@@ -37,7 +37,7 @@ diriter_next(DeeObject *__restrict UNUSED(self)) {
 }
 #define dir_iter diriter_next
 
-PRIVATE struct type_member diriter_members[] = {
+PRIVATE struct type_member tpconst diriter_members[] = {
 	/* NOTE: Since the type cannot be instantiated, it
 	 *       doesn't matter that this is an invalid address. */
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, 0, "->?Gdir"),
@@ -114,7 +114,7 @@ PRIVATE struct type_seq dir_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member dir_class_members[] = {
+PRIVATE struct type_member tpconst dir_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeDirIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -211,7 +211,7 @@ INTERN DeeTypeObject DeeQueryIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE struct type_member query_class_members[] = {
+PRIVATE struct type_member tpconst query_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeQueryIterator_Type),
 	TYPE_MEMBER_END
 };

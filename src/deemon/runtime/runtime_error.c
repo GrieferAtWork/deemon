@@ -178,7 +178,7 @@ err_bytes_not_writable(DeeObject *__restrict UNUSED(bytes_ob)) {
 
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_operator(DeeTypeObject *__restrict tp, uint16_t operator_name) {
-	struct opinfo *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
+	struct opinfo const *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_NotImplemented,
@@ -190,7 +190,7 @@ INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_operator2(DeeTypeObject *__restrict tp,
                             uint16_t operator_name,
                             uint16_t operator_name2) {
-	struct opinfo *info, *info2;
+	struct opinfo const *info, *info2;
 	info  = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
 	ASSERT_OBJECT(tp);
@@ -206,7 +206,7 @@ err_unimplemented_operator3(DeeTypeObject *__restrict tp,
                             uint16_t operator_name,
                             uint16_t operator_name2,
                             uint16_t operator_name3) {
-	struct opinfo *info, *info2, *info3;
+	struct opinfo const *info, *info2, *info3;
 	info  = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
 	info3 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name3);

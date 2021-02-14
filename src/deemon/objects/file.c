@@ -1301,7 +1301,7 @@ err:
 }
 
 
-PRIVATE struct type_method file_class_methods[] = {
+PRIVATE struct type_method tpconst file_class_methods[] = {
 	{ "open",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_class_open,
 	  DOC("(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
@@ -1605,7 +1605,7 @@ file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 	return get_files_object(&str_Joined);
 }
 
-PRIVATE struct type_getset file_class_getsets[] = {
+PRIVATE struct type_getset tpconst file_class_getsets[] = {
 	{ "stdin",
 	  &file_class_get_stdin,
 	  &file_class_del_stdin,
@@ -1681,7 +1681,7 @@ PRIVATE DEFINE_UINT32(file_SEEK_END, SEEK_END);
 #endif /* SEEK_END > ((1 << 15) - 1) */
 
 
-PRIVATE struct type_member file_class_members[] = {
+PRIVATE struct type_member tpconst file_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", (DeeObject *)&DeeFile_Type),
 	TYPE_MEMBER_CONST("Reader", (DeeObject *)&DeeFileReader_Type),
 	TYPE_MEMBER_CONST("Writer", (DeeObject *)&DeeFileWriter_Type),
@@ -2110,7 +2110,7 @@ err:
 }
 
 
-PRIVATE struct type_method file_methods[] = {
+PRIVATE struct type_method tpconst file_methods[] = {
 	{ "read",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_read,
 	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
@@ -2271,7 +2271,7 @@ file_return_self(DeeFileObject *__restrict self) {
 	return_reference_(self);
 }
 
-PRIVATE struct type_getset file_getsets[] = {
+PRIVATE struct type_getset tpconst file_getsets[] = {
 	/* Maintain at least a tiny bit of compatibility to the iterator interface... */
 	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_return_self },
 	{ NULL }

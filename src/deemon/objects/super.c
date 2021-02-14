@@ -602,7 +602,7 @@ super_enumattr(DeeTypeObject *UNUSED(tp_self),
 	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);
 }
 
-PRIVATE struct type_attr super_attr = {
+PRIVATE struct type_attr tpconst super_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
@@ -664,7 +664,7 @@ super_selfof(DeeObject *UNUSED(self),
 	return_reference_((DeeObject *)super_object->s_self);
 }
 
-PRIVATE struct type_method super_class_methods[] = {
+PRIVATE struct type_method tpconst super_class_methods[] = {
 	{ "typeof", &super_typeof,
 	  DOC("(ob:?.)->?DType\n"
 	      "@throw TypeError @ob is not a super-object\n"

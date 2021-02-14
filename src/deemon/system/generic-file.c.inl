@@ -158,14 +158,14 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	return_none;
 }
 
-PRIVATE struct type_method sysfile_class_methods[] = {
+PRIVATE struct type_method tpconst sysfile_class_methods[] = {
 	{ "sync", &sysfile_class_sync,
 	  DOC("()\n"
 	      "Synchronize all unwritten data with the host operating system") },
 	{ NULL }
 };
 
-PRIVATE struct type_member sysfile_class_members[] = {
+PRIVATE struct type_member tpconst sysfile_class_members[] = {
 	TYPE_MEMBER_CONST("Fs", (DeeTypeObject *)&DeeFSFile_Type),
 	TYPE_MEMBER_END
 };

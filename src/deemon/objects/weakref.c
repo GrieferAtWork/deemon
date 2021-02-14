@@ -323,7 +323,7 @@ ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-PRIVATE struct type_method ob_weakref_methods[] = {
+PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_lock,
 	  DOC("->\n"
 	      "(def)->\n"
@@ -338,7 +338,7 @@ PRIVATE struct type_method ob_weakref_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_getset ob_weakref_getsets[] = {
+PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
 	{ "value",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_get,
 	  (int (DCALL *)(DeeObject *__restrict))&ob_weakref_del,
@@ -353,7 +353,7 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member ob_weakref_members[] = {
+PRIVATE struct type_member tpconst ob_weakref_members[] = {
 	TYPE_MEMBER_FIELD_DOC("callback", STRUCT_OBJECT, offsetof(WeakRef, wr_del),
 	                      "->?DCallable\n"
 	                      "@throw UnboundAttribute No callback has been specified\n"

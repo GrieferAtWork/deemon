@@ -661,7 +661,7 @@ done:
 }
 
 
-PRIVATE struct type_getset keyword_getsets[] = {
+PRIVATE struct type_getset tpconst keyword_getsets[] = {
 	{ "id",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_id, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -1441,7 +1441,7 @@ lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
 }
 
 
-PRIVATE struct type_getset lexer_getsets[] = {
+PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	{ "keywords",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_keywords, NULL, NULL,
 	  DOC("->?#Keywords\n"
@@ -1837,7 +1837,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 };
 
 
-PRIVATE struct type_member lexer_class_members[] = {
+PRIVATE struct type_member tpconst lexer_class_members[] = {
 	TYPE_MEMBER_CONST("Keyword", &DeeCompilerKeyword_Type),
 	TYPE_MEMBER_CONST("Keywords", &DeeCompilerLexerKeywords_Type),
 	TYPE_MEMBER_CONST("Extensions", &DeeCompilerLexerExtensions_Type),
@@ -2250,7 +2250,7 @@ err:
 }
 
 
-PRIVATE struct type_method lexer_methods[] = {
+PRIVATE struct type_method tpconst lexer_methods[] = {
 	{ "include",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_include,
 	  DOC("(stream:?DFile,filename:?Dstring=!N)\n"
@@ -2435,7 +2435,7 @@ PRIVATE struct type_seq lexer_keywords_seq = {
 
 
 
-PRIVATE struct type_method lexer_keywords_methods[] = {
+PRIVATE struct type_method tpconst lexer_keywords_methods[] = {
 	{ "getkwd",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwd,
 	  DOC_GET(lexer_getkwd_doc),
@@ -2660,7 +2660,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method lexer_syspaths_methods[] = {
+PRIVATE struct type_method tpconst lexer_syspaths_methods[] = {
 	{ "push",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_push,
 	  DOC("()\n"
@@ -2999,7 +2999,7 @@ token_setkeyword(DeeCompilerWrapperObject *__restrict self,
 	return result;
 }
 
-PRIVATE struct type_getset lexer_token_getsets[] = {
+PRIVATE struct type_getset tpconst lexer_token_getsets[] = {
 	{ "text",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_text, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -3103,7 +3103,7 @@ done2:
 	return result;
 }
 
-PRIVATE struct type_method lexer_token_methods[] = {
+PRIVATE struct type_method tpconst lexer_token_methods[] = {
 	{ "decodestring",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_token_decodestring,
 	  DOC("->?Dstring\n"
@@ -4351,7 +4351,7 @@ file_functionmacroexpansions(DeeCompilerItemObject *__restrict self) {
 }
 
 
-PRIVATE struct type_getset file_getsets[] = {
+PRIVATE struct type_getset tpconst file_getsets[] = {
 	{ "istext",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_istext, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -4616,7 +4616,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_method file_methods[] = {
+PRIVATE struct type_method tpconst file_methods[] = {
 	{ "nextchunk",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_nextchunk,
 	  DOC("(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"

@@ -1893,12 +1893,11 @@ PRIVATE struct type_seq imod_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_iter
 };
 
-PRIVATE struct type_gc imod_gc = {
+PRIVATE struct type_gc tpconst imod_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&imod_clear
 };
 
 
-INTDEF struct type_gc module_gc;
 PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_InteractiveModule",

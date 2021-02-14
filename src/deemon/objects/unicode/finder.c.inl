@@ -362,14 +362,14 @@ scfi_bool(StringFindIterator *__restrict self) {
 	return ptr.ptr != NULL;
 }
 
-PRIVATE struct type_member sfi_members[] = {
+PRIVATE struct type_member tpconst sfi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
 	                      offsetof(StringFindIterator, sfi_find),
 	                      "->?Ert:StringFind"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member scfi_members[] = {
+PRIVATE struct type_member tpconst scfi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
 	                      offsetof(StringFindIterator, sfi_find),
 	                      "->?Ert:StringCaseFind"),
@@ -585,7 +585,7 @@ PRIVATE struct type_seq scf_seq = {
 };
 
 
-PRIVATE struct type_member sf_members[] = {
+PRIVATE struct type_member tpconst sf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringFind, sf_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC("__needle__", STRUCT_OBJECT, offsetof(StringFind, sf_needle), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(StringFind, sf_start)),
@@ -593,7 +593,7 @@ PRIVATE struct type_member sf_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member sf_class_members[] = {
+PRIVATE struct type_member tpconst sf_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringFindIterator_Type),
 	TYPE_MEMBER_END
 };

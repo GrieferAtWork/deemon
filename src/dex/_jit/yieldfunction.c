@@ -245,7 +245,7 @@ jy_gettext(JITYieldFunction *__restrict self) {
 	return jf_gettext(self->jy_func);
 }
 
-PRIVATE struct type_getset jy_getsets[] = {
+PRIVATE struct type_getset tpconst jy_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
@@ -270,13 +270,13 @@ PRIVATE struct type_getset jy_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member jy_members[] = {
+PRIVATE struct type_member tpconst jy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(JITYieldFunction, jy_func), "->?GFunction"),
 	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT_OPT, offsetof(JITYieldFunction, jy_kw), "->?S?T2?Dstring?X2?Dint?O"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member jy_class_members[] = {
+PRIVATE struct type_member tpconst jy_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &JITYieldFunctionIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1894,7 +1894,7 @@ ji_gettext(JITYieldFunctionIterator *__restrict self) {
 }
 
 
-PRIVATE struct type_getset ji_getsets[] = {
+PRIVATE struct type_getset tpconst ji_getsets[] = {
 	{ "__func__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getfunc, NULL, NULL,
 	  DOC("->?GFunction\n"
@@ -1923,7 +1923,7 @@ PRIVATE struct type_getset ji_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member ji_members[] = {
+PRIVATE struct type_member tpconst ji_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(JITYieldFunctionIterator, ji_func),
 	                      "->?GYieldFunction\n"
 	                      "Alias for ?#__yfunc__"),

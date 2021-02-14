@@ -592,7 +592,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset frame_getsets[] = {
+PRIVATE struct type_getset tpconst frame_getsets[] = {
 	{ "location",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
 	  DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
@@ -674,7 +674,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member frame_members[] = {
+PRIVATE struct type_member tpconst frame_members[] = {
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(Frame, f_owner)),
 	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, DEEFRAME_FWRITABLE,
 	                         "Evaluates to ?t if @this Frame is writable"),

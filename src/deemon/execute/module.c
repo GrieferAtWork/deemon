@@ -1264,7 +1264,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_attr module_attr = {
+PRIVATE struct type_attr tpconst module_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
@@ -1323,7 +1323,7 @@ module_get_imports(DeeModuleObject *__restrict self) {
 	                                (DeeObject **)self->mo_importv);
 }
 
-PRIVATE struct type_member module_members[] = {
+PRIVATE struct type_member tpconst module_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
 	                      "->?Dstring\n"
 	                      "The name of @this Module"),
@@ -1335,7 +1335,7 @@ DeeModule_ViewExports(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
 
-PRIVATE struct type_getset module_getsets[] = {
+PRIVATE struct type_getset tpconst module_getsets[] = {
 	{ "__exports__", &DeeModule_ViewExports, NULL, NULL,
 	  DOC("->?S?T2?Dstring?O\n"
 	      "Returns a modifiable mapping-like object containing @this "
@@ -1391,7 +1391,7 @@ module_class_setpath(DeeObject *UNUSED(self),
 	return DeeObject_Assign(DeeModule_GetPath(), value);
 }
 
-PRIVATE struct type_getset module_class_getsets[] = {
+PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	{ "path", &module_class_getpath, NULL, &module_class_setpath,
 	  DOC("->?DList\n"
 	      "A list of strings describing the search path for system libraries") },
@@ -1416,7 +1416,7 @@ module_class_open(DeeObject *UNUSED(self),
 }
 
 
-PRIVATE struct type_method module_class_methods[] = {
+PRIVATE struct type_method tpconst module_class_methods[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	{ "open", &module_class_open,
 	  DOC("(name:?Dstring)->?DModule\n"
@@ -1546,7 +1546,7 @@ module_pclear(DeeModuleObject *__restrict self,
 }
 
 
-INTERN struct type_gc module_gc = {
+PRIVATE struct type_gc tpconst module_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_clear,
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE

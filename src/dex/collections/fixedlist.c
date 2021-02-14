@@ -518,7 +518,7 @@ again:
 }
 
 
-PRIVATE struct type_gc fl_gc = {
+PRIVATE struct type_gc tpconst fl_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&fl_clear,
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&fl_pclear
 };
@@ -773,7 +773,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method fl_methods[] = {
+PRIVATE struct type_method tpconst fl_methods[] = {
 	{ "clear",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_clear_meth,
 	  DOC("()") },
@@ -783,7 +783,7 @@ PRIVATE struct type_method fl_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member fl_class_members[] = {
+PRIVATE struct type_member tpconst fl_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &FixedListIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -974,7 +974,7 @@ PRIVATE struct type_cmp fli_cmp = {
 };
 
 
-PRIVATE struct type_member fli_members[] = {
+PRIVATE struct type_member tpconst fli_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(FixedListIterator, li_list), "->?GFixedList"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_OBJECT, offsetof(FixedListIterator, li_iter)),
 	TYPE_MEMBER_END

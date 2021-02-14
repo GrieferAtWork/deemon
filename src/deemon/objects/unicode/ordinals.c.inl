@@ -155,7 +155,7 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 	return (DREF StringOrdinals *)DeeString_Ordinals((DeeObject *)self->soi_str);
 }
 
-PRIVATE struct type_getset stringordinalsiter_getsets[] = {
+PRIVATE struct type_getset tpconst stringordinalsiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq,
 	  NULL,
@@ -299,12 +299,12 @@ PRIVATE struct type_seq stringordinals_seq = {
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_get,
 };
 
-PRIVATE struct type_member stringordinals_members[] = {
+PRIVATE struct type_member tpconst stringordinals_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringOrdinals, so_str), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member stringordinals_class_members[] = {
+PRIVATE struct type_member tpconst stringordinals_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringOrdinalsIterator_Type),
 	TYPE_MEMBER_END
 };

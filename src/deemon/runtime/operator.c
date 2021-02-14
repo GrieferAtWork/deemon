@@ -3431,7 +3431,7 @@ DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_size) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi) {
@@ -3591,7 +3591,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq && seq->tp_range_get) {
 			dssize_t end_index;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			DREF DeeObject *begin_ob, *result;
 			/* NSI optimizations. */
 			nsi = seq->tp_nsi;
@@ -3626,7 +3626,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
 			dssize_t begin_index;
 			DREF DeeObject *end_ob, *result;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3656,7 +3656,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
 			DREF DeeObject *begin_ob, *end_ob, *result;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3693,7 +3693,7 @@ PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
 			int result;
 			DREF DeeObject *begin_ob;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3731,7 +3731,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
 			int result;
 			DREF DeeObject *end_ob;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3765,7 +3765,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set) {
 			DREF DeeObject *begin_ob, *end_ob;
 			int result;
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			/* NSI optimizations. */
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3832,7 +3832,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi) {
 				if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -3910,7 +3910,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi) {
 				if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -4090,7 +4090,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi) {
 				if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -4144,7 +4144,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi) {
 				if (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
@@ -4253,7 +4253,7 @@ DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP) {
 				if (nsi->nsi_maplike.nsi_getdefault)
@@ -4283,7 +4283,7 @@ DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 				if (nsi->nsi_seqlike.nsi_getitem)
@@ -4312,7 +4312,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_del) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 				if (nsi->nsi_seqlike.nsi_delitem)
@@ -4342,7 +4342,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_set) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 				if (nsi->nsi_seqlike.nsi_setitem)

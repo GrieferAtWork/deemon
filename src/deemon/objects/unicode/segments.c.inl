@@ -153,7 +153,7 @@ ssegiter_getseq(StringSegmentsIterator *__restrict self) {
 	                                                 self->s_siz);
 }
 
-PRIVATE struct type_getset ssegiter_getsets[] = {
+PRIVATE struct type_getset tpconst ssegiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssegiter_getseq,
 	  NULL,
@@ -428,13 +428,13 @@ PRIVATE struct type_seq sseg_seq = {
 };
 
 
-PRIVATE struct type_member sseg_members[] = {
+PRIVATE struct type_member tpconst sseg_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringSegments, s_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__siz__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(StringSegments, s_siz)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member sseg_class_members[] = {
+PRIVATE struct type_member tpconst sseg_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringSegmentsIterator_Type),
 	TYPE_MEMBER_END
 };

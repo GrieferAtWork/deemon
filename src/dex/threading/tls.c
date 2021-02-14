@@ -634,7 +634,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 
 
-PRIVATE struct type_getset tls_getsets[] = {
+PRIVATE struct type_getset tpconst tls_getsets[] = {
 	{ "value", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getvalue,
 	  (int (DCALL *)(DeeObject *__restrict))&tls_delvalue,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&tls_setvalue,
@@ -691,7 +691,7 @@ tls_set(Tls *self, size_t argc, DeeObject *const *argv) {
 	return_none;
 }
 
-PRIVATE struct type_method tls_methods[] = {
+PRIVATE struct type_method tpconst tls_methods[] = {
 	{ "get",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_get,
 	  DOC("->\n"

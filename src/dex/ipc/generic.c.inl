@@ -172,7 +172,7 @@ err:
 }
 
 
-PRIVATE struct type_method process_methods[] = {
+PRIVATE struct type_method tpconst process_methods[] = {
 	{ S_Process_function_start_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_start, S_Process_function_start_doc },
 	{ S_Process_function_join_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_join, S_Process_function_join_doc },
 	{ S_Process_function_tryjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_tryjoin, S_Process_function_tryjoin_doc },
@@ -466,7 +466,7 @@ err:
 }
 
 
-PRIVATE struct type_getset process_getsets[] = {
+PRIVATE struct type_getset tpconst process_getsets[] = {
 	{ S_Process_getset_stdin_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
@@ -534,12 +534,12 @@ process_class_self(DeeObject *UNUSED(self),
 	return_reference_((DeeObject *)&this_process);
 }
 
-PRIVATE struct type_method process_class_methods[] = {
+PRIVATE struct type_method tpconst process_class_methods[] = {
 	{ S_Process_class_function_self_name, &process_class_self, S_Process_class_function_self_doc },
 	{ NULL }
 };
 
-PRIVATE struct type_member process_class_members[] = {
+PRIVATE struct type_member tpconst process_class_members[] = {
 	TYPE_MEMBER_CONST_DOC(S_Process_member_current_name,
 	                      &this_process,
 	                      S_Process_member_current_doc),
@@ -650,7 +650,7 @@ INTERN DeeTypeObject DeeProcEnumIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE struct type_member enumproc_class_members[] = {
+PRIVATE struct type_member tpconst enumproc_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeProcEnumIterator_Type),
 	TYPE_MEMBER_END
 };

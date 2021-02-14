@@ -295,7 +295,7 @@ PRIVATE struct type_cmp cell_cmp = {
 };
 
 
-PRIVATE struct type_getset cell_getsets[] = {
+PRIVATE struct type_getset tpconst cell_getsets[] = {
 	{ "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
 	  DOC("@throw UnboundAttribute Attempted to read from an empty Cell\n"
 	      "read/write access to the underlying, contained :Object") },
@@ -442,7 +442,7 @@ err:
 }
 
 
-PRIVATE struct type_method cell_methods[] = {
+PRIVATE struct type_method tpconst cell_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_get,
 	  DOC("->\n"
@@ -527,7 +527,7 @@ PRIVATE struct type_method cell_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_gc cell_gc = {
+PRIVATE struct type_gc tpconst cell_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cell_clear
 };
 

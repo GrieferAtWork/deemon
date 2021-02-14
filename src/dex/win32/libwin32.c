@@ -746,7 +746,7 @@ PRIVATE struct Dee_type_math handle_math = {
 #endif /* __SIZEOF_POINTER__ <= 4 */
 };
 
-PRIVATE struct type_member handle_members[] = {
+PRIVATE struct type_member tpconst handle_members[] = {
 	TYPE_MEMBER_FIELD(DeeSysFD_HANDLE_GETSET,
 	                  STRUCT_UINTPTR_T,
 	                  offsetof(DeeHandleObject, ho_handle)),

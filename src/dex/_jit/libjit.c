@@ -217,7 +217,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *     - `print' statements without a file target are compiled as follows
 	 *       >> print "foo"; // This...
 	 *       >> print globals["__stdout__"]: "foo"; // ... becomes this
-	 *       If no `__stdout__' global is provided, `file.stdout' is used.
+	 *       If no `__stdout__' global is provided, `File.stdout' is used.
 	 *  - restricted:
 	 *     - `catch' statements/expressions with interrupt capabilities are not allowed.
 	 *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
@@ -272,11 +272,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       >>     }
 	 *       >> }
 	 *       Separately, accessing an attribute of a module has special restrictions
-	 *       applies when done for the exports of the builtin `deemon' module:
+	 *       applied when done for the exports of the builtin `deemon' module:
 	 *         - The following types/objects are off-limits, and access
 	 *           will cause an AttributeError to be thrown:
 	 *             - `deemon.gc'
-	 *             - `deemon.thread'
+	 *             - `deemon.Thread'
 	 *             - `deemon.Error.SystemError'
 	 *             - `deemon.Error.AppExit'
 	 *             - `deemon.Signal.Interrupt'
@@ -288,14 +288,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       either a bug in their implementation, or pre-existing write-access
 	 *       to the deemon library path, meaning that they don't pose a security
 	 *       risk on their own.
-	 *     - Seperately, the runtime restricts access to `file.open()',
-	 *      `file.system' (and `file.io'), as well as `File.Buffer.sync()'
+	 *     - Seperately, the runtime restricts access to `File.open()',
+	 *       `File.System' (and `File.io'), as well as `File.Buffer.sync()'
 	 *       Attempting to perform any of these operations will cause a
-	 *       NotImplemented error to be thrown, emulating a target system
+	 *       `NotImplemented' error to be thrown, emulating a target system
 	 *       that doesn't implement user-code I/O support.
 	 *     - Access to attributes beginning with a leading underscore is disallowed
 	 *       This is done to prevent access to implementation-specific attributes that
-	 *       could be used to break out of the pure-code sandbox
+	 *       could be used to break out of the restricted-code sandbox
 	 *       >> import fs;
 	 *       >> function safe_unlink(path: string) {
 	 *       >>     if (!is_allowed_path(path))
@@ -371,12 +371,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       expressions.
 	 *       NOTE: An exception to this are `x is y', as well as `x === y' and `x !== y' expressions.
 	 *       The types are:
-	 *         - `deemon.Thread'  (blocking access to multi-threading)
-	 *         - `deemon.File'  (blocking access to `deemon.file.open()')
+	 *         - `deemon.Thread'     (blocking access to multi-threading)
+	 *         - `deemon.File'       (blocking access to `deemon.File.open()')
 	 *       Additionally, the following objects are disallowed:
 	 *         - `deemon.gc'
-	 *         - `deemon.enumattr'  (There is no reason for code to do this)
-	 *                               NOTE: This also includes `operator enumattr()'!
+	 *         - `deemon.enumattr'   (There is no reason for code to do this)
+	 *                                NOTE: This also includes `operator enumattr()'!
 	 *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
 	 *         - `deemon.import' and `deemon.import_'
 	 *         - `deemon.Error.SystemError'
@@ -404,7 +404,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *     interrupt it if it ends up taking too long, or using too much CPU.
 	 *   - On its own, exec() code can create an arbitrary amount of objects, potentially
 	 *     allowing for memory starvation attacks by having code allocate ridiculous amounts
-	 *     of memory though simple interfaces such as `bytes from deemon', or simply by
+	 *     of memory though simple interfaces such as `Bytes from deemon', or simply by
 	 *     doing something like `"foo" * 12345678'
 	 *     XXX: Add a runtime feature to allow for pre-thread redirection of heap functions,
 	 *          thus allowing for a custom implementation which could then set a ceiling on

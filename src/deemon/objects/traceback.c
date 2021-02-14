@@ -296,7 +296,7 @@ traceiter_next(TraceIterator *__restrict self) {
 	                                     &self->ti_trace->tb_lock);
 }
 
-PRIVATE struct type_member traceiter_members[] = {
+PRIVATE struct type_member tpconst traceiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TraceIterator, ti_trace), "->?DTraceback"),
 	TYPE_MEMBER_END
 };
@@ -703,7 +703,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 	return result;
 }
 
-PRIVATE struct type_getset traceback_class_getsets[] = {
+PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
 	{ "current", &traceback_current, NULL, NULL,
 	  DOC("->?.\n"
 	      "@throw RuntimeError No exception was being handled"
@@ -711,12 +711,12 @@ PRIVATE struct type_getset traceback_class_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member traceback_class_members[] = {
+PRIVATE struct type_member tpconst traceback_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeTracebackIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_gc traceback_gc = {
+PRIVATE struct type_gc tpconst traceback_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&traceback_clear
 };
 
@@ -742,7 +742,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method traceback_methods[] = {
+PRIVATE struct type_method tpconst traceback_methods[] = {
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&traceback_sizeof,
 	  DOC("->?Dint") },

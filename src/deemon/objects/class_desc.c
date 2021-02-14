@@ -125,7 +125,7 @@ coti_next_ent(ClassOperatorTableIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 coti_next(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
-	struct opinfo *info;
+	struct opinfo const *info;
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
@@ -144,7 +144,7 @@ coti_next(ClassOperatorTableIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 coti_next_key(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
-	struct opinfo *info;
+	struct opinfo const *info;
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
@@ -224,14 +224,14 @@ PRIVATE struct type_cmp coti_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_ge,
 };
 
-PRIVATE struct type_getset coti_getsets[] = {
+PRIVATE struct type_getset tpconst coti_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
 	  DOC("->?Ert:ClassOperatorTable") },
 	{ NULL }
 };
 
-PRIVATE struct type_member coti_members[] = {
+PRIVATE struct type_member tpconst coti_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__class__", STRUCT_OBJECT,
 	                      offsetof(ClassOperatorTableIterator, co_desc),
 	                      "->?Ert:ClassDescriptor"),
@@ -401,7 +401,7 @@ PRIVATE struct type_seq cot_seq = {
 	/* .tp_nsi       = */ &cot_nsi
 };
 
-PRIVATE struct type_member cot_class_members[] = {
+PRIVATE struct type_member tpconst cot_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ClassOperatorTableIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -687,14 +687,14 @@ done:
 	return result;
 }
 
-PRIVATE struct type_getset cati_getsets[] = {
+PRIVATE struct type_getset tpconst cati_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
 	  DOC("->?AAttributeTable?Ert:ClassDescriptor") },
 	{ NULL }
 };
 
-PRIVATE struct type_member cat_class_members[] = {
+PRIVATE struct type_member tpconst cat_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ClassAttributeTableIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -817,7 +817,7 @@ err:
 }
 
 
-PRIVATE struct type_getset ca_getsets[] = {
+PRIVATE struct type_getset tpconst ca_getsets[] = {
 	{ "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getname, NULL, NULL, DOC("->?Dstring") },
 	{ "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getdoc, NULL, NULL, DOC("->?X2?Dstring?N") },
 	{ "addr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getaddr, NULL, NULL,
@@ -1299,14 +1299,14 @@ err:
  return NULL;
 }
 
-PRIVATE struct type_method cd_methods[] = {
+PRIVATE struct type_method tpconst cd_methods[] = {
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cd_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
 
-PRIVATE struct type_getset cd_getsets[] = {
+PRIVATE struct type_getset tpconst cd_getsets[] = {
 	{ "flags",
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -1338,7 +1338,7 @@ PRIVATE struct type_getset cd_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member cd_members[] = {
+PRIVATE struct type_member tpconst cd_members[] = {
 	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FFINAL),
 	TYPE_MEMBER_BITFIELD_DOC("isinterrupt", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINTERRUPT,
 	                         "Evaluates to ?t if @this class behaves as an interrupt exception when thrown\n"
@@ -1375,7 +1375,7 @@ PRIVATE struct type_member cd_members[] = {
 };
 
 INTDEF DeeTypeObject ObjectTable_Type;
-PRIVATE struct type_member cd_class_members[] = {
+PRIVATE struct type_member tpconst cd_class_members[] = {
 	TYPE_MEMBER_CONST("Attribute", &ClassAttribute_Type),
 	TYPE_MEMBER_CONST("AttributeTable", &ClassAttributeTable_Type),
 	TYPE_MEMBER_CONST("OperatorTable", &ClassOperatorTable_Type),
@@ -1741,7 +1741,7 @@ cd_add_operator(ClassDescriptor *__restrict self,
 	ent->co_addr = index;
 	return 0;
 err_duplicate_name: {
-	struct opinfo *op = Dee_OperatorInfo(NULL, name);
+	struct opinfo const *op = Dee_OperatorInfo(NULL, name);
 	if (op) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Duplicate operator `%s'",
@@ -1923,7 +1923,7 @@ got_flag:
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
 			if (class_csize != (uint16_t)-1 && index >= class_csize) {
-				struct opinfo *op = Dee_OperatorInfo(NULL, name);
+				struct opinfo const *op = Dee_OperatorInfo(NULL, name);
 				if (op) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Operator %s uses out-of-bounds class object table index %I16u (>= %I16u)",
@@ -2312,7 +2312,7 @@ ot_isitable(ObjectTable *__restrict self) {
 	return_bool(!DeeType_Check(self->ot_owner));
 }
 
-PRIVATE struct type_getset ot_getsets[] = {
+PRIVATE struct type_getset tpconst ot_getsets[] = {
 	{ DeeString_STR(&str___type__),
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_gettype, NULL, NULL,
 	  DOC("->?DType\nThe type describing @this object table") },
@@ -2325,7 +2325,7 @@ PRIVATE struct type_getset ot_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member ot_members[] = {
+PRIVATE struct type_member tpconst ot_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(ObjectTable, ot_owner),
 	                      "The object that owns @this object table"),
 	TYPE_MEMBER_END
@@ -2559,7 +2559,7 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 }
 
 
-PRIVATE struct type_method instancemember_methods[] = {
+PRIVATE struct type_method tpconst instancemember_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&instancemember_get,
 	  DOC("(thisarg)->\n"
@@ -2636,7 +2636,7 @@ instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 	return_true;
 }
 
-PRIVATE struct type_getset instancemember_getsets[] = {
+PRIVATE struct type_getset tpconst instancemember_getsets[] = {
 	{ "canget",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemember_get_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -2665,7 +2665,7 @@ PRIVATE struct type_getset instancemember_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member instancemember_members[] = {
+PRIVATE struct type_member tpconst instancemember_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
 	TYPE_MEMBER_END
 };

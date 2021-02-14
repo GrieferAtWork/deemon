@@ -1959,7 +1959,7 @@ err:
 DOC_REF(map_get_doc);
 DOC_REF(map_byhash_doc);
 
-PRIVATE struct type_method dict_methods[] = {
+PRIVATE struct type_method tpconst dict_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_get,
 	  DOC_GET(map_get_doc) },
@@ -2030,7 +2030,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL set_del_maxloadfactor(DeeObject *__restric
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL set_set_maxloadfactor(DeeObject *__restrict self, DeeObject *__restrict value);
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-INTERN struct type_getset dict_getsets[] = {
+INTDEF struct type_getset tpconst dict_getsets[];
+INTERN struct type_getset tpconst dict_getsets[] = {
 	{ "keys",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys,
 	  NULL,
@@ -2069,7 +2070,7 @@ INTERN struct type_getset dict_getsets[] = {
 
 
 INTDEF DeeTypeObject DictIterator_Type;
-PRIVATE struct type_member dict_class_members[] = {
+PRIVATE struct type_member tpconst dict_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DictIterator_Type),
 	TYPE_MEMBER_CONST("Proxy", &DeeDictProxy_Type),
 	TYPE_MEMBER_CONST("Keys", &DeeDictKeys_Type),
@@ -2079,7 +2080,7 @@ PRIVATE struct type_member dict_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_gc dict_gc = {
+PRIVATE struct type_gc tpconst dict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear
 };
 

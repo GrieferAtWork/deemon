@@ -144,7 +144,7 @@ gcsetiterator_bool(GCSetIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE struct type_member gcset_iterator_members[] = {
+PRIVATE struct type_member tpconst gcset_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(GCSetIterator, gsi_set), "->?Ert:GCSet"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(GCSetIterator, gsi_index)),
 	TYPE_MEMBER_END
@@ -316,7 +316,7 @@ PRIVATE struct type_seq gcset_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_contains
 };
 
-PRIVATE struct type_member gcset_class_members[] = {
+PRIVATE struct type_member tpconst gcset_class_members[] = {
     TYPE_MEMBER_CONST("Iterator", &DeeGCSetIterator_Type),
     TYPE_MEMBER_END
 };

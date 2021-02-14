@@ -2065,7 +2065,7 @@ ast_setfunctioncode(Ast *__restrict self,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_operator_name(uint16_t opid) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	switch (opid) {
 	case AST_OPERATOR_POS_OR_ADD:
 		return DeeString_Chr((uint8_t)'+');
@@ -3595,7 +3595,7 @@ got_except_symbol:
 		break;
 
 	case AST_OPERATOR_FUNC: {
-		struct opinfo *info;
+		struct opinfo const *info;
 		info = Dee_OperatorInfo(NULL, self->a_flag);
 		if (!info)
 			PRINT("(");
@@ -3613,7 +3613,7 @@ got_except_symbol:
 	}	break;
 
 	case AST_OPERATOR: {
-		struct opinfo *info;
+		struct opinfo const *info;
 		char const *name;
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			goto operator_fallback;
@@ -4383,7 +4383,7 @@ class_member_in_class:
 		/* Print class operators. */
 		for (i = 0; i <= desc->cd_clsop_mask; ++i) {
 			struct class_member *member;
-			struct opinfo *info;
+			struct opinfo const *info;
 			struct class_operator *op = &desc->cd_clsop_list[i];
 			if (op->co_name == (uint16_t)-1)
 				continue;
@@ -4600,7 +4600,7 @@ print_scope_repr(DeeScopeObject *__restrict self,
 PRIVATE dssize_t DCALL
 print_operator_name(uint16_t opid,
                     struct unicode_printer *__restrict printer) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	switch (opid) {
 
 	case AST_OPERATOR_POS_OR_ADD:
@@ -5041,7 +5041,7 @@ err:
 
 
 
-PRIVATE struct type_getset ast_getsets[] = {
+PRIVATE struct type_getset tpconst ast_getsets[] = {
 	{ "scope",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getscope,
 	  NULL,

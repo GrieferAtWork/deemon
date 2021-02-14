@@ -53,6 +53,22 @@
 #include <string.h>
 #endif /* CONFIG_HAVE_STRING_H */
 
+/* Const modified for static type callback-table declaration */
+#ifndef Dee_tpconst
+#if (defined(__PIC__) || defined(__PIE__) || \
+     defined(__pic__) || defined(__pie__))
+#define Dee_tpconst /* nothing */
+#elif defined(CONFIG_BUILDING_DEEMON)
+#define Dee_tpconst const
+#else /* ... */
+#define Dee_tpconst const
+#endif /* !... */
+#endif /* !Dee_tpconst */
+
+#ifdef DEE_SOURCE
+#define tpconst Dee_tpconst
+#endif /* DEE_SOURCE */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strlen
@@ -1547,7 +1563,7 @@ struct Dee_type_cmp {
 	 * NOTE: The compare sub-structure was chosen for this, as native
 	 *       iterators usually implement compare operators to allow
 	 *       them to be ordered with other operators. */
-	struct Dee_type_nii    *tp_nii;
+	struct Dee_type_nii Dee_tpconst *tp_nii;
 }; 
 
 
@@ -1564,7 +1580,7 @@ struct Dee_type_seq {
 	WUNUSED NONNULL((1, 2, 3, 4)) int             (DCALL *tp_range_set)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
-	struct Dee_type_nsi    *tp_nsi;
+	struct Dee_type_nsi Dee_tpconst *tp_nsi;
 };
 
 struct Dee_type_attr {
@@ -2167,7 +2183,7 @@ struct Dee_opinfo {
  *                   behave identical to `typetype' being `DeeType_Type',
  *                   in which case only operators implemented by all types
  *                   can be queried. */
-DFUNDEF WUNUSED struct Dee_opinfo *DCALL
+DFUNDEF WUNUSED struct Dee_opinfo const *DCALL
 Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id);
 
 /* Lookup an operator, given its name, and returning its id.
@@ -2302,39 +2318,38 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 struct Dee_type_object {
 	Dee_OBJECT_HEAD
-	char const             *tp_name;     /* [0..1] Name of this type. */
-	/*utf-8*/ char const   *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
-	uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */
-	uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)', or 0 when not supported.
-	                                      * NOTE: Must be explicitly inherited by derived types.
-	                                      * NOTE: This member must explicitly be initialized during object construction
-	                                      *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
-	uint32_t                tp_features; /* Type sub-class specific features (Set of `TF_*'). */
-	DREF DeeTypeObject     *tp_base;     /* [0..1][const] Base class.
-	                                      * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
-	struct Dee_type_constructor
-	                        tp_init;     /* Constructor/destructor operators. */
-	struct Dee_type_cast    tp_cast;     /* Type casting operators. */
+	char const                         *tp_name;     /* [0..1] Name of this type. */
+	/*utf-8*/ char const               *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
+	uint16_t                            tp_flags;    /* Type flags (Set of `TP_F*'). */
+	uint16_t                            tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)', or 0 when not supported.
+	                                                  * NOTE: Must be explicitly inherited by derived types.
+	                                                  * NOTE: This member must explicitly be initialized during object construction
+	                                                  *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
+	uint32_t                            tp_features; /* Type sub-class specific features (Set of `TF_*'). */
+	DREF DeeTypeObject                 *tp_base;     /* [0..1][const] Base class.
+	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
+	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
+	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
 	WUNUSED NONNULL((1))
-	DREF DeeObject *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
-	NONNULL((1, 2))
-	void            (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
-	struct Dee_type_gc     *tp_gc;       /* [0..1] GC related operators. */
-	struct Dee_type_math   *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
-	struct Dee_type_cmp    *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
-	struct Dee_type_seq    *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
+	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
+	NONNULL((1, 2)) void        (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
+	/* NOTE: Anything used by `type_inherit_*' can't be made `Dee_tpconst' here! */
+	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
+	struct Dee_type_math               *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
+	struct Dee_type_cmp                *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
+	struct Dee_type_seq                *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
 	WUNUSED NONNULL((1))
-	DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
-	struct Dee_type_attr   *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
-	struct Dee_type_with   *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
-	struct Dee_type_buffer *tp_buffer;   /* [0..1] Raw buffer interface. */
+	DREF DeeObject             *(DCALL *tp_iter_next)(DeeObject *__restrict self);
+	struct Dee_type_attr Dee_tpconst   *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
+	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
+	struct Dee_type_buffer             *tp_buffer;   /* [0..1] Raw buffer interface. */
 	/* NOTE: All of the following as sentinel-terminated vectors. */
-	struct Dee_type_method *tp_methods;  /* [0..1] Instance methods. */
-	struct Dee_type_getset *tp_getsets;  /* [0..1] Instance getsets. */
-	struct Dee_type_member *tp_members;  /* [0..1] Instance member fields. */
-	struct Dee_type_method *tp_class_methods; /* [0..1] Class methods. */
-	struct Dee_type_getset *tp_class_getsets; /* [0..1] Class getsets. */
-	struct Dee_type_member *tp_class_members; /* [0..1] Class members (usually constants). */
+	struct Dee_type_method Dee_tpconst *tp_methods;  /* [0..1] Instance methods. */
+	struct Dee_type_getset Dee_tpconst *tp_getsets;  /* [0..1] Instance getsets. */
+	struct Dee_type_member Dee_tpconst *tp_members;  /* [0..1] Instance member fields. */
+	struct Dee_type_method Dee_tpconst *tp_class_methods; /* [0..1] Class methods. */
+	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
+	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
 	/* [0..1] Same as `tp_call', but using keywords. */
 	WUNUSED NONNULL((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
@@ -2929,9 +2944,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrString)(
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 #define DeeObject_GetAttrStringLen(self, attr_name, attrlen) DeeObject_GetAttrStringLenHash(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen))
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr_name); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr_name);                                                           /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr_name);                                         /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);                    /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash); /* @return: 0: doesn't exist; @return: 1: does exists; @return: -1: Error. */
 #define DeeObject_HasAttrStringLen(self, attr_name, attrlen) DeeObject_HasAttrStringLenHash(self, attr_name, attrlen, Dee_HashPtr(attr_name, attrlen))
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelAttr)(DeeObject *self, /*String*/ DeeObject *attr_name);

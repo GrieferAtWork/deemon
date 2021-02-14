@@ -109,7 +109,7 @@ proxy_size(SeqSimpleProxy *__restrict self) {
 	return DeeObject_SizeObject(self->sp_seq);
 }
 
-PRIVATE struct type_member proxy_members[] = {
+PRIVATE struct type_member tpconst proxy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqSimpleProxy, sp_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
@@ -541,17 +541,17 @@ PRIVATE struct type_seq classes_seq = {
 };
 
 
-PRIVATE struct type_member ids_class_members[] = {
+PRIVATE struct type_member tpconst ids_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqIdsIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member types_class_members[] = {
+PRIVATE struct type_member tpconst types_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqTypesIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member classes_class_members[] = {
+PRIVATE struct type_member tpconst classes_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqClassesIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -777,7 +777,7 @@ PRIVATE struct type_cmp iter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_ge
 };
 
-PRIVATE struct type_member iter_members[] = {
+PRIVATE struct type_member tpconst iter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqSimpleProxyIterator, si_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -858,21 +858,21 @@ classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 }
 
 
-PRIVATE struct type_getset idsiter_getsets[] = {
+PRIVATE struct type_getset tpconst idsiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&idsiter_getseq, NULL, NULL,
 	  DOC("->?Ert:SeqIds") },
 	{ NULL }
 };
 
-PRIVATE struct type_getset typesiter_getsets[] = {
+PRIVATE struct type_getset tpconst typesiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typesiter_getseq, NULL, NULL,
 	  DOC("->?Ert:SeqTypes") },
 	{ NULL }
 };
 
-PRIVATE struct type_getset classesiter_getsets[] = {
+PRIVATE struct type_getset tpconst classesiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&classesiter_getseq, NULL, NULL,
 	  DOC("->?Ert:SeqClasses") },

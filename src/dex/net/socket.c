@@ -2409,7 +2409,7 @@ socket_wasclosed(Socket *__restrict self) {
 }
 
 
-PRIVATE struct type_method socket_methods[] = {
+PRIVATE struct type_method tpconst socket_methods[] = {
 	{ "close",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_close,
 	  DOC("(shutdown_mode:?Dint)\n"
@@ -2626,7 +2626,7 @@ PRIVATE struct type_method socket_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_getset socket_getsets[] = {
+PRIVATE struct type_getset tpconst socket_getsets[] = {
 	{ "sockname",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_sockname_get, NULL, NULL,
 	  DOC("->?Gsockaddr\n"
@@ -2650,7 +2650,7 @@ PRIVATE struct type_getset socket_getsets[] = {
 };
 
 
-PRIVATE struct type_member socket_members[] = {
+PRIVATE struct type_member tpconst socket_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isbound", STRUCT_CONST, Socket, s_state, SOCKET_FBOUND,
 	                         "Returns ?t if @this socket has been bound (s.a. ?#bind)"),
 	TYPE_MEMBER_BITFIELD_DOC("isconnected", STRUCT_CONST, Socket, s_state, SOCKET_FCONNECTED,

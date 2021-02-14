@@ -63,7 +63,7 @@ PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
-	struct type_nsi *nsi;
+	struct type_nsi const *nsi;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if ((seq = tp_self->tp_seq) != NULL &&
@@ -86,7 +86,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
-	struct type_nsi *nsi;
+	struct type_nsi const *nsi;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	seq     = tp_self->tp_seq;
@@ -113,7 +113,7 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
-	struct type_nsi *nsi;
+	struct type_nsi const *nsi;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	seq     = tp_self->tp_seq;

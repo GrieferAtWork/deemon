@@ -1014,7 +1014,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_member stringiter_members[] = {
+PRIVATE struct type_member tpconst stringiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(StringIterator, si_string), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__width__", STRUCT_CONST | STRUCT_INT, offsetof(StringIterator, si_width)),
 	TYPE_MEMBER_END
@@ -1380,7 +1380,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_nsi       = */ &string_nsi
 };
 
-PRIVATE struct type_member string_class_members[] = {
+PRIVATE struct type_member tpconst string_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1434,7 +1434,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method string_class_methods[] = {
+PRIVATE struct type_method tpconst string_class_methods[] = {
 	{ "chr", &string_class_chr,
 	  DOC("(ch:?.)->?.\n"
 	      "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
@@ -1446,7 +1446,7 @@ PRIVATE struct type_method string_class_methods[] = {
 	{ NULL }
 };
 
-INTDEF struct type_method string_methods[];
+INTDEF struct type_method tpconst string_methods[];
 INTDEF struct type_math string_math;
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1492,7 +1492,7 @@ err_empty:
 }
 
 
-PRIVATE struct type_getset string_getsets[] = {
+PRIVATE struct type_getset tpconst string_getsets[] = {
 	{ "ordinals",
 	  &DeeString_Ordinals, NULL, NULL,
 	  DOC("->?S?Dint\n"

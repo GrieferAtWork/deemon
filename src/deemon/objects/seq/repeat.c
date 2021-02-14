@@ -313,7 +313,7 @@ err:
 }
 
 
-PRIVATE struct type_getset repeatiter_getsets[] = {
+PRIVATE struct type_getset tpconst repeatiter_getsets[] = {
 	{ "__iter__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_iter, NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_set_iter,
@@ -325,7 +325,7 @@ PRIVATE struct type_getset repeatiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member repeatiter_members[] = {
+PRIVATE struct type_member tpconst repeatiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RepeatIterator, ri_rep), "->?Ert:SeqRepeat"),
 	TYPE_MEMBER_END
 };
@@ -609,13 +609,13 @@ PRIVATE struct type_seq repeat_seq = {
 	/* .tp_nsi       = */ &repeat_nsi
 };
 
-PRIVATE struct type_member repeat_members[] = {
+PRIVATE struct type_member tpconst repeat_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Repeat, r_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(Repeat, r_num)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member repeat_class_members[] = {
+PRIVATE struct type_member tpconst repeat_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqRepeatIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -854,7 +854,7 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 	return_reference_(self->rii_obj);
 }
 
-PRIVATE struct type_member repeatitemiter_members[] = {
+PRIVATE struct type_member tpconst repeatitemiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqItemRepeat"),
 	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T, offsetof(RepeatItemIterator, rii_num)),
@@ -1160,13 +1160,13 @@ PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_nsi       = */ &repeatitem_nsi
 };
 
-PRIVATE struct type_member repeatitem_members[] = {
+PRIVATE struct type_member tpconst repeatitem_members[] = {
 	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItem, ri_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RepeatItem, ri_num)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member repeatitem_class_members[] = {
+PRIVATE struct type_member tpconst repeatitem_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqItemRepeatIterator_Type),
 	TYPE_MEMBER_END
 };

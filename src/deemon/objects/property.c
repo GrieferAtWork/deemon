@@ -207,7 +207,7 @@ PRIVATE struct type_cmp property_cmp = {
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&property_eq
 };
 
-PRIVATE struct type_member property_members[] = {
+PRIVATE struct type_member tpconst property_members[] = {
 	TYPE_MEMBER_FIELD_DOC("getter", STRUCT_OBJECT, offsetof(Property, p_get),
 	                      "->?DCallable\n"
 	                      "The getter callback"),
@@ -360,7 +360,7 @@ property_get_module(Property *__restrict self) {
 
 
 
-PRIVATE struct type_getset property_getsets[] = {
+PRIVATE struct type_getset tpconst property_getsets[] = {
 	{ "canget",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canget, NULL, NULL,
 	  DOC("->?Dbool\n"

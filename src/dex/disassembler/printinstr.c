@@ -2120,7 +2120,7 @@ do_print_adjstack:
 	}	break;
 
 	case ASM16_OPERATOR: {
-		struct opinfo *info;
+		struct opinfo const *info;
 		imm = READ_imm16(iter);
 		goto do_print_operator;
 	case ASM_OPERATOR:
@@ -2137,7 +2137,7 @@ do_print_operator:
 	}	break;
 
 	case ASM16_OPERATOR_TUPLE: {
-		struct opinfo *info;
+		struct opinfo const *info;
 		imm = READ_imm16(iter);
 		goto do_print_operator_tuple;
 	case ASM_OPERATOR_TUPLE:

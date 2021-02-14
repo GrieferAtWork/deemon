@@ -91,7 +91,8 @@ DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg
 	COMPILER_END();
 }
 
-INTERN struct type_member DeeCompilerItem_Members[] = {
+INTDEF struct type_member tpconst DeeCompilerItem_Members[];
+INTERN struct type_member tpconst DeeCompilerItem_Members[] = {
 	TYPE_MEMBER_FIELD_DOC("compiler", STRUCT_OBJECT,
 	                      offsetof(CompilerItem, ci_compiler),
 	                      "->?Ert:Compiler"),

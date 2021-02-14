@@ -830,27 +830,27 @@ INSTR("pow", (
 /* CONSTRAINTS: `inc <p>' */
 /* CONSTRAINTS: `push inc <p>' */
 INSTR("inc", (
-	O0(ASM_INC,     FPREFIX)                   /* `PREFIX: inc' */
-	O0(ASM_INCPOST, FPREFIX | FPUSH)           /* `PREFIX: push inc' */
-	O1(ASM_INC,     FNORMAL,         (PREFIX)) /* `inc PREFIX' */
-	O1(ASM_INCPOST, FPUSH,           (PREFIX)) /* `push inc PREFIX' */
+	O0(ASM_INC,     FPREFIX)                      /* `PREFIX: inc' */
+	O0(ASM_INCPOST, FPREFIX | FPUSH)              /* `PREFIX: push inc' */
+	O1(ASM_INC,     FNORMAL,            (PREFIX)) /* `inc PREFIX' */
+	O1(ASM_INCPOST, FPUSH,              (PREFIX)) /* `push inc PREFIX' */
 ))
 
 /* CONSTRAINTS: `dec <p>' */
 /* CONSTRAINTS: `push dec <p>' */
 INSTR("dec", (
-	O0(ASM_DEC,    FPREFIX)                                  /* `PREFIX: dec' */
-	O0(ASM_DECPOST, FPREFIX | FPUSH)                            /* `PREFIX: push dec' */
-	O1(ASM_DEC,    FNORMAL, (PREFIX))                         /* `dec PREFIX' */
-	O1(ASM_DECPOST, FPUSH,  (PREFIX))                         /* `push dec PREFIX' */
+	O0(ASM_DEC,     FPREFIX)                      /* `PREFIX: dec' */
+	O0(ASM_DECPOST, FPREFIX | FPUSH)              /* `PREFIX: push dec' */
+	O1(ASM_DEC,     FNORMAL,            (PREFIX)) /* `dec PREFIX' */
+	O1(ASM_DECPOST, FPUSH,              (PREFIX)) /* `push dec PREFIX' */
 ))
 
 /* CONSTRAINTS: `nop' */
 /* CONSTRAINTS: `nop <p>' */
 INSTR("nop", (
-	O0(ASM_NOP, FNORMAL)                        /* `nop' */
-	O0(ASM_NOP, FPREFIX | FPREFIX_RO)           /* `PREFIX: nop' */
-	O1(ASM_NOP, FPREFIX_RO,           (PREFIX)) /* `nop PREFIX' */
+	O0(ASM_NOP, FNORMAL)                          /* `nop' */
+	O0(ASM_NOP, FPREFIX | FPREFIX_RO)             /* `PREFIX: nop' */
+	O1(ASM_NOP, FPREFIX_RO,             (PREFIX)) /* `nop PREFIX' */
 ))
 
 /* CONSTRAINTS: `nop16' */

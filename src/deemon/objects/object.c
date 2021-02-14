@@ -2175,7 +2175,7 @@ DEFINE_DEPRECATED_INPLACE_BINARY(ipow, DeeObject_InplacePow)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 
-PRIVATE struct type_method object_methods[] = {
+PRIVATE struct type_method tpconst object_methods[] = {
 	/* Utility function: Return the size of a given object (in bytes) */
 	{ "__sizeof__", &object_sizeof,
 	  DOC("->?Dint\n"
@@ -2275,7 +2275,7 @@ object_id_get(DeeObject *__restrict self) {
 }
 
 PRIVATE DEFINE_CLSPROPERTY(object_id_get_cobj, &DeeObject_Type, &object_id_get, NULL, NULL);
-PRIVATE struct type_member object_class_members[] = {
+PRIVATE struct type_member tpconst object_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("id", &object_id_get_cobj,
 	                      "Alias for ?#id to speed up expressions such as ${Object.id}"),
 	TYPE_MEMBER_END
@@ -2285,7 +2285,7 @@ PRIVATE struct type_member object_class_members[] = {
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
-PRIVATE struct type_getset object_getsets[] = {
+PRIVATE struct type_getset tpconst object_getsets[] = {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	{ DeeString_STR(&str_this),
 	  &DeeObject_NewRef, NULL, NULL,
@@ -2318,7 +2318,7 @@ PRIVATE struct type_getset object_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member object_members[] = {
+PRIVATE struct type_member tpconst object_members[] = {
 	TYPE_MEMBER_FIELD_DOC("type", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
 	                      "->?DType\nThe Type of @this object (same as ${type this})"),
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
@@ -3529,7 +3529,7 @@ err:
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-PRIVATE struct type_method type_methods[] = {
+PRIVATE struct type_method tpconst type_methods[] = {
 	{ "baseof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_baseof,
 	  DOC("(other:?DType)->?Dbool\n"
 	      "Returns ?t if @this Type is equal to, or a base of @other\n"
@@ -4002,7 +4002,7 @@ type_gcpriority(DeeObject *__restrict self) {
 	return DeeInt_NewUInt(DeeType_GCPriority(self));
 }
 
-PRIVATE struct type_member type_members[] = {
+PRIVATE struct type_member tpconst type_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base), "->?X2?DType?N"),
@@ -4024,7 +4024,7 @@ PRIVATE struct type_member type_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_getset type_getsets[] = {
+PRIVATE struct type_getset tpconst type_getsets[] = {
 	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Type implements the buffer interface\n"
@@ -4177,14 +4177,14 @@ PRIVATE struct type_cmp type_cmp_data = {
 	/* .tp_ne   = */ &type_ne
 };
 
-PRIVATE struct type_attr type_attr_data = {
+PRIVATE struct type_attr tpconst type_attr_data = {
 	/* .tp_getattr  = */ &type_getattr,
 	/* .tp_delattr  = */ &type_delattr,
 	/* .tp_setattr  = */ &type_setattr,
 	/* .tp_enumattr = */ &type_enumattr
 };
 
-PRIVATE struct type_gc type_gc_data = {
+PRIVATE struct type_gc tpconst type_gc_data = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&type_clear,
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&type_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_CLASS

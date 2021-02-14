@@ -1016,7 +1016,7 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_member tuple_iterator_members[] = {
+PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
 	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
 	TYPE_MEMBER_END
@@ -1512,7 +1512,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_method tuple_class_methods[] = {
+PRIVATE struct type_method tpconst tuple_class_methods[] = {
 	{ "unpack",
 	  &tuple_unpack,
 	  DOC("(num:?Dint,seq:?S?O)->?.\n"
@@ -1521,7 +1521,7 @@ PRIVATE struct type_method tuple_class_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member tuple_class_members[] = {
+PRIVATE struct type_member tpconst tuple_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeTupleIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1660,14 +1660,14 @@ err_empty:
 }
 
 
-PRIVATE struct type_method tuple_methods[] = {
+PRIVATE struct type_method tpconst tuple_methods[] = {
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tuple_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
 
-PRIVATE struct type_getset tuple_getsets[] = {
+PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first,
 	  NULL,

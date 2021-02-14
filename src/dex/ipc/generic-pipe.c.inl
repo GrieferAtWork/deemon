@@ -57,13 +57,13 @@ err:
 }
 
 
-PRIVATE struct type_member pipe_class_members[] = {
+PRIVATE struct type_member tpconst pipe_class_members[] = {
 	TYPE_MEMBER_CONST_DOC(S_Pipe_member_Reader_name, (DeeObject *)&DeePipeReader_Type, S_Pipe_member_Reader_doc),
 	TYPE_MEMBER_CONST_DOC(S_Pipe_member_Writer_name, (DeeObject *)&DeePipeWriter_Type, S_Pipe_member_Writer_doc),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_method pipe_class_methods[] = {
+PRIVATE struct type_method tpconst pipe_class_methods[] = {
 	{ S_Pipe_function_new_name, &pipe_class_new, S_Pipe_function_new_doc },
 	{ NULL }
 };

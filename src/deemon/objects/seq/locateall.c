@@ -215,7 +215,7 @@ locatoriter_seq_get(LocatorIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_getset locatoriter_getsets[] = {
+PRIVATE struct type_getset tpconst locatoriter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get,
 	  NULL,
@@ -224,7 +224,7 @@ PRIVATE struct type_getset locatoriter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member locatoriter_members[] = {
+PRIVATE struct type_member tpconst locatoriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(LocatorIterator, li_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__elem__", STRUCT_OBJECT, offsetof(LocatorIterator, li_elem)),
 	TYPE_MEMBER_FIELD_DOC("__pred__", STRUCT_OBJECT_OPT, offsetof(LocatorIterator, li_pred), "->?DCallable"),
@@ -379,14 +379,14 @@ err_r:
 	return NULL;
 }
 
-PRIVATE struct type_member locator_members[] = {
+PRIVATE struct type_member tpconst locator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Locator, l_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__elem__", STRUCT_OBJECT, offsetof(Locator, l_elem)),
 	TYPE_MEMBER_FIELD_DOC("__pred__", STRUCT_OBJECT_OPT, offsetof(Locator, l_pred), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member locator_class_members[] = {
+PRIVATE struct type_member tpconst locator_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqLocatorIterator_Type),
 	TYPE_MEMBER_END
 };

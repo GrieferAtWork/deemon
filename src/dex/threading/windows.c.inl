@@ -222,7 +222,7 @@ sema_fileno(Semaphore *self, size_t argc,
 }
 
 
-PRIVATE struct type_method sema_methods[] = {
+PRIVATE struct type_method tpconst sema_methods[] = {
 	{ "post",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_post,
 	  DOC("(count=!1)\n"
@@ -477,7 +477,7 @@ mutex_release(Mutex *self, size_t argc, DeeObject *const *argv) {
 	return_none;
 }
 
-PRIVATE struct type_method mutex_methods[] = {
+PRIVATE struct type_method tpconst mutex_methods[] = {
 	{ "acquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_acquire,
 	  DOC("()\n"
 	      "Wait for the mutex to becomes available and recursive acquires an exclusive lock") },

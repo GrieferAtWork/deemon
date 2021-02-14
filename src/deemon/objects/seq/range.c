@@ -337,7 +337,7 @@ ri_index_set(RangeIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE struct type_getset ri_getsets[] = {
+PRIVATE struct type_getset tpconst ri_getsets[] = {
 	{ "index",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_index_get,
 	  (int (DCALL *)(DeeObject *__restrict))&ri_index_del,
@@ -345,7 +345,7 @@ PRIVATE struct type_getset ri_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member ri_members[] = {
+PRIVATE struct type_member tpconst ri_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RangeIterator, ri_range), "->?Ert:SeqRange"),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
@@ -931,7 +931,7 @@ PRIVATE struct type_seq range_seq = {
 };
 
 
-PRIVATE struct type_member range_members[] = {
+PRIVATE struct type_member tpconst range_members[] = {
 	TYPE_MEMBER_FIELD("start", STRUCT_OBJECT, offsetof(Range, r_start)),
 	TYPE_MEMBER_FIELD("end", STRUCT_OBJECT, offsetof(Range, r_end)),
 	TYPE_MEMBER_FIELD("step", STRUCT_OBJECT, offsetof(Range, r_step)),
@@ -939,7 +939,7 @@ PRIVATE struct type_member range_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member range_class_members[] = {
+PRIVATE struct type_member tpconst range_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqRangeIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1176,7 +1176,7 @@ iri_next(IntRangeIterator *__restrict self) {
 	return DeeInt_NewSSize(result_index);
 }
 
-PRIVATE struct type_member iri_members[] = {
+PRIVATE struct type_member tpconst iri_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(IntRangeIterator, iri_range), "->?Ert:SeqIntRange"),
 	/* We allow write-access to these members because doing so doesn't
 	 * actually harm anything, although fiddling with this stuff may
@@ -1463,14 +1463,14 @@ PRIVATE struct type_seq intrange_seq = {
 };
 
 
-PRIVATE struct type_member intrange_members[] = {
+PRIVATE struct type_member tpconst intrange_members[] = {
 	TYPE_MEMBER_FIELD("start", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_start)),
 	TYPE_MEMBER_FIELD("end", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_end)),
 	TYPE_MEMBER_FIELD("step", STRUCT_ATOMIC | STRUCT_SSIZE_T, offsetof(IntRange, ir_step)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member intrange_class_members[] = {
+PRIVATE struct type_member tpconst intrange_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqIntRangeIterator_Type),
 	TYPE_MEMBER_END
 };

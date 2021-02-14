@@ -903,7 +903,7 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_getset diriter_getsets[] = {
+PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_getseq, NULL, NULL,
 	  DOC("->?GDIR") },
 	{ "pathstr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_getpathstr, NULL, NULL,
@@ -928,7 +928,7 @@ PRIVATE struct type_getset diriter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member diriter_members[] = {
+PRIVATE struct type_member tpconst diriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("path", STRUCT_OBJECT, offsetof(DeeDirIteratorObject, di_path),
 	                      "->?X3?Dstring?DFile?Dint"),
 	TYPE_MEMBER_END
@@ -1076,7 +1076,7 @@ PRIVATE struct type_seq dir_seq = {
 };
 
 
-PRIVATE struct type_member dir_class_members[] = {
+PRIVATE struct type_member tpconst dir_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeDirIterator_Type),
 	TYPE_MEMBER_END
 };

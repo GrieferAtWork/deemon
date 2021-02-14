@@ -1009,7 +1009,7 @@ deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 }
 
 
-PRIVATE struct type_gc deq_gc = {
+PRIVATE struct type_gc tpconst deq_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&deq_clear,
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&deq_pclear
 };
@@ -1425,7 +1425,7 @@ err:
 }
 
 
-PRIVATE struct type_method deq_methods[] = {
+PRIVATE struct type_method tpconst deq_methods[] = {
 	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_insert,
 	  DOC("(index:?Dint,ob)\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
@@ -1503,7 +1503,7 @@ PRIVATE struct type_method deq_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member deq_class_members[] = {
+PRIVATE struct type_member tpconst deq_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DequeIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1793,7 +1793,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_getset deqiter_getsets[] = {
+PRIVATE struct type_getset tpconst deqiter_getsets[] = {
 	{ "index",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deqiter_getindex_ob,
 	  NULL,
@@ -1805,7 +1805,7 @@ PRIVATE struct type_getset deqiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member deqiter_members[] = {
+PRIVATE struct type_member tpconst deqiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DequeIteratorObject, di_deq), "->?GDeque"),
 	TYPE_MEMBER_END
 };

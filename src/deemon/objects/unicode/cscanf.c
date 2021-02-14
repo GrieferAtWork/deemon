@@ -555,7 +555,7 @@ PRIVATE struct type_cmp ssi_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ge
 };
 
-PRIVATE struct type_member ssi_members[] = {
+PRIVATE struct type_member tpconst ssi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
 	                      offsetof(StringScanIterator, si_scanner),
 	                      "->?Ert:StringScan"),
@@ -684,13 +684,13 @@ PRIVATE struct type_seq ss_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ss_iter
 };
 
-PRIVATE struct type_member ss_members[] = {
+PRIVATE struct type_member tpconst ss_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringScanner, ss_data), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_FIELD_DOC("__format__", STRUCT_OBJECT, offsetof(StringScanner, ss_format), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ss_class_members[] = {
+PRIVATE struct type_member tpconst ss_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringScanIterator_Type),
 	TYPE_MEMBER_END
 };

@@ -643,7 +643,7 @@ ddi_visit(DeeDDIObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->d_strtab);
 }
 
-PRIVATE struct type_member ddi_members[] = {
+PRIVATE struct type_member tpconst ddi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__strtab__", STRUCT_OBJECT, offsetof(DeeDDIObject, d_strtab), "->?Dstring"),
 	TYPE_MEMBER_END
 };

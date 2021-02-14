@@ -366,7 +366,7 @@ err:
 }
 
 
-PRIVATE struct type_member function_class_members[] = {
+PRIVATE struct type_member tpconst function_class_members[] = {
 	TYPE_MEMBER_CONST("YieldFunction", &DeeYieldFunction_Type),
 	TYPE_MEMBER_END
 };
@@ -461,7 +461,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operatorname(Function *__restrict self) {
 	struct function_info info;
-	struct opinfo *op;
+	struct opinfo const *op;
 	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -494,7 +494,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset function_getsets[] = {
+PRIVATE struct type_getset tpconst function_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
@@ -549,7 +549,7 @@ PRIVATE struct type_getset function_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member function_members[] = {
+PRIVATE struct type_member tpconst function_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT, offsetof(Function, fo_code), "->?Ert:Code"),
 	TYPE_MEMBER_END
 };
@@ -935,7 +935,7 @@ PRIVATE struct type_seq yf_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter_self
 };
 
-PRIVATE struct type_member yf_class_members[] = {
+PRIVATE struct type_member tpconst yf_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeYieldFunctionIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1004,7 +1004,7 @@ PRIVATE struct type_cmp yf_cmp = {
 };
 
 
-PRIVATE struct type_member yf_members[] = {
+PRIVATE struct type_member tpconst yf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFunction, yf_func), "->?Dfunction"),
 	TYPE_MEMBER_FIELD_DOC("__args__", STRUCT_OBJECT, offsetof(YFunction, yf_args), "->?S?O"),
 	TYPE_MEMBER_FIELD("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this)),
@@ -1061,7 +1061,7 @@ yf_get_kwds(YFunction *__restrict self) {
 	return function_get_kwds(self->yf_func);
 }
 
-PRIVATE struct type_getset yf_getsets[] = {
+PRIVATE struct type_getset tpconst yf_getsets[] = {
 	{ "__code__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_code, NULL, NULL,
 	  DOC("->?Ert:Code\n"
@@ -1828,7 +1828,7 @@ err:
 }
 
 
-PRIVATE struct type_getset yfi_getsets[] = {
+PRIVATE struct type_getset tpconst yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL,
@@ -1901,7 +1901,7 @@ PRIVATE struct type_getset yfi_getsets[] = {
 };
 
 #ifdef CONFIG_NO_THREADS
-PRIVATE struct type_member yfi_members[] = {
+PRIVATE struct type_member tpconst yfi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
 	                      "Alias for ?#__yfunc__"),
@@ -1913,7 +1913,7 @@ PRIVATE struct type_member yfi_members[] = {
 };
 #endif /* CONFIG_NO_THREADS */
 
-PRIVATE struct type_gc yfi_gc = {
+PRIVATE struct type_gc tpconst yfi_gc = {
 	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&yfi_clear
 };
 

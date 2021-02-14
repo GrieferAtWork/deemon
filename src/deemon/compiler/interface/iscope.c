@@ -162,7 +162,7 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 }
 
 
-PRIVATE struct type_getset scope_getsets[] = {
+PRIVATE struct type_getset tpconst scope_getsets[] = {
 	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getbase, NULL, NULL,
 	  DOC("->?ABaseScope?Ert:Compiler\n"
 	      "Returns the nearest base-scope that @this scope is apart of") },
@@ -306,7 +306,7 @@ PRIVATE struct type_seq scope_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member scope_class_members[] = {
+PRIVATE struct type_member tpconst scope_class_members[] = {
 	TYPE_MEMBER_CONST("Symbol", &DeeCompilerSymbol_Type),
 	TYPE_MEMBER_END
 };
@@ -372,7 +372,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_method scope_methods[] = {
+PRIVATE struct type_method tpconst scope_methods[] = {
 	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newanon,
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"

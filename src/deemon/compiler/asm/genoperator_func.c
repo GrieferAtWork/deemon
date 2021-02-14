@@ -68,7 +68,7 @@ INTERN WUNUSED NONNULL((2)) int DCALL
 ast_gen_operator_func(struct ast *binding,
                       struct ast *ddi_ast,
                       uint16_t operator_name) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	int temp;
 	char const *symbol_name = NULL;
 	DREF DeeModuleObject *operators_module;

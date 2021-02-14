@@ -137,7 +137,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset aiter_getsets[] = {
+PRIVATE struct type_getset tpconst aiter_getsets[] = {
 	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&aiter_getseq },
 	{ NULL }
 };
@@ -623,7 +623,7 @@ PRIVATE struct stype_seq array_seq = {
 };
 
 
-PRIVATE struct type_member array_class_members[] = {
+PRIVATE struct type_member tpconst array_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ArrayIterator_Type),
 	TYPE_MEMBER_END
 };

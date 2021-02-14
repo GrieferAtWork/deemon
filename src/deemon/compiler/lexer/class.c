@@ -354,7 +354,7 @@ class_maker_bindoperator(struct class_maker *__restrict self,
 			continue;
 		if (result->co_addr != addr) {
 			/* Warn about a duplicate operator */
-			struct opinfo *info = Dee_OperatorInfo(NULL, name);
+			struct opinfo const *info = Dee_OperatorInfo(NULL, name);
 			if (WARNAT(loc, W_OPERATOR_WAS_ALREADY_DEFINED,
 			           info ? info->oi_sname : "?"))
 				goto err;
@@ -1740,7 +1740,7 @@ err_yield_function_temp:
 				Dee_Decref(operator_ast->a_scope);
 				operator_ast->a_scope = current_scope->s_prev;
 			} else {
-				struct opinfo *info;
+				struct opinfo const *info;
 				operator_name_kwd = NULL;
 				if ((info = Dee_OperatorInfo(NULL, operator_name)) != NULL) {
 					char opname[4 + COMPILER_LENOF(info->oi_sname)];
@@ -1823,7 +1823,7 @@ set_operator_ast:
 
 			/* Warn when attempting to declare an operator as private. */
 			if (member_flags & CLASS_ATTRIBUTE_FPRIVATE) {
-				struct opinfo *info = Dee_OperatorInfo(NULL, operator_name);
+				struct opinfo const *info = Dee_OperatorInfo(NULL, operator_name);
 				if (WARN(W_PRIVATE_OPERATOR_IS_PUBLIC, info ? info->oi_sname : "?"))
 					goto err;
 			}

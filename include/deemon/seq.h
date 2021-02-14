@@ -456,7 +456,7 @@ struct Dee_type_nsi {
 /* Lookup the closest NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
  * expose NSI functionality. */
-DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi *DCALL
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi const *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp);
 
 /* Create new range sequence objects. */

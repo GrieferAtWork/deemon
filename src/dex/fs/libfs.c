@@ -267,7 +267,7 @@ PRIVATE struct type_seq env_seq = {
 	/* .tp_nsi       = */ &env_nsi
 };
 
-PRIVATE struct type_member env_members[] = {
+PRIVATE struct type_member tpconst env_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeEnvIterator_Type),
 	TYPE_MEMBER_END
 };

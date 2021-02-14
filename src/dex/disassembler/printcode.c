@@ -550,7 +550,7 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 	{
 		bool has_operators = false;
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
-			struct opinfo *info;
+			struct opinfo const *info;
 			if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
 				continue;
 			if (!has_operators) {

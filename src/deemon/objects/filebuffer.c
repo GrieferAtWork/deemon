@@ -1583,7 +1583,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method buffer_methods[] = {
+PRIVATE struct type_method tpconst buffer_methods[] = {
 	{ DeeString_STR(&str_size),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_size,
 	  DOC("->?Dint\n"
@@ -1656,7 +1656,7 @@ err_closed_unlock:
 }
 
 
-PRIVATE struct type_getset buffer_getsets[] = {
+PRIVATE struct type_getset tpconst buffer_getsets[] = {
 #ifdef DeeSysFD_GETSET
 	{ DeeString_STR(&str_getsysfd),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&buffer_getsysfd, NULL, NULL,
@@ -1704,7 +1704,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method buffer_class_methods[] = {
+PRIVATE struct type_method tpconst buffer_class_methods[] = {
 	{ "sync", &buffer_class_sync,
 	  DOC("()\n"
 	      "Flush all buffers that are connected to TTY file descriptors\n"

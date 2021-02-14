@@ -282,7 +282,7 @@ bsci_next(BytesSplitIterator *__restrict self) {
 	                        self->bsi_bytes->b_flags);
 }
 
-PRIVATE struct type_member bsi_members[] = {
+PRIVATE struct type_member tpconst bsi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesSplit"),
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
@@ -291,7 +291,7 @@ PRIVATE struct type_member bsi_members[] = {
 #ifdef CONFIG_NO_DOC
 #define bcsi_members bsi_members
 #else /* CONFIG_NO_DOC */
-PRIVATE struct type_member bcsi_members[] = {
+PRIVATE struct type_member tpconst bcsi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
@@ -564,25 +564,25 @@ bs_getsep(BytesSplit *__restrict self) {
 	                        self->bs_sep_ptr, self->bs_sep_len, Dee_BUFFER_FREADONLY);
 }
 
-PRIVATE struct type_getset bs_getsets[] = {
+PRIVATE struct type_getset tpconst bs_getsets[] = {
 	{ "__sep__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_getsep, NULL, NULL,
 	  DOC("->?DBytes") },
 	{ NULL }
 };
 
-PRIVATE struct type_member bs_members[] = {
+PRIVATE struct type_member tpconst bs_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplit, bs_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__sep_owner__", STRUCT_OBJECT, offsetof(BytesSplit, bs_sep_owner)),
 	TYPE_MEMBER_FIELD("__sep_length__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BytesSplit, bs_sep_len)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member bs_class_members[] = {
+PRIVATE struct type_member tpconst bs_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BytesSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member bcs_class_members[] = {
+PRIVATE struct type_member tpconst bcs_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BytesCaseSplitIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -950,12 +950,12 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 	                           self->blsi_keepends);
 }
 
-PRIVATE struct type_getset blsi_getsets[] = {
+PRIVATE struct type_getset tpconst blsi_getsets[] = {
 	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blsi_getseq },
 	{ NULL }
 };
 
-PRIVATE struct type_member blsi_members[] = {
+PRIVATE struct type_member tpconst blsi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplitIterator, blsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplitIterator, blsi_keepends)),
 	TYPE_MEMBER_END
@@ -1090,13 +1090,13 @@ PRIVATE struct type_seq bls_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member bls_members[] = {
+PRIVATE struct type_member tpconst bls_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplit, bls_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplit, bls_keepends)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member bls_class_members[] = {
+PRIVATE struct type_member tpconst bls_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BytesLineSplitIterator_Type),
 	TYPE_MEMBER_END
 };

@@ -306,7 +306,7 @@ INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
 /* Special value which may be returned by the EVAL functions to indicate
  * that the parsed expression cannot losslessly be represented as an object.
  * When this value is returned, everything required to calculate the underlying
- * value is stored within the the associated length `->jl_lvalue', and
+ * value is stored within the the associated lexer `->jl_lvalue', and
  * `JITLexer_GetLValue()' can be called to discard extended information and
  * acquire the actual expression value. */
 #define JIT_LVALUE    ITER_DONE

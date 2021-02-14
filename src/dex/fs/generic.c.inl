@@ -67,7 +67,7 @@ enviterator_next_value(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-PRIVATE struct type_member env_members[] = {
+PRIVATE struct type_member tpconst env_members[] = {
 	TYPE_MEMBER_CONST("seq", &DeeEnv_Singleton),
 	TYPE_MEMBER_END
 };
@@ -175,7 +175,7 @@ stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethostname();
 }
 
-PRIVATE struct type_getset stat_getsets[] = {
+PRIVATE struct type_getset tpconst stat_getsets[] = {
 	{ S_Stat_getset_st_dev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
 	{ S_Stat_getset_st_ino_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
 	{ S_Stat_getset_st_mode_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
@@ -219,7 +219,7 @@ DEFINE_STATIC_QUERY(stat_class_isexe, S_Stat_class_function_isexe_name, return_f
 #undef DEFINE_STATIC_QUERY
 
 
-PRIVATE struct type_method stat_class_methods[] = {
+PRIVATE struct type_method tpconst stat_class_methods[] = {
 	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
 	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
 	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },

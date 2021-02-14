@@ -206,7 +206,7 @@ stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 }
 
 
-PRIVATE struct type_method stype_methods[] = {
+PRIVATE struct type_method tpconst stype_methods[] = {
 	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_func,
 	  DOC("(types!:?DType)->?Gfunction_type\n"
 	      "(calling_convention:?Dstring,types!:?DType)->?Gfunction_type\n"
@@ -243,7 +243,7 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE struct type_getset stype_getsets[] = {
+PRIVATE struct type_getset tpconst stype_getsets[] = {
 	{ "ptr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
 	  DOC("->?GPointerType\nReturns the pointer type associated with @this ?GStructuredType") },
 	{ "lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
@@ -257,7 +257,7 @@ PRIVATE struct type_getset stype_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member stype_members[] = {
+PRIVATE struct type_member tpconst stype_members[] = {
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_False, DOC_GET(ispointer_doc)),
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_False, DOC_GET(islvalue_doc)),
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_False, DOC_GET(isarray_doc)),
@@ -387,7 +387,7 @@ ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit((DeeObject *)self->pt_orig);
 }
 
-PRIVATE struct type_member ptype_members[] = {
+PRIVATE struct type_member tpconst ptype_members[] = {
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_True, DOC_GET(ispointer_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeePointerTypeObject, pt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
@@ -450,13 +450,13 @@ ltype_sizeof(DeeLValueTypeObject *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE struct type_getset ltype_getsets[] = {
+PRIVATE struct type_getset tpconst ltype_getsets[] = {
 	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_sizeof, NULL, NULL,
 	  DOC("->?Dint\nReturns the size of the base of @this ?GLValueType in bytes") },
 	{ NULL }
 };
 
-PRIVATE struct type_member ltype_members[] = {
+PRIVATE struct type_member tpconst ltype_members[] = {
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_True, DOC_GET(islvalue_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeLValueTypeObject, lt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
@@ -696,7 +696,7 @@ DeeSType_Get(DeeObject *__restrict self) {
 
 INTERN ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	info = Dee_OperatorInfo(Dee_TYPE((DeeObject *)tp), operator_name);
 	ASSERT_OBJECT((DeeTypeObject *)tp);
 	ASSERT(DeeType_Check((DeeObject *)tp));
@@ -931,7 +931,7 @@ PRIVATE struct type_seq struct_seq = {
 	/* .tp_range_set = */ &struct_setrange
 };
 
-PRIVATE struct type_attr struct_attr = {
+PRIVATE struct type_attr tpconst struct_attr = {
 	/* .tp_getattr  = */ &struct_getattr,
 	/* .tp_delattr  = */ &struct_delattr,
 	/* .tp_setattr  = */ &struct_setattr,
@@ -986,7 +986,7 @@ err:
 
 
 
-PRIVATE struct type_getset struct_getsets[] = {
+PRIVATE struct type_getset tpconst struct_getsets[] = {
 	{ "sizeof", &struct_sizeof, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Returns the size of @this ?GStructured object") },
@@ -1009,7 +1009,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method struct_methods[] = {
+PRIVATE struct type_method tpconst struct_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
 	{ "__ref__", &struct_ref_func,
 	  DOC("->pointer\n"
@@ -1709,7 +1709,7 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	Dee_Decref((DeeObject *)orig);
 }
 
-PRIVATE struct type_member atype_members[] = {
+PRIVATE struct type_member tpconst atype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig), "->?GStructuredType"),
 	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeArrayTypeObject, at_count)),
@@ -1819,14 +1819,14 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 }
 
-PRIVATE struct type_getset ftype_getsets[] = {
+PRIVATE struct type_getset tpconst ftype_getsets[] = {
 	{ "args", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_args, NULL, NULL,
 	  DOC("->?S?Gstructured_type\n"
 	      "Returns an immutable sequence describing the argument types used by this function") },
 	{ NULL }
 };
 
-PRIVATE struct type_member ftype_members[] = {
+PRIVATE struct type_member tpconst ftype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
 #ifndef CONFIG_NO_CFUNCTION
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig), "->?GStructuredType"),

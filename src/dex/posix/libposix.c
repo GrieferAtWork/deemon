@@ -478,7 +478,7 @@ PRIVATE struct type_seq pst_seq = {
 	/* .tp_contains  = */ &pst_contains
 };
 
-PRIVATE struct type_getset pst_class_getsets[] = {
+PRIVATE struct type_getset tpconst pst_class_getsets[] = {
 	{ "Iterator", &pst_Iterator_get, NULL, NULL },
 	{ NULL }
 };

@@ -208,7 +208,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
 INTDEF struct type_cmp sveciter_cmp;
 #define smapiter_cmp sveciter_cmp
 
-PRIVATE struct type_member smapiter_members[] = {
+PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SharedMapIterator, sm_seq), "->?Ert:SharedMap"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedMapIterator, sm_index)),
 	TYPE_MEMBER_END
@@ -669,14 +669,14 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_nsi       = */ &smap_nsi
 };
 
-PRIVATE struct type_member smap_class_members[] = {
+PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SharedMapIterator_Type),
 	TYPE_MEMBER_END
 };
 
 DOC_REF(map_get_doc);
 
-PRIVATE struct type_method smap_methods[] = {
+PRIVATE struct type_method tpconst smap_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&smap_get,
 	  DOC_GET(map_get_doc) },

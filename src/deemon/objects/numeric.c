@@ -319,7 +319,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset numeric_getsets[] = {
+PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	{ DeeString_STR(&str_int),
 	  &DeeObject_Int, NULL, NULL,
 	  DOC("->?Dint\n"

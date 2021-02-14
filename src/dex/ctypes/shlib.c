@@ -292,7 +292,7 @@ PRIVATE struct type_seq shlib_seq = {
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
 };
 
-PRIVATE struct type_attr shlib_attr = {
+PRIVATE struct type_attr tpconst shlib_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&shlib_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))NULL,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))NULL,
@@ -325,7 +325,7 @@ err:
 
 
 
-PRIVATE struct type_method shlib_methods[] = {
+PRIVATE struct type_method tpconst shlib_methods[] = {
 	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&shlib_base,
 	  DOC("->?Aptr?Gvoid\n"
 	      "Returns the base address of the shared library") },

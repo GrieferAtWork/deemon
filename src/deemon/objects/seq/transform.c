@@ -88,14 +88,14 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset transiter_getsets[] = {
+PRIVATE struct type_getset tpconst transiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqTransformation") },
 	{ NULL }
 };
 
-PRIVATE struct type_member transiter_members[] = {
+PRIVATE struct type_member tpconst transiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(TransformationIterator, ti_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(TransformationIterator, ti_func), "->?DCallable"),
 	TYPE_MEMBER_END
@@ -278,13 +278,13 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member trans_members[] = {
+PRIVATE struct type_member tpconst trans_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Transformation, t_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(Transformation, t_fun), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member trans_class_members[] = {
+PRIVATE struct type_member tpconst trans_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqTransformationIterator_Type),
 	TYPE_MEMBER_END
 };

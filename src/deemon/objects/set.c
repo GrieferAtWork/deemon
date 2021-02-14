@@ -131,12 +131,12 @@ invset_iterator_get(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE struct type_getset invset_class_getsets[] = {
+PRIVATE struct type_getset tpconst invset_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterator_get, NULL, NULL },
 	{ NULL }
 };
 
-PRIVATE struct type_member invset_members[] = {
+PRIVATE struct type_member tpconst invset_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(DeeInverseSetObject, is_set), "->?DSet"),
 	TYPE_MEMBER_END
 };
@@ -540,7 +540,8 @@ PRIVATE struct type_math set_math = {
 	/* .tp_inplace_pow = */ NULL,
 };
 
-INTERN struct type_method set_methods[] = {
+INTDEF struct type_method tpconst set_methods[];
+INTERN struct type_method tpconst set_methods[] = {
 	{ "difference", &set_difference,
 	  DOC("(to:?.)->?.\n"
 	      "Same as ${this.operator - (to)}") },
@@ -566,7 +567,8 @@ INTERN struct type_method set_methods[] = {
 	{ NULL }
 };
 
-INTERN struct type_getset set_getsets[] = {
+INTDEF struct type_getset tpconst set_getsets[];
+INTERN struct type_getset tpconst set_getsets[] = {
 	{ "frozen", &DeeRoSet_FromSequence, NULL, NULL,
 	  DOC("->?#Frozen\n"
 	      "Returns a copy of @this Set, with all of its current elements frozen in place, "
@@ -627,7 +629,7 @@ err:
 }
 
 
-PRIVATE struct type_getset set_class_getsets[] = {
+PRIVATE struct type_getset tpconst set_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get,
 	  NULL,

@@ -293,7 +293,7 @@ DEFINE_INT15(float_rounds, __FLT_ROUNDS__);
 DEFINE_INT15(float_rounds, 1);
 #endif
 
-PRIVATE struct type_member float_class_members[] = {
+PRIVATE struct type_member tpconst float_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("min", &float_min, "The lowest possible floating point value"),
 	TYPE_MEMBER_CONST_DOC("max", &float_max, "The greatest possible floating point value"),
 	TYPE_MEMBER_CONST_DOC("min_exp", &float_min_exp, "Lowest binary exponent ($e such that ${radix ** (e - 1)} is a normalized :float)"),

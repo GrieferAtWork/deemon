@@ -340,7 +340,7 @@ INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(uint16_t operator_name,
                     size_t argc, DeeObject *const *argv) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	struct unicode_printer printer;
 	size_t i;
 	info = Dee_OperatorInfo(argc ? Dee_TYPE(argv[0]) : NULL,

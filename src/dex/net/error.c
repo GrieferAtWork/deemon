@@ -80,7 +80,7 @@ DECL_BEGIN
 		/* .tp_class_members = */ children                     \
 	}
 
-PRIVATE struct type_member neterror_class_members[] = {
+PRIVATE struct type_member tpconst neterror_class_members[] = {
 	TYPE_MEMBER_CONST("NoSupport", &DeeError_NoSupport),
 	TYPE_MEMBER_CONST("NotBound", &DeeError_NotBound),
 	TYPE_MEMBER_CONST("NotConnected", &DeeError_NotConnected),
@@ -95,22 +95,22 @@ PRIVATE struct type_member neterror_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member hostnotfound_class_members[] = {
+PRIVATE struct type_member tpconst hostnotfound_class_members[] = {
 	TYPE_MEMBER_CONST("NoHostAddress", &DeeError_NoHostAddress),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member netnotbound_class_members[] = {
+PRIVATE struct type_member tpconst netnotbound_class_members[] = {
 	TYPE_MEMBER_CONST("NotListening", &DeeError_NotListening),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member netunreachable_class_members[] = {
+PRIVATE struct type_member tpconst netunreachable_class_members[] = {
 	TYPE_MEMBER_CONST("HostUnreachable", &DeeError_HostUnreachable),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member connectreset_class_members[] = {
+PRIVATE struct type_member tpconst connectreset_class_members[] = {
 	TYPE_MEMBER_CONST("TimedOut", &DeeError_TimedOut),
 	TYPE_MEMBER_END
 };

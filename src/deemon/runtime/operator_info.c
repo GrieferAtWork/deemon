@@ -49,7 +49,8 @@ DECL_BEGIN
 typedef DeeTypeObject Type;
 
 
-INTERN struct opinfo basic_opinfo[OPERATOR_USERCOUNT] = {
+INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
+INTERN struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_CONSTRUCTOR]  = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_any_ctor),  "this",         "constructor", "tp_any_ctor" },
 	/* [OPERATOR_COPY]         = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
 	/* [OPERATOR_DEEPCOPY]     = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
@@ -114,14 +115,15 @@ INTERN struct opinfo basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_LEAVE]        = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_WITH, 0, offsetof(struct type_with, tp_leave),          "leave",        "leave",       "tp_leave" }
 };
 
-PRIVATE struct opinfo private_opinfo[(OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1] = {
+PRIVATE struct opinfo const private_opinfo[(OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1] = {
 	/* [OPERATOR_VISIT  - OPERATOR_PRIVMIN] = */ { OPTYPE_VISIT,                OPCLASS_TYPE,   1, offsetof(Type, tp_visit),               "", "", "tp_visit" },
 	/* [OPERATOR_CLEAR  - OPERATOR_PRIVMIN] = */ { OPTYPE_RVOID | OPTYPE_UNARY, OPCLASS_GC,     1, offsetof(struct type_gc, tp_clear),     "", "", "tp_clear" },
 	/* [OPERATOR_PCLEAR - OPERATOR_PRIVMIN] = */ { OPTYPE_PCLEAR,               OPCLASS_GC,     1, offsetof(struct type_gc, tp_pclear),    "", "", "tp_pclear" },
 	/* [OPERATOR_GETBUF - OPERATOR_PRIVMIN] = */ { OPTYPE_GETBUF,               OPCLASS_BUFFER, 1, offsetof(struct type_buffer, tp_getbuf),"", "", "tp_getbuf" }
 };
 
-INTERN struct opinfo file_opinfo[FILE_OPERATOR_COUNT] = {
+INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
+INTERN struct opinfo const file_opinfo[FILE_OPERATOR_COUNT] = {
 	/* [FILE_OPERATOR_READ   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_read),   "read",   "read",   "ft_read",   },
 	/* [FILE_OPERATOR_WRITE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_write),  "write",  "write",  "ft_write",  },
 	/* [FILE_OPERATOR_SEEK   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_SEEK,                OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_seek),   "seek",   "seek",   "ft_seek",   },
@@ -563,7 +565,7 @@ done_extended:
 }
 
 
-PUBLIC WUNUSED struct opinfo *DCALL
+PUBLIC WUNUSED struct opinfo const *DCALL
 Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id) {
 	ASSERT_OBJECT_TYPE_OPT(typetype, &DeeType_Type);
 	if (id < OPERATOR_USERCOUNT)
@@ -1038,7 +1040,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 	{
 		/* NOTE: We must query operator information on the
 		 *       type-type of `self'. Not the regular type! */
-		struct opinfo *info;
+		struct opinfo const *info;
 		DeeTypeObject *typetype;
 		typetype = Dee_TYPE(self);
 		/* Special handling for unwrapping super objects. */
@@ -1288,7 +1290,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 PRIVATE WUNUSED NONNULL((1, 2)) void *DCALL
 DeeType_GetOpPointer(DeeTypeObject *__restrict self,
-                     struct opinfo *__restrict info) {
+                     struct opinfo const *__restrict info) {
 	switch (info->oi_class) {
 
 	case OPCLASS_TYPE:
@@ -1338,7 +1340,7 @@ DeeType_GetOpPointer(DeeTypeObject *__restrict self,
 /* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
-	struct opinfo *info;
+	struct opinfo const *info;
 	if (name == OPERATOR_CONSTRUCTOR) {
 		/* Special case: the constructor operator (which cannot be inherited). */
 		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
@@ -1360,7 +1362,7 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 	void *my_ptr;
-	struct opinfo *info;
+	struct opinfo const *info;
 	if (name == OPERATOR_CONSTRUCTOR) {
 		/* Special case: the constructor operator (which cannot be inherited). */
 		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
@@ -1463,7 +1465,7 @@ PRIVATE struct type_seq to_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains
 };
 
-PRIVATE struct type_member to_class_members[] = {
+PRIVATE struct type_member tpconst to_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &TypeOperatorsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1515,7 +1517,7 @@ PRIVATE struct type_cmp toi_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 toi_next(TypeOperatorsIterator *__restrict self) {
 	DeeTypeObject *tp = self->to_type;
-	struct opinfo *info;
+	struct opinfo const *info;
 	uint16_t result;
 #ifndef CONFIG_NO_THREADS
 	uint16_t start;

@@ -228,7 +228,7 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 	return DeeModule_ViewExports(self->mei_module);
 }
 
-PRIVATE struct type_getset mei_getsets[] = {
+PRIVATE struct type_getset tpconst mei_getsets[] = {
 	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mei_getseq },
 	{ NULL }
 };
@@ -510,19 +510,19 @@ PRIVATE struct type_seq me_seq = {
 
 DOC_REF(map_get_doc);
 
-PRIVATE struct type_method me_methods[] = {
+PRIVATE struct type_method tpconst me_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&me_get_f,
 	  DOC_GET(map_get_doc) },
 	{ NULL }
 };
 
-PRIVATE struct type_member me_members[] = {
+PRIVATE struct type_member tpconst me_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member me_class_members[] = {
+PRIVATE struct type_member tpconst me_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ModuleExportsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -691,7 +691,7 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 	return DeeModule_ViewGlobals(self->mgi_module);
 }
 
-PRIVATE struct type_getset mgi_getsets[] = {
+PRIVATE struct type_getset tpconst mgi_getsets[] = {
 	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_getseq },
 	{ NULL }
 };
@@ -852,7 +852,7 @@ PRIVATE struct type_seq mg_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mg_set
 };
 
-PRIVATE struct type_member mg_class_members[] = {
+PRIVATE struct type_member tpconst mg_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ModuleGlobalsIterator_Type),
 	TYPE_MEMBER_END
 };

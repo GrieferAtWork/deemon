@@ -344,11 +344,11 @@ err:
 	return ast_operator2(name, flags | AST_OPERATOR_FVARARGS, self, args);
 }
 
-INTDEF struct opinfo basic_opinfo[OPERATOR_USERCOUNT];
-INTDEF struct opinfo file_opinfo[FILE_OPERATOR_COUNT];
+INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
+INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
 
-INTERN struct opinfo *DCALL
-find_opinfo(struct opinfo *__restrict v, unsigned int c,
+INTERN struct opinfo const *DCALL
+find_opinfo(struct opinfo const *__restrict v, unsigned int c,
             char const *__restrict str, size_t len) {
 	unsigned int i;
 	for (i = 0; i < c; ++i) {
@@ -753,7 +753,7 @@ parse_string:
 		 * NOTE: This is also where a lot of backwards-compatibility lies, as
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
-			struct opinfo *info;
+			struct opinfo const *info;
 			info = find_opinfo(basic_opinfo, COMPILER_LENOF(basic_opinfo), name_begin, name_size);
 			if (info) {
 				result = (uint16_t)(info - basic_opinfo);

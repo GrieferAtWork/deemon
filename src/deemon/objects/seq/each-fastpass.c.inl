@@ -344,7 +344,7 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_nsi       = */ &F(nsi)
 };
 
-PRIVATE struct type_member F(members)[] = {
+PRIVATE struct type_member tpconst F(members)[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, se_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__attr__", STRUCT_OBJECT, offsetof(STRUCT_TYPE, sg_attr), "->?Dstring"),
 #ifdef DEFINE_CALLATTRKW
@@ -353,7 +353,7 @@ PRIVATE struct type_member F(members)[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member F(class_members)[] = {
+PRIVATE struct type_member tpconst F(class_members)[] = {
 	TYPE_MEMBER_CONST("Iterator", &ITERATOR_TYPE_OBJECT),
 	TYPE_MEMBER_END
 };
@@ -723,7 +723,7 @@ err:
 }
 
 #ifndef CONFIG_NO_DOC
-PRIVATE struct type_member Fi(members)[] = {
+PRIVATE struct type_member tpconst Fi(members)[] = {
 #ifdef DEFINE_GETATTR
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachGetAttr"),
 #elif defined(DEFINE_CALLATTR)

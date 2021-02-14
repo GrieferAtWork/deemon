@@ -322,7 +322,7 @@ PRIVATE struct type_cmp dictiterator_cmp = {
 };
 
 
-PRIVATE struct type_member dict_iterator_members[] = {
+PRIVATE struct type_member tpconst dict_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
@@ -400,7 +400,7 @@ typedef struct {
 	DREF DictProxy *dpi_proxy; /* [1..1][const] The proxy that spawned this iterator. */
 } DictProxyIterator;
 
-PRIVATE struct type_member proxy_iterator_members[] = {
+PRIVATE struct type_member tpconst proxy_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictProxyIterator, dpi_proxy), "->?Ert:DictProxy"),
 	TYPE_MEMBER_END
 };
@@ -716,27 +716,27 @@ PRIVATE struct type_seq proxy_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member proxy_members[] = {
+PRIVATE struct type_member tpconst proxy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__dict__", STRUCT_OBJECT, offsetof(DictProxy, dp_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member proxy_class_members[] = {
+PRIVATE struct type_member tpconst proxy_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DictProxyIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member dict_keys_class_members[] = {
+PRIVATE struct type_member tpconst dict_keys_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DictKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member dict_items_class_members[] = {
+PRIVATE struct type_member tpconst dict_items_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DictItemsIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member dict_values_class_members[] = {
+PRIVATE struct type_member tpconst dict_values_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DictValuesIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -824,7 +824,7 @@ err:
 
 DOC_REF(map_byhash_doc);
 
-PRIVATE struct type_method dict_keys_methods[] = {
+PRIVATE struct type_method tpconst dict_keys_methods[] = {
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_keys_byhash,
 	  DOC_GET(map_byhash_doc),
@@ -832,7 +832,7 @@ PRIVATE struct type_method dict_keys_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_method dict_items_methods[] = {
+PRIVATE struct type_method tpconst dict_items_methods[] = {
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_items_byhash,
 	  DOC_GET(map_byhash_doc),

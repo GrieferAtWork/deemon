@@ -201,7 +201,8 @@ compiler_get_module(DeeCompilerObject *__restrict self) {
 }
 
 
-INTERN struct type_getset compiler_getsets[] = {
+INTDEF struct type_getset tpconst compiler_getsets[];
+INTERN struct type_getset tpconst compiler_getsets[] = {
 	{ "lexer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&compiler_get_lexer, NULL, NULL,
 	  DOC("->?ALexer?Ert:Compiler\n"
 	      "Returns the lexer (tokenizer) of @this compiler") },
@@ -1960,7 +1961,8 @@ ast_makeassembly(DeeCompilerObject *self, size_t argc,
 	return NULL;
 }
 
-INTERN struct type_method compiler_methods[] = {
+INTDEF struct type_method tpconst compiler_methods[];
+INTERN struct type_method tpconst compiler_methods[] = {
 	{ "makeconstexpr", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ast_makeconstexpr,
 	  DOC("(value,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "@param scope The scope to-be used for the new branch, or ?N to use ?#scope\n"
@@ -2246,7 +2248,8 @@ INTERN struct type_method compiler_methods[] = {
 	{ NULL }
 };
 
-INTERN struct type_member compiler_class_members[] = {
+INTDEF struct type_member tpconst compiler_class_members[];
+INTERN struct type_member tpconst compiler_class_members[] = {
 	TYPE_MEMBER_CONST("Lexer", &DeeCompilerLexer_Type),
 	TYPE_MEMBER_CONST("Parser", &DeeCompilerParser_Type),
 	TYPE_MEMBER_CONST("Symbol", &DeeCompilerSymbol_Type),

@@ -78,7 +78,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod(DeeTypeObject *__restrict self,
                           dobjmethod_t meth) {
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		iter = self->tp_class_methods;
 		if (iter)
 			for (; iter->m_name; ++iter) {
@@ -93,7 +93,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
                               dobjmethod_t meth) {
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		iter = self->tp_class_methods;
 		if (iter)
 			for (; iter->m_name; ++iter) {
@@ -108,7 +108,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
                                dobjmethod_t meth) {
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		iter = self->tp_class_methods;
 		if (iter)
 			for (; iter->m_name; ++iter) {
@@ -128,7 +128,7 @@ DeeObjMethod_GetName(DeeObject *__restrict self) {
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
 			char const *result;
 			result = typeobject_find_objmethod((DeeTypeObject *)DeeObjMethod_SELF(self), func);
@@ -154,7 +154,7 @@ DeeObjMethod_GetDoc(DeeObject *__restrict self) {
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
 			char const *result;
 			result = typeobject_find_objmethod_doc((DeeTypeObject *)DeeObjMethod_SELF(self), func);
@@ -181,7 +181,7 @@ DeeObjMethod_GetType(DeeObject *__restrict self) {
 	func    = DeeObjMethod_FUNC(self);
 	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
 	do {
-		struct type_method *iter;
+		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
 			DeeTypeObject *result;
 			result = typeobject_find_objmethod_type((DeeTypeObject *)DeeObjMethod_SELF(self), func);
@@ -201,7 +201,7 @@ DeeObjMethod_GetType(DeeObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetName(DeeObject *__restrict self) {
 	dobjmethod_t func;
-	struct type_method *iter;
+	struct type_method const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
 	func = DeeClsMethod_FUNC(self);
@@ -218,7 +218,7 @@ DeeClsMethod_GetName(DeeObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetDoc(DeeObject *__restrict self) {
 	dobjmethod_t func;
-	struct type_method *iter;
+	struct type_method const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
 	func = DeeClsMethod_FUNC(self);
@@ -349,7 +349,7 @@ DOC_DEF(objmethod_get_module_doc,
         "->?X2?DModule?N\n"
         "The module implementing the function that is being bound, or ?N if unknown");
 
-PRIVATE struct type_getset objmethod_getsets[] = {
+PRIVATE struct type_getset tpconst objmethod_getsets[] = {
 	{ "__func__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_func, NULL, NULL,
 	  DOC_GET(objmethod_get_func_doc) },
@@ -368,7 +368,7 @@ PRIVATE struct type_getset objmethod_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member objmethod_members[] = {
+PRIVATE struct type_member tpconst objmethod_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(DeeObjMethodObject, om_this),
 	                      "The object to which @this object-method is bound"),
 #define OBJMETHOD_MEMBERS_INDEXOF_KWDS 1
@@ -609,14 +609,14 @@ dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
 	return DeeString_New(self->dki_kwds->dk_start);
 }
 
-PRIVATE struct type_getset dockwdsiter_getsets[] = {
+PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
 	{ "__docstr__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getdocstr, NULL, NULL,
 	  DOC("->?Dstring") },
 	{ NULL }
 };
 
-PRIVATE struct type_member dockwdsiter_members[] = {
+PRIVATE struct type_member tpconst dockwdsiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
 	TYPE_MEMBER_END
 };
@@ -699,13 +699,13 @@ PRIVATE struct type_seq dockwds_seq = {
 	/* .tp_range_set = */ NULL,
 };
 
-PRIVATE struct type_member dockwds_members[] = {
+PRIVATE struct type_member tpconst dockwds_members[] = {
 	TYPE_MEMBER_FIELD("__docstr__", STRUCT_CONST | STRUCT_CSTR, offsetof(DocKwds, dk_start)),
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(DocKwds, dk_owner)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member dockwds_class_members[] = {
+PRIVATE struct type_member tpconst dockwds_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DocKwdsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -865,7 +865,7 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_type_doc   objmethod_get_type_doc
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
-PRIVATE struct type_getset kwobjmethod_getsets[] = {
+PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
 	{ "__func__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_func, NULL, NULL,
 	  DOC_GET(kwobjmethod_get_func_doc) },
@@ -1142,7 +1142,7 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 }
 
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
-PRIVATE struct type_getset kwclsmethod_getsets[] = {
+PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwclsmethod_get_kwds, NULL, NULL,
 	  DOC_GET(objmethod_get_kwds_doc) },
@@ -1163,7 +1163,7 @@ PRIVATE struct type_getset kwclsmethod_getsets[] = {
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
 
 
-PRIVATE struct type_member kwclsmethod_members[] = {
+PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 	TYPE_MEMBER_CONST_DOC("__kwds__", Dee_EmptySeq, clsmethod_get_kwds_doc),
 #define clsmethod_members (kwclsmethod_members + 1)
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsMethodObject, cm_type),
@@ -1316,7 +1316,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsProperty_GetName(DeeObject *__restrict self) {
-	struct type_getset *iter;
+	struct type_getset const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsProperty_Check(self));
 	iter = DeeClsProperty_TYPE(self)->tp_getsets;
@@ -1333,7 +1333,7 @@ DeeClsProperty_GetName(DeeObject *__restrict self) {
 
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsProperty_GetDoc(DeeObject *__restrict self) {
-	struct type_getset *iter;
+	struct type_getset const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsProperty_Check(self));
 	iter = DeeClsProperty_TYPE(self)->tp_getsets;
@@ -1502,7 +1502,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method clsproperty_methods[] = {
+PRIVATE struct type_method tpconst clsproperty_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
 	  DOC("(thisarg)->"),
@@ -1592,7 +1592,7 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 	return_bool_(self->cp_set != NULL);
 }
 
-PRIVATE struct type_getset clsproperty_getsets[] = {
+PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
 	{ "canget",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -1620,7 +1620,7 @@ PRIVATE struct type_getset clsproperty_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member clsproperty_members[] = {
+PRIVATE struct type_member tpconst clsproperty_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsPropertyObject, cp_type),
 	                      "->?DType\n"
 	                      "The type implementing @this property"),
@@ -1770,7 +1770,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method clsmember_methods[] = {
+PRIVATE struct type_method tpconst clsmember_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_get,
 	  DOC("(thisarg)->"),
@@ -1825,7 +1825,7 @@ PRIVATE struct type_cmp clsmember_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_ge
 };
 
-PRIVATE struct type_member clsmember_members[] = {
+PRIVATE struct type_member tpconst clsmember_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsMemberObject, cm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this member"),
@@ -1854,7 +1854,7 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_getset clsmember_getsets[] = {
+PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	{ "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Alias for #canset") },
@@ -1950,9 +1950,9 @@ cmethod_getmodsym(DeeModuleObject *__restrict module,
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
 type_member_search_cmethod(DeeTypeObject *type,
-                           struct type_member *chain,
+                           struct type_member const *chain,
                            DeeTypeObject **__restrict ptarget_type,
                            dcmethod_t func_ptr) {
 	for (; chain->m_name; ++chain) {
@@ -1972,11 +1972,11 @@ gotit:
 	return chain;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
 type_seach_cmethod(DeeTypeObject *self,
                    dcmethod_t func_ptr,
                    DeeTypeObject **__restrict ptarget_type) {
-	struct type_member *result;
+	struct type_member const *result;
 	do {
 		if (self->tp_class_members &&
 		    (result = type_member_search_cmethod(self, self->tp_class_members, ptarget_type, func_ptr)) != NULL)
@@ -1990,12 +1990,12 @@ gotit:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
 cmethod_gettypefield(DeeModuleObject *module,
                      DREF DeeTypeObject **__restrict ptype,
                      dcmethod_t func_ptr) {
 	uint16_t addr;
-	struct type_member *result;
+	struct type_member const *result;
 	rwlock_read(&module->mo_lock);
 	for (addr = 0; addr < module->mo_globalc; ++addr) {
 		DeeObject *glob = module->mo_globalv[addr];
@@ -2035,7 +2035,7 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (mod) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(mod, self->cm_func);
 		if (symbol) {
@@ -2072,7 +2072,7 @@ cmethod_get_name(DeeCMethodObject *__restrict self) {
 	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {
@@ -2098,7 +2098,7 @@ cmethod_get_type(DeeCMethodObject *__restrict self) {
 	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {
@@ -2122,7 +2122,7 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {
@@ -2154,7 +2154,7 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
 #define cmethod_getsets (kwcmethod_getsets + 1)
-PRIVATE struct type_getset kwcmethod_getsets[] = {
+PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_get_kwds, NULL, NULL,
 	  DOC_GET(objmethod_get_kwds_doc) },
@@ -2189,7 +2189,7 @@ cmethod_str(DeeCMethodObject *__restrict self) {
 	module           = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {
@@ -2216,7 +2216,7 @@ cmethod_repr(DeeCMethodObject *__restrict self) {
 	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
-		struct type_member *member;
+		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {

@@ -218,7 +218,7 @@ PRIVATE struct type_seq ss_seq = {
 	/* .tp_nsi       = */ &ss_nsi
 };
 
-PRIVATE struct type_member ss_class_members[] = {
+PRIVATE struct type_member tpconst ss_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SlabStatIterator_Type),
 	TYPE_MEMBER_CONST("item", &SlabInfo_Type),
 	TYPE_MEMBER_END
@@ -357,7 +357,7 @@ done:
 }
 
 
-PRIVATE struct type_member ssi_members[] = {
+PRIVATE struct type_member tpconst ssi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SlabStatIteratorObject, sti_stat), "->?GSlabStat"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SlabStatIteratorObject, sti_stat)),
 	TYPE_MEMBER_END
@@ -461,12 +461,12 @@ DEFINE_FIELD_READER(tailpages)
 #undef DEFINE_FIELD_READER
 
 
-PRIVATE struct type_member si_members[] = {
+PRIVATE struct type_member tpconst si_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__stat__", STRUCT_OBJECT, offsetof(SlabInfoObject, si_stat), "->?GSlabStat"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_getset si_getsets[] = {
+PRIVATE struct type_getset tpconst si_getsets[] = {
 #define DEFINE_FIELD(name, doc)                                                     \
 	{ #name,                                                                        \
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_##name, NULL, NULL, \

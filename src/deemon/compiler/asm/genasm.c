@@ -1456,7 +1456,7 @@ done_fake_none:
 		/* Special case: The arguments of the operator are variadic. */
 		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			struct symbol *prefix_symbol;
-			struct opinfo *info;
+			struct opinfo const *info;
 			info = Dee_OperatorInfo(NULL, operator_name);
 			if (self->a_operator.o_op0->a_type == AST_SYM &&
 			    (!info || (info->oi_type & OPTYPE_INPLACE))) {
@@ -2332,7 +2332,7 @@ push_a_if_used:
 			/* Generic operator assembler. */
 			uint8_t argc;
 			struct symbol *prefix_symbol;
-			struct opinfo *info;
+			struct opinfo const *info;
 generic_operator:
 			argc = 0;
 			info = Dee_OperatorInfo(NULL, operator_name);

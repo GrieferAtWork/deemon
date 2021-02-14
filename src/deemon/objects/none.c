@@ -207,7 +207,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
 };
 
-PRIVATE struct type_attr none_attr = {
+PRIVATE struct type_attr tpconst none_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_2,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&none_i3,

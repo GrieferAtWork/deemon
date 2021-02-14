@@ -475,12 +475,12 @@ PRIVATE struct type_cmp suiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_ge
 };
 
-PRIVATE struct type_member suiter_members[] = {
+PRIVATE struct type_member tpconst suiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetUnionIterator, sui_union), "->?Ert:SetUnion"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_getset suiter_getsets[] = {
+PRIVATE struct type_getset tpconst suiter_getsets[] = {
 	{ "__iter__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_iter, NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&suiter_set_iter,
@@ -635,7 +635,7 @@ PRIVATE struct type_seq su_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
 };
 
-PRIVATE struct type_member su_class_members[] = {
+PRIVATE struct type_member tpconst su_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SetUnionIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -774,7 +774,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_member ssditer_members[] = {
+PRIVATE struct type_member tpconst ssditer_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
 	                      offsetof(SetSymmetricDifferenceIterator, ssd_set),
 	                      "->?Ert:SetSymmetricDifference"),
@@ -887,7 +887,7 @@ PRIVATE struct type_seq ssd_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
 };
 
-PRIVATE struct type_member ssd_class_members[] = {
+PRIVATE struct type_member tpconst ssd_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SetSymmetricDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1079,7 +1079,7 @@ PRIVATE struct type_cmp siiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_ge
 };
 
-PRIVATE struct type_member siiter_members[] = {
+PRIVATE struct type_member tpconst siiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_other), "->?Dset"),
@@ -1197,7 +1197,7 @@ PRIVATE struct type_seq si_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
 };
 
-PRIVATE struct type_member si_class_members[] = {
+PRIVATE struct type_member tpconst si_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SetIntersectionIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1284,7 +1284,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_member sditer_members[] = {
+PRIVATE struct type_member tpconst sditer_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_other), "->?Dset"),
@@ -1401,7 +1401,7 @@ PRIVATE struct type_seq sd_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
 };
 
-PRIVATE struct type_member sd_class_members[] = {
+PRIVATE struct type_member tpconst sd_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SetDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };

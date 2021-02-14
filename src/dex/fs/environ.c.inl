@@ -268,7 +268,7 @@ err:
 }
 
 
-PRIVATE struct type_member env_members[] = {
+PRIVATE struct type_member tpconst env_members[] = {
 	TYPE_MEMBER_CONST("seq", &DeeEnv_Singleton),
 	TYPE_MEMBER_END
 };

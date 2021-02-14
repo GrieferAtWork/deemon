@@ -166,7 +166,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset segiter_getsets[] = {
+PRIVATE struct type_getset tpconst segiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq,
 	  NULL,
@@ -175,7 +175,7 @@ PRIVATE struct type_getset segiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member segiter_members[] = {
+PRIVATE struct type_member tpconst segiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SegmentsIterator, si_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SegmentsIterator, si_len)),
 	TYPE_MEMBER_END
@@ -256,7 +256,7 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 
 
 
-PRIVATE struct type_member seg_class_members[] = {
+PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -438,7 +438,7 @@ PRIVATE struct type_seq seg_seq = {
 	/* .tp_nsi       = */ &seg_nsi,
 };
 
-PRIVATE struct type_member seg_members[] = {
+PRIVATE struct type_member tpconst seg_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Segments, s_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Segments, s_len)),
 	TYPE_MEMBER_END

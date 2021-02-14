@@ -210,7 +210,7 @@ JIT_GetOperatorFunction(uint16_t opname) {
 		symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
 		hash        = Dee_HashPtr(symbol_name, 8);
 	} else {
-		struct opinfo *info;
+		struct opinfo const *info;
 		/* Default case: determine the operator symbol using generic-operator info. */
 		info = Dee_OperatorInfo(NULL, opname);
 		if (info) {

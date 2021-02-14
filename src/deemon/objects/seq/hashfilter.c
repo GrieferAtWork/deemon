@@ -222,7 +222,7 @@ err:
 }
 
 
-PRIVATE struct type_getset seq_filteriterator_getsets[] = {
+PRIVATE struct type_getset tpconst seq_filteriterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
 	  NULL,
@@ -231,7 +231,7 @@ PRIVATE struct type_getset seq_filteriterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_getset map_filteriterator_getsets[] = {
+PRIVATE struct type_getset tpconst map_filteriterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
 	  NULL,
@@ -240,7 +240,7 @@ PRIVATE struct type_getset map_filteriterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member filteriterator_members[] = {
+PRIVATE struct type_member tpconst filteriterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(HashFilterIterator, fi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_DHASH_T, offsetof(HashFilterIterator, fi_hash)),
 	TYPE_MEMBER_END
@@ -371,24 +371,24 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member seq_filter_members[] = {
+PRIVATE struct type_member tpconst seq_filter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(HashFilter, f_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_DHASH_T, offsetof(HashFilter, f_hash)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member map_filter_members[] = {
+PRIVATE struct type_member tpconst map_filter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(HashFilter, f_seq), "->?DMapping"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_DHASH_T, offsetof(HashFilter, f_hash)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member seq_filter_class_members[] = {
+PRIVATE struct type_member tpconst seq_filter_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqHashFilterIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member map_filter_class_members[] = {
+PRIVATE struct type_member tpconst map_filter_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &MapHashFilterIterator_Type),
 	TYPE_MEMBER_END
 };

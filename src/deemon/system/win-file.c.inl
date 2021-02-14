@@ -132,7 +132,7 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 	return_true;
 }
 
-PRIVATE struct type_getset debug_file_getsets[] = {
+PRIVATE struct type_getset tpconst debug_file_getsets[] = {
 	{ DeeString_STR(&str_isatty), &debugfile_isatty, NULL, NULL, DOC("->?Dbool") },
 	{ NULL }
 };
@@ -1108,7 +1108,7 @@ err:
 #define STR_osfhandle DeeSysFD_HANDLE_GETSET
 #endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
 
-PRIVATE struct type_getset sysfile_getsets[] = {
+PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 	{ STR_osfhandle, (DREF DeeObject * (DCALL *)(DeeObject *))&sysfile_osfhandle, NULL, NULL, DOC("->?Dint") },
 	{ DeeString_STR(&str_isatty), (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL, DOC("->?Dbool") },
 	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
@@ -1203,14 +1203,14 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	return_none;
 }
 
-PRIVATE struct type_method sysfile_class_methods[] = {
+PRIVATE struct type_method tpconst sysfile_class_methods[] = {
 	{ "sync", &sysfile_class_sync,
 	  DOC("()\n"
 	      "Synchronize all unwritten data with the host operating system") },
 	{ NULL }
 };
 
-PRIVATE struct type_member sysfile_class_members[] = {
+PRIVATE struct type_member tpconst sysfile_class_members[] = {
 	TYPE_MEMBER_CONST("Fs", (DeeTypeObject *)&DeeFSFile_Type),
 	TYPE_MEMBER_END
 };

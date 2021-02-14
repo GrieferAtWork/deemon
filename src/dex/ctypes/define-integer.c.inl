@@ -940,7 +940,7 @@ PRIVATE X(Integer) X(int_max) = {
 #endif /* !SIGNED */
 };
 
-PRIVATE struct type_member X(int_class_members)[] = {
+PRIVATE struct type_member tpconst X(int_class_members)[] = {
 #if !defined(NO_SIGNED_TYPE_NAME) && !defined(NO_UNSIGNED_TYPE_NAME)
 	TYPE_MEMBER_CONST("signed", (DeeObject *)&SIGNED_TYPE_NAME),
 	TYPE_MEMBER_CONST("unsigned", (DeeObject *)&UNSIGNED_TYPE_NAME),

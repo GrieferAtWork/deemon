@@ -97,7 +97,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast 
 #endif /* !__INTELLISENSE__ */
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
-INTDEF struct type_member DeeCompilerItem_Members[];
+INTDEF struct type_member Dee_tpconst DeeCompilerItem_Members[];
 INTDEF NONNULL((1)) void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
 INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);

@@ -340,7 +340,7 @@ catiterator_curr_set(CatIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE struct type_getset catiterator_getsets[] = {
+PRIVATE struct type_getset tpconst catiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqConcat") },
@@ -351,7 +351,7 @@ PRIVATE struct type_getset catiterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member catiterator_members[] = {
+PRIVATE struct type_member tpconst catiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__sequences__", STRUCT_OBJECT, offsetof(CatIterator, c_cat), "->?S?DSequence"),
 	TYPE_MEMBER_END
 };
@@ -439,7 +439,7 @@ cat_getsequences(Cat *__restrict self) {
 	                                DeeTuple_ELEM(self));
 }
 
-PRIVATE struct type_getset cat_getsets[] = {
+PRIVATE struct type_getset tpconst cat_getsets[] = {
 	{ "__sequences__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences,
 	  NULL,
@@ -448,7 +448,7 @@ PRIVATE struct type_getset cat_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member cat_class_members[] = {
+PRIVATE struct type_member tpconst cat_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqConcatIterator_Type),
 	TYPE_MEMBER_END
 };

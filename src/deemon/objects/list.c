@@ -2954,7 +2954,7 @@ err:
 }
 
 
-PRIVATE struct type_getset list_getsets[] = {
+PRIVATE struct type_getset tpconst list_getsets[] = {
 	{ "allocated",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_getallocated,
 	  (int (DCALL *)(DeeObject *__restrict))&list_delallocated,
@@ -2997,7 +2997,7 @@ PRIVATE struct type_getset list_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_method list_methods[] = {
+PRIVATE struct type_method tpconst list_methods[] = {
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_sizeof },
 	{ DeeString_STR(&str_append),
@@ -3147,7 +3147,7 @@ PRIVATE struct type_method list_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_gc list_gc = {
+PRIVATE struct type_gc tpconst list_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&DeeList_Clear
 };
 
@@ -3318,7 +3318,7 @@ PRIVATE struct type_math list_math = {
 	/* .tp_inplace_pow = */ NULL,
 };
 
-PRIVATE struct type_member list_class_members[] = {
+PRIVATE struct type_member tpconst list_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeListIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeTuple_Type),
 	TYPE_MEMBER_END
@@ -4255,7 +4255,7 @@ PRIVATE struct type_cmp li_cmp = {
 	/* .tp_nii  = */ &list_iterator_nii
 };
 
-PRIVATE struct type_member li_members[] = {
+PRIVATE struct type_member tpconst li_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(ListIterator, li_list), "->?DList"),
 	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(ListIterator, li_index)),
 	TYPE_MEMBER_END

@@ -196,7 +196,7 @@ err:
 }
 
 
-PRIVATE struct type_getset filteriterator_getsets[] = {
+PRIVATE struct type_getset tpconst filteriterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
 	  NULL,
@@ -205,7 +205,7 @@ PRIVATE struct type_getset filteriterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member filteriterator_members[] = {
+PRIVATE struct type_member tpconst filteriterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(FilterIterator, fi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT, offsetof(FilterIterator, fi_func), "->?DCallable"),
 	TYPE_MEMBER_END
@@ -288,13 +288,13 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE struct type_member filter_members[] = {
+PRIVATE struct type_member tpconst filter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Filter, f_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT, offsetof(Filter, f_fun), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member filter_class_members[] = {
+PRIVATE struct type_member tpconst filter_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqFilterIterator_Type),
 	TYPE_MEMBER_END
 };

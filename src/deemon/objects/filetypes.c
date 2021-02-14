@@ -657,7 +657,7 @@ reader_init(Reader *__restrict self,
 	return 0;
 }
 
-PRIVATE struct type_getset reader_getsets[] = {
+PRIVATE struct type_getset tpconst reader_getsets[] = {
 	{ "owner", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&reader_getowner,
 	  (int (DCALL *)(DeeObject *__restrict))&reader_close,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&reader_setowner,
@@ -1010,7 +1010,7 @@ do_del_string:
 	return writer_delstring(self);
 }
 
-PRIVATE struct type_getset writer_getsets[] = {
+PRIVATE struct type_getset tpconst writer_getsets[] = {
 	{ DeeString_STR(&str_string),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeFileWriter_GetString,
 	  (int (DCALL *)(DeeObject *__restrict))&writer_delstring,
@@ -1069,7 +1069,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method writer_methods[] = {
+PRIVATE struct type_method tpconst writer_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
 	  DOC("->?Dstring\n"

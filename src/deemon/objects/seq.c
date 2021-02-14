@@ -56,7 +56,7 @@ DECL_BEGIN
 /* Lookup the closest NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
  * expose NSI functionality. */
-PUBLIC WUNUSED NONNULL((1)) struct type_nsi *DCALL
+PUBLIC WUNUSED NONNULL((1)) struct type_nsi const *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp) {
 	ASSERT_OBJECT_TYPE(tp, &DeeType_Type);
 	do {
@@ -439,7 +439,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_getset seqiterator_getsets[] = {
+PRIVATE struct type_getset tpconst seqiterator_getsets[] = {
 	{ "__index__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seqiterator_index_get,
 	  (int (DCALL *)(DeeObject *__restrict))&seqiterator_index_del,
@@ -448,7 +448,7 @@ PRIVATE struct type_getset seqiterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member seqiterator_members[] = {
+PRIVATE struct type_member tpconst seqiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqIterator, si_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__size__", STRUCT_OBJECT, offsetof(SeqIterator, si_size), "->?X2?DInt?O"),
 	TYPE_MEMBER_END
@@ -1075,7 +1075,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset seq_class_getsets[] = {
+PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get, NULL, NULL,
 	  DOC("->?DType\n"
@@ -2008,7 +2008,8 @@ DOC_DEF(seq_byhash_doc,
         "${for (local e: Dict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
 
 
-INTERN struct type_method seq_methods[] = {
+INTDEF struct type_method tpconst seq_methods[];
+INTERN struct type_method tpconst seq_methods[] = {
 	{ "empty",
 	  &seq_empty,
 	  DOC("->?Dbool\n"
@@ -3622,7 +3623,7 @@ seq_get_isfrozen(DeeObject *__restrict self) {
 
 
 
-PRIVATE struct type_getset seq_getsets[] = {
+PRIVATE struct type_getset tpconst seq_getsets[] = {
 	{ "length", &seq_length_get, NULL, NULL, DOC("->?Dint\nAlias for ${##this}") },
 	{ DeeString_STR(&str_first),
 	  &DeeSeq_Front,
@@ -3861,7 +3862,7 @@ seq_class_concat(DeeObject *UNUSED(self),
 	return result;
 }
 
-PRIVATE struct type_method seq_class_methods[] = {
+PRIVATE struct type_method tpconst seq_class_methods[] = {
 	{ "range", &seq_class_range,
 	  DOC("(end:?Dint)->?S?Dint\n"
 	      "(end)->?DSequence\n"

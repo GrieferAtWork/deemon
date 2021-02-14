@@ -19,7 +19,6 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_C
 #define GUARD_DEEMON_OBJECTS_CLASS_C 1
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -130,7 +129,7 @@ again:
 	if (!self->tp_base || self->tp_seq != self->tp_base->tp_seq)
 		Dee_Free(self->tp_seq);
 	if (!self->tp_base || self->tp_attr != self->tp_base->tp_attr)
-		Dee_Free(self->tp_attr);
+		Dee_Free((void *)self->tp_attr);
 	if (!self->tp_base || self->tp_with != self->tp_base->tp_with)
 		Dee_Free(self->tp_with);
 }
@@ -3908,6 +3907,7 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
 	(void)self;
 	(void)proc;
 	(void)arg;
+	/* TODO */
 	DERROR_NOTIMPLEMENTED();
 	return -1;
 }
@@ -4514,7 +4514,7 @@ instance_pclear(DeeObject *__restrict self,
 	         DeeType_IsClass(tp_self));
 }
 
-INTERN struct type_gc instance_gc = {
+INTERN struct type_gc tpconst instance_gc = {
 	/* .tp_clear  = */ &instance_clear,
 	/* .tp_pclear = */ &instance_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_INSTANCE
@@ -4523,89 +4523,90 @@ INTERN struct type_gc instance_gc = {
 
 
 /* Binding descriptors for standard operators provided by DeeType_Type */
+typedef void (*CFUNC)(void);
 struct opwrapper {
-	uintptr_t offset;  /* Offset from the containing operator table to where `wrapper' must be written. */
-	void     *wrapper; /* [0..1] The C wrapper function that should be assigned to
-	                    *         the operator to have it invoke user-callbacks.
-	                    *   NOTE: A value of NULL in this field acts as a sentinel. */
+	uintptr_t ow_offset;  /* Offset from the containing operator table to where `wrapper' must be written. */
+	CFUNC     ow_wrapper; /* [0..1] The C wrapper function that should be assigned to
+	                       *         the operator to have it invoke user-callbacks.
+	                       *   NOTE: A value of NULL in this field acts as a sentinel. */
 };
 
 /* Operator wrapper descriptor tables. */
 PRIVATE struct opwrapper type_wrappers[] = {
-	/* [OPERATOR_COPY - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_copy_ctor), (void *)&instance_copy },
-	/* [OPERATOR_DEEPCOPY - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor), (void *)&instance_deepcopy },
-	/* [OPERATOR_DESTRUCTOR - OPERATOR_COPY]  = */ { offsetof(DeeTypeObject, tp_init.tp_dtor), &instance_destructor },
-	/* [OPERATOR_ASSIGN - OPERATOR_COPY]      = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_assign), (void *)&instance_assign*/ },
-	/* [OPERATOR_MOVEASSIGN - OPERATOR_COPY]  = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_move_assign), (void *)&instance_moveassign*/ },
-	/* [OPERATOR_STR - OPERATOR_COPY]         = */ { offsetof(DeeTypeObject, tp_cast.tp_str), (void *)&instance_str },
-	/* [OPERATOR_REPR - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_repr), (void *)&instance_repr },
-	/* [OPERATOR_BOOL - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_bool), (void *)&instance_bool },
-	/* [OPERATOR_ITERNEXT - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_iter_next), (void *)&instance_next }
+	/* [OPERATOR_COPY - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_copy_ctor), (CFUNC)&instance_copy },
+	/* [OPERATOR_DEEPCOPY - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor), (CFUNC)&instance_deepcopy },
+	/* [OPERATOR_DESTRUCTOR - OPERATOR_COPY]  = */ { offsetof(DeeTypeObject, tp_init.tp_dtor), (CFUNC)&instance_destructor },
+	/* [OPERATOR_ASSIGN - OPERATOR_COPY]      = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_assign), (CFUNC)&instance_assign*/ },
+	/* [OPERATOR_MOVEASSIGN - OPERATOR_COPY]  = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_move_assign), (CFUNC)&instance_moveassign*/ },
+	/* [OPERATOR_STR - OPERATOR_COPY]         = */ { offsetof(DeeTypeObject, tp_cast.tp_str), (CFUNC)&instance_str },
+	/* [OPERATOR_REPR - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_repr), (CFUNC)&instance_repr },
+	/* [OPERATOR_BOOL - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_bool), (CFUNC)&instance_bool },
+	/* [OPERATOR_ITERNEXT - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_iter_next), (CFUNC)&instance_next }
 };
 
 PRIVATE struct opwrapper math_wrappers[] = {
-	/* [OPERATOR_FLOAT - OPERATOR_FLOAT]       = */ { offsetof(struct type_math, tp_double), (void *)&instance_double },
-	/* [OPERATOR_INV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inv), (void *)&instance_inv },
-	/* [OPERATOR_POS - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pos), (void *)&instance_pos },
-	/* [OPERATOR_NEG - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_neg), (void *)&instance_neg },
-	/* [OPERATOR_ADD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_add), (void *)&instance_add },
-	/* [OPERATOR_SUB - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_sub), (void *)&instance_sub },
-	/* [OPERATOR_MUL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mul), (void *)&instance_mul },
-	/* [OPERATOR_DIV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_div), (void *)&instance_div },
-	/* [OPERATOR_MOD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mod), (void *)&instance_mod },
-	/* [OPERATOR_SHL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shl), (void *)&instance_shl },
-	/* [OPERATOR_SHR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shr), (void *)&instance_shr },
-	/* [OPERATOR_AND - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_and), (void *)&instance_and },
-	/* [OPERATOR_OR - OPERATOR_FLOAT]          = */ { offsetof(struct type_math, tp_or), (void *)&instance_or },
-	/* [OPERATOR_XOR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_xor), (void *)&instance_xor },
-	/* [OPERATOR_POW - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pow), (void *)&instance_pow },
-	/* [OPERATOR_INC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inc), (void *)&instance_inc },
-	/* [OPERATOR_DEC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_dec), (void *)&instance_dec },
-	/* [OPERATOR_INPLACE_ADD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_add), (void *)&instance_iadd },
-	/* [OPERATOR_INPLACE_SUB - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_sub), (void *)&instance_isub },
-	/* [OPERATOR_INPLACE_MUL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mul), (void *)&instance_imul },
-	/* [OPERATOR_INPLACE_DIV - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_div), (void *)&instance_idiv },
-	/* [OPERATOR_INPLACE_MOD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mod), (void *)&instance_imod },
-	/* [OPERATOR_INPLACE_SHL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shl), (void *)&instance_ishl },
-	/* [OPERATOR_INPLACE_SHR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shr), (void *)&instance_ishr },
-	/* [OPERATOR_INPLACE_AND - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_and), (void *)&instance_iand },
-	/* [OPERATOR_INPLACE_OR - OPERATOR_FLOAT]  = */ { offsetof(struct type_math, tp_inplace_or), (void *)&instance_ior },
-	/* [OPERATOR_INPLACE_XOR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_xor), (void *)&instance_ixor },
-	/* [OPERATOR_INPLACE_POW - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_pow), (void *)&instance_ipow }
+	/* [OPERATOR_FLOAT - OPERATOR_FLOAT]       = */ { offsetof(struct type_math, tp_double), (CFUNC)&instance_double },
+	/* [OPERATOR_INV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inv), (CFUNC)&instance_inv },
+	/* [OPERATOR_POS - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pos), (CFUNC)&instance_pos },
+	/* [OPERATOR_NEG - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_neg), (CFUNC)&instance_neg },
+	/* [OPERATOR_ADD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_add), (CFUNC)&instance_add },
+	/* [OPERATOR_SUB - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_sub), (CFUNC)&instance_sub },
+	/* [OPERATOR_MUL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mul), (CFUNC)&instance_mul },
+	/* [OPERATOR_DIV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_div), (CFUNC)&instance_div },
+	/* [OPERATOR_MOD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mod), (CFUNC)&instance_mod },
+	/* [OPERATOR_SHL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shl), (CFUNC)&instance_shl },
+	/* [OPERATOR_SHR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shr), (CFUNC)&instance_shr },
+	/* [OPERATOR_AND - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_and), (CFUNC)&instance_and },
+	/* [OPERATOR_OR - OPERATOR_FLOAT]          = */ { offsetof(struct type_math, tp_or), (CFUNC)&instance_or },
+	/* [OPERATOR_XOR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_xor), (CFUNC)&instance_xor },
+	/* [OPERATOR_POW - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pow), (CFUNC)&instance_pow },
+	/* [OPERATOR_INC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inc), (CFUNC)&instance_inc },
+	/* [OPERATOR_DEC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_dec), (CFUNC)&instance_dec },
+	/* [OPERATOR_INPLACE_ADD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_add), (CFUNC)&instance_iadd },
+	/* [OPERATOR_INPLACE_SUB - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_sub), (CFUNC)&instance_isub },
+	/* [OPERATOR_INPLACE_MUL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mul), (CFUNC)&instance_imul },
+	/* [OPERATOR_INPLACE_DIV - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_div), (CFUNC)&instance_idiv },
+	/* [OPERATOR_INPLACE_MOD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mod), (CFUNC)&instance_imod },
+	/* [OPERATOR_INPLACE_SHL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shl), (CFUNC)&instance_ishl },
+	/* [OPERATOR_INPLACE_SHR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shr), (CFUNC)&instance_ishr },
+	/* [OPERATOR_INPLACE_AND - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_and), (CFUNC)&instance_iand },
+	/* [OPERATOR_INPLACE_OR - OPERATOR_FLOAT]  = */ { offsetof(struct type_math, tp_inplace_or), (CFUNC)&instance_ior },
+	/* [OPERATOR_INPLACE_XOR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_xor), (CFUNC)&instance_ixor },
+	/* [OPERATOR_INPLACE_POW - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_pow), (CFUNC)&instance_ipow }
 };
 
 PRIVATE struct opwrapper cmp_wrappers[] = {
-	/* [OPERATOR_HASH - OPERATOR_CMPMIN] = */ { offsetof(struct type_cmp, tp_hash), (void *)&instance_hash },
-	/* [OPERATOR_EQ - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_eq), (void *)&instance_eq },
-	/* [OPERATOR_NE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ne), (void *)&instance_ne },
-	/* [OPERATOR_LO - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_lo), (void *)&instance_lo },
-	/* [OPERATOR_LE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_le), (void *)&instance_le },
-	/* [OPERATOR_GR - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_gr), (void *)&instance_gr },
-	/* [OPERATOR_GE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ge), (void *)&instance_ge }
+	/* [OPERATOR_HASH - OPERATOR_CMPMIN] = */ { offsetof(struct type_cmp, tp_hash), (CFUNC)&instance_hash },
+	/* [OPERATOR_EQ - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_eq), (CFUNC)&instance_eq },
+	/* [OPERATOR_NE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ne), (CFUNC)&instance_ne },
+	/* [OPERATOR_LO - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_lo), (CFUNC)&instance_lo },
+	/* [OPERATOR_LE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_le), (CFUNC)&instance_le },
+	/* [OPERATOR_GR - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_gr), (CFUNC)&instance_gr },
+	/* [OPERATOR_GE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ge), (CFUNC)&instance_ge }
 };
 
 PRIVATE struct opwrapper seq_wrappers[] = {
-	/* [OPERATOR_ITERSELF - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_iter_self), (void *)&instance_iter },
-	/* [OPERATOR_SIZE     - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_size), (void *)&instance_size },
-	/* [OPERATOR_CONTAINS - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_contains), (void *)&instance_contains },
-	/* [OPERATOR_GETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_get), (void *)&instance_getitem },
-	/* [OPERATOR_DELITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_del), (void *)&instance_delitem },
-	/* [OPERATOR_SETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_set), (void *)&instance_setitem },
-	/* [OPERATOR_GETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_get), (void *)&instance_getrange },
-	/* [OPERATOR_DELRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_del), (void *)&instance_delrange },
-	/* [OPERATOR_SETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_set), (void *)&instance_setrange }
+	/* [OPERATOR_ITERSELF - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_iter_self), (CFUNC)&instance_iter },
+	/* [OPERATOR_SIZE     - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_size), (CFUNC)&instance_size },
+	/* [OPERATOR_CONTAINS - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_contains), (CFUNC)&instance_contains },
+	/* [OPERATOR_GETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_get), (CFUNC)&instance_getitem },
+	/* [OPERATOR_DELITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_del), (CFUNC)&instance_delitem },
+	/* [OPERATOR_SETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_set), (CFUNC)&instance_setitem },
+	/* [OPERATOR_GETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_get), (CFUNC)&instance_getrange },
+	/* [OPERATOR_DELRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_del), (CFUNC)&instance_delrange },
+	/* [OPERATOR_SETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_set), (CFUNC)&instance_setrange }
 };
 
 PRIVATE struct opwrapper attr_wrappers[] = {
-	/* [OPERATOR_GETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_getattr), (void *)&instance_getattr },
-	/* [OPERATOR_DELATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_delattr), (void *)&instance_delattr },
-	/* [OPERATOR_SETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_setattr), (void *)&instance_setattr },
-	/* [OPERATOR_ENUMATTR - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_enumattr), (void *)&instance_enumattr }
+	/* [OPERATOR_GETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_getattr), (CFUNC)&instance_getattr },
+	/* [OPERATOR_DELATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_delattr), (CFUNC)&instance_delattr },
+	/* [OPERATOR_SETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_setattr), (CFUNC)&instance_setattr },
+	/* [OPERATOR_ENUMATTR - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_enumattr), (CFUNC)&instance_enumattr }
 };
 
 PRIVATE struct opwrapper with_wrappers[] = {
-	/* [OPERATOR_ENTER - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_enter), (void *)&instance_enter },
-	/* [OPERATOR_LEAVE - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_leave), (void *)&instance_leave },
+	/* [OPERATOR_ENTER - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_enter), (CFUNC)&instance_enter },
+	/* [OPERATOR_LEAVE - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_leave), (CFUNC)&instance_leave },
 };
 
 
@@ -4644,52 +4645,53 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bind_class_operator(DeeTypeObject *__restrict type_type,
                     DeeTypeObject *__restrict class_type,
                     uint16_t operator_name) {
-	void *wrapper, **target;
+	CFUNC wrapper, *target;
 	/* Assign operator wrapper. */
 	if (operator_name <= OPERATOR_TYPEMAX) {
 		/* type operator. */
 		ASSERT(operator_name >= OPERATOR_COPY);
-		wrapper = type_wrappers[operator_name - OPERATOR_COPY].wrapper;
-		target  = (void **)((uintptr_t)class_type + type_wrappers[operator_name - OPERATOR_COPY].offset);
+		wrapper = type_wrappers[operator_name - OPERATOR_COPY].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type + type_wrappers[operator_name - OPERATOR_COPY].ow_offset);
 	} else if (operator_name <= OPERATOR_MATHMAX) {
 		if (LAZY_ALLOCATE(class_type->tp_math))
 			goto err;
 		/* math operator. */
 		ASSERT(operator_name >= OPERATOR_FLOAT);
-		wrapper = math_wrappers[operator_name - OPERATOR_FLOAT].wrapper;
-		target  = (void **)((uintptr_t)class_type->tp_math + math_wrappers[operator_name - OPERATOR_FLOAT].offset);
+		wrapper = math_wrappers[operator_name - OPERATOR_FLOAT].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type->tp_math + math_wrappers[operator_name - OPERATOR_FLOAT].ow_offset);
 	} else if (operator_name <= OPERATOR_CMPMAX) {
 		if (LAZY_ALLOCATE(class_type->tp_cmp))
 			goto err;
 		/* compare operator. */
 		ASSERT(operator_name >= OPERATOR_CMPMIN);
-		wrapper = cmp_wrappers[operator_name - OPERATOR_CMPMIN].wrapper;
-		target  = (void **)((uintptr_t)class_type->tp_cmp + cmp_wrappers[operator_name - OPERATOR_CMPMIN].offset);
+		wrapper = cmp_wrappers[operator_name - OPERATOR_CMPMIN].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type->tp_cmp + cmp_wrappers[operator_name - OPERATOR_CMPMIN].ow_offset);
 	} else if (operator_name <= OPERATOR_SEQMAX) {
 		if (LAZY_ALLOCATE(class_type->tp_seq))
 			goto err;
 		/* compare operator. */
 		ASSERT(operator_name >= OPERATOR_SEQMIN);
-		wrapper = seq_wrappers[operator_name - OPERATOR_SEQMIN].wrapper;
-		target  = (void **)((uintptr_t)class_type->tp_seq + seq_wrappers[operator_name - OPERATOR_SEQMIN].offset);
+		wrapper = seq_wrappers[operator_name - OPERATOR_SEQMIN].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type->tp_seq + seq_wrappers[operator_name - OPERATOR_SEQMIN].ow_offset);
 	} else if (operator_name <= OPERATOR_ATTRMAX) {
 		if (LAZY_ALLOCATE(class_type->tp_attr))
 			goto err;
 		/* attribute operator. */
 		ASSERT(operator_name >= OPERATOR_ATTRMIN);
-		wrapper = attr_wrappers[operator_name - OPERATOR_ATTRMIN].wrapper;
-		target  = (void **)((uintptr_t)class_type->tp_attr + attr_wrappers[operator_name - OPERATOR_ATTRMIN].offset);
+		wrapper = attr_wrappers[operator_name - OPERATOR_ATTRMIN].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type->tp_attr + attr_wrappers[operator_name - OPERATOR_ATTRMIN].ow_offset);
 	} else if (operator_name <= OPERATOR_WITHMAX) {
 		if (LAZY_ALLOCATE(class_type->tp_with))
 			goto err;
 		/* with operators. */
 		ASSERT(operator_name >= OPERATOR_WITHMIN);
-		wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].wrapper;
-		target  = (void **)((uintptr_t)class_type->tp_with + with_wrappers[operator_name - OPERATOR_WITHMIN].offset);
+		wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].ow_wrapper;
+		target  = (CFUNC *)((uintptr_t)class_type->tp_with + with_wrappers[operator_name - OPERATOR_WITHMIN].ow_offset);
 	} else {
-		return DeeError_Throwf(&DeeError_TypeError,
-		                       "Type %q does not define an operator %#I16x",
-		                       type_type->tp_name, operator_name);
+		DeeError_Throwf(&DeeError_TypeError,
+		                "Type %q does not define an operator %#I16x",
+		                type_type->tp_name, operator_name);
+		goto err;
 	}
 	/* Assign the proper wrapper to the target. */
 	*target = wrapper;
@@ -5029,7 +5031,7 @@ err_r_base:
 	Dee_Free(result->tp_math);
 	Dee_Free(result->tp_cmp);
 	Dee_Free(result->tp_seq);
-	Dee_Free(result->tp_attr);
+	Dee_Free((void *)result->tp_attr);
 	Dee_Free(result->tp_with);
 	Dee_XDecref_unlikely(result->tp_base);
 	Dee_XDecref_unlikely(desc->cd_name);

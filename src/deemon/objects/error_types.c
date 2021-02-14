@@ -168,7 +168,7 @@ done_ok:
 
 
 /* BEGIN::Error */
-PRIVATE struct type_member error_class_members[] = {
+PRIVATE struct type_member tpconst error_class_members[] = {
 	TYPE_MEMBER_CONST("AttributeError", &DeeError_AttributeError),
 	TYPE_MEMBER_CONST("CompilerError", &DeeError_CompilerError),
 	TYPE_MEMBER_CONST("ThreadCrash", &DeeError_ThreadCrash),
@@ -327,7 +327,7 @@ error_repr(DeeErrorObject *__restrict self) {
 	                      self->e_message);
 }
 
-PRIVATE struct type_member error_members[] = {
+PRIVATE struct type_member tpconst error_members[] = {
 	TYPE_MEMBER_FIELD_DOC("inner", STRUCT_OBJECT_OPT, offsetof(DeeErrorObject, e_inner),
 	                      "->?X3?DError?O?N\n"
 	                      "An optional inner error object, or ?N when not set"),
@@ -398,7 +398,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 
 
 /* BEGIN::AttributeError */
-PRIVATE struct type_member attribute_error_class_members[] = {
+PRIVATE struct type_member tpconst attribute_error_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundAttribute", &DeeError_UnboundAttribute),
 	TYPE_MEMBER_END
 };
@@ -468,7 +468,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member compiler_error_class_members[] = {
+PRIVATE struct type_member tpconst compiler_error_class_members[] = {
 	TYPE_MEMBER_CONST("SyntaxError", &DeeError_SyntaxError),
 	TYPE_MEMBER_CONST("SymbolError", &DeeError_SymbolError),
 	TYPE_MEMBER_END
@@ -502,7 +502,7 @@ INIT_CUSTOM_ERROR("ThreadCrash", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_E
 
 
 /* BEGIN::NoMemory */
-PRIVATE struct type_member nomemory_members[] = {
+PRIVATE struct type_member tpconst nomemory_members[] = {
 	TYPE_MEMBER_FIELD("size", STRUCT_SIZE_T, offsetof(DeeNoMemoryErrorObject, nm_allocsize)),
 	TYPE_MEMBER_END
 };
@@ -552,7 +552,7 @@ INIT_CUSTOM_ERROR("NoMemory", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Erro
 
 
 /* BEGIN::RuntimeError */
-PRIVATE struct type_member runtimeerror_class_members[] = {
+PRIVATE struct type_member tpconst runtimeerror_class_members[] = {
 	TYPE_MEMBER_CONST("NotImplemented", &DeeError_NotImplemented),
 	TYPE_MEMBER_CONST("AssertionError", &DeeError_AssertionError),
 	TYPE_MEMBER_CONST("UnboundLocal", &DeeError_UnboundLocal),
@@ -603,7 +603,7 @@ INIT_CUSTOM_ERROR("TypeError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Err
 
 
 /* BEGIN::ValueError */
-PRIVATE struct type_member valueerror_class_members[] = {
+PRIVATE struct type_member tpconst valueerror_class_members[] = {
 	TYPE_MEMBER_CONST("ArithmeticError", &DeeError_ArithmeticError),
 	TYPE_MEMBER_CONST("KeyError", &DeeError_KeyError),
 	TYPE_MEMBER_CONST("IndexError", &DeeError_IndexError),
@@ -619,7 +619,7 @@ INIT_CUSTOM_ERROR("ValueError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Er
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, valueerror_class_members);
 /* BEGIN::ValueError.ArithmeticError */
-PRIVATE struct type_member arithmetic_class_members[] = {
+PRIVATE struct type_member tpconst arithmetic_class_members[] = {
 	TYPE_MEMBER_CONST("IntegerOverflow", &DeeError_IntegerOverflow),
 	TYPE_MEMBER_CONST("DivideByZero", &DeeError_DivideByZero),
 	TYPE_MEMBER_CONST("NegativeShift", &DeeError_NegativeShift),
@@ -647,7 +647,7 @@ INIT_CUSTOM_ERROR("KeyError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Valu
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL);
 /* BEGIN::ValueError.IndexError */
-PRIVATE struct type_member indexerror_class_members[] = {
+PRIVATE struct type_member tpconst indexerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnboundItem", &DeeError_UnboundItem),
 	TYPE_MEMBER_END
 };
@@ -665,7 +665,7 @@ INIT_CUSTOM_ERROR("SequenceError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError
                   NULL, NULL, NULL, NULL, DeeErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL);
 /* BEGIN::ValueError.UnicodeError */
-PRIVATE struct type_member unicodeerror_class_members[] = {
+PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnicodeDecodeError", &DeeError_UnicodeDecodeError),
 	TYPE_MEMBER_CONST("UnicodeEncodeError", &DeeError_UnicodeEncodeError),
 	TYPE_MEMBER_END
@@ -702,7 +702,7 @@ INIT_CUSTOM_ERROR("BufferError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_V
 
 
 /* BEGIN::SystemError */
-PRIVATE struct type_member systemerror_class_members[] = {
+PRIVATE struct type_member tpconst systemerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnsupportedAPI", &DeeError_UnsupportedAPI),
 	TYPE_MEMBER_CONST("FSError", &DeeError_FSError),
 	TYPE_MEMBER_CONST_DOC("IOError", &DeeError_FSError, "Deprecated alias for ?#FSError"),
@@ -971,7 +971,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset systemerror_getsets[] = {
+PRIVATE struct type_getset tpconst systemerror_getsets[] = {
 	{ "strerrorname",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerrorname, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -992,7 +992,7 @@ PRIVATE struct type_getset systemerror_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member systemerror_members[] = {
+PRIVATE struct type_member tpconst systemerror_members[] = {
 	TYPE_MEMBER_FIELD_DOC("errno", STRUCT_CONST | STRUCT_INT,
 	                      offsetof(DeeSystemErrorObject, se_errno),
 	                      "The associated system errno value (one of #C{E*} from ?R!Mposix])"),
@@ -1058,7 +1058,7 @@ PUBLIC DeeTypeObject DeeError_UnsupportedAPI =
 INIT_CUSTOM_ERROR("UnsupportedAPI", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL);
-PRIVATE struct type_member fserror_class_members[] = {
+PRIVATE struct type_member tpconst fserror_class_members[] = {
 	TYPE_MEMBER_CONST("FileAccessError", &DeeError_FileAccessError),
 	TYPE_MEMBER_CONST("FileNotFound", &DeeError_FileNotFound),
 	TYPE_MEMBER_CONST("FileExists", &DeeError_FileExists),
@@ -1069,7 +1069,7 @@ PUBLIC DeeTypeObject DeeError_FSError =
 INIT_CUSTOM_ERROR("FSError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, fserror_class_members);
-PRIVATE struct type_member accesserror_members[] = {
+PRIVATE struct type_member tpconst accesserror_members[] = {
 	TYPE_MEMBER_CONST("ReadOnlyFile", &DeeError_ReadOnlyFile),
 	TYPE_MEMBER_END
 };
@@ -1132,7 +1132,7 @@ appexit_repr(struct appexit_object *__restrict self) {
 	return DeeString_Newf("AppExit(%d)", self->ae_exitcode);
 }
 
-PRIVATE struct type_member appexit_members[] = {
+PRIVATE struct type_member tpconst appexit_members[] = {
 	TYPE_MEMBER_FIELD("exitcode", STRUCT_CONST | STRUCT_INT,
 	                  offsetof(struct appexit_object, ae_exitcode)),
 	TYPE_MEMBER_END
@@ -1199,7 +1199,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method appexit_class_methods[] = {
+PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	{ "exit", &appexit_class_exit,
 	  DOC("()\n"
 	      "(exitcode:?Dint,invoke_atexit=!t)\n"
@@ -1297,7 +1297,7 @@ PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 PUBLIC DeeTypeObject DeeError_StopIteration =
 INIT_CUSTOM_ERROR("StopIteration", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Signal,
                   NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-PRIVATE struct type_member interrupt_class_members[] = {
+PRIVATE struct type_member tpconst interrupt_class_members[] = {
 	TYPE_MEMBER_CONST("KeyboardInterrupt", &DeeError_KeyboardInterrupt),
 	TYPE_MEMBER_CONST("ThreadExit", &DeeError_ThreadExit),
 	TYPE_MEMBER_END
@@ -1326,7 +1326,7 @@ threadexit_visit(struct threadexit_object *__restrict self, dvisit_t proc, void 
 	Dee_Visit(self->te_result);
 }
 
-PRIVATE struct type_member threadexit_members[] = {
+PRIVATE struct type_member tpconst threadexit_members[] = {
 	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct threadexit_object, te_result)),
 	TYPE_MEMBER_END
 };
@@ -1341,7 +1341,7 @@ INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL, TP_FNORMAL | TP_FINHERITCTOR | TP_F
                   NULL, NULL, NULL, NULL);
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
-PRIVATE struct type_member signal_class_members[] = {
+PRIVATE struct type_member tpconst signal_class_members[] = {
 	TYPE_MEMBER_CONST("Interrupt", &DeeError_Interrupt),
 	TYPE_MEMBER_CONST("StopIteration", &DeeError_StopIteration),
 	TYPE_MEMBER_END

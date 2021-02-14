@@ -419,7 +419,7 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 
 
 
-PRIVATE struct type_method struct_type_methods[] = {
+PRIVATE struct type_method tpconst struct_type_methods[] = {
 	{ "offsetof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&struct_type_offsetof,
 	  DOC("(field:?Dstring)->?Dint\n"
 	      "@throw AttributeError No field with the name @field exists\n"
@@ -438,7 +438,7 @@ PRIVATE struct type_method struct_type_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member struct_type_members[] = {
+PRIVATE struct type_member tpconst struct_type_members[] = {
 	TYPE_MEMBER_CONST_DOC("isstruct", Dee_True, "Returns ?t if @this ?GStructuredType is a ?GStructType"),
 	TYPE_MEMBER_END
 };

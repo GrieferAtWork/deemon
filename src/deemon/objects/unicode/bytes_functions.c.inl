@@ -4392,7 +4392,8 @@ err:
 
 
 
-INTERN struct type_method bytes_methods[] = {
+INTDEF struct type_method tpconst bytes_methods[];
+INTERN struct type_method tpconst bytes_methods[] = {
 	{ "decode",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_decode,
 	  DOC("(codec:?Dstring,errors=!Pstrict)->?X2?Dstring?O\n"

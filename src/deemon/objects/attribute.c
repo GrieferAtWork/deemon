@@ -135,7 +135,7 @@ PRIVATE struct type_cmp attr_cmp = {
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&attr_eq
 };
 
-PRIVATE struct type_member attr_members[] = {
+PRIVATE struct type_member tpconst attr_members[] = {
 	TYPE_MEMBER_FIELD_DOC("decl", STRUCT_OBJECT, offsetof(Attr, a_info.a_decl),
 	                      "The type or object that is declaring this Attribute"),
 	TYPE_MEMBER_FIELD_DOC("attrtype", STRUCT_OBJECT_OPT, offsetof(Attr, a_info.a_attrtype),
@@ -309,7 +309,7 @@ attr_repr(Attr *__restrict self) {
 
 
 
-PRIVATE struct type_getset attr_getsets[] = {
+PRIVATE struct type_getset tpconst attr_getsets[] = {
 	{ "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_name, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "The name of this Attribute") },
@@ -567,7 +567,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method attr_class_methods[] = {
+PRIVATE struct type_method tpconst attr_class_methods[] = {
 	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_exists,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
@@ -896,7 +896,7 @@ PRIVATE struct type_seq enumattr_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&enumattr_iter
 };
 
-PRIVATE struct type_member enumattr_class_members[] = {
+PRIVATE struct type_member tpconst enumattr_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeEnumAttrIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1242,7 +1242,7 @@ done:
 }
 
 
-PRIVATE struct type_member enumattriter_members[] = {
+PRIVATE struct type_member tpconst enumattriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
 	TYPE_MEMBER_END
 };

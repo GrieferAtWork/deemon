@@ -940,7 +940,7 @@ INTDEF NONNULL((1, 2)) void DCALL instance_tclear(DeeTypeObject *__restrict tp_s
 INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
-INTDEF struct type_gc instance_gc;
+INTDEF struct type_gc Dee_tpconst instance_gc;
 
 /* Builtin (standard) operators for hashing and comparing class objects. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);

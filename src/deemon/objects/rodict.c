@@ -262,7 +262,7 @@ PRIVATE struct type_cmp rodictiterator_cmp = {
 };
 
 
-PRIVATE struct type_member rodict_iterator_members[] = {
+PRIVATE struct type_member tpconst rodict_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?Ert:RoDict"),
 	TYPE_MEMBER_END
 };
@@ -965,7 +965,7 @@ err:
 DOC_REF(map_get_doc);
 DOC_REF(map_byhash_doc);
 
-PRIVATE struct type_method rodict_methods[] = {
+PRIVATE struct type_method tpconst rodict_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_get,
 	  DOC_GET(map_get_doc) },
@@ -979,19 +979,19 @@ PRIVATE struct type_method rodict_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_getset rodict_getsets[] = {
+PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
 	{ NULL }
 };
 
-PRIVATE struct type_member rodict_members[] = {
+PRIVATE struct type_member tpconst rodict_members[] = {
 	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Dict, rd_mask)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Dict, rd_size)),
 	TYPE_MEMBER_END
 };
 
 
-PRIVATE struct type_member rodict_class_members[] = {
+PRIVATE struct type_member tpconst rodict_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &RoDictIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoDict_Type),
 	TYPE_MEMBER_END

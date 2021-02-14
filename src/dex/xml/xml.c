@@ -419,11 +419,11 @@ node_visit(XMLNodeObject *__restrict self,
 }
 
 
-PRIVATE struct type_getset node_getsets[] = {
+PRIVATE struct type_getset tpconst node_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_method node_methods[] = {
+PRIVATE struct type_method tpconst node_methods[] = {
 	{ NULL }
 };
 

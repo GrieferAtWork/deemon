@@ -325,9 +325,9 @@ compiler_visit(DeeCompilerObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->cp_scope);
 }
 
-INTDEF struct type_method compiler_methods[];
-INTDEF struct type_getset compiler_getsets[];
-INTDEF struct type_member compiler_class_members[];
+INTDEF struct type_method tpconst compiler_methods[];
+INTDEF struct type_getset tpconst compiler_getsets[];
+INTDEF struct type_member tpconst compiler_class_members[];
 
 INTDEF int DCALL
 compiler_init(DeeCompilerObject *__restrict self,

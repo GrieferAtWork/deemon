@@ -314,7 +314,7 @@ enviterator_next_value(DeeObject *__restrict self) {
 }
 
 
-PRIVATE struct type_member env_members[] = {
+PRIVATE struct type_member tpconst env_members[] = {
 	TYPE_MEMBER_CONST("seq", &DeeEnv_Singleton),
 	TYPE_MEMBER_END
 };
@@ -1175,7 +1175,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset user_class_getsets[] = {
+PRIVATE struct type_getset tpconst user_class_getsets[] = {
 	{ S_User_class_getset_name_name, &default_user_get_name, NULL, NULL, S_User_class_getset_name_doc },
 	{ S_User_class_getset_home_name, &default_user_get_home, NULL, NULL, S_User_class_getset_home_doc },
 	{ "domain_np", &default_user_get_domain, NULL, NULL,
@@ -1311,7 +1311,7 @@ err:
 	}
 }
 
-PRIVATE struct type_getset user_getsets[] = {
+PRIVATE struct type_getset tpconst user_getsets[] = {
 	{ S_User_getset_name_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, S_User_getset_name_doc },
 	{ S_User_getset_home_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, S_User_getset_home_doc },
 	{ "domain_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_domain, NULL, NULL,
@@ -1970,7 +1970,7 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32(result);
 }
 
-PRIVATE struct type_getset stat_getsets[] = {
+PRIVATE struct type_getset tpconst stat_getsets[] = {
 	{ S_Stat_getset_st_dev_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, S_Stat_getset_st_dev_doc },
 	{ S_Stat_getset_st_ino_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, S_Stat_getset_st_ino_doc },
 	{ S_Stat_getset_st_mode_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, S_Stat_getset_st_mode_doc },
@@ -2362,7 +2362,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method stat_class_methods[] = {
+PRIVATE struct type_method tpconst stat_class_methods[] = {
 	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
 	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
 	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
@@ -2759,7 +2759,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member diriter_members[] = {
+PRIVATE struct type_member tpconst diriter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, d_dir), "->?Gdir"),
 	TYPE_MEMBER_END
 };
@@ -2863,7 +2863,7 @@ PRIVATE struct type_seq dir_seq = {
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL
 };
 
-PRIVATE struct type_member dir_class_members[] = {
+PRIVATE struct type_member tpconst dir_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeDirIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -3106,7 +3106,7 @@ INTERN DeeTypeObject DeeQueryIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE struct type_member query_class_members[] = {
+PRIVATE struct type_member tpconst query_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeQueryIterator_Type),
 	TYPE_MEMBER_END
 };

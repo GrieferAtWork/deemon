@@ -1676,7 +1676,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_member sockaddr_members[] = {
+PRIVATE struct type_member tpconst sockaddr_members[] = {
 	TYPE_MEMBER_FIELD_DOC("family", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeSockAddrObject, sa_addr.sa.sa_family),
 	                      "The address family of this :sockaddr"),
 	TYPE_MEMBER_FIELD_DOC("sa_family", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeSockAddrObject, sa_addr.sa.sa_family),
@@ -1741,7 +1741,7 @@ sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 }
 #endif /* AF_INET6 */
 
-PRIVATE struct type_getset sockaddr_getsets[] = {
+PRIVATE struct type_getset tpconst sockaddr_getsets[] = {
 #ifdef AF_INET
 	{ "inet_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_host, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET\": The host address in host endian") },

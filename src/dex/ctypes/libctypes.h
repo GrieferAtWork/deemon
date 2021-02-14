@@ -567,16 +567,20 @@ INTDEF DeeSTypeObject DeeCUInt64_Type;
 #define CUINT_SIZED(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_, sizeof)
 
 
+#ifdef __LONGDOUBLE
+typedef __LONGDOUBLE long_double;
+#else /* __LONGDOUBLE */
 typedef long double long_double;
-#define CONFIG_CTYPES_FLOAT_TYPE    float
-#define CONFIG_CTYPES_DOUBLE_TYPE   double
-#if defined(FFI_TYPE_LONGDOUBLE) && \
-    defined(FFI_TYPE_DOUBLE) && \
-    FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE
-#define CONFIG_CTYPES_LDOUBLE_TYPE  double
-#else
-#define CONFIG_CTYPES_LDOUBLE_TYPE  long_double
-#endif
+#endif /* !__LONGDOUBLE */
+#define CONFIG_CTYPES_FLOAT_TYPE   float
+#define CONFIG_CTYPES_DOUBLE_TYPE  double
+#if (defined(FFI_TYPE_LONGDOUBLE) && \
+     defined(FFI_TYPE_DOUBLE) &&     \
+     FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE)
+#define CONFIG_CTYPES_LDOUBLE_TYPE double
+#else /* FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE */
+#define CONFIG_CTYPES_LDOUBLE_TYPE long_double
+#endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
 
 INTDEF DeeSTypeObject  DeeCFloat_Type;
 INTDEF DeeSTypeObject  DeeCDouble_Type;
@@ -768,13 +772,13 @@ DeeSType_Array(DeeSTypeObject *__restrict self, size_t num_items);
 
 #ifndef CONFIG_NO_CFUNCTION
 typedef ffi_abi ctypes_cc_t;
-#define CC_DEFAULT     FFI_DEFAULT_ABI
+#define CC_DEFAULT   FFI_DEFAULT_ABI
 #define CC_MTYPE     ((ctypes_cc_t)0x7fff) /* MASK: The actual FFI type. */
 #define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
 #define CC_INVALID   ((ctypes_cc_t)-1)
 #else /* !CONFIG_NO_CFUNCTION */
 typedef int ctypes_cc_t;
-#define CC_DEFAULT     0
+#define CC_DEFAULT   0
 #define CC_INVALID   (-1)
 #define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
 #endif /* CONFIG_NO_CFUNCTION */

@@ -135,7 +135,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset subrangeiterator_getsets[] = {
+PRIVATE struct type_getset tpconst subrangeiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get,
 	  NULL, NULL,
@@ -143,7 +143,7 @@ PRIVATE struct type_getset subrangeiterator_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member subrangeiterator_members[] = {
+PRIVATE struct type_member tpconst subrangeiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SubRangeIterator, sr_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T, offsetof(SubRangeIterator, sr_start)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_SIZE_T, offsetof(SubRangeIterator, sr_size)),
@@ -305,7 +305,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member subrange_members[] = {
+PRIVATE struct type_member tpconst subrange_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SubRange, sr_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SubRange, sr_start)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SubRange, sr_size)),
@@ -313,7 +313,7 @@ PRIVATE struct type_member subrange_members[] = {
 };
 
 
-PRIVATE struct type_member subrange_class_members[] = {
+PRIVATE struct type_member tpconst subrange_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqSubRangeIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -753,14 +753,14 @@ PRIVATE struct type_seq subrangen_seq = {
 	/* .tp_nsi       = */ &subrangen_nsi
 };
 
-PRIVATE struct type_member subrangen_members[] = {
+PRIVATE struct type_member tpconst subrangen_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SubRangeN, sr_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T, offsetof(SubRangeN, sr_start)),
 	TYPE_MEMBER_END
 };
 
 
-PRIVATE struct type_member subrangen_class_members[] = {
+PRIVATE struct type_member tpconst subrangen_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeIterator_Type),
 	TYPE_MEMBER_END
 };

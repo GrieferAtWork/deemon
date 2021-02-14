@@ -207,7 +207,7 @@ DEFINE_ITERATOR_COMPARE(usetiterator_gr, >)
 DEFINE_ITERATOR_COMPARE(usetiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
-PRIVATE struct type_member usetiterator_members[] = {
+PRIVATE struct type_member tpconst usetiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(USetIterator, si_set), "->?GUniqueSet"),
 	TYPE_MEMBER_END
 };
@@ -772,7 +772,7 @@ err:
 
 
 
-PRIVATE struct type_getset uset_getsets[] = {
+PRIVATE struct type_getset tpconst uset_getsets[] = {
 	//TODO:{ "frozen",
 	//TODO: (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoSet_FromSequence,
 	//TODO:  NULL,
@@ -782,7 +782,7 @@ PRIVATE struct type_getset uset_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member uset_class_members[] = {
+PRIVATE struct type_member tpconst uset_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &USetIterator_Type),
 	//TODO:TYPE_MEMBER_CONST("Frozen", &URoSet_Type),
 	TYPE_MEMBER_END
@@ -1226,7 +1226,7 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_nsi       = */ &uset_nsi
 };
 
-PRIVATE struct type_method uset_methods[] = {
+PRIVATE struct type_method tpconst uset_methods[] = {
 	{ "pop",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_pop,
 	  DOC("->\n"
@@ -1273,7 +1273,7 @@ PRIVATE struct type_method uset_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_gc uset_gc = {
+PRIVATE struct type_gc tpconst uset_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&uset_clear
 };
 

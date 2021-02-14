@@ -1385,7 +1385,7 @@ time_isdst(DeeTimeObject *__restrict self) {
 	return_bool(determine_isdst(self));
 }
 
-PRIVATE struct type_method time_methods[] = {
+PRIVATE struct type_method tpconst time_methods[] = {
 	{ "as", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_as,
 	  DOC("(string repr)->time\n"
 	      "@throw ValueError The given @repr is not a known string representation\n"
@@ -1638,7 +1638,7 @@ DOC_DEF(docof_timeas, "->?GTime\n"
                       "Get/Set this specific representation of time, potentially clamped to the limits of the next-greater view\n"
                       "Note that these representations are always zero-based, meaning "
                       "that January is $0, the 2nd day of the month is $1, etc.");
-PRIVATE struct type_getset time_getsets[] = {
+PRIVATE struct type_getset tpconst time_getsets[] = {
 	{ "intval", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_intval, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Returns the integer value of the selected time representation\n"
@@ -1964,7 +1964,7 @@ PRIVATE DEFINE_INT15(time_class_bits, 128);
 PRIVATE DEFINE_INT15(time_class_bits, 64);
 #endif /* !HAVE_128BIT_TIME */
 
-PRIVATE struct type_member time_class_members[] = {
+PRIVATE struct type_member tpconst time_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("bits", &time_class_bits,
 	                      "The number of bits used by the implementation to represent a ?. object"),
 	TYPE_MEMBER_END
@@ -2261,7 +2261,7 @@ time_class_freq(DeeObject *UNUSED(self),
 	return DeeInt_NewInt(MICROSECONDS_PER_SECOND);
 }
 
-PRIVATE struct type_method time_class_methods[] = {
+PRIVATE struct type_method tpconst time_class_methods[] = {
 	/* For backwards compatibility with the old deemon (which
 	 * did everything as part of the `time' builtin type) */
 	{ "now", &time_class_now,

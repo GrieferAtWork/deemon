@@ -544,14 +544,14 @@ se_enumattr(DeeTypeObject *UNUSED(tp_self),
 	                    arg);
 }
 
-PRIVATE struct type_attr se_attr = {
+PRIVATE struct type_attr tpconst se_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
 	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr
 };
 
-PRIVATE struct type_member se_members[] = {
+PRIVATE struct type_member tpconst se_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqEachBase, se_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
@@ -1107,7 +1107,7 @@ done:
 DEFINE_SEW_BINARY(sew_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
-PRIVATE struct type_attr sew_attr = {
+PRIVATE struct type_attr tpconst sew_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_delattr,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&sew_setattr,
@@ -1228,7 +1228,7 @@ PRIVATE struct type_seq seo_seq = {
 
 #define seo_members   se_members /* TODO: Access to operator name & arguments */
 
-PRIVATE struct type_member seo_class_members[] = {
+PRIVATE struct type_member tpconst seo_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqEachOperatorIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1470,7 +1470,7 @@ PRIVATE struct type_cmp sewi_cmp = {
 	/* .tp_nii  = */ &sewi_nii
 };
 
-PRIVATE struct type_member seoi_members[] = {
+PRIVATE struct type_member tpconst seoi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachOperator"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END

@@ -259,7 +259,7 @@ PRIVATE struct type_cmp refaiter_cmp = {
 };
 
 
-PRIVATE struct type_getset refaiter_getsets[] = {
+PRIVATE struct type_getset tpconst refaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq,
 	  NULL,
@@ -268,7 +268,7 @@ PRIVATE struct type_getset refaiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member refaiter_members[] = {
+PRIVATE struct type_member tpconst refaiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequenceIterator, re_data), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequenceIterator, re_pattern), "->?Dstring"),
 	TYPE_MEMBER_END
@@ -357,7 +357,7 @@ relaiter_getseq(ReSequenceIterator *__restrict self) {
 	                           &args_copy);
 }
 
-PRIVATE struct type_getset relaiter_getsets[] = {
+PRIVATE struct type_getset tpconst relaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq,
 	  NULL,
@@ -496,7 +496,7 @@ respiter_getseq(ReSequenceIterator *__restrict self) {
 	                       &args_copy);
 }
 
-PRIVATE struct type_getset respiter_getsets[] = {
+PRIVATE struct type_getset tpconst respiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq,
 	  NULL,
@@ -768,13 +768,13 @@ PRIVATE struct type_seq refa_seq = {
 	/* .tp_nsi       = */ &refa_nsi
 };
 
-PRIVATE struct type_member refa_members[] = {
+PRIVATE struct type_member tpconst refa_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequence, re_data), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequence, re_pattern), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member refa_class_members[] = {
+PRIVATE struct type_member tpconst refa_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ReFindAllIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -863,7 +863,7 @@ PRIVATE struct type_seq rela_seq = {
 	/* .tp_nsi       = */ &rela_nsi
 };
 
-PRIVATE struct type_member rela_class_members[] = {
+PRIVATE struct type_member tpconst rela_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ReLocateAllIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1019,7 +1019,7 @@ PRIVATE struct type_seq resp_seq = {
 	/* .tp_nsi       = */ &resp_nsi
 };
 
-PRIVATE struct type_member resp_class_members[] = {
+PRIVATE struct type_member tpconst resp_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ReSplitIterator_Type),
 	TYPE_MEMBER_END
 };

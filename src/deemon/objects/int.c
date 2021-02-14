@@ -3241,7 +3241,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method int_class_methods[] = {
+PRIVATE struct type_method tpconst int_class_methods[] = {
 	{ "frombytes",
 	  (dobjmethod_t)&int_frombytes,
 	  DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
@@ -3292,7 +3292,7 @@ err:
 }
 
 
-PRIVATE struct type_method int_methods[] = {
+PRIVATE struct type_method tpconst int_methods[] = {
 	{ "tostr",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tostr,
 	  DOC("(radix=!10,mode=!P{})->?Dstring\n"
@@ -3407,7 +3407,7 @@ err:
 }
 
 
-PRIVATE struct type_getset int_getsets[] = {
+PRIVATE struct type_getset tpconst int_getsets[] = {
 	{ "bitcount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_bitcount,
 	  NULL,
@@ -3435,7 +3435,7 @@ INTERN DEFINE_UINT64(int_size_max, SSIZE_MAX);
 INTERN DEFINE_UINT32(int_size_max, SSIZE_MAX);
 #endif /* SSIZE_MAX < UINT32_MAX */
 
-PRIVATE struct type_member int_class_members[] = {
+PRIVATE struct type_member tpconst int_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("SIZE_MAX", &int_size_max,
 	                      "The max value acceptable for sequence sizes, or indices\n"
 	                      "Note that despite its name, this constant is not necessarily "

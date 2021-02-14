@@ -198,7 +198,7 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 }
 
 
-PRIVATE struct type_getset symbol_getsets[] = {
+PRIVATE struct type_getset tpconst symbol_getsets[] = {
 	{ "kind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_getkind,
 	  (int (DCALL *)(DeeObject *__restrict))&symbol_delkind,
@@ -359,7 +359,7 @@ symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *arg
 }
 
 
-PRIVATE struct type_method symbol_methods[] = {
+PRIVATE struct type_method tpconst symbol_methods[] = {
 	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_getalias,
 	  DOC("->?.\n"
 	      "Either re-returns @this symbol, or unwinds it to return "

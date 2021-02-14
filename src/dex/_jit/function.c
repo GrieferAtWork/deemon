@@ -1017,7 +1017,7 @@ jf_gettext(JITFunction *__restrict self) {
 	                         STRING_ERROR_FIGNORE);
 }
 
-PRIVATE struct type_getset jf_getsets[] = {
+PRIVATE struct type_getset tpconst jf_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N") },
@@ -1049,7 +1049,7 @@ PRIVATE struct type_getset jf_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member jf_members[] = {
+PRIVATE struct type_member tpconst jf_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FYIELDING,
 	                         "Check if @this function behaves as yielding (i.e. contains a yield statement "
 	                         "that doesn't appear as part of a recursively defined inner function)"),

@@ -360,3 +360,6 @@
 #define Dee_weakref_object     weakref_object
 #define Dee_weakrefable_object weakrefable_object
 
+#define tpconst     const
+#define Dee_tpconst const
+

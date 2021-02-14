@@ -2891,7 +2891,7 @@ err:
 
 
 
-PRIVATE struct type_method thread_methods[] = {
+PRIVATE struct type_method tpconst thread_methods[] = {
 	{ "start", &thread_start,
 	  DOC("->?Dbool\n"
 	      "@throw SystemError Failed to start @this thread for some reason\n"
@@ -3073,7 +3073,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_getset thread_class_getsets[] = {
+PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	{ "current",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_current_get, NULL, NULL,
 	  DOC("->?.\n"
@@ -3084,12 +3084,12 @@ PRIVATE struct type_getset thread_class_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member thread_class_members[] = {
+PRIVATE struct type_member tpconst thread_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("main", &DeeThread_Main, "The main (initial) thread"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_method thread_class_methods[] = {
+PRIVATE struct type_method tpconst thread_class_methods[] = {
 	{ "self", &thread_self,
 	  DOC("->?.\n"
 	      "Deprecated alias for ?#current") },
@@ -3384,7 +3384,7 @@ thread_hascrashed(DeeObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE struct type_getset thread_getsets[] = {
+PRIVATE struct type_getset tpconst thread_getsets[] = {
 	{ "callback",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
 	  (int (DCALL *)(DeeObject *__restrict))&thread_callback_del,
@@ -3457,7 +3457,7 @@ PRIVATE struct type_getset thread_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member thread_members[] = {
+PRIVATE struct type_member tpconst thread_members[] = {
 #ifndef CONFIG_NO_THREADS
 	TYPE_MEMBER_FIELD_DOC("name",
 	                      STRUCT_OBJECT_OPT,
@@ -3746,7 +3746,7 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE struct type_gc thread_gc = {
+PRIVATE struct type_gc tpconst thread_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&thread_clear
 };
 #endif /* !CONFIG_NO_THREADS */

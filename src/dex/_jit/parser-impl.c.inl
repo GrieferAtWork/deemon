@@ -136,7 +136,7 @@ DECL_BEGIN
 PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 	DeeTypeObject *typetype;
-	struct opinfo *info;
+	struct opinfo const *info;
 	if (!base)
 		typetype = NULL;
 	else {

@@ -211,7 +211,7 @@ err:
 }
 
 LOCAL int DCALL
-iterator_do_hasprev(DeeObject *__restrict self, struct type_nii *__restrict nii) {
+iterator_do_hasprev(DeeObject *__restrict self, struct type_nii const *__restrict nii) {
 	DREF DeeObject *temp;
 	int error;
 	if (nii->nii_common.nii_hasprev)
@@ -268,7 +268,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_revert)
 				return (*nii->nii_common.nii_revert)(self, count);
@@ -525,7 +525,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_advance)
 				return (*nii->nii_common.nii_advance)(self, count);
@@ -817,7 +817,7 @@ err:
 }
 
 
-PRIVATE struct type_method iterator_methods[] = {
+PRIVATE struct type_method tpconst iterator_methods[] = {
 	{ "next",
 	  &iterator_next,
 	  DOC("(defl?)->\n"
@@ -1137,7 +1137,7 @@ DeeIterator_GetIndex(DeeObject *__restrict self) {
 	int error;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_getindex)
 				return (*nii->nii_common.nii_getindex)(self);
@@ -1213,7 +1213,7 @@ DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 	DREF DeeObject *temp;
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_setindex)
 				return (*nii->nii_common.nii_setindex)(self, new_index);
@@ -1248,7 +1248,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
 		struct type_math *m;
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_rewind) {
 				if unlikely((*nii->nii_common.nii_rewind)(self))
@@ -1489,7 +1489,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Prev(DeeObject *__restrict sel
 		DREF DeeObject *new_self;
 		int error;
 		struct type_math *m;
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_prev)
 				return (*nii->nii_common.nii_prev)(self);
@@ -1767,7 +1767,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_HasPrev(DeeObject *__restrict 
 	while (tp_self != &DeeIterator_Type) {
 		DREF DeeObject *temp, *temp2;
 		int error;
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_hasprev)
 				return (*nii->nii_common.nii_hasprev)(self);
@@ -1848,7 +1848,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__
 	int error;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_peek)
 				return (*nii->nii_common.nii_peek)(self);
@@ -1925,7 +1925,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 	if unlikely(tp_self == &DeeIterator_Type)
 		return_empty_seq;
 	while (tp_self != &DeeIterator_Type) {
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp &&
 		    (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_getseq)
@@ -2024,7 +2024,7 @@ iterator_set_index(DeeObject *__restrict self,
 		goto err;
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
-		struct type_nii *nii;
+		struct type_nii const *nii;
 		if (tp_self->tp_cmp && (nii = tp_self->tp_cmp->tp_nii) != NULL) {
 			if (nii->nii_common.nii_setindex)
 				return (*nii->nii_common.nii_setindex)(self, newindex);
@@ -2051,7 +2051,7 @@ err:
 
 
 
-PRIVATE struct type_getset iterator_getsets[] = {
+PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  &DeeIterator_GetSeq, NULL, NULL,
 	  DOC("->?DSequence\n"
@@ -2661,12 +2661,12 @@ PRIVATE struct type_seq if_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&if_iter
 };
 
-PRIVATE struct type_member if_members[] = {
+PRIVATE struct type_member tpconst if_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(IteratorFuture, if_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member if_class_members[] = {
+PRIVATE struct type_member tpconst if_class_members[] = {
 	/* Should always be right, because this standard proxy is usually constructed
 	 * by the `future' member of `iterator', meaning that the contained iterator
 	 * should always be derived from that type.

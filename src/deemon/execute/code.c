@@ -864,7 +864,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operatorname(DeeCodeObject *__restrict self) {
 	struct function_info info;
-	struct opinfo *op;
+	struct opinfo const *op;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -897,7 +897,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member code_members[] = {
+PRIVATE struct type_member tpconst code_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__ddi__", STRUCT_OBJECT, offsetof(DeeCodeObject, co_ddi),
 	                      "->?Ert:Ddi\n"
 	                      "The DDI (DeemonDebugInformation) data block"),
@@ -934,7 +934,7 @@ PRIVATE struct type_member code_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_getset code_getsets[] = {
+PRIVATE struct type_getset tpconst code_getsets[] = {
 	/* General-purpose callable object RTTI interface implementation.
 	 * These functions are mangled with leading/trailing underscores,
 	 * as they also appear in other (standard-compliant) runtime types,
@@ -996,7 +996,7 @@ PRIVATE struct type_getset code_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_gc code_gc = {
+PRIVATE struct type_gc tpconst code_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&code_clear
 };
 

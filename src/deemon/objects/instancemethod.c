@@ -301,7 +301,7 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 	return DeeObject_GetAttr(self->im_func, &str___module__);
 }
 
-PRIVATE struct type_getset im_getsets[] = {
+PRIVATE struct type_getset tpconst im_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
@@ -330,7 +330,7 @@ PRIVATE struct type_getset im_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member im_members[] = {
+PRIVATE struct type_member tpconst im_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(InstanceMethod, im_this),
 	                      "->\n"
 	                      "The object to which @this :InstanceMethod is bound"),

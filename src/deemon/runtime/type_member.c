@@ -101,7 +101,7 @@ type_member_typefor(struct type_member const *__restrict self) {
 
 INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 type_method_enum(DeeTypeObject *__restrict tp_self,
-                 struct type_method *chain,
+                 struct type_method const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	flags |= ATTR_PERMGET | ATTR_PERMCALL;
@@ -118,7 +118,7 @@ type_method_enum(DeeTypeObject *__restrict tp_self,
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 type_obmeth_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
-	struct type_method *chain;
+	struct type_method const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_methods;
 	ASSERT(chain);
@@ -136,7 +136,7 @@ type_obmeth_enum(DeeTypeObject *__restrict tp_self,
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 type_obprop_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
-	struct type_getset *chain;
+	struct type_getset const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_getsets;
 	ASSERT(chain);
@@ -160,7 +160,7 @@ type_obprop_enum(DeeTypeObject *__restrict tp_self,
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 type_obmemb_enum(DeeTypeObject *__restrict tp_self,
                  denum_t proc, void *arg) {
-	struct type_member *chain;
+	struct type_member const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_members;
 	ASSERT(chain);
@@ -179,7 +179,7 @@ type_obmemb_enum(DeeTypeObject *__restrict tp_self,
 
 INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 type_getset_enum(DeeTypeObject *__restrict tp_self,
-                 struct type_getset *chain,
+                 struct type_getset const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	ASSERT(flags & ATTR_PROPERTY);
@@ -202,7 +202,7 @@ type_getset_enum(DeeTypeObject *__restrict tp_self,
 
 INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 type_member_enum(DeeTypeObject *__restrict tp_self,
-                 struct type_member *chain,
+                 struct type_member const *chain,
                  uint16_t flags, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	for (; chain->m_name; ++chain) {
@@ -225,7 +225,7 @@ type_member_enum(DeeTypeObject *__restrict tp_self,
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
-type_getset_typeof(struct type_getset *chain,
+type_getset_typeof(struct type_getset const *chain,
                    DeeObject *__restrict self) {
 	DeeTypeObject *result = Dee_TYPE(self);
 	do {
@@ -243,7 +243,7 @@ type_getset_typeof(struct type_getset *chain,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
-type_member_typeof(struct type_member *chain,
+type_member_typeof(struct type_member const *chain,
                    DeeObject *__restrict self) {
 	DeeTypeObject *result = Dee_TYPE(self);
 	do {
@@ -263,7 +263,7 @@ type_member_typeof(struct type_member *chain,
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmeth_call(DeeTypeObject *cls_type,
-                 struct type_method *desc,
+                 struct type_method const *desc,
                  size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
@@ -284,7 +284,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmeth_call_kw(DeeTypeObject *cls_type,
-                    struct type_method *desc,
+                    struct type_method const *desc,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	if unlikely(!argc) {
@@ -320,7 +320,7 @@ err_no_keywords:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_method_call_kw_normal(struct type_method *desc,
+type_method_call_kw_normal(struct type_method const *desc,
                            DeeObject *self, size_t argc,
                            DeeObject *const *argv, DeeObject *kw) {
 	ASSERT(!(desc->m_flag & TYPE_METHOD_FKWDS));
@@ -343,7 +343,7 @@ err_no_keywords:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_getset_get(struct type_getset *desc,
+type_getset_get(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_get)
 		return (*desc->gs_get)(self);
@@ -353,7 +353,7 @@ type_getset_get(struct type_getset *desc,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-type_getset_del(struct type_getset *desc,
+type_getset_del(struct type_getset const *desc,
                 DeeObject *__restrict self) {
 	if likely(desc->gs_del)
 		return (*desc->gs_del)(self);
@@ -362,7 +362,7 @@ type_getset_del(struct type_getset *desc,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-type_getset_set(struct type_getset *desc,
+type_getset_set(struct type_getset const *desc,
                 DeeObject *self, DeeObject *value) {
 	if likely(desc->gs_set)
 		return (*desc->gs_set)(self, value);
@@ -374,7 +374,7 @@ PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call(DeeTypeObject *cls_type,
-                 struct type_getset *desc,
+                 struct type_getset const *desc,
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if unlikely(!desc->gs_get)
@@ -392,7 +392,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call_kw(DeeTypeObject *cls_type,
-                    struct type_getset *desc,
+                    struct type_getset const *desc,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
@@ -411,7 +411,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call(DeeTypeObject *cls_type,
-                 struct type_member *desc,
+                 struct type_member const *desc,
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg) ||
@@ -424,7 +424,7 @@ type_obmemb_call(DeeTypeObject *cls_type,
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call_kw(DeeTypeObject *cls_type,
-                    struct type_member *desc,
+                    struct type_member const *desc,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
@@ -440,7 +440,7 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
 #define FIELD(T)  (*(T *)((uintptr_t)self + desc->m_field.m_offset))
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_member_get(struct type_member *desc,
+type_member_get(struct type_member const *desc,
                 DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		ASSERT_OBJECT(desc->m_const);
@@ -584,7 +584,7 @@ is_unbound:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-type_member_bound(struct type_member *desc,
+type_member_bound(struct type_member const *desc,
                   DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		ASSERT_OBJECT(desc->m_const);
@@ -641,7 +641,7 @@ type_member_bound(struct type_member *desc,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-type_member_set(struct type_member *desc,
+type_member_set(struct type_member const *desc,
                 DeeObject *self, DeeObject *value) {
 	if (TYPE_MEMBER_ISCONST(desc) ||
 	    desc->m_field.m_type & STRUCT_CONST)

@@ -398,7 +398,7 @@ not_allowed:
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 		if (operator_result &&
 		    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
-			struct opinfo *info;
+			struct opinfo const *info;
 			info = Dee_OperatorInfo(Dee_TYPE(argv[0]), self->a_flag);
 			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r'\n",
 			                 argv[0], info ? info->oi_uname : "?",

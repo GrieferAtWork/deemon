@@ -232,7 +232,7 @@ PRIVATE struct type_cmp splititer_cmp = {
 };
 
 
-PRIVATE struct type_member splititer_members[] = {
+PRIVATE struct type_member tpconst splititer_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(StringSplitIterator, s_split), "->?Ert:StringSplit"),
 	TYPE_MEMBER_END
 };
@@ -499,18 +499,18 @@ casesplit_iter(StringSplit *__restrict self) {
 	return split_doiter(self, &StringCaseSplitIterator_Type);
 }
 
-PRIVATE struct type_member split_members[] = {
+PRIVATE struct type_member tpconst split_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringSplit, s_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC("__sep__", STRUCT_OBJECT, offsetof(StringSplit, s_sep), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member split_class_members[] = {
+PRIVATE struct type_member tpconst split_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member casesplit_class_members[] = {
+PRIVATE struct type_member tpconst casesplit_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringCaseSplitIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -938,7 +938,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE struct type_member linesplit_class_members[] = {
+PRIVATE struct type_member tpconst linesplit_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &StringLineSplitIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -980,7 +980,7 @@ linesplit_visit(LineSplit *__restrict self, dvisit_t proc, void *arg) {
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool
 
-PRIVATE struct type_member linesplit_members[] = {
+PRIVATE struct type_member tpconst linesplit_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(LineSplit, ls_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__keeplf__", STRUCT_CONST | STRUCT_CBOOL, offsetof(LineSplit, ls_keep)),
 	TYPE_MEMBER_END

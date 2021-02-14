@@ -63,22 +63,22 @@ INTDEF DeeTypeObject SeqPermutationsIterator_Type;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject    *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
-	DREF DeeObject   **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
-	                                  * The vector of elements found in `c_seq'
-	                                  * NOTE: When `NULL', elements from `c_seq' are accessed through
-	                                  *       the GETITEM interface, as those items are being used. */
-	size_t             c_seqlen;     /* [const][!0] The length of the sequence (in items) */
-	size_t             c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
-	struct type_seq   *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
-	                                  * to-be used to access the items of `c_seq' */
-	DeeTypeObject     *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
+	DREF DeeObject        *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
+	DREF DeeObject       **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
+	                                      * The vector of elements found in `c_seq'
+	                                      * NOTE: When `NULL', elements from `c_seq' are accessed through
+	                                      *       the GETITEM interface, as those items are being used. */
+	size_t                 c_seqlen;     /* [const][!0] The length of the sequence (in items) */
+	size_t                 c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
+	struct type_seq *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
+	                                      * to-be used to access the items of `c_seq' */
+	DeeTypeObject         *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
 } Combinations;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	DREF DeeObject *temp, *result;
-	struct type_nsi *nsi;
+	struct type_nsi const *nsi;
 	ASSERT(index < self->c_seqlen);
 	if (self->c_elem)
 		return_reference_(self->c_elem[index]);
@@ -268,7 +268,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member comiter_members[] = {
+PRIVATE struct type_member tpconst comiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqCombinations"),
 	TYPE_MEMBER_END
 };
@@ -553,12 +553,12 @@ PRIVATE struct type_seq com_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
 };
 
-PRIVATE struct type_member com_class_members[] = {
+PRIVATE struct type_member tpconst com_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqCombinationsIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member com_members[] = {
+PRIVATE struct type_member tpconst com_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Combinations, c_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
@@ -693,7 +693,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member rcomiter_members[] = {
+PRIVATE struct type_member tpconst rcomiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqRepeatCombinations"),
 	TYPE_MEMBER_END
 };
@@ -809,7 +809,7 @@ PRIVATE struct type_seq rcom_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
 };
 
-PRIVATE struct type_member rcom_class_members[] = {
+PRIVATE struct type_member tpconst rcom_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqRepeatCombinationsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -934,7 +934,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_member pmutiter_members[] = {
+PRIVATE struct type_member tpconst pmutiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqPermutations"),
 	TYPE_MEMBER_END
 };
@@ -1054,7 +1054,7 @@ PRIVATE struct type_seq pmut_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
 };
 
-PRIVATE struct type_member pmut_class_members[] = {
+PRIVATE struct type_member tpconst pmut_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqPermutationsIterator_Type),
 	TYPE_MEMBER_END
 };

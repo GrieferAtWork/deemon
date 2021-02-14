@@ -216,7 +216,7 @@ done:
 }
 
 
-PRIVATE struct type_method parser_methods[] = {
+PRIVATE struct type_method tpconst parser_methods[] = {
 	{ "parse_unaryhead",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_unaryhead,
 	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
@@ -442,7 +442,7 @@ parser_setlfstmt(DeeCompilerWrapperObject *self,
 	return 0;
 }
 
-PRIVATE struct type_getset parser_getsets[] = {
+PRIVATE struct type_getset tpconst parser_getsets[] = {
 	{ "allowlfstatements",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&parser_getlfstmt, NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&parser_setlfstmt,
@@ -454,7 +454,7 @@ PRIVATE struct type_getset parser_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member parser_class_members[] = {
+PRIVATE struct type_member tpconst parser_class_members[] = {
 	TYPE_MEMBER_CONST("Ast", &DeeCompilerAst_Type),
 	TYPE_MEMBER_END
 };

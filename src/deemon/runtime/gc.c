@@ -1383,7 +1383,7 @@ gciter_next(GCIter *__restrict self) {
 }
 
 
-PRIVATE struct type_member gciter_members[] = {
+PRIVATE struct type_member tpconst gciter_members[] = {
 	TYPE_MEMBER_CONST("seq", &DeeGCEnumTracked_Singleton),
 	TYPE_MEMBER_END
 };
@@ -1501,7 +1501,7 @@ PRIVATE struct type_seq gcenum_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcenum_contains
 };
 
-PRIVATE struct type_member gcenum_class_members[] = {
+PRIVATE struct type_member tpconst gcenum_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &GCIter_Type),
 	TYPE_MEMBER_END
 };
@@ -1585,7 +1585,7 @@ err:
 }
 
 
-PRIVATE struct type_method gcenum_methods[] = {
+PRIVATE struct type_method tpconst gcenum_methods[] = {
 	{ "collect", &gcenum_collect,
 	  DOC("(max=!-1)->?Dint\n"
 	      "Try to collect at least @max GC objects and return the actual number collected\n"

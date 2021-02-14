@@ -189,7 +189,7 @@ PRIVATE struct type_cmp blvi_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_ge,
 };
 
-PRIVATE struct type_member blvi_members[] = {
+PRIVATE struct type_member tpconst blvi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BlackListVarkwdsIterator, ki_map), "->?Ert:BlackListVarkwds"),
 	TYPE_MEMBER_END
 };
@@ -803,7 +803,7 @@ PRIVATE struct type_seq blv_seq = {
 	/* .tp_nsi       = */ &blv_nsi
 };
 
-PRIVATE struct type_member blv_class_members[] = {
+PRIVATE struct type_member tpconst blv_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BlackListVarkwdsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1199,7 +1199,7 @@ PRIVATE struct type_cmp blmi_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_ge,
 };
 
-PRIVATE struct type_member blmi_members[] = {
+PRIVATE struct type_member tpconst blmi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BlackListMappingIterator, mi_map), "->?Ert:BlackListMapping"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(BlackListMappingIterator, mi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
@@ -1682,7 +1682,7 @@ PRIVATE struct type_seq blm_seq = {
 	/* .tp_nsi       = */ &blm_nsi
 };
 
-PRIVATE struct type_member blm_class_members[] = {
+PRIVATE struct type_member tpconst blm_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BlackListMappingIterator_Type),
 	TYPE_MEMBER_END
 };

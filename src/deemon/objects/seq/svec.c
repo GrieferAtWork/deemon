@@ -184,7 +184,7 @@ PRIVATE struct type_cmp rveciter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_ge,
 };
 
-PRIVATE struct type_member rveciter_members[] = {
+PRIVATE struct type_member tpconst rveciter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RefVectorIterator, rvi_vector), "->?Ert:RefVector"),
 	TYPE_MEMBER_END
 };
@@ -975,12 +975,12 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_nsi       = */ &rvec_nsi
 };
 
-PRIVATE struct type_member rvec_class_members[] = {
+PRIVATE struct type_member tpconst rvec_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &RefVectorIterator_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member rvec_members[] = {
+PRIVATE struct type_member tpconst rvec_members[] = {
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(RefVector, rv_owner)),
 	TYPE_MEMBER_FIELD("__length__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(RefVector, rv_length)),
 	TYPE_MEMBER_END
@@ -995,7 +995,7 @@ rvec_get_writable(RefVector *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 }
 
-PRIVATE struct type_getset rvec_getsets[] = {
+PRIVATE struct type_getset tpconst rvec_getsets[] = {
 	{ "__writable__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_get_writable,
 	  NULL, NULL, DOC("->?Dbool") },
@@ -1213,7 +1213,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_member sveciter_members[] = {
+PRIVATE struct type_member tpconst sveciter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SharedVectorIterator, si_seq), "->?Ert:SharedVector"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedVectorIterator, si_index)),
 	TYPE_MEMBER_END
@@ -1586,7 +1586,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_nsi       = */ &svec_nsi,
 };
 
-PRIVATE struct type_member svec_class_members[] = {
+PRIVATE struct type_member tpconst svec_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SharedVectorIterator_Type),
 	TYPE_MEMBER_END
 };

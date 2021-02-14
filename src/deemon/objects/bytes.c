@@ -142,7 +142,7 @@ PRIVATE struct type_cmp bytesiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_ge,
 };
 
-PRIVATE struct type_member bytesiter_members[] = {
+PRIVATE struct type_member tpconst bytesiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
@@ -1464,7 +1464,7 @@ bytes_dellast(Bytes *__restrict self) {
 }
 
 
-PRIVATE struct type_getset bytes_getsets[] = {
+PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	{ "isreadonly",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -1496,7 +1496,7 @@ PRIVATE struct type_getset bytes_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member bytes_members[] = {
+PRIVATE struct type_member tpconst bytes_members[] = {
 	TYPE_MEMBER_FIELD("length", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Bytes, b_size)),
 	TYPE_MEMBER_END
 };
@@ -1523,7 +1523,7 @@ PRIVATE struct type_buffer bytes_buffer = {
 };
 
 
-INTDEF struct type_method bytes_methods[];
+INTDEF struct type_method tpconst bytes_methods[];
 
 
 PRIVATE WUNUSED DREF Bytes *DCALL
@@ -1737,7 +1737,7 @@ err:
 
 
 
-PRIVATE struct type_method bytes_class_methods[] = {
+PRIVATE struct type_method tpconst bytes_class_methods[] = {
 	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromseq,
 	  DOC("(seq:?S?Dint)->?.\n"
 	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
@@ -1764,7 +1764,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member bytes_class_members[] = {
+PRIVATE struct type_member tpconst bytes_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &BytesIterator_Type),
 	TYPE_MEMBER_END
 };

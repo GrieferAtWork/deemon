@@ -1256,7 +1256,7 @@ err:
 }
 
 
-PRIVATE struct type_method process_methods[] = {
+PRIVATE struct type_method tpconst process_methods[] = {
 	{ S_Process_function_start_name,
 	  (DREF DeeObject * (DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_start,
 	  DOC(S_Process_function_start_doc) },
@@ -1355,7 +1355,7 @@ PRIVATE struct type_seq pt_seq = {
 };
 
 
-PRIVATE struct type_member pt_class_members[] = {
+PRIVATE struct type_member tpconst pt_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &ProcessThreadsIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1470,7 +1470,7 @@ pti_getseq(ProcessThreadsIterator *__restrict self) {
 	return pt_new(self->pti_id);
 }
 
-PRIVATE struct type_getset pti_getsets[] = {
+PRIVATE struct type_getset tpconst pti_getsets[] = {
 	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pti_getseq },
 	{ NULL }
 };
@@ -2056,7 +2056,7 @@ err_noprinter:
 }
 
 
-PRIVATE struct type_getset process_getsets[] = {
+PRIVATE struct type_getset tpconst process_getsets[] = {
 	{ S_Process_getset_hasterminated_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasterminated, NULL, NULL,
 	  DOC(S_Process_getset_hasterminated_doc) },
@@ -2120,7 +2120,7 @@ PRIVATE struct type_getset process_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member process_members[] = {
+PRIVATE struct type_member tpconst process_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC(S_Process_getset_hasstarted_name,
 	                         STRUCT_CONST, Process, p_state, PROCESS_FSTARTED,
 	                         S_Process_getset_hasstarted_doc),
@@ -2143,13 +2143,13 @@ process_class_self(DeeObject *UNUSED(self),
 	return_reference_((DeeObject *)&this_process);
 }
 
-PRIVATE struct type_method process_class_methods[] = {
+PRIVATE struct type_method tpconst process_class_methods[] = {
 	{ S_Process_class_function_self_name, &process_class_self,
 	  DOC(S_Process_class_function_self_doc) },
 	{ NULL }
 };
 
-PRIVATE struct type_member process_class_members[] = {
+PRIVATE struct type_member tpconst process_class_members[] = {
 	TYPE_MEMBER_CONST_DOC(S_Process_member_current_name,
 	                      &this_process,
 	                      S_Process_member_current_doc),
@@ -2220,7 +2220,7 @@ err_exe_noprinter:
 	goto err_noprinter;
 }
 
-PRIVATE struct type_gc process_gc = {
+PRIVATE struct type_gc tpconst process_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&process_clear
 };
 
@@ -2316,7 +2316,7 @@ INTERN DeeTypeObject DeeProcEnumIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE struct type_member enumproc_class_members[] = {
+PRIVATE struct type_member tpconst enumproc_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DeeProcEnumIterator_Type),
 	TYPE_MEMBER_END
 };

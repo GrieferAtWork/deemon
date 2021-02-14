@@ -184,7 +184,7 @@ PRIVATE struct type_cmp rosetiterator_cmp = {
 };
 
 
-PRIVATE struct type_member roset_iterator_members[] = {
+PRIVATE struct type_member tpconst roset_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?Ert:RoSet"),
 	TYPE_MEMBER_END
 };
@@ -567,7 +567,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method roset_methods[] = {
+PRIVATE struct type_method tpconst roset_methods[] = {
 	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSequence */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&roset_sizeof,
@@ -575,18 +575,18 @@ PRIVATE struct type_method roset_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_getset roset_getsets[] = {
+PRIVATE struct type_getset tpconst roset_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
 	{ NULL }
 };
 
-PRIVATE struct type_member roset_members[] = {
+PRIVATE struct type_member tpconst roset_members[] = {
 	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Set, rs_mask)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Set, rs_size)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member roset_class_members[] = {
+PRIVATE struct type_member tpconst roset_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &RoSetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
 	TYPE_MEMBER_END

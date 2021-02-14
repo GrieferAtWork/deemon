@@ -10976,7 +10976,8 @@ err:
 }
 
 
-INTERN struct type_method string_methods[] = {
+INTDEF struct type_method tpconst string_methods[];
+INTERN struct type_method tpconst string_methods[] = {
 
 	/* String encode/decode functions */
 	{ "decode",

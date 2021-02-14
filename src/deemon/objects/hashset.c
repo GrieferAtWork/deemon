@@ -1281,7 +1281,7 @@ DEFINE_ITERATOR_COMPARE(setiterator_gr, >)
 DEFINE_ITERATOR_COMPARE(setiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
-PRIVATE struct type_member setiterator_members[] = {
+PRIVATE struct type_member tpconst setiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?DHashSet"),
 	TYPE_MEMBER_END
 };
@@ -1795,7 +1795,7 @@ err:
 
 
 
-PRIVATE struct type_method set_methods[] = {
+PRIVATE struct type_method tpconst set_methods[] = {
 	{ DeeString_STR(&str_pop),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
 	  DOC("->\n"
@@ -1869,7 +1869,8 @@ set_set_maxloadfactor(DeeObject *UNUSED(self),
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-INTERN struct type_getset hashset_getsets[] = {
+INTDEF struct type_getset tpconst hashset_getsets[];
+INTERN struct type_getset tpconst hashset_getsets[] = {
 	{ "frozen",
 	  &DeeRoSet_FromSequence,
 	  NULL,
@@ -1887,13 +1888,13 @@ INTERN struct type_getset hashset_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member set_class_members[] = {
+PRIVATE struct type_member tpconst set_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &HashSetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_gc set_gc = {
+PRIVATE struct type_gc tpconst set_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&set_clear
 };
 

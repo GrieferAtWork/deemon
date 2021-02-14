@@ -112,7 +112,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	for (;;) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
@@ -221,7 +221,7 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 	for (;;) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			DREF DeeObject *temp;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
@@ -278,7 +278,7 @@ DeeSeq_Front(DeeObject *__restrict self) {
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			DREF DeeObject *temp;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
@@ -333,7 +333,7 @@ DeeSeq_Back(DeeObject *__restrict self) {
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
@@ -1025,7 +1025,7 @@ DeeSeq_StartsWith(DeeObject *self,
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			DREF DeeObject *temp;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
@@ -1089,7 +1089,7 @@ DeeSeq_EndsWith(DeeObject *self,
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq;
 		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi *nsi;
+			struct type_nsi const *nsi;
 			if ((nsi = seq->tp_nsi) != NULL &&
 			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
@@ -1302,7 +1302,7 @@ DeeSeq_Find(DeeObject *self,
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
-			struct type_nsi *nsi = seq->tp_nsi;
+			struct type_nsi const *nsi = seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
 				if (nsi->nsi_seqlike.nsi_find)
@@ -1448,7 +1448,7 @@ DeeSeq_RFind(DeeObject *self,
 	while (tp_self != &DeeSeq_Type) {
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
-			struct type_nsi *nsi = seq->tp_nsi;
+			struct type_nsi const *nsi = seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
 				if (nsi->nsi_seqlike.nsi_rfind)

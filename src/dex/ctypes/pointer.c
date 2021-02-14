@@ -212,7 +212,7 @@ pointer_del_deref(struct pointer_object *__restrict self) {
 	return pointer_set_deref(self, Dee_None);
 }
 
-PRIVATE struct type_getset pointer_getsets[] = {
+PRIVATE struct type_getset tpconst pointer_getsets[] = {
 	{ "ind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pointer_get_deref,
 	  (int (DCALL *)(DeeObject *__restrict))&pointer_del_deref,
@@ -222,7 +222,7 @@ PRIVATE struct type_getset pointer_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member pointer_members[] = {
+PRIVATE struct type_member tpconst pointer_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__ptr__", STRUCT_UINTPTR_T, offsetof(struct pointer_object, p_ptr),
 	                      "ABI interface for other libraries to determine if some given object "
 	                      "can be accessed as a pointer. Modules that wish to accept pointer "
@@ -242,7 +242,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method pointer_methods[] = {
+PRIVATE struct type_method tpconst pointer_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
 	{ "__deref__", &struct_deref_func,
 	  DOC("->pointer\n"
@@ -547,7 +547,7 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE struct type_getset lvalue_getsets[] = {
+PRIVATE struct type_getset tpconst lvalue_getsets[] = {
 	{ "ref", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_ref, NULL, NULL,
 	  DOC("->?Gpointer\n"
 	      "Returns a pointer for the object referred to by @this ?GLValue") },
