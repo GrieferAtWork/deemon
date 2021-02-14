@@ -1004,7 +1004,7 @@ do_dollar_decimal:
 							break;
 						if (docstring.isdecimal(i))
 							continue;
-						if (docstring[i] == ".")
+						if (docstring[i] in ".xXabcdefABCDEF")
 							continue;
 						break;
 					}
@@ -1424,6 +1424,7 @@ continue_after_collonStart:
 
 		case "?": {
 			local questionStart = i;
+			local addend = "";
 			++i;
 again_parse_character_after_question:
 			if (i >= end)
@@ -1431,7 +1432,6 @@ again_parse_character_after_question:
 			ch = docstring[i];
 			++i;
 			local ref;
-			local addend = "";
 			switch (ch) {
 
 			case ".":
