@@ -153,7 +153,7 @@ proxy_iterator_visit(MapProxyIterator *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE struct type_member proxy_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(MapProxyIterator, mpi_map)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(MapProxyIterator, mpi_map), "->?DMapping"),
 	TYPE_MEMBER_END
 };
 

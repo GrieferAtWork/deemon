@@ -305,7 +305,7 @@ DeeKwds_NewWithHint(size_t num_items) {
 	size_t init_mask = 1;
 	while (init_mask <= num_items)
 		init_mask = (init_mask << 1) | 1;
-	result = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
+	result = (DREF Kwds *)DeeObject_Calloc(offsetof(Kwds, kw_map) +
 	                                       (init_mask + 1) * sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
@@ -320,7 +320,7 @@ kwds_rehash(DREF Kwds *__restrict self) {
 	DREF Kwds *result;
 	size_t i, j, perturb;
 	size_t new_mask = (self->kw_mask << 1) | 1;
-	result = (DREF Kwds *)DeeObject_Calloc(COMPILER_OFFSETOF(Kwds, kw_map) +
+	result = (DREF Kwds *)DeeObject_Calloc(offsetof(Kwds, kw_map) +
 	                                       (new_mask + 1) * sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
@@ -425,7 +425,7 @@ kwds_findstr_len(Kwds *__restrict self,
 
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void) {
 	DREF Kwds *result;
-	result = (DREF Kwds *)DeeObject_Malloc(COMPILER_OFFSETOF(Kwds, kw_map) +
+	result = (DREF Kwds *)DeeObject_Malloc(offsetof(Kwds, kw_map) +
 	                                       (2 * sizeof(struct kwds_entry)));
 	if unlikely(!result)
 		goto done;
@@ -655,12 +655,9 @@ typedef struct {
 #define READ_ITER(x) ATOMIC_READ((x)->ki_iter)
 #endif /* !CONFIG_NO_THREADS */
 
-STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator, ki_iter) ==
-              COMPILER_OFFSETOF(KmapIterator, ki_iter));
-STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator, ki_end) ==
-              COMPILER_OFFSETOF(KmapIterator, ki_end));
-STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator, ki_map) ==
-              COMPILER_OFFSETOF(KmapIterator, ki_map));
+STATIC_ASSERT(offsetof(KwdsIterator, ki_iter) == offsetof(KmapIterator, ki_iter));
+STATIC_ASSERT(offsetof(KwdsIterator, ki_end) == offsetof(KmapIterator, ki_end));
+STATIC_ASSERT(offsetof(KwdsIterator, ki_map) == offsetof(KmapIterator, ki_map));
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

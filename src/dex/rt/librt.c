@@ -367,6 +367,24 @@ librt_get_GCSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_GCSet_empty_impl_f()));
 }
 
+PRIVATE WUNUSED DREF DeeObject *DCALL librt_get_Code_empty_impl_f(void) {
+	/* The empty-code object is set when `Function()' is called without any arguments. */
+	DREF DeeObject *result, *stub_function;
+	stub_function = DeeObject_NewDefault(&DeeFunction_Type);
+	if unlikely(!stub_function)
+		goto err;
+	result = DeeObject_GetAttrString(stub_function, "__code__");
+	Dee_Decref(stub_function);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_Code_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_Code_empty_impl_f();
+}
+
 
 
 PRIVATE DeeStringObject *varkwds_keywords[1] = { NULL };
@@ -1549,6 +1567,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_TracebackIterator, librt_get_TracebackIterator_
 PRIVATE DEFINE_CMETHOD(librt_get_GCSet, librt_get_GCSet_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSetIterator, librt_get_GCSetIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSet_empty, librt_get_GCSet_empty_f);
+PRIVATE DEFINE_CMETHOD(librt_get_Code_empty, librt_get_Code_empty_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwds, librt_get_BlackListVarkwds_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwdsIterator, librt_get_BlackListVarkwdsIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListMapping, librt_get_BlackListMapping_f);
@@ -1995,8 +2014,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Int_0", (DeeObject *)&DeeInt_Zero, MODSYM_FREADONLY, DOC("The integer constant $0") },
 	{ "Int_1", (DeeObject *)&DeeInt_One, MODSYM_FREADONLY, DOC("The integer constant $1") },
 	{ "Int_m1", (DeeObject *)&DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
+	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	  DOC("->?GCode\n"
+	      "Special instance of ?GCode that immediatly returns ?Dnone") }, /* empty_code_head.c_code */
 	{ "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Special instance of ?GGCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
+	  DOC("->?GGCSet\n"
+	      "Special instance of ?GGCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
 	{ "GCEnum_singleton", &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("The gc-singleton which can also be found under :gc") }, /* DeeGCEnumTracked_Singleton */
 	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,

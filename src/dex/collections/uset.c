@@ -208,7 +208,7 @@ DEFINE_ITERATOR_COMPARE(usetiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
 PRIVATE struct type_member usetiterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(USetIterator, si_set)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(USetIterator, si_set), "->?GUniqueSet"),
 	TYPE_MEMBER_END
 };
 

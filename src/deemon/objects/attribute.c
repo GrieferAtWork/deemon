@@ -1243,14 +1243,14 @@ done:
 
 
 PRIVATE struct type_member enumattriter_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
 	TYPE_MEMBER_END
 };
 
 PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_EnumAttrIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?DAttribute"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

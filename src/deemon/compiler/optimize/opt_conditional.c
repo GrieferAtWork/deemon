@@ -47,8 +47,8 @@ INTERN int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restric
 		if (result_used) {
 			ast_decref_nokill(self->a_conditional.c_tt);
 			ast_decref_nokill(self->a_conditional.c_ff);
-			__STATIC_IF(COMPILER_OFFSETOF(struct ast, a_bool) !=
-			            COMPILER_OFFSETOF(struct ast, a_conditional.c_cond)) {
+			__STATIC_IF(offsetof(struct ast, a_bool) !=
+			            offsetof(struct ast, a_conditional.c_cond)) {
 				self->a_bool = self->a_conditional.c_cond;
 			}
 			self->a_type = AST_BOOL;
@@ -244,8 +244,8 @@ after_constant_condition:
 					/* Optimize: `!!foo() ? : false' --> `!!foo();' */
 					ast_decref_nokill(self->a_conditional.c_tt);
 					ast_xdecref(self->a_conditional.c_ff);
-					__STATIC_IF(COMPILER_OFFSETOF(struct ast, a_bool) !=
-					            COMPILER_OFFSETOF(struct ast, a_conditional.c_cond)) {
+					__STATIC_IF(offsetof(struct ast, a_bool) !=
+					            offsetof(struct ast, a_conditional.c_cond)) {
 						self->a_bool = self->a_conditional.c_cond;
 					}
 					self->a_type = AST_BOOL;
@@ -282,8 +282,8 @@ after_constant_condition:
 					/* Optimize: `!!foo() ? true : ' --> `!!foo();' */
 					ast_decref_nokill(self->a_conditional.c_ff);
 					ast_xdecref(self->a_conditional.c_tt);
-					__STATIC_IF(COMPILER_OFFSETOF(struct ast, a_bool) !=
-					            COMPILER_OFFSETOF(struct ast, a_conditional.c_cond)) {
+					__STATIC_IF(offsetof(struct ast, a_bool) !=
+					            offsetof(struct ast, a_conditional.c_cond)) {
 						self->a_bool = self->a_conditional.c_cond;
 					}
 					self->a_type = AST_BOOL;
@@ -335,8 +335,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
 					/* cond ? true : false  --> !!cond */
 					ast_decref(self->a_conditional.c_tt);
 					ast_decref(self->a_conditional.c_ff);
-					__STATIC_IF(COMPILER_OFFSETOF(struct ast, a_bool) !=
-					            COMPILER_OFFSETOF(struct ast, a_conditional.c_cond)) {
+					__STATIC_IF(offsetof(struct ast, a_bool) !=
+					            offsetof(struct ast, a_conditional.c_cond)) {
 						self->a_bool = self->a_conditional.c_cond;
 					}
 					self->a_type = AST_BOOL;
@@ -350,8 +350,8 @@ optimize_conditional_bool_predictable_inherit_multiple:
 					/* cond ? false : true  --> !cond */
 					ast_decref(self->a_conditional.c_tt);
 					ast_decref(self->a_conditional.c_ff);
-					__STATIC_IF(COMPILER_OFFSETOF(struct ast, a_bool) !=
-					            COMPILER_OFFSETOF(struct ast, a_conditional.c_cond)) {
+					__STATIC_IF(offsetof(struct ast, a_bool) !=
+					            offsetof(struct ast, a_conditional.c_cond)) {
 						self->a_bool = self->a_conditional.c_cond;
 					}
 					self->a_type = AST_BOOL;

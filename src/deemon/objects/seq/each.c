@@ -1250,8 +1250,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 				/* .tp_copy_ctor = */ (void *)&seo_copy,
 				/* .tp_deep_ctor = */ (void *)&seo_deep,
 				/* .tp_any_ctor  = */ (void *)&seo_init,
-				TYPE_SIZED_ALLOCATOR_R(COMPILER_OFFSETOF(SeqEachOperator, so_opargv),
-				                       sizeof(SeqEachOperator))
+				TYPE_SIZED_ALLOCATOR_R(offsetof(SeqEachOperator, so_opargv), sizeof(SeqEachOperator))
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
@@ -1543,7 +1542,7 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *const *argv) {
 	size_t i;
 	DREF SeqEachCallAttr *result;
-	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttr, sg_argv) +
+	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(offsetof(SeqEachCallAttr, sg_argv) +
 	                                                  (argc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
@@ -1571,7 +1570,7 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 	DREF SeqEachCallAttrKw *result;
 	if (!kw)
 		return DeeSeqEach_CallAttr(self, attr, argc, argv);
-	result = (DREF SeqEachCallAttrKw *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttrKw, sg_argv) +
+	result = (DREF SeqEachCallAttrKw *)DeeObject_Malloc(offsetof(SeqEachCallAttrKw, sg_argv) +
 	                                                    (argc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;

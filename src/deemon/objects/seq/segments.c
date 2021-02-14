@@ -262,10 +262,8 @@ PRIVATE struct type_member seg_class_members[] = {
 };
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(Segments, s_seq) ==
-              COMPILER_OFFSETOF(SegmentsIterator, si_iter));
-STATIC_ASSERT(COMPILER_OFFSETOF(Segments, s_len) ==
-              COMPILER_OFFSETOF(SegmentsIterator, si_len));
+STATIC_ASSERT(offsetof(Segments, s_seq) == offsetof(SegmentsIterator, si_iter));
+STATIC_ASSERT(offsetof(Segments, s_len) == offsetof(SegmentsIterator, si_len));
 #define seg_copy     segiter_copy
 #define seg_deep     segiter_deep
 #define seg_fini     segiter_fini

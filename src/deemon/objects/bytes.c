@@ -143,7 +143,7 @@ PRIVATE struct type_cmp bytesiter_cmp = {
 };
 
 PRIVATE struct type_member bytesiter_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 
@@ -151,7 +151,7 @@ PRIVATE struct type_member bytesiter_members[] = {
 INTERN DeeTypeObject BytesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -288,7 +288,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		return_empty_bytes;
 	bufsize = DeeFastSeq_GetSize(seq);
 	if (bufsize != DEE_FASTSEQ_NOTFAST) {
-		result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
+		result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 		                                        bufsize);
 		if unlikely(!result)
 			goto err;
@@ -307,10 +307,10 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	}
 	/* Fallback: use an iterator. */
 	bufsize = 256;
-	result  = (DREF Bytes *)DeeObject_TryMalloc(COMPILER_OFFSETOF(Bytes, b_data) + bufsize);
+	result  = (DREF Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) + bufsize);
 	if unlikely(!bufsize) {
 		bufsize = 1;
-		result  = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) + 1);
+		result  = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) + 1);
 		if unlikely(!result)
 			goto err;
 	}
@@ -325,12 +325,12 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 			size_t new_bufsize = bufsize * 2;
 			/* Must allocate more memory. */
 			new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-			                                                COMPILER_OFFSETOF(Bytes, b_data) +
+			                                                offsetof(Bytes, b_data) +
 			                                                new_bufsize);
 			if unlikely(!new_result) {
 				new_bufsize = i + 1;
 				new_result = (DREF Bytes *)DeeObject_Realloc(result,
-				                                             COMPILER_OFFSETOF(Bytes, b_data) +
+				                                             offsetof(Bytes, b_data) +
 				                                             new_bufsize);
 				if unlikely(!new_result)
 					goto err_r_elem;
@@ -352,7 +352,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	if likely(i < bufsize) {
 		DREF Bytes *new_result;
 		new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-		                                                COMPILER_OFFSETOF(Bytes, b_data) +
+		                                                offsetof(Bytes, b_data) +
 		                                                i);
 		if likely(new_result)
 			result = new_result;
@@ -390,7 +390,7 @@ DeeObject_Bytes(DeeObject *__restrict self,
 	ASSERTF(!(flags & ~(Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE)),
 	        "Invalid flags %x", flags);
 	ASSERT_OBJECT(self);
-	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data));
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data));
 	if unlikely(!result)
 		goto done;
 	if (DeeObject_GetBuf(self, &result->b_buffer, flags))
@@ -416,7 +416,7 @@ err_r:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 	                                        num_bytes);
 	if unlikely(!result)
 		goto done;
@@ -438,7 +438,7 @@ done:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 	                                        num_bytes);
 	if unlikely(!result)
 		goto done;
@@ -459,7 +459,7 @@ done:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 	                                        num_bytes);
 	if unlikely(!result)
 		goto done;
@@ -491,14 +491,14 @@ DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 again:
 	new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-	                                                COMPILER_OFFSETOF(Bytes, b_data) +
+	                                                offsetof(Bytes, b_data) +
 	                                                num_bytes);
 	if unlikely(!new_result) {
 		if (num_bytes <= result->b_size) {
 			result->b_size = result->b_buffer.bb_size = num_bytes;
 			return (DREF DeeObject *)result;
 		}
-		if (Dee_CollectMemory(COMPILER_OFFSETOF(Bytes, b_data) + num_bytes))
+		if (Dee_CollectMemory(offsetof(Bytes, b_data) + num_bytes))
 			goto again;
 		return NULL;
 	}
@@ -523,7 +523,7 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(num_bytes <= result->b_size);
 	if (num_bytes != result->b_size) {
 		result = (DREF Bytes *)DeeObject_TryRealloc(result,
-		                                            COMPILER_OFFSETOF(Bytes, b_data) +
+		                                            offsetof(Bytes, b_data) +
 		                                            num_bytes);
 		if unlikely(!result) {
 			result         = (DREF Bytes *)self;
@@ -545,7 +545,7 @@ DeeBytes_NewView(DeeObject *owner, void *base,
 	ASSERTF(!(flags & ~(Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE)),
 	        "Invalid flags %x", flags);
 	ASSERT_OBJECT(owner);
-	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data));
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data));
 	if unlikely(!result)
 		goto done;
 	result->b_base           = (uint8_t *)base;
@@ -662,7 +662,7 @@ err_args:
 		do {
 			struct type_buffer *buf = tp_iter->tp_buffer;
 			if (buf && buf->tp_getbuf) {
-				result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data));
+				result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data));
 				if unlikely(!result)
 					goto err;
 				/* Construct a Bytes object using the buffer interface provided by `ob' */
@@ -1800,7 +1800,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 
 	                         "\n"
 	                         "(ob:?O,start=!0,end=!-1)\n"
-	                         "(ob:?O,mode=!Gr,start=!0,end=!-1)\n"
+	                         "(ob:?O,mode=!Pr,start=!0,end=!-1)\n"
 	                         "@throw NotImplemented The given @ob does not implement the buffer protocol\n"
 	                         "Construct a Bytes object for viewing the memory of @ob, either "
 	                         "as read-only when @mode is set to $\"r\" or omitted, or as read-write "
@@ -1823,7 +1823,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "undefined when @init isn't specified\n"
 
 	                         "\n"
-	                         "(items:?S?O)\n"
+	                         "(items:?S?Dint)\n"
 	                         "For compatibility with other sequence types, as well as the expectation "
 	                         "of a sequence-like object implementing a sequence-cast-constructor, Bytes "
 	                         "objects also implement this overload\n"

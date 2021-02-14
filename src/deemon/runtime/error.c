@@ -217,8 +217,8 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	 *    the interrupt to be executed next with max priority. */
 	STATIC_ASSERT(sizeof(struct thread_interrupt) <=
 	              sizeof(struct except_frame));
-	STATIC_ASSERT(COMPILER_OFFSETOF(struct thread_interrupt, ti_intr) ==
-	              COMPILER_OFFSETOF(struct except_frame, ef_error));
+	STATIC_ASSERT(offsetof(struct thread_interrupt, ti_intr) ==
+	              offsetof(struct except_frame, ef_error));
 	/* Drop a reference to the traceback. - Those don't get scheduled. */
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);

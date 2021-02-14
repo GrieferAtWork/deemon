@@ -345,7 +345,11 @@ PRIVATE struct type_getset bool_class_getsets[] = {
 PUBLIC DeeTypeObject DeeBool_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_bool),
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "Return the $false singleton\n"
+	                         "\n"
+	                         "(ob)\n"
+	                         "Convert the given @ob into a boolean"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FTRUNCATE | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

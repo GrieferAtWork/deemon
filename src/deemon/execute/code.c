@@ -1517,7 +1517,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_buf;
 	}
 #endif /* __SIZEOF_SIZE_T__ > 4 */
-	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(COMPILER_OFFSETOF(DeeCodeObject, co_code) +
+	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
 	                                                  text_buf.bb_size + INSTRLEN_MAX);
 	if unlikely(!result)
 		goto err_buf;

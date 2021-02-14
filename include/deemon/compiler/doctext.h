@@ -621,8 +621,7 @@ DECL_BEGIN
  *     >>     name = "{" + name + "}";
  *     >> }
  *
- *
- *
+ * NOTE: The !-encoding is fully documented under EXPR-ENCODING in "deemon/compiler/symbol.h"
  */
 
 /* Compile documentation text in `doctext' into itself.

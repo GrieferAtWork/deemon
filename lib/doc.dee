@@ -367,7 +367,7 @@ local final function getIteratorElementTypeDoc(typ: Type): string {
 		 * For this purpose, we look at the return type of
 		 * the iterator's `next' operator. If explicitly
 		 * defined, then use that type as the sequence type. */
-		local doc = typ.__doc__;
+		local doc = Type.__doc__(typ);
 		local loc = doc.find("\n\nnext->");
 		if (loc != -1) {
 			loc += 8;
@@ -385,6 +385,52 @@ local final function getIteratorElementTypeDoc(typ: Type): string {
 		_knownSequenceElementTypes[typ] = result;
 	}
 	return result;
+}
+
+local final function getNextTyperefStart(typeref: string, start: int): int {
+	assert typeref[start] == "?";
+	++start;
+	if (start >= #typeref)
+		return -1;
+	switch (typeref[start]) {
+
+	case "C":
+		start = findNonEscaped(typeref, "?", start);
+		if (start != -1)
+			start = getNextTyperefStart(typeref, start);
+		break;
+
+	case "T":
+	case "X": {
+		++start;
+		local nStart = start;
+		while (start < #typeref && typeref.isdigit(start))
+			++start;
+		local n;
+		try {
+			n = int(typeref[nStart:start]);
+		} catch (...) {
+			return -1;
+		}
+		for (none: [:n]) {
+			start = getNextTyperefStart(typeref, start);
+			if (start == -1)
+				break;
+		}
+	}	break;
+
+	case "R":
+	case "Q":
+		start = findNonEscaped(typeref, "]", start);
+		if (start != -1)
+			++start;
+		break;
+
+	default:
+		start = findNonEscaped(typeref, "?", start);
+		break;
+	}
+	return start;
 }
 
 local final function getDefaultOperatorWithType(typ: Type, name: string): string | none {
@@ -409,10 +455,10 @@ local final function getDefaultOperatorWithType(typ: Type, name: string): string
 		if (Mapping.baseof(typ)) {
 			/* Special handling for mappings. */
 			result = {
-				"contains" : "(item:?K*)->?Dbool",
-				"getitem"  : "(index:?K*)->?V*",
-				"delitem"  : "(index:?K*)->?N",
-				"setitem"  : "(index:?K*,value:?V*)->?N",
+				"contains" : "(key:?K*)->?Dbool",
+				"getitem"  : "(key:?K*)->?V*",
+				"delitem"  : "(key:?K*)->?N",
+				"setitem"  : "(key:?K*,value:?V*)->?N",
 			}.get(name, result);
 			typ = try typ.Iterator catch (...) none;
 			local repl = "?O";
@@ -423,13 +469,15 @@ local final function getDefaultOperatorWithType(typ: Type, name: string): string
 				local k_repl = "?O";
 				local v_repl = "?O";
 				if (repl.startswith("?T2?")) {
-					repl = repl[3:];
-					if (repl.count("?") == 2) {
-						local p = repl.rindex("?");
-						k_repl = repl[:p];
-						v_repl = repl[p:];
+					local p;
+					if (repl.count("?") == 3) {
+						p = repl.rindex("?");
 					} else {
-						print "TODO: complex mapping element type:", repr repl;
+						p = getNextTyperefStart(repl, 3);
+					}
+					if (p != -1) {
+						k_repl = repl[3:p];
+						v_repl = repl[p:];
 					}
 				}
 				result = result

@@ -53,12 +53,12 @@ typedef struct {
 	size_t               b_siz; /* [!0][const] The size of a single segment. */
 } BytesSegments;
 
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegmentsIterator, s_str) == COMPILER_OFFSETOF(BytesSegmentsIterator, b_str));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegmentsIterator, s_siz) == COMPILER_OFFSETOF(BytesSegmentsIterator, b_siz));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegmentsIterator, s_ptr) == COMPILER_OFFSETOF(BytesSegmentsIterator, b_ptr));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegmentsIterator, s_end) == COMPILER_OFFSETOF(BytesSegmentsIterator, b_end));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegments, s_str) == COMPILER_OFFSETOF(BytesSegments, b_str));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSegments, s_siz) == COMPILER_OFFSETOF(BytesSegments, b_siz));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(BytesSegmentsIterator, b_str));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_siz) == offsetof(BytesSegmentsIterator, b_siz));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_ptr) == offsetof(BytesSegmentsIterator, b_ptr));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_end) == offsetof(BytesSegmentsIterator, b_end));
+STATIC_ASSERT(offsetof(StringSegments, s_str) == offsetof(BytesSegments, b_str));
+STATIC_ASSERT(offsetof(StringSegments, s_siz) == offsetof(BytesSegments, b_siz));
 
 
 

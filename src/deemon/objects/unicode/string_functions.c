@@ -12644,7 +12644,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 				size_t total_length = self->s_len + DeeString_SIZE(other);
 				/* Most likely case: both strings use 1-byte characters,
 				 * so we don't even need to use a multi-byte buffer! */
-				result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
+				result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
 				                                         (total_length + 1) * sizeof(char));
 				if unlikely(!result)
 					goto err;
@@ -12676,7 +12676,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			size_t total_length = self->s_len + DeeString_SIZE(other);
 			/* Most likely case: both strings use 1-byte characters,
 			 * so we don't even need to use a multi-byte buffer! */
-			result = (DREF String *)DeeObject_Malloc(COMPILER_OFFSETOF(String, s_str) +
+			result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
 			                                         (total_length + 1) * sizeof(char));
 			if unlikely(!result)
 				goto err;

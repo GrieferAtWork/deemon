@@ -63,12 +63,9 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 } ReSequenceIterator;
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ReSequence, re_data) ==
-              COMPILER_OFFSETOF(ReSequenceIterator, re_data));
-STATIC_ASSERT(COMPILER_OFFSETOF(ReSequence, re_pattern) ==
-              COMPILER_OFFSETOF(ReSequenceIterator, re_pattern));
-STATIC_ASSERT(COMPILER_OFFSETOF(ReSequence, re_args) ==
-              COMPILER_OFFSETOF(ReSequenceIterator, re_args));
+STATIC_ASSERT(offsetof(ReSequence, re_data) == offsetof(ReSequenceIterator, re_data));
+STATIC_ASSERT(offsetof(ReSequence, re_pattern) == offsetof(ReSequenceIterator, re_pattern));
+STATIC_ASSERT(offsetof(ReSequence, re_args) == offsetof(ReSequenceIterator, re_args));
 
 
 
@@ -158,10 +155,10 @@ refaiter_bool(ReSequenceIterator *__restrict self) {
 
 /* Assert binary compatibility between the index-variants
  * of `struct regex_range' and `struct regex_range_ex' */
-STATIC_ASSERT((COMPILER_OFFSETOF(struct regex_range, rr_end) -
-               COMPILER_OFFSETOF(struct regex_range, rr_start)) ==
-              (COMPILER_OFFSETOF(struct regex_range_ex, rr_end) -
-               COMPILER_OFFSETOF(struct regex_range_ex, rr_start)));
+STATIC_ASSERT((offsetof(struct regex_range, rr_end) -
+               offsetof(struct regex_range, rr_start)) ==
+              (offsetof(struct regex_range_ex, rr_end) -
+               offsetof(struct regex_range_ex, rr_start)));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_next(ReSequenceIterator *__restrict self) {

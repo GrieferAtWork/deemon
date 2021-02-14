@@ -389,7 +389,7 @@ ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE struct type_member ptype_members[] = {
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_True, DOC_GET(ispointer_doc)),
-	TYPE_MEMBER_FIELD("base", STRUCT_OBJECT, offsetof(DeePointerTypeObject, pt_orig)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeePointerTypeObject, pt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
 };
 
@@ -440,8 +440,8 @@ INTERN DeeTypeObject DeePointerType_Type = {
 
 
 /* Assert that we can re-use some operators from `pointer_type'. */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeePointerTypeObject, pt_orig) ==
-              COMPILER_OFFSETOF(DeeLValueTypeObject, lt_orig));
+STATIC_ASSERT(offsetof(DeePointerTypeObject, pt_orig) ==
+              offsetof(DeeLValueTypeObject, lt_orig));
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -458,7 +458,7 @@ PRIVATE struct type_getset ltype_getsets[] = {
 
 PRIVATE struct type_member ltype_members[] = {
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_True, DOC_GET(islvalue_doc)),
-	TYPE_MEMBER_FIELD("base", STRUCT_OBJECT, offsetof(DeeLValueTypeObject, lt_orig)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeLValueTypeObject, lt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
 };
 
@@ -1711,14 +1711,14 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 
 PRIVATE struct type_member atype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
-	TYPE_MEMBER_FIELD("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig), "->?GStructuredType"),
 	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeArrayTypeObject, at_count)),
 	TYPE_MEMBER_END
 };
 
 /* Assert that we can re-use some operators from `pointer_type'. */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeArrayTypeObject, at_orig) ==
-              COMPILER_OFFSETOF(DeeLValueTypeObject, lt_orig));
+STATIC_ASSERT(offsetof(DeeArrayTypeObject, at_orig) ==
+              offsetof(DeeLValueTypeObject, lt_orig));
 
 INTERN DeeTypeObject DeeArrayType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1801,8 +1801,8 @@ ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 /* Assert that we can re-use some operators from `pointer_type'. */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeArrayTypeObject, at_orig) ==
-              COMPILER_OFFSETOF(DeeLValueTypeObject, lt_orig));
+STATIC_ASSERT(offsetof(DeeArrayTypeObject, at_orig) ==
+              offsetof(DeeLValueTypeObject, lt_orig));
 #endif /* !CONFIG_NO_CFUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1829,7 +1829,7 @@ PRIVATE struct type_getset ftype_getsets[] = {
 PRIVATE struct type_member ftype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
 #ifndef CONFIG_NO_CFUNCTION
-	TYPE_MEMBER_FIELD("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig), "->?GStructuredType"),
 #endif /* !CONFIG_NO_CFUNCTION */
 	TYPE_MEMBER_END
 };

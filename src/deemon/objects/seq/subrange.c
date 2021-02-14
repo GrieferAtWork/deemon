@@ -601,8 +601,8 @@ done:
 
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(SubRangeN, sr_seq) ==
-              COMPILER_OFFSETOF(SubRange, sr_seq));
+STATIC_ASSERT(offsetof(SubRangeN, sr_seq) ==
+              offsetof(SubRange, sr_seq));
 #define subrangen_fini  subrange_fini
 #define subrangen_visit subrange_visit
 

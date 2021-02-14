@@ -2742,8 +2742,8 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(IteratorFuture, if_iter) ==
-              COMPILER_OFFSETOF(IteratorPending, ip_iter));
+STATIC_ASSERT(offsetof(IteratorFuture, if_iter) ==
+              offsetof(IteratorPending, ip_iter));
 #define ip_ctor if_ctor
 #define ip_deep if_deep
 

@@ -82,8 +82,8 @@ typedef struct {
 	DREF DeeObject *so_opargv[2]; /* [1..1][const][0..so_opargc] Vector of arguments passed to the operator. */
 } SeqEachOperator;
 
-#define SeqEachOperator_MALLOC(argc)                                                           \
-	((DREF SeqEachOperator *)DeeObject_FMalloc(COMPILER_OFFSETOF(SeqEachOperator, so_opargv) + \
+#define SeqEachOperator_MALLOC(argc)                                                  \
+	((DREF SeqEachOperator *)DeeObject_FMalloc(offsetof(SeqEachOperator, so_opargv) + \
 	                                           (argc) * sizeof(DREF DeeObject *)))
 
 

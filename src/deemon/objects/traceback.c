@@ -297,7 +297,7 @@ traceiter_next(TraceIterator *__restrict self) {
 }
 
 PRIVATE struct type_member traceiter_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(TraceIterator, ti_trace)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TraceIterator, ti_trace), "->?DTraceback"),
 	TYPE_MEMBER_END
 };
 

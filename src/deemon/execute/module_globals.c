@@ -298,8 +298,8 @@ me_init(ModuleExports *__restrict self,
 	return 0;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==
-              COMPILER_OFFSETOF(ModuleExports, me_module));
+STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) ==
+              offsetof(ModuleExports, me_module));
 #define me_fini  mei_fini
 #define me_visit mei_visit
 
@@ -518,8 +518,7 @@ PRIVATE struct type_method me_methods[] = {
 };
 
 PRIVATE struct type_member me_members[] = {
-	TYPE_MEMBER_FIELD("__module__", STRUCT_OBJECT,
-	                  COMPILER_OFFSETOF(ModuleExports, me_module)),
+	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
 	TYPE_MEMBER_END
 };
 
@@ -597,10 +596,10 @@ typedef struct {
 	DWEAK uint16_t        mgi_index;  /* The current global variable index. */
 } ModuleGlobalsIterator;
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==
-              COMPILER_OFFSETOF(ModuleGlobalsIterator, mgi_module));
-STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_index) ==
-              COMPILER_OFFSETOF(ModuleGlobalsIterator, mgi_index));
+STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) ==
+              offsetof(ModuleGlobalsIterator, mgi_module));
+STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_index) ==
+              offsetof(ModuleGlobalsIterator, mgi_index));
 #define mgi_ctor  mei_ctor
 #define mgi_copy  mei_copy
 #define mgi_fini  mei_fini
@@ -756,10 +755,8 @@ mg_init(ModuleGlobals *__restrict self,
 	return 0;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExports, me_module) ==
-              COMPILER_OFFSETOF(ModuleGlobals, mg_module));
-STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==
-              COMPILER_OFFSETOF(ModuleGlobals, mg_module));
+STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ModuleGlobals, mg_module));
+STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlobals, mg_module));
 #define mg_ctor    me_ctor
 #define mg_fini    mei_fini
 #define mg_bool    me_bool

@@ -40,7 +40,7 @@ diriter_next(DeeObject *__restrict UNUSED(self)) {
 PRIVATE struct type_member diriter_members[] = {
 	/* NOTE: Since the type cannot be instantiated, it
 	 *       doesn't matter that this is an invalid address. */
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, 0),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, 0, "->?Gdir"),
 	TYPE_MEMBER_END
 };
 

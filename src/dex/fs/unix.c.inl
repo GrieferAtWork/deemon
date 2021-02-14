@@ -1167,7 +1167,7 @@ err:
 }
 
 PRIVATE struct type_member diriter_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DirIterator, d_dir)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, d_dir), "->?Gdir"),
 	TYPE_MEMBER_END
 };
 

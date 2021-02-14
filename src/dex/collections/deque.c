@@ -840,16 +840,16 @@ deq_init(Deque *__restrict self,
 
 
 #define DEQUE_BUFFER_SIZE \
-	(sizeof(Deque) - COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START))
+	(sizeof(Deque) - offsetof(Deque, DEQUE_BUFFER_START))
 #define DEQUE_BUFFER_SIZE_NOVERSION \
-	(COMPILER_OFFSETOF(Deque, d_version) - COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START))
+	(offsetof(Deque, d_version) - offsetof(Deque, DEQUE_BUFFER_START))
 #define DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION \
-	(COMPILER_OFFSETOF(Deque, d_version) - COMPILER_OFFSETOF(Deque, d_head))
+	(offsetof(Deque, d_version) - offsetof(Deque, d_head))
 typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE[DEQUE_BUFFER_SIZE];
 typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE_NOLOCK_NOVERSION[DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION];
-#define DEQUE_BUFFER_GET(x)        ((Deque *)((__BYTE_TYPE__ *)(x) - COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START)))
+#define DEQUE_BUFFER_GET(x)        ((Deque *)((__BYTE_TYPE__ *)(x) - offsetof(Deque, DEQUE_BUFFER_START)))
 #define DEQUE_BUFFER_FOR(x)        ((__BYTE_TYPE__ *)&(x)->DEQUE_BUFFER_START)
-#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((__BYTE_TYPE__ *)(x) - COMPILER_OFFSETOF(Deque, d_head)))
+#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((__BYTE_TYPE__ *)(x) - offsetof(Deque, d_head)))
 #define DEQUE_BUFFER_FOR_NOLOCK(x) ((__BYTE_TYPE__ *)&(x)->d_head)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1806,7 +1806,7 @@ PRIVATE struct type_getset deqiter_getsets[] = {
 };
 
 PRIVATE struct type_member deqiter_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DequeIteratorObject, di_deq)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DequeIteratorObject, di_deq), "->?GDeque"),
 	TYPE_MEMBER_END
 };
 

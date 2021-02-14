@@ -24,6 +24,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
@@ -75,6 +76,20 @@ gcsetiterator_copy(GCSetIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+gcsetiterator_init(GCSetIterator *__restrict self,
+                   size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_GCSetIterator", &self->gsi_set))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->gsi_set, &DeeGCSet_Type))
+		goto err;
+	Dee_Incref(self->gsi_set);
+	self->gsi_index = 0;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE NONNULL((1)) void DCALL
 gcsetiterator_fini(GCSetIterator *__restrict self) {
 	Dee_Decref(self->gsi_set);
@@ -116,11 +131,53 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
 	return_reference_(result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+gcsetiterator_bool(GCSetIterator *__restrict self) {
+	size_t idx;
+	idx = READ_INDEX(self);
+	for (;;) {
+		if (idx > self->gsi_set->gs_mask)
+			return 0;
+		if (self->gsi_set->gs_elem[idx++])
+			break;
+	}
+	return 1;
+}
+
 PRIVATE struct type_member gcset_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(GCSetIterator, gsi_set)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(GCSetIterator, gsi_set), "->?Ert:GCSet"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(GCSetIterator, gsi_index)),
 	TYPE_MEMBER_END
 };
+
+INTDEF DeeTypeObject DeeGCSetIterator_Type;
+#define DEFINE_GCSET_ITERATOR_COMPARE(name, op)                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
+	name(GCSetIterator *self, GCSetIterator *other) {                 \
+		if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type)) \
+			goto err;                                                 \
+		return_bool(READ_INDEX(self) op READ_INDEX(other));           \
+	err:                                                              \
+		return NULL;                                                  \
+	}
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_eq, ==)
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_ne, !=)
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_lo, <)
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_le, <=)
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_gr, >)
+DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_ge, >=)
+#undef DEFINE_GCSET_ITERATOR_COMPARE
+
+PRIVATE struct type_cmp gcset_iterator_cmp = {
+	/* .tp_hash = */ NULL,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_ge,
+};
+
 
 INTERN DeeTypeObject DeeGCSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -133,10 +190,10 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&gcsetiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&gcsetiterator_copy,
+				/* .tp_ctor      = */ (void *)&gcsetiterator_ctor,
+				/* .tp_copy_ctor = */ (void *)&gcsetiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_any_ctor  = */ (void *)&gcsetiterator_init,
 				TYPE_FIXED_ALLOCATOR(GCSetIterator)
 			}
 		},
@@ -147,13 +204,13 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL /* TODO */
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&gcsetiterator_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&gcsetiterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO */
+	/* .tp_cmp           = */ &gcset_iterator_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcsetiterator_next,
 	/* .tp_attr          = */ NULL,
@@ -343,7 +400,7 @@ GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 	else {
 		new_mask = 31;
 	}
-	new_set = (GCSet *)DeeObject_TryCalloc(COMPILER_OFFSETOF(GCSet, gs_elem) +
+	new_set = (GCSet *)DeeObject_TryCalloc(offsetof(GCSet, gs_elem) +
 	                                       (new_mask + 1) * sizeof(DREF DeeObject *));
 	if unlikely(!new_set)
 		return false;
@@ -410,7 +467,7 @@ GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self) {
 	old_set = self->gs_set;
 	if (!old_set)
 		return 0;
-	new_set = (GCSet *)DeeObject_TryCalloc(COMPILER_OFFSETOF(GCSet, gs_elem) +
+	new_set = (GCSet *)DeeObject_TryCalloc(offsetof(GCSet, gs_elem) +
 	                                       (old_set->gs_mask + 1) *
 	                                       sizeof(DREF DeeObject *));
 	if unlikely(!new_set)

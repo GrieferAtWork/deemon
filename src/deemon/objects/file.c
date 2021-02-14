@@ -1040,7 +1040,7 @@ filetype_ctor(DeeFileTypeObject *__restrict self) {
 
 PUBLIC DeeTypeObject DeeFileType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "filetype",
+	/* .tp_name     = */ "_FileType",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FGC,
 	/* .tp_weakrefs = */ 0,

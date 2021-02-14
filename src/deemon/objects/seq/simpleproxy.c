@@ -110,7 +110,7 @@ proxy_size(SeqSimpleProxy *__restrict self) {
 }
 
 PRIVATE struct type_member proxy_members[] = {
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(SeqSimpleProxy, sp_seq)),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqSimpleProxy, sp_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
 
@@ -742,8 +742,8 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(SeqSimpleProxy, sp_seq) ==
-              COMPILER_OFFSETOF(SeqSimpleProxyIterator, si_iter));
+STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) ==
+              offsetof(SeqSimpleProxyIterator, si_iter));
 #define iter_deep proxy_deep
 #define iter_fini proxy_fini
 #define iter_bool proxy_bool

@@ -41,24 +41,24 @@ DECL_BEGIN
 STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetIntersection));
 STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetDifference));
 STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetSymmetricDifference));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_a) == COMPILER_OFFSETOF(SetIntersection, si_a));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_b) == COMPILER_OFFSETOF(SetIntersection, si_b));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_a) == COMPILER_OFFSETOF(SetDifference, sd_a));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_b) == COMPILER_OFFSETOF(SetDifference, sd_b));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_a) == COMPILER_OFFSETOF(SetSymmetricDifference, ssd_a));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnion, su_b) == COMPILER_OFFSETOF(SetSymmetricDifference, ssd_b));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_union) == COMPILER_OFFSETOF(SetIntersectionIterator, sii_intersect));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_union) == COMPILER_OFFSETOF(SetDifferenceIterator, sdi_diff));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_union) == COMPILER_OFFSETOF(SetSymmetricDifferenceIterator, ssd_set));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_iter) == COMPILER_OFFSETOF(SetSymmetricDifferenceIterator, ssd_iter));
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetIntersection, si_a));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetIntersection, si_b));
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetDifference, sd_a));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetDifference, sd_b));
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetSymmetricDifference, ssd_a));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetSymmetricDifference, ssd_b));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetIntersectionIterator, sii_intersect));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetDifferenceIterator, sdi_diff));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetSymmetricDifferenceIterator, ssd_set));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetSymmetricDifferenceIterator, ssd_iter));
 STATIC_ASSERT(sizeof(SetUnionIterator) == sizeof(SetSymmetricDifferenceIterator));
 STATIC_ASSERT(sizeof(SetIntersectionIterator) == sizeof(SetDifferenceIterator));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetIntersectionIterator, sii_iter) == COMPILER_OFFSETOF(SetDifferenceIterator, sdi_iter));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetIntersectionIterator, sii_other) == COMPILER_OFFSETOF(SetDifferenceIterator, sdi_other));
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(SetDifferenceIterator, sdi_iter));
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_other) == offsetof(SetDifferenceIterator, sdi_other));
 #ifndef CONFIG_NO_THREADS
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_lock) == COMPILER_OFFSETOF(SetSymmetricDifferenceIterator, ssd_lock));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_lock) == offsetof(SetSymmetricDifferenceIterator, ssd_lock));
 #endif /* !CONFIG_NO_THREADS */
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_in2nd) == COMPILER_OFFSETOF(SetSymmetricDifferenceIterator, ssd_in2nd));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDifferenceIterator, ssd_in2nd));
 
 
 /* ================================================================================ */
@@ -82,8 +82,8 @@ proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
 /* ================================================================================ */
 /*   SET UNION                                                                      */
 /* ================================================================================ */
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_union) == COMPILER_OFFSETOF(SetUnion, su_a));
-STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_iter) == COMPILER_OFFSETOF(SetUnion, su_b));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetUnion, su_a));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetUnion, su_b));
 #define suiter_fini proxy_fini
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {

@@ -449,8 +449,8 @@ PRIVATE struct type_getset seqiterator_getsets[] = {
 };
 
 PRIVATE struct type_member seqiterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(SeqIterator, si_seq)),
-	TYPE_MEMBER_FIELD("__size__", STRUCT_OBJECT, offsetof(SeqIterator, si_size)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqIterator, si_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__size__", STRUCT_OBJECT, offsetof(SeqIterator, si_size), "->?X2?DInt?O"),
 	TYPE_MEMBER_END
 };
 

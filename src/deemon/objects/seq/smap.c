@@ -53,12 +53,12 @@ STATIC_ASSERT(sizeof(DeeSharedItem) == 2 * sizeof(DeeObject *));
 
 /* Assert that we can re-use components from svec-iterator. */
 #ifndef CONFIG_NO_THREADS
-STATIC_ASSERT(COMPILER_OFFSETOF(SharedMap, sm_lock) == COMPILER_OFFSETOF(SharedVector, sv_lock));
+STATIC_ASSERT(offsetof(SharedMap, sm_lock) == offsetof(SharedVector, sv_lock));
 #endif /* !CONFIG_NO_THREADS */
-STATIC_ASSERT(COMPILER_OFFSETOF(SharedMap, sm_length) == COMPILER_OFFSETOF(SharedVector, sv_length));
-STATIC_ASSERT(COMPILER_OFFSETOF(SharedMap, sm_vector) == COMPILER_OFFSETOF(SharedVector, sv_vector));
-STATIC_ASSERT(COMPILER_OFFSETOF(SharedMapIterator, sm_seq) == COMPILER_OFFSETOF(SharedVectorIterator, si_seq));
-STATIC_ASSERT(COMPILER_OFFSETOF(SharedMapIterator, sm_index) == COMPILER_OFFSETOF(SharedVectorIterator, si_index));
+STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
+STATIC_ASSERT(offsetof(SharedMap, sm_vector) == offsetof(SharedVector, sv_vector));
+STATIC_ASSERT(offsetof(SharedMapIterator, sm_seq) == offsetof(SharedVectorIterator, si_seq));
+STATIC_ASSERT(offsetof(SharedMapIterator, sm_index) == offsetof(SharedVectorIterator, si_index));
 STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 
 

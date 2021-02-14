@@ -610,7 +610,7 @@ PRIVATE struct type_seq repeat_seq = {
 };
 
 PRIVATE struct type_member repeat_members[] = {
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(Repeat, r_seq)),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Repeat, r_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(Repeat, r_num)),
 	TYPE_MEMBER_END
 };
@@ -949,7 +949,7 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(Repeat, r_seq) == COMPILER_OFFSETOF(RepeatItem, ri_obj));
+STATIC_ASSERT(offsetof(Repeat, r_seq) == offsetof(RepeatItem, ri_obj));
 #define repeatitem_fini  repeat_fini
 #define repeatitem_visit repeat_visit
 

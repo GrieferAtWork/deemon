@@ -163,8 +163,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL set_copy(Set *__restrict self, Set *__restrict other);
 
 STATIC_ASSERT(sizeof(struct hashset_item) == sizeof(struct roset_item));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item, si_key) == COMPILER_OFFSETOF(struct roset_item, si_key));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item, si_hash) == COMPILER_OFFSETOF(struct roset_item, si_hash));
+STATIC_ASSERT(offsetof(struct hashset_item, si_key) == offsetof(struct roset_item, si_key));
+STATIC_ASSERT(offsetof(struct hashset_item, si_hash) == offsetof(struct roset_item, si_hash));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_init_sequence(Set *__restrict self,
@@ -1282,7 +1282,7 @@ DEFINE_ITERATOR_COMPARE(setiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
 PRIVATE struct type_member setiterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?DHashSet"),
 	TYPE_MEMBER_END
 };
 

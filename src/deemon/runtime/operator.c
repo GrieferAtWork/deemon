@@ -851,8 +851,8 @@ DeeObject_Newf(DeeTypeObject *object_type,
  
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
-              COMPILER_OFFSETOF(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
+STATIC_ASSERT(offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
+              offsetof(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
 
 DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
@@ -1250,10 +1250,10 @@ repr_contains(struct repr_frame *chain, DeeObject *__restrict ob)
 }
 
 /* Make sure the repr-frame offsets match. */
-STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame, rf_prev) ==
-              COMPILER_OFFSETOF(struct repr_frame, rf_prev));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame, rf_obj) ==
-              COMPILER_OFFSETOF(struct repr_frame, rf_obj));
+STATIC_ASSERT(offsetof(struct trepr_frame, rf_prev) ==
+              offsetof(struct repr_frame, rf_prev));
+STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
+              offsetof(struct repr_frame, rf_obj));
 
 #ifdef DEFINE_TYPED_OPERATORS
 #define Xrepr_frame trepr_frame

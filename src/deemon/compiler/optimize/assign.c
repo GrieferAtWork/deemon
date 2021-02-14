@@ -35,8 +35,7 @@ INTDEF void DCALL ast_incwriteonly(struct ast *__restrict self);
 
 INTERN int (DCALL ast_assign)(struct ast *__restrict self,
                               struct ast *__restrict other) {
-	uint8_t buffer[(sizeof(struct ast) -
-	                COMPILER_OFFSETOF(struct ast, a_type))];
+	uint8_t buffer[(sizeof(struct ast) - offsetof(struct ast, a_type))];
 	/* Use a temporary buffer for the variable portion of the AST.
 	 * Until we actually assign `other' to `self', we initialize it as a shallow copy of `other'. */
 #if defined(__INTELLISENSE__) || 1

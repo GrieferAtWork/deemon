@@ -116,8 +116,8 @@ err:
 }
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(HashFilterIterator, fi_iter) == COMPILER_OFFSETOF(HashFilter, f_seq));
-STATIC_ASSERT(COMPILER_OFFSETOF(HashFilterIterator, fi_hash) == COMPILER_OFFSETOF(HashFilter, f_hash));
+STATIC_ASSERT(offsetof(HashFilterIterator, fi_iter) == offsetof(HashFilter, f_seq));
+STATIC_ASSERT(offsetof(HashFilterIterator, fi_hash) == offsetof(HashFilter, f_hash));
 #define filteriterator_fini  filter_fini
 #define filteriterator_visit filter_visit
 

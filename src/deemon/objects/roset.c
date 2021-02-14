@@ -185,7 +185,7 @@ PRIVATE struct type_cmp rosetiterator_cmp = {
 
 
 PRIVATE struct type_member roset_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?Ert:RoSet"),
 	TYPE_MEMBER_END
 };
 
@@ -200,10 +200,10 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rosetiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&rosetiterator_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rosetiterator_init,
+				/* .tp_ctor      = */ (void *)&rosetiterator_ctor,
+				/* .tp_copy_ctor = */ (void *)&rosetiterator_copy,
+				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (void *)&rosetiterator_init,
 				TYPE_FIXED_ALLOCATOR(SetIterator)
 			}
 		},
@@ -656,10 +656,10 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (DREF DeeObject *(DCALL *)(void))&roset_ctor,
-				/* .tp_copy_ctor = */ &DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_deepcopy,
-				/* .tp_any_ctor  = */ (DREF DeeObject *(DCALL *)(size_t, DeeObject **__restrict))&roset_init,
+				/* .tp_ctor      = */ (void *)&roset_ctor,
+				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (void *)&roset_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&roset_init,
 				/* .tp_free      = */ NULL
 			}
 		},

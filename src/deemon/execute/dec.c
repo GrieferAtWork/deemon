@@ -1346,7 +1346,7 @@ err_function_code:
 			while (iattr_count > (iattr_mask / 3) * 2)
 				iattr_mask = (iattr_mask << 1) | 1;
 		}
-		result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
+		result = (DREF DeeObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 		                                            (iattr_mask + 1) * sizeof(struct class_attribute));
 		if unlikely(!result)
 			goto err;
@@ -1712,7 +1712,7 @@ err_function_code:
 				while (iattr_count > (iattr_mask / 3) * 2)
 					iattr_mask = (iattr_mask << 1) | 1;
 			}
-			result = (DREF DeeObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
+			result = (DREF DeeObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 			                                            (iattr_mask + 1) * sizeof(struct class_attribute));
 			if unlikely(!result)
 				goto err;

@@ -288,8 +288,8 @@ struct class_attribute;
  *       FLOAT_LITERAL |            // 1.0  (decimal followed by a `.'; prevent ambiguity with decimal-operator)
  *       "t"                        // The true builtin constant
  *       "f"                        // The false builtin constant
- *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
  *       "A" <NAME>                 // Referring to another argument <DECODED_NAME>
+ *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
  *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR, SECOND_EXPR)
  *       "B" <NAME>                 // Referring to true/false indicative of the is-bound state of another argument <DECODED_NAME>
  *       "C" EXPR |                 // copy(EXPR)

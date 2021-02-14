@@ -323,14 +323,14 @@ PRIVATE struct type_cmp dictiterator_cmp = {
 
 
 PRIVATE struct type_member dict_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject DictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -401,7 +401,7 @@ typedef struct {
 } DictProxyIterator;
 
 PRIVATE struct type_member proxy_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DictProxyIterator, dpi_proxy)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictProxyIterator, dpi_proxy), "->?Ert:DictProxy"),
 	TYPE_MEMBER_END
 };
 
@@ -527,11 +527,11 @@ err:
 	return -1;
 }
 
-#define INIT_PROXY_ITERATOR_TYPE(tp_name, tp_iter_next)                                           \
+#define INIT_PROXY_ITERATOR_TYPE(tp_name, tp_doc, tp_iter_next)                                   \
 	{                                                                                             \
 		OBJECT_HEAD_INIT(&DeeType_Type),                                                          \
-		/* .tp_name     = */tp_name,                                                              \
-		/* .tp_doc      = */ NULL,                                                                \
+		/* .tp_name     = */ tp_name,                                                             \
+		/* .tp_doc      = */ tp_doc,                                                              \
 		/* .tp_flags    = */ TP_FNORMAL,                                                          \
 		/* .tp_weakrefs = */ 0,                                                                   \
 		/* .tp_features = */ TF_NONE,                                                             \
@@ -573,9 +573,23 @@ err:
 		/* .tp_class_members = */ NULL                                                            \
 	}
 
-INTERN DeeTypeObject DictKeysIterator_Type   = INIT_PROXY_ITERATOR_TYPE("_DictKeysIterator", &dictiterator_next_key);
-INTERN DeeTypeObject DictItemsIterator_Type  = INIT_PROXY_ITERATOR_TYPE("_DictItemsIterator", &dictiterator_next_item);
-INTERN DeeTypeObject DictValuesIterator_Type = INIT_PROXY_ITERATOR_TYPE("_DictValuesIterator", &dictiterator_next_value);
+INTERN DeeTypeObject DictKeysIterator_Type =
+INIT_PROXY_ITERATOR_TYPE("_DictKeysIterator",
+                         DOC("()\n"
+                             "(dictkeys:?Ert:DictKeys))"),
+                         &dictiterator_next_key);
+INTERN DeeTypeObject DictValuesIterator_Type =
+INIT_PROXY_ITERATOR_TYPE("_DictValuesIterator",
+                         DOC("()\n"
+                             "(dictvalues:?Ert:DictValues)"),
+                         &dictiterator_next_value);
+INTERN DeeTypeObject DictItemsIterator_Type =
+INIT_PROXY_ITERATOR_TYPE("_DictItemsIterator",
+                         DOC("()\n"
+                             "(dictitems:?Ert:DictItems)\n"
+                             "\n"
+                             "next->?T2?O?O"),
+                         &dictiterator_next_item);
 #undef INIT_PROXY_ITERATOR_TYPE
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -703,7 +717,7 @@ PRIVATE struct type_seq proxy_seq = {
 };
 
 PRIVATE struct type_member proxy_members[] = {
-	TYPE_MEMBER_FIELD("__dict__", STRUCT_OBJECT, offsetof(DictProxy, dp_dict)),
+	TYPE_MEMBER_FIELD_DOC("__dict__", STRUCT_OBJECT, offsetof(DictProxy, dp_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
 
@@ -831,7 +845,8 @@ PRIVATE struct type_method dict_items_methods[] = {
 PUBLIC DeeTypeObject DeeDictProxy_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictProxy",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?DDict)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -876,7 +891,8 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
 PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictKeys",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?DDict)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -921,7 +937,8 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 PUBLIC DeeTypeObject DeeDictItems_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictItems",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?DDict)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -966,7 +983,8 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 PUBLIC DeeTypeObject DeeDictValues_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictValues",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?DDict)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

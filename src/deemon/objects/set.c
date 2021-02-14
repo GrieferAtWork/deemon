@@ -137,7 +137,7 @@ PRIVATE struct type_getset invset_class_getsets[] = {
 };
 
 PRIVATE struct type_member invset_members[] = {
-	TYPE_MEMBER_FIELD("__blacklist__", STRUCT_OBJECT, offsetof(DeeInverseSetObject, is_set)),
+	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(DeeInverseSetObject, is_set), "->?DSet"),
 	TYPE_MEMBER_END
 };
 

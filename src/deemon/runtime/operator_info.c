@@ -1405,8 +1405,8 @@ to_visit(TypeOperators *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->to_type);
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(TypeOperatorsIterator, to_type) ==
-              COMPILER_OFFSETOF(TypeOperators, to_type));
+STATIC_ASSERT(offsetof(TypeOperatorsIterator, to_type) ==
+              offsetof(TypeOperators, to_type));
 #define toi_fini  to_fini
 #define toi_visit to_visit
 

@@ -809,7 +809,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "possible due to lack of memory, rather than throwing a :NoMemory error\n"
 	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
 	{ "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FNORMAL,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
+	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
 	      "@throw NoMemory Insufficient memory\n"
 	      "Duplicate the given @str into a heap-allocated memory block\n"
 	      "${"
@@ -822,7 +822,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "	return res;\n"
 	      "}}") },
 	{ "trystrdup", (DeeObject *)&ctypes_trystrdup, MODSYM_FNORMAL,
-	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
+	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!A!Pmax!Gsize_t)->?Aptr?Gchar\n"
 	      "Try to duplicate the given @str into a heap-allocated memory block\n"
 	      "${"
 	      "function trystrndup(str: char.ptr, maxlen?: int): char.ptr {\n"

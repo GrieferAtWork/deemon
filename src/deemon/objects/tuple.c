@@ -1017,7 +1017,7 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tuple_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
 	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
 	TYPE_MEMBER_END
 };

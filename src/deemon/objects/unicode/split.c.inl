@@ -31,6 +31,13 @@
 
 DECL_BEGIN
 
+INTDEF DeeTypeObject StringSplit_Type;
+INTDEF DeeTypeObject StringSplitIterator_Type;
+INTDEF DeeTypeObject StringCaseSplit_Type;
+INTDEF DeeTypeObject StringCaseSplitIterator_Type;
+INTDEF DeeTypeObject StringLineSplit_Type;
+INTDEF DeeTypeObject StringLineSplitIterator_Type;
+
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeStringObject *s_str; /* [1..1][const] The string that is being split. */
@@ -231,6 +238,66 @@ PRIVATE struct type_member splititer_members[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+splititer_setup(StringSplitIterator *__restrict self,
+                StringSplit *__restrict split) {
+	self->s_width = STRING_WIDTH_COMMON(DeeString_WIDTH(split->s_str),
+	                                    DeeString_WIDTH(split->s_sep));
+	SWITCH_SIZEOF_WIDTH(self->s_width) {
+
+	CASE_WIDTH_1BYTE:
+		self->s_begin = DeeString_As1Byte((DeeObject *)split->s_str);
+		self->s_end   = self->s_begin + WSTR_LENGTH(self->s_begin);
+		self->s_sep   = DeeString_As1Byte((DeeObject *)split->s_sep);
+		break;
+
+	CASE_WIDTH_2BYTE:
+		self->s_begin = (uint8_t *)DeeString_As2Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_begin)
+			goto err;
+		self->s_end = self->s_begin + WSTR_LENGTH(self->s_begin) * 2;
+		self->s_sep = (uint8_t *)DeeString_As2Byte((DeeObject *)split->s_sep);
+		if unlikely(!self->s_sep)
+			goto err;
+		break;
+
+	CASE_WIDTH_4BYTE:
+		self->s_begin = (uint8_t *)DeeString_As4Byte((DeeObject *)split->s_str);
+		if unlikely(!self->s_begin)
+			goto err;
+		self->s_end = self->s_begin + WSTR_LENGTH(self->s_begin) * 4;
+		self->s_sep = (uint8_t *)DeeString_As4Byte((DeeObject *)split->s_sep);
+		if unlikely(!self->s_sep)
+			goto err;
+		break;
+	}
+	self->s_next = self->s_begin;
+	if (self->s_next == self->s_end)
+		self->s_next = NULL;
+	self->s_sepsz = WSTR_LENGTH(self->s_sep);
+	self->s_split = split;
+	Dee_Incref(split);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+splititer_ctor(StringSplitIterator *__restrict self) {
+	DREF StringSplit *split;
+	split = (DREF StringSplit *)DeeObject_NewDefault(&StringSplit_Type);
+	if unlikely(!split)
+		goto err;
+	if unlikely(splititer_setup(self, split))
+		goto err_split;
+	Dee_DecrefNokill(split);
+	return 0;
+err_split:
+	Dee_Decref(split);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 splititer_copy(StringSplitIterator *__restrict self,
                StringSplitIterator *__restrict other) {
 	self->s_split = other->s_split;
@@ -244,10 +311,27 @@ splititer_copy(StringSplitIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+splititer_init(StringSplitIterator *__restrict self,
+               size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *split_type;
+	StringSplit *split;
+	if (DeeArg_Unpack(argc, argv, "o:_StringSplitIterator", &split))
+		goto err;
+	split_type = &StringSplit_Type;
+	if (Dee_TYPE(self) == &StringCaseSplitIterator_Type)
+		split_type = &StringCaseSplit_Type;
+	if (DeeObject_AssertTypeExact(split, split_type))
+		goto err;
+	return splititer_setup(self, split);
+err:
+	return -1;
+}
+
 INTERN DeeTypeObject StringSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -255,10 +339,10 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL, /* TODO */
+				/* .tp_ctor      = */ (void *)&splititer_ctor,
 				/* .tp_copy_ctor = */ (void *)&splititer_copy,
 				/* .tp_deep_ctor = */ (void *)&splititer_copy,
-				/* .tp_any_ctor  = */ NULL, /* TODO */
+				/* .tp_any_ctor  = */ (void *)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -292,7 +376,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -300,10 +384,10 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL, /* TODO */
+				/* .tp_ctor      = */ (void *)&splititer_ctor,
 				/* .tp_copy_ctor = */ (void *)&splititer_copy,
 				/* .tp_deep_ctor = */ (void *)&splititer_copy,
-				/* .tp_any_ctor  = */ NULL, /* TODO */
+				/* .tp_any_ctor  = */ (void *)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -455,10 +539,46 @@ PRIVATE struct type_seq casesplit_seq = {
 	/* .tp_range_set = */ NULL
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+split_ctor(StringSplit *__restrict self) {
+	self->s_str = (DREF DeeStringObject *)Dee_EmptyString;
+	self->s_sep = (DREF DeeStringObject *)Dee_EmptyString;
+	Dee_Incref_n(Dee_EmptyString, 2);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+split_copy(StringSplit *__restrict self,
+           StringSplit *__restrict other) {
+	self->s_str = other->s_str;
+	self->s_sep = other->s_sep;
+	Dee_Incref(self->s_str);
+	Dee_Incref(self->s_sep);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+split_init(StringSplit *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "oo:_StringSplit", &self->s_str, &self->s_sep))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->s_sep, &DeeString_Type))
+		goto err;
+	Dee_Incref(self->s_str);
+	Dee_Incref(self->s_sep);
+	return 0;
+err:
+	return -1;
+}
+
+
 INTERN DeeTypeObject StringSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(s:?Dstring,sep:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -466,10 +586,10 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (void *)&split_ctor,
+				/* .tp_copy_ctor = */ (void *)&split_copy,
+				/* .tp_deep_ctor = */ (void *)&split_copy,
+				/* .tp_any_ctor  = */ (void *)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -503,7 +623,8 @@ INTERN DeeTypeObject StringSplit_Type = {
 INTERN DeeTypeObject StringCaseSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(s:?Dstring,sep:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -511,10 +632,10 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (void *)&split_ctor,
+				/* .tp_copy_ctor = */ (void *)&split_copy,
+				/* .tp_deep_ctor = */ (void *)&split_copy,
+				/* .tp_any_ctor  = */ (void *)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -709,11 +830,35 @@ lineiter_next(LineSplitIterator *__restrict self) {
 
 
 /* Assert that we're allowed to re-use some helper functions from `strsplit' */
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSplitIterator, s_split) ==
-              COMPILER_OFFSETOF(LineSplitIterator, ls_split));
-STATIC_ASSERT(COMPILER_OFFSETOF(StringSplitIterator, s_next) ==
-              COMPILER_OFFSETOF(LineSplitIterator, ls_next));
+STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(LineSplitIterator, ls_split));
+STATIC_ASSERT(offsetof(StringSplitIterator, s_next) == offsetof(LineSplitIterator, ls_next));
 
+PRIVATE NONNULL((1, 2)) void DCALL
+lineiter_setup(LineSplitIterator *__restrict self,
+               LineSplit *__restrict split) {
+	self->ls_width = DeeString_WIDTH(split->ls_str);
+	self->ls_begin = (uint8_t *)DeeString_WSTR(split->ls_str);
+	self->ls_next  = self->ls_begin;
+	self->ls_end   = (uint8_t *)DeeString_WEND(split->ls_str);
+	if (self->ls_next == self->ls_end)
+		self->ls_next = NULL;
+	self->ls_keep = split->ls_keep;
+	Dee_Incref(split);
+	self->ls_split = split;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lineiter_ctor(LineSplitIterator *__restrict self) {
+	DREF LineSplit *split;
+	split = (DREF LineSplit *)DeeObject_NewDefault(&StringLineSplit_Type);
+	if unlikely(!split)
+		goto err;
+	lineiter_setup(self, split);
+	Dee_DecrefNokill(split);
+	return 0;
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lineiter_copy(LineSplitIterator *__restrict self,
@@ -732,11 +877,26 @@ lineiter_copy(LineSplitIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lineiter_init(LineSplitIterator *__restrict self,
+              size_t argc, DeeObject *const *argv) {
+	LineSplit *split;
+	if (DeeArg_Unpack(argc, argv, "o:_StringLineSplitIterator", &split))
+		goto err;
+	if (DeeObject_AssertTypeExact(split, &StringLineSplit_Type))
+		goto err;
+	lineiter_setup(self, split);
+	return 0;
+err:
+	return -1;
+}
+
+
 
 INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -744,10 +904,10 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&lineiter_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (void *)&lineiter_ctor,
+				/* .tp_copy_ctor = */ (void *)&lineiter_copy,
+				/* .tp_deep_ctor = */ (void *)&lineiter_copy,
+				/* .tp_any_ctor  = */ (void *)&lineiter_init,
 				TYPE_FIXED_ALLOCATOR(LineSplitIterator)
 			}
 		},
@@ -817,8 +977,7 @@ linesplit_visit(LineSplit *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ls_str);
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(LineSplit, ls_str) ==
-              COMPILER_OFFSETOF(StringSplit, s_str));
+STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool
 
 PRIVATE struct type_member linesplit_members[] = {
@@ -827,10 +986,42 @@ PRIVATE struct type_member linesplit_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+linesplit_ctor(LineSplit *__restrict self) {
+	self->ls_str  = (DREF DeeStringObject *)Dee_EmptyString;
+	self->ls_keep = false;
+	Dee_Incref(Dee_EmptyString);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+linesplit_copy(LineSplit *__restrict self,
+               LineSplit *__restrict other) {
+	self->ls_str  = other->ls_str;
+	self->ls_keep = other->ls_keep;
+	Dee_Incref(self->ls_str);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+linesplit_init(LineSplit *__restrict self,
+               size_t argc, DeeObject *const *argv) {
+	self->ls_keep = false;
+	if (DeeArg_Unpack(argc, argv, "o|b:_StringLineSplit", &self->ls_str, &self->ls_keep))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->ls_str, &DeeString_Type))
+		goto err;
+	Dee_Incref(self->ls_str);
+	return 0;
+err:
+	return -1;
+}
+
 INTERN DeeTypeObject StringLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(s:?Dstring,keepends=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -838,10 +1029,10 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (void *)&linesplit_ctor,
+				/* .tp_copy_ctor = */ (void *)&linesplit_copy,
+				/* .tp_deep_ctor = */ (void *)&linesplit_copy,
+				/* .tp_any_ctor  = */ (void *)&linesplit_init,
 				TYPE_FIXED_ALLOCATOR(LineSplit)
 			}
 		},

@@ -166,7 +166,7 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	/* The instance-attribute table is pre-initialized
 	 * to a mask of `7', so this would never trigger. */
 	/*if (new_mask <= 1) new_mask = 7;*/
-	new_descr = (DeeClassDescriptorObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
+	new_descr = (DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 	                                                         (new_mask + 1) * sizeof(struct class_attribute));
 	if unlikely(!new_descr)
 		goto err;
@@ -187,7 +187,7 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 		relocate_attribute(old_attr, new_attr);
 	}
 	/* Copy the entire header from the old descriptor (thus stealing all of its data) */
-	memcpy(new_descr, self, COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list));
+	memcpy(new_descr, self, offsetof(DeeClassDescriptorObject, cd_iattr_list));
 	/* Remember the (now) larger mask. */
 	new_descr->cd_iattr_mask = new_mask;
 	/* Free the old descriptor. */
@@ -874,7 +874,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 	if (!self->cm_iattr_size) {
 		DeeClassDescriptorObject *new_desc;
 		new_desc = (DeeClassDescriptorObject *)DeeObject_TryRealloc(self->cm_desc,
-		                                                            COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
+		                                                            offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 		                                                            1 * sizeof(struct class_attribute));
 		if likely(new_desc)
 			self->cm_desc = new_desc;
@@ -1324,7 +1324,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 	memcpy(&maker.cm_doc, &current_tags.at_doc, sizeof(struct unicode_printer));
 	unicode_printer_init(&current_tags.at_doc);
 	/* Allocate the initial descriptor for the class. */
-	maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Calloc(COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
+	maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 	                                                                  (7 + 1) * sizeof(struct class_attribute));
 	if unlikely(!maker.cm_desc)
 		goto err;

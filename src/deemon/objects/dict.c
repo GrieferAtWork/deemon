@@ -179,9 +179,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
 
 STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_key) == COMPILER_OFFSETOF(struct rodict_item, di_key));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_value) == COMPILER_OFFSETOF(struct rodict_item, di_value));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_hash) == COMPILER_OFFSETOF(struct rodict_item, di_hash));
+STATIC_ASSERT(offsetof(struct dict_item, di_key) == offsetof(struct rodict_item, di_key));
+STATIC_ASSERT(offsetof(struct dict_item, di_value) == offsetof(struct rodict_item, di_value));
+STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item, di_hash));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_sequence(Dict *__restrict self,

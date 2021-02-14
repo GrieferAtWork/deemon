@@ -263,7 +263,7 @@ PRIVATE struct type_cmp rodictiterator_cmp = {
 
 
 PRIVATE struct type_member rodict_iterator_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?Ert:RoDict"),
 	TYPE_MEMBER_END
 };
 
@@ -271,7 +271,7 @@ PRIVATE struct type_member rodict_iterator_members[] = {
 INTERN DeeTypeObject RoDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDictIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -279,10 +279,10 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rodictiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodictiterator_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rodictiterator_init,
+				/* .tp_ctor      = */ (void *)&rodictiterator_ctor,
+				/* .tp_copy_ctor = */ (void *)&rodictiterator_copy,
+				/* .tp_deep_ctor = */ NULL, /* TODO */
+				/* .tp_any_ctor  = */ (void *)&rodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
@@ -326,7 +326,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	 *               given sequence already is a read-only Dict. */
 	if (DeeRoDict_CheckExact(self))
 		return_reference_(self);
-	/* TODO: if (DeeDict_CheckExact(self)) ... */
+	/* TODO: Optimization: if (DeeDict_CheckExact(self)) ... */
 	/* Construct a read-only Dict from an iterator. */
 	self = DeeObject_IterSelf(self);
 	if unlikely(!self)
@@ -1060,9 +1060,7 @@ err:
 PUBLIC DeeTypeObject DeeRoDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDict",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "\n"
-	                         "(seq:?S?T2?O?O)"),
+	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

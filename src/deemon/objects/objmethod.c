@@ -617,7 +617,7 @@ PRIVATE struct type_getset dockwdsiter_getsets[] = {
 };
 
 PRIVATE struct type_member dockwdsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:_DocKwds"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
 	TYPE_MEMBER_END
 };
 
@@ -821,10 +821,10 @@ no_kwds:
 
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject, om_this) ==
-              COMPILER_OFFSETOF(DeeKwObjMethodObject, om_this));
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeObjMethodObject, om_func) ==
-              COMPILER_OFFSETOF(DeeKwObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) ==
+              offsetof(DeeKwObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) ==
+              offsetof(DeeKwObjMethodObject, om_func));
 #define kwobjmethod_fini  objmethod_fini
 #define kwobjmethod_visit objmethod_visit
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -996,10 +996,10 @@ err:
 
 
 #if 1
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_type) ==
-              COMPILER_OFFSETOF(DeeObjMethodObject, om_this));
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_func) ==
-              COMPILER_OFFSETOF(DeeObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) ==
+              offsetof(DeeObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) ==
+              offsetof(DeeObjMethodObject, om_func));
 #define clsmethod_fini  objmethod_fini
 #define clsmethod_visit objmethod_visit
 #else
@@ -1219,10 +1219,10 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 };
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_func) ==
-              COMPILER_OFFSETOF(DeeKwClsMethodObject, cm_func));
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_type) ==
-              COMPILER_OFFSETOF(DeeKwClsMethodObject, cm_type));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) ==
+              offsetof(DeeKwClsMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) ==
+              offsetof(DeeKwClsMethodObject, cm_type));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -1628,8 +1628,8 @@ PRIVATE struct type_member clsproperty_members[] = {
 };
 
 /* Make sure that we're allowed to re-use operators from classmethod. */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsPropertyObject, cp_type) ==
-              COMPILER_OFFSETOF(DeeClsMethodObject, cm_type));
+STATIC_ASSERT(offsetof(DeeClsPropertyObject, cp_type) ==
+              offsetof(DeeClsMethodObject, cm_type));
 
 PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1916,8 +1916,8 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 
 
 /* Make sure that we can re-use some functions from `classmethod' */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeCMethodObject, cm_func) ==
-              COMPILER_OFFSETOF(DeeClsMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
+              offsetof(DeeClsMethodObject, cm_func));
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2285,8 +2285,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 
 
 /* Make sure that we can re-use some functions from `classmethod' */
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeKwCMethodObject, cm_func) ==
-              COMPILER_OFFSETOF(DeeCMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeKwCMethodObject, cm_func) ==
+              offsetof(DeeCMethodObject, cm_func));
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

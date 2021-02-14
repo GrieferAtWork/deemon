@@ -345,8 +345,9 @@ function_init(size_t argc, DeeObject *const *argv) {
 	DREF Function *result;
 	DeeCodeObject *code = &empty_code;
 	DeeObject *refs     = Dee_EmptyTuple;
-	if (DeeArg_Unpack(argc, argv, "|oo:Function", &code, &refs) ||
-	    DeeObject_AssertTypeExact(code, &DeeCode_Type))
+	if (DeeArg_Unpack(argc, argv, "|oo:Function", &code, &refs))
+		goto err;
+	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 		goto err;
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (code->co_refc * sizeof(DREF DeeObject *)));
@@ -549,7 +550,7 @@ PRIVATE struct type_getset function_getsets[] = {
 };
 
 PRIVATE struct type_member function_members[] = {
-	TYPE_MEMBER_FIELD("__code__", STRUCT_OBJECT, offsetof(Function, fo_code)),
+	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT, offsetof(Function, fo_code), "->?Ert:Code"),
 	TYPE_MEMBER_END
 };
 
@@ -682,7 +683,7 @@ PRIVATE struct type_cmp function_cmp = {
 PUBLIC DeeTypeObject DeeFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Function),
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(code=!Ert:Code_empty,refs=!T0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT|TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1007,7 +1008,6 @@ PRIVATE struct type_member yf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFunction, yf_func), "->?Dfunction"),
 	TYPE_MEMBER_FIELD_DOC("__args__", STRUCT_OBJECT, offsetof(YFunction, yf_args), "->?S?O"),
 	TYPE_MEMBER_FIELD("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this)),
-	TYPE_MEMBER_FIELD("__kw__", STRUCT_OBJECT, offsetof(YFunction, yf_kw)),
 	TYPE_MEMBER_END
 };
 
@@ -1120,7 +1120,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 				/* .tp_ctor      = */ &yf_ctor,
 				/* .tp_copy_ctor = */ &yf_copy,
 				/* .tp_deep_ctor = */ &yf_deepcopy,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_any_ctor  = */ NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(YFunction)
 			}
 		},
@@ -1385,10 +1385,24 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_ctor(YFIterator *__restrict self) {
+	int result;
+	DREF YFunction *func;
+	func = (DREF YFunction *)DeeObject_NewDefault(&DeeYieldFunction_Type);
+	if unlikely(!func)
+		goto err;
+	result = yfi_init(self, func);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_new(YFIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	YFunction *func;
-	if (DeeArg_Unpack(argc, argv, "o:YieldFunction.Iterator", &func))
+	if (DeeArg_Unpack(argc, argv, "o:_YieldFunctionIterator", &func))
 		goto err;
 	if (DeeObject_AssertType((DeeObject *)func, &DeeYieldFunction_Type))
 		goto err;
@@ -1829,10 +1843,12 @@ PRIVATE struct type_getset yfi_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getthis, NULL, NULL,
 	  DOC("@throw UnboundAttribute No $this-argument available\n"
 	      "The $this-argument used during execution") },
+#ifndef CONFIG_NO_THREADS
 	{ "__yfunc__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL,
 	  DOC("->?Ert:YieldFunction\n"
-	      "The underlying yield-function, describing the :Function and arguments that are being executed") },
+	      "The underlying yield-function, describing the ?DFunction and arguments that are being executed") },
+#endif /* !CONFIG_NO_THREADS */
 	{ "__func__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getfunc, NULL, NULL,
 	  DOC("->?Dfunction\n"
@@ -1852,41 +1868,47 @@ PRIVATE struct type_getset yfi_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__name__ though ?#__func__") },
+	      "Alias for ?A__name__?DFunction though ?#__func__") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__doc__ though ?#__func__") },
+	      "Alias for ?A__doc__?DFunction though ?#__func__") },
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
-	      "Alias for :Function.__kwds__ though ?#__func__") },
+	      "Alias for ?A__kwds__?DFunction though ?#__func__") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_gettype, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
-	      "Alias for :Function.__type__ though ?#__func__") },
+	      "Alias for ?A__type__?DFunction though ?#__func__") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getmodule, NULL, NULL,
 	  DOC("->?DModule\n"
-	      "Alias for :Function.__module__ though ?#__func__") },
+	      "Alias for ?A__module__?DFunction though ?#__func__") },
 	{ "__operator__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperator, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__operator__ though ?#__func__") },
+	      "Alias for ?A__operator__?DFunction though ?#__func__") },
 	{ "__operatorname__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Alias for :Function.__operatorname__ though ?#__func__") },
+	      "Alias for ?A__operatorname__?DFunction though ?#__func__") },
 	{ "__property__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getproperty, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__property__ though ?#__func__") },
+	      "Alias for ?A__property__?DFunction though ?#__func__") },
 	{ NULL }
 };
 
 #ifdef CONFIG_NO_THREADS
 PRIVATE struct type_member yfi_members[] = {
-	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(YFIterator, yi_func)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
+	                      "->?Ert:YieldFunction\n"
+	                      "Alias for ?#__yfunc__"),
+	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
+	                      "->?Ert:YieldFunction\n"
+	                      "The underlying yield-function, describing the ?DFunction "
+	                      "and arguments that are being executed"),
 	TYPE_MEMBER_END
 };
 #endif /* CONFIG_NO_THREADS */
@@ -1907,10 +1929,10 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &yfi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &yfi_new,
+				/* .tp_ctor      = */ (void *)&yfi_ctor,
+				/* .tp_copy_ctor = */ (void *)&yfi_copy,
+				/* .tp_deep_ctor = */ (void *)NULL,
+				/* .tp_any_ctor  = */ (void *)&yfi_new,
 				TYPE_FIXED_ALLOCATOR_GC(YFIterator)
 			}
 		},

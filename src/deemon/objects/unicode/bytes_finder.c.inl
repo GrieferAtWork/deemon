@@ -232,12 +232,12 @@ PRIVATE struct type_member bcfi_members[] = {
 #endif /* !CONFIG_NO_DOC */
 
 
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(BytesFindIterator *self, BytesFindIterator *other) {              \
+#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)       \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
+	name(BytesFindIterator *self, BytesFindIterator *other) { \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                                   \
-		return_bool(READ_PTR(self) op READ_PTR(other));                    \
+			return NULL;                                      \
+		return_bool(READ_PTR(self) op READ_PTR(other));       \
 	}
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_eq, ==)
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_ne, !=)
@@ -262,7 +262,7 @@ PRIVATE struct type_cmp bfi_cmp = {
 INTERN DeeTypeObject BytesFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFindIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -307,7 +307,7 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFindIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -372,9 +372,11 @@ bf_init(BytesFind *__restrict self,
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_BytesFind",
 	                  &self->bf_bytes, &self->bf_other,
-	                  &start, &end) ||
-	    DeeObject_AssertTypeExact(self->bf_bytes, &DeeBytes_Type) ||
-	    get_needle(&self->bf_needle, self->bf_other))
+	                  &start, &end))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->bf_bytes, &DeeBytes_Type))
+		goto err;
+	if (get_needle(&self->bf_needle, self->bf_other))
 		goto err;
 	if (end > DeeBytes_SIZE(self->bf_bytes))
 		end = DeeBytes_SIZE(self->bf_bytes);
@@ -468,7 +470,7 @@ PRIVATE struct type_member bcf_class_members[] = {
 INTERN DeeTypeObject BytesFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFind",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -513,7 +515,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 INTERN DeeTypeObject BytesCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFind",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -535,7 +537,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL  /* TODO: bytes.contains() */
+		/* .tp_bool = */ NULL  /* TODO: bytes.casecontains() */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,

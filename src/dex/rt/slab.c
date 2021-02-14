@@ -45,21 +45,21 @@ PRIVATE WUNUSED DREF SlabStatObject *DCALL ss_ctor(void) {
 	size_t reqsize;
 	DREF SlabStatObject *result;
 	DREF SlabStatObject *new_result;
-	result = (DREF SlabStatObject *)DeeObject_Malloc(COMPILER_OFFSETOF(SlabStatObject, st_stat.st_slabs) +
+	result = (DREF SlabStatObject *)DeeObject_Malloc(offsetof(SlabStatObject, st_stat.st_slabs) +
 	                                                 Dee_SLAB_COUNT * sizeof(DeeSlabInfo));
 	if unlikely(!result)
 		goto done;
 	reqsize = DeeSlab_Stat(&result->st_stat,
-	                       COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
+	                       offsetof(DeeSlabStat, st_slabs) +
 	                       (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)));
 	if unlikely(reqsize >
-	            COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
+	            offsetof(DeeSlabStat, st_slabs) +
 	            (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
 		size_t oldsize;
 do_realloc_result:
 		oldsize    = reqsize;
 		new_result = (DREF SlabStatObject *)DeeObject_Realloc(result,
-		                                                      COMPILER_OFFSETOF(SlabStatObject, st_stat) +
+		                                                      offsetof(SlabStatObject, st_stat) +
 		                                                      reqsize);
 		if unlikely(!new_result)
 			goto err_r;
@@ -68,10 +68,10 @@ do_realloc_result:
 		if unlikely(reqsize > oldsize)
 			goto do_realloc_result;
 	} else if unlikely(reqsize <
-	                   COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
+	                   offsetof(DeeSlabStat, st_slabs) +
 	                   (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
 		new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
-		                                                         COMPILER_OFFSETOF(SlabStatObject, st_stat) +
+		                                                         offsetof(SlabStatObject, st_stat) +
 		                                                         reqsize);
 		if likely(new_result)
 			result = new_result;
@@ -85,7 +85,7 @@ err_r:
 }
 
 #define SLABSTAT_DATASIZE(x)                    \
-	(COMPILER_OFFSETOF(DeeSlabStat, st_slabs) + \
+	(offsetof(DeeSlabStat, st_slabs) + \
 	 ((x)->st_stat.st_slabcount * sizeof(DeeSlabInfo)))
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -408,8 +408,8 @@ INTERN DeeTypeObject SlabStatIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-STATIC_ASSERT(COMPILER_OFFSETOF(SlabStatIteratorObject, sti_stat) ==
-              COMPILER_OFFSETOF(SlabInfoObject, si_stat));
+STATIC_ASSERT(offsetof(SlabStatIteratorObject, sti_stat) ==
+              offsetof(SlabInfoObject, si_stat));
 #define si_fini  ssi_fini
 #define si_visit ssi_visit
 

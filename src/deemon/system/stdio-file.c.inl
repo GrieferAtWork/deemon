@@ -997,7 +997,7 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 };
 
 PRIVATE struct type_member sysfile_members[] = {
-	TYPE_MEMBER_FIELD("filename", STRUCT_OBJECT, offsetof(SystemFile, sf_filename)),
+	TYPE_MEMBER_FIELD_DOC("filename", STRUCT_OBJECT, offsetof(SystemFile, sf_filename), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 

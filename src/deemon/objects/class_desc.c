@@ -227,7 +227,7 @@ PRIVATE struct type_cmp coti_cmp = {
 PRIVATE struct type_getset coti_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_getseq, NULL, NULL,
-	  DOC("->?Aoperators?Ert:ClassDescriptor") },
+	  DOC("->?Ert:ClassOperatorTable") },
 	{ NULL }
 };
 
@@ -284,8 +284,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 };
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
-              COMPILER_OFFSETOF(ClassOperatorTableIterator, co_desc));
+STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) ==
+              offsetof(ClassOperatorTableIterator, co_desc));
 #define cot_fini    coti_fini
 #define cot_visit   coti_visit
 #define cot_members coti_members
@@ -493,25 +493,25 @@ done:
 	return result;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
-              COMPILER_OFFSETOF(ClassAttribute, ca_desc));
+STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) ==
+              offsetof(ClassAttribute, ca_desc));
 #define ca_fini    cot_fini
 #define ca_visit   cot_visit
 #define ca_members cot_members
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
-              COMPILER_OFFSETOF(ClassAttributeTable, ca_desc));
+STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) ==
+              offsetof(ClassAttributeTable, ca_desc));
 #define cat_fini    cot_fini
 #define cat_visit   cot_visit
 #define cat_members cot_members
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
-              COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_desc));
+STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) ==
+              offsetof(ClassAttributeTableIterator, ca_desc));
 #define cati_fini    cot_fini
 #define cati_visit   cot_visit
 #define cati_members cot_members
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator, co_desc) == COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_desc));
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator, co_iter) == COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_iter));
-STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator, co_end) == COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_end));
+STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ClassAttributeTableIterator, ca_desc));
+STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_iter) == offsetof(ClassAttributeTableIterator, ca_iter));
+STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_end) == offsetof(ClassAttributeTableIterator, ca_end));
 #define cati_cmp  coti_cmp
 #define cati_copy coti_copy
 
@@ -2061,8 +2061,8 @@ typedef struct {
 	uint16_t              ot_size;  /* [const] The length of the object table contained within `ot_desc' */
 } ObjectTable;
 
-STATIC_ASSERT(COMPILER_OFFSETOF(ObjectTable, ot_owner) ==
-              COMPILER_OFFSETOF(ClassAttributeTable, ca_desc));
+STATIC_ASSERT(offsetof(ObjectTable, ot_owner) ==
+              offsetof(ClassAttributeTable, ca_desc));
 #define ot_fini    cot_fini
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2666,7 +2666,7 @@ PRIVATE struct type_getset instancemember_getsets[] = {
 };
 
 PRIVATE struct type_member instancemember_members[] = {
-	TYPE_MEMBER_FIELD("__type__", STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type)),
+	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
 	TYPE_MEMBER_END
 };
 

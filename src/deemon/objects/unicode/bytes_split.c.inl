@@ -55,7 +55,7 @@ typedef struct {
 	DREF BytesSplit *bsi_split;    /* [1..1][const] The underlying split controller. */
 	DWEAK uint8_t   *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
 	uint8_t         *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
-	Bytes           *bsi_bytes;    /* [1..1][const][== bsi_split] The Bytes object being split. */
+	Bytes           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
 	uint8_t         *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
 	size_t           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
@@ -91,6 +91,24 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bsi_ctor(BytesSplitIterator *__restrict self) {
+	DeeTypeObject *seqtyp = &BytesSplit_Type;
+	if (Dee_TYPE(self) == &BytesCaseSplitIterator_Type)
+		seqtyp = &BytesCaseSplit_Type;
+	self->bsi_split = (DREF BytesSplit *)DeeObject_NewDefault(seqtyp);
+	if unlikely(!self->bsi_split)
+		goto err;
+	self->bsi_iter    = NULL;
+	self->bsi_end     = DeeBytes_TERM(Dee_EmptyBytes);
+	self->bsi_bytes   = (Bytes *)Dee_EmptyBytes;
+	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
+	self->bsi_sep_len = self->bsi_split->bs_sep_len;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bsi_copy(BytesSplitIterator *__restrict self,
          BytesSplitIterator *__restrict other) {
@@ -102,6 +120,28 @@ bsi_copy(BytesSplitIterator *__restrict self,
 	self->bsi_sep_len = other->bsi_sep_len;
 	Dee_Incref(self->bsi_split);
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsi_deepcopy(BytesSplitIterator *__restrict self,
+             BytesSplitIterator *__restrict other) {
+	uint8_t *iterpos;
+	self->bsi_split = (DREF BytesSplit *)DeeObject_DeepCopy((DeeObject *)other->bsi_split);
+	if unlikely(!self->bsi_split)
+		goto err;
+	iterpos = READ_BSI_ITER(other);
+	if (iterpos) {
+		iterpos = DeeBytes_DATA(self->bsi_split->bs_bytes) +
+		          (iterpos - DeeBytes_DATA(other->bsi_bytes));
+	}
+	self->bsi_iter    = iterpos;
+	self->bsi_end     = DeeBytes_TERM(self->bsi_split->bs_bytes);
+	self->bsi_bytes   = self->bsi_split->bs_bytes;
+	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
+	self->bsi_sep_len = self->bsi_split->bs_sep_len;
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -262,7 +302,7 @@ PRIVATE struct type_member bcsi_members[] = {
 INTERN DeeTypeObject BytesSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -270,10 +310,10 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &bsi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bsi_init,
+				/* .tp_ctor      = */ (void *)&bsi_ctor,
+				/* .tp_copy_ctor = */ (void *)&bsi_copy,
+				/* .tp_deep_ctor = */ (void *)&bsi_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&bsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
@@ -307,7 +347,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -315,10 +355,10 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &bsi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bsi_init,
+				/* .tp_ctor      = */ (void *)&bsi_ctor,
+				/* .tp_copy_ctor = */ (void *)&bsi_copy,
+				/* .tp_deep_ctor = */ (void *)&bsi_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&bsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
@@ -357,6 +397,54 @@ bs_ctor(BytesSplit *__restrict self) {
 	self->bs_sep_len   = 0;
 	Dee_Incref(Dee_EmptyBytes);
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_copy(BytesSplit *__restrict self,
+        BytesSplit *__restrict other) {
+	self->bs_bytes     = other->bs_bytes;
+	self->bs_sep_owner = other->bs_sep_owner;
+	self->bs_sep_ptr   = other->bs_sep_ptr;
+	self->bs_sep_len   = other->bs_sep_len;
+	if (self->bs_sep_ptr == other->bs_sep_buf) {
+		memcpy(self->bs_sep_buf, other->bs_sep_buf, sizeof(self->bs_sep_buf));
+		self->bs_sep_ptr = self->bs_sep_buf;
+	}
+	Dee_Incref(self->bs_bytes);
+	Dee_XIncref(self->bs_sep_owner);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_deepcopy(BytesSplit *__restrict self,
+            BytesSplit *__restrict other) {
+	self->bs_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->bs_bytes);
+	if unlikely(!self->bs_bytes)
+		goto err;
+	self->bs_sep_owner = other->bs_sep_owner;
+	self->bs_sep_ptr   = other->bs_sep_ptr;
+	self->bs_sep_len   = other->bs_sep_len;
+	if (self->bs_sep_ptr == other->bs_sep_buf) {
+		memcpy(self->bs_sep_buf, other->bs_sep_buf, sizeof(self->bs_sep_buf));
+		self->bs_sep_ptr = self->bs_sep_buf;
+	}
+	if (!self->bs_sep_owner) {
+		/* ... */
+	} else if (DeeBytes_Check(self->bs_sep_owner)) {
+		self->bs_sep_owner = DeeObject_DeepCopy(self->bs_sep_owner);
+		if unlikely(!self->bs_sep_owner)
+			goto err_bytes;
+		self->bs_sep_ptr = DeeBytes_DATA(self->bs_sep_owner);
+		self->bs_sep_len = DeeBytes_SIZE(self->bs_sep_owner);
+	} else {
+		/* Can't copy the sep-owner in this case... */
+		Dee_Incref(self->bs_sep_owner);
+	}
+	return 0;
+err_bytes:
+	Dee_Decref(self->bs_bytes);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -502,7 +590,7 @@ PRIVATE struct type_member bcs_class_members[] = {
 INTERN DeeTypeObject BytesSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,sep:?X3?DBytes?Dstring?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -510,10 +598,10 @@ INTERN DeeTypeObject BytesSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bs_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bs_init,
+				/* .tp_ctor      = */ (void *)&bs_ctor,
+				/* .tp_copy_ctor = */ (void *)&bs_copy,
+				/* .tp_deep_ctor = */ (void *)&bs_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&bs_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
@@ -547,7 +635,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 INTERN DeeTypeObject BytesCaseSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,sep:?X3?DBytes?Dstring?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -555,10 +643,10 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bs_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bs_init,
+				/* .tp_ctor      = */ (void *)&bs_ctor,
+				/* .tp_copy_ctor = */ (void *)&bs_copy,
+				/* .tp_deep_ctor = */ (void *)&bs_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&bs_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
@@ -712,10 +800,10 @@ typedef struct {
 #define READ_BLSI_ITER(x)            ((x)->blsi_iter)
 #endif /* CONFIG_NO_THREADS */
 
-STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplitIterator, bsi_split) ==
-              COMPILER_OFFSETOF(BytesLineSplitIterator, blsi_bytes));
-STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplitIterator, bsi_iter) ==
-              COMPILER_OFFSETOF(BytesLineSplitIterator, blsi_iter));
+STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) ==
+              offsetof(BytesLineSplitIterator, blsi_bytes));
+STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_iter) ==
+              offsetof(BytesLineSplitIterator, blsi_iter));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blsi_init(BytesLineSplitIterator *__restrict self,
@@ -736,6 +824,16 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+blsi_ctor(BytesLineSplitIterator *__restrict self) {
+	self->blsi_bytes    = (DREF Bytes *)Dee_EmptyBytes;
+	self->blsi_iter     = NULL;
+	self->blsi_end      = DeeBytes_DATA(Dee_EmptyBytes);
+	self->blsi_keepends = false;
+	Dee_Incref(Dee_EmptyBytes);
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blsi_copy(BytesLineSplitIterator *__restrict self,
           BytesLineSplitIterator *__restrict other) {
@@ -744,6 +842,26 @@ blsi_copy(BytesLineSplitIterator *__restrict self,
 	self->blsi_end   = other->blsi_end;
 	Dee_Incref(self->blsi_bytes);
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blsi_deepcopy(BytesLineSplitIterator *__restrict self,
+              BytesLineSplitIterator *__restrict other) {
+	uint8_t *other_pos;
+	self->blsi_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->blsi_bytes);
+	if unlikely(!self->blsi_bytes)
+		goto err;
+	other_pos = READ_BLSI_ITER(other);
+	if (other_pos) {
+		other_pos = DeeBytes_DATA(self->blsi_bytes) +
+		            (other_pos - DeeBytes_DATA(other->blsi_bytes));
+	}
+	self->blsi_iter = other_pos;
+	self->blsi_end  = DeeBytes_TERM(self->blsi_bytes);
+	Dee_Incref(self->blsi_bytes);
+	return 0;
+err:
+	return -1;
 }
 
 #define blsi_fini   bsi_fini
@@ -847,7 +965,7 @@ PRIVATE struct type_member blsi_members[] = {
 INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplitIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -855,10 +973,10 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &blsi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &blsi_init,
+				/* .tp_ctor      = */ (void *)&blsi_ctor,
+				/* .tp_copy_ctor = */ (void *)&blsi_copy,
+				/* .tp_deep_ctor = */ (void *)&blsi_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&blsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesLineSplitIterator)
 			}
 		},
@@ -890,10 +1008,10 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 };
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(BytesLineSplitIterator, blsi_bytes) ==
-              COMPILER_OFFSETOF(BytesLineSplit, bls_bytes));
-STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplit, bs_bytes) ==
-              COMPILER_OFFSETOF(BytesLineSplit, bls_bytes));
+STATIC_ASSERT(offsetof(BytesLineSplitIterator, blsi_bytes) ==
+              offsetof(BytesLineSplit, bls_bytes));
+STATIC_ASSERT(offsetof(BytesSplit, bs_bytes) ==
+              offsetof(BytesLineSplit, bls_bytes));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_ctor(BytesLineSplit *__restrict self) {
@@ -903,12 +1021,34 @@ bls_ctor(BytesLineSplit *__restrict self) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bls_copy(BytesLineSplit *__restrict self,
+         BytesLineSplit *__restrict other) {
+	self->bls_bytes    = other->bls_bytes;
+	self->bls_keepends = other->bls_keepends;
+	Dee_Incref(self->bls_bytes);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bls_deepcopy(BytesLineSplit *__restrict self,
+             BytesLineSplit *__restrict other) {
+	self->bls_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->bls_bytes);
+	if unlikely(!self->bls_bytes)
+		goto err;
+	self->bls_keepends = other->bls_keepends;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject *const *argv) {
 	self->bls_keepends = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit", &self->bls_bytes, &self->bls_keepends) ||
-	    DeeObject_AssertTypeExact(self->bls_bytes, &DeeBytes_Type))
+	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit", &self->bls_bytes, &self->bls_keepends))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->bls_bytes, &DeeBytes_Type))
 		goto err;
 	Dee_Incref(self->bls_bytes);
 	return 0;
@@ -964,7 +1104,8 @@ PRIVATE struct type_member bls_class_members[] = {
 INTERN DeeTypeObject BytesLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplit",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(bytes:?DBytes,keepends=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -972,10 +1113,10 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bls_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bls_init,
+				/* .tp_ctor      = */ (void *)&bls_ctor,
+				/* .tp_copy_ctor = */ (void *)&bls_copy,
+				/* .tp_deep_ctor = */ (void *)&bls_deepcopy,
+				/* .tp_any_ctor  = */ (void *)&bls_init,
 				TYPE_FIXED_ALLOCATOR(BytesLineSplit)
 			}
 		},

@@ -188,8 +188,8 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-STATIC_ASSERT(COMPILER_OFFSETOF(CompilerItem, ci_compiler) ==
-              COMPILER_OFFSETOF(CompilerWrapper, cw_compiler));
+STATIC_ASSERT(offsetof(CompilerItem, ci_compiler) ==
+              offsetof(CompilerWrapper, cw_compiler));
 INTERN NONNULL((1)) void DCALL
 DeeCompilerWrapper_Fini(CompilerWrapper *__restrict self) {
 	Dee_Decref_unlikely(self->cw_compiler);

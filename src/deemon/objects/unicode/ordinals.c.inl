@@ -77,8 +77,7 @@ done:
 
 PRIVATE NONNULL((1)) void DCALL stringordinals_fini(StringOrdinals *__restrict self);
 PRIVATE NONNULL((1, 2)) void DCALL stringordinals_visit(StringOrdinals *__restrict self, dvisit_t proc, void *arg);
-STATIC_ASSERT(COMPILER_OFFSETOF(StringOrdinals, so_str) ==
-              COMPILER_OFFSETOF(StringOrdinalsIterator, soi_str));
+STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(StringOrdinalsIterator, soi_str));
 #define stringordinalsiter_fini  stringordinals_fini
 #define stringordinalsiter_visit stringordinals_visit
 

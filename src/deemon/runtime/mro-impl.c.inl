@@ -96,7 +96,7 @@ NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -169,7 +169,7 @@ NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -358,7 +358,7 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -432,7 +432,7 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -604,7 +604,7 @@ NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -676,7 +676,7 @@ NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -801,7 +801,7 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -874,7 +874,7 @@ NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -980,7 +980,7 @@ NLen(DeeType_SetBasicCachedAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1029,7 +1029,7 @@ NLen(DeeType_SetBasicCachedClassAttr)(DeeTypeObject *tp_self,
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -1161,7 +1161,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1274,7 +1274,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -1558,7 +1558,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -1658,7 +1658,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -1968,7 +1968,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -2050,7 +2050,7 @@ check_and_invoke_callback:
 		}
 			{
 				struct buffer {
-					uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+					uint8_t dat[offsetof(struct type_member, m_doc)];
 				} buf;
 			case MEMBERCACHE_MEMBER:
 				buf = *(struct buffer *)&item->mcs_member;
@@ -2333,7 +2333,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -2430,7 +2430,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
@@ -2793,7 +2793,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_cache);
@@ -2876,7 +2876,7 @@ check_and_invoke_callback:
 
 		case MEMBERCACHE_MEMBER: {
 			struct buffer {
-				uint8_t dat[COMPILER_OFFSETOF(struct type_member, m_doc)];
+				uint8_t dat[offsetof(struct type_member, m_doc)];
 			} buf;
 			buf = *(struct buffer *)&item->mcs_member;
 			MEMBERCACHE_ENDREAD(&tp_self->tp_class_cache);
