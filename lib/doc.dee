@@ -268,7 +268,7 @@ local function decodeNameEnd(name: string, start: int = 0): int {
 
 @@Lookup table to determine default prototypes for operators, given their names
 local final OPERATOR_DEFAULTS: {string: string} = {
-	"constructor" : "(args!)->?N",
+	"constructor" : "?*", /* Special handling... */
 	"copy"        : "(other:?.)->?N",
 	"deepcopy"    : "(other:?.)->?N",
 	"destructor"  : "()->?N",
@@ -332,6 +332,33 @@ local final OPERATOR_DEFAULTS: {string: string} = {
 	"leave"       : "()->?N",
 };
 
+local _knownIteratorSequenceTypes: {Type: string} = Dict();
+local final function getIteratorSequenceTypeDoc(typ: Type): string {
+	local result = _knownIteratorSequenceTypes.get(typ);
+	if (result is none) {
+		/* Check for a member `seq' and have the constructor
+		 * take 1 argument that matches that element's typing. */
+		local doc = try typ.seq.__doc__ catch (...) none;
+		if (doc) {
+			local loc = doc.find("\n\n->");
+			if (loc != -1) {
+				loc += 4;
+			} else if (doc.startswith("->")) {
+				loc = 2;
+			}
+			if (loc != -1) {
+				local end = doc.find("\n", loc);
+				if (end < 0)
+					end = #doc;
+				result = doc[loc:end];
+			}
+		}
+		if (!result)
+			result = "?DSequence";
+	}
+	return result;
+}
+
 local _knownSequenceElementTypes: {Type: string} = Dict();
 local final function getIteratorElementTypeDoc(typ: Type): string {
 	local result = _knownSequenceElementTypes.get(typ);
@@ -363,6 +390,22 @@ local final function getIteratorElementTypeDoc(typ: Type): string {
 local final function getDefaultOperatorWithType(typ: Type, name: string): string | none {
 	local result = OPERATOR_DEFAULTS.get(name);
 	if (result !is none && "?*" in result) {
+		if (name == "constructor") {
+			if (Iterator.baseof(typ)) {
+				return "(seq:{})->?N".format({
+					getIteratorSequenceTypeDoc(typ)
+				});
+			}
+			if (Sequence.baseof(typ)) {
+				typ = try typ.Iterator catch (...) none;
+				if (Iterator.baseof(typ)) {
+					return "(seq:?S{})->?N".format({
+						getIteratorElementTypeDoc(typ)
+					});
+				}
+			}
+			return "(args!)->?N";
+		}
 		if (Mapping.baseof(typ)) {
 			/* Special handling for mappings. */
 			result = {
@@ -1564,7 +1607,7 @@ class Expression: WeakRefAble {
 					if (id == "P" || id.isdigit()) {
 						m_kind = "C";
 					} else if (id == "-" && #m_docstring >= 2 &&
-					          (m_docstring.isdigit(2) || m_docstring[2] == ".")) {
+					           (m_docstring.isdigit(2) || m_docstring[2] == ".")) {
 						m_kind = "C";
 					} else if (id in ["N", "t", "f"]) {
 						local map = { "N" : none, "t" : true, "f" : false };
@@ -1921,7 +1964,7 @@ done:
 
 		case "O":
 			/* TODO: Operator */
-			break;
+			return "TODO:operator:" + docstring;
 
 		default:
 			break;
