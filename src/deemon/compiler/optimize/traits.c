@@ -477,7 +477,7 @@ ast_doesnt_return(struct ast *__restrict self,
 	case AST_OPERATOR: {
 		size_t i;
 		bool has_noreturn;
-		/* Assume simple, ordered operator execution (a,[b,[c,[d]]]),
+		/* Assume simple, ordered operator execution (a, [b, [c, [d]]]),
 		 * which is guarantied for any operator invocation. */
 		has_noreturn = false;
 		for (i = 0; i < 4; ++i) {

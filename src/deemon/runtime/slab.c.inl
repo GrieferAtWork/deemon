@@ -117,7 +117,7 @@ typedef struct {
 PRIVATE SlabConfig slab_config = {
 	{
 		{
-#define INIT_REGION(index,size)  { (uintptr_t)-1 },
+#define INIT_REGION(index, size)  { (uintptr_t)-1 },
 			DeeSlab_ENUMERATE(INIT_REGION)
 #undef INIT_REGION
 		}
@@ -365,7 +365,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 		/* FIXME: We're not checking if sscanf() really exists!
 		 *        There needs to be a fallback for when it doesn't exist! */
 		sscanf(config,
-		       "%u,%u,%u,%u,%u",
+		       "%u , %u , %u , %u , %u",
 		       (unsigned int *)&sizes[0],
 		       (unsigned int *)&sizes[1],
 		       (unsigned int *)&sizes[2],

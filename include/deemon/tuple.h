@@ -48,7 +48,7 @@ struct Dee_tuple_object {
 #endif /* !__INTELLISENSE__ */
 };
 
-#define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject,t_elem) + (n_items) * sizeof(DREF DeeObject *))
+#define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
 #define DeeTuple_IsEmpty(ob)     ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
 #define DeeTuple_SIZE(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
 #define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem

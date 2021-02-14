@@ -116,7 +116,7 @@ ast_gen_operator_func(struct ast *binding,
 			if unlikely(deemon_module_id < 0)
 				goto err_module;
 			if (asm_gcall_extern((uint16_t)deemon_module_id, id_InstanceMethod, 2))
-				goto err_module; /* InstanceMethod(<...> from operators,binding) */
+				goto err_module; /* InstanceMethod(<...> from operators, binding) */
 		}
 	} else {
 generic_operator:
@@ -145,12 +145,12 @@ generic_operator:
 		if (asm_gpush_u16(operator_name))
 			goto err_module; /* operator from operators, opname */
 		if (asm_gcall_extern((uint16_t)deemon_module_id, id_InstanceMethod, 2))
-			goto err_module; /* InstanceMethod(operator from operators,opname) */
+			goto err_module; /* InstanceMethod(operator from operators, opname) */
 		if (binding) {
 			if (ast_genasm_one(binding, ASM_G_FPUSHRES))
 				goto err_module;
 			if (asm_gcall_extern((uint16_t)deemon_module_id, id_InstanceMethod, 2))
-				goto err_module; /* InstanceMethod(InstanceMethod(operator from operators,opname),binding) */
+				goto err_module; /* InstanceMethod(InstanceMethod(operator from operators, opname), binding) */
 		}
 	}
 	Dee_Decref(operators_module);

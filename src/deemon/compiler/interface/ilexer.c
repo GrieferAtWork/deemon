@@ -1481,7 +1481,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	{ "textposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textposition, NULL, NULL,
 	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Returns a tuple (file,line,column) for the text-position of the current token\n"
+	      "Returns a tuple (file, line, column) for the text-position of the current token\n"
 	      "In the event that the current file is the result of an expanded macro, the source "
 	      "location of the macro invocation site is returned\n"
 	      "In the event that no text file is currently loaded, ?N is returned instead") },
@@ -1709,7 +1709,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_msvcmessages,
 	  DOC("->?Dbool\n"
 	      "When ?t, the file+line+column in warning and error messages is printed "
-	      "as $\"file(line,column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
+	      "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "nowarnings",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nowarnings,
@@ -1717,7 +1717,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nowarnings,
 	  DOC("->?Dbool\n"
 	      "When ?t, the file+line+column in warning and error messages is printed "
-	      "as $\"file(line,column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
+	      "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "noencoding",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noencoding,
@@ -4386,7 +4386,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	{ "position",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_position, NULL, NULL,
 	  DOC("->?T2?Dint?Dint\n"
-	      "Returns the current position (as a pair of integer `line,column', both of which "
+	      "Returns the current position (as a pair of integer `line, column', both of which "
 	      "are zero-based, meaning you'll probably have to add ${+1} to get line numbers as "
 	      "they would be used in a text editor)\n"
 	      "In the event that @this File is a macro, the positions returned refer to the "
@@ -4510,8 +4510,8 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsposition, NULL, NULL,
 	  DOC("->?X2?T2?Dint?Dint?N\n"
 	      "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
-	      "Return the (line,column) pair of the definition location of @this macro file\n"
-	      "Macros not defined through files will return ${(0,0)}") },
+	      "Return the (line, column) pair of the definition location of @this macro file\n"
+	      "Macros not defined through files will return ${(0, 0)}") },
 	{ "previousdefinition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_previousdefinition, NULL, NULL,
 	  DOC("->?X2?.?N\n"
@@ -4568,7 +4568,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setfunctionmacrovariant,
 	  DOC("->?Dstring\n"
 	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "@throw ValueError Attempted to set a value not apart of ${(\"(\",\"[\",\"{\",\"<\")}\n"
+	      "@throw ValueError Attempted to set a value not apart of ${(\"(\", \"[\", \"{\", \"<\")}\n"
 	      "Get or set the type of parenthesis used to start the argument list of @this function-like macro") },
 	{ "functionmacroargc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroargc, NULL, NULL,

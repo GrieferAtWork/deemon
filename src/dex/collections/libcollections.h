@@ -58,12 +58,12 @@ typedef struct deque {
 	DequeBucket *d_head;      /* [lock(d_lock)][0..1] Head bucket. */
 	DequeBucket *d_tail;      /* [lock(d_lock)][0..1] Tail bucket. */
 	size_t       d_size;      /* [lock(d_lock)] Total number of objects stored in this deque. */
-	size_t       d_head_idx;  /* [lock(d_lock)][< d_bucket_sz][if(d_size == 0,[== 0])]
+	size_t       d_head_idx;  /* [lock(d_lock)][< d_bucket_sz][if(d_size == 0, [== 0])]
 	                           * Absolute index where the head starts. */
-	size_t       d_head_use;  /* [lock(d_lock)][<= d_bucket_sz][if(d_size == 0,[== 0])]
+	size_t       d_head_use;  /* [lock(d_lock)][<= d_bucket_sz][if(d_size == 0, [== 0])]
 	                           * Amount of indices in use in `d_head'. */
-	size_t       d_tail_sz;   /* [lock(d_lock)][if(d_head == d_tail,[== 0])]
-	                           * [if(d_head && d_head != d_tail,[!= 0])][<= d_bucket_sz]
+	size_t       d_tail_sz;   /* [lock(d_lock)][if(d_head == d_tail, [== 0])]
+	                           * [if(d_head && d_head != d_tail, [!= 0])][<= d_bucket_sz]
 	                           * Number of items in use by the tail-bucket (only when there are more than 2 buckets). */
 	size_t       d_bucket_sz; /* [lock(d_lock)][!0] Size of a bucket (in objects) */
 	size_t       d_version;   /* [lock(d_lock)] Incremented every time the deque changes. */
@@ -392,7 +392,7 @@ typedef struct urodict_iterator_object URoDictIterator;
 /* UDICT */
 struct udict_item {
 	DREF DeeObject *di_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
-	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy,0..0)][valid_if(di_key)]
+	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)]
 	                           * [lock(:d_lock)] Dictionary item value. */
 };
 

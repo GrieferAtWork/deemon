@@ -196,9 +196,9 @@ union Dee_charptr {
  */
 #ifndef __NO_XBLOCK
 #define Dee_STRING_WIDTH_COMMON(x, y) \
-	XBLOCK({ unsigned int _x=(x),_y=(y); XRETURN _x >= _y ? _x : _y; })
+	XBLOCK({ unsigned int _x=(x), _y=(y); XRETURN _x >= _y ? _x : _y; })
 #define Dee_STRING_WIDTH_COMMON3(x, y, z) \
-	XBLOCK({ unsigned int _x=(x),_y=(y),_z=(z); XRETURN _x >= _y ? (_x >= _z ? _x : _z) : (_y >= _z ? _y : _z); })
+	XBLOCK({ unsigned int _x=(x), _y=(y), _z=(z); XRETURN _x >= _y ? (_x >= _z ? _x : _z) : (_y >= _z ? _y : _z); })
 #elif !defined(__NO_ATTR_FORCEINLINE) && (!defined(_MSC_VER) || defined(NDEBUG))
 LOCAL ATTR_CONST unsigned int DCALL
 _Dee_string_width_common(unsigned int x, unsigned int y) {
@@ -251,7 +251,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define Dee_STRING_MUL_SIZEOF_WIDTH(x, width) ((size_t)(x) << (width))
 
 #ifndef __NO_builtin_expect
-#define Dee_SWITCH_SIZEOF_WIDTH(x) switch (__builtin_expect(x,Dee_STRING_WIDTH_1BYTE))
+#define Dee_SWITCH_SIZEOF_WIDTH(x) switch (__builtin_expect(x, Dee_STRING_WIDTH_1BYTE))
 #else /* !__NO_builtin_expect */
 #define Dee_SWITCH_SIZEOF_WIDTH(x) switch (x)
 #endif /* __NO_builtin_expect */
@@ -473,11 +473,14 @@ DDATDEF DeeTypeObject DeeString_Type;
  *       working within the ASCII-range:
  *    >> DREF DeeObject *partition_after(DeeObject *__restrict str, char ch) {
  *    >>     DREF DeeObject *result;
- *    >>     char *pos = (char *)memchr(DeeString_STR(str),ch,DeeString_SIZE(str));
- *    >>     if (!pos) return_none;
+ *    >>     char *pos;
+ *    >>     pos = (char *)memchr(DeeString_STR(str), ch,
+ *    >>                          DeeString_SIZE(str));
+ *    >>     if (!pos)
+ *    >>         return_none;
  *    >>     // Return the sub-string after `ch'
  *    >>     ++pos;
- *    >>     result = DeeString_NewSized(pos,(size_t)(DeeString_END(str) - pos));
+ *    >>     result = DeeString_NewSized(pos, (size_t)(DeeString_END(str) - pos));
  *    >>     if likely(result && DeeString_STR_ISUTF8(str))
  *    >>        result = DeeString_SetUtf8(result); // Interpret raw data as UTF-8
  *    >>     return result;
@@ -668,10 +671,10 @@ uint32_t *DeeString_AsUtf32(DeeObject *__restrict self);
 #ifdef __INTELLISENSE__
 Dee_wchar_t *DeeString_AsWide(DeeObject *__restrict self);
 #elif __SIZEOF_WCHAR_T__ == 2
-#define DeeString_AsWide(self) ((Dee_wchar_t *)DeeString_AsUtf16(self,Dee_STRING_ERROR_FREPLAC))
-#else
+#define DeeString_AsWide(self) ((Dee_wchar_t *)DeeString_AsUtf16(self, Dee_STRING_ERROR_FREPLAC))
+#else /* __SIZEOF_WCHAR_T__ == 2 */
 #define DeeString_AsWide(self) ((Dee_wchar_t *)DeeString_AsUtf32(self))
-#endif
+#endif /* __SIZEOF_WCHAR_T__ != 2 */
 
 
 
@@ -837,7 +840,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_New4Byte(uint32_t c
 #ifdef __INTELLISENSE__
 DREF DeeObject *DeeString_New1Byte(uint8_t const *__restrict str, size_t length);
 #else /* __INTELLISENSE__ */
-#define DeeString_New1Byte(str,length) DeeString_NewSized((char const *)(str),length)
+#define DeeString_New1Byte(str, length) DeeString_NewSized((char const *)(str), length)
 #endif /* !__INTELLISENSE__ */
 
 
@@ -2298,7 +2301,7 @@ Dee_ascii_printer_pack(/*inherit(always)*/ struct Dee_ascii_printer *__restrict 
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define Dee_ascii_printer_putc(self,ch) __builtin_expect(Dee_ascii_printer_putc(self,ch),0)
+#define Dee_ascii_printer_putc(self, ch) __builtin_expect(Dee_ascii_printer_putc(self, ch), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
@@ -2841,10 +2844,10 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_vprintf)(struct Dee_uni
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobject)(struct Dee_unicode_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct Dee_unicode_printer *__restrict self, DeeObject *__restrict ob);
 #else /* __INTELLISENSE__ */
-#define Dee_unicode_printer_printf(self, ...)          DeeFormat_Printf(&Dee_unicode_printer_print,self,__VA_ARGS__)
-#define Dee_unicode_printer_vprintf(self,format,args) DeeFormat_VPrintf(&Dee_unicode_printer_print,self,format,args)
-#define Dee_unicode_printer_printobject(self,ob)      DeeObject_Print(ob, &Dee_unicode_printer_print,self)
-#define Dee_unicode_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob, &Dee_unicode_printer_print,self)
+#define Dee_unicode_printer_printf(self, ...)           DeeFormat_Printf(&Dee_unicode_printer_print, self, __VA_ARGS__)
+#define Dee_unicode_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_unicode_printer_print, self, format, args)
+#define Dee_unicode_printer_printobject(self, ob)       DeeObject_Print(ob, &Dee_unicode_printer_print, self)
+#define Dee_unicode_printer_printobjectrepr(self, ob)   DeeObject_PrintRepr(ob, &Dee_unicode_printer_print, self)
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
@@ -2943,11 +2946,11 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
  * These functions will start by normalizing `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
  * call to `encode from codecs' / `decode from codecs':
- * >> name = name.casefold().replace("_","-");
+ * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
- * >>     name = "iso"+name[4:];
+ * >>     name = "iso" + name[4:];
  * >> else if (name.startswith("cp-")) {
- * >>     name = "cp"+name[3:];
+ * >>     name = "cp" + name[3:];
  * >> }
  * >> if (has_builtin_codec(name))
  * >>     return builtin_encode(self, name, error_mode); // or decode...

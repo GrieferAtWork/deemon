@@ -21,6 +21,6 @@
 #include "__stddef.dee"
 
 /* `ctypes' now exports all the memory functions */
-#pragma push_macro(undef,"import","ctypes")
+#pragma push_macro(undef, "import", "ctypes")
 import mem = ctypes;
-#pragma pop_macro("import","ctypes")
+#pragma pop_macro("import", "ctypes")

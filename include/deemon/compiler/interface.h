@@ -129,7 +129,7 @@ INTDEF int DCALL get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict 
  *          and the old DDI file will _NOT_ be decref'ed! */
 INTDEF int DCALL set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
 
-/* Print the repr-form of the given ast-location to the given unicode printer `(filename,line,col)' */
+/* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)' */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL print_ast_loc_repr(struct ast_loc *__restrict self, struct unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
@@ -149,7 +149,7 @@ INTDEF WUNUSED NONNULL((1)) uint16_t DCALL get_ast_multiple_typing(DeeTypeObject
 struct catch_expr;
 struct base_scope_object;
 
-/* Unpack and validate a sequence `{(string,ast,ast)...} handlers' */
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
 INTDEF struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict pcatch_c,

@@ -243,7 +243,7 @@ struct Dee_ddi_xregs {
 #if __SIZEOF_POINTER__ > 4
 	uint16_t            _dx_pad[(sizeof(void *) / 2) - 2];
 #endif /* __SIZEOF_POINTER__ > 4 */
-	uint16_t            *dx_spnamv; /* [0..MIN(dx_base.dr_usp,dx_spnama)|ALLOC(dx_spnama)]
+	uint16_t            *dx_spnamv; /* [0..MIN(dx_base.dr_usp, dx_spnama)|ALLOC(dx_spnama)]
 	                                 * [owned] Vector of stack-symbol name registers.
 	                                 * NOTE: Unallocated indices should be assumed to be unbound. */
 	uint16_t            *dx_lcnamv; /* [0..dx_lcnamc][owned] Vector of local variable name registers. */
@@ -277,7 +277,7 @@ struct Dee_ddi_state {
  * >> struct Dee_ddi_state state;
  * >> struct Dee_ddi_xregs *iter;
  * >> DDI_STATE_DO(iter, &state) {
- * >>     printf("line = %d\n",iter->dx_base.dr_lno);
+ * >>     printf("line = %d\n", iter->dx_base.dr_lno);
  * >> } DDI_STATE_WHILE(iter, &state);
  */
 #define Dee_DDI_STATE_DO(ddi_xregs_iter, self)                 \
@@ -355,8 +355,8 @@ Dee_ddi_next_state(uint8_t *__restrict ip,
 #define DDI_EXDAT_OPMASK  0xc0 /* Operand size mask. */
 #define DDI_EXDAT_MAXSIZE 7    /* Max size (in bytes) of a single DDI extension data block. */
 #define DDI_EXDAT_O_END   0x00 /* End of extended data. */
-#define DDI_EXDAT_O_RNAM  0x00 /* | DDI_EXDAT_OP*; [id,strtab_offset] */
-#define DDI_EXDAT_O_SNAM  0x01 /* | DDI_EXDAT_OP*; [id,strtab_offset] */
+#define DDI_EXDAT_O_RNAM  0x00 /* | DDI_EXDAT_OP*; [id, strtab_offset] */
+#define DDI_EXDAT_O_SNAM  0x01 /* | DDI_EXDAT_OP*; [id, strtab_offset] */
 
 struct Dee_ddi_exdat {
 	uint32_t  dx_size;    /* Amount of extended data bytes. */
@@ -620,8 +620,8 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCode_SetAssembly(/*Code*/ DeeObject *_
 
 
 /* Extended frame information for functions invoked with keyword arguments.
- * >> function foo(x?,y?,z?,**w) { }
- * >> foo(10,z: 20,foobar: "barfoo");
+ * >> function foo(x?, y?, z?, **w) { }
+ * >> foo(10, z: 20, foobar: "barfoo");
  * VALUES:
  *    cf_argc         = 1
  *    cf_argv         = { int(10) }     (with out-of-bounds extension `{ int(20), string("barfoo") }')
@@ -766,7 +766,7 @@ DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
 /* Handle a breakpoint having been triggered in `frame'.
  * NOTE: This function is called to deal with an encounter
  *       of a breakpoint during execution of code.
- * @param: frame: [in|out][OVERRIDE(->cf_result,DREF)]
+ * @param: frame: [in|out][OVERRIDE(->cf_result, DREF)]
  *                 The execution frame that triggered the breakpoint.
  *                 Anything and everything about the state described
  *                 within this frame is subject to change by this
@@ -875,11 +875,11 @@ struct Dee_yield_function_iterator_object {
 	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
 	struct Dee_code_frame        yi_frame; /* [lock(yi_lock)]
 	                                        * [owned(.cf_frame)]
-	                                        * [owned_if(.cf_stack,.cf_stacksz)]
-	                                        * [OVERRIDE(.cf_func,DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
-	                                        * [OVERRIDE(.cf_argv,DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
-	                                        * [OVERRIDE(.cf_ip,[?..1][valid_if(:yi_func != NULL)])]
-	                                        * [OVERRIDE(.cf_this,DREF [0..1])]
+	                                        * [owned_if(.cf_stack, .cf_stacksz)]
+	                                        * [OVERRIDE(.cf_func, DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
+	                                        * [OVERRIDE(.cf_argv, DREF [0..1][(!= NULL) == (:yi_func != NULL)])]
+	                                        * [OVERRIDE(.cf_ip, [?..1][valid_if(:yi_func != NULL)])]
+	                                        * [OVERRIDE(.cf_this, DREF [0..1])]
 	                                        * [.cf_argv == yi_func->yf_args || NULL]
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */

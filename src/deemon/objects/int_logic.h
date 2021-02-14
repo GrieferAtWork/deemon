@@ -67,7 +67,7 @@ DECL_BEGIN
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
 #else /* NDEBUG */
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line);
-#define DeeInt_Alloc(n_digits)  DeeInt_Alloc_dbg(n_digits,__FILE__,__LINE__)
+#define DeeInt_Alloc(n_digits) DeeInt_Alloc_dbg(n_digits, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);

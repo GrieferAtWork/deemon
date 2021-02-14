@@ -22,6 +22,6 @@
 #include "../__builtin_fs.dee"
 #include "../file"
 
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import fs = ".m_gcode_fs";
 #pragma pop_macro("import")

@@ -949,7 +949,7 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(COMPILER_OFFSETOF(Repeat,r_seq) == COMPILER_OFFSETOF(RepeatItem,ri_obj));
+STATIC_ASSERT(COMPILER_OFFSETOF(Repeat, r_seq) == COMPILER_OFFSETOF(RepeatItem, ri_obj));
 #define repeatitem_fini  repeat_fini
 #define repeatitem_visit repeat_visit
 

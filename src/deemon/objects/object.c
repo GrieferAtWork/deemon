@@ -2217,17 +2217,17 @@ PRIVATE struct type_method object_methods[] = {
 	{ meth_contains+2,   &object_contains, DOC("(item)->\n@return The result of ${this.operator contains (item)}") },
 	{ meth_getitem+2,    &object_getitem, DOC("(index)->\n@return The result of ${this.operator [] (index)}") },
 	{ meth_delitem+2,    &object_delitem, DOC("(index)\nInvokes ${this.operator del[] (index)}") },
-	{ meth_setitem+3,    &object_setitem, DOC("(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index,value)}") },
-	{ meth_getrange+3,   &object_getrange, DOC("(start,end)->\n@return The result of ${this.operator [:] (start,end)}") },
-	{ meth_delrange+3,   &object_delrange, DOC("(start,end)\nInvokes ${this.operator del[:] (start,end)}") },
-	{ meth_setrange+4,   &object_setrange, DOC("(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start,end,value)}") },
+	{ meth_setitem+3,    &object_setitem, DOC("(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index, value)}") },
+	{ meth_getrange+3,   &object_getrange, DOC("(start,end)->\n@return The result of ${this.operator [:] (start, end)}") },
+	{ meth_delrange+3,   &object_delrange, DOC("(start,end)\nInvokes ${this.operator del[:] (start, end)}") },
+	{ meth_setrange+4,   &object_setrange, DOC("(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start, end, value)}") },
 	{ meth_iterself+1,   &object_iterself, DOC("->\n@return The result of ${this.operator iter()}") },
 	{ meth_iternext+1,   &object_iternext, DOC("->\n@return The result of ${this.operator next()}") },
 	{ meth_getattr+2,    &object_getattr, DOC("(name:?Dstring)->\n@return The result of ${this.operator . (name)}") },
 	{ meth_callattr,     &object_callattr, DOC("(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}") },
 	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning ?t or ?f indicative of this") },
 	{ meth_delattr+2,    &object_delattr, DOC("(name:?Dstring)\nInvokes ${this.operator del . (name)}") },
-	{ meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name,value)}") },
+	{ meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}") },
 	{ meth_enumattr+1,   &object_enumattr, DOC("()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}") },
 	{ DeeString_STR(&str___format__), &object_format_method,
 	  DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. :string.format)") },
@@ -3557,14 +3557,14 @@ PRIVATE struct type_method type_methods[] = {
 	      "}"
 
 	      "\n"
-	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type,({(string,Object)...},)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type,({(string,Object)...},none)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type,({(string,Object)...},Tuple)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type,({(string,Object)...},Tuple,none)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type,({(string,Object)...},Tuple,Mapping)...} */
-	      "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type,(none,Tuple)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type,(none,Tuple,none)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type,(none,Tuple,Mapping)...} */
+	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type, ({(string,Object)...},)...} */
+	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type, ({(string,Object)...}, none)...} */
+	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type, ({(string,Object)...}, Tuple)...} */
+	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type, ({(string,Object)...}, Tuple, none)...} */
+	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type, ({(string,Object)...}, Tuple, Mapping)...} */
+	      "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
+	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
+	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
 	      "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
 	      /**/ "has a mandatory constructor that can't be invoked without any arguments. "
 	      /**/ "Note that a user-defined class never has a mandatory constructor, with this "
@@ -3687,10 +3687,10 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
 	      "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
 	      "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"
-	      "$\"setitem\"|$\"[]=\"|${operator []= (index,value): none}&"
-	      "$\"getrange\"|$\"[:]\"|${operator [:] (start,end): Object}&"
-	      "$\"delrange\"|$\"del[:]\"|${operator del[:] (start,end): none}&"
-	      "$\"setrange\"|$\"[:]=\"|${operator [:]= (start,end,value): none}&"
+	      "$\"setitem\"|$\"[]=\"|${operator []= (index, value): none}&"
+	      "$\"getrange\"|$\"[:]\"|${operator [:] (start, end): Object}&"
+	      "$\"delrange\"|$\"del[:]\"|${operator del[:] (start, end): none}&"
+	      "$\"setrange\"|$\"[:]=\"|${operator [:]= (start, end, value): none}&"
 	      "$\"getattr\"|$\".\"|${operator . (name: string): Object}&"
 	      "$\"delattr\"|$\"del.\"|${operator del. (name: string): none}&"
 	      "$\"setattr\"|$\".=\"|${operator .= (name: string, value): none}&"

@@ -36,10 +36,10 @@
 #include <stddef.h>
 
 #ifndef PP_CAT2
-#define PP_PRIVATE_CAT2(a,b)   a##b
-#define PP_PRIVATE_CAT3(a,b,c) a##b##c
-#define PP_CAT2(a,b)   PP_PRIVATE_CAT2(a,b)
-#define PP_CAT3(a,b,c) PP_PRIVATE_CAT3(a,b,c)
+#define PP_PRIVATE_CAT2(a, b)    a##b
+#define PP_PRIVATE_CAT3(a, b, c) a##b##c
+#define PP_CAT2(a, b)            PP_PRIVATE_CAT2(a, b)
+#define PP_CAT3(a, b, c)         PP_PRIVATE_CAT3(a, b, c)
 #endif /* !PP_CAT2 */
 
 #ifndef PP_MUL8

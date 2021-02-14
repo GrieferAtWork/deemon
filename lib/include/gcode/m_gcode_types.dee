@@ -38,9 +38,9 @@ global final LongWord = ctypes.uint32_t;
 /* Floating names */
 global final Single = ctypes.float;
 
-global final signedNumbers   = pack ctypes.int8_t,ctypes.int16_t,ctypes.int32_t,ctypes.int64_t;
-global final unSignedNumbers = pack ctypes.uint8_t,ctypes.uint16_t,ctypes.uint32_t,ctypes.uint64_t;
-global final floatingNumbers = pack ctypes.float,ctypes.double,ctypes.ldouble;
+global final signedNumbers   = pack ctypes.int8_t, ctypes.int16_t, ctypes.int32_t, ctypes.int64_t;
+global final unSignedNumbers = pack ctypes.uint8_t, ctypes.uint16_t, ctypes.uint32_t, ctypes.uint64_t;
+global final floatingNumbers = pack ctypes.float, ctypes.double, ctypes.ldouble;
 
 /* OMG! The f#$%ing casing! Who the hell designed this $hit?
  * ... oh right: me */

@@ -35,14 +35,14 @@
 
 #ifndef __memory_order_relaxed_defined
 #define __memory_order_relaxed_defined 1
-#pragma push_macro(undef,"local","memory_order_relaxed","memory_order_consume","memory_order_acquire","memory_order_release","memory_order_acq_rel","memory_order_seq_cst")
-local memory_order_relaxed = __MEMORY_ORDER_RELAXED;
-local memory_order_consume = __MEMORY_ORDER_CONSUME;
-local memory_order_acquire = __MEMORY_ORDER_ACQUIRE;
-local memory_order_release = __MEMORY_ORDER_RELEASE;
-local memory_order_acq_rel = __MEMORY_ORDER_ACQ_REL;
-local memory_order_seq_cst = __MEMORY_ORDER_SEQ_CST;
-#pragma pop_macro("local","memory_order_relaxed","memory_order_consume","memory_order_acquire","memory_order_release","memory_order_acq_rel","memory_order_seq_cst")
+#pragma push_macro(undef, "local", "memory_order_relaxed", "memory_order_consume", "memory_order_acquire", "memory_order_release", "memory_order_acq_rel", "memory_order_seq_cst")
+final local memory_order_relaxed = __MEMORY_ORDER_RELAXED;
+final local memory_order_consume = __MEMORY_ORDER_CONSUME;
+final local memory_order_acquire = __MEMORY_ORDER_ACQUIRE;
+final local memory_order_release = __MEMORY_ORDER_RELEASE;
+final local memory_order_acq_rel = __MEMORY_ORDER_ACQ_REL;
+final local memory_order_seq_cst = __MEMORY_ORDER_SEQ_CST;
+#pragma pop_macro("local", "memory_order_relaxed", "memory_order_consume", "memory_order_acquire", "memory_order_release", "memory_order_acq_rel", "memory_order_seq_cst")
 #endif
 
 #ifdef __DEEMON_GUARD___CXXDEFAULT_DEE

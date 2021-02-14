@@ -242,6 +242,7 @@ assert identical(exec(r'local function foo(x) { return x * 2; };')(7), none);
 assert identical(exec(r'function(x) -> x * 2')(7), 14);
 assert identical(exec(r'function(x) -> x * 2;')(7), 14);
 assert identical(exec(r'function(x) { return x * 2; }')(7), 14);
+assert identical(exec(r'function(x) { return x * 2; };'), none);
 assert identical(exec(r'function(x) { return x * 2; };')(7), none);
 assert identical(exec(r'[](x) -> x * 2')(7), 14);
 assert identical(exec(r'[](x) -> x * 2;')(7), 14);

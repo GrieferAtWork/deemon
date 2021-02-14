@@ -153,7 +153,7 @@ import_module_by_name:
 			 * Now to handle the portion that isn't common.
 			 * For this, we need to write 1+self_pathstr.count(SEP) `.'
 			 * characters to deal with up-path reference, which is then
-			 * followed by `other_pathstr.replace(SEP,".")' */
+			 * followed by `other_pathstr.replace(SEP, ".")' */
 			num_dots = 1; /* +1 leading dot to identify the use of a local dependency name. */
 			while (self_pathstr != self_pathend) {
 				if (*self_pathstr++ == SEP)

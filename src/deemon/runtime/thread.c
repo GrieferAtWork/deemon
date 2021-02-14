@@ -49,7 +49,7 @@
  * >> }
  * >> 
  * >> int main(int argc, char *argv[]) {
- * >>     unsigned int i,count,pass;
+ * >>     unsigned int i, count, pass;
  * >>     
  * >>     for (count = 0; count < 1000; ++count) {
  * >>         pthread_t thread;
@@ -202,7 +202,7 @@ PUBLIC struct tls_callback_hooks _DeeThread_TlsCallbacks = {
 
 
 STATIC_ASSERT(SIZEOF_DTHREADID_T == sizeof(dthreadid_t));
-PRIVATE DEFINE_STRING(main_thread_name,"MainThread");
+PRIVATE DEFINE_STRING(main_thread_name, "MainThread");
 PUBLIC uint16_t DeeExec_StackLimit = DEE_CONFIG_DEFAULT_STACK_LIMIT;
 
 
@@ -217,7 +217,7 @@ PRIVATE struct deep_assoc_entry empty_deep_assoc[] = {
 #pragma warning(disable: 6320)
 #pragma warning(disable: 6322)
 #endif /* _PREFAST_ */
-#pragma pack(push,8)
+#pragma pack(push, 8)
 PRIVATE NONNULL((1)) void DCALL
 sys_setthreadname(char const *__restrict name) {
 	typedef struct THREADNAME_INFO {
@@ -979,7 +979,7 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 		if (ATOMIC_CMPXCH(self->ob_refcnt, refcnt, refcnt - 1))
 			break;
 #if 0 /* No need to go back on this... */
-		ATOMIC_WRITE(self->t_state,old_state);
+		ATOMIC_WRITE(self->t_state, old_state);
 #endif
 	}
 	/* WARNING: Once we release this lock, the main thread is allowed to assume that we no longer exist.

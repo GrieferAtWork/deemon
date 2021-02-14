@@ -1031,25 +1031,25 @@ PRIVATE struct dex_symbol symbols[] = {
 #ifdef MATH_HAVE_sincos
 	{ "sincos", (DeeObject *)&math_sincos, MODSYM_FNORMAL,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
-	      "Returns a tuple equivalent to ${(sin(x),cos(x))}") },
+	      "Returns a tuple equivalent to ${(sin(x), cos(x))}") },
 #endif /* MATH_HAVE_sincos */
 
 #ifdef MATH_HAVE_asincos
 	{ "asincos", (DeeObject *)&math_asincos, MODSYM_FNORMAL,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
-	      "Returns a tuple equivalent to ${(asin(x),acos(x))}") },
+	      "Returns a tuple equivalent to ${(asin(x), acos(x))}") },
 #endif /* MATH_HAVE_asincos */
 
 #ifdef MATH_HAVE_sincosh
 	{ "sincosh", (DeeObject *)&math_sincosh, MODSYM_FNORMAL,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
-	      "Returns a tuple equivalent to ${(sinh(x),cosh(x))}") },
+	      "Returns a tuple equivalent to ${(sinh(x), cosh(x))}") },
 #endif /* MATH_HAVE_sincosh */
 
 #ifdef MATH_HAVE_asincosh
 	{ "asincosh", (DeeObject *)&math_asincosh, MODSYM_FNORMAL,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
-	      "Returns a tuple equivalent to ${(asinh(x),acosh(x))}") },
+	      "Returns a tuple equivalent to ${(asinh(x), acosh(x))}") },
 #endif /* MATH_HAVE_asincosh */
 
 #ifdef MATH_HAVE_scalbn

@@ -50,11 +50,11 @@ struct Dee_gc_head {
 	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
 	DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
-#define DEE_GC_OBJECT_OFFSET  COMPILER_OFFSETOF(struct gc_head,gc_object)
-#define DEE_GC_HEAD_SIZE      COMPILER_OFFSETOF(struct gc_head,gc_object)
-#define DeeGC_Head(ob)   ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_OBJECT(ob) - DEE_GC_OBJECT_OFFSET))
-#define DeeGC_Object(ob) (&(ob)->gc_object)
-#define DeeGC_Check(ob)  ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (((DeeTypeObject *)Dee_REQUIRES_OBJECT(ob))->tp_flags & TP_FHEAP)))
+#define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct gc_head, gc_object)
+#define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct gc_head, gc_object)
+#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_OBJECT(ob) - DEE_GC_OBJECT_OFFSET))
+#define DeeGC_Object(ob)     (&(ob)->gc_object)
+#define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (((DeeTypeObject *)Dee_REQUIRES_OBJECT(ob))->tp_flags & TP_FHEAP)))
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object
@@ -97,7 +97,7 @@ DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 
 /* Allocate fixed-size, gc-object-purposed slab memory.
  * NOTE: This memory must be freed by one of:
- *   - DeeGCObject_FFree(return,size2)     | size2 <= size
+ *   - DeeGCObject_FFree(return, size2)    | size2 <= size
  *   - DeeGCObject_SlabFree<size2>(return) | size2 <= size
  *   - DeeGCObject_Free(return) */
 #ifdef CONFIG_NO_OBJECT_SLABS

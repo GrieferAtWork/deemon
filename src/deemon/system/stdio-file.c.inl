@@ -876,7 +876,7 @@ PRIVATE struct mode_name const mode_names[] = {
 #endif /* CONFIG_HAVE__IOLBF */
 };
 
-/* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
+/* CASEEQ(x, 'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 #endif /* FILE_HAVE_SETVBUF */
 

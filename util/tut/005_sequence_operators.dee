@@ -109,7 +109,7 @@ print repr [2:10];     /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
 print repr [2:10, 3];  /* { 2, 5, 8 } */
 print repr [10:0, -3]; /* { 10, 7, 4, 1 } */
 
-/* Range expressions are written as `[<start>:<end>,<step>]',
+/* Range expressions are written as `[<start>:<end>, <step>]',
  * with `<start>' defaulting to a default-constructed instance
  * of end (which is usually just `0'), and `<step>' being omit
  * causing `operator ++' to be used (explained later alongside

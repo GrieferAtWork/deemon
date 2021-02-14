@@ -40,7 +40,7 @@
 	 *    sequence needs to be expanded (thus explaining the `...')
 	 * HINT:
 	 *    For this, the compiler generates assembly is equivalent to:
-	 * >> for (none: lists.each.insert(0,9)) {} */
+	 * >> for (none: lists.each.insert(0, 9)) {} */
 	lists.each.insert(0, 9)...;
 	assert lists == { { 9, 10, 20, 30 }, { 9, 1, 2, 3 }, { 9, 19, 41, 57 } };
 

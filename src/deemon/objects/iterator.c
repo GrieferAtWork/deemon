@@ -1018,7 +1018,7 @@ PRIVATE struct type_method iterator_methods[] = {
 	      "	if (step == 0)\n"
 	      "		return;\n"
 	      "	if (step < 0)\n"
-	      "		return iterator.advance(this,-step);\n"
+	      "		return iterator.advance(this, -step);\n"
 	      "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
 	      "		if (tp.hasprivateoperator(\"isub\")) {\n"
 	      "			this -= step;\n"
@@ -1072,7 +1072,7 @@ PRIVATE struct type_method iterator_methods[] = {
 	      "	if (step == 0)\n"
 	      "		return;\n"
 	      "	if (step < 0)\n"
-	      "		return iterator.revert(this,-step);\n"
+	      "		return iterator.revert(this, -step);\n"
 	      "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
 	      "		if (tp.hasprivateoperator(\"iadd\")) {\n"
 	      "			this += step;\n"
@@ -2327,7 +2327,7 @@ PRIVATE struct type_math iterator_math = {
  * Meant for use in multi-threaded environments, where one thread is set up as
  * data producer, lazily producing data, and all of the other threads there to
  * lazily consume that data:
- * >> function tee(iter,n = 2) {
+ * >> function tee(iter, n = 2) {
  * >>     import deque from collections;
  * >>     import Signal, Error from deemon;
  * >>     import mutex from threading;
@@ -2349,11 +2349,11 @@ PRIVATE struct type_math iterator_math = {
  * >>                     } catch (Signal.StopIteration) {
  * >>                         return;
  * >>                     }
- * >>                     pending.pushback((n - 1,new_item));
+ * >>                     pending.pushback((n - 1, new_item));
  * >>                     ++offsets[i]; // offsets[i] = #pending;
  * >>                 } else {
  * >>                     local count;
- * >>                     count,new_item = pending[offset]...;
+ * >>                     count, new_item = pending[offset]...;
  * >>                     if (count == 1) {
  * >>                         assert offset == 0;
  * >>                         pending.popfront();
@@ -2361,7 +2361,7 @@ PRIVATE struct type_math iterator_math = {
  * >>                             --offsets[j];
  * >>                         offsets[i] = 0;
  * >>                     } else {
- * >>                         pending[offset] = (count - 1,new_item);
+ * >>                         pending[offset] = (count - 1, new_item);
  * >>                         ++offsets[i];
  * >>                     }
  * >>                 }

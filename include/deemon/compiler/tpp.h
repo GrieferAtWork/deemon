@@ -82,7 +82,7 @@ struct TPPKeyword;
 
 /* In order to prevent data redundancy of the library path (considering
  * that the way standard system include paths are now implemented as
- * `for (x: (module from deemon).paths) yield (joinpath from fs)(x,"include");'),
+ * `for (x: (module from deemon).paths) yield (joinpath from fs)(x, "include");'),
  * we simply implement the unknown-file hook of TPP, allowing us to search the
  * default library path for a given filename whenever TPP couldn't find the file
  * as part of its own library path. */

@@ -233,7 +233,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       >> //       expression, while access to imported modules is compiled to
 	 *       >> //       generate the appropriate attribute operators.
 	 *       >> import("foo"); // This...
-	 *       >> globals.get("__import__",restricted_import)("foo"); // ... becomes this
+	 *       >> globals.get("__import__", restricted_import)("foo"); // ... becomes this
 	 *       >>
 	 *       >> // Where `restricted_import' is implemented as follows:
 	 *       >> //   - A function that emulates `deemon.import()', but only allows
@@ -281,7 +281,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *             - `deemon.Error.AppExit'
 	 *             - `deemon.Signal.Interrupt'
 	 *         - `deemon.import' and its alias `deemon.import_' will cause the value
-	 *            of the expression `globals.get("__import__",restricted_import)' to
+	 *            of the expression `globals.get("__import__", restricted_import)' to
 	 *            be returned instead.
 	 *       Note that other ways of loading modules, such as `string.decode()'
 	 *       are not restricted, as them becoming unsafe would already require
@@ -308,7 +308,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       >>     function deltree(x) {
 	 *       >>         for (local y: fs_module.dir(x)) {
 	 *       >>             try {
-	 *       >>                 y = fs_module.joinpath(x,y);
+	 *       >>                 y = fs_module.joinpath(x, y);
 	 *       >>                 if (fs_module.stat.isdir(y)) {
 	 *       >>                     deltree(y);
 	 *       >>                     fs_module.rmdir(y);

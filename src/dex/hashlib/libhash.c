@@ -82,7 +82,7 @@ function DEEMON_GENERATE_CRC(width, polynom, reflect_input) {
 		}
 		if (reflect_input) {
 			reg >>= crc_shift;
-			reg = DEEMON_REFLECT(reg,width);
+			reg = DEEMON_REFLECT(reg, width);
 			reg <<= crc_shift;
 		}
 		reg >>= crc_shift;
@@ -121,7 +121,7 @@ function get_hashfunc(width, revin, revout) {
 	return name;
 }
 
-function def_crc(names,width,poly,args...) {
+function def_crc(names, width, poly, args...) {
 	local init = 0x0;
 	local refin = false;
 	local refout = false;
@@ -170,7 +170,7 @@ function def_crc(names,width,poly,args...) {
 	print("\t", CODEINT(init), ",");
 	print("\t", CODEINT(xorout), ",");
 	local algo_filename = joinpath(algo_folder, "algorithm." + main_name.replace("\\", "_").replace("/", "_") + ".c.inl");
-	with (local algo_file = File.open(algo_filename,"w")) {
+	with (local algo_file = File.open(algo_filename, "w")) {
 		print algo_file: "{";
 		for (local i, x: util.enumerate(DEEMON_GENERATE_CRC(width, poly, refin))) {
 			if ((i % 8) == 0)
@@ -185,7 +185,7 @@ function def_crc(names,width,poly,args...) {
 		}
 		print algo_file: "}";
 	}
-	print "#include",repr(algo_filename.replace("\\", "/"));
+	print "#include", repr(algo_filename.replace("\\", "/"));
 	print "};";
 	print;
 }
@@ -210,7 +210,7 @@ def_crc(["CRC-8/AUTOSAR"],             8, 0x2f, 0xff, false, false, 0xff);
 def_crc(["CRC-8/CDMA2000"],            8, 0x9b, 0xff, false, false, 0x00);
 def_crc(["CRC-8/DARC"],                8, 0x39, 0x00, true, true, 0x00);
 def_crc(["CRC-8/DVB-S2"],              8, 0xd5, 0x00, false, false, 0x00);
-def_crc(["CRC-8/EBU","CRC-8/AES"],     8, 0x1d, 0xff, true, true, 0x00);
+def_crc(["CRC-8/EBU", "CRC-8/AES"],    8, 0x1d, 0xff, true, true, 0x00);
 def_crc(["CRC-8/I-CODE"],              8, 0x1d, 0xfd, false, false, 0x00);
 def_crc(["CRC-8/ITU"],                 8, 0x07, 0x00, false, false, 0x55);
 def_crc(["CRC-8/LTE"],                 8, 0x9b, 0x00, false, false, 0x00);
@@ -219,21 +219,21 @@ def_crc(["CRC-8/LTE"],                 8, 0x9b, 0x00, false, false, 0x00);
 // >> https://en.wikipedia.org/wiki/Polynomial_representations_of_cyclic_redundancy_checks
 def_crc(["CRC-8/MAXIM", "DOW-CRC", "CRC-8/DALLAS"], 8, 0x31, 0x00, true, true, 0x00);
 
-def_crc(["CRC-8/OPENSAFETY"],           8, 0x2f, 0x00, false, false, 0x00);
-def_crc(["CRC-8/ROHC"],                 8, 0x07, 0xff, true, true, 0x00);
-def_crc(["CRC-8/SAE-J1850"],            8, 0x1d, 0xff, false, false, 0xff);
-def_crc(["CRC-8/WCDMA"],                8, 0x9b, 0x00, true, true, 0x00);
-def_crc(["CRC-10"],                    10, 0x233, 0x000, false, false, 0x000);
-def_crc(["CRC-10/CDMA2000"],           10, 0x3d9, 0x3ff, false, false, 0x000);
-def_crc(["CRC-11"],                    11, 0x385, 0x01a, false, false, 0x000);
-def_crc(["CRC-11/UMTS"],               11, 0x307, 0x000, false, false, 0x000);
-def_crc(["CRC-12/CDMA2000"],           12, 0xf13, 0xfff, false, false, 0x000);
-def_crc(["CRC-12/DECT","X-CRC-12"],    12, 0x80f, 0x000, false, false, 0x000);
-def_crc(["CRC-12/UMTS","CRC-12/3GPP"], 12, 0x80f, 0x000, false, true, 0x000);
-def_crc(["CRC-13/BBC"],                13, 0x1cf5, 0x0000, false, false, 0x0000);
-def_crc(["CRC-14/DARC"],               14, 0x0805, 0x0000, true, true, 0x0000);
-def_crc(["CRC-15"],                    15, 0x4599, 0x0000, false, false, 0x0000);
-def_crc(["CRC-15/MPT1327"],            15, 0x6815, 0x0000, false, false, 0x0001);
+def_crc(["CRC-8/OPENSAFETY"],            8, 0x2f, 0x00, false, false, 0x00);
+def_crc(["CRC-8/ROHC"],                  8, 0x07, 0xff, true, true, 0x00);
+def_crc(["CRC-8/SAE-J1850"],             8, 0x1d, 0xff, false, false, 0xff);
+def_crc(["CRC-8/WCDMA"],                 8, 0x9b, 0x00, true, true, 0x00);
+def_crc(["CRC-10"],                     10, 0x233, 0x000, false, false, 0x000);
+def_crc(["CRC-10/CDMA2000"],            10, 0x3d9, 0x3ff, false, false, 0x000);
+def_crc(["CRC-11"],                     11, 0x385, 0x01a, false, false, 0x000);
+def_crc(["CRC-11/UMTS"],                11, 0x307, 0x000, false, false, 0x000);
+def_crc(["CRC-12/CDMA2000"],            12, 0xf13, 0xfff, false, false, 0x000);
+def_crc(["CRC-12/DECT", "X-CRC-12"],    12, 0x80f, 0x000, false, false, 0x000);
+def_crc(["CRC-12/UMTS", "CRC-12/3GPP"], 12, 0x80f, 0x000, false, true, 0x000);
+def_crc(["CRC-13/BBC"],                 13, 0x1cf5, 0x0000, false, false, 0x0000);
+def_crc(["CRC-14/DARC"],                14, 0x0805, 0x0000, true, true, 0x0000);
+def_crc(["CRC-15"],                     15, 0x4599, 0x0000, false, false, 0x0000);
+def_crc(["CRC-15/MPT1327"],             15, 0x6815, 0x0000, false, false, 0x0001);
 
 // Added 'CRC-16/IBM' alias, as referenced here: https://users.ece.cmu.edu/~koopman/crc/crc16.html
 def_crc(["ARC", "CRC-16", "CRC-IBM", "CRC-16/ARC", "CRC-16/LHA", "CRC-16/IBM"], 16, 0x8005, 0x0000, true, true, 0x0000);
@@ -326,7 +326,7 @@ def_crc(["CRC-31/PHILIPS"],            31, 0x04c11db7, 0x7fffffff, false, false,
 
 // >> https://users.ece.cmu.edu/~koopman/crc/crc32.html (referenced this as 'CRC-32/IEEE-802.3')
 // >> https://www.autosar.org/fileadmin/files/releases/4-2/software-architecture/safety-and-security/standard/AUTOSAR_SWS_CRCLibrary.pdf (contains freaking readable IEEE-802.3 specs on page 25/48)
-def_crc(["CRC-32","CRC-32/ADCCP","PKZIP","CRC-32/IEEE-802.3",
+def_crc(["CRC-32", "CRC-32/ADCCP", "PKZIP", "CRC-32/IEEE-802.3",
          "IEEE-802.3"], 32, 0x04c11db7, 0xffffffff, true, true, 0xffffffff);
 
 def_crc(["CRC-32/AUTOSAR"],            32, 0xf4acfb13, 0xffffffff, true, true, 0xffffffff);
@@ -351,7 +351,7 @@ def_crc(["CRC-64/XZ"],                 64, 0x42f0e1eba9ea3693, 0xfffffffffffffff
 // Some more unspecific crcs from here: http://crcmod.sourceforge.net/crcmod.predefined.html
 // NOTE: These we fitted to match the reveng name format
 //crc-64 	0x1000000000000001B 	True 	0x0000000000000000 	0x0000000000000000 	0x46A5A9388A5BEFFE
-def_crc(["CRC-64/JONES"],             64,0xAD93D23594C935A9,0xffffffffffffffff, true, true,0x0000000000000000);
+def_crc(["CRC-64/JONES"],             64, 0xAD93D23594C935A9, 0xffffffffffffffff, true, true, 0x0000000000000000);
 
 // Some more asorted CRC algorithms from across the internet
 

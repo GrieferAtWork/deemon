@@ -98,10 +98,10 @@ struct cmd_option {
 #define CMD_OPTION_ISSENTINEL(x) ((x)->co_func == NULL)
 
 /* Parse commandline options:
- * >> cmd_parse(["-foo","-bar","source.dee","bar"])
- *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["source.dee","bar"]'
- * >> cmd_parse(["-foo","-bar","--","-source.dee","bar"])
- *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["-source.dee","bar"]'
+ * >> cmd_parse(["-foo", "-bar", "source.dee", "bar"])
+ *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["source.dee", "bar"]'
+ * >> cmd_parse(["-foo", "-bar", "--", "-source.dee", "bar"])
+ *    Execute commands `foo' and `bar', leave `*pargc' and `*pargv' as `["-source.dee", "bar"]'
  * @param: exec_all:     When true, always execute all given arguments as commands,
  *                       allowing the leading dhash to be omitted.
  *                       Otherwise, arguments are parsed as shown in the previous example.

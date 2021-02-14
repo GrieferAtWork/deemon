@@ -48,7 +48,7 @@
 	(((x)&0x00ff000000000000ui64)>>40)|\
 	(((x)&0xff00000000000000ui64)>>56))
 
-#pragma push_macro(undef,"import","from","ctypes")
+#pragma push_macro(undef, "import", "from", "ctypes")
 from ctypes import
 	__swap16 = "bswap16",
 	__swap32 = "bswap32",
@@ -60,4 +60,4 @@ from ctypes import
 	__swap_be32 = "beswap32",
 	__swap_be64 = "beswap64"
 ;
-#pragma pop_macro("import","from","ctypes")
+#pragma pop_macro("import", "from", "ctypes")

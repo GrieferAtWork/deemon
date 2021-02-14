@@ -32,6 +32,6 @@ final function enumattr(self, callback: Callable from deemon) {
 		if (attr.canget) flags |= ENUM_ATTR_FLAG_PERMISSION_GET;
 		if (attr.candel) flags |= ENUM_ATTR_FLAG_PERMISSION_DEL;
 		if (attr.canset) flags |= ENUM_ATTR_FLAG_PERMISSION_SET;
-		callback(attr.decl,self,attr.name,flags,attr.attrtype);
+		callback(attr.decl, self, attr.name, flags, attr.attrtype);
 	}
 }

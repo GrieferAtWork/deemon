@@ -69,62 +69,62 @@ struct compiler_options_mapping {
 };
 
 typedef struct {
-	DeeModuleObject          im_module;   /* [OVERRIDE(.mo_path,[const])]
-	                                       * [OVERRIDE(.mo_pself,[0..0][const])]
-	                                       * [OVERRIDE(.mo_next,[0..0][const])]
-	                                       * [OVERRIDE(.mo_globpself,[0..0][const])]
-	                                       * [OVERRIDE(.mo_globnext,[0..0][const])]
-	                                       * [OVERRIDE(.mo_importc,[lock(:im_exec_lock)])]
-	                                       * [OVERRIDE(.mo_globalc,[lock(:im_exec_lock && :mo_lock)])]
-	                                       * [OVERRIDE(.mo_flags,[const][== MODULE_FLOADING|MODULE_FINITIALIZING])]
-	                                       * [OVERRIDE(.mo_bucketm,[lock(:im_exec_lock)])]
-	                                       * [OVERRIDE(.mo_bucketv,[lock(:im_exec_lock)])]
-	                                       * [OVERRIDE(.mo_importv,[lock(:im_exec_lock)])]
-	                                       * [OVERRIDE(.mo_globalv,[lock(:im_exec_lock && :mo_lock)])]
-	                                       * [OVERRIDE(.mo_root,[0..1][lock(READ(:im_exec_lock),WRITE(:im_lock))]
-	                                       *                    [COMMENT("The currently generated root-code object (when shared "
-	                                       *                             "prior to new code being generated, it is replaced with"
-	                                       *                             "an exact copy that is then used for modifcations; i.e. "
-	                                       *                             "it can be accessed when using `im_lock', and must be "
-	                                       *                             "copied before modifications can be made)\n"
-	                                       *                             "NOTE: A reference held by :im_frame.cf_func->fo_code does "
-	                                       *                             "not count towards the code object being shared, so-long as "
-	                                       *                             "that function isn't being shared, either")])]
-	                                       * [OVERRIDE(.mo_loader,[lock(:im_exec_lock)][0..1]
-	                                       *                      [COMMENT("Non-NULL, and pointing to the thread managing compilation "
-	                                       *                               "when new code is currently being compiled")])]
+	DeeModuleObject          im_module;   /* [OVERRIDE(.mo_path, [const])]
+	                                       * [OVERRIDE(.mo_pself, [0..0][const])]
+	                                       * [OVERRIDE(.mo_next, [0..0][const])]
+	                                       * [OVERRIDE(.mo_globpself, [0..0][const])]
+	                                       * [OVERRIDE(.mo_globnext, [0..0][const])]
+	                                       * [OVERRIDE(.mo_importc, [lock(:im_exec_lock)])]
+	                                       * [OVERRIDE(.mo_globalc, [lock(:im_exec_lock && :mo_lock)])]
+	                                       * [OVERRIDE(.mo_flags, [const][== MODULE_FLOADING|MODULE_FINITIALIZING])]
+	                                       * [OVERRIDE(.mo_bucketm, [lock(:im_exec_lock)])]
+	                                       * [OVERRIDE(.mo_bucketv, [lock(:im_exec_lock)])]
+	                                       * [OVERRIDE(.mo_importv, [lock(:im_exec_lock)])]
+	                                       * [OVERRIDE(.mo_globalv, [lock(:im_exec_lock && :mo_lock)])]
+	                                       * [OVERRIDE(.mo_root, [0..1][lock(READ(:im_exec_lock), WRITE(:im_lock))]
+	                                       *                     [COMMENT("The currently generated root-code object (when shared "
+	                                       *                              "prior to new code being generated, it is replaced with"
+	                                       *                              "an exact copy that is then used for modifcations; i.e. "
+	                                       *                              "it can be accessed when using `im_lock', and must be "
+	                                       *                              "copied before modifications can be made)\n"
+	                                       *                              "NOTE: A reference held by :im_frame.cf_func->fo_code does "
+	                                       *                              "not count towards the code object being shared, so-long as "
+	                                       *                              "that function isn't being shared, either")])]
+	                                       * [OVERRIDE(.mo_loader, [lock(:im_exec_lock)][0..1]
+	                                       *                       [COMMENT("Non-NULL, and pointing to the thread managing compilation "
+	                                       *                                "when new code is currently being compiled")])]
 	                                       * The underlying module. */
 	unsigned int             im_mode;     /* [const] The module in which source code will be compiled.
 	                                       * Set of `MODULE_INTERACTIVE_MODE_F*' */
 	DREF DeeObject          *im_stream;   /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The stream from which source code is read. */
-	struct compiler_options  im_options;  /* [OVERRIDE(.[co_inner->*]->co_inner,[owned])]
-	                                       * [OVERRIDE(.[co_inner->*]->co_pathname,[TAG(DREF)])]
-	                                       * [OVERRIDE(.[co_inner->*]->co_filename,[TAG(DREF)])]
-	                                       * [OVERRIDE(.[co_inner->*]->co_rootname,[TAG(DREF)])]
-	                                       * [OVERRIDE(.co_inner->*->co_decoutput,[TAG(DREF)])]
-	                                       * [OVERRIDE(.co_decoutput,[0..0])]
-	                                       * [OVERRIDE(.co_decwriter,[valid_if(false)])]
-	                                       * [OVERRIDE(.co_assembler,[!(. & ASM_FPEEPHOLE)])]
-	                                       * [OVERRIDE(.co_assembler,[. & ASM_FNODEC])]
-	                                       * [OVERRIDE(.co_assembler,[. & ASM_FNOREUSECONST])]
-	                                       * [OVERRIDE(.co_assembler,[. & ASM_FBIGCODE])]
+	struct compiler_options  im_options;  /* [OVERRIDE(.[co_inner->*]->co_inner, [owned])]
+	                                       * [OVERRIDE(.[co_inner->*]->co_pathname, [TAG(DREF)])]
+	                                       * [OVERRIDE(.[co_inner->*]->co_filename, [TAG(DREF)])]
+	                                       * [OVERRIDE(.[co_inner->*]->co_rootname, [TAG(DREF)])]
+	                                       * [OVERRIDE(.co_inner->*->co_decoutput, [TAG(DREF)])]
+	                                       * [OVERRIDE(.co_decoutput, [0..0])]
+	                                       * [OVERRIDE(.co_decwriter, [valid_if(false)])]
+	                                       * [OVERRIDE(.co_assembler, [!(. & ASM_FPEEPHOLE)])]
+	                                       * [OVERRIDE(.co_assembler, [. & ASM_FNODEC])]
+	                                       * [OVERRIDE(.co_assembler, [. & ASM_FNOREUSECONST])]
+	                                       * [OVERRIDE(.co_assembler, [. & ASM_FBIGCODE])]
 	                                       * [const] Compiler options used for compiling source code. */
 	DREF DeeCompilerObject  *im_compiler; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The compiler used for compiling source code */
 	/*ref*/ struct TPPFile   *im_basefile; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The TPP base file that is linked against `im_stream' */
-	struct code_frame        im_frame;    /* [OVERRIDE(.cf_func,[0..1][(!= NULL) == (:im_module.mo_root != NULL)][TAG(DREF)]
-	                                       *                    [COMMENT("A function object referring to the code object used "
-	                                       *                             "to execute interactive assembly. This object is copied "
-	                                       *                             "prior to being modified the same way `im_module.mo_root' "
-	                                       *                             "is, meaning that accessing this function will yield a "
-	                                       *                             "sort-of snapshot that will only remain up to date until "
-	                                       *                             "it new code has to be compiled, after which point it "
-	                                       *                             "will refer to the old code")])]
-	                                       * [OVERRIDE(.cf_argc,[== DeeTuple_SIZE(cf_vargs)])]
-	                                       * [OVERRIDE(.cf_argv,[== DeeTuple_ELEM(cf_vargs)])]
-	                                       * [OVERRIDE(.cf_vargs,[1..1][const])]
+	struct code_frame        im_frame;    /* [OVERRIDE(.cf_func, [0..1][(!= NULL) == (:im_module.mo_root != NULL)][TAG(DREF)]
+	                                       *                     [COMMENT("A function object referring to the code object used "
+	                                       *                              "to execute interactive assembly. This object is copied "
+	                                       *                              "prior to being modified the same way `im_module.mo_root' "
+	                                       *                              "is, meaning that accessing this function will yield a "
+	                                       *                              "sort-of snapshot that will only remain up to date until "
+	                                       *                              "it new code has to be compiled, after which point it "
+	                                       *                              "will refer to the old code")])]
+	                                       * [OVERRIDE(.cf_argc, [== DeeTuple_SIZE(cf_vargs)])]
+	                                       * [OVERRIDE(.cf_argv, [== DeeTuple_ELEM(cf_vargs)])]
+	                                       * [OVERRIDE(.cf_vargs, [1..1][const])]
 	                                       * [lock(im_exec_lock)]
 	                                       * Code execution frame used when items are yielded from the interactive module. */
 #ifndef CONFIG_NO_THREADS

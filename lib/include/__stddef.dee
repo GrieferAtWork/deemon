@@ -101,7 +101,7 @@
 
 
 
-#if 0 /* Would interfere with stuff like `x,y = pipe.new()...;' */
+#if 0 /* Would interfere with stuff like `x, y = pipe.new()...;' */
 local function __ctypes_new(tp) {
 	import malloc, sizeof from ctypes;
 	return (tp.ptr)malloc(sizeof(tp));
@@ -112,36 +112,36 @@ local function __ctypes_new(tp) {
 
 
 /* Re-implement some old builtin functions as macros. */
-#define __builtin_dex(x)                    import(x)
-#define __builtin_breakpoint()              __asm__("debug break")
-#define __builtin_typeof(x)                 type(x)
-#define __builtin_expect(x,y)              (x)
+#define __builtin_dex(x)                   import(x)
+#define __builtin_breakpoint()             __asm__("debug break")
+#define __builtin_typeof(x)                type(x)
+#define __builtin_expect(x, y)             (x)
 #define __builtin_object(id)               (get_builtin from __builtins(id))
-#define __builtin_predictable(x)            false
-#define __builtin_exprast(...)              none
+#define __builtin_predictable(x)           false
+#define __builtin_exprast(...)             none
 #define __builtin_alloca(sz)               (malloc from ctypes)(sz) /* It's a leak, but it'll work... */
-#define __builtin_noop(...)                 none
-#define __noop(...)                         none
-#define _Noexcept(...)                      false
-#define __builtin_noexcept(...)             false
-#define _Noreturn(...)                      false
-#define __builtin_noreturn(...)             false
-#define __builtin_noeffect(...)             false
-#define __builtin_constant_p(...)           false
-#define __builtin_unused_1(a)            ({ a; none; })
-#define __builtin_unused_2(a,b)          ({ a; b; })
-#define __builtin_unused(...)               __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_noop(...)                none
+#define __noop(...)                        none
+#define _Noexcept(...)                     false
+#define __builtin_noexcept(...)            false
+#define _Noreturn(...)                     false
+#define __builtin_noreturn(...)            false
+#define __builtin_noeffect(...)            false
+#define __builtin_constant_p(...)          false
+#define __builtin_unused_1(a)              ({ a; none; })
+#define __builtin_unused_2(a, b)           ({ a; b; })
+#define __builtin_unused(...)              __builtin_unused_##__VA_NARGS__(__VA_ARGS__)
 #define __builtin_dead(x)                  (true || (x))
-#define __builtin_choose_expr(c,tt,ff)    ((c)?(tt):(ff))
-#define __builtin_unreachable()             __asm__("" : : : "noreturn")
-#define __builtin_types_compatible_p(x,y) ((x)===(y))
-#define __builtin_last_traceback()        ((Traceback from deemon).current)
-#define __builtin_super_1(x)              ((x).super)
-#define __builtin_super_2(x,y)            ((x) as (y))
-#define __builtin_super(...)                __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __super(...)                        __builtin_super_##__VA_NARGS__(__VA_ARGS__)
-#define __builtin_bound(x)                  bound(x)
-#define __builtin_offsetof(s,t)           ((s).offsetof(#t))
+#define __builtin_choose_expr(c, tt, ff)   ((c)?(tt):(ff))
+#define __builtin_unreachable()            __asm__("" : : : "noreturn")
+#define __builtin_types_compatible_p(x, y) ((x)===(y))
+#define __builtin_last_traceback()         ((Traceback from deemon).current)
+#define __builtin_super_1(x)               ((x).super)
+#define __builtin_super_2(x, y)            ((x) as (y))
+#define __builtin_super(...)               __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __super(...)                       __builtin_super_##__VA_NARGS__(__VA_ARGS__)
+#define __builtin_bound(x)                 bound(x)
+#define __builtin_offsetof(s, t)           ((s).offsetof(#t))
 
 /* Define some unary-expression keywords that got removed */
 #define weak   WeakRef from deemon pack /* Create weak referece */
@@ -215,7 +215,10 @@ from deemon import
 /* Import some C-types.
  * Note however that we can't actually support stuff
  * like `x = (unsigned int)42', because there's no way
- * of defining multi-keyword identifiers. */
+ * of defining multi-keyword identifiers.
+ * As a quick & dirty work-around, such code can be altered
+ * to instead be `x = (unsigned)42', which means the same,
+ * and is still portable between d100+ and d200! */
 from ctypes import
 	__int8 = int8_t, __int16 = int16_t, __int32 = int32_t, __int64 = int64_t,
 	int8 = int8_t, int16 = int16_t, int32 = int32_t, int64 = int64_t,
@@ -254,14 +257,14 @@ from ctypes import
 #define __MEMORY_ORDER_ACQ_REL 4
 #define __MEMORY_ORDER_SEQ_CST 5
 
-/* Disable warnings about deprecated d200 syntax. */
+/* Disable warnings about syntax deprecated in d200. */
 #pragma warning("-Wno-d200")
 
 /* The deemon 100+ runtime used reserved identifiers
  * for attributes names in a bunch of places:
  * >> fp = File.Writer();
  * >> fp.pack(); // You should use `fp.string' now
- * >> local my_cell = cell(42);
+ * >> local my_cell = Cell(42);
  * >> my_cell.del(); // You should use `del my_cell.value' now
  * There are more like this, you should get the idea.
  *
@@ -269,8 +272,9 @@ from ctypes import
  * of reserved keywords as identifiers and attribute names,
  * suggesting refactoring, as well as doing something like
  * `my_cell.operator . ("del")()', which will work to suppress
- * such a warning, however since we're only here to keep legacy
- * code running as intended, just disable these types of warnings! */
+ * such a warning, however since we're only here to keep
+ * legacy code running as intended, just disable these types
+ * of warnings! */
 #pragma warning("-Wno-reserved")
 
 /* Apparently, deemon 100+ didn't warn about things like

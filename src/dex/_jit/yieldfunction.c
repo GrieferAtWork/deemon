@@ -1129,7 +1129,7 @@ parse_else_after_if:
 					JITLValue elem_lvalue;
 					DREF DeeObject *iter;
 					int temp;
-					/* TODO: Multiple targets (`for (local x,y,z: triples)') */
+					/* TODO: Multiple targets (`for (local x, y, z: triples)') */
 					/* Initialize the foreach element target. */
 					if (result == JIT_LVALUE) {
 						elem_lvalue = self->ji_lex.jl_lvalue;
@@ -1439,7 +1439,7 @@ err_obj_scope:
 					syn_foreach_expected_collon_after_foreach(&self->ji_lex);
 					goto err_scope;
 				}
-				/* TODO: Multiple targets (`for (local x,y,z: triples)') */
+				/* TODO: Multiple targets (`for (local x, y, z: triples)') */
 				/* Initialize the foreach element target. */
 				if (result == JIT_LVALUE) {
 					elem_lvalue = self->ji_lex.jl_lvalue;

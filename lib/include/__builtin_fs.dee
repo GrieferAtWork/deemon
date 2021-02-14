@@ -66,9 +66,9 @@ final function __builtin_fs_listenv() -> environ from fs;
 #define __builtin_fs_wlistenv  __builtin_fs_listenv
 final function __builtin_fs_getenv(__name) -> (environ from fs)[__name];
 final function __builtin_fs_delenv(__name) -> (environ from fs).operator del[](__name);
-final function __builtin_fs_setenv(__name,__val) -> (environ from fs).operator[](__name,__val);
-final function __builtin_fs_path_expanduser(__path) -> (expand from fs)(__path,"h");
-final function __builtin_fs_path_expandvars(__path) -> (expand from fs)(__path,"vV");
+final function __builtin_fs_setenv(__name, __val) -> (environ from fs).operator[](__name, __val);
+final function __builtin_fs_path_expanduser(__path) -> (expand from fs)(__path, "h");
+final function __builtin_fs_path_expandvars(__path) -> (expand from fs)(__path, "vV");
 final function __builtin_fs_getatime(__path) -> (stat from fs)(__path).operator . ("st_atime");
 final function __builtin_fs_getctime(__path) -> (stat from fs)(__path).operator . ("st_mtime");
 final function __builtin_fs_getmtime(__path) -> (stat from fs)(__path).operator . ("st_ctime");
@@ -79,17 +79,17 @@ final function __builtin_fs_gettimes(__path) {
 		__st.operator . ("st_ctime"),
 		__st.operator . ("st_mtime"));
 }
-final function __builtin_fs_setatime(__path,val) -> (chtime from fs)(__path,val,none,none);
-final function __builtin_fs_setctime(__path,val) -> (chtime from fs)(__path,none,val,none);
-final function __builtin_fs_setmtime(__path,val) -> (chtime from fs)(__path,none,none,val);
-final function __builtin_fs_settimes(__path,at = none,ct = none,mt = none)
-	-> (chtime from fs)(__path,at,mt,ct);
+final function __builtin_fs_setatime(__path, val) -> (chtime from fs)(__path, val, none, none);
+final function __builtin_fs_setctime(__path, val) -> (chtime from fs)(__path, none, val, none);
+final function __builtin_fs_setmtime(__path, val) -> (chtime from fs)(__path, none, none, val);
+final function __builtin_fs_settimes(__path, at = none, ct = none, mt = none)
+	-> (chtime from fs)(__path, at, mt, ct);
 final function __builtin_fs_isfile(__path) -> (stat from fs).operator . ("isreg")(__path);
 final function __builtin_fs_isdir(__path) -> (stat from fs).operator . ("isdir")(__path);
 final function __builtin_fs_islink(__path) -> (stat from fs).operator . ("islnk")(__path);
 final function __builtin_fs_isdrive(__path) {
 	import fs;
-	__path = fs.operator . ("inctrail")(fs.expand(__path,"pc"));
+	__path = fs.operator . ("inctrail")(fs.expand(__path, "pc"));
 	return fs.operator . ("driveof")(__path) == __path;
 }
 #define __builtin_fs_ismount  __builtin_fs_isdrive
@@ -103,7 +103,7 @@ final function __builtin_fs_exists(__path) -> (stat from fs).operator . ("exists
 final function __builtin_fs_getmod(__path) -> (stat from fs)(__path).operator . ("st_mode");
 final function __builtin_fs_getown(__path) {
 	local st = (stat from fs)(__path);
-	return (st.operator . ("st_uid"),st.operator . ("st_gid"));
+	return (st.operator . ("st_uid"), st.operator . ("st_gid"));
 }
 
 #define __builtin_fs_wuidname __builtin_fs_uidname

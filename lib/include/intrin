@@ -22,7 +22,7 @@
 
 /* !!! This header has been replaced by the `operators' module !!! */
 
-#pragma push_macro(undef,"import","from","operators","function","type","is","operator")
+#pragma push_macro(undef, "import", "from", "operators", "function", "type", "is", "operator")
 from operators import
 	__str__ = "str",
 	__repr__ = "repr",
@@ -96,6 +96,6 @@ function __ref__(__x) -> __x.operator . ("ref");
 function __deref__(__x) -> __x.operator . ("ind");
 function __incpost__(__x) -> __x++;
 function __decpost__(__x) -> __x--;
-function __is__(__x,__y) -> __x is __y;
-function __callv__(__x,__y...) -> __x(__y...);
-#pragma pop_macro("import","from","operators","function","type","is","operator")
+function __is__(__x, __y) -> __x is __y;
+function __callv__(__x, __y...) -> __x(__y...);
+#pragma pop_macro("import", "from", "operators", "function", "type", "is", "operator")

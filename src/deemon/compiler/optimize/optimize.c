@@ -137,7 +137,7 @@ again:
 		self->a_scope = new_scope;
 		++optimizer_count;
 #if 0 /* This happens so often, logging it would just be spam... */
-		OPTIMIZE_VERBOSEAT(self,"Inherit parent scope above empty child scope\n");
+		OPTIMIZE_VERBOSEAT(self, "Inherit parent scope above empty child scope\n");
 #endif
 	}
 	/* TODO: Remove unused symbols from scopes (s.a. `s_nread == 0 && s_nwrite == 0 && s_nbound == 0') */

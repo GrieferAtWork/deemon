@@ -95,7 +95,7 @@ struct class_attribute;
  *        auto-generated one.
  *        >> ()       // function(): none { ... }
  *        >> (:)      // function(none): none { ... }
- *        >> (,)      // function(none,none): none { ... }
+ *        >> (,)      // function(none, none): none { ... }
  *        >> (:?Dint) // function(none: int): none { ... }
  *        REMINDER: Using `none' as argument name sets the name to be undefined/reserved.
  *      - When encountered in a member-doc, the member is assumed to be a function
@@ -224,7 +224,7 @@ struct class_attribute;
  *     the declaration pattern is automatically deduced form the documented object, or left
  *     omitted if no object is being documented:
  *       - For types, the doc is appended to the set of strings giving a generic overview of the type
- *       - For a `function foo(x,y,z)' the doc defaults to `(!a,!b,!c)->'
+ *       - For a `function foo(x, y, z)' the doc defaults to `(!a,!b,!c)->'
  *          - Since argument name information is lost during this, names are generated
  *            as abcdefghijklmnopqrstuvwxyz, after which naming continues as aa ab ac, etc...
  *       - For member/variables the declaration defaults to `->' (untyped, object)
@@ -347,7 +347,7 @@ struct class_attribute;
  *   EXAMPLES:
  *       !Pfoo           // string("foo")
  *       !!+!1!2         // int(1) + int(2)
- *       !C!L2!N!N!VAi   // i in list([none,none])
+ *       !C!L2!N!N!VAi   // i in list([none, none])
  *       !A!1.0!P{a-\>b} // float(1.0).operator getattr("a->b")
  *
  *
@@ -372,7 +372,7 @@ struct class_attribute;
 #define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
 #define DAST_CONST   0x0002 /* `type(0)' Declaration information is provided as a constant type. */
 #define DAST_ALT     0x0003 /* `int | bool' Declaration information has multiple, alternative representations. */
-#define DAST_TUPLE   0x0004 /* `(int,string,float)' Declaration describes an n-element Tuple of values. */
+#define DAST_TUPLE   0x0004 /* `(int, string, float)' Declaration describes an n-element Tuple of values. */
 #define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
 #define DAST_FUNC    0x0006 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
 #define DAST_ATTR    0x0007 /* `list.Iterator' Access a custom attribute of another declaration. */
@@ -598,7 +598,7 @@ struct symbol {
 	                                * The effective reference ID (RID) of the symbol within the current assembler,
 	                                * when the symbol is declared in a different base-scope, and must be
 	                                * used in order to construct an inner function making use of it. */
-	struct ast_loc       s_decl;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+	struct ast_loc       s_decl;   /* [OVERRIDE(.l_file, REF(TPPFile_Decref) [0..1])]
 	                                * The source location first referencing where the symbol. */
 	uint32_t             s_nread;  /* Number of times the symbol is read */
 	uint32_t             s_nwrite; /* Number of times the symbol is written */
@@ -628,10 +628,10 @@ struct symbol {
 		DREF struct symbol *s_alias;  /* [SYMBOL_TYPE_ALIAS][1..1] The symbol being aliased.
 		                               * NOTE: This symbol may be another alias, however is not allowed to produce a loop */
 		struct {
-			struct ast_loc             a_decl2;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+			struct ast_loc             a_decl2;  /* [OVERRIDE(.l_file, REF(TPPFile_Decref) [0..1])]
 			                                      * The second declaration location. */
 			size_t                     a_declc;  /* Number of additional declaration locations. */
-			struct ast_loc            *a_declv;  /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+			struct ast_loc            *a_declv;  /* [OVERRIDE(.l_file, REF(TPPFile_Decref) [0..1])]
 			                                      * [0..a_declc][owned] Additional declaration locations. */
 		}                s_ambig;  /* [SYMBOL_TYPE_AMBIG] */
 		DREF DeeObject  *s_const;  /* [SYMBOL_TYPE_CONST] The constant that the symbol evaluates to. */
@@ -880,10 +880,10 @@ INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 /* Destroy a given symbol. */
 INTDEF void DCALL symbol_destroy(struct symbol *__restrict self);
-#define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc((x)->s_refcnt,__ATOMIC_SEQ_CST))
-#define symbol_decref(x)  (void)(__hybrid_atomic_decfetch((x)->s_refcnt,__ATOMIC_SEQ_CST) || (symbol_destroy(x),0))
-#define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc((x)->s_refcnt,__ATOMIC_SEQ_CST)))
-#define symbol_xdecref(x) (void)(!(x) || (__hybrid_atomic_decfetch((x)->s_refcnt,__ATOMIC_SEQ_CST) || (symbol_destroy(x),0)))
+#define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST))
+#define symbol_decref(x)  (void)(__hybrid_atomic_decfetch((x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0))
+#define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST)))
+#define symbol_xdecref(x) (void)(!(x) || (__hybrid_atomic_decfetch((x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0)))
 #else /* CONFIG_SYMBOL_HAS_REFCNT */
 #define symbol_incref(x)  (void)0
 #define symbol_decref(x)  (void)0

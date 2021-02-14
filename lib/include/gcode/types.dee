@@ -20,6 +20,6 @@
 #pragma once
 #include "__gc_default.dee"
 
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import types = ".m_gcode_types";
 #pragma pop_macro("import")

@@ -231,7 +231,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	        ob, ob->ob_type->tp_name, ob);
 #endif /* GCHEAD_ISTRACKED */
 	GCLOCK_ACQUIRE_S();
-	/*printf("Untrack: %s:%p\n",ob->ob_type->tp_name,ob);*/
+	/*printf("Untrack: %s:%p\n", ob->ob_type->tp_name, ob);*/
 	/* Unlink the gc head from whatever chain it is apart of. */
 	/* HINT: If the following line crashes, it is likely that a GC-object was
 	 *       allocated using something other than the GC-object allocators:

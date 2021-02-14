@@ -1250,7 +1250,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 				/* .tp_copy_ctor = */ (void *)&seo_copy,
 				/* .tp_deep_ctor = */ (void *)&seo_deep,
 				/* .tp_any_ctor  = */ (void *)&seo_init,
-				TYPE_SIZED_ALLOCATOR_R(COMPILER_OFFSETOF(SeqEachOperator,so_opargv),
+				TYPE_SIZED_ALLOCATOR_R(COMPILER_OFFSETOF(SeqEachOperator, so_opargv),
 				                       sizeof(SeqEachOperator))
 			}
 		},

@@ -39,7 +39,7 @@ struct Dee_super_object {
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
 	                             * NOTE: This is never `&DeeSuper_Type' itself and the
-	                             *       check `DeeObject_InstanceOf(s_self,s_type)'
+	                             *       check `DeeObject_InstanceOf(s_self, s_type)'
 	                             *       must always succeed. */
 	DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 };
@@ -54,14 +54,14 @@ DDATDEF DeeTypeObject DeeSuper_Type;
 /* Create a new super-wrapper for `tp_self:self'.
  * NOTE: This function automatically checks the given operands for validity:
  *        - DeeType_Check(tp_self);
- *        - DeeObject_InstanceOf(self,tp_self);
+ *        - DeeObject_InstanceOf(self, tp_self);
  *       It also automatically unwraps `self' should it already be a super-object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self);
 
 /* Taking some object, return the effective super-class of it.
  * HINT: When `self' is another super-object, this is identical to
- *      `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)),DeeSuper_SELF(self))'
+ *      `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
  * WARNING: This function may perform non-shared
  *          optimizations by re-using `self' when allowed.
  * @throws: Error.TypeError: The class of `self' has no super-class. */

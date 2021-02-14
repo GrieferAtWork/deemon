@@ -580,7 +580,7 @@ struct compiler_flag {
 	uint16_t   flag;     /* The bit associated with this flag. */
 };
 
-#define FIELD(x) COMPILER_OFFSETOF(struct compiler_options,x)
+#define FIELD(x) COMPILER_OFFSETOF(struct compiler_options, x)
 PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "lfstmt",        0, FIELD(co_parser),    PARSE_FLFSTMT },
 	{ "ast-optimize",  0, FIELD(co_optimizer), OPTIMIZE_FENABLED },

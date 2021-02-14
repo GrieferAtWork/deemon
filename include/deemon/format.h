@@ -182,10 +182,10 @@ struct va_list_struct { va_list vl_ap; };
  *                  | 'LD' // long double
  *     ;
  *     ref_bool   ::= ref_intlen 'b';
- *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str,MIN(strlen(str),<int>));
- *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str,MIN(strlen(str),max));
- *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str,MIN(strlen(str),max));
- *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str,len);
+ *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), <int>));
+ *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, len);
  *                    ] 's';      // DeeString_New(va_arg(char *));
  *
  * Example:

@@ -72,7 +72,7 @@ struct class_maker {
 #define CLASS_MAKER_CTOR_FDELETED   0x0001     /* The constructor has been deleted. */
 #define CLASS_MAKER_CTOR_FSUPER     0x0002     /* The constructor has explicitly been inherited from the super-type. */
 #define CLASS_MAKER_CTOR_FDEFAULT   0x0004     /* The constructor has explicitly been defined to be default-implemented. */
-#define CLASS_MAKER_CTOR_FSUPERKWDS 0x0008     /* The superargs operator returns an (args,kwds) pair. */
+#define CLASS_MAKER_CTOR_FSUPERKWDS 0x0008     /* The superargs operator returns an (args, kwds) pair. */
 	uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
 	uint16_t                   cm_pad;         /* ... */
 	DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
@@ -1673,7 +1673,7 @@ define_operator:
 				 * WRAP: `AST_FUNCTION(AST_RETURN(AST_OPERATOR(OPERATOR_ITERSELF,
 				 *                                AST_OPERATOR(OPERATOR_CALL,
 				 *                                             ...,  // The inner function
-				 *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE,[
+				 *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE, [
 				 *                                                          AST_SYM(this)]))))' */
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;

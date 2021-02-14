@@ -1772,7 +1772,7 @@ check_dst_sym_class_hybrid:
 		break;
 
 	case AST_MULTIPLE:
-		/* Special handling for unpack expressions (i.e. `(a,b,c) = foo()'). */
+		/* Special handling for unpack expressions (i.e. `(a, b, c) = foo()'). */
 		if (dst->a_flag == AST_FMULTIPLE_KEEPLAST) {
 			size_t i = 0;
 			if (dst->a_multiple.m_astc == 0)
@@ -1790,7 +1790,7 @@ check_dst_sym_class_hybrid:
 			dst = dst->a_multiple.m_astv[i];
 			goto again;
 		}
-		/* Optimization for special case: (a,b,c) = (d,e,f); */
+		/* Optimization for special case: (a, b, c) = (d, e, f); */
 		if (src->a_type == AST_MULTIPLE &&
 		    src->a_flag != AST_FMULTIPLE_KEEPLAST &&
 		    src->a_multiple.m_astc == dst->a_multiple.m_astc &&

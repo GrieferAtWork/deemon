@@ -52,7 +52,7 @@ struct parser_errors {
 };
 
 INTDEF struct parser_errors current_parser_errors;
-#define parser_errors_init(self) memset(self,0,sizeof(struct parser_errors))
+#define parser_errors_init(self) memset(self, 0, sizeof(struct parser_errors))
 INTDEF void DCALL parser_errors_fini(struct parser_errors *__restrict self);
 
 /* Invoke a user-defined compiler error handler and save the

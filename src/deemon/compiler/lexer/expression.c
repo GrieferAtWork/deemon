@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-#define GET_CHOP(x) (ASSERT((x) < 128),chops[x])
+#define GET_CHOP(x) (ASSERT((x) < 128), chops[x])
 INTERN uint8_t const chops[128] = {
 /*[[[deemon
 #include <util>

@@ -738,11 +738,11 @@ handle_int32(DeeHandleObject *__restrict self,
 
 PRIVATE struct Dee_type_math handle_math = {
 #if __SIZEOF_POINTER__ > 4
-	/* .tp_int32 = */ (int (DCALL *)(DeeObject *__restrict,int32_t *__restrict))NULL,
-	/* .tp_int64 = */ (int (DCALL *)(DeeObject *__restrict,int64_t *__restrict))&handle_int64
+	/* .tp_int32 = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))NULL,
+	/* .tp_int64 = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))&handle_int64
 #else /* __SIZEOF_POINTER__ > 4 */
-	/* .tp_int32 = */ (int (DCALL *)(DeeObject *__restrict,int32_t *__restrict))&handle_int32,
-	/* .tp_int64 = */ (int (DCALL *)(DeeObject *__restrict,int64_t *__restrict))NULL
+	/* .tp_int32 = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))&handle_int32,
+	/* .tp_int64 = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))NULL
 #endif /* __SIZEOF_POINTER__ <= 4 */
 };
 
@@ -793,12 +793,12 @@ DEFINE_HANDLE_COMPARE(handle_ge, >=)
 
 PRIVATE struct type_cmp handle_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&handle_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *,DeeObject *))&handle_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&handle_ge,
 };
 
 PRIVATE DeeTypeObject DeeHandle_Type = {

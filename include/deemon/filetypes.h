@@ -93,7 +93,7 @@ struct Dee_system_file_object {
 
 
 struct Dee_file_buffer_link {
-	DeeFileBufferObject **fbl_pself; /* [1..1,==self][0..1][lock(INTERN(:buffer_ttys_lock))] Self-pointer. */
+	DeeFileBufferObject **fbl_pself; /* [1..1, == self][0..1][lock(INTERN(:buffer_ttys_lock))] Self-pointer. */
 	DeeFileBufferObject  *fbl_next;  /* [0..1][valid_if(fbl_pself != NULL)][lock(INTERN(:buffer_ttys_lock))] Next-pointer. */
 };
 

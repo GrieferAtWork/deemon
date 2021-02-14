@@ -81,7 +81,7 @@ typedef struct {
 	                                 * gets unshared (meaning that if varkwds continue to exist,
 	                                 * this vector gets replaced with either a copy of itself,
 	                                 * or with a NULL-pointer, if the copy fails to be allocated) */
-	size_t                 vk_load; /* [lock(vk_lock,INCREMENT_ONLY)][<= vk_ckwc]
+	size_t                 vk_load; /* [lock(vk_lock, INCREMENT_ONLY)][<= vk_ckwc]
 	                                 * Index of the next keyword which has yet to be loaded into
 	                                 * the `vk_blck' hash-set for blacklisted identifiers. */
 	size_t                 vk_mask; /* [!0][const] Hash-mask for `vk_blck' */
@@ -183,7 +183,7 @@ typedef struct {
 	                                 * NOTE: If revived during unsharing, the object in this field
 	                                 *       gets incref'd, meaning that before that point, this
 	                                 *       field doesn't actually carry a reference. */
-	size_t                 bm_load; /* [lock(vk_lock,INCREMENT_ONLY)][<= bm_ckwc]
+	size_t                 bm_load; /* [lock(vk_lock, INCREMENT_ONLY)][<= bm_ckwc]
 	                                 * Index of the next keyword which has yet to be loaded into
 	                                 * the `vk_blck' hash-set for blacklisted identifiers. */
 	size_t                 bm_mask; /* [!0][const] Hash-mask for `vk_blck' */
@@ -215,8 +215,8 @@ INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackL
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
  * NOTE: If `code' doesn't specify any keywords, re-return `kw' unmodified.
  * -> The returned objects can be used for any kind of mapping, such that in the
- *    case of kwmappings, `BlackListMapping_New(code,DeeKwdsMapping_New(kwds,argv))'
- *    would produce the semantically equivalent of `BlackListVarkwds_New(code,kwds,argv)'
+ *    case of kwmappings, `BlackListMapping_New(code, DeeKwdsMapping_New(kwds, argv))'
+ *    would produce the semantically equivalent of `BlackListVarkwds_New(code, kwds, argv)'
  * -> This function is used to filter keyword arguments from varkwds when the general
  *    purpose keyword argument protocol is used:
  *    >> function foo(x, y?, **kwds) {

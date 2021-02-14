@@ -824,10 +824,10 @@ do_set_year:
 		/* Special case: Changing the week of February in a non-leap year
 		 *               limits the max number of weeks to 5, rather than
 		 *               the usual 6:
-		 *               >> ceildiv(31,7) --> 6
-		 *               >> ceildiv(30,7) --> 6
-		 *               >> ceildiv(29,7) --> 6
-		 *               >> ceildiv(28,7) --> 5 // This case!
+		 *               >> ceildiv(31, 7) --> 6
+		 *               >> ceildiv(30, 7) --> 6
+		 *               >> ceildiv(29, 7) --> 6
+		 *               >> ceildiv(28, 7) --> 5 // This case!
 		 */
 		if ((month % MONTHS_PER_YEAR) == 1 &&
 		    (unsigned int)value > 28 / DAYS_PER_WEEK &&
@@ -846,7 +846,7 @@ do_set_year:
 		dtime_half_t days;
 		/* Just as with Month-week, we allow the user
 		 * to let the week bleed into the next year.
-		 * Yet because `ceildiv(365,7) == ceildiv(366,7)', there is no
+		 * Yet because `ceildiv(365, 7) == ceildiv(366, 7)', there is no
 		 * special case to separate between leap and non-leap years.
 		 * NOTE: We compare using `>' and `>=' because we allow setting the last
 		 *       week for the chance that it bleeds over to the next year! */
@@ -2412,7 +2412,7 @@ time_str(DeeTimeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_repr(DeeTimeObject *__restrict self) {
-	return DeeString_Newf("time(" DUTIME_HALF_PRINTF ",%u,%u,%u,%u,%u,%u,%u)%s%s",
+	return DeeString_Newf("time(" DUTIME_HALF_PRINTF ", %u, %u, %u, %u, %u, %u, %u)%s%s",
 	                      (dtime_half_t)time_getint(self, TIME_REPR_YER),
 	                      (unsigned int)time_getint(self, TIME_REPR_MON),
 	                      (unsigned int)time_getint(self, TIME_REPR_MDAY),

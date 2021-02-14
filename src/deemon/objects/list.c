@@ -3118,7 +3118,7 @@ PRIVATE struct type_method list_methods[] = {
 	{ "insert_iter",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_insertiter_deprecated,
 	  DOC("(index:?Dint,iter:?DIterator)\n"
-	      "Deprecated alias for ${this.insertall(index,(iter as iterator from deemon).future)}") },
+	      "Deprecated alias for ${this.insertall(index, (iter as iterator from deemon).future)}") },
 	{ "push_front",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushfront,
 	  DOC("(item)\n"
@@ -3139,11 +3139,11 @@ PRIVATE struct type_method list_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_shrink,
 	  DOC("()\n"
 	      "Deprecated alias for ?#shrink") },
-	/* TODO: DEE_METHODDEF_v100("sorted_insert",member(&_deelist_sorted_insert),DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_v100("fill",member(&_deelist_fill),DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_v100("unique",member(&_deelist_unique),DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_CONST_v100("tounique",member(&_deelist_tounique),DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_CONST_v100("extend_unique",member(&_deelist_extend_unique),DEE_DOC_AUTO), */
+	/* TODO: DEE_METHODDEF_v100("sorted_insert", member(&_deelist_sorted_insert), DEE_DOC_AUTO),
+	 * TODO: DEE_METHODDEF_v100("fill", member(&_deelist_fill), DEE_DOC_AUTO),
+	 * TODO: DEE_METHODDEF_v100("unique", member(&_deelist_unique), DEE_DOC_AUTO),
+	 * TODO: DEE_METHODDEF_CONST_v100("tounique", member(&_deelist_tounique), DEE_DOC_AUTO),
+	 * TODO: DEE_METHODDEF_CONST_v100("extend_unique", member(&_deelist_extend_unique), DEE_DOC_AUTO), */
 	{ NULL }
 };
 

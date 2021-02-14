@@ -70,7 +70,7 @@ typedef struct {
 	                                  *       the GETITEM interface, as those items are being used. */
 	size_t             c_seqlen;     /* [const][!0] The length of the sequence (in items) */
 	size_t             c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
-	struct type_seq   *c_getitem;    /* [0..1][if(!c_elem,[1..1])][const] The seq-interface of the type
+	struct type_seq   *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
 	                                  * to-be used to access the items of `c_seq' */
 	DeeTypeObject     *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
 } Combinations;

@@ -54,7 +54,7 @@ DECL_BEGIN
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
-/* Returns the value of `(environ from fs).get(name,none)',
+/* Returns the value of `(environ from fs).get(name, none)',
  * or `ITER_DONE' if that expression evaluated to `none'
  * @return: * :        The value of the environment variable `name'
  * @return: NULL:      An error occurred.
@@ -82,11 +82,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restr
 
 
 
-/* >> DEFINE_NOTIFY_ENVIRON_INTEGER(int,my_envint,7,"MY_ENVINT");
+/* >> DEFINE_NOTIFY_ENVIRON_INTEGER(int, my_envint, 7, "MY_ENVINT");
  * >> DREF DeeObject *DCALL
  * >> get_my_envint(size_t argc, DeeObject *const *argv) {
  * >>     int result;
- * >>     if (DeeArg_Unpack(argc, argv,":get_my_envint"))
+ * >>     if (DeeArg_Unpack(argc, argv, ":get_my_envint"))
  * >>         goto err;
  * >>     if (my_envint_get(&result))
  * >>         goto err;

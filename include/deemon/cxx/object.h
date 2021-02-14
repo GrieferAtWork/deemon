@@ -2079,7 +2079,7 @@ public:
 	void(unpack)(size_t objc, DREF DeeObject **__restrict objv) const {
 		throw_if_nonzero(DeeObject_Unpack(*this, objc, objv));
 	}
-	//  void unpack(size_t objc, object **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this,objc,(DeeObject **)objv)); }
+	//  void unpack(size_t objc, object **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this, objc, (DeeObject **)objv)); }
 	typedef detail::cxx_iterator<Object> iterator;
 	WUNUSED iterator(begin)() const {
 		return inherit(DeeObject_IterSelf(*this));

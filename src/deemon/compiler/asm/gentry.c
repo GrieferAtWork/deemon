@@ -200,9 +200,9 @@ gen_guard:
 			 * >> try {
 			 * >>     __stack local inner_stack = 42;
 			 * >>     try {
-			 * >>         print "Try",inner_stack;
+			 * >>         print "Try", inner_stack;
 			 * >>     } catch (...) {
-			 * >>         print "Inner",inner_stack;
+			 * >>         print "Inner", inner_stack;
 			 * >>     }
 			 * >> } catch (...) {
 			 * >>     print "Outer";

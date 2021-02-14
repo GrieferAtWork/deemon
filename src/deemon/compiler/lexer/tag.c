@@ -62,7 +62,7 @@ INTERN WUNUSED DREF struct ast *
 			                      func, args);
 		} else {
 			/* Invoke the annotation function using the current input:
-			 * >> input = aa_func.op0(input,aa_func.op1...); */
+			 * >> input = aa_func.op0(input, aa_func.op1...); */
 			struct ast *base;
 			base = func->a_operator.o_op0;
 			args = func->a_operator.o_op1;

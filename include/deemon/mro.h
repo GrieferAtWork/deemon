@@ -193,8 +193,8 @@ INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedClassAttrLen)(DeeTyp
 INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttr)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrLen)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 #else /* __INTELLISENSE__ */
-#define DeeType_HasCachedInstanceAttr(tp_self,attr,hash) DeeType_HasCachedAttr(tp_self,attr,hash)
-#define DeeType_HasCachedInstanceAttrLen(tp_self,attr,attrlen,hash) DeeType_HasCachedAttr(tp_self,attr,attrlen,hash)
+#define DeeType_HasCachedInstanceAttr(tp_self, attr, hash)             DeeType_HasCachedAttr(tp_self, attr, hash)
+#define DeeType_HasCachedInstanceAttrLen(tp_self, attr, attrlen, hash) DeeType_HasCachedAttr(tp_self, attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
 
 /* @return:  1: The attribute could not be found in the cache.

@@ -1191,7 +1191,7 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 		return NULL;
 	/* TODO:
 	 * >> for (filename: "\\.\<DRIVELETTER>:")
-	 * >>     with (x = file.open(filename,"r"))
+	 * >>     with (local x = File.open(filename, "r"))
 	 * >>         x.sync(); // FlushFileBuffers
 	 * XXX: This method requires admin privileges...
 	 *      How do we handle this? Should we ignore it?

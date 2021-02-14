@@ -2687,7 +2687,7 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_or, "operator or", or)
 DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_xor, "operator xor", xor)
 DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_pow, "operator pow", pow)
 
-/* inc,dec,add,sub,iadd & isub are all apart of the same operator group. */
+/* inc, dec, add, sub, iadd & isub are all apart of the same operator group. */
 INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
 	struct type_math *base_math;
 	DeeTypeObject *base = DeeType_Base(self);
@@ -4948,7 +4948,7 @@ type_inherit_with(DeeTypeObject *__restrict self) {
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
-DEFINE_OPERATOR(int,Enter,
+DEFINE_OPERATOR(int, Enter,
                (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
@@ -4964,7 +4964,7 @@ DEFINE_OPERATOR(int,Enter,
 	return err_unimplemented_operator(tp_self, OPERATOR_ENTER);
 }
 
-DEFINE_OPERATOR(int,Leave,
+DEFINE_OPERATOR(int, Leave,
                (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {

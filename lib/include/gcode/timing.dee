@@ -21,6 +21,6 @@
 #include "__gc_default.dee"
 #include "../time"
 
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import timing = ".m_gcode_timing";
 #pragma pop_macro("import")

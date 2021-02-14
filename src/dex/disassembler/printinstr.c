@@ -158,7 +158,7 @@ for (local id, data: util.enumerate(codes)) {
 print "};";
 print "";
 print "PRIVATE char const mnemonic_names_f0[256]["+(longest_name_f0+1)+"] = {";
-for (local id,data: util.enumerate(codes_f0)) {
+for (local id, data: util.enumerate(codes_f0)) {
 	if (data is none) {
 		print ("\t/" "* 0xf0%.2I8x *" "/" % id) + " UNKNOWN_MNEMONIC, /" "* --- *" "/";
 	} else {

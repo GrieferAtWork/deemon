@@ -100,27 +100,27 @@ DECL_BEGIN
 
 #ifdef SIGNED
 #if SIZEOF == 1
-#define F(x)  x##s8
+#define F(x) x##s8
 #elif SIZEOF == 2
-#define F(x)  x##s16
+#define F(x) x##s16
 #elif SIZEOF == 4
-#define F(x)  x##s32
+#define F(x) x##s32
 #elif SIZEOF == 8
-#define F(x)  x##s64
+#define F(x) x##s64
 #else
-#define F(x)  X2(x,TYPE_NAME)
+#define F(x) X2(x, TYPE_NAME)
 #endif
 #else /* SIGNED */
 #if SIZEOF == 1
-#define F(x)  x##u8
+#define F(x) x##u8
 #elif SIZEOF == 2
-#define F(x)  x##u16
+#define F(x) x##u16
 #elif SIZEOF == 4
-#define F(x)  x##u32
+#define F(x) x##u32
 #elif SIZEOF == 8
-#define F(x)  x##u64
+#define F(x) x##u64
 #else
-#define F(x)  X2(x,TYPE_NAME)
+#define F(x) X2(x, TYPE_NAME)
 #endif
 #endif /* !SIGNED */
 
@@ -241,36 +241,36 @@ DECL_BEGIN
 #ifdef SIGNED
 #if SIZEOF == 1
 #define GET(ptr)    (*(int8_t *)(ptr))
-#define SET(ptr,v)  (void)(*(int8_t *)(ptr)=(v))
+#define SET(ptr, v) (void)(*(int8_t *)(ptr) = (v))
 #elif SIZEOF == 2
 #define GET(ptr)    ((int16_t)UNALIGNED_GET16(ptr))
-#define SET(ptr,v)  UNALIGNED_SET16(ptr,(uint16_t)(v))
+#define SET(ptr, v) UNALIGNED_SET16(ptr, (uint16_t)(v))
 #elif SIZEOF == 4
 #define GET(ptr)    ((int32_t)UNALIGNED_GET32(ptr))
-#define SET(ptr,v)  UNALIGNED_SET32(ptr,(uint32_t)(v))
+#define SET(ptr, v) UNALIGNED_SET32(ptr, (uint32_t)(v))
 #elif SIZEOF == 8
 #define GET(ptr)    ((int64_t)UNALIGNED_GET64(ptr))
-#define SET(ptr,v)  UNALIGNED_SET64(ptr,(uint64_t)(v))
+#define SET(ptr, v) UNALIGNED_SET64(ptr, (uint64_t)(v))
 #elif SIZEOF == 16
 #define GET(ptr)    ((__INT128_TYPE__)UNALIGNED_GET128(ptr))
-#define SET(ptr,v)  UNALIGNED_SET128(ptr,(__UINT128_TYPE__)(v))
+#define SET(ptr, v) UNALIGNED_SET128(ptr, (__UINT128_TYPE__)(v))
 #endif
 #else /* SIGNED */
 #if SIZEOF == 1
 #define GET(ptr)    (*(uint8_t *)(ptr))
-#define SET(ptr,v)  (void)(*(uint8_t *)(ptr)=(v))
+#define SET(ptr, v) (void)(*(uint8_t *)(ptr) = (v))
 #elif SIZEOF == 2
-#define GET(ptr)     UNALIGNED_GET16(ptr)
-#define SET(ptr,v)   UNALIGNED_SET16(ptr,v)
+#define GET(ptr)    UNALIGNED_GET16(ptr)
+#define SET(ptr, v) UNALIGNED_SET16(ptr, v)
 #elif SIZEOF == 4
-#define GET(ptr)     UNALIGNED_GET32(ptr)
-#define SET(ptr,v)   UNALIGNED_SET32(ptr,v)
+#define GET(ptr)    UNALIGNED_GET32(ptr)
+#define SET(ptr, v) UNALIGNED_SET32(ptr, v)
 #elif SIZEOF == 8
-#define GET(ptr)     UNALIGNED_GET64(ptr)
-#define SET(ptr,v)   UNALIGNED_SET64(ptr,v)
+#define GET(ptr)    UNALIGNED_GET64(ptr)
+#define SET(ptr, v) UNALIGNED_SET64(ptr, v)
 #elif SIZEOF == 16
-#define GET(ptr)     UNALIGNED_GET128(ptr)
-#define SET(ptr,v)   UNALIGNED_SET128(ptr,v)
+#define GET(ptr)    UNALIGNED_GET128(ptr)
+#define SET(ptr, v) UNALIGNED_SET128(ptr, v)
 #endif
 #endif /* !SIGNED */
 #endif /* !GET */
@@ -419,8 +419,8 @@ err:
 #ifdef CONFIG_BOOL_STRING
 #ifndef BOOL_STRINGS_DEFINED
 #define BOOL_STRINGS_DEFINED 1
-PRIVATE DEFINE_STRING(str_true,"true");
-PRIVATE DEFINE_STRING(str_false,"false");
+PRIVATE DEFINE_STRING(str_true, "true");
+PRIVATE DEFINE_STRING(str_false, "false");
 #endif /* !BOOL_STRINGS_DEFINED */
 #endif /* CONFIG_BOOL_STRING */
 

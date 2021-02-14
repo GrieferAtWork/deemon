@@ -1309,7 +1309,7 @@ PRIVATE struct mode_name const mode_names[] = {
 	{ { 'a', 'u', 't', 'o' }, FILE_BUFFER_MODE_AUTO }
 };
 
-/* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
+/* CASEEQ(x, 'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

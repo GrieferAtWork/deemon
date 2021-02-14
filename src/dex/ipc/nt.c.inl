@@ -211,7 +211,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64, CommandLine)     
 #define PROCATTR_DLLPATH               4 /* DREF DeeStringObject * */
 #define PROCATTR_IMAGEPATHNAME         5 /* DREF DeeStringObject * */
 #define PROCATTR_COMMANDLINE           6 /* DREF DeeStringObject * */
-#define PROCATTR_ENVIRONMENT           7 /* DREF DeeSequenceObject * -- {(string,string)...} */
+#define PROCATTR_ENVIRONMENT           7 /* DREF DeeSequenceObject * -- {(string, string)...} */
 
 /* Read the attribute `dwAttributeId' (One of `PROCATTR_*')
  * for the given process `*lphProcess' with id `dwProcessId'.
@@ -285,7 +285,7 @@ err:
 
 typedef BOOL (WINAPI *LPQUERYFULLPROCESSIMAGENAMEW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 PRIVATE LPQUERYFULLPROCESSIMAGENAMEW pQueryFullProcessImageNameW = NULL;
-PRIVATE WCHAR const str_KERNEL32[] = {'K','E','R','N','E','L','3','2',0};
+PRIVATE WCHAR const str_KERNEL32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 
 INTERN WUNUSED DREF DeeObject *DCALL
 nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {

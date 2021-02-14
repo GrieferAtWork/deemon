@@ -354,7 +354,7 @@ function printTypeExpr(fp: File, t: TypeExpr) {
 
 	case "S":
 		fp << "{";
-		printTypeExpr(fp,t.Stype);
+		printTypeExpr(fp, t.Stype);
 		fp << "...}";
 		break;
 

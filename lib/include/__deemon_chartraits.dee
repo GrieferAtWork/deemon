@@ -76,7 +76,7 @@
 #	define __deemon_toupper_f  __deemon_toupper
 #endif /* !__builtin_choose_expr || !__builtin_constant_p */
 
-#pragma push_macro(undef,"final","function")
+#pragma push_macro(undef, "final", "function")
 final function __deemon_isalnum_f(__c) -> __deemon_isalnum_m(__c);
 final function __deemon_isalpha_f(__c) -> __deemon_isalpha_m(__c);
 final function __deemon_isblank_f(__c) -> __deemon_isblank_m(__c);
@@ -91,4 +91,4 @@ final function __deemon_isupper_f(__c) -> __deemon_isupper_m(__c);
 final function __deemon_isxdigit_f(__c) -> __deemon_isxdigit_m(__c);
 final function __deemon_tolower_f(__c) -> __deemon_tolower_m(__c);
 final function __deemon_toupper_f(__c) -> __deemon_toupper_m(__c);
-#pragma pop_macro("final","function")
+#pragma pop_macro("final", "function")

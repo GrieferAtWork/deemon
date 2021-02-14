@@ -57,7 +57,7 @@ struct Dee_nomemory_error_object {
 
 struct TPPFile;
 struct Dee_compiler_error_loc {
-	struct Dee_compiler_error_loc *cl_prev; /* [0..1][OVERRIDE(->cl_file,[1..1])]
+	struct Dee_compiler_error_loc *cl_prev; /* [0..1][OVERRIDE(->cl_file, [1..1])]
 	                                         * Calling compiler location (might be used
 	                                         * when the parser was inside of a macro) */
 	/*ref*/ struct TPPFile        *cl_file; /* [0..1] The file in which the error occurred

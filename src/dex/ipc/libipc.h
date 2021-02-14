@@ -39,29 +39,29 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
 /* The main process type.
  *
  * Constructor:
- * >> process(string exe, sequence argv = []);
- * >> process(file exefp, sequence argv = []);
- * >> process(int exefd, sequence argv = []);
- * Construct a new process, using `[exe,argv...]' as arguments.
+ * >> process(exe: string, argv: Sequence = []);
+ * >> process(exefp: File, argv: Sequence = []);
+ * >> process(exefd: int, argv: Sequence = []);
+ * Construct a new process, using `[exe, argv...]' as arguments.
  * NOTE: Before start(), the arguments can modified again
  *       through use of the `argv' and `cmdline' properties.
  *
  * Thread enumeration functions:
- * >> property threads -> {thread...};
+ * >> property threads: {Thread...};
  *
  * File enumeration functions:
- * >> property files -> {_SystemFile...};
+ * >> property files: {File...};
  *
  * Process environment control:
- * >> property stdin -> file;
- * >> property stdout -> file;
- * >> property stderr -> file;
- * >> property pwd -> string;
- * >> property exe -> string;
- * >> property cmdline -> string; // Simply an alias for `" ".join(argv)'
- * >> property argv -> {string...};
- * >> property environ -> {(string,string)...};
- * >> property memory -> file; // A file allowing read/write access to the process's VM
+ * >> property stdin: File;
+ * >> property stdout: File;
+ * >> property stderr: File;
+ * >> property pwd: string;
+ * >> property exe: string;
+ * >> property cmdline: string; // Simply an alias for `" ".join(argv)'
+ * >> property argv: {string...};
+ * >> property environ: {string: string};
+ * >> property memory: File; // A file allowing read/write access to the process's VM
  *
  * Execution state functions:
  * >> function started(): bool;
@@ -70,19 +70,19 @@ INTDEF DeeFileTypeObject DeePipeWriter_Type;
  * >> function isachild(): bool;
  *
  * Execution control functions:
- * >> function start() -> none;
- * >> function id() -> int;
+ * >> function start();
+ * >> function id(): int;
  *    Return the process's pid
- * >> function join() -> int;
- * >> function tryjoin() -> (bool, int);
- * >> function timedjoin(timeout_in_microseconds:?Dint) -> (bool, int);
+ * >> function join(): int;
+ * >> function tryjoin(): (bool, int);
+ * >> function timedjoin(timeout_in_microseconds:?Dint): (bool, int);
  * >> function detach(): bool;
  *    Returns false if the process already was detached.
- * >> function terminate(int exit_code = 0): bool;
+ * >> function terminate(exit_code: int = 0): bool;
  *    Returns false if the process already was terminated.
  *
  * Non-portable control functions:
- * >> function kill_np(int signo) -> none; // Unix: Send a signal.
+ * >> function kill_np(int signo); // Unix: Send a signal.
  *
  */
 INTDEF DeeTypeObject DeeProcess_Type;
@@ -101,7 +101,7 @@ INTDEF DeeTypeObject DeeProcEnum_Type;
 #define PROCATTR_DLLPATH               4 /* DREF DeeStringObject * */
 #define PROCATTR_IMAGEPATHNAME         5 /* DREF DeeStringObject * */
 #define PROCATTR_COMMANDLINE           6 /* DREF DeeStringObject * */
-#define PROCATTR_ENVIRONMENT           7 /* DREF DeeSequenceObject * -- {(string,string)...} */
+#define PROCATTR_ENVIRONMENT           7 /* DREF DeeSequenceObject * -- {(string, string)...} */
 
 /* Read the attribute `dwAttributeId' (One of `PROCATTR_*')
  * for the given process `*lphProcess' with id `dwProcessId'.

@@ -3219,7 +3219,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 				member_type = Dee_TYPE(item->mcs_member.m_const);
 				Dee_Incref(member_type);
 			} else {
-				/* TODO: Use `type_member_get(&item->mcs_member,instance)' to determine the proper attribute type! */
+				/* TODO: Use `type_member_get(&item->mcs_member, instance)' to determine the proper attribute type! */
 				member_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(member_type);
 				if (!(item->mcs_member.m_field.m_type & STRUCT_CONST))
@@ -3356,7 +3356,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 				member_type = Dee_TYPE(item->mcs_member.m_const);
 				Dee_Incref(member_type);
 			} else {
-				/* TODO: Use `type_member_get(&item->mcs_member,(DeeObject *)tp_self)' to determine the proper attribute type! */
+				/* TODO: Use `type_member_get(&item->mcs_member, (DeeObject *)tp_self)' to determine the proper attribute type! */
 				member_type = type_member_typefor(&item->mcs_member);
 				Dee_XIncref(member_type);
 				if (!(item->mcs_member.m_field.m_type & STRUCT_CONST))

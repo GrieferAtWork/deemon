@@ -1729,7 +1729,7 @@ check_getattr_base_symbol_class_argv:
 			    function_self->a_action.a_act0->a_type == AST_SYM &&
 			    function_self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
 			    !SYMBOL_MUST_REFERENCE_THIS(function_self->a_action.a_act0->a_sym)) {
-				/* `(this as ...).foobar(a,b,c)'
+				/* `(this as ...).foobar(a, b, c)'
 				 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
 				struct ast *type_expr = function_self->a_action.a_act1;
 				int32_t type_rid;

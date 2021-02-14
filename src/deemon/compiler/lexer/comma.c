@@ -237,16 +237,16 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
 	int error;
 	unsigned int lookup_mode;
 	struct ast_loc loc;
-	/* In: "foo,bar = 10,x,y = getvalue()...,7"
-	 *              |     |                 |
-	 *              +-------------------------  expr_batch = { }
-	 *                    |                 |   expr_comma = { foo, bar }
-	 *                    |                 |
-	 *                    +-------------------  expr_batch = { foo, (bar = 10) }
-	 *                                      |   expr_comma = { x }
-	 *                                      |
-	 *                                      +-  expr_batch = { foo, (bar = 10), (x,y = getvalue()...) }
-	 *                                          expr_comma = { }
+	/* In: "foo, bar = 10, x, y = getvalue()..., 7"
+	 *               |      |                  | 
+	 *               +----------------------------  expr_batch = { }
+	 *                      |                  |    expr_comma = { foo, bar }
+	 *                      |                  | 
+	 *                      +---------------------  expr_batch = { foo, (bar = 10) }
+	 *                                         |    expr_comma = { x }
+	 *                                         | 
+	 *                                         +--  expr_batch = { foo, (bar = 10), (x,y = getvalue()...) }
+	 *                                              expr_comma = { }
 	 */
 	struct astlist expr_batch = ASTLIST_INIT; /* Expressions that have already been written to. */
 	struct astlist expr_comma = ASTLIST_INIT; /* Expressions that are pending getting assigned. */

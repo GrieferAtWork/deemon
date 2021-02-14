@@ -301,7 +301,7 @@ for (local setname, setlist: sets) {
 print "};";
 
 
-for (local setname,setlist: sets) {
+for (local setname, setlist: sets) {
 	print "PRIVATE DeeObject *buitlin_set"+setname+"[DTYPE_BUILTIN_NUM] = {";
 	if (#setlist < 0xf0)
 		setlist.resize(0xf0);

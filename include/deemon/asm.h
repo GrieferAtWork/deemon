@@ -1638,7 +1638,7 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
  *   - Since some instructions exist who's stack-effect depends on parameters
  *     on known at runtime (e.g.: ASM_POP_POP), those instructions have an effective
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2,*pstacksz -= 2;')
+ *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2, *pstacksz -= 2;')
  *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add' */
 DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,

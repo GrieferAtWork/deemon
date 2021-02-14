@@ -30,7 +30,7 @@ import * from threading;
 @@the with_closure to the caller, the given thread @t will already be suspended.
 @@Also note that the thread @t can still be interrupted
 @@>import thread from deemon;
-@@>import milliseconds,seconds from time;
+@@>import milliseconds, seconds from time;
 @@>local my_thread = thread([]{
 @@>    for (;;) {
 @@>        print "In thread";

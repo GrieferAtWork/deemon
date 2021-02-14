@@ -4898,21 +4898,21 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	      "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	      "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
+	      "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rparition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	      "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	      "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
+	      "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_compare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Compare the sub-string ${left = this.substr(my_start,my_end)} with ${right = other.substr(other_start,other_end)}, "
+	      "Compare the sub-string ${left = this.substr(my_start, my_end)} with ${right = other.substr(other_start, other_end)}, "
 	      "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
 	{ "vercompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_vercompare,
@@ -4933,7 +4933,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
-	      "with ${right = pattern.substr(pattern_start,pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
+	      "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	      "if ${left > right}, or ${== 0} if they are equal\n"
 	      "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
 	      "be matched with any single character from @this, and $\"*\" to be matched to "
@@ -5282,11 +5282,11 @@ INTERN struct type_method bytes_methods[] = {
 	      "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
 	      "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
 	      "${"
-	      "s = \"get_string().foo(bar(),baz(42),7).length\";\n"
+	      "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
 	      "lcol = s.find(\")\");\n"
 	      "print lcol; /* 19 */\n"
-	      "mtch = s.rfindmatch(\"(\",\")\",0,lcol);\n"
-	      "print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */"
+	      "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
+	      "print repr s[mtch:lcol+1]; /* \"(bar(), baz(42), 7)\" */"
 	      "}\n"
 	      "If no @open without a match @close exists, ${-1} is returned") },
 	{ "rindexmatch",

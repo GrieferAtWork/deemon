@@ -119,7 +119,7 @@ function constant_nonzero(name) {
 	print("#define CONFIG_NO_", name, " 1");
 	print("#endif /" "* ", name, " *" "/");
 	print("#elif defined(__", name, "__defined)");
-	print("#define CONFIG_HAVE_", name," 1");
+	print("#define CONFIG_HAVE_", name, " 1");
 	print("#endif");
 	print;
 }
@@ -9601,7 +9601,7 @@ local errno_names = {
 };
 
 for (local x: errno_names) {
-	print "#ifdef",x;
+	print "#ifdef", x;
 	print "#define DeePrivateSystem_IF_HAVE_",;
 	print x,;
 	print "(tt, ff) tt";
@@ -9610,7 +9610,7 @@ for (local x: errno_names) {
 	print x,;
 	print "(tt, ff) ff";
 	print "#endif /" "* !",;
-	print x,"*" "/";
+	print x, "*" "/";
 }
 
 

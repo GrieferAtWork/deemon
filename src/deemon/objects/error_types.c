@@ -341,7 +341,6 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Error),
 	/* .tp_doc      = */ DOC("Base class for all errors thrown by the runtime\n"
-
 	                         "\n"
 	                         "(message?:?Dstring,inner?:?X2?DError?O)\n"
 	                         "Create a new error object with the given @message and @inner error"),

@@ -86,7 +86,7 @@ PRIVATE char const decimals[2][17] = {
 	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' },
 };
 
-PRIVATE DEFINE_STRING(str_lpnullrp,"(null)");
+PRIVATE DEFINE_STRING(str_lpnullrp, "(null)");
 
 
 PRIVATE dssize_t DCALL

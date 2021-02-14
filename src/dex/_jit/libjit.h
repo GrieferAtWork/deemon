@@ -532,7 +532,7 @@ INTDEF void FCALL
 JITLexer_ErrorTrace(JITLexer *__restrict self,
                     unsigned char *__restrict pos);
 #else /* __INTELLISENSE__ */
-#define JITLexer_ErrorTrace(self,pos) (void)((self)->jl_errpos = (pos))
+#define JITLexer_ErrorTrace(self, pos) (void)((self)->jl_errpos = (pos))
 #endif /* !__INTELLISENSE__ */
 
 
@@ -832,7 +832,7 @@ JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
 
 
 INTDEF WUNUSED DREF /*Module*/ DeeObject *FCALL JITLexer_EvalModule(JITLexer *__restrict self);
-#define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self,NULL,NULL,NULL) < 0 ? -1 : 0)
+#define JITLexer_SkipModule(self) (JITLexer_ParseModuleName(self, NULL, NULL, NULL) < 0 ? -1 : 0)
 
 
 /* Parse a comma-separated list of expressions,
@@ -1220,7 +1220,7 @@ struct jit_yield_function_object {
 #define JIT_STATE_KIND_FOR      0x0004 /* [SCOPE] For-statement (`for (local i = 0; i < 10; ++i) { ... }') */
 #define JIT_STATE_KIND_WHILE    0x0005 /* [SCOPE] While-statement (`while (local item = getitem()) { ... }') */
 #define JIT_STATE_KIND_FOREACH  0x0006 /* [SCOPE] Foreach-statement (`for (local x: items) { ... }') */
-#define JIT_STATE_KIND_FOREACH2 0x0007 /* [SCOPE] Foreach-statement with multiple targets `for (local x,y: pairs) { ... }') */
+#define JIT_STATE_KIND_FOREACH2 0x0007 /* [SCOPE] Foreach-statement with multiple targets `for (local x, y: pairs) { ... }') */
 #define JIT_STATE_KIND_WITH     0x0008 /* [SCOPE] with-statement (`with (local x = get_value()) { ... }') */
 #define JIT_STATE_KIND_SKIPELSE 0x0009 /* [SCOPE] Skip of an else-block if `else' or `elif' is encountered after this block ends.
                                         *         -> This type of state is pushed when an if-expression evalutes to follow the true-branch,
@@ -1299,18 +1299,18 @@ struct jit_yield_function_iterator_object {
 	recursive_rwlock_t           ji_lock;  /* Lock held while executing code of this iterator. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF JITYieldFunctionObject *ji_func;  /* [1..1][const] The underlying yield-function. */
-	JITLexer                     ji_lex;   /* [OVERRIDE(.jl_text,[const][== ji_func->jy_func->jf_source])]
-	                                        * [OVERRIDE(.jl_context,[const][== &ji_ctx])]
+	JITLexer                     ji_lex;   /* [OVERRIDE(.jl_text, [const][== ji_func->jy_func->jf_source])]
+	                                        * [OVERRIDE(.jl_context, [const][== &ji_ctx])]
 	                                        * [lock(ji_lock)] The associated lexer. */
-	JITContext                   ji_ctx;   /* [OVERRIDE(.jc_impbase,[const][== ji_func->jy_func->jf_impbase])]
-	                                        * [OVERRIDE(.jc_locals.otp_ind,[>= 1])]
-	                                        * [OVERRIDE(.jc_locals.otp_tab,[owned_if(!= &ji_loc)])]
-	                                        * [OVERRIDE(.jc_globals,[lock(WRITE_ONCE)]
-	                                        *                       [if(ji_func->jy_func->jf_globals),[== ji_func->jy_func->jf_globals])]
+	JITContext                   ji_ctx;   /* [OVERRIDE(.jc_impbase, [const][== ji_func->jy_func->jf_impbase])]
+	                                        * [OVERRIDE(.jc_locals.otp_ind, [>= 1])]
+	                                        * [OVERRIDE(.jc_locals.otp_tab, [owned_if(!= &ji_loc)])]
+	                                        * [OVERRIDE(.jc_globals, [lock(WRITE_ONCE)]
+	                                        *                        [if(ji_func->jy_func->jf_globals), [== ji_func->jy_func->jf_globals])]
 	                                        *           )]
 	                                        * [lock(ji_lock)] The associated JIT context. */
-	JITObjectTable               ji_loc;   /* [OVERRIDE(.ot_prev.otp_ind,[>= 2])]
-	                                        * [OVERRIDE(.ot_prev.otp_tab,[const][== &ji_func->jy_func->jf_refs])]
+	JITObjectTable               ji_loc;   /* [OVERRIDE(.ot_prev.otp_ind, [>= 2])]
+	                                        * [OVERRIDE(.ot_prev.otp_tab, [const][== &ji_func->jy_func->jf_refs])]
 	                                        * [lock(ji_lock)] The base-level local variable table. */
 	struct jit_state            *ji_state; /* [lock(ji_lock)][1..1][owned_if(!= &ji_bstat)]
 	                                        * The current execution/syntax state. */

@@ -124,42 +124,42 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #undef ASSERT
 
 #ifdef NDEBUG
-#define ASSERT(...)                /* nothing */
-#define ASSERT_LOWER(a,b)          /* nothing */
-#define ASSERT_LOWER_EQUAL(a,b)    /* nothing */
-#define ASSERT_BELOW(a,b)          /* nothing */
-#define ASSERT_BELOW_EQUAL(a,b)    /* nothing */
-#define ASSERT_ABOVE(a,b)          /* nothing */
-#define ASSERT_ABOVE_EQUAL(a,b)    /* nothing */
-#define ASSERT_EQUAL(a,b)          /* nothing */
-#define ASSERT_NOT_EQUAL(a,b)      /* nothing */
-#define ASSERT_BIT(w,flag,flagset) /* nothing */
-#define WASSERT_LOWER(w,a,b)       /* nothing */
-#define WASSERT_LOWER_EQUAL(w,a,b) /* nothing */
-#define WASSERT_BELOW(w,a,b)       /* nothing */
-#define WASSERT_BELOW_EQUAL(w,a,b) /* nothing */
-#define WASSERT_ABOVE(w,a,b)       /* nothing */
-#define WASSERT_ABOVE_EQUAL(w,a,b) /* nothing */
-#define WASSERT_EQUAL(w,a,b)       /* nothing */
-#define WASSERT_NOT_EQUAL(w,a,b)   /* nothing */
+#define ASSERT(...)                  /* nothing */
+#define ASSERT_LOWER(a, b)           /* nothing */
+#define ASSERT_LOWER_EQUAL(a, b)     /* nothing */
+#define ASSERT_BELOW(a, b)           /* nothing */
+#define ASSERT_BELOW_EQUAL(a, b)     /* nothing */
+#define ASSERT_ABOVE(a, b)           /* nothing */
+#define ASSERT_ABOVE_EQUAL(a, b)     /* nothing */
+#define ASSERT_EQUAL(a, b)           /* nothing */
+#define ASSERT_NOT_EQUAL(a, b)       /* nothing */
+#define ASSERT_BIT(w, flag, flagset) /* nothing */
+#define WASSERT_LOWER(w, a, b)       /* nothing */
+#define WASSERT_LOWER_EQUAL(w, a, b) /* nothing */
+#define WASSERT_BELOW(w, a, b)       /* nothing */
+#define WASSERT_BELOW_EQUAL(w, a, b) /* nothing */
+#define WASSERT_ABOVE(w, a, b)       /* nothing */
+#define WASSERT_ABOVE_EQUAL(w, a, b) /* nothing */
+#define WASSERT_EQUAL(w, a, b)       /* nothing */
+#define WASSERT_NOT_EQUAL(w, a, b)   /* nothing */
 #else /* NDEBUG */
-#define ASSERT_LOWER(x,y)          cmp y, x; assert __LINE__, l;
-#define ASSERT_LOWER_EQUAL(x,y)    cmp y, x; assert __LINE__, le;
-#define ASSERT_BELOW(x,y)          cmp y, x; assert __LINE__, b;
-#define ASSERT_BELOW_EQUAL(x,y)    cmp y, x; assert __LINE__, be;
-#define ASSERT_ABOVE(x,y)          cmp y, x; assert __LINE__, a;
-#define ASSERT_ABOVE_EQUAL(x,y)    cmp y, x; assert __LINE__, ae;
-#define ASSERT_EQUAL(x,y)          cmp y, x; assert __LINE__, e;
-#define ASSERT_NOT_EQUAL(x,y)      cmp y, x; assert __LINE__, ne;
-#define WASSERT_LOWER(w,x,y)       cmp##w y, x; assert __LINE__, l;
-#define WASSERT_LOWER_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, le;
-#define WASSERT_BELOW(w,x,y)       cmp##w y, x; assert __LINE__, b;
-#define WASSERT_BELOW_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, be;
-#define WASSERT_ABOVE(w,x,y)       cmp##w y, x; assert __LINE__, a;
-#define WASSERT_ABOVE_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, ae;
-#define WASSERT_EQUAL(w,x,y)       cmp##w y, x; assert __LINE__, e;
-#define WASSERT_NOT_EQUAL(w,x,y)   cmp##w y, x; assert __LINE__, ne;
-#define ASSERT_BIT(w,flag,flagset) test##w flag, flagset; assert __LINE__, nz;
+#define ASSERT_LOWER(x, y)           cmp y, x; assert __LINE__, l;
+#define ASSERT_LOWER_EQUAL(x, y)     cmp y, x; assert __LINE__, le;
+#define ASSERT_BELOW(x, y)           cmp y, x; assert __LINE__, b;
+#define ASSERT_BELOW_EQUAL(x, y)     cmp y, x; assert __LINE__, be;
+#define ASSERT_ABOVE(x, y)           cmp y, x; assert __LINE__, a;
+#define ASSERT_ABOVE_EQUAL(x, y)     cmp y, x; assert __LINE__, ae;
+#define ASSERT_EQUAL(x, y)           cmp y, x; assert __LINE__, e;
+#define ASSERT_NOT_EQUAL(x, y)       cmp y, x; assert __LINE__, ne;
+#define WASSERT_LOWER(w, x, y)       cmp##w y, x; assert __LINE__, l;
+#define WASSERT_LOWER_EQUAL(w, x, y) cmp##w y, x; assert __LINE__, le;
+#define WASSERT_BELOW(w, x, y)       cmp##w y, x; assert __LINE__, b;
+#define WASSERT_BELOW_EQUAL(w, x, y) cmp##w y, x; assert __LINE__, be;
+#define WASSERT_ABOVE(w, x, y)       cmp##w y, x; assert __LINE__, a;
+#define WASSERT_ABOVE_EQUAL(w, x, y) cmp##w y, x; assert __LINE__, ae;
+#define WASSERT_EQUAL(w, x, y)       cmp##w y, x; assert __LINE__, e;
+#define WASSERT_NOT_EQUAL(w, x, y)   cmp##w y, x; assert __LINE__, ne;
+#define ASSERT_BIT(w, flag, flagset) test##w flag, flagset; assert __LINE__, nz;
 #define ASSERT(...) __VA_ARGS__; assert __LINE__
 .section .rodata
 1:	.string __FILE__

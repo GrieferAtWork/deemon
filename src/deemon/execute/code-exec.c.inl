@@ -1016,7 +1016,7 @@ inc_execsz_start:
 #else /* USE_SWITCH */
 #define RAW_TARGET2(op, _op)               target##_op:
 #endif /* !USE_SWITCH */
-#define RAW_TARGET(op)       RAW_TARGET2(op,_##op)
+#define RAW_TARGET(op)       RAW_TARGET2(op, _##op)
 #define EXCEPTION_CLEANUP    /* nothing */
 #ifdef EXEC_SAFE
 #define ASSERT_TUPLE(ob)     do{ if unlikely(!DeeTuple_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_tuple;} }__WHILE0

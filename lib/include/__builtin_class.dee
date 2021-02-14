@@ -25,7 +25,7 @@ final function __builtin_class(__base = Object from deemon,
                                __name = "",
                                __uuid_str = none) {
 	import rt;
-	return rt.makeclass(__base,rt.ClassDescriptor(name: __name));
+	return rt.makeclass(__base, rt.ClassDescriptor(name: __name));
 }
 #pragma pop_macro("final", "function", "from", "import", "return", "rt", "makeclass", "ClassDescriptor", "name")
 

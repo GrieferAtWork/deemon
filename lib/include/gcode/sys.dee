@@ -22,6 +22,6 @@
 #include "fs.dee"
 #include "../__builtin_exit.dee"
 
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import sys = ".m_gcode_sys";
 #pragma pop_macro("import")

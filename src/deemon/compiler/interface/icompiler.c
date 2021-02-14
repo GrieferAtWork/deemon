@@ -675,6 +675,7 @@ parse_handler_flags(char const *__restrict flags,
 			flag_length = (size_t)(next_flag - flags);
 			++next_flag;
 		}
+		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
 			if (IS_FLAG("finally"))
@@ -899,6 +900,7 @@ parse_loop_flags(char const *__restrict flags,
 			flag_length = (size_t)(next_flag - flags);
 			++next_flag;
 		}
+		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
 			if (IS_FLAG("foreach"))
@@ -1073,6 +1075,7 @@ parse_conditional_flags(char const *__restrict flags,
 			flag_length = (size_t)(next_flag - flags);
 			++next_flag;
 		}
+		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, sizeof(x) - sizeof(char)) == 0)
 #define IS_FLAG_S(len, s) (flag_length == (len) && memcmp(flags, s, (len) * sizeof(char)) == 0)
@@ -1443,6 +1446,7 @@ parse_operator_flags(char const *__restrict flags,
 			flag_length = (size_t)(next_flag - flags);
 			++next_flag;
 		}
+		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
 			if (IS_FLAG("post"))
@@ -2004,8 +2008,8 @@ INTERN struct type_method compiler_methods[] = {
 	      "when @typing is ?N, or construct a sequence expression for the associated type when @typeing "
 	      "is one of the following\n"
 	      "#T{Type|Example|Description~"
-	      "?DTuple|${(a,b,c)}|Construct a Tuple expression&"
-	      "?DList|${[a,b,c]}|Construct a List expression&"
+	      "?DTuple|${(a, b, c)}|Construct a Tuple expression&"
+	      "?DList|${[a, b, c]}|Construct a List expression&"
 	      "?DHashSet|-|Construct a mutable HashSet sequence expression&"
 	      "?DDict|-|Construct a mutable Dict-like mapping expression&"
 	      "?DSequence|${{ a, b, c }}|Construct an abstract sequence expression&"
@@ -2098,18 +2102,18 @@ INTERN struct type_method compiler_methods[] = {
 	      "You may additionally pass @cond for @tt or @ff in order to propagate the value of @cond "
 	      "as the result of the conditional branch, when that value is used.\n"
 	      "For example, in ${cond ? : ff}, the value of `cond' is propagated when it is ?t, "
-	      "and replaced with `ff' when not. This is equivalent to ${makeconditional(cond,cond,ff)}, "
+	      "and replaced with `ff' when not. This is equivalent to ${makeconditional(cond, cond, ff)}, "
 	      "but must be noted specifially, as the conditional branch is only evaluated once, meaning "
 	      "that any side-effects only happen once, too\n"
-	      "Using this knowledge, you could also construct a branch ${makeconditional(cond,tt,cond)}, which simply does the opposite\n"
+	      "Using this knowledge, you could also construct a branch ${makeconditional(cond, tt, cond)}, which simply does the opposite\n"
 	      "When @tt is ?N, the true-branch returns ?N at runtime\n"
 	      "When @ff is ?N, the false-branch returns ?N at runtime\n"
 	      "The given @flags is a $\",\"-separated string containing zero or "
 	      "more of the following options, with empty options being ignored:\n"
 	      "#T{Name|Description~"
 	      "$\"bool\"|The values of @cond, @tt and @ff are cast to a boolean during evaluation. "
-	                "Using this, code like ${a || b} results in a branch ${makeconditional(a,a,b,\"bool\")}, "
-	                "and ${a && b} results in a branch ${makeconditional(a,b,a,\"bool\")}&"
+	                "Using this, code like ${a || b} results in a branch ${makeconditional(a, a, b, \"bool\")}, "
+	                "and ${a && b} results in a branch ${makeconditional(a, b, a, \"bool\")}&"
 	      "$\"likely\"|When given, assembly for @ff is placed in a section of code that is rarely used&"
 	      "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used}"),
 	  TYPE_METHOD_FKWDS },
@@ -2145,7 +2149,7 @@ INTERN struct type_method compiler_methods[] = {
 	{ "makeoperatorfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ast_makeoperatorfunc,
 	  DOC("(name:?Dstring,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dint,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	      "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
+	      "@param name The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
 	      "for ambiguous operators resolved at runtime\n"
 	      "@param scope The scope to-be used for the new branch, or ?N to use ?#scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or ?N when not available\n"
@@ -2155,14 +2159,14 @@ INTERN struct type_method compiler_methods[] = {
 	      "Create a new branch a reference to one of the operator functions, or to "
 	      "construct an instance-bound operator function\n"
 	      "For example ${operator add} results in ${makeoperatorfunc(\"add\")}, while "
-	      "${binding.operator add} results in ${makeoperatorfunc(\"add\",binding)}"),
+	      "${binding.operator add} results in ${makeoperatorfunc(\"add\", binding)}"),
 	  TYPE_METHOD_FKWDS },
 	{ "makeoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ast_makeoperator,
 	  DOC("(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
 	      "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	      "@param name The name of the operator, or one of ${[\"+\",\"-\",\"[]\",\"[:]\",\".\"]} "
+	      "@param name The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
 	      "for ambiguous operators resolved based on argument count\n"
 	      "@param scope The scope to-be used for the new branch, or ?N to use ?#scope\n"
 	      "@param loc The location of the ast for DDI, omitted to use the current token position, or ?N when not available\n"
@@ -2173,7 +2177,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "The given @flags is a $\",\"-separated string containing zero or "
 	      "more of the following options, with empty options being ignored:\n"
 	      "#T{Flag|Description~"
-	      "$\"post\"|The invocation is assembled as ${ ({ __stack local _res = copy a; a.operator <name> (b[,[c,d]]); _res; }); } "
+	      "$\"post\"|The invocation is assembled as ${ ({ __stack local _res = copy a; a.operator <name> (b[, [c, d]]); _res; }); } "
 	                "when the result of the expression is being used. Otherwise, this flag is ignored. "
 	                "This is mainly used to implement ${a++}, such that the old value of @a is returned&"
 	      "$\"varargs\"|May only be passed when exactly 2 operands (@a and @b) are given: @b should be "
@@ -2207,7 +2211,7 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"println\"|${print a...;}|1|Print the individual elements of a sequence @a, separated by spaces, and followed by a line-feed&"
 	      "$\"fprint\"|${print a: b...,;}|2|Same as $\"print\", but print a sequence @b, and write data to a file @a&"
 	      "$\"fprintln\"|${print a: b...;}|2|Same as $\"println\", but print a sequence @b, and write data to a file @a&"
-	      "$\"range\"|${[a:b,c]}|3|Construct a range expression. Note that @a and @c may evaluate to ?N at runtime, in which case the behavior is the same as when omitted in user-code&"
+	      "$\"range\"|${[a:b, c]}|3|Construct a range expression. Note that @a and @c may evaluate to ?N at runtime, in which case the behavior is the same as when omitted in user-code&"
 	      "$\"is\"|${a is b}|2|Check if @a is an instance of @b at runtime, and evaluate to ?t or ?f&"
 	      "$\"in\"|${a in b}|2|Same as ${b.operator contains(a)}, however operands are evaluated in reverse order&"
 	      "$\"as\"|${a as b}|2|Construct a super-wrapper for @a with a typing of @b&"
@@ -2217,12 +2221,12 @@ INTERN struct type_method compiler_methods[] = {
 	      "$\"any\"|${a || ...}|1|Evaluate to ?t if any element from @a evaluates to ?t, or ?f when @a is empty or has no such elements, with the side-effect of enumerating @a&"
 	      "$\"all\"|${a && ...}|1|Evaluate to ?t if all elements from @a evaluate to ?t or when @a is empty, or ?f otherwise, with the side-effect of enumerating @a&"
 	      "$\"store\"|${a = b}|2|Store the expression in @b into the branch @a (@a may be a ?#makesym, ?#makemultiple, or a $\"getitem\", $\"getrange\", or $\"getattr\" #makeoperator branch)&"
-	      "$\"assert\"|${assert(a)} or ${assert(a,b)}|1 or 2|Assert that @a evaluates to ?t when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
-	                                                        "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :file.stdout&"
+	      "$\"assert\"|${assert(a)} or ${assert(a, b)}|1 or 2|Assert that @a evaluates to ?t when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
+	                                                         "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :file.stdout&"
 	      "$\"boundattr\"|${a.operator . (b) is bound}|2|Evaluate to ?t / ?f when attribute @b of @a is bound at runtime&"
 	      "$\"sameobj\"|${a === b is bound}|2|Evaluate to ?t when @a and @b are the same object at runtime, or ?f otherwise&"
 	      "$\"diffobj\"|${a !== b is bound}|2|Evaluate to ?t when @a and @b are different objects at runtime, or ?f otherwise&"
-	      "$\"callkw\"|${a(b...,**c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c}"),
+	      "$\"callkw\"|${a(b..., **c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c}"),
 	  TYPE_METHOD_FKWDS },
 	{ "makeclass", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ast_makeclass,
 	  DOC("TODO"),

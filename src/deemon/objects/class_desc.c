@@ -2003,7 +2003,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         "member tables. - When omitted, these sizes are automatically calculated by "
 	                         "determining the greatest used table indices within @operators, @iattr and @cattr\n"
 	                         "Note that both @iattr and @cattr take mappings of attribute names to one either "
-	                         "the associated table_index, or a tuple of (table_index,flags[,doc]), where flags is "
+	                         "the associated table_index, or a tuple of (table_index, flags[, doc]), where flags is "
 	                         "a comma-separated string of flags as described in ?Aflags?#Attribute\n"
 	                         "Hint: Once created, a _ClassDescriptor object can be used "
 	                         "with :rt:makeclass to create custom class types at runtime"),
@@ -3394,7 +3394,7 @@ DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
 		/* Calling an instance property using the class as base
 		 * will simply invoke the getter associated with that property.
 		 * Technically, we could assert that `argc == 1' at this point,
-		 * as well as that `DeeTuple_GET(args,0) is class_type', but there is no
+		 * as well as that `DeeTuple_GET(args, 0) is class_type', but there is no
 		 * need for us to do this, as the callback that's going to be
 		 * invoked will perform those same check (should that guaranty
 		 * become relevant), because it's yet another object over which
@@ -3449,7 +3449,7 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
 		/* Calling an instance property using the class as base
 		 * will simply invoke the getter associated with that property.
 		 * Technically, we could assert that `argc == 1' at this point,
-		 * as well as that `DeeTuple_GET(args,0) is class_type', but there is no
+		 * as well as that `DeeTuple_GET(args, 0) is class_type', but there is no
 		 * need for us to do this, as the callback that's going to be
 		 * invoked will perform those same check (should that guaranty
 		 * become relevant), because it's yet another object over which

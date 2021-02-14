@@ -149,7 +149,7 @@ public:
 	@@Note however that a constructor can also be omitted entirely, in which case
 	@@it behaves identical to `this(): super() { }', or be written by one of the
 	@@following:
-	@@>// Same as `this(args..., **kwds): super(args...,**kwds) { }'
+	@@>// Same as `this(args..., **kwds): super(args..., **kwds) { }'
 	@@>this = super;
 	@@>
 	@@>// Same as `this(args..., **kwds): super(({ throw TypeError("..."); })) { }'
@@ -334,12 +334,12 @@ public:
 	 * SYMBOL    NAME    ARGC PROTOTYPE                               USAGE                             INPLACE
 	 *           read    2    `operator read(count: int): bytes'      `this.read(count)'                no
 	 *           write   2    `operator write(data: bytes): int'      `this.write(data)'                no
-	 *           seek    3    `operator seek(off: int, whence: int): int' `this.seek(off,whence)'       no
+	 *           seek    3    `operator seek(off: int, whence: int): int' `this.seek(off, whence)'      no
 	 *           sync    1    `operator sync()'                       `this.sync()'                     no
 	 *           trunc   2    `operator trunc(len: int)'              `this.trunc(len)'                 no
 	 *           close   1    `operator close()'                      `this.close()'                    no
-	 *           pread   3    `operator pread(count: int, pos: int): bytes' `this.pread(count,pos)'     no
-	 *           pwrite  3    `operator pwrite(data: bytes, pos: int): int' `this.pwrite(data,pos)'     no
+	 *           pread   3    `operator pread(count: int, pos: int): bytes' `this.pread(count, pos)'    no
+	 *           pwrite  3    `operator pwrite(data: bytes, pos: int): int' `this.pwrite(data, pos)'    no
 	 *           getc    1    `operator getc(): int'                  `this.getc()'                     no
 	 *           ungetc  2    `operator ungetc(ch: int): bool'        `this.ungetc(ch)'                 no
 	 *           putc    2    `operator putc(ch: int): bool'          `this.putc(ch)'                   no
@@ -379,7 +379,7 @@ class Point {
 	@@with properties not being considered for this purpose.
 	@@With all that in mind, the constructor of this class is implemented
 	@@as follows:
-	@@>this(x?,y?,z?) {
+	@@>this(x?, y?, z?) {
 	@@>	this.z = 7; // Member pre-initialization
 	@@>	if (x is bound) this.x = x;
 	@@>	if (y is bound) this.y = y;

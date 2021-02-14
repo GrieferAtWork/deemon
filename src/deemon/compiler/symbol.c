@@ -48,7 +48,7 @@ DEFINE_STRUCT_CACHE_EX(sym, struct symbol,
                            sizeof(struct text_label)),
                        64)
 #ifndef NDEBUG
-#define sym_alloc()  sym_dbgalloc(__FILE__,__LINE__)
+#define sym_alloc() sym_dbgalloc(__FILE__, __LINE__)
 #endif /* !NDEBUG */
 
 /* Re-use the symbol cache for labels. (As rare as they are, this is the best way to allocate them) */
@@ -81,8 +81,8 @@ INTERN char const symclass_names[0x1f + 1][8] = {
 	/* [SYMBOL_TYPE_AMBIG ] = */ "ambig",
 	/* [SYMBOL_TYPE_FWD   ] = */ "fwd",
 	/* [SYMBOL_TYPE_CONST ] = */ "const",
-	"?","?","?","?","?","?","?",
-	"?","?","?","?","?","?"
+	"?", "?", "?", "?", "?", "?", "?",
+	"?", "?", "?", "?", "?", "?"
 };
 
 
@@ -590,7 +590,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ NULL, /*&DeeObject_Type,*/
+	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {

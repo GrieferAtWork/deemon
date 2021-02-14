@@ -37,7 +37,7 @@ print repr ["f", "o", "o", "b", "a", "r"];
 
 
 /* none can always be expanded to anything, re-yielding itself
- * >> After this line, a,b,c and d are all initialized to 'none' */
+ * >> After this line, a, b, c and d are all initialized to 'none' */
 a, b, c, d = none...;
 
 /* Guess what this line does

@@ -356,7 +356,7 @@ err:
  *                      no longer being valid! */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
+                                  /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                   /*in-out*/ size_t *__restrict pallocated) {
 	DeeObject **new_elemv, **elemv = *pvector;
 	DREF DeeObject *iterator, *elem;
@@ -438,7 +438,7 @@ err:
  *    vector which may already contain other objects upon entry. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
+                                        /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/ size_t *__restrict pallocated,
                                         /*in*/ size_t offset) {
 	DeeObject **new_elemv, **elemv = *pvector;

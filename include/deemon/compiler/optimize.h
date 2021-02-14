@@ -76,9 +76,9 @@ struct ast_symbol_assumes {
 	size_t                    sa_mask; /* Allocated hash-vector mask. */
 	struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
 };
-#define AST_SYMBOL_ASSUMES_HASHST(self,hash)   ((hash) & (self)->sa_mask)
+#define AST_SYMBOL_ASSUMES_HASHST(self, hash)  ((hash) & (self)->sa_mask)
 #define AST_SYMBOL_ASSUMES_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define AST_SYMBOL_ASSUMES_HASHIT(self, i)     ((self)->sa_elem+((i) & (self)->sa_mask))
+#define AST_SYMBOL_ASSUMES_HASHIT(self, i)     ((self)->sa_elem + ((i) & (self)->sa_mask))
 
 struct ast_assumes {
 	struct ast_assumes const *aa_prev; /* [0..1] When inside of a conditional branch, this points
@@ -356,28 +356,28 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restric
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #ifdef OPTIMIZE_FASSUME
-#define ast_assumes_setsymval(self,sym,value)    __builtin_expect(ast_assumes_setsymval(self,sym,value),0)
-#define ast_assumes_gather(self,ast,result_used) __builtin_expect(ast_assumes_gather(self,ast,result_used),0)
-#define ast_assumes_undefined(self)              __builtin_expect(ast_assumes_undefined(self),0)
-#define ast_assumes_undefined_all(self)          __builtin_expect(ast_assumes_undefined_all(self),0)
-#define ast_assumes_initcond(child,parent)       __builtin_expect(ast_assumes_initcond(child,parent),0)
-#define ast_assumes_initfunction(child,parent)   __builtin_expect(ast_assumes_initfunction(child,parent),0)
-#define ast_assumes_mergecond(child,sibling)     __builtin_expect(ast_assumes_mergecond(child,sibling),0)
-#define ast_assumes_merge(self,follower)         __builtin_expect(ast_assumes_merge(self,follower),0)
+#define ast_assumes_setsymval(self, sym, value)    __builtin_expect(ast_assumes_setsymval(self, sym, value), 0)
+#define ast_assumes_gather(self, ast, result_used) __builtin_expect(ast_assumes_gather(self, ast, result_used), 0)
+#define ast_assumes_undefined(self)                __builtin_expect(ast_assumes_undefined(self), 0)
+#define ast_assumes_undefined_all(self)            __builtin_expect(ast_assumes_undefined_all(self), 0)
+#define ast_assumes_initcond(child, parent)        __builtin_expect(ast_assumes_initcond(child, parent), 0)
+#define ast_assumes_initfunction(child, parent)    __builtin_expect(ast_assumes_initfunction(child, parent), 0)
+#define ast_assumes_mergecond(child, sibling)      __builtin_expect(ast_assumes_mergecond(child, sibling), 0)
+#define ast_assumes_merge(self, follower)          __builtin_expect(ast_assumes_merge(self, follower), 0)
 #endif /* OPTIMIZE_FASSUME */
-#define ast_optimize(parent,self,result_used)    __builtin_expect(ast_optimize(parent,self,result_used),0)
-#define ast_dooptimize(stack,self,result_used)   __builtin_expect(ast_dooptimize(stack,self,result_used),0)
-#define ast_startoptimize(self,result_used)      __builtin_expect(ast_startoptimize(self,result_used),0)
-#define ast_optimize_all(self,result_used)       __builtin_expect(ast_optimize_all(self,result_used),0)
-#define ast_assign(self,other)                   __builtin_expect(ast_assign(self,other),0)
-#define ast_graft_onto(self,other)               __builtin_expect(ast_graft_onto(self,other),0)
+#define ast_optimize(parent, self, result_used)  __builtin_expect(ast_optimize(parent, self, result_used), 0)
+#define ast_dooptimize(stack, self, result_used) __builtin_expect(ast_dooptimize(stack, self, result_used), 0)
+#define ast_startoptimize(self, result_used)     __builtin_expect(ast_startoptimize(self, result_used), 0)
+#define ast_optimize_all(self, result_used)      __builtin_expect(ast_optimize_all(self, result_used), 0)
+#define ast_assign(self, other)                  __builtin_expect(ast_assign(self, other), 0)
+#define ast_graft_onto(self, other)              __builtin_expect(ast_graft_onto(self, other), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
 #if !defined(NDEBUG) && 1
 #define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
-#define OPTIMIZE_VERBOSE(...)        ast_optimize_verbose(self,__VA_ARGS__)
-#define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast,__VA_ARGS__)
+#define OPTIMIZE_VERBOSE(...)        ast_optimize_verbose(self, __VA_ARGS__)
+#define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast, __VA_ARGS__)
 INTDEF void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
 #else /* !NDEBUG */
 #define OPTIMIZE_VERBOSE(...)       (void)0

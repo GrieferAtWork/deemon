@@ -1062,11 +1062,11 @@ retry_addrinfo:
 			(void)error; /* XXX: New error code class? */
 #ifdef CONFIG_HOST_WINDOWS
 			DeeError_Throwf(&DeeError_NetError,
-			                "Failed to query getaddrinfo(%q,%q)",
+			                "Failed to query getaddrinfo(%q, %q)",
 			                host, port);
 #else /* CONFIG_HOST_WINDOWS */
 			DeeError_Throwf(&DeeError_NetError,
-			                "Failed to query getaddrinfo(%q,%q): %s",
+			                "Failed to query getaddrinfo(%q, %q): %s",
 			                host, port, gai_strerror(error));
 #endif /* !CONFIG_HOST_WINDOWS */
 			goto err;

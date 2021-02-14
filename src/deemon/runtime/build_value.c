@@ -972,7 +972,7 @@ err:
  * >> my_function(DeeObject *UNUSED(self),
  * >>             size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
- * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function", &a, &b, &c))
+ * >>     if (DeeArg_Unpack(argc, argv, "dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
@@ -1108,7 +1108,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 				ASSERTF(!kwlist->k_name, "Keyword list too long");
 				if (kw_argc) {
 					/* TODO: This can also happen when:
-					 * >> function foo(x,bar = none);
+					 * >> function foo(x, bar = none);
 					 * >> foo(x: 10, baz: 20);
 					 * In this case we should do a fuzzy match and
 					 * warn the caller that instead of `baz', they

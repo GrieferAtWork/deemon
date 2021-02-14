@@ -380,12 +380,12 @@ err:
  * NOTE: If the given `text' contains multiple nodes, a pointer to the start
  *       of a potential other node is stored under `self->xn_text_end' upon
  *       success.
- * @param: self:          The node to initialize.
- * @param: data_owner:    The object which owns the given input text.
- * @param: text,text_end: The text that should be parsed for an XML Node.
- * @return: 0:            Successfully parsed a node.
- * @return: 1:            No node found within the given input text.
- * @return: -1:           An error occurred. */
+ * @param: self:           The node to initialize.
+ * @param: data_owner:     The object which owns the given input text.
+ * @param: text, text_end: The text that should be parsed for an XML Node.
+ * @return: 0:             Successfully parsed a node.
+ * @return: 1:             No node found within the given input text.
+ * @return: -1:            An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 XMLNode_InitFromString(XMLNode *__restrict self,
                        DeeObject *__restrict data_owner,

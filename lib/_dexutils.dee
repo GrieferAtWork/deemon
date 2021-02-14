@@ -93,11 +93,11 @@ local converter_map: {string: (string, string, string) | string} = {
 		"\t{obj}_str = (dwchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
-		("dwchar_t const *","{}_str")),
+		("dwchar_t const *", "{}_str")),
 	"c:ptr"        : ("o", "?Aptr?Ectypes:void", "DeeObject *",
 		"\tif (DeeCTypes_GetPointer({obj}, &{obj}_ptr))\n"
 		"\t\tgoto err;\n",
-		("void *","{}_ptr")),
+		("void *", "{}_ptr")),
 	"c:bool"       : ("b", "?Dbool",   "bool"),
 	"c:uint8_t"    : ("I8u", "?Dint",  "uint8_t"),
 	"c:uint16_t"   : ("I16u", "?Dint", "uint16_t"),

@@ -137,7 +137,7 @@ INTDEF WUNUSED DREF struct ast *FCALL ast_parse_brace_list(struct ast *__restric
 
 /* Parse an import statement/expression.
  * @param: allow_symbol_define: When true, allow the `import foo = x from y;' syntax,
- *                              as well as define local symbols `x,y' for `import x,y from z'
+ *                              as well as define local symbols `x, y' for `import x, y from z'
  *                              When false, no symbols are defined by the AST, and the returned
  *                              AST contains either a single, or multiple symbols describing
  *                              what was imported either as an `AST_SYM' (single) or as an
@@ -167,7 +167,7 @@ INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__res
  * as well as assignment/inplace expressions.
  * >> foo = 42;               // (foo = (42));
  * >> foo += 42;              // (foo += (42));
- * >> foo, bar = (10, 20)...; // (foo ,bar = (10, 20)...);
+ * >> foo, bar = (10, 20)...; // (foo, bar = (10, 20)...);
  * >> foo, bar = 10;          // (foo, (bar = 10));
  * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
@@ -473,7 +473,7 @@ struct ast_annotation {
 	 * >> foo = my_annotation(function() {
 	 * >> });
 	 * >> bar = my_annotation(function() {
-	 * >> },"foobar");
+	 * >> }, "foobar");
 	 */
 	DREF struct ast       *aa_func;   /* [1..1] The expression invoked for the purposes of
 	                                   *        transforming the annotated declaration. */
@@ -571,9 +571,9 @@ INTDEF WUNUSED DREF struct ast *
 
 /* Parse tags at the current lexer position, starting
  * immediately after the (probably) `@' token.
- * >> @doc("foo"),doc("bar")
- *     ^                    ^
- *     entry                exit
+ * >> @doc("foo"), doc("bar")
+ *     ^                     ^
+ *     entry                 exit
  * Note that for backwards compatibility, deemon still
  * parses `__attribute__', `__attribute' and `__declspec'
  * using this function. */
@@ -586,7 +586,7 @@ INTDEF int DCALL parse_tags_block(void);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define parse_tags()  __builtin_expect(parse_tags(),0)
+#define parse_tags() __builtin_expect(parse_tags(), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

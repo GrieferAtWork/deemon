@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-STATIC_ASSERT_MSG(sizeof(char) == sizeof(uint8_t),"Probably won't work...");
+STATIC_ASSERT_MSG(sizeof(char) == sizeof(uint8_t), "Probably won't work...");
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_1BYTE) == 1);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_2BYTE) == 2);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_4BYTE) == 4);

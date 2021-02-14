@@ -21,10 +21,10 @@
 #include "__cdefault.dee"
 
 #ifndef offsetof
-#define offsetof(t,m) size_t((t).ptr(none).deref.m.ref)
+#define offsetof(t, m) size_t((t).ptr(none).deref.m.ref)
 #endif
 
-#pragma push_macro(undef,"import","from","ctypes","type","none")
+#pragma push_macro(undef, "import", "from", "ctypes", "type", "none")
 #ifndef __ptrdiff_t_defined
 #define __ptrdiff_t_defined 1
 import ptrdiff_t = "ptrdiff_t" from ctypes;
@@ -41,7 +41,7 @@ import ssize_t = "ssize_t" from ctypes;
 #define __nullptr_t_defined 1
 local nullptr_t = type none;
 #endif
-#pragma pop_macro("import","from","ctypes","type","none")
+#pragma pop_macro("import", "from", "ctypes", "type", "none")
 
 #ifndef NULL
 #define NULL none

@@ -346,7 +346,7 @@ fs_readlink(DeeObject *__restrict path);
  * >>     chmod_flags |= (stat(path).st_mode &
  * >>                     chmod_mask);
  * >> }
- * >> chmod(path,chmod_flags);
+ * >> chmod(path, chmod_flags);
  */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_getchmod_mask(DeeObject *__restrict mode,
@@ -387,8 +387,8 @@ INTDEF WUNUSED DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, u
 #define FS_EXPAND_FWVARS  0x0004 /* `V': Expand `%nam%' with `fs.env[nam]' */
 #define FS_EXPAND_FPATH   0x0008 /* `p': Expand `.' and `..' folders and delete multiple consecutive
                                   *      slashes, as well as whitespace surrounding them. */
-#define FS_EXPAND_FABS    0x0010 /* `a': Force the path to become absolute (same as `fs_pathabs(path,NULL)'). */
-#define FS_EXPAND_FREL    0x0020 /* `r': Force the path to become relative (same as `fs_pathrel(path,NULL)'). - Overrules `FS_EXPAND_FABS' */
+#define FS_EXPAND_FABS    0x0010 /* `a': Force the path to become absolute (same as `fs_pathabs(path, NULL)'). */
+#define FS_EXPAND_FREL    0x0020 /* `r': Force the path to become relative (same as `fs_pathrel(path, NULL)'). - Overrules `FS_EXPAND_FABS' */
 #define FS_EXPAND_FCASE   0x0040 /* `c': Force all parts of the path to share the same casing when the host filesystem is case-insensitive. */
 #define FS_EXPAND_FNOFAIL 0x1000 /* `f': Skip expansion when a variable isn't known, or the home path cannot be determined. */
 #define EXPAND_DEFAULT_OPTIONS \

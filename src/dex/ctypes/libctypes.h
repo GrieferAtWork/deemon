@@ -223,7 +223,7 @@ struct stype_cfunction {
 	struct cfunction_type_list *sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
 	                                      * As hash for indexing this map, use `ft_hash'. */
 };
-#define STYPE_CFUNCTION_INIT       {0,0,NULL}
+#define STYPE_CFUNCTION_INIT { 0, 0, NULL }
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
@@ -555,16 +555,16 @@ INTDEF DeeSTypeObject DeeCUInt32_Type;
 INTDEF DeeSTypeObject DeeCUInt64_Type;
 
 
-#define PRIVATE_CINT_SIZED_1   DeeCInt8_Type
-#define PRIVATE_CINT_SIZED_2   DeeCInt16_Type
-#define PRIVATE_CINT_SIZED_4   DeeCInt32_Type
-#define PRIVATE_CINT_SIZED_8   DeeCInt64_Type
-#define PRIVATE_CUINT_SIZED_1  DeeCUInt8_Type
-#define PRIVATE_CUINT_SIZED_2  DeeCUInt16_Type
-#define PRIVATE_CUINT_SIZED_4  DeeCUInt32_Type
-#define PRIVATE_CUINT_SIZED_8  DeeCUInt64_Type
-#define CINT_SIZED(sizeof)  PP_PRIVATE_CAT2(PRIVATE_CINT_SIZED_,sizeof)
-#define CUINT_SIZED(sizeof) PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_,sizeof)
+#define PRIVATE_CINT_SIZED_1  DeeCInt8_Type
+#define PRIVATE_CINT_SIZED_2  DeeCInt16_Type
+#define PRIVATE_CINT_SIZED_4  DeeCInt32_Type
+#define PRIVATE_CINT_SIZED_8  DeeCInt64_Type
+#define PRIVATE_CUINT_SIZED_1 DeeCUInt8_Type
+#define PRIVATE_CUINT_SIZED_2 DeeCUInt16_Type
+#define PRIVATE_CUINT_SIZED_4 DeeCUInt32_Type
+#define PRIVATE_CUINT_SIZED_8 DeeCUInt64_Type
+#define CINT_SIZED(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CINT_SIZED_, sizeof)
+#define CUINT_SIZED(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_, sizeof)
 
 
 typedef long double long_double;
@@ -882,7 +882,7 @@ INTDEF DeeStructTypeObject DeeStruct_Type;
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeStructType_Type) /* `struct_type' is final */
 
 /* Construct a new struct-type from `fields', which
- * is a `sequence<pair<string,structured_type>>' */
+ * is a `sequence<pair<string, structured_type>>' */
 INTDEF WUNUSED DREF DeeStructTypeObject *DCALL
 DeeStructType_FromSequence(DeeObject *name,
                            DeeObject *__restrict fields,

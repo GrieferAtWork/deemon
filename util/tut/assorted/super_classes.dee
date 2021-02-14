@@ -33,7 +33,7 @@ class a {
 };
 class b: a {
 	foo() {
-		print type this,"--","b::foo()";
+		print type this, "--", "b::foo()";
 		/* Call a method from another base
 		 * Note how we don't have to explicitly state
 		 * which base class should be used
@@ -50,7 +50,7 @@ class b: a {
 };
 class c: b {
 	/* Member functions have two implicit attributes:
-	 * The following would be defined as: [[thiscall,super(b)]]
+	 * The following would be defined as: [[thiscall, super(b)]]
 	 * The super attribute states which class super references should link to */
 	foo() {
 		print type this, "--", "c::foo()";

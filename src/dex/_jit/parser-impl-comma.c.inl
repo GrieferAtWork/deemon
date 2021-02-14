@@ -51,7 +51,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 	 *                      +---------------------  expr_batch = { foo, (bar = 10) }
 	 *                                         |    expr_comma = { x }
 	 *                                         | 
-	 *                                         +--  expr_batch = { foo, (bar = 10), (x,y = getvalue()...) }
+	 *                                         +--  expr_batch = { foo, (bar = 10), (x, y = getvalue()...) }
 	 *                                              expr_comma = { }
 	 */
 #ifdef JIT_EVAL
@@ -550,8 +550,8 @@ err_current_lvalue:
 		need_semi = !!(mode & AST_COMMA_PARSESEMI);
 		/* Now everything depends on whether or not what
 		 * we've just parsed is an expand-expression:
-		 * >> a,b,c = get_value()...; // >> (((a,b,c) = get_value())...);
-		 * >> a,b,c = get_value();    // >> (a,b,(c = get_value())); */
+		 * >> a, b, c = get_value()...; // >> (((a, b, c) = get_value())...);
+		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
 		if (self->jl_tok == TOK_DOTS) {
 			/* Append the last expression (in the example above, that is `c') */
 			if (pout_mode)

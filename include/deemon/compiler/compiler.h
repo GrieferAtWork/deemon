@@ -142,7 +142,7 @@ struct Dee_compiler_object {
 	uint16_t               _cp_pad[(sizeof(void *) / 2) - 1]; /* ... */
 	Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
-	/* [OVERRIDE(*,[valid_if(self != DeeCompiler_Active.wr_obj)])] */
+	/* [OVERRIDE(*, [valid_if(self != DeeCompiler_Active.wr_obj)])] */
 	struct Dee_compiler_items    cp_items;         /* Hash-map of user-code compiler item wrappers. */
 	DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
 	struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */

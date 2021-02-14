@@ -473,7 +473,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 		if unlikely(!init)
 			goto err_scope;
 		if (self->jl_tok == ':') {
-			/* TODO: Multiple targets (`for (local x,y,z: triples)') */
+			/* TODO: Multiple targets (`for (local x, y, z: triples)') */
 			JITLValue iterator_storage;
 			DREF DeeObject *seq, *iterator, *elem;
 			unsigned char *block_start;
@@ -768,7 +768,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 			syn_foreach_expected_collon_after_foreach(self);
 			goto err_scope;
 		}
-		/* TODO: Multiple targets (`foreach (local x,y,z: triples)') */
+		/* TODO: Multiple targets (`foreach (local x, y, z: triples)') */
 		JITLValue iterator_storage;
 		DREF DeeObject *iterator, *elem;
 		unsigned char *block_start;

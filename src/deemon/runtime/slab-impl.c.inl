@@ -414,7 +414,7 @@ FORCELOCAL void
 			oldval = ATOMIC_FETCHAND(page->sp_inuse[i], ~mask);
 			/* FIXME: This assertion has been seen failing sporadically */
 			ASSERTF((oldval & mask) != 0,
-			        "Item at %p didn't have the in-use bit set (oldval=%p,mask=%p)",
+			        "Item at %p didn't have the in-use bit set (oldval=%p, mask=%p)",
 			        ptr, oldval, mask);
 		}
 #endif /* !NDEBUG */

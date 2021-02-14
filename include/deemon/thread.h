@@ -212,7 +212,7 @@ struct Dee_deep_assoc {
 	 * >>     if (type(ob).isgc()) {
 	 * >>         result = type(ob).begin_deepcopy();
 	 * >>         THREAD_LOCAL_DEEPCOPY_MAP[ob] = result;
-	 * >>         type(ob).perform_deepcopy(result,ob);
+	 * >>         type(ob).perform_deepcopy(result, ob);
 	 * >>     } else {
 	 * >>         result = deepcopy:
 	 * >>     }
@@ -326,7 +326,8 @@ struct Dee_thread_object {
 	                                         * System-specific thread descriptor. */
 	int                       t_suspended;  /* Thread arbitrary suspension counter (Thread must not be/stop executing when non-zero). */
 	struct Dee_thread_interrupt
-	                          t_interrupt;  /* [OVERRIDE(ti_intr,[0..1])][OVERRIDE(ti_args,[== NULL || ti_intr != NULL])] Chain of pending interrupts and asynchronous callbacks to-be executed in the context of this thread. */
+	                          t_interrupt;  /* [OVERRIDE(ti_intr, [0..1])][OVERRIDE(ti_args, [== NULL || ti_intr != NULL])]
+	                                         * Chain of pending interrupts and asynchronous callbacks to-be executed in the context of this thread. */
 	DREF DeeObject           *t_threadmain; /* [0..1][lock(THREAD_STATE_STARTING)] The user-code callable object that is executed by this thread.
 	                                         * NOTE: When NULL during thread startup, this field is filled with a
 	                                         *       member function `thread.self().run', which is then invoked instead.
@@ -639,7 +640,7 @@ DDATDEF struct Dee_tls_callback_hooks _DeeThread_TlsCallbacks;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DFUNDEF void (DCALL DeeThread_SleepNoInterrupt)(unsigned int microseconds);
-#define DeeThread_Sleep(microseconds) (DeeThread_SleepNoInterrupt(microseconds),0)
+#define DeeThread_Sleep(microseconds) (DeeThread_SleepNoInterrupt(microseconds), 0)
 
 DDATDEF DeeThreadObject       DeeThread_Main;
 #define DeeThread_Self()    (&DeeThread_Main)

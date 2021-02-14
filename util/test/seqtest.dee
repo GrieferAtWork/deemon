@@ -30,7 +30,7 @@ function testSequenceType(typ: Type, cls: string) {
 	assert !typ();
 	assert typ().empty();
 	assert !typ().nonempty();
-	if (cls in [LIKE_SEQ,LIKE_SET]) {
+	if (cls in [LIKE_SEQ, LIKE_SET]) {
 		for (local rawTestInput: {
 			none,
 			Tuple {  },

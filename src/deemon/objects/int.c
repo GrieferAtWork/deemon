@@ -755,7 +755,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 		sign    = -1;
 		abs_val = (uint64_t)0 - (uint64_t)val;
 	}
-	/* NOTE: 32 == Bits required to display everything in the range 0..MAX(-INT32_MIN,INT32_MAX) */
+	/* NOTE: 32 == Bits required to display everything in the range 0..MAX(-INT32_MIN, INT32_MAX) */
 #if __SIZEOF_POINTER__ >= 8 || DIGIT_BITS > 32
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)

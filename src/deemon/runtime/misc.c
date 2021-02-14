@@ -84,9 +84,9 @@ DECL_BEGIN
 
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define ESEL(l,b) l
+#define ESEL(l, b) l
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#define ESEL(l,b) b
+#define ESEL(l, b) b
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 
@@ -1070,13 +1070,13 @@ done:
 
 
 #if 0
-#define BEGIN_ALLOC()    (DBG_ALIGNMENT_DISABLE(),DeeMem_ClearCaches((size_t)-1))
+#define BEGIN_ALLOC() (DBG_ALIGNMENT_DISABLE(), DeeMem_ClearCaches((size_t)-1))
 #else
-#define BEGIN_ALLOC()     DBG_ALIGNMENT_DISABLE()
+#define BEGIN_ALLOC() DBG_ALIGNMENT_DISABLE()
 #endif
-#define END_ALLOC()       DBG_ALIGNMENT_ENABLE()
-#define BEGIN_TRYALLOC()  DBG_ALIGNMENT_DISABLE()
-#define END_TRYALLOC()    DBG_ALIGNMENT_ENABLE()
+#define END_ALLOC()      DBG_ALIGNMENT_ENABLE()
+#define BEGIN_TRYALLOC() DBG_ALIGNMENT_DISABLE()
+#define END_TRYALLOC()   DBG_ALIGNMENT_ENABLE()
 
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashStr(char const *__restrict str) {

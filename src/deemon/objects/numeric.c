@@ -531,11 +531,11 @@ PRIVATE struct type_getset numeric_getsets[] = {
 	      "Same as ${this.swap128.signed128}") },
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define LE_SEL(cast,swap) cast
-#define BE_SEL(cast,swap) swap
+#define LE_SEL(cast, swap) cast
+#define BE_SEL(cast, swap) swap
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#define LE_SEL(cast,swap) swap
-#define BE_SEL(cast,swap) cast
+#define LE_SEL(cast, swap) swap
+#define BE_SEL(cast, swap) cast
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	{ "leswap16",
 	  &LE_SEL(numeric_unsigned16, numeric_swap16), NULL, NULL,

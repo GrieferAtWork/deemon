@@ -28,33 +28,33 @@ local codes = list([none] * 256);
 local codes_f0 = list([none] * 256);
 
 for (local l: file.open("../../../include/deemon/asm.h")) {
-	local name,code;
-	try name,code = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F]")...;
+	local name, code;
+	try name, code = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F]")...;
 	catch (...) continue;
-	code = (int)("0x"+code);
+	code = (int)("0x" + code);
 	if (code <= 256) {
-		if (codes[code] is none && name !in ["_INC","_DEC","_PREFIXMIN","_PREFIXMAX"])
+		if (codes[code] is none && name !in ["_INC", "_DEC", "_PREFIXMIN", "_PREFIXMAX"])
 			codes[code] = name;
 	} else if (code >= 0xf000 && code <= 0xf0ff) {
-		if (codes_f0[code - 0xf000] is none && name !in ["_INCPOST","_DECPOST"])
+		if (codes_f0[code - 0xf000] is none && name !in ["_INCPOST", "_DECPOST"])
 			codes_f0[code - 0xf000] = name;
 	}
 }
 print "static void *const basic_targets[256] = {";
 for (local i, name: util::enumerate(codes)) {
 	if (name is none || name.startswith("RESERVED")) {
-		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&unknown_instruction,";
+		print ("\t/" "* 0x%.2I8x *" "/" % i), "&&unknown_instruction,";
 	} else {
-		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&target_ASM"+name+",";
+		print ("\t/" "* 0x%.2I8x *" "/" % i), "&&target_ASM" + name + ",";
 	}
 }
 print "};";
 print "static void *const f0_targets[256] = {";
 for (local i, name: util::enumerate(codes_f0)) {
 	if (name is none || name.startswith("RESERVED")) {
-		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&unknown_instruction,";
+		print ("\t/" "* 0x%.2I8x *" "/" % i), "&&unknown_instruction,";
 	} else {
-		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&target_ASM"+name+",";
+		print ("\t/" "* 0x%.2I8x *" "/" % i), "&&target_ASM" + name + ",";
 	}
 }
 print "};";

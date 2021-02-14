@@ -2937,7 +2937,7 @@ class Doc: WeakRefAble {
 					PRETTY_OPERATOR_NAMES.get(name, name)
 				});
 			}
-			return result.replace("/",".");
+			return result.replace("/", ".");
 		}
 	}
 
@@ -3496,7 +3496,7 @@ set_is_type:
 	@@>}
 	@@>print Doc(foo).isaccepted(10, 20);     /* true */
 	@@>print Doc(foo).isaccepted(10, 1.0);    /* true */
-	@@>print Doc(foo).isaccepted(10,"foo");   /* false */
+	@@>print Doc(foo).isaccepted(10, "foo");  /* false */
 	@@>print Doc(foo).isaccepted("bar", 20);  /* true */
 	@@>print Doc(foo).isaccepted("bar", 1.0); /* true */
 	@@>print Doc(foo).isaccepted();           /* false */

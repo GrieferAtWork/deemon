@@ -204,7 +204,7 @@ DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
 DFUNDEF void (DCALL DeeObject_Free)(void *ptr);
 DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
 #ifndef NDEBUG
-#define DeeObject_Free(ptr)                DeeDbgObject_Free(ptr,__FILE__,__LINE__)
+#define DeeObject_Free(ptr)                DeeDbgObject_Free(ptr, __FILE__, __LINE__)
 #else /* !NDEBUG */
 #define DeeDbgObject_Free(ptr, file, line) DeeObject_Free(ptr)
 #endif /* NDEBUG */
@@ -380,7 +380,7 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 
 /* Allocate fixed-size, general-purpose slab memory.
  * NOTE: This memory must be freed by one of:
- *   - DeeSlab_FFree(return,size2)  | size2 <= size
+ *   - DeeSlab_FFree(return, size2) | size2 <= size
  *   - DeeSlab_Free<size2>(return)  | size2 <= size
  *   - DeeSlab_Free(return) */
 #define DeeSlab_Malloc(size)                     DeeSlab_Invoke(DeeSlab_Malloc, size, (), Dee_Malloc(size))
@@ -521,7 +521,7 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *ptr, char const *file, int line);
 
 /* Allocate fixed-size, general-purpose slab memory.
  * NOTE: This memory must be freed by one of:
- *   - DeeSlab_FFree(return,size2)  | size2 <= size
+ *   - DeeSlab_FFree(return, size2) | size2 <= size
  *   - DeeSlab_Free<size2>(return)  | size2 <= size
  *   - DeeSlab_Free(return) */
 #define DeeSlab_Malloc(size)                     Dee_Malloc(size)
@@ -621,7 +621,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
 /* Allocate fixed-size, object-purposed slab memory.
  * NOTE: This memory must be freed by one of:
- *   - DeeObject_FFree(return,size2)     | size2 <= size
+ *   - DeeObject_FFree(return, size2)    | size2 <= size
  *   - DeeObject_SlabFree<size2>(return) | size2 <= size
  *   - DeeObject_Free(return) */
 #ifdef CONFIG_NO_OBJECT_SLABS

@@ -23,7 +23,7 @@
  *      - Some features may get re-added at one point using extensions,
  *        but will never again appear in the deemon core compiler!
  *      - This listing is an early draft and before the first official
- *        release of the new deemon, backwards-compatible parsing will
+ *        release of the new deemon, backwards-compatible parsing may
  *        get added, including a way for c-level deemon extensions (dex)
  *        to define new compiler sub-routines that will implement this
  *        backwards compatibility.
@@ -33,10 +33,10 @@
  *
  *  - Added support for keyword arguments:
  *    >> function foo(a = none, b = none, c = none) {
- *    >>     print a,b,c;
+ *    >>     print a, b, c;
  *    >> }
- *    >> foo(none,none,30); // none, none, 30
- *    >> foo(c: 30);        // none, none, 30
+ *    >> foo(none, none, 30); // none, none, 30
+ *    >> foo(c: 30);          // none, none, 30
  *    Note however that in many cases, keyword-arguments are not really
  *    desired, and that passing named arguments is really just an extension
  *    on top of an existing system for passing regular arguments.
@@ -46,19 +46,18 @@
  *
  *  - Added an as-expression that add a syntactically more
  *    fluid way of constructor super-view proxy objects:
- *    >> class MyClass: list {
+ *    >> class MyClass: List {
  *    >>     append(obj) {
- *    >>         print "My Append",obj;
+ *    >>         print "My Append", obj;
  *    >>     }
  *    >> }
  *    >> local x = MyClass();
  *    >> x.append(42);           // My Append
- *    >> (x as list).append(42); // the orignal append function.
+ *    >> (x as List).append(42); // the orignal append function.
  *    This functionality used to be provided by __builtin_super / __super
  *    In addition to this, as well as the introduction of the concept of
- *    abstract base classes (not yet available in user-code; but they're
- *    basically deemon's equivalent of interfaces), you can also cast any
- *    kind of object to any abstract base class:
+ *    abstract base classes, you can also cast any kind of object to any
+ *    abstract base class:
  *    >> class MyClass {
  *    >>     operator for() {
  *    >>         yield 10;
@@ -66,11 +65,11 @@
  *    >>         yield 30;
  *    >>     }
  *    >> }
- *    >> import sequence from deemon;
+ *    >> import Sequence from deemon;
  *    >> local inst = MyClass();
  *    >> print 20 in inst; // ERROR: `operator contains' not implemented
- *    >> print 20 in (inst as sequence); // true
- *    >> print 19 in (inst as sequence); // false
+ *    >> print 20 in (inst as Sequence); // true
+ *    >> print 19 in (inst as Sequence); // false
  *
  *  - Added a syntactically more fluid way of testing for object binding:
  *    >> local x;
@@ -174,7 +173,7 @@
  *    The only existing code that might be affected is code that relied on
  *    the specific sequence type returned by a function that now returns
  *    an ASP, such as `(string from deemon).split', which used to return
- *    a `list from deemon', but now returns an ASP:
+ *    a `List from deemon', but now returns an ASP:
  *    >> local items;
  *    >> items = a.split(",");
  *    >> items.extend(b.split(","));
@@ -197,115 +196,115 @@
  *    that used to return sequences such as list objects are now allowed
  *    (and actually do) return ASPs (abstract sequence proxies).
  *    New functions include:
- *      - rematch(string pattern, int start = 0, int end = -1, string rules = "") -> int
- *        rematch(string pattern, string rules, int start = 0, int end = -1) -> int
- *      - refind(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
- *        refind(string pattern, int start = 0, int end = -1, string rules = "") -> none
- *        refind(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
- *        refind(string pattern, string rules, int start = 0, int end = -1) -> none
- *      - rerfind(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
- *        rerfind(string pattern, int start = 0, int end = -1, string rules = "") -> none
- *        rerfind(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
- *        rerfind(string pattern, string rules, int start = 0, int end = -1) -> none
- *      - reindex(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
- *        reindex(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
- *        rerindex(string pattern, int start = 0, int end = -1, string rules = "") -> (int, int)
- *      - rerindex(string pattern, string rules, int start = 0, int end = -1) -> (int, int)
- *        relocate(string pattern, int start = 0, int end = -1, string rules = "") -> string
- *        relocate(string pattern, string rules, int start = 0, int end = -1) -> string
- *      - rerlocate(string pattern, int start = 0, int end = -1, string rules = "") -> string
- *        rerlocate(string pattern, string rules, int start = 0, int end = -1) -> string
- *      - repartition(string pattern, int start = 0, int end = -1, string rules = "") -> (string, string, string)
- *        repartition(string pattern, string rules, int start = 0, int end = -1) -> (string, string, string)
- *      - rerpartition(string pattern, int start = 0, int end = -1, string rules = "") -> (string, string, string)
- *        rerpartition(string pattern, string rules, int start = 0, int end = -1) -> (string, string, string)
- *      - rereplace(string pattern, string replace_str, int max_count = int.SIZE_MAX, string rules = "") -> string
- *        rereplace(string pattern, string replace_str, string rules = "", int max_count = int.SIZE_MAX) -> string
- *      - refindall(string pattern, int start = 0, int end = -1, string rules = "") -> {(int, int)...}
- *        refindall(string pattern, string rules, int start = 0, int end = -1) -> {(int, int)...}
- *      - relocateall(string pattern, int start = 0, int end = -1, string rules = "") -> {string...}
- *        relocateall(string pattern, string rules, int start = 0, int end = -1) -> {string...}
- *      - resplit(string pattern, string rules = "") -> {string...}
- *      - decode(string encoding, string errors = "strict") -> string
- *        decode(string encoding, string errors = "strict") -> object
- *      - encode(string encoding, string errors = "strict") -> string
- *        encode(string encoding, string errors = "strict") -> bytes
- *        encode(string encoding, string errors = "strict") -> object
+ *      - rematch(pattern: string, start: int = 0, end: int = -1, rules: string = ""): int
+ *        rematch(pattern: string, rules: string, start: int = 0, end: int = -1): int
+ *      - refind(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (int, int)
+ *        refind(pattern: string, start: int = 0, end: int = -1, rules: string = "")
+ *        refind(pattern: string, rules: string, start: int = 0, end: int = -1): (int, int)
+ *        refind(pattern: string, rules: string, start: int = 0, end: int = -1)
+ *      - rerfind(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (int, int)
+ *        rerfind(pattern: string, start: int = 0, end: int = -1, rules: string = "")
+ *        rerfind(pattern: string, rules: string, start: int = 0, end: int = -1): (int, int)
+ *        rerfind(pattern: string, rules: string, start: int = 0, end: int = -1)
+ *      - reindex(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (int, int)
+ *        reindex(pattern: string, rules: string, start: int = 0, end: int = -1): (int, int)
+ *        rerindex(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (int, int)
+ *      - rerindex(pattern: string, rules: string, start: int = 0, end: int = -1): (int, int)
+ *        relocate(pattern: string, start: int = 0, end: int = -1, rules: string = ""): string
+ *        relocate(pattern: string, rules: string, start: int = 0, end: int = -1): string
+ *      - rerlocate(pattern: string, start: int = 0, end: int = -1, rules: string = ""): string
+ *        rerlocate(pattern: string, rules: string, start: int = 0, end: int = -1): string
+ *      - repartition(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (string, string, string)
+ *        repartition(pattern: string, rules: string, start: int = 0, end: int = -1): (string, string, string)
+ *      - rerpartition(pattern: string, start: int = 0, end: int = -1, rules: string = ""): (string, string, string)
+ *        rerpartition(pattern: string, rules: string, start: int = 0, end: int = -1): (string, string, string)
+ *      - rereplace(pattern: string, replace_str: string, max_count: int = int.SIZE_MAX, rules: string = ""): string
+ *        rereplace(pattern: string, replace_str: string, rules: string = "", max_count: int = int.SIZE_MAX): string
+ *      - refindall(pattern: string, start: int = 0, end: int = -1, rules: string = ""): {(int, int)...}
+ *        refindall(pattern: string, rules: string, start: int = 0, end: int = -1): {(int, int)...}
+ *      - relocateall(pattern: string, start: int = 0, end: int = -1, rules: string = ""): {string...}
+ *        relocateall(pattern: string, rules: string, start: int = 0, end: int = -1): {string...}
+ *      - resplit(pattern: string, rules: string = ""): {string...}
+ *      - decode(encoding: string, errors: string = "strict"): string
+ *        decode(encoding: string, errors: string = "strict"): Object
+ *      - encode(encoding: string, errors: string = "strict"): string
+ *        encode(encoding: string, errors: string = "strict"): Bytes
+ *        encode(encoding: string, errors: string = "strict"): Object
  *        Reinterpret the unicode data of a string as `encoding' and return a
  *        new string using the old string's data, then encoded as `encoding'
- *      - issymbol(int start = 0, int end = -1) -> bool
+ *      - issymbol(start: int = 0, end: int = -1): bool
  *        Returns true if the substring qualifies as a valid identifier/symbol name
- *      - isany(alpha|lower|upper|alnum|space|print|digit|decimal|numberic)(int start = 0, int end = -1) -> bool
+ *      - isany(alpha|lower|upper|alnum|space|print|digit|decimal|numberic)(start: int = 0, end: int = -1): bool
  *        Where the versions without `any' in the name only return true
  *        if _all_ characters of the string match the queried property,
  *        these functions return true if _any_ of them match.
- *      - vercompare(string other, int other_start = 0, int other_end = -1) -> int
- *        vercompare(int my_start, string other, int other_start = 0, int other_end = -1) -> int
- *        vercompare(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *      - vercompare(other: string, other_start: int = 0, other_end: int = -1): int
+ *        vercompare(my_start: int, other: string, other_start: int = 0, other_end: int = -1): int
+ *        vercompare(my_start: int, my_end: int, other: string, other_start: int = 0, other_end: int = -1): int
  *        A portable implementation of the GNU `strverscmp' function
- *      - wildcompare(string pattern, int pattern_start = 0, int pattern_end = -1) -> int
- *        wildcompare(int my_start, string pattern, int pattern_start = 0, int pattern_end = -1) -> int
- *        wildcompare(int my_start, int my_end, string pattern, int pattern_start = 0, int pattern_end = -1) -> int
+ *      - wildcompare(pattern: string, pattern_start: int = 0, pattern_end: int = -1): int
+ *        wildcompare(my_start: int, pattern: string, pattern_start: int = 0, pattern_end: int = -1): int
+ *        wildcompare(my_start: int, my_end: int, pattern: string, pattern_start: int = 0, pattern_end: int = -1): int
  *        Returns values of the same meaning as `compare', allow wild-characters `?' and `*'
  *        in `pattern', thus implementing `this.wmatch(pattern)' as `this.wildcompare(pattern) == 0'
- *      - fuzzycompare(string other, int other_start = 0, int other_end = -1) -> int
- *        fuzzycompare(int my_start, string other, int other_start = 0, int other_end = -1) -> int
- *        fuzzycompare(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *      - fuzzycompare(other: string, other_start: int = 0, other_end: int = -1): int
+ *        fuzzycompare(my_start: int, other: string, other_start: int = 0, other_end: int = -1): int
+ *        fuzzycompare(my_start: int, my_end: int, other: string, other_start: int = 0, other_end: int = -1): int
  *        Perform a fuzzy comparison between `this' and `other', returning a score
  *        indicating how similar the two strings are, which 0 being identical,
  *        negative values never being returned, and greater values indicating
  *        less alike.
- *      - indent(string filler = "\t") -> string
+ *      - indent(filler: string = "\t"): string
  *        Indent the string by inserting `filler' at the start, as well as after every
  *        line-feed found in the string, excluding a trailing linefeed, similar to what
  *        a text editor would do when you select multiple lines and press TAB.
- *      - dedent(int max_chars = 1) -> string
- *        dedent(int max_chars = 1, string mask) -> string
+ *      - dedent(max_chars: int = 1): string
+ *        dedent(max_chars: int = 1, mask: string): string
  *        Remove up to `max_chars' whitespace-characters, or characters apart of `mask'
  *        from the front of the string, as well as after any linefeed, similar to what
  *        a text editor would do when you select multiple lines and press SHIFT+TAB.
- *      - common(string other, int other_start = 0, int other_end = -1) -> int
- *        common(int my_start, string other, int other_start = 0, int other_end = -1) -> int
- *        common(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *      - common(other: string, other_start: int = 0, other_end: int = -1): int
+ *        common(my_start: int, other: string, other_start: int = 0, other_end: int = -1): int
+ *        common(my_start: int, my_end: int, other: string, other_start: int = 0, other_end: int = -1): int
  *        Returns the number of leading characters that are identical between the 2 given strings.
- *      - rcommon(string other, int other_start = 0, int other_end = -1) -> int
- *        rcommon(int my_start, string other, int other_start = 0, int other_end = -1) -> int
- *        rcommon(int my_start, int my_end, string other, int other_start = 0, int other_end = -1) -> int
+ *      - rcommon(other: string, other_start: int = 0, other_end: int = -1): int
+ *        rcommon(my_start: int, other: string, other_start: int = 0, other_end: int = -1): int
+ *        rcommon(my_start: int, my_end: int, other: string, other_start: int = 0, other_end: int = -1): int
  *        Returns the number of trailing characters that are identical between the 2 given strings.
- *      - findmatch(string open, string close, int start = 0, int end = -1) -> int
- *        rfindmatch(string open, string close, int start = 0, int end = -1) -> int
- *        indexmatch(string open, string close, int start = 0, int end = -1) -> int
- *        rindexmatch(string open, string close, int start = 0, int end = -1) -> int
+ *      - findmatch(open: string, close: string, start: int = 0, end: int = -1): int
+ *        rfindmatch(open: string, close: string, start: int = 0, end: int = -1): int
+ *        indexmatch(open: string, close: string, start: int = 0, end: int = -1): int
+ *        rindexmatch(open: string, close: string, start: int = 0, end: int = -1): int
  *        A varient of the find/index functions that can be used to find the end/start
  *        of a recursively structured string:
- *        >> s = "foo(bar(),baz(42),7).strip()";
+ *        >> s = "foo(bar(), baz(42), 7).strip()";
  *        >> lcol = s.find("(");
  *        >> print lcol; // 3
- *        >> mtch = s.findmatch("(",")",lcol+1);
- *        >> print repr s[lcol:mtch+1]; // "(bar(),baz(42),7)"
+ *        >> mtch = s.findmatch("(", ")", lcol + 1);
+ *        >> print repr s[lcol:mtch+1]; // "(bar(), baz(42), 7)"
  *        In this example, the index of the first ")" that isn't matched
  *        by an accompanying "(" after the first "(" found, is returned.
  *        If you understand what this does, you should understand that this
  *        is quite the useful feature for disecting expressions, with the
  *        most notable usage examples being `(' and `)', `[' and `]',
  *        `{' and `}', and `<' and `>'.
- *      - partitionmatch(string open, string close, int start = 0, int end = -1) -> (string,string,string)
- *        rpartitionmatch(string open, string close, int start = 0, int end = -1) -> (string,string,string)
+ *      - partitionmatch(open: string, close: string, start: int = 0, end: int = -1): (string, string, string)
+ *        rpartitionmatch(open: string, close: string, start: int = 0, end: int = -1): (string, string, string)
  *        By making use of `findmatch' and friends, also provide a partition-like variant
  *        that automatically splits the string into the 3 parts, before, during, and after
  *        an encountered match, with the latter 2 being empty strings when no match is found:
  *        >> function partitionmatch(open, close, start = 0, end = -1) {
  *        >>     local j;
- *        >>     local i = this.find(open,start,end);
- *        >>     if (i < 0 || (j = this.findmatch(open,close,i+#open,end)) < 0)
- *        >>         return (this.substr(start,end),"","");
- *        >>     return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))
+ *        >>     local i = this.find(open, start, end);
+ *        >>     if (i < 0 || (j = this.findmatch(open, close, i + #open, end)) < 0)
+ *        >>         return (this.substr(start, end), "", "");
+ *        >>     return (this.substr(start, i), this.substr(i, j + #close), this.substr(j + #close, end));
  *        >> }
- *      - unifylines(string replacement = "\n") -> string
+ *      - unifylines(replacement: string = "\n"): string
  *        Unify all linefeeds found in a string, replacing all of them with
  *        `replacement'. This function should be used to replace stuff like
  *        This function should be used to replace stuff like
- *        `x.replace("\r\n","\n").replace("\r","\n")' with `x.unifylines()'.
+ *        `x.replace("\r\n", "\n").replace("\r", "\n")' with `x.unifylines()'.
  *      - casereplace, casefind, caserfind, caseindex, caserindex, casecount, casecontains,
  *        casesstrip, caselsstrip, casersstrip, casestartswith, caseendswith, casepartition,
  *        caserpartition, casecompare, casevercompare, casewildcompare, casefuzzycompare,
@@ -317,66 +316,66 @@
  *        made to have a common casing, following the results of either
  *       `string.lower' or `string.upper' (which one is used is implementation-defined)
  *    New overloads for pre-existing functions:
- *      - is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)() -> bool
- *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(int index) -> bool
- *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(int start, int end) -> bool
+ *      - is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(): bool
+ *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(index: int): bool
+ *        is(alpha|lower|upper|alnum|space|print|digit|decimal|numberic|title)(start: int, end: int): bool
  *        You may now specifiy the sub-string, or character index that should be checked
- *      - partition(string other, int start = 0, int end = -1) -> (string,string,string)
- *        rpartition(string other, int start = 0, int end = -1) -> (string,string,string)
+ *      - partition(other: string, start: int = 0, end: int = -1): (string, string, string)
+ *        rpartition(other: string, start: int = 0, end: int = -1): (string, string, string)
  *        Now accepts substr-like string/end arguments to specifiy the sub-string to check
- *      - wmatch(string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
- *        wmatch(int my_start, string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
- *        wmatch(int my_start, int my_end, string pattern, int pattern_start = 0, int pattern_end = -1) -> bool
+ *      - wmatch(pattern: string, pattern_start: int = 0, pattern_end: int = -1): bool
+ *        wmatch(my_start: int, pattern: string, pattern_start: int = 0, pattern_end: int = -1): bool
+ *        wmatch(my_start: int, my_end: int, pattern: string, pattern_start: int = 0, pattern_end: int = -1): bool
  *        Add support for compare-like arguments to specifiy the string sub-ranges to compare.
  *    Changes to semantics of pre-existing functions:
- *      - chr(int ord) -> string
+ *      - chr(ord: int): string
  *        Now always accepts any unicode character, rather than being
  *        bound to the encoding type of the string being used.
- *      - scanf(string format) -> sequence
+ *      - scanf(format: string): Sequence
  *        Now returns an ASP
- *      - splitlines(bool keepends = false) -> sequence
+ *      - splitlines(keepends: bool = false): Sequence
  *        Now returns an ASP
- *      - substr(int start = 0, int end = -1) -> string
+ *      - substr(start: int = 0, end: int = -1): string
  *        Now accepts negative integers as alias for #this
- *      - count(string other, int start = 0, int end = -1) -> int
+ *      - count(other: string, start: int = 0, end: int = -1): int
  *        Now accepts negative integers as alias for #this
  *    Changes to the prototypes of pre-existing functions:
- *      - OLD:contains(string ch, callable pred_eq = none) -> bool
- *        NEW:contains(string other, int start = 0, int end = -1) -> bool
+ *      - OLD:contains(ch: string, pred_eq: Callable = none): bool
+ *        NEW:contains(other: string, start: int = 0, end: int = -1): bool
  *        The new prototype should really be self-explainatory:
- *        `other in this.substr(start,end)'
+ *        `other in this.substr(start, end)'
  *    Deprecated functions and their new variants:
- *      - reverse() -> string
+ *      - reverse(): string
  *        Use `reversed' instead (which was also available in deemon 101+)
  *
  *  - Changes to a varienty of member functions previously found
  *    in various sequence types, and now found as part of the
  *    ABC (Abstract Base Class) known as `sequence from deemon'
  *    New functions:
- *      - reduce(callable merger) -> object
- *        reduce(callable merger, object init) -> object
+ *      - reduce(merger: Callable): Object
+ *        reduce(merger: Callable, init: Object): Object
  *        Conbine all the elements of the sequence by using `merger'
  *        as a predicate taking 2 arguments and returning some combination.
- *      - nonempty() -> bool
+ *      - nonempty(): bool
  *        Returns true if the sequence is non-empty, similar to
  *        directly invocing `operator bool()' on the sequence.
  *    Deprecated functions:
- *      - non_empty() -> bool
+ *      - non_empty(): bool
  *        `nonempty' should now be used instead
  *
  *  - Add support for default arguments, as well as optional arguments:
  *    >> function foo(a, x = 10, ?y, z...) {
- *    >>     print "a:",repr a,"",;
- *    >>     print "x:",repr x,"",;
+ *    >>     print "a:", repr a, "",;
+ *    >>     print "x:", repr x, "",;
  *    >>     if (bound(y)) // The presence of optional arguments can be tested using `bound'
- *    >>         print "y:",repr y,"",;
- *    >>     print "z:",repr z;
+ *    >>         print "y:", repr y, "",;
+ *    >>     print "z:", repr z;
  *    >> }
- *    >> foo(0);            // a: 0 x:10 z: ()
- *    >> foo(0,7);          // a: 0 x:7 z: ()
- *    >> foo(0,7,20);       // a: 0 x:7 y: 20 z: ()
- *    >> foo(0,7,20,30);    // a: 0 x:7 y: 20 z: (30,)
- *    >> foo(0,7,20,30,55); // a: 0 x:7 y: 20 z: (30, 55)
+ *    >> foo(0);                // a: 0 x:10 z: ()
+ *    >> foo(0, 7);             // a: 0 x:7 z: ()
+ *    >> foo(0, 7, 20);         // a: 0 x:7 y: 20 z: ()
+ *    >> foo(0, 7, 20, 30);     // a: 0 x:7 y: 20 z: (30,)
+ *    >> foo(0, 7, 20, 30, 55); // a: 0 x:7 y: 20 z: (30, 55)
  *
  *  - Functions (other than bracket-style lambdas) without any arguments
  *    must now be written with empty parenthesis, rather than allowing
@@ -405,7 +404,7 @@
  *        >> local old_text = get_old_text();
  *        >> local new_text = get_new_text();
  *        >> new_text = new_text.rstrip();
- *        >> if (old_text && old_text[0] in ["\r","\n"])
+ *        >> if (old_text && old_text[0] in ["\r", "\n"])
  *        >>     new_text = "\n{}\n".format({ new_text });
  *        >> DELETE(old_text);
  *        >> INSERT(new_text);
@@ -451,9 +450,9 @@
  *            >>     ("y", int)
  *            >> };
  *            >> local IntPointer = int.ptr;
- *            >> local MyFunction = shlib("mylib.dll","stdcall").MyFunction;
+ *            >> local MyFunction = ShLib("mylib.dll", "stdcall").MyFunction;
  *            Or if you with to bind `MyFunction' as fully type-safe:
- *            >> local MyFunction = (void(int,int).ptr)shlib("mylib.dll","stdcall").MyFunction;
+ *            >> local MyFunction = (void(int, int).ptr)ShLib("mylib.dll", "stdcall").MyFunction;
  *
  *      - Removed recognition of c/c++ type names as
  *        a combination of the following keywords:
@@ -467,7 +466,9 @@
  *            `_Atomic', `float', `double', `bool', `_Bool'
  *            Single-keyword variants for all but the variations of `const' and `volatile'
  *            will become available again once any old-style header has been included.
- *          - Builtin types must now be `import * from deemon'-ed
+ *          - Builtin types must now be `import * from deemon'-ed, but note that
+ *            many types that used to be all lower-case have been changed to CamelCase
+ *            with a leading capital character.
  *      - Removed c/c++ builtin constants:
  *          - `__func__'
  *          - `__FUNCTION__'
@@ -491,13 +492,13 @@
  *  - Removed recognition of keywords for builtin types:
  *      - `bool'
  *      - `string'
- *      - `tuple'
- *      - `list'
+ *      - `tuple'   (renamed to `Tuple')
+ *      - `list'    (renamed to `List')
  *      - `int'
  *      - `float'
- *      - `object'
- *      - `dict'
- *      - `set'
+ *      - `object'  (renamed to `Object')
+ *      - `dict'    (renamed to `Dict')
+ *      - `set'     (renamed to `HashSet')
  *      - These types must now be written as `bool from deemon' or
  *        be imported from module `deemon' before being used:
  *        `import bool from deemon;'
@@ -505,7 +506,7 @@
  *        again once any old-style header is included.
  *      - Note however that `none', `true' and `false' are
  *        still recognized without being imported first, as well
- *        as the speudo-function-like `import(string module_name)'
+ *        as the function-like `import(module_name: string)'
  *        symbol (e.g. `import(get_module_name())')
  *
  *  - Added the entire notion of modules
@@ -515,7 +516,8 @@
  *        library-path, configurable using the `-L' commandline option as well as
  *        the `DEEMON_PATH' environment variable.
  *        Modules can also be used relative to the current module by prefixing
- *        the module's name with a `.' character (similar to what python does)
+ *        the module's name with a `.' character (similar to what (I believe)
+ *        python does)
  *      - Modules can use other modules, where which are actually being used
  *        is determined at compile-time based on hidden function calls, and
  *        the presence of `import ... from ...', `from ... import ...',
@@ -533,28 +535,32 @@
  *            that will attempt to emulate this builtin's behavior.
  *            The emulated behavior translates to a call to `get_builtin from __builtins'
  *      - __builtin_dex
- *          - Instead, `import(...)' can now be used like a pre-defined, builtin function
+ *          - Instead, `import(...)' can now be used like a pre-defined, builtin function, which
+ *            also has the ability of loading *.dee files, instad of being limited to *.dll/*.so
  *      - __builtin_noop / __noop
  *      - __builtin_noexcept
  *      - __builtin_noreturn
  *      - __builtin_noeffect
  *      - __builtin_constant_p
- *      - __builtin_choose_expr(c,tt,ff)
+ *      - __builtin_choose_expr(c, tt, ff)
  *          - Replace with `c ? tt : ff'
  *      - __builtin_unreachable()
  *          - Replace with `__asm__("" : : : "noreturn")'
- *      - __builtin_types_compatible_p(x,y)
+ *      - __builtin_types_compatible_p(x, y)
  *          - Replace with `x == y' / `x === y'
  *      - __builtin_breakpoint()
  *          - Replace with user-assembly `__asm__("debug break");'
- *            Note however that doing this is non-portable
+ *            Note however that doing this is non-portable, as implementations
+ *            are not required to share any compatibility when it comes to how
+ *            bytecode is written (if it can be written at all)
+ *            For reference, the above doesn't work with the jit-compiler.
  *      - __builtin_typeof(x)
  *          - Replace with `type(x)'
  *      - __builtin_help(x)
  *          - Make use of the doc meta-data library `import Doc from doc;'
- *            Alternatively, any objects implement a `__doc__' attribute
+ *            Alternatively, many objects implement a `__doc__' attribute
  *            though which documentation meta-data can be accessed.
- *      - __builtin_offsetof(s,t)
+ *      - __builtin_offsetof(s, t)
  *          - Replace with `s.offsetof("t")' (assuming use of `ctypes')
  *      - __builtin_exists
  *      - __builtin_expect
@@ -578,7 +584,7 @@
  *        references any more, but rather only objects that have explicit
  *        support, as well as tracing for weak references.
  *      - To create a weak reference wrapper object, you must now use the
- *        builtin type accessible as `weakref from deemon', which implements
+ *        builtin type accessible as `WeakRef from deemon', which implements
  *        a single-argument constructor to which the object that should be
  *        referenced may be passed.
  *
@@ -620,13 +626,13 @@
  *        >> };
  *        >> print MyClass().foo; // Still works as it did before
  *        Just as a reminder, new usercode should be re-written as:
- *        >> import file from deemon;
+ *        >> import File from deemon;
  *        >> class MyClass {
  *        >>     public foo;
  *        >>     this() {
  *        >>         foo = 42;
  *        >>     }
- *        >> };
+ *        >> }
  *        >> print MyClass().foo;
  *
  *  - Minor syntactical additions to arrow-functions:
@@ -668,8 +674,8 @@
  *           >> }
  *              Would not be optimized because calls to `get_*' may have
  *              side-effects that may not be predictable at compile-time.
- *              With that in mind, you mustn't rely on the exact sequence
- *              type returned by yield-functions, as the compiler may try
+ *              With that in mind, you mustn't rely on the exact iterator
+ *              type produced by yield-functions, as the compiler may try
  *              to optimize sequence forwarding by simply changing:
  *           >> function get_values() {
  *           >>     yield 10;
@@ -687,20 +693,20 @@
  *
  *  - Added the `@attribute_name' spelling for attributes
  *
- *  - Removed the `__super(<expr>,<type>)' builtin function.
+ *  - Removed the `__super(<expr>, <type>)' builtin function.
  *    Its behavior has been replaced with the much more intuitive
  *    syntax `<expr> as <type>'
  *    Backwards-compatibility can easily be achieved with:
  *    >> #if __DEEMON__ >= 200
- *    >> #define __super(expr,type) ((expr) as (type))
+ *    >> #define __super(expr, type) ((expr) as (type))
  *    >> #endif
  *
  *  - Addition of 2 new operators `operator enter' and
- *   `operator leave' used by a new with-statement:
+ *   `operator leave' used by the new with-statement:
  *    >> with (get_lock()) {
  *    >>     print "In with-statement";
  *    >> }
- *    This code is identical to (except that `__hidden_symbol'
+ *    This code is identical to the following (except that `__hidden_symbol'
  *    doesn't have any name as it is an anonymous, internal symbol):
  *    >> {
  *    >>     __stack local __hidden_symbol = get_lock();
@@ -715,12 +721,13 @@
  *          variables which will be scoped to the associated with-block
  *          >> with (local fp = file.open("foo.txt")) {
  *          >>     print fp.read();
- *          >> }  // `fp' is automatically closed here!
+ *          >> }  // `fp' is automatically closed here, and
+ *          >>    // the symbol will no longer be visible!
  *    This syntax is highly useful for implementing auto-scope
  *    locks, or other scope-based operations that require some
  *    custom cleanup code to be run when some object goes out-of-scope,
  *    regardless of what the reference state of the scoped variable
- *    may be, and regardless of how the compiler chose to distribute
+ *    may be, and regardless of how the compiler chooses to distribute
  *    local variable indices, and without relying on stack-variables.
  *
  *  - Using `yield' within a `finally' can no longer be used to delay
@@ -733,23 +740,28 @@
  *    will now force-create a 1-element sequence:
  *    >> print repr(42);    // 42
  *    >> print repr((42));  // 42
- *    >> print repr((42,)); // (42,) -- single-item tuple
+ *    >> print repr((42,)); // (42,) -- single-item Tuple
  *    Prior to deemon 200, the 3rd line would have also printed `42'
  *
  *  - Slightly changed the semantics of expand-expression in unpack-assign statements:
- *    >> local x,y,z = get_values()...; // This still works as expected
+ *    >> local x, y, z = get_values()...; // This still works as expected
  *    Internally though, unpack+assign expressions such as this now happen
  *    when the store-ast has some kind of sequence on the left-hand-side,
  *    while an expand-branch on the right-hand-side is not treated specially.
  *    In other words, what the compiler will translate the code into is this:
- *    >> (x,y,z) = get_values(); // Note how the right-hand-side isn't an expand expression.
+ *    >> (x, y, z) = get_values(); // Note how the right-hand-side isn't an expand expression.
  *    Existing code should not be affected by this, as expand-in-store continues
  *    to work as it always did, but it should be interesting to know how all
  *    that's now required to do an expand-to-multiple-targets, is to use a sequence
  *    construct on the left-hand-side (aka. the target).
- *    NOTE: As far as the intended semantics of expand-expressions go, this
- *          change technically fixed a bug in expand's old design, as an
- *          expression such as `(x,y,z) = get_values()...' should (and now does)
+ *    NOTE: Portable code must not make use of sequence objects on the left-hand-side
+ *          of an assignment expression. `(x, y, z) = get_value()' is not portable
+ *          between different implementations of the deemon compiler (e.g. the gatw
+ *          JIT compiler doesn't accept this syntax). The only portable way of unpacking
+ *          an expression into multiple variables is, and remains `x, y, z = get_values()...'
+ *    NOTE: GATW-specific: As far as the intended semantics of expand-expressions
+ *          go, this change technically fixed a bug in expand's old design, as an
+ *          expression such as `(x, y, z) = get_values()...' should (and now does)
  *          mean that after calling `get_values()', the return value should be
  *          expanded as a sequence. However since it is used in a binary operator,
  *          there is only a single target item into which to expand, meaning that
@@ -762,15 +774,15 @@
  *          However prior to v200, deemon used to associate the expansion of
  *          the return value of `get_values()' to imply the expansion required
  *          when storing values into multiple targets on the left.
- *          And while the intended behavior of `x,y,z = get_values()...' continues
+ *          And while the intended behavior of `x, y, z = get_values()...' continues
  *          to work the same, it only does so by transferring that single indirection
  *          of expansion described by the `...' on the right-hand-side, by
  *          inverting it into a sequence construct and moving it to the left,
  *          thus leading back to the much more sensical internal representation
- *          that is `(x,y,z) = get_values()'.
+ *          that is `(x, y, z) = get_values()'.
  *          *huff* *huff* *huff*...
- *          Basically, you can think of `(x,y,z) = get_values()' being equal
- *          to `x,y,z = get_values()...' the same way `x-z = y' is equal to `x = y+z'
+ *          Basically, you can think of `(x, y, z) = get_values()' being equal to
+ *          `x, y, z = get_values()...' the same way `x-z = y' is equal to `x = y+z'
  */
 
 
@@ -850,7 +862,7 @@ ast_parse_unaryhead ::= (
 	DDI(<TOK_CHAR>) |      /* string (including raw-strings)
 	                        * GATW: When #pragma extension("-fcharacter-literals")
 	                        *       is enabled (disabled by default), this is compiled
-	                        *       as an ordinal */
+	                        *       as an ordinal (iow: `int') */
 	DDI(<TOK_STRING>...) | /* string (including raw-strings) */
 	DDI(<TOK_FLOAT>) |     /* float */
 
@@ -891,18 +903,17 @@ ast_parse_unaryhead ::= (
 
 #if BACKWARDS_COMPATIBILITY_DEEMON_100
 	/* NOTE: An implementation is not required to support
-	 *       backwards-compatibility for using <...> in
-	 *       order to define cells. GrieferAtWork's implementation
+	 *       backwards-compatibility for using <...> in order
+	 *       to define cells. GrieferAtWork's implementation
 	 *       does, while also emitting a warning, but this is
 	 *       entirely optional. */
+
 	/* Backwards-compatibility with deemon v100's cell-syntax.
 	 * Newer code should instead make use of on `cell from deemon':
-	 * >> local x = (cell from deemon)();  // Empty cell
-	 * >> local y = (cell from deemon)(x); // A cell containing `x'
-	 * If backwards-compatibility is required, user-code may choose to do this:
-	 * >>
+	 * >> local x = (Cell from deemon)();  // Empty cell
+	 * >> local y = (Cell from deemon)(x); // A cell containing `x'
 	 */
-	(DDI('<') [ast_parse_unary] '>') | /* ACTION: cell/cell0 */
+	(DDI('<') [ast_parse_unary] '>') | /* ACTION: Cell/empty-Cell */
 #endif
 
 	(DDI('if') '(' ast_parse_expr ')' (
@@ -917,7 +928,7 @@ ast_parse_unaryhead ::= (
 	 *          which simply result in a compile-time, constant `true')
 	 *        - getattr expression (both `foo.bar' and `foo.operator . ("bar")')
 	 *          This type of use is semantically equivalent to the
-	 *          builtin function `hasattr from deemon(foo,"bar")'
+	 *          builtin function `(boundattr from deemon)(foo, "bar")'
 	 *          An implementation is also allowed to replace this
 	 *          kind of use with a call to said function.
 	 */
@@ -930,7 +941,7 @@ ast_parse_unaryhead ::= (
 	('assert' '(' DDI(ast_parse_expr) [',' ast_parse_expr] ')') |
 
 	/* With-expressions. */
-	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_expr) |
+	(DDI('with') '(' ast_parse_comma(false, true) ')' ast_parse_expr) |
 
 	/* Try-expressions. */
 	ast_parse_try(false) |
@@ -939,7 +950,7 @@ ast_parse_unaryhead ::= (
 	/* Function-expressions.
 	 * NOTE: This is a deprecated feature!
 	 *       New code should always use the lambda syntax
-	 *       within expressions: `[](a,b,c) { ... }' */
+	 *       within expressions: `[](a, b, c) { ... }' */
 	(DDI('function') [_keyword] ast_parse_function(false)) |
 #endif
 
@@ -949,10 +960,10 @@ ast_parse_unaryhead ::= (
 	/* When no expression follows `pack', it evaluates to an empty tuple. */
 	(DDI('pack') (('(' [
 		('{' ast_parse_statement_or_braces '}') |
-		ast_parse_comma(false,false)
+		ast_parse_comma(false, false)
 	] ')') | [
 		('{' ast_parse_statement_or_braces '}') |
-		ast_parse_comma(true,false)
+		ast_parse_comma(true, false)
 	])) |
 
 	/* Generator expressions */
@@ -972,10 +983,10 @@ ast_parse_unaryhead ::= (
 		('pack' ast_parse_expr)
 	) |
 
-	/* Parenthesis / [empty] tuple expression. */
+	/* Parenthesis / [empty] tuple expression / statement-in-expression. */
 	(DDI('(') [(
 		('{' ast_parse_statement_or_braces '}') |
-		ast_parse_comma(false,false)
+		ast_parse_comma(false, false)
 	)] ')') |
 
 	(DDI('{') ast_parse_brace_items '}') |
@@ -992,9 +1003,8 @@ ast_parse_unaryhead ::= (
 		(['&' | '='] ']' (
 			ast_parse_function_noargs(false) | /* Allow functions with missing argument lists */
 			ast_parse_function(false)
-			)) |
+		)) |
 		/* Range expression.
-		 * Omission of the begin/end index is the same as passing `none'.
 		 * >> for (local x: [:10])
 		 * >>     print x; // Prints the numbers 0...9
 		 * Since ranges proofed to be as useful as they are, instead of
@@ -1006,7 +1016,7 @@ ast_parse_unaryhead ::= (
 		 * NOTE: Ambiguity with lambda for `[]' is resolved by looking at the
 		 *       token following. When it's a '(', '{' or '->', it's a lambda.
 		 *       Otherwise it's a list. */
-		([ast_parse_comma(false,false)] ']') |
+		([ast_parse_comma(false, false)] ']') |
 	)) |
 
 	/* Package the varargs portion of the argument list in an expand expression.
@@ -1124,7 +1134,7 @@ ast_parse_unary_operand ::= (
 #if 0 /* Redundant syntax. - Already implemented by a call-suffix expression */
 			/* Invoke an operator by name. */
 			('operator' ast_parse_operator_name(false)
-				'(' ast_parse_comma(false,false) ')') |
+				'(' ast_parse_comma(false, false) ')') |
 #endif
 
 			/* Regular, old attribute operator invocation. */
@@ -1188,11 +1198,11 @@ ast_parse_unary ::= (
 ast_parse_argument_list ::= (
 	(
 		/* Regular argument list (e.g. `foo(10,20)') */
-		ast_parse_comma(false,false)
+		ast_parse_comma(false, false)
 	) | (
 		/* Argument list with keyword labels (e.g. `foo(x: 10, y: 20)')
 		 * May optionally be pre-fixed with positional arguments. */
-		[ast_parse_comma(false,false) ',']
+		[ast_parse_comma(false, false) ',']
 		[',' ~~ (
 			keyword ':' ast_parse_expr
 		)...]
@@ -1511,13 +1521,13 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 
 ast_parse_for_head ::= (
 	(	/* foreach-style loop. */
-		ast_parse_comma(false,true) ':'
+		ast_parse_comma(false, true) ':'
 		ast_parse_expr
 	) |
 	(	/* c-style for loop. */
-		[ast_parse_comma(false,true)] ';'
-		[ast_parse_comma(false,false)] ';'
-		[ast_parse_comma(false,false)]
+		[ast_parse_comma(false, true)] ';'
+		[ast_parse_comma(false, false)] ';'
+		[ast_parse_comma(false, false)]
 	)
 );
 
@@ -1803,19 +1813,19 @@ ast_parse_statement ::= (
 	(DDI(';')) |
 
 	(DDI('if')
-		'(' ast_parse_comma(false,true) ')' ast_parse_statement
-		[ ('elif' '(' ast_parse_comma(false,true) ')' ast_parse_statement)... ]
+		'(' ast_parse_comma(false, true) ')' ast_parse_statement
+		[ ('elif' '(' ast_parse_comma(false, true) ')' ast_parse_statement)... ]
 		[ ('else' ast_parse_statement) ]
 	) |
 
-	(DDI('with') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+	(DDI('with') '(' ast_parse_comma(false, true) ')' ast_parse_statement) |
 
-	(DDI('return') [ast_parse_comma(false,false)] ';') |
-	(DDI('yield') ast_parse_comma(false,false) ';') |
+	(DDI('return') [ast_parse_comma(false, false)] ';') |
+	(DDI('yield') ast_parse_comma(false, false) ';') |
 	(ast_parse_import ';') |
-	(DDI('throw') ast_parse_comma(false,false) ';') |
+	(DDI('throw') ast_parse_comma(false, false) ';') |
 	/* NOTE: A trailing ',' token suppresses the trailing new-line. */
-	(DDI('print') [ast_parse_comma(true,false) ':'] ast_parse_comma(true,false) [','] ';') |
+	(DDI('print') [ast_parse_comma(true, false) ':'] ast_parse_comma(true, false) [','] ';') |
 	(DDI('for') '(' ast_parse_for_head ')' ast_parse_statement) |
 
 
@@ -1825,7 +1835,7 @@ ast_parse_statement ::= (
 	 * implemented as `foreach(x: y.operator iter())'
 	 */
 	(DDI('foreach') '('
-		ast_parse_comma(false,true) ':'
+		ast_parse_comma(false, true) ':'
 		ast_parse_expr
 	')' ast_parse_statement) |
 
@@ -1844,7 +1854,7 @@ ast_parse_statement ::= (
 	) |
 
 	/* A while... loop */
-	(DDI('while') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+	(DDI('while') '(' ast_parse_comma(false, true) ')' ast_parse_statement) |
 
 	/* Loop control statements */
 	(DDI('break') ';') |
@@ -1871,11 +1881,11 @@ ast_parse_statement ::= (
 	 *       using the `jmp pop' or `jmp pop, #pop' instructions. */
 	(DDI('case') ast_parse_expr ':' ast_parse_statement) |
 	(DDI('default') ':' ast_parse_statement) |
-	(DDI('switch') '(' ast_parse_comma(false,true) ')' ast_parse_statement) |
+	(DDI('switch') '(' ast_parse_comma(false, true) ')' ast_parse_statement) |
 
 	/* Fallback: parse a comma-expression.
 	 * NOTE: `INTERNAL(AST_COMMA_PARSESEMI)' is enabled for this call! */
-	ast_parse_comma(false,true)
+	ast_parse_comma(false, true)
 )
 #	INTERNAL(clear_current_tags())
 ;
@@ -2017,7 +2027,7 @@ parse_constructor_initializers ::= (
 		/* NOTE: `_keyword' is only allowed as super-initializer
 		 *        when the class's base expression is a symbol
 		 *        who's name is then matched by `_keyword' */
-		(DDI('super' | _keyword) '(' [ast_parse_comma(false,false)] ')') |
+		(DDI('super' | _keyword) '(' [ast_parse_comma(false, false)] ')') |
 		/* Member initializer. */
 		(DDI(_keyword) (
 			/* Value to assign to member `_keyword'
@@ -2269,15 +2279,15 @@ ast_parse_operator_name(allow_class_operators) ::= (
 parse_generator_loop ::= (
 	/* Special if-statement interpretation to
 	 * allowing for conditional generator items. */
-	(DDI('if') '(' ast_parse_comma(false,true) ')'
+	(DDI('if') '(' ast_parse_comma(false, true) ')'
 		parse_generator_loop
 		['else' parse_generator_loop]
 	) |
 	(DDI('do') parse_generator_loop 'while' '(' ast_parse_expr ')') |
-	(DDI('while') '(' ast_parse_comma(false,true) ')' parse_generator_loop) |
+	(DDI('while') '(' ast_parse_comma(false, true) ')' parse_generator_loop) |
 	(DDI('for') '(' ast_parse_for_head ')' parse_generator_loop) |
 	(DDI('foreach') '('
-		ast_parse_comma(false,true) ':'
+		ast_parse_comma(false, true) ':'
 		ast_parse_expr
 	')' parse_generator_loop) |
 	ast_parse_expr /* This expression is wrapped in a yield-branch */

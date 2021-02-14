@@ -766,7 +766,7 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
              Dee_formatprinter_t printer, void *arg);
-#define DEEINT_PRINT(radix,flags) ((radix) << DEEINT_PRINT_RSHIFT | (flags))
+#define DEEINT_PRINT(radix, flags) ((radix) << DEEINT_PRINT_RSHIFT | (flags))
 #define DEEINT_PRINT_RSHIFT  16
 #define DEEINT_PRINT_FNORMAL 0x0000
 #define DEEINT_PRINT_FUPPER  0x0001 /* Use uppercase characters for printing digits above `9' */

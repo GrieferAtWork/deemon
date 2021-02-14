@@ -72,8 +72,8 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  *          the first encouter of a -L option will call `DeeModule_GetPath()'
  *          before pre-pending the following string at the front of the list,
  *          following other -L paths prepended before then.
- * >> fs.env.get("DEEMON_PATH","").split(fs.delim)...;
- * >> fs.join(DeeExec_GetHome(),"lib")
+ * >> fs.env.get("DEEMON_PATH", "").split(fs.delim)...;
+ * >> fs.join(DeeExec_GetHome(), "lib")
  *
  * This list is also used to locate system-include paths for the preprocessor,
  * in that every entry that is a string is an include-path after appending "/include":
@@ -132,7 +132,7 @@ DFUNDEF int DCALL Dee_Exit(int exitcode, bool run_atexit);
 /* Get/Set the user-code argument vector that is
  * accessible from module-scope code using `...':
  * >> local argv = [...];
- * >> print repr argv; // ["my_script.dee","these","are","from","the","commandline"]
+ * >> print repr argv; // ["my_script.dee", "these", "are", "from", "the", "commandline"]
  * With that in mind, module root-code objects are varargs functions that are
  * invoked using the Argv tuple modifiable using this pair of functions.
  * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.

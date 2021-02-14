@@ -64,7 +64,7 @@ fs_pathhead(DeeObject *__restrict path) {
 	tailsep = (char *)memrchr(DeeString_STR(path), '/',
 	                          DeeString_SIZE(path) *
 	                          sizeof(char));
-#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/","\\"]' */
+#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/", "\\"]' */
 	if (!tailsep)
 		tailsep = (char *)memrchr(DeeString_STR(path), '\\',
 		                          DeeString_SIZE(path) *
@@ -84,7 +84,7 @@ fs_pathtail(DeeObject *__restrict path) {
 	tailsep = (char *)memrchr(DeeString_STR(path), '/',
 	                          DeeString_SIZE(path) *
 	                          sizeof(char));
-#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/","\\"]' */
+#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/", "\\"]' */
 	if (!tailsep)
 		tailsep = (char *)memrchr(DeeString_STR(path), '\\',
 		                          DeeString_SIZE(path) *
@@ -106,7 +106,7 @@ fs_pathfile(DeeObject *__restrict path) {
 	tailsep = (char *)memrchr(DeeString_STR(path), '/',
 	                          DeeString_SIZE(path) *
 	                          sizeof(char));
-#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/","\\"]' */
+#ifdef CONFIG_HOST_WINDOWS /* TODO: Must use the first one of `["/", "\\"]' */
 	if (!tailsep)
 		tailsep = (char *)memrchr(DeeString_STR(path), '\\',
 		                          DeeString_SIZE(path) *
@@ -626,7 +626,7 @@ continue_after_sep_sp:
 				if (ISSEP(a) && ISSEP(b))
 					goto continue_after_sep_sp;
 			}
-			/* Special handling for `relpath("foo/bar","foo/bar/")' */
+			/* Special handling for `relpath("foo/bar", "foo/bar/")' */
 			if (!a && pth_iter >= pth_end) {
 				next = pwd_iter;
 				while (next < pwd_end) {
@@ -637,7 +637,7 @@ continue_after_sep_sp:
 				if (next >= pwd_end)
 					goto return_single_dot;
 			}
-			/* Special handling for `relpath("foo/bar/","foo/bar")' */
+			/* Special handling for `relpath("foo/bar/", "foo/bar")' */
 			if (!b && pwd_iter >= pwd_end) {
 				next = pth_iter;
 				while (next < pth_end) {

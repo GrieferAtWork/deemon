@@ -593,7 +593,7 @@ function_repr(Function *__restrict self) {
 		goto err;
 #endif
 	if (self->fo_code->co_refc) {
-		if (UNICODE_PRINTER_PRINT(&printer, ",{ ") < 0)
+		if (UNICODE_PRINTER_PRINT(&printer, ", { ") < 0)
 			goto err;
 		for (i = 0; i < self->fo_code->co_refc; ++i) {
 			if (i != 0 && UNICODE_PRINTER_PRINT(&printer, ", ") < 0)

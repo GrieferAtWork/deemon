@@ -60,7 +60,7 @@ DECL_BEGIN
  * >> my_function(DeeObject *UNUSED(self),
  * >>             size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
- * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function", &a, &b, &c))
+ * >>     if (DeeArg_Unpack(argc, argv, "dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
@@ -133,7 +133,7 @@ struct dee_kwds_object {
 	struct dee_kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
 };
 #define DeeKwds_MAPNEXT(i, perturb) \
-	((i) = (((i) << 2) + (i) + (perturb) + 1),(perturb) >>= 5)
+	((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 
 #define Dee_DEFINE_KWDS(name, kw_size_, kw_mask_, ...) \
 	struct {                                           \

@@ -1980,7 +1980,7 @@ fs_symlink(DeeObject *__restrict target_text,
 	/* TODO: `SYMBOLIC_LINK_FLAG_DIRECTORY'
 	 * >> local abs_target = target_text;
 	 * >> if (!fs.isabs(target_text))
-	 * >>      abs_target = fs.abspath(target_text,fs.headof(link_path));
+	 * >>      abs_target = fs.abspath(target_text, fs.headof(link_path));
 	 * >> if (fs.stat.isdir(abs_target))
 	 * >>     flags |= SYMBOLIC_LINK_FLAG_DIRECTORY;
 	 */

@@ -47,7 +47,7 @@ DEFINE_OBJECT_CACHE(ast, struct ast, 512)
 DECLARE_STRUCT_CACHE(sym, struct symbol)
 
 #ifndef NDEBUG
-#define sym_alloc()  sym_dbgalloc(__FILE__,__LINE__)
+#define sym_alloc() sym_dbgalloc(__FILE__, __LINE__)
 #endif /* !NDEBUG */
 
 /* Re-use the symbol cache for labels. (As rare as they are, this is the best way to allocate them) */
@@ -1252,7 +1252,7 @@ INTERN DeeTypeObject DeeAst_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ NULL, /*&DeeObject_Type,*/
+	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {

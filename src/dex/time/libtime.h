@@ -165,7 +165,7 @@ struct time_object {
 		_dee_astruct
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 		;
-		uint16_t     t_kind; /* Encoded using TIME_KIND(type,repr) */
+		uint16_t     t_kind; /* Encoded using TIME_KIND(type, repr) */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion2
@@ -186,15 +186,15 @@ struct time_object {
 
 #ifdef HAVE_128BIT_TIME
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#   define _Time_Set64(x,y) ((x).t_time_half[1] = 0, (x).t_time_half[0] = (y))
-#   define _Time_Get64(x)    (x).t_time_half[0]
+#define _Time_Set64(x, y) ((x).t_time_half[1] = 0, (x).t_time_half[0] = (y))
+#define _Time_Get64(x)    (x).t_time_half[0]
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-#   define _Time_Set64(x,y) ((x).t_time_half[0] = 0, (x).t_time_half[1] = (y))
-#   define _Time_Get64(x)    (x).t_time_half[1]
+#define _Time_Set64(x, y) ((x).t_time_half[0] = 0, (x).t_time_half[1] = (y))
+#define _Time_Get64(x)    (x).t_time_half[1]
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 #else /* HAVE_128BIT_TIME */
-#   define _Time_Get64(x)    (x).t_time
-#   define _Time_Set64(x,y) ((x).t_time = (y))
+#define _Time_Get64(x)    (x).t_time
+#define _Time_Set64(x, y) ((x).t_time = (y))
 #endif /* !HAVE_128BIT_TIME */
 
 #ifdef CONFIG_BUILDING_LIBTIME

@@ -233,7 +233,7 @@ function force_symbol_character(ord, traits) {
 force_symbol_character("_".ord(), ["XID_Start", "XID_Continue"]);
 force_symbol_character("$".ord(), ["XID_Start", "XID_Continue"]);
 for (local x: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-	force_symbol_character(x.ord(),["XID_Continue"]);
+	force_symbol_character(x.ord(), ["XID_Continue"]);
 
 
 for (local i, record: util::enumerate(records)) {
@@ -339,12 +339,12 @@ print out: copyright.strip();
 print out: "#define DESCRIPTORS_COUNT", #descriptors;
 print out: "static struct unitraits const descriptors[" + #descriptors + "] = {";
 for (local i, x: util::enumerate(descriptors)) {
-	print out: ("\t/* 0x%.2x */" % i)+"{ 0x%x, %d, %d, %d, %d, %d }," % x;
+	print out: ("\t/* 0x%.2x */" % i) + "{ 0x%x, %d, %d, %d, %d, %d }, " % x;
 }
 print out: "};";
 
 function print_table(out, name, tab) {
-	print out: "static",ctypeof(elem_size(tab)),"const "+name+"[" + #tab + "] = {\n\t",;
+	print out: "static", ctypeof(elem_size(tab)), "const " + name + "[" + #tab + "] = {\n\t",;
 	for (local i, x: util::enumerate(tab)) {
 		print out: "0x%x, " % x,;
 		if ((i % 16) == 15)

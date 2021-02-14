@@ -43,9 +43,9 @@ typedef struct Dee_dict_object DeeDictObject;
 
 struct Dee_dict_item {
 	DREF DeeObject *di_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
-	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy,0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
+	DREF DeeObject *di_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)][lock(:d_lock)] Hash of `di_key' (with a starting value of `0').
-	                           *   NOTE: Some random value when `di_key' is the dummy key. */
+	                           * NOTE: Some random value when `di_key' is the dummy key. */
 };
 
 struct Dee_dict_object {
@@ -133,14 +133,16 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
 
 /* The basic dictionary item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
- * >>     Dee_hash_t i,perturb;
- * >>     Dee_hash_t hash = DeeObject_Hash(0,key);
- * >>     perturb = i = DeeDict_HashSt(self,hash);
- * >>     for (;; i = DeeDict_HashNx(i,perturb),DeeDict_HashPt(perturb)) {
- * >>          struct Dee_dict_item *item = DeeDict_HashIt(self,i);
- * >>          if (!item->di_key) break; // Not found
- * >>          if (item->di_hash != hash) continue; // Non-matching hash
- * >>          if (DeeObject_CompareEq(key,item->di_key))
+ * >>     Dee_hash_t i, perturb;
+ * >>     Dee_hash_t hash = DeeObject_Hash(0, key);
+ * >>     perturb = i = DeeDict_HashSt(self, hash);
+ * >>     for (;; i = DeeDict_HashNx(i, perturb), DeeDict_HashPt(perturb)) {
+ * >>          struct Dee_dict_item *item = DeeDict_HashIt(self, i);
+ * >>          if (!item->di_key)
+ * >>              break; // Not found
+ * >>          if (item->di_hash != hash)
+ * >>              continue; // Non-matching hash
+ * >>          if (DeeObject_CompareEq(key, item->di_key))
  * >>              return item->di_item;
  * >>     }
  * >>     return NULL;

@@ -106,7 +106,7 @@
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     member foo = 42;                 >>     member foo;
  * >>     this() {                         >>     this(): super() {
- * >>         print "foo =",foo;           >>         foo = 42;
+ * >>         print "foo =", foo;          >>         foo = 42;
  * >>     }                                >>         {
  * >> }                                    >>             print "foo =", foo;
  *                                         >>         }
@@ -254,7 +254,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 #define Dee_CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
 #define Dee_CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
 /*      Dee_CLASS_ATTRIBUTE_F         0x0008  * ... */
-#define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `InstanceMethod(MEMBER_TABLE[ca_addr],foo)' (calling `foo.bar()' will similarly perform a this-call). */
+#define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `InstanceMethod(MEMBER_TABLE[ca_addr], foo)' (calling `foo.bar()' will similarly perform a this-call). */
 #define Dee_CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
                                               * When `Dee_CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
                                               * When `Dee_CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
@@ -404,8 +404,8 @@ struct Dee_class_descriptor_object {
 	                                                  *       Additionally, if not already defined by the caller, this flag also causes
 	                                                  *      `operator repr' to be implemented (see above).
 	                                                  * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
-#define CLASS_TP_FSUPERKWDS        Dee_TP_FHEAP      /* FLAG: When set, the superargs operator actually returns a tuple `(args,kwds)' which
-	                                                  *       should then be used to invoke the super-constructor as `super(args...,**kwds)'
+#define CLASS_TP_FSUPERKWDS        Dee_TP_FHEAP      /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
+	                                                  *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
 	                                                  *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
 #endif /* DEE_SOURCE */
 	uint16_t                       cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
@@ -484,7 +484,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescr
 #endif /* (Dee_CLASS_HEADER_OPC1 * Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT */
 
 struct Dee_class_optable {
-	/* [0..1][lock(READ(:cd_lock),SET_TO_NULL(:cd_lock),WRITE_ONCE)][*] Table of operators.
+	/* [0..1][lock(READ(:cd_lock), SET_TO_NULL(:cd_lock),WRITE_ONCE)][*] Table of operators.
 	 * NOTE: Individual callback objects may be `ITER_DONE',
 	 *       indicative of that operator having been deleted
 	 *       explicitly. */
@@ -727,7 +727,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeOb
  * >>     public class member class_field = 84;
  * >>     public field = 42;
  * >>     function foo() {
- * >>         print "foo():",field;
+ * >>         print "foo():", field;
  * >>     }
  * >> }
  * >> local x = MyClass();

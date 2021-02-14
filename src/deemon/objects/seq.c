@@ -230,7 +230,7 @@ seqiterator_repr(SeqIterator *__restrict self) {
 	index_ob = self->si_index;
 	Dee_Incref(index_ob);
 	rwlock_endread(&self->si_lock);
-	result = DeeString_Newf("Iterator[%k/%k,%r]",
+	result = DeeString_Newf("Iterator[%k/%k, %r]",
 	                        index_ob, self->si_size, self->si_seq);
 	Dee_Decref(index_ob);
 	return result;
@@ -1674,7 +1674,7 @@ err:
 
 
 /* Mutable-Sequence functions */
-INTERN DEFINE_KWLIST(seq_insert_kwlist,{ K(index), K(item), KEND });
+INTERN DEFINE_KWLIST(seq_insert_kwlist, { K(index), K(item), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_insert(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
@@ -2632,27 +2632,27 @@ INTERN struct type_method seq_methods[] = {
 	 * >> // `unique_items' now contains no object more than once
 	 */
 
-	/* TODO: join(?S?DSequence items) -> Sequence */
-	/* TODO: strip(object item, callable key = none) -> Sequence */
-	/* TODO: lstrip(object item, callable key = none) -> Sequence */
-	/* TODO: rstrip(object item, callable key = none) -> Sequence */
-	/* TODO: split(object sep, callable key = none) -> Sequence */
+	/* TODO: join(items: {Sequence...}): Sequence */
+	/* TODO: strip(item: Object, key: Callable = none): Sequence */
+	/* TODO: lstrip(item: Object, key: Callable = none): Sequence */
+	/* TODO: rstrip(item: Object, key: Callable = none): Sequence */
+	/* TODO: split(sep: Object, key: Callable = none): Sequence */
 
-	/* TODO: countseq(seq:?DSequence, callable key = none) -> int */
-	/* TODO: partition(object item, callable key = none) -> (Sequence,(item),Sequence) */
-	/* TODO: rpartition(object item, callable key = none) -> (Sequence,(item),Sequence) */
-	/* TODO: partitionseq(seq:?DSequence, callable key = none) -> (Sequence,seq,Sequence) */
-	/* TODO: rpartitionseq(seq:?DSequence, callable key = none) -> (Sequence,seq,Sequence) */
-	/* TODO: startswithseq(seq:?DSequence, callable key = none): bool */
-	/* TODO: endswithseq(seq:?DSequence, callable key = none): bool */
-	/* TODO: findseq(seq:?DSequence, callable key = none) -> int */
-	/* TODO: rfindseq(seq:?DSequence, callable key = none) -> int */
-	/* TODO: indexseq(seq:?DSequence, callable key = none) -> int */
-	/* TODO: rindexseq(seq:?DSequence, callable key = none) -> int */
-	/* TODO: stripseq(items:?DSequence, callable key = none) -> Sequence */
-	/* TODO: lstripseq(items:?DSequence, callable key = none) -> Sequence */
-	/* TODO: rstripseq(items:?DSequence, callable key = none) -> Sequence */
-	/* TODO: splitseq(seq:?DSequence, callable key = none) -> Sequence */
+	/* TODO: countseq(seq: Sequence, key: Callable = none): int */
+	/* TODO: partition(item: Object, key: Callable = none): (Sequence, (item), Sequence) */
+	/* TODO: rpartition(item: Object, key: Callable = none): (Sequence, (item), Sequence) */
+	/* TODO: partitionseq(seq: Sequence, key: Callable = none): (Sequence, seq, Sequence) */
+	/* TODO: rpartitionseq(seq: Sequence, key: Callable = none): (Sequence, seq, Sequence) */
+	/* TODO: startswithseq(seq: Sequence, key: Callable = none): bool */
+	/* TODO: endswithseq(seq: Sequence, key: Callable = none): bool */
+	/* TODO: findseq(seq: Sequence, key: Callable = none): int */
+	/* TODO: rfindseq(seq: Sequence, key: Callable = none): int */
+	/* TODO: indexseq(seq: Sequence, key: Callable = none): int */
+	/* TODO: rindexseq(seq: Sequence, key: Callable = none): int */
+	/* TODO: stripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: lstripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: rstripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: splitseq(seq: Sequence, key: Callable = none): Sequence */
 
 
 	/* Functions for mutable sequences. */
@@ -2766,11 +2766,11 @@ INTERN struct type_method seq_methods[] = {
 	      "			return;\n"
 	      "		}\n"
 	      "		if (tp.hasprivateattribute(\"insert\")) {\n"
-	      "			this.insert(-1,item);\n"
+	      "			this.insert(-1, item);\n"
 	      "			return;\n"
 	      "		}\n"
 	      "		if (tp.hasprivateattribute(\"insertall\")) {\n"
-	      "			this.insertall(-1,{ item });\n"
+	      "			this.insertall(-1, { item });\n"
 	      "			return;\n"
 	      "		}\n"
 	      "		if (tp.hasprivateoperator(\"setrange\")) {\n"
@@ -2797,7 +2797,7 @@ INTERN struct type_method seq_methods[] = {
 	      "	import int, Error, Sequence from deemon;\n"
 	      "	for (local tp = type(this); tp !is none && tp !== Sequence; tp = tp.__base__) {\n"
 	      "		if (tp.hasprivateattribute(\"insertall\")) {\n"
-	      "			this.insertall(-1,items);\n"
+	      "			this.insertall(-1, items);\n"
 	      "			return;\n"
 	      "		}\n"
 	      "		if (tp.hasprivateoperator(\"setrange\")) {\n"
@@ -2811,7 +2811,7 @@ INTERN struct type_method seq_methods[] = {
 	      "		}\n"
 	      "		if (tp.hasprivateattribute(\"insert\")) {\n"
 	      "			for (local x: items)\n"
-	      "				this.insert(-1,x);\n"
+	      "				this.insert(-1, x);\n"
 	      "			return;\n"
 	      "		}\n"
 	      "		if (tp.hasprivateoperator(\"assign\")) {\n"
@@ -3016,7 +3016,7 @@ INTERN struct type_method seq_methods[] = {
 	      "	}\n"
 	      "	return false;\n"
 	      "}}\n"
-	      "For ${erase(index,count)}:\n"
+	      "For ${erase(index, count)}:\n"
 	      "${"
 	      "function remove(elem: int, start: int, end: int, key: Callable): bool {\n"
 	      "	start = (int)start;\n"
@@ -4205,10 +4205,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "			return this;\n"
 	                         "		}\n"
 	                         "		if (tp.hasprivateattribute(\"insertall\")) {\n"
-	                         "			this.insertall(-1,items);\n"
+	                         "			this.insertall(-1, items);\n"
 	                         "			return this;\n"
 	                         "		}\n"
-	                         "		if (tp.hasprivateoperator(this,\"setrange\")) {\n"
+	                         "		if (tp.hasprivateoperator(this, \"setrange\")) {\n"
 	                         "			this[int.SIZE_MAX:int.SIZE_MAX] = items;\n"
 	                         "			return this;\n"
 	                         "		}\n"
@@ -4219,7 +4219,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "		}\n"
 	                         "		if (tp.hasprivateattribute(\"insert\")) {\n"
 	                         "			for (local x: items)\n"
-	                         "				this.insert(-1,x);\n"
+	                         "				this.insert(-1, x);\n"
 	                         "			return this;\n"
 	                         "		}\n"
 	                         "		if (tp.hasprivateoperator(\"assign\")) {\n"
@@ -4270,7 +4270,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "operator := (other: Sequence) {\n"
 	                         "	import Error from deemon;\n"
 	                         "	try {\n"
-	                         "		this[:] = other; /* Implemented using `setrange(none,none,other)' */\n"
+	                         "		this[:] = other; /* Implemented using `setrange(none, none, other)' */\n"
 	                         "	} catch (Error.RuntimeError.NotImplemented) {\n"
 	                         "		throw Error.ValueError.SequenceError(\"Immutable Sequence\");\n"
 	                         "	}\n"
@@ -4364,7 +4364,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "				local mylen = ##this;\n"
 	                         "				if (start > mylen)\n"
 	                         "					start = mylen;\n"
-	                         "				this.erase(start,mylen - start);\n"
+	                         "				this.erase(start, mylen - start);\n"
 	                         "				return;\n"
 	                         "			}\n"
 	                         "			if (tp.hasprivateoperator(\"del[]\")) {\n"
@@ -4396,7 +4396,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "					start = mylen;\n"
 	                         "				if (end < start)\n"
 	                         "					end = start;\n"
-	                         "				this.erase(start,end - start);\n"
+	                         "				this.erase(start, end - start);\n"
 	                         "				return;\n"
 	                         "			}\n"
 	                         "			if (tp.hasprivateoperator(\"delitem\")) {\n"
@@ -4443,7 +4443,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "		if (start > mylen)\n"
 	                         "			start = mylen;\n"
 	                         "		try {\n"
-	                         "			this.insertall(start,values);\n"
+	                         "			this.insertall(start, values);\n"
 	                         "		} catch (Error.AttributeError | Error.RuntimeError.NotImplemented) {\n"
 	                         "			if (!##values)\n"
 	                         "				return;\n"
@@ -4462,7 +4462,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "					elem = it.operator next();\n"
 	                         "				} catch (Signal.StopIteration) {\n"
 	                         "					try {\n"
-	                         "						this.erase(start,end - start);\n"
+	                         "						this.erase(start, end - start);\n"
 	                         "					} catch (Error.AttributeError | Error.RuntimeError.NotImplemented) {\n"
 	                         "						throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	                         "					}\n"
@@ -4473,7 +4473,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "			}\n"
 	                         "			/* Insert remainder */\n"
 	                         "			try {\n"
-	                         "				this.insertall(start,(it as Iterator).pending);\n"
+	                         "				this.insertall(start, (it as Iterator).pending);\n"
 	                         "			} catch (Error.AttributeError | Error.RuntimeError.NotImplemented) {\n"
 	                         "				/* If the input-Sequence was fully iterated, then\n"
 	                         "				 * we don't actually need to resize the Sequence */\n"
@@ -4494,7 +4494,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "				return;\n"
 	                         "			}\n"
 	                         "			if (tp.hasprivateattribute(\"erase\")) {\n"
-	                         "				this.erase(start,end - start);\n"
+	                         "				this.erase(start, end - start);\n"
 	                         "				return;\n"
 	                         "			}\n"
 	                         "			if (tp.hasprivateoperator(\"delitem\")) {\n"

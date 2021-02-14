@@ -23,7 +23,7 @@
 
 /*[[[deemon
 for (x: [:10])
-  print "print",repr TEXT+";";
+  print("print ", repr TEXT, ";");
 ]]]*/
 print "Run with deemon -F deemon_format.dee!";
 print "Run with deemon -F deemon_format.dee!";

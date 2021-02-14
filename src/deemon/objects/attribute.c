@@ -161,7 +161,7 @@ PRIVATE struct type_member attr_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("iswrapper", STRUCT_CONST, Attr, a_info.a_perm, ATTR_WRAPPER,
 	                         "Check if the Attribute is accessed from the implementing type, which "
 	                         "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
-	                         "wrapper (aka. ${Attribute(string,\"find\").iswrapper == true}) for the instance function, "
+	                         "wrapper (aka. ${Attribute(string, \"find\").iswrapper == true}) for the instance function, "
 	                         "member or property that would be bound in ${\"foo\".find} (aka. "
 	                         "${Attribute(\"foo\", \"find\").iswrapper == false}))"),
 	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, ATTR_IMEMBER,
@@ -297,7 +297,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
 	DREF DeeObject *flags_str, *result;
 	flags_str = attr_getflags(self);
-	result = DeeString_Newf("Attribute(%r,%q,%r,%r,%r)",
+	result = DeeString_Newf("Attribute(%r, %q, %r, %r, %r)",
 	                        self->a_info.a_decl,
 	                        self->a_name,
 	                        flags_str,

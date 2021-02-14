@@ -100,7 +100,7 @@ socket_ctor(Socket *__restrict self,
 			                   sock_getprotonameorid(proto));
 		} else {
 			DeeNet_ThrowErrorf(&DeeError_NetError, err,
-			                   "Failed to create `socket(%R,%R,%R)'",
+			                   "Failed to create `socket(%R, %R, %R)'",
 			                   sock_getafnameorid((sa_family_t)af),
 			                   sock_gettypenameorid(type),
 			                   sock_getprotonameorid(proto));
@@ -2138,7 +2138,7 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err_text;
 	if (result_text == ITER_DONE) {
-		/* A somewhat different story: must return (none,"") */
+		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
 		DeeTuple_SET(result, 0, Dee_None);
 		DeeTuple_SET(result, 1, Dee_EmptyString);
@@ -2216,7 +2216,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err_addr;
 	if (result_size == 0) {
-		/* A somewhat different story: must return (none,"") */
+		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
 		DeeTuple_SET(result, 0, Dee_None);
 		DeeTuple_SET(result, 1, (DeeObject *)&DeeInt_Zero);
@@ -2442,7 +2442,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to bind @this socket for some unknown reason\n"
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Binds @this socket to a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating ?Gsockaddr") },
+	      "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr") },
 	{ "connect",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_connect,
 	  DOC("(args!)\n"
@@ -2460,7 +2460,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to connect @this socket for some unknown reason\n"
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Connect @this socket with a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating ?Gsockaddr") },
+	      "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr") },
 	{ "listen",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_listen,
 	  DOC("(max_backlog=!-1)\n"
@@ -2558,7 +2558,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "arguments, the second being the text regularly returned ?#recv\n"
 	      "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
 	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
-	      "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
+	      "as any other integer value to specify how long to wait before returning ${(none, \"\")}") },
 	{ "recvfrominto",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrominto,
 	  DOC("(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
@@ -2610,7 +2610,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
 	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	      "@param target A tuple consisting of arguments which can be used to construct a ?Gsockaddr object, or a single argument used for "
-	      "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
+	      "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af, target...) : sockaddr(this.sock_af, target)}.\n"
 	      "@return The total number of bytes that was sent\n"
 	      "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected.") },
 	{ "wasshutdown",
@@ -2730,7 +2730,7 @@ socket_repr(DeeSocketObject *__restrict self) {
 	SockAddr sock, peer;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	state                        = ATOMIC_READ(self->s_state);
-	if (ascii_printer_printf(&printer, "<socket(%R,%R,%R): ",
+	if (ascii_printer_printf(&printer, "<socket(%R, %R, %R): ",
 	                         sock_getafnameorid(self->s_sockaddr.sa.sa_family),
 	                         sock_gettypenameorid(self->s_type),
 	                         sock_getprotonameorid(self->s_proto)) < 0)

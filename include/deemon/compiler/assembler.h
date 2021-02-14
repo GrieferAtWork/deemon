@@ -174,7 +174,7 @@ struct asm_sec {
 	                            * NOTE: When non-NULL, this is used as buffer for written text.
 	                            * NOTE: Code assumes that only the first section has this field always
 	                            *       set to non-NULL, while all other sections always use NULL here. */
-	instruction_t  *sec_begin; /* [0..1][<= sec_end][owned_if(!sec_code)][if(sec_code,== sec_code->co_code)]
+	instruction_t  *sec_begin; /* [0..1][<= sec_end][owned_if(!sec_code)][if(sec_code, == sec_code->co_code)]
 	                            * The base address of allocated section memory. */
 	instruction_t  *sec_iter;  /* [0..1][in(sec_begin...sec_end)] The current code position. */
 	instruction_t  *sec_end;   /* [0..1][>= sec_begin] Allocated end address. */
@@ -275,7 +275,7 @@ struct user_assembler {
 	                                * NOTE: Set to `ASM_DELOP' when symbols are defined. */
 #define USER_ASM_FNORMAL 0x0000    /* Normal user-assembly flags. */
 #define USER_ASM_FSTKINV 0x0001    /* The stack has entered an undefined state (can happen when `adjstack' is used with an undefined symbol)
-	                                * During this mode, only instructions with a -0,+0 stack effect can be used,
+	                                * During this mode, only instructions with a -0/+0 stack effect can be used,
 	                                * and the only way to exit this mode is to use a .adjstack instruction. */
 	uint16_t            ua_mode;   /* Current user-assembly mode (Set of `USER_ASM_F*'). */
 	uint16_t           _ua_pad;    /* ... */
@@ -454,7 +454,7 @@ struct asm_invocation {
 	uint8_t            ai_prefix;     /* [valid_if(INVOKE_FPREFIX)] The type of prefix (One of `ASM_*'; aka. the prefixed instruction id without F0 prefix). */
 	uint16_t           ai_prefix_id1; /* [valid_if(INVOKE_FPREFIX)] The first prefix id. */
 	uint16_t           ai_prefix_id2; /* [valid_if(INVOKE_FPREFIX)] The second prefix id (Only used by `ASM_EXTERN') */
-	struct asm_invoke_operand ai_ops[ASM_MAX_INSTRUCTION_OPERANDS]; /* [FOR([*],valid_if(* < ai_opcount))] Invocation operands. */
+	struct asm_invoke_operand ai_ops[ASM_MAX_INSTRUCTION_OPERANDS]; /* [FOR([*], valid_if(* < ai_opcount))] Invocation operands. */
 };
 
 struct asm_mnemonic;
@@ -643,7 +643,7 @@ struct asm_symbol_ref {
 	 */
 	struct symbol         *sr_sym;         /* [1..1][const]
 	                                        * [->s_flag & SYMBOL_FALLOCREF]
-	                                        * [->s_refid == INDEXOF(self,:a_refv)]
+	                                        * [->s_refid == INDEXOF(self, :a_refv)]
 	                                        * The symbol being referenced. */
 	uint16_t               sr_orig_refid;  /* [const] The original value of `sr_sym->s_refid', before that symbol was re-referenced */
 	uint16_t               sr_orig_flag;   /* [const] The original value of `sr_sym->s_flag', who's `SYMBOL_FALLOCREF' bit must be restored. */
@@ -659,7 +659,7 @@ struct assembler {
 	struct asm_sec        *a_curr;     /* [1..1][in(a_sect)] The current target section. */
 	struct asm_sym        *a_syms;     /* [0..1][owned] Chain of assembly symbols allocated by the assembler. */
 	struct asm_sym        *a_finsym;   /* [0..1] The address of the current, top finally handler. */
-	uint8_t               *a_localuse; /* [0..((a_localc+7)/8)|ALLOC(a_locala)][if(!ASM_FREUSELOC,== NULL)][owned] Bitset of local variables that are currently in use. */
+	uint8_t               *a_localuse; /* [0..((a_localc+7)/8)|ALLOC(a_locala)][if(!ASM_FREUSELOC, == NULL)][owned] Bitset of local variables that are currently in use. */
 	DREF DeeObject       **a_constv;   /* [1..1][0..a_constc|ALLOC(a_consta)][owned] Vector of constant variables.
 	                                    * WARNING: Elements are only guarantied to always be non-NULL before `asm_mergestatic()' has been called. */
 	struct asm_symbol_static
@@ -677,8 +677,8 @@ struct assembler {
 	struct asm_sym        *a_loopctl[ASM_LOOPCTL_COUNT]; /* Loop control symbols. */
 	DeeScopeObject        *a_scope;    /* [0..1] The scope of the last AST (Used for tracking stack-based variables) */
 	struct ast_loc        *a_error;    /* [0..1] An AST location that is used as context for displaying assembler messages/warnings. */
-#define ASM_ERR(...)       parser_erratrf(current_assembler.a_error,__VA_ARGS__)
-#define ASM_WARN(...)      parser_warnatrf(current_assembler.a_error,__VA_ARGS__)
+#define ASM_ERR(...)       parser_erratrf(current_assembler.a_error, __VA_ARGS__)
+#define ASM_WARN(...)      parser_warnatrf(current_assembler.a_error, __VA_ARGS__)
 	struct ddi_assembler   a_ddi;      /* Deemon debug information assembler subsystem. */
 	struct handler_frame  *a_handler;  /* [0..1][(!= NULL) == (a_handlerc != 0)] Chain of active exception handlers. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
@@ -686,7 +686,7 @@ struct assembler {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	uint16_t               a_handlerc; /* [(!= 0) == (a_handler != NULL)] Amount of active exception handlers. */
 	uint16_t               a_localc;   /* Amount of required local variables. */
-	uint16_t               a_locala;   /* [if(!ASM_FREUSELOC,== 0)] Allocated size of the `a_localuse' bitset. */
+	uint16_t               a_locala;   /* [if(!ASM_FREUSELOC, == 0)] Allocated size of the `a_localuse' bitset. */
 	uint16_t               a_constc;   /* Amount of required constant variables. */
 	uint16_t               a_consta;   /* Allocated amount of constant variables. */
 	uint16_t               a_staticc;  /* Amount of required static variables. */
@@ -1557,7 +1557,7 @@ INTDEF WUNUSED int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **astv);
 /* Generate code before and after the source expression when
  * trying to store an expression in a given destination `ast'
  * -> asm_gpop_expr_enter(dst);
- * -> ast_genasm(src,ASM_G_FPUSHRES);
+ * -> ast_genasm(src, ASM_G_FPUSHRES);
  * -> asm_gpop_expr_leave(dst);
  * In `a[b] = c':
  * -> diff = asm_gpop_expr_enter(dst); // push @a; push @b;

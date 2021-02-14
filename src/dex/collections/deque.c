@@ -834,7 +834,7 @@ deq_init(Deque *__restrict self,
 /* Get rid of:
  *   array subscript 0 is outside array bounds of 'DEQUE_BUFFER_TYPE' {aka 'unsigned char[40]'}
  * Either I'm not seeing the bug in my code, or the fact that GCC apparently claims that `0'
- * is outside the bounds of [0,40) is incorrect, because 0 is _very_ _well_ within those bounds! */
+ * is outside the bounds of [0, 40) is incorrect, because 0 is _very_ _well_ within those bounds! */
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif /* __GNUC__ && __GNUC__ >= 9 */
 

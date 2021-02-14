@@ -47,7 +47,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 		 * >>          Error.ValueError |
 		 * >>          Error.TypeError
 		 * >>          as err) {
-		 * >>     print "So this happened:",err;
+		 * >>     print "So this happened:", err;
 		 * >> }
 		 * Multi-masks are actually just implemented as
 		 * tuple-expressions found in the mask ast, meaning
@@ -59,7 +59,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 		 * >>           Error.ValueError,
 		 * >>           Error.TypeError)
 		 * >>           as err) {
-		 * >>     print "So this happened:",err;
+		 * >>     print "So this happened:", err;
 		 * >> }
 		 */
 		loc_here(&multi_loc);

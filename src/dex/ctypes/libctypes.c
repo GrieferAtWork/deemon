@@ -1000,7 +1000,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
 	{ "strnoff", (DeeObject *)&ctypes_strnoff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack,maxlen)} if @needle wasn't found") },
+	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack, maxlen)} if @needle wasn't found") },
 	{ "strnroff", (DeeObject *)&ctypes_strnroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
 	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
@@ -1012,7 +1012,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Same as ?Gstrrchr, but return ${haystack - 1} if @needle wasn't found") },
 	{ "strnchrnul", (DeeObject *)&ctypes_strnchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrnchr, but return ${strnend(haystack,maxlen)} if @needle wasn't found") },
+	      "Same as ?Gstrnchr, but return ${strnend(haystack, maxlen)} if @needle wasn't found") },
 	{ "strnrchrnul", (DeeObject *)&ctypes_strnrchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found") },

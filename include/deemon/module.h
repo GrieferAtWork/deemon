@@ -284,7 +284,7 @@ struct Dee_module_object {
 	DREF struct Dee_string_object
 	                            *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
 	DeeModuleObject            **mo_pself;     /* [1..1][0..1][lock(INTERN(modules_lock))] Module self-pointer in the module file hash-table.
-	                                            * [if(MODULE_FDIDINIT,DREF)] When the module has been initialized, this becomes a reference to keep cached modules alive. */
+	                                            * [if(MODULE_FDIDINIT, DREF)] When the module has been initialized, this becomes a reference to keep cached modules alive. */
 	DeeModuleObject             *mo_next;      /* [0..1][valid_if(mo_pself)][lock(INTERN(modules_lock))] Next module with the same modulated `mo_path' hash (module file hash-table). */
 	DREF struct Dee_string_object
 	                            *mo_path;      /* [0..1][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The absolute filename of this module's source file. */
@@ -325,7 +325,7 @@ struct Dee_module_object {
 	                                            *          doing so would kind-of defeat the purpose of
 	                                            *          making everything thread-safe...)
 	                                            *     XXX: The lock would have to be re-entrant & global and
-	                                            *          be held during `DeeObject_Call(init_function,0,NULL)'
+	                                            *          be held during `DeeObject_Call(init_function, 0, NULL)'
 	                                            *          inside of `DeeModule_RunInit()' */
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEC
@@ -869,7 +869,7 @@ DDATDEF DeeTypeObject DeeInteractiveModule_Type;
  * >> if (!padd)
  * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
- * >> return DeeInt_New((*padd)(x,y)); */
+ * >> return DeeInt_New((*padd)(x, y)); */
 DFUNDEF WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(/*Module*/ DeeObject *__restrict self,
                           char const *__restrict name);
@@ -958,13 +958,13 @@ DeeModule_VCallExternf(/*utf-8*/ char const *__restrict module_name,
  * `module_name' that is based off of `module_pathname'
  * NOTE: If the given `module_name' doesn't start with a `.'
  *       character, the given `module_pathname' is ignored and the
- *       call is identical to `DeeModule_OpenGlobal(module_name,options)'
+ *       call is identical to `DeeModule_OpenGlobal(module_name, options)'
  * HINT: The given `module_pathname' is merely prepended
  *       before the module's actual filename.
  * Example:
- * >> DeeModule_OpenRelative("..foo.bar","src/scripts");  // `src/foo/bar.dee'
- * >> DeeModule_OpenRelative(".sys.types",".");           // `./sys/types.dee'
- * >> DeeModule_OpenRelative("thread","foo/bar");         // `${LIBPATH}/thread.dee'
+ * >> DeeModule_OpenRelative("..foo.bar", "src/scripts");  // `src/foo/bar.dee'
+ * >> DeeModule_OpenRelative(".sys.types", ".");           // `./sys/types.dee'
+ * >> DeeModule_OpenRelative("thread", "foo/bar");         // `${LIBPATH}/thread.dee'
  * NOTE: This function also tries to open DEX modules, as well as `.*.dec' files.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
@@ -1000,18 +1000,18 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
  * @param: options:            Compiler options detailing how a module should be loaded
  * @param: mode:               The open mode (set of `MODULE_OPENINPATH_F*')
  * Module files are attempted to be opened in the following order:
- * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path,module_name + ".dee"));
+ * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path, module_name + ".dee"));
  * >>#ifndef CONFIG_NO_DEC
- * >> TRY_LOAD_DEC_FILE(joinpath(module_path,"." + module_name + ".dec"));
+ * >> TRY_LOAD_DEC_FILE(joinpath(module_path, "." + module_name + ".dec"));
  * >>#endif // !CONFIG_NO_DEC
  * >>#ifndef CONFIG_NO_DEX
  * >>#ifdef CONFIG_HOST_WINDOWS
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".dll"));
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".dll"));
  * >>#else
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".so"));
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".so"));
  * >>#endif
  * >>#endif // !CONFIG_NO_DEX
- * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path,module_name + ".dee"));
+ * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path, module_name + ".dee"));
  * EXAMPLES:
  * >> char const *path = "/usr/lib/deemon/lib";
  * >> char const *name = "util";
@@ -1019,7 +1019,7 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
  * >> //   - /usr/lib/deemon/lib/
  * >> DeeModule_OpenInPath(path, strlen(path),
  * >>                      name, strlen(name),
- * >>                      NULL,NULL,
+ * >>                      NULL, NULL,
  * >>                      Dee_MODULE_OPENINPATH_FTHROWERROR);
  * @return: * :        The module that was imported.
  * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)

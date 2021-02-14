@@ -10117,7 +10117,7 @@ do_empty_scan:
 			size_t end_offset;
 		case 4:
 			if (DeeString_Check(argv[1])) {
-				/* pattern,rules,start,end */
+				/* pattern, rules, start, end */
 				if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
 					goto err;
 				if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
@@ -10257,7 +10257,7 @@ do_empty_scan:
 
 	case 4:
 		if (DeeString_Check(argv[1])) {
-			/* pattern,rules,start,end */
+			/* pattern, rules, start, end */
 			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
 				goto err;
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
@@ -11098,21 +11098,21 @@ INTERN struct type_method string_methods[] = {
 	      /*            */ "${x.operator [] (<expr>)} (whitespace before "
 	      /*            */ "and after $\"[\" and $\"]\" is ignored)&"
 	      "$\"{x[<expr>:]}\"|With $x being another selection expression, use "
-	      /*             */ "${x.operator [:] (<expr>,none)} (whitespace "
+	      /*             */ "${x.operator [:] (<expr>, none)} (whitespace "
 	      /*             */ "before and after $\"[\" and $\"]\" is ignored)&"
 	      "$\"{x[:<expr>]}\"|With $x being another selection expression, use "
-	      /*             */ "${x.operator [:] (none,<expr>)} (whitespace "
+	      /*             */ "${x.operator [:] (none, <expr>)} (whitespace "
 	      /*             */ "before and after $\"[\" and $\"]\" is ignored)&"
 	      "$\"{x[<expr1>:<expr2>]}\"|With $x being another selection expression, use "
-	      /*                     */ "${x.operator [:] (<expr1>,<expr2>)} (whitespace before "
+	      /*                     */ "${x.operator [:] (<expr1>, <expr2>)} (whitespace before "
 	      /*                     */ "and after $\"[\", $\":\" and $\"]\" is ignored)&"
-	      "$\"{x(<expr1>,<expr2>,[...])}\"|With $x being another selection expression, use "
-	      /*                           */ "${x(<expr1>,<expr2>,[...])} (whitespace before "
-	      /*                           */ "and after $\"(\", $\",\" and $\")\" is ignored)&"
-	      "$\"{x(<expr1>,<expr2>...)}\"|With $x being another selection expression, use "
-	      /*                        */ "${x(<expr1>,<expr2>...)} (i.e. you're able to use "
-	      /*                        */ "expand expressions here) (whitespace before and after "
-	      /*                        */ "$\"(\", $\",\", $\"...\" and $\")\" is ignored)&"
+	      "$\"{x(<expr1>, <expr2>, [...])}\"|With $x being another selection expression, use "
+	      /*                             */ "${x(<expr1>, <expr2>,[...])} (whitespace before "
+	      /*                             */ "and after $\"(\", $\",\" and $\")\" is ignored)&"
+	      "$\"{x(<expr1>, <expr2>...)}\"|With $x being another selection expression, use "
+	      /*                         */ "${x(<expr1>, <expr2>...)} (i.e. you're able to use "
+	      /*                         */ "expand expressions here) (whitespace before and after "
+	      /*                         */ "$\"(\", $\",\", $\"...\" and $\")\" is ignored)&"
 	      "$\"{x ? <expr1> : <expr2>}\"|With $x being another selection expression, use sub-"
 	      /*                        */ "expression <expr1> if ${x.operator bool()} is true, "
 	      /*                        */ "or <expr2> otherwise (whitespace before and after "
@@ -11714,7 +11714,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	      /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + #needle:])}.\n"
-	      "If @needle could not be found, ${(this,\"\",\"\")} is returned"),
+	      "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_compare,
@@ -12036,11 +12036,11 @@ INTERN struct type_method string_methods[] = {
 	      /**/ "first @close that doesn't have a match @{open}:\n"
 
 	      "${"
-	      "s = \"foo(bar(),baz(42),7).strip()\";\n"
+	      "s = \"foo(bar(), baz(42), 7).strip()\";\n"
 	      "lcol = s.find(\"(\");\n"
 	      "print lcol; /* 3 */\n"
-	      "mtch = s.findmatch(\"(\",\")\",lcol+1);\n"
-	      "print repr s[lcol:mtch+1]; /* \"(bar(),baz(42),7)\" */"
+	      "mtch = s.findmatch(\"(\", \")\", lcol+1);\n"
+	      "print repr s[lcol:mtch+1]; /* \"(bar(), baz(42), 7)\" */"
 	      "}\n"
 
 	      "If no @close without a match @open exists, $-1 is returned\n"
@@ -12115,7 +12115,7 @@ INTERN struct type_method string_methods[] = {
 	      "${"
 	      "s = \"foo { x, y, { 13, 19, 42, { } }, w } -- tail {}\";\n"
 	      "/* { \"foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail {}\" } */\n"
-	      "print repr s.partitionmatch(\"{\",\"\");"
+	      "print repr s.partitionmatch(\"{\", \"\");"
 	      "}\n"
 
 	      "if no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
@@ -12144,14 +12144,14 @@ INTERN struct type_method string_methods[] = {
 	      "print repr s.rpartitionmatch(\"{\", \"\"); /* { \"{ } foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail\" } */"
 	      "}\n"
 
-	      "If no matching @open + @close pair could be found, ${(this[start:end],\"\",\"\")} is returned\n"
+	      "If no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
 
 	      "${"
 	      "function rpartitionmatch(open: string, close: string, start: int = 0, end: int = -1) {\n"
 	      "	local i;\n"
 	      "	local j = this.rfind(close, start, end);\n"
 	      "	if (j < 0 || (i = this.rfindmatch(open, close, start, j)) < 0)\n"
-	      "		return (this.substr(start, end),\"\",\"\");\n"
+	      "		return (this.substr(start, end), \"\", \"\");\n"
 	      "	return (\n"
 	      "		this.substr(start, i),\n"
 	      "		this.substr(i, j + #close),\n"
@@ -12219,8 +12219,8 @@ INTERN struct type_method string_methods[] = {
 	      "?#rerindex" /*    */ "|?#rindex" /*           */ "|Same as ?#rerfind, but throws an error if not found&"
 	      "?#relocate" /*    */ "|-" /*                  */ "|Same as ?#refind, but return the sub-string that was matched, rather than its indices&"
 	      "?#rerlocate" /*   */ "|-" /*                  */ "|Same as ?#rerfind, but return the sub-string that was matched, rather than its indices&"
-	      "?#repartition" /* */ "|?#partition" /*        */ "|Same as ?#relocate, but return a 3-tuple of strings (before_match,match,after_match)&"
-	      "?#rerpartition" /**/ "|?#rpartition" /*       */ "|Same as ?#rerlocate, but return a 3-tuple of strings (before_match,match,after_match)&"
+	      "?#repartition" /* */ "|?#partition" /*        */ "|Same as ?#relocate, but return a 3-tuple of strings (before_match, match, after_match)&"
+	      "?#rerpartition" /**/ "|?#rpartition" /*       */ "|Same as ?#rerlocate, but return a 3-tuple of strings (before_match, match, after_match)&"
 	      "?#rereplace" /*   */ "|?#replace" /*          */ "|Find and replace all sub-ranges matched by a regex pattern with a different string&"
 	      "?#refindall" /*   */ "|?#findall" /*          */ "|Enumerate all sub-ranges matched by a regex pattern in ascending order&"
 	      "?#relocateall" /* */ "|-" /*                  */ "|Enumerate all sub-strings matched by a regex pattern in ascending order&"
@@ -12467,7 +12467,7 @@ INTERN struct type_method string_methods[] = {
 	      "function repartition(pattern: string, start: int, end: int, rules: string) {\n"
 	      "	local start, end = this.refind(pattern, start, end, rules)...;\n"
 	      "	if (start is none)\n"
-	      "		return (this,\"\",\"\");\n"
+	      "		return (this, \"\", \"\");\n"
 	      "	return (\n"
 	      "		this.substr(0,start),\n"
 	      "		this.substr(start, end),\n"
@@ -12485,7 +12485,7 @@ INTERN struct type_method string_methods[] = {
 	      "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
 	      "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
 	      "	if (start is none)\n"
-	      "		return (this,\"\",\"\");\n"
+	      "		return (this, \"\", \"\");\n"
 	      "	return (\n"
 	      "		this.substr(0, start),\n"
 	      "		this.substr(start, end), \n"

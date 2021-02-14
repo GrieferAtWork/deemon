@@ -536,9 +536,9 @@ fs.chdir(fs.path.head(__FILE__));
 
 local options = [7] * 256;
 for (local line: file.open("libfs.h")) {
-	local mask,id;
+	local mask, id;
 	try {
-		none,mask,id = line.scanf(" # define FS_EXPAND_F%[^ ] 0x%[0-9a-fA-F] /" "* `%[^']'")...;
+		none, mask, id = line.scanf(" # define FS_EXPAND_F%[^ ] 0x%[0-9a-fA-F] /" "* `%[^']'")...;
 	} catch (...) {
 		continue;
 	}
@@ -1395,7 +1395,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "calling ?Gabspath with @cwd as first and the return value of ?Ggetcwd as second argument\n"
 	      "${"
 	      "import abspath from fs;\n"
-	      "print abspath(\"../user/bar\",\"/home/foobar\"); /* \"/home/user/bar\" */"
+	      "print abspath(\"../user/bar\", \"/home/foobar\"); /* \"/home/user/bar\" */"
 	      "}") },
 	{ "relpath", (DeeObject *)&libfs_relpath, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,cwd=!P{.})->?Dstring\n"

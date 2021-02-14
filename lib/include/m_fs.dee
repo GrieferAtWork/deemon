@@ -28,7 +28,7 @@ final function home(...) -> fs.User(...).home;
 final function listenv() -> [fs.environ...];
 final function getenv(name) -> fs.environ[name];
 final function delenv(name) -> fs.environ.operator del[](name);
-final function setenv(name,value) -> fs.environ.operator [] (name,value);
+final function setenv(name, value) -> fs.environ.operator [] (name, value);
 final function User() -> fs.User.name;
 final global host = fs.gethostname;
 final global path = fs_path;
@@ -37,18 +37,18 @@ final function getmtime(path) -> fs.stat(path).st_mtime;
 final function getctime(path) -> fs.stat(path).st_ctime;
 final function gettimes(path) {
 	__stack local st = fs.stat(path);
-	return (st.st_atime,st.st_ctime,st.st_mtime);
+	return (st.st_atime, st.st_ctime, st.st_mtime);
 }
-final function setatime(path,val) -> fs.chtime(val,none,none);
-final function setmtime(path,val) -> fs.chtime(none,val,none);
-final function setctime(path,val) -> fs.chtime(none,none,val);
-final function settimes(path,at = none,ct = none,mt = none) -> fs.chtime(at,mt,ct);
+final function setatime(path, val) -> fs.chtime(val, none, none);
+final function setmtime(path, val) -> fs.chtime(none, val, none);
+final function setctime(path, val) -> fs.chtime(none, none, val);
+final function settimes(path, at = none, ct = none, mt = none) -> fs.chtime(at, mt, ct);
 final global isabs = fs.isabs;
 final global isfile = fs.stat.isreg;
 final global isdir = fs.stat.isdir;
 final global islink = fs.stat.islnk;
 final function isdrive(path) {
-	path = fs.inctrail(fs.expand(path,"pc"));
+	path = fs.inctrail(fs.expand(path, "pc"));
 	return fs.driveof(path) == path;
 }
 final global ismount = isdrive;
@@ -75,7 +75,7 @@ final function getmod(path) -> fs.stat(path).st_mode;
 final global chown = fs.chown;
 final function getown(path) {
 	__stack local st = fs.stat(path);
-	return (st.st_uid,st.st_gid);
+	return (st.st_uid, st.st_gid);
 }
 final global uidof = fs.User;
 final global gidof = fs.Group;

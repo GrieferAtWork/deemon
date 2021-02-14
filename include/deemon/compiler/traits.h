@@ -27,7 +27,7 @@
 #ifdef CONFIG_BUILDING_DEEMON
 DECL_BEGIN
 
-#define AST_ENUMERATE_CHILD_BRANCHES(self,callback)
+#define AST_ENUMERATE_CHILD_BRANCHES(self, callback)
 
 
 /* Return true if a given `AST_MULTIPLE' contains expand ASTs. */

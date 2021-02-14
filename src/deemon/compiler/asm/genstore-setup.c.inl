@@ -111,7 +111,7 @@ INTERN WUNUSED NONNULL((1)) int
 					/* This is where it gets _really_ complicated, because
 					 * we need to look out for stack variables being lazily
 					 * initialized.
-					 * >> __stack local x,y,z = get_values()...;
+					 * >> __stack local x, y, z = get_values()...;
 					 * ASM:
 					 * >> push call get_values, #0
 					 * >> unpack pop, #3

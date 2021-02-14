@@ -3238,7 +3238,7 @@ force_scope:
 				for (i = 0; i < self->a_multiple.m_astc; ++i) {
 					DO(print_ast_code(self->a_multiple.m_astv[i], printer, arg, true, self->a_scope, indent + 1));
 					if (i < self->a_multiple.m_astc - 1)
-						PRINT(",");
+						PRINT(", ");
 				}
 				if (self->a_multiple.m_astc == 1) {
 					PRINT(",)");
@@ -3253,7 +3253,7 @@ force_scope:
 			for (i = 0; i < self->a_multiple.m_astc; ++i) {
 				DO(print_ast_code(self->a_multiple.m_astv[i], printer, arg, true, self->a_scope, indent + 1));
 				if (i < self->a_multiple.m_astc - 1)
-					PRINT(",");
+					PRINT(", ");
 			}
 			PRINT("]");
 			break;
@@ -3674,7 +3674,7 @@ do_unary_operator:
 				PRINT("(");
 				for (i = 0; i < args->a_multiple.m_astc; ++i) {
 					if (i != 0)
-						PRINT(",");
+						PRINT(", ");
 					DO(print_ast_code(args->a_multiple.m_astv[i],
 					                  printer, arg, true,
 					                  self->a_scope, indent));
@@ -3688,7 +3688,7 @@ do_unary_operator:
 				PRINT("(");
 				for (i = 0; i < DeeTuple_SIZE(args); ++i) {
 					if (i != 0)
-						PRINT(",");
+						PRINT(", ");
 					DO(DeeObject_PrintRepr(DeeTuple_GET(args, i), printer, arg));
 				}
 				PRINT(")");
@@ -3963,10 +3963,10 @@ operator_fallback:
 			if (self->a_operator.o_op1) {
 				DO(print_ast_code(self->a_operator.o_op1, printer, arg, true, self->a_scope, indent));
 				if (self->a_operator.o_op2) {
-					PRINT(",");
+					PRINT(", ");
 					DO(print_ast_code(self->a_operator.o_op2, printer, arg, true, self->a_scope, indent));
 					if (self->a_operator.o_op3) {
-						PRINT(",");
+						PRINT(", ");
 						DO(print_ast_code(self->a_operator.o_op3, printer, arg, true, self->a_scope, indent));
 					}
 				}
@@ -4045,7 +4045,7 @@ operator_fallback:
 			DO(print_ast_code(self->a_action.a_act0, printer, arg, true, self->a_scope, indent));
 			PRINT(":");
 			DO(print_ast_code(self->a_action.a_act1, printer, arg, true, self->a_scope, indent));
-			PRINT(",");
+			PRINT(", ");
 			DO(print_ast_code(self->a_action.a_act2, printer, arg, true, self->a_scope, indent));
 			PRINT("]");
 			break;
@@ -4119,7 +4119,7 @@ operator_fallback:
 		ACTION(AST_FACTION_ASSERT_M):
 			PRINT("assert(");
 			DO(print_ast_code(self->a_action.a_act0, printer, arg, true, self->a_scope, indent));
-			PRINT(",");
+			PRINT(", ");
 			DO(print_ast_code(self->a_action.a_act1, printer, arg, true, self->a_scope, indent));
 			PRINT(")");
 			break;
@@ -4170,7 +4170,7 @@ operator_fallback:
 			DO(print_ast_code(self->a_action.a_act0, printer, arg, true, self->a_scope, indent));
 			PRINT("(");
 			DO(print_ast_code(self->a_action.a_act1, printer, arg, true, self->a_scope, indent));
-			PRINT("...,**");
+			PRINT("..., **");
 			DO(print_ast_code(self->a_action.a_act2, printer, arg, true, self->a_scope, indent));
 			PRINT(")");
 			break;
@@ -4749,7 +4749,7 @@ print_single_expr:
 			struct catch_expr *handler;
 			handler = &self->a_try.t_catchv[i];
 			if (i != 0)
-				PUTC(',');
+				PRINT(", ");
 			PRINT("(\"");
 			if (handler->ce_flags & EXCEPTION_HANDLER_FFINALLY) {
 				PRINT("finally");
@@ -4760,12 +4760,12 @@ print_single_expr:
 					PUTC(',');
 				PRINT("interrupt");
 			}
-			PRINT("\",");
+			PRINT("\", ");
 			if (handler->ce_mask) {
 				PRINTAST(handler->ce_mask);
-				PUTC(',');
+				PRINT(", ");
 			} else {
-				PRINT("none,");
+				PRINT("none, ");
 			}
 			PRINTAST(handler->ce_code);
 			PRINT(")");
@@ -5006,7 +5006,7 @@ print_single_expr:
 	DO(print_scope_repr(self->a_scope, printer));
 	if (self->a_ddi.l_file) {
 		PRINT(", loc: (");
-		printf("<file %$q>,%d,%d",
+		printf("<file %$q>, %d, %d",
 		       self->a_ddi.l_file->f_namesize,
 		       self->a_ddi.l_file->f_name,
 		       self->a_ddi.l_line,
@@ -5080,7 +5080,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setmultiple,
 	  DOC("->?S?.\n"
 	      "@throw TypeError ?#kind isn't $\"multiple\"\n"
-	      "@throw ValueError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw ValueError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the sequence of sub-branches associated with @this multi-branch ast") },
 	{ "multiple_typing",
@@ -5097,7 +5097,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setreturnast,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"return\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No return expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the ast describing the expression returned by @this branch\n"
@@ -5108,7 +5108,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setyieldast,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"yield\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the ast describing the expression yielded by @this branch") },
 	{ "throwast",
@@ -5117,7 +5117,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setthrowast,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"throw\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No throw expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the ast describing the expression thrown by @this branch\n"
@@ -5128,7 +5128,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_settryguard,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"try\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No throw expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the ast guarded by the ?#tryhandlers of @this try-branch") },
@@ -5183,7 +5183,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
 	      "@throw TypeError ?#loopflags contains $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No condition expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5195,7 +5195,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
 	      "@throw TypeError ?#loopflags contains $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No advance expression expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5206,7 +5206,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setlooploop,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No loop block expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5218,7 +5218,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
 	      "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No loop element has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
@@ -5229,7 +5229,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
 	      "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the foreach iterator expression of @this loop (${foreach (loopelem: loopiter) looploop})") },
 	{ "loopelemcond",
@@ -5238,7 +5238,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopelemcond,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No condition or element expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Alias for accessing either the condition of a regular loop (#loopcond), or the element of foreach-loop (#loopelem)") },
@@ -5248,7 +5248,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopiternext,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No loop advance expression has been bound\n"
 	      "@throw AttributeError Attempted to unbind or assign ?N to ?#loopiter\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
@@ -5264,7 +5264,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalcond,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the condition used to determine the the path taken by a conditional branch") },
 	{ "conditionaltt",
@@ -5273,7 +5273,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionaltt,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No true-branch has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?t\n"
@@ -5285,7 +5285,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalff,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute No false-branch has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?f\n"
@@ -5326,7 +5326,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setboolast,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"bool\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the ast describing the expression turned into a boolean by @this branch") },
 	{ "boolisnegated",
@@ -5342,7 +5342,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setexpandast,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"expand\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the ast being expanded by @this one") },
 	{ "functioncode",
@@ -5351,7 +5351,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setfunctioncode,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"function\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError ${this.scope} is not reachable from ${VALUE.scope}\n"
 	      "@throw ReferenceError ${this.scope.base} is identical to ${VALUE.scope.base}\n"
 	      "Get or set the code bound to the function of @this ast") },
@@ -5369,7 +5369,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorfuncbinding,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operatorfunc\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute The operator function hasn't been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the binding of the operator function loaded by this branch\n"
@@ -5389,7 +5389,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatora,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the first operand used for invoking ?#operatorname") },
 	{ "operatorb",
@@ -5398,7 +5398,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorb,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute The second operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second operand used for invoking ?#operatorname\n"
@@ -5409,7 +5409,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorc,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute The third operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second third used for invoking ?#operatorname\n"
@@ -5420,7 +5420,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatord,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw UnboundAttribute The fourth operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second fourth used for invoking ?#operatorname\n"
@@ -5477,7 +5477,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactiona,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw AttributeError The currently set action takes $0 arguments\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the first operand used by the action performed by @this ast") },
@@ -5487,7 +5487,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactionb,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw AttributeError The currently set action takes $0, or $1 argument\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the second operand used by the action performed by @this ast") },
@@ -5497,7 +5497,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactionc,
 	  DOC("->?.\n"
 	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
+	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
 	      "@throw AttributeError The currently set action takes $0, $1 or $2 arguments\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get or set the third operand used by the action performed by @this ast") },

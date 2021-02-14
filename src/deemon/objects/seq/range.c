@@ -58,7 +58,7 @@ DECL_BEGIN
 >> print repr([7:0, -2] as sequence); // { 7, 5, 3, 1 }
 >> print repr([7:0, -3] as sequence); // { 7, 4, 1 }
 Implementation:
-function range(start,end,step?) {
+function range(start, end, step?) {
 	if (step !is bound) {
 		while (start < end) {
 			yield start;
@@ -947,7 +947,7 @@ PRIVATE struct type_member range_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 range_repr(Range *__restrict self) {
 	return self->r_step
-	       ? DeeString_Newf("[%r:%r,%r]", self->r_start, self->r_end, self->r_step)
+	       ? DeeString_Newf("[%r:%r, %r]", self->r_start, self->r_end, self->r_step)
 	       : DeeString_Newf("[%r:%r]", self->r_start, self->r_end);
 }
 
@@ -1034,7 +1034,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRange",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(start,end,step?)"),
+	                         "(start, end, step?)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1478,7 +1478,7 @@ PRIVATE struct type_member intrange_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 intrange_repr(IntRange *__restrict self) {
 	return self->ir_step != 1
-	       ? DeeString_Newf("[%Id:%Id,%Id]", self->ir_start, self->ir_end, self->ir_step)
+	       ? DeeString_Newf("[%Id:%Id, %Id]", self->ir_start, self->ir_end, self->ir_step)
 	       : DeeString_Newf("[%Id:%Id]", self->ir_start, self->ir_end);
 }
 

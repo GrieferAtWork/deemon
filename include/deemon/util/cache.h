@@ -145,7 +145,7 @@ struct cache_object {
 		rwlock_endwrite(&structcache_##name##_lock);                                         \
 		if (!result)*/                                                                       \
 		result = (alloc_type *)DeeDbg_Malloc(object_size, file, line);                       \
-		/*OBJECT_CACHE_IFDBG(else memset(result,0xcc,object_size);)*/                        \
+		/*OBJECT_CACHE_IFDBG(else memset(result, 0xcc, object_size);)*/                      \
 		return result;                                                                       \
 	})
 #define DEFINE_OBJECT_CACHE_EX(name, alloc_type, object_size, limit)                 \
@@ -207,7 +207,7 @@ struct cache_object {
 		rwlock_endwrite(&obcache_##name##_lock);                                     \
 		if (!result)*/                                                               \
 		result = (alloc_type *)DeeDbgObject_Malloc(object_size, file, line);         \
-		/*OBJECT_CACHE_IFDBG(else memset(result,0xcc,object_size);)*/                \
+		/*OBJECT_CACHE_IFDBG(else memset(result, 0xcc, object_size);)*/              \
 		return result;                                                               \
 	})                                                                               \
 	INTERN void DCALL name##_tp_free(void *__restrict ob) {                          \
@@ -281,7 +281,7 @@ struct cache_object {
 		if (result) {                                                                          \
 			structcache_##name##_list = ((struct cache_struct *)result)->cs_next;              \
 			--structcache_##name##_size;                                                       \
-			OBJECT_CACHE_IFDBG(memset(result,0xcc,object_size);)                               \
+			OBJECT_CACHE_IFDBG(memset(result, 0xcc, object_size);)                             \
 		} else*/                                                                               \
 		{                                                                                      \
 			result = (alloc_type *)DeeDbg_Malloc(object_size, file, line);                     \
@@ -334,7 +334,7 @@ struct cache_object {
 		if (result) {                                                                  \
 			obcache_##name##_list = ((struct cache_object *)result)->co_next;          \
 			--obcache_##name##_size;                                                   \
-			OBJECT_CACHE_IFDBG(memset(result,0xcc,object_size);)                       \
+			OBJECT_CACHE_IFDBG(memset(result, 0xcc, object_size);)                     \
 		} else*/                                                                       \
 		{                                                                              \
 			result = (alloc_type *)DeeDbgObject_Malloc(object_size, file, line);       \

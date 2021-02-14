@@ -1665,7 +1665,7 @@ check_sym_class:
 				goto err;
 			if (modsym->ss_flags & MODSYM_FPROPERTY) {
 				/* Call an external property:
-				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>,#0
+				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>, #0
 				 * >> pop     top */
 				if (asm_gcall_extern((uint16_t)mid,
 				                     modsym->ss_index + MODULE_PROPERTY_DEL,
@@ -1675,7 +1675,7 @@ check_sym_class:
 			} else {
 				/* Delete an external global variable:
 				 * >> push    module <mid>
-				 * >> delattr pop, const DeeModule_GlobalName(<module>,<gid>) */
+				 * >> delattr pop, const DeeModule_GlobalName(<module>, <gid>) */
 				int32_t cid;
 				DREF DeeStringObject *name_obj;
 				name_obj = module_symbol_getnameobj(modsym);

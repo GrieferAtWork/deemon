@@ -323,8 +323,8 @@ PRIVATE struct type_cmp dictiterator_cmp = {
 
 
 PRIVATE struct type_member dict_iterator_members[] = {
-    TYPE_MEMBER_FIELD("seq",STRUCT_OBJECT,offsetof(DictIterator,di_dict)),
-    TYPE_MEMBER_END
+	TYPE_MEMBER_FIELD("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict)),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject DictIterator_Type = {

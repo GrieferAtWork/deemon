@@ -156,7 +156,7 @@ function zip(seqs...: Sequence): {Sequence...} {
 @@>    yield 20;
 @@>    yield 30;
 @@>}
-@@>for (local index,item: enumerate(enum_items())) {
+@@>for (local index, item: enumerate(enum_items())) {
 @@>    /* Item number 0 is 10 */
 @@>    /* Item number 1 is 20 */
 @@>    /* Item number 2 is 30 */

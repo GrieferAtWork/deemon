@@ -328,7 +328,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_deepload(Dict *__restrict self) {
 	typedef struct {
 		DREF DeeObject *e_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
-		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy,0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
+		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:d_lock)] Dictionary item value. */
 	} Entry;
 	/* #1 Allocate 2 new element-vector of the same size as `self'
 	 *    One of them has a length `d_mask+1', the other `d_used'

@@ -37,9 +37,9 @@
  * (like the wheird way assignment worked). But we're
  * not trying to go back. This is just for fun! */
 
-#pragma push_macro(undef,"from","import")
+#pragma push_macro(undef, "from", "import")
 from "ctypes" import
-#pragma pop_macro("from","import")
+#pragma pop_macro("from", "import")
 	SInt8 = "int8_t",
 	SInt16 = "int16_t",
 	SInt32 = "int32_t",

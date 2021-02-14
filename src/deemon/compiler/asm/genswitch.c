@@ -112,7 +112,7 @@ err:
 }
 
 
-/* Construct a tuple `(sym.PC,sym.SP)' for the given `sym' */
+/* Construct a tuple `(sym.PC, sym.SP)' for the given `sym' */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pack_target_tuple(struct asm_sym *__restrict sym) {
 	DREF DeeObject *ri_ip;
@@ -338,11 +338,11 @@ err_jump_table:
 			constant_cases = constant_cases->tl_next;
 		}
 		/* With the jump table now generated, generate code like this:
-		 * >>    push     const @<jump_table>            // expr, jump_table
-		 * >>    swap                                    // jump_table, expr
-		 * >>    push     const @(default.PC,default.SP) // jump_table, expr, default
-		 * >>    callattr top, @"get", #2                // target
-		 * >>    unpack   pop, #2                        // target.PC, target.SP
+		 * >>    push     const @<jump_table>             // expr, jump_table
+		 * >>    swap                                     // jump_table, expr
+		 * >>    push     const @(default.PC, default.SP) // jump_table, expr, default
+		 * >>    callattr top, @"get", #2                 // target
+		 * >>    unpack   pop, #2                         // target.PC, target.SP
 		 * >>    jmp      pop, #pop */
 		// ...
 		if (asm_allowconst(jump_table)) {
@@ -415,18 +415,18 @@ do_generate_block:
 		/* Check if all jump targets share the same stack depth,
 		 * and if they do, optimize the generated assembly:
 		 * OLD:
-		 * >>    push     const @<jump_table>            // expr, jump_table
-		 * >>    swap                                    // jump_table, expr
-		 * >>    push     const @(default.PC,default.SP) // jump_table, expr, default
-		 * >>    callattr top, @"get", #2                // target
-		 * >>    unpack   pop, #2                        // target.PC, target.SP
-		 * >>    jmp      pop, #pop                      // ...
+		 * >>    push     const @<jump_table>             // expr, jump_table
+		 * >>    swap                                     // jump_table, expr
+		 * >>    push     const @(default.PC, default.SP) // jump_table, expr, default
+		 * >>    callattr top, @"get", #2                 // target
+		 * >>    unpack   pop, #2                         // target.PC, target.SP
+		 * >>    jmp      pop, #pop                       // ...
 		 * NEW:
-		 * >>    push     const @<jump_table>            // expr, jump_table
-		 * >>    swap                                    // jump_table, expr
-		 * >>    push     const @default.PC              // jump_table, expr, default
-		 * >>    callattr top, @"get", #2                // target
-		 * >>    jmp      pop                            // ...
+		 * >>    push     const @<jump_table>             // expr, jump_table
+		 * >>    swap                                     // jump_table, expr
+		 * >>    push     const @default.PC               // jump_table, expr, default
+		 * >>    callattr top, @"get", #2                 // target
+		 * >>    jmp      pop                             // ...
 		 */
 		size_t i;
 		uint16_t common_sp, alt_sp;

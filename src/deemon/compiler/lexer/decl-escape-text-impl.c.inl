@@ -27,9 +27,9 @@
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */
 INTERN int DCALL
-PP_CAT2(decl_ast_escapetext,N)(PP_CAT3(uint,N,_t) const *__restrict text, size_t text_len,
-                               struct unicode_printer *__restrict printer,
-                               struct unicode_printer *__restrict source_printer) {
+PP_CAT2(decl_ast_escapetext, N)(PP_CAT3(uint, N, _t) const *__restrict text, size_t text_len,
+                                struct unicode_printer *__restrict printer,
+                                struct unicode_printer *__restrict source_printer) {
 	PP_CAT3(uint, N, _t)
 	const *iter, *end, *flush_start = text;
 	/* Strip tailing whitespace (would otherwise be stripped by the doc API). */

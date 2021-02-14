@@ -57,8 +57,8 @@ typedef struct {
 	rwlock_t            si_lock;    /* Lock for modifying the data and format pointers.
 	                                 * NOTE: Not required to be held when reading those pointers! */
 #endif /* !CONFIG_NO_THREADS */
-	char               *si_datiter; /* [1..1][lock(READ(atomic),WRITE(si_lock))] The current data pointer (UTF-8). */
-	char               *si_fmtiter; /* [1..1][lock(READ(atomic),WRITE(si_lock))] The current format pointer (UTF-8). */
+	char               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
+	char               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
 } StringScanIterator;
 
 #ifdef CONFIG_NO_THREADS
@@ -464,7 +464,7 @@ do_integer_scan:
 		 *       >> try {
 		 *       >>     x, y, z = data.scanf("x = %d, y = %d, z = %d")...;
 		 *       >> } catch (...) {
-		 *       >>     print "Bad data:",repr data;
+		 *       >>     print "Bad data:", repr data;
 		 *       >>     continue;
 		 *       >> }
 		 *       >> process_data(x, y, z);

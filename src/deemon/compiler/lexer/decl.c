@@ -324,9 +324,9 @@ nope:
 /* Print the given `name' as encoded documentation name:
  * >> if (!name.issymbol()) {
  * >>     for (local x: r'\?!{}|,()<>[]=')
- * >>          name = name.replace(x,r'\' + x);
- * >>     name = name.replace(r"->",r"-\>");
- * >>     name = name.replace("\n","\\\n"); // For any type of line-feed
+ * >>          name = name.replace(x, r'\' + x);
+ * >>     name = name.replace(r"->", r"-\>");
+ * >>     name = name.replace("\n", "\\\n"); // For any type of line-feed
  * >>     name = "{" + name + "}";
  * >> } */
 INTERN int DCALL
@@ -1127,7 +1127,7 @@ err_seq:
 			goto err_flags;
 		}
 		if (tok == ':') {
-			/* Special case: `{x: y}' is an alias for `{(x,y)...}', as it best represents a mapping */
+			/* Special case: `{x: y}' is an alias for `{(x, y)...}', as it best represents a mapping */
 			struct decl_ast *elemv;
 			elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
 			if unlikely(!elemv) {

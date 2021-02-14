@@ -21,8 +21,8 @@
 #include "__stddef.dee"
 
 #pragma push_macro(undef, \
-	"class","function","new","import","Pipe", \
-	"from","ipc","File","deemon","local","buffer", \
+	"class", "function", "new", "import", "Pipe", \
+	"from", "ipc", "File", "deemon", "local", "buffer", \
 	"return")
 
 class pipe {
@@ -42,12 +42,12 @@ class pipe {
 		 * is the exact behavior of read/write-through buffers (aka. `none')
 		 * NOTE: Also set the `close' flag so that the buffer is allowed
 		 *       to close() the underlying pipe. */
-		return (File.Buffer(__r,"ro,c,none"), __w);
+		return (File.Buffer(__r, "ro,c,none"), __w);
 	}
 }
 #pragma pop_macro( \
-	"class","function","new","import","Pipe", \
-	"from","ipc","File","deemon","local","buffer", \
+	"class", "function", "new", "import", "Pipe", \
+	"from", "ipc", "File", "deemon", "local", "buffer", \
 	"return")
 
 

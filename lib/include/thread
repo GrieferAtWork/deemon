@@ -20,10 +20,10 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","deemon","import","threading")
+#pragma push_macro(undef, "from", "deemon", "import", "threading")
 from deemon import thread_id = "int", sempahore_count = "int", thread = "Thread";
 from threading import semaphore = "Semaphore", mutex = "Mutex", tls = "Tls";
-#pragma pop_macro("from","deemon","import","threading")
+#pragma pop_macro("from", "deemon", "import", "threading")
 
 #define __atomic_once{...} \
 {\

@@ -38,7 +38,7 @@
 DECL_BEGIN
 
 #define BUILTIN(name, object, flags) \
-	PRIVATE DEFINE_STRING(str_##name,#name);
+	PRIVATE DEFINE_STRING(str_##name, #name);
 
 #define BUILTIN_REUSE(name, object, flags) /* nothing */
 #include "builtins.def"

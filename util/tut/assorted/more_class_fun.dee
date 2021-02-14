@@ -35,7 +35,7 @@ class a_class {
 		print ">> Destructor: a_class", this;
 	}
 
-	this(x,y,z) {
+	this(x, y, z) {
 		m_x = x;
 		m_y = y;
 		m_z = z;

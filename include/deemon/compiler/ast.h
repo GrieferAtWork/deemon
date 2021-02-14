@@ -71,25 +71,25 @@ struct catch_expr {
 	uint16_t             ce_flags; /* Catch block flags (Set of `EXCEPTION_HANDLER_F*'). */
 #define CATCH_EXPR_FNORMAL 0x0000  /* Normal catch processing. */
 #define CATCH_EXPR_FSECOND 0x0001  /* If the catch-expression is a catch-handler (as opposed to being a finally-handler),
-	                                * do not generate code to discard secondary exceptions if the handler throws an
-	                                * additional primary exception:
-	                                * >> try {
-	                                * >>     throw "foo";
-	                                * >> } catch (...) {
-	                                * >>     throw "bar";
-	                                * >> }
-	                                * With this flag set, any exception thrown in the catch-handler (`"bar"'),
-	                                * will cause the previous primary (then secondary) exception (`"foo"') to
-	                                * be discarded before exception handling is continued normally.
-	                                * However if this flag isn't set, both `"foo"' and `"bar"' remain active
-	                                * exception, leaving `"bar"' to be discarded once the associated function
-	                                * frame ends.
-	                                * This flag is usually set by the AST optimizer if it is detected that
-	                                * the handler branch never throws an exception, or is itself protected with
-	                                * another handler capable of handling at least all non-interrupt exceptions.
-	                                * Note however that if this flag is set and `ce_code' still manages to throw
-	                                * an exception, both exceptions will remain active, with all but the one
-	                                * thrown first then being discarded during stackframe cleanup. */
+                                    * do not generate code to discard secondary exceptions if the handler throws an
+                                    * additional primary exception:
+                                    * >> try {
+                                    * >>     throw "foo";
+                                    * >> } catch (...) {
+                                    * >>     throw "bar";
+                                    * >> }
+                                    * With this flag set, any exception thrown in the catch-handler (`"bar"'),
+                                    * will cause the previous primary (then secondary) exception (`"foo"') to
+                                    * be discarded before exception handling is continued normally.
+                                    * However if this flag isn't set, both `"foo"' and `"bar"' remain active
+                                    * exception, leaving `"bar"' to be discarded once the associated function
+                                    * frame ends.
+                                    * This flag is usually set by the AST optimizer if it is detected that
+                                    * the handler branch never throws an exception, or is itself protected with
+                                    * another handler capable of handling at least all non-interrupt exceptions.
+                                    * Note however that if this flag is set and `ce_code' still manages to throw
+                                    * an exception, both exceptions will remain active, with all but the one
+                                    * thrown first then being discarded during stackframe cleanup. */
 	uint16_t             ce_mode;  /* Catch mode flags (Set of `CATCH_EXPR_F*'). */
 };
 
@@ -117,8 +117,8 @@ struct asm_operand {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	struct TPPKeyword        *ao_name;  /* [0..1] User-defined name for this operand. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	/*REF*/ struct TPPString *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i,[1..1])]
-	                                     *       [if((self - :as_opv) >= :as_num_o+:as_num_i,[0..0])]
+	/*REF*/ struct TPPString *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i, [1..1])]
+	                                     *       [if((self - :as_opv) >= :as_num_o+:as_num_i, [0..0])]
 	                                     * Allowed operand types (A string of `ASM_OP_*' from `genasm-userasm.c').
 	                                     * NOTE: Only, and always `NULL' for label operands. */
 	union {
@@ -144,7 +144,7 @@ struct ast {
 #endif /* !CONFIG_AST_IS_STRUCT */
 	/* XXX: Maybe not use an object for this, but rather a raw struct? */
 	DREF DeeScopeObject *a_scope; /* [1..1] The scope in which this AST exists. */
-	struct ast_loc       a_ddi;   /* [OVERRIDE(.l_file,REF(TPPFile_Decref) [0..1])]
+	struct ast_loc       a_ddi;   /* [OVERRIDE(.l_file, REF(TPPFile_Decref) [0..1])]
 	                               * Debug information describing the location of this AST. */
 	uint16_t             a_type;  /* AST Type (One of `AST_*') */
 #define AST_FNORMAL      0x0000   /* Normal AST flags. */
@@ -173,28 +173,28 @@ struct ast {
 
 		/* Statement expressions. */
 #define AST_MULTIPLE                    0x0004  /* Multiple, consecutive statements/expressions.
-		                                         * Dependent on the context, multiple expressions
-		                                         * behave special, such as when used as the element
-		                                         * expression in a __foreach statement:
-		                                         * >> __foreach(a,b,c: foo)
-		                                         * ... in which case they will cause the compiler to
-		                                         * generate code for unpacking yielded values and
-		                                         * individually assigning them to `a', `b' and `c'.
-		                                         * NOTE: You may use `a_flag' to specify how
-		                                         *       multiple expressions should be packed together. */
+                                                 * Dependent on the context, multiple expressions
+                                                 * behave special, such as when used as the element
+                                                 * expression in a __foreach statement:
+                                                 * >> __foreach(a, b, c: foo)
+                                                 * ... in which case they will cause the compiler to
+                                                 * generate code for unpacking yielded values and
+                                                 * individually assigning them to `a', `b' and `c'.
+                                                 * NOTE: You may use `a_flag' to specify how
+                                                 *       multiple expressions should be packed together. */
 #   define AST_FMULTIPLE_KEEPLAST       0x0000  /* Default: Evaluate, but discard all but the last expression, which is then propagated as value.
-		                                         *          If an `AST_EXPAND' expression appears in the sequence,  */
+                                                 *          If an `AST_EXPAND' expression appears in the sequence,  */
 #   define AST_FMULTIPLE_TUPLE          0x1000  /* Pack all elements into a Tuple, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_LIST           0x1001  /* Pack all elements into a List, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_HASHSET        0x1002  /* Pack all elements into a HashSet, correctly handling `AST_EXPAND' elements. */
 #   define AST_FMULTIPLE_DICT           0x1003  /* Pack all elements into a Dict, correctly handling `AST_EXPAND' elements.
-		                                         * NOTE: This sequence class requires that `m_astc' is aligned
-		                                         *       by 2, with every first used as key, and every second as item.
-		                                         *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
+                                                 * NOTE: This sequence class requires that `m_astc' is aligned
+                                                 *       by 2, with every first used as key, and every second as item.
+                                                 *       If it isn't aligned by 2, the last expression is ignored and not compiled. */
 #   define AST_FMULTIPLE_GENERIC        0x1008  /* Pack elements into a sequence of unspecified typing (used to encode
-		                                         * brace-initializer being encoded as `ASM_CALL_SEQ' instructions). */
+                                                 * brace-initializer being encoded as `ASM_CALL_SEQ' instructions). */
 #   define AST_FMULTIPLE_GENERIC_KEYS   0x100b  /* Pack elements into a mapping-like sequence of unspecified typing (used to
-		                                         * encode brace-initializer being encoded as `ASM_CALL_MAP' instructions). */
+                                                 * encode brace-initializer being encoded as `ASM_CALL_MAP' instructions). */
 #   define AST_FMULTIPLE_ISSEQUENCE(x) (((x)&0x1000) && ((x)&0x0003) <= 1)
 #   define AST_FMULTIPLE_ISGENERIC(x)  (((x)&0x1008) == 0x1008)
 #   define AST_FMULTIPLE_ISDICT(x)     (((x)&0x1003) == 0x1003)
@@ -222,26 +222,26 @@ struct ast {
 		}                    a_try;       /* `try' statement. */
 
 #define AST_LOOP             0x0009          /* Some type of loop statement. (for, while, do..while)
-		                                      * NOTE: As far as return values go, `AST_LOOP' always evaluates to `none'.
-		                                      * HINT: The initializer of a for() statement is encoded as an `AST_MULTIPLE'
-		                                      *       ast containing the initializer first, followed by the loop.
-		                                      * NOTE: If any of the expressions (`l_cond', `l_next' or `a_loop') contain
-		                                      *       a `continue' statement, control will always continue at `l_cond'.
-		                                      *       If any of them contain a `break' statement, control will continue after `a_loop'. */
+                                              * NOTE: As far as return values go, `AST_LOOP' always evaluates to `none'.
+                                              * HINT: The initializer of a for() statement is encoded as an `AST_MULTIPLE'
+                                              *       ast containing the initializer first, followed by the loop.
+                                              * NOTE: If any of the expressions (`l_cond', `l_next' or `a_loop') contain
+                                              *       a `continue' statement, control will always continue at `l_cond'.
+                                              *       If any of them contain a `break' statement, control will continue after `a_loop'. */
 #   define AST_FLOOP_NORMAL         0x0000   /* Normal loop flags. */
 #   define AST_FLOOP_POSTCOND       0x0001   /* `l_cond' (when non-`NULL') is evaluated after `a_loop',
-		                                      *  rather than before, essentially resulting in `do..while' behavior. */
+                                              *  rather than before, essentially resulting in `do..while' behavior. */
 #   define AST_FLOOP_FOREACH        0x0002   /* This is a foreach loop:
-		                                      * `__foreach(x: y) foo(x)' statement.
-		                                      * HINT: The regular `for (x: y)' statement is implemented using
-		                                      *       this AST after applying the `__iterself__()' operator to `y'
-		                                      * NOTE: This flag supersedes `AST_FLOOP_POSTCOND' when both are set.
-		                                      * NOTE: As far as return values go, `AST_FOREACH' always returns `none'.
-		                                      * NOTE: If any expression (`l_elem', `l_iter' or `a_loop') contains a
-		                                      *       `continue' statement, control will jump to yield the next element
-		                                      *       from the iterator, meaning that `y' will be evaluated immediately after.
-		                                      *       If any of the expression contain a `break' statement,
-		                                      *       control will jump forward to continue after `a_loop'. */
+                                              * `__foreach(x: y) foo(x)' statement.
+                                              * HINT: The regular `for (x: y)' statement is implemented using
+                                              *       this AST after applying the `__iterself__()' operator to `y'
+                                              * NOTE: This flag supersedes `AST_FLOOP_POSTCOND' when both are set.
+                                              * NOTE: As far as return values go, `AST_FOREACH' always returns `none'.
+                                              * NOTE: If any expression (`l_elem', `l_iter' or `a_loop') contains a
+                                              *       `continue' statement, control will jump to yield the next element
+                                              *       from the iterator, meaning that `y' will be evaluated immediately after.
+                                              *       If any of the expression contain a `break' statement,
+                                              *       control will jump forward to continue after `a_loop'. */
 #   define AST_FLOOP_UNLIKELY       0x8000   /* The loop is unlikely to be run and `a_loop.l_loop' should be written to the cold section. */
 		struct {
 			union {
@@ -278,10 +278,10 @@ struct ast {
 #define AST_CONDITIONAL 0x000b         /* `if (foo) bar(); else baz()' / `foo ? bar() : baz()' */
 #   define AST_FCOND_EVAL     0x0000   /* Use regular evaluation, returning the actual value of the chosen branch. */
 #   define AST_FCOND_BOOL     0x0001   /* Force the result of the conditional expression to evaluate.
-		                                * Using this flag, `AST_CONDITIONAL' is used to implement
-		                                * logical and (`&&') and or (`||') as follows:
-		                                * >> a && b; // (a ? b : ) // With `AST_FCOND_BOOL' set
-		                                * >> a || b; // (a ?  : b) // With `AST_FCOND_BOOL' set */
+                                        * Using this flag, `AST_CONDITIONAL' is used to implement
+                                        * logical and (`&&') and or (`||') as follows:
+                                        * >> a && b; // (a ? b : ) // With `AST_FCOND_BOOL' set
+                                        * >> a || b; // (a ?  : b) // With `AST_FCOND_BOOL' set */
 #   define AST_FCOND_LIKELY   0x4000   /* When set, place text for `c_ff' in the cold text-section (at the end of the function). */
 #   define AST_FCOND_UNLIKELY 0x8000   /* When set, place text for `c_tt' in the cold text-section (at the end of the function). */
 		struct {
@@ -326,15 +326,15 @@ struct ast {
 		}                    a_function; /* A new function definition. */
 
 #define AST_OPERATOR_FUNC    0x000f       /* An operator-function (either bound, or unbound)
-		                                   * >> x = operator +;   // AST_OPERATOR_POS_OR_ADD (unbound)
-		                                   * >> x = y.operator +; // AST_OPERATOR_POS_OR_ADD (bound)
-		                                   * `a_flag' is one of `OPERATOR_*', or one of `AST_OPERATOR_*'
-		                                   * When used as function-operand of call-expression, this type
-		                                   * of AST is transformed into an `AST_OPERATOR' branch.
-		                                   * Otherwise, it is replaced with an external binding to one
-		                                   * of the symbols found in the `operators' module:
-		                                   * >> x = operator +;   // compiles (in this implementation) as `x = __pooad from operators;'
-		                                   * >> x = y.operator +; // compiles (in this implementation) as `x = (InstanceMethod from deemon)(y,__pooad from operators);' */
+                                           * >> x = operator +;   // AST_OPERATOR_POS_OR_ADD (unbound)
+                                           * >> x = y.operator +; // AST_OPERATOR_POS_OR_ADD (bound)
+                                           * `a_flag' is one of `OPERATOR_*', or one of `AST_OPERATOR_*'
+                                           * When used as function-operand of call-expression, this type
+                                           * of AST is transformed into an `AST_OPERATOR' branch.
+                                           * Otherwise, it is replaced with an external binding to one
+                                           * of the symbols found in the `operators' module:
+                                           * >> x = operator +;   // compiles (in this implementation) as `x = __pooad from operators;'
+                                           * >> x = y.operator +; // compiles (in this implementation) as `x = (InstanceMethod from deemon)(y, __pooad from operators);' */
 		struct {
 			DREF struct ast  *of_binding; /* [0..1] The first argument of the operator (if it is bound).
 			                               * When set, construct an InstanceMethod object that is bound to this expression. */
@@ -342,7 +342,7 @@ struct ast {
 
 
 #define AST_OPERATOR         0x0010      /* Invocation of some kind of operator.
-		                                  * Which one specifically is encoded in `a_flag' as one of `OPERATOR_*'. */
+                                          * Which one specifically is encoded in `a_flag' as one of `OPERATOR_*'. */
 		struct {
 			DREF struct ast    *o_op0;   /* [1..1] First (aka. self) operand. */
 			DREF struct ast    *o_op1;   /* [0..1] Second operand. */
@@ -350,19 +350,19 @@ struct ast {
 			DREF struct ast    *o_op3;   /* [0..1] Fourth operand. */
 #define AST_OPERATOR_FNORMAL    0x0000   /* Normal operator flags. */
 #define AST_OPERATOR_FPOSTOP    0x0001   /* FLAG: Before the operation, create a copy of the self-operator
-			                              *       and discard the return value of the operator, instead opting
-			                              *       to exit with the self-copy ontop of the stack.
-			                              * NOTE: No copy is created if the value of the expression itself isn't used.
-			                              * HINT: This flag is used to implement `a++' as `({ __stack local temp = copy a; ++a; temp; })'  */
+                                          *       and discard the return value of the operator, instead opting
+                                          *       to exit with the self-copy ontop of the stack.
+                                          * NOTE: No copy is created if the value of the expression itself isn't used.
+                                          * HINT: This flag is used to implement `a++' as `({ __stack local temp = copy a; ++a; temp; })'  */
 #define AST_OPERATOR_FVARARGS   0x0002   /* FLAG: The operator always has 2 arguments, the first of which
-			                              *       is the self-operand and the second a tuple of arguments
-			                              *       to pass to the operator callback. */
+                                          *       is the self-operand and the second a tuple of arguments
+                                          *       to pass to the operator callback. */
 #define AST_OPERATOR_FMAYBEPFX  0x0004   /* FLAG: If the operator is an inplace operation, always generate code and don't
-			                              *       cause a compiler error if the operation will cause an error at runtime.
-			                              *       This flag is usually set for explicit operator invocations. */
+                                          *       cause a compiler error if the operation will cause an error at runtime.
+                                          *       This flag is usually set for explicit operator invocations. */
 #define AST_OPERATOR_FDONTOPT   0x8000   /* Don't perform constant propagation optimization on this branch.
-			                              * Usually just set by the optimizer itself, so-as not to re-attempt
-			                              * constant propagation after doing so failed before. */
+                                          * Usually just set by the optimizer itself, so-as not to re-attempt
+                                          * constant propagation after doing so failed before. */
 			uint16_t            o_exflag;/* Set of `AST_OPERATOR_F*' */
 		}                       a_operator; /* General purpose operator AST. */
 		DREF struct ast        *a_operator_ops[4];
@@ -374,10 +374,10 @@ struct ast {
 #   define AST_FACTION_ARGC_GT(x)      (((x)&AST_FACTION_ARGCMASK) >> AST_FACTION_ARGCSHFT)
 #   define AST_FACTION_ARGC_ST(x)      (((x) << AST_FACTION_ARGCSHFT)&AST_FACTION_ARGCMASK)
 #   define AST_FACTION_MAYBERUN 0x8000 /* FLAG: When set, optimization is allowed to remove branches
-		                                *       of this AST even if they may have side-effects.
-		                                *       The main intention of this flag is to implement
-		                                *       better compile-time optimizations for `typeof()'
-		                                *       and `.class'. */
+                                        *       of this AST even if they may have side-effects.
+                                        *       The main intention of this flag is to implement
+                                        *       better compile-time optimizations for `typeof()'
+                                        *       and `.class'. */
 #   define AST_FACTION_CELL0    0x0000 /* `<>'                        - Create an empty Cell. */
 #   define AST_FACTION_CELL1    0x1001 /* `< <act0> >'                - Create an Cell for `<act0>'. */
 #   define AST_FACTION_TYPEOF   0x1002 /* `type(<act0>)'              - Return the actual type of `<act0>' */
@@ -387,7 +387,7 @@ struct ast {
 #   define AST_FACTION_PRINTLN  0x1006 /* `print <act0>...;'          - Print the elements of a sequence in `<act0>' */
 #   define AST_FACTION_FPRINT   0x2007 /* `print <act0>: <act1>...,;' - Print the elements of a sequence in `<act1>' to a file in `<act0>' (without linefeed) */
 #   define AST_FACTION_FPRINTLN 0x2008 /* `print <act0>: <act1>...;'  - Print the elements of a sequence in `<act1>' to a file in `<act0>' */
-#   define AST_FACTION_RANGE    0x3009 /* `[<act0>:<act1>,<act2>]'    - Create a new range object for enumerating indices from `<act0>' to `<act1>', using `<act2>' as step. (constexpr(none) is used to indicate unset action operands) */
+#   define AST_FACTION_RANGE    0x3009 /* `[<act0>:<act1>, <act2>]'   - Create a new range object for enumerating indices from `<act0>' to `<act1>', using `<act2>' as step. (constexpr(none) is used to indicate unset action operands) */
 #   define AST_FACTION_IS       0x200a /* `<act0> is <act1>'          - Generate a test to check if `<act0>' ~is~ `<act1>' (instanceof / is none) */
 #   define AST_FACTION_IN       0x200b /* `<act0> in <act1>'          - A variant of `AST_OPERATOR:OPERATOR_CONTAINS' that evaluates arguments in reverse order. */
 #   define AST_FACTION_AS       0x200c /* `<act0> as <act1>'          - Create a super wrapper object for `<act0>' of type `<act1>' */
@@ -397,20 +397,20 @@ struct ast {
 #   define AST_FACTION_ANY      0x1010 /* `<act0> || ...'             - Return true if any element of a sequence `<act0>' is true. */
 #   define AST_FACTION_ALL      0x1011 /* `<act0> && ...'             - Return true if all elements of a sequence `<act0>' are true. */
 #   define AST_FACTION_STORE    0x2012 /* `<act0> = <act1>'           - Store an expression in <act1> into that found in <act0>
-		                                *  NOTE: This kind of actions holds special references to every `AST_SYM'
-		                                *        apart of `<act0>', including any reached through AST_MULTIPLE:
-		                                *        >> --sym_read;
-		                                *        >> ++sym_write;
-		                                *        This way, symbols can track how often they are written to, or read from. */
-#   define AST_FACTION_ASSERT   0x1013 /* `assert <act0>'             - Assert that <act0> evaluates to true at runtime. */
-#   define AST_FACTION_ASSERT_M 0x2014 /* `assert <act0>, <act1>'     - Assert that <act0> evaluates to true at runtime,
-		                                *                               <act1> is a message that is evaluated and added
-		                                *                               to the error message when the assertion fails. */
+                                        *  NOTE: This kind of actions holds special references to every `AST_SYM'
+                                        *        apart of `<act0>', including any reached through AST_MULTIPLE:
+                                        *        >> --sym_read;
+                                        *        >> ++sym_write;
+                                        *        This way, symbols can track how often they are written to, or read from. */
+#   define AST_FACTION_ASSERT   0x1013 /* `assert <act0>'               - Assert that <act0> evaluates to true at runtime. */
+#   define AST_FACTION_ASSERT_M 0x2014 /* `assert <act0>, <act1>'       - Assert that <act0> evaluates to true at runtime,
+                                        *                                 <act1> is a message that is evaluated and added
+                                        *                                 to the error message when the assertion fails. */
 #   define AST_FACTION_BOUNDATTR 0x2015/* `<act0>.operator . (<act1>) is bound' - Check if the attribute `<act1>' of `<act0>' is currently bound. */
 #   define AST_FACTION_BOUNDITEM 0x2016/* `<act0>.operator [] (<act1>) is bound' - Check if the item `<act1>' of `<act0>' is currently bound. */
-#   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
-#   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
-#   define AST_FACTION_CALL_KW  0x3019 /* `<act0>(<act1>...,**<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
+#   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'           - Check if <act0> and <act1> are the same object */
+#   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'           - Check if <act0> and <act1> are the different objects */
+#   define AST_FACTION_CALL_KW  0x3019 /* `<act0>(<act1>..., **<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
 		struct {
 			DREF struct ast    *a_act0; /* [0..1] Primary action operand or NULL when not used. */
 			DREF struct ast    *a_act1; /* [0..1] Secondary action operand or NULL when not used. */
@@ -432,11 +432,11 @@ struct ast {
 		}                       a_class;
 
 #define AST_LABEL               0x0013       /* Define a text/case label at the current address.
-		                                      * HINT: This AST type usually appears inside of another AST_MULTIPLE,
-		                                      *       followed by the actual expression that is being addressed. */
+                                              * HINT: This AST type usually appears inside of another AST_MULTIPLE,
+                                              *       followed by the actual expression that is being addressed. */
 #define AST_FLABEL_NORMAL       0x0000       /* Normal label flags. */
 #define AST_FLABEL_CASE         0x0001       /* FLAG: This is actually a case label.
-		                                      * -> `a_label->tl_expr' is valid, but `a_label->tl_name' isn't. */
+                                              * -> `a_label->tl_expr' is valid, but `a_label->tl_name' isn't. */
 		struct {
 			struct text_label  *l_label;      /* [1..1] The text/case label that is being defined. */
 			DREF DeeBaseScopeObject *l_base;  /* [1..1] A reference to the base-scope that owns the label. */
@@ -452,54 +452,54 @@ struct ast {
 #define AST_SWITCH              0x0015 /* A switch statement. */
 #   define AST_FSWITCH_NORMAL   0x0000 /* Normal switch flags (automatically determine mode) */
 #   define AST_FSWITCH_NOJMPTAB 0x0001 /* Never generate a jump table to perform the actual switch.
-		                                * Normally, all cases that could be expressed as constant
-		                                * key-expressions of a Dict, (or even more preferred, indices of a List)
-		                                * are packaged together within a compile-time generated jump table
-		                                * that is stored as a constant/static variable and used using
-		                                * one of the 2 following code patterns (depending on whether or
-		                                * not all of the switch's targets share the same stack-alignment)
-		                                * >>#if IDENTICAL_STACK_DEPTHS
-		                                * >>     push     const @{ "foo": 1f.SP, "bar": 2f }
-		                                * >>#else
-		                                * >>     push     const @{ "foo": (1f.SP, 1f.PC), "bar": (2f.SP, 2f.PC) }
-		                                * >>#endif
-		                                * >>     push     <s_expr>
-		                                * >>     push     @(3f.SP, 3f.PC) // Default case
-		                                * >>     callattr top, @"get", #2
-		                                * >>#if IDENTICAL_STACK_DEPTHS
-		                                * >>     jmp      pop
-		                                * >>#else
-		                                * >>     unpack   #2
-		                                * >>     jmp      pop, #pop
-		                                * >>#endif
-		                                * >>1:   // case "foo":
-		                                * >>     jmp      .done
-		                                * >>2:   // case "bar":
-		                                * >>     jmp      .done
-		                                * >>3:   // default: (non-constant cases would go here, too)
-		                                * >>     jmp      .done
-		                                * >>.done:
-		                                * Or when all constant case labels are integer
-		                                * expressions (non-matching stack code excluded):
-		                                * >>     push     <s_expr>
-		                                * >>     dup
-		                                * >>     push     $3
-		                                * >>     cmp      gr, top, pop
-		                                * >>     jt       4f
-		                                * >>     push     const @(1f, 2f, 3f)
-		                                * >>     swap
-		                                * >>     getitem  top, pop
-		                                * >>     jmp      pop
-		                                * >>1:   // case 0:
-		                                * >>     jmp      .done
-		                                * >>2:   // case 1:
-		                                * >>     jmp      .done
-		                                * >>3:   // case 2:
-		                                * >>     jmp      .done
-		                                * >>4:   // default: (non-constant cases would go here, too)
-		                                * >>     jmp      .done
-		                                * >>.done:
-		                                */
+                                        * Normally, all cases that could be expressed as constant
+                                        * key-expressions of a Dict, (or even more preferred, indices of a List)
+                                        * are packaged together within a compile-time generated jump table
+                                        * that is stored as a constant/static variable and used using
+                                        * one of the 2 following code patterns (depending on whether or
+                                        * not all of the switch's targets share the same stack-alignment)
+                                        * >>#if IDENTICAL_STACK_DEPTHS
+                                        * >>     push     const @{ "foo": 1f.SP, "bar": 2f }
+                                        * >>#else
+                                        * >>     push     const @{ "foo": (1f.SP, 1f.PC), "bar": (2f.SP, 2f.PC) }
+                                        * >>#endif
+                                        * >>     push     <s_expr>
+                                        * >>     push     @(3f.SP, 3f.PC) // Default case
+                                        * >>     callattr top, @"get", #2
+                                        * >>#if IDENTICAL_STACK_DEPTHS
+                                        * >>     jmp      pop
+                                        * >>#else
+                                        * >>     unpack   #2
+                                        * >>     jmp      pop, #pop
+                                        * >>#endif
+                                        * >>1:   // case "foo":
+                                        * >>     jmp      .done
+                                        * >>2:   // case "bar":
+                                        * >>     jmp      .done
+                                        * >>3:   // default: (non-constant cases would go here, too)
+                                        * >>     jmp      .done
+                                        * >>.done:
+                                        * Or when all constant case labels are integer
+                                        * expressions (non-matching stack code excluded):
+                                        * >>     push     <s_expr>
+                                        * >>     dup
+                                        * >>     push     $3
+                                        * >>     cmp      gr, top, pop
+                                        * >>     jt       4f
+                                        * >>     push     const @(1f, 2f, 3f)
+                                        * >>     swap
+                                        * >>     getitem  top, pop
+                                        * >>     jmp      pop
+                                        * >>1:   // case 0:
+                                        * >>     jmp      .done
+                                        * >>2:   // case 1:
+                                        * >>     jmp      .done
+                                        * >>3:   // case 2:
+                                        * >>     jmp      .done
+                                        * >>4:   // default: (non-constant cases would go here, too)
+                                        * >>     jmp      .done
+                                        * >>.done:
+                                        */
 		struct {
 			DREF struct ast   *s_expr;    /* [1..1] The expression on which the switch is enacted. */
 			DREF struct ast   *s_block;   /* [1..1] The expression containing all of the labels. */
@@ -512,44 +512,44 @@ struct ast {
 
 
 #define AST_ASSEMBLY          0x0016   /* User-defined inline assembly (following GCC's __asm__ keyword).
-		                                * >> __asm__ [volatile][goto]("text..."
-		                                * >>                         [: <ouput_operands>
-		                                * >>                         [: <input_operands>
-		                                * >>                         [: <clobber_list>    // NOTE: Ignored for now
-		                                * >>                         [: <label_list>]]]]);
-		                                */
+                                        * >> __asm__ [volatile][goto]("text..."
+                                        * >>                         [: <ouput_operands>
+                                        * >>                         [: <input_operands>
+                                        * >>                         [: <clobber_list>    // NOTE: Ignored for now
+                                        * >>                         [: <label_list>]]]]);
+                                        */
 #define AST_FASSEMBLY_NORMAL   0x0000  /* Normal assembly flags. */
 #define AST_FASSEMBLY_FORMAT   0x0001  /* Format the assembly text before parsing it. */
 #define AST_FASSEMBLY_VOLATILE 0x0002  /* Do not perform peephole optimization on assembly text.
-		                                * Internally, this causes the assembler to create a dangling
-		                                * symbol for every instruction that makes it appear as though
-		                                * it was an anonymous jump target (which can't be optimized).
-		                                * NOTE: This does not disable any optimizations
-		                                *       on operands passed to the assembly text. */
+                                        * Internally, this causes the assembler to create a dangling
+                                        * symbol for every instruction that makes it appear as though
+                                        * it was an anonymous jump target (which can't be optimized).
+                                        * NOTE: This does not disable any optimizations
+                                        *       on operands passed to the assembly text. */
 #define AST_FASSEMBLY_MEMORY   0x0004  /* The assembly branch may not be exchanged with other nearby branches.
-		                                * In other words: Act as a read/write compiler barrier. */
+                                        * In other words: Act as a read/write compiler barrier. */
 #define AST_FASSEMBLY_CLOBSP   0x0008  /* Don't warn if user-assembly leaves the stack in an unaligned state.
-		                                * In any case: that state will be fixed by the assembler. */
+                                        * In any case: that state will be fixed by the assembler. */
 #define AST_FASSEMBLY_REACH    0x0010  /* User-assembly can be reached through non-conventional means.
-		                                * An example for this would be a jump into the assembly block from another one.
-		                                * When this flag is set, the optimizer must assembly that it is unpredictable
-		                                * whether or not the assembly block returns, or doesn't return, similar to how
-		                                * a label definition can return without the previous statement returning. */
+                                        * An example for this would be a jump into the assembly block from another one.
+                                        * When this flag is set, the optimizer must assembly that it is unpredictable
+                                        * whether or not the assembly block returns, or doesn't return, similar to how
+                                        * a label definition can return without the previous statement returning. */
 #define AST_FASSEMBLY_NORETURN 0x0020  /* The user-assembly statement doesn't return through normal means.
-		                                * User-code should contain something along the lines of a `ret' instruction,
-		                                * or something similar.
-		                                * NOTE: To prevent confusion, this flag is ignored when user-assembly appears
-		                                *       within a try-catch block, meaning that the assembly is allowed to set
-		                                *       this flag if the intention is to never return by throwing an error.
-		                                * NOTE: Setting this flag improperly will only result in weak undefined behavior,
-		                                *       as deemon performs dead-code-elimination twice at `-O3'. Once at AST-level,
-		                                *       and another time at assembly-level.
-		                                *       The more efficient (and important) one is the assembly-level elimination
-		                                *       done using peephole optimization. However the other pass done on ASTs
-		                                *       themself is the one effect by this flag, and may cause other branches
-		                                *       semantically located after the one with this flag to be deleted right
-		                                *       there and then, in essence changing the code as though they were never
-		                                *       there at all. */
+                                        * User-code should contain something along the lines of a `ret' instruction,
+                                        * or something similar.
+                                        * NOTE: To prevent confusion, this flag is ignored when user-assembly appears
+                                        *       within a try-catch block, meaning that the assembly is allowed to set
+                                        *       this flag if the intention is to never return by throwing an error.
+                                        * NOTE: Setting this flag improperly will only result in weak undefined behavior,
+                                        *       as deemon performs dead-code-elimination twice at `-O3'. Once at AST-level,
+                                        *       and another time at assembly-level.
+                                        *       The more efficient (and important) one is the assembly-level elimination
+                                        *       done using peephole optimization. However the other pass done on ASTs
+                                        *       themself is the one effect by this flag, and may cause other branches
+                                        *       semantically located after the one with this flag to be deleted right
+                                        *       there and then, in essence changing the code as though they were never
+                                        *       there at all. */
 		struct {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 			struct asm_text    as_text;  /* The assembly text (not formatted yet). */

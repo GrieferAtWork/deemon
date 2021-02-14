@@ -3554,7 +3554,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 				}
 			}
 		}
-		/* >> `self.removeif([](x) -> keyed_search_item == (key is none ? x : key(x)),start,end)' */
+		/* >> `self.removeif([](x) -> keyed_search_item == (key is none ? x : key(x)), start, end)' */
 		erase_func = get_generic_attribute(tp_self,
 		                                   self,
 		                                   &str_removeif);
@@ -4256,7 +4256,7 @@ DeeSeq_Fill(DeeObject *self, size_t start, size_t end,
 		if (seq) {
 			struct type_nsi *nsi = seq->tp_nsi;
 			if (seq->tp_range_set) {
-				/* >> this[start:end] = sequence.repeat(value,end - start); */
+				/* >> this[start:end] = sequence.repeat(value, end - start); */
 				DREF DeeObject *repeated_value;
 				repeated_value = DeeSeq_RepeatItem(value, result);
 				if unlikely(!repeated_value)

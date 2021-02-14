@@ -1107,9 +1107,9 @@ struct open_option {
 
 /* Open options are parsed from a comma-separated
  * string passed as second argument to file.open:
- * >> file.open("foo.txt","w+");                    // STD-C mode name.
- * >> file.open("foo.txt","text,RW,T,C");           // Extended form.
- * >> file.open("foo.txt","text,rdwr,trunc,creat"); // Long form.
+ * >> file.open("foo.txt", "w+");                    // STD-C mode name.
+ * >> file.open("foo.txt", "text,RW,T,C");           // Extended form.
+ * >> file.open("foo.txt", "text,rdwr,trunc,creat"); // Long form.
  */
 #define BASEMODE_MASK (OPEN_FACCMODE | OPEN_FCREAT | OPEN_FEXCL | OPEN_FTRUNC | OPEN_FAPPEND)
 PRIVATE struct open_option const open_options[] = {
@@ -2173,11 +2173,11 @@ PRIVATE struct type_method file_methods[] = {
 	{ "tell",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_tell,
 	  DOC("->?Dint\n"
-	      "Same as calling ?#seek as ${this.seek(0,\"CUR\")}") },
+	      "Same as calling ?#seek as ${this.seek(0, \"CUR\")}") },
 	{ "rewind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_rewind,
 	  DOC("()\n"
-	      "Same as calling ?#seek as ${this.seek(0,\"SET\")}") },
+	      "Same as calling ?#seek as ${this.seek(0, \"SET\")}") },
 	{ "trunc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_trunc,
 	  DOC("->?Dint\n"
@@ -2407,8 +2407,8 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "this type of iteration isn't thread-save, :File isn't derived "
 		                         /**/ "from :Sequence, meaning that abstract Sequence functions are "
 		                         /**/ "not implicitly provided, but would have to be invoked like "
-		                         /**/ "${Sequence.find(File.open(\"foo.txt\"),\"find this line\")}\n"
-		                         "Note that because isn't derived from :Sequence, the returned "
+		                         /**/ "${Sequence.find(File.open(\"foo.txt\"), \"find this line\")}\n"
+		                         "Note that because isn't derived from ?DSequence, the returned "
 		                         /**/ "iterator also isn't required to be derived from :Iterator\n"
 
 		                         "\n"

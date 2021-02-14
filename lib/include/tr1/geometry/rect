@@ -25,7 +25,7 @@
 
 #ifndef __tr1_defined
 #define __tr1_defined 1
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import tr1 = "..m_tr1";
 #pragma pop_macro("import")
 #endif /* !__tr1_defined */

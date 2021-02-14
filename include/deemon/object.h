@@ -1333,7 +1333,7 @@ struct Dee_type_constructor {
 	 * >>     Deebject      *old_object; // The object being copied.
 	 * >>     Deebject      *new_object; // The object resulting from the copy.
 	 * >>     // Check if this instance is already being duplicated
-	 * >>     new_object = deepcopy_lookup(old_object,type);
+	 * >>     new_object = deepcopy_lookup(old_object, type);
 	 * >>     if (new_object) return_reference_(new_object);
 	 * >>     // Construct a new object using the deep-constructor.
 	 * >>     // For non-GC objects, this will do _all_ the work, but for GC objects,
@@ -1352,7 +1352,7 @@ struct Dee_type_constructor {
 	 * >>     if (tp_deepload) {
 	 * >>         int error;
 	 * >>         if (!new_object) goto err;
-	 * >>         if (Dee_DeepCopyAddAssoc(old_object,new_object))
+	 * >>         if (Dee_DeepCopyAddAssoc(old_object, new_object))
 	 * >>             goto err_new;
 	 * >>         error = tp_deepload(new_object);
 	 * >>         if (error)
@@ -1360,7 +1360,7 @@ struct Dee_type_constructor {
 	 * >>         deepcopy_end();
 	 * >>     } else if (deepcopy_end()) {
 	 * >>         // This is a recursive deepcopy operation, so we must still track the new object
-	 * >>         if (Dee_DeepCopyAddAssoc(old_object,new_object))
+	 * >>         if (Dee_DeepCopyAddAssoc(old_object, new_object))
 	 * >>             goto err_new;
 	 * >>     }
 	 * >>     return new_object;
@@ -1409,10 +1409,10 @@ struct Dee_type_gc {
 	 * >> class MyClass {
 	 * >>     private m_value = 42;
 	 * >>     this() {
-	 * >>         print "MyClass.this()",m_value;
+	 * >>         print "MyClass.this()", m_value;
 	 * >>     }
 	 * >>     ~this() {
-	 * >>         print "MyClass.~this()",m_value;
+	 * >>         print "MyClass.~this()", m_value;
 	 * >>     }
 	 * >> }
 	 * >> 
@@ -1593,9 +1593,9 @@ struct dee_bytesbuffer {
 #endif /* !__INTELLISENSE__ */
 };
 #ifdef __INTELLISENSE__
-#define DeeBuffer_INIT(base,size) { base, size }
+#define DeeBuffer_INIT(base, size) { base, size }
 #else /* __INTELLISENSE__ */
-#define DeeBuffer_INIT(base,size) { base, size, NULL }
+#define DeeBuffer_INIT(base, size) { base, size, NULL }
 #endif /* !__INTELLISENSE__ */
 
 
@@ -2243,7 +2243,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
                                         * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
 #define Dee_TP_FABSTRACT        0x0080 /* Member functions and getsets of this type are type-generic and may
                                         * even be invoked when being passed objects that do not fulfill the
-                                        * requirement of `DeeObject_InstanceOf(ob,self)' (where `self' is this type).
+                                        * requirement of `DeeObject_InstanceOf(ob, self)' (where `self' is this type).
                                         * For example: Abstract base classes have this flag set, such as `object', `sequence' or `iterator'
                                         * NOTE: This flag is not inherited.
                                         * When this flag is set, the type may also be used to construct super-wrappers
@@ -2305,7 +2305,7 @@ struct Dee_type_object {
 	char const             *tp_name;     /* [0..1] Name of this type. */
 	/*utf-8*/ char const   *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
 	uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */
-	uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object *,ob_weakrefs)', or 0 when not supported.
+	uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)', or 0 when not supported.
 	                                      * NOTE: Must be explicitly inherited by derived types.
 	                                      * NOTE: This member must explicitly be initialized during object construction
 	                                      *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
@@ -2842,7 +2842,7 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_HasItemIndex)(DeeObject *__res
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemString)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 
-/* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self,index)')
+/* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
  * @return: 1 : Item is bound.
  * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
  * @return: -1: An error occurred.
@@ -2892,11 +2892,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeObject_PrintRepr)(DeeObjec
  *  - "{:>42}"     --> arg.operator str().rjust(42);
  *  - "{:^42}"     --> arg.operator str().center(42);
  *  - "{:=42}"     --> arg.operator str().zfill(42);
- *  - "{:42:foo}"  --> arg.operator str().ljust(42,"foo");
- *  - "{:<42:foo}" --> arg.operator str().ljust(42,"foo");
- *  - "{:>42:foo}" --> arg.operator str().rjust(42,"foo");
- *  - "{:^42:foo}" --> arg.operator str().center(42,"foo");
- *  - "{:=42:foo}" --> arg.operator str().zfill(42,"foo"); */
+ *  - "{:42:foo}"  --> arg.operator str().ljust(42, "foo");
+ *  - "{:<42:foo}" --> arg.operator str().ljust(42, "foo");
+ *  - "{:>42:foo}" --> arg.operator str().rjust(42, "foo");
+ *  - "{:^42:foo}" --> arg.operator str().center(42, "foo");
+ *  - "{:=42:foo}" --> arg.operator str().zfill(42, "foo"); */
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 (DCALL DeeObject_PrintFormatString)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg,
                                     /*utf-8*/ char const *__restrict format_str, size_t format_len);

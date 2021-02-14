@@ -65,7 +65,7 @@ cmdline_split(DeeStringObject *__restrict cmdline);
 
 
 
-/* @param: procenv: {(string,string)...} */
+/* @param: procenv: {(string, string)...} */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 print_environ(struct ascii_printer *__restrict printer,
               DeeObject *__restrict procenv) {

@@ -33,7 +33,7 @@
 //   - If all you read are dict reprs, get a faster pc
 
 
-gc_collector = thread("gc.collect",function {
+gc_collector = thread("gc.collect", function {
 	print "AAA\n"*100;
 	// Background thread, that constantly collects garbage
 	while (1) {
@@ -42,7 +42,8 @@ gc_collector = thread("gc.collect",function {
 		// doesn't once the main thread starts waiting for us)
 		thread.check_interrupt();
 		local collected = gc::collect();
-		if (collected) print "GC: Collected",collected;
+		if (collected)
+			print "GC: Collected", collected;
 		//thread.sleep(1);
 	}
 });

@@ -188,7 +188,7 @@ BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "depending on the given @allow_missing\n"
             "${"
             "import boundattr from deemon;\n"
-            "print boundattr(foo,\"bar\", true);\n"
+            "print boundattr(foo, \"bar\", true);\n"
             "print foo.bar is bound; /* Functionally equivalent */"
             "}")
 
@@ -204,7 +204,7 @@ BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "depending on the given @allow_missing\n"
             "${"
             "import bounditem from deemon;\n"
-            "print bounditem(foo,42, true);\n"
+            "print bounditem(foo, 42, true);\n"
             "print foo[42] is bound; /* Functionally equivalent */}")
 
 /* Load a module, given its name.

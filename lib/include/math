@@ -20,6 +20,6 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"import")
+#pragma push_macro(undef, "import")
 import math = ".m_math";
-#pragma pop_macro(undef,"import")
+#pragma pop_macro(undef, "import")

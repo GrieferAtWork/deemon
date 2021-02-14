@@ -1470,8 +1470,8 @@ again_find_existing_global_module:
 					 * >> print a.helper.__isglobal__; // true
 					 * NOTE: This requires some changes to the runtime, as `mo_name' is
 					 *       currently assumed to be `[const]', when that must to be changed to:
-					 *      [const_if(mo_globpself != NULL)]
-					 *      [lock_if(mo_globpself == NULL,INTERNAL(modules_glob_lock))]
+					 *       [const_if(mo_globpself != NULL)]
+					 *       [lock_if(mo_globpself == NULL, INTERNAL(modules_glob_lock))]
 					 */
 
 					existing_module = find_glob_module(result->mo_name);
@@ -2340,13 +2340,13 @@ DeeModule_VCallExternf(/*utf-8*/ char const *__restrict module_name,
  * `module_name' that is based off of `module_pathname'
  * NOTE: If the given `module_name' doesn't start with a `.'
  *       character, the given `module_pathname' is ignored and the
- *       call is identical to `DeeModule_OpenGlobal(module_name,options)'
+ *       call is identical to `DeeModule_OpenGlobal(module_name, options)'
  * HINT: The given `module_pathname' is merely prepended
  *       before the module's actual filename.
  * Example:
- * >> DeeModule_OpenRelative("..foo.bar","src/scripts");  // `src/foo/bar.dee'
- * >> DeeModule_OpenRelative(".sys.types",".");           // `./sys/types.dee'
- * >> DeeModule_OpenRelative("thread","foo/bar");         // `${LIBPATH}/thread.dee'
+ * >> DeeModule_OpenRelative("..foo.bar", "src/scripts");  // `src/foo/bar.dee'
+ * >> DeeModule_OpenRelative(".sys.types", ".");           // `./sys/types.dee'
+ * >> DeeModule_OpenRelative("thread", "foo/bar");         // `${LIBPATH}/thread.dee'
  * NOTE: This function also tries to open DEX modules, as well as `.*.dec' files.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */

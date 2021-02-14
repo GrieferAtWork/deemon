@@ -87,69 +87,69 @@ DECL_BEGIN
  *     - Abstraction that automatically defines the following methods:
  *        - `empty(): bool'
  *        - `non_empty(): bool'
- *        - `front() -> object'
- *        - `back() -> object'
- *        - `filter(callable func) -> sequence'
+ *        - `front(): Object'
+ *        - `back(): Object'
+ *        - `filter(func: Callable): Sequence'
  *           - Same as `(for (local x: this) if (func(x)) x)'
- *        - `reduce(callable combine) -> object'
+ *        - `reduce(callable combine): Object'
  *           - Call `combine()' on two consecutive objects, reusing the result as
  *             the first argument in the next call; return the final sum-style value.
  *             NOTE: When the sequence is empty, return `none'
- *        - `sum() -> object'
- *           - Same as `reduce([](a,b) -> a+b);'
+ *        - `sum(): Object'
+ *           - Same as `reduce([](a, b) -> a+b);'
  *           - Preferred way to concat sequences containing strings:
- *              - `print ["foo","bar","foobar"].sum(); // "foobarfoobar"'
+ *              - `print ["foo", "bar", "foobar"].sum(); // "foobarfoobar"'
  *        - `any(): bool'
- *           - Same as `reduce([](a,b) -> a || b);', but stop on the first `true' and return `false' when empty.
+ *           - Same as `reduce([](a, b) -> a || b);', but stop on the first `true' and return `false' when empty.
  *        - `all(): bool'
- *           - Same as `reduce([](a,b) -> a && b);', but stop on the first `false' and return `true' when empty.
+ *           - Same as `reduce([](a, b) -> a && b);', but stop on the first `false' and return `true' when empty.
  *        - `non(): bool'
  *           - Returns true if all elements of the sequence equate to `false' and return `true' when empty.
- *        - `parity() -> object'
- *           - Same as `reduce([](a,b) -> !!a ^ !!b);'
- *        - `min(callable key = none) -> object'
- *           - Same as `reduce([](a,b) -> key(a,b) ? a : b);'
- *        - `max(callable key = none) -> object'
- *           - Same as `reduce([](a,b) -> key(a,b) ? b : a);'
- *        - `count(ob: object, callable key = none) -> int'
- *        - `locate(ob: object, callable key = none) -> object'
- *        - `rlocate(ob: object, callable key = none) -> object'
- *        - `locateall(ob: object, callable key = none) -> sequence'
- *        - `transform(callable transformation) -> sequence'
+ *        - `parity(): Object'
+ *           - Same as `reduce([](a, b) -> !!a ^ !!b);'
+ *        - `min(key: Callable = none): Object'
+ *           - Same as `reduce([](a, b) -> key(a, b) ? a : b);'
+ *        - `max(key: Callable = none): Object'
+ *           - Same as `reduce([](a, b) -> key(a, b) ? b : a);'
+ *        - `count(ob: object, key: Callable = none): int'
+ *        - `locate(ob: object, key: Callable = none): Object'
+ *        - `rlocate(ob: object, key: Callable = none): Object'
+ *        - `locateall(ob: object, key: Callable = none): Sequence'
+ *        - `transform(callable transformation): Sequence'
  *           - Invoke `transformation()' on all items and return a sequence of all the results.
  *           - Same as `(for (local x: this) transformation(x));'
- *        - `contains(ob: object, callable key = none): bool'
+ *        - `contains(ob: object, key: Callable = none): bool'
  *           - Same as the `tp_contains' operator, but allows for a key function to be used.
- *        - `partition(ob: object, callable key = none) -> (sequence,(ob),sequence)'
- *        - `rpartition(ob: object, callable key = none) -> (sequence,(ob),sequence)'
- *        - `startswith(ob: object, callable key = none): bool'
- *        - `endswith(ob: object, callable key = none): bool'
- *        - `find(ob: object, callable key = none) -> int'
- *        - `rfind(ob: object, callable key = none) -> int'
- *        - `index(ob: object, callable key = none) -> int'
- *        - `rindex(ob: object, callable key = none) -> int'
- *        - `join(sequence items) -> sequence'
- *        - `strip(ob: object, callable key = none) -> sequence'
- *        - `lstrip(ob: object, callable key = none) -> sequence'
- *        - `rstrip(ob: object, callable key = none) -> sequence'
- *        - `split(object sep, callable key = none) -> sequence'
- *        - `reversed() -> sequence'
- *        - `sorted(callable key = none) -> sequence'
- *        - `segments(size_t segsize) -> sequence'
- *        - `countseq(sequence seq, callable key = none) -> int'
- *        - `containsseq(sequence seq, callable key = none): bool'
- *        - `partitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
- *        - `rpartitionseq(sequence seq, callable key = none) -> (sequence,seq,sequence)'
- *        - `startswithseq(sequence seq, callable key = none): bool'
- *        - `endswithseq(sequence seq, callable key = none): bool'
- *        - `findseq(sequence seq, callable key = none) -> int'
- *        - `rfindseq(sequence seq, callable key = none) -> int'
- *        - `indexseq(sequence seq, callable key = none) -> int'
- *        - `rindexseq(sequence seq, callable key = none) -> int'
- *        - `stripseq(sequence items, callable key = none) -> sequence'
- *        - `lstripseq(sequence items, callable key = none) -> sequence'
- *        - `rstripseq(sequence items, callable key = none) -> sequence'
- *        - `splitseq(sequence sep_seq, callable key = none) -> sequence'
+ *        - `partition(ob: object, key: Callable = none): (Sequence, (ob), Sequence)'
+ *        - `rpartition(ob: object, key: Callable = none): (Sequence, (ob), Sequence)'
+ *        - `startswith(ob: object, key: Callable = none): bool'
+ *        - `endswith(ob: object, key: Callable = none): bool'
+ *        - `find(ob: object, key: Callable = none): int'
+ *        - `rfind(ob: object, key: Callable = none): int'
+ *        - `index(ob: object, key: Callable = none): int'
+ *        - `rindex(ob: object, key: Callable = none): int'
+ *        - `join(items: Sequence): Sequence'
+ *        - `strip(ob: object, key: Callable = none): Sequence'
+ *        - `lstrip(ob: object, key: Callable = none): Sequence'
+ *        - `rstrip(ob: object, key: Callable = none): Sequence'
+ *        - `split(sep: Object, key: Callable = none): Sequence'
+ *        - `reversed(): Sequence'
+ *        - `sorted(key: Callable = none): Sequence'
+ *        - `segments(segsize: int): Sequence'
+ *        - `countseq(seq: Sequence, key: Callable = none): int'
+ *        - `containsseq(seq: Sequence, key: Callable = none): bool'
+ *        - `partitionseq(seq: Sequence, key: Callable = none): (sequence,seq, Sequence)'
+ *        - `rpartitionseq(seq: Sequence, key: Callable = none): (sequence,seq, Sequence)'
+ *        - `startswithseq(seq: Sequence, key: Callable = none): bool'
+ *        - `endswithseq(seq: Sequence, key: Callable = none): bool'
+ *        - `findseq(seq: Sequence, key: Callable = none): int'
+ *        - `rfindseq(seq: Sequence, key: Callable = none): int'
+ *        - `indexseq(seq: Sequence, key: Callable = none): int'
+ *        - `rindexseq(seq: Sequence, key: Callable = none): int'
+ *        - `stripseq(items: Sequence, key: Callable = none): Sequence'
+ *        - `lstripseq(items: Sequence, key: Callable = none): Sequence'
+ *        - `rstripseq(items: Sequence, key: Callable = none): Sequence'
+ *        - `splitseq(sequence sep_seq, key: Callable = none): Sequence'
  * Some operations (Such as `tp_add') will create instances of special objects
  * that will only start invoking underlying operators when worked with:
  * >> function foo() {
@@ -198,7 +198,7 @@ DDATDEF DeeTypeObject DeeSeq_Type;  /* `sequence from deemon' */
  *           - Advance the iterator by the integer representation of the second operand.
  *             When the second operand is negative, throw an `Error.ValueError.ArithmeticError.IntegerOverflow'
  *     - Abstraction that automatically defines the following methods:
- *        - `next() -> object'
+ *        - `next(): Object'
  *           - Literally the same as invoking `operator __next__()', but has a more userfriendly name.
  *             This function will throw a `Signal.StopIteration' when the iterator has been exhausted.
  * As should be apparent, in order to use the full auto-API provided for
@@ -381,7 +381,7 @@ struct Dee_type_nsi {
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_insertall)(DeeObject *self, size_t index, DeeObject *values);
 			WUNUSED NONNULL((1))    int             (DCALL *nsi_insertvec)(DeeObject *self, size_t index, size_t insertc, DeeObject *const *insertv);
 			/* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
-			 *       first, such that `nsi_pop(self,-1)' is equivalent to a `popback()' function call. */
+			 *       first, such that `nsi_pop(self, -1)' is equivalent to a `popback()' function call. */
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
 			/* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
 			 *       while delrange is allowed to leave the index range as unbound.
@@ -897,7 +897,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
  *                      no longer being valid! */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
+                                  /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                   /*in-out*/ size_t *__restrict pallocated);
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
@@ -908,7 +908,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
  *    vector which may already contain other objects upon entry. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
-                                        /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
+                                        /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/ size_t *__restrict pallocated,
                                         /*in*/ size_t offset);
 

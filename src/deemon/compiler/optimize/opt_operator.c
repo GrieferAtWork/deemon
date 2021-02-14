@@ -479,7 +479,7 @@ generic_operator_optimizations:
 					 *       pair, and inline all of them into a new multi-branch
 					 *       If this isn't possible for all branches, don't perform
 					 *       the optimization.
-					 * >> local x = [("foo",a),("bar",b)];
+					 * >> local x = [("foo", a), ("bar", b)];
 					 * >> // Optimize into this:
 					 * >> local y = Dict { "foo" : a, "bar" : b }; */
 					goto after_sequence_cast_propagation;
@@ -492,7 +492,7 @@ generic_operator_optimizations:
 					 *       as tuple expression-like multi-branches.
 					 * >> local x = List { "foo" : a, "bar" : b };
 					 * >> // Optimize into this:
-					 * >> local y = [("foo",a),("bar",b)];
+					 * >> local y = [("foo", a), ("bar", b)];
 					 */
 					goto after_sequence_cast_propagation;
 				}

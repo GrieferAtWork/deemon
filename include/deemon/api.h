@@ -297,12 +297,12 @@ DECL_BEGIN
 #if ((defined(__i386__) && !defined(__x86_64__)) && \
      defined(CONFIG_HOST_WINDOWS))
 #if 0
-#define ASSEMBLY_NAME(x,s)     PP_CAT4(__USER_LABEL_PREFIX__,x,@,s)
+#define ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
 #else
-#define ASSEMBLY_NAME(x,s)     PP_CAT2(__USER_LABEL_PREFIX__,x@s)
+#define ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
 #endif
 #else
-#define ASSEMBLY_NAME(x,s)     PP_CAT2(__USER_LABEL_PREFIX__,x)
+#define ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
 #endif
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -313,21 +313,21 @@ DECL_BEGIN
  * >> void DCALL function_a(size_t argc, void **argv) {
  * >>      size_t i;
  * >>      for (i = 0; i < argc; ++i)
- * >>          printf("argv[%lu] = %p\n",(unsigned long)i,argv[i]);
+ * >>          printf("argv[%lu] = %p\n", (unsigned long)i, argv[i]);
  * >> }
  * >> #ifndef __NO_DEFINE_ALIAS
  * >> DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(function_b, 8),
  * >>                     ASSEMBLY_NAME(function_a, 8));
  * >> #else // !__NO_DEFINE_ALIAS
  * >> void DCALL function_b(size_t argc, va_list args) {
- * >>      function_a(argc,(void **)args);
+ * >>      function_a(argc, (void **)args);
  * >> }
  * >> #endif // __NO_DEFINE_ALIAS
  * >> void function_c(size_t argc, ...) {
  * >>      va_list args;
- * >>      va_start(args,argc);
- * >>      function_b(argc,args);
- * >>      va_end(args,argc);
+ * >>      va_start(args, argc);
+ * >>      function_b(argc, args);
+ * >>      va_end(args, argc);
  * >> }
  * Using this internally, we can greatly optimize calls to functions
  * like `DeeObject_CallPack()' by not needing to pack everything together
