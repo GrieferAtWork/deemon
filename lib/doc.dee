@@ -268,34 +268,143 @@ local function decodeNameEnd(name: string, start: int = 0): int {
 
 @@Lookup table to determine default prototypes for operators, given their names
 local final OPERATOR_DEFAULTS: {string: string} = {
-	"constructor" : "(args!)->?N", "copy" : "(other:?.)->?N", "deepcopy" : "(other:?.)->?N",
-	"destructor" : "()->?N", "assign" : "(other:?.)->?N", "moveassign" : "(other:?.)->?N",
-	"str" : "()->?Dstring", "repr" : "()->?Dstring", "bool" : "()->?Dbool",
-	"next" : "()->", "call" : "(args!)->", "int" : "()->?Dint", "hash" : "()->?Dint",
-	"size" : "()->?Dint", "float" : "()->?Dfloat", "inv" : "()->?.",
-	"pos" : "()->?.", "neg" : "()->?.", "add" : "(other:?.)->?.",
-	"sub" : "(other:?.)->?.", "mul" : "(other:?.)->?.",
-	"div" : "(other:?.)->?.", "mod" : "(other:?.)->?.",
-	"shl" : "(shift:?Dint)->?.", "shr" : "(shift:?Dint)->?.",
-	"pow" : "(other:?.)->?.", "and" : "(other:?.)->?.",
-	"or" : "(other:?.)->?.", "xor" : "(other:?.)->?.",
-	"inc" : "()->?.", "dec" : "()->?.", "iadd" : "(other:?.)->?.",
-	"isub" : "(other:?.)->?.", "imul" : "(other:?.)->?.",
-	"idiv" : "(other:?.)->?.", "imod" : "(other:?.)->?.",
-	"ishl" : "(shift:?Dint)->?.", "ishr" : "(shift:?Dint)->?.",
-	"ipow" : "(other:?.)->?.", "iand" : "(other:?.)->?.",
-	"ior" : "(other:?.)->?.", "ixor" : "(other:?.)->?.",
-	"eq" : "(other:?.)->?Dbool", "ne" : "(other:?.)->?Dbool",
-	"lo" : "(other:?.)->?Dbool", "le" : "(other:?.)->?Dbool",
-	"gr" : "(other:?.)->?Dbool", "ge" : "(other:?.)->?Dbool",
-	"iter" : "()->?AIterator?.", "contains" : "(item)->?Dbool",
-	"getitem" : "(index:?Dint)->", "delitem" : "(index:?Dint)->?N",
-	"setitem" : "(index:?Dint,value)->?N", "getrange" : "(start:?Dint,end:?Dint)->?S?O",
-	"delrange" : "(start:?Dint,end:?Dint)->?N", "setrange" : "(start:?Dint,end:?Dint,values:?S?O)->?N",
-	"getattr" : "(attr:?Dstring)->", "delattr" : "(attr:?Dstring)->?N",
-	"setattr" : "(attr:?Dstring,value)->?N", "enumattr" : "()->?S?DAttribute",
-	"enter" : "()->?N", "leave" : "()->?N",
+	"constructor" : "(args!)->?N",
+	"copy"        : "(other:?.)->?N",
+	"deepcopy"    : "(other:?.)->?N",
+	"destructor"  : "()->?N",
+	"assign"      : "(other:?.)->?N",
+	"moveassign"  : "(other:?.)->?N",
+	"str"         : "()->?Dstring",
+	"repr"        : "()->?Dstring",
+	"bool"        : "()->?Dbool",
+	"next"        : "()->?*",
+	"call"        : "(args!)->",
+	"int"         : "()->?Dint",
+	"hash"        : "()->?Dint",
+	"size"        : "()->?Dint",
+	"float"       : "()->?Dfloat",
+	"inv"         : "()->?.",
+	"pos"         : "()->?.",
+	"neg"         : "()->?.",
+	"add"         : "(other:?.)->?.",
+	"sub"         : "(other:?.)->?.",
+	"mul"         : "(other:?.)->?.",
+	"div"         : "(other:?.)->?.",
+	"mod"         : "(other:?.)->?.",
+	"shl"         : "(shift:?Dint)->?.",
+	"shr"         : "(shift:?Dint)->?.",
+	"pow"         : "(other:?.)->?.",
+	"and"         : "(other:?.)->?.",
+	"or"          : "(other:?.)->?.",
+	"xor"         : "(other:?.)->?.",
+	"inc"         : "()->?.",
+	"dec"         : "()->?.",
+	"iadd"        : "(other:?.)->?.",
+	"isub"        : "(other:?.)->?.",
+	"imul"        : "(other:?.)->?.",
+	"idiv"        : "(other:?.)->?.",
+	"imod"        : "(other:?.)->?.",
+	"ishl"        : "(shift:?Dint)->?.",
+	"ishr"        : "(shift:?Dint)->?.",
+	"ipow"        : "(other:?.)->?.",
+	"iand"        : "(other:?.)->?.",
+	"ior"         : "(other:?.)->?.",
+	"ixor"        : "(other:?.)->?.",
+	"eq"          : "(other:?.)->?Dbool",
+	"ne"          : "(other:?.)->?Dbool",
+	"lo"          : "(other:?.)->?Dbool",
+	"le"          : "(other:?.)->?Dbool",
+	"gr"          : "(other:?.)->?Dbool",
+	"ge"          : "(other:?.)->?Dbool",
+	"iter"        : "()->?AIterator?.",
+	"contains"    : "(item:?*)->?Dbool",
+	"getitem"     : "(index:?Dint)->?*",
+	"delitem"     : "(index:?Dint)->?N",
+	"setitem"     : "(index:?Dint,value:?*)->?N",
+	"getrange"    : "(start:?Dint,end:?Dint)->?S?*",
+	"delrange"    : "(start:?Dint,end:?Dint)->?N",
+	"setrange"    : "(start:?Dint,end:?Dint,values:?S?*)->?N",
+	"getattr"     : "(attr:?Dstring)->",
+	"delattr"     : "(attr:?Dstring)->?N",
+	"setattr"     : "(attr:?Dstring,value)->?N",
+	"enumattr"    : "()->?S?DAttribute",
+	"enter"       : "()->?N",
+	"leave"       : "()->?N",
 };
+
+local _knownSequenceElementTypes: {Type: string} = Dict();
+local final function getIteratorElementTypeDoc(typ: Type): string {
+	local result = _knownSequenceElementTypes.get(typ);
+	if (result is none) {
+		/* (try to) Extract generic iterator element type.
+		 * For this purpose, we look at the return type of
+		 * the iterator's `next' operator. If explicitly
+		 * defined, then use that type as the sequence type. */
+		local doc = typ.__doc__;
+		local loc = doc.find("\n\nnext->");
+		if (loc != -1) {
+			loc += 8;
+		} else if (doc.startswith("next->")) {
+			loc = 6;
+		}
+		if (loc != -1) {
+			local end = doc.find("\n", loc);
+			if (end < 0)
+				end = #doc;
+			result = doc[loc:end];
+		}
+		if (!result)
+			result = "?O";
+		_knownSequenceElementTypes[typ] = result;
+	}
+	return result;
+}
+
+local final function getDefaultOperatorWithType(typ: Type, name: string): string | none {
+	local result = OPERATOR_DEFAULTS.get(name);
+	if (result !is none && "?*" in result) {
+		if (Mapping.baseof(typ)) {
+			/* Special handling for mappings. */
+			result = {
+				"contains" : "(item:?K*)->?Dbool",
+				"getitem"  : "(index:?K*)->?V*",
+				"delitem"  : "(index:?K*)->?N",
+				"setitem"  : "(index:?K*,value:?V*)->?N",
+			}.get(name, result);
+			typ = try typ.Iterator catch (...) none;
+			local repl = "?O";
+			if (Iterator.baseof(typ))
+				repl = getIteratorElementTypeDoc(typ);
+			result = result.replace("?*", repl);
+			if ("?K*" in result || "?V*" in result) {
+				local k_repl = "?O";
+				local v_repl = "?O";
+				if (repl.startswith("?T2?")) {
+					repl = repl[3:];
+					if (repl.count("?") == 2) {
+						local p = repl.rindex("?");
+						k_repl = repl[:p];
+						v_repl = repl[p:];
+					} else {
+						print "TODO: complex mapping element type:", repr repl;
+					}
+				}
+				result = result
+					.replace("?K*", k_repl)
+					.replace("?V*", v_repl);
+			}
+			return result;
+		}
+		if (Sequence.baseof(typ))
+			typ = try typ.Iterator catch (...) none;
+		local repl = "?O";
+		if (Iterator.baseof(typ))
+			repl = getIteratorElementTypeDoc(typ);
+		result = result.replace("?*", repl);
+	}
+	return result;
+}
+
 
 @@Lookup table to convert pretty operator names to their real counterparts
 global final OPERATOR_NAMES: {string: string} = {
@@ -2213,6 +2322,11 @@ class Declaration: WeakRefAble {
 	private member m_isinherited: bool;
 	private member m_explittype: bool;
 
+	private defaultOperatorImpl(opname: string): string | none {
+		return getDefaultOperatorWithType(
+			docsect.lock(none).docnode.lock(none).object, opname);
+	}
+
 	@@Split @docstring into its individual segments
 	private splitDeclString() {
 		local ds = docstring;
@@ -2248,7 +2362,7 @@ class Declaration: WeakRefAble {
 				if (isoperator) {
 					/* Generate default parameter information for operators */
 					m_parstring = "";
-					local defl = OPERATOR_DEFAULTS.get(opname);
+					local defl = defaultOperatorImpl(opname);
 					if (defl !is none) {
 						local rt = defl.rfind("->");
 						if (rt >= 0) {
@@ -2265,7 +2379,7 @@ class Declaration: WeakRefAble {
 			if (!m_retstring) {
 				m_explittype = false;
 				if (isoperator) {
-					local defl = OPERATOR_DEFAULTS.get(opname);
+					local defl = defaultOperatorImpl(opname);
 					if (defl !is none) {
 						local rt = defl.rfind("->");
 						if (rt >= 0) {
@@ -2279,7 +2393,7 @@ class Declaration: WeakRefAble {
 			/* Default to returning `Object' when the parameter List was omitted. */
 			m_retstring = "";
 			if (isoperator) {
-				local defl = OPERATOR_DEFAULTS.get(opname);
+				local defl = defaultOperatorImpl(opname);
 				if (defl !is none) {
 					local rt = defl.rfind("->");
 					if (rt >= 0) {
@@ -3448,8 +3562,7 @@ set_is_type:
 	@@if @this node isn't a type, or if that type doesn't have a base.
 	public final property objectbase: Type | none = {
 		get(): Type | none {
-			if (object !is bound ||
-				object !is Type)
+			if (object !is bound || object !is Type)
 				return none;
 			return Type.__base__(object);
 		}
@@ -3539,7 +3652,8 @@ set_is_type:
 
 	@@Auto-generate declaration information for an operator @opname
 	private final autogenerateOperatorDecl(opname: string): {DocSection...} {
-		local defl = OPERATOR_DEFAULTS.get(opname);
+		local defl = getDefaultOperatorWithType(
+			object is bound ? object : none, opname);
 		if (defl !is none)
 			yield DocSection(this, opname + defl);
 	}
@@ -3671,7 +3785,7 @@ set_is_type:
 							resdoc << opname;
 							generateFunctionParams(resdoc, fun);
 							resdoc << "->";
-							local defl = OPERATOR_DEFAULTS.get(opname);
+							local defl = getDefaultOperatorWithType(object, opname);
 							if (defl !is none) {
 								local rt = findNonEscaped(defl, "->");
 								resdoc << defl.substr(rt + 2);
@@ -3723,7 +3837,7 @@ set_is_type:
 								resdoc << name;
 								generateFunctionParams(resdoc, fun);
 								resdoc << "->";
-								local defl = OPERATOR_DEFAULTS.get(name);
+								local defl = getDefaultOperatorWithType(object, name);
 								if (defl !is none) {
 									local rt = findNonEscaped(defl, "->");
 									resdoc << defl.substr(rt + 2);

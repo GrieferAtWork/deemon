@@ -895,16 +895,16 @@ function claculateComponentIndentation(
 @@|                                | - @"#L*{BODY1|BODY2|BODY3}"            |
 @@|                                | - @"#L{{1.}BODY1|{2.}BODY2|{3.}BODY3}" |
 @@|                                |                                        |
-@@| @HyperLink                     | - #A{BODY|LINK}                        |
+@@| @HyperLink                     | - @"#A{BODY|LINK}"                     |
 @@|                                |                                        |
 @@| @Code                          | - @"#C{BODY}" or @"#CBODY"             |
 @@|                                | - @"#C[deemon]{BODY}" or               |
 @@|                                |   @"#C[deemon]BODY"                    |
 @@|                                | - @"${BODY}" or @"$BODY"               |
 @@|                                |                                        |
-@@| @Table                         | - @("#T{BODY11|BODY12|BODY13~"         |
-@@|                                |      "BODY21|BODY22|BODY23&|"          |
-@@|                                |      "BODY31|BODY32|BODY33}")          |
+@@| @Table                         | - @("#T{BODY11|BODY12|BODY13~          |
+@@|                                |   BODY21|BODY22|BODY23&|               |
+@@|                                |   BODY31|BODY32|BODY33}")              |
 @@|                                |                                        |
 @@| @ArgumentReference             | - @"@foo" or @"@{foo}"                 |
 @@|                                |                                        |
