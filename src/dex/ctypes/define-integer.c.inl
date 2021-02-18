@@ -955,9 +955,9 @@ INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_base = */ {
 		OBJECT_HEAD_INIT((DeeTypeObject *)&DeeSType_Type),
 #ifdef NAME
-		/* .tp_name     = */NAME,
+		/* .tp_name     = */ NAME,
 #else /* NAME */
-		/* .tp_name     = */PP_STR(T),
+		/* .tp_name     = */ PP_STR(T),
 #endif /* !NAME */
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR,

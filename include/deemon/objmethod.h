@@ -57,8 +57,8 @@ typedef struct Dee_clsmember_object DeeClsMemberObject;
 typedef struct Dee_cmethod_object DeeCMethodObject;
 typedef struct Dee_kwcmethod_object DeeKwCMethodObject;
 
-typedef WUNUSED DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject *const *argv);
-typedef WUNUSED DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject *const *argv, DeeObject *kw);
+typedef WUNUSED DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv);
+typedef WUNUSED DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv, DeeObject *kw);
 
 #ifdef DEE_SOURCE
 typedef Dee_cmethod_t   dcmethod_t;

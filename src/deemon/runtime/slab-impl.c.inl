@@ -105,9 +105,9 @@ PRIVATE FUNC(Slab) FUNC(slab) = {
 #ifndef CONFIG_NO_THREADS
 	/* .s_lock = */ RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
-	/* .s_free = */SLAB_PAGE_INVALID,
-	/* .s_full = */SLAB_PAGE_INVALID,
-	/* .s_tail = */SLAB_PAGE_INVALID
+	/* .s_free = */ SLAB_PAGE_INVALID,
+	/* .s_full = */ SLAB_PAGE_INVALID,
+	/* .s_tail = */ SLAB_PAGE_INVALID
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
 	,
 	/* .s_num_free      = */ 0,

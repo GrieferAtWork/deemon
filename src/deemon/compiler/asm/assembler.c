@@ -1940,9 +1940,9 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
-	/* .tp_init = */{
+	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */{
+			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ NULL,
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
@@ -1955,7 +1955,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
 	},
-	/* .tp_cast = */{
+	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL

@@ -956,7 +956,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */enumattr_class_members
+	/* .tp_class_members = */ enumattr_class_members
 };
 
 #ifdef CONFIG_LONGJMP_ENUMATTR

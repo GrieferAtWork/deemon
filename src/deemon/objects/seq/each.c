@@ -1441,8 +1441,8 @@ sewi_nii_peek(SeqEachIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst sewi_nii = {
-	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (void *)&sewi_nii_getseq,

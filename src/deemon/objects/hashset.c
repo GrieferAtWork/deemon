@@ -1503,8 +1503,8 @@ iter_exhausted:
 
 
 PRIVATE struct type_nii tpconst setiterator_nii = {
-	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (void *)&seti_nii_getseq,

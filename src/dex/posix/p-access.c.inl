@@ -115,7 +115,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_access, posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
-#define POSIX_KWDS_FILENAME_HOW_DEFINED 1
+#define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -123,12 +123,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 	DeeStringObject *filename;
 	int how;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_how, "od:access", &filename, &how))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_access_f_impl(filename_str, how);
 err:
 	return NULL;
@@ -144,7 +144,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_access, posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
-#define POSIX_KWDS_FILENAME_HOW_DEFINED 1
+#define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -152,12 +152,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *con
 	DeeStringObject *filename;
 	int how;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_how, "od:access", &filename, &how))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_access_f_impl(filename_str, how);
 err:
 	return NULL;
@@ -229,7 +229,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject 
 #define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, posix_euidaccess_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
-#define POSIX_KWDS_FILENAME_HOW_DEFINED 1
+#define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { K(filename), K(how), KEND });
 #endif /* !POSIX_KWDS_FILENAME_HOW_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -237,12 +237,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject 
 	DeeStringObject *filename;
 	int how;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_how, "od:euidaccess", &filename, &how))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_euidaccess_f_impl(filename_str, how);
 err:
 	return NULL;
@@ -300,7 +300,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *
 #define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_faccessat, posix_faccessat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED 1
+#define POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_how_atflags, { K(dfd), K(filename), K(how), K(atflags), KEND });
 #endif /* !POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -310,12 +310,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *
 	int how;
 	int atflags;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_how_atflags, "dodd:faccessat", &dfd, &filename, &how, &atflags))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_faccessat_f_impl(dfd, filename_str, how, atflags);
 err:
 	return NULL;

@@ -73,7 +73,7 @@ INTDEF int DCALL GCSetMaker_Insert(GCSetMaker *__restrict self, /*inherit(return
 INTDEF WUNUSED NONNULL((1)) int DCALL GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self);
 
 /* Pack the current set of objects and return them after (always) finalizing `self' */
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL GCSetMaker_Pack(/*inherit(always)*/GCSetMaker *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self);
 
 
 INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReferred(DeeObject *__restrict start);    /* Objects immediately referred to by X */

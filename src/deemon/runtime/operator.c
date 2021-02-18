@@ -5072,7 +5072,7 @@ DEFINE_OPERATOR(void, PutBuf,
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
-                         /*out*/DREF DeeObject **__restrict objv) {
+                         /*out*/ DREF DeeObject **__restrict objv) {
 	DREF DeeObject *iterator, *elem;
 	size_t fast_size, i = 0;
 	/* Try to make use of the fast-sequence API. */
@@ -5175,7 +5175,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
-                               DeeObject *elem, /*nullable*/DeeObject *key) {
+                               DeeObject *elem, /*nullable*/ DeeObject *key) {
 	int result;
 	if (!key)
 		return DeeObject_CompareEq(keyed_search_item, elem);

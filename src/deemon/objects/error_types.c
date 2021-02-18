@@ -1396,7 +1396,7 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */signal_class_members
+	/* .tp_class_members = */ signal_class_members
 };
 
 PUBLIC DeeSignalObject DeeError_StopIteration_instance = {

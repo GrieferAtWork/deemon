@@ -1662,7 +1662,7 @@ struct Dee_type_buffer {
  * @return: * :   The function return value.
  * @return: NULL: An error occurred. */
 typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
-typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/DeeObject *kw);
+typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/ DeeObject *kw);
 typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED NONNULL((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED NONNULL((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
@@ -2818,7 +2818,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
  * @return:  < 0: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
-                               DeeObject *elem, /*nullable*/DeeObject *key);
+                               DeeObject *elem, /*nullable*/ DeeObject *key);
 
 /* Sequence operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_Size)(DeeObject *__restrict self); /* @return: (size_t)-1: Error */

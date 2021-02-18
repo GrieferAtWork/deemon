@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1321
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deemon", "deemon.vcxproj", "{86D226C5-EF62-4562-AC06-E6A753DFA7CF}"
 EndProject
@@ -85,7 +85,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{2360741E-FB4
 		..\lib\codecs.dee = ..\lib\codecs.dee
 		..\lib\d200.dee = ..\lib\d200.dee
 		..\lib\doc.dee = ..\lib\doc.dee
+		..\lib\doctext.dee = ..\lib\doctext.dee
 		..\lib\errors.dee = ..\lib\errors.dee
+		..\lib\fs.dee = ..\lib\fs.dee
 		..\lib\functools.dee = ..\lib\functools.dee
 		..\lib\operators.dee = ..\lib\operators.dee
 		..\lib\py2dee.dee = ..\lib\py2dee.dee
@@ -279,6 +281,116 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hashlib", "dex\hashlib.vcxproj", "{D2ACD173-EA49-4031-92ED-A69D25649B1A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{D3451C56-5533-40B4-AD90-E912F4EE68A4}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\doc-server.dee = ..\util\doc-server.dee
+		..\util\evalstackdump.dee = ..\util\evalstackdump.dee
+		..\util\makelight.dee = ..\util\makelight.dee
+		..\util\test.dee = ..\util\test.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{769FFC8B-5466-40A5-AC97-4503035D1BFE}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\scripts\fixlinefeeds.dee = ..\util\scripts\fixlinefeeds.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{459F3608-8CBD-4646-B901-E48629A7D657}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\test\byhash.dee = ..\util\test\byhash.dee
+		..\util\test\c_cast.dee = ..\util\test\c_cast.dee
+		..\util\test\casefold.dee = ..\util\test\casefold.dee
+		..\util\test\class_constructors.dee = ..\util\test\class_constructors.dee
+		..\util\test\conversion_operator.dee = ..\util\test\conversion_operator.dee
+		..\util\test\cover.dee = ..\util\test\cover.dee
+		..\util\test\destructor_order.dee = ..\util\test\destructor_order.dee
+		..\util\test\each.dee = ..\util\test\each.dee
+		..\util\test\except_branching.dee = ..\util\test\except_branching.dee
+		..\util\test\except_expr.dee = ..\util\test\except_expr.dee
+		..\util\test\except_order.dee = ..\util\test\except_order.dee
+		..\util\test\finally_in_except.dee = ..\util\test\finally_in_except.dee
+		..\util\test\findany.dee = ..\util\test\findany.dee
+		..\util\test\forward_class_symbols.dee = ..\util\test\forward_class_symbols.dee
+		..\util\test\function_keywords.dee = ..\util\test\function_keywords.dee
+		..\util\test\hashlib.dee = ..\util\test\hashlib.dee
+		..\util\test\implicit_local_conversion.dee = ..\util\test\implicit_local_conversion.dee
+		..\util\test\import_lib.dee = ..\util\test\import_lib.dee
+		..\util\test\int_bitcount.dee = ..\util\test\int_bitcount.dee
+		..\util\test\int_fromstring.dee = ..\util\test\int_fromstring.dee
+		..\util\test\int_incdec.dee = ..\util\test\int_incdec.dee
+		..\util\test\integer_imm.dee = ..\util\test\integer_imm.dee
+		..\util\test\jit.dee = ..\util\test\jit.dee
+		..\util\test\lexer_corners.dee = ..\util\test\lexer_corners.dee
+		..\util\test\memmem.dee = ..\util\test\memmem.dee
+		..\util\test\posix_DIR.dee = ..\util\test\posix_DIR.dee
+		..\util\test\print_in_statement_expressions.dee = ..\util\test\print_in_statement_expressions.dee
+		..\util\test\range_expressions.dee = ..\util\test\range_expressions.dee
+		..\util\test\recursive_references.dee = ..\util\test\recursive_references.dee
+		..\util\test\scanf.dee = ..\util\test\scanf.dee
+		..\util\test\self_recursion.dee = ..\util\test\self_recursion.dee
+		..\util\test\seq_segments.dee = ..\util\test\seq_segments.dee
+		..\util\test\seqtest.dee = ..\util\test\seqtest.dee
+		..\util\test\sort.dee = ..\util\test\sort.dee
+		..\util\test\sstrip.dee = ..\util\test\sstrip.dee
+		..\util\test\string_bytes_compare.dee = ..\util\test\string_bytes_compare.dee
+		..\util\test\string_encoding.dee = ..\util\test\string_encoding.dee
+		..\util\test\strings.dee = ..\util\test\strings.dee
+		..\util\test\type_annotations.dee = ..\util\test\type_annotations.dee
+		..\util\test\type_mro.dee = ..\util\test\type_mro.dee
+		..\util\test\unused_getset.dee = ..\util\test\unused_getset.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tut", "tut", "{BD5D31FF-75B8-4FE3-989E-BE066BFDC464}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\tut\001_hello_world.dee = ..\util\tut\001_hello_world.dee
+		..\util\tut\002_strings.dee = ..\util\tut\002_strings.dee
+		..\util\tut\003_arithmetic.dee = ..\util\tut\003_arithmetic.dee
+		..\util\tut\004_conversion_operators.dee = ..\util\tut\004_conversion_operators.dee
+		..\util\tut\005_sequence_operators.dee = ..\util\tut\005_sequence_operators.dee
+		..\util\tut\006_variables.dee = ..\util\tut\006_variables.dee
+		..\util\tut\007_predefined_symbols.dee = ..\util\tut\007_predefined_symbols.dee
+		..\util\tut\008_statements.dee = ..\util\tut\008_statements.dee
+		..\util\tut\009_functions.dee = ..\util\tut\009_functions.dee
+		..\util\tut\00A_classes.dee = ..\util\tut\00A_classes.dee
+		..\util\tut\00B_going_further.dee = ..\util\tut\00B_going_further.dee
+		..\util\tut\demo_module.dee = ..\util\tut\demo_module.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assorted", "assorted", "{A3A8B55A-CC9A-4A3E-8E7D-854A7A77BE9E}"
+	ProjectSection(SolutionItems) = preProject
+		..\util\tut\assorted\af_unix_socket.dee = ..\util\tut\assorted\af_unix_socket.dee
+		..\util\tut\assorted\classes.dee = ..\util\tut\assorted\classes.dee
+		..\util\tut\assorted\conversion_operator.dee = ..\util\tut\assorted\conversion_operator.dee
+		..\util\tut\assorted\deemon_format.dee = ..\util\tut\assorted\deemon_format.dee
+		..\util\tut\assorted\destructor_hax.dee = ..\util\tut\assorted\destructor_hax.dee
+		..\util\tut\assorted\enum_attributes.dee = ..\util\tut\assorted\enum_attributes.dee
+		..\util\tut\assorted\expand_expressions.dee = ..\util\tut\assorted\expand_expressions.dee
+		..\util\tut\assorted\extern_function.dee = ..\util\tut\assorted\extern_function.dee
+		..\util\tut\assorted\fancy_loading.dee = ..\util\tut\assorted\fancy_loading.dee
+		..\util\tut\assorted\generators.dee = ..\util\tut\assorted\generators.dee
+		..\util\tut\assorted\linked_list.dee = ..\util\tut\assorted\linked_list.dee
+		..\util\tut\assorted\list_env.dee = ..\util\tut\assorted\list_env.dee
+		..\util\tut\assorted\more_class_fun.dee = ..\util\tut\assorted\more_class_fun.dee
+		..\util\tut\assorted\nametuple.dee = ..\util\tut\assorted\nametuple.dee
+		..\util\tut\assorted\pipe_thread.dee = ..\util\tut\assorted\pipe_thread.dee
+		..\util\tut\assorted\python_style_main.dee = ..\util\tut\assorted\python_style_main.dee
+		..\util\tut\assorted\runall.sh = ..\util\tut\assorted\runall.sh
+		..\util\tut\assorted\simple_echo.dee = ..\util\tut\assorted\simple_echo.dee
+		..\util\tut\assorted\simple_io.dee = ..\util\tut\assorted\simple_io.dee
+		..\util\tut\assorted\simple_scanf.dee = ..\util\tut\assorted\simple_scanf.dee
+		..\util\tut\assorted\super_classes.dee = ..\util\tut\assorted\super_classes.dee
+		..\util\tut\assorted\thread_punishment.dee = ..\util\tut\assorted\thread_punishment.dee
+		..\util\tut\assorted\walk_path.dee = ..\util\tut\assorted\walk_path.dee
+		..\util\tut\assorted\win32_process.dee = ..\util\tut\assorted\win32_process.dee
+		..\util\tut\assorted\yield_awesomeness.dee = ..\util\tut\assorted\yield_awesomeness.dee
+		..\util\tut\assorted\yield_iter_copy.dee = ..\util\tut\assorted\yield_iter_copy.dee
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dex", "dex", "{5D607076-CF32-4BFE-90B0-FED6C3CBE7A1}"
+	ProjectSection(SolutionItems) = preProject
+		..\lib\include\dex\hashlib = ..\lib\include\dex\hashlib
+		..\lib\include\dex\hashlib.dee = ..\lib\include\dex\hashlib.dee
 	EndProjectSection
 EndProject
 Global
@@ -875,6 +987,11 @@ Global
 		{4DD29BBB-B719-4E48-8504-28FFE3E54B7E} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
 		{A1CA9A57-C6E5-4D80-B9A8-2BEBBE3AF1AA} = {2360741E-FB49-40D4-B684-65FE0F4A9A7C}
 		{D2ACD173-EA49-4031-92ED-A69D25649B1A} = {D0CDCDF8-71E9-4F21-8231-EAF86D441513}
+		{769FFC8B-5466-40A5-AC97-4503035D1BFE} = {D3451C56-5533-40B4-AD90-E912F4EE68A4}
+		{459F3608-8CBD-4646-B901-E48629A7D657} = {D3451C56-5533-40B4-AD90-E912F4EE68A4}
+		{BD5D31FF-75B8-4FE3-989E-BE066BFDC464} = {D3451C56-5533-40B4-AD90-E912F4EE68A4}
+		{A3A8B55A-CC9A-4A3E-8E7D-854A7A77BE9E} = {BD5D31FF-75B8-4FE3-989E-BE066BFDC464}
+		{5D607076-CF32-4BFE-90B0-FED6C3CBE7A1} = {BB688EBB-D2A7-47A1-8304-B97665CA724A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A751EA8C-34FD-41A5-B12E-5C7D76FEF65A}

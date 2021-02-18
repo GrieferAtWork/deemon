@@ -416,7 +416,7 @@ INTDEF NONNULL((1)) void DCALL JITLValueList_Fini(JITLValueList *__restrict self
 /* Append the given @value onto @self, returning -1 on error and 0 on success. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_Append(JITLValueList *__restrict self,
-                     /*inherit(on_success)*/JITLValue *__restrict value);
+                     /*inherit(on_success)*/ JITLValue *__restrict value);
 /* Append an R-value expression. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_AppendRValue(JITLValueList *__restrict self,

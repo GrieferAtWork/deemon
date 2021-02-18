@@ -3053,7 +3053,7 @@ PRIVATE DEFINE_STRING(default_deemon_home, CONFIG_DEEMON_HOME);
 
 
 
-PRIVATE WUNUSED DREF /*String*/DeeStringObject *DCALL get_default_home(void) {
+PRIVATE WUNUSED DREF /*String*/ DeeStringObject *DCALL get_default_home(void) {
 #ifndef CONFIG_NO_DEEMON_HOME_ENVIRON
 	char *env;
 #ifndef CONFIG_DEEMON_HOME_ENVIRON

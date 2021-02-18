@@ -425,14 +425,14 @@ DeeThreadObject DeeThread_Main = {
 	/* .t_deepassoc  = */ {
 		/* .da_used = */ 0,
 		/* .da_mask = */ 0,
-		/* .da_list = */empty_deep_assoc
+		/* .da_list = */ empty_deep_assoc
 	}
 #ifndef CONFIG_NO_THREADS
 	,
 	/* .t_globlpself = */ NULL,
 	/* .t_globalnext = */ NULL,
 	/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
-	/* .t_state      = */THREAD_STATE_STARTED,
+	/* .t_state      = */ THREAD_STATE_STARTED,
 	/* .t_padding2   = */ 0,
 #ifndef CONFIG_NO_THREADID
 	/* .t_threadid   = */ 0,

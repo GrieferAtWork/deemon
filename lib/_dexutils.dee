@@ -33,6 +33,7 @@ local converter_map: {string: (string, string, string) | string} = {
 	"Id"           : ("Id", "?Dint",   "dssize_t"),
 	"Ii"           : ("Id", "?Dint",   "dssize_t"),
 	"Iu"           : ("Iu", "?Dint",   "size_t"),
+	"Iud"          : ("Id", "?Dint",   "size_t"),
 	"Ix"           : ("Iu", "?Dint",   "size_t"),
 	"I8d"          : ("I8d", "?Dint",  "int8_t"),
 	"I8i"          : ("I8d", "?Dint",  "int8_t"),
@@ -193,23 +194,16 @@ function gi(
 	if (value is none)
 		value = name;
 	function define_with_bits(sign, n_bits) {
-		print "{} DEFINE_{}INT{}({}{}, {});".format({
-			visi,
-			sign ? "" : "U",
-			n_bits,
-			libname,
-			name,
-			value
-		});
+		print(visi, " DEFINE_", sign ? "" : "U", "INT", n_bits, "(", libname, name, ", ", value, ");");
 	}
 	local macro_name = "{}{}_DEF".format({ libname.upper(), name.upper() });
 	print File.stderr: macro_name;
-	print "#define", macro_name, "\\\n\t",
-		"{", (repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) +
-		",", isconstant ? "MODSYM_FREADONLY | MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL",;
+	print("#define ", macro_name, " \\\n\t",
+		"{ ", repr name, ", (DeeObject *)&", libname, name, ", ",
+		isconstant ? "MODSYM_FREADONLY | MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL"),;
 	if (doc !is none)
-		print ",", repr doc,;
-	print " },";
+		print(", ", repr doc),;
+	print(" },");
 	local valid_bits = [15, 30, 45, 60];
 	if (value is int) {
 		/* The constant is given directly. */
@@ -246,31 +240,29 @@ function gi(
 		}
 	} else {
 		/* The constant is given via a macro that, meaning we must generate dynamic code. */
-		print "#if", value, ">= 0";
-		print "#if", value, "== 0";
-		print "#define", libname + name, "DeeInt_Zero";
-		print "#elif", value, "== 1";
-		print "#define", libname + name, "DeeInt_One";
+		print("#if ", value, " >= 0");
+		print("#if ", value, " == 0");
+		print("#define ", libname, name, " DeeInt_Zero");
+		print("#elif ", value, " == 1");
+		print("#define ", libname, name, " DeeInt_One");
 		for (local b: valid_bits) {
-			print "#elif ",;
-			print value, "<= " + ((1 << b) - 1).hex() + "ull /* "+b+"-bit */";
+			print("#elif ", value, " <= ", ((1 << b) - 1).hex(), "ull /* ", b, "-bit */");
 			define_with_bits(false, b);
 		}
-		print "#else";
+		print("#else");
 		define_with_bits(false, 75);
-		print "#endif";
-		print "#else /* ", value, ">= 0 */";
-		print "#if", value, "== -1";
-		print "#define", libname + name, "DeeInt_MinusOne";
+		print("#endif");
+		print("#else /* ", value, " >= 0 */");
+		print("#if ", value, " == -1");
+		print("#define ", libname, name, " DeeInt_MinusOne");
 		for (local b: valid_bits) {
-			print "#elif ",;
-			print value, ">= -" + (1 << (b - 1)).hex() + "ll /* "+b+"-bit */";
+			print("#elif ", value, " >= -", (1 << (b - 1)).hex(), "ll /* ", b, "-bit */");
 			define_with_bits(true, b);
 		}
-		print "#else";
+		print("#else");
 		define_with_bits(true, 75);
-		print "#endif";
-		print "#endif /* ", value, "< 0 */";
+		print("#endif");
+		print("#endif /* ", value, " < 0 */");
 	}
 }
 
@@ -288,13 +280,13 @@ function gii(
 	if (check is none) {
 		gi(name, value, libname, visi, isconstant, doc);
 	} else {
-		print "#ifdef", check;
+		print("#ifdef ", check);
 		gi(name, value, libname, visi, isconstant, doc);
-		print "#else /*", check, "*/";
+		print("#else /* ", check, " */");
 		if (libname)
 			libname = libname + "_";
-		print "#define {}{}_DEF /* nothing */".format({ libname.upper(), name.upper() });
-		print "#endif /* !"+check, "*/";
+		print("#define ", libname.upper(), name.upper(), "_DEF /* nothing */");
+		print("#endif /* !", check, " */");
 	}
 }
 
@@ -354,7 +346,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		arg_data[i] = (x.strip(), y.strip(), z.strip());
 	}
 	function print_user_impl() {
-		print "FORCELOCAL WUNUSED DREF DeeObject *DCALL", user_impl_name + "(",;
+		print("FORCELOCAL WUNUSED DREF DeeObject *DCALL ", user_impl_name, "("),;
 		if (!arg_data)
 			print "void",;
 		else {
@@ -386,45 +378,45 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	}
 	print_user_impl();
 	print ";";
-	print visi == "INTERN" ? "INTDEF" : visi,
-		"WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv"
-		.format({ libname, name }),;
-	if (kw && arg_data) print ", DeeObject *kw",;
-	print ");";
+	print(visi == "INTERN" ? "INTDEF" : visi,
+		" WUNUSED DREF DeeObject *DCALL ", libname, name,
+		"_f(size_t argc, DeeObject *const *argv"),;
+	if (kw && arg_data)
+		print(", DeeObject *kw"),;
+	print(");");
 	function print_default_doc_decl() {
 		if (!arg_data) {
 			if (return_type && return_type !in ["?N", "?Dnone", "?Edeemon:none"])
-				print "->"+return_type,;
+				print("->", return_type),;
 			else {
-				print "()",;
+				print("()"),;
 			}
 			return;
 		}
-		print "(",;
+		print("("),;
 		local is_first = true;
 		for (local x, y, z: arg_data) {
 			if (is_first)
 				is_first = false;
 			else {
-				print ",",;
+				print(","),;
 			}
-			print x,;
+			print(x),;
 			if ("?" in y) {
 				if (z == "NULL") {
-					print "?",;
+					print("?"),;
 					z = "";
 				}
-				print ":"+y,;
+				print(":", y),;
 			} else {
 				local conv = get_converter(y);
 				local typ = conv[1];
 				if (z == "NULL" && conv[2].endswith("*")) {
-					print "?",;
+					print("?"),;
 					z = "";
 				}
-				if (typ != "?O") {
-					print ":"+typ,;
-				}
+				if (typ != "?O")
+					print(":", typ),;
 			}
 			if (z) {
 				local map = {
@@ -447,50 +439,51 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 						/* TODO: Support for string constants! */
 					}
 				}
-				print "="+r,;
+				print("=", r),;
 			}
 		}
-		print ")",;
+		print(")"),;
 		if (return_type && return_type !in ["?N", "?Dnone", "?Edeemon:none"])
-			print "->"+return_type,;
+			print("->", return_type),;
 	}
-	print "#define {}{}_DEF".format({ libname.upper(), name.upper() }),
-		"{", (repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) + ", MODSYM_FNORMAL",;
+	print("#define ", libname.upper(), name.upper(), "_DEF { ",
+		repr name, ", (DeeObject *)&", libname, name, ", MODSYM_FNORMAL"),;
 	if (docdecl) {
-		print ", DOC(\"",;
+		print(", DOC(\""),;
 		print_default_doc_decl();
-		print "\") },";
+		print("\") },");
 	} else {
-		print " },";
+		print(" },");
 	}
-	print "#define {}{}_DEF_DOC(doc)".format({ libname.upper(), name.upper() }),
-		"{", (repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) + ", MODSYM_FNORMAL",;
+	print("#define ", libname.upper(), name.upper(), "_DEF_DOC(doc) { ",
+		repr name, ", (DeeObject *)&", libname, name, ", MODSYM_FNORMAL"),;
 	if (docdecl) {
-		print ", DOC(\"",;
+		print(", DOC(\""),;
 		print_default_doc_decl();
-		print "\\n\" doc) },";
+		print("\\n\" doc) },");
 	} else {
-		print ", DOC(doc) },";
+		print(", DOC(doc) },");
 	}
 	local kwlist_name;
 	if (kw && arg_data) {
-		print visi, "DEFINE_KWCMETHOD({}{}, {0}{1}_f);".format({ libname, name });
+		print(visi, " DEFINE_KWCMETHOD(", libname, name, ", ", libname, name, "_f);");
 		//kwlist_name = "{}{}_kwds".format({ libname, name });
 		kwlist_name = "{}kwds_{}".format({ libname,
 			"_".join(for (local x, y, z: arg_data) x)
 		});
 		local kwlist_def_name = "{}_DEFINED".format({ kwlist_name.upper() });
-		print "#ifndef", kwlist_def_name;
-		print "#define", kwlist_def_name, "1";
-		print visi, "DEFINE_KWLIST({}, {{ ".format({ kwlist_name }),;
+		print("#ifndef ", kwlist_def_name);
+		print("#define ", kwlist_def_name);
+		print(visi, " DEFINE_KWLIST(", kwlist_name, ", { "),;
 		for (local x, y, z: arg_data)
-			print "K({}), ".format({ x }),;
-		print "KEND });";
-		print "#endif /* !"+kwlist_def_name, "*/";
-		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {{".format({ libname, name });
+			print("K(", x, "), "),;
+		print("KEND });");
+		print("#endif /* !", kwlist_def_name, " */");
+		print(visi, " WUNUSED DREF DeeObject *DCALL ", libname, name,
+			"_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {");
 	} else {
-		print visi, "DEFINE_CMETHOD({}{}, {0}{1}_f);".format({ libname, name });
-		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv) {{".format({ libname, name });
+		print(visi, " DEFINE_CMETHOD(", libname, name, ", ", libname, name, "_f);");
+		print(visi, " WUNUSED DREF DeeObject *DCALL ", libname, name, "_f(size_t argc, DeeObject *const *argv) {");
 	}
 	for (local x, y, z: arg_data) {
 		local conv;
@@ -501,68 +494,62 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 			conv = map[2];
 			if (#map >= 5) {
 				local alt_type, alt_format = map[4]...;
-				print "\t"+alt_type,;
+				print("\t", alt_type),;
 				if (!alt_type.endswith("*"))
-					print " ",;
-				print alt_format.format({ x }),;
+					print(" "),;
+				print(alt_format.format({ x })),;
 				if (z) {
-					print " =", z,;
+					print(" = ", z),;
 					z = "(" + conv + ")Dee_None";
 				}
-				print ";";
+				print(";");
 			}
 		}
-		print "\t"+conv,;
+		print("\t", conv),;
 		if (!conv.endswith("*"))
-			print " ",;
-		print x,;
+			print(" "),;
+		print(x),;
 		if (z) {
-			print " = ",;
+			print(" = "),;
 			if (z.startswith("-") &&
 			    ("unsigned" in conv || conv.startswith("uint") ||
-			     conv in ["size_t", "__ULONGLONG"])) {
-				print "(",;
-				print conv,;
-				print ")",;
-			}
-			print z,;
+			     conv in ["size_t", "__ULONGLONG"]))
+				print("(", conv, ")"),;
+			print(z),;
 		}
-		print ";";
+		print(";");
 	}
 	if (kw && arg_data) {
-		print "\tif (DeeArg_UnpackKw(argc, argv, kw, {}, \"".format({ kwlist_name }),;
+		print("\tif (DeeArg_UnpackKw(argc, argv, kw, ", kwlist_name, ", \""),;
 	} else {
-		print "\tif (DeeArg_Unpack(argc, argv, \"",;
+		print("\tif (DeeArg_Unpack(argc, argv, \""),;
 	}
 	local is_optional = false;
 	for (local x, y, z: arg_data) {
 		if (z) {
 			if (!is_optional) {
-				print "|",;
+				print("|"),;
 				is_optional = true;
 			}
 		} else {
 			if (is_optional)
-				throw "Argument {!r}, following another default "
-					"argument is missing an initializer".format({ x });
+				throw Error("Argument {!r}, following another default "
+				            "argument is missing an initializer"
+					.format({ x }));
 		}
 		if ("?" in y) {
-			print "o",;
+			print("o"),;
 		} else {
-			print get_converter(y)[0],;
+			print(get_converter(y)[0]),;
 		}
 	}
-	print ":",;
-	print name,;
-	print "\"",;
+	print(":", name, "\""),;
 	if (arg_data) {
-		for (local x, y, z: arg_data) {
-			print ", &",;
-			print x,;
-		}
+		for (local x, y, z: arg_data)
+			print(", &", x),;
 	}
-	print "))";
-	print "\t\tgoto err;";
+	print("))");
+	print("\t\tgoto err;");
 	/* Invoke check functions. */
 	for (local x, y, z: arg_data) {
 		if ("?" in y)
@@ -570,26 +557,21 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		local d = get_converter(y);
 		if (#d >= 4) {
 			if (z) {
-				print "\tif (!DeeNone_Check(",;
-				print x,;
-				print ")) {";
+				print("\tif (!DeeNone_Check(", x, ")) {");
 				local text = d[3].format({ "obj" : x });
-				print "\t",;
-				print text.replace("\n", "\n\t").rstrip("\t"),;
-				print "\t}";
+				print("\t", text.replace("\n", "\n\t").rstrip("\t"), "\t}");
 			} else {
-				print d[3].format({ "obj" : x }),;
+				print(d[3].format({ "obj" : x })),;
 			}
 		}
 	}
-	print "\treturn", user_impl_name,;
-	print "(",;
+	print("\treturn ", user_impl_name, "("),;
 	local is_first = true;
 	for (local x, y, z: arg_data) {
 		if (is_first) {
 			is_first = false;
 		} else {
-			print ", " ,;
+			print(", "),;
 		}
 		if ("?" !in y) {
 			local d = get_converter(y);
@@ -598,12 +580,12 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 				x = alt_format.format({ x });
 			}
 		}
-		print x,;
+		print(x),;
 	}
-	print ");";
-	print "err:";
-	print "\treturn NULL;";
-	print "}";
+	print(");");
+	print("err:");
+	print("\treturn NULL;");
+	print("}");
 	print_user_impl();
 	print;
 }

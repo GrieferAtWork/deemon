@@ -636,7 +636,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */kwds_class_members
+	/* .tp_class_members = */ kwds_class_members
 };
 #undef READ_ITER
 

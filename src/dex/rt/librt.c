@@ -416,8 +416,8 @@ PRIVATE DEFINE_FUNCTION_NOREFS(
 	/* fo_code: */ (DeeCodeObject *)&varkwds_code.ob);
 PRIVATE DEFINE_KWDS(
 	varkwds_invoke_kwds,
-	/* kw_size: */1,
-	/* kw_mask: */1,
+	/* kw_size: */ 1,
+	/* kw_mask: */ 1,
 {
 });
 

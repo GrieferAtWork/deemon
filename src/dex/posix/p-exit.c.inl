@@ -73,14 +73,14 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *con
 #define POSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&posix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_atexit, posix_atexit_f);
 #ifndef POSIX_KWDS_CALLBACK_ARGS_DEFINED
-#define POSIX_KWDS_CALLBACK_ARGS_DEFINED 1
+#define POSIX_KWDS_CALLBACK_ARGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_callback_args, { K(callback), K(args), KEND });
 #endif /* !POSIX_KWDS_CALLBACK_ARGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *callback;
 	DeeObject *args = Dee_EmptyTuple;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_callback_args, "o|o:atexit", &callback, &args))
-	    goto err;
+		goto err;
 	return posix_atexit_f_impl(callback, args);
 err:
 	return NULL;
@@ -112,13 +112,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const
 #define POSIX_EXIT_DEF_DOC(doc) { "exit", (DeeObject *)&posix_exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_exit, posix_exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
-#define POSIX_KWDS_EXITCODE_DEFINED 1
+#define POSIX_KWDS_EXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
 #endif /* !POSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int exitcode;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_exitcode, "d:exit", &exitcode))
-	    goto err;
+		goto err;
 	return posix_exit_f_impl(exitcode);
 err:
 	return NULL;
@@ -145,13 +145,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *cons
 #define POSIX__EXIT_DEF_DOC(doc) { "_Exit", (DeeObject *)&posix__Exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix__Exit, posix__Exit_f);
 #ifndef POSIX_KWDS_EXITCODE_DEFINED
-#define POSIX_KWDS_EXITCODE_DEFINED 1
+#define POSIX_KWDS_EXITCODE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_exitcode, { K(exitcode), KEND });
 #endif /* !POSIX_KWDS_EXITCODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__Exit_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int exitcode;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_exitcode, "d:_Exit", &exitcode))
-	    goto err;
+		goto err;
 	return posix__Exit_f_impl(exitcode);
 err:
 	return NULL;
@@ -179,7 +179,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *cons
 PRIVATE DEFINE_CMETHOD(posix_abort, posix_abort_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_abort_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":abort"))
-	    goto err;
+		goto err;
 	return posix_abort_f_impl();
 err:
 	return NULL;

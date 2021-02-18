@@ -2732,7 +2732,7 @@ class TextSegment: WeakRefAble {
 		);
 	}
 
-	function printConsoleString(p/*: ConsolePrinter*/) {
+	function printConsoleString(p /*: ConsolePrinter*/) {
 		for (local part: this)
 			p << part;
 	}
@@ -2818,7 +2818,7 @@ class DocSection: WeakRefAble {
 			local result_segments = [s];
 			for (local j = i + 1; j < #seg; ++j) {
 				s = seg[j];
-				if (s is Declaration/* && s.opname != opname*/)
+				if (s is Declaration /*&& s.opname != opname*/)
 					continue;
 				result_segments.append(s);
 			}
@@ -2852,7 +2852,7 @@ class DocSection: WeakRefAble {
 			local result_segments = [s];
 			for (local j = i + 1; j < #seg; ++j) {
 				s = seg[j];
-				if (s is Declaration/* && s.opname != opname*/)
+				if (s is Declaration /*&& s.opname != opname*/)
 					continue;
 				result_segments.append(s);
 			}

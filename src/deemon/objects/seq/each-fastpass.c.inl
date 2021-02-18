@@ -601,19 +601,19 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring)"),
 #define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY)
-	/* .tp_flags    = */TYPE_FLAGS,
+	/* .tp_flags    = */ TYPE_FLAGS,
 #elif defined(DEFINE_CALLATTR)
 	/* .tp_name     = */ "_SeqEachCallAttr",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring,args=!T0)"),
 #define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
-	/* .tp_flags    = */TYPE_FLAGS,
+	/* .tp_flags    = */ TYPE_FLAGS,
 #elif defined(DEFINE_CALLATTRKW)
 	/* .tp_name     = */ "_SeqEachCallAttrKw",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?S?T2?Dstring?O=!T0)"),
 #define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
-	/* .tp_flags    = */TYPE_FLAGS,
+	/* .tp_flags    = */ TYPE_FLAGS,
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */

@@ -76,19 +76,19 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *con
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
-#define POSIX_KWDS_COMMAND_DEFINED 1
+#define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });
 #endif /* !POSIX_KWDS_COMMAND_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	dwchar_t const *command_str;
 	DeeStringObject *command;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_command, "o:system", &command))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(command, &DeeString_Type))
-	    goto err;
+		goto err;
 	command_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)command);
 	if unlikely(!command_str)
-	    goto err;
+		goto err;
 	return posix_system_f_impl(command_str);
 err:
 	return NULL;
@@ -104,19 +104,19 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *con
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
-#define POSIX_KWDS_COMMAND_DEFINED 1
+#define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { K(command), KEND });
 #endif /* !POSIX_KWDS_COMMAND_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/*utf-8*/ char const *command_str;
 	DeeStringObject *command;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_command, "o:system", &command))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(command, &DeeString_Type))
-	    goto err;
+		goto err;
 	command_str = DeeString_AsUtf8((DeeObject *)command);
 	if unlikely(!command_str)
-	    goto err;
+		goto err;
 	return posix_system_f_impl(command_str);
 err:
 	return NULL;
@@ -228,7 +228,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject
 PRIVATE DEFINE_CMETHOD(posix_sched_yield, posix_sched_yield_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sched_yield"))
-	    goto err;
+		goto err;
 	return posix_sched_yield_f_impl();
 err:
 	return NULL;
@@ -255,7 +255,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *con
 PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getpid"))
-	    goto err;
+		goto err;
 	return posix_getpid_f_impl();
 err:
 	return NULL;

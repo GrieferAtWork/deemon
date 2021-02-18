@@ -944,7 +944,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */blv_class_members
+	/* .tp_class_members = */ blv_class_members
 };
 
 

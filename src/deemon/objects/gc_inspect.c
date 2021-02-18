@@ -365,7 +365,7 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */gcset_class_members
+	/* .tp_class_members = */ gcset_class_members
 };
 
 INTERN GCSet DeeGCSet_Empty = {

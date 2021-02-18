@@ -1539,8 +1539,8 @@ LOCAL WUNUSED void *(DCALL DeeDbgString_ResizeWidthBuffer)(void *buffer, size_t 
 LOCAL WUNUSED void *(DCALL DeeDbgString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width, char const *file, int line);
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *(DCALL DeeDbgString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width, char const *file, int line);
 LOCAL void (DCALL DeeDbgString_FreeWidthBuffer)(void *buffer, unsigned int width, char const *file, int line);
-LOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/void *__restrict buffer, unsigned int width);
-LOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/void *__restrict buffer, unsigned int width);
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/ void *__restrict buffer, unsigned int width);
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/ void *__restrict buffer, unsigned int width);
 #else /* __INTELLISENSE__ */
 #ifdef NDEBUG
 #define DeeDbgString_NewWidthBuffer(num_chars, width, file, line) \
@@ -1846,7 +1846,7 @@ LOCAL void
 #endif /* !NDEBUG */
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/void *__restrict buffer, unsigned int width) {
+(DCALL DeeString_PackWidthBuffer)(/*inherit(always)*/ void *__restrict buffer, unsigned int width) {
 	Dee_SWITCH_SIZEOF_WIDTH(width) {
 
 	Dee_CASE_WIDTH_1BYTE:
@@ -1861,7 +1861,7 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *
 }
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/void *__restrict buffer, unsigned int width) {
+(DCALL DeeString_TryPackWidthBuffer)(/*inherit(on_success)*/ void *__restrict buffer, unsigned int width) {
 	Dee_SWITCH_SIZEOF_WIDTH(width) {
 
 	Dee_CASE_WIDTH_1BYTE:

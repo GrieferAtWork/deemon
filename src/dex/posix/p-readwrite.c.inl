@@ -346,7 +346,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
-#define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED 1
+#define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
 #endif /* !POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -374,7 +374,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *cons
 #define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
-#define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED 1
+#define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_offset_whence, { K(fd), K(offset), K(whence), KEND });
 #endif /* !POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -682,7 +682,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *cons
 #define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_write, posix_write_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
-#define POSIX_KWDS_FD_BUF_COUNT_DEFINED 1
+#define POSIX_KWDS_FD_BUF_COUNT_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { K(fd), K(buf), K(count), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_COUNT_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {

@@ -1152,8 +1152,8 @@ tuple_iterator_nii_peek(TupleIterator *__restrict self) {
 
 
 PRIVATE struct type_nii tpconst tuple_iterator_nii = {
-	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (void *)&tuple_iterator_nii_getseq,

@@ -67,14 +67,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\dex\posix\p-access-constants.def" />
     <None Include="..\..\src\dex\posix\p-access.c.inl" />
     <None Include="..\..\src\dex\posix\p-cpucount.c.inl" />
+    <None Include="..\..\src\dex\posix\p-errno-constants.def" />
     <None Include="..\..\src\dex\posix\p-errno.c.inl" />
+    <None Include="..\..\src\dex\posix\p-exit-constants.def" />
     <None Include="..\..\src\dex\posix\p-exit.c.inl" />
+    <None Include="..\..\src\dex\posix\p-fd-constants.def" />
     <None Include="..\..\src\dex\posix\p-fd.c.inl" />
     <None Include="..\..\src\dex\posix\p-fs.c.inl" />
+    <None Include="..\..\src\dex\posix\p-open-constants.def" />
     <None Include="..\..\src\dex\posix\p-open.c.inl" />
     <None Include="..\..\src\dex\posix\p-pipe.c.inl" />
+    <None Include="..\..\src\dex\posix\p-readwrite-constants.def" />
     <None Include="..\..\src\dex\posix\p-readwrite.c.inl" />
     <None Include="..\..\src\dex\posix\p-realpath.c.inl" />
     <None Include="..\..\src\dex\posix\p-sched.c.inl" />

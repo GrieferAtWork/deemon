@@ -60,7 +60,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
-#define POSIX_KWDS_FILENAME_LEN_DEFINED 1
+#define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
 #endif /* !POSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -68,12 +68,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	DeeStringObject *filename;
 	int64_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI64d:truncate", &filename, &len))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
@@ -90,7 +90,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
-#define POSIX_KWDS_FILENAME_LEN_DEFINED 1
+#define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
 #endif /* !POSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -98,12 +98,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	DeeStringObject *filename;
 	int32_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI32d:truncate", &filename, &len))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
@@ -121,7 +121,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
-#define POSIX_KWDS_FILENAME_LEN_DEFINED 1
+#define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
 #endif /* !POSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -129,12 +129,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	DeeStringObject *filename;
 	int64_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI64d:truncate", &filename, &len))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
@@ -152,7 +152,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 #define POSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&posix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_truncate, posix_truncate_f);
 #ifndef POSIX_KWDS_FILENAME_LEN_DEFINED
-#define POSIX_KWDS_FILENAME_LEN_DEFINED 1
+#define POSIX_KWDS_FILENAME_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_len, { K(filename), K(len), KEND });
 #endif /* !POSIX_KWDS_FILENAME_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -160,12 +160,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	DeeStringObject *filename;
 	int32_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI32d:truncate", &filename, &len))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
+		goto err;
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
-	    goto err;
+		goto err;
 	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
@@ -260,7 +260,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 #define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
-#define POSIX_KWDS_FD_LEN_DEFINED 1
+#define POSIX_KWDS_FD_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });
 #endif /* !POSIX_KWDS_FD_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -268,10 +268,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	DeeObject *fd;
 	int64_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI64d:ftruncate", &fd, &len))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_ftruncate_f_impl(fd_fd, len);
 err:
 	return NULL;
@@ -287,7 +287,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 #define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
-#define POSIX_KWDS_FD_LEN_DEFINED 1
+#define POSIX_KWDS_FD_LEN_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });
 #endif /* !POSIX_KWDS_FD_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -295,10 +295,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	DeeObject *fd;
 	int32_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI32d:ftruncate", &fd, &len))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_ftruncate_f_impl(fd_fd, len);
 err:
 	return NULL;

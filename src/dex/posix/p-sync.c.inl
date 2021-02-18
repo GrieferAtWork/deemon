@@ -63,7 +63,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_CMETHOD(posix_sync, posix_sync_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sync_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
-	    goto err;
+		goto err;
 	return posix_sync_f_impl();
 err:
 	return NULL;
@@ -96,17 +96,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *cons
 #define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fsync, posix_fsync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED 1
+#define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
 	DeeObject *fd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fsync", &fd))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_fsync_f_impl(fd_fd);
 err:
 	return NULL;
@@ -157,17 +157,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *
 #define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, posix_fdatasync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
-#define POSIX_KWDS_FD_DEFINED 1
+#define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int fd_fd;
 	DeeObject *fd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fdatasync", &fd))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_fdatasync_f_impl(fd_fd);
 err:
 	return NULL;

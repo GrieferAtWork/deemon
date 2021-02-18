@@ -70,24 +70,24 @@ typedef struct Dee_file_writer_object DeeFileWriterObject;
 struct Dee_system_file_object {
 	Dee_LFILE_OBJECT_HEAD
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
-	DREF DeeObject *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
-	/*HANDLE*/void *sf_handle;     /* [0..1] Underlying file handle.
-	                                *      - STD handles are set to `NULL' before being initialized.
-	                                *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
-	/*HANDLE*/void *sf_ownhandle;  /* [0..1] The owned file handle. */
-	uint32_t        sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
-	unsigned char   sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
-	unsigned char   sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
+	DREF DeeObject  *sf_filename;   /* [0..1][lock(WRITE_ONCE)] The filename of this systemfile. */
+	/*HANDLE*/ void *sf_handle;     /* [0..1] Underlying file handle.
+	                                 *      - STD handles are set to `NULL' before being initialized.
+	                                 *      - Closed handlers are set to `INVALID_HANDLE_VALUE' */
+	/*HANDLE*/ void *sf_ownhandle;  /* [0..1] The owned file handle. */
+	uint32_t         sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
+	unsigned char    sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
+	unsigned char    sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 #ifdef DEESYSTEM_FILE_USE_UNIX
-	DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-	int             sf_handle;     /* [0..1] Underlying system file. */
-	int             sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
+	int              sf_handle;     /* [0..1] Underlying system file. */
+	int              sf_ownhandle;  /* [0..1] The owned underlying system file. */
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
-	DREF DeeObject *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
-	/*FILE*/void   *sf_handle;     /* [0..1] Underlying system file. */
-	/*FILE*/void   *sf_ownhandle;  /* [0..1] The owned underlying system file. */
+	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
+	/*FILE*/ void   *sf_handle;     /* [0..1] Underlying system file. */
+	/*FILE*/ void   *sf_ownhandle;  /* [0..1] The owned underlying system file. */
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 };
 

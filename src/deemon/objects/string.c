@@ -1146,8 +1146,8 @@ stringiter_nii_peek(StringIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst stringiter_nii = {
-	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (void *)&stringiter_nii_getseq,
@@ -1215,7 +1215,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */stringiter_members,
+	/* .tp_members       = */ stringiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1694,8 +1694,8 @@ PRIVATE struct {
 } empty_utf = { 0, 0 };
 
 PRIVATE struct string_utf empty_string_utf = {
-	/* .u_width = */STRING_WIDTH_1BYTE, /* Every character fits into a single byte (because there are no characters) */
-	/* .u_flags = */STRING_UTF_FASCII,
+	/* .u_width = */ STRING_WIDTH_1BYTE, /* Every character fits into a single byte (because there are no characters) */
+	/* .u_flags = */ STRING_UTF_FASCII,
 	/* .u_data  = */ {
 		/* [STRING_WIDTH_1BYTE] = */ (size_t *)&DeeString_Empty.s_zero,
 		/* [STRING_WIDTH_2BYTE] = */ (size_t *)&empty_utf.zero,
@@ -1709,7 +1709,7 @@ PUBLIC struct empty_string_struct DeeString_Empty = {
 	/* .s_data = */ &empty_string_utf,
 	/* .s_hash = */ 0,
 	/* .s_len  = */ 0,
-	/* .s_zero = */'\0'
+	/* .s_zero = */ '\0'
 };
 
 DECL_END

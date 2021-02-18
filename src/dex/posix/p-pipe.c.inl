@@ -75,7 +75,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const
 PRIVATE DEFINE_CMETHOD(posix_pipe, posix_pipe_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":pipe"))
-	    goto err;
+		goto err;
 	return posix_pipe_f_impl();
 err:
 	return NULL;
@@ -199,13 +199,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *cons
 #define POSIX_PIPE2_DEF_DOC(doc) { "pipe2", (DeeObject *)&posix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_pipe2, posix_pipe2_f);
 #ifndef POSIX_KWDS_OFLAGS_DEFINED
-#define POSIX_KWDS_OFLAGS_DEFINED 1
+#define POSIX_KWDS_OFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oflags, { K(oflags), KEND });
 #endif /* !POSIX_KWDS_OFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe2_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int oflags;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oflags, "d:pipe2", &oflags))
-	    goto err;
+		goto err;
 	return posix_pipe2_f_impl(oflags);
 err:
 	return NULL;

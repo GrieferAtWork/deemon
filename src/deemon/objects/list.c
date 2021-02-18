@@ -4225,8 +4225,8 @@ list_iterator_nii_peek(ListIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst list_iterator_nii = {
-	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (void *)&list_iterator_nii_getseq,

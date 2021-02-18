@@ -2705,7 +2705,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */instancemember_copy,
+				/* .tp_copy_ctor = */ instancemember_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(DeeInstanceMemberObject)
