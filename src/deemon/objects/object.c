@@ -3028,9 +3028,9 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 					continue;
 				ASSERT(kwds->kw_map[i].ke_index <= argc);
 				if unlikely(set_private_basic_member(self, result,
-					                                  kwds->kw_map[i].ke_name,
-					                                  argv[kwds->kw_map[i].ke_index]))
-				goto err_r;
+				                                     kwds->kw_map[i].ke_name,
+				                                     argv[kwds->kw_map[i].ke_index]))
+					goto err_r;
 			}
 		} else {
 			iterator = DeeObject_IterSelf(kw);
@@ -3085,10 +3085,15 @@ PRIVATE char const meth_boundinstanceattr[] = "o|b:boundinstanceattr";
 PRIVATE char const meth_delinstanceattr[]   = "o:delinstanceattr";
 PRIVATE char const meth_setinstanceattr[]   = "oo:setinstanceattr";
 
-PRIVATE struct keyword getattr_kwdlist[] = { K(name), KEND };
+#define name_getinstanceattr   (meth_getinstanceattr + 2)
+#define name_callinstanceattr  (meth_callinstanceattr + 0)
+#define name_hasinstanceattr   (meth_hasinstanceattr + 2)
+#define name_boundinstanceattr (meth_boundinstanceattr + 4)
+#define name_delinstanceattr   (meth_delinstanceattr + 2)
+#define name_setinstanceattr   (meth_setinstanceattr + 3)
 
-PRIVATE struct keyword setattr_kwdlist[] = { K(name), K(value), KEND };
-
+PRIVATE struct keyword getattr_kwdlist[]   = { K(name), KEND };
+PRIVATE struct keyword setattr_kwdlist[]   = { K(name), K(value), KEND };
 PRIVATE struct keyword boundattr_kwdlist[] = { K(name), K(allow_missing), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3239,8 +3244,9 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	char const *name_str;
 	dhash_t name_hash;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasattribute", &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasattribute", &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	name_str  = DeeString_STR(name);
 	name_hash = DeeString_Hash(name);
@@ -3546,7 +3552,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
 	  DOC("(fields!!)->\n"
-	      "Allocate a new instance of @this Type and initialize members in accordance ot @fields\n"
+	      "Allocate a new instance of @this Type and initialize members in accordance to @fields\n"
 	      "${"
 	      "class MyClass {\n"
 	      "	member foo;\n"
@@ -3578,7 +3584,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "${"
 	      "import List from deemon;\n"
 	      "class MyList: List {\n"
-	      "	this = del;\n"
+	      "	this = del; /* Delete the regular constructor. */\n"
 	      "	member mylist_member;\n"
 	      "	appendmember() {\n"
 	      "		this.append(mylist_member);\n"
@@ -3601,7 +3607,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "Otherwise, return ?f\n"
 
 	      "${"
-	      "function hasattribute(name) {\n"
+	      "function hasattribute(name: string): bool {\n"
 	      "	import attribute from deemon;\n"
 	      "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
 	      "}}\n"
@@ -3617,7 +3623,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "Similar to #hasattribute, but only looks at attributes declared by "
 	      /**/ "@this Type, excluding any defined by a sub-class.\n"
 	      "${"
-	      "function hasattribute(name) {\n"
+	      "function hasprivateattribute(name: string): bool {\n"
 	      "	import attribute from deemon;\n"
 	      "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
 	      "}}"),
@@ -3636,7 +3642,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "The given @name is the so-called real operator name, "
 	      /**/ "as listed under Name in the following table:\n"
 	      "#T{Name|Symbolical name|Prototype~"
-	      "$\"constructor\"|$\"this\"|${this(args!)}&"
+	      "$\"constructor\"|$\"this\"|${this(args..., **kwds)}&"
 	      "$\"copy\"|$\"copy\"|${copy()}&"
 	      "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
 	      "$\"destructor\"|$\"#~this\"|${##~this()}&"
@@ -3710,7 +3716,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      /**/ "inherited constructors\n"
 	      "For a list of operator names, see #hasoperator"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_getinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_getinstanceattr,
+	{ name_getinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_getinstanceattr,
 	  DOC("(name:?Dstring)->\n"
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
@@ -3739,23 +3745,23 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "one of the attribute-operators, but will continue search for matching attribute names, even "
 	      "if those attributes would normally have been overshadowed by attribute callbacks"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
+	{ name_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
 	  DOC("(name:?Dstring,args!)->\n"
 	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_hasinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasinstanceattr,
+	{ name_hasinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasinstanceattr,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_boundinstanceattr + 4, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_boundinstanceattr,
+	{ name_boundinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_boundinstanceattr,
 	  DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
 	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_delinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_delinstanceattr,
+	{ name_delinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_delinstanceattr,
 	  DOC("(name:?Dstring)\n"
 	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_setinstanceattr + 3, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_setinstanceattr,
+	{ name_setinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_setinstanceattr,
 	  DOC("(name:?Dstring,value)->\n"
 	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },

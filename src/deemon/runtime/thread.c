@@ -3767,7 +3767,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	                         "${"
 	                         "import Thread, Callable from deemon;\n"
 	                         "class MyWorker: Thread {\n"
-	                         "	private m_jobs: {Callable...};\n"
+	                         "	private member m_jobs: {Callable...};\n"
 	                         "\\\n"
 	                         "	this(jobs: {Callable...})\n"
 	                         "		: m_jobs = jobs\n"

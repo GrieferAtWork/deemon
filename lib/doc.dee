@@ -3840,7 +3840,7 @@ set_is_type:
 	}
 
 
-	@@Returns the DocSection associated with a given @opname, which
+	@@Returns the DocSection(s) associated with a given @opname, which
 	@@must be the operator's real name (e.g. @"eq", and not @"==")
 	@@If the operator is implemented, but doesn't have an explicit
 	@@section defined within the associated type's doc string, a

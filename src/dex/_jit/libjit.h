@@ -336,7 +336,7 @@ struct jit_lvalue {
 		} lv_objent; /* JIT_LVALUE_OBJENT | JIT_LVALUE_ROOBJENT -- Object table entry. */
 		struct {
 			DREF DeeModuleObject *lx_mod; /* [1..1] The module that is being referenced.
-											* NOTE: Guarantied to be a regular, or a DEX module. */
+			                               * NOTE: Guarantied to be a regular, or a DEX module. */
 			struct module_symbol *lx_sym; /* The symbol that is being accessed. */
 		} lv_extern; /* JIT_LVALUE_EXTERN */
 		DREF struct string_object   *lv_global; /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
