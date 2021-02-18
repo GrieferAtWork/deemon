@@ -135,7 +135,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 im_eq(InstanceMethod *self,
       InstanceMethod *other) {
 	int temp;
-	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMethod_Type))
+	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		return NULL;
 	temp = DeeObject_CompareEq(self->im_func, other->im_func);
 	if (temp <= 0)
@@ -152,7 +152,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 im_ne(InstanceMethod *self,
       InstanceMethod *other) {
 	int temp;
-	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMethod_Type))
+	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		return NULL;
 	temp = DeeObject_CompareNe(self->im_func, other->im_func);
 	if (temp != 0)

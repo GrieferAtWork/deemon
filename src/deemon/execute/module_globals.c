@@ -292,7 +292,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_init(ModuleExports *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module) ||
-	    DeeObject_AssertType((DeeObject *)self->me_module, &DeeModule_Type))
+	    DeeObject_AssertType(self->me_module, &DeeModule_Type))
 		return -1;
 	Dee_Incref(&empty_module);
 	return 0;
@@ -749,7 +749,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mg_init(ModuleGlobals *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module) ||
-	    DeeObject_AssertType((DeeObject *)self->mg_module, &DeeModule_Type))
+	    DeeObject_AssertType(self->mg_module, &DeeModule_Type))
 		return -1;
 	Dee_Incref(&empty_module);
 	return 0;

@@ -234,14 +234,14 @@ iter_exhausted:
 }
 
 INTDEF DeeTypeObject RoDictIterator_Type;
-#define DEFINE_ITERATOR_COMPARE(name, op)                                   \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
-	name(DictIterator *self, DictIterator *other) {                         \
-		if (DeeObject_AssertType((DeeObject *)other, &RoDictIterator_Type)) \
-			goto err;                                                       \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));                   \
-	err:                                                                    \
-		return NULL;                                                        \
+#define DEFINE_ITERATOR_COMPARE(name, op)                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL      \
+	name(DictIterator *self, DictIterator *other) {            \
+		if (DeeObject_AssertType(other, &RoDictIterator_Type)) \
+			goto err;                                          \
+		return_bool(READ_ITEM(self) op READ_ITEM(other));      \
+	err:                                                       \
+		return NULL;                                           \
 	}
 DEFINE_ITERATOR_COMPARE(rodictiterator_eq, ==)
 DEFINE_ITERATOR_COMPARE(rodictiterator_ne, !=)

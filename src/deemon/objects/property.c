@@ -167,7 +167,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 property_eq(Property *self, Property *other) {
 	int temp;
-	if (DeeObject_AssertType((DeeObject *)other, &DeeProperty_Type))
+	if (DeeObject_AssertType(other, &DeeProperty_Type))
 		goto err;
 	/* Make sure that the same callbacks are implemented. */
 	if ((self->p_get != NULL) != (other->p_get != NULL))

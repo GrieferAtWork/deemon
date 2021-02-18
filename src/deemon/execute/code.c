@@ -1395,7 +1395,7 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 		goto err;
 	if (DeeNone_Check(self->eh_mask))
 		self->eh_mask = NULL;
-	if (self->eh_mask && DeeObject_AssertType((DeeObject *)self->eh_mask, &DeeType_Type))
+	if (self->eh_mask && DeeObject_AssertType(self->eh_mask, &DeeType_Type))
 		goto err;
 	self->eh_flags = EXCEPTION_HANDLER_FNORMAL;
 	if (!DeeNone_Check(flags)) {

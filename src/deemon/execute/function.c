@@ -1404,7 +1404,7 @@ yfi_new(YFIterator *__restrict self,
 	YFunction *func;
 	if (DeeArg_Unpack(argc, argv, "o:_YieldFunctionIterator", &func))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)func, &DeeYieldFunction_Type))
+	if (DeeObject_AssertType(func, &DeeYieldFunction_Type))
 		goto err;
 	return yfi_init(self, func);
 err:

@@ -121,7 +121,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setscope(Ast *__restrict self,
              DeeCompilerScopeObject *__restrict value) {
 	struct ast *branch = self->ci_value;
-	if (DeeObject_AssertType((DeeObject *)value, &DeeCompilerScope_Type))
+	if (DeeObject_AssertType(value, &DeeCompilerScope_Type))
 		return -1;
 	if (value->ci_compiler != self->ci_compiler)
 		return err_invalid_scope_compiler(value);

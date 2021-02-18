@@ -91,7 +91,7 @@ attr_hash(Attr *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 attr_eq(Attr *self, Attr *other) {
 	int result;
-	if (DeeObject_AssertType((DeeObject *)other, &DeeAttribute_Type))
+	if (DeeObject_AssertType(other, &DeeAttribute_Type))
 		goto err;
 	if (self->a_info.a_attrtype != other->a_info.a_attrtype)
 		goto nope;
@@ -976,7 +976,7 @@ enumattriter_init(EnumAttrIter *__restrict self,
 	EnumAttr *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_EnumAttrIterator", &seq))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)seq, &DeeEnumAttr_Type))
+	if (DeeObject_AssertType(seq, &DeeEnumAttr_Type))
 		goto err;
 	enumattriter_setup(self, seq);
 	return 0;

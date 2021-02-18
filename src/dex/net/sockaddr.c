@@ -1769,7 +1769,7 @@ sockaddr_hash(DeeSockAddrObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sockaddr_eq(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeSockAddr_Type))
+	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
 		return NULL;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
 	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
@@ -1778,7 +1778,7 @@ sockaddr_eq(DeeSockAddrObject *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sockaddr_ne(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeSockAddr_Type))
+	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
 		return NULL;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
 	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) != 0);

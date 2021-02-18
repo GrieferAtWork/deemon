@@ -1241,7 +1241,7 @@ setiterator_init(SetIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set) ||
-	    DeeObject_AssertType((DeeObject *)set, &DeeHashSet_Type))
+	    DeeObject_AssertType(set, &DeeHashSet_Type))
 		return -1;
 	self->si_set = set;
 	Dee_Incref(set);
@@ -1264,14 +1264,14 @@ setiterator_bool(SetIterator *__restrict self) {
 	        item < set->s_elem + (set->s_mask + 1));
 }
 
-#define DEFINE_ITERATOR_COMPARE(name, op)                                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                    \
-	name(SetIterator *self, SetIterator *other) {                            \
-		if (DeeObject_AssertType((DeeObject *)other, &HashSetIterator_Type)) \
-			goto err;                                                        \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));                    \
-	err:                                                                     \
-		return NULL;                                                         \
+#define DEFINE_ITERATOR_COMPARE(name, op)                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
+	name(SetIterator *self, SetIterator *other) {               \
+		if (DeeObject_AssertType(other, &HashSetIterator_Type)) \
+			goto err;                                           \
+		return_bool(READ_ITEM(self) op READ_ITEM(other));       \
+	err:                                                        \
+		return NULL;                                            \
 	}
 DEFINE_ITERATOR_COMPARE(setiterator_eq, ==)
 DEFINE_ITERATOR_COMPARE(setiterator_ne, !=)

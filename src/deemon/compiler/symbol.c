@@ -807,7 +807,7 @@ root_scope_ctor(DeeRootScopeObject *__restrict self,
 	DeeModuleObject *module;
 	if (DeeArg_Unpack(argc, argv, "o:root_scope", &module))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)module, &DeeModule_Type))
+	if (DeeObject_AssertType(module, &DeeModule_Type))
 		goto err;
 	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
 	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));

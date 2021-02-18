@@ -134,7 +134,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compiler_set_scope(DeeCompilerObject *__restrict self,
                    DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
-	if (DeeObject_AssertType((DeeObject *)value, &DeeCompilerScope_Type))
+	if (DeeObject_AssertType(value, &DeeCompilerScope_Type))
 		return -1;
 	if (value->ci_compiler != self)
 		return err_invalid_scope_compiler(value);
@@ -163,7 +163,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compiler_set_basescope(DeeCompilerObject *__restrict self,
                        DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
-	if (DeeObject_AssertType((DeeObject *)value, &DeeCompilerBaseScope_Type))
+	if (DeeObject_AssertType(value, &DeeCompilerBaseScope_Type))
 		return -1;
 	if (value->ci_compiler != self)
 		return err_invalid_scope_compiler(value);
@@ -281,7 +281,7 @@ PRIVATE DeeScopeObject *DCALL
 get_scope(DeeCompilerScopeObject *scope) {
 	if (DeeNone_Check(scope))
 		return current_scope;
-	if (DeeObject_AssertType((DeeObject *)scope, &DeeCompilerScope_Type))
+	if (DeeObject_AssertType(scope, &DeeCompilerScope_Type))
 		goto err;
 	if unlikely(scope->ci_compiler != DeeCompiler_Current) {
 		err_invalid_scope_compiler(scope);

@@ -253,7 +253,7 @@ dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
 	DeeDictObject *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict) ||
-	    DeeObject_AssertType((DeeObject *)Dict, &DeeDict_Type))
+	    DeeObject_AssertType(Dict, &DeeDict_Type))
 		return -1;
 	self->di_dict = Dict;
 	Dee_Incref(Dict);
@@ -294,14 +294,14 @@ dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 INTDEF DeeTypeObject DictIterator_Type;
-#define DEFINE_ITERATOR_COMPARE(name, op)                                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
-	name(DictIterator *self, DictIterator *other) {                       \
-		if (DeeObject_AssertType((DeeObject *)other, &DictIterator_Type)) \
-			goto err;                                                     \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));                 \
-	err:                                                                  \
-		return NULL;                                                      \
+#define DEFINE_ITERATOR_COMPARE(name, op)                    \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL    \
+	name(DictIterator *self, DictIterator *other) {          \
+		if (DeeObject_AssertType(other, &DictIterator_Type)) \
+			goto err;                                        \
+		return_bool(READ_ITEM(self) op READ_ITEM(other));    \
+	err:                                                     \
+		return NULL;                                         \
 	}
 DEFINE_ITERATOR_COMPARE(dictiterator_eq, ==)
 DEFINE_ITERATOR_COMPARE(dictiterator_ne, !=)
@@ -506,7 +506,7 @@ dictproxyiterator_init(DictProxyIterator *__restrict self,
 	DictProxy *proxy;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &proxy))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)proxy,
+	if (DeeObject_AssertType(proxy,
 	                         DeeObject_InstanceOf((DeeObject *)self, &DictKeysIterator_Type)
 	                         ? &DeeDictKeys_Type
 	                         : DeeObject_InstanceOf((DeeObject *)self, &DictItemsIterator_Type)

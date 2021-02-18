@@ -483,7 +483,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 weakrefable_assign(WeakRefAble *__restrict self,
                    WeakRefAble *__restrict other) {
 	(void)self;
-	return DeeObject_AssertType((DeeObject *)other, &DeeWeakRefAble_Type);
+	return DeeObject_AssertType(other, &DeeWeakRefAble_Type);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

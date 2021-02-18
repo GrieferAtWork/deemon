@@ -355,40 +355,40 @@ INTDEF DeeTypeObject DeeGenericIterator_Type;
 
 
 #ifndef CONFIG_NO_THREADS
-#define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
-	name(SeqIterator *self, SeqIterator *other) {                               \
-		DREF DeeObject *lindex, *rindex, *result;                               \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeGenericIterator_Type)) \
-			return NULL;                                                        \
-		rwlock_read(&self->si_lock);                                            \
-		lindex = self->si_index;                                                \
-		Dee_Incref(lindex);                                                     \
-		rwlock_endread(&self->si_lock);                                         \
-		rwlock_read(&other->si_lock);                                           \
-		rindex = other->si_index;                                               \
-		Dee_Incref(rindex);                                                     \
-		rwlock_endread(&other->si_lock);                                        \
-		result = cmp_name(lindex, rindex);                                      \
-		Dee_Decref(rindex);                                                     \
-		Dee_Decref(lindex);                                                     \
-		return result;                                                          \
+#define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
+	name(SeqIterator *self, SeqIterator *other) {                  \
+		DREF DeeObject *lindex, *rindex, *result;                  \
+		if (DeeObject_AssertType(other, &DeeGenericIterator_Type)) \
+			return NULL;                                           \
+		rwlock_read(&self->si_lock);                               \
+		lindex = self->si_index;                                   \
+		Dee_Incref(lindex);                                        \
+		rwlock_endread(&self->si_lock);                            \
+		rwlock_read(&other->si_lock);                              \
+		rindex = other->si_index;                                  \
+		Dee_Incref(rindex);                                        \
+		rwlock_endread(&other->si_lock);                           \
+		result = cmp_name(lindex, rindex);                         \
+		Dee_Decref(rindex);                                        \
+		Dee_Decref(lindex);                                        \
+		return result;                                             \
 	}
 #else /* CONFIG_NO_THREADS */
-#define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
-	name(SeqIterator *self, SeqIterator *other) {                               \
-		DREF DeeObject *lindex, *rindex, *result;                               \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeGenericIterator_Type)) \
-			return NULL;                                                        \
-		lindex = self->si_index;                                                \
-		Dee_Incref(lindex);                                                     \
-		rindex = other->si_index;                                               \
-		Dee_Incref(rindex);                                                     \
-		result = cmp_name(lindex, rindex);                                      \
-		Dee_Decref(rindex);                                                     \
-		Dee_Decref(lindex);                                                     \
-		return result;                                                          \
+#define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
+	name(SeqIterator *self, SeqIterator *other) {                  \
+		DREF DeeObject *lindex, *rindex, *result;                  \
+		if (DeeObject_AssertType(other, &DeeGenericIterator_Type)) \
+			return NULL;                                           \
+		lindex = self->si_index;                                   \
+		Dee_Incref(lindex);                                        \
+		rindex = other->si_index;                                  \
+		Dee_Incref(rindex);                                        \
+		result = cmp_name(lindex, rindex);                         \
+		Dee_Decref(rindex);                                        \
+		Dee_Decref(lindex);                                        \
+		return result;                                             \
 	}
 #endif /* !CONFIG_NO_THREADS */
 DEFINE_SEQITERATOR_COMPARE(seqiterator_eq, DeeObject_CompareEqObject)

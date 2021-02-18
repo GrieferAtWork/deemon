@@ -50,7 +50,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF Super *result;
 	if (tp_self == (DeeTypeObject *)Dee_None)
 		tp_self = &DeeNone_Type;
-	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeSuper_Check(self)) {
 		if unlikely(!DeeType_IsAbstract(tp_self) &&
@@ -165,7 +165,7 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 			tp = &DeeNone_Type;
 		} else {
 			/* Make sure the passed type matches. */
-			if (DeeObject_AssertType((DeeObject *)tp, &DeeType_Type))
+			if (DeeObject_AssertType(tp, &DeeType_Type))
 				return -1;
 			if (!DeeType_IsAbstract(tp) && DeeObject_AssertType(ob, tp))
 				return -1;

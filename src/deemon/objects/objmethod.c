@@ -258,7 +258,7 @@ objmethod_hash(DeeObjMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 objmethod_eq(DeeObjMethodObject *self,
              DeeObjMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeObjMethod_Type))
+	if (DeeObject_AssertType(other, &DeeObjMethod_Type))
 		goto err;
 	if (self->om_func != other->om_func)
 		return_false;
@@ -270,7 +270,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 objmethod_ne(DeeObjMethodObject *self,
              DeeObjMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeObjMethod_Type))
+	if (DeeObject_AssertType(other, &DeeObjMethod_Type))
 		goto err;
 	if (self->om_func != other->om_func)
 		return_true;
@@ -1041,7 +1041,7 @@ clsmethod_hash(DeeClsMethodObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_eq(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func == other->cm_func);
 err:
@@ -1051,7 +1051,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_ne(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func != other->cm_func);
 err:
@@ -1061,7 +1061,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_lo(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func < other->cm_func);
 err:
@@ -1071,7 +1071,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_le(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func <= other->cm_func);
 err:
@@ -1081,7 +1081,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_gr(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func > other->cm_func);
 err:
@@ -1091,7 +1091,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_ge(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func >= other->cm_func);
 err:
@@ -1797,14 +1797,14 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	       sizeof(DeeClsMemberObject) -  \
 	       offsetof(DeeClsMemberObject, cm_memb))
 
-#define DEFINE_CLSMEMBER_CMP(name, op)                                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
-	name(DeeClsMemberObject *self, DeeClsMemberObject *other) {           \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeClsMember_Type)) \
-			goto err;                                                     \
-		return_bool(CLSMEMBER_CMP(self, other) op 0);                     \
-	err:                                                                  \
-		return NULL;                                                      \
+#define DEFINE_CLSMEMBER_CMP(name, op)                          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
+	name(DeeClsMemberObject *self, DeeClsMemberObject *other) { \
+		if (DeeObject_AssertType(other, &DeeClsMember_Type))    \
+			goto err;                                           \
+		return_bool(CLSMEMBER_CMP(self, other) op 0);           \
+	err:                                                        \
+		return NULL;                                            \
 	}
 DEFINE_CLSMEMBER_CMP(clsmember_eq, ==)
 DEFINE_CLSMEMBER_CMP(clsmember_ne, !=)

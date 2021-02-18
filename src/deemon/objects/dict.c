@@ -54,7 +54,7 @@ DECL_BEGIN
 PUBLIC DeeObject DeeDict_Dummy = {
 	OBJECT_HEAD_INIT(&DeeObject_Type)
 };
-#define dummy  (&DeeDict_Dummy)
+#define dummy (&DeeDict_Dummy)
 
 
 typedef DeeDictObject Dict;

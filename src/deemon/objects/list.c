@@ -4011,7 +4011,7 @@ li_init(ListIterator *__restrict self,
 	self->li_index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_ListIterator", &self->li_list, &self->li_index))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)self->li_list, &DeeList_Type))
+	if (DeeObject_AssertType(self->li_list, &DeeList_Type))
 		goto err;
 	Dee_Incref(self->li_list);
 	return 0;

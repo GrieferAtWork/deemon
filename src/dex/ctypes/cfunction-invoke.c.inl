@@ -279,7 +279,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 				*argp_iter = (void *)iter;
 			} else {
 				/* Fallback: Any structured object. */
-				if (DeeObject_AssertType((DeeObject *)dee_va_type, &DeeSType_Type))
+				if (DeeObject_AssertType(dee_va_type, &DeeSType_Type))
 					goto err_wbuf;
 				*dee_va_ffi_types = stype_ffitype((DeeSTypeObject *)dee_va_type);
 				if unlikely(!*dee_va_ffi_types)

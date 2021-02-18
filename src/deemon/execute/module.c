@@ -1564,7 +1564,7 @@ module_hash(DeeModuleObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_eq(DeeModuleObject *self,
           DeeModuleObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeModule_Type))
+	if (DeeObject_AssertType(other, &DeeModule_Type))
 		return NULL;
 	return_bool_(self == other);
 }
@@ -1572,7 +1572,7 @@ module_eq(DeeModuleObject *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_ne(DeeModuleObject *self,
           DeeModuleObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeModule_Type))
+	if (DeeObject_AssertType(other, &DeeModule_Type))
 		return NULL;
 	return_bool_(self != other);
 }

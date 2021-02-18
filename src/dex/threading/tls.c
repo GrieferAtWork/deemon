@@ -406,12 +406,12 @@ tls_hash(Tls *__restrict self) {
 	return (dhash_t)self->t_index;
 }
 
-#define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
-	name(Tls *self, Tls *other) {                                   \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \
-			return NULL;                                            \
-		return_bool_(self->t_index op other->t_index);              \
+#define DEFINE_TLS_COMPARE(name, op)                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Tls *self, Tls *other) {                         \
+		if (DeeObject_AssertType(other, &DeeTls_Type))    \
+			return NULL;                                  \
+		return_bool_(self->t_index op other->t_index);    \
 	}
 DEFINE_TLS_COMPARE(tls_eq, ==)
 DEFINE_TLS_COMPARE(tls_ne, !=)
@@ -612,12 +612,12 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 tls_hash(Tls *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
-#define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
-	name(Tls *self, Tls *other) {                                   \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \
-			return NULL;                                            \
-		return_bool_(self op other);                                \
+#define DEFINE_TLS_COMPARE(name, op)                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Tls *self, Tls *other) {                         \
+		if (DeeObject_AssertType(other, &DeeTls_Type))    \
+			return NULL;                                  \
+		return_bool_(self op other);                      \
 	}
 DEFINE_TLS_COMPARE(tls_eq, ==)
 DEFINE_TLS_COMPARE(tls_ne, !=)

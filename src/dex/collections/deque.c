@@ -1711,7 +1711,7 @@ deqiter_init(DequeIteratorObject *__restrict self,
 	size_t index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:DequeIterator", &self->di_deq, &index))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)self->di_deq, &Deque_Type))
+	if (DeeObject_AssertType(self->di_deq, &Deque_Type))
 		goto err;
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->di_lock);

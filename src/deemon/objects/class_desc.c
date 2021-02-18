@@ -1780,10 +1780,10 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    &class_iattr, &class_cattr,
 	                    &class_isize, &class_csize))
 		goto err;
-	if (DeeObject_AssertType((DeeObject *)class_name, &DeeString_Type))
+	if (DeeObject_AssertType(class_name, &DeeString_Type))
 		goto err;
 	if (class_doc &&
-	    DeeObject_AssertType((DeeObject *)class_doc, &DeeString_Type))
+	    DeeObject_AssertType(class_doc, &DeeString_Type))
 		goto err;
 
 	result = cd_alloc_from_iattr(class_iattr, class_isize, class_csize);
@@ -2682,7 +2682,7 @@ instancemember_hash(DeeInstanceMemberObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instancemember_eq(DeeInstanceMemberObject *self,
                   DeeInstanceMemberObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMember_Type))
+	if (DeeObject_AssertType(other, &DeeInstanceMember_Type))
 		return NULL;
 	return_bool_(self->im_type == other->im_type &&
 	             self->im_attribute == other->im_attribute);
@@ -4497,7 +4497,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
-	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
 		goto err;
@@ -4519,7 +4519,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *__restrict tp_self,
                                     DeeObject *__restrict self,
                                     uint16_t addr) {
-	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
 		goto err;
@@ -4540,7 +4540,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
-	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
 		goto err;
@@ -4561,7 +4561,7 @@ INTERN WUNUSED NONNULL((1, 2, 4)) int
 (DCALL DeeInstance_SetMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *self,
                                   uint16_t addr, DeeObject *value) {
-	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
 		goto err;
@@ -4601,7 +4601,7 @@ INTERN NONNULL((1, 3)) void
 INTERN WUNUSED NONNULL((1, 3)) int
 (DCALL DeeClass_SetMemberSafe)(DeeTypeObject *__restrict self,
                                uint16_t addr, DeeObject *__restrict value) {
-	if (DeeObject_AssertType((DeeObject *)self, &DeeType_Type))
+	if (DeeObject_AssertType(self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))
 		goto err_req_class;
@@ -4637,7 +4637,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeClass_GetMemberSafe)(DeeTypeObject *__restrict self, uint16_t addr) {
-	if (DeeObject_AssertType((DeeObject *)self, &DeeType_Type))
+	if (DeeObject_AssertType(self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))
 		goto err_req_class;

@@ -268,13 +268,13 @@ cell_hash(Cell *__restrict self) {
 }
 
 
-#define DEFINE_CELL_COMPARE(name, op)                                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL            \
-	name(Cell *self, Cell *other) {                                  \
-		if (DeeObject_AssertType((DeeObject *)other, &DeeCell_Type)) \
-			return NULL;                                             \
-		return_bool(DeeObject_Id(CELL_READITEM(self)) op             \
-		            DeeObject_Id(CELL_READITEM(other)));             \
+#define DEFINE_CELL_COMPARE(name, op)                     \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Cell *self, Cell *other) {                       \
+		if (DeeObject_AssertType(other, &DeeCell_Type))   \
+			return NULL;                                  \
+		return_bool(DeeObject_Id(CELL_READITEM(self)) op  \
+		            DeeObject_Id(CELL_READITEM(other)));  \
 	}
 DEFINE_CELL_COMPARE(cell_eq, ==)
 DEFINE_CELL_COMPARE(cell_ne, !=)
