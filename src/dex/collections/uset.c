@@ -29,13 +29,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/dict.h>
+#include <deemon/dict.h> /* DeeDict_Dummy */
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
-#include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
@@ -132,13 +130,15 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_ctor(USetIterator *__restrict self) {
-	self->si_set = (USet *)DeeObject_NewDefault(&USet_Type);
+	self->si_set = (DREF USet *)DeeObject_NewDefault(&USet_Type);
 	if unlikely(!self->si_set)
-		return -1;
+		goto err;
 	self->si_next = self->si_set->s_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -151,18 +151,18 @@ usetiterator_copy(USetIterator *__restrict self,
 }
 
 
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 usetiterator_fini(USetIterator *__restrict self) {
 	Dee_Decref(self->si_set);
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 usetiterator_visit(USetIterator *__restrict self,
                    dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_set);
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
 	USet *set;
@@ -172,23 +172,19 @@ usetiterator_init(USetIterator *__restrict self,
 		goto err;
 	self->si_set = set;
 	Dee_Incref(set);
-#ifdef CONFIG_NO_THREADS
 	self->si_next = set->s_elem;
-#else /* CONFIG_NO_THREADS */
-	self->si_next = ATOMIC_READ(set->s_elem);
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 usetiterator_bool(USetIterator *__restrict self) {
 	struct uset_item *item = READ_ITEM(self);
 	USet *set              = self->si_set;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
-	 *       is no need to lock the Dict since we're not dereferencing anything. */
+	 *       is no need to lock the Set since we're not dereferencing anything. */
 	return (item >= set->s_elem &&
 	        item < set->s_elem + (set->s_mask + 1));
 }
@@ -210,12 +206,7 @@ DEFINE_ITERATOR_COMPARE(usetiterator_gr, >)
 DEFINE_ITERATOR_COMPARE(usetiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
-PRIVATE struct type_member tpconst usetiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(USetIterator, si_set), "->?GUniqueSet"),
-	TYPE_MEMBER_END
-};
-
-PRIVATE struct type_cmp usetiterator_cmp = {
+INTERN struct type_cmp usetiterator_cmp = {
 	/* .tp_hash = */ NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_ne,
@@ -223,7 +214,11 @@ PRIVATE struct type_cmp usetiterator_cmp = {
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_ge
-	/* TODO: NII */
+};
+
+PRIVATE struct type_member tpconst usetiterator_members[] = {
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(USetIterator, si_set), "->?GUniqueSet"),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject USetIterator_Type = {
@@ -778,6 +773,12 @@ PRIVATE struct type_getset tpconst uset_getsets[] = {
 	{ NULL }
 };
 
+PRIVATE struct type_member tpconst uset_members[] = {
+	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(USet, s_mask)),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(USet, s_size)),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member tpconst uset_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &USetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &URoSet_Type),
@@ -828,7 +829,7 @@ uset_deepload(USet *__restrict self) {
 	size_t new_mask;
 	for (;;) {
 		USet_LockRead(self);
-		/* Optimization: if the Dict is empty, then there's nothing to copy! */
+		/* Optimization: if the Set is empty, then there's nothing to copy! */
 		if (self->s_elem == empty_set_items) {
 			USet_LockEndRead(self);
 			return 0;
@@ -837,7 +838,9 @@ uset_deepload(USet *__restrict self) {
 		if (item_count <= ols_item_count)
 			break;
 		USet_LockEndRead(self);
-		new_items = (DREF DeeObject **)Dee_Realloc(items, item_count * sizeof(DREF DeeObject *));
+		new_items = (DREF DeeObject **)Dee_Realloc(items,
+		                                           item_count *
+		                                           sizeof(DREF DeeObject *));
 		if unlikely(!new_items)
 			goto err_items;
 		ols_item_count = item_count;
@@ -876,12 +879,14 @@ uset_deepload(USet *__restrict self) {
 			if (item->si_key) {
 				if likely(!USAME(item->si_key, items[i]))
 					continue; /* Already in use */
+				Dee_Decref(items[i]);
 				goto next_item;
 			}
 			item->si_key = items[i]; /* Inherit reference. */
 			break;
 		}
-	next_item:;
+next_item:
+		;
 	}
 	USet_LockWrite(self);
 	i            = self->s_mask + 1;
@@ -1058,7 +1063,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 uset_bool(USet *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->s_used != 0;
@@ -1348,22 +1353,22 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ uset_methods,
 	/* .tp_getsets       = */ uset_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ uset_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ uset_class_members
 };
 
+
+
+
+
+
+
+
+
+
 #undef READ_ITEM
-
-
-
-
-
-
-
-
-
 #ifdef CONFIG_NO_THREADS
 #define READ_ITEM(x) ((x)->si_next)
 #else /* CONFIG_NO_THREADS */
@@ -1422,11 +1427,16 @@ err:
 
 STATIC_ASSERT(offsetof(USetIterator, si_set) == offsetof(URoSetIterator, si_set));
 STATIC_ASSERT(offsetof(USetIterator, si_next) == offsetof(URoSetIterator, si_next));
-#define urosetiterator_copy    usetiterator_copy
-#define urosetiterator_fini    usetiterator_fini
-#define urosetiterator_visit   usetiterator_visit
-#define urosetiterator_members usetiterator_members
-#define urosetiterator_cmp     usetiterator_cmp
+#define urosetiterator_copy  usetiterator_copy
+#define urosetiterator_fini  usetiterator_fini
+#define urosetiterator_visit usetiterator_visit
+#define urosetiterator_cmp   usetiterator_cmp
+
+PRIVATE struct type_member tpconst urosetiterator_members[] = {
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoSetIterator, si_set), "->?AFrozen?GUniqueSet"),
+	TYPE_MEMBER_END
+};
+
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
@@ -1434,7 +1444,7 @@ urosetiterator_init(URoSetIterator *__restrict self,
 	URoSet *set;
 	if (DeeArg_Unpack(argc, argv, "o:_UniqueRoSetIterator", &set))
 		goto err;
-	if (DeeObject_AssertType(set, &URoSet_Type))
+	if (DeeObject_AssertTypeExact(set, &URoSet_Type))
 		goto err;
 	self->si_set = set;
 	Dee_Incref(set);
@@ -1450,7 +1460,7 @@ urosetiterator_bool(URoSetIterator *__restrict self) {
 	URoSet *set            = self->si_set;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
-	 *       is no need to lock the Dict since we're not dereferencing anything. */
+	 *       is no need to lock the Set since we're not dereferencing anything. */
 	return (item >= set->rs_elem &&
 	        item < set->rs_elem + (set->rs_mask + 1));
 }
@@ -1994,6 +2004,12 @@ PRIVATE struct type_getset tpconst uroset_getsets[] = {
 	{ NULL }
 };
 
+PRIVATE struct type_member tpconst uroset_members[] = {
+	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoSet, rs_mask)),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(URoSet, rs_size)),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member tpconst uroset_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &URoSetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &URoSet_Type),
@@ -2040,7 +2056,7 @@ INTERN DeeTypeObject URoSet_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ uroset_methods,
 	/* .tp_getsets       = */ uroset_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ uroset_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ uroset_class_members

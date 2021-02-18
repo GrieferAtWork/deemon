@@ -395,8 +395,30 @@ dict_deepload(Dict *__restrict self) {
 		perturb = j = hash & new_mask;
 		for (;; DeeDict_HashNx(j, perturb)) {
 			struct dict_item *item = &new_map[j & new_mask];
-			if (item->di_key)
-				continue; /* Already in use */
+			if (item->di_key) {
+				/* Check if deepcopy caused one of the elements to get duplicated. */
+				if unlikely(item->di_key == items[i].e_key) {
+remove_duplicate_key:
+					Dee_Decref(items[i].e_key);
+					Dee_Decref(items[i].e_value);
+					--item_count;
+					memmovedownc(&items[i],
+					             &items[i + 1],
+					             item_count - i,
+					             sizeof(struct dict_item));
+					break;
+				}
+				if (Dee_TYPE(item->di_key) == Dee_TYPE(items[i].e_key)) {
+					int error;
+					error = DeeObject_CompareEq(item->di_key, items[i].e_key);
+					if unlikely(error < 0)
+						goto err_items_v_new_map;
+					if (error)
+						goto remove_duplicate_key;
+				}
+				/* Slot already in use */
+				continue;
+			}
 			item->di_hash  = hash;
 			item->di_key   = items[i].e_key;   /* Inherit reference. */
 			item->di_value = items[i].e_value; /* Inherit reference. */
@@ -422,6 +444,8 @@ dict_deepload(Dict *__restrict self) {
 	}
 	Dee_Free(items);
 	return 0;
+err_items_v_new_map:
+	Dee_Free(new_map);
 err_items_v:
 	i = item_count;
 	while (i--) {
@@ -1054,7 +1078,11 @@ collect_memory:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_size(Dict *__restrict self) {
+#ifdef CONFIG_NO_THREADS
 	return DeeInt_NewSize(self->d_used);
+#else /* CONFIG_NO_THREADS */
+	return DeeInt_NewSize(ATOMIC_READ(self->d_used));
+#endif /* !CONFIG_NO_THREADS */
 }
 
 /* This one's basically your hasitem operator. */
@@ -1227,7 +1255,7 @@ again:
 			/* There are multiple matches for `hash'. */
 			DeeDict_LockEndRead(me);
 			Dee_Decref(match);
-			/* XXX: Dict-specific optimizations? */
+			/* TODO: Dict-specific optimizations? */
 			return DeeMap_HashFilter(self, hash);
 		}
 		if (key_only) {
@@ -1452,10 +1480,10 @@ err:
 }
 
 
-#define SETITEM_SETOLD 0 /* if_exists: *pold_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1; \
-	                      * else:      return 0; */
-#define SETITEM_SETNEW 1 /* if_exists: *pold_value = GET_OLD_VALUE(); return 1; \
-	                      * else:      ADD_NEW_ITEM(); return 0; */
+#define SETITEM_SETOLD 0 /* if_exists: *pold_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
+                          * else:      return 0; */
+#define SETITEM_SETNEW 1 /* if_exists: *pold_value = GET_OLD_VALUE(); return 1;
+                          * else:      ADD_NEW_ITEM(); return 0; */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem_ex(Dict *self,
                 DeeObject *key,
@@ -1514,7 +1542,6 @@ again:
 				item->di_key   = key;
 				item->di_value = value;
 				DeeDict_LockEndWrite(self);
-				Dee_Decref(item_key);
 				if (pold_value) {
 					*pold_value = item_value; /* Inherit reference */
 				} else {
@@ -2103,10 +2130,10 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &dict_ctor,
-				/* .tp_copy_ctor = */ &dict_copy,
-				/* .tp_deep_ctor = */ &dict_copy,
-				/* .tp_any_ctor  = */ &dict_init,
+				/* .tp_ctor      = */ (void *)&dict_ctor,
+				/* .tp_copy_ctor = */ (void *)&dict_copy,
+				/* .tp_deep_ctor = */ (void *)&dict_copy,
+				/* .tp_any_ctor  = */ (void *)&dict_init,
 				TYPE_FIXED_ALLOCATOR_GC(Dict)
 			}
 		},

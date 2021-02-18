@@ -399,9 +399,9 @@ struct udict_item {
 struct udict_object {
 	OBJECT_HEAD /* GC Object */
 	size_t             d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
-	size_t             d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
 	size_t             d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
 	                            *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
+	size_t             d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
 	struct udict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
 	                            * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
@@ -410,12 +410,72 @@ struct udict_object {
 	WEAKREF_SUPPORT
 };
 
+#define UDict_HashSt(self, hash)  ((hash) & ((UDict *)Dee_REQUIRES_OBJECT(self))->d_mask)
+#define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define UDict_HashIt(self, i)     (((UDict *)Dee_REQUIRES_OBJECT(self))->d_elem + ((i) & ((UDict *)(self))->d_mask))
+
+#ifndef CONFIG_NO_THREADS
+#define UDict_LockReading(x)    rwlock_reading(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockWriting(x)    rwlock_writing(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTryread(x)    rwlock_tryread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTrywrite(x)   rwlock_trywrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockRead(x)       rwlock_read(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockWrite(x)      rwlock_write(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTryUpgrade(x) rwlock_tryupgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockUpgrade(x)    rwlock_upgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockDowngrade(x)  rwlock_downgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEndWrite(x)   rwlock_endwrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEndRead(x)    rwlock_endread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEnd(x)        rwlock_end(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#else /* !CONFIG_NO_THREADS */
+#define UDict_LockReading(x)          1
+#define UDict_LockWriting(x)          1
+#define UDict_LockTryread(x)          1
+#define UDict_LockTrywrite(x)         1
+#define UDict_LockRead(x)       (void)0
+#define UDict_LockWrite(x)      (void)0
+#define UDict_LockTryUpgrade(x)       1
+#define UDict_LockUpgrade(x)          1
+#define UDict_LockDowngrade(x)  (void)0
+#define UDict_LockEndWrite(x)   (void)0
+#define UDict_LockEndRead(x)    (void)0
+#define UDict_LockEnd(x)        (void)0
+#endif /* CONFIG_NO_THREADS */
+
+
 struct urodict_object {
 	OBJECT_HEAD
 	size_t            rd_mask;    /* [const][!0] Allocated dictionary mask. */
 	size_t            rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
 	struct udict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
 };
+
+#define URoDict_HashSt(self, hash)  ((hash) & ((URoDict *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define URoDict_HashIt(self, i)     (((URoDict *)Dee_REQUIRES_OBJECT(self))->rd_elem + ((i) & ((URoDict *)(self))->rd_mask))
+
+
+
+struct udict_iterator_object {
+	OBJECT_HEAD
+	DREF UDict        *di_dict; /* [1..1][const] The dict that is being iterated. */
+	struct udict_item *di_next; /* [?..1][MAYBE(in(di_dict->d_elem))][atomic]
+	                             * The first candidate for the next item.
+	                             * NOTE: Before being dereferenced, this pointer is checked
+	                             *       for being located inside the dict's element vector.
+	                             *       In the event that it is located at its end, `ITER_DONE'
+	                             *       is returned, though in the event that it is located
+	                             *       outside, an error is thrown (`err_changed_sequence()'). */
+};
+
+struct urodict_iterator_object {
+	OBJECT_HEAD
+	DREF URoDict      *di_dict; /* [1..1][const] The dict that is being iterated. */
+	struct udict_item *di_next; /* [?..1][MAYBE(in(di_dict->rd_elem))][atomic]
+	                             * The first candidate for the next item. */
+};
+
+
 
 
 
@@ -428,12 +488,12 @@ struct uset_iterator_object {
 	OBJECT_HEAD
 	DREF USet        *si_set;  /* [1..1][const] The set that is being iterated. */
 	struct uset_item *si_next; /* [?..1][MAYBE(in(si_set->s_elem))][atomic]
-	                            *   The first candidate for the next item.
-	                            *   NOTE: Before being dereferenced, this pointer is checked
-	                            *         for being located inside the set's element vector.
-	                            *         In the event that it is located at its end, `ITER_DONE'
-	                            *         is returned, though in the event that it is located
-	                            *         outside, an error is thrown (`err_changed_sequence()'). */
+	                            * The first candidate for the next item.
+	                            * NOTE: Before being dereferenced, this pointer is checked
+	                            *       for being located inside the set's element vector.
+	                            *       In the event that it is located at its end, `ITER_DONE'
+	                            *       is returned, though in the event that it is located
+	                            *       outside, an error is thrown (`err_changed_sequence()'). */
 };
 
 struct uset_object {
@@ -486,13 +546,8 @@ struct uset_object {
 struct uroset_iterator_object {
 	OBJECT_HEAD
 	DREF URoSet      *si_set;  /* [1..1][const] The set that is being iterated. */
-	struct uset_item *si_next; /* [?..1][MAYBE(in(si_set->s_elem))][atomic]
-	                            *   The first candidate for the next item.
-	                            *   NOTE: Before being dereferenced, this pointer is checked
-	                            *         for being located inside the set's element vector.
-	                            *         In the event that it is located at its end, `ITER_DONE'
-	                            *         is returned, though in the event that it is located
-	                            *         outside, an error is thrown (`err_changed_sequence()'). */
+	struct uset_item *si_next; /* [?..1][MAYBE(in(si_set->rs_elem))][atomic]
+	                            * The first candidate for the next item. */
 };
 
 struct uroset_object {
@@ -522,6 +577,7 @@ INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromUSet(USet *__restrict 
 INTDEF WUNUSED DREF URoDict *DCALL URoDict_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);
 INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromUDict(UDict *__restrict self);
 
 /* Unique map/set types.
  * These function identical to the normal Dict/HashSet, but instead
@@ -530,19 +586,22 @@ INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromSequence(DeeObject *
  * rely on any user-defined operator, or on hashing being implemented. */
 INTDEF DeeTypeObject USet_Type;
 INTDEF DeeTypeObject USetIterator_Type;
-INTDEF DeeTypeObject UDict_Type;
-INTDEF DeeTypeObject UDictIterator_Type;
 INTDEF DeeTypeObject URoSet_Type;
 INTDEF DeeTypeObject URoSetIterator_Type;
+
+INTDEF DeeTypeObject UDict_Type;
+INTDEF DeeTypeObject UDictIterator_Type;
 INTDEF DeeTypeObject URoDict_Type;
 INTDEF DeeTypeObject URoDictIterator_Type;
 
 
 
-INTDEF ATTR_COLD int DCALL err_empty_sequence(DeeObject *__restrict seq);
-INTDEF ATTR_COLD int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
-INTDEF ATTR_COLD int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
-INTDEF ATTR_COLD int DCALL err_changed_sequence(DeeObject *__restrict seq);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_empty_sequence(DeeObject *__restrict seq);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_index_out_of_bounds(DeeObject *__restrict self, size_t index, size_t size);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_changed_sequence(DeeObject *__restrict seq);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key);
+
 
 
 DECL_END

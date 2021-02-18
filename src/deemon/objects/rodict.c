@@ -445,7 +445,7 @@ done:
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeRoDict_Insert(DREF DeeObject **__restrict pself,
                  DeeObject *key, DeeObject *value) {
-	Dict *me = (Dict *)*pself;
+	DREF Dict *me = (Dict *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
 	ASSERT(key != (DeeObject *)me);
@@ -456,6 +456,7 @@ DeeRoDict_Insert(DREF DeeObject **__restrict pself,
 		me              = rehash(me, me->rd_mask, new_mask);
 		if unlikely(!me)
 			goto err;
+		*pself      = (DREF DeeObject *)me;
 		me->rd_mask = new_mask;
 		me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
 	}
@@ -999,10 +1000,10 @@ PRIVATE struct type_member tpconst rodict_class_members[] = {
 
 PRIVATE WUNUSED DREF Dict *DCALL rodict_ctor(void) {
 	DREF Dict *result;
-	result = RODICT_ALLOC(1);
+	result = RODICT_ALLOC(0);
 	if unlikely(!result)
 		goto done;
-	result->rd_mask = 1;
+	result->rd_mask = 0;
 	result->rd_size = 0;
 	DeeObject_Init(result, &DeeRoDict_Type);
 done:

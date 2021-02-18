@@ -31,7 +31,7 @@
 
 DECL_BEGIN
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_changed_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,
@@ -39,7 +39,7 @@ err_changed_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq), seq);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -47,7 +47,7 @@ err_empty_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq));
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_index_out_of_bounds(DeeObject *__restrict self,
                         size_t index, size_t size) {
 	ASSERT_OBJECT(self);
@@ -57,7 +57,7 @@ err_index_out_of_bounds(DeeObject *__restrict self,
 	                       index, size, Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unbound_index(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,
@@ -65,11 +65,20 @@ err_unbound_index(DeeObject *__restrict self, size_t index) {
 	                       index, Dee_TYPE(self), self);
 }
 
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
+	ASSERT_OBJECT(map);
+	ASSERT_OBJECT(key);
+	return DeeError_Throwf(&DeeError_KeyError,
+	                       "Could not find key `%k' in %k `%k'",
+	                       key, Dee_TYPE(map), map);
+}
+
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "Deque", (DeeObject *)&Deque_Type },
 	{ "FixedList", (DeeObject *)&FixedList_Type },
-	//TODO:    { "UniqueDict", (DeeObject *)&UDict_Type },
+	{ "UniqueDict", (DeeObject *)&UDict_Type },
 	{ "UniqueSet", (DeeObject *)&USet_Type },
 	{ NULL }
 };

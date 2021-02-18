@@ -350,8 +350,29 @@ set_deepload(Set *__restrict self) {
 		perturb = j = hash & new_mask;
 		for (;; DeeHashSet_HashNx(j, perturb)) {
 			struct hashset_item *item = &new_map[j & new_mask];
-			if (item->si_key)
-				continue; /* Already in use */
+			if (item->si_key) {
+				/* Check if deepcopy caused one of the elements to get duplicated. */
+				if unlikely(item->si_key == items[i]) {
+remove_duplicate_key:
+					Dee_Decref(items[i]);
+					--item_count;
+					memmovedownc(&items[i],
+					             &items[i + 1],
+					             item_count - i,
+					             sizeof(struct dict_item));
+					break;
+				}
+				if (Dee_TYPE(item->si_key) == Dee_TYPE(items[i])) {
+					int error;
+					error = DeeObject_CompareEq(item->si_key, items[i]);
+					if unlikely(error < 0)
+						goto err_items_v_new_map;
+					if (error)
+						goto remove_duplicate_key;
+				}
+				/* Slot already in use */
+				continue;
+			}
 			item->si_hash = hash;
 			item->si_key  = items[i]; /* Inherit reference. */
 			break;
@@ -372,6 +393,8 @@ set_deepload(Set *__restrict self) {
 	}
 	Dee_Free(items);
 	return 0;
+err_items_v_new_map:
+	Dee_Free(new_map);
 err_items_v:
 	i = item_count;
 	while (i--)

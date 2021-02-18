@@ -177,5 +177,7 @@ testSequenceType(Dict.Frozen, LIKE_MAP);
 testMutableSequence(collections.Deque, LIKE_SEQ);
 testMutableSequence(collections.FixedList, LIKE_SEQ);
 testMutableSequence(collections.UniqueSet, LIKE_SET);
-testMutableSequence(collections.UniqueSet.Frozen, LIKE_SET);
+testSequenceType(collections.UniqueSet.Frozen, LIKE_SET);
+testMutableSequence(collections.UniqueDict, LIKE_MAP);
+testSequenceType(collections.UniqueDict.Frozen, LIKE_MAP);
 
