@@ -439,9 +439,9 @@ struct uset_iterator_object {
 struct uset_object {
 	OBJECT_HEAD /* GC Object */
 	size_t            s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
-	size_t            s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
 	size_t            s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
 	                           * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
+	size_t            s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
 	struct uset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
 	                           * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
@@ -449,6 +449,39 @@ struct uset_object {
 #endif /* !CONFIG_NO_THREADS */
 	WEAKREF_SUPPORT
 };
+
+#define USet_HashSt(self, hash)  ((hash) & ((USet *)Dee_REQUIRES_OBJECT(self))->s_mask)
+#define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define USet_HashIt(self, i)     (((USet *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((USet *)(self))->s_mask))
+
+#ifndef CONFIG_NO_THREADS
+#define USet_LockReading(x)    rwlock_reading(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockWriting(x)    rwlock_writing(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTryread(x)    rwlock_tryread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTrywrite(x)   rwlock_trywrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockRead(x)       rwlock_read(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockWrite(x)      rwlock_write(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTryUpgrade(x) rwlock_tryupgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockUpgrade(x)    rwlock_upgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockDowngrade(x)  rwlock_downgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEndWrite(x)   rwlock_endwrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEndRead(x)    rwlock_endread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEnd(x)        rwlock_end(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#else /* !CONFIG_NO_THREADS */
+#define USet_LockReading(x)          1
+#define USet_LockWriting(x)          1
+#define USet_LockTryread(x)          1
+#define USet_LockTrywrite(x)         1
+#define USet_LockRead(x)       (void)0
+#define USet_LockWrite(x)      (void)0
+#define USet_LockTryUpgrade(x)       1
+#define USet_LockUpgrade(x)          1
+#define USet_LockDowngrade(x)  (void)0
+#define USet_LockEndWrite(x)   (void)0
+#define USet_LockEndRead(x)    (void)0
+#define USet_LockEnd(x)        (void)0
+#endif /* CONFIG_NO_THREADS */
+
 
 struct uroset_iterator_object {
 	OBJECT_HEAD
@@ -484,6 +517,7 @@ INTDEF WUNUSED NONNULL((1)) DREF UDict *DCALL UDict_FromSequence(DeeObject *__re
 INTDEF WUNUSED DREF URoSet *DCALL URoSet_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromIterator(DeeObject *__restrict iterator);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromUSet(USet *__restrict self);
 
 INTDEF WUNUSED DREF URoDict *DCALL URoDict_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);

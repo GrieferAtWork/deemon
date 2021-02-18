@@ -94,7 +94,7 @@ function testSequenceType(typ: Type, cls: string) {
 				 * with a UniqueSet object on the left-hand-side only succeeds if
 				 * the other set contains the _exact_ same objects!
 				 * Because of this, perform the comparison with HashSet()s instead! */
-				if (typ === collections.UniqueSet) {
+				if (typ in [collections.UniqueSet, collections.UniqueSet.Frozen]) {
 					assert HashSet(obj) == HashSet(dc);
 					assert HashSet(obj) <= HashSet(dc);
 					assert HashSet(obj) >= HashSet(dc);
@@ -177,4 +177,5 @@ testSequenceType(Dict.Frozen, LIKE_MAP);
 testMutableSequence(collections.Deque, LIKE_SEQ);
 testMutableSequence(collections.FixedList, LIKE_SEQ);
 testMutableSequence(collections.UniqueSet, LIKE_SET);
+testMutableSequence(collections.UniqueSet.Frozen, LIKE_SET);
 
