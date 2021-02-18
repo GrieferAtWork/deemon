@@ -1145,7 +1145,7 @@ stringiter_nii_peek(StringIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_nii stringiter_nii = {
+PRIVATE struct type_nii tpconst stringiter_nii = {
 	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
 	/* .nii_flags = */TYPE_ITERX_FNORMAL,
 	{

@@ -370,7 +370,7 @@ traceiter_nii_next(TraceIterator *__restrict self) {
 }
 
 
-PRIVATE struct type_nii traceiter_nii = {
+PRIVATE struct type_nii tpconst traceiter_nii = {
 	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
 	/* .nii_flags = */TYPE_ITERX_FNORMAL,
 	{

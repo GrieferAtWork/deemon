@@ -4224,7 +4224,7 @@ list_iterator_nii_peek(ListIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE struct type_nii list_iterator_nii = {
+PRIVATE struct type_nii tpconst list_iterator_nii = {
 	/* .nii_class = */TYPE_ITERX_CLASS_BIDIRECTIONAL,
 	/* .nii_flags = */TYPE_ITERX_FNORMAL,
 	{
