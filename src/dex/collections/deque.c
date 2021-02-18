@@ -1234,7 +1234,7 @@ err:
 
 
 
-PRIVATE struct type_nsi deq_nsi = {
+PRIVATE struct type_nsi tpconst deq_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{

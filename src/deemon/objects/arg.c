@@ -561,7 +561,7 @@ kwds_get(Kwds *self,
 	return NULL;
 }
 
-PRIVATE struct type_nsi kwds_nsi = {
+PRIVATE struct type_nsi tpconst kwds_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -1112,7 +1112,7 @@ kmap_get(KwdsMapping *self,
 	return NULL;
 }
 
-PRIVATE struct type_nsi kmap_nsi = {
+PRIVATE struct type_nsi tpconst kmap_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

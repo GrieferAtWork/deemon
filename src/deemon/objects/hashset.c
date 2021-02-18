@@ -1574,7 +1574,7 @@ done:
 	return result;
 }
 
-PRIVATE struct type_nsi set_nsi = {
+PRIVATE struct type_nsi tpconst set_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{

@@ -1064,7 +1064,7 @@ err:
 
 
 
-PRIVATE struct type_nsi fl_nsi = {
+PRIVATE struct type_nsi tpconst fl_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{

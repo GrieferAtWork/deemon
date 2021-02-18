@@ -777,7 +777,7 @@ blv_getdefault(BlackListVarkwds *__restrict self,
 	return BlackListVarkwds_GetItemDef(self, key, def);
 }
 
-PRIVATE struct type_nsi blv_nsi = {
+PRIVATE struct type_nsi tpconst blv_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -1656,7 +1656,7 @@ blm_getdefault(BlackListMapping *__restrict self,
 	return BlackListMapping_GetItemDef(self, key, def);
 }
 
-PRIVATE struct type_nsi blm_nsi = {
+PRIVATE struct type_nsi tpconst blm_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

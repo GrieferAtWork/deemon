@@ -672,7 +672,7 @@ err:
 }
 
 
-PRIVATE struct type_nsi cat_nsi = {
+PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

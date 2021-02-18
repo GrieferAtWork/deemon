@@ -238,7 +238,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_nsi env_nsi = {
+PRIVATE struct type_nsi tpconst env_nsi = {
 	/* .nsi_class = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{

@@ -1632,7 +1632,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_nsi dict_nsi = {
+PRIVATE struct type_nsi tpconst dict_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{

@@ -174,7 +174,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_nsi ss_nsi = {
+PRIVATE struct type_nsi tpconst ss_nsi = {
 	/* .nsi_class = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags = */ TYPE_SEQX_FNORMAL,
 	{

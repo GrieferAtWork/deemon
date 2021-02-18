@@ -930,7 +930,7 @@ err:
 }
 
 
-PRIVATE struct type_nsi rvec_nsi = {
+PRIVATE struct type_nsi tpconst rvec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
@@ -1542,7 +1542,7 @@ err:
 }
 
 
-PRIVATE struct type_nsi svec_nsi = {
+PRIVATE struct type_nsi tpconst svec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

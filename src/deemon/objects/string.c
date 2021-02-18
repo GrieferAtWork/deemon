@@ -1336,7 +1336,7 @@ err_index:
 	return NULL;
 }
 
-PRIVATE struct type_nsi string_nsi = {
+PRIVATE struct type_nsi tpconst string_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

@@ -2271,7 +2271,7 @@ list_nsi_xch(List *self, size_t index, DeeObject *value) {
 }
 
 
-PRIVATE struct type_nsi list_nsi = {
+PRIVATE struct type_nsi tpconst list_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{

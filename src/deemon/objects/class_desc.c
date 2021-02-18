@@ -372,7 +372,7 @@ cot_getitem(ClassOperatorTable *self,
 	return result;
 }
 
-PRIVATE struct type_nsi cot_nsi = {
+PRIVATE struct type_nsi tpconst cot_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -885,7 +885,7 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 };
 
 
-PRIVATE struct type_nsi cat_nsi = {
+PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -2231,7 +2231,7 @@ err:
 
 
 
-PRIVATE struct type_nsi ot_nsi = {
+PRIVATE struct type_nsi tpconst ot_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{

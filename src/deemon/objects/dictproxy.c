@@ -383,9 +383,9 @@ dict_iter(DeeDictObject *__restrict self) {
 	Dee_Incref(self);
 #ifdef CONFIG_NO_THREADS
 	result->di_next = self->d_elem;
-#else
+#else /* CONFIG_NO_THREADS */
 	result->di_next = ATOMIC_READ(self->d_elem);
-#endif
+#endif /* !CONFIG_NO_THREADS */
 done:
 	return (DREF DeeObject *)result;
 }

@@ -643,7 +643,7 @@ smap_nsi_getsize(SharedMap *__restrict self) {
 }
 
 
-PRIVATE struct type_nsi smap_nsi = {
+PRIVATE struct type_nsi tpconst smap_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

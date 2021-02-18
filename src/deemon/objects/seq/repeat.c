@@ -564,7 +564,7 @@ repeat_nsi_rfind(Repeat *__restrict self, size_t start, size_t end,
 
 
 
-PRIVATE struct type_nsi repeat_nsi = {
+PRIVATE struct type_nsi tpconst repeat_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -1116,7 +1116,7 @@ repeatitem_nsi_rfind(RepeatItem *__restrict self,
 }
 
 
-PRIVATE struct type_nsi repeatitem_nsi = {
+PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

@@ -342,7 +342,7 @@ trans_nsi_getitem(Transformation *__restrict self, size_t index) {
 }
 
 
-PRIVATE struct type_nsi trans_nsi = {
+PRIVATE struct type_nsi tpconst trans_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

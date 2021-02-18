@@ -300,7 +300,7 @@ F(getitem)(STRUCT_TYPE *__restrict self,
 }
 
 
-PRIVATE struct type_nsi F(nsi) = {
+PRIVATE struct type_nsi tpconst F(nsi) = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

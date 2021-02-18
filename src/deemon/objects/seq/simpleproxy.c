@@ -408,7 +408,7 @@ err:
 }
 
 
-PRIVATE struct type_nsi ids_nsi = {
+PRIVATE struct type_nsi tpconst ids_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -439,7 +439,7 @@ PRIVATE struct type_nsi ids_nsi = {
 	}
 };
 
-PRIVATE struct type_nsi types_nsi = {
+PRIVATE struct type_nsi tpconst types_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -470,7 +470,7 @@ PRIVATE struct type_nsi types_nsi = {
 	}
 };
 
-PRIVATE struct type_nsi classes_nsi = {
+PRIVATE struct type_nsi tpconst classes_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

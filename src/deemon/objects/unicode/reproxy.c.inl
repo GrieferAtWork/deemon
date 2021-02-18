@@ -725,7 +725,7 @@ refa_size(ReSequence *__restrict self) {
 }
 
 
-PRIVATE struct type_nsi refa_nsi = {
+PRIVATE struct type_nsi tpconst refa_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -976,7 +976,7 @@ resp_size(ReSequence *__restrict self) {
 }
 
 
-PRIVATE struct type_nsi resp_nsi = {
+PRIVATE struct type_nsi tpconst resp_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{

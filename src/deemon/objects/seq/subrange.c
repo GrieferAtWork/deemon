@@ -391,7 +391,7 @@ subrange_nsi_rfind(SubRange *__restrict self, size_t start, size_t end,
 }
 
 
-PRIVATE struct type_nsi subrange_nsi = {
+PRIVATE struct type_nsi tpconst subrange_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
@@ -709,7 +709,7 @@ subrangen_nsi_rfind(SubRangeN *__restrict self, size_t start, size_t end,
 	                    key);
 }
 
-PRIVATE struct type_nsi subrangen_nsi = {
+PRIVATE struct type_nsi tpconst subrangen_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
