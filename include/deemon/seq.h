@@ -392,14 +392,14 @@ struct Dee_type_nsi {
 			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
 			 * @return: 0 : Element not found.
 			 * @return: 1 : Element was unbound.
-			 * @return: -1 : error. */
+			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 4)) int             (DCALL *nsi_remove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
 			WUNUSED NONNULL((1, 4)) int             (DCALL *nsi_rremove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
 			/* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
 			 * @return: * : The number of removed items.
 			 * @return: (size_t)-1: Error. */
 			WUNUSED NONNULL((1, 4)) size_t          (DCALL *nsi_removeall)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-			WUNUSED NONNULL((1, 2)) size_t          (DCALL *nsi_removeif)(DeeObject *self, DeeObject *should, size_t start, size_t end);
+			WUNUSED NONNULL((1, 2)) size_t          (DCALL *nsi_removeif)(DeeObject *self, size_t start, size_t end, DeeObject *should);
 		}                   nsi_seqlike;
 		struct { /* TYPE_SEQX_CLASS_MAP */
 			WUNUSED NONNULL((1))      size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
@@ -493,7 +493,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__re
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_Remove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_RRemove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_RemoveIf(DeeObject *self, DeeObject *should, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveIf(DeeObject *self, size_t start, size_t end, DeeObject *should);
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Fill(DeeObject *self, size_t start, size_t end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Reverse(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Sort(DeeObject *self, DeeObject *key);
@@ -911,6 +911,28 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out, owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/ size_t *__restrict pallocated,
                                         /*in*/ size_t offset);
+
+/* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
+ * by filling in the resp. element from `objv[*]' with `NULL'.
+ * This function is implemented to try the following things with `self' (in order):
+ *  - Use `DeeFastSeq_GetSize()' + `DeeFastSeq_GetItemUnbound()'
+ *    Try next when `DeeFastSeq_GetSize() == DEE_FASTSEQ_NOTFAST'
+ *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
+ *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
+ *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'
+ *    or `DeeError_TypeError'.
+ *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
+ * @return: 0 : Success
+ * @return: -1: Error */
+DFUNDEF WUNUSED NONNULL((1, 3)) int
+(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
+                                    /*out*/ DREF DeeObject **__restrict objv);
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeObject_UnpackWithUnbound(self, objc, objv) __builtin_expect(DeeObject_UnpackWithUnbound(self, objc, objv), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

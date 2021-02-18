@@ -516,6 +516,68 @@ err:
 }
 
 
+/* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
+ * by filling in the resp. element from `objv[*]' with `NULL'.
+ * This function is implemented to try the following things with `self' (in order):
+ *  - Use `DeeFastSeq_GetSize()' + `DeeFastSeq_GetItemUnbound()'
+ *    Try next when `DeeFastSeq_GetSize() == DEE_FASTSEQ_NOTFAST'
+ *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
+ *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
+ *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'
+ *    or `DeeError_TypeError'.
+ *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
+ * @return: 0 : Success
+ * @return: -1: Error */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
+                                    /*out*/ DREF DeeObject **__restrict objv) {
+	size_t i, size;
+	size = DeeFastSeq_GetSize(self);
+	if (size != DEE_FASTSEQ_NOTFAST) {
+		if (size != objc)
+			goto err_badsize;
+		for (i = 0; i < objc; ++i) {
+			DREF DeeObject *elem;
+			elem = DeeFastSeq_GetItemUnbound(self, i);
+			if unlikely(elem == ITER_DONE) {
+				Dee_XDecprefv(objv, i);
+				goto err;
+			}
+			objv[i] = elem; /* Inherit reference */
+		}
+		return 0;
+	}
+	size = DeeObject_Size(self);
+	if (size != (size_t)-1) {
+		if (size != objc)
+			goto err_badsize;
+		for (i = 0; i < objc; ++i) {
+			DREF DeeObject *elem;
+			elem = DeeObject_GetItemIndex(self, i);
+			if (!elem && !DeeError_Catch(&DeeError_UnboundItem)) {
+				/* The first time around, try to handle these errors
+				 * in which case we'll do the fallback method instead. */
+				if (i == 0 &&
+				    (DeeError_Catch(&DeeError_NotImplemented) ||
+				     DeeError_Catch(&DeeError_TypeError)))
+					goto fallback;
+				goto err;
+			}
+			objv[i] = elem; /* Inherit reference */
+		}
+		return 0;
+	}
+	if (!DeeError_Catch(&DeeError_NotImplemented))
+		goto err;
+fallback:
+	return DeeObject_Unpack(self, objc, objv);
+err_badsize:
+	return err_invalid_unpack_size(self, objc, size);
+err:
+	return -1;
+}
+
+
 
 DECL_END
 

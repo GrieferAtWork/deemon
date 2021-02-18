@@ -3405,7 +3405,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 					wrapper = make_removeif_all_wrapper(elem, key);
 					if unlikely(!wrapper)
 						goto err;
-					count = (*nsi->nsi_seqlike.nsi_removeif)(self, wrapper, start, end);
+					count = (*nsi->nsi_seqlike.nsi_removeif)(self, start, end, wrapper);
 					Dee_Decref(wrapper);
 					return count;
 				}
@@ -3904,9 +3904,9 @@ err_overflow:
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_RemoveIf(DeeObject *self, DeeObject *should,
-                size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_RemoveIf(DeeObject *self, size_t start,
+                size_t end, DeeObject *should) {
 	DREF DeeObject *item, *callback_result, *erase_func;
 	int error;
 	size_t count           = 0;
@@ -3931,7 +3931,7 @@ DeeSeq_RemoveIf(DeeObject *self, DeeObject *should,
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
 				if (nsi->nsi_seqlike.nsi_removeif)
-					return (*nsi->nsi_seqlike.nsi_removeif)(self, should, start, end);
+					return (*nsi->nsi_seqlike.nsi_removeif)(self, start, end, should);
 				if (nsi->nsi_seqlike.nsi_removeall)
 					return (*nsi->nsi_seqlike.nsi_removeall)(self, start, end, Dee_True, should);
 				if (nsi->nsi_seqlike.nsi_rremove) {

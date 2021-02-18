@@ -616,6 +616,7 @@ EXPORTS
 	_DeeObject_TypeAssertFailed@8=DeeObject_TypeAssertFailed@8
 	_DeeObject_UndoConstruction@8=DeeObject_UndoConstruction@8
 	_DeeObject_Unpack@12=DeeObject_Unpack@12
+	_DeeObject_UnpackWithUnbound@12=DeeObject_UnpackWithUnbound@12
 	_DeeObject_VCallAttrPack@16=DeeObject_VCallAttrPack@16
 	_DeeObject_VCallAttrStringHashPack@20=DeeObject_VCallAttrStringHashPack@20
 	_DeeObject_VCallAttrStringHashf@20=DeeObject_VCallAttrStringHashf@20

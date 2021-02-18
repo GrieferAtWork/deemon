@@ -751,9 +751,9 @@ again:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeList_RemoveIf(List *self, DeeObject *should,
-                 size_t start, size_t end) {
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeList_RemoveIf(List *self, size_t start,
+                 size_t end, DeeObject *should) {
 	DeeObject **vector;
 	size_t i, length, result;
 	DeeList_LockRead(self);
@@ -2371,7 +2371,7 @@ list_removeif(List *self, size_t argc,
 	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist, "o|IdId:removeif", &should, &start, &end))
 		goto err;
-	result = DeeList_RemoveIf(self, should, start, end);
+	result = DeeList_RemoveIf(self, start, end, should);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

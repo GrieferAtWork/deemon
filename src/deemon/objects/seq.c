@@ -1869,7 +1869,7 @@ seq_removeif(DeeObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
 	                    "o|IdId:removeif", &should, &start, &end))
 		goto err;
-	result = DeeSeq_RemoveIf(self, should, start, end);
+	result = DeeSeq_RemoveIf(self, start, end, should);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

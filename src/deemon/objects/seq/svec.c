@@ -750,7 +750,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 rvec_nsi_removeif(RefVector *__restrict self,
                   size_t start, size_t end,
                   DeeObject *__restrict should_remove) {
