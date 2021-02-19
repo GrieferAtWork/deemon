@@ -2865,6 +2865,12 @@ function worker2(self: Object) {
 	print MyClass.operator . ("public_member").get(self);       /* Static */
 	print MyClass.public_final_member.get(self);                /* Static */
 	print MyClass.operator . ("public_final_member").get(self); /* Static */
+	/* This forces the following 2 accesses to _always_ be dynamic, even
+	 * when `worker2' were to be inlined below, since the compiler won't
+	 * be able to keep track of what `self' represents. */
+	__asm__("" : "+x" (self));
+	print self.public_final_member;                             /* Dynamic */
+	print self.operator . ("public_final_member");              /* Dynamic */
 }
 
 local x = MyClass();
