@@ -62,9 +62,9 @@ INTDEF struct class_attribute empty_class_attributes[];
 struct class_maker {
 	DREF struct ast           *cm_base;        /* [0..1] An AST evaluating to the base of the class. */
 	DREF DeeClassDescriptorObject *cm_desc;    /* [1..1] The descriptor for the class. */
-	size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
+	size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_iattr_list' */
 	size_t                     cm_cattr_size;  /* Number of used slots in `cm_desc->cd_cattr_list' */
-	uint16_t                   cm_clsop_size;  /* Number of used slots in `cm_desc->cd_iattr_list' */
+	uint16_t                   cm_clsop_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
 	uint16_t                   cm_null_member; /* The address of a class member that is always unbound (used for
 	                                            * deleted operator), or `(uint16_t)-1' when no such address has
 	                                            * yet to be designated. */
@@ -74,7 +74,10 @@ struct class_maker {
 #define CLASS_MAKER_CTOR_FDEFAULT   0x0004     /* The constructor has explicitly been defined to be default-implemented. */
 #define CLASS_MAKER_CTOR_FSUPERKWDS 0x0008     /* The superargs operator returns an (args, kwds) pair. */
 	uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
-	uint16_t                   cm_pad;         /* ... */
+#define CLASS_MAKER_FEAT_FNORMAL    0x0000     /* Normal class features. */
+#define CLASS_MAKER_FEAT_FATTROPS   0x0001     /* The class is defining attribute operators */
+#define CLASS_MAKER_FEAT_FNOFINPUB  0x0002     /* The class contains at least one non-final, public member */
+	uint16_t                   cm_features;    /* Encountered class features (only used for warnings; set of `CLASS_MAKER_FEAT_F*') */
 	DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
 	                                            * The class's constructor function AST (AST_FUNCTION) */
 	DREF DeeBaseScopeObject   *cm_ctor_scope;  /* [0..1][(!= NULL) == (cm_ctor != NULL) == (cm_initc != 0)] (lazy-alloc)
@@ -118,6 +121,41 @@ relocate_attribute(struct class_attribute *__restrict old_attr,
 		    iter->s_attr.a_attr == old_attr)
 			iter->s_attr.a_attr = new_attr;
 	}
+}
+
+#define class_attribute_is_nonfinal_public(ca_flag)                          \
+	(((ca_flag) & (CLASS_ATTRIBUTE_FFINAL | CLASS_ATTRIBUTE_FVISIBILITY)) == \
+	 /*        */ (CLASS_ATTRIBUTE_FPUBLIC))
+
+PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
+cdesc_find_nonfinal_public_symbol(DeeClassDescriptorObject *__restrict self) {
+	size_t i;
+	for (i = 0; i <= self->cd_iattr_mask; ++i) {
+		struct class_attribute *attr;
+		attr = &self->cd_iattr_list[i];
+		if (!attr->ca_name)
+			continue;
+		if (!class_attribute_is_nonfinal_public(attr->ca_flag))
+			continue;
+		return attr;
+	}
+	return NULL;
+}
+
+PRIVATE int DCALL
+warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
+                                         char const *__restrict attr_name,
+                                         uint16_t attr_flags) {
+	char const *category_name;
+	if (attr_flags & CLASS_ATTRIBUTE_FGETSET) {
+		category_name = "property";
+	} else if (attr_flags & CLASS_ATTRIBUTE_FMETHOD) {
+		category_name = "function";
+	} else {
+		category_name = "member";
+	}
+	return WARNAT(loc, W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER,
+	              category_name, attr_name);
 }
 
 
@@ -452,9 +490,20 @@ class_maker_addmember(struct class_maker *__restrict self,
 	if unlikely(!name_str)
 		goto err;
 	/* Add a new member entry to the specified table. */
-	attr = is_class_member
-	       ? class_maker_newcattr(self, name_str)
-	       : class_maker_newiattr(self, name_str);
+	if (is_class_member) {
+		attr = class_maker_newcattr(self, name_str);
+	} else {
+		/* Warn if declaring an attribute operator with non-final, public members. */
+		if (class_attribute_is_nonfinal_public(flags)) {
+			if ((self->cm_features & CLASS_MAKER_FEAT_FATTROPS) &&
+			    warn_nonfinal_public_with_attr_operators(loc, DeeString_STR(name_str), flags)) {
+				Dee_Decref(name_str);
+				goto err;
+			}
+			self->cm_features |= CLASS_MAKER_FEAT_FNOFINPUB;
+		}
+		attr = class_maker_newiattr(self, name_str);
+	}
 	Dee_Decref(name_str);
 	if unlikely(!attr)
 		goto err;
@@ -1616,6 +1665,50 @@ define_operator:
 			/* Special case: The constructor operator. */
 			if (operator_name == OPERATOR_CONSTRUCTOR)
 				goto define_constructor;
+			/* Warn if declaring an attribute operator with non-final, public members. */
+			if (!(maker.cm_features & CLASS_MAKER_FEAT_FATTROPS) &&
+			    (operator_name == OPERATOR_GETATTR || operator_name == OPERATOR_DELATTR ||
+			     operator_name == OPERATOR_SETATTR || operator_name == AST_OPERATOR_GETATTR_OR_SETATTR)) {
+				if (maker.cm_features & CLASS_MAKER_FEAT_FNOFINPUB) {
+					bool did_warn_any = false;
+					size_t i;
+					for (i = 0; i <= maker.cm_desc->cd_iattr_mask; ++i) {
+						struct TPPKeyword *member_keyword;
+						struct class_attribute *attr;
+						struct symbol *member_symbol;
+						attr = &maker.cm_desc->cd_iattr_list[i];
+						if (!attr->ca_name)
+							continue;
+						if (!class_attribute_is_nonfinal_public(attr->ca_flag))
+							continue;
+						/* Find the declaration location of this symbol. */
+						member_keyword = TPPLexer_LookupKeyword(DeeString_STR(attr->ca_name),
+						                                        DeeString_SIZE(attr->ca_name),
+						                                        0);
+						if unlikely(!member_keyword)
+							continue;
+						member_symbol = get_local_symbol(member_keyword);
+						if unlikely(!member_symbol)
+							continue;
+						if (warn_nonfinal_public_with_attr_operators(&member_symbol->s_decl,
+						                                             DeeString_STR(attr->ca_name),
+						                                             attr->ca_flag))
+							goto err;
+						did_warn_any = true;
+					}
+					/* Make sure that we always emit at least 1 warning.
+					 * But note that at this point, `did_warn_any' should _always_ already be true! */
+					if unlikely(!did_warn_any) {
+						struct class_attribute *attr;
+						attr = cdesc_find_nonfinal_public_symbol(maker.cm_desc);
+						if (warn_nonfinal_public_with_attr_operators(&loc,
+						                                             attr ? DeeString_STR(attr->ca_name) : "?",
+						                                             attr ? attr->ca_flag : CLASS_ATTRIBUTE_FNORMAL))
+							goto err;
+					}
+				}
+				maker.cm_features |= CLASS_MAKER_FEAT_FATTROPS;
+			}
 			ast_annotations_get(&annotations);
 			if (tok == '=') {
 				if ((operator_name >= AST_OPERATOR_MIN &&

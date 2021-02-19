@@ -393,6 +393,11 @@ DEF_WARNING(W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR, (WG_SYNTAX), WSTATE_WARN, WARN
 DEF_WARNING(W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR, (WG_SYNTAX), WSTATE_WARN, WARNF("Cannot default-implement inherited (`super') constructor for `%s'", ARG(char *)))
 DEF_WARNING(W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR, (WG_SYNTAX), WSTATE_WARN, WARNF("Cannot default-implement deleted constructor for `%s'", ARG(char *)))
 DEF_WARNING(W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Instance member initializer is deleted"))
+DEF_WARNING(W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER, (WG_SYNTAX), WSTATE_WARN, {
+	char *visi = ARG(char *);
+	char *name = ARG(char *);
+	WARNF("non-final `public %s %s' cannot be accessed because of attribute operators", visi, name);
+})
 
 /* Annotations */
 WARNING_NAMESPACE(WN_ANNOTATIONS, 2600)
