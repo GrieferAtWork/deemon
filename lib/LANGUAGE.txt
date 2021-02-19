@@ -2762,18 +2762,141 @@ parse_tags ::= (
 );
 
 parse_tags_block ::= [('@' parse_tags)...];
+/************************************************************************************/
 
 
 
 
 
+/************************************************************************************
+ * Semantics for accessing private/public members within class members.
+ ************************************************************************************
+ * Because the names of class members are defined at compile-time, but
+ * attribute access in general is a thing that happens at runtime, deemon
+ * differentiates between 2 different types of attribute access:
+ *  - Static attribute access (which cannot be overridden)
+ *    In the GATW-implementation, this is done via the "getmember" instruction
+ *    set, which essentially behaves like an array-index-lookup
+ *  - Dynamic attribute access (which can be overridden, as well
+ *    as be dispatched via `operator getattr')
+ *
+ * Which of the 2 methods is used is determined at compile-time, based
+ * on characteristics of the member being accessed, and how exactly that
+ * access is being made:
+ ************************************************************************************/
+class MyClass {
+	/* REMINDER: `final' on class members doesn't mean write-once like it does
+	 *           for local/global variables. - Instead, it means that the member
+	 *           can't be overwritten by sub-classes, and should not be accessed
+	 *           dynamically. */
+	private       member private_member       = none;
+	private final member private_final_member = none;
+	public        member public_member        = none;
+	public  final member public_final_member  = none;
+
+#if 0 /* Because of the member initializers, the constructor will look like this: */
+	this() {
+		private_member       = none; /* Static */
+		private_final_member = none; /* Static */
+		public_member        = none; /* Dynamic */
+		public_final_member  = none; /* Static */
+	}
+#endif
+
+	function fun() {
+		local self = this;
+		print private_member;                           /* Static */
+		print this.private_member;                      /* Static */
+		print this.operator . ("private_member");       /* Implementation-specific */
+		print self.private_member;                      /* Implementation-specific */
+		print self.operator . ("private_member");       /* Implementation-specific */
+		print private_final_member;                     /* Static */
+		print this.private_final_member;                /* Static */
+		print this.operator . ("private_final_member"); /* Implementation-specific */
+		print self.private_final_member;                /* Implementation-specific */
+		print self.operator . ("private_final_member"); /* Implementation-specific */
+		print public_member;                            /* Dynamic */
+		print this.public_member;                       /* Dynamic */
+		print this.operator . ("public_member");        /* Dynamic */
+		print self.public_member;                       /* Dynamic */
+		print self.operator . ("public_member");        /* Dynamic */
+		print public_final_member;                      /* Static */
+		print this.public_final_member;                 /* Static */
+		print this.operator . ("public_final_member");  /* Implementation-specific */
+		print self.public_final_member;                 /* Implementation-specific */
+		print self.operator . ("public_final_member");  /* Implementation-specific */
+//		print missing_symbol;                           /* Compiler error */
+		print this.missing_symbol;                      /* Dynamic */
+		print this.operator . ("missing_symbol");       /* Dynamic */
+		print self.missing_symbol;                      /* Dynamic */
+		print self.operator . ("missing_symbol");       /* Dynamic */
+	}
+
+	function my_getattr(name: string) {
+		print this.operator . (name);                   /* Dynamic */
+	}
+}
+
+function worker(self: MyClass) {
+	print self.private_member;                      /* Runtime-error (private member accessed) */
+	print self.operator . ("private_member");       /* Runtime-error (private member accessed) */
+	print self.private_final_member;                /* Runtime-error (private member accessed) */
+	print self.operator . ("private_final_member"); /* Runtime-error (private member accessed) */
+	print self.public_member;                       /* Implementation-specific */
+	print self.operator . ("public_member");        /* Implementation-specific */
+	print self.public_final_member;                 /* Implementation-specific */
+	print self.operator . ("public_final_member");  /* Implementation-specific */
+	print self.missing_symbol;                      /* Dynamic */
+	print self.operator . ("missing_symbol");       /* Dynamic */
+}
+
+function worker2(self: Object) {
+	print self.private_member;                                  /* Runtime-error (private member accessed) */
+	print self.operator . ("private_member");                   /* Runtime-error (private member accessed) */
+	print self.private_final_member;                            /* Runtime-error (private member accessed) */
+	print self.operator . ("private_final_member");             /* Runtime-error (private member accessed) */
+	print self.public_member;                                   /* Dynamic */
+	print self.operator . ("public_member");                    /* Dynamic */
+	print self.public_final_member;                             /* Dynamic */
+	print self.operator . ("public_final_member");              /* Dynamic */
+	print self.missing_symbol;                                  /* Dynamic */
+	print self.operator . ("missing_symbol");                   /* Dynamic */
+	print MyClass.public_member.get(self);                      /* Static */
+	print MyClass.operator . ("public_member").get(self);       /* Static */
+	print MyClass.public_final_member.get(self);                /* Static */
+	print MyClass.operator . ("public_final_member").get(self); /* Static */
+}
+
+local x = MyClass();
+worker(x);
+worker2(x);
 
 
 
 
-
-
-
-
-
-
+/* As such, the rules that govern attribute access when
+ * dealing with class member access are as follows:
+ *  #1: In general, all attribute access happens dynamically
+ *  #2: When user-defined classes come into the mix, this continues to be
+ *      the case, except for attributes declared as `private' or `final'
+ *      iow: non-final, public members _must_ be accessed dynamically.
+ *  #3: When such a (private or final) attribute is accessed as...
+ *       - >> class MyClass { ... function fun() { attrib; } }
+ *         >> class MyClass { ... function fun() { this.attrib; } }
+ *         ... the access _must_ happen statically.
+ *       - >> class MyClass { ... function fun() { this.operator . ("attrib"); } }
+ *         >> class MyClass { ... function fun() { local self = this; self.operator . ("attrib"); } }
+ *         >> class MyClass { ... } function foo(self: MyClass) { self.attrib; }' or
+ *         >> class MyClass { ... } function foo(self: MyClass) { self.operator . ("attrib"); }':
+ *         ... the access may happen statically.
+ *  #4: Any attribute, no matter how it may have been declared, can always
+ *      be accessed statically via `MyClass.attrib.get(this)' (`*.del(this)'
+ *      and `*.set(this, value)')
+ *      Note however that this functionality is governed by the runtime, and
+ *      should work independently of the compiler.
+ *
+ * If user-code defines a class to have any non-final, public members, as well as
+ * at least one of `operator getattr', `operator delattr' or `operator setattr',
+ * the compiler may issue a warning, since none of the non-final, public members
+ * of the class can only be accessed as `MyClass.attrib.get(this)'.
+ ************************************************************************************/
