@@ -22,6 +22,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/class.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzero() */
@@ -272,23 +273,24 @@ struct jit_symbol {
 		struct {
 			struct jit_object_entry *jo_ent;     /* [1..1] The entry, the last time it was loaded. */
 			struct jit_object_table *jo_tab;     /* [1..1] The object table in question. */
-			/*utf-8*/ char const     *jo_namestr; /* [0..jo_namelen] The object name. */
+			/*utf-8*/ char const    *jo_namestr; /* [0..jo_namelen] The object name. */
 			size_t                   jo_namelen; /* Length of the object name. */
 		} js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
 		struct {
 			DREF DeeModuleObject    *jx_mod; /* [1..1] The module that is being referenced.
-												* NOTE: Guarantied to be a regular, or a DEX module. */
+			                                  * NOTE: Guarantied to be a regular, or a DEX module. */
 			struct module_symbol    *jx_sym; /* The symbol that is being accessed. */
 		} js_extern; /* JIT_SYMBOL_EXTERN */
 		DREF struct string_object   *js_global; /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
 		struct {
-			/*utf-8*/ char const     *jg_namestr; /* [0..jg_namelen] The global symbol name. */
+			/*utf-8*/ char const    *jg_namestr; /* [0..jg_namelen] The global symbol name. */
 			size_t                   jg_namelen; /* Length of the global symbol name. */
 			dhash_t                  jg_namehsh; /* Hash for the global symbol name. */
 		} js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
+#define js_ptr       _dee_aunion.js_ptr
 #define js_objent    _dee_aunion.js_objent
 #define js_extern    _dee_aunion.js_extern
 #define js_globalstr _dee_aunion.js_globalstr
@@ -312,17 +314,17 @@ INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
 #define JIT_LVALUE    ITER_DONE
 
 
-#define JIT_LVALUE_NONE       JIT_SYMBOL_NONE      /* No l-value */
-#define JIT_LVALUE_POINTER    JIT_SYMBOL_POINTER   /* Pointer to an object reference (used to describe local & inherited variables) */
-#define JIT_LVALUE_OBJENT     JIT_SYMBOL_OBJENT    /* Object table entry. */
-#define JIT_LVALUE_EXTERN     JIT_SYMBOL_EXTERN    /* External symbol reference */
-#define JIT_LVALUE_GLOBAL     JIT_SYMBOL_GLOBAL    /* Try to access an entry inside of `jc_globals' */
-#define JIT_LVALUE_GLOBALSTR  JIT_SYMBOL_GLOBALSTR /* Same as `JIT_SYMBOL_GLOBAL', but use a string as operand. */
-#define JIT_LVALUE_ATTR       0x0100               /* Attribute expression. */
-#define JIT_LVALUE_ATTRSTR    0x0101               /* Attribute string expression. */
-#define JIT_LVALUE_ITEM       0x0102               /* Item expression. */
-#define JIT_LVALUE_RANGE      0x0103               /* Range expression. */
-#define JIT_LVALUE_RVALUE     0x0200               /* R-value expression (just a regular, read-only expression, but stored inside of an L-Value descriptor). */
+#define JIT_LVALUE_NONE      JIT_SYMBOL_NONE      /* No l-value */
+#define JIT_LVALUE_POINTER   JIT_SYMBOL_POINTER   /* Pointer to an object reference (used to describe local & inherited variables) */
+#define JIT_LVALUE_OBJENT    JIT_SYMBOL_OBJENT    /* Object table entry. */
+#define JIT_LVALUE_EXTERN    JIT_SYMBOL_EXTERN    /* External symbol reference */
+#define JIT_LVALUE_GLOBAL    JIT_SYMBOL_GLOBAL    /* Try to access an entry inside of `jc_globals' */
+#define JIT_LVALUE_GLOBALSTR JIT_SYMBOL_GLOBALSTR /* Same as `JIT_SYMBOL_GLOBAL', but use a string as operand. */
+#define JIT_LVALUE_ATTR      0x0100               /* Attribute expression. */
+#define JIT_LVALUE_ATTRSTR   0x0101               /* Attribute string expression. */
+#define JIT_LVALUE_ITEM      0x0102               /* Item expression. */
+#define JIT_LVALUE_RANGE     0x0103               /* Range expression. */
+#define JIT_LVALUE_RVALUE    0x0200               /* R-value expression (just a regular, read-only expression, but stored inside of an L-Value descriptor). */
 struct jit_lvalue {
 	uint16_t lv_kind;  /* L-value kind (One of JIT_LVALUE_*) */
 	uint16_t lv_pad[(sizeof(void *)-2)/2];
@@ -331,7 +333,7 @@ struct jit_lvalue {
 		struct {
 			struct jit_object_entry *lo_ent;     /* [1..1] The entry, the last time it was loaded. */
 			struct jit_object_table *lo_tab;     /* [1..1] The object table in question. */
-			/*utf-8*/ char const     *lo_namestr; /* [0..lo_namelen] The object name. */
+			/*utf-8*/ char const    *lo_namestr; /* [0..lo_namelen] The object name. */
 			size_t                   lo_namesiz; /* Length of the object name. */
 		} lv_objent; /* JIT_LVALUE_OBJENT | JIT_LVALUE_ROOBJENT -- Object table entry. */
 		struct {
@@ -341,7 +343,7 @@ struct jit_lvalue {
 		} lv_extern; /* JIT_LVALUE_EXTERN */
 		DREF struct string_object   *lv_global; /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
 		struct {
-			/*utf-8*/ char const     *lg_namestr; /* [0..jg_namelen] The global symbol name. */
+			/*utf-8*/ char const    *lg_namestr; /* [0..jg_namelen] The global symbol name. */
 			size_t                   lg_namelen; /* Length of the global symbol name. */
 			dhash_t                  lg_namehsh; /* Hash of the global symbol name. */
 		} lv_globalstr; /* JIT_LVALUE_GLOBALSTR */
@@ -350,10 +352,10 @@ struct jit_lvalue {
 			DREF struct string_object *la_name; /* [1..1] Attribute name object */
 		} lv_attr; /* JIT_LVALUE_ATTR */
 		struct {
-			DREF DeeObject      *la_base; /* [1..1] Expression base object */
+			DREF DeeObject       *la_base; /* [1..1] Expression base object */
 			/*utf-8*/ char const *la_name; /* [0..la_size] Attribute name. */
-			size_t               la_size; /* Length of the attribute name. */
-			dhash_t              la_hash; /* Hash of the attribute name. */
+			size_t                la_size; /* Length of the attribute name. */
+			dhash_t               la_hash; /* Hash of the attribute name. */
 		} lv_attrstr; /* JIT_LVALUE_ATTRSTR */
 		struct {
 			DREF DeeObject *li_base;  /* [1..1] Expression base object */
@@ -729,6 +731,7 @@ JITContext_LookupNth(JITContext *__restrict self,
 #define LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
 #define LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
 #define LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
+#define LOOKUP_SYM_FINAL     0x0400 /* Create final (write-once) variables. */
 #define LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
 
 
@@ -1035,6 +1038,16 @@ INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalImportHybrid(JITLexer *__restr
 INTDEF int FCALL JITLexer_SkipImport(JITLexer *__restrict self, bool is_from_import);
 INTDEF int FCALL JITLexer_SkipImportHybrid(JITLexer *__restrict self, bool is_from_import, unsigned int *pwas_expression);
 
+/* Parse a class declaration, and return the produced class type.
+ * Parsing starts after the `class' (or `class final'), meaning
+ * that the current token is either:
+ *   - `extends', `:' or `('     (followed by the class's base-type)
+ *   - A keyword                 (the class name)
+ *   - '{'                       (Start of the class body)
+ * @param: tp_flags: Set of `0 | TP_FFINAL' */
+INTDEF WUNUSED DREF DeeTypeObject *FCALL JITLexer_EvalClass(JITLexer *__restrict self, uint16_t tp_flags);
+INTDEF int FCALL JITLexer_SkipClass(JITLexer *__restrict self);
+
 
 /* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
@@ -1142,8 +1155,8 @@ JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 #define JIT_FUNCTION_FYIELDING 0x0002 /* The function's contains a yield statement. */
 struct jit_function_object {
 	OBJECT_HEAD
-	/*utf-8*/ char const    *jf_source_start; /* [1..1][const] Source start pointer. */
-	/*utf-8*/ char const    *jf_source_end;   /* [1..1][const] Source end pointer. */
+	/*utf-8*/ char const   *jf_source_start; /* [1..1][const] Source start pointer. */
+	/*utf-8*/ char const   *jf_source_end;   /* [1..1][const] Source end pointer. */
 	DREF DeeObject         *jf_source;       /* [1..1][const] The object that owns input text. */
 	DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                                          * When `NULL', code isn't allowed to perform relative imports. */
@@ -1390,6 +1403,10 @@ INTDEF ATTR_COLD int FCALL syn_operator_expected_lbracket_or_dot_after_del(JITLe
 INTDEF ATTR_COLD int FCALL syn_operator_unknown_name(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_module_expected_dot_keyword_or_string(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_anno_expected_rbracket(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_class_expected_class_after_final(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_class_expected_lbrace_after_class(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_class_expected_rbrace_after_class(JITLexer *__restrict self);
 
 
 DECL_END

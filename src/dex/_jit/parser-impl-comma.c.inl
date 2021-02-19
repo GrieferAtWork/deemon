@@ -76,52 +76,30 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 next_expr:
 	need_semi = !!(mode & AST_COMMA_PARSESEMI);
 	/* Parse an expression (special handling for functions/classes) */
-#if 0 /* TODO: Class declarations */
-	if (self->jl_tok == KWD_final || self->jl_tok == KWD_class) {
+	if (self->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self, "class")) {
 		/* Declare a new class */
-		uint16_t class_flags          = current_tags.at_class_flags & 0xf; /* From tags. */
-		struct TPPKeyword *class_name = NULL;
-		unsigned int symbol_mode      = lookup_mode;
-		if (self->jl_tok == KWD_final) {
-			class_flags |= TP_FFINAL;
-			if unlikely(yield() < 0)
-				goto err;
-			if (unlikely(self->jl_tok != KWD_class) &&
-			    WARN(W_EXPECTED_CLASS_AFTER_FINAL))
-				goto err;
+#ifdef JIT_EVAL
+		uint16_t tp_flags = TP_FNORMAL;
+		if (lookup_mode & LOOKUP_SYM_FINAL)
+			tp_flags = TP_FFINAL;
+#endif /* JIT_EVAL */
+		JITLexer_Yield(self);
+		if (JITLexer_ISKWD(self, "final") && !(lookup_mode & LOOKUP_SYM_FINAL)) {
+#ifdef JIT_EVAL
+			tp_flags |= TP_FFINAL;
+#endif /* JIT_EVAL */
+			JITLexer_Yield(self);
 		}
-		loc_here(&loc);
-		if unlikely(yield() < 0)
+#ifdef JIT_EVAL
+		current = (DREF DeeObject *)JITLexer_EvalClass(self, tp_flags);
+#else /* JIT_EVAL */
+		current = JITLexer_SkipClass(self);
+#endif /* !JIT_EVAL */
+		if (ISERR(current))
 			goto err;
-		if (self->jl_tok == KWD_class && !(class_flags & TP_FFINAL)) {
-			class_flags |= TP_FFINAL;
-			if unlikely(yield() < 0)
-				goto err;
-		}
-		if (TPP_ISKEYWORD(self->jl_tok)) {
-			class_name = token.t_kwd;
-			if unlikely(yield() < 0)
-				goto err;
-			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
-				/* Use the default mode appropriate for the current scope. */
-				if (current_scope == &current_rootscope->rs_scope.bs_scope)
-					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else {
-					symbol_mode |= LOOKUP_SYM_VLOCAL;
-				}
-			}
-		}
-		current = ast_setddi(ast_parse_class(class_flags, class_name,
-		                                     class_name != NULL,
-		                                     symbol_mode),
-		                     &loc);
-		if unlikely(!current)
-			goto err;
-		need_semi = false; /* Classes always have braces and don't need semicolons. */
-	} else
-#endif
-#if 1
-	if (JITLexer_ISKWD(self, "function")) {
+		/* Classes always have braces and don't need semicolons. */
+		need_semi = false;
+	} else if (JITLexer_ISKWD(self, "function")) {
 		/* Declare a new function */
 #ifdef JIT_EVAL
 		unsigned char *name_start;
@@ -279,9 +257,7 @@ err_var_symbol:
 		}
 		JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
-	} else
-#endif
-	{
+	} else {
 		if (mode & AST_COMMA_ALLOWKWDLIST) {
 			if (self->jl_tok == JIT_KEYWORD) {
 				/* If the next token is a `:', then we're currently at a keyword list label,

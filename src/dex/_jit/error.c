@@ -637,6 +637,44 @@ syn_anno_expected_rbracket(JITLexer *__restrict self) {
 }
 
 
+INTERN ATTR_COLD int FCALL
+syn_class_expected_class_after_final(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `class' after `final', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+
+INTERN ATTR_COLD int FCALL
+syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `)' after `class ... (...', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+
+INTERN ATTR_COLD int FCALL
+syn_class_expected_lbrace_after_class(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `{' after `class ...', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+
+INTERN ATTR_COLD int FCALL
+syn_class_expected_rbrace_after_class(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `}' after `class { ...', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
 
 DECL_END
 

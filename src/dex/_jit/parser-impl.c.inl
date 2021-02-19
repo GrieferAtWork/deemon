@@ -1591,6 +1591,37 @@ skip_rbrck_and_done:
 				result = FUNC(While)(self, false);
 				goto done;
 			}
+			if ((name == ENCODE_INT32('c', 'l', 'a', 's') && *(uint8_t *)(tok_begin + 4) == 's') ||
+			    (name == ENCODE_INT32('f', 'i', 'n', 'a') && *(uint8_t *)(tok_begin + 4) == 'l')) {
+#ifdef JIT_EVAL
+				uint16_t tp_flags = TP_FNORMAL;
+#endif /* JIT_EVAL */
+				if (self->jl_tokstart[0] == 'f') {
+#ifdef JIT_EVAL
+					tp_flags = TP_FFINAL;
+#endif /* JIT_EVAL */
+					JITLexer_Yield(self);
+					if (!JITLexer_ISKWD(self, "class")) {
+						syn_class_expected_class_after_final(self);
+						goto err;
+					}
+					JITLexer_Yield(self);
+				} else {
+					JITLexer_Yield(self);
+					if (JITLexer_ISKWD(self, "final")) {
+#ifdef JIT_EVAL
+						tp_flags = TP_FFINAL;
+#endif /* JIT_EVAL */
+						JITLexer_Yield(self);
+					}
+				}
+#ifdef JIT_EVAL
+				result = (DREF DeeObject *)JITLexer_EvalClass(self, tp_flags);
+#else /* JIT_EVAL */
+				result = JITLexer_SkipClass(self);
+#endif /* !JIT_EVAL */
+				goto done;
+			}
 			break;
 
 		case 6:
@@ -3637,6 +3668,9 @@ done:
 DECL_END
 
 #ifndef __INTELLISENSE__
+
+#include "parser-impl-class.c.inl"
+/**/
 
 #include "parser-impl-comma.c.inl"
 /**/

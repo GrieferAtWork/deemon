@@ -262,7 +262,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 /*      Dee_CLASS_ATTRIBUTE_F         0x0040  * ... */
 #define Dee_CLASS_ATTRIBUTE_FCLASSMEM 0x0080 /* An instance-attribute is stored in class memory (usually set for instance member functions).
                                               * NOTE: Ignored when used by attributes in `cd_cattr_list', where
-                                              *       operation is always done like it would be when it was set. */
+                                              *       access is always done like it would be when this was set. */
 /*      Dee_CLASS_ATTRIBUTE_F         0x0100  * ... */
 /*      Dee_CLASS_ATTRIBUTE_F         0x8000  * ... */
 #define Dee_CLASS_ATTRIBUTE_FMASK     0x00b7 /* Mask of known flag bits. */
@@ -298,7 +298,8 @@ class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
 /* A special operator invoked using the same
  * arguments as passed to the class constructor.
  * It should return a sequence that is then cast to a tuple
- * before being used as 
+ * before being used as an argument list for invoking the
+ * constructor of the base-class.
  * WARNING: Unlike all other class operators, this one
  *          is _NOT_ called using thiscall conventions,
  *          but instead as a regular function.
@@ -377,12 +378,12 @@ struct Dee_class_descriptor_object {
 	 * INSTANCE (class):
 	 * >> {
 	 * >>     .cd_members = {
-	 * >>         [0] = <function cfunc() { print "static function"; }>,
-	 * >>         [1] = <cmember = "static member">,
+	 * >>         [0]                    = <function cfunc() { print "static function"; }>,
+	 * >>         [1]                    = <cmember = "static member">,
 	 * >>         [2 + CLASS_GETSET_GET] = <cprop:get: get()  { return "static member"; }>,
 	 * >>         [2 + CLASS_GETSET_DEL] = <cprop:del: del()  { print "static member"; }>,
 	 * >>         [2 + CLASS_GETSET_SET] = <cprop:set: set(v) { print "static member"; }>,
-	 * >>         [5] = <function ifunc() { print "instance function"; }>,
+	 * >>         [5]                    = <function ifunc() { print "instance function"; }>,
 	 * >>         [6 + CLASS_GETSET_GET] = <iprop:get: get()  { return "instance member"; }>,
 	 * >>         [6 + CLASS_GETSET_DEL] = <iprop:del: del()  { print "instance member"; }>,
 	 * >>         [6 + CLASS_GETSET_SET] = <iprop:set: set(v) { print "instance member"; }>
@@ -400,13 +401,13 @@ struct Dee_class_descriptor_object {
 	DREF struct Dee_string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
 #ifdef DEE_SOURCE
 #define CLASS_TP_FAUTOINIT         Dee_TP_FGC        /* FLAG: When set, the construction operator is implemented to automatically initialize
-	                                                  *       class members in compliance to the `this = default;' constructor definition.
-	                                                  *       Additionally, if not already defined by the caller, this flag also causes
-	                                                  *      `operator repr' to be implemented (see above).
-	                                                  * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
+                                                      *       class members in compliance to the `this = default;' constructor definition.
+                                                      *       Additionally, if not already defined by the caller, this flag also causes
+                                                      *      `operator repr' to be implemented (see above).
+                                                      * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
 #define CLASS_TP_FSUPERKWDS        Dee_TP_FHEAP      /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
-	                                                  *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
-	                                                  *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
+                                                      *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
+                                                      *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
 #endif /* DEE_SOURCE */
 	uint16_t                       cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
 	                                                  * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
@@ -476,8 +477,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescr
 
 
 
-#define Dee_CLASS_HEADER_OPC1    8
-#define Dee_CLASS_HEADER_OPC2  ((Dee_CLASS_OPERATOR_USERCOUNT+7)/8)
+#define Dee_CLASS_HEADER_OPC1 8
+#define Dee_CLASS_HEADER_OPC2 ((Dee_CLASS_OPERATOR_USERCOUNT + 7) / 8)
 
 #if (Dee_CLASS_HEADER_OPC1 * Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT
 #error "FIXME: Not enough space for all available operators"

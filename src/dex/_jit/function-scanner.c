@@ -514,6 +514,8 @@ do_handle_for:
 				JITLexer_ScanExpression(self, false);
 				goto do_again_docast;
 			}
+			/* TODO: Scan class (but must make sure not to reference symbols found
+			 *       in member bodies that are the names of other members!) */
 			break;
 
 		case 6:

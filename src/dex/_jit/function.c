@@ -545,9 +545,9 @@ jf_repr(JITFunction *__restrict self) {
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_argv[i]];
 		if unlikely(unicode_printer_print(&printer,
-			                               (char const *)ent->oe_namestr,
-			                               ent->oe_namelen) < 0)
-		goto err;
+		                                  (char const *)ent->oe_namestr,
+		                                  ent->oe_namelen) < 0)
+			goto err;
 		if (i >= self->jf_argc_min) {
 			if (!ent->oe_value) {
 				if (unicode_printer_putascii(&printer, '?'))
@@ -577,9 +577,9 @@ jf_repr(JITFunction *__restrict self) {
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, "**") < 0)
 			goto err;
 		if unlikely(unicode_printer_print(&printer,
-			                               (char const *)ent->oe_namestr,
-			                               ent->oe_namelen) < 0)
-		goto err;
+		                                  (char const *)ent->oe_namestr,
+		                                  ent->oe_namelen) < 0)
+			goto err;
 	}
 	if unlikely(unicode_printer_putc(&printer, ')') < 0)
 		goto err;
@@ -588,14 +588,14 @@ do_print_code:
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
 			goto err;
 		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
-			                               (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
-		goto err;
+		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+			goto err;
 	} else {
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
 			goto err;
 		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
-			                               (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
-		goto err;
+		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+			goto err;
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, "\n}") < 0)
 			goto err;
 	}

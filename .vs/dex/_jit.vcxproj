@@ -82,6 +82,7 @@
     <ClInclude Include="..\..\src\dex\_jit\libjit.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\dex\_jit\parser-impl-class.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl-comma.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl-hybrid-parts.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl-hybrid.c.inl" />

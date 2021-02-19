@@ -937,6 +937,10 @@ continue_modifier:
 			*pmode |= LOOKUP_SYM_STACK;
 			goto continue_modifier;
 		}
+		if (JITLexer_ISTOK(self, "final")) {
+			*pmode |= LOOKUP_SYM_FINAL;
+			goto continue_modifier;
+		}
 	}
 	return 0;
 /*
