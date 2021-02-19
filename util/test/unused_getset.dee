@@ -24,13 +24,13 @@ global prop_called = 0;
 
 final class MyClass {
 
-	myprop = {
+	property myprop = {
 		get() {
 			++prop_called;
 		}
 	}
 
-	test() {
+	function test() {
 		local x;
 		x;           /* This can be optimized away */
 		prop_called; /* This can be optimized away  */
@@ -39,8 +39,12 @@ final class MyClass {
 
 }
 
-
-MyClass().test();
+assert prop_called == 0;
+local x = MyClass();
+assert prop_called == 0;
+x.test();
 assert prop_called == 1;
+x.myprop;
+assert prop_called == 2;
 
 
