@@ -103,7 +103,7 @@ struct class_maker {
 };
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 relocate_attribute(struct class_attribute *__restrict old_attr,
                    struct class_attribute *__restrict new_attr) {
 	struct symbol **biter, **bend, *iter;
@@ -142,7 +142,7 @@ cdesc_find_nonfinal_public_symbol(DeeClassDescriptorObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
                                          char const *__restrict attr_name,
                                          uint16_t attr_flags) {
@@ -159,7 +159,7 @@ warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
 }
 
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1)) int DCALL
 rehash_class_attributes(DeeClassDescriptorObject *__restrict self) {
 	size_t new_mask, i, j, perturb;
 	struct class_attribute *new_table;
@@ -196,7 +196,7 @@ err:
 	return -1;
 }
 
-LOCAL WUNUSED DREF DeeClassDescriptorObject *DCALL
+LOCAL WUNUSED NONNULL((1)) DREF DeeClassDescriptorObject *DCALL
 rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	size_t new_mask, i, j, perturb;
 	DREF DeeClassDescriptorObject *new_descr;
@@ -235,7 +235,7 @@ err:
 	return NULL;
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1)) int DCALL
 rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
 	uint16_t new_mask, i, j, perturb;
 	struct class_operator *new_table;
@@ -276,9 +276,10 @@ err:
 }
 
 /* Allocate a new class- or instance-attribute. */
-PRIVATE struct class_attribute *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct class_attribute *DCALL
 class_maker_newcattr(struct class_maker *__restrict self,
-                     DeeStringObject *__restrict name) {
+                     DeeStringObject *__restrict name,
+                     struct ast_loc *__restrict loc) {
 	dhash_t i, perturb, hash;
 	struct class_attribute *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
@@ -304,9 +305,9 @@ class_maker_newcattr(struct class_maker *__restrict self,
 		           DeeString_SIZE(name) * sizeof(char)) != 0)
 			continue;
 		/* Duplicate name */
-		if (WARN(W_CLASS_MEMBER_ALREADY_DEFINED,
-		         DeeString_SIZE(name),
-		         DeeString_STR(name)))
+		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
+		           DeeString_SIZE(name),
+		           DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -321,9 +322,10 @@ err:
 	return NULL;
 }
 
-PRIVATE struct class_attribute *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct class_attribute *DCALL
 class_maker_newiattr(struct class_maker *__restrict self,
-                     DeeStringObject *__restrict name) {
+                     DeeStringObject *__restrict name,
+                     struct ast_loc *__restrict loc) {
 	dhash_t i, perturb, hash;
 	struct class_attribute *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
@@ -352,9 +354,9 @@ class_maker_newiattr(struct class_maker *__restrict self,
 		           DeeString_SIZE(name) * sizeof(char)) != 0)
 			continue;
 		/* Duplicate name */
-		if (WARN(W_CLASS_MEMBER_ALREADY_DEFINED,
-		         DeeString_SIZE(name),
-		         DeeString_STR(name)))
+		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
+		           DeeString_SIZE(name),
+		           DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -371,10 +373,10 @@ err:
 
 /* Bind operator `name' to a function stored
  * in the class member table under `addr' */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 class_maker_bindoperator(struct class_maker *__restrict self,
                          uint16_t name, uint16_t addr,
-                         struct ast_loc *loc) {
+                         struct ast_loc *__restrict loc) {
 	uint16_t i, perturb;
 	struct class_operator *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
@@ -467,13 +469,13 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
  * @return: * :             A new symbol classified as `SYM_CLASS_MEMBER' that is now stored in the caller's scope.
  *                          The symbol has already been fully initialized, including the `sym_member.sym_member'
  *                          field which contains the member descriptor apart of the either the `cm_cmem' or `cm_imem' table. */
-PRIVATE struct symbol *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
                       struct TPPKeyword *__restrict name,
                       bool is_class_member,
                       uint16_t flags,
                       uint16_t **__restrict ppusage_counter,
-                      struct ast_loc *loc
+                      struct ast_loc *__restrict loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                       , struct decl_ast *decl
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
@@ -491,7 +493,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 		goto err;
 	/* Add a new member entry to the specified table. */
 	if (is_class_member) {
-		attr = class_maker_newcattr(self, name_str);
+		attr = class_maker_newcattr(self, name_str, loc);
 	} else {
 		/* Warn if declaring an attribute operator with non-final, public members. */
 		if (class_attribute_is_nonfinal_public(flags)) {
@@ -502,7 +504,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 			}
 			self->cm_features |= CLASS_MAKER_FEAT_FNOFINPUB;
 		}
-		attr = class_maker_newiattr(self, name_str);
+		attr = class_maker_newiattr(self, name_str, loc);
 	}
 	Dee_Decref(name_str);
 	if unlikely(!attr)
@@ -597,7 +599,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct class_member *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct class_member *DCALL
 priv_alloc_class_member(struct class_maker *__restrict self) {
 	if (self->cm_class_initc == self->cm_class_inita) {
 		struct class_member *new_vector;
@@ -716,7 +718,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_addanon(struct class_maker *__restrict self, uint16_t addr,
                     struct ast *__restrict initializer) {
 	struct class_member *member;
@@ -736,7 +738,7 @@ err:
 }
 
 /* Add a new operator function to a given class. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_addoperator(struct class_maker *__restrict self,
                         uint16_t operator_name,
                         struct ast *__restrict callback) {
@@ -765,9 +767,10 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_deloperator(struct class_maker *__restrict self,
-                        uint16_t operator_name, struct ast_loc *loc) {
+                        uint16_t operator_name,
+                        struct ast_loc *__restrict loc) {
 	/* Deleted operator (e.g. `operator str = del;') */
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
@@ -789,7 +792,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 	bzero(self, sizeof(struct class_maker))
 
 /* Finalize everything concerning the given class maker. */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 class_maker_fini(struct class_maker *__restrict self) {
 	size_t i;
 	/* May be `NULL' following an init-failure. */
@@ -807,7 +810,7 @@ class_maker_fini(struct class_maker *__restrict self) {
 }
 
 /* Pack together an AST to create the class described by `self'. */
-PRIVATE WUNUSED DREF struct ast *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DCALL
 class_maker_pack(struct class_maker *__restrict self) {
 	DREF struct ast *result;
 	/* If required, create a class member initializer for the constructor. */
@@ -1189,10 +1192,9 @@ PRIVATE struct callback_name const callback_names[] = {
 
 
 /* Parse the contents of a property declaration. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
-               struct class_maker *__restrict maker,
-               bool is_class_property) {
+               struct class_maker *__restrict maker, bool is_class_property) {
 	uint16_t callback_id;
 	struct ast_loc loc;
 	DREF struct ast *callback;
@@ -1255,8 +1257,12 @@ next:
 				goto err;
 		}
 		goto got_callback_id;
-	case '-': callback_id = CLASS_GETSET_DEL; goto warn_deprecated_yield;
-	case '=': callback_id = CLASS_GETSET_SET; goto warn_deprecated_yield;
+	case '-':
+		callback_id = CLASS_GETSET_DEL;
+		goto warn_deprecated_yield;
+	case '=':
+		callback_id = CLASS_GETSET_SET;
+		goto warn_deprecated_yield;
 
 	default:
 		if (TPP_ISKEYWORD(tok)) {
@@ -1488,7 +1494,7 @@ use_object_base:
 			goto err;
 		maker.cm_classsym->s_type = SYMBOL_TYPE_STACK;
 	}
-	maker.cm_thissym                                 = ((DeeClassScopeObject *)current_scope)->cs_this;
+	maker.cm_thissym = ((DeeClassScopeObject *)current_scope)->cs_this;
 	((DeeClassScopeObject *)current_scope)->cs_class = maker.cm_classsym;
 
 	/* Create a symbol for the class's super type. */
@@ -1639,7 +1645,11 @@ set_visibility:
 			if (member_class != MEMBER_CLASS_AUTO &&
 			    WARN(W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED))
 				goto err;
-			member_class = (tok == KWD_function ? MEMBER_CLASS_METHOD : tok == KWD_property ? MEMBER_CLASS_GETSET : MEMBER_CLASS_MEMBER);
+			member_class = (tok == KWD_function
+			                ? MEMBER_CLASS_METHOD
+			                : tok == KWD_property
+			                  ? MEMBER_CLASS_GETSET
+			                  : MEMBER_CLASS_MEMBER);
 			if unlikely(yield() < 0)
 				goto err;
 			modifiers_encountered = true;
@@ -1917,7 +1927,7 @@ set_operator_ast:
 			/* Warn when attempting to declare an operator as private. */
 			if (member_flags & CLASS_ATTRIBUTE_FPRIVATE) {
 				struct opinfo const *info = Dee_OperatorInfo(NULL, operator_name);
-				if (WARN(W_PRIVATE_OPERATOR_IS_PUBLIC, info ? info->oi_sname : "?"))
+				if (WARNAT(&loc, W_PRIVATE_OPERATOR_IS_PUBLIC, info ? info->oi_sname : "?"))
 					goto err;
 			}
 			/* Add the new operator to the class. */
@@ -2371,7 +2381,9 @@ err_property:
 					goto err;
 				/* Increment the usage-counter to consume the member slot. */
 				++*pusage_counter;
-				if unlikely(likely(is_semicollon()) ? (yield_semicollon() < 0) : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+				if unlikely(likely(is_semicollon())
+				            ? (yield_semicollon() < 0)
+				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
 					goto err;
 				break;
 			}
