@@ -37,7 +37,8 @@ INTERN struct jit_object_entry jit_empty_object_list[1] = {
 		/* .oe_namestr = */ NULL,
 		/* .oe_namelen = */ 0,
 		/* .oe_namehsh = */ 0,
-		/* .oe_value   = */ NULL
+		/* .oe_type    = */ JIT_OBJECT_ENTRY_TYPE_LOCAL,
+		/* .oe_value   = */ { NULL }
 	}
 };
 
@@ -70,32 +71,6 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 	}
 	return 0;
 }
-
-/* Insert all elements from `src' into `dst'
- * Existing entires will not be overwritten. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
-                           JITObjectTable const *__restrict src) {
-	size_t i;
-	struct jit_object_entry *old_table;
-	old_table = src->ot_list;
-	for (i = 0; i <= src->ot_mask; ++i) {
-		if (!ITER_ISOK(old_table[i].oe_namestr))
-			continue;
-		if (JITObjectTable_Update(dst,
-		                          old_table[i].oe_namestr,
-		                          old_table[i].oe_namelen,
-		                          old_table[i].oe_namehsh,
-		                          old_table[i].oe_value,
-		                          false))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-
 
 INTERN NONNULL((1)) void DCALL
 JITObjectTable_Fini(JITObjectTable *__restrict self) {
@@ -213,7 +188,7 @@ again:
 							if likely(JITObjectTable_TryRehash(self, new_mask))
 								goto again;
 							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-								return -1;
+								goto err;
 						}
 					}
 				}
@@ -230,27 +205,13 @@ again:
 			continue;
 		/* Existing entry! */
 		if (override_existing) {
-#if 1
 			DREF DeeObject *oldval;
 			oldval = entry->oe_value;
 			Dee_XIncref(value);
+			entry->oe_type  = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 			entry->oe_value = value;
 			COMPILER_BARRIER();
 			Dee_XDecref(oldval);
-#else
-			DREF DeeObject *name, *oldval;
-			name   = entry->oe_nameobj;
-			oldval = entry->oe_value;
-			Dee_Incref(nameobj);
-			Dee_XIncref(value);
-			entry->oe_nameobj = nameobj;
-			entry->oe_namestr = namestr;
-			entry->oe_value   = value;
-			COMPILER_BARRIER();
-			/* Cleanup the old values. */
-			Dee_Decref_unlikely(name);
-			Dee_XDecref(oldval);
-#endif
 		}
 		return 1;
 	}
@@ -258,9 +219,12 @@ again:
 	result_entry->oe_namestr = namestr;
 	result_entry->oe_namelen = namelen;
 	result_entry->oe_namehsh = namehsh;
+	result_entry->oe_type    = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 	result_entry->oe_value   = value;
 	Dee_XIncref(value);
 	return 0;
+err:
+	return -1;
 }
 
 /* Delete an existing entry for an object with the given name
@@ -287,7 +251,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
 			continue;
 		/* Found it! */
-		value             = entry->oe_value;
+		value = entry->oe_value;
 		entry->oe_namestr = (char *)ITER_DONE;
 		ASSERT(self->ot_size);
 		ASSERT(self->ot_used);
@@ -393,6 +357,7 @@ again:
 	result_entry->oe_namestr = namestr;
 	result_entry->oe_namelen = namelen;
 	result_entry->oe_namehsh = namehsh;
+	result_entry->oe_type    = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 	result_entry->oe_value   = NULL;
 	return result_entry;
 }

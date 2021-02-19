@@ -165,6 +165,7 @@ again:
 	result_entry->oe_namestr = namestr;
 	result_entry->oe_namelen = namelen;
 	result_entry->oe_namehsh = namehsh;
+	result_entry->oe_type    = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 	result_entry->oe_value   = NULL;
 	return result_entry;
 }
@@ -229,6 +230,9 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 }
 
 
+/* Create a new JIT function object by parsing the specified
+ * parameter list, and executing the given source region.
+ * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
 INTERN WUNUSED DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
@@ -263,7 +267,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 	result->jf_varkwds              = (size_t)-1;
 	result->jf_argc_min             = 0;
 	result->jf_argc_max             = 0;
-	result->jf_flags                = flags;
+	result->jf_flags                = flags & ~JIT_FUNCTION_FTHISCALL;
 	Dee_Incref(source);
 	Dee_XIncref(impbase);
 	Dee_XIncref(globals);
@@ -271,6 +275,23 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 
 	if (params_end > params_start) {
 		uint16_t arga = 0;
+
+		/* If necessary, construct the hidden, leading this-argument */
+		if (flags & JIT_FUNCTION_FTHISCALL) {
+			struct jit_object_entry *argent;
+			argent = JITFunction_CreateArgument(result, JIT_RTSYM_THIS,
+			                                    COMPILER_STRLEN(JIT_RTSYM_THIS));
+			if unlikely(!argent)
+				goto err_r;
+			result->jf_argv = (size_t *)Dee_Malloc(1 * sizeof(size_t));
+			if unlikely(!result->jf_argv)
+				goto err_r;
+			result->jf_argv[0]  = (size_t)(argent - result->jf_args.ot_list);
+			result->jf_argc_min = 1;
+			result->jf_argc_max = 1;
+			arga                = 1;
+		}
+
 		/* Analyze & parse the parameter list. */
 		JITLexer_Start(&lex,
 		               (unsigned char *)params_start,
@@ -419,7 +440,20 @@ err_no_keyword_for_argument:
 			if likely(new_argv)
 				result->jf_argv = new_argv;
 		}
+	} else if (flags & JIT_FUNCTION_FTHISCALL) {
+		struct jit_object_entry *argent;
+		argent = JITFunction_CreateArgument(result, JIT_RTSYM_THIS,
+		                                    COMPILER_STRLEN(JIT_RTSYM_THIS));
+		if unlikely(!argent)
+			goto err_r;
+		result->jf_argv = (size_t *)Dee_Malloc(1 * sizeof(size_t));
+		if unlikely(!result->jf_argv)
+			goto err_r;
+		result->jf_argv[0] = (size_t)(argent - result->jf_args.ot_list);
+		result->jf_argc_min = 1;
+		result->jf_argc_max = 1;
 	}
+
 
 	if (name_start < name_end) {
 		struct jit_object_entry *ent;

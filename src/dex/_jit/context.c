@@ -29,11 +29,13 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/objectlist.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 
 DECL_BEGIN
@@ -53,6 +55,8 @@ JITLValue_Fini(JITLValue *__restrict self) {
 	case JIT_LVALUE_GLOBAL:
 	case JIT_LVALUE_ATTRSTR:
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
+	case JIT_LVALUE_CLSATTRIB:
 		Dee_Decref(self->lv_global);
 		break;
 
@@ -75,6 +79,8 @@ JITLValue_Visit(JITLValue *__restrict self, dvisit_t proc, void *arg) {
 	case JIT_LVALUE_GLOBAL:
 	case JIT_LVALUE_ATTRSTR:
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
+	case JIT_LVALUE_CLSATTRIB:
 		Dee_Visit(self->lv_global);
 		break;
 
@@ -138,6 +144,248 @@ err_unloaded:
 	return false;
 }
 
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct class_desc *DCALL
+class_desc_from_instance(struct instance_desc *__restrict self,
+                         DeeObject *__restrict this_arg) {
+	DeeTypeObject *tp;
+	if (DeeType_Check(this_arg)) {
+		tp = (DeeTypeObject *)this_arg;
+		ASSERT(tp->tp_class);
+		ASSERT(self == Dee_class_desc_as_instance(tp->tp_class));
+		return tp->tp_class;
+	}
+	tp = Dee_TYPE(this_arg);
+	for (;;) {
+		struct class_desc *result;
+		result = tp->tp_class;
+		ASSERT(result);
+		if (DeeInstance_DESC(result, this_arg) == self)
+			return result;
+		tp = DeeType_Base(tp);
+	}
+}
+
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2, 3)) struct instance_desc *DCALL
+class_desc_as_instance_from_instance(struct instance_desc *__restrict self,
+                                     DeeObject *__restrict this_arg) {
+	struct class_desc *cls;
+	cls = class_desc_from_instance(self, this_arg);
+	return class_desc_as_instance(cls);
+}
+
+#define CATCH_ATTRIBUTE_ERROR()                  \
+	(DeeError_Catch(&DeeError_AttributeError) || \
+	 DeeError_Catch(&DeeError_NotImplemented))
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeInstance_GetAttribute(struct instance_desc *__restrict self,
+                         DeeObject *__restrict this_arg,
+                         struct class_attribute *__restrict attr) {
+	DREF DeeObject *result;
+	ASSERT(self);
+	ASSERT(attr);
+	ASSERT_OBJECT(this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		self = class_desc_as_instance_from_instance(self, this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		DREF DeeObject *getter;
+		rwlock_read(&self->id_lock);
+		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+		Dee_XIncref(getter);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!getter)
+			goto illegal;
+		/* Invoke the getter. */
+		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
+		         : DeeObject_Call(getter, 0, NULL);
+		Dee_Decref(getter);
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		/* Construct a thiscall function. */
+		DREF DeeObject *callback;
+		rwlock_read(&self->id_lock);
+		callback = self->id_vtab[attr->ca_addr];
+		Dee_XIncref(callback);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!callback)
+			goto unbound;
+		result = DeeInstanceMethod_New(callback, this_arg);
+		Dee_Decref(callback);
+	} else {
+		/* Simply return the attribute as-is. */
+		rwlock_read(&self->id_lock);
+		result = self->id_vtab[attr->ca_addr];
+		Dee_XIncref(result);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!result)
+			goto unbound;
+	}
+	return result;
+unbound:
+	err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
+	                        DeeString_STR(attr->ca_name));
+	return NULL;
+illegal:
+	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
+	                            DeeString_STR(attr->ca_name),
+	                            ATTR_ACCESS_GET);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
+                           DeeObject *__restrict this_arg,
+                           struct class_attribute *__restrict attr) {
+	DREF DeeObject *result;
+	ASSERT(self);
+	ASSERT(attr);
+	ASSERT_OBJECT(this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		self = class_desc_as_instance_from_instance(self, this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		DREF DeeObject *getter;
+		rwlock_read(&self->id_lock);
+		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+		Dee_XIncref(getter);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!getter)
+			goto unbound;
+		/* Invoke the getter. */
+		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
+		         : DeeObject_Call(getter, 0, NULL);
+		Dee_Decref(getter);
+		if likely(result) {
+			Dee_Decref(result);
+			return 1;
+		}
+		if (CATCH_ATTRIBUTE_ERROR())
+			return 0; /* return -3; */
+		if (DeeError_Catch(&DeeError_UnboundAttribute))
+			return 0;
+		return -1;
+	} else {
+		/* Simply return the attribute as-is. */
+#ifdef CONFIG_NO_THREADS
+		return self->id_vtab[attr->ca_addr] != NULL;
+#else /* CONFIG_NO_THREADS */
+		return ATOMIC_READ(self->id_vtab[attr->ca_addr]) != NULL;
+#endif /* !CONFIG_NO_THREADS */
+	}
+unbound:
+	return 0;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeInstance_DelAttribute(struct instance_desc *__restrict self,
+                         DeeObject *__restrict this_arg,
+                         struct class_attribute *__restrict attr) {
+	ASSERT(self);
+	ASSERT(attr);
+	ASSERT_OBJECT(this_arg);
+	/* Make sure that the access is allowed. */
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		goto illegal;
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		self = class_desc_as_instance_from_instance(self, this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		DREF DeeObject *delfun, *temp;
+		rwlock_read(&self->id_lock);
+		delfun = self->id_vtab[attr->ca_addr + CLASS_GETSET_DEL];
+		Dee_XIncref(delfun);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!delfun)
+			goto illegal;
+		/* Invoke the getter. */
+		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		       ? DeeObject_ThisCall(delfun, this_arg, 0, NULL)
+		       : DeeObject_Call(delfun, 0, NULL);
+		Dee_Decref(delfun);
+		if unlikely(!temp)
+			return -1;
+		Dee_Decref(temp);
+	} else {
+		DREF DeeObject *old_value;
+		/* Simply unbind the field in the attr table. */
+		rwlock_write(&self->id_lock);
+		old_value                    = self->id_vtab[attr->ca_addr];
+		self->id_vtab[attr->ca_addr] = NULL;
+		rwlock_endwrite(&self->id_lock);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+		if unlikely(!old_value)
+			goto unbound;
+		Dee_Decref(old_value);
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+		Dee_XDecref(old_value);
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
+	}
+	return 0;
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+unbound:
+	return err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
+	                               DeeString_STR(attr->ca_name));
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+illegal:
+	return err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_DEL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeInstance_SetAttribute(struct instance_desc *__restrict self,
+                         DeeObject *this_arg,
+                         struct class_attribute *__restrict attr,
+                         DeeObject *value) {
+	ASSERT(self);
+	ASSERT(attr);
+	ASSERT_OBJECT(this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		self = class_desc_as_instance_from_instance(self, this_arg);
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		DREF DeeObject *setter, *temp;
+		/* Make sure that the access is allowed. */
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			goto illegal;
+		rwlock_read(&self->id_lock);
+		setter = self->id_vtab[attr->ca_addr + CLASS_GETSET_SET];
+		Dee_XIncref(setter);
+		rwlock_endread(&self->id_lock);
+		if unlikely(!setter)
+			goto illegal;
+		/* Invoke the getter. */
+		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		       ? DeeObject_ThisCall(setter, this_arg, 1, (DeeObject **)&value)
+		       : DeeObject_Call(setter, 1, (DeeObject **)&value);
+		Dee_Decref(setter);
+		if unlikely(!temp)
+			return -1;
+		Dee_Decref(temp);
+	} else {
+		DREF DeeObject *old_value;
+		/* Simply override the field in the attr table. */
+		rwlock_write(&self->id_lock);
+		old_value = self->id_vtab[attr->ca_addr];
+		if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+			rwlock_endwrite(&self->id_lock);
+			goto illegal; /* readonly fields can only be set once. */
+		} else {
+			Dee_Incref(value);
+			self->id_vtab[attr->ca_addr] = value;
+		}
+		rwlock_endwrite(&self->id_lock);
+		/* Drop a reference from the old value. */
+		Dee_XDecref(old_value);
+	}
+	return 0;
+illegal:
+	return err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_SET);
+}
+
+
 
 INTERN int FCALL
 JITLValue_IsBound(JITLValue *__restrict self,
@@ -184,6 +432,12 @@ JITLValue_IsBound(JITLValue *__restrict self,
 			result = 0; /* Attribute doesn't exist */
 		break;
 
+	case JIT_LVALUE_CLSATTRIB:
+		result = DeeInstance_BoundAttribute(self->lv_clsattrib.lc_desc,
+		                                    self->lv_clsattrib.lc_obj,
+		                                    self->lv_clsattrib.lc_attr);
+		break;
+
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_BoundAttr(self->lv_attr.la_base,
 		                             (DeeObject *)self->lv_attr.la_name);
@@ -215,6 +469,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		                       "Expected a symbol, or attribute expression");
 
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
 		result = 1;
 		break;
 
@@ -281,6 +536,12 @@ err_unbound:
 		                                    self->lv_globalstr.lg_namehsh);
 		break;
 
+	case JIT_LVALUE_CLSATTRIB:
+		result = DeeInstance_GetAttribute(self->lv_clsattrib.lc_desc,
+		                                  self->lv_clsattrib.lc_obj,
+		                                  self->lv_clsattrib.lc_attr);
+		break;
+
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_GetAttr(self->lv_attr.la_base,
 		                           (DeeObject *)self->lv_attr.la_name);
@@ -304,6 +565,7 @@ err_unbound:
 		break;
 
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
 		result = self->lv_rvalue;
 		Dee_Incref(result);
 		break;
@@ -334,11 +596,13 @@ JITLValue_DelValue(JITLValue *__restrict self,
 	}	break;
 
 	case JIT_LVALUE_OBJENT: {
+		struct jit_object_entry *ent;
 		DREF DeeObject *old_value;
 		if unlikely(!update_symbol_objent((JITSymbol *)self))
 			goto err;
-		old_value                        = self->lv_objent.lo_ent->oe_value;
-		self->lv_objent.lo_ent->oe_value = NULL;
+		ent           = self->lv_objent.lo_ent;
+		old_value     = ent->oe_value;
+		ent->oe_value = NULL;
 		Dee_XDecref(old_value);
 		result = 0;
 	}	break;
@@ -365,6 +629,12 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		                                    self->lv_globalstr.lg_namehsh);
 		break;
 
+	case JIT_LVALUE_CLSATTRIB:
+		result = DeeInstance_DelAttribute(self->lv_clsattrib.lc_desc,
+		                                  self->lv_clsattrib.lc_obj,
+		                                  self->lv_clsattrib.lc_attr);
+		break;
+
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_DelAttr(self->lv_attr.la_base,
 		                           (DeeObject *)self->lv_attr.la_name);
@@ -388,6 +658,7 @@ JITLValue_DelValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
 		result = DeeError_Throwf(&DeeError_SyntaxError,
 		                         "Cannot delete R-value");
 		break;
@@ -420,12 +691,14 @@ JITLValue_SetValue(JITLValue *__restrict self,
 	}	break;
 
 	case JIT_LVALUE_OBJENT: {
+		struct jit_object_entry *ent;
 		DREF DeeObject *old_value;
 		if unlikely(!update_symbol_objent((JITSymbol *)self))
 			goto err;
 		Dee_Incref(value);
-		old_value                        = self->lv_objent.lo_ent->oe_value;
-		self->lv_objent.lo_ent->oe_value = value;
+		ent           = self->lv_objent.lo_ent;
+		old_value     = ent->oe_value;
+		ent->oe_value = value;
 		Dee_XDecref(old_value);
 		result = 0;
 	}	break;
@@ -460,6 +733,13 @@ JITLValue_SetValue(JITLValue *__restrict self,
 		                                    value);
 		break;
 
+	case JIT_LVALUE_CLSATTRIB:
+		result = DeeInstance_SetAttribute(self->lv_clsattrib.lc_desc,
+		                                  self->lv_clsattrib.lc_obj,
+		                                  self->lv_clsattrib.lc_attr,
+		                                  value);
+		break;
+
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_SetAttr(self->lv_attr.la_base,
 		                           (DeeObject *)self->lv_attr.la_name,
@@ -488,6 +768,7 @@ JITLValue_SetValue(JITLValue *__restrict self,
 		break;
 
 	case JIT_LVALUE_RVALUE:
+	case JIT_LVALUE_THIS:
 		result = DeeError_Throwf(&DeeError_SyntaxError,
 		                         "Cannot store to R-value");
 		break;
@@ -763,11 +1044,48 @@ JITContext_Lookup(JITContext *__restrict self,
 			break;
 		/* Found a local variable entry. */
 set_object_entry:
-		result->js_kind              = JIT_SYMBOL_OBJENT;
-		result->js_objent.jo_tab     = tab;
-		result->js_objent.jo_ent     = ent;
-		result->js_objent.jo_namestr = ent->oe_namestr;
-		result->js_objent.jo_namelen = ent->oe_namelen;
+		switch (ent->oe_type) {
+
+		case JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED:
+			result->js_kind              = JIT_SYMBOL_CLSATTRIB;
+			result->js_clsattrib.jc_obj  = ent->oe_attr_fixed.af_obj;
+			result->js_clsattrib.jc_attr = ent->oe_attr_fixed.af_attr;
+			result->js_clsattrib.jc_desc = ent->oe_attr_fixed.af_desc;
+			break;
+
+		case JIT_OBJECT_ENTRY_TYPE_ATTR: {
+			JITLValue lv;
+			/* XXX: Cache the this-argument? */
+			if unlikely(namelen == COMPILER_STRLEN(JIT_RTSYM_THIS) &&
+			            memcmp(name, JIT_RTSYM_THIS,
+			                   COMPILER_STRLEN(JIT_RTSYM_THIS) *
+			                   sizeof(char)) == 0)
+				goto err_unknown_var;
+			if (JITContext_Lookup(self, (JITSymbol *)&lv, JIT_RTSYM_THIS,
+			                      COMPILER_STRLEN(JIT_RTSYM_THIS), LOOKUP_SYM_NORMAL))
+				goto err;
+			result->js_clsattrib.jc_obj = JITLValue_GetValue(&lv, self);
+			JITLValue_Fini(&lv);
+			if unlikely(!result->js_clsattrib.jc_obj)
+				goto err;
+			if (DeeObject_AssertType(result->js_clsattrib.jc_obj,
+			                         ent->oe_attr.a_class)) {
+				Dee_Decref(result->js_clsattrib.jc_obj);
+				goto err;
+			}
+			result->js_kind              = JIT_SYMBOL_CLSATTRIB;
+			result->js_clsattrib.jc_attr = ent->oe_attr.a_attr;
+			result->js_clsattrib.jc_desc = DeeInstance_DESC(ent->oe_attr.a_class->tp_class,
+			                                                result->js_clsattrib.jc_obj);
+		}	break;
+
+		default:
+			result->js_kind              = JIT_SYMBOL_OBJENT;
+			result->js_objent.jo_tab     = tab;
+			result->js_objent.jo_ent     = ent;
+			result->js_objent.jo_namestr = ent->oe_namestr;
+			result->js_objent.jo_namelen = ent->oe_namelen;
+		}
 done:
 		return 0;
 

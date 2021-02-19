@@ -1546,6 +1546,30 @@ skip_rbrck_and_done:
 				result = FUNC(With)(self, false);
 				goto done;
 			}
+			if (name == ENCODE_INT32('t', 'h', 'i', 's')) {
+#ifdef JIT_EVAL
+				if (JITContext_Lookup(self->jl_context,
+				                      (JITSymbol *)&self->jl_lvalue,
+				                      JITLexer_TokPtr(self),
+				                      JITLexer_TokLen(self),
+				                      LOOKUP_SYM_NORMAL))
+					goto err;
+				/* Convert an object reference into  */
+				if (self->jl_lvalue.lv_kind != JIT_LVALUE_RVALUE) {
+					result = JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
+					if unlikely(!result)
+						goto err;
+					JITLValue_Fini(&self->jl_lvalue);
+					self->jl_lvalue.lv_rvalue = result;
+				}
+				self->jl_lvalue.lv_kind = JIT_LVALUE_THIS;
+				result                  = JIT_LVALUE;
+#else /* JIT_EVAL */
+				result = 0;
+#endif /* !JIT_EVAL */
+				JITLexer_Yield(self);
+				goto done;
+			}
 			break;
 
 		case 5:
@@ -1620,6 +1644,56 @@ skip_rbrck_and_done:
 #else /* JIT_EVAL */
 				result = JITLexer_SkipClass(self);
 #endif /* !JIT_EVAL */
+				goto done;
+			}
+			if (name == ENCODE_INT32('s', 'u', 'p', 'e') &&
+			    *(uint8_t *)(tok_begin + 4) == 'r') {
+				/* In jit, `super' is essentially compiled as `this as __identifier(class).base'
+				 * s.a. `JIT_RTSYM_THIS' and `JIT_RTSYM_CLASS' */
+#ifdef JIT_EVAL
+				DeeTypeObject *oo_super;
+				DREF DeeTypeObject *oo_class;
+				DREF DeeObject *oo_this;
+				if (JITContext_Lookup(self->jl_context,
+				                      (JITSymbol *)&self->jl_lvalue,
+				                      JIT_RTSYM_CLASS,
+				                      COMPILER_STRLEN(JIT_RTSYM_CLASS),
+				                      LOOKUP_SYM_NORMAL))
+					goto err;
+				oo_class = (DREF DeeTypeObject *)JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
+				JITLValue_Fini(&self->jl_lvalue);
+				if unlikely(!oo_class) {
+err_reinit_lvalue:
+					JITLValue_Init(&self->jl_lvalue);
+					goto err;
+				}
+				if (DeeObject_AssertType(oo_class, &DeeType_Type)) {
+err_oo_class_reinit_lvalue:
+					Dee_Decref(oo_class);
+					goto err_reinit_lvalue;
+				}
+				if (JITContext_Lookup(self->jl_context,
+				                      (JITSymbol *)&self->jl_lvalue,
+				                      JIT_RTSYM_THIS,
+				                      COMPILER_STRLEN(JIT_RTSYM_THIS),
+				                      LOOKUP_SYM_NORMAL))
+					goto err_oo_class_reinit_lvalue;
+				oo_this = JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
+				if unlikely(!oo_this)
+					goto err_oo_class_reinit_lvalue;
+				JITLValue_Init(&self->jl_lvalue);
+				oo_super = DeeType_Base(oo_class);
+				if unlikely(!oo_super)
+					oo_super = &DeeObject_Type;
+				result = DeeSuper_New(oo_super, oo_this);
+				Dee_Decref(oo_class);
+				Dee_Decref(oo_this);
+				if unlikely(!result)
+					goto err;
+#else /* JIT_EVAL */
+				result = 0;
+#endif /* !JIT_EVAL */
+				JITLexer_Yield(self);
 				goto done;
 			}
 			break;
@@ -1765,8 +1839,10 @@ DEFINE_SECONDARY(UnaryOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(unsigned char *pos;)
 	ASSERT(TOKEN_IS_UNARY(self));
-	LOAD_LVALUE(lhs, err);
 	(void)flags;
+#ifdef JIT_EVAL
+again:
+#endif /* JIT_EVAL */
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		switch (self->jl_tok) {
@@ -1870,10 +1946,57 @@ err_result_copy:
 #ifdef JIT_EVAL
 				char *attr_name;
 				size_t attr_size;
-				LOAD_LVALUE(lhs, err);
 				/* Generic attribute lookup. */
 				attr_name = JITLexer_TokPtr(self);
 				attr_size = JITLexer_TokLen(self);
+				if (lhs == JIT_LVALUE) {
+					if (self->jl_lvalue.lv_kind == JIT_LVALUE_THIS) {
+						/* The deemon specs require that `this.attrib' be evaluated
+						 * as static-member-access, so-long as the named attribute
+						 * actually exists.
+						 *
+						 * For this purpose, the specs only require that `this.foo' be
+						 * static,  while `this.operator . ("foo")' is allowed to be
+						 * dynamic. Confirming with this requirement, we only check
+						 * for this-attribute-access in the case of `this.foo'! */
+						DREF DeeTypeObject *oo_class;
+						lhs = self->jl_lvalue.lv_rvalue;
+						JITLValue_Init(&self->jl_lvalue);
+
+						/* Lookup the class descriptor. */
+						if (JITContext_Lookup(self->jl_context,
+						                      (JITSymbol *)&self->jl_lvalue,
+						                      JIT_RTSYM_CLASS,
+						                      COMPILER_STRLEN(JIT_RTSYM_CLASS),
+						                      LOOKUP_SYM_NORMAL))
+							goto err;
+						oo_class = (DREF DeeTypeObject *)JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
+						JITLValue_Fini(&self->jl_lvalue);
+						JITLValue_Init(&self->jl_lvalue);
+						if unlikely(!oo_class)
+							goto err_r;
+						if (DeeType_Check(oo_class) && oo_class->tp_class) {
+							/* Check if `oo_class' contains an instance-member `attr_name' */
+							struct class_attribute *attrib;
+							attrib = DeeClass_QueryClassAttributeStringLen(oo_class, attr_name, attr_size);
+							if (attrib != NULL) {
+								/* Yes, it does! -> Construct an l-value reference to the accessed instance member. */
+								JITLexer_Yield(self);
+								self->jl_lvalue.lv_kind = JIT_LVALUE_CLSATTRIB;
+								self->jl_lvalue.lv_clsattrib.lc_obj  = lhs; /* Inherit reference */
+								self->jl_lvalue.lv_clsattrib.lc_attr = attrib;
+								self->jl_lvalue.lv_clsattrib.lc_desc = DeeInstance_DESC(oo_class->tp_class, lhs);
+								lhs = JIT_LVALUE;
+								goto again;
+							}
+						}
+						Dee_Decref(oo_class);
+					} else {
+						lhs = JITLexer_PackLValue(self);
+						if unlikely(!lhs)
+							goto err;
+					}
+				}
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
 #ifdef JIT_EVAL
@@ -2106,6 +2229,7 @@ err_start_expr:
 
 		case JIT_KEYWORD:
 			if (JITLexer_ISTOK(self, "pack")) {
+				/* TODO */
 				DERROR_NOTIMPLEMENTED();
 				goto err_r;
 			}

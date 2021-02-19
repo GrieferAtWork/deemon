@@ -32,7 +32,9 @@
 DECL_BEGIN
 
 INTDEF NONNULL((1, 2)) void DCALL
-JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size) {
+JITLexer_ReferenceKeyword(JITLexer *__restrict self,
+                          char const *__restrict name,
+                          size_t size) {
 	JITObjectTable *iter;
 	dhash_t hash;
 	if (self->jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
@@ -47,20 +49,94 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name
 		ent = JITObjectTable_Lookup(iter, name, size, hash);
 		if (!ent || !ent->oe_value)
 			continue;
-		/* Create a new reference for this keyword. */
-		destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
-		                                name, size, hash);
-		if unlikely(!destent)
-			goto err;
-		destent->oe_value = ent->oe_value;
-		Dee_XIncref(ent->oe_value);
+		switch (ent->oe_type) {
+
+		case JIT_OBJECT_ENTRY_TYPE_ATTR:
+			if (iter == self->jl_scandata.jl_parobtab) {
+				/* Make sure that we're referencing our caller's this-argument! */
+				if likely(size != COMPILER_STRLEN(JIT_RTSYM_THIS) ||
+				          memcmp(name, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS) * sizeof(char)) != 0)
+					JITLexer_ReferenceKeyword(self, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS));
+				if unlikely(self->jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
+					return;
+do_alias_thisattr:
+				destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
+				                                name, size, hash);
+				if unlikely(!destent)
+					goto err;
+				destent->oe_attr.a_attr  = ent->oe_attr.a_attr;
+				destent->oe_attr.a_class = ent->oe_attr.a_class;
+				Dee_Incref(destent->oe_attr.a_class);
+			} else {
+				/* Reference the member of a recursive class:
+				 * >> class Foo {
+				 * >>     public member fooMember = 42;
+				 * >>     public function getLambda() {
+				 * >>         return []{
+				 * >>             return fooMember; // << We're here right now!
+				 * >>         };
+				 * >>     }
+				 * >> }
+				 * In this case, we must lookup the this-argument from the scope
+				 * one before `iter' and re-use its value for our own purposes! */
+				JITObjectTable *before_iter;
+				struct jit_object_entry *effective_this;
+				before_iter = self->jl_scandata.jl_parobtab;
+				while (before_iter->ot_prev.otp_tab != iter)
+					before_iter = before_iter->ot_prev.otp_tab;
+				effective_this = JITObjectTable_Lookup(before_iter, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS),
+				                                       Dee_HashUtf8(JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS)));
+				if unlikely(!effective_this)
+					goto do_alias_thisattr; /* Shouldn't happen... */
+				if unlikely(effective_this->oe_type != JIT_OBJECT_ENTRY_TYPE_LOCAL)
+					goto do_alias_thisattr; /* Shouldn't happen... */
+				if unlikely(!effective_this->oe_value)
+					goto do_alias_thisattr; /* Shouldn't happen... */
+				if (DeeObject_AssertType(effective_this->oe_value, ent->oe_attr.a_class))
+					goto err; /* Shouldn't happen... */
+				destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
+				                                name, size, hash);
+				if unlikely(!destent)
+					goto err;
+
+				/* Load the symbols as a fixed attribute into the object table. */
+				destent->oe_attr_fixed.af_obj  = effective_this->oe_value;
+				destent->oe_attr_fixed.af_attr = ent->oe_attr.a_attr;
+				destent->oe_attr_fixed.af_desc = DeeInstance_DESC(ent->oe_attr.a_class->tp_class,
+				                                                  effective_this->oe_value);
+				Dee_Incref(destent->oe_attr_fixed.af_obj);
+			}
+			break;
+
+		case JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED:
+			destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
+			                                name, size, hash);
+			if unlikely(!destent)
+				goto err;
+			destent->oe_type = JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED;
+			memcpy(&destent->oe_attr_fixed, &ent->oe_attr_fixed,
+			       sizeof(destent->oe_attr_fixed));
+			Dee_Incref(destent->oe_attr_fixed.af_obj);
+			break;
+
+		default:
+			destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
+			                                name, size, hash);
+			if unlikely(!destent)
+				goto err;
+			destent->oe_type  = JIT_OBJECT_ENTRY_TYPE_LOCAL;
+			destent->oe_value = ent->oe_value;
+			Dee_XIncref(ent->oe_value);
+			break;
+		}
 		break;
 	}
 	return;
 err:
 	self->jl_scandata.jl_flags |= JIT_SCANDATA_FERROR;
-	self->jl_tokstart = self->jl_tokend = self->jl_end;
-	self->jl_tok                        = 0;
+	self->jl_tokstart = self->jl_end;
+	self->jl_tokend   = self->jl_end;
+	self->jl_tok      = 0;
 }
 
 
@@ -489,6 +565,8 @@ do_handle_for:
 			}
 			if (name == ENCODE_INT32('w', 'i', 't', 'h'))
 				goto do_yield_again_docast;
+			if (name == ENCODE_INT32('t', 'h', 'i', 's'))
+				goto do_reference_this_and_class;
 			break;
 
 		case 5:
@@ -513,6 +591,14 @@ do_handle_for:
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, false);
 				goto do_again_docast;
+			}
+			if (name == ENCODE_INT32('s', 'u', 'p', 'e') &&
+			    *(uint8_t *)(tok_begin + 4) == 'r') {
+do_reference_this_and_class:
+				JITLexer_Yield(self);
+				JITLexer_ReferenceKeyword(self, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS));
+				JITLexer_ReferenceKeyword(self, JIT_RTSYM_CLASS, COMPILER_STRLEN(JIT_RTSYM_CLASS));
+				goto do_suffix;
 			}
 			/* TODO: Scan class (but must make sure not to reference symbols found
 			 *       in member bodies that are the names of other members!) */

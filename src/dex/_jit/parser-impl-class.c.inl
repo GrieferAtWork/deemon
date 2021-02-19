@@ -99,27 +99,65 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 	JITLexer_Yield(self);
 
 #ifdef JIT_EVAL
-
-	/* TODO */
 	/* NOTE: We can (easily) handle class-scope variables by:
-	 *        - First parsing the class's entire body, and creating
-	 *          unbound symbols for every member/function/property
-	 *          that will end up getting declared
-	 *        - Scanning the bodies of member-initializers/property
-	 *          callbacks and functions during a second pass.
-	 *          At that point, we'll already know all of the names that
-	 *          are being declared inside of the class, and thus can
-	 *          select how to link symbols (all class-scope symbols will
-	 *          be linked as class member accessors, as in:
-	 *          class MyClass {
-	 *              member foo;
-	 *              static member bar;
-	 *              function meth() {
-	 *                  foo = 42;    // >> Object.__itable__(this as MyClass)[<indexof(foo)>] = 42;
-	 *                  return bar;  // >> return Type.__ctable__(MyClass)[<indexof(bar)>];
-	 *              }
-	 *          }
+	 *  - First parsing the class's entire body, and creating
+	 *    unbound symbols for every member/function/property
+	 *    that will end up getting declared
+	 *  - Scanning the bodies of member-initializers/property
+	 *    callbacks and functions during a second pass.
+	 *    At that point, we'll already know all of the names that
+	 *    are being declared inside of the class, and thus can
+	 *    select how to link symbols (all class-scope symbols will
+	 *    be linked as class member accessors, as in:
+	 *    class MyClass {
+	 *        member foo;
+	 *        static member bar;
+	 *        function meth() {
+	 *            foo = 42;    // >> Object.__itable__(this as MyClass)[<indexof(foo)>] = 42;
+	 *            return bar;  // >> return Type.__ctable__(MyClass)[<indexof(bar)>];
+	 *        }
+	 *    }
 	 */
+
+	/* TODO: Create the class descriptor that will be returned by this function */
+
+	/* TODO: Parse the class declaration body, and modify/extend the to-be returned
+	 *       class type. For every member initializer and property/function body,
+	 *       remember where it starts/ends for later, but already allocate slots
+	 *       for all of them in the class descriptor's class-object-table. */
+
+	/* TODO: Once the new class descriptor has been finalized, make use of
+	 *       `DeeClass_New()' in order to create the to-be returned type object. */
+
+	/* TODO: Create a new scope and:
+	 *    - Fill it with `JIT_OBJECT_ENTRY_TYPE_ATTR'-entires for every non-static
+	 *      class member, as well as `JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED'-entries for
+	 *      every static class member. (in the later case, use the to-be returned
+	 *      class type as the bound object)
+	 *    - Define a local variable `JIT_RTSYM_CLASS', and store the to-be returned
+	 *      class inside. This variable is needed when class members make use of `super',
+	 *      in which case it is expected to hold the surrounding class's base-type.
+	 */
+
+	/* TODO: If present, do custom processing for `CLASS_OPERATOR_SUPERARGS' */
+	/* TODO: If present, do custom processing for `OPERATOR_CONSTRUCTOR'
+	 *       Note that in this case, it may be necessary to generate additional
+	 *       code in order to initialize class member prior to the normal construct
+	 *       being invoked. - This should be quite easy to do, as we can simply
+	 *       use a unicode_printer to build the auto-generated portion of the ctor.
+	 *       This would also solve the custom handling that's required for custom
+	 *       member initialization at the start of a constructor, as in:
+	 *       >> this(): foo(42), bar(17), baz = "hello" { ... }
+	 *       Which we must execute as:
+	 *       >> this() { foo = 42; bar = 17; baz = "hello"; ... } */
+
+	/* TODO: Use `JITFunction_New()' (with `JIT_FUNCTION_FTHISCALL' for non-static functions)
+	 *       to construct all of the member functions needed. At the same time (as they're
+	 *       being created), use these newly created functions to fill in the class-object-
+	 *       table of the to-be returned class type. */
+
+	/* TODO: Pop the class-scope pushed above. */
+
 	(void)tp_flags;
 	result = NULL;
 	DeeError_NOTIMPLEMENTED();

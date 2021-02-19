@@ -146,6 +146,11 @@ enum {
 	TOK_RANGLE2_EQUAL = TOK_SHR_EQUAL,
 };
 
+/* Special variable names. */
+#define JIT_RTSYM_THIS  "this"
+#define JIT_RTSYM_CLASS "class"
+
+
 
 typedef struct jit_small_lexer JITSmallLexer;
 typedef struct jit_symbol JITSymbol;
@@ -258,6 +263,8 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 
 
 struct jit_object_entry;
+struct instance_desc;
+struct class_attribute;
 
 #define JIT_SYMBOL_NONE      0x0000 /* No symbol (unused) */
 #define JIT_SYMBOL_POINTER   0x0001 /* Pointer to an object reference (used to describe local & inherited variables) */
@@ -265,28 +272,39 @@ struct jit_object_entry;
 #define JIT_SYMBOL_EXTERN    0x0003 /* External symbol reference */
 #define JIT_SYMBOL_GLOBAL    0x0004 /* Try to access an entry inside of `jc_globals' */
 #define JIT_SYMBOL_GLOBALSTR 0x0005 /* Same as `JIT_SYMBOL_GLOBAL', but use a string as operand. */
+#define JIT_SYMBOL_CLSATTRIB 0x0006 /* class- or instance-attribute. */
 struct jit_symbol {
 	uint16_t js_kind;  /* Symbol kind (One of JIT_SYMBOL_*) */
 	uint16_t js_pad[(sizeof(void *)-2)/2];
 	union {
-		DREF DeeObject **js_ptr; /* [0..1][1..1] JIT_SYMBOL_POINTER -- Object pointer. */
+		DREF DeeObject             **js_ptr;     /* [0..1][1..1] JIT_SYMBOL_POINTER -- Object pointer. */
+
 		struct {
 			struct jit_object_entry *jo_ent;     /* [1..1] The entry, the last time it was loaded. */
 			struct jit_object_table *jo_tab;     /* [1..1] The object table in question. */
 			/*utf-8*/ char const    *jo_namestr; /* [0..jo_namelen] The object name. */
 			size_t                   jo_namelen; /* Length of the object name. */
 		} js_objent; /* JIT_SYMBOL_OBJENT -- Object table entry. */
+
 		struct {
-			DREF DeeModuleObject    *jx_mod; /* [1..1] The module that is being referenced.
-			                                  * NOTE: Guarantied to be a regular, or a DEX module. */
-			struct module_symbol    *jx_sym; /* The symbol that is being accessed. */
+			DREF DeeModuleObject    *jx_mod;     /* [1..1] The module that is being referenced.
+			                                      * NOTE: Guarantied to be a regular, or a DEX module. */
+			struct module_symbol    *jx_sym;     /* The symbol that is being accessed. */
 		} js_extern; /* JIT_SYMBOL_EXTERN */
-		DREF struct string_object   *js_global; /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
+
+		DREF struct string_object   *js_global;  /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
+
 		struct {
 			/*utf-8*/ char const    *jg_namestr; /* [0..jg_namelen] The global symbol name. */
 			size_t                   jg_namelen; /* Length of the global symbol name. */
 			dhash_t                  jg_namehsh; /* Hash for the global symbol name. */
 		} js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
+
+		struct {
+			DREF DeeObject          *jc_obj;     /* [1..1][const] The object who's members are being referenced. */
+			struct class_attribute  *jc_attr;    /* [1..1][const] Attribute descriptor. */
+			struct instance_desc    *jc_desc;    /* [1..1][const] Instance descriptor. */
+		} js_clsattrib; /* JIT_SYMBOL_CLSATTRIB */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -294,6 +312,8 @@ struct jit_symbol {
 #define js_objent    _dee_aunion.js_objent
 #define js_extern    _dee_aunion.js_extern
 #define js_globalstr _dee_aunion.js_globalstr
+#define js_clsattrib _dee_aunion.js_clsattrib
+#define js_getset    _dee_aunion.js_getset
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -316,57 +336,75 @@ INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
 
 #define JIT_LVALUE_NONE      JIT_SYMBOL_NONE      /* No l-value */
 #define JIT_LVALUE_POINTER   JIT_SYMBOL_POINTER   /* Pointer to an object reference (used to describe local & inherited variables) */
-#define JIT_LVALUE_OBJENT    JIT_SYMBOL_OBJENT    /* Object table entry. */
+#define JIT_LVALUE_OBJENT    JIT_SYMBOL_OBJENT    /* Object table entry. (JIT_OBJECT_ENTRY_TYPE_LOCAL) */
 #define JIT_LVALUE_EXTERN    JIT_SYMBOL_EXTERN    /* External symbol reference */
 #define JIT_LVALUE_GLOBAL    JIT_SYMBOL_GLOBAL    /* Try to access an entry inside of `jc_globals' */
-#define JIT_LVALUE_GLOBALSTR JIT_SYMBOL_GLOBALSTR /* Same as `JIT_SYMBOL_GLOBAL', but use a string as operand. */
+#define JIT_LVALUE_GLOBALSTR JIT_SYMBOL_GLOBALSTR /* Same as `JIT_LVALUE_GLOBAL', but use a string as operand. */
+#define JIT_LVALUE_CLSATTRIB JIT_SYMBOL_CLSATTRIB /* class- or instance-attribute. */
 #define JIT_LVALUE_ATTR      0x0100               /* Attribute expression. */
 #define JIT_LVALUE_ATTRSTR   0x0101               /* Attribute string expression. */
 #define JIT_LVALUE_ITEM      0x0102               /* Item expression. */
 #define JIT_LVALUE_RANGE     0x0103               /* Range expression. */
 #define JIT_LVALUE_RVALUE    0x0200               /* R-value expression (just a regular, read-only expression, but stored inside of an L-Value descriptor). */
+#define JIT_LVALUE_THIS      0x0201               /* Reference to the `this'-symbol (behaves the same as `JIT_LVALUE_RVALUE') */
 struct jit_lvalue {
 	uint16_t lv_kind;  /* L-value kind (One of JIT_LVALUE_*) */
 	uint16_t lv_pad[(sizeof(void *)-2)/2];
 	union {
-		DREF DeeObject **lv_ptr; /* [0..1][1..1] JIT_LVALUE_POINTER -- Object pointer. */
+
+		DREF DeeObject               **lv_ptr;     /* [0..1][1..1] JIT_LVALUE_POINTER -- Object pointer. */
+
 		struct {
-			struct jit_object_entry *lo_ent;     /* [1..1] The entry, the last time it was loaded. */
-			struct jit_object_table *lo_tab;     /* [1..1] The object table in question. */
-			/*utf-8*/ char const    *lo_namestr; /* [0..lo_namelen] The object name. */
-			size_t                   lo_namesiz; /* Length of the object name. */
-		} lv_objent; /* JIT_LVALUE_OBJENT | JIT_LVALUE_ROOBJENT -- Object table entry. */
+			struct jit_object_entry   *lo_ent;     /* [1..1] The entry, the last time it was loaded. */
+			struct jit_object_table   *lo_tab;     /* [1..1] The object table in question. */
+			/*utf-8*/ char const      *lo_namestr; /* [0..lo_namelen] The object name. */
+			size_t                     lo_namesiz; /* Length of the object name. */
+		} lv_objent; /* JIT_LVALUE_OBJENT -- Object table entry. */
+
 		struct {
-			DREF DeeModuleObject *lx_mod; /* [1..1] The module that is being referenced.
-			                               * NOTE: Guarantied to be a regular, or a DEX module. */
-			struct module_symbol *lx_sym; /* The symbol that is being accessed. */
+			DREF DeeModuleObject      *lx_mod;     /* [1..1] The module that is being referenced.
+			                                        * NOTE: Guarantied to be a regular, or a DEX module. */
+			struct module_symbol      *lx_sym;     /* The symbol that is being accessed. */
 		} lv_extern; /* JIT_LVALUE_EXTERN */
-		DREF struct string_object   *lv_global; /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
+
+		DREF struct string_object     *lv_global;  /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
+
 		struct {
-			/*utf-8*/ char const    *lg_namestr; /* [0..jg_namelen] The global symbol name. */
-			size_t                   lg_namelen; /* Length of the global symbol name. */
-			dhash_t                  lg_namehsh; /* Hash of the global symbol name. */
+			/*utf-8*/ char const      *lg_namestr; /* [0..jg_namelen] The global symbol name. */
+			size_t                     lg_namelen; /* Length of the global symbol name. */
+			dhash_t                    lg_namehsh; /* Hash of the global symbol name. */
 		} lv_globalstr; /* JIT_LVALUE_GLOBALSTR */
+
 		struct {
-			DREF DeeObject            *la_base; /* [1..1] Expression base object */
-			DREF struct string_object *la_name; /* [1..1] Attribute name object */
+			DREF DeeObject            *lc_obj;     /* [1..1][const] The object who's members are being referenced. */
+			struct class_attribute    *lc_attr;    /* [1..1][const] Attribute descriptor. */
+			struct instance_desc      *lc_desc;    /* [1..1][const] Instance descriptor. */
+		} lv_clsattrib; /* JIT_LVALUE_CLSATTRIB */
+
+		struct {
+			DREF DeeObject            *la_base;    /* [1..1] Expression base object */
+			DREF struct string_object *la_name;    /* [1..1] Attribute name object */
 		} lv_attr; /* JIT_LVALUE_ATTR */
+
 		struct {
-			DREF DeeObject       *la_base; /* [1..1] Expression base object */
-			/*utf-8*/ char const *la_name; /* [0..la_size] Attribute name. */
-			size_t                la_size; /* Length of the attribute name. */
-			dhash_t               la_hash; /* Hash of the attribute name. */
+			DREF DeeObject            *la_base;    /* [1..1] Expression base object */
+			/*utf-8*/ char const      *la_name;    /* [0..la_size] Attribute name. */
+			size_t                     la_size;    /* Length of the attribute name. */
+			dhash_t                    la_hash;    /* Hash of the attribute name. */
 		} lv_attrstr; /* JIT_LVALUE_ATTRSTR */
+
 		struct {
-			DREF DeeObject *li_base;  /* [1..1] Expression base object */
-			DREF DeeObject *li_index; /* [1..1] Item index/key object */
+			DREF DeeObject            *li_base;    /* [1..1] Expression base object */
+			DREF DeeObject            *li_index;   /* [1..1] Item index/key object */
 		} lv_item; /* JIT_LVALUE_ITEM */
+
 		struct {
-			DREF DeeObject *lr_base;  /* [1..1] Expression base object */
-			DREF DeeObject *lr_start; /* [1..1] Range start index object */
-			DREF DeeObject *lr_end;   /* [1..1] Range end index object */
+			DREF DeeObject            *lr_base;    /* [1..1] Expression base object */
+			DREF DeeObject            *lr_start;   /* [1..1] Range start index object */
+			DREF DeeObject            *lr_end;     /* [1..1] Range end index object */
 		} lv_range; /* JIT_LVALUE_RANGE */
-		DREF DeeObject *lv_rvalue;    /* [1..1] JIT_LVALUE_RVALUE */
+
+		DREF DeeObject *lv_rvalue;    /* [1..1] JIT_LVALUE_RVALUE or JIT_LVALUE_THIS */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -396,6 +434,7 @@ INTDEF int FCALL JITLValue_IsBound(JITLValue *__restrict self, JITContext *__res
 INTDEF WUNUSED DREF DeeObject *FCALL JITLValue_GetValue(JITLValue *__restrict self, JITContext *__restrict context);
 INTDEF int FCALL JITLValue_DelValue(JITLValue *__restrict self, JITContext *__restrict context);
 INTDEF int FCALL JITLValue_SetValue(JITLValue *__restrict self, JITContext *__restrict context, DeeObject *__restrict value);
+/* TODO: JITLValue_CallValue() */
 
 
 struct jit_lvalue_list {
@@ -539,15 +578,33 @@ JITLexer_ErrorTrace(JITLexer *__restrict self,
 
 
 
-
+#define JIT_OBJECT_ENTRY_TYPE_LOCAL      0 /* Local variable. */
+#define JIT_OBJECT_ENTRY_TYPE_ATTR       1 /* Unbound (non-static) class member */
+#define JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED 2 /* Bound (static or non-static) class member */
 struct jit_object_entry {
-	/*utf-8*/ char const *oe_namestr; /* [0..oe_namelen] Name of the object
-	                                   * NOTE: `NULL' indicates an unused/sentinal entry;
-	                                   *       `ITER_DONE' indicates a deleted entry. */
-	size_t                oe_namelen; /* Length of the object name. */
-	dhash_t               oe_namehsh; /* Hash of the object name. */
-	DREF DeeObject       *oe_value;   /* [0..1] Value associated with this entry (NULL if unbound). */
+	/*utf-8*/ char const       *oe_namestr;    /* [0..oe_namelen] Name of the object
+	                                            * NOTE: `NULL' indicates an unused/sentinal entry;
+	                                            *       `ITER_DONE' indicates a deleted entry. */
+	size_t                      oe_namelen;    /* Length of the object name. */
+	dhash_t                     oe_namehsh;    /* Hash of the object name. */
+	uintptr_t                   oe_type;       /* Object type (one of `JIT_OBJECT_ENTRY_TYPE_*') */
+	union {
+		DREF DeeObject         *oe_value;      /* [0..1][JIT_OBJECT_TABLE_KIND_NORMAL]
+		                                        * Value associated with this entry (NULL if unbound). */
+
+		struct {
+			DREF DeeTypeObject     *a_class;   /* [1..1][const] The class that is declaring the attribute */
+			struct class_attribute *a_attr;    /* [1..1][const] Attribute descriptor. */
+		}                       oe_attr;       /* JIT_OBJECT_ENTRY_TYPE_ATTR */
+
+		struct {
+			DREF DeeObject         *af_obj;    /* [1..1][const] The object who's members are being referenced. */
+			struct class_attribute *af_attr;   /* [1..1][const] Attribute descriptor. */
+			struct instance_desc   *af_desc;   /* [1..1][const] Instance descriptor. */
+		}                       oe_attr_fixed; /* JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED */
+	};
 };
+
 struct jit_object_table_pointer {
 	JITObjectTable    *otp_tab; /* [0..1] The table that is being referenced. */
 	size_t             otp_ind; /* The number of scopes for which `otp_tab' table is shared.
@@ -555,13 +612,14 @@ struct jit_object_table_pointer {
 	                             * and modifications may only be made to `otp_tab' when this
 	                             * field is ONE(1). */
 };
+
 struct jit_object_table {
 	/* A small, light-weight table for mapping objects to strings
 	 * -> Used to represent local variables in functions. */
 	size_t                          ot_mask; /* Allocated hash-mask. */
 	size_t                          ot_size; /* Number of used + deleted entries. */
 	size_t                          ot_used; /* Number of used entries. */
-	struct jit_object_entry        *ot_list; /* [1..ot_mask + 1][owned_if(!= jit_empty_object_list)]
+	struct jit_object_entry        *ot_list; /* [1..ot_mask + 1][owned_if(ot_list != jit_empty_object_list)]
 	                                          * Object table hash-vector. */
 	struct jit_object_table_pointer ot_prev; /* Previous object table (does not affect utility functions, and
 	                                          * is only used to link between different scoped object tables) */
@@ -573,10 +631,10 @@ INTDEF struct jit_object_entry jit_empty_object_list[1];
 
 /* Initialize/finalize a given JIT object table. */
 #define JITOBJECTTABLE_INIT { 0, 0, 0, jit_empty_object_list }
-#define JITObjectTable_CInit(self) \
-	(ASSERT((self)->ot_mask == 0), \
-	 ASSERT((self)->ot_size == 0), \
-	 ASSERT((self)->ot_used == 0), \
+#define JITObjectTable_CInit(self)                            \
+	(ASSERT((self)->ot_mask == 0),                            \
+	 ASSERT((self)->ot_size == 0),                            \
+	 ASSERT((self)->ot_used == 0),                            \
 	 (self)->ot_list = jit_empty_object_list)
 #define JITObjectTable_Init(self)                             \
 	((self)->ot_mask = (self)->ot_size = (self)->ot_used = 0, \
@@ -592,12 +650,6 @@ INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restric
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_Copy(JITObjectTable *__restrict dst,
                     JITObjectTable const *__restrict src);
-
-/* Insert all elements from `src' into `dst'
- * Existing entires will not be overwritten. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
-                           JITObjectTable const *__restrict src);
 
 /* Update an object within the given object table, potentially overwriting an
  * existing object, or creating a new entry if no existing object could be found.
@@ -890,8 +942,9 @@ JITLexer_ParseModuleName(JITLexer *__restrict self,
  * >> local x = 42;
  *    ^     ^
  */
-INTDEF int DCALL JITLexer_ParseLookupMode(JITLexer *__restrict self,
-                                          unsigned int *__restrict pmode);
+INTDEF int DCALL
+JITLexer_ParseLookupMode(JITLexer *__restrict self,
+                         unsigned int *__restrict pmode);
 
 
 
@@ -1150,6 +1203,7 @@ JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 
 
 
+
 #define JIT_FUNCTION_FNORMAL   0x0000 /* Normal function flags. */
 #define JIT_FUNCTION_FRETEXPR  0x0001 /* The function's source text describes an arrow-like return expression */
 #define JIT_FUNCTION_FYIELDING 0x0002 /* The function's contains a yield statement. */
@@ -1160,7 +1214,8 @@ struct jit_function_object {
 	DREF DeeObject         *jf_source;       /* [1..1][const] The object that owns input text. */
 	DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                                          * When `NULL', code isn't allowed to perform relative imports. */
-	DREF DeeObject         *jf_globals;      /* [0..1] Mapping-like object for global variables. */
+	DREF DeeObject         *jf_globals;      /* [0..1][const] Mapping-like object for global variables. */
+	DREF DeeTypeObject     *jf_thiscall_cls; /* [0..1][const] When non-NULL, the thiscall class type. */
 	JITObjectTable          jf_args;         /* [const] A template for the arguments accepted by this function.
 	                                          *  - NULL-values identify optional arguments
 	                                          * NOTE: The back-pointer of this object table is pointed
@@ -1181,7 +1236,8 @@ struct jit_function_object {
 INTDEF DeeTypeObject JITFunction_Type;
 
 /* Create a new JIT function object by parsing the specified
- * parameter list, and executing the given source region. */
+ * parameter list, and executing the given source region.
+ * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
 INTDEF WUNUSED DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
@@ -1194,6 +1250,10 @@ JITFunction_New(/*utf-8*/ char const *name_start,
                 DeeModuleObject *impbase,
                 DeeObject *globals,
                 uint16_t flags);
+
+#define JIT_FUNCTION_FTHISCALL 0x8000 /* Special flag for `JITFunction_New()': Inject a hidden argument
+                                       * at the start of the parameter-list with the name "this". */
+
 
 /* Add a new symbol entry for an argument to `self->jf_args'
  * This is similar to using `JITObjectTable_Create()', however
@@ -1407,7 +1467,16 @@ INTDEF ATTR_COLD int FCALL syn_class_expected_class_after_final(JITLexer *__rest
 INTDEF ATTR_COLD int FCALL syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_class_expected_lbrace_after_class(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_class_expected_rbrace_after_class(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_class_not_thiscall(JITLexer *__restrict self);
 
+#define ATTR_ACCESS_GET     0
+#define ATTR_ACCESS_DEL     1
+#define ATTR_ACCESS_SET     2
+#define ATTR_ACCESS_MASK    3
+
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_argc(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
 
 DECL_END
 

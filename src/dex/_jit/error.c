@@ -676,6 +676,68 @@ syn_class_expected_rbrace_after_class(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
+INTERN ATTR_COLD int FCALL
+syn_class_not_thiscall(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "`this' or `super' are only allowed in thiscall functions");
+}
+
+
+
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+err_invalid_argc(char const *function_name, size_t argc_cur,
+                 size_t argc_min, size_t argc_max) {
+	if (argc_min == argc_max) {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects %Iu arguments when %Iu w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
+	} else {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects between %Iu and %Iu arguments when %Iu w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
+	}
+}
+
+
+PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
+get_desc_name(struct class_desc *__restrict desc) {
+	return desc->cd_desc->cd_name
+	       ? DeeString_STR(desc->cd_desc->cd_name)
+	       : "<unnamed>";
+}
+
+PRIVATE char const access_names[4][4] = {
+	/* [ATTR_ACCESS_GET] = */ "get",
+	/* [ATTR_ACCESS_DEL] = */ "del",
+	/* [ATTR_ACCESS_SET] = */ "set",
+	/* [?]               = */ "",
+};
+
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_cant_access_attribute_c(struct class_desc *__restrict desc,
+                            char const *__restrict name,
+                            int access) {
+	ASSERT(desc);
+	ASSERT(name);
+	return DeeError_Throwf(&DeeError_AttributeError,
+	                       "Cannot %s attribute `%s.%s'",
+	                       access_names[access & ATTR_ACCESS_MASK],
+	                       get_desc_name(desc), name);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name) {
+	ASSERT(desc);
+	ASSERT(name);
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "Unbound attribute `%s.%s'",
+	                       get_desc_name(desc), name);
+}
+
 DECL_END
 
 #endif /* !GUARD_DEX_JIT_ERROR_C */
