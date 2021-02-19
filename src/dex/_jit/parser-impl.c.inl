@@ -1976,10 +1976,13 @@ err_result_copy:
 						if unlikely(!oo_class)
 							goto err_r;
 						if (DeeType_Check(oo_class) && oo_class->tp_class) {
-							/* Check if `oo_class' contains an instance-member `attr_name' */
+							/* Check if `oo_class' contains an instance-member `attr_name'
+							 * that had been declared as `private' or `final'. If it does,
+							 * then we _must_ (as per the specs) access that attribute
+							 * statically, rather than dynamically! */
 							struct class_attribute *attrib;
 							attrib = DeeClass_QueryClassAttributeStringLen(oo_class, attr_name, attr_size);
-							if (attrib != NULL) {
+							if (attrib != NULL && (attrib->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
 								/* Yes, it does! -> Construct an l-value reference to the accessed instance member. */
 								JITLexer_Yield(self);
 								self->jl_lvalue.lv_kind = JIT_LVALUE_CLSATTRIB;
