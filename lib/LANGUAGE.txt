@@ -2838,27 +2838,27 @@ class MyClass {
 }
 
 function worker(self: MyClass) {
-	print self.private_member;                      /* Runtime-error (private member accessed) */
-	print self.operator . ("private_member");       /* Runtime-error (private member accessed) */
-	print self.private_final_member;                /* Runtime-error (private member accessed) */
-	print self.operator . ("private_final_member"); /* Runtime-error (private member accessed) */
-	print self.public_member;                       /* Implementation-specific */
-	print self.operator . ("public_member");        /* Implementation-specific */
+	print self.private_member;                      /* Dynamic -- Runtime-error (private member accessed) */
+	print self.operator . ("private_member");       /* Dynamic -- Runtime-error (private member accessed) */
+	print self.private_final_member;                /* Dynamic -- Runtime-error (private member accessed) */
+	print self.operator . ("private_final_member"); /* Dynamic -- Runtime-error (private member accessed) */
+	print self.public_member;                       /* Dynamic */
+	print self.operator . ("public_member");        /* Dynamic */
 	print self.public_final_member;                 /* Implementation-specific */
 	print self.operator . ("public_final_member");  /* Implementation-specific */
-	print self.missing_symbol;                      /* Dynamic */
-	print self.operator . ("missing_symbol");       /* Dynamic */
+	print self.missing_symbol;                      /* Dynamic -- Runtime-error (unknown member) */
+	print self.operator . ("missing_symbol");       /* Dynamic -- Runtime-error (unknown member) */
 }
 
 function worker2(self: Object) {
-	print self.private_member;                                  /* Runtime-error (private member accessed) */
-	print self.operator . ("private_member");                   /* Runtime-error (private member accessed) */
-	print self.private_final_member;                            /* Runtime-error (private member accessed) */
-	print self.operator . ("private_final_member");             /* Runtime-error (private member accessed) */
+	print self.private_member;                                  /* Dynamic -- Runtime-error (private member accessed) */
+	print self.operator . ("private_member");                   /* Dynamic -- Runtime-error (private member accessed) */
+	print self.private_final_member;                            /* Dynamic -- Runtime-error (private member accessed) */
+	print self.operator . ("private_final_member");             /* Dynamic -- Runtime-error (private member accessed) */
 	print self.public_member;                                   /* Dynamic */
 	print self.operator . ("public_member");                    /* Dynamic */
-	print self.public_final_member;                             /* Dynamic */
-	print self.operator . ("public_final_member");              /* Dynamic */
+	print self.public_final_member;                             /* Dynamic (if `worker2' is inlined below, this is allowed to become Static then) */
+	print self.operator . ("public_final_member");              /* Dynamic (if `worker2' is inlined below, this is allowed to become Static then) */
 	print self.missing_symbol;                                  /* Dynamic */
 	print self.operator . ("missing_symbol");                   /* Dynamic */
 	print MyClass.public_member.get(self);                      /* Static */
