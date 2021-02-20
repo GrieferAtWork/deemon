@@ -431,7 +431,7 @@ parser_setlfstmt(DeeCompilerWrapperObject *self,
                  DeeObject *value) {
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	if (newval) {
 		parser_flags |= PARSE_FLFSTMT;
@@ -440,6 +440,8 @@ parser_setlfstmt(DeeCompilerWrapperObject *self,
 	}
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE struct type_getset tpconst parser_getsets[] = {

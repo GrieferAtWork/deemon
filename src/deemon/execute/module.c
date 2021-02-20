@@ -124,10 +124,10 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	/* Check if this module has been loaded. */
 	if unlikely(DeeModule_InitImports(self))
-		return NULL;
+		goto err;
 	result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	rwlock_read(&me->mo_lock);
 	result->fo_code = me->mo_root;
 	Dee_XIncref(result->fo_code);
@@ -147,6 +147,8 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 		} while (!ATOMIC_CMPXCH_WEAK(me->mo_flags, flags, flags | MODULE_FDIDINIT));
 	}
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 
@@ -165,7 +167,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 	 * when reading the bucket fields below, as they only
 	 * become immutable once this flag has been set. */
 	if unlikely(!(self->mo_flags & MODULE_FDIDLOAD))
-		return NULL;
+		goto err;
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
 	for (; iter != end; ++iter) {
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))
@@ -181,6 +183,8 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 		}
 	}
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
@@ -1014,29 +1018,36 @@ PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 	uint16_t flags;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	flags = ATOMIC_READ(me->mo_flags);
+
 	/* Quick check: When the did-init flag has been set, we can
 	 *              assume that all other modules imported by
 	 *              this one have also been initialized. */
 	if (flags & MODULE_FDIDINIT)
-		return 0;
+		goto done;
+
 	/* Make sure not to tinker with the imports of an interactive module. */
 	if (flags & MODULE_FINITIALIZING &&
 	    DeeInteractiveModule_Check(self))
-		return 0;
+		goto done;
+
 	/* Make sure the module has been loaded. */
-	if unlikely(!(flags & MODULE_FDIDLOAD)) {
-		/* The module hasn't been loaded yet. */
-		err_module_not_loaded(me);
-		return -1;
-	}
+	if unlikely(!(flags & MODULE_FDIDLOAD))
+		goto err_not_loaded; /* The module hasn't been loaded yet. */
+
 	/* Go though and run initializers for all imported modules. */
 	for (i = 0; i < me->mo_importc; ++i) {
 		DeeModuleObject *import = me->mo_importv[i];
 		ASSERT_OBJECT_TYPE(import, &DeeModule_Type);
 		if unlikely(DeeModule_RunInit((DeeObject *)import) < 0)
-			return -1;
+			goto err;
 	}
+
+done:
 	return 0;
+err_not_loaded:
+	err_module_not_loaded(me);
+err:
+	return -1;
 }
 
 
@@ -1409,10 +1420,13 @@ module_class_open(DeeObject *UNUSED(self),
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */
 	DeeObject *module_name;
-	if (DeeArg_Unpack(argc, argv, "o:open", &module_name) ||
-	    DeeObject_AssertTypeExact(module_name, &DeeString_Type))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:open", &module_name))
+		goto err;
+	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
+		goto err;
 	return DeeModule_Import(module_name, NULL, true);
+err:
+	return NULL;
 }
 
 
@@ -1565,16 +1579,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_eq(DeeModuleObject *self,
           DeeModuleObject *other) {
 	if (DeeObject_AssertType(other, &DeeModule_Type))
-		return NULL;
+		goto err;
 	return_bool_(self == other);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_ne(DeeModuleObject *self,
           DeeModuleObject *other) {
 	if (DeeObject_AssertType(other, &DeeModule_Type))
-		return NULL;
+		goto err;
 	return_bool_(self != other);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp module_cmp = {

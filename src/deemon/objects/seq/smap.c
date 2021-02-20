@@ -180,12 +180,15 @@ done:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq) ||
-	    DeeObject_AssertTypeExact(self->si_seq, &SharedMap_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->si_seq, &SharedMap_Type))
+		goto err;
 	Dee_Incref(self->si_seq);
 	self->si_index = 0;
 	return 0;
+err:
+	return -1;
 }
 
 INTDEF NONNULL((1)) void DCALL
@@ -369,7 +372,7 @@ again_search:
 		Dee_Decref(item_key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
-				return NULL;
+				goto err;
 			return_true;
 		}
 	}
@@ -402,7 +405,7 @@ again_search:
 				if (temp != 0) {
 					Dee_Decref(item_key);
 					if unlikely(temp < 0)
-						return NULL;
+						goto err;
 					return_true; /* Found it! */
 				}
 			}
@@ -418,6 +421,8 @@ endread_and_not_found:
 	rwlock_endread(&self->sm_lock);
 not_found:
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

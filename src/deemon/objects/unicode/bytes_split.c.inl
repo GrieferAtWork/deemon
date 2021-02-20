@@ -810,8 +810,9 @@ blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	BytesLineSplit *ls;
 	self->blsi_keepends = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplitIterator", &ls, &self->blsi_keepends) ||
-	    DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
+	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplitIterator", &ls, &self->blsi_keepends))
+		goto err;
+	if (DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
 		goto err;
 	self->blsi_bytes = ls->bls_bytes;
 	self->blsi_iter  = DeeBytes_DATA(self->blsi_bytes);

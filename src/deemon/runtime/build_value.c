@@ -457,15 +457,15 @@ has_length:
 		string_length = strlen(string);
 		goto do_string;
 	case '.':
-#if !defined(__SIZEOF_INT__) || !defined(__SIZEOF_SIZE_T__) || \
-            (__SIZEOF_INT__ != __SIZEOF_SIZE_T__)
+#if (!defined(__SIZEOF_INT__) || !defined(__SIZEOF_SIZE_T__) || \
+     (__SIZEOF_INT__ != __SIZEOF_SIZE_T__))
 		if (*format == '*') {
 			string_length = (size_t)va_arg(pargs->vl_ap, unsigned int);
 			goto do_strnlen;
 		} else if (*format == '?')
-#else
+#else /* ... */
 		if (*format == '*' || *format == '?')
-#endif
+#endif /* !... */
 		{
 			string_length = va_arg(pargs->vl_ap, size_t);
 do_strnlen:
@@ -545,7 +545,7 @@ again:
 		/* Unpack a sequence. */
 		iterator = DeeObject_IterSelf(self);
 		if unlikely(!iterator)
-			return -1;
+			goto err;
 		is_optional = false, fmt_start = format, argc = 0;
 		while (*format) {
 			if (*format == '|') {
@@ -554,7 +554,7 @@ again:
 			}
 			elem = DeeObject_IterNext(iterator);
 			if unlikely(!elem)
-				return -1;
+				goto err;
 			if (elem == ITER_DONE) {
 				if (!is_optional && *format && *format != ')')
 					goto invalid_argc2;
@@ -625,7 +625,7 @@ invalid_argc2:
 		      ? (void *)DeeString_As2Byte(self)
 		      : (void *)DeeString_As4Byte(self);
 		if unlikely(!str)
-			return -1;
+			goto err;
 		format += 3;
 		*va_arg(pargs->vl_ap, void **) = str;
 	}	break;
@@ -633,14 +633,14 @@ invalid_argc2:
 
 	case 's': /* Store a string. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
-			return -1;
+			goto err;
 		*va_arg(pargs->vl_ap, char **) = DeeString_STR(self);
 		break;
 
 	case '$': {
 		void *str; /* Store a string, including its length. */
 		if (DeeObject_AssertTypeExact(self, &DeeString_Type))
-			return -1;
+			goto err;
 		if (*format == 'U') {
 			ASSERTF((format[1] == '1' && format[2] == '6') ||
 			        (format[1] == '3' && format[2] == '2'),
@@ -653,7 +653,7 @@ invalid_argc2:
 			str = DeeString_AsUtf8(self);
 		}
 		if unlikely(!str)
-			return -1;
+			goto err;
 		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *pformat);
 		++format;
 		*va_arg(pargs->vl_ap, size_t *) = WSTR_LENGTH(str);
@@ -668,7 +668,7 @@ invalid_argc2:
 	case 'f':
 	case 'D':
 		if (DeeObject_AsDouble(self, &value))
-			return -1;
+			goto err;
 		if (format[-1] == 'f')
 			*va_arg(pargs->vl_ap, float *) = (float)value;
 		else if (format[-2] != 'L')
@@ -703,10 +703,10 @@ invalid_argc2:
 			void *str;
 			/* Wide-character string. */
 			if (DeeObject_AssertTypeExact(self, &DeeString_Type))
-				return -1;
+				goto err;
 			str = DeeString_AsWide(self);
 			if unlikely(!str)
-				return -1;
+				goto err;
 			*va_arg(pargs->vl_ap, void **) = str;
 			break;
 		}
@@ -1087,7 +1087,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 			}
 			if (!*format || *format == ':') {
 				ASSERTF(!kwlist->k_name, "Keyword list too long");
-				goto invalid_argc; /* Too many arguments. */
+				goto err_invalid_argc; /* Too many arguments. */
 			}
 			temp = Dee_VPUnpackf(*argv++, (char const **)&format, pargs);
 			if unlikely(temp)
@@ -1113,7 +1113,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 					 * In this case we should do a fuzzy match and
 					 * warn the caller that instead of `baz', they
 					 * probably meant `bar' */
-					goto invalid_argc; /* Too many arguments. */
+					goto err_invalid_argc; /* Too many arguments. */
 				}
 				break;
 			}
@@ -1167,7 +1167,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 					 * In this case we should do a fuzzy match and
 					 * warn the caller that instead of `baz', they
 					 * probably meant `bar' */
-					goto invalid_argc; /* Too few arguments. */
+					goto err_invalid_argc; /* Too few arguments. */
 				}
 			}
 			++kwlist;
@@ -1184,7 +1184,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 		}
 		if (!*format || *format == ':') {
 			ASSERTF(!kwlist->k_name, "Keyword list too long");
-			goto invalid_argc; /* Too many arguments. */
+			goto err_invalid_argc; /* Too many arguments. */
 		}
 		temp = Dee_VPUnpackf(*argv++, (char const **)&format, pargs);
 		if unlikely(temp)
@@ -1253,12 +1253,12 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 	{
 		size_t kw_size = DeeObject_Size(kw);
 		if unlikely(kw_size == (size_t)-1)
-			return -1;
+			goto err;
 		if (kw_argc != kw_size)
-			goto invalid_argc;
+			goto err_invalid_argc;
 	}
 	return 0;
-invalid_argc:
+err_invalid_argc:
 	{
 		size_t argc_min, argc_max;
 		format   = fmt_start;
@@ -1272,8 +1272,10 @@ invalid_argc:
 		else {
 			format = NULL;
 		}
-		return err_invalid_argc(format, argc, argc_min, argc_max);
+		err_invalid_argc(format, argc, argc_min, argc_max);
 	}
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((4, 5)) int

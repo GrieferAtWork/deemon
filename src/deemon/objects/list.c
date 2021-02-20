@@ -476,7 +476,7 @@ DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *self,
 	result = DeeList_Copy(self);
 	Dee_Decref(self);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	if unlikely(DeeList_AppendSequence(result, sequence))
 		Dee_Clear(result);
 	return result;
@@ -1346,7 +1346,7 @@ again:
 		error = DeeObject_CompareEq(elem, list_elem);
 		Dee_Decref(list_elem);
 		if unlikely(error < 0)
-			return NULL;
+			goto err;
 		if (error)
 			return_true;
 		DeeList_LockRead(self);
@@ -1357,6 +1357,8 @@ again:
 	}
 	DeeList_LockEndRead(self);
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1364,18 +1366,20 @@ list_getitem(List *self, DeeObject *index) {
 	size_t i;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index, &i))
-		return NULL;
+		goto err;
 	DeeList_LockRead(self);
 	if unlikely(i >= DeeList_SIZE(self)) {
 		size_t list_size = DeeList_SIZE(self);
 		DeeList_LockEndRead(self);
 		err_index_out_of_bounds((DeeObject *)self, i, list_size);
-		return NULL;
+		goto err;
 	}
 	result = DeeList_GET(self, i);
 	Dee_Incref(result);
 	DeeList_LockEndRead(self);
 	return result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2327,19 +2331,28 @@ INTDEF struct keyword seq_resize_kwlist[];
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_append(List *self, size_t argc, DeeObject *const *argv) {
 	/* Optimize for the case of a single object to-be appended. */
-	if (likely(argc == 1) ? DeeList_Append((DeeObject *)self, argv[0])
-	                      : DeeList_AppendVector((DeeObject *)self, argc, argv))
-		return NULL;
+	if likely(argc == 1) {
+		if (DeeList_Append((DeeObject *)self, argv[0]))
+			goto err;
+	} else {
+		if (DeeList_AppendVector((DeeObject *)self, argc, argv))
+			goto err;
+	}
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_extend(List *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *extension;
-	if (DeeArg_Unpack(argc, argv, "o:extend", &extension) ||
-	    DeeList_AppendSequence((DeeObject *)self, extension))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:extend", &extension))
+		goto err;
+	if (DeeList_AppendSequence((DeeObject *)self, extension))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2347,10 +2360,13 @@ list_insert(List *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Iuo:insert", &index, &item) ||
-	    DeeList_Insert((DeeObject *)self, index, item))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Iuo:insert", &index, &item))
+		goto err;
+	if (DeeList_Insert((DeeObject *)self, index, item))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2358,10 +2374,13 @@ list_insertall(List *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, "Ido:insertall", &index, &items) ||
-	    DeeList_InsertSequence((DeeObject *)self, index, items))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, "Ido:insertall", &index, &items))
+		goto err;
+	if (DeeList_InsertSequence((DeeObject *)self, index, items))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2384,10 +2403,13 @@ list_insertiter_deprecated(List *self,
                            size_t argc, DeeObject *const *argv) {
 	size_t index;
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "Ido:insert_iter", &index, &seq) ||
-	    DeeList_InsertIterator((DeeObject *)self, index, seq))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "Ido:insert_iter", &index, &seq))
+		goto err;
+	if (DeeList_InsertIterator((DeeObject *)self, index, seq))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2395,11 +2417,13 @@ list_erase(List *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	size_t index, count = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Iu|Iu:erase", &index, &count))
-		return NULL;
+		goto err;
 	count = DeeList_Erase((DeeObject *)self, index, count);
 	if unlikely(count == (size_t)-1)
-		return NULL;
+		goto err;
 	return DeeInt_NewSize(count);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2419,16 +2443,20 @@ list_pop(List *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	dssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|Id:pop", &index))
-		return NULL;
+		goto err;
 	return DeeList_Pop((DeeObject *)self, index);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 list_clear(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
-		return NULL;
+		goto err;
 	DeeList_Clear((DeeObject *)self);
 	return_none;
+err:
+	return NULL;
 }
 
 #ifdef CONFIG_NO_THREADS
@@ -2440,9 +2468,11 @@ list_clear(List *self, size_t argc, DeeObject *const *argv) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sizeof(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		return NULL;
+		goto err;
 	return DeeInt_NewSize(sizeof(List) +
 	                      (WEAK_READSIZE(self) * sizeof(DeeObject *)));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2649,8 +2679,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_pushfront(List *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item) ||
-	    DeeList_Insert((DeeObject *)self, 0, item))
+	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item))
+		goto err;
+	if (DeeList_Insert((DeeObject *)self, 0, item))
 		goto err;
 	return_none;
 err:
@@ -2725,9 +2756,11 @@ DeeList_Reverse(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_reverse(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":reverse"))
-		return NULL;
+		goto err;
 	DeeList_Reverse((DeeObject *)self);
 	return_none;
+err:
+	return NULL;
 }
 
 

@@ -373,7 +373,7 @@ got_result:
 			result = ast_constexpr(Dee_None);
 got_result_maybe:
 			if unlikely(!result)
-				return NULL;
+				goto err;
 			goto got_result;
 		}
 		if (flags == AST_FMULTIPLE_TUPLE ||
@@ -391,6 +391,8 @@ got_result_maybe:
 		INIT_REF(result);
 	}
 	return result;
+err:
+	return NULL;
 }
 
 DEFINE_AST_GENERATOR(ast_return,
@@ -465,7 +467,7 @@ DEFINE_AST_GENERATOR(ast_tryfinally,
 	/* Allocate the catch-expression vector inherited by `a_try' upon success. */
 	catchv = (struct catch_expr *)Dee_Malloc(1 * sizeof(struct catch_expr));
 	if unlikely(!catchv)
-		return NULL;
+		goto err;
 	catchv[0].ce_code  = finally_expression;         /* Reference is incremented later. */
 	catchv[0].ce_flags = EXCEPTION_HANDLER_FFINALLY; /* Regular, old finally-handler. */
 	catchv[0].ce_mask  = NULL;                       /* Regular finally-handlers don't have masks. */
@@ -474,10 +476,14 @@ DEFINE_AST_GENERATOR(ast_tryfinally,
 #else /* CONFIG_NO_AST_DEBUG */
 	result = ast_try_d(file, line, guarded_expression, 1, catchv);
 #endif /* !CONFIG_NO_AST_DEBUG */
-	if unlikely(!result)
+	if unlikely(!result) {
 		Dee_Free(catchv);
-	else ast_incref(finally_expression);
+	} else {
+		ast_incref(finally_expression);
+	}
 	return result;
+err:
+	return NULL;
 }
 
 DEFINE_AST_GENERATOR(ast_loop,

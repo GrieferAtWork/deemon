@@ -454,8 +454,10 @@ again:
 		}
 	}
 	if (!GCSetMaker_Rehash(self))
-		return -1;
+		goto err;
 	goto again;
+err:
+	return -1;
 }
 
 

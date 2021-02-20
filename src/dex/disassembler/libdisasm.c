@@ -135,10 +135,12 @@ libdisasm_public_printcode_f(size_t argc,
 		flags_ob = fp;
 		fp       = NULL;
 	}
-	if (flags_ob &&
-	    (DeeObject_AssertTypeExact(flags_ob, &DeeString_Type) ||
-	     parse_asm_flags(DeeString_STR(flags_ob), &flags)))
-		goto err;
+	if (flags_ob) {
+		if (DeeObject_AssertTypeExact(flags_ob, &DeeString_Type))
+			goto err;
+		if (parse_asm_flags(DeeString_STR(flags_ob), &flags))
+			goto err;
+	}
 	if (!fp) {
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		error = libdisasm_printcode(&unicode_printer_print,

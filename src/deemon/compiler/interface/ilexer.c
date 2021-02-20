@@ -1049,12 +1049,14 @@ lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
                 DeeObject *__restrict value) {
 	uint32_t new_flags;
 	if (DeeObject_AsUInt32(value, &new_flags))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= new_flags & ~TPPLEXER_FLAG_MERGEMASK;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
@@ -1140,11 +1142,13 @@ lexer_set_eofparen(DeeCompilerWrapperObject *__restrict self,
                    DeeObject *__restrict value) {
 	size_t new_eofparen;
 	if (DeeObject_AsSize(value, &new_eofparen))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_eof_paren = new_eofparen;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1259,11 +1263,13 @@ lexer_set_macrolimit(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_macrolimit;
 	if (DeeObject_AsSize(value, &new_macrolimit))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_limit_mrec = new_macrolimit;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1288,11 +1294,13 @@ lexer_set_includelimit(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_includelimit;
 	if (DeeObject_AsSize(value, &new_includelimit))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_limit_incl = new_includelimit;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1317,11 +1325,13 @@ lexer_set_warningcount(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_warningcount;
 	if (DeeObject_AsSize(value, &new_warningcount))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_warncount = new_warningcount;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1346,11 +1356,13 @@ lexer_set_errorcount(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_errorcount;
 	if (DeeObject_AsSize(value, &new_errorcount))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_errorcount = new_errorcount;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1375,11 +1387,13 @@ lexer_set_maxerrors(DeeCompilerWrapperObject *__restrict self,
                     DeeObject *__restrict value) {
 	size_t new_maxerrors;
 	if (DeeObject_AsSize(value, &new_maxerrors))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_maxerrors = new_maxerrors;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1404,11 +1418,13 @@ lexer_set_tabsize(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	size_t new_tabsize;
 	if (DeeObject_AsSize(value, &new_tabsize))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_tabsize = new_tabsize;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1433,11 +1449,13 @@ lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	int64_t new_counter;
 	if (DeeObject_AsInt64(value, &new_counter))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_counter = new_counter;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -2057,8 +2075,9 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getkwd", &name, &create) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getkwd", &name, &create))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	name_utf8 = DeeString_AsUtf8(name);
 	if unlikely(!name_utf8)
@@ -2096,8 +2115,9 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getxkwd", &name, &create) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getxkwd", &name, &create))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	name_utf8 = DeeString_AsUtf8(name);
 	if unlikely(!name_utf8)
@@ -2154,9 +2174,12 @@ lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv)
 	int error;
 	char *utf8_name;
 	uint16_t old_exceptsz;
-	if (DeeArg_Unpack(argc, argv, "o:undef", &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    (utf8_name = DeeString_AsUtf8(name)) == NULL)
+	if (DeeArg_Unpack(argc, argv, "o:undef", &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2178,11 +2201,17 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
 	bool builtin = false;
 	uint16_t old_exceptsz;
 	PRIVATE struct keyword kwlist[] = { K(name), K(value), K(builtin), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|b:define", &name, &value, &builtin) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact(value, &DeeString_Type) ||
-	    (utf8_name = DeeString_AsUtf8(name)) == NULL ||
-	    (utf8_value = DeeString_AsUtf8(value)) == NULL)
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|b:define", &name, &value, &builtin))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+		goto err;
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	utf8_value = DeeString_AsUtf8(value);
+	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2206,11 +2235,17 @@ lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
 	int error;
 	char *utf8_name, *utf8_value;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "oo:addassert", &name, &value) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact(value, &DeeString_Type) ||
-	    (utf8_name = DeeString_AsUtf8(name)) == NULL ||
-	    (utf8_value = DeeString_AsUtf8(value)) == NULL)
+	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "oo:addassert", &name, &value))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+		goto err;
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	utf8_value = DeeString_AsUtf8(value);
+	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2231,12 +2266,20 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
 	int error;
 	char *utf8_name, *utf8_value = NULL;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "o|o:delassert", &name, &value) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    (value && DeeObject_AssertTypeExact(value, &DeeString_Type)) ||
-	    (utf8_name = DeeString_AsUtf8(name)) == NULL ||
-	    (value && (utf8_value = DeeString_AsUtf8(value)) == NULL))
+	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "o|o:delassert", &name, &value))
 		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	if (value) {
+		if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+			goto err;
+		utf8_value = DeeString_AsUtf8(value);
+		if unlikely(!utf8_value)
+			goto err;
+	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	COMPILER_BEGIN(self->cw_compiler);
 	error = TPPLexer_DelAssert(utf8_name, WSTR_LENGTH(utf8_name),
@@ -2407,7 +2450,7 @@ lexer_keywords_getitem(DeeCompilerWrapperObject *self,
 	DREF DeeObject *result;
 	struct TPPKeyword *kwd;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
-		return NULL;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	kwd = TPPLexer_LookupKeyword(DeeString_STR(name),
 	                             DeeString_SIZE(name),
@@ -2419,6 +2462,8 @@ lexer_keywords_getitem(DeeCompilerWrapperObject *self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_seq lexer_keywords_seq = {
@@ -2619,9 +2664,12 @@ lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	int result;
 	DeeObject *path;
 	char *utf8, *copy;
-	if (DeeArg_Unpack(argc, argv, "o:insert", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
-	    (utf8 = DeeString_AsUtf8(path)) == NULL)
+	if (DeeArg_Unpack(argc, argv, "o:insert", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	utf8 = DeeString_AsUtf8(path);
+	if unlikely(!utf8)
 		goto err;
 	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
 	if unlikely(!copy)
@@ -2643,9 +2691,12 @@ lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	int result;
 	DeeObject *path;
 	char *utf8, *copy;
-	if (DeeArg_Unpack(argc, argv, "o:remove", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
-	    (utf8 = DeeString_AsUtf8(path)) == NULL)
+	if (DeeArg_Unpack(argc, argv, "o:remove", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	utf8 = DeeString_AsUtf8(path);
+	if unlikely(!utf8)
 		goto err;
 	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
 	if unlikely(!copy)
@@ -2926,11 +2977,13 @@ token_setid(DeeCompilerWrapperObject *__restrict self,
             DeeObject *__restrict value) {
 	int new_id;
 	if (DeeObject_AsInt(value, &new_id))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_token.t_id = new_id;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2955,11 +3008,13 @@ token_setnum(DeeCompilerWrapperObject *__restrict self,
              DeeObject *__restrict value) {
 	unsigned long new_num;
 	if (DeeObject_AsULong(value, &new_num))
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_token.t_num = new_num;
 	COMPILER_END();
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3136,14 +3191,18 @@ token_eq(DeeCompilerWrapperObject *self,
 	bool result;
 	char const *other_utf8;
 	tok_t other_id;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type) ||
-	    (other_utf8 = DeeString_AsUtf8(other)) == NULL)
-		return NULL;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	other_utf8 = DeeString_AsUtf8(other);
+	if unlikely(!other_utf8)
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	other_id = get_token_from_str(other_utf8, false);
 	result   = tok == other_id;
 	COMPILER_END();
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3152,14 +3211,18 @@ token_ne(DeeCompilerWrapperObject *self,
 	bool result;
 	char const *other_utf8;
 	tok_t other_id;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type) ||
-	    (other_utf8 = DeeString_AsUtf8(other)) == NULL)
-		return NULL;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	other_utf8 = DeeString_AsUtf8(other);
+	if unlikely(!other_utf8)
+		goto err;
 	COMPILER_BEGIN(self->cw_compiler);
 	other_id = get_token_from_str(other_utf8, false);
 	result   = tok != other_id;
 	COMPILER_END();
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp token_cmp = {

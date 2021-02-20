@@ -2510,11 +2510,13 @@ split_nul_string(/*inherit(always)*/ DREF DeeObject *str) {
 	DREF DeeObject *result;
 	DeeObject *argv[1];
 	if unlikely(!str)
-		return NULL;
+		goto err;
 	argv[0] = (DeeObject *)&str_nul;
 	result = DeeObject_CallAttrString(str, "split", 1, argv);
 	Dee_Decref(str);
 	return result;
+err:
+	return NULL;
 }
 
 

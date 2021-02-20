@@ -154,8 +154,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
-		return NULL;
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {

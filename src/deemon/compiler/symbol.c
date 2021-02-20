@@ -1495,7 +1495,7 @@ lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 	DeeScopeObject *iter;
 	/* Make sure to return `NULL' when `nth' was zero. */
 	if unlikely(!nth--)
-		return NULL;
+		goto nope;
 	iter = current_scope;
 	for (; iter; iter = iter->s_prev) {
 		struct symbol *result;
@@ -1514,6 +1514,7 @@ lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 			result = result->s_next;
 		}
 	}
+nope:
 	return NULL;
 }
 
@@ -1522,8 +1523,9 @@ INTERN struct symbol *DCALL
 new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	ASSERT(name);
-	if unlikely((result = sym_alloc()) == NULL)
-		return NULL;
+	result = sym_alloc();
+	if unlikely(!result)
+		goto err;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1561,13 +1563,15 @@ set_default_location:
 err_r:
 	--current_scope->s_mapc;
 	sym_free(result);
+err:
 	return NULL;
 }
 
 INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 	struct symbol *result;
-	if unlikely((result = sym_alloc()) == NULL)
-		return NULL;
+	result = sym_alloc();
+	if unlikely(!result)
+		goto err;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1587,13 +1591,16 @@ INTERN struct symbol *DCALL new_unnamed_symbol(void) {
 	result->s_scope       = current_scope;
 	result->s_decl.l_file = NULL;
 	return result;
+err:
+	return NULL;
 }
 
 INTERN struct symbol *DCALL
 new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	struct symbol *result;
-	if unlikely((result = sym_alloc()) == NULL)
-		return NULL;
+	result = sym_alloc();
+	if unlikely(!result)
+		goto err;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1613,6 +1620,8 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	result->s_scope       = scope;
 	result->s_decl.l_file = NULL;
 	return result;
+err:
+	return NULL;
 }
 
 INTERN struct symbol *DCALL
@@ -1621,8 +1630,9 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
                           struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	ASSERT(name);
-	if unlikely((result = sym_alloc()) == NULL)
-		return NULL;
+	result = sym_alloc();
+	if unlikely(!result)
+		goto err;
 #ifndef NDEBUG
 	memset(result, 0xcc, sizeof(struct symbol));
 #endif /* !NDEBUG */
@@ -1660,6 +1670,7 @@ set_default_location:
 err_r:
 	--scope->s_mapc;
 	sym_free(result);
+err:
 	return NULL;
 }
 
@@ -1786,20 +1797,23 @@ lookup_label(struct TPPKeyword *__restrict name) {
 			result = result->tl_next;
 		}
 	}
-	if (current_basescope->bs_lblc >= current_basescope->bs_lbla &&
-	    rehash_labels())
-		return NULL;
+	if (current_basescope->bs_lblc >= current_basescope->bs_lbla) {
+		if (rehash_labels())
+			goto err;
+	}
 	ASSERT(current_basescope->bs_lbla);
 	presult = &current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
 	result  = lbl_alloc();
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->tl_next = *presult;
 	result->tl_name = name;
 	result->tl_asym = NULL;
 	result->tl_goto = 0;
 	*presult        = result;
 	return result;
+err:
+	return NULL;
 }
 
 INTERN struct text_label *DCALL

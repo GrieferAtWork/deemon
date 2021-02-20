@@ -332,8 +332,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 relaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq) ||
-	    DeeObject_AssertTypeExact(reseq, &ReLocateAll_Type))
+	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq))
+		goto err;
+	if (DeeObject_AssertTypeExact(reseq, &ReLocateAll_Type))
 		goto err;
 	memcpy(&self->re_data, &reseq->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
@@ -385,7 +386,7 @@ again:
 	                         &range,
 	                         self->re_args.re_flags);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	if (!error) {
 		rwlock_write(&self->re_lock);
 		if (dataptr != self->re_args.re_dataptr ||
@@ -411,6 +412,8 @@ again:
 	return DeeString_NewUtf8(range.rr_start,
 	                         (size_t)(range.rr_end - range.rr_start),
 	                         STRING_ERROR_FIGNORE);
+err:
+	return NULL;
 }
 
 INTERN DeeTypeObject ReLocateAllIterator_Type = {
@@ -470,8 +473,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
-	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq) ||
-	    DeeObject_AssertTypeExact(reseq, &ReSplit_Type))
+	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq))
+		goto err;
+	if (DeeObject_AssertTypeExact(reseq, &ReSplit_Type))
 		goto err;
 	memcpy(&self->re_data, &reseq->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
@@ -524,7 +528,7 @@ again:
 	                         &range,
 	                         self->re_args.re_flags);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	if (!error) {
 		rwlock_write(&self->re_lock);
 		if (dataptr != self->re_args.re_dataptr ||
@@ -551,6 +555,8 @@ again:
 	return DeeString_NewUtf8(dataptr,
 	                         (size_t)(range.rr_start - dataptr),
 	                         STRING_ERROR_FIGNORE);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -628,9 +634,11 @@ refa_init(ReSequence *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	String *rules = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o" /*":_ReFindAll"*/,
-	                  &self->re_data, &self->re_pattern, &rules) ||
-	    DeeObject_AssertTypeExact(self->re_data, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact(self->re_pattern, &DeeString_Type))
+	                  &self->re_data, &self->re_pattern, &rules))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->re_data, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->re_pattern, &DeeString_Type))
 		goto err;
 	self->re_args.re_flags = Dee_REGEX_FNORMAL;
 	if (rules) {
@@ -720,8 +728,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refa_size(ReSequence *__restrict self) {
 	size_t result = refa_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
-		return NULL;
+		goto err;
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 
@@ -971,8 +981,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 resp_size(ReSequence *__restrict self) {
 	size_t result = resp_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
-		return NULL;
+		goto err;
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 

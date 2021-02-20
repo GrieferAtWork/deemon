@@ -111,8 +111,8 @@ DECL_BEGIN
 PUBLIC WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 	DREF DeeObject *attr;
-#if defined(DeeSysFS_IS_HANDLE) || \
-   (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle))
+#if (defined(DeeSysFS_IS_HANDLE) || \
+     (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
 	if (DeeFile_Check(ob)) {
 		DeeSysFD sysfd;
 		sysfd = DeeFile_GetSysFD(ob);
@@ -214,8 +214,8 @@ PUBLIC WUNUSED int
 (DCALL DeeNTSystem_TryGetHandle)(DeeObject *__restrict ob,
                                  /*PHANDLE*/ void **pHandle) {
 	DREF DeeObject *attr;
-#if defined(DeeSysFS_IS_HANDLE) || \
-   (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle))
+#if (defined(DeeSysFS_IS_HANDLE) || \
+     (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
 	if (DeeFile_Check(ob)) {
 		DeeSysFD sysfd;
 		sysfd = DeeFile_GetSysFD(ob);
@@ -2320,8 +2320,10 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
 	unicode_printer_fini(&printer);
 	SetLastError(dwLastError);
 	if (error < 0)
-		return NULL;
+		goto err;
 	return ITER_DONE;
+err:
+	return NULL;
 }
 
 /* @return: 1:  The system call failed (See GetLastError())

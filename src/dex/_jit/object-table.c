@@ -60,7 +60,7 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 		size      = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
 		new_table = (struct jit_object_entry *)Dee_Calloc(size);
 		if unlikely(!new_table)
-			return -1;
+			goto err;
 		dst->ot_list = new_table;
 		memcpy(new_table, src->ot_list, size);
 		for (i = 0; i <= dst->ot_mask; ++i) {
@@ -70,6 +70,8 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 		}
 	}
 	return 0;
+err:
+	return -1;
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -335,7 +337,7 @@ again:
 							if likely(JITObjectTable_TryRehash(self, new_mask))
 								goto again;
 							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-								return NULL;
+								goto err;
 						}
 					}
 				}
@@ -360,6 +362,8 @@ again:
 	result_entry->oe_type    = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 	result_entry->oe_value   = NULL;
 	return result_entry;
+err:
+	return NULL;
 }
 
 

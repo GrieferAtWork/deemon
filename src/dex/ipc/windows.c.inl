@@ -75,8 +75,9 @@ print_environ(struct ascii_printer *__restrict printer,
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
 		if (DeeObject_Unpack(item, 2, name_and_value))
 			goto err_item;
-		if (DeeObject_AssertTypeExact(name_and_value[0], &DeeString_Type) ||
-		    DeeObject_AssertTypeExact(name_and_value[1], &DeeString_Type))
+		if (DeeObject_AssertTypeExact(name_and_value[0], &DeeString_Type))
+			goto err_name_and_value;
+		if (DeeObject_AssertTypeExact(name_and_value[1], &DeeString_Type))
 			goto err_name_and_value;
 		if (ascii_printer_print(printer,
 		                        DeeString_STR(name_and_value[0]),
@@ -1755,7 +1756,7 @@ process_set_environ(Process *self, DeeObject *value) {
 		int result;
 		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
 		if unlikely(!temp)
-			return -1;
+			goto err;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
 		Dee_Decref(temp);
 		return result;
@@ -1770,11 +1771,13 @@ process_set_environ(Process *self, DeeObject *value) {
 		return 0;
 	}
 	rwlock_endwrite(&self->p_lock);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Cannot %s environ of running process %k",
-	                       value ? "change"
-	                             : "delete",
-	                       self);
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot %s environ of running process %k",
+	                value ? "change"
+	                      : "delete",
+	                self);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2139,8 +2142,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
-		return NULL;
+		goto err;
 	return_reference_((DeeObject *)&this_process);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst process_class_methods[] = {

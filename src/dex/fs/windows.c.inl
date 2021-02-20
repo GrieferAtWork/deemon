@@ -1265,9 +1265,11 @@ user_get_name(struct user_object *__restrict self) {
 	if (!self->u_sd)
 		return fs_getuser(false);
 	if (user_get_name_and_domain(self, &name, &domain, &use))
-		return NULL;
+		goto err;
 	DeeString_FreeWideBuffer(domain);
 	return DeeString_PackWideBuffer(name, STRING_ERROR_FIGNORE);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1277,9 +1279,11 @@ user_get_domain(struct user_object *__restrict self) {
 	if (!self->u_sd)
 		return fs_gethostname();
 	if (user_get_name_and_domain(self, &name, &domain, &use))
-		return NULL;
+		goto err;
 	DeeString_FreeWideBuffer(name);
 	return DeeString_PackWideBuffer(domain, STRING_ERROR_FIGNORE);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1742,8 +1746,10 @@ stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_tp_name, &path, &arg2))
-		return -1;
+		goto err;
 	return Stat_Init(&self->st_stat, path, arg2, DOSTAT_FNORMAL);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1751,8 +1757,10 @@ lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|on:" S_LStat_tp_name, &path, &arg2))
-		return -1;
+		goto err;
 	return Stat_Init(&self->st_stat, path, arg2, DOSTAT_FLSTAT);
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1966,8 +1974,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getnttype_np(DeeStatObject *__restrict self) {
 	DWORD result = stat_get_nttype(&self->st_stat, false);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
-		return NULL;
+		goto err;
 	return DeeInt_NewU32(result);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {

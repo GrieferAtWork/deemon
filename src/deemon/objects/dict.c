@@ -69,7 +69,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 	/* Allocate the Dict object. */
 	result = DeeGCObject_MALLOC(Dict);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	if (!num_keyitems) {
 		/* Special case: allocate an empty Dict. */
 		result->d_mask = 0;
@@ -122,6 +122,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 err_r:
 	Dee_Free(result->d_elem);
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -1117,7 +1118,7 @@ restart:
 		if (error > 0)
 			return_true; /* Found the item. */
 		if unlikely(error < 0)
-			return NULL; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
@@ -1127,6 +1128,8 @@ restart:
 	}
 	DeeDict_LockEndRead(self);
 	return_false;
+err:
+	return NULL;
 }
 
 
@@ -1164,7 +1167,7 @@ restart:
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
 		if unlikely(error < 0)
-			return NULL; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (self->d_elem != vector ||
@@ -1175,6 +1178,7 @@ restart:
 	}
 	DeeDict_LockEndRead(self);
 	err_unknown_key((DeeObject *)self, key);
+err:
 	return NULL;
 }
 
@@ -1213,7 +1217,7 @@ restart:
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
 		if unlikely(error < 0)
-			return NULL; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
 		if (((Dict *)self)->d_elem != vector ||
@@ -1226,6 +1230,8 @@ restart:
 	if (def != ITER_DONE)
 		Dee_Incref(def);
 	return def;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1329,7 +1335,7 @@ restart:
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return NULL; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found it! */
@@ -1363,6 +1369,7 @@ restart:
 	if (def)
 		return_reference_(def);
 	err_unknown_key((DeeObject *)self, key);
+err:
 	return NULL;
 }
 
@@ -1635,10 +1642,12 @@ dict_nsi_setdefault(Dict *self, DeeObject *key, DeeObject *defl) {
 	int error;
 	error = dict_setitem_ex(self, key, defl, SETITEM_SETNEW, &old_value);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	if (error == 1)
 		return old_value;
 	return_reference_(defl);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL

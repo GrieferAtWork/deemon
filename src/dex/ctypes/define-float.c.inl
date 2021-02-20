@@ -51,7 +51,7 @@ DECL_BEGIN
 #define FLOATID_long_double 2
 #define PRIVATE_FLOATID(x)  FLOATID_##x
 #define FLOATID(x)          PRIVATE_FLOATID(x)
-#endif
+#endif /* !FLOATID_float */
 
 #define TYPE_ID FLOATID(T)
 #define X(x)    PP_CAT2(x, TYPE_NAME)
@@ -62,20 +62,20 @@ DECL_BEGIN
 #ifndef FLOAT0_FUNCTIONS_DEFINED
 #define FLOAT0_FUNCTIONS_DEFINED 1
 #define DEFINE_FLOAT_FUNCTIONS 1
-#endif
+#endif /* !FLOAT0_FUNCTIONS_DEFINED */
 #elif TYPE_ID == 1
 #ifndef FLOAT1_FUNCTIONS_DEFINED
 #define FLOAT1_FUNCTIONS_DEFINED 1
 #define DEFINE_FLOAT_FUNCTIONS 1
-#endif
+#endif /* !FLOAT1_FUNCTIONS_DEFINED */
 #elif TYPE_ID == 2
 #ifndef FLOAT2_FUNCTIONS_DEFINED
 #define FLOAT2_FUNCTIONS_DEFINED 1
 #define DEFINE_FLOAT_FUNCTIONS 1
-#endif
-#else
+#endif /* !FLOAT2_FUNCTIONS_DEFINED */
+#else /* TYPE_ID == ... */
 #define DEFINE_FLOAT_FUNCTIONS 1
-#endif
+#endif /* TYPE_ID != ... */
 
 /* TODO: Unaligned memory access */
 
@@ -98,7 +98,8 @@ typedef struct {
 	CONFIG_CTYPES_DOUBLE_TYPE f_value; /* The integer value. */
 } Float_double_object;
 
-PRIVATE WUNUSED DREF DeeObject *DCALL float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
+PRIVATE WUNUSED DREF DeeObject *DCALL
+float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	Float_double_object *result;
 	result = DeeObject_MALLOC(Float_double_object);
 	if unlikely(!result)
@@ -110,7 +111,7 @@ done:
 }
 #endif /* !INT_NEWINT_DEFINED */
 
-#else
+#else /* TYPE_ID <= 1 */
 
 #define NEW_FLOAT(val) F(fltnew)(val)
 PRIVATE WUNUSED DREF DeeObject *DCALL F(fltnew)(T val) {
@@ -123,10 +124,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL F(fltnew)(T val) {
 done:
 	return (DREF DeeObject *)result;
 }
-#endif
+#endif /* TYPE_ID > 1 */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(floatinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, size_t argc, DeeObject *const *argv) {
 	double value;
@@ -146,7 +147,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(floatass)(DeeSTypeObject *__restrict UNUSED(tp_self),
             T *self, DeeObject *__restrict arg) {
 	double value;
@@ -158,21 +159,21 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(floatstr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	double value;
 	CTYPES_FAULTPROTECT(value = (double)*self, return NULL);
 	return DeeString_Newf("%f", value);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(floatbool)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return -1);
 	return value != (T)0.0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_int32)(DeeSTypeObject *__restrict UNUSED(tp_self),
                T *self, int32_t *__restrict result) {
 	T value;
@@ -181,7 +182,7 @@ F(float_int32)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return INT_SIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
                T *self, int64_t *__restrict result) {
 	T value;
@@ -190,7 +191,7 @@ F(float_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return INT_SIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
                 T *self, double *__restrict result) {
 	T value;
@@ -199,131 +200,145 @@ F(float_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return DeeInt_NewS64((int64_t)value);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return NEW_FLOAT(+value);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return NEW_FLOAT(-value);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
 	double other_value;
-	CTYPES_FAULTPROTECT(value = *self, return NULL);
+	CTYPES_FAULTPROTECT(value = *self, goto err);
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return NULL;
+		goto err;
 	return NEW_FLOAT(value + other_value);
+err:
+	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
 	double other_value;
-	CTYPES_FAULTPROTECT(value = *self, return NULL);
+	CTYPES_FAULTPROTECT(value = *self, goto err);
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return NULL;
+		goto err;
 	return NEW_FLOAT(value - other_value);
+err:
+	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
 	double other_value;
-	CTYPES_FAULTPROTECT(value = *self, return NULL);
+	CTYPES_FAULTPROTECT(value = *self, goto err);
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return NULL;
+		goto err;
 	return NEW_FLOAT(value * other_value);
+err:
+	return NULL;
 }
 
-PRIVATE ATTR_COLD void DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 F(float_divzero)(T value, DeeObject *__restrict some_object) {
-	DeeError_Throwf(&DeeError_DivideByZero,
-	                "Divide by Zero: `%f / %k'",
-	                (double)value, some_object);
+	return DeeError_Throwf(&DeeError_DivideByZero,
+	                       "Divide by Zero: `%f / %k'",
+	                       (double)value, some_object);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
 	double other_value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return NULL;
+		goto err;
 	if unlikely(!other_value) {
-		F(float_divzero)
-		(value, some_object);
-		return NULL;
+		(F(float_divzero)(value, some_object));
+		goto err;
 	}
 	return NEW_FLOAT(value / other_value);
+err:
+	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_inplace_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                      DeeObject *__restrict some_object) {
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return -1;
-	CTYPES_FAULTPROTECT(*self += (T)other_value, return -1);
+		goto err;
+	CTYPES_FAULTPROTECT(*self += (T)other_value, goto err);
 	return 0;
+err:
+	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_inplace_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                      DeeObject *__restrict some_object) {
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return -1;
-	CTYPES_FAULTPROTECT(*self -= (T)other_value, return -1);
+		goto err;
+	CTYPES_FAULTPROTECT(*self -= (T)other_value, goto err);
 	return 0;
+err:
+	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_inplace_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                      DeeObject *__restrict some_object) {
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return -1;
-	CTYPES_FAULTPROTECT(*self *= (T)other_value, return -1);
+		goto err;
+	CTYPES_FAULTPROTECT(*self *= (T)other_value, goto err);
 	return 0;
+err:
+	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                      DeeObject *__restrict some_object) {
 	double other_value;
 	if (DeeObject_AsDouble(some_object, &other_value))
-		return -1;
+		goto err;
 	if unlikely(!other_value) {
 		T value;
-		CTYPES_FAULTPROTECT(value = *self, return -1);
-		F(float_divzero)
-		(value, some_object);
-		return -1;
+		CTYPES_FAULTPROTECT(value = *self, goto err);
+		(F(float_divzero)(value, some_object));
+		goto err;
 	}
-	CTYPES_FAULTPROTECT(*self /= (T)other_value, return -1);
+	CTYPES_FAULTPROTECT(*self /= (T)other_value, goto err);
 	return 0;
+err:
+	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(float_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	(void)self;
@@ -333,7 +348,7 @@ F(float_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(float_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                      DeeObject *__restrict some_object) {
 	(void)self;
@@ -379,16 +394,17 @@ PRIVATE struct stype_math F(floatmath) = {
 };
 
 #define DEFINE_COMPARE_OPERATOR(name, op)                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                          \
+	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL  \
 	name(DeeSTypeObject *__restrict UNUSED(tp_self),       \
-	     T *self,                                          \
-	     DeeObject *__restrict some_object) {              \
+	     T *self, DeeObject *__restrict some_object) {     \
 		T value;                                           \
 		double other_value;                                \
-		CTYPES_FAULTPROTECT(value = *self, return NULL);   \
+		CTYPES_FAULTPROTECT(value = *self, goto err);      \
 		if (DeeObject_AsDouble(some_object, &other_value)) \
-			return NULL;                                   \
+			goto err;                                      \
 		return_bool(value op other_value);                 \
+	err:                                                   \
+		return NULL;                                       \
 	}
 DEFINE_COMPARE_OPERATOR(F(float_eq), ==)
 DEFINE_COMPARE_OPERATOR(F(float_ne), !=)
@@ -475,9 +491,9 @@ INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_ffitype  = */ &ffi_type_double,
 #elif TYPE_ID == 2
 	/* .st_ffitype  = */ &ffi_type_longdouble,
-#else
+#else /* TYPE_ID == ... */
 	/* .st_ffitype  = */ &ffi_type_void,
-#endif
+#endif /* TYPE_ID != ... */
 #endif /* !CONFIG_NO_CFUNCTION */
 	/* .st_sizeof   = */ sizeof(T),
 #if TYPE_ID == 0
@@ -486,9 +502,9 @@ INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_align    = */ CONFIG_ALIGNOF_DOUBLE,
 #elif TYPE_ID == 2
 	/* .st_align    = */ CONFIG_ALIGNOF_LDOUBLE,
-#else
+#else /* TYPE_ID == ... */
 	/* .st_align    = */ COMPILER_ALIGNOF(T),
-#endif
+#endif /* TYPE_ID != ... */
 	/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&F(floatinit),
 	/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(floatass),
 	/* .st_cast     = */ {

@@ -50,9 +50,9 @@ DECL_BEGIN
 #define posix_pipe2_USE_PIPE2 1
 #elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_pipe_USE_STUB)
 #define posix_pipe2_USE_PIPE 1
-#elif defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) && \
-    (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
-    (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL))
+#elif (defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) &&                                                \
+       (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
+       (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
 #define posix_pipe2_USE_PIPE_FCNTL 1
 #elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pipe2_USE_CREATEPIPE 1

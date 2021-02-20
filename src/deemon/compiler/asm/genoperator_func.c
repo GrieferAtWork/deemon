@@ -57,10 +57,12 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 	/* XXX: What if the calling module is the `operators' module? */
 	temp = asm_newmodule(module);
 	if unlikely(temp < 0)
-		return -1;
+		goto err;
 	*pmodid = (uint16_t)temp;
 	*psymid = symbol->ss_index;
 	return 0;
+err:
+	return -1;
 }
 
 

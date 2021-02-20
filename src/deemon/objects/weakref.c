@@ -291,7 +291,7 @@ ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *alt = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:lock", &alt))
-		return NULL;
+		goto err;
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
 		if ((result = alt) == NULL)
@@ -301,6 +301,8 @@ ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 		}
 	}
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -313,13 +315,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":try_lock"))
-		return NULL;
+		goto err;
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 	}
 	return result;
+err:
+	return NULL;
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 

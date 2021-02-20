@@ -45,7 +45,7 @@ DECL_BEGIN
 
 
 
-PRIVATE int
+PRIVATE WUNUSED NONNULL((1)) int
 (DCALL ast_assumes_rehashsymbol)(struct ast_assumes *__restrict self) {
 	struct ast_symbol_assume *new_vector, *iter, *end;
 	size_t new_mask = self->aa_syms.sa_mask;
@@ -55,7 +55,7 @@ PRIVATE int
 	ASSERT(self->aa_syms.sa_size < new_mask);
 	new_vector = (struct ast_symbol_assume *)Dee_Calloc((new_mask + 1) * sizeof(struct ast_symbol_assume));
 	if unlikely(!new_vector)
-		return -1;
+		goto err;
 	if (self->aa_syms.sa_elem) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->aa_syms.sa_elem) + (self->aa_syms.sa_mask + 1);
@@ -80,6 +80,8 @@ PRIVATE int
 	self->aa_syms.sa_elem = new_vector;
 	DEE_CHECKMEMORY();
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE struct ast_symbol_assume *DCALL
@@ -88,7 +90,7 @@ ast_assumes_getsymbol(struct ast_assumes *__restrict self,
 	dhash_t i, perturb, hash;
 	hash = sym->s_name->k_id;
 	if (!self->aa_syms.sa_elem)
-		return NULL;
+		goto nope;
 	i = perturb = hash & self->aa_syms.sa_mask;
 	for (;; AST_SYMBOL_ASSUMES_HASHNX(i, perturb)) {
 		struct ast_symbol_assume *item;
@@ -99,6 +101,7 @@ ast_assumes_getsymbol(struct ast_assumes *__restrict self,
 			return item;
 	}
 	DEE_CHECKMEMORY();
+nope:
 	return NULL;
 }
 

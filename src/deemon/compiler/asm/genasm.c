@@ -582,8 +582,10 @@ PRIVATE int DCALL cast_sequence(uint16_t type) {
 	uint16_t op = seqops_info[type & 3].so_cas;
 	ASSERT(type != AST_FMULTIPLE_KEEPLAST);
 	if (op & 0xff00 && asm_put((op & 0xff00) >> 8))
-		return -1;
+		goto err;
 	return asm_put(op & 0xff);
+err:
+	return -1;
 }
 
 
@@ -2853,9 +2855,11 @@ action_in_without_const:
 			/* NOTE: Must only go through the finally-block
 			 *       if the jump target is located outside. */
 			current_assembler.a_finflag |= ASM_FINFLAG_USED;
-			if (asm_gpush_abs(sym) ||
-			    asm_gpush_stk(sym) ||
-			    asm_gjmps(current_assembler.a_finsym))
+			if (asm_gpush_abs(sym))
+				goto err;
+			if (asm_gpush_stk(sym))
+				goto err;
+			if (asm_gjmps(current_assembler.a_finsym))
 				goto err;
 		} else {
 			if (asm_gjmps(sym))

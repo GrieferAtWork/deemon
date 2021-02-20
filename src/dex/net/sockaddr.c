@@ -1384,8 +1384,9 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 #ifdef AF_INET
 			if (DeeTuple_Check(arg0) && DeeTuple_SIZE(arg0) == 2 &&
 			    (family == AF_AUTO || family == AF_INET)) {
-				if (DeeObject_AsUInt32(DeeTuple_GET(arg0, 0), &host) ||
-				    DeeObject_AsUInt16(DeeTuple_GET(arg0, 1), &port))
+				if (DeeObject_AsUInt32(DeeTuple_GET(arg0, 0), &host))
+					goto err;
+				if (DeeObject_AsUInt16(DeeTuple_GET(arg0, 1), &port))
 					goto err;
 do_init_inet_hostport:
 				self->sa.sa_family            = AF_INET;
@@ -1450,11 +1451,15 @@ do_generic_string_2:
 		case 5:
 			/* (uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint16_t port) */
 			if (family == AF_AUTO || family == AF_INET) {
-				if (DeeObject_AsUInt8(argv[0], &a) ||
-				    DeeObject_AsUInt8(argv[1], &b) ||
-				    DeeObject_AsUInt8(argv[2], &c) ||
-				    DeeObject_AsUInt8(argv[3], &d) ||
-				    DeeObject_AsUInt16(argv[4], &port))
+				if (DeeObject_AsUInt8(argv[0], &a))
+					goto err;
+				if (DeeObject_AsUInt8(argv[1], &b))
+					goto err;
+				if (DeeObject_AsUInt8(argv[2], &c))
+					goto err;
+				if (DeeObject_AsUInt8(argv[3], &d))
+					goto err;
+				if (DeeObject_AsUInt16(argv[4], &port))
 					goto err;
 				self->sa.sa_family            = AF_INET;
 				self->sa_inet.sin_addr.s_addr = SOCKADDRINET(a, b, c, d);
@@ -1516,8 +1521,9 @@ do_generic_string_2:
 		case 2:
 			bzero(&self->sa_nl, sizeof(struct sockaddr_nl));
 			self->sa_nl.nl_family = AF_NETLINK;
-			if (DeeObject_AsUINT(argv[0], &self->sa_nl.nl_pid) ||
-			    DeeObject_AsUINT(argv[1], &self->sa_nl.nl_groups))
+			if (DeeObject_AsUINT(argv[0], &self->sa_nl.nl_pid))
+				goto err;
+			if (DeeObject_AsUINT(argv[1], &self->sa_nl.nl_groups))
 				goto err;
 			break;
 
@@ -1770,18 +1776,22 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sockaddr_eq(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
 	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
-		return NULL;
+		goto err;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
 	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sockaddr_ne(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
 	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
-		return NULL;
+		goto err;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
 	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) != 0);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp sockaddr_cmp = {

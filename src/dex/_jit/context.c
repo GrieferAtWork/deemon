@@ -304,7 +304,7 @@ DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 		       : DeeObject_Call(delfun, 0, NULL);
 		Dee_Decref(delfun);
 		if unlikely(!temp)
-			return -1;
+			goto err;
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
@@ -324,13 +324,16 @@ DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 	return 0;
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 unbound:
-	return err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
-	                               DeeString_STR(attr->ca_name));
+	err_unbound_attribute_c(class_desc_from_instance(self, this_arg),
+	                        DeeString_STR(attr->ca_name));
+	goto err;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
-	return err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_DEL);
+	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
+	                            DeeString_STR(attr->ca_name),
+	                            ATTR_ACCESS_DEL);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -360,7 +363,7 @@ DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 		       : DeeObject_Call(setter, 1, (DeeObject **)&value);
 		Dee_Decref(setter);
 		if unlikely(!temp)
-			return -1;
+			goto err;
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
@@ -380,9 +383,11 @@ DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 	}
 	return 0;
 illegal:
-	return err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_SET);
+	err_cant_access_attribute_c(class_desc_from_instance(self, this_arg),
+	                            DeeString_STR(attr->ca_name),
+	                            ATTR_ACCESS_SET);
+err:
+	return -1;
 }
 
 

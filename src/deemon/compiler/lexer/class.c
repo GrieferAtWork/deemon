@@ -441,12 +441,14 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 	}
 	/* Must create a new constructor-scope. */
 	if unlikely(class_maker_push_methscope(self))
-		return -1;
+		goto err;
 	/* Now just set the constructor-flag in the scope. */
 	current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
 	self->cm_ctor_scope = current_basescope;
 	Dee_Incref((DeeObject *)current_basescope);
 	return 0;
+err:
+	return -1;
 }
 
 /* Check if an initializer for a given symbol must be processed in the

@@ -246,11 +246,13 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 			                                  sizeof(uint16_t));
 		}
 		if unlikely(!new_vec)
-			return -1;
+			goto err;
 	}
 	regs->dx_spnamv = new_vec;
 	regs->dx_spnama = new_alloc;
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -697,16 +699,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ddi_eq(DeeDDIObject *self,
        DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
-		return NULL;
+		goto err;
 	return_bool(ddi_eq_impl(self, other));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ddi_ne(DeeDDIObject *self,
        DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
-		return NULL;
+		goto err;
 	return_bool(!ddi_eq_impl(self, other));
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp ddi_cmp = {

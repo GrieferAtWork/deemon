@@ -1070,16 +1070,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 yf_eq(DeeYieldFunctionObject *self, DeeYieldFunctionObject *other) {
 	int result = yf_eq_impl(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 yf_ne(DeeYieldFunctionObject *self, DeeYieldFunctionObject *other) {
 	int result = yf_eq_impl(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp yf_cmp = {

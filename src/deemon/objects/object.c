@@ -4164,16 +4164,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_eq(DeeObject *self,
         DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
-		return NULL;
+		goto err;
 	return_bool_(self == some_object);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_ne(DeeObject *self,
         DeeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
-		return NULL;
+		goto err;
 	return_bool_(self != some_object);
+err:
+	return NULL;
 }
 
 

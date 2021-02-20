@@ -101,12 +101,15 @@ astlist_trunc(struct astlist *__restrict self) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 astlist_append(struct astlist *__restrict self,
                struct ast *__restrict branch) {
-	if (self->ast_c == self->ast_a &&
-	    astlist_upsize(self, 1))
-		return -1;
+	if (self->ast_c == self->ast_a) {
+		if (astlist_upsize(self, 1))
+			goto err;
+	}
 	self->ast_v[self->ast_c++] = branch;
 	ast_incref(branch);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -126,7 +129,7 @@ astlist_appendall(struct astlist *__restrict self,
 			return 0;
 		}
 		if (astlist_upsize(self, other->ast_c - avail))
-			return -1;
+			goto err;
 	}
 	ASSERT(self->ast_c + other->ast_c <= self->ast_a);
 	memcpyc(self->ast_v + self->ast_c,
@@ -135,6 +138,8 @@ astlist_appendall(struct astlist *__restrict self,
 	self->ast_c += other->ast_c;
 	other->ast_c = 0; /* Steal all of these references. */
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int DCALL

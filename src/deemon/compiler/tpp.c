@@ -288,7 +288,7 @@ again:
 		/* If the file was extended, search for the next token again. */
 		if likely(extend_error) {
 			if unlikely(extend_error < 0)
-				return NULL;
+				goto err;
 			goto again;
 		}
 		/* Continue searching through the include-stack. */
@@ -302,6 +302,8 @@ set_result:
 	if (tok_file)
 		*tok_file = curfile;
 	return result;
+err:
+	return NULL;
 }
 
 

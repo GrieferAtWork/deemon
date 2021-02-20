@@ -59,11 +59,9 @@ again:
 		rwlock_endread(&fs_module_lock);
 		mod = DeeModule_OpenGlobal((DeeObject *)&str_fs, NULL, true);
 		if unlikely(!mod)
-			return NULL;
-		if unlikely(DeeModule_RunInit(mod) < 0) {
-			Dee_Decref(mod);
-			return NULL;
-		}
+			goto err;
+		if unlikely(DeeModule_RunInit(mod) < 0)
+			goto err_mod;
 		rwlock_write(&fs_module_lock);
 		if unlikely(fs_module) {
 			rwlock_endwrite(&fs_module_lock);
@@ -80,6 +78,10 @@ again:
 	result = DeeObject_GetAttr(mod, name);
 	Dee_Decref(mod);
 	return result;
+err_mod:
+	Dee_Decref(mod);
+err:
+	return NULL;
 }
 
 INTERN bool DCALL clear_fs_module(void) {

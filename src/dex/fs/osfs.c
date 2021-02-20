@@ -1972,8 +1972,9 @@ fs_symlink(DeeObject *__restrict target_text,
 	DWORD dwFlags;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeObject_AssertTypeExact(target_text, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact(link_path, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(target_text, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(link_path, &DeeString_Type))
 		goto err;
 	(void)format_target; /* TODO: Fix slashes. */
 	dwFlags = dwSymlinkAdditionalFlags;
@@ -2472,13 +2473,13 @@ err_fd:
 		if (DeeInt_Check(path)) {
 			int fd; /* Support for descriptor-based readlink() */
 			if (DeeObject_AsInt(path, &fd))
-				goto err;
+				goto err_printer_buffer;
 			path = DeeSystem_GetFilenameOfFD(fd);
 		} else {
 			path = DeeFile_Filename(path);
 		}
 		if unlikely(!path)
-			return NULL;
+			goto err;
 		result = fs_readlink(path);
 		Dee_Decref(path);
 		return result;
@@ -2551,7 +2552,7 @@ no_link:
 					                          "Failed to read symbolic link %r",
 					                          path);
 				}
-				goto err;
+				goto err_printer_buffer;
 			}
 			DBG_ALIGNMENT_ENABLE();
 			if ((size_t)req_size <= bufsize)
@@ -2569,7 +2570,7 @@ no_link:
 				STRUCT_STAT st;
 				utf8 = DeeString_AsUtf8(path);
 				if unlikely(!utf8)
-					goto err;
+					goto err_printer_buffer;
 				DBG_ALIGNMENT_DISABLE();
 				if (LSTAT(utf8, &st))
 					goto handle_error;
@@ -2580,7 +2581,7 @@ no_link:
 				wchar_t *wpath;
 				wpath = (wchar_t *)DeeString_AsWide(path);
 				if unlikely(!wpath)
-					goto err;
+					goto err_printer_buffer;
 				DBG_ALIGNMENT_DISABLE();
 				if (WLSTAT(wpath, &st))
 					goto handle_error;
@@ -2601,7 +2602,7 @@ no_link:
 					DeeError_Throwf(&DeeError_NoLink,
 					                "Path %r is not a symbolic link",
 					                path);
-					goto err;
+					goto err_printer_buffer;
 #endif /* !EINVAL */
 				}
 				new_size = (size_t)st.st_size;
@@ -2618,7 +2619,7 @@ no_link:
 			new_buffer = Dee_unicode_printer_resize_utf8(&printer, buffer, new_size);
 #endif /* !fs_readlink_USE_WREADLINK */
 			if unlikely(!new_buffer)
-				goto err;
+				goto err_printer_buffer;
 			buffer  = new_buffer;
 			bufsize = new_size;
 		}
@@ -2631,7 +2632,7 @@ no_link:
 			goto err_printer;
 #endif /* !fs_readlink_USE_WREADLINK */
 		return Dee_unicode_printer_pack(&printer);
-err:
+err_printer_buffer:
 #ifdef fs_readlink_USE_WREADLINK
 		Dee_unicode_printer_free_wchar(&printer, (Dee_wchar_t *)buffer);
 #else /* fs_readlink_USE_WREADLINK */
@@ -2639,8 +2640,9 @@ err:
 #endif /* !fs_readlink_USE_WREADLINK */
 err_printer:
 		Dee_unicode_printer_fini(&printer);
-		return NULL;
 	}
+err:
+	return NULL;
 #endif /* fs_readlink_USE_WREADLINK || fs_readlink_USE_READLINK */
 
 #ifdef fs_readlink_USE_STUB
@@ -2895,7 +2897,7 @@ no_access:
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
 		if unlikely(!wpath)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!WLSTAT(wpath, &st) && (st.st_mode & STAT_ISVTX))
 #else /* WLSTAT */
@@ -2903,7 +2905,7 @@ no_access:
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
 		if unlikely(!utf8)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!LSTAT(utf8, &st) && (st.st_mode & STAT_ISVTX))
 #endif /* !WLSTAT */
@@ -2929,6 +2931,8 @@ no_access:
 		                                 "Failed to remove directory %r",
 		                                 path);
 	}
+err:
+	return -1;
 }
 #endif /* WANT_UNIX_ERRRMDIR */
 
@@ -2982,7 +2986,7 @@ err_isdir:
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
 		if unlikely(!wpath)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!WLSTAT(wpath, &st))
 #else /* WLSTAT */
@@ -2990,7 +2994,7 @@ err_isdir:
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
 		if unlikely(!utf8)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!LSTAT(utf8, &st))
 #endif /* !WLSTAT */
@@ -3028,6 +3032,8 @@ err_isdir:
 		                                 "Failed to unlink file %r",
 		                                 path);
 	}
+err:
+	return -1;
 }
 #endif /* WANT_UNIX_ERRUNLINK */
 
@@ -3085,7 +3091,7 @@ no_access:
 		wchar_t *wpath;
 		wpath = (wchar_t *)DeeString_AsWide(path);
 		if unlikely(!wpath)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!WLSTAT(wpath, &st))
 #else /* WLSTAT */
@@ -3093,7 +3099,7 @@ no_access:
 		char *utf8;
 		utf8 = DeeString_AsUtf8(path);
 		if unlikely(!utf8)
-			return -1;
+			goto err;
 		DBG_ALIGNMENT_DISABLE();
 		if (!LSTAT(utf8, &st))
 #endif /* !WLSTAT */
@@ -3123,6 +3129,8 @@ no_access:
 		                                 "Failed to remove file or directory %r",
 		                                 path);
 	}
+err:
+	return -1;
 }
 #endif /* WANT_UNIX_ERRREMOVE */
 

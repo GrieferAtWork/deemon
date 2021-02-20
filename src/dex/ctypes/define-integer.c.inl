@@ -107,9 +107,9 @@ DECL_BEGIN
 #define F(x) x##s32
 #elif SIZEOF == 8
 #define F(x) x##s64
-#else
+#else /* SIZEOF == ... */
 #define F(x) X2(x, TYPE_NAME)
-#endif
+#endif /* SIZEOF != ... */
 #else /* SIGNED */
 #if SIZEOF == 1
 #define F(x) x##u8
@@ -119,9 +119,9 @@ DECL_BEGIN
 #define F(x) x##u32
 #elif SIZEOF == 8
 #define F(x) x##u64
-#else
+#else /* SIZEOF == ... */
 #define F(x) X2(x, TYPE_NAME)
-#endif
+#endif /* SIZEOF != ... */
 #endif /* !SIGNED */
 
 #ifndef SIGNED_TYPE_NAME
@@ -133,9 +133,9 @@ DECL_BEGIN
 #define SIGNED_TYPE_NAME  DeeCInt32_Type
 #elif SIZEOF == 8
 #define SIGNED_TYPE_NAME  DeeCInt64_Type
-#else
+#else /* SIZEOF == ... */
 #error "Must #define SIGNED_TYPE_NAME"
-#endif
+#endif /* SIZEOF != ... */
 #endif /* !SIGNED_TYPE_NAME */
 
 #ifndef UNSIGNED_TYPE_NAME
@@ -147,20 +147,20 @@ DECL_BEGIN
 #define UNSIGNED_TYPE_NAME  DeeCUInt32_Type
 #elif SIZEOF == 8
 #define UNSIGNED_TYPE_NAME  DeeCUInt64_Type
-#else
+#else /* SIZEOF == ... */
 #error "Must #define UNSIGNED_TYPE_NAME"
-#endif
+#endif /* SIZEOF != ... */
 #endif /* !UNSIGNED_TYPE_NAME */
 
 #ifndef TYPE_NAME
 #ifdef SIGNED
 #define TYPE_NAME  SIGNED_TYPE_NAME
-#else
+#else /* SIGNED */
 #define TYPE_NAME  UNSIGNED_TYPE_NAME
-#endif
+#endif /* !SIGNED */
 #ifndef TYPE_NAME
 #error "Must #define TYPE_NAME for custom-width integer"
-#endif
+#endif /* !TYPE_NAME */
 #endif /* !TYPE_NAME */
 
 #ifndef FORMAT_STR
@@ -177,7 +177,7 @@ DECL_BEGIN
 #elif SIZEOF <= 8
 #define FORMAT_STR  "%I64d"
 #define FORMAT_TYP  int64_t
-#endif
+#endif /* SIZEOF <= ... */
 #else /* SIGNED */
 #if SIZEOF <= 1
 #define FORMAT_STR  "%I8u"
@@ -191,7 +191,7 @@ DECL_BEGIN
 #elif SIZEOF <= 8
 #define FORMAT_STR  "%I64u"
 #define FORMAT_TYP  uint64_t
-#endif
+#endif /* SIZEOF <= ... */
 #endif /* !SIGNED */
 #ifndef FORMAT_STR
 #error "Must #define FORMAT_STR for extended-width integer"
@@ -208,7 +208,7 @@ DECL_BEGIN
 #define T  int32_t
 #elif SIZEOF == 8
 #define T  int64_t
-#endif
+#endif /* SIZEOF == ... */
 #else /* SIGNED */
 #if SIZEOF == 1
 #define T  uint8_t
@@ -218,11 +218,11 @@ DECL_BEGIN
 #define T  uint32_t
 #elif SIZEOF == 8
 #define T  uint64_t
-#endif
+#endif /* SIZEOF == ... */
 #endif /* !SIGNED */
-#ifndef TYPE_NAME
+#ifndef T
 #error "Must #define T for custom-width integer"
-#endif
+#endif /* !T */
 #endif /* !T */
 
 #if SIZEOF == 1
@@ -233,9 +233,9 @@ DECL_BEGIN
 #define F_NOSIGN(x) x##ns32
 #elif SIZEOF == 8
 #define F_NOSIGN(x) x##ns64
-#else
+#else /* SIZEOF == ... */
 #define F_NOSIGN(x) X(x##ns)
-#endif
+#endif /* SIZEOF != ... */
 
 #ifndef GET
 #ifdef SIGNED
@@ -254,7 +254,7 @@ DECL_BEGIN
 #elif SIZEOF == 16
 #define GET(ptr)    ((__INT128_TYPE__)UNALIGNED_GET128(ptr))
 #define SET(ptr, v) UNALIGNED_SET128(ptr, (__UINT128_TYPE__)(v))
-#endif
+#endif /* SIZEOF == ... */
 #else /* SIGNED */
 #if SIZEOF == 1
 #define GET(ptr)    (*(uint8_t *)(ptr))
@@ -271,7 +271,7 @@ DECL_BEGIN
 #elif SIZEOF == 16
 #define GET(ptr)    UNALIGNED_GET128(ptr)
 #define SET(ptr, v) UNALIGNED_SET128(ptr, v)
-#endif
+#endif /* SIZEOF == ... */
 #endif /* !SIGNED */
 #endif /* !GET */
 
@@ -296,7 +296,7 @@ typedef struct {
 #define INT32_FUNCTIONS_DEFINED 1
 #elif SIZEOF == 8
 #define INT64_FUNCTIONS_DEFINED 1
-#endif
+#endif /* SIZEOF == ... */
 #else /* SIGNED */
 #if SIZEOF == 1
 #define UINT8_FUNCTIONS_DEFINED  1
@@ -306,7 +306,7 @@ typedef struct {
 #define UINT32_FUNCTIONS_DEFINED 1
 #elif SIZEOF == 8
 #define UINT64_FUNCTIONS_DEFINED 1
-#endif
+#endif /* SIZEOF == ... */
 #endif /* !SIGNED */
 
 #if SIZEOF == 1
@@ -333,7 +333,7 @@ typedef struct {
 #else /* !INT64_SIGNLESS_FUNCTIONS_DEFINED */
 #define SIGNLESS_DEFINED                 1
 #endif /* INT64_SIGNLESS_FUNCTIONS_DEFINED */
-#endif
+#endif /* SIZEOF == ... */
 
 
 #ifdef SIGNED
@@ -374,17 +374,17 @@ done:
 }
 #endif /* !SIGNED || SIZEOF != CONFIG_CTYPES_SIZEOF_INT */
 
-#if (SIZEOF < CONFIG_CTYPES_SIZEOF_INT) || \
-    (defined(SIGNED) && SIZEOF == CONFIG_CTYPES_SIZEOF_INT)
+#if ((SIZEOF < CONFIG_CTYPES_SIZEOF_INT) || \
+     (defined(SIGNED) && SIZEOF == CONFIG_CTYPES_SIZEOF_INT))
 /* Integer promotion. */
 #define NEW_INTEGER(val) int_newint((CTYPES_INT)(val))
-#else
+#else /* ... */
 #define NEW_INTEGER(val) F(int_new)(val)
-#endif
+#endif /* !... */
 
 
 /* Define functions. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(intinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
            T *self, size_t argc, DeeObject *const *argv) {
 	T value;
@@ -404,7 +404,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(intass)(DeeSTypeObject *__restrict UNUSED(tp_self),
           T *self, DeeObject *__restrict arg) {
 	T value;
@@ -425,7 +425,7 @@ PRIVATE DEFINE_STRING(str_false, "false");
 #endif /* CONFIG_BOOL_STRING */
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(intstr)(DeeSTypeObject *__restrict UNUSED(tp_self),
           T *self) {
 	T value;
@@ -438,7 +438,7 @@ F(intstr)(DeeSTypeObject *__restrict UNUSED(tp_self),
 }
 
 #ifndef SIGNLESS_DEFINED
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F_NOSIGN(intbool)(DeeSTypeObject *__restrict UNUSED(tp_self),
                   T *self) {
 	T value;
@@ -448,7 +448,7 @@ F_NOSIGN(intbool)(DeeSTypeObject *__restrict UNUSED(tp_self),
 }
 #endif /* !SIGNLESS_DEFINED */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_int32)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, int32_t *__restrict result) {
 	T value;
@@ -462,7 +462,7 @@ F(int_int32)(DeeSTypeObject *__restrict UNUSED(tp_self),
 #endif /* !SIGNED */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
              T *self, int64_t *__restrict result) {
 	T value;
@@ -476,7 +476,7 @@ F(int_int64)(DeeSTypeObject *__restrict UNUSED(tp_self),
 #endif /* !SIGNED */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
               T *self, double *__restrict result) {
 	T value;
@@ -485,7 +485,7 @@ F(int_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -496,14 +496,14 @@ F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 #endif /* !SIGNED */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(int_inv)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 	return NEW_INTEGER(~value);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(int_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -511,7 +511,7 @@ F(int_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 }
 
 #ifdef SIGNED
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(int_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -519,7 +519,7 @@ F(int_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 }
 #endif /* SIGNED */
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -531,7 +531,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -543,7 +543,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -555,14 +555,14 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD void DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 F(int_divzero)(T value, DeeObject *__restrict some_object) {
-	DeeError_Throwf(&DeeError_DivideByZero,
-	                "Divide by Zero: `" FORMAT_STR " / %k'",
-	                (FORMAT_TYP)value, some_object);
+	return DeeError_Throwf(&DeeError_DivideByZero,
+	                       "Divide by Zero: `" FORMAT_STR " / %k'",
+	                       (FORMAT_TYP)value, some_object);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -570,8 +570,7 @@ F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	if (OBJECT_AS_T(some_object, &other_value))
 		goto err;
 	if unlikely(!other_value) {
-		F(int_divzero)
-		(value, some_object);
+		(F(int_divzero)(value, some_object));
 		goto err;
 	}
 	return NEW_INTEGER(value / other_value);
@@ -579,7 +578,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -587,8 +586,7 @@ F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	if (OBJECT_AS_T(some_object, &other_value))
 		goto err;
 	if unlikely(!other_value) {
-		F(int_divzero)
-		(value, some_object);
+		(F(int_divzero)(value, some_object));
 		goto err;
 	}
 	return NEW_INTEGER(value % other_value);
@@ -596,7 +594,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
@@ -609,7 +607,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
@@ -622,7 +620,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -634,7 +632,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
           DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -646,7 +644,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -658,19 +656,19 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(int_inc)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) + 1)), return -1);
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(int_dec)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) - 1)), return -1);
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	T other_value;
@@ -682,7 +680,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	T other_value;
@@ -694,7 +692,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	T other_value;
@@ -706,7 +704,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	T other_value;
@@ -715,8 +713,7 @@ F(int_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	if unlikely(!other_value) {
 		T value;
 		CTYPES_FAULTPROTECT(value = GET(self), goto err);
-		F(int_divzero)
-		(value, some_object);
+		(F(int_divzero)(value, some_object));
 		goto err;
 	}
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) / other_value)), goto err);
@@ -725,7 +722,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	T other_value;
@@ -734,8 +731,7 @@ F(int_inplace_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	if unlikely(!other_value) {
 		T value;
 		CTYPES_FAULTPROTECT(value = GET(self), goto err);
-		F(int_divzero)
-		(value, some_object);
+		(F(int_divzero)(value, some_object));
 		goto err;
 	}
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) % other_value)), goto err);
@@ -744,7 +740,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	unsigned int other_value;
@@ -756,7 +752,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	unsigned int other_value;
@@ -768,7 +764,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	unsigned int other_value;
@@ -780,7 +776,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                   DeeObject *__restrict some_object) {
 	unsigned int other_value;
@@ -792,7 +788,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	unsigned int other_value;
@@ -804,7 +800,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	(void)self;
@@ -814,7 +810,7 @@ F(int_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
 	(void)self;

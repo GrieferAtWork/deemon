@@ -590,7 +590,7 @@ again:
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return NULL; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		if (error > 0) {
 			DeeHashSet_LockWrite(me);
 			/* Check if the set was modified. */
@@ -645,6 +645,7 @@ again:
 	DeeHashSet_LockEndWrite(me);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
+err:
 	return NULL;
 }
 
@@ -685,7 +686,7 @@ again:
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return -1; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */
 		if (me->s_elem != vector ||
@@ -730,6 +731,7 @@ again:
 	DeeHashSet_LockEndWrite(me);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
+err:
 	return -1;
 }
 
@@ -763,7 +765,7 @@ restart:
 		error = DeeObject_CompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return -1; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		if (error > 0) {
 			/* Found it! */
 			DeeHashSet_LockWrite(me);
@@ -795,6 +797,8 @@ restart:
 	}
 	DeeHashSet_LockEndRead(me);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -1080,7 +1084,7 @@ restart:
 		if (error > 0)
 			return 1; /* Found the item. */
 		if unlikely(error < 0)
-			return -1; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */
 		if (me->s_elem != vector ||
@@ -1090,7 +1094,10 @@ restart:
 	}
 	DeeHashSet_LockEndRead(me);
 	return 0;
+err:
+	return -1;
 }
+
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL
 DeeHashSet_ContainsString(DeeObject *__restrict self,
                           char const *__restrict search_item,
@@ -1149,8 +1156,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 set_contains(Set *self, DeeObject *search_item) {
 	int result = DeeHashSet_Contains((DeeObject *)self, search_item);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 
@@ -1233,9 +1242,11 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (DeeHashSetObject *)DeeHashSet_New();
 	if unlikely(!self->si_set)
-		return -1;
+		goto err;
 	self->si_next = self->si_set->s_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1263,9 +1274,10 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_init(SetIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	Set *set;
-	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set) ||
-	    DeeObject_AssertType(set, &DeeHashSet_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set))
+		goto err;
+	if (DeeObject_AssertType(set, &DeeHashSet_Type))
+		goto err;
 	self->si_set = set;
 	Dee_Incref(set);
 #ifdef CONFIG_NO_THREADS
@@ -1274,6 +1286,8 @@ setiterator_init(SetIterator *__restrict self,
 	self->si_next = ATOMIC_READ(set->s_elem);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1766,15 +1780,15 @@ err:
 	return NULL;
 }
 
-#if __SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
-(defined(__i386__) || defined(__x86_64__))
+#if (__SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
+     (defined(__i386__) || defined(__x86_64__)))
 #define insert_callback DeeHashSet_Insert
-#else
+#else /* ... */
 PRIVATE dssize_t DCALL
 insert_callback(Set *__restrict self, DeeObject *item) {
 	return DeeHashSet_Insert((DeeObject *)self, item);
 }
-#endif
+#endif /* !... */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_update(Set *self, size_t argc, DeeObject *const *argv) {

@@ -780,10 +780,12 @@ DeeObject_VNewPack(DeeTypeObject *object_type,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_New(object_type, argc, DeeTuple_ELEM(args_tuple));
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
@@ -793,12 +795,14 @@ DeeObject_VNewf(DeeTypeObject *object_type,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_New(object_type,
 	                       DeeTuple_SIZE(args_tuple),
 	                       DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *
@@ -1124,10 +1128,12 @@ PUBLIC WUNUSED NONNULL((1)) int
 	ASSERT_OBJECT(old_object);
 	objcopy = DeeObject_DeepCopy(old_object);
 	if unlikely(!objcopy)
-		return -1;
+		goto err;
 	Dee_Decref(old_object);
 	*pself = objcopy;
 	return 0;
+err:
+	return -1;
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -1448,7 +1454,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
 					size_t kw_length;
 					kw_length = DeeObject_Size(kw);
 					if unlikely(kw_length == (size_t)-1)
-						return NULL;
+						goto err;
 					if (kw_length != 0)
 						goto err_no_keywords;
 				}
@@ -1459,10 +1465,11 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
 		}
 	} while (type_inherit_call(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
+err:
 	return NULL;
 err_no_keywords:
 	err_keywords_not_accepted(tp_self, kw);
-	return NULL;
+	goto err;
 }
 
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -1494,7 +1501,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallKw,
 					size_t kw_length;
 					kw_length = DeeObject_Size(kw);
 					if unlikely(kw_length == (size_t)-1)
-						return NULL;
+						goto err;
 					if (kw_length != 0)
 						goto err_no_keywords;
 				}
@@ -1503,10 +1510,11 @@ DEFINE_OPERATOR(DREF DeeObject *, CallKw,
 		}
 	} while (type_inherit_call(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
+err:
 	return NULL;
 err_no_keywords:
 	err_keywords_not_accepted(tp_self, kw);
-	return NULL;
+	goto err;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -1540,19 +1548,19 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
 		/* Must ensure proper typing of the this-argument. */
 		if (DeeObject_AssertType(this_arg, ((DeeClsMethodObject *)self)->cm_type))
-			return NULL;
+			goto err;
 		return (*((DeeClsMethodObject *)self)->cm_func)(this_arg, argc, argv);
 	}
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
 		/* Must ensure proper typing of the this-argument. */
 		if (DeeObject_AssertType(this_arg, ((DeeKwClsMethodObject *)self)->cm_type))
-			return NULL;
+			goto err;
 		return (*((DeeKwClsMethodObject *)self)->cm_func)(this_arg, argc, argv, NULL);
 	}
 	/* sigh... Looks like we need to create a temporary argument tuple... */
 	full_args = DeeTuple_NewUninitialized(1 + argc);
 	if unlikely(!full_args)
-		return NULL;
+		goto err;
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
 	memcpyc(&DeeTuple_ELEM(full_args)[1],
@@ -1568,6 +1576,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 #endif /* !DEFINE_TYPED_OPERATORS */
 	DeeTuple_DecrefSymbolic(full_args);
 	return result;
+err:
+	return NULL;
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
@@ -1590,13 +1600,13 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
 		/* Must ensure proper typing of the this-argument. */
 		if (DeeObject_AssertType(this_arg, ((DeeKwClsMethodObject *)self)->cm_type))
-			return NULL;
+			goto err;
 		return (*((DeeKwClsMethodObject *)self)->cm_func)(this_arg, argc, argv, kw);
 	}
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
 		/* Must ensure proper typing of the this-argument. */
 		if (DeeObject_AssertType(this_arg, ((DeeClsMethodObject *)self)->cm_type))
-			return NULL;
+			goto err;
 		if (kw) {
 			if (DeeKwds_Check(kw)) {
 				if (DeeKwds_SIZE(kw) != 0)
@@ -1605,7 +1615,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 				size_t kw_length;
 				kw_length = DeeObject_Size(kw);
 				if unlikely(kw_length == (size_t)-1)
-					return NULL;
+					goto err;
 				if (kw_length != 0)
 					goto err_no_keywords;
 			}
@@ -1615,7 +1625,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	/* sigh... Looks like we need to create a temporary argument tuple... */
 	full_args = DeeTuple_NewUninitialized(1 + argc);
 	if unlikely(!full_args)
-		return NULL;
+		goto err;
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
 	memcpyc(&DeeTuple_ELEM(full_args)[1],
@@ -1635,6 +1645,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	return result;
 err_no_keywords:
 	err_keywords_not_accepted(GET_TP_SELF(), kw);
+err:
 	return NULL;
 }
 
@@ -1686,10 +1697,12 @@ DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_Call(self, argc, DeeTuple_ELEM(args_tuple));
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
@@ -1698,12 +1711,14 @@ DeeObject_VCallf(DeeObject *self, char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_Call(self,
 	                        DeeTuple_SIZE(args_tuple),
 	                        DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -1712,12 +1727,14 @@ DeeObject_VThisCallf(DeeObject *self, DeeObject *this_arg,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_ThisCall(self, this_arg,
 	                            DeeTuple_SIZE(args_tuple),
 	                            DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *
@@ -1908,7 +1925,7 @@ DEFINE_OPERATOR(int, GetInt32,
 				int64_t val64;
 				error = DeeType_INVOKE_INT64(tp_self, self, &val64);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if (error == INT_SIGNED) {
 					if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
 						if (val64 > 0) {
@@ -1938,7 +1955,7 @@ DEFINE_OPERATOR(int, GetInt32,
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_As32(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -1947,7 +1964,7 @@ DEFINE_OPERATOR(int, GetInt32,
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(resflt < INT32_MIN || resflt > UINT32_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 						if (resflt < 0) {
@@ -1970,6 +1987,8 @@ DEFINE_OPERATOR(int, GetInt32,
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 
 DEFINE_OPERATOR(int, GetInt64,
@@ -1985,7 +2004,7 @@ DEFINE_OPERATOR(int, GetInt64,
 				int32_t val32;
 				error = DeeType_INVOKE_INT32(tp_self, self, &val32);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if (error == INT_SIGNED) {
 					*result = (int64_t)val32;
 				} else {
@@ -1998,7 +2017,7 @@ DEFINE_OPERATOR(int, GetInt64,
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_As64(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -2007,7 +2026,7 @@ DEFINE_OPERATOR(int, GetInt64,
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error)
-					return -1;
+					goto err;
 				if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 						if (resflt < 0) {
@@ -2030,6 +2049,8 @@ DEFINE_OPERATOR(int, GetInt64,
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -2047,7 +2068,7 @@ DEFINE_OPERATOR(int, GetInt128,
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_As128(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -2064,7 +2085,7 @@ DEFINE_OPERATOR(int, GetInt128,
 				DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
 				error = DeeType_INVOKE_INT32(tp_self, self, &val32);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if (error == INT_SIGNED) {
 					if (val32 < 0)
 						DUINT128_GETS64(*result)[DEE_INT128_MS64] = -1;
@@ -2078,7 +2099,7 @@ DEFINE_OPERATOR(int, GetInt128,
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				DUINT128_GETS64(*result)[DEE_INT128_MS64] = 0;
 				if unlikely(resflt < INT64_MIN || resflt > UINT64_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
@@ -2104,6 +2125,8 @@ DEFINE_OPERATOR(int, GetInt128,
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 #endif
 
@@ -2120,7 +2143,7 @@ PUBLIC int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
 			if (tp_self->tp_math->tp_int32) {
 				error = DeeType_INVOKE_INT32(tp_self, self, (int32_t *)result);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(error == INT_SIGNED && *(int32_t *)result < 0) {
 					if (tp_self->tp_flags & TP_FTRUNCATE)
 						return 0;
@@ -2133,7 +2156,7 @@ neg_overflow:
 				int64_t val64;
 				error = DeeType_INVOKE_INT64(tp_self, self, &val64);
 				if (error < 0)
-					return -1;
+					goto err;
 				if unlikely(error == INT_SIGNED && val64 < 0) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 return_trunc64:
@@ -2155,7 +2178,7 @@ return_trunc64:
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_AsU32(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -2164,7 +2187,7 @@ return_trunc64:
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(resflt < 0 || resflt > UINT32_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 						*result = (uint32_t)resflt;
@@ -2178,6 +2201,8 @@ return_trunc64:
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 
 PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
@@ -2191,7 +2216,7 @@ PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
 			if (tp_self->tp_math->tp_int32) {
 				error = DeeType_INVOKE_INT32(tp_self, self, result);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(error == INT_UNSIGNED && (uint32_t)*result > INT32_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE)
 						return 0;
@@ -2203,7 +2228,7 @@ PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
 				int64_t val64;
 				error = DeeType_INVOKE_INT64(tp_self, self, &val64);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if (error == INT_SIGNED) {
 					if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
 						if (tp_self->tp_flags & TP_FTRUNCATE) {
@@ -2229,7 +2254,7 @@ return_trunc64:
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_AsS32(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -2238,7 +2263,7 @@ return_trunc64:
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(resflt < INT32_MIN || resflt > INT32_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 						*result = (int32_t)resflt;
@@ -2252,6 +2277,8 @@ return_trunc64:
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 
 PUBLIC int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
@@ -2265,7 +2292,7 @@ PUBLIC int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
 			if (tp_self->tp_math->tp_int64) {
 				error = DeeType_INVOKE_INT64(tp_self, self, (int64_t *)result);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(error == INT_SIGNED && *(int64_t *)result < 0) {
 					if (tp_self->tp_flags & TP_FTRUNCATE)
 						return 0;
@@ -2332,7 +2359,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 			if (tp_self->tp_math->tp_int64) {
 				error = DeeType_INVOKE_INT64(tp_self, self, result);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(error == INT_UNSIGNED && (uint64_t)*result > INT64_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE)
 						return 0;
@@ -2344,7 +2371,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 				int32_t val32;
 				error = DeeType_INVOKE_INT32(tp_self, self, &val32);
 				if (error < 0)
-					return -1;
+					goto err;
 				if (error == INT_SIGNED)
 					*result = (int64_t)val32;
 				else {
@@ -2357,7 +2384,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 				DREF DeeObject *intob;
 				intob = DeeType_INVOKE_INT(tp_self, self);
 				if unlikely(!intob)
-					return -1;
+					goto err;
 				error = DeeInt_AsS64(intob, result);
 				Dee_Decref(intob);
 				return error;
@@ -2366,7 +2393,7 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return -1;
+					goto err;
 				if unlikely(resflt < INT64_MIN || resflt > INT64_MAX) {
 					if (tp_self->tp_flags & TP_FTRUNCATE) {
 						*result = (int64_t)resflt;
@@ -2380,6 +2407,8 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 		}
 	} while (type_inherit_int(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
+err:
+	return -1;
 }
 
 PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
@@ -2466,7 +2495,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
 	int32_t val32;
 	int error = DeeObject_GetInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto done;
 	if (error == INT_SIGNED) {
 		if (val32 < INT8_MIN || val32 > INT8_MAX) {
 			if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE) {
@@ -2486,6 +2515,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
 		}
 		*result = (int8_t)(uint8_t)val32;
 	}
+done:
 	return error;
 }
 
@@ -2495,7 +2525,7 @@ DeeObject_GetInt16(DeeObject *__restrict self,
 	int32_t val32;
 	int error = DeeObject_GetInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto done;
 	if (error == INT_SIGNED) {
 		if (val32 < INT16_MIN || val32 > INT16_MAX) {
 			if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE) {
@@ -2515,6 +2545,7 @@ DeeObject_GetInt16(DeeObject *__restrict self,
 		}
 		*result = (int16_t)(uint16_t)val32;
 	}
+done:
 	return error;
 }
 
@@ -2523,7 +2554,7 @@ PUBLIC int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
 	int32_t val32;
 	int error = DeeObject_AsInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto done;
 	if (val32 < INT8_MIN || val32 > INT8_MAX) {
 		if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE)
 			goto return_value;
@@ -2531,6 +2562,7 @@ PUBLIC int (DCALL DeeObject_AsInt8)(DeeObject *__restrict self,
 	}
 return_value:
 	*result = (int8_t)val32;
+done:
 	return error;
 }
 
@@ -2539,7 +2571,7 @@ PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
 	int32_t val32;
 	int error = DeeObject_AsInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto err;
 	if (val32 < INT16_MIN || val32 > INT16_MAX) {
 		if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE)
 			goto return_value;
@@ -2548,6 +2580,8 @@ PUBLIC int (DCALL DeeObject_AsInt16)(DeeObject *__restrict self,
 return_value:
 	*result = (int8_t)val32;
 	return 0;
+err:
+	return -1;
 }
 
 PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
@@ -2555,7 +2589,7 @@ PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
 	uint32_t val32;
 	int error = DeeObject_AsUInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto done;
 	if (val32 > UINT8_MAX) {
 		if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE)
 			goto return_value;
@@ -2563,6 +2597,7 @@ PUBLIC int (DCALL DeeObject_AsUInt8)(DeeObject *__restrict self,
 	}
 return_value:
 	*result = (uint8_t)val32;
+done:
 	return error;
 }
 
@@ -2571,7 +2606,7 @@ PUBLIC int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
 	uint32_t val32;
 	int error = DeeObject_AsUInt32(self, &val32);
 	if unlikely(error < 0)
-		return -1;
+		goto err;
 	if (val32 > UINT16_MAX) {
 		if (type_get_int_caster(Dee_TYPE(self))->tp_flags & TP_FTRUNCATE)
 			goto return_value;
@@ -2580,6 +2615,8 @@ PUBLIC int (DCALL DeeObject_AsUInt16)(DeeObject *__restrict self,
 return_value:
 	*result = (uint16_t)val32;
 	return 0;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -2614,11 +2651,11 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				double resflt;
 				error = DeeType_INVOKE_DOUBLE(tp_self, self, &resflt);
 				if unlikely(error < 0)
-					return NULL;
+					goto err;
 				if (resflt < INT64_MIN || resflt > UINT64_MAX) {
 					if (!(tp_self->tp_flags & TP_FTRUNCATE)) {
 						err_integer_overflow(self, 64, resflt > 0);
-						return NULL;
+						goto err;
 					}
 				}
 				return DeeInt_NewS64((int64_t)resflt);
@@ -4613,10 +4650,12 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 	/* Fallback: print the object __repr__ operator result. */
 	ob_repr = DeeObject_Repr(self);
 	if unlikely(!ob_repr)
-		return -1;
+		goto err;
 	result = DeeString_PrintUtf8(ob_repr, printer, arg);
 	Dee_Decref(ob_repr);
 	return result;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -4917,11 +4956,13 @@ DeeObject_VCallAttrPack(DeeObject *self,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_CallAttr(self, attr_name, argc,
 	                            DeeTuple_ELEM(args_tuple));
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 #endif /* !DEFINE_TYPED_OPERATORS */

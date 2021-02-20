@@ -375,10 +375,12 @@ DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
 	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-		return NULL;
+		goto err;
 	CALL_WITH_STACK(result, DeeCode_ExecFrameFast, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
+err:
+	return NULL;
 #endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
 }
 
@@ -390,10 +392,12 @@ DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
 	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-		return NULL;
+		goto err;
 	CALL_WITH_STACK(result, DeeCode_ExecFrameSafe, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
+err:
+	return NULL;
 #endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
 }
 #endif /* !EXEC_ALTSTACK_ASM_USE_EXTERNAL */
@@ -1080,7 +1084,7 @@ code_eq_impl(DeeCodeObject *__restrict self,
              DeeCodeObject *__restrict other) {
 	int temp;
 	if (DeeObject_AssertTypeExact(other, &DeeCode_Type))
-		return -1;
+		goto err;
 	if (self == other)
 		return 1;
 	if (self->co_flags != other->co_flags)
@@ -1182,6 +1186,8 @@ err_temp:
 	return temp;
 nope:
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1190,8 +1196,10 @@ code_eq(DeeCodeObject *self,
 	int result;
 	result = code_eq_impl(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result != 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1200,8 +1208,10 @@ code_ne(DeeCodeObject *self,
 	int result;
 	result = code_eq_impl(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result == 0);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp code_cmp = {

@@ -121,11 +121,11 @@ typedef union {
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pread_IS64 1
 #define posix_pread_USE_READFILE 1
-#elif defined(CONFIG_HAVE_pread) && \
-     (defined(posix_lseek_USE_STUB) || defined(posix_read_USE_STUB) || !defined(posix_lseek_IS64))
+#elif (defined(CONFIG_HAVE_pread) && \
+       (defined(posix_lseek_USE_STUB) || defined(posix_read_USE_STUB) || !defined(posix_lseek_IS64)))
 #define posix_pread_USE_PREAD 1
-#elif !defined(posix_read_USE_STUB) && \
-      (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64))
+#elif (!defined(posix_read_USE_STUB) && \
+       (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
 #define posix_pread_IS64 1
 #endif /* CONFIG_HAVE_lseek64 */
@@ -171,11 +171,11 @@ typedef union {
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pwrite_IS64 1
 #define posix_pwrite_USE_WRITEFILE 1
-#elif defined(CONFIG_HAVE_pwrite) && \
-     (defined(posix_lseek_USE_STUB) || defined(posix_write_USE_STUB) || !defined(posix_lseek_IS64))
+#elif (defined(CONFIG_HAVE_pwrite) && \
+       (defined(posix_lseek_USE_STUB) || defined(posix_write_USE_STUB) || !defined(posix_lseek_IS64)))
 #define posix_pwrite_USE_PWRITE 1
-#elif !defined(CONFIG_HAVE_write) && \
-      (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64))
+#elif (!defined(CONFIG_HAVE_write) && \
+       (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
 #define posix_pwrite_IS64 1
 #endif /* CONFIG_HAVE_lseek64 */

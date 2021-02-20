@@ -380,11 +380,13 @@ again:
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
 		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			return -1;
+			goto err;
 		goto again;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -396,11 +398,13 @@ again:
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
 		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			return -1;
+			goto err;
 		goto again;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -445,11 +449,13 @@ again:
 		bucket_size = self->d_bucket_sz;
 		Deque_LockEndWrite(self);
 		if (!Dee_CollectMemory(SIZEOF_BUCKET(bucket_size)))
-			return -1;
+			goto err;
 		goto again;
 	}
 	Deque_LockEndWrite(self);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
@@ -683,11 +689,12 @@ err_restart_collect:
 		for (;;) {
 			size_t i, count;
 			next = iter->db_next;
-			if (iter == copy)
-				i     = self->d_head_idx,
+			if (iter == copy) {
+				i     = self->d_head_idx;
 				count = self->d_head_use;
-			else {
-				i = 0, count = self->d_bucket_sz;
+			} else {
+				i     = 0;
+				count = self->d_bucket_sz;
 			}
 			while (count--) {
 				Dee_Decref(iter->db_items[i]);
@@ -701,8 +708,10 @@ err_restart_collect:
 	}
 	/* Collect memory for the missing bucket. */
 	if (!Dee_CollectMemory(SIZEOF_BUCKET(self->d_bucket_sz)))
-		return -1;
+		goto err;
 	goto again;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -722,7 +731,7 @@ deq_deepload(Deque *__restrict self) {
 			copy = DeeObject_DeepCopy(orig_ob);
 			Dee_Decref(orig_ob);
 			if unlikely(!copy)
-				return -1;
+				goto err;
 			Deque_LockWrite(self);
 			/* Check if the deque changed in the mean time. */
 			if (version != self->d_version) {
@@ -730,8 +739,8 @@ deq_deepload(Deque *__restrict self) {
 				Dee_Decref(copy);
 				return 0;
 			}
-			orig_ob                   = DequeIterator_ITEM(&iter); /* Inherit reference. */
-			DequeIterator_ITEM(&iter) = copy;                      /* Inherit reference. */
+			orig_ob = DequeIterator_ITEM(&iter); /* Inherit reference. */
+			DequeIterator_ITEM(&iter) = copy;    /* Inherit reference. */
 			Deque_LockDowngrade(self);
 			/* Drop a reference from the exchanged object. */
 			if (!Dee_DecrefIfNotOne(orig_ob)) {
@@ -748,6 +757,8 @@ deq_deepload(Deque *__restrict self) {
 	}
 	Deque_LockEndRead(self);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -793,11 +804,11 @@ deq_init(Deque *__restrict self,
 	DeeObject *init   = Dee_EmptySeq;
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	if (DeeArg_Unpack(argc, argv, "|oIu:Deque", &init, &self->d_bucket_sz))
-		return -1;
+		goto err;
 	if unlikely(!self->d_bucket_sz) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid bucket size: 0");
-		return -1;
+		goto err;
 	}
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->d_lock);
@@ -817,9 +828,11 @@ deq_init(Deque *__restrict self,
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 	{
 		deq_fini(self);
-		return -1;
+		goto err;
 	}
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -840,7 +853,7 @@ deq_assign(Deque *__restrict self,
 	weakref_support_init(&bTemp);
 	if (DeeObject_InstanceOfExact(seq, &Deque_Type)) {
 		if (deq_copy(&bTemp, (Deque *)seq))
-			return -1;
+			goto err;
 	} else {
 		bTemp.d_head      = NULL;
 		bTemp.d_tail      = NULL;
@@ -857,7 +870,7 @@ deq_assign(Deque *__restrict self,
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 		{
 			deq_fini(&bTemp);
-			return -1;
+			goto err;
 		}
 	}
 	/* Save the new deque into the current. */
@@ -871,6 +884,8 @@ deq_assign(Deque *__restrict self,
 	/* Free the old deque state. */
 	deq_fini(&bOld);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1329,44 +1344,58 @@ deq_pop(Deque *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "Id:pop", &index))
-		return NULL;
+		goto err;
 	return Deque_Pop(self, index);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_llrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, "Iu:llrot", &num_items) ||
-	    Deque_llrot(self, num_items))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "Iu:llrot", &num_items))
+		goto err;
+	if (Deque_llrot(self, num_items))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_lrrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, "Iu:lrrot", &num_items) ||
-	    Deque_lrrot(self, num_items))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "Iu:lrrot", &num_items))
+		goto err;
+	if (Deque_lrrot(self, num_items))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_rlrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, "Iu:rlrot", &num_items) ||
-	    Deque_rlrot(self, num_items))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "Iu:rlrot", &num_items))
+		goto err;
+	if (Deque_rlrot(self, num_items))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_rrrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
-	if (DeeArg_Unpack(argc, argv, "Iu:rrrot", &num_items) ||
-	    Deque_rrrot(self, num_items))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "Iu:rrrot", &num_items))
+		goto err;
+	if (Deque_rrrot(self, num_items))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1599,10 +1628,12 @@ deqiter_ctor(DequeIteratorObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 	self->di_deq = (DREF Deque *)DeeObject_NewDefault(&Deque_Type);
 	if unlikely(!self->di_deq)
-		return -1;
+		goto err;
 	self->di_ver = 0;
 	DequeIterator_InitBegin(&self->di_iter, self->di_deq);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

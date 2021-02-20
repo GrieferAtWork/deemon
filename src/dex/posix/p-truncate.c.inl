@@ -197,8 +197,8 @@ EINTR_LABEL(again)
 	result = truncate(filename, len);
 #else /* Single-call */
 	{
-#if defined(posix_truncate_USE_WOPEN_FTRUNCATE) || \
-    defined(posix_truncate_USE_WOPEN_FTRUNCATE64)
+#if (defined(posix_truncate_USE_WOPEN_FTRUNCATE) || \
+     defined(posix_truncate_USE_WOPEN_FTRUNCATE64))
 #define TRUNCATE_PRINTF_FILENAME "%lq"
 #ifdef CONFIG_HAVE_wopen64
 		int fd = wopen64(filename, O_RDWR);
@@ -215,12 +215,12 @@ EINTR_LABEL(again)
 #endif
 		result = fd;
 		if (fd >= 0) {
-#if defined(posix_truncate_USE_OPEN_FTRUNCATE64) || \
-    defined(posix_truncate_USE_WOPEN_FTRUNCATE64)
+#if (defined(posix_truncate_USE_OPEN_FTRUNCATE64) || \
+     defined(posix_truncate_USE_WOPEN_FTRUNCATE64))
 			result = ftruncate64(fd, len);
-#else
+#else /* ... */
 			result = ftruncate(fd, len);
-#endif
+#endif /* !... */
 #ifdef CONFIG_HAVE_close
 			close(fd);
 #endif /* CONFIG_HAVE_close */

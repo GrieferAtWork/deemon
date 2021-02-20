@@ -122,13 +122,13 @@ ast_setscope(Ast *__restrict self,
              DeeCompilerScopeObject *__restrict value) {
 	struct ast *branch = self->ci_value;
 	if (DeeObject_AssertType(value, &DeeCompilerScope_Type))
-		return -1;
+		goto err;
 	if (value->ci_compiler != self->ci_compiler)
 		return err_invalid_scope_compiler(value);
 	COMPILER_BEGIN(self->ci_compiler);
 	if unlikely(value->ci_value->s_base != branch->a_scope->s_base) {
 		err_different_base_scope();
-		goto err;
+		goto err_compiler;
 	}
 	/* Make sure that referenced symbols is
 	 * still reachable from the new scope. */
@@ -143,7 +143,7 @@ err_unreachable_symbols:
 		DeeError_Throwf(&DeeError_ReferenceError,
 		                "Cannot assign new scope to branch containing "
 		                "symbols that would no longer be reachable");
-		goto err;
+		goto err_compiler;
 
 	case AST_CLASS:
 		if (branch->a_class.c_classsym &&
@@ -162,8 +162,9 @@ err_unreachable_symbols:
 	branch->a_scope = value->ci_value;
 	COMPILER_END();
 	return 0;
-err:
+err_compiler:
 	COMPILER_END();
+err:
 	return -1;
 }
 
@@ -836,7 +837,7 @@ ast_setloopisforeach(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
@@ -852,6 +853,8 @@ ast_setloopisforeach(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -878,7 +881,7 @@ ast_setloopispostcond(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
@@ -890,6 +893,8 @@ ast_setloopispostcond(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -916,7 +921,7 @@ ast_setloopisunlikely(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
@@ -928,6 +933,8 @@ ast_setloopisunlikely(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1515,7 +1522,7 @@ ast_setloopctlisbreak(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
@@ -1527,6 +1534,8 @@ ast_setloopctlisbreak(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1800,7 +1809,7 @@ ast_setconditionalisbool(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
@@ -1812,6 +1821,8 @@ ast_setconditionalisbool(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1838,7 +1849,7 @@ ast_setconditionalislikely(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
@@ -1850,6 +1861,8 @@ ast_setconditionalislikely(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1876,7 +1889,7 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
@@ -1888,6 +1901,8 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1956,7 +1971,7 @@ ast_setboolisnegated(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
@@ -1968,6 +1983,8 @@ ast_setboolisnegated(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2570,7 +2587,7 @@ ast_setoperatorispost(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
@@ -2582,6 +2599,8 @@ ast_setoperatorispost(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2608,7 +2627,7 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
@@ -2620,6 +2639,8 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2646,7 +2667,7 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
@@ -2658,6 +2679,8 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2684,7 +2707,7 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
-		return -1;
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
@@ -2696,6 +2719,8 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

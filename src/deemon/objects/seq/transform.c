@@ -300,10 +300,12 @@ trans_getitem(Transformation *self,
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetItem(self->t_seq, index);
 	if unlikely(!orig)
-		return NULL;
+		goto err;
 	result = DeeObject_Call(self->t_fun, 1, &orig);
 	Dee_Decref(orig);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -313,10 +315,12 @@ trans_getrange(Transformation *__restrict self,
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetRange(self->t_seq, start, end);
 	if unlikely(!orig)
-		return NULL;
+		goto err;
 	result = DeeSeq_Transform(orig, self->t_fun);
 	Dee_Decref(orig);
 	return result;
+err:
+	return NULL;
 }
 
 
@@ -335,10 +339,12 @@ trans_nsi_getitem(Transformation *__restrict self, size_t index) {
 	DREF DeeObject *inner[1], *result;
 	inner[0] = DeeObject_GetItemIndex(self->t_seq, index);
 	if unlikely(!inner[0])
-		return NULL;
+		goto err;
 	result = DeeObject_Call(self->t_fun, 1, inner);
 	Dee_Decref(inner[0]);
 	return result;
+err:
+	return NULL;
 }
 
 

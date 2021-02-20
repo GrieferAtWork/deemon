@@ -262,10 +262,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) char *
 	/* Append a new string. */
 	error = ascii_printer_print(self, str, length);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	ASSERT(self->ap_string || (!self->ap_length && !length));
 	ASSERT(self->ap_length >= length);
 	return self->ap_string->s_str + (self->ap_length - length);
+err:
+	return NULL;
 }
 
 STATIC_ASSERT(STRING_WIDTH_1BYTE < 1);
@@ -821,10 +823,12 @@ string_lo(String *self, DeeObject *some_object) {
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			return NULL;
+			goto err;
 		result = compare_strings(self, (String *)some_object);
 	}
 	return_bool_(result < 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -834,10 +838,12 @@ string_le(String *self, DeeObject *some_object) {
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			return NULL;
+			goto err;
 		result = compare_strings(self, (String *)some_object);
 	}
 	return_bool_(result <= 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -847,10 +853,12 @@ string_gr(String *self, DeeObject *some_object) {
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			return NULL;
+			goto err;
 		result = compare_strings(self, (String *)some_object);
 	}
 	return_bool_(result > 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -860,10 +868,12 @@ string_ge(String *self, DeeObject *some_object) {
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			return NULL;
+			goto err;
 		result = compare_strings(self, (String *)some_object);
 	}
 	return_bool_(result >= 0);
+err:
+	return NULL;
 }
 
 
@@ -879,11 +889,13 @@ string_eq(String *self, DeeObject *some_object) {
 	if (DeeBytes_Check(some_object))
 		return_bool(string_eq_bytes(self, (DeeBytesObject *)some_object));
 	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-		return NULL;
+		goto err;
 	if (DeeString_Hash((DeeObject *)self) !=
 	    DeeString_Hash((DeeObject *)some_object))
 		return_false;
 	return_bool(compare_strings(self, (String *)some_object) == 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -894,12 +906,14 @@ string_ne(String *self, DeeObject *some_object) {
 	if (DeeBytes_Check(some_object))
 		return_bool(!string_eq_bytes(self, (DeeBytesObject *)some_object));
 	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-		return NULL;
+		goto err;
 	if (DeeString_Hash((DeeObject *)self) !=
 	    DeeString_Hash((DeeObject *)some_object))
 		return_true;
 	/* XXX: This could be optimized! */
 	return_bool(compare_strings(self, (String *)some_object) != 0);
+err:
+	return NULL;
 }
 
 
@@ -1289,9 +1303,12 @@ string_range_get(String *__restrict self,
 	int width  = DeeString_WIDTH(self);
 	size_t len = WSTR_LENGTH(str);
 	dssize_t i_begin, i_end = (dssize_t)len;
-	if (DeeObject_AsSSize(begin, &i_begin) ||
-	    (!DeeNone_Check(end) && DeeObject_AsSSize(end, &i_end)))
+	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
+	if (!DeeNone_Check(end)) {
+		if (DeeObject_AsSSize(end, &i_end))
+			goto err;
+	}
 	if (i_begin < 0)
 		i_begin += len;
 	if (i_end < 0)

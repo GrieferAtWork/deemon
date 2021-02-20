@@ -3289,18 +3289,20 @@ ria_call(RemoveIfAllWrapper *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *key_elem;
 	if unlikely(argc != 1) {
 		err_invalid_argc("_SeqRemoveIfAllWrapper", argc, 1, 1);
-		return NULL;
+		goto err;
 	}
 	if (self->ria_pred) {
 		key_elem = DeeObject_Call(self->ria_pred, 1, argv);
 		if unlikely(!key_elem)
-			return NULL;
+			goto err;
 		result = DeeObject_CompareEqObject(self->ria_elem, key_elem);
 		Dee_Decref(key_elem);
 	} else {
 		result = DeeObject_CompareEqObject(self->ria_elem, argv[0]);
 	}
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {

@@ -252,9 +252,10 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
 	DeeDictObject *Dict;
-	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict) ||
-	    DeeObject_AssertType(Dict, &DeeDict_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict))
+		goto err;
+	if (DeeObject_AssertType(Dict, &DeeDict_Type))
+		goto err;
 	self->di_dict = Dict;
 	Dee_Incref(Dict);
 #ifdef CONFIG_NO_THREADS
@@ -263,15 +264,19 @@ dictiterator_init(DictIterator *__restrict self,
 	self->di_next = ATOMIC_READ(Dict->d_elem);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (DeeDictObject *)DeeDict_New();
 	if unlikely(!self->di_dict)
-		return -1;
+		goto err;
 	self->di_next = self->di_dict->d_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -621,11 +626,13 @@ dict_newproxy(DeeDictObject *self,
 	ASSERT_OBJECT_TYPE(self, &DeeDict_Type);
 	result = DeeObject_MALLOC(DictProxy);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	DeeObject_Init(result, proxy_type);
 	result->dp_dict = self;
 	Dee_Incref(self);
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 

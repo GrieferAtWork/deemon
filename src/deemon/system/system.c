@@ -861,8 +861,8 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 
 
 
-#if defined(DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX) || \
-    defined(DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME)
+#if (defined(DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX) || \
+     defined(DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME))
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 PRIVATE uint64_t DCALL
 nt_getunixfiletime(uint64_t filetime) {
@@ -1107,7 +1107,7 @@ DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
 			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
 				return 0;
 		}
-		return -1;
+		goto err;
 	}
 again_deletefile:
 	if (DeleteFileW(wname))
@@ -1117,7 +1117,7 @@ again_deletefile:
 		if (DeeThread_CheckInterrupt()) {
 			/* Try hard to delete the file... (even after an interrupt) */
 			DeleteFileW(wname);
-			return -1;
+			goto err;
 		}
 		goto again_deletefile;
 	}
@@ -1126,13 +1126,13 @@ again_deletefile:
 		/* Try again with a UNC filename. */
 		unc_filename = (DREF DeeStringObject *)DeeNTSystem_FixUncPath(filename);
 		if unlikely(!unc_filename)
-			return -1;
+			goto err;
 		wname = (LPWSTR)DeeString_AsWide(filename);
 		if unlikely(!wname) {
 			/* No point in trying to use DeleteFileA() here.
 			 * It doesn't work for UNC paths to begin with... */
 			Dee_Decref(unc_filename);
-			return -1;
+			goto err;
 		}
 again_deletefile2:
 		if (DeleteFileW(wname)) {
@@ -1145,7 +1145,7 @@ again_deletefile2:
 				/* Try hard to delete the file... (even after an interrupt) */
 				DeleteFileW(wname);
 				Dee_Decref(unc_filename);
-				return -1;
+				goto err;
 			}
 			goto again_deletefile2;
 		}
@@ -1157,11 +1157,12 @@ again_deletefile2:
 	DeeNTSystem_ThrowErrorf(NULL, dwError,
 	                        "Failed to delete file %r",
 	                        filename);
+err:
 	return -1;
 #endif /* DeeSystem_Unlink_USE_DELETEFILE */
 
-#if defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE) || \
-    defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE)
+#if (defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE) || \
+     defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE))
 #if defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE)
 	dwchar_t *wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);

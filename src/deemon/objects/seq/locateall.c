@@ -209,10 +209,12 @@ locatoriter_seq_get(LocatorIterator *__restrict self) {
 	/* Forward access to this attribute to the pointed-to iterator. */
 	inner_seq = DeeObject_GetAttr(self->li_iter, (DeeObject *)&str_seq);
 	if unlikely(!inner_seq)
-		return NULL;
+		goto err;
 	result = DeeSeq_LocateAll(inner_seq, self->li_elem, self->li_pred);
 	Dee_Decref(inner_seq);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_getset tpconst locatoriter_getsets[] = {
@@ -459,7 +461,7 @@ DeeSeq_LocateAll(DeeObject *self,
 	/* Create a new locator sequence. */
 	result = DeeObject_MALLOC(Locator);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->l_seq  = self;
 	result->l_elem = keyed_search_item;
 	result->l_pred = key;
@@ -468,6 +470,8 @@ DeeSeq_LocateAll(DeeObject *self,
 	Dee_XIncref(key);
 	DeeObject_Init(result, &SeqLocator_Type);
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 DECL_END

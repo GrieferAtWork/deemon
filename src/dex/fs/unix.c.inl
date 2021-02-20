@@ -149,7 +149,7 @@ LOCAL DIR *(opendir)(char const *name) {
 	size_t namelen = strlen(name);
 	char *query    = (char *)malloc((namelen + 3) * sizeof(char));
 	if unlikely(!query)
-		return NULL;
+		goto err;
 	result = (DIR *)malloc(sizeof(DIR));
 	if unlikely(!result)
 		goto done;
@@ -166,6 +166,8 @@ LOCAL DIR *(opendir)(char const *name) {
 done:
 	free(query);
 	return result;
+err:
+	return NULL;
 }
 
 LOCAL int (closedir)(DIR *dirp) {
@@ -183,14 +185,16 @@ LOCAL int (closedir)(DIR *dirp) {
 LOCAL struct dirent *(readdir)(DIR *dirp) {
 	if unlikely(!dirp) {
 		_set_errno(EINVAL);
-		return NULL;
+		goto err;
 	}
 	if (!dirp->d_isfirst) {
 		if (_findnext32(dirp->d_hnd, (struct _finddata32_t *)&dirp->d_ent.d_attrib))
-			return NULL;
+			goto err;
 	}
 	dirp->d_isfirst = 0;
 	return &dirp->d_ent;
+err:
+	return NULL;
 }
 
 #ifdef __USE_LARGEFILE64
@@ -347,7 +351,7 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	DREF DeeObject *result;
 	size_t i;
 	if (DeeThread_CheckInterrupt())
-		return NULL;
+		goto err;
 	for (i = 0; i < COMPILER_STRLEN(tmpdir_vars); ++i)
 		if ((result = fs_getenv(tmpdir_vars[i], true)) != NULL)
 			goto done;
@@ -356,6 +360,8 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	Dee_Incref(result);
 done:
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE ATTR_COLD int DCALL

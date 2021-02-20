@@ -123,10 +123,12 @@ super_copy(Super *__restrict self,
 	ASSERT_OBJECT(self);
 	self->s_self = DeeObject_TCopy(other->s_type, other->s_self);
 	if unlikely(!self->s_self)
-		return -1;
+		goto err;
 	self->s_type = Dee_TYPE(self->s_self);
 	Dee_Incref(self->s_type);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -135,10 +137,12 @@ super_deepcopy(Super *__restrict self,
 	ASSERT_OBJECT(self);
 	self->s_self = DeeObject_TDeepCopy(other->s_type, other->s_self);
 	if unlikely(!self->s_self)
-		return -1;
+		goto err;
 	self->s_type = Dee_TYPE(self->s_self);
 	Dee_Incref(self->s_type);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -146,13 +150,13 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:Super", &ob, &tp))
-		return -1;
+		goto err;
 	/* Special handling when the base-object is another super-object. */
 	if (DeeSuper_Check(ob)) {
 		if (!tp) {
 			self->s_type = DeeType_Base(DeeSuper_TYPE(self));
 			if unlikely(!self->s_type)
-				goto nosuper;
+				goto err_nosuper;
 			self->s_self = DeeSuper_SELF(self);
 			Dee_Incref(self->s_type);
 			Dee_Incref(self->s_self);
@@ -166,14 +170,16 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 		} else {
 			/* Make sure the passed type matches. */
 			if (DeeObject_AssertType(tp, &DeeType_Type))
-				return -1;
-			if (!DeeType_IsAbstract(tp) && DeeObject_AssertType(ob, tp))
-				return -1;
+				goto err;
+			if (!DeeType_IsAbstract(tp)) {
+				if (DeeObject_AssertType(ob, tp))
+					goto err;
+			}
 		}
 	} else {
 		tp = DeeType_Base(Dee_TYPE(ob));
 		if unlikely(!tp)
-			goto nosuper;
+			goto err_nosuper;
 	}
 	ASSERT(ob);
 	ASSERT(tp);
@@ -182,11 +188,12 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	Dee_Incref(ob);
 	Dee_Incref(tp);
 	return 0;
-nosuper:
+err_nosuper:
 	/* Special case: There is no super-class to dereference. */
 	err_no_super_class(DeeSuper_Check(self)
 	                   ? DeeSuper_TYPE(self)
 	                   : Dee_TYPE(self));
+err:
 	return -1;
 }
 
@@ -648,20 +655,26 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_typeof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
-	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object) ||
-	    DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object))
+		goto err;
+	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
+		goto err;
 	return_reference_((DeeObject *)super_object->s_type);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_selfof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
-	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object) ||
-	    DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object))
+		goto err;
+	if (DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
+		goto err;
 	return_reference_((DeeObject *)super_object->s_self);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst super_class_methods[] = {

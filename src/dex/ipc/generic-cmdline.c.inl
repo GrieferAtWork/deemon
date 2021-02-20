@@ -186,11 +186,13 @@ process_cmdline_encode_argument(dformatprinter printer, void *arg,
                                 char const *arg_start, size_t arg_len) {
 	struct cmdline_encode_argument_wrapper_data p;
 	if (!libcmdline_init())
-		return -1;
+		goto err;
 	p.wd_printer = printer;
 	p.wd_arg     = arg;
 	return (*pdyn_cmdline_encode_argument)(&cmdline_encode_argument_wrapper_func,
 	                                       &p, arg_start, arg_len);
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -199,12 +201,14 @@ process_cmdline_decode(char *cmdline,
                        void *arg_printer_arg) {
 	struct cmdline_encode_argument_wrapper_data p;
 	if (!libcmdline_init())
-		return -1;
+		goto err;
 	p.wd_printer = arg_printer;
 	p.wd_arg     = arg_printer_arg;
 	return (*pdyn_cmdline_decode)(cmdline,
 	                              &cmdline_encode_argument_wrapper_func,
 	                              &p);
+err:
+	return -1;
 }
 
 #else /* CONFIG_HAVE_LIBCMDLINE */
@@ -638,18 +642,21 @@ process_cmdline_decode_full_func(void *arg,
 	p = (struct process_cmdline_decode_full_data *)arg;
 	data_str = DeeString_NewUtf8(data, datalen, STRING_ERROR_FIGNORE);
 	if unlikely(!data_str)
-		return -1;
+		goto err;
 	if (!p->dfd_resexe) {
 		Dee_Incref(data_str);
 		p->dfd_resexe = data_str;
 	}
 	new_argv = DeeTuple_Append(p->dfd_restuple, data_str);
-	if unlikely(!new_argv) {
-		Dee_Decref(data_str);
-		return -1;
-	}
+	if unlikely(!new_argv)
+		goto err_data_str;
+	p->dfd_restuple = new_argv;
 	Dee_DecrefNokill(data_str);
 	return 0;
+err_data_str:
+	Dee_Decref(data_str);
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
@@ -685,14 +692,18 @@ PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 process_cmdline_decode_full(char const *__restrict cmdline,
                             DREF DeeObject **pexe) {
 	DREF DeeObject *result;
-	size_t cmdline_len = strlen(cmdline);
-	char *cmdline_copy = (char *)Dee_Malloc((cmdline_len + 1) * sizeof(char));
+	size_t cmdline_len;
+	char *cmdline_copy;
+	cmdline_len  = strlen(cmdline);
+	cmdline_copy = (char *)Dee_Malloc((cmdline_len + 1) * sizeof(char));
 	if unlikely(!cmdline_copy)
-		return NULL;
+		goto err;
 	memcpyc(cmdline_copy, cmdline, cmdline_len + 1, sizeof(char));
 	result = process_cmdline_decode_full_inplace(cmdline_copy, pexe);
 	Dee_Free(cmdline_copy);
 	return result;
+err:
+	return NULL;
 }
 
 

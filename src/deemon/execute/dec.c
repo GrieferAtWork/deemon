@@ -1949,7 +1949,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 	*pcount = count = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 	result          = (DREF DeeObject **)Dee_Malloc(count * sizeof(DREF DeeObject *));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	for (i = 0; i < count; ++i) {
 		/* Validate the the vector is still in-bounds. */
 		if unlikely(reader >= end) {
@@ -1975,6 +1975,8 @@ read_failed:
 	}
 	*preader = reader;
 	return result;
+err:
+	return NULL;
 }
 
 #define decode_uleb(pptr) Dec_DecodePointer(pptr)
@@ -2028,7 +2030,7 @@ load_strmap(DecFile *__restrict self,
 	/* Allocate the map vector. */
 	vector = (uint32_t *)Dee_Malloc(map_length * sizeof(uint32_t));
 	if unlikely(!vector)
-		return -1;
+		goto err;
 
 	string_size = LETOH32(self->df_ehdr->e_strsiz);
 	/* Read vector contents. */
@@ -2051,6 +2053,8 @@ err_currupt_vec:
 	Dee_Free(vector);
 err_currupt:
 	return 1;
+err:
+	return -1;
 }
 
 

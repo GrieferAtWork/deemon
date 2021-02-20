@@ -324,8 +324,10 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
-		return NULL;
+		goto err;
 	return DeeFile_OpenString(utf8_filename, oflags, mode);
+err:
+	return NULL;
 }
 
 
@@ -776,9 +778,9 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 #define sysfile_isatty_USE_ISATTY 1
 #elif defined(CONFIG_HAVE_stdin) ||  defined(CONFIG_HAVE_stdout) || defined(CONFIG_HAVE_stderr)
 #define sysfile_isatty_USE_ISASTDFILE 1
-#else
+#else /* ... */
 #define sysfile_isatty_USE_RETURN_FALSE 1
-#endif
+#endif /* !... */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1022,7 +1024,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
-		return NULL;
+		goto err;
 	/* Flush all streams. */
 #ifdef CONFIG_HAVE_fflush
 	DBG_ALIGNMENT_DISABLE();
@@ -1030,6 +1032,8 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_fflush */
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {

@@ -357,11 +357,11 @@ decode_c_escape(DeeObject *__restrict self, unsigned int error_mode) {
 	} else if (DeeString_Check(self)) {
 		text = DeeString_AsUtf8(self);
 		if unlikely(!text)
-			return NULL;
+			goto err;
 		size = WSTR_LENGTH(text);
 	} else {
 		err_expected_string_or_bytes(self);
-		return NULL;
+		goto err;
 	}
 	/* If the string starts and ends with the same quotation mark, remove them. */
 	if (size >= 2 &&
@@ -369,6 +369,8 @@ decode_c_escape(DeeObject *__restrict self, unsigned int error_mode) {
 	    (text[0] == '\"' || text[0] == '\''))
 		++text, size -= 2;
 	return DeeString_FromBackslashEscaped(text, size, error_mode);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

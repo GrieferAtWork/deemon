@@ -540,7 +540,7 @@ reader_setowner(Reader *__restrict self,
 	if (DeeGC_IsReachable((DeeObject *)self, value))
 		return err_reference_loop((DeeObject *)self, value);
 	if (DeeObject_GetBuf(value, &new_buffer, Dee_BUFFER_FREADONLY))
-		return -1;
+		goto err;
 	Dee_Incref(value);
 	DeeFile_LockRead(self);
 	old_value     = self->r_owner;
@@ -557,6 +557,8 @@ reader_setowner(Reader *__restrict self,
 		Dee_Decref(old_value);
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -639,9 +641,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	size_t begin = 0, end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o|IdId:_FileReader", &self->r_owner, &begin, &end) ||
-	    DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o|IdId:_FileReader", &self->r_owner, &begin, &end))
+		goto err;
+	if (DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
+		goto err;
 	/* Truncate the end-pointer. */
 	if (end > self->r_buffer.bb_size)
 		end = self->r_buffer.bb_size;
@@ -655,6 +658,8 @@ reader_init(Reader *__restrict self,
 	self->r_end   = (char *)self->r_buffer.bb_base + end;
 	self->r_ptr   = self->r_begin;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE struct type_getset tpconst reader_getsets[] = {
@@ -806,8 +811,9 @@ writer_ctor(Writer *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeStringObject *init_string;
-	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string) ||
-	    DeeObject_AssertTypeExact(init_string, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string))
+		goto err;
+	if (DeeObject_AssertTypeExact(init_string, &DeeString_Type))
 		goto err;
 	rwlock_init(&self->fo_lock);
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(init_string);
@@ -975,7 +981,7 @@ writer_setstring(Writer *__restrict self,
 	if (DeeNone_Check(value))
 		goto do_del_string;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
-		return -1;
+		goto err;
 	if (DeeString_IsEmpty(value))
 		goto do_del_string;
 	Dee_Incref(value);
@@ -1008,6 +1014,8 @@ writer_setstring(Writer *__restrict self,
 	return 0;
 do_del_string:
 	return writer_delstring(self);
+err:
+	return -1;
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
@@ -1023,34 +1031,40 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
-		return NULL;
+		goto err;
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":size"))
-		return NULL;
+		goto err;
 #ifdef CONFIG_NO_THREADS
 	result = self->w_printer.up_length;
 #else /* CONFIG_NO_THREADS */
 	result = ATOMIC_READ(self->w_printer.up_length);
 #endif /* !CONFIG_NO_THREADS */
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":allocated"))
-		return NULL;
+		goto err;
 	DeeFile_LockRead(self);
 	result = self->w_printer.up_buffer
 	         ? WSTR_LENGTH(self->w_printer.up_buffer)
 	         : 0;
 	DeeFile_LockEndRead(self);
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

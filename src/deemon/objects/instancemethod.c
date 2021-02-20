@@ -49,13 +49,15 @@ DeeInstanceMethod_New(DeeObject *func,
 	ASSERT_OBJECT(this_arg);
 	result = DeeObject_MALLOC(InstanceMethod);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	DeeObject_Init(result, &DeeInstanceMethod_Type);
 	result->im_func = func;
 	result->im_this = this_arg;
 	Dee_Incref(func);
 	Dee_Incref(this_arg);
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -86,13 +88,15 @@ im_deepcopy(InstanceMethod *__restrict self,
             InstanceMethod *__restrict other) {
 	self->im_this = DeeObject_DeepCopy(other->im_this);
 	if unlikely(!self->im_this)
-		return -1;
+		goto err;
 	self->im_func = DeeObject_DeepCopy(other->im_func);
-	if unlikely(!self->im_func) {
-		Dee_Decref(self->im_this);
-		return -1;
-	}
+	if unlikely(!self->im_func)
+		goto err_im_this;
 	return 0;
+err_im_this:
+	Dee_Decref(self->im_this);
+err:
+	return -1;
 }
 
 PRIVATE int DCALL
@@ -102,12 +106,14 @@ im_init(InstanceMethod *__restrict self,
 	DeeObject *thisarg, *func;
 	PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:InstanceMethod", &func, &thisarg))
-		return -1;
+		goto err;
 	self->im_this = thisarg;
 	self->im_func = func;
 	Dee_Incref(thisarg);
 	Dee_Incref(func);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -136,7 +142,7 @@ im_eq(InstanceMethod *self,
       InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
-		return NULL;
+		goto err;
 	temp = DeeObject_CompareEq(self->im_func, other->im_func);
 	if (temp <= 0)
 		return (unlikely(temp < 0))
@@ -144,8 +150,10 @@ im_eq(InstanceMethod *self,
 		       : (Dee_Incref(Dee_False), Dee_False);
 	temp = DeeObject_CompareEq(self->im_this, other->im_this);
 	if unlikely(temp < 0)
-		return NULL;
+		goto err;
 	return_bool_(temp);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -153,16 +161,19 @@ im_ne(InstanceMethod *self,
       InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
-		return NULL;
+		goto err;
 	temp = DeeObject_CompareNe(self->im_func, other->im_func);
-	if (temp != 0)
-		return (unlikely(temp < 0))
-		       ? NULL
-		       : (Dee_Incref(Dee_True), Dee_True);
+	if (temp != 0) {
+		if unlikely(temp < 0)
+			goto err;
+		return_true;
+	}
 	temp = DeeObject_CompareNe(self->im_this, other->im_this);
 	if unlikely(temp < 0)
-		return NULL;
+		goto err;
 	return_bool_(temp);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp im_cmp = {

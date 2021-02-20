@@ -146,8 +146,10 @@ float_add(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
-		return NULL;
+		goto err;
 	return DeeFloat_NewReuse(self, self->f_value + other_val);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
@@ -155,8 +157,10 @@ float_sub(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
-		return NULL;
+		goto err;
 	return DeeFloat_NewReuse(self, self->f_value - other_val);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
@@ -164,8 +168,10 @@ float_mul(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
-		return NULL;
+		goto err;
 	return DeeFloat_NewReuse(self, self->f_value * other_val);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
@@ -173,8 +179,10 @@ float_div(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
-		return NULL;
+		goto err;
 	return DeeFloat_NewReuse(self, self->f_value / other_val);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_math float_math = {

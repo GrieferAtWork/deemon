@@ -287,15 +287,17 @@ DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs) {
 		return 0; /* A regular set can never match an inverse set. */
 	result = set_issubset_impl(lhs, rhs);
 	if unlikely(result == -2)
-		return -1;
+		goto err;
 	if (result < 0)
 		return 0;
 	/* Check the size of `rhs' to make sure
 	 * it contains the same number of as `lhs' */
 	rhs_size = DeeObject_Size(rhs);
 	if unlikely(rhs_size == (size_t)-1)
-		return -1;
+		goto err;
 	return rhs_size == (size_t)result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -345,62 +347,82 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
-		return NULL;
+		goto err;
 	return DeeSet_Difference(self, other);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_intersection(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
-		return NULL;
+		goto err;
 	return DeeSet_Intersection(self, other);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
-	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other) ||
-	    (result = DeeSet_IsDisjoint(self, other)) < 0)
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other))
+		goto err;
+	result = DeeSet_IsDisjoint(self, other);
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_union(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:union", &other))
-		return NULL;
+		goto err;
 	return DeeSet_Union(self, other);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_symmetric_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
-		return NULL;
+		goto err;
 	return DeeSet_SymmetricDifference(self, other);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
-	if (DeeArg_Unpack(argc, argv, "o:issubset", &other) ||
-	    (result = DeeSet_IsSubSet(self, other)) < 0)
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
+		goto err;
+	result = DeeSet_IsSubSet(self, other);
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
-	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other) ||
-	    (result = DeeSet_IsSubSet(other, self)) < 0)
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other))
+		goto err;
+	result = DeeSet_IsSubSet(other, self);
+	if unlikely(result < 0)
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -474,10 +496,12 @@ set_inplace_intersection(DeeObject **__restrict pself, DeeObject *items) {
 	DREF DeeObject *new_self;
 	new_self = DeeObject_And(self, items);
 	if unlikely(!new_self)
-		return -1;
+		goto err;
 	result = DeeObject_Assign(self, new_self);
 	Dee_Decref(new_self);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -488,9 +512,11 @@ set_inplace_union(DeeObject **__restrict pself, DeeObject *items) {
 	                                     1,
 	                                     (DeeObject **)&items);
 	if unlikely(!callback_result)
-		return -1;
+		goto err;
 	Dee_Decref(callback_result);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -500,10 +526,12 @@ set_inplace_symmetric_difference(DeeObject **__restrict pself, DeeObject *items)
 	DREF DeeObject *new_self;
 	new_self = DeeObject_Xor(self, items);
 	if unlikely(!new_self)
-		return -1;
+		goto err;
 	result = DeeObject_Assign(self, new_self);
 	Dee_Decref(new_self);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE struct type_math set_math = {
@@ -652,8 +680,10 @@ set_eq(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSameSet(self, some_object);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -661,8 +691,10 @@ set_ne(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSameSet(self, some_object);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -670,8 +702,10 @@ set_lo(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsTrueSubSet(self, some_object);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -679,8 +713,10 @@ set_le(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSubSet(self, some_object);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -688,8 +724,10 @@ set_gr(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsTrueSubSet(some_object, self);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -697,8 +735,10 @@ set_ge(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSubSet(self, some_object);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 

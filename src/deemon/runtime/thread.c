@@ -529,11 +529,10 @@ do_tickcount:
 }
 
 #ifndef CONFIG_NO_THREADS
-#if defined(CONFIG_THREADS_PTHREAD) || \
-    defined(USE_SUSPEND_SIGNALS)
+#if defined(CONFIG_THREADS_PTHREAD) || defined(USE_SUSPEND_SIGNALS)
 #ifndef PTHREAD_INTERRUPT_SIGNAL
 #define PTHREAD_INTERRUPT_SIGNAL SIGUSR1
-#endif
+#endif /* !PTHREAD_INTERRUPT_SIGNAL */
 #define sys_threadstartup  sys_threadstartup
 PRIVATE void suspend_signal_handler(int signo);
 
@@ -849,7 +848,7 @@ again:
 		/* Well shit! Try one more time?... */
 		result = DeeObject_TRYCALLOC(DeeThreadObject);
 		if (!result)
-			return NULL;
+			goto done;
 	}
 	DeeObject_Init(result, &DeeThread_Type);
 	result->t_state             = THREAD_STATE_STARTED;
@@ -874,6 +873,7 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 #endif
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
+done:
 	return result;
 }
 
@@ -1245,8 +1245,7 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 	return result;
 }
 
-#if defined(CONFIG_THREADS_PTHREAD) || \
-    defined(USE_SUSPEND_SIGNALS)
+#if defined(CONFIG_THREADS_PTHREAD) || defined(USE_SUSPEND_SIGNALS)
 PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 #ifdef USE_SUSPEND_SIGNALS
 	DeeThreadObject *caller;
@@ -2758,9 +2757,12 @@ thread_interrupt(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "|oo:interrupt", &sig, &args) ||
-	    (args && DeeObject_AssertTypeExact(args, &DeeTuple_Type)))
+	if (DeeArg_Unpack(argc, argv, "|oo:interrupt", &sig, &args))
 		goto err;
+	if (args) {
+		if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
+			goto err;
+	}
 	error = DeeThread_Interrupt(self, sig, args);
 	if unlikely(error < 0)
 		goto err;
@@ -2772,36 +2774,46 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_started(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
-		return NULL;
+		goto err;
 	return_bool(DeeThread_HasStarted(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detached(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
-		return NULL;
+		goto err;
 	return_bool(DeeThread_WasDetached(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_terminated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
-		return NULL;
+		goto err;
 	return_bool(DeeThread_HasTerminated(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_interrupted(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":interrupted"))
-		return NULL;
+		goto err;
 	return_bool(DeeThread_WasInterrupted(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashed(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":crashed"))
-		return NULL;
+		goto err;
 	return_bool(DeeThread_HasCrashed(self));
+err:
+	return NULL;
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -2993,8 +3005,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
-		return NULL;
+		goto err;
 	return_reference(DeeThread_Self());
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3006,11 +3020,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_selfid(DeeObject *UNUSED(self),
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
-		return NULL;
+		goto err;
 #ifdef CONFIG_NO_THREADID_INTERNAL
 	dthreadid_t result;
 	if (DeeThread_GetTid(DeeThread_Self(), &result))
-		return NULL;
+		goto err;
 	return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
 #else /* CONFIG_NO_THREADID_INTERNAL */
 #ifdef NO_DBG_ALIGNMENT
@@ -3025,34 +3039,44 @@ thread_selfid(DeeObject *UNUSED(self),
 	}
 #endif /* !NO_DBG_ALIGNMENT */
 #endif /* !CONFIG_NO_THREADID_INTERNAL */
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_yield(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":yield"))
-		return NULL;
+		goto err;
 	SCHED_YIELD();
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *UNUSED(self),
                        size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":check_interrupt") ||
-	    DeeThread_CheckInterrupt())
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":check_interrupt"))
+		goto err;
+	if (DeeThread_CheckInterrupt())
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout) ||
-	    DeeThread_Sleep(timeout))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout))
+		goto err;
+	if (DeeThread_Sleep(timeout))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3223,7 +3247,7 @@ thread_callargs_set(DeeThreadObject *__restrict self,
 		value = Dee_EmptyTuple;
 	/* Make sure the new value is actually a tuple. */
 	if (DeeObject_AssertTypeExact(value, &DeeTuple_Type))
-		return -1;
+		goto err;
 	/* Don't allow this to be overwritten for sub-classes of `thread' */
 	if (!DeeThread_CheckExact(self))
 		return err_cannot_set_thread_subclass_callback(self, "callargs");
@@ -3247,6 +3271,8 @@ restart:
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	Dee_Decref(old_callargs);
 	return 0;
+err:
+	return -1;
 #endif /* !CONFIG_NO_THREADS */
 }
 
@@ -3291,8 +3317,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_id(DeeObject *__restrict self) {
 	dthreadid_t result;
 	if (DeeThread_GetTid(self, &result))
-		return NULL;
+		goto err;
 	return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

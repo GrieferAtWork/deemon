@@ -880,16 +880,20 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFile_PrintObjectSp(DeeObject *self,
                       DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob))
-		return -1;
+		goto err;
 	return print_sp(self);
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFile_PrintObjectNl(DeeObject *self,
                       DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob))
-		return -1;
+		goto err;
 	return DeeFile_PrintNl(self);
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
@@ -995,8 +999,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFile_PrintAllNl(DeeObject *self,
                    DeeObject *ob) {
 	if unlikely(DeeFile_PrintAll(self, ob))
-		return -1;
+		goto err;
 	return DeeFile_PrintNl(self);
+err:
+	return -1;
 }
 
 
@@ -1500,11 +1506,9 @@ again:
 		rwlock_endread(&files_module_lock);
 		mod = DeeModule_OpenGlobal((DeeObject *)&str_files, NULL, true);
 		if unlikely(!mod)
-			return NULL;
-		if unlikely(DeeModule_RunInit(mod) < 0) {
-			Dee_Decref(mod);
-			return NULL;
-		}
+			goto err;
+		if unlikely(DeeModule_RunInit(mod) < 0)
+			goto err_mod;
 		rwlock_write(&files_module_lock);
 		if unlikely(ATOMIC_READ(files_module)) {
 			rwlock_endwrite(&files_module_lock);
@@ -1521,6 +1525,10 @@ again:
 	result = DeeObject_GetAttr(mod, name);
 	Dee_Decref(mod);
 	return result;
+err_mod:
+	Dee_Decref(mod);
+err:
+	return NULL;
 }
 
 PRIVATE bool DCALL clear_files_module(void) {
@@ -2286,8 +2294,10 @@ PRIVATE struct type_seq file_seq = {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 file_shl(DeeObject *self, DeeObject *some_object) {
 	if (DeeFile_PrintObject(self, some_object))
-		return NULL;
+		goto err;
 	return_reference_(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

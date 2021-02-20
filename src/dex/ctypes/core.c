@@ -273,8 +273,10 @@ stype_getitem(DeeSTypeObject *self, DeeObject *array_size_ob) {
 	/* Use `operator []' to construct array types. */
 	size_t array_size;
 	if (DeeObject_AsSize(array_size_ob, &array_size))
-		return NULL;
+		goto err;
 	return DeeSType_Array(self, array_size);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_seq stype_seq = {
@@ -1562,10 +1564,12 @@ DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	/* Fallback: Implement getitem as `ind(add)' --> `foo[2]' same as `*(foo + 2)' */
 	result = DeeStruct_Add(tp_self, self, index);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	new_result = DeeObject_Deref(result);
 	Dee_Decref(result);
 	return new_result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL

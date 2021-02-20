@@ -65,10 +65,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_ctor(KwdsIterator *__restrict self) {
 	self->ki_map = kwds_ctor();
 	if unlikely(!self->ki_map)
-		return -1;
+		goto err;
 	self->ki_iter = self->ki_map->kw_map;
 	self->ki_end  = self->ki_map->kw_map + self->ki_map->kw_mask + 1;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -85,13 +87,16 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_KwdsIterator", &self->ki_map) ||
-	    DeeObject_AssertTypeExact(self->ki_map, &DeeKwds_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_KwdsIterator", &self->ki_map))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->ki_map, &DeeKwds_Type))
+		goto err;
 	Dee_Incref(self->ki_map);
 	self->ki_iter = self->ki_map->kw_map;
 	self->ki_end  = self->ki_map->kw_map + self->ki_map->kw_mask + 1;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -149,10 +154,12 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 	value = DeeInt_NewSize(entry->ke_index);
 	if unlikely(!value)
-		return NULL;
+		goto err;
 	result = DeeTuple_Pack(2, entry->ke_name, value);
 	Dee_Decref_unlikely(value);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -358,7 +365,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		/* Must allocate a larger map. */
 		self = kwds_rehash(self);
 		if unlikely(!self)
-			return -1;
+			goto err;
 		*pself = (DREF DeeObject *)self;
 	}
 	ASSERT(self->kw_size < self->kw_mask);
@@ -370,11 +377,13 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	}
 	entry->ke_name = (DREF DeeStringObject *)DeeString_NewSized(name, name_len);
 	if unlikely(!entry->ke_name)
-		return -1;
+		goto err;
 	entry->ke_name->s_hash = hash; /* Remember the hash! */
 	entry->ke_index        = self->kw_size++;
 	entry->ke_hash         = hash;
 	return 0;
+err:
+	return -1;
 }
 
 LOCAL size_t DCALL

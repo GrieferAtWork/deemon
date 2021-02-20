@@ -87,13 +87,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mei_init(ModuleExportsIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	ModuleExports *exports_map;
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleExportsIterator", &exports_map) ||
-	    DeeObject_AssertTypeExact(exports_map, &ModuleExports_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_ModuleExportsIterator", &exports_map))
+		goto err;
+	if (DeeObject_AssertTypeExact(exports_map, &ModuleExports_Type))
+		goto err;
 	self->mei_index  = 0;
 	self->mei_module = exports_map->me_module;
 	Dee_Incref(self->mei_module);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -206,7 +209,7 @@ continue_symbol_search:
 		result_value = module_it_getattr_symbol(module, symbol);
 		if (!ITER_ISOK(result_value)) {
 			if unlikely(!result_value)
-				return NULL;
+				goto err;
 			goto continue_symbol_search;
 		}
 		if (ATOMIC_CMPXCH(self->mei_index, old_index, new_index + 1))
@@ -221,6 +224,8 @@ continue_symbol_search:
 		Dee_Decref_unlikely(result_value);
 	}
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
@@ -291,11 +296,14 @@ me_ctor(ModuleExports *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_init(ModuleExports *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module) ||
-	    DeeObject_AssertType(self->me_module, &DeeModule_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module))
+		goto err;
+	if (DeeObject_AssertType(self->me_module, &DeeModule_Type))
+		goto err;
 	Dee_Incref(&empty_module);
 	return 0;
+err:
+	return -1;
 }
 
 STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) ==
@@ -626,13 +634,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mgi_init(ModuleGlobalsIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	ModuleGlobals *globals;
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals) ||
-	    DeeObject_AssertTypeExact(globals, &ModuleGlobals_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals))
+		goto err;
+	if (DeeObject_AssertTypeExact(globals, &ModuleGlobals_Type))
+		goto err;
 	self->mgi_index  = 0;
 	self->mgi_module = globals->mg_module;
 	Dee_Incref(self->mgi_module);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -748,11 +759,14 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mg_init(ModuleGlobals *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module) ||
-	    DeeObject_AssertType(self->mg_module, &DeeModule_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module))
+		goto err;
+	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
+		goto err;
 	Dee_Incref(&empty_module);
 	return 0;
+err:
+	return -1;
 }
 
 STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ModuleGlobals, mg_module));
@@ -793,13 +807,13 @@ mg_get(ModuleGlobals *self, DeeObject *index_ob) {
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
-		return NULL;
+		goto err;
 	DeeModule_LockSymbols(module);
 	if (index >= module->mo_globalc) {
 		size_t num_globals = module->mo_globalc;
 		DeeModule_UnlockSymbols(module);
 		err_index_out_of_bounds((DeeObject *)self, index, num_globals);
-		return NULL;
+		goto err;
 	}
 	rwlock_read(&module->mo_lock);
 	result = module->mo_globalv[index];
@@ -807,12 +821,14 @@ mg_get(ModuleGlobals *self, DeeObject *index_ob) {
 		rwlock_endread(&module->mo_lock);
 		DeeModule_UnlockSymbols(module);
 		err_unbound_index((DeeObject *)self, index);
-		return NULL;
+		goto err;
 	}
 	Dee_Incref(result);
 	rwlock_endread(&module->mo_lock);
 	DeeModule_UnlockSymbols(module);
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE NONNULL((1, 2)) int DCALL
@@ -821,12 +837,13 @@ mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->mg_module;
 	if (DeeObject_AsSize(index_ob, &index))
-		return -1;
+		goto err;
 	DeeModule_LockSymbols(module);
 	if (index >= module->mo_globalc) {
 		size_t num_globals = module->mo_globalc;
 		DeeModule_UnlockSymbols(module);
-		return err_index_out_of_bounds((DeeObject *)self, index, num_globals);
+		err_index_out_of_bounds((DeeObject *)self, index, num_globals);
+		goto err;
 	}
 	rwlock_write(&module->mo_lock);
 	Dee_XIncref(value);
@@ -836,6 +853,8 @@ mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	DeeModule_UnlockSymbols(module);
 	Dee_XDecref(result);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

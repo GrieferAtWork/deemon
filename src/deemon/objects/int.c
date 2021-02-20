@@ -987,7 +987,7 @@ int_from_nonbinary_string(char *__restrict begin,
 	size_z = (size_t)((end - begin) * log_base_BASE[radix]) + 1;
 	result = DeeInt_Alloc(size_z);
 	if (result == NULL)
-		return NULL;
+		goto err;
 	result->ob_size = 0;
 	convwidth   = convwidth_base[radix];
 	convmultmax = convmultmax_base[radix];
@@ -1101,6 +1101,8 @@ handle_backslash_in_text:
 invalid_r:
 	Dee_DecrefDokill(result);
 	return (DREF DeeIntObject *)ITER_DONE;
+err:
+	return NULL;
 }
 
 

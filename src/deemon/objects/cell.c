@@ -79,10 +79,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_init(Cell *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))
-		return -1;
+		goto err;
 	Dee_Incref(self->c_item);
 	rwlock_init(&self->c_lock);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL

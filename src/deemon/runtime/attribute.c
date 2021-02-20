@@ -3840,12 +3840,14 @@ DeeObject_VCallAttrf(DeeObject *self, /*String*/ DeeObject *attr_name,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_CallAttr(self, attr_name,
 	                            DeeTuple_SIZE(args_tuple),
 	                            DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
@@ -3889,11 +3891,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_CallAttrStringHash(self, attr_name, hash, argc,
 	                                      DeeTuple_ELEM(args_tuple));
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
@@ -3935,12 +3939,14 @@ DeeObject_VCallAttrStringHashf(DeeObject *self,
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
-		return NULL;
+		goto err;
 	result = DeeObject_CallAttrStringHash(self, attr_name, hash,
 	                                      DeeTuple_SIZE(args_tuple),
 	                                      DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *

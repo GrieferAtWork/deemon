@@ -244,7 +244,7 @@ DeeStructType_FromSequence(DeeObject *name,
 		/* Use iterators to construct the struct-type. */
 		fields = DeeObject_IterSelf(fields);
 		if unlikely(!fields)
-			return NULL;
+			goto err;
 		result = struct_type_alloc_iterator(fields, flags);
 		Dee_Decref(fields);
 		if unlikely(!result)
@@ -288,13 +288,15 @@ PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 struct_type_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
-	if (DeeArg_Unpack(argc, argv, "o|o?GStructType", &fields_or_name, &fields))
-		return NULL;
-	return fields
-	       ? (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type)
-	          ? NULL
-	          : DeeStructType_FromSequence(fields_or_name, fields, flags))
-	       : DeeStructType_FromSequence(NULL, fields_or_name, flags);
+	if (DeeArg_Unpack(argc, argv, "o|o:StructType", &fields_or_name, &fields))
+		goto err;
+	if (!fields)
+		return DeeStructType_FromSequence(NULL, fields_or_name, flags);
+	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
+		goto err;
+	return DeeStructType_FromSequence(fields_or_name, fields, flags);
+err:
+	return NULL;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -390,9 +392,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
-	if (DeeArg_Unpack(argc, argv, "o:typeof", &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:typeof", &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
@@ -414,6 +417,7 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 	DeeError_Throwf(&DeeError_AttributeError,
 	                "Cannot get unknown attribute `%k.%k'",
 	                self, name);
+err:
 	return NULL;
 }
 
@@ -753,9 +757,11 @@ struct_init(DeeStructTypeObject *__restrict tp_self,
             void *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *value = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
-		return -1;
+		goto err;
 	/* Do an initial assignment using the initializer. */
 	return struct_assign(tp_self, self, value);
+err:
+	return -1;
 }
 
 

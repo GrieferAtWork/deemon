@@ -1770,9 +1770,11 @@ Dee_vsprintf(char *__restrict buffer,
              char const *__restrict format, va_list args) {
 	if unlikely(DeeFormat_VPrintf((dformatprinter)&sprintf_callback,
 	                              (void *)&buffer, format, args) < 0)
-		return NULL;
+		goto err;
 	*buffer = '\0';
 	return buffer;
+err:
+	return NULL;
 }
 
 PUBLIC NONNULL((3)) char *DCALL
@@ -1783,10 +1785,12 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 	data.siz = bufsize;
 	if unlikely(DeeFormat_VPrintf((dformatprinter)&snprintf_callback,
 	                              &data, format, args) < 0)
-		return NULL;
+		goto err;
 	if (data.siz)
 		*data.buf = '\0';
 	return data.buf;
+err:
+	return NULL;
 }
 
 PUBLIC NONNULL((1, 2)) char *

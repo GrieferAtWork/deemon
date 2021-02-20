@@ -45,15 +45,15 @@ DECL_BEGIN
 #define POINTER_MATH              pointer_math1
 #define F(x)                      x##1
 #define ITEM_SIZE(pointer_type)   1
-#else
+#else /* N == ... */
 #define POINTER_MATH              pointer_mathn
 #define F(x)                      x##n
 #define ITEM_SIZE(pointer_type) ((pointer_type)->pt_size)
-#endif
+#endif /* N != ... */
 
 #ifndef GENERIC_POINTER_MATH_DEFINED
 #define GENERIC_POINTER_MATH_DEFINED 1
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 pointer_int32(DeePointerTypeObject *__restrict UNUSED(tp_self),
               union pointer *self,
               int32_t *__restrict result) {
@@ -61,7 +61,7 @@ pointer_int32(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 pointer_int64(DeePointerTypeObject *__restrict UNUSED(tp_self),
               union pointer *self,
               int64_t *__restrict result) {
@@ -69,7 +69,7 @@ pointer_int64(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 pointer_double(DeePointerTypeObject *__restrict UNUSED(tp_self),
                union pointer *self,
                double *__restrict result) {
@@ -77,7 +77,7 @@ pointer_double(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pointer_int(DeePointerTypeObject *__restrict UNUSED(tp_self),
             union pointer *self) {
 	uintptr_t value;
@@ -87,7 +87,7 @@ pointer_int(DeePointerTypeObject *__restrict UNUSED(tp_self),
 #endif /* !GENERIC_POINTER_MATH_DEFINED */
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(pointer_add)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self,
                DeeObject *__restrict some_object) {
@@ -96,29 +96,31 @@ F(pointer_add)(DeePointerTypeObject *__restrict tp_self,
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
 	                    return NULL);
 	if (DeeObject_AsPtrdiff(some_object, &other))
-		return NULL;
+		goto err;
 #if N == 0
 	return DeePointer_New(tp_self, value.ptr);
 #elif N == 1
 	return DeePointer_New(tp_self, (void *)(value.uint + other));
-#else
+#else /* N == ... */
 	return DeePointer_New(tp_self, (void *)(value.uint + other * tp_self->pt_size));
-#endif
+#endif /* N != ... */
+err:
+	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(pointer_sub)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self,
                DeeObject *__restrict some_object) {
 	ptrdiff_t other;
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
-	                    return NULL);
+	                    goto err);
 	if (DeePointer_Check(some_object)) {
 		if (((DeePointerTypeObject *)Dee_TYPE(some_object))->pt_orig !=
 		    tp_self->pt_orig) {
 			DeeObject_TypeAssertFailed(some_object, (DeeTypeObject *)tp_self);
-			return NULL;
+			goto err;
 		}
 		value.uint -= ((struct pointer_object *)some_object)->p_ptr.uint;
 #if N != 0 && N != 1
@@ -127,17 +129,19 @@ F(pointer_sub)(DeePointerTypeObject *__restrict tp_self,
 		return DeePointer_New(tp_self, value.ptr);
 	}
 	if (DeeObject_AsPtrdiff(some_object, &other))
-		return NULL;
+		goto err;
 #if N == 0
 	return DeePointer_New(tp_self, value.ptr);
 #elif N == 1
 	return DeePointer_New(tp_self, (void *)(value.uint - other));
-#else
+#else /* N == ... */
 	return DeePointer_New(tp_self, (void *)(value.uint - other * tp_self->pt_size));
-#endif
+#endif /* N != ... */
+err:
+	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(pointer_inc)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self) {
 	(void)tp_self;
@@ -147,11 +151,11 @@ F(pointer_inc)(DeePointerTypeObject *__restrict tp_self,
 #elif N != 0
 	CTYPES_FAULTPROTECT(self->uint += ITEM_SIZE(tp_self),
 	                    return -1);
-#endif
+#endif /* N... */
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 F(pointer_dec)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self) {
 	(void)tp_self;
@@ -161,11 +165,11 @@ F(pointer_dec)(DeePointerTypeObject *__restrict tp_self,
 #elif N != 0
 	CTYPES_FAULTPROTECT(self->uint -= ITEM_SIZE(tp_self),
 	                    return -1);
-#endif
+#endif /* N... */
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(pointer_inplace_add)(DeePointerTypeObject *__restrict tp_self,
                        union pointer *self,
                        DeeObject *__restrict some_object) {
@@ -173,18 +177,20 @@ F(pointer_inplace_add)(DeePointerTypeObject *__restrict tp_self,
 	(void)tp_self;
 	(void)self;
 	if (DeeObject_AsPtrdiff(some_object, &other))
-		return -1;
+		goto err;
 #if N != 0 && N != 1
 	other *= tp_self->pt_size;
 #endif /* N != 0 && N != 1 */
 #if N != 0
 	CTYPES_FAULTPROTECT(self->uint += other,
-	                    return -1);
+	                    goto err);
 #endif /* N != 0 */
 	return 0;
+err:
+	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(pointer_inplace_sub)(DeePointerTypeObject *__restrict tp_self,
                        union pointer *self,
                        DeeObject *__restrict some_object) {
@@ -192,15 +198,17 @@ F(pointer_inplace_sub)(DeePointerTypeObject *__restrict tp_self,
 	(void)tp_self;
 	(void)self;
 	if (DeeObject_AsPtrdiff(some_object, &other))
-		return -1;
+		goto err;
 #if N != 0 && N != 1
 	other *= tp_self->pt_size;
 #endif /* N != 0 && N != 1 */
 #if N != 0
 	CTYPES_FAULTPROTECT(self->uint -= other,
-	                    return -1);
+	                    goto err);
 #endif /* N != 0 */
 	return 0;
+err:
+	return -1;
 }
 
 INTERN struct stype_math POINTER_MATH = {

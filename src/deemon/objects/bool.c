@@ -260,16 +260,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_((!error) != DeeBool_IsTrue(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_((!error) == DeeBool_IsTrue(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -279,8 +283,10 @@ bool_lo(DeeObject *self, DeeObject *other) {
 		return_false; /* true < X --> false */
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_(error); /* false < X --> X */
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -290,8 +296,10 @@ bool_le(DeeObject *self, DeeObject *other) {
 		return_true; /* false <= X --> true */
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_(error); /* true <= X --> X */
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -301,8 +309,10 @@ bool_gr(DeeObject *self, DeeObject *other) {
 		return_false; /* false > X --> false */
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_(error); /* true > X --> X */
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -312,8 +322,10 @@ bool_ge(DeeObject *self, DeeObject *other) {
 		return_true; /* true >= X --> true */
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	return_bool_(!error); /* false >= X --> !X */
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp bool_cmp = {

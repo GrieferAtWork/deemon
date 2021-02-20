@@ -63,10 +63,12 @@ INTERN int DCALL
 set_astloc_from_obj(DeeObject *obj,
                     struct ast *__restrict result) {
 	if unlikely(get_astloc_from_obj(obj, &result->a_ddi))
-		return -1;
+		goto err;
 	if likely(result->a_ddi.l_file)
 		TPPFile_Incref(result->a_ddi.l_file);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int DCALL
@@ -251,14 +253,15 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-scope_getitem(DeeCompilerScopeObject *self,
-              DeeObject *elem) {
+scope_getitem(DeeCompilerScopeObject *self, DeeObject *elem) {
 	DREF DeeObject *result;
 	struct symbol *sym;
 	char *utf8;
-	if (DeeObject_AssertTypeExact(elem, &DeeString_Type) ||
-	    (utf8 = DeeString_AsUtf8(elem)) == NULL)
-		return NULL;
+	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
+		goto err;
+	utf8 = DeeString_AsUtf8(elem);
+	if unlikely(!utf8)
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
@@ -269,6 +272,8 @@ scope_getitem(DeeCompilerScopeObject *self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -277,9 +282,11 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 	int result;
 	struct symbol *sym;
 	char *utf8;
-	if (DeeObject_AssertTypeExact(elem, &DeeString_Type) ||
-	    (utf8 = DeeString_AsUtf8(elem)) == NULL)
-		return -1;
+	if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
+		goto err;
+	utf8 = DeeString_AsUtf8(elem);
+	if unlikely(!utf8)
+		goto err;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8));
 	if unlikely(!sym) {
@@ -292,6 +299,8 @@ scope_delitem(DeeCompilerScopeObject *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE struct type_seq scope_seq = {

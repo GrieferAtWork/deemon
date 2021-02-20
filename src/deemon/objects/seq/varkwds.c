@@ -97,7 +97,7 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 	for (;;) {
 		if (iter >= self->ki_end)
-			return NULL;
+			goto nope;
 		if (iter->ke_name) {
 			/* Skip values which have been black-listed. */
 			if (!BlackListVarkwds_IsBlackListed(self->ki_map, (DeeObject *)iter->ke_name))
@@ -112,6 +112,8 @@ again:
 	self->ki_iter = iter + 1;
 #endif /* CONFIG_NO_THREADS */
 	return iter;
+nope:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

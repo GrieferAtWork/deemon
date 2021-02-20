@@ -42,72 +42,92 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getafname", &af_id))
-		return NULL;
+		goto err;
 	return sock_getafnameorid(af_id);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	if (DeeArg_Unpack(argc, argv, "o:getafof", &afob) ||
-	    sock_getafof(afob, &afid))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:getafof", &afob))
+		goto err;
+	if (sock_getafof(afob, &afid))
+		goto err;
 	return DeeInt_NewInt(afid);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypename_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:gettypename", &af_id))
-		return NULL;
+		goto err;
 	return sock_gettypenameorid(af_id);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypeof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	if (DeeArg_Unpack(argc, argv, "o:gettypeof", &afob) ||
-	    sock_gettypeof(afob, &afid))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:gettypeof", &afob))
+		goto err;
+	if (sock_gettypeof(afob, &afid))
+		goto err;
 	return DeeInt_NewInt(afid);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getprotoname", &af_id))
-		return NULL;
+		goto err;
 	return sock_getprotonameorid(af_id);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	if (DeeArg_Unpack(argc, argv, "o:getprotoof", &afob) ||
-	    sock_getprotoof(afob, &afid))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:getprotoof", &afob))
+		goto err;
+	if (sock_getprotoof(afob, &afid))
+		goto err;
 	return DeeInt_NewInt(afid);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getmsgflagsname", &af_id))
-		return NULL;
+		goto err;
 	return sock_getmsgflagsnameorid(af_id);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
-	if (DeeArg_Unpack(argc, argv, "o:getmsgflags", &afob) ||
-	    sock_getmsgflagsof(afob, &afid))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:getmsgflags", &afob))
+		goto err;
+	if (sock_getmsgflagsof(afob, &afid))
+		goto err;
 	return DeeInt_NewInt(afid);
+err:
+	return NULL;
 }
 
 PRIVATE DEFINE_CMETHOD(lib_getafname, &lib_getafname_f);
@@ -124,48 +144,60 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU16(BETOH16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU32(BETOH32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU64(BETOH64(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU16(HTOBE16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU32(HTOBE32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))
-		return NULL;
+		goto err;
 	return DeeInt_NewU64(HTOBE64(i));
+err:
+	return NULL;
 }
 
 PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f);
@@ -256,10 +288,8 @@ libnet_init(DeeDexObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_DISABLE();
 	error = (neterrno_t)WSAStartup(MAKEWORD(1, 1), &wsaData);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(error != 0) {
-		DeeError_Throwf(&DeeError_NetError, "WSAStartup() : %lu", error);
-		return -1;
-	}
+	if unlikely(error != 0)
+		return DeeError_Throwf(&DeeError_NetError, "WSAStartup() : %lu", error);
 #else /* CONFIG_HOST_WINDOWS */
 	/* SIGPIPE is generated when a remote socket is closed. */
 	void (*handler)(int);

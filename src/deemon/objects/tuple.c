@@ -340,7 +340,7 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 	                                                     offsetof(DeeTupleObject, t_elem) +
 	                                                     new_size * sizeof(DREF DeeObject *));
 	if unlikely(!new_tuple)
-		return NULL;
+		goto err;
 #ifndef NDEBUG
 	if (new_size > new_tuple->t_size) {
 		memset(&new_tuple->t_elem[new_tuple->t_size],
@@ -351,6 +351,8 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 #endif /* !NDEBUG */
 	new_tuple->t_size = new_size;
 	return (DREF DeeObject *)new_tuple;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
@@ -885,7 +887,7 @@ handle_list_size2:
 		result = (DREF DeeTupleObject *)DeeTuple_NewVector(oldsize, DeeTuple_ELEM(self));
 		Dee_Decref_unlikely(self);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 	}
 	sequence = DeeObject_IterSelf(sequence);
 	if unlikely(!sequence)
@@ -1686,8 +1688,10 @@ tuple_eq(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1697,8 +1701,10 @@ tuple_ne(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1708,8 +1714,10 @@ tuple_lo(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1719,8 +1727,10 @@ tuple_le(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1730,8 +1740,10 @@ tuple_gr(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1741,8 +1753,10 @@ tuple_ge(Tuple *self, DeeObject *other) {
 	                     DeeTuple_SIZE(self),
 	                     other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

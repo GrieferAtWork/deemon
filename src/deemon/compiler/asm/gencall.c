@@ -1814,9 +1814,12 @@ generic_call:
 		goto err;
 	if (ast_genasm_one(args, ASM_G_FPUSHRES))
 		goto err;
-	if (ast_predict_type(args) != &DeeTuple_Type &&
-	    (asm_putddi(args) || asm_gcast_tuple()))
-		goto err;
+	if (ast_predict_type(args) != &DeeTuple_Type) {
+		if (asm_putddi(args))
+			goto err;
+		if (asm_gcast_tuple())
+			goto err;
+	}
 	if (asm_putddi(ddi_ast))
 		goto err;
 	if (asm_gcall_tuple())
@@ -1862,9 +1865,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					if unlikely(asm_gargv(args->a_multiple.m_astc,
 					                      args->a_multiple.m_astv))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type &&
-					    (asm_putddi(args) || asm_gcast_tuple()))
-						goto err;
+					if (ast_predict_type(args) != &DeeTuple_Type) {
+						if (asm_putddi(args))
+							goto err;
+						if (asm_gcast_tuple())
+							goto err;
+					}
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcallattr_const_kw((uint16_t)attrid,
@@ -1879,9 +1885,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 						goto err;
 					if (ast_genasm_one(args, ASM_G_FPUSHRES))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type &&
-					    (asm_putddi(args) || asm_gcast_tuple()))
-						goto err;
+					if (ast_predict_type(args) != &DeeTuple_Type) {
+						if (asm_putddi(args))
+							goto err;
+						if (asm_gcast_tuple())
+							goto err;
+					}
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (asm_gcallattr_const_kw((uint16_t)attrid, 0, (uint16_t)kwd_cid))
@@ -1892,9 +1901,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type &&
-				    (asm_putddi(args) || asm_gcast_tuple()))
-					goto err;
+				if (ast_predict_type(args) != &DeeTuple_Type) {
+					if (asm_putddi(args))
+						goto err;
+					if (asm_gcast_tuple())
+						goto err;
+				}
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (asm_gcallattr_const_tuple_kw((uint16_t)attrid, (uint16_t)kwd_cid))
@@ -1912,9 +1924,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					if unlikely(asm_gargv(args->a_multiple.m_astc,
 					                      args->a_multiple.m_astv))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type &&
-					    (asm_putddi(args) || asm_gcast_tuple()))
-						goto err;
+					if (ast_predict_type(args) != &DeeTuple_Type) {
+						if (asm_putddi(args))
+							goto err;
+						if (asm_gcast_tuple())
+							goto err;
+					}
 					if (asm_putddi(ddi_ast))
 						goto err;
 					if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
@@ -1943,9 +1958,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type &&
-				    (asm_putddi(args) || asm_gcast_tuple()))
-					goto err;
+				if (ast_predict_type(args) != &DeeTuple_Type) {
+					if (asm_putddi(args))
+						goto err;
+					if (asm_gcast_tuple())
+						goto err;
+				}
 				if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
 					goto err;
 				if (asm_putddi(ddi_ast))
@@ -1981,9 +1999,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				if unlikely(asm_gargv(args->a_multiple.m_astc,
 				                      args->a_multiple.m_astv))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type &&
-				    (asm_putddi(args) || asm_gcast_tuple()))
-					goto err;
+				if (ast_predict_type(args) != &DeeTuple_Type) {
+					if (asm_putddi(args))
+						goto err;
+					if (asm_gcast_tuple())
+						goto err;
+				}
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (asm_gcallattr_const_kw((uint16_t)att_cid,
@@ -1998,9 +2019,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type &&
-				    (asm_putddi(args) || asm_gcast_tuple()))
-					goto err;
+				if (ast_predict_type(args) != &DeeTuple_Type) {
+					if (asm_putddi(args))
+						goto err;
+					if (asm_gcast_tuple())
+						goto err;
+				}
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (asm_gcallattr_const_kw((uint16_t)att_cid, 0, (uint16_t)kwd_cid))
@@ -2011,9 +2035,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				goto err;
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type &&
-			    (asm_putddi(args) || asm_gcast_tuple()))
-				goto err;
+			if (ast_predict_type(args) != &DeeTuple_Type) {
+				if (asm_putddi(args))
+					goto err;
+				if (asm_gcast_tuple())
+					goto err;
+			}
 			if (asm_putddi(ddi_ast))
 				goto err;
 			if (asm_gcallattr_const_tuple_kw((uint16_t)att_cid, (uint16_t)kwd_cid))
@@ -2031,9 +2058,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				if unlikely(asm_gargv(args->a_multiple.m_astc,
 				                      args->a_multiple.m_astv))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type &&
-				    (asm_putddi(args) || asm_gcast_tuple()))
-					goto err;
+				if (ast_predict_type(args) != &DeeTuple_Type) {
+					if (asm_putddi(args))
+						goto err;
+					if (asm_gcast_tuple())
+						goto err;
+				}
 				if (asm_putddi(ddi_ast))
 					goto err;
 				if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
@@ -2062,9 +2092,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				goto err;
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type &&
-			    (asm_putddi(args) || asm_gcast_tuple()))
-				goto err;
+			if (ast_predict_type(args) != &DeeTuple_Type) {
+				if (asm_putddi(args))
+					goto err;
+				if (asm_gcast_tuple())
+					goto err;
+			}
 			if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
 				goto err;
 			if (asm_putddi(ddi_ast))
@@ -2103,9 +2136,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		} else {
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type &&
-			    (asm_putddi(args) || asm_gcast_tuple()))
-				goto err;
+			if (ast_predict_type(args) != &DeeTuple_Type) {
+				if (asm_putddi(args))
+					goto err;
+				if (asm_gcast_tuple())
+					goto err;
+			}
 			if (asm_putddi(ddi_ast))
 				goto err;
 			if (asm_gcall_tuple_kw((uint16_t)kwd_cid))
@@ -2115,9 +2151,12 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		/* Fallback: use the stack to pass all the arguments. */
 		if (ast_genasm_one(args, ASM_G_FPUSHRES))
 			goto err;
-		if (ast_predict_type(args) != &DeeTuple_Type &&
-		    (asm_putddi(args) || asm_gcast_tuple()))
-			goto err;
+		if (ast_predict_type(args) != &DeeTuple_Type) {
+			if (asm_putddi(args))
+				goto err;
+			if (asm_gcast_tuple())
+				goto err;
+		}
 		if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
 			goto err;
 		if (asm_putddi(ddi_ast))

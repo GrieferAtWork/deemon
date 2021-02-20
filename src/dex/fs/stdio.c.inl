@@ -96,10 +96,12 @@ file_exists(DeeObject *__restrict filename) {
 		return file_exists_str(DeeString_STR(filename));
 	filename = DeeFile_Filename(filename);
 	if unlikely(!filename)
-		return -1;
+		goto err;
 	result = file_exists_str(DeeString_STR(filename));
 	Dee_Decref(filename);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE FILE *DCALL

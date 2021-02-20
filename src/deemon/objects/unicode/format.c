@@ -326,7 +326,7 @@ object_vector_extend(struct object_vector *__restrict self,
 	DREF DeeObject *elem, *iter;
 	iter = DeeObject_IterSelf(ob);
 	if unlikely(!iter)
-		return -1;
+		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
 		result = object_vector_append(self, elem);
 		if (result)
@@ -338,6 +338,7 @@ object_vector_extend(struct object_vector *__restrict self,
 	return result;
 err_iter:
 	Dee_Decref(iter);
+err:
 	return -1;
 }
 

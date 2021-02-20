@@ -104,8 +104,8 @@ x_add(DeeIntObject *__restrict a,
 		SWAP(dssize_t, size_a, size_b);
 	}
 	z = DeeInt_Alloc(size_a + 1);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	for (i = 0; i < size_b; ++i) {
 		carry += a->ob_digit[i] + b->ob_digit[i];
 		z->ob_digit[i] = carry & DIGIT_MASK;
@@ -118,6 +118,8 @@ x_add(DeeIntObject *__restrict a,
 	}
 	z->ob_digit[i] = carry;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
@@ -150,8 +152,8 @@ x_sub(DeeIntObject *__restrict a,
 		size_a = size_b = i + 1;
 	}
 	z = DeeInt_Alloc(size_a);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	for (i = 0; i < size_b; ++i) {
 		borrow         = a->ob_digit[i] - b->ob_digit[i] - borrow;
 		z->ob_digit[i] = borrow & DIGIT_MASK;
@@ -168,13 +170,16 @@ x_sub(DeeIntObject *__restrict a,
 	if (sign < 0)
 		z->ob_size = -z->ob_size;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_add(DeeIntObject *__restrict a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	if (ABS(a->ob_size) <= 1 && ABS(b->ob_size) <= 1) {
 		z = (DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) +
 		                                     MEDIUM_VALUE(b));
@@ -196,13 +201,16 @@ int_add(DeeIntObject *__restrict a, DeeObject *b_ob) {
 done:
 	Dee_Decref(b);
 	return (DeeObject *)z;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_sub(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	if (ABS(a->ob_size) <= 1 && ABS(b->ob_size) <= 1) {
 		z = (DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) -
 		                                     MEDIUM_VALUE(b));
@@ -226,6 +234,8 @@ int_sub(DeeIntObject *a, DeeObject *b_ob) {
 done:
 	Dee_Decref(b);
 	return (DeeObject *)z;
+err:
+	return NULL;
 }
 
 
@@ -238,8 +248,8 @@ x_add_int(DeeIntObject *__restrict a, digit b) {
 	digit carry;
 	ASSERT(size_a >= 2);
 	z = DeeInt_Alloc(size_a + 1);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	carry          = a->ob_digit[0] + b;
 	z->ob_digit[0] = carry & DIGIT_MASK;
 	carry >>= DIGIT_BITS;
@@ -250,6 +260,8 @@ x_add_int(DeeIntObject *__restrict a, digit b) {
 	}
 	z->ob_digit[i] = carry;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
@@ -260,8 +272,8 @@ x_add_int2(DeeIntObject *__restrict a, twodigits b) {
 	digit carry;
 	ASSERT(size_a >= 2);
 	z = DeeInt_Alloc(size_a + 1);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	carry          = a->ob_digit[0] + (b & DIGIT_MASK);
 	z->ob_digit[0] = carry & DIGIT_MASK;
 	carry >>= DIGIT_BITS;
@@ -275,6 +287,8 @@ x_add_int2(DeeIntObject *__restrict a, twodigits b) {
 	}
 	z->ob_digit[i] = carry;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 #if (DIGIT_BITS * 2) < 32
@@ -294,8 +308,8 @@ x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 	}
 	ASSERT(size_a >= 3);
 	z = DeeInt_Alloc(size_a + 1);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	carry          = a->ob_digit[0] + (b & DIGIT_MASK);
 	z->ob_digit[0] = carry & DIGIT_MASK;
 	carry >>= DIGIT_BITS;
@@ -312,6 +326,8 @@ x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 	}
 	z->ob_digit[i] = carry;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 #endif /* (DIGIT_BITS * 2) < 32 */
 
@@ -324,8 +340,8 @@ x_sub_revint(digit a, DeeIntObject *__restrict b) {
 	digit borrow;
 	ASSERT(size_b >= 2);
 	z = DeeInt_Alloc(size_b);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = b->ob_digit[0] - a;
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -339,6 +355,8 @@ x_sub_revint(digit a, DeeIntObject *__restrict b) {
 	ASSERT(borrow == 0);
 	z->ob_size = -z->ob_size;
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 #if (DIGIT_BITS * 2) < 32
@@ -376,8 +394,8 @@ x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 	}
 	ASSERT(size_b == 2);
 	z = DeeInt_Alloc(3);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = (a & DIGIT_MASK) - b->ob_digit[0];
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -392,6 +410,8 @@ x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 	borrow &= 1;
 	ASSERT(borrow == 0);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 #endif /* (DIGIT_BITS * 2) < 32 */
 
@@ -404,8 +424,8 @@ x_sub_int(DeeIntObject *__restrict a, digit b) {
 	digit borrow;
 	ASSERT(size_a >= 2);
 	z = DeeInt_Alloc(size_a);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = a->ob_digit[0] - b;
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -418,6 +438,8 @@ x_sub_int(DeeIntObject *__restrict a, digit b) {
 	}
 	ASSERT(borrow == 0);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
@@ -439,13 +461,13 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 			if (b <= DIGIT_MASK) {
 				z = DeeInt_Alloc(1);
 				if unlikely(!z)
-					return NULL;
+					goto err;
 				z->ob_digit[0] = (digit)b;
 				z->ob_size     = -1;
 			} else {
 				z = DeeInt_Alloc(2);
 				if unlikely(!z)
-					return NULL;
+					goto err;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_size     = -2;
@@ -456,20 +478,20 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 		if (a_value <= DIGIT_MASK) {
 			z = DeeInt_Alloc(1);
 			if unlikely(!z)
-				return NULL;
+				goto err;
 			z->ob_digit[0] = (digit)a_value;
 		} else {
 			z = DeeInt_Alloc(2);
 			if unlikely(!z)
-				return NULL;
+				goto err;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 		}
 		return z;
 	}
 	z = DeeInt_Alloc(size_a);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = a->ob_digit[0] - (b & DIGIT_MASK);
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -486,6 +508,8 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 	}
 	ASSERT(borrow == 0);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 #if (DIGIT_BITS * 2) < 32
@@ -516,20 +540,20 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 			if (b <= DIGIT_MASK) {
 				z = DeeInt_Alloc(1);
 				if unlikely(!z)
-					return NULL;
+					goto err;
 				z->ob_digit[0] = (digit)b;
 				z->ob_size     = -1;
 			} else if (b <= ((twodigits)1 << (DIGIT_BITS * 2)) - 1) {
 				z = DeeInt_Alloc(2);
 				if unlikely(!z)
-					return NULL;
+					goto err;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_size     = -2;
 			} else {
 				z = DeeInt_Alloc(3);
 				if unlikely(!z)
-					return NULL;
+					goto err;
 				z->ob_digit[0] = b & DIGIT_MASK;
 				z->ob_digit[1] = (b >> DIGIT_BITS) & DIGIT_MASK;
 				z->ob_digit[2] = (b >> (DIGIT_BITS * 2)) & DIGIT_MASK;
@@ -541,18 +565,18 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 		if (a_value <= DIGIT_MASK) {
 			z = DeeInt_Alloc(1);
 			if unlikely(!z)
-				return NULL;
+				goto err;
 			z->ob_digit[0] = (digit)a_value;
 		} else if (a_value <= ((twodigits)1 << (DIGIT_BITS * 2)) - 1) {
 			z = DeeInt_Alloc(2);
 			if unlikely(!z)
-				return NULL;
+				goto err;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 		} else {
 			z = DeeInt_Alloc(3);
 			if unlikely(!z)
-				return NULL;
+				goto err;
 			z->ob_digit[0] = a_value & DIGIT_MASK;
 			z->ob_digit[1] = (a_value >> DIGIT_BITS) & DIGIT_MASK;
 			z->ob_digit[2] = (a_value >> (DIGIT_BITS * 2)) & DIGIT_MASK;
@@ -560,8 +584,8 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 		return z;
 	}
 	z = DeeInt_Alloc(size_a);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = a->ob_digit[0] - (b & DIGIT_MASK);
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -582,6 +606,8 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 	}
 	ASSERT(borrow == 0);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 #endif /* (DIGIT_BITS * 2) < 32 */
 
@@ -614,8 +640,8 @@ do_reverse:
 		return z;
 	}
 	z = DeeInt_Alloc(2);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	borrow         = (a & DIGIT_MASK) - b->ob_digit[0];
 	z->ob_digit[0] = borrow & DIGIT_MASK;
 	borrow >>= DIGIT_BITS;
@@ -626,6 +652,8 @@ do_reverse:
 	borrow &= 1;
 	ASSERT(borrow == 0);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 INTERN int DCALL
@@ -991,10 +1019,12 @@ divrem1(DeeIntObject *__restrict a, digit n, digit *prem) {
 	dssize_t const size = ABS(a->ob_size);
 	ASSERT(n > 0 && n <= DIGIT_MASK);
 	z = DeeInt_Alloc(size);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	*prem = inplace_divrem1(z->ob_digit, a->ob_digit, size, n);
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 
@@ -1004,8 +1034,9 @@ x_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	dssize_t i;
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t size_b = ABS(b->ob_size);
-	if unlikely((z = DeeInt_Alloc(size_a + size_b)) == NULL)
-		return NULL;
+	z = DeeInt_Alloc(size_a + size_b);
+	if unlikely(!z)
+		goto err;
 	bzeroc(z->ob_digit, z->ob_size, sizeof(digit));
 	if (a == b) {
 		for (i = 0; i < size_a; ++i) {
@@ -1053,6 +1084,8 @@ x_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		}
 	}
 	return int_normalize(z);
+err:
+	return NULL;
 }
 
 PRIVATE int DCALL
@@ -1060,21 +1093,24 @@ kmul_split(DeeIntObject *__restrict n, dssize_t size,
            DREF DeeIntObject **__restrict phigh,
            DREF DeeIntObject **__restrict plow) {
 	DREF DeeIntObject *hi, *lo;
-	dssize_t size_lo, size_hi;
 	dssize_t const size_n = ABS(n->ob_size);
-	size_lo               = MIN(size_n, size);
-	size_hi               = size_n - size_lo;
-	if unlikely((hi = DeeInt_Alloc(size_hi)) == NULL)
-		return -1;
-	if unlikely((lo = DeeInt_Alloc(size_lo)) == NULL) {
-		Dee_Decref(hi);
-		return -1;
-	}
+	dssize_t size_lo      = MIN(size_n, size);
+	dssize_t size_hi      = size_n - size_lo;
+	hi = DeeInt_Alloc(size_hi);
+	if unlikely(!hi)
+		goto err;
+	lo = DeeInt_Alloc(size_lo);
+	if unlikely(!lo)
+		goto err_hi;
 	memcpyc(lo->ob_digit, n->ob_digit, size_lo, sizeof(digit));
 	memcpyc(hi->ob_digit, n->ob_digit + size_lo, size_hi, sizeof(digit));
 	*phigh = int_normalize(hi);
 	*plow  = int_normalize(lo);
 	return 0;
+err_hi:
+	Dee_Decref(hi);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
@@ -1113,12 +1149,13 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		goto fail;
 	}
 	ret = DeeInt_Alloc(asize + bsize);
-	if (ret == NULL)
+	if unlikely(!ret)
 		goto fail;
 #ifndef NDEBUG
 	memset(ret->ob_digit, 0xdf, ret->ob_size * sizeof(digit));
 #endif /* !NDEBUG */
-	if ((t1 = k_mul(ah, bh)) == NULL)
+	t1 = k_mul(ah, bh);
+	if unlikely(!t1)
 		goto fail;
 	ASSERT(t1->ob_size >= 0);
 	ASSERT(2 * shift + t1->ob_size <= ret->ob_size);
@@ -1131,10 +1168,9 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		bzeroc(ret->ob_digit + 2 * shift + t1->ob_size,
 		       i, sizeof(digit));
 	}
-	if ((t2 = k_mul(al, bl)) == NULL) {
-		Dee_Decref(t1);
-		goto fail;
-	}
+	t2 = k_mul(al, bl);
+	if unlikely(!t2)
+		goto fail_t1;
 	ASSERT(t2->ob_size >= 0);
 	ASSERT(t2->ob_size <= 2 * shift);
 	memcpyc(ret->ob_digit,
@@ -1151,7 +1187,8 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	Dee_Decref(t2);
 	(void)v_isub(ret->ob_digit + shift, i, t1->ob_digit, t1->ob_size);
 	Dee_Decref(t1);
-	if ((t1 = x_add(ah, al)) == NULL)
+	t1 = x_add(ah, al);
+	if unlikely(!t1)
 		goto fail;
 	Dee_Decref(ah);
 	Dee_Decref(al);
@@ -1159,9 +1196,10 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	if (a == b) {
 		t2 = t1;
 		Dee_Incref(t2);
-	} else if ((t2 = x_add(bh, bl)) == NULL) {
-		Dee_Decref(t1);
-		goto fail;
+	} else {
+		t2 = x_add(bh, bl);
+		if unlikely(!t2)
+			goto fail_t1;
 	}
 	Dee_Decref(bh);
 	Dee_Decref(bl);
@@ -1170,12 +1208,14 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	t3 = k_mul(t1, t2);
 	Dee_Decref(t1);
 	Dee_Decref(t2);
-	if (t3 == NULL)
+	if unlikely(!t3)
 		goto fail;
 	ASSERT(t3->ob_size >= 0);
 	(void)v_iadd(ret->ob_digit + shift, i, t3->ob_digit, t3->ob_size);
 	Dee_Decref(t3);
 	return int_normalize(ret);
+fail_t1:
+	Dee_Decref(t1);
 fail:
 	Dee_XDecref(ret);
 	Dee_XDecref(ah);
@@ -1193,12 +1233,12 @@ k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	ASSERT(asize > KARATSUBA_CUTOFF);
 	ASSERT(2 * asize <= bsize);
 	ret = DeeInt_Alloc(asize + bsize);
-	if (ret == NULL)
-		return NULL;
+	if unlikely(!ret)
+		goto err;
 	bzeroc(ret->ob_digit, ret->ob_size, sizeof(digit));
 	bslice = DeeInt_Alloc(asize);
-	if (bslice == NULL)
-		goto fail;
+	if unlikely(!bslice)
+		goto err_bslice_fail;
 	nbdone = 0;
 	while (bsize > 0) {
 		DeeIntObject *product;
@@ -1208,8 +1248,8 @@ k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		        nbtouse, sizeof(digit));
 		bslice->ob_size = nbtouse;
 		product         = k_mul(a, bslice);
-		if (product == NULL)
-			goto fail;
+		if unlikely(!product)
+			goto err_bslice_fail;
 		(void)v_iadd(ret->ob_digit + nbdone, ret->ob_size - nbdone,
 		             product->ob_digit, product->ob_size);
 		Dee_Decref(product);
@@ -1218,17 +1258,19 @@ k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	}
 	Dee_Decref(bslice);
 	return int_normalize(ret);
-fail:
+err_bslice_fail:
 	Dee_Decref(ret);
 	Dee_XDecref(bslice);
+err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_mul(DeeIntObject *a, DeeObject *b_ob) {
 	DREF DeeIntObject *z, *b;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	if (ABS(a->ob_size) <= 1 && ABS(b->ob_size) <= 1) {
 		stwodigits v = (stwodigits)(MEDIUM_VALUE(a)) * MEDIUM_VALUE(b);
 		Dee_Decref(b);
@@ -1242,6 +1284,8 @@ int_mul(DeeIntObject *a, DeeObject *b_ob) {
 	}
 	Dee_Decref(b);
 	return (DeeObject *)z;
+err:
+	return NULL;
 }
 
 
@@ -1260,7 +1304,7 @@ int_divrem(DeeIntObject *__restrict a,
 	dssize_t size_b = ABS(b->ob_size);
 	if (size_b == 0) {
 		err_divide_by_zero((DeeObject *)a, (DeeObject *)b);
-		return -1;
+		goto err;
 	}
 	if (size_a < size_b || (size_a == size_b && a->ob_digit[size_a - 1] < b->ob_digit[size_b - 1])) {
 		Dee_Incref(&DeeInt_Zero);
@@ -1271,39 +1315,40 @@ int_divrem(DeeIntObject *__restrict a,
 	}
 	if (size_b == 1) {
 		digit rem = 0;
-		z         = divrem1(a, b->ob_digit[0], &rem);
-		if (z == NULL)
-			return -1;
+		z = divrem1(a, b->ob_digit[0], &rem);
+		if unlikely(!z)
+			goto err;
 		*prem = (DeeIntObject *)DeeInt_NewDigit(rem);
-		if (*prem == NULL) {
-			Dee_Decref(z);
-			return -1;
-		}
+		if unlikely(!*prem)
+			goto err_z;
 	} else {
 		z = x_divrem(a, b, prem);
-		if (z == NULL)
-			return -1;
+		if unlikely(!z)
+			goto err;
 	}
 	if ((a->ob_size < 0) != (b->ob_size < 0)) {
 		DREF DeeObject *temp = int_neg(z);
 		Dee_Decref(z);
-		if (!temp) {
-			Dee_Clear(*prem);
-			return -1;
-		}
+		if (!temp)
+			goto err_prem;
 		z = (DREF DeeIntObject *)temp;
 	}
 	if (a->ob_size < 0 && (*prem)->ob_size != 0) {
 		DREF DeeObject *temp = int_neg(*prem);
 		Dee_Decref(*prem);
 		*prem = (DeeIntObject *)temp;
-		if (temp == NULL) {
-			Dee_Decref(z);
-			return -1;
-		}
+		if unlikely(!temp)
+			goto err_z;
 	}
 	*pdiv = maybe_small_int(z);
 	return 0;
+err_prem:
+	Dee_Clear(*prem);
+	goto err;
+err_z:
+	Dee_Decref(z);
+err:
+	return -1;
 }
 
 
@@ -1336,15 +1381,12 @@ x_divrem(DeeIntObject *__restrict v1,
 	size_v = ABS(v1->ob_size);
 	size_w = ABS(w1->ob_size);
 	ASSERT(size_v >= size_w && size_w >= 2);
-	if unlikely((v = DeeInt_Alloc(size_v + 1)) == NULL) {
-		*prem = NULL;
-		return NULL;
-	}
-	if unlikely((w = DeeInt_Alloc(size_w)) == NULL) {
-		Dee_Decref(v);
-		*prem = NULL;
-		return NULL;
-	}
+	v = DeeInt_Alloc(size_v + 1);
+	if unlikely(!v)
+		goto err;
+	w = DeeInt_Alloc(size_w);
+	if unlikely(!w)
+		goto err_v;
 	d     = DIGIT_BITS - bits_in_digit(w1->ob_digit[size_w - 1]);
 	carry = v_lshift(w->ob_digit, w1->ob_digit, size_w, d);
 	ASSERT(carry == 0);
@@ -1355,12 +1397,9 @@ x_divrem(DeeIntObject *__restrict v1,
 	}
 	k = size_v - size_w;
 	ASSERT(k >= 0);
-	if ((a = DeeInt_Alloc(k)) == NULL) {
-		Dee_Decref(w);
-		Dee_Decref(v);
-		*prem = NULL;
-		return NULL;
-	}
+	a = DeeInt_Alloc(k);
+	if unlikely(!a)
+		goto err_v_w;
 	v0  = v->ob_digit;
 	w0  = w->ob_digit;
 	wm1 = w0[size_w - 1];
@@ -1402,6 +1441,13 @@ x_divrem(DeeIntObject *__restrict v1,
 	Dee_Decref(v);
 	*prem = int_normalize(w);
 	return int_normalize(a);
+err_v_w:
+	Dee_Decref(w);
+err_v:
+	Dee_Decref(v);
+err:
+	*prem = NULL;
+	return NULL;
 }
 
 
@@ -1412,56 +1458,64 @@ l_divmod(DeeIntObject *__restrict v,
          DREF DeeIntObject **pmod) {
 	DREF DeeIntObject *div, *mod;
 	if (int_divrem(v, w, &div, &mod) < 0)
-		return -1;
+		goto err;
 	if ((mod->ob_size < 0 && w->ob_size > 0) ||
 	    (mod->ob_size > 0 && w->ob_size < 0)) {
 		DeeIntObject *temp;
 		temp = (DeeIntObject *)int_add(mod, (DeeObject *)w);
 		Dee_Decref(mod);
 		mod = temp;
-		if (mod == NULL) {
-			Dee_Decref(div);
-			return -1;
-		}
-		if ((temp = (DeeIntObject *)int_sub(div, (DeeObject *)&DeeInt_One)) == NULL) {
-			Dee_Decref(mod);
-			Dee_Decref(div);
-			return -1;
-		}
+		if unlikely(!mod)
+			goto err_div;
+		temp = (DeeIntObject *)int_sub(div, (DeeObject *)&DeeInt_One);
+		if unlikely(!temp)
+			goto err_div_mod;
 		Dee_Decref(div);
 		div = temp;
 	}
-	if (pdiv != NULL)
+	if (pdiv != NULL) {
 		*pdiv = div;
-	else {
+	} else {
 		Dee_Decref(div);
 	}
-	if (pmod != NULL)
+	if (pmod != NULL) {
 		*pmod = mod;
-	else {
+	} else {
 		Dee_Decref(mod);
 	}
 	return 0;
+err_div_mod:
+	Dee_Decref(mod);
+err_div:
+	Dee_Decref(div);
+err:
+	return -1;
 }
 
 INTERN DeeObject *DCALL int_div(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *div, *b;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	if (l_divmod((DeeIntObject *)a, (DeeIntObject *)b, &div, NULL) < 0)
 		div = NULL;
 	Dee_Decref(b);
 	return (DeeObject *)div;
+err:
+	return NULL;
 }
 
 INTERN DeeObject *DCALL int_mod(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *mod, *b;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	if (l_divmod((DeeIntObject *)a, (DeeIntObject *)b, NULL, &mod) < 0)
 		mod = NULL;
 	Dee_Decref(b);
 	return (DeeObject *)mod;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL int_inv(DeeIntObject *v) {
@@ -1469,10 +1523,12 @@ INTERN WUNUSED DREF DeeObject *DCALL int_inv(DeeIntObject *v) {
 	if (ABS(v->ob_size) <= 1)
 		return DeeInt_NewMedian(-(MEDIUM_VALUE(v) + 1));
 	x = (DeeIntObject *)int_add(v, (DeeObject *)&DeeInt_One);
-	if (x == NULL)
-		return NULL;
+	if unlikely(!x)
+		goto err;
 	x->ob_size = -x->ob_size;
 	return (DeeObject *)maybe_small_int(x);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL int_neg(DeeIntObject *v) {
@@ -1493,11 +1549,11 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 	if (a->ob_size < 0) {
 		DeeIntObject *a1, *a2;
 		a1 = (DeeIntObject *)int_inv(a);
-		if (a1 == NULL)
+		if unlikely(!a1)
 			goto rshift_error;
 		a2 = (DeeIntObject *)int_shr(a1, b);
 		Dee_Decref(a1);
-		if (a2 == NULL)
+		if unlikely(!a2)
 			goto rshift_error;
 		z = (DeeIntObject *)int_inv(a2);
 		Dee_Decref(a2);
@@ -1517,7 +1573,7 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		lomask  = ((digit)1 << hishift) - 1;
 		himask  = DIGIT_MASK ^ lomask;
 		z       = DeeInt_Alloc(newsize);
-		if (z == NULL)
+		if unlikely(!z)
 			goto rshift_error;
 		if (a->ob_size < 0)
 			z->ob_size = -(z->ob_size);
@@ -1538,10 +1594,10 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	twodigits accum;
 	dssize_t shiftby, oldsize, newsize, wordshift, remshift, i, j;
 	if (DeeObject_AsSSize(b, &shiftby))
-		return NULL;
+		goto err;
 	if (shiftby < 0) {
 		err_shift_negative((DeeObject *)a, b, true);
-		return NULL;
+		goto err;
 	}
 	wordshift = shiftby / DIGIT_BITS;
 	remshift  = shiftby - wordshift * DIGIT_BITS;
@@ -1550,8 +1606,8 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	if (remshift)
 		++newsize;
 	z = DeeInt_Alloc(newsize);
-	if (z == NULL)
-		return NULL;
+	if unlikely(!z)
+		goto err;
 	if (a->ob_size < 0) {
 		ASSERT(z->ob_refcnt == 1);
 		z->ob_size = -z->ob_size;
@@ -1571,6 +1627,8 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 	}
 	z = int_normalize(z);
 	return (DeeObject *)maybe_small_int(z);
+err:
+	return NULL;
 }
 
 PRIVATE void DCALL
@@ -1595,8 +1653,9 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 	size_a = ABS(a->ob_size);
 	nega   = a->ob_size < 0;
 	if (nega) {
-		if ((z = DeeInt_Alloc(size_a)) == NULL)
-			return NULL;
+		z = DeeInt_Alloc(size_a);
+		if unlikely(!z)
+			goto err;
 		v_complement(z->ob_digit, a->ob_digit, size_a), a = z;
 	} else {
 		Dee_Incref(a);
@@ -1604,10 +1663,9 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 	size_b = ABS(b->ob_size);
 	negb   = b->ob_size < 0;
 	if (negb) {
-		if ((z = DeeInt_Alloc(size_b)) == NULL) {
-			Dee_Decref(a);
-			return NULL;
-		}
+		z = DeeInt_Alloc(size_b);
+		if unlikely(!z)
+			goto err_a;
 		v_complement(z->ob_digit, b->ob_digit, size_b), b = z;
 	} else {
 		Dee_Incref(b);
@@ -1640,11 +1698,9 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 		size_z = negb ? size_b : size_a;
 		break;
 	}
-	if ((z = DeeInt_Alloc(size_z + negz)) == NULL) {
-		Dee_Decref(a);
-		Dee_Decref(b);
-		return NULL;
-	}
+	z = DeeInt_Alloc(size_z + negz);
+	if unlikely(!z)
+		goto err_a_b;
 	switch (op) {
 
 	case '&':
@@ -1680,39 +1736,54 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 	Dee_Decref(a);
 	Dee_Decref(b);
 	return (DeeObject *)maybe_small_int(int_normalize(z));
+err_a_b:
+	Dee_Decref(b);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_and(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	c = (DREF DeeIntObject *)int_bitwise((DeeIntObject *)a, '&', (DeeIntObject *)b);
 	Dee_Decref(b);
 	return (DREF DeeObject *)c;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_xor(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	c = (DREF DeeIntObject *)int_bitwise((DeeIntObject *)a, '^', (DeeIntObject *)b);
 	Dee_Decref(b);
 	return (DREF DeeObject *)c;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 int_or(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	c = (DREF DeeIntObject *)int_bitwise((DeeIntObject *)a, '|', (DeeIntObject *)b);
 	Dee_Decref(b);
 	return (DREF DeeObject *)c;
+err:
+	return NULL;
 }
 
 
@@ -1726,8 +1797,9 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	};
-	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
-		return NULL;
+	b = (DeeIntObject *)DeeObject_Int(b_ob);
+	if unlikely(!b)
+		goto err;
 	a = (DeeIntObject *)a;
 	Dee_Incref(a);
 	if (b->ob_size < 0) {
@@ -1737,7 +1809,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 		return (*DeeFloat_Type.tp_math->tp_pow)(a, b);
 #else
 		DERROR_NOTIMPLEMENTED();
-		return NULL;
+		goto err;
 #endif
 	}
 	z = (DeeIntObject *)&DeeInt_One;
@@ -1746,8 +1818,8 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	do {                                                     \
 		DREF DeeIntObject *temp;                             \
 		temp = (DeeIntObject *)int_mul(x, (DeeObject *)(y)); \
-		if (temp == NULL)                                    \
-			goto err;                                        \
+		if unlikely(!temp)                                   \
+			goto err_b_a_table_z;                            \
 		Dee_XDecref(result);                                 \
 		result = temp;                                       \
 	} __WHILE0
@@ -1785,9 +1857,11 @@ out:
 	Dee_Decref(a);
 	Dee_Decref(b);
 	return (DeeObject *)z;
-err:
+err_b_a_table_z:
 	Dee_Clear(z);
 	goto out;
+err:
+	return NULL;
 }
 
 DECL_END

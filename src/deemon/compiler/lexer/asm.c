@@ -359,8 +359,10 @@ done:
 PRIVATE dssize_t DCALL
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
 	if unlikely(tpp_string_printer_append(buf, bufsize, (struct tpp_string_printer *)arg))
-		return -1;
+		goto err;
 	return (dssize_t)bufsize;
+err:
+	return -1;
 }
 
 PRIVATE /*REF*/ struct TPPString *

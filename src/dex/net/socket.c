@@ -61,10 +61,13 @@ socket_ctor(Socket *__restrict self,
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
 	PRIVATE struct keyword kwlist[] = { K(af), K(type), K(proto), KEND };
 	/* Parse and translate arguments. */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:socket", &arg_af, &arg_type, &arg_proto) ||
-	    sock_getafof(arg_af, &af) ||
-	    sock_gettypeof(arg_type, &type) ||
-	    sock_getprotoof(arg_proto, &proto))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:socket", &arg_af, &arg_type, &arg_proto))
+		goto err;
+	if (sock_getafof(arg_af, &af))
+		goto err;
+	if (sock_gettypeof(arg_type, &type))
+		goto err;
+	if (sock_getprotoof(arg_proto, &proto))
 		goto err;
 	if (af == AF_AUTO) {
 		DeeError_Throwf(&DeeError_ValueError,
@@ -732,9 +735,11 @@ DEFINE_NOTIFY_ENVIRON_INTEGER(uint16_t, maxbacklog, 5, "DEEMON_MAXBACKLOG");
 PRIVATE int DCALL get_default_backlog(void) {
 	uint16_t result;
 	if (maxbacklog_get(&result))
-		return -1;
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	return (int)(unsigned int)result;
+err:
+	return -1;
 }
 
 #endif /* !CONFIG_NO_NOTIFICATIONS */
@@ -1958,15 +1963,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout = (uint64_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|I64d:accept", &timeout))
-		return NULL;
+		goto err;
 	return socket_doaccept(self, timeout);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_tryaccept(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
-		return NULL;
+		goto err;
 	return socket_doaccept(self, 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2011,9 +2020,11 @@ socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?Dstring\n" */
 		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?Dstring\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size) ||
-		    DeeObject_AsInt64(arg_1, (int64_t *)&timeout) ||
-		    sock_getmsgflagsof(arg_2, &flags))
+		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+			goto err;
+		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+			goto err;
+		if (sock_getmsgflagsof(arg_2, &flags))
 			goto err;
 	}
 	result = DeeSocket_RecvData(self, timeout, max_size, flags, NULL);
@@ -2119,9 +2130,11 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->(sockaddr,string)\n" */
 		/* "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->(sockaddr,string)\n" */
-		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size) ||
-		    DeeObject_AsInt64(arg_1, (int64_t *)&timeout) ||
-		    sock_getmsgflagsof(arg_2, &flags))
+		if (DeeObject_AsSSize(arg_0, (dssize_t *)&max_size))
+			goto err;
+		if (DeeObject_AsInt64(arg_1, (int64_t *)&timeout))
+			goto err;
+		if (sock_getmsgflagsof(arg_2, &flags))
 			goto err;
 	}
 	/* Create the socket address object that's going to be returned. */
@@ -2270,8 +2283,9 @@ socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
 		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
-		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout) ||
-		    sock_getmsgflagsof(arg_1, &flags))
+		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+			goto err;
+		if (sock_getmsgflagsof(arg_1, &flags))
 			goto err;
 	}
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
@@ -2340,8 +2354,9 @@ socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n" */
 		/* "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n" */
-		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout) ||
-		    sock_getmsgflagsof(arg_1, &flags))
+		if (DeeObject_AsInt64(arg_0, (int64_t *)&timeout))
+			goto err;
+		if (sock_getmsgflagsof(arg_1, &flags))
 			goto err;
 	}
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
@@ -2395,12 +2410,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_fileno(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		return NULL;
+		goto err;
 #ifdef CONFIG_HOST_WINDOWS
 	return DeeInt_NewUIntptr((uintptr_t)self->s_socket);
 #else /* CONFIG_HOST_WINDOWS */
 	return DeeInt_NewInt((int)self->s_socket);
 #endif /* !CONFIG_HOST_WINDOWS */
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

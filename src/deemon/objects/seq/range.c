@@ -1597,22 +1597,26 @@ DeeRange_NewInt(dssize_t begin,
 #ifdef ALWAYS_USE_OBJECT_RANGES
 	DREF DeeObject *begin_ob, *end_ob, *step_ob, *result;
 	ASSERT(step != 0);
-	if ((begin_ob = DeeInt_NewSSize(begin)) == NULL)
-		return NULL;
-	if ((end_ob = DeeInt_NewSSize(end)) == NULL) {
-		Dee_Decref(begin_ob);
-		return NULL;
-	}
-	if ((step_ob = DeeInt_NewSSize(step)) == NULL) {
-		Dee_Decref(end_ob);
-		Dee_Decref(begin_ob);
-		return NULL;
-	}
+	begin_ob = DeeInt_NewSSize(begin);
+	if unlikely(!begin_ob)
+		goto err;
+	end_ob = DeeInt_NewSSize(end);
+	if unlikely(!end_ob)
+		goto err_begin_ob;
+	step_ob = DeeInt_NewSSize(step);
+	if unlikely(!step_ob)
+		goto err_begin_ob_end_ob;
 	result = DeeRange_New(begin_ob, end_ob, step_ob);
 	Dee_Decref(step_ob);
 	Dee_Decref(end_ob);
 	Dee_Decref(begin_ob);
 	return result;
+err_begin_ob_end_ob:
+	Dee_Decref(end_ob);
+err_begin_ob:
+	Dee_Decref(begin_ob);
+err:
+	return NULL;
 #else /* ALWAYS_USE_OBJECT_RANGES */
 	DREF IntRange *result;
 	ASSERT(step != 0);

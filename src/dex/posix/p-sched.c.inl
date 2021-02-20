@@ -125,8 +125,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char cons
 //[[[end]]]
 #endif /* !posix_system_USE_WSYSTEM && !posix_system_USE_FORK_WEXEC */
 {
-#if defined(posix_system_USE_WSYSTEM) || \
-    defined(posix_system_USE_SYSTEM)
+#if (defined(posix_system_USE_WSYSTEM) || \
+     defined(posix_system_USE_SYSTEM))
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();

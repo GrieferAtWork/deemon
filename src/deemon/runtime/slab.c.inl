@@ -54,10 +54,10 @@
 
 
 #ifndef CONFIG_NO_OBJECT_SLABS
-#if (!defined(__i386__) && !defined(__x86_64__)) || \
-    (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX))
+#if ((!defined(__i386__) && !defined(__x86_64__)) || \
+     (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
 #define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
-#endif
+#endif /* ... */
 #ifndef CONFIG_NO_OBJECT_SLABS
 #ifdef CONFIG_HOST_WINDOWS
 #define USE_WINDOWS_VIRTUALALLOC 1

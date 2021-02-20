@@ -135,7 +135,7 @@ compiler_set_scope(DeeCompilerObject *__restrict self,
                    DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
 	if (DeeObject_AssertType(value, &DeeCompilerScope_Type))
-		return -1;
+		goto err;
 	if (value->ci_compiler != self)
 		return err_invalid_scope_compiler(value);
 	COMPILER_BEGIN(self);
@@ -148,6 +148,8 @@ compiler_set_scope(DeeCompilerObject *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -164,7 +166,7 @@ compiler_set_basescope(DeeCompilerObject *__restrict self,
                        DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
 	if (DeeObject_AssertType(value, &DeeCompilerBaseScope_Type))
-		return -1;
+		goto err;
 	if (value->ci_compiler != self)
 		return err_invalid_scope_compiler(value);
 	COMPILER_BEGIN(self);
@@ -178,6 +180,8 @@ compiler_set_basescope(DeeCompilerObject *__restrict self,
 	}
 	COMPILER_END();
 	return result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -303,8 +307,10 @@ ast_makeconstexpr(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	PRIVATE struct keyword kwlist[] = { K(value), K(scope), K(loc), KEND };
 	COMPILER_BEGIN(self);
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:makeconstexpr", &value, &scope, &loc) ||
-	    unlikely((ast_scope = get_scope(scope)) == NULL))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:makeconstexpr", &value, &scope, &loc))
+		goto done;
+	ast_scope = get_scope(scope);
+	if unlikely(!ast_scope)
 		goto done;
 	result_ast = ast_new(ast_scope, loc);
 	if unlikely(!result_ast)

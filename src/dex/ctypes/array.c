@@ -299,11 +299,13 @@ array_set(DeeArrayTypeObject *tp_self, void *base,
 	DREF DeeObject *item;
 	item = array_get(tp_self, base, index_ob);
 	if unlikely(!item)
-		return -1;
+		goto err;
 	/* Assign the given value to the item. */
 	result = DeeObject_Assign(item, value);
 	Dee_Decref(item);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL
@@ -318,9 +320,12 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 	DREF DeeLValueTypeObject *lval_type;
 	DREF DeeArrayTypeObject *array_type;
 	dssize_t begin, end = -1;
-	if (DeeObject_AsSSize(begin_ob, &begin) ||
-	    (!DeeNone_Check(end_ob) && DeeObject_AsSSize(end_ob, &end)))
+	if (DeeObject_AsSSize(begin_ob, &begin))
 		goto err;
+	if (!DeeNone_Check(end_ob)) {
+		if (DeeObject_AsSSize(end_ob, &end))
+			goto err;
+	}
 	if unlikely(begin < 0)
 		begin += tp_self->at_count;
 	if unlikely(end < 0)
@@ -357,9 +362,12 @@ PRIVATE int DCALL
 array_delrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob) {
 	dssize_t begin, end = -1;
-	if (DeeObject_AsSSize(begin_ob, &begin) ||
-	    (!DeeNone_Check(end_ob) && DeeObject_AsSSize(end_ob, &end)))
+	if (DeeObject_AsSSize(begin_ob, &begin))
 		goto err;
+	if (!DeeNone_Check(end_ob)) {
+		if (DeeObject_AsSSize(end_ob, &end))
+			goto err;
+	}
 	if unlikely(begin < 0)
 		begin += tp_self->at_count;
 	if unlikely(end < 0)
@@ -405,9 +413,12 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 	/* When `none' is passed, simply clear out affected memory. */
 	if (DeeNone_Check(value))
 		return array_delrange(tp_self, base, begin_ob, end_ob);
-	if (DeeObject_AsSSize(begin_ob, &begin) ||
-	    (!DeeNone_Check(end_ob) && DeeObject_AsSSize(end_ob, &end)))
+	if (DeeObject_AsSSize(begin_ob, &begin))
 		goto err;
+	if (!DeeNone_Check(end_ob)) {
+		if (DeeObject_AsSSize(end_ob, &end))
+			goto err;
+	}
 	if unlikely(begin < 0)
 		begin += tp_self->at_count;
 	if unlikely(end < 0)
@@ -480,8 +491,10 @@ array_init(DeeArrayTypeObject *tp_self, void *base,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	if (DeeArg_Unpack(argc, argv, "o:array", &arg))
-		return -1;
+		goto err;
 	return array_assign(tp_self, base, arg);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED DREF struct pointer_object *DCALL
@@ -515,16 +528,20 @@ PRIVATE WUNUSED DREF struct pointer_object *DCALL
 array_add(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
-		return NULL;
+		goto err;
 	return array_adddiff(tp_self, base, diff);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF struct pointer_object *DCALL
 array_sub(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
-		return NULL;
+		goto err;
 	return array_adddiff(tp_self, base, -diff);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

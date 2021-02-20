@@ -289,12 +289,14 @@ process_set_environ(Process *self, DeeObject *value) {
 		int result;
 		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
 		if unlikely(!temp)
-			return -1;
+			goto err;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
 		Dee_Decref(temp);
 		return result;
 	}
 	return ipc_unimplemented();
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -530,8 +532,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
-		return NULL;
+		goto err;
 	return_reference_((DeeObject *)&this_process);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst process_class_methods[] = {

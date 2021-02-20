@@ -61,8 +61,9 @@ emulate_object_decode(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_Unpack(argc, argv, "o|s:decode", &name, &errors) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o|s:decode", &name, &errors))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	if (errors) {
 		error_mode = DeeCodec_GetErrorMode(errors);
@@ -79,8 +80,9 @@ emulate_object_encode(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_Unpack(argc, argv, "o|s:encode", &name, &errors) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o|s:encode", &name, &errors))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	if (errors) {
 		error_mode = DeeCodec_GetErrorMode(errors);

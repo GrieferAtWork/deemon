@@ -237,8 +237,10 @@ PRIVATE int DCALL cmd_o(char *arg) {
 		                                                 644);
 	}
 	if unlikely(!script_options.co_decoutput)
-		return -1;
+		goto err;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_O(char *arg) {
@@ -395,10 +397,12 @@ PRIVATE int DCALL cmd_L(char *arg) {
 	path = DeeString_NewUtf8(arg, strlen(arg),
 	                         STRING_ERROR_FIGNORE);
 	if unlikely(!path)
-		return -1;
+		goto err;
 	result = DeeList_Append(DeeModule_GetPath(), path);
 	Dee_Decref(path);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_pp(char *UNUSED(arg)) {
@@ -2592,7 +2596,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 			} else {
 				buffer = (char *)Dee_AMalloc((req_bufsize + 1) * sizeof(char));
 				if unlikely(!buffer)
-					return -1;
+					goto err;
 			}
 			iter = buffer;
 			for (;;) {
@@ -2618,6 +2622,8 @@ dchdir_and_format_source_files(char *__restrict filename) {
 	/* Without any slashes, or if the chdir() failed, don't change directory! */
 	result = dformat_source_files(filename, NULL);
 	return result;
+err:
+	return -1;
 }
 
 

@@ -75,13 +75,15 @@ bfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_FindAll((Bytes *)Dee_EmptyBytes,
 	                                                    Dee_EmptyBytes, 0, 0);
 	if unlikely(!self->bfi_find)
-		return -1;
+		goto err;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_ptr        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_ptr = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_len = 0;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -89,13 +91,15 @@ bcfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_CaseFindAll((Bytes *)Dee_EmptyBytes,
 	                                                        Dee_EmptyBytes, 0, 0);
 	if unlikely(!self->bfi_find)
-		return -1;
+		goto err;
 	self->bfi_start      = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_ptr        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_end        = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_ptr = DeeBytes_DATA(Dee_EmptyBytes);
 	self->bfi_needle_len = 0;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

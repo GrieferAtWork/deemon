@@ -3868,10 +3868,12 @@ instance_tcall(DeeTypeObject *tp_self, DeeObject *self,
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_CALL);
 	if unlikely(!func)
-		return NULL;
+		goto err;
 	result = DeeObject_ThisCall(func, self, argc, argv);
 	Dee_Decref(func);
 	return result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3881,10 +3883,12 @@ instance_tcallkw(DeeTypeObject *tp_self,
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_CALL);
 	if unlikely(!func)
-		return NULL;
+		goto err;
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
 	Dee_Decref(func);
 	return result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3942,12 +3946,14 @@ instance_tnext(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_ITERNEXT);
 	if unlikely(!func)
-		return NULL;
+		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
 	if (!result && DeeError_Catch(&DeeError_StopIteration))
 		result = ITER_DONE;
 	return result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4296,10 +4302,12 @@ instance_tint32(DeeTypeObject *__restrict tp_self,
 	int error;
 	intval = instance_tint(tp_self, self);
 	if unlikely(!intval)
-		return -1;
+		goto err;
 	error = DeeInt_As32(intval, result);
 	Dee_Decref(intval);
 	return error;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -4310,10 +4318,12 @@ instance_tint64(DeeTypeObject *__restrict tp_self,
 	int error;
 	intval = instance_tint(tp_self, self);
 	if unlikely(!intval)
-		return -1;
+		goto err;
 	error = DeeInt_As64(intval, result);
 	Dee_Decref(intval);
 	return error;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -4617,7 +4627,7 @@ lazy_allocate(void **__restrict ptable, size_t table_size) {
 		return 0;
 	new_table = Dee_Calloc(table_size);
 	if unlikely(!new_table)
-		return -1;
+		goto err;
 #ifdef CONFIG_NO_THREADS
 	if unlikely(*ptable)
 		Dee_Free(new_table);
@@ -4627,6 +4637,8 @@ lazy_allocate(void **__restrict ptable, size_t table_size) {
 		Dee_Free(new_table);
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
+err:
+	return -1;
 }
 
 #ifndef __INTELLISENSE__

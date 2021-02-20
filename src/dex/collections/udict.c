@@ -1022,10 +1022,12 @@ udict_nsi_setdefault(UDict *self, DeeObject *key, DeeObject *defl) {
 	int error;
 	error = udict_setitem_ex(self, key, defl, SETITEM_SETNEW, &old_value);
 	if unlikely(error < 0)
-		return NULL;
+		goto err;
 	if (error == 1)
 		return old_value;
 	return_reference_(defl);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL

@@ -52,12 +52,14 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_ctor(RepeatIterator *__restrict self) {
 	self->ri_rep = (DREF Repeat *)DeeSeq_Repeat(Dee_EmptySeq, 1);
 	if unlikely(!self->ri_rep)
-		return -1;
+		goto err;
 	self->ri_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->ri_iter) { Dee_Decref(self->ri_rep); }
 	rwlock_init(&self->ri_lock);
 	self->ri_num = 0;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -110,16 +112,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep) ||
-	    DeeObject_AssertTypeExact(self->ri_rep, &SeqRepeat_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->ri_rep, &SeqRepeat_Type))
+		goto err;
 	self->ri_iter = DeeObject_IterSelf(self->ri_rep->r_seq);
 	if unlikely(!self->ri_iter)
-		return -1;
+		goto err;
 	Dee_Incref(self->ri_rep);
 	rwlock_init(&self->ri_lock);
 	self->ri_num = self->ri_rep->r_num - 1;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -244,7 +249,7 @@ done:
 	/* Create a new iterator for the next loop. */
 	iter = DeeObject_IterSelf(self->ri_rep->r_seq);
 	if unlikely(!iter)
-		return NULL;
+		goto err;
 	COMPILER_READ_BARRIER();
 	rwlock_write(&self->ri_lock);
 	if unlikely(!self->ri_num) {
@@ -260,6 +265,8 @@ done:
 	rwlock_endwrite(&self->ri_lock);
 	Dee_Decref(result); /* Drop the old iterator. */
 	goto again_iter;    /* Read more items. */
+err:
+	return NULL;
 }
 
 
@@ -409,13 +416,15 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
-		return -1;
+		goto err;
 	if unlikely(!self->r_num) {
 		self->r_seq = Dee_EmptySeq;
 		self->r_num = 1;
 	}
 	Dee_Incref(self->r_seq);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -460,12 +469,14 @@ repeat_size(Repeat *__restrict self) {
 	size_t result;
 	base_size = DeeObject_Size(self->r_seq);
 	if unlikely(base_size == (size_t)-1)
-		return NULL;
-	if (OVERFLOW_UMUL(base_size, self->r_num, &result)) {
-		err_integer_overflow_i(sizeof(size_t) * 8, true);
-		return NULL;
-	}
+		goto err;
+	if (OVERFLOW_UMUL(base_size, self->r_num, &result))
+		goto err_overflow;
 	return DeeInt_NewSize(result);
+err_overflow:
+	err_integer_overflow_i(sizeof(size_t) * 8, true);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -480,17 +491,19 @@ repeat_get(Repeat *self,
 	size_t index;
 	size_t seq_size;
 	if (DeeObject_AsSize(index_ob, &index))
-		return NULL;
+		goto err;
 	seq_size = DeeObject_Size(self->r_seq);
 	if unlikely(seq_size == (size_t)-1)
-		return NULL;
+		goto err;
 	if unlikely(index >= seq_size * self->r_num) {
 		err_index_out_of_bounds((DeeObject *)self, index,
 		                        seq_size * self->r_num);
-		return NULL;
+		goto err;
 	}
 	index %= seq_size;
 	return DeeObject_GetItemIndex(self->r_seq, index);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -524,14 +537,16 @@ repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
 	size_t seq_size;
 	seq_size = DeeObject_Size(self->r_seq);
 	if unlikely(seq_size == (size_t)-1)
-		return NULL;
+		goto err;
 	if unlikely(index >= seq_size * self->r_num) {
 		err_index_out_of_bounds((DeeObject *)self, index,
 		                        seq_size * self->r_num);
-		return NULL;
+		goto err;
 	}
 	index %= seq_size;
 	return DeeObject_GetItemIndex(self->r_seq, index);
+err:
+	return NULL;
 }
 
 PRIVATE size_t DCALL
@@ -689,10 +704,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_ctor(RepeatItemIterator *__restrict self) {
 	self->rii_rep = (DREF RepeatItem *)DeeSeq_RepeatItem(Dee_None, 0);
 	if unlikely(!self->rii_rep)
-		return -1;
+		goto err;
 	self->rii_obj = Dee_None;
 	self->rii_num = 0;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -989,7 +1006,7 @@ repeatitem_get(RepeatItem *self,
                DeeObject *index_ob) {
 	dssize_t index;
 	if (DeeObject_AsSSize(index_ob, &index))
-		return NULL;
+		goto err;
 	if (index < 0)
 		index += self->ri_num;
 	if unlikely((size_t)index >= self->ri_num) {
@@ -998,6 +1015,8 @@ repeatitem_get(RepeatItem *self,
 		                        self->ri_num);
 	}
 	return_reference_(self->ri_obj);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL

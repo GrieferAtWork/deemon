@@ -447,10 +447,12 @@ pst_iter_self(DeeObject *__restrict UNUSED(self)) {
 	seq = DeeObject_CallAttrString((DeeObject *)&posix_missing_features,
 	                               "split", 1, argv);
 	if unlikely(!seq)
-		return NULL;
+		goto err;
 	iter = DeeObject_IterSelf(seq);
 	Dee_Decref(seq);
 	return iter;
+err:
+	return NULL;
 }
 
 #ifndef CONFIG_HAVE_memmem

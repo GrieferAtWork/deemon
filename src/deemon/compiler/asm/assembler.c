@@ -270,13 +270,19 @@ INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi_dbg)(struct ast *__restrict se
 		goto done;
 		/* Allocate a symbol and DDI checkpoint. */
 #ifdef NDEBUG
-	if unlikely((sym = asm_newsym()) == NULL ||
-	            (ddi = asm_newddi()) == NULL)
-		return -1;
+	sym = asm_newsym();
+	if unlikely(!sym)
+		goto err;
+	ddi = asm_newddi();
+	if unlikely(!ddi)
+		goto err;
 #else /* NDEBUG */
-	if unlikely((sym = asm_newsym_dbg(file, line)) == NULL ||
-	            (ddi = asm_newddi()) == NULL)
-		return -1;
+	sym = asm_newsym_dbg(file, line);
+	if unlikely(!sym)
+		goto err;
+	ddi = asm_newddi();
+	if unlikely(!ddi)
+		goto err;
 #endif /* !NDEBUG */
 	/* Simply define the symbol at the current text position.
 	 * NOTE: Its actual address may change during later assembly phases. */
@@ -290,6 +296,8 @@ INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi_dbg)(struct ast *__restrict se
 	current_assembler.a_ddi.da_slast = current_assembler.a_curr;
 done:
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -312,12 +320,14 @@ PRIVATE struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
 			new_vec = (struct ddi_binding *)Dee_Realloc(current_assembler.a_ddi.da_bndv,
 			                                            new_alloc * sizeof(struct ddi_binding));
 			if unlikely(!new_vec)
-				return NULL;
+				goto err;
 		}
 		current_assembler.a_ddi.da_bndv = new_vec;
 		current_assembler.a_ddi.da_bnda = new_alloc;
 	}
 	return &current_assembler.a_ddi.da_bndv[current_assembler.a_ddi.da_bndc++];
+err:
+	return NULL;
 }
 
 INTERN WUNUSED int DCALL
@@ -573,9 +583,10 @@ INTERN struct asm_exc *(DCALL asm_newexc)(void) {
 	ASSERT(current_assembler.a_exceptc <=
 	       current_assembler.a_excepta);
 	/* Allocate more exception vector memory if necessary. */
-	if (current_assembler.a_exceptc == current_assembler.a_excepta &&
-	    asm_realloc_exc())
-		return NULL;
+	if (current_assembler.a_exceptc == current_assembler.a_excepta) {
+		if (asm_realloc_exc())
+			goto err;
+	}
 	ASSERT(current_assembler.a_exceptc < current_assembler.a_excepta);
 	result = current_assembler.a_exceptv;
 	result += current_assembler.a_exceptc++;
@@ -584,6 +595,8 @@ INTERN struct asm_exc *(DCALL asm_newexc)(void) {
 	memset(result, 0xcc, sizeof(struct asm_exc));
 #endif /* !NDEBUG */
 	return result;
+err:
+	return NULL;
 }
 
 INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
@@ -591,9 +604,10 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
 	ASSERT(priority <= current_assembler.a_exceptc);
 	ASSERT(current_assembler.a_exceptc <= current_assembler.a_excepta);
 	/* Allocate more exception vector memory if necessary. */
-	if (current_assembler.a_exceptc == current_assembler.a_excepta &&
-	    asm_realloc_exc())
-		return NULL;
+	if (current_assembler.a_exceptc == current_assembler.a_excepta) {
+		if (asm_realloc_exc())
+			goto err;
+	}
 	ASSERT(current_assembler.a_exceptc < current_assembler.a_excepta);
 	result = current_assembler.a_exceptv;
 	/* Shift all handlers with a greater priority. */
@@ -609,6 +623,8 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
 	memset(result, 0xcc, sizeof(struct asm_exc));
 #endif /* !NDEBUG */
 	return result;
+err:
+	return NULL;
 }
 
 INTERN void DCALL
@@ -1066,7 +1082,7 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		                                                offsetof(DeeCodeObject, co_code) +
 		                                                total_code * sizeof(instruction_t));
 		if unlikely(!new_code)
-			return -1;
+			goto err;
 		sc_main.sec_code  = new_code;
 		sc_main.sec_iter  = new_code->co_code + (sc_main.sec_iter - sc_main.sec_begin);
 		sc_main.sec_begin = new_code->co_code;
@@ -1079,7 +1095,7 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		                                        total_rel *
 		                                        sizeof(struct asm_rel));
 		if unlikely(!new_rel)
-			return -1;
+			goto err;
 		sc_main.sec_relv = new_rel;
 		sc_main.sec_rela = total_rel;
 	}
@@ -1105,6 +1121,8 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		ASSERT(sc_main.sec_relc <= sc_main.sec_rela);
 	}
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED int DCALL asm_mergestatic(void) {
@@ -1118,16 +1136,12 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	 * placing the static ones after the constant ones. */
 	static_offset = current_assembler.a_constc;
 	total_count   = static_offset + current_assembler.a_staticc;
-	if unlikely(total_count < static_offset) {
-		/* Too many variables. */
-		DeeError_Throwf(&DeeError_CompilerError,
-		                "Too many constant/static variables");
-		return -1;
-	}
+	if unlikely(static_offset > total_count)
+		goto err_too_many; /* Too many variables. */
 	total_vector = (DREF DeeObject **)Dee_Realloc(current_assembler.a_constv,
 	                                              total_count * sizeof(DREF DeeObject *));
 	if unlikely(!total_vector)
-		return -1;
+		goto err;
 	/* Copy static variable initializers. */
 	current_assembler.a_constv = total_vector;
 	current_assembler.a_constc = total_count;
@@ -1192,6 +1206,11 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 		asm_reldel(iter);
 	}
 	return 0;
+err_too_many:
+	DeeError_Throwf(&DeeError_CompilerError,
+	                "Too many constant/static variables");
+err:
+	return -1;
 }
 
 INTERN WUNUSED int DCALL asm_linkstack(void) {
@@ -1470,7 +1489,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	ASSERT(sc_main.sec_code);
 	ddi = ddi_compile();
 	if unlikely(!ddi)
-		return NULL;
+		goto err;
 	total_codesize = (code_size_t)(sc_main.sec_iter - sc_main.sec_begin);
 	if (sc_main.sec_iter != sc_main.sec_end) {
 		/* Try to release as much code memory as possible. - We won't be needing it anymore. */
@@ -1494,11 +1513,8 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	 * compatible with `struct except_handler'. */
 	if (current_assembler.a_exceptc) {
 		exceptv = asm_pack_exceptv();
-		if unlikely(!exceptv) {
-err_ddi:
-			Dee_Decref(ddi);
-			return NULL; /* Well... $h1t. */
-		}
+		if unlikely(!exceptv)
+			goto err_ddi; /* Well... $h1t. */
 	} else {
 		exceptv = NULL;
 	}
@@ -1584,6 +1600,10 @@ err_ddi:
 
 	/* And we're done! */
 	return result;
+err_ddi:
+	Dee_Decref(ddi);
+err:
+	return NULL;
 }
 
 
@@ -1876,28 +1896,33 @@ INTERN WUNUSED int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm1
 }
 
 INTERN WUNUSED int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
-	instruction_t *result = asm_alloc(sizeof(instruction_t) + 4);
-	if likely(result) {
-		*(result + 0) = instr;
-		UNALIGNED_SETLE32((uint32_t *)(result + 1), imm32);
-		return 0;
-	}
+	instruction_t *result;
+	result = asm_alloc(sizeof(instruction_t) + 4);
+	if unlikely(!result)
+		goto err;
+	*(result + 0) = instr;
+	UNALIGNED_SETLE32((uint32_t *)(result + 1), imm32);
+	return 0;
+err:
 	return -1;
 }
 
 INTERN WUNUSED int (DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
-	instruction_t *result = asm_alloc(sizeof(uint16_t) + 2);
-	if likely(result) {
-		struct asm_rel *rel = asm_allocrel();
-		if unlikely(!rel)
-			return -1;
-		*(uint8_t *)(result + 0) = (uint8_t)((instr & 0xff00) >> 8);
-		*(uint8_t *)(result + 1) = (uint8_t)(instr & 0xff);
-		UNALIGNED_SETLE16((uint16_t *)(result + 2), sid);
-		rel->ar_addr = asm_ip() - 2;
-		rel->ar_type = R_DMN_STATIC16;
-		return 0;
-	}
+	instruction_t *result;
+	struct asm_rel *rel;
+	result = asm_alloc(sizeof(uint16_t) + 2);
+	if unlikely(!result)
+		goto err;
+	rel = asm_allocrel();
+	if unlikely(!rel)
+		goto err;
+	*(uint8_t *)(result + 0) = (uint8_t)((instr & 0xff00) >> 8);
+	*(uint8_t *)(result + 1) = (uint8_t)(instr & 0xff);
+	UNALIGNED_SETLE16((uint16_t *)(result + 2), sid);
+	rel->ar_addr = asm_ip() - 2;
+	rel->ar_type = R_DMN_STATIC16;
+	return 0;
+err:
 	return -1;
 }
 
@@ -1911,19 +1936,23 @@ relint_fini(DeeRelIntObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 relint_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
-		return NULL;
+		goto err;
 	return_bool(self->ri_sym == other->ri_sym &&
 	            self->ri_add == other->ri_add &&
 	            self->ri_mode == other->ri_mode);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 relint_ne(DeeRelIntObject *self, DeeRelIntObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
-		return NULL;
+		goto err;
 	return_bool(self->ri_sym != other->ri_sym ||
 	            self->ri_add != other->ri_add ||
 	            self->ri_mode != other->ri_mode);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp relint_cmp = {
@@ -2028,11 +2057,13 @@ PRIVATE int DCALL fix_relint(DeeObject **__restrict pobj) {
 	}
 	intob = DeeInt_NewS64(value);
 	if unlikely(!intob)
-		return -1;
+		goto err;
 	/* Replace the constant slot with this value. */
 	*pobj = (DREF DeeObject *)intob; /* Inherit reference (x2) */
 	Dee_DecrefDokill(relint);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL fix_relint_r(DeeObject **__restrict pobj) {
@@ -2086,16 +2117,20 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpush_abs(struct asm_sym *__restrict sym) {
 	int32_t cid = asm_newrelint(sym, 0, RELINT_MODE_FADDR);
 	if unlikely(cid < 0)
-		return -1;
+		goto err;
 	return asm_gpush_const((uint16_t)cid);
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpush_stk(struct asm_sym *__restrict sym) {
 	int32_t cid = asm_newrelint(sym, 0, RELINT_MODE_FSTCK);
 	if unlikely(cid < 0)
-		return -1;
+		goto err;
 	return asm_gpush_const((uint16_t)cid);
+err:
+	return -1;
 }
 
 
@@ -2242,16 +2277,18 @@ asm_gsetstack_s(struct asm_sym *__restrict target) {
 	instruction_t *data;
 	struct asm_rel *rel;
 	if unlikely((rel = asm_allocrel()) == NULL)
-		return -1;
+		goto err;
 	rel->ar_sym = target, ++target->as_used;
 	if unlikely((data = asm_alloc(4)) == NULL)
-		return -1;
+		goto err;
 	*(data + 0) = (ASM16_ADJSTACK & 0xff00) >> 8;
 	*(data + 1) = (ASM16_ADJSTACK & 0xff);
 	UNALIGNED_SETLE16((uint16_t *)(data + 2), current_assembler.a_stackcur);
 	rel->ar_addr = asm_ip() - 2;
 	rel->ar_type = R_DMN_STCK16;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
@@ -2870,9 +2907,11 @@ asm_lsymid(struct symbol *__restrict sym) {
 	sym->s_flag |= SYMBOL_FALLOC;
 	/* Generate DDI information for the local->symbol binding. */
 	if (asm_putddi_lbind((uint16_t)new_index, sym->s_name))
-		return -1;
+		goto err;
 end:
 	return new_index;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int32_t DCALL

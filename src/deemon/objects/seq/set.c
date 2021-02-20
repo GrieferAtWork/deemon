@@ -835,10 +835,12 @@ ssd_init(SetSymmetricDifference *__restrict self,
 	self->ssd_a = Dee_EmptySet;
 	self->ssd_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetSymmetricDifference", &self->ssd_a, &self->ssd_b))
-		return -1;
+		goto err;
 	Dee_Incref(self->ssd_a);
 	Dee_Incref(self->ssd_b);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL

@@ -105,27 +105,28 @@ iterator_repr(DeeObject *__restrict self) {
 	 * >> print repr y; // { [...], 20, 30 }
 	 */
 	if unlikely(!iterator)
-		return NULL;
+		goto err;
 	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ [...]") < 0)
-		goto err1;
+		goto err_p_iterator;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		if unlikely(unicode_printer_printf(&p, ", %r", elem) < 0)
-			goto err2;
+			goto err_p_iterator_elem;
 		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
-			goto err1;
+			goto err_p_iterator;
 	}
 	if unlikely(!elem)
-		goto err1;
+		goto err_p_iterator;
 	if unlikely(UNICODE_PRINTER_PRINT(&p, " }") < 0)
-		goto err1;
+		goto err_p_iterator;
 	Dee_Decref(iterator);
 	return unicode_printer_pack(&p);
-err2:
+err_p_iterator_elem:
 	Dee_Decref(elem);
-err1:
+err_p_iterator:
 	Dee_Decref(iterator);
 	unicode_printer_fini(&p);
+err:
 	return NULL;
 }
 
@@ -1954,12 +1955,16 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 			return c->tp_nii->nii_class == TYPE_ITERX_CLASS_BIDIRECTIONAL;
 		m = tp_self->tp_math;
 		if (m) {
-			if ((m->tp_dec && m->tp_dec != &iterator_dec) ||
-			    (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub) ||
-			    (m->tp_sub && m->tp_sub != &iterator_sub) ||
-			    (m->tp_add && m->tp_add != &iterator_add) ||
-			    (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add))
-				return 1;
+			if (m->tp_dec && m->tp_dec != &iterator_dec)
+				goto yes;
+			if (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub)
+				goto yes;
+			if (m->tp_sub && m->tp_sub != &iterator_sub)
+				goto yes;
+			if (m->tp_add && m->tp_add != &iterator_add)
+				goto yes;
+			if (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
+				goto yes;
 		}
 		for (i = 0; i < COMPILER_LENOF(bidirectional_iterator_attributes); ++i) {
 			int temp = has_generic_attribute(tp_self, self, (DeeObject *)bidirectional_iterator_attributes[i]);
@@ -1970,6 +1975,8 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 			break;
 	}
 	return 0;
+yes:
+	return 1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

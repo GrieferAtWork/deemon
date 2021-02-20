@@ -106,15 +106,18 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	StringOrdinals *ords;
-	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords) ||
-	    DeeObject_AssertTypeExact(ords, &StringOrdinals_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords))
+		goto err;
+	if (DeeObject_AssertTypeExact(ords, &StringOrdinals_Type))
+		goto err;
 	self->soi_str     = ords->so_str;
 	self->soi_width   = ords->so_width;
 	self->soi_ptr.ptr = ords->so_ptr.ptr;
 	self->soi_end.ptr = DeeString_WEND(ords->so_str);
 	Dee_Incref(self->soi_str);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -254,7 +257,7 @@ stringordinals_contains(StringOrdinals *self,
                         DeeObject *ord_ob) {
 	uint32_t ord;
 	if (DeeObject_AsUInt32(ord_ob, &ord))
-		return NULL;
+		goto err;
 	SWITCH_SIZEOF_WIDTH(self->so_width) {
 
 	CASE_WIDTH_1BYTE:
@@ -271,6 +274,8 @@ stringordinals_contains(StringOrdinals *self,
 		return_bool(memchrl(self->so_ptr.cp32, ord, WSTR_LENGTH(self->so_ptr.cp32)) != NULL);
 	}
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

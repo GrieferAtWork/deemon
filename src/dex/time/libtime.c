@@ -467,9 +467,10 @@ time_as(DeeTimeObject *self,
 	DeeObject *name;
 	char const *str;
 	size_t len;
-	if (DeeArg_Unpack(argc, argv, "o:as", &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:as", &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
 	str = DeeString_STR(name);
 	len = DeeString_SIZE(name);
 	if (len < COMPILER_LENOF(repr_desc[0].name)) {
@@ -482,6 +483,7 @@ time_as(DeeTimeObject *self,
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Unknown string representation %r",
 	                name);
+err:
 	return NULL;
 }
 
@@ -1349,8 +1351,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_doformat(DeeTimeObject *self, size_t argc, DeeObject *const *argv) {
 	char const *format;
 	if (DeeArg_Unpack(argc, argv, "s:format", &format))
-		return NULL;
+		goto err;
 	return time_doformat_string(self, format);
+err:
+	return NULL;
 }
 
 /* From http://stackoverflow.com/questions/5590429/calculating-daylight-savings-time-from-only-date */
@@ -1407,12 +1411,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_intval(DeeTimeObject *__restrict self) {
 	dtime_t result;
 	if (time_intrepr(self, &result))
-		return NULL;
+		goto err;
 #ifdef HAVE_128BIT_TIME
 	return DeeInt_NewS128(result);
 #else /* HAVE_128BIT_TIME */
 	return DeeInt_NewS64(result);
 #endif /* !HAVE_128BIT_TIME */
+err:
+	return NULL;
 }
 
 #ifdef HAVE_128BIT_TIME
@@ -1621,11 +1627,13 @@ time_set_time_t(DeeTimeObject *self,
                 DeeObject *value) {
 	dtime_t tval;
 	if (object_as_time(value, &tval))
-		return -1;
+		goto err;
 	self->t_time = ((time_yer2day(1970) * MICROSECONDS_PER_DAY) +
 	                (tval * MICROSECONDS_PER_SECOND));
 	self->t_type = TIME_MICROSECONDS;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2016,10 +2024,13 @@ err:
 	f_libtime_##name(size_t argc, DeeObject *const *argv) {     \
 		DeeObject *value_ob;                                    \
 		dtime_t value;                                          \
-		if (DeeArg_Unpack(argc, argv, "o:" #name, &value_ob) || \
-		    object_as_time(value_ob, &value))                   \
-			return NULL;                                        \
+		if (DeeArg_Unpack(argc, argv, "o:" #name, &value_ob))   \
+			goto err;                                           \
+		if (object_as_time(value_ob, &value))                   \
+			goto err;                                           \
 		return new;                                             \
+	err:                                                        \
+		return NULL;                                            \
 	}                                                           \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
@@ -2027,8 +2038,10 @@ err:
 	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_half_t value;                                   \
 		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
-			return NULL;                                      \
+			goto err;                                         \
 		return new;                                           \
+	err:                                                      \
+		return NULL;                                          \
 	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #else /* HAVE_128BIT_TIME */
@@ -2037,8 +2050,10 @@ err:
 	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_t value;                                        \
 		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
-			return NULL;                                      \
+			goto err;                                         \
 		return new;                                           \
+	err:                                                      \
+		return NULL;                                          \
 	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
@@ -2046,8 +2061,10 @@ err:
 	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_half_t value;                                   \
 		if (DeeArg_Unpack(argc, argv, "I32d:" #name, &value)) \
-			return NULL;                                      \
+			goto err;                                         \
 		return new;                                           \
+	err:                                                      \
+		return NULL;                                          \
 	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #endif /* !HAVE_128BIT_TIME */
@@ -2087,11 +2104,15 @@ f_libtime_maketime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto done;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = 0;
-	if (time_setint(result, TIME_REPR_HOR, hor) ||
-	    time_setint(result, TIME_REPR_MIN, min) ||
-	    time_setint(result, TIME_REPR_SEC, sec) ||
-	    time_setint(result, TIME_REPR_MIL, mil) ||
-	    time_setint(result, TIME_REPR_MIC, mic))
+	if (time_setint(result, TIME_REPR_HOR, hor))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_MIN, min))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_SEC, sec))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_MIL, mil))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_MIC, mic))
 		goto err_r;
 	DeeObject_Init(result, &DeeTime_Type);
 done:
@@ -2121,9 +2142,11 @@ f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto done;
 	result->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	result->t_time = 0;
-	if (time_setint(result, TIME_REPR_YER, yer) ||
-	    time_setint(result, TIME_REPR_MON, mon) ||
-	    time_setint(result, TIME_REPR_MDAY, day))
+	if (time_setint(result, TIME_REPR_YER, yer))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_MON, mon))
+		goto err_r;
+	if (time_setint(result, TIME_REPR_MDAY, day))
 		goto err_r;
 	DeeObject_Init(result, &DeeTime_Type);
 done:
@@ -2257,8 +2280,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_class_freq(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":freq"))
-		return NULL;
+		goto err;
 	return DeeInt_NewInt(MICROSECONDS_PER_SECOND);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst time_class_methods[] = {
@@ -2321,10 +2346,12 @@ time_assign(DeeTimeObject *self, DeeTimeObject *other) {
 		self->t_time = other->t_time;
 	} else {
 		if (object_as_time((DeeObject *)other, &self->t_time))
-			return -1;
+			goto err;
 		self->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

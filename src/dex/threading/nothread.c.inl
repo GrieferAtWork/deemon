@@ -71,10 +71,12 @@ sema_enter(Semaphore *__restrict self) {
 			continue;
 		}
 		if (DeeThread_CheckInterrupt())
-			return -1;
+			goto err;
 		SCHED_YIELD();
 	}
 	return 0;
+err:
+	return -1;
 #endif /* !CONFIG_NO_THREADS */
 }
 
@@ -105,18 +107,24 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sema_post(Semaphore *self, size_t argc, DeeObject *const *argv) {
 	size_t count = 1;
-	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count) ||
-	    sema_leave(self, count))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count))
+		goto err;
+	if (sema_leave(self, count))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sema_wait(Semaphore *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":wait") ||
-	    sema_enter(self))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":wait"))
+		goto err;
+	if (sema_enter(self))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -317,10 +325,13 @@ PRIVATE struct type_with mutex_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_acquire(Mutex *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire") ||
-	    mutex_enter(self))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":acquire"))
+		goto err;
+	if (mutex_enter(self))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -371,10 +382,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_release(Mutex *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release") ||
-	    mutex_leave(self))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":release"))
+		goto err;
+	if (mutex_leave(self))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst mutex_methods[] = {

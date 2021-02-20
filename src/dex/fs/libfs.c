@@ -57,9 +57,11 @@ open_file_for_copy(DeeObject *__restrict name, int oflags, int mode) {
 #else /* CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 	/* Fallback: Interpret the name as an integer file descriptor number. */
 	if (DeeObject_AsFd(name, &fd))
-		return NULL;
+		goto err;
 	/* Open the file descriptor, but don't inherit it. */
 	return DeeFile_OpenFd(fd, NULL, oflags, false);
+err:
+	return NULL;
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 }
 
@@ -327,8 +329,10 @@ PRIVATE struct keyword path_pwd_kwlist[] = { K(path), K(pwd), KEND };
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_gettmp(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gettmp"))
-		return NULL;
+		goto err;
 	return fs_gettmp();
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
@@ -344,126 +348,172 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_getcwd(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getcwd"))
-		return NULL;
+		goto err;
 	return fs_getcwd();
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 
 f_libfs_chdir(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:chdir", &path) ||
-	    fs_chdir(path))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:chdir", &path))
+		goto err;
+	if (fs_chdir(path))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_gethostname(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gethostname"))
-		return NULL;
+		goto err;
 	return fs_gethostname();
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_headof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:headof", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:headof", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathhead(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_tailof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:tailof", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:tailof", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathtail(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_fileof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fileof", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fileof", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathfile(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_extof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:extof", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:extof", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathext(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_driveof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:driveof", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:driveof", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathdrive(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_inctrail(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:inctrail", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:inctrail", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathinctrail(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_exctrail(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:exctrail", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:exctrail", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return fs_pathinctrail(path);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_abspath(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path, *pwd = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:abspath", &path, &pwd) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
-	    (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:abspath", &path, &pwd))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	if (pwd) {
+		if (DeeObject_AssertTypeExact(pwd, &DeeString_Type))
+			goto err;
+	}
 	return fs_pathabs(path, pwd);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_relpath(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path, *pwd = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:relpath", &path, &pwd) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
-	    (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:relpath", &path, &pwd))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+	if (pwd) {
+		if (DeeObject_AssertTypeExact(pwd, &DeeString_Type))
+			goto err;
+	}
 	return fs_pathrel(path, pwd);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_isabs(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isabs", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isabs", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return_bool(fs_pathisabs(path));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_isrel(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isrel", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isrel", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return_bool(!fs_pathisabs(path));
+err:
+	return NULL;
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
@@ -471,12 +521,15 @@ f_libfs_issep(size_t argc, DeeObject *const *argv)
 #ifdef CONFIG_HOST_WINDOWS
 {
 	DeeObject *str;
-	if (DeeArg_Unpack(argc, argv, "o:issep", &str) ||
-	    DeeObject_AssertTypeExact(str, &DeeString_Type))
-		return NULL;
-	return_bool(DeeString_SIZE(str) == 0 &&
+	if (DeeArg_Unpack(argc, argv, "o:issep", &str))
+		goto err;
+	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
+		goto err;
+	return_bool(DeeString_SIZE(str) == 1 &&
 	            (DeeString_STR(str)[0] == '\\' ||
 	             DeeString_STR(str)[0] == '/'));
+err:
+	return NULL;
 }
 
 INTERN DEFINE_STRING(libfs_sep, "\\");
@@ -485,11 +538,14 @@ INTERN DEFINE_STRING(libfs_delim, ";");
 #else /* CONFIG_HOST_WINDOWS */
 {
 	DeeObject *str;
-	if (DeeArg_Unpack(argc, argv, "o:issep", &str) ||
-	    DeeObject_AssertTypeExact(str, &DeeString_Type))
-		return NULL;
-	return_bool(DeeString_SIZE(str) == 0 &&
+	if (DeeArg_Unpack(argc, argv, "o:issep", &str))
+		goto err;
+	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
+		goto err;
+	return_bool(DeeString_SIZE(str) == 1 &&
 	            DeeString_STR(str)[0] == '/');
+err:
+	return NULL;
 }
 
 INTERN DEFINE_STRING(libfs_sep, "/");
@@ -589,8 +645,9 @@ INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_expand(size_t argc, DeeObject *const *argv) {
 	uint16_t options = EXPAND_DEFAULT_OPTIONS;
 	DREF DeeObject *path, *options_ob = NULL, *env_ob = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|oo:expand", &path, &options_ob, &env_ob) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o|oo:expand", &path, &options_ob, &env_ob))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 	if (options_ob) {
 		if (DeeString_Check(options_ob)) {
@@ -630,20 +687,26 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_nt_fixunc(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
-	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fixunc_np", &path) ||
-	    DeeObject_AssertTypeExact(path, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fixunc_np", &path))
+		goto err;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 	return DeeNTSystem_FixUncPath(path);
+err:
+	return NULL;
 }
 
 PRIVATE DEFINE_KWCMETHOD(libfs_fixunc_np, &f_libfs_nt_fixunc);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_chattr_np(size_t argc, DeeObject *const *argv) {
 	DeeObject *arg, *mode;
-	if (DeeArg_Unpack(argc, argv, "oo:chattr_np", &arg, &mode) ||
-	    fs_chattr_np(arg, mode))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "oo:chattr_np", &arg, &mode))
+		goto err;
+	if (fs_chattr_np(arg, mode))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE DEFINE_CMETHOD(libfs_chattr_np, &f_libfs_chattr_np);
@@ -880,56 +943,70 @@ INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISDIR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISDIR", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISDIR(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISCHR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISCHR", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISCHR(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISBLK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISBLK", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISBLK(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISREG(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISREG", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISREG(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISFIFO(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISFIFO", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISFIFO(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISLNK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISLNK", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISLNK(arg));
+err:
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISSOCK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISSOCK", &arg))
-		return NULL;
+		goto err;
 	return_bool(STAT_ISSOCK(arg));
+err:
+	return NULL;
 }
 
 PRIVATE DEFINE_CMETHOD(libfs_S_ISDIR, &f_libfs_S_ISDIR);

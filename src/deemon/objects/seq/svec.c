@@ -56,12 +56,15 @@ rveciter_copy(RefVectorIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector) ||
-	    DeeObject_AssertTypeExact(self->rvi_vector, &RefVector_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->rvi_vector, &RefVector_Type))
+		goto err;
 	Dee_Incref(self->rvi_vector);
 	self->rvi_pos = self->rvi_vector->rv_vector;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -120,58 +123,70 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_eq(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector == other->rvi_vector &&
-	             RVI_GETPOS(self) == RVI_GETPOS(other));
+		goto err;
+	return_bool(self->rvi_vector == other->rvi_vector &&
+	            RVI_GETPOS(self) == RVI_GETPOS(other));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_ne(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector != other->rvi_vector ||
-	             RVI_GETPOS(self) != RVI_GETPOS(other));
+		goto err;
+	return_bool(self->rvi_vector != other->rvi_vector ||
+	            RVI_GETPOS(self) != RVI_GETPOS(other));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_lo(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector == other->rvi_vector
-	             ? RVI_GETPOS(self) < RVI_GETPOS(other)
-	             : self->rvi_vector < other->rvi_vector);
+		goto err;
+	return_bool(self->rvi_vector == other->rvi_vector
+	            ? RVI_GETPOS(self) < RVI_GETPOS(other)
+	            : self->rvi_vector < other->rvi_vector);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_le(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector == other->rvi_vector
-	             ? RVI_GETPOS(self) <= RVI_GETPOS(other)
-	             : self->rvi_vector <= other->rvi_vector);
+		goto err;
+	return_bool(self->rvi_vector == other->rvi_vector
+	            ? RVI_GETPOS(self) <= RVI_GETPOS(other)
+	            : self->rvi_vector <= other->rvi_vector);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_gr(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector == other->rvi_vector
-	             ? RVI_GETPOS(self) > RVI_GETPOS(other)
-	             : self->rvi_vector > other->rvi_vector);
+		goto err;
+	return_bool(self->rvi_vector == other->rvi_vector
+	            ? RVI_GETPOS(self) > RVI_GETPOS(other)
+	            : self->rvi_vector > other->rvi_vector);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_ge(RefVectorIterator *self,
             RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		return NULL;
-	return_bool_(self->rvi_vector == other->rvi_vector
-	             ? RVI_GETPOS(self) >= RVI_GETPOS(other)
-	             : self->rvi_vector >= other->rvi_vector);
+		goto err;
+	return_bool(self->rvi_vector == other->rvi_vector
+	            ? RVI_GETPOS(self) >= RVI_GETPOS(other)
+	            : self->rvi_vector >= other->rvi_vector);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp rveciter_cmp = {
@@ -292,11 +307,13 @@ rvec_contains(RefVector *self,
 		Dee_Decref(item);
 		if (temp != 0) {
 			if unlikely(temp < 0)
-				return NULL;
+				goto err;
 			return_true;
 		}
 	}
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -305,7 +322,7 @@ rvec_getitem(RefVector *self,
 	size_t index;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
-		return NULL;
+		goto err;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self,
 		                        index,
@@ -357,7 +374,7 @@ rvec_setitem(RefVector *__restrict self,
 		goto err;
 	}
 	if (DeeObject_AsSize(index_ob, &index))
-		return -1;
+		goto err;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self,
 		                        index,

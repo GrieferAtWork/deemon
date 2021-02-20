@@ -1066,9 +1066,10 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					DeeObject *data, *begin, *end;
 					dssize_t result;
 					begin = end = NULL;
+					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end))
+						goto err;
 					/* TODO: Support for writing buffers */
-					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end) ||
-					    DeeObject_AssertTypeExact(data, &DeeString_Type))
+					if (DeeObject_AssertTypeExact(data, &DeeString_Type))
 						goto err;
 					if (end) {
 						dssize_t ibegin, iend;
@@ -1158,10 +1159,11 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					dssize_t result;
 					dpos_t pos;
 					b = c = NULL;
-					if (DeeArg_Unpack(argc, argv, "oo|oo:__write__", &data, &a, &b, &c) ||
-					    DeeObject_AssertTypeExact(data, &DeeString_Type))
+					if (DeeArg_Unpack(argc, argv, "oo|oo:__write__", &data, &a, &b, &c))
 						goto err;
 					/* TODO: Support for writing buffers */
+					if (DeeObject_AssertTypeExact(data, &DeeString_Type))
+						goto err;
 					if (c) {
 						dssize_t ibegin, iend;
 						if (DeeObject_AsSSize(a, &ibegin))

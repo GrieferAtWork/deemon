@@ -106,22 +106,27 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	Bytes *bytes;
-	if (DeeArg_Unpack(argc, argv, "o:_BytesIterator", &bytes) ||
-	    DeeObject_AssertTypeExact(bytes, &DeeBytes_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_BytesIterator", &bytes))
+		goto err;
+	if (DeeObject_AssertTypeExact(bytes, &DeeBytes_Type))
+		goto err;
 	self->bi_bytes = bytes;
 	Dee_Incref(bytes);
 	self->bi_iter = DeeBytes_DATA(bytes);
 	self->bi_end  = DeeBytes_DATA(bytes) + DeeBytes_SIZE(bytes);
 	return 0;
+err:
+	return -1;
 }
 
-#define DEFINE_BYTESITER_COMPARE(name, expr)                                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
-	name(BytesIterator *self, BytesIterator *other) {                           \
+#define DEFINE_BYTESITER_COMPARE(name, expr)                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
+	name(BytesIterator *self, BytesIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &BytesIterator_Type)) \
-			return NULL;                                                        \
-		return_bool(expr);                                                      \
+			goto err;                                              \
+		return_bool(expr);                                         \
+	err:                                                           \
+		return NULL;                                               \
 	}
 DEFINE_BYTESITER_COMPARE(bytesiter_eq, (self->bi_bytes == other->bi_bytes && self->bi_iter == other->bi_iter));
 DEFINE_BYTESITER_COMPARE(bytesiter_ne, (self->bi_bytes != other->bi_bytes || self->bi_iter != other->bi_iter));
@@ -950,9 +955,12 @@ bytes_setrange(Bytes *self, DeeObject *begin,
 	dssize_t end_index = (dssize_t)DeeBytes_SIZE(self);
 	uint8_t *dst;
 	size_t size;
-	if (DeeObject_AsSSize(begin, &start_index) ||
-	    (!DeeNone_Check(end) && DeeObject_AsSSize(end, &end_index)))
+	if (DeeObject_AsSSize(begin, &start_index))
 		goto err;
+	if (!DeeNone_Check(end)) {
+		if (DeeObject_AsSSize(end, &end_index))
+			goto err;
+	}
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
 	if unlikely(start_index < 0)
@@ -960,12 +968,14 @@ bytes_setrange(Bytes *self, DeeObject *begin,
 	if unlikely(end_index < 0)
 		end_index += DeeBytes_SIZE(self);
 	if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
-		         (size_t)start_index >= (size_t)end_index)
-	start_index = end_index = 0;
-	else if unlikely((size_t)end_index > DeeBytes_SIZE(self))
-	end_index = (dssize_t)DeeBytes_SIZE(self);
-	size      = (size_t)(end_index - start_index);
-	dst       = DeeBytes_DATA(self) + (size_t)start_index;
+	            (size_t)start_index >= (size_t)end_index) {
+		start_index = 0;
+		end_index   = 0;
+	} else if unlikely((size_t)end_index > DeeBytes_SIZE(self)) {
+		end_index = (dssize_t)DeeBytes_SIZE(self);
+	}
+	size = (size_t)(end_index - start_index);
+	dst  = DeeBytes_DATA(self) + (size_t)start_index;
 	return DeeSeq_ItemsToBytes(dst, size, value);
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);
@@ -1283,12 +1293,14 @@ bytes_nsi_setrange_i(Bytes *self,
 	if unlikely(end_index < 0)
 		end_index += DeeBytes_SIZE(self);
 	if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
-		         (size_t)start_index >= (size_t)end_index)
-	start_index = end_index = 0;
-	else if unlikely((size_t)end_index > DeeBytes_SIZE(self))
-	end_index = (dssize_t)DeeBytes_SIZE(self);
-	size      = (size_t)(end_index - start_index);
-	dst       = DeeBytes_DATA(self) + (size_t)start_index;
+	            (size_t)start_index >= (size_t)end_index) {
+		start_index = 0;
+		end_index   = 0;
+	} else if unlikely((size_t)end_index > DeeBytes_SIZE(self)) {
+		end_index = (dssize_t)DeeBytes_SIZE(self);
+	}
+	size = (size_t)(end_index - start_index);
+	dst  = DeeBytes_DATA(self) + (size_t)start_index;
 	return DeeSeq_ItemsToBytes(dst, size, value);
 err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
@@ -1306,8 +1318,8 @@ bytes_nsi_setrange_in(Bytes *self,
 		start_index += DeeBytes_SIZE(self);
 	if unlikely((size_t)start_index >= DeeBytes_SIZE(self))
 		start_index = DeeBytes_SIZE(self);
-	size        = (size_t)(DeeBytes_SIZE(self) - start_index);
-	dst         = DeeBytes_DATA(self) + (size_t)start_index;
+	size = (size_t)(DeeBytes_SIZE(self) - start_index);
+	dst  = DeeBytes_DATA(self) + (size_t)start_index;
 	return DeeSeq_ItemsToBytes(dst, size, value);
 err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
@@ -1545,8 +1557,9 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	uint8_t *dst;
 	union dcharptr iter, end;
 	size_t length;
-	if (DeeArg_Unpack(argc, argv, "o:fromhex", &hex_str) ||
-	    DeeObject_AssertTypeExact(hex_str, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o:fromhex", &hex_str))
+		goto err;
+	if (DeeObject_AssertTypeExact(hex_str, &DeeString_Type))
 		goto err;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(hex_str)) {
 

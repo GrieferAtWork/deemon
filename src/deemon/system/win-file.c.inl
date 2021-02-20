@@ -410,10 +410,12 @@ DeeFile_OpenString(char const *__restrict filename,
 	 * just a thin wrapper around the string-object version. */
 	nameob = DeeString_New(filename);
 	if unlikely(!nameob)
-		return NULL;
+		goto err;
 	result = DeeFile_Open(nameob, oflags, mode);
 	Dee_Decref(nameob);
 	return result;
+err:
+	return NULL;
 }
 
 
@@ -1087,8 +1089,10 @@ sysfile_osfhandle(SystemFile *__restrict self) {
 	DeeSysFD result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	return DeeInt_NewUIntptr((uintptr_t)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1188,7 +1192,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
-		return NULL;
+		goto err;
 	/* TODO:
 	 * >> for (filename: "\\.\<DRIVELETTER>:")
 	 * >>     with (local x = File.open(filename, "r"))
@@ -1201,6 +1205,8 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	 *      How does cygwin implement `sync()'?
 	 */
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {

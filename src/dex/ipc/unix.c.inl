@@ -1201,7 +1201,7 @@ process_get_file(Process *__restrict self, int stdno, int fd) {
 		DREF DeeObject *filename;
 		filename = unix_readlinkf("/proc/%d/fd/%d", pid, fd);
 		if unlikely(!filename)
-			return NULL;
+			goto err;
 		/* Try to open the linked file. */
 		result = DeeFile_Open(filename, OPEN_FRDWR, 0);
 		if (!result && DeeError_Catch(&DeeError_FSError))
@@ -1212,6 +1212,8 @@ process_get_file(Process *__restrict self, int stdno, int fd) {
 		}
 		Dee_Decref(filename);
 		return result;
+err:
+		return NULL;
 	}
 #else /* HAVE_UNIX_READLINK */
 	ipc_unimplemented();
@@ -1423,7 +1425,7 @@ process_set_environ(Process *self, DeeObject *value) {
 		int result;
 		temp = get_extern((DeeObject *)&str_fs, (DeeObject *)&str_environ);
 		if unlikely(!temp)
-			return -1;
+			goto err;
 		result = DeeObject_Assign(temp, value ? value : Dee_None);
 		Dee_Decref(temp);
 		return result;
@@ -1438,11 +1440,13 @@ process_set_environ(Process *self, DeeObject *value) {
 		return 0;
 	}
 	rwlock_endwrite(&self->p_lock);
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Cannot %s environ of running process %k",
-	                       value ? "change"
-	                             : "delete",
-	                       self);
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot %s environ of running process %k",
+	                value ? "change"
+	                      : "delete",
+	                self);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2099,8 +2103,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
-		return NULL;
+		goto err;
 	return_reference_((DeeObject *)&this_process);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst process_class_methods[] = {

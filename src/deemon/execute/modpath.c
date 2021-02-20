@@ -205,7 +205,7 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 		 * of the starting column number in the first line. */
 		pad_text = TPPString_NewSized((size_t)(unsigned int)start_col);
 		if unlikely(!pad_text)
-			return -1;
+			goto err;
 		/* Use space characters to pad text. */
 		memset(pad_text->s_text, ' ', pad_text->s_size);
 		TPPString_Decref(self->f_text);
@@ -216,6 +216,8 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 		self->f_pos = self->f_end;
 	}
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -1140,7 +1142,7 @@ DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_si
 	DREF DeeObject *source_stream, *result;
 	source_stream = DeeFile_OpenRoMemory(data, data_size);
 	if unlikely(!source_stream)
-		return NULL;
+		goto err;
 	result = DeeModule_OpenSourceStream(source_stream,
 	                                    start_line,
 	                                    start_col,
@@ -1149,6 +1151,8 @@ DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_si
 	                                    module_name);
 	DeeFile_ReleaseMemory(source_stream);
 	return result;
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL

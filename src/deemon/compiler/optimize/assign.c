@@ -232,14 +232,15 @@ err:
 #undef temp
 }
 
-INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
-                                  struct ast *__restrict other) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_graft_onto)(struct ast *__restrict self,
+                       struct ast *__restrict other) {
 	DREF struct ast **elemv;
 	if (self->a_scope == other->a_scope)
 		return ast_assign(self, other);
 	elemv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 	if unlikely(!elemv)
-		return -1;
+		goto err;
 	elemv[0] = other;
 	ast_incref(other);
 	if (self != other) {
@@ -257,13 +258,15 @@ INTERN int (DCALL ast_graft_onto)(struct ast *__restrict self,
 	self->a_multiple.m_astc = 1;
 	self->a_multiple.m_astv = elemv;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN struct ast *DCALL
 ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src) {
 	if unlikely(!self)
-		return NULL;
+		goto err;
 	Dee_Incref(src->a_scope);
 	Dee_Decref(self->a_scope);
 	/* Override the effective scope of the AST. */
@@ -275,6 +278,8 @@ ast_setscope_and_ddi(struct ast *self,
 		TPPFile_Decref(self->a_ddi.l_file);
 	self->a_ddi = src->a_ddi;
 	return self;
+err:
+	return NULL;
 }
 
 DECL_END

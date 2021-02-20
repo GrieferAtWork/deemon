@@ -600,10 +600,11 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	char *utf8_filename;
 	filename = DeeSystemFile_Filename((DeeObject *)self);
 	if unlikely(!filename)
-		return -1;
+		goto err;
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename) {
 		Dee_Decref(filename);
+err:
 		return -1;
 	}
 	DBG_ALIGNMENT_DISABLE();
@@ -643,8 +644,10 @@ sysfile_fileno(SystemFile *__restrict self) {
 	DeeSysFD result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
 	if unlikely(result == (DeeSysFD)-1)
-		return NULL;
+		goto err;
 	return DeeInt_NewInt((int)result);
+err:
+	return NULL;
 }
 
 #undef sysfile_isatty_USE_ISATTY
@@ -654,9 +657,9 @@ sysfile_fileno(SystemFile *__restrict self) {
 #define sysfile_isatty_USE_ISATTY 1
 #elif defined(STDIN_FILENO) || defined(STDOUT_FILENO) || defined(STDERR_FILENO)
 #define sysfile_isatty_USE_ISASTDFILE 1
-#else
+#else /* ... */
 #define sysfile_isatty_USE_RETURN_FALSE 1
-#endif
+#endif /* !... */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -805,13 +808,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
-		return NULL;
+		goto err;
 #ifdef CONFIG_HAVE_sync
 	DBG_ALIGNMENT_DISABLE();
 	sync();
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_sync */
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {

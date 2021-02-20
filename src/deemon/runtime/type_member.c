@@ -306,16 +306,15 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 		} else {
 			size_t temp = DeeObject_Size(kw);
 			if unlikely(temp == (size_t)-1)
-				return NULL;
+				goto err;
 			if (temp != 0)
 				goto err_no_keywords;
 		}
 	}
 	return (*desc->m_func)(argv[0], argc - 1, argv + 1);
-err:
-	return NULL;
 err_no_keywords:
 	err_keywords_func_not_accepted(desc->m_name, kw);
+err:
 	return NULL;
 }
 
@@ -331,7 +330,7 @@ type_method_call_kw_normal(struct type_method const *desc,
 		} else {
 			size_t temp = DeeObject_Size(kw);
 			if unlikely(temp == (size_t)-1)
-				return NULL;
+				goto err;
 			if (temp != 0)
 				goto err_no_keywords;
 		}
@@ -339,6 +338,7 @@ type_method_call_kw_normal(struct type_method const *desc,
 	return (*desc->m_func)(self, argc, argv);
 err_no_keywords:
 	err_keywords_func_not_accepted(desc->m_name, kw);
+err:
 	return NULL;
 }
 
@@ -414,12 +414,16 @@ type_obmemb_call(DeeTypeObject *cls_type,
                  struct type_member const *desc,
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
-	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(cls_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, cls_type)))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err;
+	}
 	return type_member_get(desc, thisarg);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -428,12 +432,16 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(cls_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, cls_type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err;
+	}
 	return type_member_get(desc, thisarg);
+err:
+	return NULL;
 }
 
 
@@ -643,8 +651,9 @@ type_member_bound(struct type_member const *desc,
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 type_member_set(struct type_member const *desc,
                 DeeObject *self, DeeObject *value) {
-	if (TYPE_MEMBER_ISCONST(desc) ||
-	    desc->m_field.m_type & STRUCT_CONST)
+	if (TYPE_MEMBER_ISCONST(desc))
+		goto cant_access;
+	if (desc->m_field.m_type & STRUCT_CONST)
 		goto cant_access;
 	switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
 

@@ -178,10 +178,13 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_wait(Semaphore *self, size_t argc,
           DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":wait") ||
-	    nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":wait"))
+		goto err;
+	if (nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -217,8 +220,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_fileno(Semaphore *self, size_t argc,
             DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		return NULL;
+		goto err;
 	return DeeInt_NewUIntptr((uintptr_t)self->sem_handle);
+err:
+	return NULL;
 }
 
 
@@ -436,10 +441,13 @@ PRIVATE struct type_with mutex_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_acquire(Mutex *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":acquire") ||
-	    mutex_timedenter(self, (uint64_t)-1))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":acquire"))
+		goto err;
+	if (mutex_timedenter(self, (uint64_t)-1))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -471,10 +479,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_release(Mutex *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":release") ||
-	    mutex_leave(self))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":release"))
+		goto err;
+	if (mutex_leave(self))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst mutex_methods[] = {

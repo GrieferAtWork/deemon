@@ -171,15 +171,17 @@ DeeUnixSystem_Printlink(struct unicode_printer *__restrict printer,
 	return 1;
 #endif /* DeeUnixSystem_Readlink_USE_WINDOWS */
 
-#if defined(DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT) || \
-    defined(DeeUnixSystem_Readlink_USE_READLINK)
+#if (defined(DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT) || \
+     defined(DeeUnixSystem_Readlink_USE_READLINK))
 	int result;
 	char const *utf8_filename;
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
-		return -1;
+		goto err;
 	result = DeeUnixSystem_PrintlinkString(printer, utf8_filename);
 	return result;
+err:
+	return -1;
 #endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT || DeeUnixSystem_Readlink_USE_READLINK */
 
 #ifdef DeeUnixSystem_Readlink_USE_STUB

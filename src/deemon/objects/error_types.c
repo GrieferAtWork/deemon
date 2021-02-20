@@ -223,7 +223,7 @@ error_deep(DeeErrorObject *__restrict self,
 	if (other->e_inner) {
 		self->e_inner = DeeObject_DeepCopy(other->e_inner);
 		if unlikely(!self->e_inner)
-			return -1;
+			goto err;
 	}
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_message);
@@ -231,6 +231,8 @@ error_deep(DeeErrorObject *__restrict self,
 	      instance_size -
 	      sizeof(DeeErrorObject));
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE char const error_init_fmt[]        = "|oo:Error";
@@ -514,9 +516,11 @@ nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
 		goto done;
 	self->nm_allocsize = 1;
 	if (DeeArg_Unpack(argc, argv, "|Iu:NoMemory", &self->nm_allocsize))
-		return -1;
+		goto err;
 done:
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1311,9 +1315,11 @@ threadexit_init(struct threadexit_object *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	self->te_result = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o", &self->te_result))
-		return -1;
+		goto err;
 	Dee_Incref(self->te_result);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE void DCALL

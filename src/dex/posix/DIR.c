@@ -670,19 +670,23 @@ diriter_makepathstr(DeeDirIteratorObject *__restrict self) {
 		HANDLE hPath;
 		hPath = DeeNTSystem_GetHandle((DeeObject *)result);
 		if (hPath == INVALID_HANDLE_VALUE)
-			return NULL;
+			goto err;
 		result = (DREF DeeStringObject *)DeeNTSystem_GetFilenameOfHandle(hPath);
 	}
 	return result;
+err:
+	return NULL;
 #elif defined(posix_opendir_USE_opendir)
 	{
 		int fd;
 		fd = DeeUnixSystem_GetFD((DeeObject *)result);
 		if (fd == -1)
-			return NULL;
+			goto err;
 		result = (DREF DeeStringObject *)DeeSystem_GetFilenameOfFD(fd);
 	}
 	return result;
+err:
+	return NULL;
 #else /* ... */
 	diriter_unbound_attr("pathstr");
 	return NULL;
@@ -803,11 +807,11 @@ again:
 	char const *utf8;
 	fullname = diriter_get_d_fullname(self);
 	if unlikely(!fullname)
-		return -1;
+		goto err;
 	utf8 = DeeString_AsUtf8(fullname);
 	if unlikely(!utf8) {
 		Dee_Decref(fullname);
-		return -1;
+		goto err;
 	}
 	if (lstat(utf8, &self->di_st) == 0) {
 		self->di_stvalid = true;
@@ -818,9 +822,12 @@ again:
 	Dee_Decref(fullname);
 #endif /* !lstatat || !CONFIG_HAVE_dirfd */
 	HANDLE_EINTR(error, again, err)
-	return DeeUnixSystem_ThrowErrorf(NULL, error,
-	                                 "Failed to stat %q in %k",
-	                                 self->di_ent->d_name, self);
+	DeeUnixSystem_ThrowErrorf(NULL, error,
+	                          "Failed to stat %q in %k",
+	                          self->di_ent->d_name, self);
+	goto err;
+err:
+	return -1;
 }
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 
@@ -850,12 +857,17 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 		return DeeInt_New_D_TYPE(NATIVE_DT_TO_USED_DT(self->di_ent->d_type));
 #elif defined(posix_opendir_NEED_STAT_EXTENSION)
 		if unlikely(diriter_loadstat(self))
-			return NULL;
+			goto err;
+#define NEED_err
 		return DeeInt_New_D_TYPE(USED_IFTODT(self->di_st.st_mode));
 #endif /* !CONFIG_HAVE_DIRENT_D_TYPE */
 	}
 #endif /* ... */
 	diriter_unbound_attr("d_type");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
 	return NULL;
 }
 

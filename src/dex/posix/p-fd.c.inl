@@ -415,9 +415,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd,
 //[[[end]]]
 {
 
-#if defined(posix_dup3_USE_DUP3) || \
-    defined(posix_dup3_USE_DUP2_FCNTL) || \
-    defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION)
+#if (defined(posix_dup3_USE_DUP3) ||       \
+     defined(posix_dup3_USE_DUP2_FCNTL) || \
+     defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION))
 	DREF DeeObject *result;
 	int error;
 EINTR_LABEL(again)
@@ -429,8 +429,8 @@ EINTR_LABEL(again)
 		goto handle_system_error;
 #endif /* posix_dup3_USE_DUP3 */
 
-#if defined(posix_dup3_USE_DUP2_FCNTL) || \
-    defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION)
+#if (defined(posix_dup3_USE_DUP2_FCNTL) || \
+     defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION))
 	/* Validate the given `oflags' */
 #if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))

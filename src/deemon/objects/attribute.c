@@ -760,11 +760,12 @@ enumattr_init(EnumAttr *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeObject *a, *b = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:enumattr", &a, &b))
-		return -1;
+		goto err;
 	if (b) {
-		if (DeeObject_AssertType(a, &DeeType_Type) ||
-		    DeeObject_AssertType(b, (DeeTypeObject *)a))
-			return -1;
+		if (DeeObject_AssertType(a, &DeeType_Type))
+			goto err;
+		if (DeeObject_AssertType(b, (DeeTypeObject *)a))
+			goto err;
 		self->ea_type = (DREF DeeTypeObject *)a;
 		self->ea_obj  = b;
 		Dee_Incref(a);
@@ -788,7 +789,7 @@ enumattr_init(EnumAttr *__restrict self,
 			Dee_Free(list.al_v);
 			Dee_Decref(self->ea_type);
 			Dee_XDecref(self->ea_obj);
-			return -1;
+			goto err;
 		}
 		/* Truncate the collection vector. */
 		if (list.al_c != list.al_a) {
@@ -804,6 +805,8 @@ enumattr_init(EnumAttr *__restrict self,
 	}
 #endif
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -870,20 +873,24 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 enumattr_eq(EnumAttr *self,
             EnumAttr *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
-		return NULL;
+		goto err;
 	if (self->ea_type != other->ea_type)
 		return_false;
 	return DeeObject_CompareEqObject(self->ea_obj, other->ea_obj);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 enumattr_ne(EnumAttr *self,
             EnumAttr *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
-		return NULL;
+		goto err;
 	if (self->ea_type != other->ea_type)
 		return_true;
 	return DeeObject_CompareNeObject(self->ea_obj, other->ea_obj);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
@@ -1414,7 +1421,7 @@ do_iter_attr:
 			if (enum_error == 0 || enum_error == -3) /* Not found */
 				break; /* Don't consider attributes from lower levels for custom member access. */
 			if (enum_error == -1)
-				return -1;            /* Error... */
+				goto err;             /* Error... */
 			ASSERT(enum_error == -2); /* Found it! */
 			return 0;
 		}
@@ -1422,6 +1429,8 @@ do_iter_attr:
 	return 1; /* Not found */
 done:
 	return error;
+err:
+	return -1;
 }
 
 

@@ -328,26 +328,31 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp_iter;
 	self->si_index = &DeeInt_Zero;
-	if (DeeArg_Unpack(argc, argv, "o|o:Sequence.Iterator", &self->si_seq, &self->si_index) ||
-	    DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o|o:Sequence.Iterator", &self->si_seq, &self->si_index))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
+		goto err;
 	tp_iter = Dee_TYPE(self->si_seq);
-	if ((!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) &&
-	    !type_inherit_getitem(tp_iter)) {
-		return err_unimplemented_operator(tp_iter, OPERATOR_GETITEM);
+	if (!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) {
+		if (!type_inherit_getitem(tp_iter))
+			goto err_not_implemented;
 	}
 	ASSERT(tp_iter->tp_seq);
 	ASSERT(tp_iter->tp_seq->tp_get);
 	self->si_getitem = tp_iter->tp_seq->tp_get;
 	self->si_size    = DeeObject_SizeObject(self->si_seq);
 	if unlikely(!self->si_size)
-		return -1;
+		goto err;
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->si_lock);
 #endif /* !CONFIG_NO_THREADS */
 	Dee_Incref(self->si_seq);
 	Dee_Incref(self->si_index);
 	return 0;
+err_not_implemented:
+	err_unimplemented_operator(tp_iter, OPERATOR_GETITEM);
+err:
+	return -1;
 }
 
 

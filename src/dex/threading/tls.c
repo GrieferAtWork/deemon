@@ -54,7 +54,7 @@ thread_tls_get(size_t index) {
 		                                            offsetof(struct tls_descriptor, td_elem) +
 		                                            (index + 1) * sizeof(DREF DeeObject *));
 		if unlikely(!desc)
-			return NULL;
+			goto err;
 		/* Save the new descriptor length. */
 		desc->td_size = index + 1;
 		/* ZERO-initialize all newly allocated indices. */
@@ -66,17 +66,22 @@ thread_tls_get(size_t index) {
 	}
 	/* Return a pointer into the descriptor. */
 	return &desc->td_elem[index];
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject **DCALL
 thread_tls_tryget(size_t index) {
 	struct tls_descriptor *desc;
-	DeeThreadObject *caller = DeeThread_Self();
-	desc                    = (struct tls_descriptor *)caller->t_tlsdata;
+	DeeThreadObject *caller;
+	caller = DeeThread_Self();
+	desc   = (struct tls_descriptor *)caller->t_tlsdata;
 	if unlikely(!desc || index >= desc->td_size)
-		return NULL;
+		goto err;
 	/* Return a pointer into the descriptor. */
 	return &desc->td_elem[index];
+err:
+	return NULL;
 }
 
 
@@ -651,22 +656,28 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_xch(Tls *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:xch", &newval))
-		return NULL;
+		goto err;
 	return tls_xchitem(self, newval);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_pop(Tls *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":pop"))
-		return NULL;
+		goto err;
 	return tls_xchitem(self, ITER_DONE);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_get(Tls *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
-		return NULL;
+		goto err;
 	return tls_getvalue(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -685,10 +696,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_set(Tls *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
-	if (DeeArg_Unpack(argc, argv, "o:set", &ob) ||
-	    tls_setvalue(self, ob))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, "o:set", &ob))
+		goto err;
+	if (tls_setvalue(self, ob))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method tpconst tls_methods[] = {

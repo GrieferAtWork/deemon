@@ -1199,9 +1199,11 @@ LOCAL WUNUSED ATTR_MALLOC uint8_t *
 	result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 	                                             (num_chars + 1) * sizeof(char));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_MALLOC uint8_t *
@@ -1210,9 +1212,11 @@ LOCAL WUNUSED ATTR_MALLOC uint8_t *
 	result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 	                                                (num_chars + 1) * sizeof(char));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED uint8_t *
@@ -1223,9 +1227,11 @@ LOCAL WUNUSED uint8_t *
 	                                              COMPILER_OFFSETOF(DeeStringObject, s_str) +
 	                                              (num_chars + 1) * sizeof(char));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED uint8_t *
@@ -1236,9 +1242,11 @@ LOCAL WUNUSED uint8_t *
 	                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
 	                                                 (num_chars + 1) * sizeof(char));
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
@@ -1422,9 +1430,11 @@ LOCAL WUNUSED ATTR_MALLOC uint8_t *
 	                                                (num_chars + 1) * sizeof(char),
 	                                                file, line);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_MALLOC uint8_t *
@@ -1434,9 +1444,11 @@ LOCAL WUNUSED ATTR_MALLOC uint8_t *
 	                                                   (num_chars + 1) * sizeof(char),
 	                                                   file, line);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED uint8_t *
@@ -1449,9 +1461,11 @@ LOCAL WUNUSED uint8_t *
 	                                                 (num_chars + 1) * sizeof(char),
 	                                                 file, line);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED uint8_t *
@@ -1464,9 +1478,11 @@ LOCAL WUNUSED uint8_t *
 	                                                    (num_chars + 1) * sizeof(char),
 	                                                    file, line);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	result->s_len = num_chars;
 	return (uint8_t *)result->s_str;
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
@@ -1565,7 +1581,7 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                             (num_chars + 1) * sizeof(char));
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1573,10 +1589,13 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		result = (size_t *)Dee_Malloc(sizeof(size_t) +
 		                              (num_chars + 1) *
 		                              Dee_STRING_SIZEOF_WIDTH(width));
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_chars, unsigned int width) {
@@ -1585,7 +1604,7 @@ LOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_c
 		result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                                (num_chars + 1) * sizeof(char));
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1593,10 +1612,13 @@ LOCAL WUNUSED ATTR_MALLOC void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_c
 		result = (size_t *)Dee_TryMalloc(sizeof(size_t) +
 		                                 (num_chars + 1) *
 		                                 Dee_STRING_SIZEOF_WIDTH(width));
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width) {
@@ -1607,7 +1629,7 @@ LOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num
 		                                              COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                              (num_chars + 1) * sizeof(char));
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1617,10 +1639,13 @@ LOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num
 		                               sizeof(size_t) +
 		                               (num_chars + 1) *
 		                               Dee_STRING_SIZEOF_WIDTH(width));
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t num_chars, unsigned int width) {
@@ -1631,7 +1656,7 @@ LOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t 
 		                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
 		                                                 (num_chars + 1) * sizeof(char));
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1641,10 +1666,13 @@ LOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t 
 		                                  sizeof(size_t) +
 		                                  (num_chars + 1) *
 		                                  Dee_STRING_SIZEOF_WIDTH(width));
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
@@ -1706,7 +1734,7 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		                                                (num_chars + 1) * sizeof(char),
 		                                                file, line);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1715,10 +1743,13 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		                                 (num_chars + 1) *
 		                                 Dee_STRING_SIZEOF_WIDTH(width),
 		                                 file, line);
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_MALLOC void *
@@ -1729,7 +1760,7 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		                                                   (num_chars + 1) * sizeof(char),
 		                                                   file, line);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1738,10 +1769,13 @@ LOCAL WUNUSED ATTR_MALLOC void *
 		                                    (num_chars + 1) *
 		                                    Dee_STRING_SIZEOF_WIDTH(width),
 		                                    file, line);
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED void *
@@ -1754,7 +1788,7 @@ LOCAL WUNUSED void *
 		                                                 (num_chars + 1) * sizeof(char),
 		                                                 file, line);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1765,10 +1799,13 @@ LOCAL WUNUSED void *
 		                                  (num_chars + 1) *
 		                                  Dee_STRING_SIZEOF_WIDTH(width),
 		                                  file, line);
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED void *
@@ -1781,7 +1818,7 @@ LOCAL WUNUSED void *
 		                                                    (num_chars + 1) * sizeof(char),
 		                                                    file, line);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_len = num_chars;
 		return (uint8_t *)result->s_str;
 	} else {
@@ -1792,10 +1829,13 @@ LOCAL WUNUSED void *
 		                                     (num_chars + 1) *
 		                                     Dee_STRING_SIZEOF_WIDTH(width),
 		                                     file, line);
-		if likely(result)
-			*result++ = num_chars;
+		if unlikely(!result)
+			goto err;
+		*result++ = num_chars;
 		return result;
 	}
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *

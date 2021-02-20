@@ -142,8 +142,9 @@ again:
 						for (;;) {
 							if likely(JITFunction_TryRehashArguments(self, new_mask))
 								goto again;
-							if unlikely(!Dee_CollectMemory((new_mask + 1) * sizeof(struct jit_object_entry)))
-								return NULL;
+							if unlikely(!Dee_CollectMemory((new_mask + 1) *
+							                               sizeof(struct jit_object_entry)))
+								goto err;
 						}
 					}
 				}
@@ -168,6 +169,8 @@ again:
 	result_entry->oe_type    = JIT_OBJECT_ENTRY_TYPE_LOCAL;
 	result_entry->oe_value   = NULL;
 	return result_entry;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

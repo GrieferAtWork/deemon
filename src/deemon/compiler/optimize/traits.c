@@ -68,7 +68,7 @@ ast_predict_type(struct ast *__restrict self) {
 	ASSERT_AST(self);
 	/* When AST type prediction is disabled, always indicate unpredictable ASTs. */
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
-		return NULL;
+		goto nope;
 	switch (self->a_type) {
 
 	case AST_CONSTEXPR:
@@ -336,6 +336,7 @@ ast_predict_type(struct ast *__restrict self) {
 	default:
 		break;
 	}
+nope:
 	return NULL;
 }
 

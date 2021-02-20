@@ -307,7 +307,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 		result = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) +
 		                                          1 + result_size);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 	}
 	/* Initialize the string printer we're using for the ddi's string table. */
 	ascii_printer_init(&strtab);
@@ -331,11 +331,11 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 		ASSERT(strtab.ap_length == 0);
 		if (ascii_printer_print(&strtab, current_basescope->bs_name->k_name,
 		                        (current_basescope->bs_name->k_size + 1)) < 0)
-			goto err;
+			goto err_result_printer;
 		/* Link the initial symbol name for the main function. */
 		result->d_strings = (uint32_t *)Dee_Malloc(sizeof(uint32_t));
 		if unlikely(!result->d_strings)
-			goto err;
+			goto err_result_printer;
 		result->d_nstring                  = 1;
 		((uint32_t *)result->d_strings)[0] = 0;
 		/* No need to set this field. - The name has
@@ -394,7 +394,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					tab_str = ascii_printer_allocstr(&strtab, file_begin + 1,
 					                                 (size_t)(length - (file_begin - filename)) + 1);
 					if unlikely(!tab_str)
-						goto err;
+						goto err_result_printer;
 					file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					/* Now to allocate the path. */
 					backup        = file_begin[0];
@@ -403,13 +403,13 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					                                 (size_t)(file_begin - filename) + 1);
 					file_begin[0] = backup;
 					if unlikely(!tab_str)
-						goto err;
+						goto err_result_printer;
 					path_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					temp = find_or_alloc_offset((uint32_t **)&result->d_strings,
 					                            &result->d_nstring,
 					                            path_offset, UINT32_MAX - 1);
 					if unlikely(temp < 0)
-						goto err;
+						goto err_result_printer;
 					new_state.reg_path = (uint16_t)(temp + 1);
 				} else {
 					/* Special case: The filename has no path associated. */
@@ -417,7 +417,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 						++length;
 					filename = ascii_printer_allocstr(&strtab, filename, length);
 					if unlikely(!filename)
-						goto err;
+						goto err_result_printer;
 					file_offset        = (uint32_t)(filename - strtab.ap_string->s_str);
 					new_state.reg_path = 0; /* No path. */
 				}
@@ -426,7 +426,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				                            &result->d_nstring,
 				                            file_offset, UINT32_MAX);
 				if unlikely(temp < 0)
-					goto err;
+					goto err_result_printer;
 				new_state.reg_file = (uint16_t)temp;
 			}
 			/* Generate DDI assembly to update symbol name bindings. */
@@ -447,7 +447,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 							                                     binding->db_name->k_name,
 							                                     binding->db_name->k_size + 1);
 							if unlikely(!symbol_name)
-								goto err;
+								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
@@ -455,7 +455,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
 							if unlikely(symbol_name_id < 0)
-								goto err;
+								goto err_result_printer;
 							*bind_text++ = DDI_DEFLCNAME;
 							bind_text    = put_uleb(bind_text, binding->db_index);
 							bind_text    = put_uleb(bind_text, (uint16_t)(uint32_t)symbol_name_id);
@@ -470,7 +470,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 							                                     binding->db_name->k_name,
 							                                     binding->db_name->k_size + 1);
 							if unlikely(!symbol_name)
-								goto err;
+								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
 							symbol_name_id = find_or_alloc_offset((uint32_t **)&result->d_strings,
 							                                      &result->d_nstring,
@@ -478,7 +478,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 							                                                 strtab.ap_string->s_str),
 							                                      UINT32_MAX);
 							if unlikely(symbol_name_id < 0)
-								goto err;
+								goto err_result_printer;
 							/* Optimize to make use of the `DDI_DEFSPNAME' instruction. */
 							if (old_state.reg_usp == binding->db_index + 1) {
 								*bind_text++ = DDI_DEFSPNAME;
@@ -525,7 +525,7 @@ do_realloc_bind:
 							}
 							if (Dee_CollectMemory(offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc))
 								goto do_realloc_bind;
-							goto err;
+							goto err_result_printer;
 						}
 						/* Relocate the code pointer into the new result buffer. */
 						code_iter -= (uintptr_t)result;
@@ -591,7 +591,7 @@ do_realloc:
 					}
 					if (Dee_CollectMemory(offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc))
 						goto do_realloc;
-					goto err;
+					goto err_result_printer;
 				}
 				/* Relocate the code pointer into the new result buffer. */
 				code_iter -= (uintptr_t)result;
@@ -666,7 +666,7 @@ do_realloc:
 		__IF0 {
 err_xwriter:
 			bytewriter_fini(&writer);
-			goto err;
+			goto err_result_printer;
 		}
 	}
 
@@ -685,7 +685,7 @@ err_xwriter:
 	/* Pack the string printer and call it a day. */
 	result->d_strtab = (DREF struct string_object *)ascii_printer_pack(&strtab);
 	if unlikely(!result->d_strtab)
-		goto err_noprinter;
+		goto err_result;
 	if (!current_basescope->bs_name) {
 		/* If no function name was set, mark the initial DDI-name register as invalid. */
 		result->d_start.dr_name = (uint16_t)-1;
@@ -694,13 +694,14 @@ err_xwriter:
 	/* Finally, initialize the DDI object. */
 	DeeObject_Init(result, &DeeDDI_Type);
 	return result;
-err:
+err_result_printer:
 	/* Free all buffers and fail. */
 	ascii_printer_fini(&strtab);
-err_noprinter:
+err_result:
 	Dee_Free((void *)result->d_exdat);
 	Dee_Free((void *)result->d_strings);
 	DeeObject_Free(result);
+err:
 	return NULL;
 }
 

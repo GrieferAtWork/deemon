@@ -167,7 +167,7 @@ PUBLIC WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch) {
 		rwlock_endread(&latin1_chars_lock);
 		result = (DREF String *)DeeString_NewBuffer(1);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		result->s_str[0] = (char)ch;
 		rwlock_write(&latin1_chars_lock);
 		if unlikely(latin1_chars[ch] != NULL) {
@@ -186,6 +186,8 @@ PUBLIC WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch) {
 		rwlock_endwrite(&latin1_chars_lock);
 	}
 	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 
@@ -2866,9 +2868,11 @@ PUBLIC WUNUSED DREF DeeObject *
 		return DeeString_Chr8((uint8_t)ch);
 	buffer = DeeString_New2ByteBuffer(1);
 	if unlikely(!buffer)
-		return NULL;
+		goto err;
 	buffer[0] = ch;
 	return DeeString_Pack2ByteBuffer(buffer);
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED DREF DeeObject *
@@ -2879,17 +2883,19 @@ PUBLIC WUNUSED DREF DeeObject *
 		uint16_t *buffer;
 		buffer = DeeString_New2ByteBuffer(1);
 		if unlikely(!buffer)
-			return NULL;
+			goto err;
 		buffer[0] = (uint16_t)ch;
 		return DeeString_Pack2ByteBuffer(buffer);
 	} else {
 		uint32_t *buffer;
 		buffer = DeeString_New4ByteBuffer(1);
 		if unlikely(!buffer)
-			return NULL;
+			goto err;
 		buffer[0] = ch;
 		return DeeString_Pack4ByteBuffer(buffer);
 	}
+err:
+	return NULL;
 }
 
 
@@ -2913,7 +2919,7 @@ DeeString_Convert(String *__restrict self,
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
@@ -2932,6 +2938,8 @@ DeeString_Convert(String *__restrict self,
 		break;
 	}
 	return (DREF String *)DeeString_PackWidthBuffer(result, width);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
@@ -2953,7 +2961,7 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
@@ -2984,6 +2992,8 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 		break;
 	}
 	return (DREF String *)DeeString_PackWidthBuffer(result, width);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
@@ -3004,7 +3014,7 @@ DeeString_Capitalize(String *__restrict self, size_t start, size_t end) {
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
@@ -3026,6 +3036,8 @@ DeeString_Capitalize(String *__restrict self, size_t start, size_t end) {
 		break;
 	}
 	return (DREF String *)DeeString_PackWidthBuffer(result, width);
+err:
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
@@ -3046,7 +3058,7 @@ DeeString_Swapcase(String *__restrict self, size_t start, size_t end) {
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
-		return NULL;
+		goto err;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
@@ -3065,6 +3077,8 @@ DeeString_Swapcase(String *__restrict self, size_t start, size_t end) {
 		break;
 	}
 	return (DREF String *)DeeString_PackWidthBuffer(result, width);
+err:
+	return NULL;
 }
 
 
@@ -4922,11 +4936,13 @@ DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
 	size_t utf8_len;
 	if (printer == &unicode_printer_print) {
 		if (unicode_printer_putc((struct unicode_printer *)arg, ch))
-			return -1;
+			goto err;
 		return 1;
 	}
 	utf8_len = (size_t)(utf8_writechar(utf8_repr, ch) - utf8_repr);
 	return (*printer)(arg, utf8_repr, utf8_len);
+err:
+	return -1;
 }
 
 

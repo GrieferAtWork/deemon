@@ -261,7 +261,7 @@ do_iter:
 	if (!ITER_ISOK(result)) {
 		DeeObject *const *pnext;
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		rwlock_write(&self->c_lock);
 		/* Check if the iterator has changed. */
 		if (self->c_curr != iter) {
@@ -282,7 +282,7 @@ do_iter:
 		/* Create an iterator for this sequence. */
 		iter = DeeObject_IterSelf(*pnext);
 		if unlikely(!iter)
-			return NULL;
+			goto err;
 		rwlock_write(&self->c_lock);
 		COMPILER_READ_BARRIER();
 		/* Check if the sequence was changed by someone else. */
@@ -303,6 +303,8 @@ do_iter:
 		goto do_iter;
 	}
 	return result;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -474,8 +476,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_size(Cat *__restrict self) {
 	size_t result = cat_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
-		return NULL;
+		goto err;
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -487,7 +491,7 @@ cat_contains(Cat *self,
 		int error;
 		result = DeeObject_ContainsObject(DeeTuple_GET(self, i), search_item);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		error = DeeObject_Bool(result);
 		if (error != 0) {
 			if unlikely(error < 0)
@@ -497,6 +501,8 @@ cat_contains(Cat *self,
 		Dee_Decref(result);
 	}
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -520,8 +526,10 @@ cat_getitem(Cat *self,
             DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
-		return NULL;
+		goto err;
 	return cat_nsi_getitem(self, index);
+err:
+	return NULL;
 }
 
 PRIVATE size_t DCALL

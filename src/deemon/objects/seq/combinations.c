@@ -91,7 +91,7 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 		return (*nsi->nsi_seqlike.nsi_getitem)(self->c_seq, index);
 	temp = DeeInt_NewSize(index);
 	if unlikely(!temp)
-		return NULL;
+		goto err;
 	if (self->c_getitem->tp_get == &instance_getitem)
 		result = instance_tgetitem(self->c_getitem_tp, self->c_seq, temp);
 	else {
@@ -99,6 +99,8 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	}
 	Dee_Decref(temp);
 	return result;
+err:
+	return NULL;
 }
 
 

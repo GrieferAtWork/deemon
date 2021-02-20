@@ -131,7 +131,7 @@ textjumps_add(struct textjumps *__restrict self,
 			newvec = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
 			                                                      sizeof(struct textjump));
 			if unlikely(!newvec)
-				return -1;
+				goto err;
 		}
 		self->tj_vec = newvec;
 		self->tj_alc = newalloc;
@@ -160,7 +160,7 @@ textjumps_add(struct textjumps *__restrict self,
 			size_t i;
 			used_levels = (uint8_t *)Dee_ACalloc((self->tj_max + 7) / 8);
 			if unlikely(!used_levels)
-				return -1;
+				goto err;
 			for (i = 0; i < self->tj_cnt; ++i) {
 				code_addr_t slot_min;
 				code_addr_t slot_max;
@@ -187,6 +187,8 @@ textjumps_add(struct textjumps *__restrict self,
 		}
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -363,7 +365,7 @@ textjumps_print(dformatprinter printer, void *arg,
 	lines = (unsigned char *)Dee_AMalloc((line_length + 3) * sizeof(unsigned char));
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 	if unlikely(!lines)
-		return -1;
+		goto err;
 	memset(lines, ' ', line_length * sizeof(unsigned char));
 	for (i = 0; i < self->tj_cnt; ++i) {
 		code_addr_t jmp_min;
@@ -451,7 +453,7 @@ textjumps_print(dformatprinter printer, void *arg,
 #ifdef HAVE_PRINT_BOX
 	temp = print_box(printer, arg, lines, line_length);
 	if unlikely(temp < 0)
-		goto err;
+		goto fail_with_temp_err_lines;
 	result += temp;
 #else /* HAVE_PRINT_BOX */
 	print((char *)lines, line_length);
@@ -459,9 +461,11 @@ textjumps_print(dformatprinter printer, void *arg,
 done:
 	Dee_AFree(lines);
 	return result;
-err:
+fail_with_temp_err_lines:
 	result = temp;
 	goto done;
+err:
+	return -1;
 }
 
 

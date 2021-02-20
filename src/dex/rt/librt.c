@@ -1006,16 +1006,18 @@ librt_get_SetUnion_impl_f(void) {
 	DREF DeeObject *a, *b, *c;
 	a = librt_get_nonempty_stub_set();
 	if unlikely(!a)
-		return NULL;
+		goto err;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b) {
-		Dee_Decref(a);
-		return NULL;
-	}
+	if unlikely(!b)
+		goto err_a;
 	c = DeeObject_Or(a, b);
 	Dee_Decref(b);
 	Dee_Decref(a);
 	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1023,16 +1025,18 @@ librt_get_SetSymmetricDifference_impl_f(void) {
 	DREF DeeObject *a, *b, *c;
 	a = librt_get_nonempty_stub_set();
 	if unlikely(!a)
-		return NULL;
+		goto err;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b) {
-		Dee_Decref(a);
-		return NULL;
-	}
+	if unlikely(!b)
+		goto err_a;
 	c = DeeObject_Xor(a, b);
 	Dee_Decref(b);
 	Dee_Decref(a);
 	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1040,16 +1044,18 @@ librt_get_SetIntersection_impl_f(void) {
 	DREF DeeObject *a, *b, *c;
 	a = librt_get_nonempty_stub_set();
 	if unlikely(!a)
-		return NULL;
+		goto err;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b) {
-		Dee_Decref(a);
-		return NULL;
-	}
+	if unlikely(!b)
+		goto err_a;
 	c = DeeObject_And(a, b);
 	Dee_Decref(b);
 	Dee_Decref(a);
 	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1057,16 +1063,18 @@ librt_get_SetDifference_impl_f(void) {
 	DREF DeeObject *a, *b, *c;
 	a = librt_get_nonempty_stub_set();
 	if unlikely(!a)
-		return NULL;
+		goto err;
 	b = librt_get_nonempty_stub_set();
-	if unlikely(!b) {
-		Dee_Decref(a);
-		return NULL;
-	}
+	if unlikely(!b)
+		goto err_a;
 	c = DeeObject_Sub(a, b);
 	Dee_Decref(b);
 	Dee_Decref(a);
 	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

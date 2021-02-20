@@ -62,8 +62,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		return NULL;
+		goto err;
 	return DeeObject_GetItemDef(self, key, def);
+err:
+	return NULL;
 }
 
 
@@ -1069,14 +1071,14 @@ map_repr(DeeObject *__restrict self) {
 	DREF DeeObject *elem;
 	bool is_first = true;
 	if unlikely(!iterator)
-		return NULL;
+		goto err;
 	if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err1;
+		goto err_p_iterator;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		dssize_t print_error;
 		DREF DeeObject *elem_key_and_value[2];
 		if (DeeObject_Unpack(elem, 2, elem_key_and_value))
-			goto err2;
+			goto err_p_iterator_elem;
 		Dee_Decref(elem);
 		print_error = unicode_printer_printf(&p, "%s%r: %r",
 		                                     is_first ? "" : ", ",
@@ -1085,23 +1087,24 @@ map_repr(DeeObject *__restrict self) {
 		Dee_Decref(elem_key_and_value[1]);
 		Dee_Decref(elem_key_and_value[0]);
 		if (print_error < 0)
-			goto err1;
+			goto err_p_iterator;
 		is_first = false;
 		if (DeeThread_CheckInterrupt())
-			goto err1;
+			goto err_p_iterator;
 	}
 	if unlikely(!elem)
-		goto err1;
+		goto err_p_iterator;
 	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
 		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-	goto err1;
+	goto err_p_iterator;
 	Dee_Decref(iterator);
 	return unicode_printer_pack(&p);
-err2:
+err_p_iterator_elem:
 	Dee_Decref(elem);
-err1:
+err_p_iterator:
 	Dee_Decref(iterator);
 	unicode_printer_fini(&p);
+err:
 	return NULL;
 }
 

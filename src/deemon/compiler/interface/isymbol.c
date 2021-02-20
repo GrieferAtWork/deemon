@@ -306,8 +306,9 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 	DeeCompilerSymbolObject *other;
 	struct symbol *other_sym;
 	COMPILER_BEGIN(self->ci_compiler);
-	if (DeeArg_Unpack(argc, argv, "o:setalias", &other) ||
-	    DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
+	if (DeeArg_Unpack(argc, argv, "o:setalias", &other))
+		goto done;
+	if (DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely(other->ci_compiler != DeeCompiler_Current) {
 		err_invalid_symbol_compiler(other);
@@ -353,10 +354,13 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":setnone") ||
-	    symbol_delkind(self))
-		return NULL;
+	if (DeeArg_Unpack(argc, argv, ":setnone"))
+		goto err;
+	if (symbol_delkind(self))
+		goto err;
 	return_reference_((DeeObject *)self);
+err:
+	return NULL;
 }
 
 
