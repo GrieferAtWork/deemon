@@ -145,6 +145,7 @@ DECL_BEGIN
 #define DDI_NEXT_DONE                       Dee_DDI_NEXT_DONE
 #define DDI_NEXT_ERR                        Dee_DDI_NEXT_ERR
 #define DDI_ISOK                            Dee_DDI_ISOK
+#define DEFINE_DDI                          Dee_DEFINE_DDI
 #define Dee_code_frame_kwds                 code_frame_kwds
 #define Dee_function_info                   function_info
 #define function_info_fini                  Dee_function_info_fini
@@ -359,23 +360,51 @@ Dee_ddi_next_state(uint8_t *__restrict ip,
 #define DDI_EXDAT_O_SNAM  0x01 /* | DDI_EXDAT_OP*; [id, strtab_offset] */
 
 struct Dee_ddi_exdat {
-	uint32_t  dx_size;    /* Amount of extended data bytes. */
-	uint8_t   dx_data[1]; /* Extended DDI data. */
+	uint32_t                         dx_size;  /* Amount of extended data bytes. */
+	COMPILER_FLEXIBLE_ARRAY(uint8_t, dx_data); /* [dx_size] Extended DDI data. */
 };
 
 struct Dee_ddi_object {
 	Dee_OBJECT_HEAD
-	uint32_t const                *d_strings; /* [OFFSET(d_strtab->s_str)][0..d_nstring][owned][const] Vector of DDI string offsets. */
-	DREF struct Dee_string_object *d_strtab;  /* [1..1][const] String table of NUL-terminated strings.
-	                                           *               All offsets above point into this table. */
-	struct Dee_ddi_exdat const    *d_exdat;   /* [0..1][owned][const] Extended DDI data */
-	uint32_t                       d_ddisize; /* [const] Amount of DDI instruction bytes stored in `d_ddi' */
-	uint32_t                       d_nstring; /* [const] Amount of static variable names. */
-	uint16_t                       d_ddiinit; /* [const] Amount of leading DDI instruction bytes that are used for state initialization */
-	uint16_t                       d_pad;     /* ... */
-	struct Dee_ddi_regs            d_start;   /* [const] The initial DDI register state. */
-	uint8_t                        d_ddi[1];  /* [const] DDI bytecode (s.a.: `DDI_*') */
+	uint32_t const                  *d_strings; /* [OFFSET(d_strtab->s_str)][0..d_nstring][owned][const] Vector of DDI string offsets. */
+	DREF struct Dee_string_object   *d_strtab;  /* [1..1][const] String table of NUL-terminated strings.
+	                                             *               All offsets above point into this table. */
+	struct Dee_ddi_exdat const      *d_exdat;   /* [0..1][owned][const] Extended DDI data */
+	uint32_t                         d_ddisize; /* [const] Amount of DDI instruction bytes stored in `d_ddi' */
+	uint32_t                         d_nstring; /* [const] Amount of static variable names. */
+	uint16_t                         d_ddiinit; /* [const] Amount of leading DDI instruction bytes that are used for state initialization */
+	uint16_t                         d_pad;     /* ... */
+	struct Dee_ddi_regs              d_start;   /* [const] The initial DDI register state. */
+	COMPILER_FLEXIBLE_ARRAY(uint8_t, d_ddi);    /* [d_ddisize][const] DDI bytecode (s.a.: `DDI_*') */
 };
+
+/* Define a statically allocated DDI object. */
+#define Dee_DEFINE_DDI(name, d_strings_, d_strtab_, d_exdat_, d_ddisize_, \
+                       d_nstring_, d_ddiinit_, ...)                       \
+	struct {                                                              \
+		Dee_OBJECT_HEAD                                                   \
+		uint32_t const                *d_strings;                         \
+		DREF struct Dee_string_object *d_strtab;                          \
+		struct Dee_ddi_exdat const    *d_exdat;                           \
+		uint32_t                       d_ddisize;                         \
+		uint32_t                       d_nstring;                         \
+		uint16_t                       d_ddiinit;                         \
+		uint16_t                       d_pad;                             \
+		struct Dee_ddi_regs            d_start;                           \
+		uint8_t                        d_ddi[d_ddisize_];                 \
+	} name = {                                                            \
+		Dee_OBJECT_HEAD_INIT(&DeeDDI_Type),                               \
+		d_strings_,                                                       \
+		d_strtab_,                                                        \
+		d_exdat_,                                                         \
+		d_ddisize_,                                                       \
+		d_nstring_,                                                       \
+		d_ddiinit_,                                                       \
+		0,                                                                \
+		__VA_ARGS__                                                       \
+	}
+
+
 
 
 /* Query DDI information for a given code address.
@@ -412,7 +441,9 @@ DDATDEF DeeTypeObject DeeDDI_Type;
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* A stub ddi-object that contains no actual information. */
+#ifndef GUARD_DEEMON_EXECUTE_DDI_C
 INTDEF DeeDDIObject empty_ddi;
+#endif /* !GUARD_DEEMON_EXECUTE_DDI_C */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
@@ -492,23 +523,22 @@ struct Dee_code_object {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	DREF struct Dee_string_object
-	                 *const *co_keywords;    /* [1..1][const][0..co_argc_max][const] Argument keywords. */
-	DREF DeeObject   *const *co_defaultv;    /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
-	                                          * NOTE: NULL entires refer to optional arguments, producing an error
-	                                          *       when attempted to be loaded without a user override. */
-	DREF DeeObject         **co_staticv;     /* [1..1][lock(co_staticv)][0..co_staticc][owned] Vector of constants and static variables. */
+	                                   *const *co_keywords; /* [1..1][const][0..co_argc_max][const] Argument keywords. */
+	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
+	                                                         * NOTE: NULL entires refer to optional arguments, producing an error
+	                                                         *       when attempted to be loaded without a user override. */
+	DREF DeeObject                           **co_staticv;  /* [1..1][lock(co_staticv)][0..co_staticc][owned] Vector of constants and static variables. */
 	/* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
-	struct Dee_except_handler
-	                        *co_exceptv;     /* [0..co_excptc][owned] Vector of exception handler descriptors. */
-	DREF DeeDDIObject       *co_ddi;         /* [1..1][const] Debug line information. */
-	Dee_instruction_t        co_code[1];     /* [co_codebytes][const] The actual instructions encoding this code object's behavior.
-	                                          * WARNING: The safe code executor assumes that the code vector does not
-	                                          *          stop prematurely, or is capable of exceeding its natural ending
-	                                          *          by means of simply continuing execution and overflowing past the end.
-	                                          *          To prevent problems arising from this, unchecked/unpredictable code
-	                                          *          should be padded with `INSTRLEN_MAX' repeated `ASM_RET_NONE' instructions,
-	                                          *          thereby ensuring that upon natural completion, at least one `ASM_RET_NONE'
-	                                          *          instruction is always executed, no matter what. */
+	struct Dee_except_handler                 *co_exceptv;  /* [0..co_excptc][owned] Vector of exception handler descriptors. */
+	DREF DeeDDIObject                         *co_ddi;      /* [1..1][const] Debug line information. */
+	COMPILER_FLEXIBLE_ARRAY(Dee_instruction_t, co_code);    /* [co_codebytes][const] The actual instructions encoding this code object's behavior.
+	                                                         * WARNING: The safe code executor assumes that the code vector does not
+	                                                         *          stop prematurely, or is capable of exceeding its natural ending
+	                                                         *          by means of simply continuing execution and overflowing past the end.
+	                                                         *          To prevent problems arising from this, unchecked/unpredictable code
+	                                                         *          should be padded with `INSTRLEN_MAX' repeated `ASM_RET_NONE' instructions,
+	                                                         *          thereby ensuring that upon natural completion, at least one `ASM_RET_NONE'
+	                                                         *          instruction is always executed, no matter what. */
 };
 
 #ifndef CONFIG_NO_THREADS
@@ -579,6 +609,8 @@ struct Dee_code_object {
 	(((x)->co_framesize / sizeof(DeeObject *)) - (x)->co_localc)
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef GUARD_DEEMON_EXECUTE_CODE_C
+
 /* A stub code-object that contains a single, `ret none' instruction. */
 struct empty_code_struct {
 	/* Even though never tracked, the empty code
@@ -593,6 +625,7 @@ INTDEF DeeCodeObject empty_code;
 INTDEF struct empty_code_struct empty_code_head;
 #define empty_code   empty_code_head.c_code
 #endif /* !__INTELLISENSE__ */
+#endif /* !GUARD_DEEMON_EXECUTE_CODE_C */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeCode_Type;
@@ -646,23 +679,23 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCode_SetAssembly(/*Code*/ DeeObject *_
  * >>    ERROR_UNBOUND_ARGUMENT(i);
  */
 struct Dee_code_frame_kwds {
-	DREF DeeObject           *fk_varkwds;     /* [0..1][valid_if(:cf_func->fo_code->co_flags & CODE_FVARKWDS)]
-	                                           * [lock(WRITE_ONCE)] Variable keyword arguments.
-	                                           * NOTE: May only be accessed by a code interpreter when the associated
-	                                           *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
-	                                           *       field may not actually exist)
-	                                           * WARNING: Certain object types which can appear in this field require
-	                                           *          special actions to be taken before being decref'd by their
-	                                           *          creator / stack-owner. */
-	DREF DeeObject           *fk_kw;          /* [1..1][const] The original `kw' object that was passed to the function.
-	                                           * NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
-	                                           *       aka. at the end of the standard-accessible argument vector.
-	                                           * NOTE: May only be accessed by a code interpreter when the associated
-	                                           *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
-	                                           *       field may not actually exist) */
-	DREF DeeObject           *fk_kargv[1024]; /* [0..1][const][1..(:cf_func->fo_code->co_argc_max - :cf_argc)]
-	                                           * Overlay of additional, non-positional arguments which were
-	                                           * passed via keyword arguments. */
+	DREF DeeObject                           *fk_varkwds; /* [0..1][valid_if(:cf_func->fo_code->co_flags & CODE_FVARKWDS)]
+	                                                       * [lock(WRITE_ONCE)] Variable keyword arguments.
+	                                                       * NOTE: May only be accessed by a code interpreter when the associated
+	                                                       *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+	                                                       *       field may not actually exist)
+	                                                       * WARNING: Certain object types which can appear in this field require
+	                                                       *          special actions to be taken before being decref'd by their
+	                                                       *          creator / stack-owner. */
+	DREF DeeObject                           *fk_kw;      /* [1..1][const] The original `kw' object that was passed to the function.
+	                                                       * NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
+	                                                       *       aka. at the end of the standard-accessible argument vector.
+	                                                       * NOTE: May only be accessed by a code interpreter when the associated
+	                                                       *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+	                                                       *       field may not actually exist) */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fk_kargv);  /* [0..1][const][1..(:cf_func->fo_code->co_argc_max - :cf_argc)]
+	                                                       * Overlay of additional, non-positional arguments which were
+	                                                       * passed via keyword arguments. */
 };
 
 
@@ -830,8 +863,8 @@ trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 struct Dee_function_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
 	Dee_OBJECT_HEAD
-	DREF DeeCodeObject       *fo_code;    /* [1..1][const] Associated code object. */
-	DREF DeeObject           *fo_refv[1]; /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
+	DREF DeeCodeObject                       *fo_code;  /* [1..1][const] Associated code object. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv); /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
 };
 #define DeeFunction_CODE(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_code
 #define DeeFunction_REFS(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_refv

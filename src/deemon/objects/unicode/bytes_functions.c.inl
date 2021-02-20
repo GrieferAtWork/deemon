@@ -71,8 +71,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_contains(Bytes *self,
-               DeeObject *find_ob) {
+bytes_contains(Bytes *self, DeeObject *find_ob) {
 	Needle needle;
 	if (get_needle(&needle, find_ob))
 		goto err;
@@ -1338,7 +1337,7 @@ err:
 #define DeeBytes_IsAnyAlnum(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_FALPHA|UNICODE_FDECIMAL)
 #define DeeBytes_IsAnyNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, UNICODE_FDIGIT|UNICODE_FDECIMAL)
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestTrait(Bytes *__restrict self,
                    size_t start_index,
                    size_t end_index,
@@ -1357,7 +1356,7 @@ DeeBytes_TestTrait(Bytes *__restrict self,
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsAscii(Bytes *__restrict self,
                  size_t start_index,
                  size_t end_index) {
@@ -1375,7 +1374,7 @@ DeeBytes_IsAscii(Bytes *__restrict self,
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestAnyTrait(Bytes *__restrict self,
                       size_t start_index,
                       size_t end_index,
@@ -1395,7 +1394,7 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
 	return false;
 }
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsAnyAscii(Bytes *__restrict self,
                     size_t start_index,
                     size_t end_index) {
@@ -1415,7 +1414,7 @@ DeeBytes_IsAnyAscii(Bytes *__restrict self,
 }
 
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsTitle(Bytes *__restrict self,
                  size_t start_index,
                  size_t end_index) {
@@ -1438,7 +1437,7 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsSymbol(Bytes *__restrict self,
                   size_t start_index,
                   size_t end_index) {
@@ -1907,8 +1906,9 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
-				if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
-				    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
+				if unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
+					goto err_printer;
+				if unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
 					goto err_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
@@ -1972,8 +1972,9 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 		while (begin < end) {
 			if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
-				if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
-				    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
+				if unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
+					goto err_printer;
+				if unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
 					goto err_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
@@ -2274,8 +2275,7 @@ bytes_startswith(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start > end ||
-	    (end -= start) < needle.n_size)
+	if (start > end || (end - start) < needle.n_size)
 		return_false;
 	return_bool(MEMEQB(DeeBytes_DATA(self) + start,
 	                   needle.n_data, needle.n_size));
@@ -2295,8 +2295,7 @@ bytes_casestartswith(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start > end ||
-	    (end -= start) < needle.n_size)
+	if (start > end || (end - start) < needle.n_size)
 		return_false;
 	return_bool(dee_memasciicaseeq(DeeBytes_DATA(self) + start,
 	                               needle.n_data, needle.n_size));
@@ -2316,8 +2315,7 @@ bytes_endswith(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start > end ||
-	    (end - start) < needle.n_size)
+	if (start > end || (end - start) < needle.n_size)
 		return_false;
 	return_bool(MEMEQB(DeeBytes_DATA(self) +
 	                   (end - needle.n_size),
@@ -2338,8 +2336,7 @@ bytes_caseendswith(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start > end ||
-	    (end - start) < needle.n_size)
+	if (start > end || (end - start) < needle.n_size)
 		return_false;
 	return_bool(dee_memasciicaseeq(DeeBytes_DATA(self) +
 	                               (end - needle.n_size),
@@ -3825,8 +3822,11 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:findmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:findmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -3853,8 +3853,11 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rfindmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:rfindmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -3881,8 +3884,11 @@ bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:indexmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:indexmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -3909,8 +3915,11 @@ bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rindexmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:rindexmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -3937,8 +3946,11 @@ bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:casefindmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:casefindmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -3968,8 +3980,11 @@ bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserfindmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserfindmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -4000,8 +4015,11 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caseindexmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:caseindexmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -4032,8 +4050,11 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserindexmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserindexmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -4079,7 +4100,7 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	} __WHILE0
+	}	__WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4149,7 +4170,7 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	} __WHILE0
+	}	__WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4220,7 +4241,7 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	} __WHILE0
+	}	__WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -4290,7 +4311,7 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err_r_1;                                        \
 		if ((result->t_elem[2] = (DREF DeeObject *)(c)) == NULL) \
 			goto err_r_2;                                        \
-	} __WHILE0
+	}	__WHILE0
 	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;

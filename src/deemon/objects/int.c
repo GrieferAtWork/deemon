@@ -3567,14 +3567,14 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ &int_return_zero,
-				/* .tp_copy_ctor = */ &DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
-				/* .tp_deep_ctor = */ &DeeObject_NewRef,
-				/* .tp_any_ctor  = */ &int_new,
+				/* .tp_ctor      = */ (dfunptr_t)&int_return_zero,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef, /* No need to actually copy. - Integers are immutable! */
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (dfunptr_t)&int_new,
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
-				/* .tp_free      = */ &DeeInt_Free
+				/* .tp_free      = */ (dfunptr_t)&DeeInt_Free
 #else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
-				/* .tp_free      = */ NULL
+				/* .tp_free      = */ (dfunptr_t)NULL
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 			}
 		},

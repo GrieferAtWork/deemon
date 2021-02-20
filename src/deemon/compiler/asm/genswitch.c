@@ -379,7 +379,7 @@ err_jump_table:
 			goto err;
 		if (asm_gpush_const((uint16_t)default_cid))
 			goto err; /* jump_table, expr, default */
-		get_cid = asm_newconst(&str_get);
+		get_cid = asm_newconst((DeeObject *)&str_get);
 		if unlikely(get_cid < 0)
 			goto err;
 		if (asm_gcallattr_const((uint16_t)get_cid, 2))

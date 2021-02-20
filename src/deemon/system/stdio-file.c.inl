@@ -174,10 +174,10 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_var = */ {
-					/* .tp_ctor      = */ &debugfile_get,
-					/* .tp_copy_ctor = */ &DeeObject_NewRef,
-					/* .tp_deep_ctor = */ &DeeObject_NewRef,
-					/* .tp_any_ctor  = */ NULL
+					/* .tp_ctor      = */ (dfunptr_t)&debugfile_get,
+					/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+					/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL
 				}
 			},
 			/* .tp_dtor        = */ NULL,
@@ -1056,10 +1056,10 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
@@ -1114,10 +1114,10 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},

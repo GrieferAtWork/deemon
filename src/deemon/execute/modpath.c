@@ -1246,7 +1246,7 @@ DeeModule_DoGet(char const *__restrict name,
 	DREF DeeModuleObject *result = NULL;
 	/* Check if the caller requested the builtin deemon module. */
 	if (size == DeeString_SIZE(&str_deemon) &&
-	    hash == DeeString_Hash(&str_deemon) &&
+	    hash == DeeString_Hash((DeeObject *)&str_deemon) &&
 	    memcmp(name, DeeString_STR(&str_deemon),
 	           DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
 		/* Yes, they did. */
@@ -1337,11 +1337,11 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
 #if !defined(CONFIG_NO_DEC) && !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX((size_t)5, (size_t)SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX_C((size_t)5, (size_t)SHLEN) + 1) * sizeof(char));
 #elif !defined(CONFIG_NO_DEC)
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5 + 1) * sizeof(char));
 #elif !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX((size_t)4, (size_t)SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1) * sizeof(char));
 #else
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 4 + 1) * sizeof(char));
 #endif
@@ -2129,7 +2129,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	/* First off: Check if this is a request for the builtin `deemon' module.
 	 * NOTE: This check is always done in case-sensitive mode! */
 	if (DeeString_SIZE(module_name) == DeeString_SIZE(&str_deemon) &&
-	    DeeString_Hash(module_name) == DeeString_Hash(&str_deemon) &&
+	    DeeString_Hash(module_name) == DeeString_Hash((DeeObject *)&str_deemon) &&
 	    memcmp(DeeString_STR(module_name), DeeString_STR(&str_deemon),
 	           DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
 		/* Yes, it is. */
@@ -2153,7 +2153,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	module_namelen = WSTR_LENGTH(module_namestr);
 
 	/* Default case: Must load a new module. */
-	paths = DeeModule_GetPath();
+	paths = (DeeListObject *)DeeModule_GetPath();
 	DeeList_LockRead(paths);
 	for (i = 0; i < DeeList_SIZE(paths); ++i) {
 		path = DeeList_GET(paths, i);
@@ -2232,7 +2232,7 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 		goto err;
 
 	/* Default case: Must load a new module. */
-	paths = DeeModule_GetPath();
+	paths = (DeeListObject *)DeeModule_GetPath();
 	DeeList_LockRead(paths);
 	for (i = 0; i < DeeList_SIZE(paths); ++i) {
 		path = DeeList_GET(paths, i);

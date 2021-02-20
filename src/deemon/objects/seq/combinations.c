@@ -345,10 +345,10 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&comiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&comiter_copy,
-				/* .tp_deep_ctor = */ (void *)&comiter_deep,
-				/* .tp_any_ctor  = */ (void *)&comiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&comiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&comiter_init,
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
@@ -575,10 +575,10 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&com_ctor,
-				/* .tp_copy_ctor = */ (void *)&com_copy,
-				/* .tp_deep_ctor = */ (void *)&com_deepcopy,
-				/* .tp_any_ctor  = */ (void *)NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},
@@ -750,10 +750,10 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&rcomiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&comiter_copy,
-				/* .tp_deep_ctor = */ (void *)&comiter_deep,
-				/* .tp_any_ctor  = */ (void *)&rcomiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&rcomiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rcomiter_init,
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
@@ -827,10 +827,10 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&com_ctor,
-				/* .tp_copy_ctor = */ (void *)&com_copy,
-				/* .tp_deep_ctor = */ (void *)&com_deepcopy,
-				/* .tp_any_ctor  = */ (void *)NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},
@@ -991,10 +991,10 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&pmutiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&comiter_copy,
-				/* .tp_deep_ctor = */ (void *)&comiter_deep,
-				/* .tp_any_ctor  = */ (void *)&pmutiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&pmutiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&pmutiter_init,
 				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
 			}
 		},
@@ -1072,10 +1072,10 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&com_ctor,
-				/* .tp_copy_ctor = */ (void *)&com_copy,
-				/* .tp_deep_ctor = */ (void *)&com_deepcopy,
-				/* .tp_any_ctor  = */ (void *)NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(Combinations)
 			}
 		},

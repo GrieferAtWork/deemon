@@ -511,9 +511,9 @@ struct ATTR_PACKED asm_overload {
 
 #define ASM_MNEMONIC_MAXNAME 14
 struct ATTR_PACKED asm_mnemonic {
-	char                am_name[ASM_MNEMONIC_MAXNAME]; /* Name of this instruction */
-	uint16_t            am_num_overloads;    /* [!0] The amount of overloads (NOTE: ZERO(0) is used to identify the sentinel) */
-	struct asm_overload am_overloads[1];     /* [am_num_overloads] The individual overloads of this mnemonic. */
+	char                                         am_name[ASM_MNEMONIC_MAXNAME]; /* Name of this instruction */
+	uint16_t                                     am_num_overloads; /* [!0] The amount of overloads (NOTE: ZERO(0) is used to identify the sentinel) */
+	COMPILER_FLEXIBLE_ARRAY(struct asm_overload, am_overloads);    /* [am_num_overloads] The individual overloads of this mnemonic. */
 };
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
 #pragma pack(pop)

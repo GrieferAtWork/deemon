@@ -305,10 +305,10 @@ INTERN DeeTypeObject UDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&udictiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&udictiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&udictiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&udictiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&udictiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&udictiterator_init,
 				TYPE_FIXED_ALLOCATOR(USetIterator)
 			}
 		},
@@ -1396,13 +1396,13 @@ PRIVATE struct type_nsi tpconst udict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&udict_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&udictiterator_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&udictiterator_nextvalue,
-			/* .nsi_getdefault = */ (void *)&UDict_GetItemDef,
-			/* .nsi_setdefault = */ (void *)&udict_nsi_setdefault,
-			/* .nsi_updateold  = */ (void *)&udict_nsi_updateold,
-			/* .nsi_insertnew  = */ (void *)&udict_nsi_insertnew
+			/* .nsi_getsize    = */ (dfunptr_t)&udict_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&udictiterator_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&udictiterator_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&UDict_GetItemDef,
+			/* .nsi_setdefault = */ (dfunptr_t)&udict_nsi_setdefault,
+			/* .nsi_updateold  = */ (dfunptr_t)&udict_nsi_updateold,
+			/* .nsi_insertnew  = */ (dfunptr_t)&udict_nsi_insertnew
 		}
 	}
 };
@@ -1433,10 +1433,10 @@ INTERN DeeTypeObject UDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&udict_ctor,
-				/* .tp_copy_ctor = */ (void *)&udict_copy,
-				/* .tp_deep_ctor = */ (void *)&udict_copy,
-				/* .tp_any_ctor  = */ (void *)&udict_init,
+				/* .tp_ctor      = */ (dfunptr_t)&udict_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&udict_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&udict_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&udict_init,
 				TYPE_FIXED_ALLOCATOR_GC(UDict)
 			}
 		},
@@ -1614,10 +1614,10 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&urodictiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&urodictiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&urodictiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&urodictiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&urodictiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&urodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(URoSetIterator)
 			}
 		},
@@ -1886,7 +1886,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF URoDict *DCALL
+PRIVATE WUNUSED DREF URoDict *DCALL
 urodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:_UniqueRoDict", &seq))
@@ -2030,10 +2030,10 @@ PRIVATE struct type_nsi tpconst urodict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&urodict_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&urodictiterator_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&urodictiterator_nextvalue,
-			/* .nsi_getdefault = */ (void *)&URoDict_GetItemDef
+			/* .nsi_getsize    = */ (dfunptr_t)&urodict_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&urodictiterator_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&urodictiterator_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&URoDict_GetItemDef
 		}
 	}
 };
@@ -2114,10 +2114,10 @@ INTERN DeeTypeObject URoDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&URoDict_New,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&urodict_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&urodict_init
+				/* .tp_ctor      = */ (dfunptr_t)&URoDict_New,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&urodict_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&urodict_init
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodict_fini,
@@ -2142,7 +2142,7 @@ INTERN DeeTypeObject URoDict_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ urodict_methods,
 	/* .tp_getsets       = */ urodict_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ urodict_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ urodict_class_members

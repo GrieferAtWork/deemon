@@ -38,12 +38,12 @@ DECL_BEGIN
 typedef struct Dee_bytes_object DeeBytesObject;
 struct Dee_bytes_object {
 	Dee_OBJECT_HEAD
-	uint8_t        *b_base;    /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
-	size_t          b_size;    /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
-	DREF DeeObject *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
-	DeeBuffer       b_buffer;  /* [const] The buffer being accessed. */
-	unsigned int    b_flags;   /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
-	uint8_t         b_data[1]; /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
+	uint8_t                         *b_base;   /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
+	size_t                           b_size;   /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
+	DREF DeeObject                  *b_orig;   /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
+	DeeBuffer                        b_buffer; /* [const] The buffer being accessed. */
+	unsigned int                     b_flags;  /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
+	COMPILER_FLEXIBLE_ARRAY(uint8_t, b_data);  /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
 };
 
 

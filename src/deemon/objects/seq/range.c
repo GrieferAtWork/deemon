@@ -429,10 +429,10 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&ri_ctor,
-				/* .tp_copy_ctor = */ (void *)&ri_copy,
-				/* .tp_deep_ctor = */ (void *)&ri_deep,
-				/* .tp_any_ctor  = */ (void *)&ri_init,
+				/* .tp_ctor      = */ (dfunptr_t)&ri_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ri_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ri_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ri_init,
 				TYPE_FIXED_ALLOCATOR(RangeIterator)
 			}
 		},
@@ -1042,10 +1042,10 @@ INTERN DeeTypeObject SeqRange_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&range_ctor,
-				/* .tp_copy_ctor = */ (void *)&range_copy,
-				/* .tp_deep_ctor = */ (void *)&range_deep,
-				/* .tp_any_ctor  = */ (void *)&range_init,
+				/* .tp_ctor      = */ (dfunptr_t)&range_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&range_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&range_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&range_init,
 				TYPE_FIXED_ALLOCATOR(Range)
 			}
 		},
@@ -1239,10 +1239,10 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&iri_ctor,
-				/* .tp_copy_ctor = */ (void *)&iri_copy,
-				/* .tp_deep_ctor = */ (void *)&iri_copy,
-				/* .tp_any_ctor  = */ (void *)&iri_init,
+				/* .tp_ctor      = */ (dfunptr_t)&iri_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&iri_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&iri_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&iri_init,
 				TYPE_FIXED_ALLOCATOR(IntRangeIterator)
 			}
 		},
@@ -1423,28 +1423,28 @@ PRIVATE struct type_nsi tpconst intrange_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&intrange_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&intrange_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&intrange_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)&intrange_nsi_getrange,
-			/* .nsi_getrange_n   = */ (void *)&intrange_nsi_getrange_n,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&intrange_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&intrange_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&intrange_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&intrange_nsi_getrange,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&intrange_nsi_getrange_n,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1537,10 +1537,10 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&intrange_ctor,
-				/* .tp_copy_ctor = */ (void *)&intrange_copy,
-				/* .tp_deep_ctor = */ (void *)&intrange_copy,
-				/* .tp_any_ctor  = */ (void *)&intrange_init,
+				/* .tp_ctor      = */ (dfunptr_t)&intrange_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&intrange_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&intrange_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&intrange_init,
 				TYPE_FIXED_ALLOCATOR(IntRange)
 			}
 		},

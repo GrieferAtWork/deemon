@@ -33,10 +33,10 @@ typedef struct {
 	 * a type derived from `file', in which case the 2 files
 	 * are used to create a so-called joined file type. */
 	FILE_OBJECT_HEAD
-	size_t          j_count;       /* [const] Amount of files that are being joined together. */
-	DREF DeeObject *j_files[1024]; /* [j_count][const] Vector of joined files.
-	                                * NOTE: This vector is accessible as an
-	                                *       abstract sequence type named `files' */
+	size_t                                    j_count;  /* [const] Amount of files that are being joined together. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, j_files); /* [j_count][const] Vector of joined files.
+	                                                     * NOTE: This vector is accessible as an
+	                                                     *       abstract sequence type named `files' */
 } Joined;
 
 INTDEF DeeFileTypeObject Joined_Type; /* TODO: Not implemented. */

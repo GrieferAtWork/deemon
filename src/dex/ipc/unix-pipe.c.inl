@@ -129,10 +129,10 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
@@ -187,10 +187,10 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},
@@ -245,10 +245,10 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},

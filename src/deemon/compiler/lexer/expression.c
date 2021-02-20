@@ -570,7 +570,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_sym_import_from_deemon(void) {
 	Dee_Incref(import_symbol->s_extern.e_module);
 	import_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(import_symbol->s_extern.e_module,
 	                                                             DeeString_STR(&str_import),
-	                                                             DeeString_Hash(&str_import));
+	                                                             DeeString_Hash((DeeObject *)&str_import));
 	ASSERT(import_symbol->s_extern.e_symbol);
 	return ast_sym(import_symbol);
 err:

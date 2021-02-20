@@ -156,7 +156,7 @@ segiter_bool(SegmentsIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
 	DREF DeeObject *base_seq, *result;
-	base_seq = DeeObject_GetAttr(self->si_iter, &str_seq);
+	base_seq = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
 	if unlikely(!base_seq)
 		goto err;
 	result = DeeSeq_Segments(base_seq, self->si_len);
@@ -220,10 +220,10 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&segiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&segiter_copy,
-				/* .tp_deep_ctor = */ (void *)&segiter_deep,
-				/* .tp_any_ctor  = */ (void *)&segiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&segiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&segiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&segiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&segiter_init,
 				TYPE_FIXED_ALLOCATOR(SegmentsIterator)
 			}
 		},
@@ -399,28 +399,28 @@ PRIVATE struct type_nsi tpconst seg_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&seg_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&seg_nsi_fast_getsize,
-			/* .nsi_getitem      = */ (void *)&seg_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&seg_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&seg_nsi_fast_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&seg_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -455,10 +455,10 @@ PRIVATE DeeTypeObject SeqSegments_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&seg_ctor,
-				/* .tp_copy_ctor = */ (void *)&seg_copy,
-				/* .tp_deep_ctor = */ (void *)&seg_deep,
-				/* .tp_any_ctor  = */ (void *)&seg_init,
+				/* .tp_ctor      = */ (dfunptr_t)&seg_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&seg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&seg_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&seg_init,
 				TYPE_FIXED_ALLOCATOR(Segments)
 			}
 		},

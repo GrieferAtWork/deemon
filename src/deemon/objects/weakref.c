@@ -424,12 +424,12 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&ob_weakref_ctor,
-				/* .tp_copy_ctor = */ (void *)&ob_weakref_copy,
-				/* .tp_deep_ctor = */ (void *)&ob_weakref_deep,
-				/* .tp_any_ctor  = */ (void *)&ob_weakref_init,
+				/* .tp_ctor        = */ (dfunptr_t)&ob_weakref_ctor,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&ob_weakref_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&ob_weakref_deep,
+				/* .tp_any_ctor    = */ (dfunptr_t)&ob_weakref_init,
 				TYPE_FIXED_ALLOCATOR(WeakRef),
-				/* .tp_any_ctor_kw = */ (void *)&ob_weakref_init_kw
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&ob_weakref_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
@@ -507,10 +507,10 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &weakrefable_init,
-				/* .tp_copy_ctor = */ &weakrefable_copy,
-				/* .tp_deep_ctor = */ &weakrefable_copy,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&weakrefable_init,
+				/* .tp_copy_ctor = */ (dfunptr_t)&weakrefable_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&weakrefable_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(WeakRefAble)
 			}
 		},

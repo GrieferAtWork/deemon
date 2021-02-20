@@ -46,27 +46,26 @@ struct Dee_code_frame;
 
 struct Dee_traceback_object {
 	Dee_OBJECT_HEAD /* GC object. */
-	DREF struct Dee_thread_object
-	                          *tb_thread;    /* [0..1][const] The thread for which this is a traceback. */
+	DREF struct Dee_thread_object                 *tb_thread;     /* [0..1][const] The thread for which this is a traceback. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t               tb_lock;      /* Lock for accessing this traceback. */
+	Dee_rwlock_t                                   tb_lock;       /* Lock for accessing this traceback. */
 #endif /* !CONFIG_NO_THREADS */
-	uint16_t                   tb_numframes; /* [const] The amount of allocated frames. */
-	uint16_t                   tb_padding[3];/* ... */
-	struct Dee_code_frame      tb_frames[1]; /* [0..tb_numframes][lock(tb_lock)]
-	                                          * [OVERRIDE([*].cf_frame, [0..1][owned])] May randomly be NULL if duplication failed.
-	                                          * [OVERRIDE([*].cf_func, DREF [1..1])]
-	                                          * [OVERRIDE([*].cf_argv, DREF [1..1][0..cf_argc][owned])]
-	                                          * [OVERRIDE([*].cf_this, DREF [0..1])]
-	                                          * [OVERRIDE([*].cf_vargs, DREF [0..1])]
-	                                          * [OVERRIDE([*].cf_result, DREF [0..1])]
-	                                          * [OVERRIDE([*].cf_prev, [?..?])]
-	                                          * [OVERRIDE([*].cf_flags, [valid])]
-	                                          * [OVERRIDE([*].cf_sp, [(!= NULL) == (cf_stack != NULL)][== cf_stack+cf_stacksz])] May randomly remain NULL if duplication failed.
-	                                          * [OVERRIDE([*].cf_stack, [(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
-	                                          * [OVERRIDE([*].cf_stacksz, [(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
-	                                          * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
-	                                          *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
+	uint16_t                                       tb_numframes;  /* [const] The amount of allocated frames. */
+	uint16_t                                       tb_padding[3]; /* ... */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_code_frame, tb_frames);    /* [0..tb_numframes][lock(tb_lock)]
+	                                                               * [OVERRIDE([*].cf_frame, [0..1][owned])] May randomly be NULL if duplication failed.
+	                                                               * [OVERRIDE([*].cf_func, DREF [1..1])]
+	                                                               * [OVERRIDE([*].cf_argv, DREF [1..1][0..cf_argc][owned])]
+	                                                               * [OVERRIDE([*].cf_this, DREF [0..1])]
+	                                                               * [OVERRIDE([*].cf_vargs, DREF [0..1])]
+	                                                               * [OVERRIDE([*].cf_result, DREF [0..1])]
+	                                                               * [OVERRIDE([*].cf_prev, [?..?])]
+	                                                               * [OVERRIDE([*].cf_flags, [valid])]
+	                                                               * [OVERRIDE([*].cf_sp, [(!= NULL) == (cf_stack != NULL)][== cf_stack+cf_stacksz])] May randomly remain NULL if duplication failed.
+	                                                               * [OVERRIDE([*].cf_stack, [(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
+	                                                               * [OVERRIDE([*].cf_stacksz, [(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
+	                                                               * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
+	                                                               *       Frames who's stack has yet to be duplicated have a `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
 };
 
 #ifdef CONFIG_BUILDING_DEEMON

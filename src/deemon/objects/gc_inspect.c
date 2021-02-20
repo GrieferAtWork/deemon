@@ -190,10 +190,10 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&gcsetiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&gcsetiterator_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (void *)&gcsetiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&gcsetiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&gcsetiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&gcsetiterator_init,
 				TYPE_FIXED_ALLOCATOR(GCSetIterator)
 			}
 		},
@@ -333,11 +333,11 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcset_ctor,
-				/* .tp_copy_ctor = */ &DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcset_deepcopy,
-				/* .tp_any_ctor  = */ NULL,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&gcset_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&gcset_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcset_fini,

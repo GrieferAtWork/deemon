@@ -1507,16 +1507,16 @@ PRIVATE struct type_nii tpconst setiterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (void *)&seti_nii_getseq,
-			/* .nii_getindex = */ (void *)&seti_nii_getindex,
-			/* .nii_setindex = */ (void *)&seti_nii_setindex,
-			/* .nii_rewind   = */ (void *)&seti_nii_rewind,
-			/* .nii_revert   = */ (void *)&seti_nii_revert,
-			/* .nii_advance  = */ (void *)&seti_nii_advance,
-			/* .nii_prev     = */ (void *)&seti_nii_prev,
-			/* .nii_next     = */ (void *)&seti_nii_next,
-			/* .nii_hasprev  = */ (void *)&seti_nii_hasprev,
-			/* .nii_peek     = */ (void *)&seti_nii_peek
+			/* .nii_getseq   = */ (dfunptr_t)&seti_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&seti_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&seti_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&seti_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&seti_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&seti_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&seti_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&seti_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&seti_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&seti_nii_peek
 		}
 	}
 };
@@ -1543,10 +1543,10 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&setiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&setiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&setiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&setiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&setiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&setiterator_init,
 				TYPE_FIXED_ALLOCATOR(SetIterator)
 			}
 		},
@@ -1602,9 +1602,9 @@ PRIVATE struct type_nsi tpconst set_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize    = */ (void *)&set_nsi_getsize,
-			/* .nsi_insert     = */ (void *)&DeeHashSet_Insert,
-			/* .nsi_remove     = */ (void *)&DeeHashSet_Remove,
+			/* .nsi_getsize    = */ (dfunptr_t)&set_nsi_getsize,
+			/* .nsi_insert     = */ (dfunptr_t)&DeeHashSet_Insert,
+			/* .nsi_remove     = */ (dfunptr_t)&DeeHashSet_Remove,
 		}
 	}
 };
@@ -1965,10 +1965,10 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &set_ctor,
-				/* .tp_copy_ctor = */ &set_copy,
-				/* .tp_deep_ctor = */ &set_copy,
-				/* .tp_any_ctor  = */ &set_init,
+				/* .tp_ctor      = */ (dfunptr_t)&set_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&set_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&set_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&set_init,
 				TYPE_FIXED_ALLOCATOR_GC(Set)
 			}
 		},

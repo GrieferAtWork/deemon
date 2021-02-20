@@ -286,10 +286,10 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&refaiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&refaiter_copy,
-				/* .tp_deep_ctor = */ (void *)&refaiter_copy,
-				/* .tp_any_ctor  = */ (void *)&refaiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&refaiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&refaiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&refaiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&refaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -424,10 +424,10 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&relaiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&relaiter_copy,
-				/* .tp_deep_ctor = */ (void *)&relaiter_copy,
-				/* .tp_any_ctor  = */ (void *)&relaiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&relaiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&relaiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&relaiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&relaiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -574,10 +574,10 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&respiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&respiter_copy,
-				/* .tp_deep_ctor = */ (void *)&respiter_copy,
-				/* .tp_any_ctor  = */ (void *)&respiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&respiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&respiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&respiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&respiter_init,
 				TYPE_FIXED_ALLOCATOR(ReSequenceIterator)
 			}
 		},
@@ -730,27 +730,27 @@ PRIVATE struct type_nsi tpconst refa_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&refa_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)NULL,
-			/* .nsi_getitem      = */ (void *)NULL,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&refa_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)NULL,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -790,10 +790,10 @@ INTERN DeeTypeObject ReFindAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&refa_ctor,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&refa_init,
+				/* .tp_ctor      = */ (dfunptr_t)&refa_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&refa_init,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -880,10 +880,10 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&rela_ctor,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&rela_init,
+				/* .tp_ctor      = */ (dfunptr_t)&rela_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rela_init,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -981,27 +981,27 @@ PRIVATE struct type_nsi tpconst resp_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&resp_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)NULL,
-			/* .nsi_getitem      = */ (void *)NULL,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&resp_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)NULL,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1036,10 +1036,10 @@ INTERN DeeTypeObject ReSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&resp_ctor,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&resp_init,
+				/* .tp_ctor      = */ (dfunptr_t)&resp_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&resp_init,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},

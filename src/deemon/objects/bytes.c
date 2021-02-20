@@ -159,10 +159,10 @@ INTERN DeeTypeObject BytesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bytesiter_ctor,
-				/* .tp_copy_ctor = */ &bytesiter_copy,
-				/* .tp_deep_ctor = */ &bytesiter_copy,
-				/* .tp_any_ctor  = */ &bytesiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bytesiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bytesiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bytesiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bytesiter_init,
 				TYPE_FIXED_ALLOCATOR(BytesIterator)
 			}
 		},
@@ -1343,28 +1343,28 @@ PRIVATE struct type_nsi tpconst bytes_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&bytes_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&bytes_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&bytes_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&bytes_nsi_delitem,
-			/* .nsi_setitem      = */ (void *)&bytes_nsi_setitem,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)&bytes_nsi_getrange_i,
-			/* .nsi_getrange_n   = */ (void *)&bytes_nsi_getrange_in,
-			/* .nsi_setrange     = */ (void *)&bytes_nsi_setrange_i,
-			/* .nsi_setrange_n   = */ (void *)&bytes_nsi_setrange_in,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)&bytes_nsi_xch,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&bytes_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&bytes_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&bytes_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&bytes_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&bytes_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&bytes_nsi_getrange_i,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_nsi_getrange_in,
+			/* .nsi_setrange     = */ (dfunptr_t)&bytes_nsi_setrange_i,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_nsi_setrange_in,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&bytes_nsi_xch,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1959,11 +1959,11 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ &bytes_ctor,
-				/* .tp_copy_ctor = */ &bytes_copy,
-				/* .tp_deep_ctor = */ &bytes_copy,
-				/* .tp_any_ctor  = */ &bytes_init,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&bytes_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bytes_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bytes_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bytes_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytes_fini,

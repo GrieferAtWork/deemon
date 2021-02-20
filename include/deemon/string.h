@@ -375,15 +375,16 @@ struct Dee_string_utf {
 
 struct Dee_string_object {
 	Dee_OBJECT_HEAD
-	struct Dee_string_utf *s_data;      /* [0..1][owned][lock(WRITE_ONCE)]
-	                                     * Extended string data, as well as unicode information & lazily allocated caches. */
-	Dee_hash_t             s_hash;      /* [valid_if(!= #define)][lock(WRITE_ONCE)] The string's hash. */
+	struct Dee_string_utf  *s_data; /* [0..1][owned][lock(WRITE_ONCE)]
+	                                 * Extended string data, as well as unicode information & lazily allocated caches. */
+	Dee_hash_t              s_hash; /* [valid_if(!= #define)][lock(WRITE_ONCE)] The string's hash. */
 #define DEE_STRING_HASH_UNSET ((Dee_hash_t)-1) /* A hash-representation of the string. */
-	size_t                 s_len;       /* [const] The number of bytes found in the single-byte string text. */
-	/*unsigned*/ char      s_str[1024]; /* [const][s_len] The single-byte string text.
-	                                     * This string is either encoded as UTF-8, when the string's character
-	                                     * width isn't 1 byte, or encoded as LATIN-1, if all characters fit
-	                                     * within the unicode range U+0000 - U+00FF */
+	size_t                  s_len;  /* [const] The number of bytes found in the single-byte string text. */
+	COMPILER_FLEXIBLE_ARRAY(/*unsigned*/ char,
+	                        s_str); /* [const][s_len] The single-byte string text.
+	                                 * This string is either encoded as UTF-8, when the string's character
+	                                 * width isn't 1 byte, or encoded as LATIN-1, if all characters fit
+	                                 * within the unicode range U+0000 - U+00FF */
 };
 
 #define Dee_DEFINE_STRING(name, str)                              \
@@ -406,21 +407,18 @@ struct Dee_string_object {
 		  name.s_str }                                            \
 	}
 
-#ifdef GUARD_DEEMON_OBJECTS_STRING_C
-struct empty_string_struct {
+struct Dee_empty_string_struct {
 	Dee_OBJECT_HEAD
 	struct Dee_string_utf *s_data;
 	Dee_hash_t             s_hash;
 	size_t                 s_len;
 	char                   s_zero;
 };
-DDATDEF struct empty_string_struct DeeString_Empty;
-#define Dee_EmptyString ((DeeObject *)&DeeString_Empty)
-#else /* GUARD_DEEMON_OBJECTS_STRING_C */
-DDATDEF DeeObject           DeeString_Empty;
-#define Dee_EmptyString   (&DeeString_Empty)
-#endif /* !GUARD_DEEMON_OBJECTS_STRING_C */
-#define Dee_return_empty_string  Dee_return_reference_(Dee_EmptyString)
+
+DDATDEF struct Dee_empty_string_struct DeeString_Empty;
+
+#define Dee_EmptyString         ((DeeObject *)&DeeString_Empty)
+#define Dee_return_empty_string Dee_return_reference_(Dee_EmptyString)
 
 #ifdef DEE_SOURCE
 #define DEFINE_STRING       Dee_DEFINE_STRING
@@ -455,17 +453,17 @@ DDATDEF DeeTypeObject DeeString_Type;
  *        found in `x->s_data->u_data[Dee_STRING_WIDTH_4BYTE]', while `DeeString_SIZE()'
  *        refers to the number of bytes used by the multi-byte string.
  */
-#define DeeString_STR(x)   (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str)
-#define DeeString_SIZE(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len)
-#define DeeString_END(x)   (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str+((DeeStringObject *)(x))->s_len)
+#define DeeString_STR(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str)
+#define DeeString_SIZE(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len)
+#define DeeString_END(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_str + ((DeeStringObject *)(x))->s_len)
 
 
 #define DeeString_STR8(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data ? (uint8_t *)((DeeStringObject *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE] : (uint8_t *)((DeeStringObject *)(x))->s_str)
 #define DeeString_STR16(x) ((uint16_t *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])
 #define DeeString_STR32(x) ((uint32_t *)((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data->u_data[Dee_STRING_WIDTH_4BYTE])
 #define DeeString_LEN8(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_data ? Dee_WSTR_LENGTH(((DeeStringObject *)(x))->s_data->u_data[Dee_STRING_WIDTH_1BYTE]) : ((DeeStringObject *)(x))->s_len)
-#define DeeString_LEN16(x)  Dee_WSTR_LENGTH(DeeString_STR16(x))
-#define DeeString_LEN32(x)  Dee_WSTR_LENGTH(DeeString_STR32(x))
+#define DeeString_LEN16(x) Dee_WSTR_LENGTH(DeeString_STR16(x))
+#define DeeString_LEN32(x) Dee_WSTR_LENGTH(DeeString_STR32(x))
 
 /* Returns true if `DeeString_STR()' is encoded in UTF-8
  * HINT: This is very useful when creating transformed sub-strings

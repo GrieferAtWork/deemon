@@ -238,7 +238,8 @@ struct Dee_type_nii {
 #error "Unsupported __SIZEOF_POINTER__"
 #endif /* __SIZEOF_POINTER__ != ... */
 	union {
-		void              *_nii_class_functions[10];
+		Dee_funptr_t       _nii_class_functions[10];
+
 		struct {
 			/* Return the sequence associated with the iterator, or NULL on error.
 			 * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
@@ -339,10 +340,12 @@ struct Dee_type_nsi {
 #error "Unsupported __SIZEOF_POINTER__"
 #endif /* __SIZEOF_POINTER__ != ... */
 	union {
-		void              *_nsi_class_functions[22];
+		Dee_funptr_t       _nsi_class_functions[22];
+
 		struct {
 			WUNUSED NONNULL((1)) size_t (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
 		}                   nsi_common;
+
 		struct { /* TYPE_SEQX_CLASS_SEQ */
 			/* NOTE: If provided, these functions are only ever called as extensions to the
 			*       regular sequence operators, meaning that if you implement `nsi_getsize',
@@ -399,8 +402,9 @@ struct Dee_type_nsi {
 			 * @return: * : The number of removed items.
 			 * @return: (size_t)-1: Error. */
 			WUNUSED NONNULL((1, 4)) size_t          (DCALL *nsi_removeall)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-			WUNUSED NONNULL((1, 2)) size_t          (DCALL *nsi_removeif)(DeeObject *self, size_t start, size_t end, DeeObject *should);
+			WUNUSED NONNULL((1, 4)) size_t          (DCALL *nsi_removeif)(DeeObject *self, size_t start, size_t end, DeeObject *should);
 		}                   nsi_seqlike;
+
 		struct { /* TYPE_SEQX_CLASS_MAP */
 			WUNUSED NONNULL((1))      size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
 			/* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
@@ -427,6 +431,7 @@ struct Dee_type_nsi {
 			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **poldvalue);
 		}                   nsi_maplike;
+
 		struct { /* TYPE_SEQX_CLASS_SET */
 			WUNUSED NONNULL((1))    size_t (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
 			/* Insert a new `key' into the set

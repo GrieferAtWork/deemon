@@ -128,9 +128,9 @@ struct dee_kwds_object {
 	 *          However, you can easily construct a {(string, Object)...}-like
 	 *          mapping by calling `DeeKwdsMapping_New()' (see below) */
 	Dee_OBJECT_HEAD
-	size_t                kw_size;      /* [const] The number of valid entries in `kw_map'. */
-	size_t                kw_mask;      /* [const] Mask for keyword names. */
-	struct dee_kwds_entry kw_map[1024]; /* [const] Keyword name->index map. */
+	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map'. */
+	size_t                                         kw_mask; /* [const] Mask for keyword names. */
+	COMPILER_FLEXIBLE_ARRAY(struct dee_kwds_entry, kw_map); /* [const] Keyword name->index map. */
 };
 #define DeeKwds_MAPNEXT(i, perturb) \
 	((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)

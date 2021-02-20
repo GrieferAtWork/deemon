@@ -38,7 +38,8 @@ DECL_BEGIN
 
 typedef DeeCompilerSymbolObject Symbol;
 
-INTERN DeeObject *symbol_type_names[] = {
+INTDEF DeeStringObject *tpconst symbol_type_names[];
+INTERN_CONST DeeStringObject *tpconst symbol_type_names[] = {
 	/* [SYMBOL_TYPE_NONE]   = */ &str_none,
 	/* [SYMBOL_TYPE_GLOBAL] = */ &str_global,
 	/* [SYMBOL_TYPE_EXTERN] = */ &str_extern,
@@ -77,9 +78,9 @@ get_symbol_kind_from_name(char const *__restrict name) {
  *                  to change them) */
 #define SYMBOL_TYPE_IS_IMMUTABLE(x) ((x) == SYMBOL_TYPE_ARG)
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 symbol_getkind(DeeCompilerSymbolObject *__restrict self) {
-	DREF DeeObject *result = NULL;
+	DREF DeeStringObject *result = NULL;
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
@@ -427,10 +428,10 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
 			}
 		},

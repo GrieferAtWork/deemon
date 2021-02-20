@@ -265,14 +265,13 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-property_callback_getattr(Property *self,
-                          DeeObject *name) {
+property_callback_getattr(Property *self, DeeStringObject *name) {
 	if (self->p_get)
-		return DeeObject_GetAttr(self->p_get, name);
+		return DeeObject_GetAttr(self->p_get, (DeeObject *)name);
 	if (self->p_del)
-		return DeeObject_GetAttr(self->p_del, name);
+		return DeeObject_GetAttr(self->p_del, (DeeObject *)name);
 	if (self->p_set)
-		return DeeObject_GetAttr(self->p_set, name);
+		return DeeObject_GetAttr(self->p_set, (DeeObject *)name);
 	return ITER_DONE;
 }
 
@@ -415,12 +414,12 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ (void *)&property_ctor,
-				/* .tp_copy_ctor   = */ (void *)&property_copy,
-				/* .tp_deep_ctor   = */ (void *)&property_deep,
-				/* .tp_any_ctor    = */ (void *)NULL,
+				/* .tp_ctor        = */ (dfunptr_t)&property_ctor,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&property_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&property_deep,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Property),
-				/* .tp_any_ctor_kw = */ (void *)&property_init_kw,
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&property_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&property_fini,

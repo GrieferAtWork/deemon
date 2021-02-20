@@ -270,10 +270,10 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bfi_ctor,
-				/* .tp_copy_ctor = */ &bfi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bfi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bfi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bfi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bfi_init,
 				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
 			}
 		},
@@ -315,10 +315,10 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bcfi_ctor,
-				/* .tp_copy_ctor = */ &bfi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bcfi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bcfi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bfi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bcfi_init,
 				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
 			}
 		},
@@ -478,10 +478,10 @@ INTERN DeeTypeObject BytesFind_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bf_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bf_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bf_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bf_init,
 				TYPE_FIXED_ALLOCATOR(BytesFind)
 			}
 		},
@@ -523,10 +523,10 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &bf_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &bf_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bf_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bf_init,
 				TYPE_FIXED_ALLOCATOR(BytesFind)
 			}
 		},

@@ -32,7 +32,7 @@
 
 DECL_BEGIN
 
-INTDEF DeeObject *rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)];
+INTDEF DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)];
 
 /* @return:  1: Symbol doesn't exist.
  * @return:  0: Everything is OK.
@@ -86,7 +86,7 @@ ast_gen_operator_func(struct ast *binding,
 			symbol_name = info->oi_sname;
 	}
 	/* Import the operators module. */
-	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal(&str_operators,
+	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
 	                                                                inner_compiler_options,
 	                                                                false);
 	if unlikely(!ITER_ISOK(operators_module)) {

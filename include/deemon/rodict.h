@@ -67,9 +67,9 @@ struct Dee_rodict_item {
 
 struct Dee_rodict_object {
 	Dee_OBJECT_HEAD
-	size_t                 rd_mask;    /* [const][!0] Allocated dictionary mask. */
-	size_t                 rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-	struct Dee_rodict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
+	size_t                                          rd_mask;  /* [const][!0] Allocated dictionary mask. */
+	size_t                                          rd_size;  /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_rodict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
 };
 
 DDATDEF DeeTypeObject DeeRoDict_Type;

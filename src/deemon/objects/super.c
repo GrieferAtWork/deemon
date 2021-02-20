@@ -775,10 +775,10 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&super_ctor,
-				/* .tp_copy_ctor = */ (void *)&super_copy,
-				/* .tp_deep_ctor = */ (void *)&super_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&super_init,
+				/* .tp_ctor      = */ (dfunptr_t)&super_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&super_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&super_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&super_init,
 				TYPE_FIXED_ALLOCATOR(Super)
 			}
 		},

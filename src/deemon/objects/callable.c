@@ -45,10 +45,10 @@ PUBLIC DeeTypeObject DeeCallable_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&none_i1,
-				/* .tp_copy_ctor = */ (void *)&none_i2,
-				/* .tp_deep_ctor = */ (void *)&none_i2,
-				/* .tp_any_ctor  = */ (void *)NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},

@@ -332,10 +332,10 @@ INTERN DeeTypeObject DeeSType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&stype_init,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&stype_init,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeSTypeObject)
 			}
 		},
@@ -404,10 +404,10 @@ INTERN DeeTypeObject DeePointerType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeePointerTypeObject)
 			}
 		},
@@ -485,10 +485,10 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeLValueTypeObject)
 			}
 		},
@@ -1032,10 +1032,10 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (void *)&struct_ctor,
-					/* .tp_copy_ctor = */ (void *)&struct_copy,
-					/* .tp_deep_ctor = */ (void *)&struct_copy,
-					/* .tp_any_ctor  = */ (void *)&struct_init,
+					/* .tp_ctor      = */ (dfunptr_t)&struct_ctor,
+					/* .tp_copy_ctor = */ (dfunptr_t)&struct_copy,
+					/* .tp_deep_ctor = */ (dfunptr_t)&struct_copy,
+					/* .tp_any_ctor  = */ (dfunptr_t)&struct_init,
 					/* TODO: Use a custom allocator that takes alignment into account. */
 					TYPE_FIXED_ALLOCATOR_S(DeeObject)
 				}
@@ -1731,10 +1731,10 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeArrayTypeObject)
 			}
 		},
@@ -1846,10 +1846,10 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeCFunctionTypeObject)
 			}
 		},

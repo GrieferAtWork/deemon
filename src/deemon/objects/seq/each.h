@@ -104,18 +104,20 @@ typedef struct {
 	SEQ_EACH_HEAD
 	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
 } SeqEachGetAttr;
+
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
-	size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
-	DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
+	DREF struct string_object                *sg_attr;  /* [1..1][const] The name of the attribute to access. */
+	size_t                                    sg_argc;  /* [const] Amount of arguments to pass. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, sg_argv); /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttr;
+
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object *sg_attr;       /* [1..1][const] The name of the attribute to access. */
-	DREF DeeObject            *sg_kw;         /* [1..1][const] Additional keyword to pass during invocation. */
-	size_t                     sg_argc;       /* [const] Amount of arguments to pass. */
-	DREF DeeObject            *sg_argv[1024]; /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
+	DREF struct string_object                *sg_attr;  /* [1..1][const] The name of the attribute to access. */
+	DREF DeeObject                           *sg_kw;    /* [1..1][const] Additional keyword to pass during invocation. */
+	size_t                                    sg_argc;  /* [const] Amount of arguments to pass. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, sg_argv); /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttrKw;
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 

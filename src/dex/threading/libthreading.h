@@ -36,11 +36,11 @@ struct tls_descriptor {
 	/* This is the actual data structure that is being pointed
 	 * to by the `t_tlsdata' field of every existing thread once
 	 * `libthreading' has been loaded. */
-	size_t          td_size;       /* The amount of TLS instances allocated for this thread. */
-	DREF DeeObject *td_elem[1024]; /* [0..1][td_size] Vector of TLS instances allocated for this thread.
-	                                *  NOTE: Individual items are set to ITER_DONE if the user
-	                                *        deletes the following their factory initialization.
-	                                *        NULL-values however are lazily allocated by the factory. */
+	size_t                                    td_size;  /* The amount of TLS instances allocated for this thread. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, td_elem); /* [0..1][td_size] Vector of TLS instances allocated for this thread.
+	                                                     *  NOTE: Individual items are set to ITER_DONE if the user
+	                                                     *        deletes the following their factory initialization.
+	                                                     *        NULL-values however are lazily allocated by the factory. */
 };
 
 

@@ -40,12 +40,8 @@ typedef struct Dee_tuple_object DeeTupleObject;
 struct Dee_tuple_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
 	Dee_OBJECT_HEAD
-	size_t          t_size;       /* [const] Tuple size. */
-#ifdef __INTELLISENSE__
-	DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
-#else /* __INTELLISENSE__ */
-	DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
-#endif /* !__INTELLISENSE__ */
+	size_t                                    t_size;  /* [const] Tuple size. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, t_elem); /* [1..1][const][t_size] Tuple elements. */
 };
 
 #define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))

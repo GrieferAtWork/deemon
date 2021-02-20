@@ -279,10 +279,10 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&rodictiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&rodictiterator_copy,
-				/* .tp_deep_ctor = */ NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&rodictiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&rodictiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rodictiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&rodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
@@ -905,10 +905,10 @@ PRIVATE struct type_nsi tpconst rodict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&rodict_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&rodictiterator_next_key,
-			/* .nsi_nextvalue  = */ (void *)&rodictiterator_next_value,
-			/* .nsi_getdefault = */ (void *)&DeeRoDict_GetItemDef
+			/* .nsi_getsize    = */ (dfunptr_t)&rodict_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&rodictiterator_next_key,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&rodictiterator_next_value,
+			/* .nsi_getdefault = */ (dfunptr_t)&DeeRoDict_GetItemDef
 		}
 	}
 };
@@ -1069,11 +1069,11 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&rodict_ctor,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&rodict_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&rodict_init,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&rodict_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&rodict_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rodict_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,

@@ -578,6 +578,26 @@ DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
 
 
 
+/* Define the special, empty_code object. */
+#define empty_code empty_code_head.ob
+INTERN DEFINE_CODE(empty_code_head,
+                   /* co_flags:     */ CODE_FCOPYABLE,
+                   /* co_localc:    */ 0,
+                   /* co_staticc:   */ 0,
+                   /* co_refc:      */ 0,
+                   /* co_exceptc:   */ 0,
+                   /* co_argc_min:  */ 0,
+                   /* co_argc_max:  */ 0,
+                   /* co_framesize: */ 0,
+                   /* co_codebytes: */ sizeof(instruction_t),
+                   /* co_module:    */ &empty_module,
+                   /* co_keywords:  */ NULL,
+                   /* co_defaultv:  */ NULL,
+                   /* co_staticv:   */ NULL,
+                   /* co_exceptv:   */ NULL,
+                   /* co_ddi:       */ &empty_ddi,
+                   /* co_code:      */ { ASM_RET_NONE });
+
 
 
 
@@ -1851,13 +1871,13 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&code_ctor,
-				/* .tp_copy_ctor = */ (void *)&code_copy,
-				/* .tp_deep_ctor = */ (void *)&code_deepcopy,
-				/* .tp_any_ctor  = */ (void *)NULL,
-				/* .tp_free      = */ (void *)NULL,
-				/* .tp_alloc     = */ { 0 },
-				/* .tp_free      = */ (void *)&code_init_kw
+				/* .tp_ctor      = */ (dfunptr_t)&code_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&code_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&code_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL,
+				/* .tp_pad       = */ { (dfunptr_t)NULL },
+				/* .tp_free      = */ (dfunptr_t)&code_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
@@ -1885,37 +1905,6 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
-};
-
-
-INTERN struct empty_code_struct empty_code_head = {
-	{
-		/* ... */
-		NULL,
-		NULL
-	}, {
-		OBJECT_HEAD_INIT(&DeeCode_Type),
-		/* .co_flags       = */ CODE_FCOPYABLE,
-		/* .co_localc      = */ 0,
-		/* .co_staticc     = */ 0,
-		/* .co_refc        = */ 0,
-		/* .co_exceptc     = */ 0,
-		/* .co_argc_min    = */ 0,
-		/* .co_argc_max    = */ 0,
-		/* .co_padding     = */ 0,
-		/* .co_framesize   = */ 0,
-		/* .co_codebytes   = */ sizeof(instruction_t),
-#ifndef CONFIG_NO_THREADS
-		/* .co_static_lock = */ RWLOCK_INIT,
-#endif /* !CONFIG_NO_THREADS */
-		/* .co_module      = */ { &empty_module },
-		/* .co_keywords    = */ NULL,
-		/* .co_defaultv    = */ NULL,
-		/* .co_staticv     = */ NULL,
-		/* .co_exceptv     = */ NULL,
-		/* .co_ddi         = */ &empty_ddi,
-		/* .co_code        = */ { ASM_RET_NONE },
-	}
 };
 
 

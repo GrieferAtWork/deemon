@@ -654,12 +654,12 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ NULL,
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor   = */ NULL,
 				/* .tp_deep_ctor   = */ NULL,
-				/* .tp_any_ctor    = */ NULL,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Attr),
-				/* .tp_any_ctor_kw = */ &attribute_init
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&attribute_init
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&attr_fini,
@@ -925,10 +925,10 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &enumattr_init,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&enumattr_init,
 				TYPE_FIXED_ALLOCATOR(EnumAttr)
 			}
 		},
@@ -1258,10 +1258,10 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&enumattriter_init,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&enumattriter_init,
 				TYPE_FIXED_ALLOCATOR(EnumAttrIter)
 			}
 		},

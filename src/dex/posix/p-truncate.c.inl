@@ -250,7 +250,7 @@ err:
 
 
 
-/* TOOD: Use the posix_xxx_USE_XXX notation for ftruncate() */
+/* TODO: Use the posix_xxx_USE_XXX notation for ftruncate() */
 
 #if defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate", "fd:unix:fd,len:I64d", libname: "posix"); ]]]*/

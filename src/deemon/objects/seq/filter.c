@@ -178,7 +178,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF Filter *DCALL
 filteriterator_seq_get(FilterIterator *__restrict self) {
 	DREF Filter *result;
 	DREF DeeObject *base_seq;
-	base_seq = DeeObject_GetAttr(self->fi_iter, &str_seq);
+	base_seq = DeeObject_GetAttr(self->fi_iter, (DeeObject *)&str_seq);
 	if unlikely(!base_seq)
 		goto err;
 	result = DeeObject_MALLOC(Filter);
@@ -222,10 +222,10 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&filteriterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&filteriterator_copy,
-				/* .tp_deep_ctor = */ (void *)&filteriterator_deep,
-				/* .tp_any_ctor  = */ (void *)&filteriterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&filteriterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&filteriterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&filteriterator_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&filteriterator_init,
 				TYPE_FIXED_ALLOCATOR(FilterIterator)
 			}
 		},
@@ -361,10 +361,10 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&filter_ctor,
-				/* .tp_copy_ctor = */ (void *)&filter_copy,
-				/* .tp_deep_ctor = */ (void *)&filter_deep,
-				/* .tp_any_ctor  = */ (void *)&filter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&filter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&filter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&filter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&filter_init,
 				TYPE_FIXED_ALLOCATOR(Filter)
 			}
 		},

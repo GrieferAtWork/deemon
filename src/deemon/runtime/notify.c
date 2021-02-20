@@ -57,7 +57,7 @@ again:
 	mod = fs_module;
 	if unlikely(!mod) {
 		rwlock_endread(&fs_module_lock);
-		mod = DeeModule_OpenGlobal(&str_fs, NULL, true);
+		mod = DeeModule_OpenGlobal((DeeObject *)&str_fs, NULL, true);
 		if unlikely(!mod)
 			return NULL;
 		if unlikely(DeeModule_RunInit(mod) < 0) {
@@ -96,7 +96,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_GetEnv(DeeObject *__restrict name) {
 	DREF DeeObject *result;
 	DREF DeeObject *fs_environ;
-	fs_environ = get_fs_object(&str_environ);
+	fs_environ = get_fs_object((DeeObject *)&str_environ);
 	if unlikely(!fs_environ)
 		goto err;
 	result = DeeObject_GetItemDef(fs_environ, name, ITER_DONE);

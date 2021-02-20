@@ -243,13 +243,13 @@ PRIVATE struct type_nsi tpconst env_nsi = {
 	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&env_nsi_getsize, /* Must be defined because this one's mandatory... */
-			/* .nsi_nextkey    = */ (void *)&enviterator_next_key,
-			/* .nsi_nextvalue  = */ (void *)&enviterator_next_value,
-			/* .nsi_getdefault = */ (void *)&env_nsi_getdefault,
-			/* .nsi_setdefault = */ (void *)NULL,
-			/* .nsi_updateold  = */ (void *)NULL,
-			/* .nsi_insertnew  = */ (void *)NULL
+			/* .nsi_getsize    = */ (dfunptr_t)&env_nsi_getsize, /* Must be defined because this one's mandatory... */
+			/* .nsi_nextkey    = */ (dfunptr_t)&enviterator_next_key,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&enviterator_next_value,
+			/* .nsi_getdefault = */ (dfunptr_t)&env_nsi_getdefault,
+			/* .nsi_setdefault = */ (dfunptr_t)NULL,
+			/* .nsi_updateold  = */ (dfunptr_t)NULL,
+			/* .nsi_insertnew  = */ (dfunptr_t)NULL
 		}        
 	}
 };
@@ -283,11 +283,11 @@ INTERN DeeTypeObject DeeEnv_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&env_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&env_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -952,10 +952,10 @@ PRIVATE DEFINE_CMETHOD(libfs_S_ISSOCK, &f_libfs_S_ISSOCK);
 		/* .tp_init = */ {                                     \
 			{                                                  \
 				/* .tp_alloc = */ {                            \
-					/* .tp_ctor      = */ NULL,                \
-					/* .tp_copy_ctor = */ NULL,                \
-					/* .tp_deep_ctor = */ NULL,                \
-					/* .tp_any_ctor  = */ NULL,                \
+					/* .tp_ctor      = */ (dfunptr_t)NULL,     \
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,     \
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,     \
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,     \
 					TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject) \
 				}                                              \
 			},                                                 \

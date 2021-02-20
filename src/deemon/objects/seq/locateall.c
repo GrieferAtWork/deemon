@@ -207,7 +207,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 locatoriter_seq_get(LocatorIterator *__restrict self) {
 	DREF DeeObject *inner_seq, *result;
 	/* Forward access to this attribute to the pointed-to iterator. */
-	inner_seq = DeeObject_GetAttr(self->li_iter, &str_seq);
+	inner_seq = DeeObject_GetAttr(self->li_iter, (DeeObject *)&str_seq);
 	if unlikely(!inner_seq)
 		return NULL;
 	result = DeeSeq_LocateAll(inner_seq, self->li_elem, self->li_pred);
@@ -242,10 +242,10 @@ INTERN DeeTypeObject SeqLocatorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&locatoriter_ctor,
-				/* .tp_copy_ctor = */ (void *)&locatoriter_copy,
-				/* .tp_deep_ctor = */ (void *)&locatoriter_deep,
-				/* .tp_any_ctor  = */ (void *)&locatoriter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&locatoriter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&locatoriter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&locatoriter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&locatoriter_init,
 				TYPE_FIXED_ALLOCATOR(LocatorIterator)
 			}
 		},
@@ -415,10 +415,10 @@ INTERN DeeTypeObject SeqLocator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&locator_ctor,
-				/* .tp_copy_ctor = */ (void *)&locator_copy,
-				/* .tp_deep_ctor = */ (void *)&locator_deep,
-				/* .tp_any_ctor  = */ (void *)&locator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&locator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&locator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&locator_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&locator_init,
 				TYPE_FIXED_ALLOCATOR(Locator)
 			}
 		},

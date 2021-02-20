@@ -475,10 +475,10 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &seqiterator_ctor,
-				/* .tp_copy_ctor = */ &seqiterator_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &seqiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&seqiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&seqiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&seqiterator_init,
 				TYPE_FIXED_ALLOCATOR(SeqIterator)
 			}
 		},
@@ -701,28 +701,28 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&DeeSeq_Size,
-			/* .nsi_getsize_fast = */ (void *)NULL,
-			/* .nsi_getitem      = */ (void *)&DeeSeq_GetItem,
-			/* .nsi_delitem      = */ (void *)&DeeSeq_DelItem,
-			/* .nsi_setitem      = */ (void *)&DeeSeq_SetItem,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)&seq_nsi_getrange,
-			/* .nsi_getrange_n   = */ (void *)&seq_nsi_getrange_n,
-			/* .nsi_setrange     = */ (void *)&seq_nsi_setrange,
-			/* .nsi_setrange_n   = */ (void *)&seq_nsi_setrange_n,
-			/* .nsi_find         = */ (void *)&DeeSeq_Find,
-			/* .nsi_rfind        = */ (void *)&DeeSeq_RFind,
-			/* .nsi_xch          = */ (void *)&DeeSeq_XchItem,
-			/* .nsi_insert       = */ (void *)&DeeSeq_Insert,
-			/* .nsi_insertall    = */ (void *)&DeeSeq_InsertAll,
-			/* .nsi_insertvec    = */ (void *)&seq_nsi_insert_vec,
-			/* .nsi_pop          = */ (void *)&DeeSeq_PopItem,
-			/* .nsi_erase        = */ (void *)&DeeSeq_Erase,
-			/* .nsi_remove       = */ (void *)&DeeSeq_Remove,
-			/* .nsi_rremove      = */ (void *)&DeeSeq_RRemove,
-			/* .nsi_removeall    = */ (void *)&DeeSeq_RemoveAll,
-			/* .nsi_removeif     = */ (void *)&DeeSeq_RemoveIf
+			/* .nsi_getsize      = */ (dfunptr_t)&DeeSeq_Size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)&DeeSeq_GetItem,
+			/* .nsi_delitem      = */ (dfunptr_t)&DeeSeq_DelItem,
+			/* .nsi_setitem      = */ (dfunptr_t)&DeeSeq_SetItem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&seq_nsi_getrange,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&seq_nsi_getrange_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&seq_nsi_setrange,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&seq_nsi_setrange_n,
+			/* .nsi_find         = */ (dfunptr_t)&DeeSeq_Find,
+			/* .nsi_rfind        = */ (dfunptr_t)&DeeSeq_RFind,
+			/* .nsi_xch          = */ (dfunptr_t)&DeeSeq_XchItem,
+			/* .nsi_insert       = */ (dfunptr_t)&DeeSeq_Insert,
+			/* .nsi_insertall    = */ (dfunptr_t)&DeeSeq_InsertAll,
+			/* .nsi_insertvec    = */ (dfunptr_t)&seq_nsi_insert_vec,
+			/* .nsi_pop          = */ (dfunptr_t)&DeeSeq_PopItem,
+			/* .nsi_erase        = */ (dfunptr_t)&DeeSeq_Erase,
+			/* .nsi_remove       = */ (dfunptr_t)&DeeSeq_Remove,
+			/* .nsi_rremove      = */ (dfunptr_t)&DeeSeq_RRemove,
+			/* .nsi_removeall    = */ (dfunptr_t)&DeeSeq_RemoveAll,
+			/* .nsi_removeif     = */ (dfunptr_t)&DeeSeq_RemoveIf
 		}
 	}
 };
@@ -1132,14 +1132,14 @@ seq_nonempty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	 * We don't simply alias this function to `seq_nonempty' to allow
 	 * sub-classes to provide their own `nonempty' function, which we
 	 * want to call here instead of our generic one. */
-	return DeeObject_CallAttr(self, &str_nonempty, argc, argv);
+	return DeeObject_CallAttr(self, (DeeObject *)&str_nonempty, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":front"))
 		goto err;
-	return DeeObject_GetAttr(self, &str_first);
+	return DeeObject_GetAttr(self, (DeeObject *)&str_first);
 err:
 	return NULL;
 }
@@ -1148,7 +1148,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":back"))
 		goto err;
-	return DeeObject_GetAttr(self, &str_last);
+	return DeeObject_GetAttr(self, (DeeObject *)&str_last);
 err:
 	return NULL;
 }
@@ -1750,7 +1750,7 @@ seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
 	args[0] = &DeeInt_Zero;
-	result  = DeeObject_CallAttr(self, &str_pop, 1, args);
+	result  = DeeObject_CallAttr(self, (DeeObject *)&str_pop, 1, args);
 	if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
 		err_empty_sequence(self);
 	return result;
@@ -1764,7 +1764,7 @@ seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
 	args[0] = &DeeInt_MinusOne;
-	result  = DeeObject_CallAttr(self, &str_pop, 1, args);
+	result  = DeeObject_CallAttr(self, (DeeObject *)&str_pop, 1, args);
 	if unlikely(!result && DeeError_Catch(&DeeError_IndexError))
 		err_empty_sequence(self);
 	return result;
@@ -1778,7 +1778,7 @@ seq_pushfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:pushfront", &args[1]))
 		goto err;
 	args[0] = &DeeInt_Zero;
-	return DeeObject_CallAttr(self, &str_insert, 2, args);
+	return DeeObject_CallAttr(self, (DeeObject *)&str_insert, 2, args);
 err:
 	return NULL;
 }
@@ -1809,7 +1809,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_pushback(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self, &str_append, argc, argv);
+	return DeeObject_CallAttr(self, (DeeObject *)&str_append, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1916,19 +1916,19 @@ seq_resize(DeeObject *self, size_t argc,
 	                    "Iu|o:resize", &newsize, &filler))
 		goto err;
 	if (!newsize) {
-		result = DeeObject_CallAttr(self, &str_clear, 0, NULL);
+		result = DeeObject_CallAttr(self, (DeeObject *)&str_clear, 0, NULL);
 	} else {
 		oldsize = DeeObject_Size(self);
 		if unlikely(oldsize == (size_t)-1)
 			goto err;
 		if (newsize < oldsize) {
-			result = DeeObject_CallAttrf(self, &str_erase, "Iuo", newsize, &DeeInt_MinusOne);
+			result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase, "Iuo", newsize, &DeeInt_MinusOne);
 		} else if (newsize > oldsize) {
 			DREF DeeObject *seq_extension;
 			seq_extension = DeeSeq_RepeatItem(filler, newsize - oldsize);
 			if unlikely(!seq_extension)
 				goto err;
-			result = DeeObject_CallAttr(self, &str_extend, 1, &seq_extension);
+			result = DeeObject_CallAttr(self, (DeeObject *)&str_extend, 1, &seq_extension);
 			Dee_Decref(seq_extension);
 		} else {
 			goto do_return_none;
@@ -4516,10 +4516,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&none_i1, /* Allow default-construction of Sequence objects. */
-				/* .tp_copy_ctor = */ (void *)&none_i2,
-				/* .tp_deep_ctor = */ (void *)&none_i2,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1, /* Allow default-construction of Sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},

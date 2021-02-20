@@ -869,10 +869,11 @@ struct struct_field {
 	uintptr_t                  sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
 	DREF DeeLValueTypeObject  *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
 };
+
 struct struct_type_object {
-	DeeSTypeObject          st_base;      /* The underlying type object. */
-	size_t                  st_fmsk;      /* [const] Field-vector mask. */
-	struct struct_field     st_fvec[1];   /* [1..st_fmsk+1][const] Hash-vector of field names. */
+	DeeSTypeObject                               st_base;  /* The underlying type object. */
+	size_t                                       st_fmsk;  /* [const] Field-vector mask. */
+	COMPILER_FLEXIBLE_ARRAY(struct struct_field, st_fvec); /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
 #define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)

@@ -368,10 +368,10 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&catiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&catiterator_copy,
-				/* .tp_deep_ctor = */ (void *)&catiterator_deep,
-				/* .tp_any_ctor  = */ (void *)&catiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&catiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&catiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&catiterator_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&catiterator_init,
 				TYPE_FIXED_ALLOCATOR(CatIterator)
 			}
 		},
@@ -677,28 +677,28 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&cat_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)NULL,
-			/* .nsi_getitem      = */ (void *)&cat_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)&cat_nsi_find,
-			/* .nsi_rfind        = */ (void *)&cat_nsi_rfind,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&cat_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)&cat_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)&cat_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&cat_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -763,11 +763,11 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&cat_deepcopy,
-				/* .tp_any_ctor  = */ (void *)NULL, /* TODO */
-				/* .tp_free      = */ &cat_tp_free,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cat_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_free      = */ (dfunptr_t)&cat_tp_free,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,

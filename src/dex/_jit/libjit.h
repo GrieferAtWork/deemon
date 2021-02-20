@@ -1276,10 +1276,10 @@ INTDEF NONNULL((1, 2)) void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict
 /* Yield-function support */
 struct jit_yield_function_object {
 	OBJECT_HEAD
-	DREF JITFunctionObject *jy_func;       /* [1..1][const] The underlying regular function object. */
-	DREF DeeObject         *jy_kw;         /* [0..1][const] Keyword arguments. */
-	size_t                  jy_argc;       /* [const] Number of positional arguments passed. */
-	DREF DeeObject         *jy_argv[1024]; /* [1..1][const][jy_argc] Vector of positional arguments. */
+	DREF JITFunctionObject                   *jy_func;  /* [1..1][const] The underlying regular function object. */
+	DREF DeeObject                           *jy_kw;    /* [0..1][const] Keyword arguments. */
+	size_t                                    jy_argc;  /* [const] Number of positional arguments passed. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, jy_argv); /* [1..1][const][jy_argc] Vector of positional arguments. */
 };
 
 

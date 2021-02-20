@@ -28,6 +28,7 @@ DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_compiler_options compiler_options
+#define Dee_list_object      list_object
 #endif /* DEE_SOURCE */
 
 
@@ -79,16 +80,13 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  * in that every entry that is a string is an include-path after appending "/include":
  * >> function get_include_paths() { for (local x: DeeModule_Path) if (x is string) yield x.rstrip("/")+"/include"; }
  */
-#ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
-DDATDEF DeeListObject DeeModule_Path;
-#else /* GUARD_DEEMON_EXECUTE_MODPATH_C */
-DDATDEF DeeObject     DeeModule_Path;
-#endif /* !GUARD_DEEMON_EXECUTE_MODPATH_C */
+
+DDATDEF struct Dee_list_object DeeModule_Path;
 DFUNDEF void DCALL DeeModule_InitPath(void);
-#define DeeModule_FiniPath() DeeList_Clear(&DeeModule_Path)
+#define DeeModule_FiniPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
 
 /* Initialize the module path sub-system and return its global list of path. */
-#define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
+#define DeeModule_GetPath() (DeeModule_InitPath(), (DeeObject *)&DeeModule_Path)
 
 /* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__' */
 DDATDEF char const DeeExec_Timestamp[];

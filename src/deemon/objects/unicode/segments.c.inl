@@ -201,10 +201,10 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &ssegiter_ctor,
-				/* .tp_copy_ctor = */ &ssegiter_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &ssegiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&ssegiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ssegiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ssegiter_init,
 				TYPE_FIXED_ALLOCATOR(StringSegmentsIterator)
 			}
 		},
@@ -451,10 +451,10 @@ INTERN DeeTypeObject StringSegments_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &sseg_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &sseg_init,
+				/* .tp_ctor      = */ (dfunptr_t)&sseg_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sseg_init,
 				TYPE_FIXED_ALLOCATOR(StringSegments)
 			}
 		},

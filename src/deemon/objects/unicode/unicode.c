@@ -2893,8 +2893,8 @@ PUBLIC WUNUSED DREF DeeObject *
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Convert(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+DeeString_Convert(String *__restrict self,
                   size_t start, size_t end,
                   uintptr_t kind) {
 	unsigned int width;
@@ -2909,7 +2909,7 @@ DeeString_Convert(DeeObject *__restrict self,
 	if (end > length)
 		end = length;
 	if (start >= end)
-		return_empty_string;
+		return_reference_((String *)Dee_EmptyString);
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
@@ -2931,11 +2931,11 @@ DeeString_Convert(DeeObject *__restrict self,
 			((uint32_t *)result)[i] = (uint32_t)DeeUni_Convert(((uint32_t *)str)[start + i], kind);
 		break;
 	}
-	return DeeString_PackWidthBuffer(result, width);
+	return (DREF String *)DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
 	unsigned int width;
 	void *str, *result;
@@ -2949,7 +2949,7 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 	if (end > length)
 		end = length;
 	if (start >= end)
-		return_empty_string;
+		return_reference_((String *)Dee_EmptyString);
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
@@ -2983,11 +2983,11 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 		}
 		break;
 	}
-	return DeeString_PackWidthBuffer(result, width);
+	return (DREF String *)DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+DeeString_Capitalize(String *__restrict self, size_t start, size_t end) {
 	unsigned int width;
 	void *str, *result;
 	size_t i, length;
@@ -3000,7 +3000,7 @@ DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
 	if (end > length)
 		end = length;
 	if (start >= end)
-		return_empty_string;
+		return_reference_((String *)Dee_EmptyString);
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
@@ -3025,11 +3025,11 @@ DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
 			((uint32_t *)result)[i] = (uint32_t)DeeUni_ToLower(((uint32_t *)str)[start + i]);
 		break;
 	}
-	return DeeString_PackWidthBuffer(result, width);
+	return (DREF String *)DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+DeeString_Swapcase(String *__restrict self, size_t start, size_t end) {
 	unsigned int width;
 	void *str, *result;
 	size_t i, length;
@@ -3042,7 +3042,7 @@ DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
 	if (end > length)
 		end = length;
 	if (start >= end)
-		return_empty_string;
+		return_reference_((String *)Dee_EmptyString);
 	end -= start;
 	result = DeeString_NewWidthBuffer(end, width);
 	if unlikely(!result)
@@ -3064,7 +3064,7 @@ DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
 			((uint32_t *)result)[i] = (uint32_t)DeeUni_SwapCase(((uint32_t *)str)[start + i]);
 		break;
 	}
-	return DeeString_PackWidthBuffer(result, width);
+	return (DREF String *)DeeString_PackWidthBuffer(result, width);
 }
 
 

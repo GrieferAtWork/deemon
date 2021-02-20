@@ -1156,16 +1156,16 @@ PRIVATE struct type_nii tpconst tuple_iterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (void *)&tuple_iterator_nii_getseq,
-			/* .nii_getindex = */ (void *)&tuple_iterator_nii_getindex,
-			/* .nii_setindex = */ (void *)&tuple_iterator_nii_setindex,
-			/* .nii_rewind   = */ (void *)&tuple_iterator_nii_rewind,
-			/* .nii_revert   = */ (void *)&tuple_iterator_nii_revert,
-			/* .nii_advance  = */ (void *)&tuple_iterator_nii_advance,
-			/* .nii_prev     = */ (void *)&tuple_iterator_nii_prev,
-			/* .nii_next     = */ (void *)&tuple_iterator_nii_next,
-			/* .nii_hasprev  = */ (void *)&tuple_iterator_nii_hasprev,
-			/* .nii_peek     = */ (void *)&tuple_iterator_nii_peek
+			/* .nii_getseq   = */ (dfunptr_t)&tuple_iterator_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&tuple_iterator_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&tuple_iterator_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&tuple_iterator_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&tuple_iterator_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&tuple_iterator_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&tuple_iterator_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&tuple_iterator_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&tuple_iterator_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&tuple_iterator_nii_peek
 		}
 	}
 };
@@ -1197,10 +1197,10 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&tuple_iterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&tuple_iterator_copy,
-				/* .tp_deep_ctor = */ (void *)&tuple_iterator_deep,
-				/* .tp_any_ctor  = */ (void *)&tuple_iterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&tuple_iterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&tuple_iterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&tuple_iterator_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&tuple_iterator_init,
 				TYPE_FIXED_ALLOCATOR(TupleIterator)
 			}
 		},
@@ -1453,27 +1453,27 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&tuple_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&tuple_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&tuple_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)&tuple_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)&tuple_getrange_i,
-			/* .nsi_getrange_n   = */ (void *)&tuple_getrange_in,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)&tuple_nsi_find,
-			/* .nsi_rfind        = */ (void *)&tuple_nsi_rfind,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&tuple_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&tuple_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&tuple_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&tuple_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&tuple_getrange_i,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&tuple_getrange_in,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)&tuple_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&tuple_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1991,14 +1991,14 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&tuple_ctor,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&tuple_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&tuple_init,
+				/* .tp_ctor      = */ (dfunptr_t)&tuple_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&tuple_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&tuple_init,
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
-				/* .tp_free      = */ (void *)&tuple_tp_free
+				/* .tp_free      = */ (dfunptr_t)&tuple_tp_free
 #else /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
-				/* .tp_free      = */ (void *)NULL
+				/* .tp_free      = */ (dfunptr_t)NULL
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
 			}
 		},

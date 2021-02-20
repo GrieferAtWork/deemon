@@ -24,11 +24,12 @@
 #include <deemon/api.h>
 #include <deemon/file.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 DECL_BEGIN
 #endif /* !ONLY_LISTING */
 
 #ifndef STRING2
-#define STRING2(name, str) INTDEF DeeObject name;
+#define STRING2(name, str) INTDEF DeeStringObject name;
 #endif /* !STRING2 */
 #ifndef STRING
 #define STRING(str) STRING2(str_##str, #str)

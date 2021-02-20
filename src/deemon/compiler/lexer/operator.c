@@ -42,7 +42,8 @@ DECL_BEGIN
 
 /* Special symbol names to generate function calls to
 	* when the argument count cannot be determined. */
-INTERN DeeObject *rt_operator_names[1+(AST_OPERATOR_MAX-AST_OPERATOR_MIN)] = {
+INTDEF DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)];
+INTERN_CONST DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)] = {
 	/* [AST_OPERATOR_POS_OR_ADD           - AST_OPERATOR_MIN] = */ &str___pooad,
 	/* [AST_OPERATOR_NEG_OR_SUB           - AST_OPERATOR_MIN] = */ &str___neosb,
 	/* [AST_OPERATOR_GETITEM_OR_SETITEM   - AST_OPERATOR_MIN] = */ &str___giosi,
@@ -205,8 +206,9 @@ do_generic:
 	    name <= AST_OPERATOR_MAX) {
 		DREF struct ast *function_ast;
 		struct symbol *function_symbol;
-		DeeObject *function_name = rt_operator_names[name - AST_OPERATOR_MIN];
-		function_symbol          = new_unnamed_symbol();
+		DeeStringObject *function_name;
+		function_name   = rt_operator_names[name - AST_OPERATOR_MIN];
+		function_symbol = new_unnamed_symbol();
 		if unlikely(!function_symbol)
 			goto err;
 		function_symbol->s_type            = SYMBOL_TYPE_EXTERN;
@@ -214,7 +216,7 @@ do_generic:
 		Dee_Incref(function_symbol->s_extern.e_module);
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
 		                                                               DeeString_STR(function_name),
-		                                                               DeeString_Hash(function_name));
+		                                                               DeeString_Hash((DeeObject *)function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));
@@ -299,7 +301,8 @@ do_generic:
 		DREF struct ast **argv, *new_args;
 		DREF struct ast *function_ast;
 		struct symbol *function_symbol;
-		DeeObject *function_name = rt_operator_names[name - AST_OPERATOR_MIN];
+		DeeStringObject *function_name;
+		function_name = rt_operator_names[name - AST_OPERATOR_MIN];
 		/* Pack together the argument list. */
 		if unlikely((args = ast_expand(args)) == NULL)
 			goto err;
@@ -324,7 +327,7 @@ do_generic:
 		Dee_Incref(function_symbol->s_extern.e_module);
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbolString(function_symbol->s_extern.e_module,
 		                                                               DeeString_STR(function_name),
-		                                                               DeeString_Hash(function_name));
+		                                                               DeeString_Hash((DeeObject *)function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
 		        "Missing runtime function `%s'",
 		        DeeString_STR(function_name));

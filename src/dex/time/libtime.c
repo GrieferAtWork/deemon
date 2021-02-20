@@ -2509,12 +2509,12 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ (void *)&time_copy,
-				/* .tp_deep_ctor = */ (void *)&time_copy,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&time_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&time_copy,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeTimeObject),
-				/* .tp_any_ctor_kw = */ (void *)&time_init_kw,
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&time_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ NULL,

@@ -344,9 +344,9 @@ DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
 				if (tp_self->tp_attr->tp_getattr) {
 					DREF DeeObject *erase_function, *erase_result;
 					if (tp_self->tp_attr->tp_getattr == &instance_getattr)
-						erase_function = instance_tgetattr(tp_self, self, &str_erase);
+						erase_function = instance_tgetattr(tp_self, self, (DeeObject *)&str_erase);
 					else {
-						erase_function = (*tp_self->tp_attr->tp_getattr)(self, &str_erase);
+						erase_function = (*tp_self->tp_attr->tp_getattr)(self, (DeeObject *)&str_erase);
 					}
 					if unlikely(!erase_function)
 						goto err_bad_attribute;
@@ -366,7 +366,7 @@ did_find_attributes:
 				callback_result = call_generic_attribute(tp_self,
 				                                         self,
 				                                         DeeString_STR(&str_erase),
-				                                         DeeString_Hash(&str_erase),
+				                                         DeeString_Hash((DeeObject *)&str_erase),
 				                                         "Iuu",
 				                                         index,
 				                                         1);
@@ -753,7 +753,7 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 				end -= start;
 				erase_result = call_generic_attribute_in_range(tp_self,
 				                                               self,
-				                                               &str_erase,
+				                                               (DeeObject *)&str_erase,
 				                                               "IuIu",
 				                                               start,
 				                                               end);
@@ -803,7 +803,7 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_clear),
-			                                         DeeString_Hash(&str_clear),
+			                                         DeeString_Hash((DeeObject *)&str_clear),
 			                                         "");
 			if (callback_result != ITER_DONE) {
 				if unlikely(!callback_result)
@@ -892,7 +892,7 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 				mylen -= start;
 				erase_result = call_generic_attribute_in_range(tp_self,
 				                                               self,
-				                                               &str_erase,
+				                                               (DeeObject *)&str_erase,
 				                                               "IuIu",
 				                                               start,
 				                                               mylen);
@@ -1052,7 +1052,7 @@ DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
 		if (start > mylen)
 			start = mylen;
 		callback_result = call_generic_attribute_anywhere(self,
-		                                                  &str_insertall,
+		                                                  (DeeObject *)&str_insertall,
 		                                                  "Iuo",
 		                                                  start,
 		                                                  values);
@@ -1167,7 +1167,7 @@ DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
 erase_remainder:
 						callback_result = call_generic_attribute_in_range(tp_self,
 						                                                  self,
-						                                                  &str_erase,
+						                                                  (DeeObject *)&str_erase,
 						                                                  "IuIu",
 						                                                  start,
 						                                                  end - start);
@@ -1200,7 +1200,7 @@ erase_remainder:
 					goto err_valiter;
 				callback_result = call_generic_attribute_in_range(tp_self,
 				                                                  self,
-				                                                  &str_insertall,
+				                                                  (DeeObject *)&str_insertall,
 				                                                  "Iuo",
 				                                                  start,
 				                                                  future);
@@ -1328,7 +1328,7 @@ DeeSeq_SetRangeN(DeeObject *self, size_t start,
 	if (start >= mylen) {
 		/* Use insertall() */
 		callback_result = call_generic_attribute_anywhere(self,
-		                                                  &str_insertall,
+		                                                  (DeeObject *)&str_insertall,
 		                                                  "Iuo",
 		                                                  mylen,
 		                                                  values);
@@ -1423,7 +1423,7 @@ DeeSeq_SetRangeN(DeeObject *self, size_t start,
 erase_remainder:
 						callback_result = call_generic_attribute_in_range(tp_self,
 						                                                  self,
-						                                                  &str_erase,
+						                                                  (DeeObject *)&str_erase,
 						                                                  "IuIu",
 						                                                  start,
 						                                                  mylen - start);
@@ -1456,7 +1456,7 @@ erase_remainder:
 					goto err_valiter;
 				callback_result = call_generic_attribute_in_range(tp_self,
 				                                                  self,
-				                                                  &str_insertall,
+				                                                  (DeeObject *)&str_insertall,
 				                                                  "Iuo",
 				                                                  start,
 				                                                  future);
@@ -1541,14 +1541,14 @@ DeeSeq_Insert(DeeObject *self, size_t index,
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_append),
-			                                         DeeString_Hash(&str_append),
+			                                         DeeString_Hash((DeeObject *)&str_append),
 			                                         "o",
 			                                         value);
 			if (callback_result == ITER_DONE) {
 				callback_result = call_generic_attribute(tp_self,
 				                                         self,
 				                                         DeeString_STR(&str_extend),
-				                                         DeeString_Hash(&str_extend),
+				                                         DeeString_Hash((DeeObject *)&str_extend),
 				                                         "(o)",
 				                                         value);
 			}
@@ -1564,7 +1564,7 @@ DeeSeq_Insert(DeeObject *self, size_t index,
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_insertall),
-			                                         DeeString_Hash(&str_insertall),
+			                                         DeeString_Hash((DeeObject *)&str_insertall),
 			                                         "Iu(o)",
 			                                         index,
 			                                         value);
@@ -1665,7 +1665,7 @@ do_insert_as_single:
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_extend),
-			                                         DeeString_Hash(&str_extend),
+			                                         DeeString_Hash((DeeObject *)&str_extend),
 			                                         "o",
 			                                         values);
 			if (callback_result != ITER_DONE) {
@@ -1690,7 +1690,7 @@ do_insert_as_single:
 			DREF DeeObject *append_function;
 			append_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_append);
+			                                        (DeeObject *)&str_append);
 			if (append_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -1742,7 +1742,7 @@ err_append_function:
 			DREF DeeObject *insert_function;
 			insert_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_insert);
+			                                        (DeeObject *)&str_insert);
 			if (insert_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -1858,14 +1858,14 @@ DeeSeq_Append(DeeObject *self, DeeObject *value) {
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_extend),
-			                                         DeeString_Hash(&str_extend),
+			                                         DeeString_Hash((DeeObject *)&str_extend),
 			                                         "(o)",
 			                                         value);
 			if (callback_result == ITER_DONE) {
 				callback_result = call_generic_attribute(tp_self,
 				                                         self,
 				                                         DeeString_STR(&str_insert),
-				                                         DeeString_Hash(&str_insert),
+				                                         DeeString_Hash((DeeObject *)&str_insert),
 				                                         "Iuo",
 				                                         (size_t)SSIZE_MAX,
 				                                         value);
@@ -1873,7 +1873,7 @@ DeeSeq_Append(DeeObject *self, DeeObject *value) {
 					callback_result = call_generic_attribute(tp_self,
 					                                         self,
 					                                         DeeString_STR(&str_insertall),
-					                                         DeeString_Hash(&str_insertall),
+					                                         DeeString_Hash((DeeObject *)&str_insertall),
 					                                         "Iu(o)",
 					                                         (size_t)SSIZE_MAX,
 					                                         value);
@@ -1970,7 +1970,7 @@ do_insert_as_single:
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_insertall),
-			                                         DeeString_Hash(&str_insertall),
+			                                         DeeString_Hash((DeeObject *)&str_insertall),
 			                                         "Ido",
 			                                         (dssize_t)SSIZE_MAX,
 			                                         values);
@@ -1994,7 +1994,7 @@ do_insert_as_single:
 			DREF DeeObject *append_function;
 			append_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_append);
+			                                        (DeeObject *)&str_append);
 			if (append_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -2046,7 +2046,7 @@ err_append_function:
 			DREF DeeObject *insert_function;
 			insert_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_insert);
+			                                        (DeeObject *)&str_insert);
 			if (insert_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -2162,7 +2162,7 @@ do_insert_as_single:
 			callback_result = call_generic_attribute(tp_self,
 			                                         self,
 			                                         DeeString_STR(&str_extend),
-			                                         DeeString_Hash(&str_extend),
+			                                         DeeString_Hash((DeeObject *)&str_extend),
 			                                         "o",
 			                                         values);
 			if (callback_result == ITER_DONE) {
@@ -2170,7 +2170,7 @@ do_insert_as_single:
 				callback_result = call_generic_attribute(tp_self,
 				                                         self,
 				                                         DeeString_STR(&str_insertall),
-				                                         DeeString_Hash(&str_insertall),
+				                                         DeeString_Hash((DeeObject *)&str_insertall),
 				                                         "Ido",
 				                                         (dssize_t)SSIZE_MAX,
 				                                         values);
@@ -2195,7 +2195,7 @@ do_insert_as_single:
 			DREF DeeObject *append_function;
 			append_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_append);
+			                                        (DeeObject *)&str_append);
 			if (append_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -2247,7 +2247,7 @@ err_append_function:
 			DREF DeeObject *insert_function;
 			insert_function = get_generic_attribute(tp_self,
 			                                        self,
-			                                        &str_insert);
+			                                        (DeeObject *)&str_insert);
 			if (insert_function != ITER_DONE) {
 				size_t i, fast_size;
 				DREF DeeObject *iterator, *elem;
@@ -2818,7 +2818,7 @@ do_tp_del_i:
 		}
 		erase_func = get_generic_attribute(tp_self,
 		                                   self,
-		                                   &str_erase);
+		                                   (DeeObject *)&str_erase);
 		if (erase_func != ITER_DONE) {
 			size_t i, mylen;
 			if unlikely(!erase_func)
@@ -3110,7 +3110,7 @@ do_tp_del_i:
 		}
 		erase_func = get_generic_attribute(tp_self,
 		                                   self,
-		                                   &str_erase);
+		                                   (DeeObject *)&str_erase);
 		if (erase_func != ITER_DONE) {
 			size_t i, mylen;
 			if unlikely(!erase_func)
@@ -3314,10 +3314,10 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL, TYPE_FIXED_ALLOCATOR(RemoveIfAllWrapper)
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, TYPE_FIXED_ALLOCATOR(RemoveIfAllWrapper)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ria_fini,
@@ -3555,9 +3555,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 			}
 		}
 		/* >> `self.removeif([](x) -> keyed_search_item == (key is none ? x : key(x)), start, end)' */
-		erase_func = get_generic_attribute(tp_self,
-		                                   self,
-		                                   &str_removeif);
+		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_removeif);
 		if (erase_func != ITER_DONE) {
 			if (end > start) {
 				DREF DeeObject *removeif_argv[3];
@@ -3588,14 +3586,9 @@ err_removeif_argv_0:
 			}
 			return count;
 		}
-		erase_func = get_generic_attribute(tp_self,
-		                                   self,
-		                                   &str_rremove);
-		if (erase_func == ITER_DONE) {
-			erase_func = get_generic_attribute(tp_self,
-			                                   self,
-			                                   &str_remove);
-		}
+		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_rremove);
+		if (erase_func == ITER_DONE)
+			erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_remove);
 		if (erase_func != ITER_DONE) {
 			if unlikely(!erase_func)
 				goto err_attr;
@@ -3711,9 +3704,7 @@ err_index_ob_del:
 			}
 			return count;
 		}
-		erase_func = get_generic_attribute(tp_self,
-		                                   self,
-		                                   &str_erase);
+		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_erase);
 		if (erase_func != ITER_DONE) {
 			size_t i, mylen;
 			if unlikely(!erase_func)
@@ -3915,7 +3906,7 @@ DeeSeq_RemoveIf(DeeObject *self, size_t start,
 		struct type_seq *seq;
 		callback_result = call_generic_attribute(tp_self, self,
 		                                         DeeString_STR(&str_removeall),
-		                                         DeeString_Hash(&str_removeall),
+		                                         DeeString_Hash((DeeObject *)&str_removeall),
 		                                         "IuIuoo", start, end,
 		                                         Dee_True, should);
 		if (callback_result != ITER_DONE) {
@@ -4008,14 +3999,9 @@ DeeSeq_RemoveIf(DeeObject *self, size_t start,
 				}
 			}
 		}
-		erase_func = get_generic_attribute(tp_self,
-		                                   self,
-		                                   &str_rremove);
-		if (erase_func == ITER_DONE) {
-			erase_func = get_generic_attribute(tp_self,
-			                                   self,
-			                                   &str_remove);
-		}
+		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_rremove);
+		if (erase_func == ITER_DONE)
+			erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_remove);
 		if (erase_func != ITER_DONE) {
 			if unlikely(!erase_func)
 				goto err_attr;
@@ -4102,9 +4088,7 @@ err_index_ob_del:
 			}
 			return count;
 		}
-		erase_func = get_generic_attribute(tp_self,
-		                                   self,
-		                                   &str_erase);
+		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_erase);
 		if (erase_func != ITER_DONE) {
 			size_t i, mylen;
 			if unlikely(!erase_func)
@@ -4356,7 +4340,7 @@ err:
 
 
 
-PRIVATE DeeObject *mutable_sequence_attributes[] = {
+PRIVATE DeeStringObject *tpconst mutable_sequence_attributes[] = {
 	&str_remove,
 	&str_rremove,
 	&str_removeall,
@@ -4405,7 +4389,7 @@ DeeSeq_IsMutable(DeeObject *__restrict self) {
 				return 1;
 		}
 		for (i = 0; i < COMPILER_LENOF(mutable_sequence_attributes); ++i) {
-			int temp = has_generic_attribute(tp_self, self, mutable_sequence_attributes[i]);
+			int temp = has_generic_attribute(tp_self, self, (DeeObject *)mutable_sequence_attributes[i]);
 			if (temp != 0)
 				return temp;
 		}
@@ -4433,7 +4417,7 @@ DeeSeq_IsResizable(DeeObject *__restrict self) {
 		if ((seq = tp_self->tp_seq) != NULL && seq->tp_nsi)
 			return (seq->tp_nsi->nsi_flags & TYPE_SEQX_FRESIZABLE) ? 1 : 0;
 		for (i = 0; i < resizable_sequence_attributes_count; ++i) {
-			int temp = has_generic_attribute(tp_self, self, resizable_sequence_attributes[i]);
+			int temp = has_generic_attribute(tp_self, self, (DeeObject *)resizable_sequence_attributes[i]);
 			if (temp != 0)
 				return temp;
 		}

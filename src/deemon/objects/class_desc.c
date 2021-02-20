@@ -249,10 +249,10 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ (void *)&coti_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&coti_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ClassOperatorTableIterator)
 			}
 		},
@@ -377,13 +377,13 @@ PRIVATE struct type_nsi tpconst cot_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&cot_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&coti_next_key,
-			/* .nsi_nextvalue  = */ (void *)&coti_next_value,
-			/* .nsi_getdefault = */ (void *)&cot_getitemdef,
-			/* .nsi_setdefault = */ (void *)NULL,
-			/* .nsi_updateold  = */ (void *)NULL,
-			/* .nsi_insertnew  = */ (void *)NULL
+			/* .nsi_getsize    = */ (dfunptr_t)&cot_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&coti_next_key,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&coti_next_value,
+			/* .nsi_getdefault = */ (dfunptr_t)&cot_getitemdef,
+			/* .nsi_setdefault = */ (dfunptr_t)NULL,
+			/* .nsi_updateold  = */ (dfunptr_t)NULL,
+			/* .nsi_insertnew  = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -417,10 +417,10 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ClassOperatorTable)
 			}
 		},
@@ -890,13 +890,13 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&cat_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&cati_next_key,
-			/* .nsi_nextvalue  = */ (void *)&cati_next_value,
-			/* .nsi_getdefault = */ (void *)&cat_getitemdef,
-			/* .nsi_setdefault = */ (void *)NULL,
-			/* .nsi_updateold  = */ (void *)NULL,
-			/* .nsi_insertnew  = */ (void *)NULL
+			/* .nsi_getsize    = */ (dfunptr_t)&cat_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&cati_next_key,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&cati_next_value,
+			/* .nsi_getdefault = */ (dfunptr_t)&cat_getitemdef,
+			/* .nsi_setdefault = */ (dfunptr_t)NULL,
+			/* .nsi_updateold  = */ (dfunptr_t)NULL,
+			/* .nsi_insertnew  = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -925,10 +925,10 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ClassAttribute)
 			}
 		},
@@ -970,10 +970,10 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ (void *)&cati_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cati_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ClassAttributeTableIterator)
 			}
 		},
@@ -1015,10 +1015,10 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ClassAttributeTable)
 			}
 		},
@@ -2014,13 +2014,13 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor        = */ NULL,
-				/* .tp_copy_ctor   = */ &DeeObject_NewRef,
-				/* .tp_deep_ctor   = */ &DeeObject_NewRef,
-				/* .tp_any_ctor    = */ NULL,
-				/* .tp_free        = */ NULL,
-				/* .tp_pad         = */ { 0 },
-				/* .tp_any_ctor_kw = */ &cd_init_kw,
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_free        = */ (dfunptr_t)NULL,
+				/* .tp_pad         = */ { (dfunptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&cd_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cd_fini,
@@ -2236,28 +2236,28 @@ PRIVATE struct type_nsi tpconst ot_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&ot_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&ot_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&ot_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&ot_nsi_delitem,
-			/* .nsi_setitem      = */ (void *)&ot_nsi_setitem,
-			/* .nsi_getitem_fast = */ (void *)&ot_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)&ot_nsi_xchitem,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&ot_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&ot_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&ot_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&ot_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&ot_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&ot_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&ot_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -2390,10 +2390,10 @@ INTERN DeeTypeObject ObjectTable_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (void *)&ot_init,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ot_init,
 				TYPE_FIXED_ALLOCATOR(ObjectTable)
 			}
 		},
@@ -2704,10 +2704,10 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ instancemember_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&instancemember_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeInstanceMemberObject)
 			}
 		},

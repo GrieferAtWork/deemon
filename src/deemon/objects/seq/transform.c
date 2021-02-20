@@ -78,7 +78,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 transiter_seq_get(TransformationIterator *__restrict self) {
 	/* Forward access to this attribute to the pointed-to iterator. */
 	DREF DeeObject *orig, *result;
-	orig = DeeObject_GetAttr(self->ti_iter, &str_seq);
+	orig = DeeObject_GetAttr(self->ti_iter, (DeeObject *)&str_seq);
 	if unlikely(!orig)
 		goto err;
 	result = DeeSeq_Transform(orig, self->ti_func);
@@ -206,10 +206,10 @@ INTERN DeeTypeObject SeqTransformationIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&transiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&transiter_copy,
-				/* .tp_deep_ctor = */ (void *)&transiter_deep,
-				/* .tp_any_ctor  = */ (void *)&transiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&transiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&transiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&transiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&transiter_init,
 				TYPE_FIXED_ALLOCATOR(TransformationIterator)
 			}
 		},
@@ -347,28 +347,28 @@ PRIVATE struct type_nsi tpconst trans_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&trans_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&trans_nsi_getsize_fast,
-			/* .nsi_getitem      = */ (void *)&trans_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL, /* TODO */
-			/* .nsi_getrange_n   = */ (void *)NULL, /* TODO */
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&trans_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&trans_nsi_getsize_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&trans_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -444,10 +444,10 @@ INTERN DeeTypeObject SeqTransformation_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&trans_ctor,
-				/* .tp_copy_ctor = */ (void *)&trans_copy,
-				/* .tp_deep_ctor = */ (void *)&trans_deep,
-				/* .tp_any_ctor  = */ (void *)&trans_init,
+				/* .tp_ctor      = */ (dfunptr_t)&trans_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&trans_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&trans_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&trans_init,
 				TYPE_FIXED_ALLOCATOR(Transformation)
 			}
 		},

@@ -320,10 +320,10 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict))&float_init,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
-				/* .tp_deep_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeTypeObject *__restrict, size_t, DeeObject **__restrict))&float_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)&float_init,
+				/* .tp_copy_ctor = */ (dfunptr_t)&float_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&float_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&float_ctor,
 				TYPE_FIXED_ALLOCATOR(Float)
 			}
 		},

@@ -413,28 +413,28 @@ PRIVATE struct type_nsi tpconst ids_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&proxy_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&proxy_nsi_fast_getsize,
-			/* .nsi_getitem      = */ (void *)&ids_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL, /* TODO */
-			/* .nsi_rfind        = */ (void *)NULL, /* TODO */
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&proxy_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_nsi_fast_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&ids_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_rfind        = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -444,28 +444,28 @@ PRIVATE struct type_nsi tpconst types_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&proxy_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&proxy_nsi_fast_getsize,
-			/* .nsi_getitem      = */ (void *)&types_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL, /* TODO */
-			/* .nsi_rfind        = */ (void *)NULL, /* TODO */
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&proxy_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_nsi_fast_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&types_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_rfind        = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -475,28 +475,28 @@ PRIVATE struct type_nsi tpconst classes_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&proxy_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&proxy_nsi_fast_getsize,
-			/* .nsi_getitem      = */ (void *)&classes_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL, /* TODO */
-			/* .nsi_rfind        = */ (void *)NULL, /* TODO */
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&proxy_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_nsi_fast_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&classes_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_rfind        = */ (dfunptr_t)NULL, /* TODO */
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -567,10 +567,10 @@ INTERN DeeTypeObject SeqIds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -612,10 +612,10 @@ INTERN DeeTypeObject SeqTypes_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -657,10 +657,10 @@ INTERN DeeTypeObject SeqClasses_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxy)
 			}
 		},
@@ -827,7 +827,7 @@ classesiter_next(SeqSimpleProxyIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
-	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
+	result = baseseq = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
 	if (ITER_ISOK(baseseq)) {
 		result = SeqIds_New(baseseq);
 		Dee_Decref(baseseq);
@@ -838,7 +838,7 @@ idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
-	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
+	result = baseseq = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
 	if (ITER_ISOK(baseseq)) {
 		result = SeqTypes_New(baseseq);
 		Dee_Decref(baseseq);
@@ -849,7 +849,7 @@ typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
-	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
+	result = baseseq = DeeObject_GetAttr(self->si_iter, (DeeObject *)&str_seq);
 	if (ITER_ISOK(baseseq)) {
 		result = SeqClasses_New(baseseq);
 		Dee_Decref(baseseq);
@@ -892,10 +892,10 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&iter_ctor,
-				/* .tp_copy_ctor = */ (void *)&iter_copy,
-				/* .tp_deep_ctor = */ (void *)&iter_deep,
-				/* .tp_any_ctor  = */ (void *)&iter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
@@ -937,10 +937,10 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&iter_ctor,
-				/* .tp_copy_ctor = */ (void *)&iter_copy,
-				/* .tp_deep_ctor = */ (void *)&iter_deep,
-				/* .tp_any_ctor  = */ (void *)&iter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},
@@ -982,10 +982,10 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&iter_ctor,
-				/* .tp_copy_ctor = */ (void *)&iter_copy,
-				/* .tp_deep_ctor = */ (void *)&iter_deep,
-				/* .tp_any_ctor  = */ (void *)&iter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&iter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&iter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&iter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&iter_init,
 				TYPE_FIXED_ALLOCATOR(SeqSimpleProxyIterator)
 			}
 		},

@@ -168,7 +168,7 @@ err:
 }
 
 
-PRIVATE DeeObject *ast_names[] = {
+PRIVATE DeeStringObject *tpconst ast_names[] = {
 	/* [AST_CONSTEXPR]     = */ &str_constexpr,
 	/* [AST_SYM]           = */ &str_sym,
 	/* [AST_UNBIND]        = */ &str_unbind,
@@ -3033,7 +3033,7 @@ err:
 	} __WHILE0
 
 INTDEF WUNUSED NONNULL((1)) bool DCALL
-DeeString_IsSymbol(DeeObject *__restrict self,
+DeeString_IsSymbol(DeeStringObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
 PRIVATE int DCALL
@@ -3911,7 +3911,7 @@ do_binary:
 				goto operator_fallback;
 			if (self->a_operator.o_op1->a_type != AST_CONSTEXPR ||
 			    !DeeString_Check(self->a_operator.o_op1->a_constexpr) ||
-			    !DeeString_IsSymbol(self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
+			    !DeeString_IsSymbol((DeeStringObject *)self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
 				goto operator_fallback;
 			DO(print_ast_code(self->a_operator.o_op0, printer, arg, true, self->a_scope, indent));
 			PRINT(".");
@@ -3923,7 +3923,7 @@ do_binary:
 				goto operator_fallback;
 			if (self->a_operator.o_op1->a_type != AST_CONSTEXPR ||
 			    !DeeString_Check(self->a_operator.o_op1->a_constexpr) ||
-			    !DeeString_IsSymbol(self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
+			    !DeeString_IsSymbol((DeeStringObject *)self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
 				goto operator_fallback;
 			PRINT("del(");
 			DO(print_ast_code(self->a_operator.o_op0, printer, arg, true, self->a_scope, indent));
@@ -3937,7 +3937,7 @@ do_binary:
 				goto operator_fallback;
 			if (self->a_operator.o_op1->a_type != AST_CONSTEXPR ||
 			    !DeeString_Check(self->a_operator.o_op1->a_constexpr) ||
-			    !DeeString_IsSymbol(self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
+			    !DeeString_IsSymbol((DeeStringObject *)self->a_operator.o_op1->a_constexpr, 0, (size_t)-1))
 				goto operator_fallback;
 			DO(print_ast_code(self->a_operator.o_op0, printer, arg, true, self->a_scope, indent));
 			PRINT(".");
@@ -4127,7 +4127,7 @@ operator_fallback:
 		ACTION(AST_FACTION_BOUNDATTR):
 			if (self->a_action.a_act1->a_type != AST_CONSTEXPR ||
 			          !DeeString_Check(self->a_action.a_act1->a_constexpr) ||
-			          !DeeString_IsSymbol(self->a_action.a_act1->a_constexpr, 0, (size_t)-1)) {
+			          !DeeString_IsSymbol((DeeStringObject *)self->a_action.a_act1->a_constexpr, 0, (size_t)-1)) {
 				PRINT("bound(");
 				DO(print_ast_code(self->a_action.a_act0, printer, arg, true, self->a_scope, indent));
 				PRINT(".operator . (");
@@ -5519,10 +5519,10 @@ INTERN DeeTypeObject DeeCompilerAst_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
 			}
 		},

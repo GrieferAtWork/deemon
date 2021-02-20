@@ -62,10 +62,10 @@ DECL_BEGIN
 		/* .tp_init = */ {                                                                             \
 			{                                                                                          \
 				/* .tp_alloc = */ {                                                                    \
-					/* .tp_ctor      = */ (void *)(tp_ctor),                                           \
-					/* .tp_copy_ctor = */ (void *)(tp_copy_ctor),                                      \
-					/* .tp_deep_ctor = */ (void *)(tp_deep_ctor),                                      \
-					/* .tp_any_ctor  = */ (void *)(tp_any_ctor),                                       \
+					/* .tp_ctor      = */ (dfunptr_t)(tp_ctor),                                           \
+					/* .tp_copy_ctor = */ (dfunptr_t)(tp_copy_ctor),                                      \
+					/* .tp_deep_ctor = */ (dfunptr_t)(tp_deep_ctor),                                      \
+					/* .tp_any_ctor  = */ (dfunptr_t)(tp_any_ctor),                                       \
 					TYPE_FIXED_ALLOCATOR(T)                                                            \
 				}                                                                                      \
 			},                                                                                         \
@@ -351,12 +351,12 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&error_ctor,
-				/* .tp_copy_ctor = */ (void *)&error_copy,
-				/* .tp_deep_ctor = */ (void *)&error_deep,
-				/* .tp_any_ctor  = */ (void *)&error_init,
+				/* .tp_ctor        = */ (dfunptr_t)&error_ctor,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&error_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&error_deep,
+				/* .tp_any_ctor    = */ (dfunptr_t)&error_init,
 				TYPE_FIXED_ALLOCATOR(DeeErrorObject),
-				/* .tp_any_ctor_kw = */ (void *)&error_init_kw,
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&error_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&error_fini,
@@ -1019,12 +1019,12 @@ PUBLIC DeeTypeObject DeeError_SystemError = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject),
-				/* .tp_any_ctor_kw = */ &systemerror_init_kw
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&systemerror_init_kw
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -1239,10 +1239,10 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &appexit_copy,
-				/* .tp_deep_ctor = */ &appexit_copy,
-				/* .tp_any_ctor  = */ &appexit_init,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&appexit_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&appexit_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&appexit_init,
 				TYPE_FIXED_ALLOCATOR(struct appexit_object)
 			}
 		},
@@ -1365,10 +1365,10 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&none_i1,
-				/* .tp_copy_ctor = */ (void *)&none_i2,
-				/* .tp_deep_ctor = */ (void *)&none_i2,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSignalObject)
 			}
 		},

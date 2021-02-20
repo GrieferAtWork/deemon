@@ -32,9 +32,9 @@ DECL_BEGIN
 #define DEQUE_BUCKET_DEFAULT_SIZE  62 /* 64-2 */
 
 typedef struct deque_bucket {
-	struct deque_bucket **db_pself;    /* [1..1][== self][1..1] Deque bucket self-pointer. */
-	struct deque_bucket  *db_next;     /* [0..1][owned] Next deque bucket. */
-	DREF DeeObject       *db_items[1]; /* [1..1][valid_if(IN_BOUNDS)] Items of this bucket. */
+	struct deque_bucket                     **db_pself;  /* [1..1][== self][1..1] Deque bucket self-pointer. */
+	struct deque_bucket                      *db_next;   /* [0..1][owned] Next deque bucket. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, db_items); /* [1..1][valid_if(IN_BOUNDS)] Items of this bucket. */
 } DequeBucket;
 
 #define DEQUEBUCKET_PREV(x)         COMPILER_CONTAINER_OF((x)->db_pself, DequeBucket, db_next)
@@ -353,10 +353,10 @@ typedef struct {
 	Dee_OBJECT_HEAD /* GC object */
 	Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t    fl_lock;       /* Lock for this list. */
+	Dee_rwlock_t                              fl_lock;  /* Lock for this list. */
 #endif /* !CONFIG_NO_THREADS */
-	size_t          fl_size;       /* [const] Length of the list. */
-	DREF DeeObject *fl_elem[1024]; /* [0..1][fl_size] List items. */
+	size_t                                    fl_size;  /* [const] Length of the list. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fl_elem); /* [0..1][fl_size] List items. */
 } FixedList;
 
 typedef struct {
@@ -445,9 +445,9 @@ struct udict_object {
 
 struct urodict_object {
 	OBJECT_HEAD
-	size_t            rd_mask;    /* [const][!0] Allocated dictionary mask. */
-	size_t            rd_size;    /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
-	struct udict_item rd_elem[1]; /* [rd_mask+1] Dict key-item pairs. */
+	size_t                                     rd_mask;  /* [const][!0] Allocated dictionary mask. */
+	size_t                                     rd_size;  /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
+	COMPILER_FLEXIBLE_ARRAY(struct udict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
 };
 
 #define URoDict_HashSt(self, hash)  ((hash) & ((URoDict *)Dee_REQUIRES_OBJECT(self))->rd_mask)
@@ -552,9 +552,9 @@ struct uroset_iterator_object {
 
 struct uroset_object {
 	OBJECT_HEAD
-	size_t           rs_mask;    /* [> rs_size] Allocated set size. */
-	size_t           rs_size;    /* [< rs_mask] Amount of non-NULL keys. */
-	struct uset_item rs_elem[1]; /* [1..rs_mask+1] Set key hash-vector. */
+	size_t                                    rs_mask;  /* [> rs_size] Allocated set size. */
+	size_t                                    rs_size;  /* [< rs_mask] Amount of non-NULL keys. */
+	COMPILER_FLEXIBLE_ARRAY(struct uset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
 };
 
 

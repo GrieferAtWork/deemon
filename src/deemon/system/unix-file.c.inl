@@ -843,12 +843,12 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor        = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile),
-					/* .tp_any_ctor_kw = */ &sysfile_init_kw
+					/* .tp_any_ctor_kw = */ (dfunptr_t)&sysfile_init_kw
 				}
 			},
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,
@@ -902,10 +902,10 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(SystemFile)
 				}
 			},

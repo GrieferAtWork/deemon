@@ -351,12 +351,12 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
-				TYPE_FIXED_ALLOCATOR(DeeCompilerObject),
-				/* .tp_any_ctor_kw = */ &compiler_init,
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				DEE_TYPE_FIXED_ALLOCATOR(DeeCompilerObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&compiler_init,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&compiler_fini,

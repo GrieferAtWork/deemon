@@ -226,10 +226,10 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &smapiter_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &smapiter_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&smapiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&smapiter_ctor,
 				TYPE_FIXED_ALLOCATOR(SharedMapIterator)
 			}
 		},
@@ -648,10 +648,10 @@ PRIVATE struct type_nsi tpconst smap_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&smap_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&smap_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&smap_nsi_nextvalue,
-			/* .nsi_getdefault = */ (void *)&smap_nsi_getdefault
+			/* .nsi_getsize    = */ (dfunptr_t)&smap_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&smap_nsi_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&smap_nsi_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&smap_nsi_getdefault
 		}
 	}
 };
@@ -695,11 +695,11 @@ INTERN DeeTypeObject SharedMap_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smap_fini,

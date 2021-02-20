@@ -263,10 +263,10 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&kwdsiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&kwdsiter_copy,
-				/* .tp_deep_ctor = */ (void *)&kwdsiter_deep,
-				/* .tp_any_ctor  = */ (void *)&kwdsiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&kwdsiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&kwdsiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&kwdsiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&kwdsiter_init,
 				TYPE_FIXED_ALLOCATOR(KwdsIterator)
 			}
 		},
@@ -566,10 +566,10 @@ PRIVATE struct type_nsi tpconst kwds_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&kwds_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&kwds_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&kwds_nsi_nextvalue,
-			/* .nsi_getdefault = */ (void *)&kwds_nsi_getdefault
+			/* .nsi_getsize    = */ (dfunptr_t)&kwds_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&kwds_nsi_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&kwds_nsi_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&kwds_nsi_getdefault
 		}
 	}
 };
@@ -604,11 +604,11 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&kwds_ctor,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ (void *)&kwds_init,
-				/* .tp_free      = */ (void *)NULL
+				/* .tp_ctor      = */ (dfunptr_t)&kwds_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (dfunptr_t)&kwds_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,
@@ -844,10 +844,10 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&kmapiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&kmapiter_copy,
-				/* .tp_deep_ctor = */ (void *)&kmapiter_deep,
-				/* .tp_any_ctor  = */ (void *)&kmapiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&kmapiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&kmapiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&kmapiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&kmapiter_init,
 				TYPE_FIXED_ALLOCATOR(KmapIterator)
 			}
 		},
@@ -1117,10 +1117,10 @@ PRIVATE struct type_nsi tpconst kmap_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&kmap_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&kmap_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&kmap_nsi_nextvalue,
-			/* .nsi_getdefault = */ (void *)&kmap_nsi_getdefault
+			/* .nsi_getsize    = */ (dfunptr_t)&kmap_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&kmap_nsi_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&kmap_nsi_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&kmap_nsi_getdefault
 		}
 	}
 };
@@ -1161,10 +1161,10 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&kmap_ctor,
-				/* .tp_copy_ctor = */ (void *)&kmap_copy,
-				/* .tp_deep_ctor = */ (void *)&kmap_deep,
-				/* .tp_any_ctor  = */ (void *)&kmap_init,
+				/* .tp_ctor      = */ (dfunptr_t)&kmap_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&kmap_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&kmap_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&kmap_init,
 				TYPE_FIXED_ALLOCATOR(KwdsMapping)
 			}
 		},

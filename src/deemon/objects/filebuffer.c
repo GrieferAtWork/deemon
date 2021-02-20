@@ -1455,7 +1455,7 @@ buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
 	Dee_Incref(file);
 	buf_endwrite(self);
 	/* Forward the to contained file. */
-	result = DeeObject_CallAttr(file, &str_size, argc, argv);
+	result = DeeObject_CallAttr(file, (DeeObject *)&str_size, argc, argv);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
@@ -1476,7 +1476,7 @@ buffer_getsysfd(Buffer *__restrict self) {
 	Dee_Incref(file);
 	buf_endread(self);
 	/* Forward the to contained file. */
-	result = DeeObject_GetAttr(file, &str_getsysfd);
+	result = DeeObject_GetAttr(file, (DeeObject *)&str_getsysfd);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
@@ -1628,7 +1628,7 @@ buffer_filename(Buffer *__restrict self) {
 	Dee_Incref(file);
 	buf_endwrite(self);
 	/* Forward the to contained file. */
-	result = DeeObject_GetAttr(file, &str_filename);
+	result = DeeObject_GetAttr(file, (DeeObject *)&str_filename);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
@@ -1766,10 +1766,10 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ &buffer_ctor,
+					/* .tp_ctor      = */ (dfunptr_t)NULL,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)&buffer_ctor,
 					TYPE_FIXED_ALLOCATOR(Buffer)
 				}
 			},

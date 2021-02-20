@@ -540,7 +540,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			DREF DeeObject *elem;
 			elem = DeeFastSeq_GetItemUnbound(self, i);
 			if unlikely(elem == ITER_DONE) {
-				Dee_XDecprefv(objv, i);
+				Dee_XDecrefv(objv, i);
 				goto err;
 			}
 			objv[i] = elem; /* Inherit reference */

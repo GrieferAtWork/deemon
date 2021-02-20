@@ -1664,13 +1664,13 @@ PRIVATE struct type_nsi tpconst dict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&dict_nsi_getsize,
-			/* .nsi_nextkey    = */ (void *)&dictiterator_next_key,
-			/* .nsi_nextvalue  = */ (void *)&dictiterator_next_value,
-			/* .nsi_getdefault = */ (void *)&DeeDict_GetItemDef,
-			/* .nsi_setdefault = */ (void *)&dict_nsi_setdefault,
-			/* .nsi_updateold  = */ (void *)&dict_nsi_updateold,
-			/* .nsi_insertnew  = */ (void *)&dict_nsi_insertnew
+			/* .nsi_getsize    = */ (dfunptr_t)&dict_nsi_getsize,
+			/* .nsi_nextkey    = */ (dfunptr_t)&dictiterator_next_key,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&dictiterator_next_value,
+			/* .nsi_getdefault = */ (dfunptr_t)&DeeDict_GetItemDef,
+			/* .nsi_setdefault = */ (dfunptr_t)&dict_nsi_setdefault,
+			/* .nsi_updateold  = */ (dfunptr_t)&dict_nsi_updateold,
+			/* .nsi_insertnew  = */ (dfunptr_t)&dict_nsi_insertnew
 		}
 	}
 };
@@ -2130,10 +2130,10 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&dict_ctor,
-				/* .tp_copy_ctor = */ (void *)&dict_copy,
-				/* .tp_deep_ctor = */ (void *)&dict_copy,
-				/* .tp_any_ctor  = */ (void *)&dict_init,
+				/* .tp_ctor      = */ (dfunptr_t)&dict_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&dict_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&dict_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&dict_init,
 				TYPE_FIXED_ALLOCATOR_GC(Dict)
 			}
 		},

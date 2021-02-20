@@ -244,10 +244,10 @@ PRIVATE DeeTypeObject DeeMappingProxyIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_iterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -289,10 +289,10 @@ PRIVATE DeeTypeObject DeeMappingKeysIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_iterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -334,10 +334,10 @@ PRIVATE DeeTypeObject DeeMappingValuesIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_iterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -379,10 +379,10 @@ PRIVATE DeeTypeObject DeeMappingItemsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_iterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_iterator_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_iterator_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_iterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_iterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_iterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_iterator_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -687,10 +687,10 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -733,10 +733,10 @@ PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -779,10 +779,10 @@ PRIVATE DeeTypeObject DeeMappingValues_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -825,10 +825,10 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -1498,10 +1498,10 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&none_i1, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (void *)&none_i2,
-				/* .tp_deep_ctor = */ (void *)&none_i2,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},

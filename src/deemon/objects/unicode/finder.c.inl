@@ -415,10 +415,10 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&sfi_ctor,
-				/* .tp_copy_ctor = */ (void *)&sfi_copy,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&sfi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&sfi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sfi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sfi_init,
 				TYPE_FIXED_ALLOCATOR(StringFindIterator)
 			}
 		},
@@ -460,10 +460,10 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&scfi_ctor,
-				/* .tp_copy_ctor = */ (void *)&sfi_copy,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&scfi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&scfi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sfi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&scfi_init,
 				TYPE_FIXED_ALLOCATOR(StringFindIterator)
 			}
 		},
@@ -609,10 +609,10 @@ INTERN DeeTypeObject StringFind_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&sf_ctor,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&sf_init,
+				/* .tp_ctor      = */ (dfunptr_t)&sf_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sf_init,
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
 		},
@@ -654,10 +654,10 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&sf_ctor,
-				/* .tp_copy_ctor = */ (void *)NULL,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&sf_init,
+				/* .tp_ctor      = */ (dfunptr_t)&sf_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sf_init,
 				TYPE_FIXED_ALLOCATOR(StringFind)
 			}
 		},

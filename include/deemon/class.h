@@ -397,42 +397,42 @@ struct Dee_class_descriptor_object {
 	 * >> }
 	 */
 	Dee_OBJECT_HEAD
-	DREF struct Dee_string_object *cd_name;          /* [0..1][const] Name of the class. */
-	DREF struct Dee_string_object *cd_doc;           /* [0..1][const] Documentation strings for the class itself, and its operators. */
+	DREF struct Dee_string_object                      *cd_name;        /* [0..1][const] Name of the class. */
+	DREF struct Dee_string_object                      *cd_doc;         /* [0..1][const] Documentation strings for the class itself, and its operators. */
 #ifdef DEE_SOURCE
-#define CLASS_TP_FAUTOINIT         Dee_TP_FGC        /* FLAG: When set, the construction operator is implemented to automatically initialize
-                                                      *       class members in compliance to the `this = default;' constructor definition.
-                                                      *       Additionally, if not already defined by the caller, this flag also causes
-                                                      *      `operator repr' to be implemented (see above).
-                                                      * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
-#define CLASS_TP_FSUPERKWDS        Dee_TP_FHEAP      /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
-                                                      *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
-                                                      *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
+#define CLASS_TP_FAUTOINIT                              Dee_TP_FGC      /* FLAG: When set, the construction operator is implemented to automatically initialize
+                                                                         *       class members in compliance to the `this = default;' constructor definition.
+                                                                         *       Additionally, if not already defined by the caller, this flag also causes
+                                                                         *      `operator repr' to be implemented (see above).
+                                                                         * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
+#define CLASS_TP_FSUPERKWDS                             Dee_TP_FHEAP    /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
+                                                                         *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
+                                                                         *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
 #endif /* DEE_SOURCE */
-	uint16_t                       cd_flags;         /* [const] Additional flags to set for the resulting type (set of `TP_F*').
-	                                                  * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
-	                                                  *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
-	                                                  *       to be implemented such that it forwards all arguments
-	                                                  *       to the underlying base-type, while also implementing
-	                                                  *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
-	                                                  *       arguments.
-	                                                  *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
-	                                                  *       the `TP_FINHERITCTOR' flag is simply ignored.
-	                                                  *       If the user overrides `OPERATOR_CONSTRUCTOR',
-	                                                  *       the user's constructor will be invoked, though
-	                                                  *       no arguments will be passed to it (this is done to
-	                                                  *       allow for class member initialization to still take
-	                                                  *       place when no constructor has actually been defined). */
-	uint16_t                       cd_cmemb_size;    /* [const] The allocation size of the class member table. */
-	uint16_t                       cd_imemb_size;    /* [const] The allocation size of the instance member table. */
-	uint16_t                       cd_clsop_mask;    /* [const] Mask for the `cd_clsop_list' hash-vector. */
-	size_t                         cd_cattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
-	size_t                         cd_iattr_mask;    /* [const] Mask for the `cd_cattr_list' hash-vector. */
-	struct Dee_class_operator     *cd_clsop_list;    /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
-	                                                  * [const] The class operator address hash-vector. */
-	struct Dee_class_attribute    *cd_cattr_list;    /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
-	                                                  * [const] The class attribute hash-vector. */
-	struct Dee_class_attribute     cd_iattr_list[1]; /* [cd_iattr_mask+1] The instance attribute hash-vector. */
+	uint16_t                                            cd_flags;       /* [const] Additional flags to set for the resulting type (set of `TP_F*').
+	                                                                     * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
+	                                                                     *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
+	                                                                     *       to be implemented such that it forwards all arguments
+	                                                                     *       to the underlying base-type, while also implementing
+	                                                                     *      `OPERATOR_CONSTRUCTOR' as a no-op for any number of
+	                                                                     *       arguments.
+	                                                                     *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
+	                                                                     *       the `TP_FINHERITCTOR' flag is simply ignored.
+	                                                                     *       If the user overrides `OPERATOR_CONSTRUCTOR',
+	                                                                     *       the user's constructor will be invoked, though
+	                                                                     *       no arguments will be passed to it (this is done to
+	                                                                     *       allow for class member initialization to still take
+	                                                                     *       place when no constructor has actually been defined). */
+	uint16_t                                            cd_cmemb_size;  /* [const] The allocation size of the class member table. */
+	uint16_t                                            cd_imemb_size;  /* [const] The allocation size of the instance member table. */
+	uint16_t                                            cd_clsop_mask;  /* [const] Mask for the `cd_clsop_list' hash-vector. */
+	size_t                                              cd_cattr_mask;  /* [const] Mask for the `cd_cattr_list' hash-vector. */
+	size_t                                              cd_iattr_mask;  /* [const] Mask for the `cd_cattr_list' hash-vector. */
+	struct Dee_class_operator                          *cd_clsop_list;  /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
+	                                                                     * [const] The class operator address hash-vector. */
+	struct Dee_class_attribute                         *cd_cattr_list;  /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
+	                                                                     * [const] The class attribute hash-vector. */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_class_attribute, cd_iattr_list); /* [cd_iattr_mask+1] The instance attribute hash-vector. */
 };
 #define DeeClassDescriptor_CLSOPNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 #define DeeClassDescriptor_CATTRNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
@@ -495,19 +495,19 @@ struct Dee_class_optable {
 struct Dee_class_desc {
 	/* The class description tail embedded into type-objects
 	 * which have been initialized as custom user-classes. */
-	DREF DeeClassDescriptorObject *cd_desc;   /* [1..1][const] The associated class descriptor.
-	                                           * This in turn contains all the relevant fields
-	                                           * required to accessing user-defined attributes. */
-	uintptr_t                      cd_offset; /* [const] Offset to the `struct Dee_instance_desc' of instances. */
-	struct Dee_class_optable      *cd_ops[Dee_CLASS_HEADER_OPC1];
-	                                          /* [0..1][owned][lock(WRITE_ONCE)][*]
-	                                           * Table of cached operator callbacks. */
+	DREF DeeClassDescriptorObject            *cd_desc;     /* [1..1][const] The associated class descriptor.
+	                                                        * This in turn contains all the relevant fields
+	                                                        * required to accessing user-defined attributes. */
+	uintptr_t                                 cd_offset;   /* [const] Offset to the `struct Dee_instance_desc' of instances. */
+	struct Dee_class_optable                 *cd_ops[Dee_CLASS_HEADER_OPC1];
+	                                                       /* [0..1][owned][lock(WRITE_ONCE)][*]
+	                                                        * Table of cached operator callbacks. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                   cd_lock;   /* Lock for accessing the class member table. */
+	Dee_rwlock_t                              cd_lock;     /* Lock for accessing the class member table. */
 #endif /* !CONFIG_NO_THREADS */
-	DREF DeeObject                *cd_members[1024]; /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
-	                                                  * The class member table (also contains
-	                                                  * instance-methods and operator callbacks). */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, cd_members); /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
+	                                                        * The class member table (also contains
+	                                                        * instance-methods and operator callbacks). */
 };
 
 #ifndef CONFIG_NO_THREADS
@@ -554,11 +554,11 @@ struct Dee_class_desc {
 
 struct Dee_instance_desc {
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t    id_lock;       /* Lock that must be held when accessing  */
+	Dee_rwlock_t                              id_lock;  /* Lock that must be held when accessing  */
 #endif /* !CONFIG_NO_THREADS */
-	DREF DeeObject *id_vtab[1024]; /* [0..1][lock(id_lock)]
-	                                * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]
-	                                * Instance member table. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, id_vtab); /* [0..1][lock(id_lock)]
+	                                                     * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]
+	                                                     * Instance member table. */
 };
 
 #define DeeInstance_DESC(class_descriptor, self) \

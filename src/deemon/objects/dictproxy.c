@@ -338,10 +338,10 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&dictiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&dictiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&dictiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&dictiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&dictiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&dictiterator_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
 			}
 		},
@@ -441,10 +441,10 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)&dictproxyiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&dictproxyiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DictProxyIterator)
 			}
 		},
@@ -539,10 +539,10 @@ err:
 		/* .tp_init = */ {                                                                        \
 			{                                                                                     \
 				/* .tp_alloc = */ {                                                               \
-					/* .tp_ctor      = */ (void *)&dictproxyiterator_ctor,                        \
-					/* .tp_copy_ctor = */ (void *)&dictproxyiterator_copy,                        \
-					/* .tp_deep_ctor = */ (void *)NULL, /* TODO */                                \
-					/* .tp_any_ctor  = */ (void *)&dictproxyiterator_init,                        \
+					/* .tp_ctor      = */ (dfunptr_t)&dictproxyiterator_ctor,                     \
+					/* .tp_copy_ctor = */ (dfunptr_t)&dictproxyiterator_copy,                     \
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */                             \
+					/* .tp_any_ctor  = */ (dfunptr_t)&dictproxyiterator_init,                     \
 					TYPE_FIXED_ALLOCATOR(DictProxyIterator)                                       \
 				}                                                                                 \
 			},                                                                                    \
@@ -854,10 +854,10 @@ PUBLIC DeeTypeObject DeeDictProxy_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(DictProxy)
 			}
 		},
@@ -900,10 +900,10 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(DictProxy)
 			}
 		},
@@ -946,10 +946,10 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(DictProxy)
 			}
 		},
@@ -992,10 +992,10 @@ PUBLIC DeeTypeObject DeeDictValues_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&proxy_ctor,
-				/* .tp_copy_ctor = */ (void *)&proxy_copy,
-				/* .tp_deep_ctor = */ (void *)&proxy_deep,
-				/* .tp_any_ctor  = */ (void *)&proxy_init,
+				/* .tp_ctor      = */ (dfunptr_t)&proxy_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&proxy_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&proxy_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&proxy_init,
 				TYPE_FIXED_ALLOCATOR(DictProxy)
 			}
 		},

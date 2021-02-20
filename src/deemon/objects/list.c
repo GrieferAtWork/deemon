@@ -2276,28 +2276,28 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&list_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&list_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&list_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&list_delitem_index,
-			/* .nsi_setitem      = */ (void *)&list_setitem_index,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)&list_getrange_i,
-			/* .nsi_getrange_n   = */ (void *)&list_getrange_in,
-			/* .nsi_setrange     = */ (void *)&list_setrange_i,
-			/* .nsi_setrange_n   = */ (void *)&list_setrange_in,
-			/* .nsi_find         = */ (void *)&list_nsi_find,
-			/* .nsi_rfind        = */ (void *)&list_nsi_rfind,
-			/* .nsi_xch          = */ (void *)&list_nsi_xch,
-			/* .nsi_insert       = */ (void *)&DeeList_Insert,
-			/* .nsi_insertall    = */ (void *)&DeeList_InsertSequence,
-			/* .nsi_insertvec    = */ (void *)&DeeList_InsertVector,
-			/* .nsi_pop          = */ (void *)&DeeList_Pop,
-			/* .nsi_erase        = */ (void *)&DeeList_Erase,
-			/* .nsi_remove       = */ (void *)&DeeList_Remove,
-			/* .nsi_rremove      = */ (void *)&DeeList_RRemove,
-			/* .nsi_removeall    = */ (void *)&DeeList_RemoveAll,
-			/* .nsi_removeif     = */ (void *)&DeeList_RemoveIf
+			/* .nsi_getsize      = */ (dfunptr_t)&list_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&list_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&list_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&list_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&list_setitem_index,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&list_getrange_i,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&list_getrange_in,
+			/* .nsi_setrange     = */ (dfunptr_t)&list_setrange_i,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&list_setrange_in,
+			/* .nsi_find         = */ (dfunptr_t)&list_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&list_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)&list_nsi_xch,
+			/* .nsi_insert       = */ (dfunptr_t)&DeeList_Insert,
+			/* .nsi_insertall    = */ (dfunptr_t)&DeeList_InsertSequence,
+			/* .nsi_insertvec    = */ (dfunptr_t)&DeeList_InsertVector,
+			/* .nsi_pop          = */ (dfunptr_t)&DeeList_Pop,
+			/* .nsi_erase        = */ (dfunptr_t)&DeeList_Erase,
+			/* .nsi_remove       = */ (dfunptr_t)&DeeList_Remove,
+			/* .nsi_rremove      = */ (dfunptr_t)&DeeList_RRemove,
+			/* .nsi_removeall    = */ (dfunptr_t)&DeeList_RemoveAll,
+			/* .nsi_removeif     = */ (dfunptr_t)&DeeList_RemoveIf
 		}
 	}
 };
@@ -3929,10 +3929,10 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&list_ctor,
-				/* .tp_copy_ctor = */ (void *)&list_copy,
-				/* .tp_deep_ctor = */ (void *)&list_copy,
-				/* .tp_any_ctor  = */ (void *)&list_init,
+				/* .tp_ctor      = */ (dfunptr_t)&list_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&list_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&list_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&list_init,
 				TYPE_FIXED_ALLOCATOR_GC(List)
 			}
 		},
@@ -4229,16 +4229,16 @@ PRIVATE struct type_nii tpconst list_iterator_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (void *)&list_iterator_nii_getseq,
-			/* .nii_getindex = */ (void *)&list_iterator_nii_getindex,
-			/* .nii_setindex = */ (void *)&list_iterator_nii_setindex,
-			/* .nii_rewind   = */ (void *)&list_iterator_nii_rewind,
-			/* .nii_revert   = */ (void *)&list_iterator_nii_revert,
-			/* .nii_advance  = */ (void *)&list_iterator_nii_advance,
-			/* .nii_prev     = */ (void *)&list_iterator_nii_prev,
-			/* .nii_next     = */ (void *)&list_iterator_nii_next,
-			/* .nii_hasprev  = */ (void *)&list_iterator_nii_hasprev,
-			/* .nii_peek     = */ (void *)&list_iterator_nii_peek
+			/* .nii_getseq   = */ (dfunptr_t)&list_iterator_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&list_iterator_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&list_iterator_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&list_iterator_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&list_iterator_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&list_iterator_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&list_iterator_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&list_iterator_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&list_iterator_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&list_iterator_nii_peek
 		}
 	}
 };
@@ -4272,10 +4272,10 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&li_ctor,
-				/* .tp_copy_ctor = */ (void *)&li_copy,
-				/* .tp_deep_ctor = */ (void *)&li_deep,
-				/* .tp_any_ctor  = */ (void *)&li_init,
+				/* .tp_ctor      = */ (dfunptr_t)&li_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&li_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&li_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&li_init,
 				TYPE_FIXED_ALLOCATOR(ListIterator)
 			}
 		},

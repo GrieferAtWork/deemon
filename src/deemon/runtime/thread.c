@@ -1500,7 +1500,7 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
 	 * search for a `run()' member function. */
 	if (!threadmain) {
 		DREF DeeObject *old_main;
-		threadmain = DeeObject_GetAttr((DeeObject *)self, &str_run);
+		threadmain = DeeObject_GetAttr((DeeObject *)self, (DeeObject *)&str_run);
 		/* Without any run() member, an error will have been set and we'll already be done. */
 		if unlikely(!threadmain) {
 early_err:
@@ -2530,18 +2530,18 @@ done:
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 thread_str(DeeThreadObject *__restrict self) {
 	if (self->t_threadname)
-		return_reference_((DeeObject *)self->t_threadname);
+		return_reference_(self->t_threadname);
 	return_reference_(&str_Thread);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 thread_repr(DeeThreadObject *__restrict self) {
 	DREF DeeObject *threadmain;
 	DREF DeeObject *threadargs;
-	DREF DeeObject *result;
+	DREF DeeStringObject *result;
 	uint16_t state;
 	struct unicode_printer printer;
 	while ((state = ATOMIC_FETCHOR(self->t_state, THREAD_STATE_STARTING),
@@ -2555,9 +2555,10 @@ thread_repr(DeeThreadObject *__restrict self) {
 	unicode_printer_init(&printer);
 	if unlikely(UNICODE_PRINTER_PRINT(&printer, "thread(") < 0)
 		goto err;
-	if (self->t_threadname &&
-	    unlikely(unicode_printer_printf(&printer, "%r, ", self->t_threadname) < 0))
-		goto err;
+	if (self->t_threadname) {
+		if unlikely(unicode_printer_printf(&printer, "%r, ", self->t_threadname) < 0)
+			goto err;
+	}
 	if (threadmain &&
 	    unlikely(unicode_printer_printf(&printer, "%r, ", threadmain) < 0))
 		goto err;
@@ -2565,7 +2566,7 @@ thread_repr(DeeThreadObject *__restrict self) {
 		goto err;
 	if unlikely(UNICODE_PRINTER_PRINT(&printer, ")") < 0)
 		goto err;
-	result = unicode_printer_pack(&printer);
+	result = (DREF DeeStringObject *)unicode_printer_pack(&printer);
 done:
 	Dee_XDecref(threadargs);
 	Dee_XDecref(threadmain);
@@ -3136,7 +3137,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	/* If the callback isn't set, lookup the `run' member function. */
 	if (!result)
-		result = DeeObject_GetAttr((DeeObject *)self, &str_run);
+		result = DeeObject_GetAttr((DeeObject *)self, (DeeObject *)&str_run);
 	return result;
 #endif /* !CONFIG_NO_THREADS */
 }
@@ -3788,10 +3789,10 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &thread_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&thread_ctor,
 				TYPE_FIXED_ALLOCATOR_GC(DeeThreadObject)
 			}
 		},
@@ -3816,10 +3817,10 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeThreadObject)
 			}
 		},

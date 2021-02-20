@@ -233,22 +233,22 @@ DeeCell_Set(DeeObject *self, DeeObject *value) {
 
 PRIVATE DEFINE_STRING(empty_cell_repr, "<>");
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 cell_str(Cell *__restrict self) {
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
 	if (!item)
 		return_reference_(&str_Cell);
-	return DeeString_Newf("Cell -> %K", item);
+	return (DREF DeeStringObject *)DeeString_Newf("Cell -> %K", item);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 cell_repr(Cell *__restrict self) {
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
 	if (!item)
-		return_reference_((DREF DeeObject *)&empty_cell_repr);
-	return DeeString_Newf("<%R>", item);
+		return_reference_((DeeStringObject *)&empty_cell_repr);
+	return (DREF DeeStringObject *)DeeString_Newf("<%R>", item);
 }
 
 #ifdef CONFIG_NO_THREADS
@@ -550,10 +550,10 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&cell_ctor,
-				/* .tp_copy_ctor = */ (void *)&cell_copy,
-				/* .tp_deep_ctor = */ (void *)&cell_copy,
-				/* .tp_any_ctor  = */ (void *)&cell_init,
+				/* .tp_ctor      = */ (dfunptr_t)&cell_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cell_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cell_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&cell_init,
 				TYPE_FIXED_ALLOCATOR_GC(Cell)
 			}
 		},

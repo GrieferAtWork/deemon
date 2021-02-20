@@ -2174,7 +2174,7 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 			USHORT PrintNameOffset;
 			USHORT PrintNameLength;
 			ULONG Flags;
-			WCHAR PathBuffer[1];
+			COMPILER_FLEXIBLE_ARRAY(WCHAR, PathBuffer);
 		} SymbolicLinkReparseBuffer; /* IO_REPARSE_TAG_SYMLINK */
 
 		struct {
@@ -2182,25 +2182,25 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 			USHORT SubstituteNameLength;
 			USHORT PrintNameOffset;
 			USHORT PrintNameLength;
-			WCHAR PathBuffer[1];
+			COMPILER_FLEXIBLE_ARRAY(WCHAR, PathBuffer);
 		} MountPointReparseBuffer; /* IO_REPARSE_TAG_MOUNT_POINT */
 
 		/* BEGIN: Taken from cygwin */
 		struct {
-			DWORD FileType;     /* Take member name with a grain of salt.  Value is
-			                     * apparently always 2 for symlinks. */
-			char PathBuffer[1]; /* POSIX path as given to symlink(2).
-			                     * Path is not \0 terminated.
-			                     * Length is ReparseDataLength - sizeof (FileType).
-			                     * Always UTF-8.
-			                     * Chars given in incompatible codesets, e. g. umlauts
-			                     * in ISO-8859-x, are converted to the Unicode
-			                     * REPLACEMENT CHARACTER 0xfffd == \xef\xbf\bd */
+			DWORD FileType;                            /* Take member name with a grain of salt.  Value is
+			                                            * apparently always 2 for symlinks. */
+			COMPILER_FLEXIBLE_ARRAY(char, PathBuffer); /* POSIX path as given to symlink(2).
+			                                            * Path is not \0 terminated.
+			                                            * Length is ReparseDataLength - sizeof (FileType).
+			                                            * Always UTF-8.
+			                                            * Chars given in incompatible codesets, e. g. umlauts
+			                                            * in ISO-8859-x, are converted to the Unicode
+			                                            * REPLACEMENT CHARACTER 0xfffd == \xef\xbf\bd */
 		} LxSymlinkReparseBuffer; /* IO_REPARSE_TAG_LX_SYMLINK */
 		/* END: Taken from cygwin */
 
 		struct {
-			UCHAR DataBuffer[1];
+			COMPILER_FLEXIBLE_ARRAY(UCHAR, DataBuffer);
 		} GenericReparseBuffer;
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

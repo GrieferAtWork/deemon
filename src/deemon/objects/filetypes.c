@@ -239,10 +239,10 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ &mf_init,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)&mf_init,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(MemoryFile)
 				}
 			},
@@ -683,10 +683,10 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (void *)&reader_ctor,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ (void *)&reader_init,
+					/* .tp_ctor      = */ (dfunptr_t)&reader_ctor,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)&reader_init,
 					TYPE_FIXED_ALLOCATOR(Reader)
 				}
 			},
@@ -1620,10 +1620,10 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (void *)&writer_ctor,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ (void *)&writer_init,
+					/* .tp_ctor      = */ (dfunptr_t)&writer_ctor,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)&writer_init,
 					TYPE_FIXED_ALLOCATOR(Writer)
 				}
 			},

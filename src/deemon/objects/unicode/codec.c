@@ -747,7 +747,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 		return result;
 	}
 	rwlock_endread(&libcodecs_lock);
-	result = DeeModule_OpenGlobal(&str_codecs, NULL, true);
+	result = DeeModule_OpenGlobal((DeeObject *)&str_codecs, NULL, true);
 	if likely(result) {
 		rwlock_write(&libcodecs_lock);
 		ASSERT(!g_libcodecs || g_libcodecs == result);
@@ -762,7 +762,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	return result;
 }
 
-PRIVATE DeeObject *error_module_names[] = {
+PRIVATE DeeStringObject *tpconst error_module_names[] = {
 	/* [STRING_ERROR_FSTRICT] = */ &str_strict,
 	/* [STRING_ERROR_FREPLAC] = */ &str_replace,
 	/* [STRING_ERROR_FIGNORE] = */ &str_ignore
@@ -855,7 +855,7 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 		goto err_name;
 	}
 	result = DeeObject_CallAttrPack(libcodecs,
-	                                &str___decode,
+	                                (DeeObject *)&str___decode,
 	                                3,
 	                                self,
 	                                name,
@@ -910,7 +910,7 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 		goto err_name;
 	}
 	result = DeeObject_CallAttrPack(libcodecs,
-	                                &str___encode,
+	                                (DeeObject *)&str___encode,
 	                                3,
 	                                self,
 	                                name,

@@ -205,10 +205,10 @@ INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)&blvi_copy,
-				/* .tp_deep_ctor = */ (void *)&blvi_deep,
-				/* .tp_any_ctor  = */ (void *)NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&blvi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&blvi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(BlackListVarkwdsIterator)
 			}
 		},
@@ -782,10 +782,10 @@ PRIVATE struct type_nsi tpconst blv_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&blv_nsi_size,
-			/* .nsi_nextkey    = */ (void *)&blvi_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&blvi_nsi_nextvalue,
-			/* .nsi_getdefault = */ (void *)&blv_getdefault
+			/* .nsi_getsize    = */ (dfunptr_t)&blv_nsi_size,
+			/* .nsi_nextkey    = */ (dfunptr_t)&blvi_nsi_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&blvi_nsi_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&blv_getdefault
 		}
 	}
 };
@@ -912,11 +912,11 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)&blv_copy,
-				/* .tp_deep_ctor = */ (void *)&blv_deep,
-				/* .tp_any_ctor  = */ (void *)NULL,
-				/* .tp_free      = */ (void *)NULL
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&blv_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&blv_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1216,10 +1216,10 @@ INTERN DeeTypeObject BlackListMappingIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &blmi_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&blmi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(BlackListMappingIterator)
 			}
 		},
@@ -1661,10 +1661,10 @@ PRIVATE struct type_nsi tpconst blm_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (void *)&blm_nsi_size,
-			/* .nsi_nextkey    = */ (void *)&blmi_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (void *)&blmi_nsi_nextvalue,
-			/* .nsi_getdefault = */ (void *)&blm_getdefault
+			/* .nsi_getsize    = */ (dfunptr_t)&blm_nsi_size,
+			/* .nsi_nextkey    = */ (dfunptr_t)&blmi_nsi_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&blmi_nsi_nextvalue,
+			/* .nsi_getdefault = */ (dfunptr_t)&blm_getdefault
 		}
 	}
 };
@@ -1765,11 +1765,11 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)NULL,
-				/* .tp_copy_ctor = */ (void *)&blm_copy,
-				/* .tp_deep_ctor = */ (void *)&blm_deep,
-				/* .tp_any_ctor  = */ (void *)NULL,
-				/* .tp_free      = */ (void *)NULL
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&blm_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&blm_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blm_fini,

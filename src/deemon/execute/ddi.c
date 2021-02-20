@@ -605,34 +605,29 @@ DeeCode_FindDDI(DeeObject *__restrict self,
 }
 
 
-INTERN DeeDDIObject empty_ddi = {
-	OBJECT_HEAD_INIT(&DeeDDI_Type),
-	/* .d_strings = */ NULL,
-	/* .d_strtab  = */ (DeeStringObject *)Dee_EmptyString,
-	/* .d_exdat   = */ NULL,
-	/* .d_ddisize = */ 1,
-	/* .d_nstring = */ 0,
-	/* .d_ddiinit = */ 0,
-	/* .d_pad     = */ 0,
-	/* .d_start = */ {
-		/* .dr_uip   = */ 0,
-		/* .dr_usp   = */ 0,
-		/* .dr_flags = */ 0,
-		/* .dr_path  = */ 0,
-		/* .dr_file  = */ 0,
-		/* .dr_name  = */ 0,
-		/* ._dr_pad  = */ { 0 },
-		/* .dr_col   = */ 0,
-		/* .dr_lno   = */ 0
-	},
-	/* .d_ddi = */ {
-		DDI_STOP
-	}
-};
+INTERN DEFINE_DDI(empty_ddi,
+                  /* d_strings: */ NULL,
+                  /* d_strtab:  */ (DeeStringObject *)Dee_EmptyString,
+                  /* d_exdat:   */ NULL,
+                  /* d_ddisize: */ 1,
+                  /* d_nstring: */ 0,
+                  /* d_ddiinit: */ 0,
+                  /* d_start:   */ {
+                      /* .dr_uip   = */ 0,
+                      /* .dr_usp   = */ 0,
+                      /* .dr_flags = */ 0,
+                      /* .dr_path  = */ 0,
+                      /* .dr_file  = */ 0,
+                      /* .dr_name  = */ 0,
+                      /* ._dr_pad  = */ { 0 },
+                      /* .dr_col   = */ 0,
+                      /* .dr_lno   = */ 0
+                  },
+                  /* d_ddi:     */ { DDI_STOP });
 
 PRIVATE NONNULL((1)) void DCALL
 ddi_fini(DeeDDIObject *__restrict self) {
-	ASSERT(self != &empty_ddi);
+	ASSERT(self != (DeeDDIObject *)&empty_ddi);
 	Dee_Free((void *)self->d_strings);
 	Dee_Free((void *)self->d_exdat);
 	Dee_Decref(self->d_strtab);
@@ -731,11 +726,11 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ &ddi_ctor,
-				/* .tp_copy_ctor = */ &DeeObject_NewRef,
-				/* .tp_deep_ctor = */ &DeeObject_NewRef,
-				/* .tp_any_ctor  = */ NULL, /* TODO */
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&ddi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ddi_fini,

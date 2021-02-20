@@ -310,10 +310,10 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&bsi_ctor,
-				/* .tp_copy_ctor = */ (void *)&bsi_copy,
-				/* .tp_deep_ctor = */ (void *)&bsi_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&bsi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bsi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bsi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bsi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
@@ -355,10 +355,10 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&bsi_ctor,
-				/* .tp_copy_ctor = */ (void *)&bsi_copy,
-				/* .tp_deep_ctor = */ (void *)&bsi_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&bsi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bsi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bsi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bsi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplitIterator)
 			}
 		},
@@ -598,10 +598,10 @@ INTERN DeeTypeObject BytesSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&bs_ctor,
-				/* .tp_copy_ctor = */ (void *)&bs_copy,
-				/* .tp_deep_ctor = */ (void *)&bs_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&bs_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bs_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bs_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bs_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bs_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
@@ -643,10 +643,10 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&bs_ctor,
-				/* .tp_copy_ctor = */ (void *)&bs_copy,
-				/* .tp_deep_ctor = */ (void *)&bs_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&bs_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bs_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bs_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bs_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bs_init,
 				TYPE_FIXED_ALLOCATOR(BytesSplit)
 			}
 		},
@@ -973,10 +973,10 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&blsi_ctor,
-				/* .tp_copy_ctor = */ (void *)&blsi_copy,
-				/* .tp_deep_ctor = */ (void *)&blsi_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&blsi_init,
+				/* .tp_ctor      = */ (dfunptr_t)&blsi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&blsi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&blsi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&blsi_init,
 				TYPE_FIXED_ALLOCATOR(BytesLineSplitIterator)
 			}
 		},
@@ -1113,10 +1113,10 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&bls_ctor,
-				/* .tp_copy_ctor = */ (void *)&bls_copy,
-				/* .tp_deep_ctor = */ (void *)&bls_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&bls_init,
+				/* .tp_ctor      = */ (dfunptr_t)&bls_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bls_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&bls_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&bls_init,
 				TYPE_FIXED_ALLOCATOR(BytesLineSplit)
 			}
 		},

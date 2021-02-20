@@ -49,44 +49,42 @@ typedef struct {
 	/* Variable keywords mapping-like object for Kwds+Argv */
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t               vk_lock; /* Lock for this kwds wrappers. */
+	rwlock_t                                       vk_lock;  /* Lock for this kwds wrappers. */
 #endif /* !CONFIG_NO_THREADS */
-	DREF struct code_object
-	                      *vk_code; /* [1..1][const] The code object who's keyword arguments should
-	                                 *               be blacklisted from the the resulting mapping.
-	                                 * NOTE: This code doesn't always takes at least 1 argument, and
-	                                 *       always specifies its keywords. When constructing an
-	                                 *      `BlackListVarkwds' object with code not doing this, a
-	                                 *      `DeeKwdsMappingObject' object will be returned instead,
-	                                 *       which maps keywords to arguments without including a
-	                                 *       blacklist of arguments which are not to be mapped.
-	                                 * NOTE: If revived during unsharing, the object in this field
-	                                 *       gets incref'd, meaning that before that point, this
-	                                 *       field doesn't actually carry a reference. */
-	size_t                 vk_ckwc; /* [const][!0] Number of black-listed keywords */
-	struct string_object *const
-	                      *vk_ckwv; /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
-	DREF DeeKwdsObject    *vk_kwds; /* [1..1][const] The mapping for kwds-to-argument-index.
-	                                 * NOTE: This kwds object always has a `kw_size' that is
-	                                 *       non-ZERO. - When trying to construct a `BlackListVarkwds'
-	                                 *       object from an empty keyword list, an empty mapping
-	                                 *       will be returned instead.
-	                                 * NOTE: If revived during unsharing, the object in this field
-	                                 *       gets incref'd, meaning that before that point, this
-	                                 *       field doesn't actually carry a reference. */
-	DREF DeeObject       **vk_argv; /* [1..1][const][0..vk_kwds->kw_size][owned][lock(vk_lock)]
-	                                 * Shared argument list to which indices from `vk_kwds'
-	                                 * map. - When a keyword-enabled user-function which made
-	                                 * use its variable keyword argument returns, this vector
-	                                 * gets unshared (meaning that if varkwds continue to exist,
-	                                 * this vector gets replaced with either a copy of itself,
-	                                 * or with a NULL-pointer, if the copy fails to be allocated) */
-	size_t                 vk_load; /* [lock(vk_lock, INCREMENT_ONLY)][<= vk_ckwc]
-	                                 * Index of the next keyword which has yet to be loaded into
-	                                 * the `vk_blck' hash-set for blacklisted identifiers. */
-	size_t                 vk_mask; /* [!0][const] Hash-mask for `vk_blck' */
-	BlackListVarkwdsEntry  vk_blck[1024]; /* [lock(vk_lock)][0..vk_mask+1]
-	                                       * Hash-vector of loaded, black-listed keywords. */
+	DREF struct code_object                       *vk_code;  /* [1..1][const] The code object who's keyword arguments should
+	                                                          *               be blacklisted from the the resulting mapping.
+	                                                          * NOTE: This code doesn't always takes at least 1 argument, and
+	                                                          *       always specifies its keywords. When constructing an
+	                                                          *      `BlackListVarkwds' object with code not doing this, a
+	                                                          *      `DeeKwdsMappingObject' object will be returned instead,
+	                                                          *       which maps keywords to arguments without including a
+	                                                          *       blacklist of arguments which are not to be mapped.
+	                                                          * NOTE: If revived during unsharing, the object in this field
+	                                                          *       gets incref'd, meaning that before that point, this
+	                                                          *       field doesn't actually carry a reference. */
+	size_t                                         vk_ckwc;  /* [const][!0] Number of black-listed keywords */
+	struct string_object *const                   *vk_ckwv;  /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
+	DREF DeeKwdsObject                            *vk_kwds;  /* [1..1][const] The mapping for kwds-to-argument-index.
+	                                                          * NOTE: This kwds object always has a `kw_size' that is
+	                                                          *       non-ZERO. - When trying to construct a `BlackListVarkwds'
+	                                                          *       object from an empty keyword list, an empty mapping
+	                                                          *       will be returned instead.
+	                                                          * NOTE: If revived during unsharing, the object in this field
+	                                                          *       gets incref'd, meaning that before that point, this
+	                                                          *       field doesn't actually carry a reference. */
+	DREF DeeObject                               **vk_argv;  /* [1..1][const][0..vk_kwds->kw_size][owned][lock(vk_lock)]
+	                                                          * Shared argument list to which indices from `vk_kwds'
+	                                                          * map. - When a keyword-enabled user-function which made
+	                                                          * use its variable keyword argument returns, this vector
+	                                                          * gets unshared (meaning that if varkwds continue to exist,
+	                                                          * this vector gets replaced with either a copy of itself,
+	                                                          * or with a NULL-pointer, if the copy fails to be allocated) */
+	size_t                                         vk_load;  /* [lock(vk_lock, INCREMENT_ONLY)][<= vk_ckwc]
+	                                                          * Index of the next keyword which has yet to be loaded into
+	                                                          * the `vk_blck' hash-set for blacklisted identifiers. */
+	size_t                                         vk_mask;  /* [!0][const] Hash-mask for `vk_blck' */
+	COMPILER_FLEXIBLE_ARRAY(BlackListVarkwdsEntry, vk_blck); /* [lock(vk_lock)][0..vk_mask+1]
+	                                                          * Hash-vector of loaded, black-listed keywords. */
 } BlackListVarkwds;
 #define BlackListVarkwds_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 
@@ -162,33 +160,31 @@ typedef struct {
 	/* Variable keywords mapping-like object for general-purpose mapping-like objects. */
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t               bm_lock; /* Lock for this kwds wrappers. */
+	rwlock_t                                       bm_lock;  /* Lock for this kwds wrappers. */
 #endif /* !CONFIG_NO_THREADS */
-	DREF struct code_object
-	                      *bm_code; /* [1..1][const] The code object who's keyword arguments should
-	                                 *               be blacklisted from the the resulting mapping.
-	                                 * NOTE: This code doesn't always takes at least 1 argument, and
-	                                 *       always specifies its keywords. When constructing a
-	                                 *      `BlackListVarkwds' object with code not doing this, a
-	                                 *      `DeeKwdsMappingObject' object will be returned instead,
-	                                 *       which maps keywords to arguments without including a
-	                                 *       blacklist of arguments which are not to be mapped.
-	                                 * NOTE: If revived during unsharing, the object in this field
-	                                 *       gets incref'd, meaning that before that point, this
-	                                 *       field doesn't actually carry a reference. */
-	size_t                 bm_ckwc; /* [const][!0] Number of black-listed keywords */
-	struct string_object *const
-	                      *bm_ckwv; /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
-	DREF DeeObject        *bm_kw;   /* [1..1][const] The underlying mapping which is being affected.
-	                                 * NOTE: If revived during unsharing, the object in this field
-	                                 *       gets incref'd, meaning that before that point, this
-	                                 *       field doesn't actually carry a reference. */
-	size_t                 bm_load; /* [lock(vk_lock, INCREMENT_ONLY)][<= bm_ckwc]
-	                                 * Index of the next keyword which has yet to be loaded into
-	                                 * the `vk_blck' hash-set for blacklisted identifiers. */
-	size_t                 bm_mask; /* [!0][const] Hash-mask for `vk_blck' */
-	BlackListVarkwdsEntry  bm_blck[1024]; /* [lock(vk_lock)][0..vk_mask+1]
-	                                       * Hash-vector of loaded, black-listed keywords. */
+	DREF struct code_object                       *bm_code;  /* [1..1][const] The code object who's keyword arguments should
+	                                                          *               be blacklisted from the the resulting mapping.
+	                                                          * NOTE: This code doesn't always takes at least 1 argument, and
+	                                                          *       always specifies its keywords. When constructing a
+	                                                          *      `BlackListVarkwds' object with code not doing this, a
+	                                                          *      `DeeKwdsMappingObject' object will be returned instead,
+	                                                          *       which maps keywords to arguments without including a
+	                                                          *       blacklist of arguments which are not to be mapped.
+	                                                          * NOTE: If revived during unsharing, the object in this field
+	                                                          *       gets incref'd, meaning that before that point, this
+	                                                          *       field doesn't actually carry a reference. */
+	size_t                                         bm_ckwc;  /* [const][!0] Number of black-listed keywords */
+	struct string_object *const                   *bm_ckwv;  /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
+	DREF DeeObject                                *bm_kw;    /* [1..1][const] The underlying mapping which is being affected.
+	                                                          * NOTE: If revived during unsharing, the object in this field
+	                                                          *       gets incref'd, meaning that before that point, this
+	                                                          *       field doesn't actually carry a reference. */
+	size_t                                         bm_load;  /* [lock(vk_lock, INCREMENT_ONLY)][<= bm_ckwc]
+	                                                          * Index of the next keyword which has yet to be loaded into
+	                                                          * the `vk_blck' hash-set for blacklisted identifiers. */
+	size_t                                         bm_mask;  /* [!0][const] Hash-mask for `vk_blck' */
+	COMPILER_FLEXIBLE_ARRAY(BlackListVarkwdsEntry, bm_blck); /* [lock(vk_lock)][0..vk_mask+1]
+	                                                          * Hash-vector of loaded, black-listed keywords. */
 } BlackListMapping;
 #define BlackListMapping_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 

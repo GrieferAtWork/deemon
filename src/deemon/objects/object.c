@@ -1338,7 +1338,7 @@ object_any_ctor(DeeObject *__restrict UNUSED(self),
 	return DeeArg_Unpack(argc, argv, ":Object");
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 object_str(DeeObject *__restrict self) {
 #if 1
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -1349,9 +1349,9 @@ object_str(DeeObject *__restrict self) {
 			                               DeeStringObject,
 			                               s_str);
 			Dee_Incref(result);
-			return (DREF DeeObject *)result;
+			return result;
 		}
-		return DeeString_New(tp_self->tp_name);
+		return (DREF DeeStringObject *)DeeString_New(tp_self->tp_name);
 	}
 	Dee_Incref(&str_Object);
 	return &str_Object;
@@ -1366,7 +1366,7 @@ err_noimp:
 #endif
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 object_repr(DeeObject *__restrict self) {
 	if (self->ob_type != &DeeObject_Type)
 		goto err_noimp;
@@ -2352,10 +2352,10 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &object_ctor,
-				/* .tp_copy_ctor = */ &object_copy_ctor,
-				/* .tp_deep_ctor = */ &object_copy_ctor,
-				/* .tp_any_ctor  = */ &object_any_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)&object_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&object_copy_ctor,
+				/* .tp_deep_ctor = */ (dfunptr_t)&object_copy_ctor,
+				/* .tp_any_ctor  = */ (dfunptr_t)&object_any_ctor,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},
@@ -2364,8 +2364,8 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ &object_str,
-		/* .tp_repr = */ &object_repr,
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
@@ -2397,7 +2397,7 @@ type_ctor(DeeTypeObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 type_str(DeeTypeObject *__restrict self) {
 	if (self->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *result;
@@ -2405,10 +2405,10 @@ type_str(DeeTypeObject *__restrict self) {
 		                               DeeStringObject,
 		                               s_str);
 		Dee_Incref(result);
-		return (DREF DeeObject *)result;
+		return result;
 	}
 	if (self->tp_name)
-		return DeeString_New(self->tp_name);
+		return (DREF DeeStringObject *)DeeString_New(self->tp_name);
 	return_reference_(&str_Type);
 }
 
@@ -4208,10 +4208,10 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&type_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&type_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeTypeObject)
 			}
 		},

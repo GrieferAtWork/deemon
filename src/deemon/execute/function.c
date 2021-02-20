@@ -558,6 +558,91 @@ PRIVATE struct type_member tpconst function_members[] = {
 PRIVATE NONNULL((1)) void DCALL
 function_fini(Function *__restrict self) {
 	size_t i;
+	/* TODO: There should be a sub-class of ref-objects
+	 *       that we don't actually hold a proper DREF to.
+	 * We could use those slots to reference the declaring
+	 * class in the case of thiscall functions, as used by
+	 * the `getmember' instruction set:
+	 *   - `DeeObject_InstanceOf(thisarg, MyClass)' fails safely,
+	 *     even when `MyClass' has already been destroyed.
+	 *     XXX: But what if `MyClass' was free'd, and alloc'd again?
+	 *          In that case, `thisarg' could be an instance of the
+	 *          new `MyClass', and we'd be none the wiser...
+	 *          To solve this, we'd need a proper `weakref'...
+	 *   - Assuming that `DeeObject_InstanceOf(thisarg, MyClass)'
+	 *     succeeds, we know that `MyClass' will remain alive as long
+	 *     as `thisarg' remains alive, too. With this knowledge, we
+	 *     can keep on accessing the `MyClass' type object without
+	 *     holding our own, dedicated reference to it!
+	 *
+	 * Why all this? - Because right now we rely on GC to kill the
+	 * reference loop within `MyClass -> Member-function -> refs -> MyClass',
+	 * and while that works, it's really inefficient, and most importantly:
+	 * doesn't automatically free the class as soon as possible, but instead
+	 * waits until GC is invoked. - And this in turn results in some really
+	 * noticeable effects if static class members were to be used, as those
+	 * only get decref'd once the class itself gets killed...
+	 *
+	 * If this was implemented, the only spot where the user can create a
+	 * function with a dead type-reference would be:
+	 * >> function makeUnboundClassFunction() {
+	 * >>     class MyClass {
+	 * >>         final member bar = 42;
+	 * >>         function foo() {
+	 * >>             return bar;
+	 * >>         }
+	 * >>     }
+	 * >>     return MyClass.foo;
+	 * >> }
+	 * >> local x = makeUnboundClassFunction();
+	 * >> local y = x(Object());
+	 *
+	 * FIXME: Currently, the above code crashes in `DeeInstance_GetMember()'! (very bad)
+	 *        All of this could be fixed if DeeFunctionObject had a weakref
+	 *        member that is a pointer to the required thisarg type.
+	 * This field could then be accessible via a new instruction set:
+	 *   - Added instructions:
+	 *     - `push this_class'
+	 *     - `push super this, super_class'                        (uses DeeType_Base(this_class))
+	 *     - `push getcmember this_class, $<imm8>'
+	 *     - `push getcmember this_class, $<imm16>'
+	 *     - `push callcmember this, this_class, $<imm8>, #<imm8>'
+	 *     - `push callcmember this, this_class, $<imm16>, #<imm8>'
+	 *     - `push getattr this, super_class, const <imm8>'
+	 *     - `push getattr this, super_class, const <imm16>'
+	 *     - `push callattr this, super_class, const <imm8>, #<imm8>'
+	 *     - `push callattr this, super_class, const <imm16>, #<imm8>'
+	 *     - `push boundmember this, this_class, $<imm8>'
+	 *     - `push boundmember this, this_class, $<imm16>'
+	 *     - `push getmember this, this_class, $<imm8>'
+	 *     - `push getmember this, this_class, $<imm16>'
+	 *     - `delmember this, this_class, $<imm8>'
+	 *     - `delmember this, this_class, $<imm16>'
+	 *     - `setmember this, this_class, $<imm8>, pop'
+	 *     - `setmember this, this_class, $<imm16>, pop'
+	 *   - Removed instructions:
+	 *     - `push super this, ref <imm8/16>'
+	 *     - `push getcmember ref <imm8/16>, $<imm8>'
+	 *     - `push getcmember ref <imm8/16>, $<imm16>'
+	 *     - `push callcmember this, ref <imm8/16>, $<imm8>, #<imm8>'
+	 *     - `push callcmember this, ref <imm8/16>, $<imm16>, #<imm8>'
+	 *     - `push getattr this, ref <imm8>, const <imm8>'
+	 *     - `push getattr this, ref <imm16>, const <imm16>'
+	 *     - `push callattr this, ref <imm8>, const <imm8>, #<imm8>'
+	 *     - `push callattr this, ref <imm16>, const <imm16>, #<imm8>'
+	 *     - `push boundmember this, ref <imm8/16>, $<imm8>'
+	 *     - `push boundmember this, ref <imm8/16>, $<imm16>'
+	 *     - `push getmember this, ref <imm8/16>, $<imm8>'
+	 *     - `push getmember this, ref <imm8/16>, $<imm16>'
+	 *     - `delmember this, ref <imm8/16>, $<imm8>'
+	 *     - `delmember this, ref <imm8/16>, $<imm16>'
+	 *     - `setmember this, ref <imm8/16>, $<imm8>, pop'
+	 *     - `setmember this, ref <imm8/16>, $<imm16>, pop'
+	 * Additionally, when performing a thiscall, check that the
+	 * this-argument is actually an instance of `this_class'!
+	 * However, this check may be skipped in the case of an attribute
+	 * call (as in `foo.fun()', as opposed to `type(foo).fun(foo)')
+	 */
 	for (i = 0; i < self->fo_code->co_refc; ++i)
 		Dee_Decref(self->fo_refv[i]);
 	Dee_Decref(self->fo_code);
@@ -572,11 +657,11 @@ function_visit(Function *__restrict self,
 	Dee_Visit(self->fo_code);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 function_str(Function *__restrict self) {
 	char *name = DeeCode_NAME(self->fo_code);
 	if (name)
-		return DeeString_New(name);
+		return (DREF DeeStringObject *)DeeString_New(name);
 	return_reference_(&str_Function);
 }
 
@@ -691,11 +776,11 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL, /* TODO */
-				/* .tp_deep_ctor = */ NULL, /* TODO */
-				/* .tp_any_ctor  = */ &function_init,
-				/* .tp_free      = */ NULL, /* XXX: Use the tuple-allocator? */
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&function_init,
+				/* .tp_free      = */ (dfunptr_t)NULL, /* XXX: Use the tuple-allocator? */
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
@@ -1117,10 +1202,10 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &yf_ctor,
-				/* .tp_copy_ctor = */ &yf_copy,
-				/* .tp_deep_ctor = */ &yf_deepcopy,
-				/* .tp_any_ctor  = */ NULL, /* TODO */
+				/* .tp_ctor      = */ (dfunptr_t)&yf_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&yf_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&yf_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(YFunction)
 			}
 		},
@@ -1929,10 +2014,10 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&yfi_ctor,
-				/* .tp_copy_ctor = */ (void *)&yfi_copy,
-				/* .tp_deep_ctor = */ (void *)NULL,
-				/* .tp_any_ctor  = */ (void *)&yfi_new,
+				/* .tp_ctor      = */ (dfunptr_t)&yfi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&yfi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&yfi_new,
 				TYPE_FIXED_ALLOCATOR_GC(YFIterator)
 			}
 		},

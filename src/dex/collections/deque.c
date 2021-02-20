@@ -823,108 +823,77 @@ deq_init(Deque *__restrict self,
 }
 
 
-
 #ifndef CONFIG_NO_THREADS
-#define DEQUE_BUFFER_START d_lock
-#else /* CONFIG_NO_THREADS */
-#define DEQUE_BUFFER_START d_head
-#endif /* !CONFIG_NO_THREADS */
+#define DEQUE_BUFFER_STARTFIELD d_lock
+#else /* !CONFIG_NO_THREADS */
+#define DEQUE_BUFFER_STARTFIELD d_head
+#endif /* CONFIG_NO_THREADS */
+#define DEQUE_BUFFER_ENDFIELD d_version
+#define DEQUE_BUFFER_OF(self) (&(self)->DEQUE_BUFFER_STARTFIELD)
+#define DEQUE_BUFFER_SIZE     (offsetof(Deque, DEQUE_BUFFER_ENDFIELD) - offsetof(Deque, DEQUE_BUFFER_STARTFIELD))
 
-#if defined(__GNUC__) && __GNUC__ >= 7
-/* Get rid of:
- *   array subscript 0 is outside array bounds of 'DEQUE_BUFFER_TYPE' {aka 'unsigned char[40]'}
- * Either I'm not seeing the bug in my code, or the fact that GCC apparently claims that `0'
- * is outside the bounds of [0, 40) is incorrect, because 0 is _very_ _well_ within those bounds! */
-#pragma GCC diagnostic ignored "-Warray-bounds"
-#endif /* __GNUC__ && __GNUC__ >= 9 */
-
-
-#define DEQUE_BUFFER_SIZE \
-	(sizeof(Deque) - offsetof(Deque, DEQUE_BUFFER_START))
-#define DEQUE_BUFFER_SIZE_NOVERSION \
-	(offsetof(Deque, d_version) - offsetof(Deque, DEQUE_BUFFER_START))
-#define DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION \
-	(offsetof(Deque, d_version) - offsetof(Deque, d_head))
-typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE[DEQUE_BUFFER_SIZE];
-typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE_NOLOCK_NOVERSION[DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION];
-#define DEQUE_BUFFER_GET(x)        ((Deque *)((__BYTE_TYPE__ *)(x) - offsetof(Deque, DEQUE_BUFFER_START)))
-#define DEQUE_BUFFER_FOR(x)        ((__BYTE_TYPE__ *)&(x)->DEQUE_BUFFER_START)
-#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((__BYTE_TYPE__ *)(x) - offsetof(Deque, d_head)))
-#define DEQUE_BUFFER_FOR_NOLOCK(x) ((__BYTE_TYPE__ *)&(x)->d_head)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_assign(Deque *__restrict self,
            DeeObject *__restrict seq) {
-	DEQUE_BUFFER_TYPE bTemp, bOld;
-	Deque *temp = DEQUE_BUFFER_GET(bTemp);
-	weakref_support_init(temp);
+	Deque bTemp, bOld;
+	weakref_support_init(&bTemp);
 	if (DeeObject_InstanceOfExact(seq, &Deque_Type)) {
-		if (deq_copy(temp, (Deque *)seq))
+		if (deq_copy(&bTemp, (Deque *)seq))
 			return -1;
 	} else {
-		temp->d_head      = NULL;
-		temp->d_tail      = NULL;
-		temp->d_size      = 0;
-		temp->d_head_idx  = 0;
-		temp->d_head_use  = 0;
-		temp->d_tail_sz   = 0;
-		temp->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
-		rwlock_init(&temp->d_lock);
+		bTemp.d_head      = NULL;
+		bTemp.d_tail      = NULL;
+		bTemp.d_size      = 0;
+		bTemp.d_head_idx  = 0;
+		bTemp.d_head_use  = 0;
+		bTemp.d_tail_sz   = 0;
+		bTemp.d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
+		rwlock_init(&bTemp.d_lock);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-		if (DeeObject_Foreach(seq, (dforeach_t)&Deque_PushBack, temp) < 0)
+		if (DeeObject_Foreach(seq, (dforeach_t)&Deque_PushBack, &bTemp) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
-		if (DeeObject_Foreach(seq, &deque_push_back, temp) < 0)
+		if (DeeObject_Foreach(seq, &deque_push_back, &bTemp) < 0)
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 		{
-			deq_fini(temp);
+			deq_fini(&bTemp);
 			return -1;
 		}
 	}
 	/* Save the new deque into the current. */
 	Deque_LockWrite(self);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bOld)),
-	       DEQUE_BUFFER_FOR_NOLOCK(self),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(self),
-	       DEQUE_BUFFER_FOR_NOLOCK(temp),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	memcpy(DEQUE_BUFFER_OF(&bOld), DEQUE_BUFFER_OF(self), DEQUE_BUFFER_SIZE);
+	memcpy(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_OF(&bTemp), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(DEQUE_BUFFER_GET(bOld));
+	weakref_support_init(&bOld);
 
 	/* Free the old deque state. */
-	deq_fini(DEQUE_BUFFER_GET(bOld));
+	deq_fini(&bOld);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_moveassign(Deque *__restrict self,
                Deque *__restrict other) {
-	DEQUE_BUFFER_TYPE bNew, bOld;
+	Deque bNew, bOld;
 	if (self == other)
 		return 0;
 	Deque_LockWrite(other);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bNew)),
-	       DEQUE_BUFFER_FOR_NOLOCK(other),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	memcpy(DEQUE_BUFFER_OF(&bNew), DEQUE_BUFFER_OF(other), DEQUE_BUFFER_SIZE);
 	/* Clear out the state of the other deque, thus stealing all of its references. */
-	bzero(DEQUE_BUFFER_FOR_NOLOCK(other),
-	      DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	bzero(DEQUE_BUFFER_OF(other), DEQUE_BUFFER_SIZE);
 	++other->d_version;
 	Deque_LockEndWrite(other);
 	/* Override the state of our own deque. */
 	Deque_LockWrite(self);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bOld)),
-	       DEQUE_BUFFER_FOR_NOLOCK(self),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(self),
-	       DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bNew)),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	memcpy(DEQUE_BUFFER_OF(&bOld), DEQUE_BUFFER_OF(self), DEQUE_BUFFER_SIZE);
+	memcpy(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_OF(&bNew), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(DEQUE_BUFFER_GET(bOld));
+	weakref_support_init(&bOld);
 	/* Free the old state of our own deque. */
-	deq_fini(DEQUE_BUFFER_GET(bOld));
+	deq_fini(&bOld);
 	return 0;
 }
 
@@ -960,20 +929,17 @@ deq_visit(Deque *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE NONNULL((1)) void DCALL
 deq_clear(Deque *__restrict self) {
-	DEQUE_BUFFER_TYPE bData;
+	Deque bData;
 	Deque_LockWrite(self);
-	memcpy(DEQUE_BUFFER_FOR_NOLOCK(DEQUE_BUFFER_GET(bData)),
-	       DEQUE_BUFFER_FOR_NOLOCK(self),
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	memcpy(DEQUE_BUFFER_OF(&bData), DEQUE_BUFFER_OF(self), DEQUE_BUFFER_SIZE);
 	/* Clear out the state of the other deque,
 	 * thus stealing all of its references. */
-	bzero(DEQUE_BUFFER_FOR_NOLOCK(self),
-	      DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	bzero(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(DEQUE_BUFFER_GET(bData));
+	weakref_support_init(&bData);
 	/* Destroy the cloned buffer. */
-	deq_fini(DEQUE_BUFFER_GET(bData));
+	deq_fini(&bData);
 }
 
 PRIVATE void DCALL
@@ -1239,28 +1205,28 @@ PRIVATE struct type_nsi tpconst deq_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&deq_nsi_size,
-			/* .nsi_getsize_fast = */ (void *)&deq_nsi_size,
-			/* .nsi_getitem      = */ (void *)&deq_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&deq_nsi_delitem,
-			/* .nsi_setitem      = */ (void *)&deq_nsi_setitem,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)NULL,
-			/* .nsi_rfind        = */ (void *)NULL,
-			/* .nsi_xch          = */ (void *)&deq_nsi_xchitem,
-			/* .nsi_insert       = */ (void *)&Deque_Insert,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)&Deque_Pops,
-			/* .nsi_erase        = */ (void *)&Deque_Erase,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&deq_nsi_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&deq_nsi_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&deq_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&deq_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&deq_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&deq_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)&Deque_Insert,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)&Deque_Pops,
+			/* .nsi_erase        = */ (dfunptr_t)&Deque_Erase,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1589,10 +1555,10 @@ INTERN DeeTypeObject Deque_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&deq_ctor, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (void *)&deq_copy,
-				/* .tp_deep_ctor = */ (void *)&deq_copy,
-				/* .tp_any_ctor  = */ (void *)&deq_init,
+				/* .tp_ctor      = */ (dfunptr_t)&deq_ctor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&deq_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&deq_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&deq_init,
 				TYPE_FIXED_ALLOCATOR_GC(Deque)
 			}
 		},
@@ -1821,10 +1787,10 @@ INTERN DeeTypeObject DequeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&deqiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&deqiter_copy,
-				/* .tp_deep_ctor = */ (void *)&deqiter_deep,
-				/* .tp_any_ctor  = */ (void *)&deqiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&deqiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&deqiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&deqiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&deqiter_init,
 				TYPE_FIXED_ALLOCATOR(DequeIteratorObject)
 			}
 		},

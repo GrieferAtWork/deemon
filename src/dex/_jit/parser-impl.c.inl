@@ -2005,6 +2005,9 @@ err_result_copy:
 #ifdef JIT_EVAL
 #ifndef __OPTIMIZE_SIZE__
 				/* Optimization for callattr expressions. */
+				/* TODO: Instead of doing this here, check for `JIT_LVALUE_ATTR' / `JIT_LVALUE_ATTRSTR'
+				 *       when executing a call-expression. - That way, we can handle a _lot_ more cases,
+				 *       than by only handling the default `self.func(args...)' case. */
 				if (self->jl_tok == '(') {
 					DREF DeeObject *args;
 					DREF DeeObject *kwds;
@@ -2049,7 +2052,7 @@ err_result_copy:
 					self->jl_lvalue.lv_attrstr.la_name = attr_name;
 					self->jl_lvalue.lv_attrstr.la_size = attr_size;
 					self->jl_lvalue.lv_attrstr.la_hash = Dee_HashUtf8(attr_name, attr_size);
-					lhs                                = JIT_LVALUE;
+					lhs = JIT_LVALUE;
 				}
 #endif /* JIT_EVAL */
 			}
@@ -2142,7 +2145,7 @@ err_start_expr:
 						self->jl_lvalue.lv_range.lr_base  = lhs;        /* Inherit reference. */
 						self->jl_lvalue.lv_range.lr_start = start_expr; /* Inherit reference. */
 						self->jl_lvalue.lv_range.lr_end   = temp;       /* Inherit reference. */
-						lhs                               = JIT_LVALUE;
+						lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 					}
 				} else {
@@ -2156,7 +2159,7 @@ err_start_expr:
 					self->jl_lvalue.lv_kind          = JIT_LVALUE_ITEM;
 					self->jl_lvalue.lv_item.li_base  = lhs;  /* Inherit reference. */
 					self->jl_lvalue.lv_item.li_index = temp; /* Inherit reference. */
-					lhs                              = JIT_LVALUE;
+					lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
 				}
 			}

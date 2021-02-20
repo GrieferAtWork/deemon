@@ -200,10 +200,10 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ &rveciter_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &rveciter_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rveciter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rveciter_ctor,
 				TYPE_FIXED_ALLOCATOR(RefVectorIterator)
 			}
 		},
@@ -935,28 +935,28 @@ PRIVATE struct type_nsi tpconst rvec_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&rvec_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&rvec_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&rvec_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&rvec_nsi_delitem,
-			/* .nsi_setitem      = */ (void *)&rvec_nsi_setitem,
-			/* .nsi_getitem_fast = */ (void *)&rvec_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)&rvec_nsi_setrange,
-			/* .nsi_setrange_n   = */ (void *)&rvec_nsi_setrange_n,
-			/* .nsi_find         = */ (void *)&rvec_nsi_find,
-			/* .nsi_rfind        = */ (void *)&rvec_nsi_rfind,
-			/* .nsi_xch          = */ (void *)&rvec_nsi_xchitem,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)&rvec_nsi_remove,
-			/* .nsi_rremove      = */ (void *)&rvec_nsi_rremove,
-			/* .nsi_removeall    = */ (void *)&rvec_nsi_removeall,
-			/* .nsi_removeif     = */ (void *)&rvec_nsi_removeif
+			/* .nsi_getsize      = */ (dfunptr_t)&rvec_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&rvec_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&rvec_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&rvec_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&rvec_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&rvec_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)&rvec_nsi_setrange,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_nsi_setrange_n,
+			/* .nsi_find         = */ (dfunptr_t)&rvec_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&rvec_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)&rvec_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)&rvec_nsi_remove,
+			/* .nsi_rremove      = */ (dfunptr_t)&rvec_nsi_rremove,
+			/* .nsi_removeall    = */ (dfunptr_t)&rvec_nsi_removeall,
+			/* .nsi_removeif     = */ (dfunptr_t)&rvec_nsi_removeif
 		}
 	}
 };
@@ -1042,10 +1042,10 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &rvec_init,
-				/* .tp_copy_ctor = */ &rvec_copy,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&rvec_init,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rvec_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(RefVector)
 			}
 		},
@@ -1318,10 +1318,10 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&sveciter_ctor,
-				/* .tp_copy_ctor = */ (void *)&sveciter_copy,
-				/* .tp_deep_ctor = */ (void *)&sveciter_deep,
-				/* .tp_any_ctor  = */ (void *)&sveciter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&sveciter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sveciter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&sveciter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sveciter_init,
 				TYPE_FIXED_ALLOCATOR(SharedVectorIterator)
 			}
 		},
@@ -1547,28 +1547,28 @@ PRIVATE struct type_nsi tpconst svec_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&svec_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&svec_nsi_getsize,
-			/* .nsi_getitem      = */ (void *)&svec_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)&svec_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)&svec_nsi_find,
-			/* .nsi_rfind        = */ (void *)&svec_nsi_rfind,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&svec_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&svec_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&svec_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)&svec_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&svec_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1666,10 +1666,10 @@ INTERN DeeTypeObject SharedVector_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&svec_ctor,
-				/* .tp_copy_ctor = */ (void *)&svec_copy,
-				/* .tp_deep_ctor = */ (void *)&svec_deep,
-				/* .tp_any_ctor  = */ (void *)NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&svec_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&svec_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&svec_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(SharedVector)
 			}
 		},

@@ -339,10 +339,10 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&splititer_ctor,
-				/* .tp_copy_ctor = */ (void *)&splititer_copy,
-				/* .tp_deep_ctor = */ (void *)&splititer_copy,
-				/* .tp_any_ctor  = */ (void *)&splititer_init,
+				/* .tp_ctor      = */ (dfunptr_t)&splititer_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -384,10 +384,10 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&splititer_ctor,
-				/* .tp_copy_ctor = */ (void *)&splititer_copy,
-				/* .tp_deep_ctor = */ (void *)&splititer_copy,
-				/* .tp_any_ctor  = */ (void *)&splititer_init,
+				/* .tp_ctor      = */ (dfunptr_t)&splititer_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&splititer_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&splititer_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&splititer_init,
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
@@ -586,10 +586,10 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&split_ctor,
-				/* .tp_copy_ctor = */ (void *)&split_copy,
-				/* .tp_deep_ctor = */ (void *)&split_copy,
-				/* .tp_any_ctor  = */ (void *)&split_init,
+				/* .tp_ctor      = */ (dfunptr_t)&split_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -632,10 +632,10 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&split_ctor,
-				/* .tp_copy_ctor = */ (void *)&split_copy,
-				/* .tp_deep_ctor = */ (void *)&split_copy,
-				/* .tp_any_ctor  = */ (void *)&split_init,
+				/* .tp_ctor      = */ (dfunptr_t)&split_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&split_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&split_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&split_init,
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
@@ -668,8 +668,8 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_Split(DeeObject *self,
-                DeeObject *separator) {
+DeeString_Split(DeeStringObject *self,
+                DeeStringObject *separator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
@@ -679,16 +679,16 @@ DeeString_Split(DeeObject *self,
 	DeeObject_Init(result, &StringSplit_Type);
 	Dee_Incref(self);
 	Dee_Incref(separator);
-	result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
-	result->s_sep = (DREF DeeStringObject *)separator; /* Inherit */
+	result->s_str = self;      /* Inherit */
+	result->s_sep = separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
 }
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_CaseSplit(DeeObject *self,
-                    DeeObject *separator) {
+DeeString_CaseSplit(DeeStringObject *self,
+                    DeeStringObject *separator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
@@ -699,8 +699,8 @@ DeeString_CaseSplit(DeeObject *self,
 	DeeObject_Init(result, &StringCaseSplit_Type);
 	Dee_Incref(self);
 	Dee_Incref(separator);
-	result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
-	result->s_sep = (DREF DeeStringObject *)separator; /* Inherit */
+	result->s_str = self;      /* Inherit */
+	result->s_sep = separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
 }
@@ -904,10 +904,10 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&lineiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&lineiter_copy,
-				/* .tp_deep_ctor = */ (void *)&lineiter_copy,
-				/* .tp_any_ctor  = */ (void *)&lineiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&lineiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&lineiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&lineiter_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&lineiter_init,
 				TYPE_FIXED_ALLOCATOR(LineSplitIterator)
 			}
 		},
@@ -1029,10 +1029,10 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&linesplit_ctor,
-				/* .tp_copy_ctor = */ (void *)&linesplit_copy,
-				/* .tp_deep_ctor = */ (void *)&linesplit_copy,
-				/* .tp_any_ctor  = */ (void *)&linesplit_init,
+				/* .tp_ctor      = */ (dfunptr_t)&linesplit_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&linesplit_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&linesplit_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&linesplit_init,
 				TYPE_FIXED_ALLOCATOR(LineSplit)
 			}
 		},

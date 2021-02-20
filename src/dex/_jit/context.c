@@ -165,7 +165,7 @@ class_desc_from_instance(struct instance_desc *__restrict self,
 	}
 }
 
-PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2, 3)) struct instance_desc *DCALL
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct instance_desc *DCALL
 class_desc_as_instance_from_instance(struct instance_desc *__restrict self,
                                      DeeObject *__restrict this_arg) {
 	struct class_desc *cls;

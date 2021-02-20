@@ -153,10 +153,10 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ &invset_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ &invset_init,
+				/* .tp_ctor      = */ (dfunptr_t)&invset_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&invset_init,
 				TYPE_FIXED_ALLOCATOR(DeeInverseSetObject)
 			}
 		},
@@ -408,7 +408,7 @@ set_inplace_sub(DeeObject **__restrict pself, DeeObject *items) {
 	DeeObject *self = *pself;
 	size_t i, size;
 	DREF DeeObject *remove_func, *callback_result, *remove_args[1];
-	remove_func = DeeObject_GetAttr(self, &str_remove);
+	remove_func = DeeObject_GetAttr(self, (DeeObject *)&str_remove);
 	if unlikely(!remove_func)
 		goto err;
 	size = DeeFastSeq_GetSize(items);
@@ -457,7 +457,7 @@ set_inplace_mul(DeeObject **__restrict pself, DeeObject *count) {
 		goto err;
 	if (count_integer == 0) {
 		DREF DeeObject *callback_result;
-		callback_result = DeeObject_CallAttr(*pself, &str_clear, 0, NULL);
+		callback_result = DeeObject_CallAttr(*pself, (DeeObject *)&str_clear, 0, NULL);
 		if unlikely(!callback_result)
 			goto err;
 		Dee_Decref(callback_result);
@@ -484,7 +484,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_inplace_union(DeeObject **__restrict pself, DeeObject *items) {
 	DREF DeeObject *callback_result;
 	callback_result = DeeObject_CallAttr(*pself,
-	                                     &str_insertall,
+	                                     (DeeObject *)&str_insertall,
 	                                     1,
 	                                     (DeeObject **)&items);
 	if unlikely(!callback_result)
@@ -969,10 +969,10 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&none_i1, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (void *)&none_i2,
-				/* .tp_deep_ctor = */ (void *)&none_i2,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
 		},

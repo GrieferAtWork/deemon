@@ -67,14 +67,14 @@ DECL_BEGIN
 
 
 #if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
-#define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, &str_getsysfd)
+#define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
 #else /* DeeSysFD_GETSET && DeeSysFS_IS_HANDLE */
 #define GETATTR_osfhandle(ob) DeeObject_GetAttrString(ob, DeeSysFD_HANDLE_GETSET)
 #endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
 
 #ifndef GETATTR_fileno
 #if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
-#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, &str_getsysfd)
+#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
 #else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
 #define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
 #endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */

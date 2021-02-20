@@ -238,7 +238,7 @@ again:
 	result = jit_module;
 	if unlikely(!result) {
 		rwlock_endread(&jit_access_lock);
-		result = DeeModule_OpenGlobal(&str__jit, NULL, false);
+		result = DeeModule_OpenGlobal((DeeObject *)&str__jit, NULL, false);
 		if unlikely(!ITER_ISOK(result)) {
 			if (!result)
 				return NULL;
@@ -307,7 +307,7 @@ do_exec:
 			goto fallback;
 		}
 		/* Load the exec function. */
-		exec = DeeObject_GetAttr(module, &str_exec);
+		exec = DeeObject_GetAttr(module, (DeeObject *)&str_exec);
 		Dee_Decref(module);
 		if unlikely(!exec)
 			goto err;

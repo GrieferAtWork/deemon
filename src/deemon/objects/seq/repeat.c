@@ -341,10 +341,10 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&repeatiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&repeatiter_copy,
-				/* .tp_deep_ctor = */ (void *)&repeatiter_deep,
-				/* .tp_any_ctor  = */ (void *)&repeatiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&repeatiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&repeatiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&repeatiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&repeatiter_init,
 				TYPE_FIXED_ALLOCATOR(RepeatIterator)
 			}
 		},
@@ -569,28 +569,28 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&repeat_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&repeat_nsi_getsize_fast,
-			/* .nsi_getitem      = */ (void *)&repeat_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)NULL,
-			/* .nsi_getrange     = */ (void *)NULL,
-			/* .nsi_getrange_n   = */ (void *)NULL,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)&repeat_nsi_find,
-			/* .nsi_rfind        = */ (void *)&repeat_nsi_rfind,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&repeat_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&repeat_nsi_getsize_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&repeat_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)&repeat_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&repeat_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -633,10 +633,10 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&repeat_ctor,
-				/* .tp_copy_ctor = */ (void *)&repeat_copy,
-				/* .tp_deep_ctor = */ (void *)&repeat_deep,
-				/* .tp_any_ctor  = */ (void *)&repeat_init,
+				/* .tp_ctor      = */ (dfunptr_t)&repeat_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&repeat_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&repeat_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&repeat_init,
 				TYPE_FIXED_ALLOCATOR(Repeat)
 			}
 		},
@@ -872,10 +872,10 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&repeatitemiter_ctor,
-				/* .tp_copy_ctor = */ (void *)&repeatitemiter_copy,
-				/* .tp_deep_ctor = */ (void *)&repeatitemiter_deep,
-				/* .tp_any_ctor  = */ (void *)&repeatitemiter_init,
+				/* .tp_ctor      = */ (dfunptr_t)&repeatitemiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&repeatitemiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&repeatitemiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&repeatitemiter_init,
 				TYPE_FIXED_ALLOCATOR(RepeatItemIterator)
 			}
 		},
@@ -1121,28 +1121,28 @@ PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&repeatitem_nsi_getsize,
-			/* .nsi_getsize_fast = */ (void *)&repeatitem_nsi_getsize_fast,
-			/* .nsi_getitem      = */ (void *)&repeatitem_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)NULL,
-			/* .nsi_setitem      = */ (void *)NULL,
-			/* .nsi_getitem_fast = */ (void *)&repeatitem_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)&repeatitem_nsi_getrange,
-			/* .nsi_getrange_n   = */ (void *)&repeatitem_nsi_getrange_n,
-			/* .nsi_setrange     = */ (void *)NULL,
-			/* .nsi_setrange_n   = */ (void *)NULL,
-			/* .nsi_find         = */ (void *)&repeatitem_nsi_find,
-			/* .nsi_rfind        = */ (void *)&repeatitem_nsi_rfind,
-			/* .nsi_xch          = */ (void *)NULL,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)NULL,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)NULL,
-			/* .nsi_rremove      = */ (void *)NULL,
-			/* .nsi_removeall    = */ (void *)NULL,
-			/* .nsi_removeif     = */ (void *)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&repeatitem_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&repeatitem_nsi_getsize_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&repeatitem_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_nsi_getrange,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_nsi_getrange_n,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)&repeatitem_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&repeatitem_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1183,10 +1183,10 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&repeatitem_ctor,
-				/* .tp_copy_ctor = */ (void *)&repeatitem_copy,
-				/* .tp_deep_ctor = */ (void *)&repeatitem_deep,
-				/* .tp_any_ctor  = */ (void *)&repeatitem_init,
+				/* .tp_ctor      = */ (dfunptr_t)&repeatitem_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&repeatitem_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&repeatitem_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&repeatitem_init,
 				TYPE_FIXED_ALLOCATOR(RepeatItem)
 			}
 		},

@@ -232,10 +232,10 @@ INTERN DeeTypeObject USetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&usetiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&usetiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&usetiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&usetiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&usetiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&usetiterator_init,
 				TYPE_FIXED_ALLOCATOR(USetIterator)
 			}
 		},
@@ -631,9 +631,9 @@ again_hashset:
 			                                              sizeof(struct uset_item));
 			if unlikely(!self->s_elem)
 				goto err;
-			Dee_XMovprefv((DeeObject **)self->s_elem,
-			              (DeeObject **)src->rs_elem,
-			              src->rs_mask + 1);
+			Dee_XMovrefv((DeeObject **)self->s_elem,
+			             (DeeObject **)src->rs_elem,
+			             src->rs_mask + 1);
 		}
 		weakref_support_init(self);
 		return 0;
@@ -1207,9 +1207,9 @@ PRIVATE struct type_nsi tpconst uset_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize    = */ (void *)&uset_nsi_getsize,
-			/* .nsi_insert     = */ (void *)&USet_Insert,
-			/* .nsi_remove     = */ (void *)&USet_Remove,
+			/* .nsi_getsize    = */ (dfunptr_t)&uset_nsi_getsize,
+			/* .nsi_insert     = */ (dfunptr_t)&USet_Insert,
+			/* .nsi_remove     = */ (dfunptr_t)&USet_Remove,
 		}
 	}
 };
@@ -1324,10 +1324,10 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&USet_InitEmpty,
-				/* .tp_copy_ctor = */ (void *)&USet_InitCopy,
-				/* .tp_deep_ctor = */ (void *)&USet_InitCopy,
-				/* .tp_any_ctor  = */ (void *)&uset_init,
+				/* .tp_ctor      = */ (dfunptr_t)&USet_InitEmpty,
+				/* .tp_copy_ctor = */ (dfunptr_t)&USet_InitCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&USet_InitCopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&uset_init,
 				TYPE_FIXED_ALLOCATOR_GC(USet)
 			}
 		},
@@ -1476,10 +1476,10 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&urosetiterator_ctor,
-				/* .tp_copy_ctor = */ (void *)&urosetiterator_copy,
-				/* .tp_deep_ctor = */ (void *)NULL, /* TODO */
-				/* .tp_any_ctor  = */ (void *)&urosetiterator_init,
+				/* .tp_ctor      = */ (dfunptr_t)&urosetiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&urosetiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&urosetiterator_init,
 				TYPE_FIXED_ALLOCATOR(URoSetIterator)
 			}
 		},
@@ -1555,7 +1555,7 @@ PRIVATE struct type_nsi tpconst uroset_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (void *)&uroset_nsi_getsize,
+			/* .nsi_getsize = */ (dfunptr_t)&uroset_nsi_getsize,
 		}
 	}
 };
@@ -1743,8 +1743,8 @@ URoSet_FromIterator(DeeObject *__restrict iterator) {
 	return result;
 err_r:
 	DeeObject_Free(result);
-	Dee_XDecprefv((DREF DeeObject **)result->rs_elem,
-	              result->rs_mask + 1);
+	Dee_XDecrefv((DREF DeeObject **)result->rs_elem,
+	             result->rs_mask + 1);
 err:
 	return NULL;
 }
@@ -1901,7 +1901,7 @@ return_result:
 				key = DeeFastSeq_GetItemUnbound(sequence, i);
 				if unlikely(!ITER_ISOK(key)) {
 					if unlikely(key == ITER_DONE) {
-						Dee_XDecprefv((DREF DeeObject **)result->rs_elem, i);
+						Dee_XDecrefv((DREF DeeObject **)result->rs_elem, i);
 						goto err_r;
 					}
 					ASSERT(result->rs_size);
@@ -1953,7 +1953,7 @@ uroset_deepcopy(URoSet *__restrict self) {
 	DeeObject_Init(result, &URoSet_Type);
 	return result;
 err_r:
-	Dee_XDecprefv((DREF DeeObject **)result->rs_elem, i);
+	Dee_XDecrefv((DREF DeeObject **)result->rs_elem, i);
 	DeeObject_Free(result);
 err:
 	return NULL;
@@ -2028,10 +2028,10 @@ INTERN DeeTypeObject URoSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&URoSet_New,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&uroset_deepcopy,
-				/* .tp_any_ctor  = */ (void *)&uroset_init
+				/* .tp_ctor      = */ (dfunptr_t)&URoSet_New,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&uroset_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&uroset_init
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uroset_fini,

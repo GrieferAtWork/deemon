@@ -495,11 +495,11 @@ PRIVATE DeeTypeObject PosixStubsList_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&pst_ctor,
-				/* .tp_copy_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_deep_ctor = */ (void *)&DeeObject_NewRef,
-				/* .tp_any_ctor  = */ NULL,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&pst_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ NULL,

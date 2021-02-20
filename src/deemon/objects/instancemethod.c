@@ -245,7 +245,7 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 	return_reference_((DeeObject *)attr->ca_name);
 return_attr: {
 	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, &str___name__);
+	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
@@ -266,7 +266,7 @@ instancemethod_get_doc(InstanceMethod *__restrict self) {
 	return_reference_((DeeObject *)attr->ca_doc);
 return_attr: {
 	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, &str___doc__);
+	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___doc__);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
@@ -279,7 +279,7 @@ return_attr: {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_kwds(InstanceMethod *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, &str___kwds__);
+	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___kwds__);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_AttributeError) ||
 		    DeeError_Catch(&DeeError_NotImplemented))
@@ -298,7 +298,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_module(InstanceMethod *__restrict self) {
-	return DeeObject_GetAttr(self->im_func, &str___module__);
+	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___module__);
 }
 
 PRIVATE struct type_getset tpconst im_getsets[] = {
@@ -358,12 +358,12 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor        = */ &im_ctor,
-				/* .tp_copy_ctor   = */ &im_copy,
-				/* .tp_deep_ctor   = */ &im_deepcopy,
-				/* .tp_any_ctor    = */ NULL,
+				/* .tp_ctor        = */ (dfunptr_t)&im_ctor,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&im_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&im_deepcopy,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(InstanceMethod),
-				/* .tp_any_ctor_kw = */ &im_init,
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&im_init,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,

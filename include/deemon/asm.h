@@ -129,7 +129,7 @@
  *
  * Frame cleanup:
  * >> RETURN:
- * >>     // Serve finally handles affecting the last-executed instruction.
+ * >>     // Serve finally handlers affecting the last-executed instruction.
  * >>     IF HAS_FINALLY_HANDLERS(REG_START_PC) THEN
  * >>         EXECUTE_FINALLY_HANDLERS();
  * >>     FI
@@ -396,7 +396,7 @@
                                     *          passed by the caller, but doesn't account for default arguments.
                                     * >> PUSH(bool(IS_BOUND(ARG(IMM8)))); */
 #define ASM_PUSH_BND_EXTERN   0x0c /* [3][-0,+1]   `push bound extern <imm8>:<imm8>'    - Check if the extern variable indexed by `<imm8>:<imm8>' is bound, pushing true/false indicative of that state.
-                                    * >> PUSH(bool(IS_BOUND(EXTERN(IMM8,IMM8)))); */
+                                    * >> PUSH(bool(IS_BOUND(EXTERN(IMM8, IMM8)))); */
 /*      ASM_                  0x0d  *               --------                            - ------------------ */
 #define ASM_PUSH_BND_GLOBAL   0x0e /* [2][-0,+1]   `push bound global <imm8>'           - Check if the global variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(GLOBAL(IMM8)))); */
@@ -546,7 +546,7 @@
                                     *                                                           that while the data-stream encoding is SP-relative, the assembler
                                     *                                                           itself encodes the operand as SP-absolute, similar to how the
                                     *                                                           operands of ASM_JMP and friends are written absolute, despite
-                                    *                                                           actually being absolute.
+                                    *                                                           actually being relative.
                                     *                                                     NOTE: Additionally, the user-code assembler will encode the following operands specially:
                                     *                                                         - `adjstack #SP + 1' --> `push none'
                                     *                                                         - `adjstack #SP + 0' --> `---'
@@ -571,7 +571,7 @@
                                     * >> STATIC(IMM8) = SOURCE; */
 #define ASM_POP_EXTERN        0x2c /* [3][-1,+0]   `pop extern <imm8>:<imm8>'           - Pop the top stack value into the extern variable indexed by `<imm8>:<imm8>', overwriting the previous value.
                                     * [3][-0,+0]   `mov extern <imm8>:<imm8>, PREFIX'   - `PREFIX: pop extern <imm8>:<imm8>'
-                                    * >> EXTERN(IMM8,IMM8) = SOURCE; */
+                                    * >> EXTERN(IMM8, IMM8) = SOURCE; */
 /*      ASM_                  0x2d  *               --------                            - ------------------ */
 #define ASM_POP_GLOBAL        0x2e /* [2][-1,+0]   `pop global <imm8>'                  - Pop the top stack value into the global variable indexed by `<imm8>', overwriting the previous value.
                                     * [2][-0,+0]   `mov global <imm8>, PREFIX'          - `PREFIX: pop global <imm8>'
@@ -579,8 +579,6 @@
 #define ASM_POP_LOCAL         0x2f /* [2][-1,+0]   `pop local <imm8>'                   - Pop the top stack value into the local variable indexed by `<imm8>', overwriting the previous value.
                                     * [2][-0,+0]   `mov local <imm8>, PREFIX'           - `PREFIX: pop local <imm8>'
                                     * >> LOCAL(IMM8) = SOURCE; */
-
-/* Push builtin constant expressions, immediate values or local/static values. */
 
 /* TODO: Add an option to the assembler to automatically unwind finally-blocks
  *       when a return statement is encountered inside of one.
@@ -590,6 +588,8 @@
  *       That way we can get rid of the slow O(N) cleanup of finally-handlers,
  *       while still maintaining the option of having the runtime deal with them
  *       in smaller functions! */
+
+/* Push builtin constant expressions, immediate values or local/static values. */
 /*      ASM_                  0x30  *               --------                            - ------------------ */
 /*      ASM_                  0x31  *               --------                            - ------------------ */
 /*      ASM_                  0x32  *               --------                            - ------------------ */
@@ -620,7 +620,7 @@
                                     * >> DESTINATION = STATIC(IMM8); */
 #define ASM_PUSH_EXTERN       0x3c /* [3][-0,+1]   `push extern <imm8>:<imm8>'          - Push the extern variable indexed by `<imm8>:<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                     * [3][-0,+0]   `mov  PREFIX, extern <imm8>'         - `PREFIX: push extern <imm8>'
-                                    * >> DESTINATION = EXTERN(IMM8,IMM8); */
+                                    * >> DESTINATION = EXTERN(IMM8, IMM8); */
 /*      ASM_                  0x3d  *               --------                            - ------------------ */
 #define ASM_PUSH_GLOBAL       0x3e /* [2][-0,+1]   `push global <imm8>'                 - Push the global variable indexed by `<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                     * [2][-0,+0]   `mov  PREFIX, global <imm8>'         - `PREFIX: push global <imm8>'
@@ -660,9 +660,9 @@
                                     * >> PUSH(POP() + POP());  // For sequences (Same as ASM_ADD, but the left-sequence (top) may be modified in-place) */
 #define ASM_EXTEND            0x48 /* [2][-n-1,+1] `extend top, #<imm8>'                - Same as `pack Tuple, #<imm8>; concat top, pop;'.
                                     * >> TOP.extend(POP(IMM8)); */
-#define ASM_TYPEOF            0x49 /* [1][-1,+1]   `typeof top'                         - Replace the top stack-entry with its own class.
+#define ASM_TYPEOF            0x49 /* [1][-1,+1]   `typeof top'                         - Replace the top stack-entry with its own type.
                                     * >> PUSH(type POP()); */
-#define ASM_CLASSOF           0x4a /* [1][-1,+1]   `classof top'                        - Replace the top stack-entry with its own type.
+#define ASM_CLASSOF           0x4a /* [1][-1,+1]   `classof top'                        - Replace the top stack-entry with its own class.
                                     * >> PUSH(POP().class); */
 #define ASM_SUPEROF           0x4b /* [1][-1,+1]   `superof top'                        - Replace the top stack-entry with a wrapper for the associated super-Object.
                                     * >> PUSH(POP().super); */
@@ -695,7 +695,7 @@
 #define ASM_DELATTR           0x57 /* [1][-2,+0]   `delattr pop, pop'                   - Pop a string, then use it to delete an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> POP().operator del. (POP()); */
 #define ASM_SETATTR           0x58 /* [1][-3,+0]   `setattr pop, pop, pop'              - Pop a value and a string then use them to set an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
-                                    * >> POP().operator . (POP(), POP()); */
+                                    * >> POP().operator .= (POP(), POP()); */
 #define ASM_BOUNDATTR         0x59 /* [1][-2,+1]   `boundattr top, pop'                 - Pop a string, then use it to check if an attribute is bound in stack-top. @throws: Error.TypeError: The attribute Object isn't a string.
                                     * >> PUSH(bound(POP().operator . (POP())); */
 #define ASM_GETATTR_C         0x5a /* [2][-1,+1]   `getattr top, const <imm8>'          - Perform a fast attribute lookup on stack-top using a string in constant slot `<imm8>'.
@@ -703,13 +703,13 @@
 #define ASM_DELATTR_C         0x5b /* [2][-1,+0]   `delattr pop, const <imm8>'          - Delete an attribute of stack-top named by a string in constant slot `<imm8>'.
                                     * >> POP().operator del. (CONST(IMM8)); */
 #define ASM_SETATTR_C         0x5c /* [2][-2,+0]   `setattr pop, const <imm8>, pop'     - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm8>'.
-                                    * >> POP().operator . (CONST(IMM8), POP()); */
+                                    * >> POP().operator .= (CONST(IMM8), POP()); */
 #define ASM_GETATTR_THIS_C    0x5d /* [2][-0,+1]   `push getattr this, const <imm8>'    - Lookup and push an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
                                     * >> PUSH(THIS.operator . (CONST(IMM8))); */
 #define ASM_DELATTR_THIS_C    0x5e /* [2][-0,+0]   `delattr this, const <imm8>'         - Delete an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
                                     * >> THIS.operator del. (CONST(IMM8)); */
 #define ASM_SETATTR_THIS_C    0x5f /* [2][-1,+0]   `setattr this, const <imm8>, pop'    - Pop a value and set an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
-                                    * >> THIS.operator . (CONST(IMM8), POP()); */
+                                    * >> THIS.operator .= (CONST(IMM8), POP()); */
 
 /* Compare instructions. */
 #define ASM_CMP_EQ            0x60 /* [1][-2,+1]   `cmp eq, top, pop'                   - Compare the two top-most objects on the stack and push the result.
@@ -1013,7 +1013,7 @@
 #endif /* ASM_EXTENDEDMIN + 7 != ASM_EXTENDEDMAX */
 #if ((ASM_EXTENDEDMIN & 0xf8) == (ASM_EXTENDEDMAX & 0xf8)) && \
     ((ASM_EXTENDEDMIN & 7) == 0 && (ASM_EXTENDEDMAX & 7) == 7)
-#define ASM_ISEXTENDED(x) (((x)&0xf8) == ASM_EXTENDEDMIN)
+#define ASM_ISEXTENDED(x) (((x)&0xf8) == (ASM_EXTENDEDMIN & 0xf8))
 #else /* ... */
 #define ASM_ISEXTENDED(x) ((x) >= ASM_EXTENDEDMIN && (x) <= ASM_EXTENDEDMAX)
 #endif /* !... */
@@ -1051,7 +1051,7 @@
                                     *          The specified local variable is not assigned. */
 #define ASM_PREFIXMIN         0xf8
 #define ASM_PREFIXMAX         0xff
-#define ASM_ISPREFIX(x)     ((x) >= ASM_PREFIXMIN)
+#define ASM_ISPREFIX(x)       ((x) >= ASM_PREFIXMIN)
 
 
 /* Opcodes for misc/rarely used operators, as well as 16-bit
@@ -1387,8 +1387,8 @@
 #define ASM16_DELMEMBER       0xf0c1 /* [4][-2,+0]   `delmember pop, pop, $<imm16>'       - Pop a class type, then an instance describing of that class and delete a member at index `$<imm16>'. */
 #define ASM_SETMEMBER         0xf0c2 /* [3][-3,+0]   `setmember pop, pop, $<imm8>, pop'   - Pop a value, a class type, and an instance, assigning the value to the member at instance index `$<imm8>' of the instance onto the stack. */
 #define ASM16_SETMEMBER       0xf0c3 /* [4][-3,+0]   `setmember pop, pop, $<imm16>, pop'  - Pop a value, a class type, and an instance, assigning the value to the member at instance index `$<imm16>' of the instance onto the stack. */
-#define ASM_BOUNDMEMBER       0xf0c4 /* [3][-2,+1]   `boundmember top, pop, $<imm8>'      - Pop an instance, a class type describing one of the bases of the instance  and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
-#define ASM16_BOUNDMEMBER     0xf0c5 /* [4][-2,+1]   `boundmember top, pop, $<imm16>'     - Pop an instance, a class type describing one of the bases of the instance  and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
+#define ASM_BOUNDMEMBER       0xf0c4 /* [3][-2,+1]   `boundmember top, pop, $<imm8>'      - Pop an instance, a class type describing one of the bases of the instance and push Dee_True/Dee_False if member at index `$<imm8>' is bound. */
+#define ASM16_BOUNDMEMBER     0xf0c5 /* [4][-2,+1]   `boundmember top, pop, $<imm16>'     - Pop an instance, a class type describing one of the bases of the instance and push Dee_True/Dee_False if member at index `$<imm16>' is bound. */
 #define ASM_GETMEMBER_THIS    0xf0c6 /* [3][-1,+1]   `push getmember this, pop, $<imm8>'  - Pop a class type describing one of the bases of `this' and push a member at index `$<imm8>' onto the stack. */
 #define ASM16_GETMEMBER_THIS  0xf0c7 /* [4][-1,+1]   `push getmember this, pop, $<imm16>' - Pop a class type describing one of the bases of `this' and push a member at index `$<imm16>' onto the stack. */
 #define ASM_DELMEMBER_THIS    0xf0c8 /* [3][-1,+0]   `delmember this, pop, $<imm8>'       - Pop a class type describing one of the bases of `this' and delete a member at index `$<imm8>'. */

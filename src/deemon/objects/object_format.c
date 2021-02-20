@@ -258,7 +258,7 @@ object_format_impl(DeeObject *__restrict self,
 		if (tp_self->tp_attr) {
 			if (!tp_self->tp_attr->tp_getattr)
 				break;
-			format_function = (*tp_self->tp_attr->tp_getattr)(self, &str___format__);
+			format_function = (*tp_self->tp_attr->tp_getattr)(self, (DeeObject *)&str___format__);
 			if unlikely(!format_function) {
 check_attribute_error:
 				if (DeeError_Catch(&DeeError_AttributeError) ||
@@ -269,7 +269,7 @@ check_attribute_error:
 			goto call_format_function;
 		}
 		format_function = get_generic_attribute(tp_self, self,
-		                                        &str___format__);
+		                                        (DeeObject *)&str___format__);
 		if (format_function != ITER_DONE) {
 			DREF DeeObject *callback_result;
 			dssize_t result;

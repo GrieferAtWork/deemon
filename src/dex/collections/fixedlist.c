@@ -681,7 +681,7 @@ fl_nsi_getrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	rwlock_init(&result->fl_lock);
 	result->fl_size = count;
 	rwlock_read(&self->fl_lock);
-	Dee_XMovprefv(result->fl_elem, self->fl_elem + (size_t)start, count);
+	Dee_XMovrefv(result->fl_elem, self->fl_elem + (size_t)start, count);
 	rwlock_endread(&self->fl_lock);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -718,7 +718,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 		*p_slot       = NULL;
 	}
 	rwlock_endwrite(&self->fl_lock);
-	Dee_XDecprefv(values_buf, count);
+	Dee_XDecrefv(values_buf, count);
 	Dee_AFree(values_buf);
 	return 0;
 err:
@@ -753,7 +753,7 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 		values_buf[i] = temp;
 	}
 	rwlock_endwrite(&self->fl_lock);
-	Dee_XDecprefv(values_buf, count);
+	Dee_XDecrefv(values_buf, count);
 	Dee_AFree(values_buf);
 	return 0;
 err_values_buf:
@@ -1069,28 +1069,28 @@ PRIVATE struct type_nsi tpconst fl_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (void *)&fl_nsi_size,
-			/* .nsi_getsize_fast = */ (void *)&fl_nsi_size,
-			/* .nsi_getitem      = */ (void *)&fl_nsi_getitem,
-			/* .nsi_delitem      = */ (void *)&fl_nsi_delitem,
-			/* .nsi_setitem      = */ (void *)&fl_nsi_setitem,
-			/* .nsi_getitem_fast = */ (void *)&fl_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (void *)&fl_nsi_getrange,
-			/* .nsi_getrange_n   = */ (void *)&fl_nsi_getrange_n,
-			/* .nsi_setrange     = */ (void *)&fl_nsi_setrange,
-			/* .nsi_setrange_n   = */ (void *)&fl_nsi_setrange_n,
-			/* .nsi_find         = */ (void *)&fl_nsi_find,
-			/* .nsi_rfind        = */ (void *)&fl_nsi_rfind,
-			/* .nsi_xch          = */ (void *)&fl_nsi_xchitem,
-			/* .nsi_insert       = */ (void *)NULL,
-			/* .nsi_insertall    = */ (void *)NULL,
-			/* .nsi_insertvec    = */ (void *)NULL,
-			/* .nsi_pop          = */ (void *)&fl_nsi_pop,
-			/* .nsi_erase        = */ (void *)NULL,
-			/* .nsi_remove       = */ (void *)&fl_nsi_remove,
-			/* .nsi_rremove      = */ (void *)&fl_nsi_rremove,
-			/* .nsi_removeall    = */ (void *)&fl_nsi_removeall,
-			/* .nsi_removeif     = */ (void *)&fl_nsi_removeif
+			/* .nsi_getsize      = */ (dfunptr_t)&fl_nsi_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&fl_nsi_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&fl_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&fl_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&fl_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&fl_nsi_getitem_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&fl_nsi_getrange,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&fl_nsi_getrange_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&fl_nsi_setrange,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&fl_nsi_setrange_n,
+			/* .nsi_find         = */ (dfunptr_t)&fl_nsi_find,
+			/* .nsi_rfind        = */ (dfunptr_t)&fl_nsi_rfind,
+			/* .nsi_xch          = */ (dfunptr_t)&fl_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)&fl_nsi_pop,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)&fl_nsi_remove,
+			/* .nsi_rremove      = */ (dfunptr_t)&fl_nsi_rremove,
+			/* .nsi_removeall    = */ (dfunptr_t)&fl_nsi_removeall,
+			/* .nsi_removeif     = */ (dfunptr_t)&fl_nsi_removeif
 		}
 	}
 };
@@ -1204,11 +1204,11 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (void *)&fl_ctor,
-				/* .tp_copy_ctor = */ (void *)&fl_copy,
-				/* .tp_deep_ctor = */ (void *)&fl_copy,
-				/* .tp_any_ctor  = */ (void *)&fl_init,
-				/* .tp_free      = */ NULL
+				/* .tp_ctor      = */ (dfunptr_t)&fl_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&fl_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&fl_copy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&fl_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fl_fini,
@@ -1425,16 +1425,16 @@ PRIVATE struct type_nii tpconst fli_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (void *)&fli_getseq,
-			/* .nii_getindex = */ (void *)&fli_getindex,
-			/* .nii_setindex = */ (void *)&fli_setindex,
-			/* .nii_rewind   = */ (void *)&fli_rewind,
-			/* .nii_revert   = */ (void *)&fli_revert,
-			/* .nii_advance  = */ (void *)&fli_advance,
-			/* .nii_prev     = */ (void *)NULL,
-			/* .nii_next     = */ (void *)NULL,
-			/* .nii_hasprev  = */ (void *)NULL,
-			/* .nii_peek     = */ (void *)&fli_peek,
+			/* .nii_getseq   = */ (dfunptr_t)&fli_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&fli_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&fli_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&fli_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&fli_revert,
+			/* .nii_advance  = */ (dfunptr_t)&fli_advance,
+			/* .nii_prev     = */ (dfunptr_t)NULL,
+			/* .nii_next     = */ (dfunptr_t)NULL,
+			/* .nii_hasprev  = */ (dfunptr_t)NULL,
+			/* .nii_peek     = */ (dfunptr_t)&fli_peek,
 		}
 	}
 };
@@ -1510,10 +1510,10 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (void *)&fli_ctor,
-				/* .tp_copy_ctor = */ (void *)&fli_copy,
-				/* .tp_deep_ctor = */ (void *)&fli_deep,
-				/* .tp_any_ctor  = */ (void *)&fli_init,
+				/* .tp_ctor      = */ (dfunptr_t)&fli_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&fli_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&fli_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&fli_init,
 				TYPE_FIXED_ALLOCATOR(FixedListIterator)
 			}
 		},

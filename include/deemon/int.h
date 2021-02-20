@@ -168,12 +168,12 @@ typedef Dee_stwodigits_t stwodigits;
 
 struct Dee_int_object {
 	Dee_OBJECT_HEAD
-	Dee_ssize_t ob_size;     /* Number of used digits (negative of that number for negative integers) */
-	Dee_digit_t ob_digit[1]; /* Bit-vector of the integer, split in digits of `Dee_DIGIT_BITS' bits each.
-	                          * Least significant bits come first with individual digits being encoded
-	                          * in host-endian.
-	                          * The total number of digits is the absolute value of `ob_size',
-	                          * which is negative if the value of the integer is too. */
+	Dee_ssize_t                          ob_size;   /* Number of used digits (negative of that number for negative integers) */
+	COMPILER_FLEXIBLE_ARRAY(Dee_digit_t, ob_digit); /* Bit-vector of the integer, split in digits of `Dee_DIGIT_BITS' bits each.
+	                                                 * Least significant bits come first with individual digits being encoded
+	                                                 * in host-endian.
+	                                                 * The total number of digits is the absolute value of `ob_size',
+	                                                 * which is negative if the value of the integer is too. */
 };
 #define DeeInt_SIZE(x)  ((DeeIntObject *)Dee_REQUIRES_OBJECT(x))->ob_size
 #define DeeInt_DIGIT(x) ((DeeIntObject *)Dee_REQUIRES_OBJECT(x))->ob_digit

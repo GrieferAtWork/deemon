@@ -158,6 +158,8 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 
 	/* TODO: Pop the class-scope pushed above. */
 
+	(void)cls_tpname_start;
+	(void)cls_tpname_end;
 	(void)tp_flags;
 	result = NULL;
 	DeeError_NOTIMPLEMENTED();

@@ -567,7 +567,7 @@ DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
 	int result;
 	/* Very simply: Just lookup the `isatty' property. */
-	result_ob = DeeObject_GetAttr(self, &str_isatty);
+	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_isatty);
 	if unlikely(!result_ob)
 		goto err_call;
 	result = DeeObject_Bool(result_ob);
@@ -606,7 +606,7 @@ DeeFile_GetSysFD(DeeObject *__restrict self) {
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Fileno(self);
 	/* Callback: Call a `fileno()' member function. */
-	result_ob = DeeObject_GetAttr(self, &str_getsysfd);
+	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_getsysfd);
 	if unlikely(!result_ob)
 		goto err;
 	/* Cast the member function's return value to an integer. */
@@ -637,7 +637,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeFile_Type))
 		goto err;
 #endif
-	result = DeeObject_GetAttr(self, &str_filename);
+	result = DeeObject_GetAttr(self, (DeeObject *)&str_filename);
 	/* Validate that `filename' is actually a string. */
 	if (result && DeeObject_AssertTypeExact(result, &DeeString_Type))
 		Dee_Clear(result);
@@ -1049,10 +1049,10 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ &filetype_ctor,
-				/* .tp_copy_ctor = */ NULL,
-				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&filetype_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DeeFileTypeObject)
 			}
 		},
@@ -1498,7 +1498,7 @@ again:
 	mod = files_module;
 	if unlikely(!mod) {
 		rwlock_endread(&files_module_lock);
-		mod = DeeModule_OpenGlobal(&str_files, NULL, true);
+		mod = DeeModule_OpenGlobal((DeeObject *)&str_files, NULL, true);
 		if unlikely(!mod)
 			return NULL;
 		if unlikely(DeeModule_RunInit(mod) < 0) {
@@ -1602,7 +1602,7 @@ file_class_default_stderr(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
-	return get_files_object(&str_Joined);
+	return get_files_object((DeeObject *)&str_Joined);
 }
 
 PRIVATE struct type_getset tpconst file_class_getsets[] = {
@@ -1714,7 +1714,7 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 PUBLIC WUNUSED NONNULL((1)) dpos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
-	result = DeeObject_CallAttr(self, &str_size, 0, NULL);
+	result = DeeObject_CallAttr(self, (DeeObject *)&str_size, 0, NULL);
 	if likely(result) {
 		dpos_t resval;
 		int error;
@@ -2456,10 +2456,10 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ &file_init,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
+					/* .tp_ctor      = */ (dfunptr_t)&file_init,
+					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+					/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 					TYPE_FIXED_ALLOCATOR(DeeFileObject)
 				}
 			},

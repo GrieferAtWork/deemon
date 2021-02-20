@@ -93,7 +93,7 @@ none_bool(DeeObject *__restrict UNUSED(a)) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 none_str(DeeObject *__restrict UNUSED(a)) {
 	return_reference_(&str_none);
 }
@@ -319,10 +319,10 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ &none_0,
-				/* .tp_copy_ctor = */ &none_1,
-				/* .tp_deep_ctor = */ &none_1,
-				/* .tp_any_ctor  = */ &none_call0
+				/* .tp_ctor      = */ (dfunptr_t)&none_0,
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_1,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_1,
+				/* .tp_any_ctor  = */ (dfunptr_t)&none_call0
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -330,8 +330,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ &none_str,
-		/* .tp_repr = */ &none_str,
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *))&none_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *))&none_str,
 		/* .tp_bool = */ &none_bool
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&none_call,

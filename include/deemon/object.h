@@ -128,12 +128,19 @@ typedef __LONG64_TYPE__        Dee_off_t;
 typedef __ULONG64_TYPE__       Dee_pos_t;
 typedef uintptr_t              Dee_hash_t;
 
+#ifdef __cplusplus
+typedef void (*Dee_funptr_t)(void);
+#else /* __cplusplus */
+typedef void (*Dee_funptr_t)();
+#endif /* !__cplusplus */
+
 #ifdef DEE_SOURCE
 typedef Dee_refcnt_t drefcnt_t;
 typedef Dee_ssize_t  dssize_t;
 typedef Dee_off_t    doff_t;
 typedef Dee_pos_t    dpos_t;
 typedef Dee_hash_t   dhash_t;
+typedef Dee_funptr_t dfunptr_t;
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -986,9 +993,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 
 #ifdef __INTELLISENSE__
-#define Dee_Increfv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_Decrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_Movrefv_untraced(dst, src, object_count)       ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
 	Dee_Increfv_untraced((DeeObject **)(object_vector), object_count)
@@ -1040,9 +1047,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 
 
 #ifdef __INTELLISENSE__
-#define Dee_XIncrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_XDecrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
-#define Dee_XMovrefv_untraced(dst, src, object_count)       ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#define Dee_XIncrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XDecrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XMovrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
 #else /* __INTELLISENSE__ */
 #define Dee_XIncrefv_untraced(object_vector, object_count) (Dee_XIncrefv)((DeeObject *const *)(object_vector), object_count)
 #define Dee_XDecrefv_untraced(object_vector, object_count) (Dee_XDecrefv)((DeeObject *const *)(object_vector), object_count)
@@ -1155,9 +1162,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
  * @param declarator: [1..1] The type or object that is declaring this attribute.
  * @param attr_name:  [1..1] The name of the attribute.
  * @param attr_doc:   [0..1] An optional documentation string containing additional information.
- * @param perm:       Set of `ATTR_*' describing permissions granted by the attribute.
- * @param attr_type:  The type of object that would be returned by `DeeObject_GetAttr', or `NULL' if unknown.
- * @param arg:        User-defined callback argument.
+ * @param perm:              Set of `ATTR_*' describing permissions granted by the attribute.
+ * @param attr_type:  [0..1] The type of object that would be returned by `DeeObject_GetAttr', or `NULL' if unknown.
+ * @param arg:               User-defined callback argument.
  * @return: < 0:      Propagate an error, letting `DeeObject_EnumAttr()' fail with the same error.
  * @return: >= 0:     Add this value to the sum of all other positive values, which `DeeObject_EnumAttr()' will then return.
  * @return: -1:       An error occurred and was thrown (This may also be returned by `DeeObject_EnumAttr()' when enumeration fails for some other reason)
@@ -1180,29 +1187,29 @@ typedef WUNUSED NONNULL((1, 2)) Dee_ssize_t
 
 #ifdef DEE_SOURCE
 typedef Dee_enum_t denum_t;
-#define ATTR_PERMGET   Dee_ATTR_PERMGET  /* [NAME("g")] Attribute supports get/has queries (g -- get). */
-#define ATTR_PERMDEL   Dee_ATTR_PERMDEL  /* [NAME("d")] Attribute supports del queries (d -- del). */
-#define ATTR_PERMSET   Dee_ATTR_PERMSET  /* [NAME("s")] Attribute supports set queries (s -- set). */
-#define ATTR_PERMCALL  Dee_ATTR_PERMCALL /* [NAME("f")] The attribute is intended to be called (f -- function). */
-#define ATTR_IMEMBER   Dee_ATTR_IMEMBER  /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
-#define ATTR_CMEMBER   Dee_ATTR_CMEMBER  /* [NAME("c")] This attribute is a class attribute (c -- class). */
-#define ATTR_PRIVATE   Dee_ATTR_PRIVATE  /* [NAME("h")] This attribute is considered private (h -- hidden). */
-#define ATTR_PROPERTY  Dee_ATTR_PROPERTY /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
-#define ATTR_WRAPPER   Dee_ATTR_WRAPPER  /* [NAME("w")] In the current content, the attribute will be accessed as a wrapper. */
-#define ATTR_NAMEOBJ   Dee_ATTR_NAMEOBJ  /* HINT: `attr_name' is actually the `s_str' field of a `DeeStringObject'. */
-#define ATTR_DOCOBJ    Dee_ATTR_DOCOBJ   /* HINT: `attr_doc' (when non-NULL) is actually the `s_str' field of a `DeeStringObject'. */
+#define ATTR_PERMGET  Dee_ATTR_PERMGET  /* [NAME("g")] Attribute supports get/has queries (g -- get). */
+#define ATTR_PERMDEL  Dee_ATTR_PERMDEL  /* [NAME("d")] Attribute supports del queries (d -- del). */
+#define ATTR_PERMSET  Dee_ATTR_PERMSET  /* [NAME("s")] Attribute supports set queries (s -- set). */
+#define ATTR_PERMCALL Dee_ATTR_PERMCALL /* [NAME("f")] The attribute is intended to be called (f -- function). */
+#define ATTR_IMEMBER  Dee_ATTR_IMEMBER  /* [NAME("i")] This attribute is an instance attribute (i -- instance). */
+#define ATTR_CMEMBER  Dee_ATTR_CMEMBER  /* [NAME("c")] This attribute is a class attribute (c -- class). */
+#define ATTR_PRIVATE  Dee_ATTR_PRIVATE  /* [NAME("h")] This attribute is considered private (h -- hidden). */
+#define ATTR_PROPERTY Dee_ATTR_PROPERTY /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
+#define ATTR_WRAPPER  Dee_ATTR_WRAPPER  /* [NAME("w")] In the current content, the attribute will be accessed as a wrapper. */
+#define ATTR_NAMEOBJ  Dee_ATTR_NAMEOBJ  /* HINT: `attr_name' is actually the `s_str' field of a `DeeStringObject'. */
+#define ATTR_DOCOBJ   Dee_ATTR_DOCOBJ   /* HINT: `attr_doc' (when non-NULL) is actually the `s_str' field of a `DeeStringObject'. */
 #endif /* DEE_SOURCE */
 
 
 
 #ifndef DEE_TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */
-#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (void *)(tp_free), { (uintptr_t)(void *)(tp_malloc) }
+#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (Dee_funptr_t)(tp_free), { (Dee_funptr_t)(tp_malloc) }
 
 /* Specifies an automatic object allocator. */
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, { (uintptr_t)(size) }
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, { (uintptr_t)(max_size) }
-#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, { (uintptr_t)sizeof(T) }
+#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, { (Dee_funptr_t)(void *)(uintptr_t)(size) }
+#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, { (Dee_funptr_t)(void *)(uintptr_t)(max_size) }
+#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, { (Dee_funptr_t)(void *)(uintptr_t)sizeof(T) }
 
 /* Expose shorter variants of macros */
 #ifdef DEE_SOURCE
@@ -1224,12 +1231,12 @@ typedef Dee_enum_t denum_t;
 #define DEE_TYPE_FIXED_ALLOCATOR       TYPE_AUTO_ALLOCATOR
 #define DEE_TYPE_FIXED_ALLOCATOR_GC    TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)               \
-	  DeeSlab_Invoke((void *)&DeeObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((uintptr_t)(void *)&DeeObject_SlabMalloc, max_size, , max_size) }
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R(min_size, max_size)              \
-	  DeeSlab_Invoke((void *)&DeeGCObject_SlabFree, min_size, , NULL), \
-	{ DeeSlab_Invoke((uintptr_t)(void *)&DeeGCObject_SlabMalloc, max_size, , max_size) }
+#define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)                     \
+	  DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabFree, min_size, , NULL), \
+	{ DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
+#define DEE_TYPE_SIZED_ALLOCATOR_GC_R(min_size, max_size)                    \
+	  DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabFree, min_size, , NULL), \
+	{ DeeSlab_Invoke((Dee_funptr_t)&DeeGCObject_SlabMalloc, max_size, , (Dee_funptr_t)(void *)(uintptr_t)(max_size)) }
 #define DEE_TYPE_SIZED_ALLOCATOR(size)    DEE_TYPE_SIZED_ALLOCATOR_R(size, size)
 #define DEE_TYPE_SIZED_ALLOCATOR_GC(size) DEE_TYPE_SIZED_ALLOCATOR_GC_R(size, size)
 #define DEE_TYPE_FIXED_ALLOCATOR(T)       DEE_TYPE_SIZED_ALLOCATOR_R(sizeof(T), sizeof(T))
@@ -1240,22 +1247,22 @@ typedef Dee_enum_t denum_t;
  * allocator functions when doing so would require the creation of
  * relocations that might cause loading times to become larger. */
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)      DEE_TYPE_AUTO_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T)   DEE_TYPE_AUTO_ALLOCATOR(T)
+#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_AUTO_ALLOCATOR(T)
+#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_AUTO_ALLOCATOR(T)
 #else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define DEE_TYPE_FIXED_ALLOCATOR_S(T)      DEE_TYPE_FIXED_ALLOCATOR(T)
-#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T)   DEE_TYPE_FIXED_ALLOCATOR_GC(T)
+#define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_FIXED_ALLOCATOR(T)
+#define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_FIXED_ALLOCATOR_GC(T)
 #endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 
 #ifdef DEE_SOURCE
-#define TYPE_SIZED_ALLOCATOR_R         DEE_TYPE_SIZED_ALLOCATOR_R
-#define TYPE_SIZED_ALLOCATOR_GC_R      DEE_TYPE_SIZED_ALLOCATOR_GC_R
-#define TYPE_SIZED_ALLOCATOR           DEE_TYPE_SIZED_ALLOCATOR
-#define TYPE_SIZED_ALLOCATOR_GC        DEE_TYPE_SIZED_ALLOCATOR_GC
-#define TYPE_FIXED_ALLOCATOR           DEE_TYPE_FIXED_ALLOCATOR
-#define TYPE_FIXED_ALLOCATOR_GC        DEE_TYPE_FIXED_ALLOCATOR_GC
-#define TYPE_FIXED_ALLOCATOR_S         DEE_TYPE_FIXED_ALLOCATOR_S
-#define TYPE_FIXED_ALLOCATOR_GC_S      DEE_TYPE_FIXED_ALLOCATOR_GC_S
+#define TYPE_SIZED_ALLOCATOR_R    DEE_TYPE_SIZED_ALLOCATOR_R
+#define TYPE_SIZED_ALLOCATOR_GC_R DEE_TYPE_SIZED_ALLOCATOR_GC_R
+#define TYPE_SIZED_ALLOCATOR      DEE_TYPE_SIZED_ALLOCATOR
+#define TYPE_SIZED_ALLOCATOR_GC   DEE_TYPE_SIZED_ALLOCATOR_GC
+#define TYPE_FIXED_ALLOCATOR      DEE_TYPE_FIXED_ALLOCATOR
+#define TYPE_FIXED_ALLOCATOR_GC   DEE_TYPE_FIXED_ALLOCATOR_GC
+#define TYPE_FIXED_ALLOCATOR_S    DEE_TYPE_FIXED_ALLOCATOR_S
+#define TYPE_FIXED_ALLOCATOR_GC_S DEE_TYPE_FIXED_ALLOCATOR_GC_S
 #endif /* DEE_SOURCE */
 #endif /* GUARD_DEEMON_ALLOC_H */
 
@@ -1267,15 +1274,16 @@ struct Dee_type_constructor {
 	/* Instance constructors/destructors. */
 	union {
 		struct {
-			void *_tp_init0_; /* tp_ctor */
-			void *_tp_init1_; /* tp_copy_ctor */
-			void *_tp_init2_; /* tp_deep_ctor */
-			void *_tp_init3_; /* tp_any_ctor */
+			Dee_funptr_t _tp_init0_; /* tp_ctor */
+			Dee_funptr_t _tp_init1_; /* tp_copy_ctor */
+			Dee_funptr_t _tp_init2_; /* tp_deep_ctor */
+			Dee_funptr_t _tp_init3_; /* tp_any_ctor */
 			/* Initializer for a custom type allocator. */
-			void *_tp_init4_; /* tp_free */
-			struct { uintptr_t _tp_init5_; } _tp_init6_;
-			void *_tp_init7_; /* tp_any_ctor_kw */
+			Dee_funptr_t _tp_init4_; /* tp_free */
+			struct { Dee_funptr_t _tp_init5_; } _tp_init6_;
+			Dee_funptr_t _tp_init7_; /* tp_any_ctor_kw */
 		} _tp_init_;
+
 		struct {
 			WUNUSED NONNULL((1))    int (DCALL *tp_ctor)(DeeObject *__restrict self);
 			WUNUSED NONNULL((1, 2)) int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
@@ -1289,7 +1297,7 @@ struct Dee_type_constructor {
 			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
 			NONNULL((1)) void (DCALL *tp_free)(void *__restrict ob);
 			union {
-				size_t tp_instance_size; /* [valid_if(tp_free == NULL)] */
+				size_t tp_instance_size;       /* [valid_if(tp_free == NULL)] */
 				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -1303,6 +1311,7 @@ struct Dee_type_constructor {
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
+
 		struct {
 			/* NOTE: Var-constructors are allowed to return instances of types other than `tp'
 			 *       However, this is a privilege that is not exposed to user-code.
@@ -1321,7 +1330,7 @@ struct Dee_type_constructor {
 			WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
 			WUNUSED              DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
 			        NONNULL((1)) void            (DCALL *tp_free)(void *__restrict ob);
-			struct { uintptr_t tp_pad; } tp_pad; /* ... */
+			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *           even when `tp_ctor' has been defined as non-NULL! */
 			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -1333,13 +1342,17 @@ struct Dee_type_constructor {
 #define tp_var   _dee_aunion.tp_var
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
-	NONNULL((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self); /* [0..1] */
+
+	/* [0..1] Optional destructor callback. */
+	NONNULL((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self);
+
 	/* NOTE: `tp_move_assign' is favored in code such as this:
 	 * >> local my_list = [];
-	 * >> my_list := copy get_other_list(); // Will try to move-assign the copy.
+	 * >> my_list := copy     get_other_list(); // Will try to move-assign the copy.
 	 * >> my_list := deepcopy get_other_list(); // Will try to move-assign the deep copy. */
 	WUNUSED NONNULL((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
 	WUNUSED NONNULL((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
+
 	/* Following a previously successful construction using the `tp_deep_ctor' operator,
 	 * go through all member objects of the type and replace them with deep copies.
 	 * This operator is required to provide a safe way for GC objects to be
@@ -1400,6 +1413,7 @@ struct Dee_type_gc {
 	/* Clear all possible references with `NULL' or some
 	 * statically allocated stub-object (e.g.: `Dee_None') */
 	NONNULL((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
+
 	/* Same as `tp_clear', but only clear reachable objects with a `tp_gcprio'
 	 * priority that is `>= prio'. (non-gc types have a priority of `Dee_GC_PRIORITY_LATE')
 	 * @assume(prio != 0);
@@ -1411,6 +1425,7 @@ struct Dee_type_gc {
 	 * a bulk, as well as do so with regards of GC priority, when comparing
 	 * `gc_priority' against the return value of `DeeObject_GCPriority()' */
 	NONNULL((1)) void (DCALL *tp_pclear)(DeeObject *__restrict self, unsigned int gc_priority);
+
 	/* The GC destruction priority of this object (greater
 	 * values are (attempted to be) destroyed before lower ones).
 	 * For a list of priority values of builtin types, see the macros below.
