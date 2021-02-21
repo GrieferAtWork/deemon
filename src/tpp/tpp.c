@@ -4725,10 +4725,18 @@ err:
 
 PRIVDEF void TPPCALL TPPKeyword_Undef(struct TPPKeyword *__restrict self);
 
+
+/* Suppress warnings about `argend_token' being uninitialized when used (it't not!) */
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4701)
+#pragma warning(disable : 4701 4703)
 #endif /* _MSC_VER */
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif /* __GNUC__ */
+
 PUBLIC struct TPPFile *TPPCALL
 TPPFile_NewDefine(void) {
 	struct TPPFile *result, *curfile;
@@ -4823,9 +4831,10 @@ common_call_extension:
 		/* Parse the argument */
 		result->f_macro.m_function.f_argc   = 0;
 		result->f_macro.m_function.f_argbuf = NULL; /* Lazily allocated later. */
-		arginfo_a = 0, arginfo_v = NULL;
+		arginfo_a = 0;
+		arginfo_v = NULL;
 		TPPLexer_YieldRaw();
-		if (tok != argend_token)
+		if (tok != argend_token) {
 			while (tok > 0) {
 				if (TPP_ISKEYWORD(tok)) { /* Argument name. */
 					argument_name = tok;
@@ -4854,8 +4863,9 @@ add_macro_argument:
 
 					if (arginfo_a == result->f_macro.m_function.f_argc) {
 						arginfo_a     = arginfo_a ? arginfo_a * 2 : 2;
-						new_arginfo_v = (struct arginfo_t *)API_REALLOC(arginfo_v, arginfo_a *
-						                                                           sizeof(struct arginfo_t));
+						new_arginfo_v = (struct arginfo_t *)API_REALLOC(arginfo_v,
+						                                                arginfo_a *
+						                                                sizeof(struct arginfo_t));
 						if unlikely(!new_arginfo_v)
 							goto seterr_arginfo;
 						arginfo_v = new_arginfo_v;
@@ -4892,7 +4902,7 @@ skip_argument_name:
 #endif /* !NO_EXTENSION_GCC_VA_ARGS */
 					if (result->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC && tok != argend_token) {
 						/* Expected `)' after varargs argument name. */
-						if (!WARN(W_EXPECTED_ARGEND_AFTER_VARARGS, argend_token))
+						if (!WARN(W_EXPECTED_ARGEND_AFTER_VARARGS))
 							goto err_arginfo;
 					}
 #if !defined(NO_EXTENSION_VA_ARGS)
@@ -4902,18 +4912,19 @@ skip_argument_name:
 					goto add_macro_argument;
 #endif /* !NO_EXTENSION_VA_ARGS */
 				} else {
-					if (!WARN(W_EXPECTED_MACRO_ARGUMENT_NAME, argend_token))
+					if (!WARN(W_EXPECTED_MACRO_ARGUMENT_NAME))
 						goto err_arginfo;
 					break;
 				}
 				if (tok == argend_token)
 					break; /* Stop parsing the argument list. */
-				if (tok == ',')
+				if (tok == ',') {
 					TPPLexer_YieldRaw();
-				else if (!WARN(W_EXPECTED_COMMA_OR_ARGEND, argend_token)) {
+				} else if (!WARN(W_EXPECTED_COMMA_OR_ARGEND)) {
 					goto err_arginfo;
 				}
 			}
+		}
 		if (result->f_macro.m_function.f_argc != arginfo_a) {
 			new_arginfo_v = (struct arginfo_t *)API_REALLOC(arginfo_v, result->f_macro.m_function.f_argc *
 			                                                           sizeof(struct arginfo_t));
@@ -5083,6 +5094,11 @@ err_arginfo:
 	free(result);
 	return NULL;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif /* __GNUC__ */
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif /* _MSC_VER */

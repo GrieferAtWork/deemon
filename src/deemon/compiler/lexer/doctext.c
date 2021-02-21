@@ -2074,6 +2074,7 @@ check_ordered_list_digit:
 			} else {
 				/* Search until a space/line-feed character is found, or the construct is ended correctly */
 				body_start = after_first_ch;
+				body_end   = after_first_ch;
 				for (;;) {
 					if (DeeUni_IsSpace(nextch) ||
 					    DeeUni_IsLF(nextch) || (!nextch && iter >= end)) {
