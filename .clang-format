@@ -80,6 +80,7 @@ DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: false
+ForEachMacros: ['LIST_FOREACH', 'SLIST_FOREACH', 'SLIST_P_FOREACH', 'STAILQ_FOREACH', 'STAILQ_P_FOREACH', 'SIMPLEQ_FOREACH', 'SIMPLEQ_P_FOREACH', 'TAILQ_FOREACH', 'TAILQ_FOREACH_REVERSE', 'CIRCLEQ_FOREACH', 'CIRCLEQ_FOREACH_REVERSE', 'DLIST_FOREACH']
 IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '\"api.h\"'
@@ -147,6 +148,6 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Cpp03
 TabWidth: 4
-TypenameMacros: ['ATREE_HEAD', 'ATREE_NODE', 'ATREE_NODE_SINGLE', 'ATREE_XNODE', 'ATREE_SEMI_T', 'SLIST', 'SLIST_NODE', 'LIST_HEAD', 'LIST_ENTRY', 'DLIST', 'DLIST_NODE']
+TypenameMacros: ['ATREE_HEAD', 'ATREE_NODE', 'ATREE_NODE_SINGLE', 'ATREE_XNODE', 'ATREE_SEMI_T', 'LLIST', 'LLIST_NODE']
 UseCRLF: false
 UseTab: ForIndentation

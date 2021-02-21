@@ -2,21 +2,29 @@
 #define attribute(x)
 #define __attribute(x)
 #define __attribute__(x)
+#define __declspec(...)
 #define __volatile volatile
 #define __volatile__ volatile
+#define explicit
+#define constexpr
 #define __const const
 #define __const__ const
 #define __label__
 #define typeof decltype
 #define __typeof decltype
 #define __typeof__ decltype
+#define _Complex
+#define __complex
+#define __complex__
 #define _Atomic
 #define __thread
 #define __auto_type auto
 #define inline
 #define __inline
 #define __inline__
+#define noreturn
 #define _Noreturn
+#define thread_local
 #define _Thread_local
 #define __flash
 #define __flash1
@@ -35,76 +43,233 @@
 #define __unsigned__ unsigned
 #define __restrict restrict
 #define __restrict__ restrict
+#define asm(...)
+#define __asm(...)
+#define __asm__(...)
+#define __w64
+#define __fastcall
+#define __stdcall
+#define __cdecl
+#define __thiscall
+#define __clrcall
+#define __ms_abi
+#define __sysv_abi
+
+#define INT8_C(c) c
+#define __INT8_C(c) c
+#define INT16_C(c) c
+#define __INT16_C(c) c
+#define INT32_C(c) c
+#define __INT32_C(c) c
+#define UINT8_C(c) c
+#define __UINT8_C(c) c
+#define UINT16_C(c) c
+#define __UINT16_C(c) c
+#define UINT32_C(c) c
+#define __UINT32_C(c) c
+#define INT64_C(c) c
+#define __INT64_C(c) c
+#define UINT64_C(c) c
+#define __UINT64_C(c) c
+#define INT128_C(c) c
+#define __INT128_C(c) c
+#define UINT128_C(c) c
+#define __UINT128_C(c) c
+#define INTMAX_C(c) c
+#define __INTMAX_C(c) c
+#define UINTMAX_C(c) c
+#define __UINTMAX_C(c) c
+#define INTPTR_C(c) c
+#define __INTPTR_C(c) c
+#define UINTPTR_C(c) c
+#define __UINTPTR_C(c) c
+#define SIZE_C(c) c
+#define __SIZE_C(c) c
+#define SSIZE_C(c) c
+#define __SSIZE_C(c) c
 
 #define DREF
 #define DWEAK
 #define __LIBCCALL
 #define DCALL
-#define DECL_BEGIN
-#define DECL_END
 #define __NULLPTR 0
 #define NULL 0
 
-#define ATTR_NOINLINE
-#define ATTR_NORETURN
-#define ATTR_FASTCALL
-#define ATTR_STDCALL
-#define ATTR_CDECL
-#define ATTR_SYSVABI
-#define ATTR_MSABI
-#define ATTR_PURE
-#define ATTR_CONST
-#define ATTR_LEAF
-#define ATTR_FLATTEN
-#define ATTR_MALLOC
-#define ATTR_HOT
-#define ATTR_COLD
-#define ATTR_WEAK
-#define ATTR_ALLOC_SIZE(x)
-#define ATTR_ASSUME_ALIGNED
-#define ATTR_ALLOC_ALIGN(x)
-#define ATTR_NOTHROW
-#define ATTR_DLLIMPORT
-#define ATTR_DLLEXPORT
-#define ATTR_NOCLONE
-#define ATTR_USED
-#define ATTR_UNUSED
-#define ATTR_SENTINEL
-#define ATTR_SENTINEL_O(x)
-#define ATTR_THREAD
-#define ATTR_DEPRECATED(x)
-#define ATTR_DEPRECATED_
-#define ATTR_WARNING(x)
-#define ATTR_ERROR(x)
-#define ATTR_SECTION(x)
-#define ATTR_RETNONNULL
-#define ATTR_ALIGNED(x)
-#define ATTR_ALIAS(x)
-#define ATTR_INLINE
-#define ATTR_FORCEINLINE
-#define ATTR_PACKED
-#define ATTR_RETURNS_TWICE
-#define ATTR_EXTERNALLY_VISIBLE
+#define DECL_BEGIN extern "C" {
+#define __DECL_BEGIN extern "C" {
+#define __SYSDECL_BEGIN extern "C" {
+#define DECL_END }
+#define __DECL_END }
+#define __SYSDECL_END }
 
-#define NONNULL(x)
+#define XBLOCK
+#define __XBLOCK
+#define XRETURN
+#define __XRETURN
+
+#define __ATTR_W64
+#define ATTR_NOINLINE
+#define __ATTR_NOINLINE
+#define ATTR_NORETURN
+#define __ATTR_NORETURN
+#define ATTR_FASTCALL
+#define __ATTR_FASTCALL
+#define ATTR_STDCALL
+#define __ATTR_STDCALL
+#define ATTR_CDECL
+#define __ATTR_CDECL
+#define ATTR_SYSVABI
+#define __ATTR_SYSVABI
+#define ATTR_MSABI
+#define __ATTR_MSABI
+#define ATTR_PURE
+#define ATTR_PURE_P
+#define __ATTR_PURE
+#define __ATTR_PURE_P
+#define ATTR_CONST
+#define ATTR_CONST_P
+#define __ATTR_CONST
+#define __ATTR_CONST_P
+#define ATTR_LEAF
+#define ATTR_LEAF_P
+#define __ATTR_LEAF
+#define __ATTR_LEAF_P
+#define ATTR_FLATTEN
+#define __ATTR_FLATTEN
+#define ATTR_MALLOC
+#define __ATTR_MALLOC
+#define ATTR_HOT
+#define __ATTR_HOT
+#define ATTR_COLD
+#define __ATTR_COLD
+#define ATTR_WEAK
+#define __ATTR_WEAK
+#define ATTR_ALLOC_SIZE(x)
+#define __ATTR_ALLOC_SIZE(x)
+#define ATTR_ASSUME_ALIGNED(x)
+#define __ATTR_ASSUME_ALIGNED(x)
+#define ATTR_ALLOC_ALIGN(x)
+#define __ATTR_ALLOC_ALIGN(x)
+#define ATTR_NOTHROW
+#define __ATTR_NOTHROW
+#define ATTR_DLLIMPORT
+#define __ATTR_DLLIMPORT
+#define ATTR_DLLEXPORT
+#define __ATTR_DLLEXPORT
+#define ATTR_NOCLONE
+#define __ATTR_NOCLONE
+#define ATTR_USED
+#define __ATTR_USED
+#define ATTR_UNUSED
+#define __ATTR_UNUSED
+#define ATTR_SENTINEL
+#define __ATTR_SENTINEL
+#define ATTR_SENTINEL_O(x)
+#define __ATTR_SENTINEL_O(x)
+#define ATTR_THREAD
+#define __ATTR_THREAD
+#define ATTR_DEPRECATED(x)
+#define __ATTR_DEPRECATED(x)
+#define ATTR_DEPRECATED_
+#define __ATTR_DEPRECATED_
+#define ATTR_WARNING(x)
+#define __ATTR_WARNING(x)
+#define ATTR_ERROR(x)
+#define __ATTR_ERROR(x)
+#define ATTR_SECTION(x)
+#define __ATTR_SECTION(x)
+#define ATTR_RETNONNULL
+#define __ATTR_RETNONNULL
+#define ATTR_ALIGNED(x)
+#define __ATTR_ALIGNED(x)
+#define ATTR_ALIAS(x)
+#define __ATTR_ALIAS(x)
+#define ATTR_INLINE
+#define __ATTR_INLINE
+#define ATTR_FORCEINLINE
+#define __ATTR_FORCEINLINE
+#define ATTR_PACKED
+#define __ATTR_PACKED
+#define ATTR_RETURNS_TWICE
+#define __ATTR_RETURNS_TWICE
+#define ATTR_EXTERNALLY_VISIBLE
+#define __ATTR_EXTERNALLY_VISIBLE
+#define ATTR_ARTIFICIAL
+#define __ATTR_ARTIFICIAL
+#define ATTR_FORMAT_ARG(x)
+#define __ATTR_FORMAT_ARG(x)
+#define ATTR_FALLTHROUGH ;
+#define __ATTR_FALLTHROUGH ;
+#define ATTR_OPTIMIZE(x)
+#define __ATTR_OPTIMIZE(x)
+#define ATTR_TRANSPARENT_UNION
+#define __ATTR_TRANSPARENT_UNION
+#define ATTR_FORMAT_PRINTF(...)
+#define __ATTR_FORMAT_PRINTF(...)
+#define ATTR_FORMAT_SCANF(...)
+#define __ATTR_FORMAT_SCANF(...)
+#define ATTR_FORMAT_STRFMON(...)
+#define __ATTR_FORMAT_STRFMON(...)
+#define ATTR_FORMAT_STRFTIME(...)
+#define __ATTR_FORMAT_STRFTIME(...)
+#define ATTR_NOPLT
+#define __ATTR_NOPLT
+#define ATTR_SELECTANY
+#define __ATTR_SELECTANY
+#define ATTR_VISIBILITY(x)
+#define __ATTR_VISIBILITY(x)
+
+#define NONNULL(...)
+#define ATTR_NONNULL(...)
+#define __ATTR_NONNULL(...)
+#define NONNULL_CXX(...)
+#define ATTR_NONNULL_CXX(...)
+#define __ATTR_NONNULL_CXX(...)
 #define WUNUSED
-#define UNUSED(x) x
-#define IMPDEF extern
-#define EXPDEF extern
-#define FUNDEF extern
-#define DATDEF extern
+#define ATTR_WUNUSED
+#define __ATTR_WUNUSED
+#define UNUSED(...) __VA_ARGS__
+#define __UNUSED(...) __VA_ARGS__
+#define IMPDEF
+#define __IMPDEF
+#define EXPDEF
+#define __EXPDEF
+#define FUNDEF
+#define __PUBDEF
+#define DATDEF
+#define __PUBDEF
+#define PUBLIC
+#define __PUBLIC
+#define INTERN
+#define __INTERN
+#define PUBLIC_CONST
+#define __PUBLIC_CONST
+#define INTERN_CONST
+#define __INTERN_CONST
+#define INTERN_COMDAT
+#define __INTERN_COMDAT
+#define PUBLIC_COMDAT
+#define __PUBLIC_COMDAT
+#define INTDEF
+#define __INTDEF
+#define PRIVATE
+#define __PRIVATE
+#define FORCELOCAL
+#define __FORCELOCAL
+#define EXTERN_INLINE
+#define __EXTERN_INLINE
+#define EXTERN_FORCEINLINE
+#define __EXTERN_FORCEINLINE
+#define LOCAL
+#define __LOCAL
+#define __LOCAL_REDIRECT
+#define DFL(x) = x
+#define __DFL(x) = x
+#define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+#define __COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+
 #define DFUNDEF extern
 #define DDATDEF extern
-#define PUBLIC
-#define INTERN
-#define PUBLIC_CONST
-#define INTERN_CONST
-#define INTDEF extern
-#define PRIVATE
-#define FORCELOCAL
-#define LOCAL
-#define DFL(x) = x
-#define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
 
 #define DEFINE_PRIVATE_ALIAS(new,old) int new() {}
 #define DEFINE_PUBLIC_ALIAS(new,old) int new() {}
@@ -113,16 +278,119 @@
 #define DEFINE_PUBLIC_WEAK_ALIAS(new,old) int new() {}
 #define DEFINE_INTERN_WEAK_ALIAS(new,old) int new() {}
 
-#define LIST_HEAD(T)                  T *
-#define LIST_ENTRY(T)             struct { T *ln_next, **ln_pself;  }
-#define DLIST(T)                  struct { T *dl_head, *dl_tail; }
-#define DLIST_NODE(T)             struct { T **dn_pnext, **dn_pprev, *dn_next, *dn_prev; }
-#define SLIST(T)                  T *
-#define SLIST_NODE(T)             struct { T *sn_next; }
-#define ATREE_HEAD(T)             T *
-#define ATREE_NODE(T,Tkey)        struct { T *a_min, *a_max; Tkey a_vmin, a_vmax; }
-#define ATREE_NODE_SINGLE(T,Tkey) struct { T *a_min, *a_max; Tkey a_vaddr; }
-#define ATREE_XNODE(T)            struct { T *a_min, *a_max; }
+#define static_assert(...)
+#define _Static_assert(...)
+#define STATIC_ASSERT(...)
+#define __STATIC_ASSERT(...)
+#define STATIC_ASSERT_MSG(...)
+#define __STATIC_ASSERT_MSG(...)
+
+#define LIST_FOREACH(...) for(;;)
+#define LIST_FOREACH_P(...) for(;;)
+#define LIST_HEAD(n,t) struct n{struct t *lh_first;}
+#define LIST_HEAD_P(T) struct{T*lh_first;}
+#define LIST_ENTRY(t) struct{struct t*le_next,**le_prev;}
+#define LIST_ENTRY_P(T) struct{T*le_next,**le_prev;}
+
+#define SLIST_FOREACH(...) for(;;)
+#define SLIST_FOREACH_P(...) for(;;)
+#define SLIST_HEAD(n,t) struct n{struct t *slh_first;}
+#define SLIST_HEAD_P(T) struct{T*slh_first;}
+#define SLIST_ENTRY(t) struct{struct t*sle_next;}
+#define SLIST_ENTRY_P(T) struct{T*sle_next;}
+
+#define STAILQ_HEAD(n,t) struct n{struct t*stqh_first,**stqh_last;}
+#define STAILQ_ENTRY(t) struct{struct t*stqe_next;}
+#define STAILQ_HEAD_P(T) struct{T*stqh_first,**stqh_last;}
+#define STAILQ_ENTRY_P(T) struct{T*stqe_next;}
+#define STAILQ_FOREACH(...) for(;;)
+#define STAILQ_FOREACH_P(...) for(;;)
+
+#define SIMPLEQ_HEAD(n,t) struct n{struct t*sqh_first,**sqh_last;}
+#define SIMPLEQ_ENTRY(t) struct{struct t*sqe_next;}
+#define SIMPLEQ_HEAD_P(T) struct{T*sqh_first,**sqh_last;}
+#define SIMPLEQ_ENTRY_P(T) struct{T*sqe_next;}
+#define SIMPLEQ_FOREACH(...) for(;;)
+#define SIMPLEQ_FOREACH_P(...) for(;;)
+
+#define _TAILQ_HEAD(n,T,q) struct n{T q*tqh_first,*q*tqh_last;}
+#define _TAILQ_ENTRY(T,q) struct{T q*tqe_next,*q*tqe_prev;}
+#define TAILQ_HEAD(n,t) struct n{struct t*tqh_first,**tqh_last;}
+#define TAILQ_HEAD_P(T) struct{T*tqh_first,**tqh_last;}
+#define TAILQ_ENTRY(t) struct{struct t*tqe_next,**tqe_prev;}
+#define TAILQ_ENTRY_P(T) struct{T*tqe_next,**tqe_prev;}
+#define TAILQ_FOREACH(...) for(;;)
+#define TAILQ_FOREACH_P(...) for(;;)
+#define TAILQ_FOREACH_REVERSE(...) for(;;)
+#define TAILQ_FOREACH_REVERSE_P(...) for(;;)
+
+#define CIRCLEQ_HEAD(n,t) struct n{struct t*cqh_first,*cqh_last;}
+#define CIRCLEQ_HEAD_P(T) struct{T*cqh_first,*cqh_last;}
+#define CIRCLEQ_ENTRY(t) struct{struct t*cqe_next,*cqe_prev;}
+#define CIRCLEQ_ENTRY_P(T) struct{T*cqe_next,*cqe_prev;}
+#define CIRCLEQ_FOREACH(...) for(;;)
+#define CIRCLEQ_FOREACH_P(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE(...) for(;;)
+#define CIRCLEQ_FOREACH_REVERSE_P(...) for(;;)
+
+#define RINGQ_ENTRY(t) struct{struct t*rqe_next,*rqe_prev;}
+#define RINGQ_ENTRY_P(T) struct{T*rqe_next,*rqe_prev;}
+
+#define DLIST_HEAD(n,t) struct n{struct t*dlh_first;}
+#define DLIST_ENTRY(t) struct{struct t*dle_next,*dle_prev;}
+#define DLIST_ENTRY_P(T) struct{T*dle_next,*dle_prev;}
+#define DLIST_FOREACH(...) for(;;)
+#define DLIST_FOREACH_P(...) for(;;)
+
+#define LIST_TRYREMOVE_IF(...)
+#define LIST_TRYREMOVE_IF_P(...)
+#define LIST_REMOVEALL(...)
+#define LIST_REMOVEALL_P(...)
+#define LIST_TRYUNBIND_IF(...)
+#define LIST_TRYUNBIND_IF_P(...)
+#define LIST_UNBINDALL(...)
+#define LIST_UNBINDALL_P(...)
+#define DLIST_TRYREMOVE_IF(...)
+#define DLIST_TRYREMOVE_IF_P(...)
+#define DLIST_REMOVEALL(...)
+#define DLIST_REMOVEALL_P(...)
+#define SLIST_TRYREMOVE(...)
+#define SLIST_TRYREMOVE_P(...)
+#define SLIST_TRYREMOVE_IF(...)
+#define SLIST_TRYREMOVE_IF_P(...)
+#define SLIST_REMOVEALL(...)
+#define SLIST_REMOVEALL_P(...)
+#define SLIST_CONTAINS(...)
+#define SLIST_CONTAINS_P(...)
+#define SLIST_TRYREPLACE(...)
+#define SLIST_TRYREPLACE_P(...)
+#define SLIST_TRYREPLACE_R(...)
+#define SLIST_TRYREPLACE_R_P(...)
+#define STAILQ_TRYREMOVE(...)
+#define STAILQ_TRYREMOVE_P(...)
+#define STAILQ_TRYREMOVE_IF(...)
+#define STAILQ_TRYREMOVE_IF_P(...)
+#define STAILQ_REMOVEALL(...)
+#define STAILQ_REMOVEALL_P(...)
+#define STAILQ_CONTAINS(...)
+#define STAILQ_CONTAINS_P(...)
+#define STAILQ_TRYREPLACE(...)
+#define STAILQ_TRYREPLACE_P(...)
+#define STAILQ_TRYREPLACE_R(...)
+#define STAILQ_TRYREPLACE_R_P(...)
+#define SIMPLEQ_TRYREMOVE(...)
+#define SIMPLEQ_TRYREMOVE_P(...)
+#define SIMPLEQ_TRYREMOVE_IF(...)
+#define SIMPLEQ_TRYREMOVE_IF_P(...)
+#define SIMPLEQ_REMOVEALL(...)
+#define SIMPLEQ_REMOVEALL_P(...)
+#define SIMPLEQ_CONTAINS(...)
+#define SIMPLEQ_CONTAINS_P(...)
+#define SIMPLEQ_TRYREPLACE(...)
+#define SIMPLEQ_TRYREPLACE_P(...)
+#define SIMPLEQ_TRYREPLACE_R(...)
+#define SIMPLEQ_TRYREPLACE_R_P(...)
+
 #define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name
 #define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name
 #define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name
