@@ -119,6 +119,22 @@ err:
 }
 
 
+/* Parse everything following a `del' keyword in a statement, or expression:
+ * >> foo = 7;
+ * >> print foo;
+ * >> del foo;        // Unbind + delete
+ *        ^  ^
+ * >> foo = 42;
+ * >> print foo;
+ * >> print del(foo); // Unbind only
+ *              ^  ^
+ * NOTE: When `LOOKUP_SYM_ALLOWDECL' is set in `lookup_mode',
+ *       the function is allocated to delete locally defined
+ *       variable symbols.
+ *       However, in all cases is this function allowed to
+ *       unbind variables (deleting only referring to the
+ *       compile-time symbol becoming unknown and being added to
+ *       the current scope's chain of deleted/anonymous symbols) */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_del(unsigned int lookup_mode) {
 	DREF struct ast *result;

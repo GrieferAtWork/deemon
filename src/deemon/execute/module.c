@@ -1159,7 +1159,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 		doc_iter = iter;
 		if (!doc_iter->ss_doc && (doc_iter->ss_flags & MODSYM_FALIAS)) {
 			doc_iter = DeeModule_GetSymbolID(self, doc_iter->ss_index);
-			ASSERT(doc_iter);
+			ASSERT(doc_iter != NULL);
 		}
 		/* NOTE: Pass the module instance as declarator! */
 		if (iter->ss_flags & MODSYM_FNAMEOBJ)
@@ -1249,7 +1249,7 @@ DeeModule_FindAttrString(DeeModuleObject *__restrict self,
 			doc_sym = sym;
 			if (!doc_sym->ss_doc && (doc_sym->ss_flags & MODSYM_FALIAS)) {
 				doc_sym = DeeModule_GetSymbolID(self, doc_sym->ss_index);
-				ASSERT(doc_sym);
+				ASSERT(doc_sym != NULL);
 			}
 			if (doc_sym->ss_flags & MODSYM_FDOCOBJ)
 				perm |= ATTR_DOCOBJ;

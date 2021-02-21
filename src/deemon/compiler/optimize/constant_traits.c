@@ -78,7 +78,7 @@ struct constexpr_frame {
 #define CONSTEXPR_FRAME_END    \
 		__WHILE0;              \
 		CONSTEXPR_FRAME_BREAK; \
-	} __WHILE0
+	}	__WHILE0
 
 
 /* [lock(DeeCompiler_Lock)] */
@@ -153,7 +153,8 @@ allowed:
 /* Return true if the optimizer is allowed to perform
  * operations on/with a constant instance `self'.
  * @return: * : One of `CONSTEXPR_*' */
-INTERN WUNUSED NONNULL((1)) int DCALL allow_constexpr(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL allow_constexpr)(DeeObject *__restrict self) {
 	DeeTypeObject *type;
 again0:
 	type = Dee_TYPE(self);
@@ -327,7 +328,8 @@ usecopy:
 }
 
 /* Check if a given object `type' is a type that implements a cast-constructor. */
-INTERN WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restrict type) {
+INTERN WUNUSED NONNULL((1)) bool
+(DCALL has_cast_constructor)(DeeObject *__restrict type) {
 	if (type == (DeeObject *)&DeeTuple_Type)
 		goto yes;
 	if (type == (DeeObject *)&DeeList_Type)

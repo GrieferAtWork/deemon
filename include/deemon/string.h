@@ -358,7 +358,7 @@ struct Dee_string_utf {
 			Dee_Free(((size_t *)(self)->u_utf8) - 1);                                                             \
 		if ((self)->u_utf16 && (uint16_t *)(self)->u_utf16 != (uint16_t *)(self)->u_data[Dee_STRING_WIDTH_2BYTE]) \
 			Dee_Free(((size_t *)(self)->u_utf16) - 1);                                                            \
-	} __WHILE0
+	}	__WHILE0
 
 #if 1
 #define Dee_string_utf_alloc()      DeeObject_MALLOC(struct Dee_string_utf)
@@ -1167,7 +1167,6 @@ LOCAL WUNUSED uint32_t *
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint16_t *
 (DCALL DeeString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars) {
 	size_t *result;
-	Dee_ASSERT(buffer);
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1,
 	                                  DeeString_SizeOf2ByteBuffer(num_chars));
@@ -1252,7 +1251,6 @@ err:
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
 (DCALL DeeString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars) {
 	DeeStringObject *result;
-	Dee_ASSERT(buffer);
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	Dee_ASSERT(result->s_len >= num_chars);
 	result = (DeeStringObject *)DeeObject_TryRealloc(result,
@@ -1394,7 +1392,6 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint16_t *
 (DCALL DeeDbgString_Truncate2ByteBuffer)(uint16_t *__restrict buffer, size_t num_chars,
                                          char const *file, int line) {
 	size_t *result;
-	Dee_ASSERT(buffer);
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1,
 	                                     DeeString_SizeOf2ByteBuffer(num_chars),
@@ -1489,7 +1486,6 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
 (DCALL DeeDbgString_Truncate1ByteBuffer)(uint8_t *__restrict buffer, size_t num_chars,
                                          char const *file, int line) {
 	DeeStringObject *result;
-	Dee_ASSERT(buffer);
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	Dee_ASSERT(result->s_len >= num_chars);
 	result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
@@ -1511,7 +1507,6 @@ LOCAL void (DCALL DeeDbgString_Free1ByteBuffer)(uint8_t *buffer, char const *fil
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeString_Pack1ByteBuffer)(/*inherit(always)*/ uint8_t *__restrict buffer) {
 	DREF DeeStringObject *result;
-	Dee_ASSERT(buffer);
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	result->s_data               = NULL;
 	result->s_hash               = DEE_STRING_HASH_UNSET;
@@ -1677,7 +1672,6 @@ err:
 
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 (DCALL DeeString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width) {
-	Dee_ASSERT(buffer);
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
@@ -1841,7 +1835,6 @@ err:
 LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 (DCALL DeeDbgString_TruncateWidthBuffer)(void *__restrict buffer, size_t num_chars, unsigned int width,
                                          char const *file, int line) {
-	Dee_ASSERT(buffer);
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
@@ -2290,7 +2283,7 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 
 
 /* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 Dee_ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
 DFUNDEF WUNUSED NONNULL((1)) char *DCALL

@@ -36,7 +36,7 @@
 
 DECL_BEGIN
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_mapping(struct ast *__restrict initial_key) {
 	size_t elema, elemc;
 	DREF struct ast *result;
@@ -105,10 +105,11 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 		if (elemc == elema) {
 			DREF struct ast **new_elemv;
 			size_t new_elema = elema * 2;
-			ASSERT(new_elema);
+			ASSERT(new_elema != 0);
 do_realloc_dict:
-			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, (new_elema * 2) *
-			                                                      sizeof(DREF struct ast *));
+			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
+			                                               (new_elema * 2) *
+			                                               sizeof(DREF struct ast *));
 			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
@@ -153,7 +154,7 @@ err:
 	goto done;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_brace_list(struct ast *__restrict initial_item) {
 	DREF struct ast *result;
 	DREF struct ast **elemv;
@@ -192,10 +193,11 @@ parse_list_item:
 		if (elemc == elema) {
 			DREF struct ast **new_elemv;
 			size_t new_elema = elema * 2;
-			ASSERT(new_elema);
+			ASSERT(new_elema != 0);
 do_realloc_list:
-			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, new_elema *
-			                                                      sizeof(DREF struct ast *));
+			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
+			                                               new_elema *
+			                                               sizeof(DREF struct ast *));
 			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
@@ -234,7 +236,10 @@ err:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void) {
+/* Parse the contents of a brace initializer,
+ * starting after the '{' token and ending on '}'. */
+INTERN WUNUSED DREF struct ast *FCALL
+ast_parse_brace_items(void) {
 	DREF struct ast *result, *new_result;
 	/* Parse the initial item. */
 	if (tok == '.') {

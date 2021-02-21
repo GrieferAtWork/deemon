@@ -62,7 +62,8 @@ INTERN DeeRootScopeObject  *current_rootscope = NULL;
 INTERN DeeModuleObject     *current_module    = NULL;
 
 
-INTERN char const symclass_names[0x1f + 1][8] = {
+INTDEF char const symclass_names[0x1f + 1][8];
+INTERN_CONST char const symclass_names[0x1f + 1][8] = {
 	/* [SYMBOL_TYPE_NONE  ] = */ "none",
 	/* [SYMBOL_TYPE_GLOBAL] = */ "global",
 	/* [SYMBOL_TYPE_EXTERN] = */ "extern",
@@ -403,11 +404,10 @@ again:
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 symbol_addambig(struct symbol *__restrict self,
                 struct ast_loc *loc) {
 	struct ast_loc *new_vec;
-	ASSERT(self);
 	ASSERT(self->s_type == SYMBOL_TYPE_AMBIG);
 	new_vec = (struct ast_loc *)Dee_TryRealloc(self->s_ambig.a_declv,
 	                                           (self->s_ambig.a_declc + 1) *
@@ -428,7 +428,8 @@ set_default_location:
 		TPPFile_Incref(new_vec->l_file);
 }
 
-INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
+INTERN NONNULL((1)) void DCALL
+symbol_fini(struct symbol *__restrict self) {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_fini(&self->s_decltype);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
@@ -493,10 +494,10 @@ INTERN void DCALL symbol_fini(struct symbol *__restrict self) {
 
 /* -------- DeeScopeObject Implementation -------- */
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 symbol_destroy(struct symbol *__restrict self)
 #else /* CONFIG_SYMBOL_HAS_REFCNT */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 delsym(struct symbol *__restrict self)
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 {
@@ -703,7 +704,7 @@ INTERN DeeTypeObject DeeClassScope_Type = {
 INTDEF void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
-INTDEF void DCALL
+INTDEF NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
                    dvisit_t proc, void *arg);
 
@@ -913,7 +914,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 
 
 
-INTERN int (DCALL scope_push)(void) {
+INTERN WUNUSED int (DCALL scope_push)(void) {
 	DREF DeeScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeScopeObject);
 	if unlikely(!new_scope)
@@ -930,7 +931,7 @@ err:
 
 INTERN void DCALL scope_pop(void) {
 	DeeScopeObject *pop_scope;
-	ASSERT(current_scope);
+	ASSERT(current_scope != NULL);
 	ASSERT(current_scope != (DeeScopeObject *)current_basescope);
 	ASSERT(current_scope != (DeeScopeObject *)current_rootscope);
 	ASSERT(current_scope->s_base == current_basescope);
@@ -941,7 +942,7 @@ INTERN void DCALL scope_pop(void) {
 	Dee_Decref(pop_scope);     /* Drop the reference previously stored in `current_scope' */
 }
 
-INTERN int (DCALL classscope_push)(void) {
+INTERN WUNUSED int (DCALL classscope_push)(void) {
 	DREF DeeClassScopeObject *new_scope;
 	struct symbol *this_sym;
 	new_scope = DeeObject_CALLOC(DeeClassScopeObject);
@@ -976,7 +977,7 @@ err:
 	return -1;
 }
 
-INTERN struct symbol *(DCALL get_current_this)(void) {
+INTERN WUNUSED struct symbol *(DCALL get_current_this)(void) {
 	DeeBaseScopeObject *base;
 	base = current_basescope;
 	do {
@@ -998,13 +999,13 @@ basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 	current_basescope = scope;
 }
 
-INTERN int (DCALL basescope_push)(void) {
+INTERN WUNUSED int (DCALL basescope_push)(void) {
 	DREF DeeBaseScopeObject *new_scope;
 	new_scope = DeeObject_CALLOC(DeeBaseScopeObject);
 	if unlikely(!new_scope)
 		goto err;
 	DeeObject_Init((DeeObject *)new_scope, &DeeBaseScope_Type);
-	ASSERT(current_scope);
+	ASSERT(current_scope != NULL);
 	ASSERT(current_rootscope == current_basescope->bs_root);
 	new_scope->bs_scope.s_prev  = current_scope; /* Inherit reference */
 	new_scope->bs_scope.s_base  = new_scope;
@@ -1020,8 +1021,8 @@ err:
 
 INTERN void DCALL basescope_pop(void) {
 	DeeBaseScopeObject *pop_scope;
-	ASSERT(current_scope);
-	ASSERT(current_basescope);
+	ASSERT(current_scope != NULL);
+	ASSERT(current_basescope != NULL);
 	if (current_scope != (DeeScopeObject *)current_basescope)
 		return; /* Can happen during error-cleanup. */
 	ASSERT(current_scope != (DeeScopeObject *)current_rootscope);
@@ -1071,7 +1072,6 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 		for (i = 0; i < count; ++i) {
 			struct symbol *sym, *other_sym;
 			other_sym = other->bs_argv[i];
-			ASSERT(other_sym);
 			sym = other_sym->s_name == &TPPKeyword_Empty
 			      ? new_unnamed_symbol()
 			      : new_local_symbol(other_sym->s_name, &other_sym->s_decl);
@@ -1139,7 +1139,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL link_forward_symbols(void) {
+INTERN WUNUSED int DCALL link_forward_symbols(void) {
 	struct symbol **bucket_iter, **bucket_end, *iter;
 	ASSERT(DeeScope_IsClassScope(current_scope));
 	bucket_end = (bucket_iter = current_scope->s_map) + current_scope->s_mapa;
@@ -1308,12 +1308,12 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 }
 
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
               struct ast_loc *warn_loc) {
 	struct symbol *result, **bucket;
 	DeeScopeObject *iter = current_scope;
-	ASSERT(iter);
+	ASSERT(iter != NULL);
 	/* Warn if a reserved name is used for a symbol. */
 	if (is_reserved_symbol_name(name) &&
 	    WARNAT(warn_loc, W_RESERVED_SYMBOL_NAME, name))
@@ -1490,7 +1490,7 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 	DeeScopeObject *iter;
 	/* Make sure to return `NULL' when `nth' was zero. */
@@ -1519,10 +1519,9 @@ nope:
 }
 
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
-	ASSERT(name);
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
@@ -1567,7 +1566,7 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *DCALL new_unnamed_symbol(void) {
+INTERN WUNUSED struct symbol *DCALL new_unnamed_symbol(void) {
 	struct symbol *result;
 	result = sym_alloc();
 	if unlikely(!result)
@@ -1595,7 +1594,7 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	struct symbol *result;
 	result = sym_alloc();
@@ -1624,12 +1623,11 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
                           struct TPPKeyword *__restrict name,
                           struct ast_loc *loc) {
 	struct symbol *result, **bucket;
-	ASSERT(name);
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
@@ -1674,7 +1672,7 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
                           struct TPPKeyword *__restrict name) {
 	struct symbol *bucket;
@@ -1687,7 +1685,7 @@ get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 	return bucket;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 get_local_symbol(struct TPPKeyword *__restrict name) {
 	struct symbol *bucket;
 	if (!current_scope->s_mapc)
@@ -1699,10 +1697,9 @@ get_local_symbol(struct TPPKeyword *__restrict name) {
 	return bucket;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 del_local_symbol(struct symbol *__restrict sym) {
 	struct symbol **pbucket, *bucket;
-	ASSERT(sym);
 	ASSERT(sym->s_name != &TPPKeyword_Empty);
 	ASSERT(sym->s_scope->s_mapa != 0);
 	pbucket = &sym->s_scope->s_map[sym->s_name->k_id % sym->s_scope->s_mapa];
@@ -1717,7 +1714,7 @@ del_local_symbol(struct symbol *__restrict sym) {
 	sym->s_scope->s_del = sym;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
              struct TPPKeyword *__restrict name) {
 	struct symbol *result = NULL;
@@ -1730,7 +1727,7 @@ done:
 	return result;
 }
 
-INTERN struct symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
                  size_t name_length) {
@@ -1749,7 +1746,7 @@ done:
 }
 
 
-PRIVATE int DCALL rehash_labels(void) {
+PRIVATE WUNUSED int DCALL rehash_labels(void) {
 	struct text_label **new_map, **biter, **bend;
 	struct text_label *lbl_iter, *s_next, **bucket;
 	size_t old_size = current_basescope->bs_lbla;
@@ -1786,7 +1783,7 @@ rehash_realloc:
 	return 0;
 }
 
-INTERN struct text_label *DCALL
+INTERN WUNUSED NONNULL((1)) struct text_label *DCALL
 lookup_label(struct TPPKeyword *__restrict name) {
 	struct text_label *result, **presult;
 	if likely(current_basescope->bs_lbla) {
@@ -1816,7 +1813,7 @@ err:
 	return NULL;
 }
 
-INTERN struct text_label *DCALL
+INTERN WUNUSED NONNULL((1)) struct text_label *DCALL
 new_case_label(struct ast *__restrict expr) {
 	struct text_label *result;
 	ASSERTF(current_basescope->bs_cflags & BASESCOPE_FSWITCH,
@@ -1837,7 +1834,7 @@ done:
 	return result;
 }
 
-INTERN struct text_label *DCALL
+INTERN WUNUSED struct text_label *DCALL
 new_default_label(void) {
 	struct text_label *result;
 	ASSERTF(current_basescope->bs_cflags & BASESCOPE_FSWITCH,

@@ -329,7 +329,7 @@ INTDEF struct type_method tpconst compiler_methods[];
 INTDEF struct type_getset tpconst compiler_getsets[];
 INTDEF struct type_member tpconst compiler_class_members[];
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw);

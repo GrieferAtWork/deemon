@@ -153,17 +153,17 @@ XMLNode_GetPrev(XMLNode *__restrict self,
 	return (DREF XMLNode *)ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL
-XMLNode_GetNext(XMLNode *__restrict self,
+INTERN WUNUSED NONNULL((2)) DREF XMLNode *DCALL
+XMLNode_GetNext(XMLNode *self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;
 	char *iter, *end, *temp;
 	bool ends_with_slash;
 again:
 	rwlock_read(&parent->xn_lock);
-	result = self
-	         ? self->xn_sib_next
-	         : parent->xn_children.ncs_head;
+	result = !self
+	         ? parent->xn_children.ncs_head
+	         : self->xn_sib_next;
 	if (result) {
 		XMLNode_Incref(result);
 		rwlock_endread(&parent->xn_lock);

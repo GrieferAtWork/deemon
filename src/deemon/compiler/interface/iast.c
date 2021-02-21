@@ -46,48 +46,48 @@ DECL_BEGIN
 
 typedef DeeCompilerAstObject Ast;
 
-INTERN ATTR_COLD int DCALL
-err_invalid_ast_basescope(DeeCompilerAstObject *__restrict obj,
-                          struct base_scope_object *__restrict base_scope) {
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_invalid_ast_basescope)(DeeCompilerAstObject *__restrict obj,
+                                  struct base_scope_object *__restrict base_scope) {
 	(void)obj;
 	(void)base_scope;
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "base-scope of ast differs from the effective base-scope");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_ast_compiler(DeeCompilerAstObject *__restrict obj) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_invalid_ast_compiler)(DeeCompilerAstObject *__restrict obj) {
 	(void)obj;
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Ast is associated with a different compiler");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_scope_compiler(DeeCompilerScopeObject *__restrict obj) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_invalid_scope_compiler)(DeeCompilerScopeObject *__restrict obj) {
 	(void)obj;
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Scope is associated with a different compiler");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_symbol_compiler(DeeCompilerSymbolObject *__restrict obj) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_invalid_symbol_compiler)(DeeCompilerSymbolObject *__restrict obj) {
 	(void)obj;
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Symbol is associated with a different compiler");
 }
 
-INTERN ATTR_COLD int DCALL
-err_symbol_not_reachable(struct scope_object *__restrict scope,
-                         struct symbol *__restrict sym) {
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_symbol_not_reachable)(struct scope_object *__restrict scope,
+                                 struct symbol *__restrict sym) {
 	(void)scope;
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Symbol %$q is not reachable from the specified scope",
 	                       sym->s_name->k_size, sym->s_name->k_name);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-scope_reaches_symbol(DeeScopeObject *__restrict scope,
-                     struct symbol *__restrict sym) {
+INTERN WUNUSED NONNULL((1, 2)) bool
+(DCALL scope_reaches_symbol)(DeeScopeObject *__restrict scope,
+                             struct symbol *__restrict sym) {
 	DeeScopeObject *dst = sym->s_scope;
 	for (; scope; scope = scope->s_prev) {
 		if (scope == dst)
@@ -96,20 +96,22 @@ scope_reaches_symbol(DeeScopeObject *__restrict scope,
 	return false;
 }
 
-INTERN ATTR_COLD int DCALL err_different_base_scope(void) {
+INTERN ATTR_COLD int (DCALL err_different_base_scope)(void) {
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Cannot assign a new scope that isn't apart "
 	                       "of the same base-scope as the old one");
 }
 
-INTERN ATTR_COLD int DCALL err_different_root_scope(void) {
+INTERN ATTR_COLD int (DCALL err_different_root_scope)(void) {
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Cannot assign a new scope that isn't apart "
 	                       "of the same root-scope as the old one");
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL ast_getscope(Ast *__restrict self) {
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_getscope(Ast *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
 	result = DeeCompiler_GetScope(self->ci_value->a_scope);
@@ -2926,7 +2928,7 @@ ast_setactionc(Ast *__restrict self,
 	do {                     \
 		if unlikely((x) < 0) \
 			goto err;        \
-	} __WHILE0
+	}	__WHILE0
 #define print(p, s) DO((*printer)(arg, p, s))
 #define printf(...) DO(DeeFormat_Printf(printer, arg, __VA_ARGS__))
 
@@ -3055,7 +3057,7 @@ err:
 		                     &indent, &is_scope))
 #define LEAVE_SCOPE(is_scope, is_expression, need_semicolon)                                  \
 		DO(print_leave_scope(printer, arg, is_expression, need_semicolon, indent, is_scope)); \
-	} __WHILE0
+	}	__WHILE0
 
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(DeeStringObject *__restrict self,
@@ -4684,7 +4686,7 @@ print_ast_repr(struct ast *__restrict self,
 	do {                     \
 		if unlikely((x) < 0) \
 			goto err;        \
-	} __WHILE0
+	}	__WHILE0
 #define PUTC(c)       DO(unicode_printer_putascii(printer, c))
 #define PRINT(str)    DO(UNICODE_PRINTER_PRINT(printer, str))
 #define PRINTAST(ast) DO(print_ast_repr(ast, printer))

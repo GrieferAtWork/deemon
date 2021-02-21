@@ -700,7 +700,7 @@ format_impl(struct formatter *__restrict self,
 	do {                                       \
 		if unlikely((*printer)(arg, p, s) < 0) \
 			goto err;                          \
-	} __WHILE0
+	}	__WHILE0
 	ASSERT(!*self->f_end);
 	while (self->f_iter < self->f_end) {
 		char *format_start;
@@ -861,7 +861,7 @@ format_bytes_impl(struct formatter *__restrict self,
 		if unlikely((temp = (*format_printer)(arg, p, s)) < 0) \
 			goto err;                                          \
 		result += temp;                                        \
-	} __WHILE0
+	}	__WHILE0
 	while (self->f_iter < self->f_end) {
 		char *format_start;
 		char *format_end;

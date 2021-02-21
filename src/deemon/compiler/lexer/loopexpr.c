@@ -326,8 +326,8 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_loopexpr(void) {
 		goto err;
 	result = merge;
 	/* Hack: The function AST itself must be located in the caller's scope. */
-	ASSERT(current_scope);
-	ASSERT(result->a_scope);
+	ASSERT(current_scope != NULL);
+	ASSERT(result->a_scope != NULL);
 	ASSERT(result->a_scope != current_scope);
 	Dee_Incref(current_scope);
 	Dee_Decref(result->a_scope);
@@ -351,6 +351,7 @@ err:
 }
 
 
+/* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_loopexpr_hybrid(unsigned int *pwas_expression) {
 	/* TODO */

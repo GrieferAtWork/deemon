@@ -39,7 +39,8 @@
 
 DECL_BEGIN
 
-INTDEF int (DCALL ast_flatten_tostr)(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_flatten_tostr)(struct ast *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
@@ -48,10 +49,14 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
-INTDEF WUNUSED NONNULL((1)) unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_DecodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCodec_NormalizeName(DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL
+DeeCodec_GetErrorMode(char const *__restrict errors);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCodec_DecodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 emulate_object_decode(DeeObject *self, size_t argc, DeeObject *const *argv) {

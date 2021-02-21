@@ -156,9 +156,7 @@ class_desc_from_instance(struct instance_desc *__restrict self,
 	}
 	tp = Dee_TYPE(this_arg);
 	for (;;) {
-		struct class_desc *result;
-		result = tp->tp_class;
-		ASSERT(result);
+		struct class_desc *result = tp->tp_class;
 		if (DeeInstance_DESC(result, this_arg) == self)
 			return result;
 		tp = DeeType_Base(tp);
@@ -183,8 +181,6 @@ DeeInstance_GetAttribute(struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
@@ -238,8 +234,6 @@ DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
                            struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
@@ -282,8 +276,6 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeInstance_DelAttribute(struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	/* Make sure that the access is allowed. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -341,8 +333,6 @@ DeeInstance_SetAttribute(struct instance_desc *__restrict self,
                          DeeObject *this_arg,
                          struct class_attribute *__restrict attr,
                          DeeObject *value) {
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);

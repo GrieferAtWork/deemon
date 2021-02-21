@@ -2060,12 +2060,11 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 Dee_bytes_printer_append(struct bytes_printer *__restrict self,
                          uint8_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;
 	size_t alloc_size;
-	ASSERT(self);
 	ASSERT(data || !datalen);
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate a bytes when the used length remains ZERO.
@@ -2123,7 +2122,6 @@ done:
 
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL Dee_bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t ch) {
-	ASSERT(self);
 	/* Quick check: Can we print to an existing buffer. */
 	if (self->bp_bytes &&
 	    self->bp_length < self->bp_bytes->b_size) {
@@ -2143,7 +2141,6 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL Dee_bytes_printer_repeat)(struct bytes_printer *__restrict self,
                                  uint8_t ch, size_t count) {
 	uint8_t *buffer;
-	ASSERT(self);
 	buffer = bytes_printer_alloc(self, count);
 	if unlikely(!buffer)
 		goto err;
@@ -2157,7 +2154,6 @@ err:
 PUBLIC NONNULL((1)) void
 (DCALL Dee_bytes_printer_release)(struct bytes_printer *__restrict self,
                                   size_t datalen) {
-	ASSERT(self);
 	ASSERT(self->bp_length >= datalen);
 	/* This's actually all that needs to be
 	 * done with the current implementation. */
@@ -2169,7 +2165,6 @@ PUBLIC WUNUSED NONNULL((1)) uint8_t *
 	Bytes *bytes;
 	size_t alloc_size;
 	uint8_t *result;
-	ASSERT(self);
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate new bytes when the used length remains ZERO.
 		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */

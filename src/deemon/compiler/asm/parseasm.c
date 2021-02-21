@@ -58,7 +58,7 @@ INTERN struct asm_symtab     symtab;
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
 #else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
 			return false;
@@ -73,7 +73,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define STRCASEEQ(a, b)    (strcasecmp(a, b) == 0)
 #else /* CONFIG_HAVE_strcasecmp */
 #define STRCASEEQ(a, b) dee_strcaseeq((char *)(a), (char *)(b))
-LOCAL bool dee_strcaseeq(char *a, char *b) {
+LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {
 	while (*a) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
 			return false;
@@ -94,13 +94,12 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 
 
 
-INTERN int DCALL
+INTERN void DCALL
 userassembler_init(void) {
 	/* HINT: The caller will have already zero-initialized
 	 *      `current_userasm' and `symtab' */
 	current_userasm.ua_lasti  = ASM_DELOP;
 	current_userasm.ua_asmuid = DeeCompiler_Current->cp_uasm_unique;
-	return 0;
 }
 
 INTERN void DCALL
@@ -109,7 +108,7 @@ userassembler_fini(void) {
 	Dee_Free(symtab.st_map);
 }
 
-PRIVATE bool FCALL symtab_rehash(void) {
+PRIVATE WUNUSED bool FCALL symtab_rehash(void) {
 	struct asm_sym **new_map, **biter, **bend;
 	struct asm_sym *sym_iter, *s_next, **bucket;
 	size_t old_size = symtab.st_alloc;
@@ -177,7 +176,6 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
 		goto not_a_label;
 	/* Return the associated symbol. */
 	textlbl = current_userasm.ua_labelv[label_number].ao_label;
-	ASSERT(textlbl);
 	if (!textlbl->tl_asym)
 		textlbl->tl_asym = asm_newsym();
 	return textlbl->tl_asym;
@@ -401,7 +399,7 @@ err:
 }
 
 
-PRIVATE int FCALL
+PRIVATE WUNUSED int FCALL
 uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 	switch (tok) {
 
@@ -605,7 +603,7 @@ err:
 	return -1;
 }
 
-PRIVATE int FCALL
+PRIVATE WUNUSED int FCALL
 uasm_parse_intexpr_unary(struct asm_intexpr *result, uint16_t features) {
 	if unlikely(uasm_parse_intexpr_unary_base(result, features))
 		goto err;
@@ -670,7 +668,7 @@ err:
 	return -1;
 }
 
-PRIVATE int FCALL
+PRIVATE WUNUSED int FCALL
 uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
 	if unlikely(uasm_parse_intexpr_unary(result, features))
 		goto err;
@@ -781,7 +779,7 @@ err:
 
 
 /* Helper functions for parsing the arguments of symbol class operands. */
-PRIVATE int32_t FCALL
+PRIVATE WUNUSED int32_t FCALL
 do_parse_module_operands(void) {
 	int32_t result;
 	/* Parse a module by name. */
@@ -803,7 +801,7 @@ err:
 	return -1;
 }
 
-PRIVATE int FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
 do_parse_extern_operands(uint16_t *__restrict pmid,
                          uint16_t *__restrict pgid) {
 	DREF DeeModuleObject *module;
@@ -874,7 +872,7 @@ err_unknown_symbol(struct TPPKeyword *__restrict name) {
 	                       name->k_name);
 }
 
-PRIVATE int32_t FCALL do_parse_global_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_global_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -908,7 +906,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_stack_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_stack_operands(void) {
 	if (skip('#', W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
 		goto err;
 	return uasm_parse_imm16(UASM_INTEXPR_FHASSP);
@@ -916,7 +914,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_local_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_local_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -962,7 +960,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_constexpr(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_constexpr(void) {
 	DREF struct ast *imm_const;
 	DREF DeeObject *const_val;
 	int32_t cid;
@@ -993,7 +991,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_const_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_const_operands(void) {
 	int32_t result;
 	if (tok == '@') {
 		if unlikely(yield() < 0)
@@ -1009,7 +1007,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_arg_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_arg_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1049,7 +1047,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_ref_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_ref_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1085,7 +1083,7 @@ err:
 	return -1;
 }
 
-PRIVATE int32_t FCALL do_parse_static_operands(void) {
+PRIVATE WUNUSED int32_t FCALL do_parse_static_operands(void) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1131,7 +1129,7 @@ err:
 	return -1;
 }
 
-PRIVATE void FCALL
+PRIVATE NONNULL((1)) void FCALL
 asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self) {
 	if (self->io_intexpr.ie_val < 0) {
 		if (self->io_intexpr.ie_val < INT16_MIN ||
@@ -1182,7 +1180,7 @@ asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self
 	}
 }
 
-PRIVATE int FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int FCALL
 do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
                          struct ast *__restrict expr) {
 	switch (expr->a_type) {
@@ -1350,7 +1348,7 @@ err:
 /* Parse a deemon-level expression following `@' and
  * try to convert it into an assembly invocation operand.
  * In order words: accept pretty much all symbols, as well as constants. */
-PRIVATE int FCALL
+PRIVATE WUNUSED NONNULL((1)) int FCALL
 do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
 	DREF struct ast *imm_expr;
 	if unlikely(scope_push())
@@ -1376,7 +1374,7 @@ err:
 /* @param: recognize_sp: When true, recognize `sp', as seen as operand of `print'.
  *                       Otherwise, `sp' is recognized as representative of the
  *                       current stack depth. */
-PRIVATE int FCALL
+PRIVATE WUNUSED NONNULL((1)) int FCALL
 do_parse_operand(struct asm_invoke_operand *__restrict result,
                  bool recognize_sp) {
 	/* Parse the actual operand. */
@@ -1451,9 +1449,9 @@ parse_stack_operand_start:
 			goto err;
 		break;
 
-parse_ref_operand:
 	{
 		int32_t val;
+parse_ref_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_ref_operands();
@@ -1463,9 +1461,9 @@ parse_ref_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-parse_arg_operand:
 	{
 		int32_t val;
+parse_arg_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_arg_operands();
@@ -1483,9 +1481,9 @@ parse_arg_operand:
 		}
 	}	break;
 
-parse_const_operand:
 	{
 		int32_t val;
+parse_const_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_const_operands();
@@ -1495,10 +1493,9 @@ parse_const_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-	case KWD_static:
-parse_static_operand:
-	{
+	case KWD_static: {
 		int32_t val;
+parse_static_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_static_operands();
@@ -1508,9 +1505,9 @@ parse_static_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-parse_module_operand:
 	{
 		int32_t val;
+parse_module_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_module_operands();
@@ -1520,9 +1517,9 @@ parse_module_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-parse_extern_operand:
 	{
 		/* Parse a module by name. */
+parse_extern_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		if unlikely(do_parse_extern_operands(&result->io_extern.io_modid,
@@ -1531,10 +1528,9 @@ parse_extern_operand:
 		result->io_class = OPERAND_CLASS_EXTERN;
 	}	break;
 
-	case KWD_global:
-parse_global_operand:
-	{
+	case KWD_global: {
 		int32_t val;
+parse_global_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_global_operands();
@@ -1544,10 +1540,9 @@ parse_global_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-	case KWD_local:
-parse_local_operand:
-	{
+	case KWD_local: {
 		int32_t val;
+parse_local_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		val = do_parse_local_operands();
@@ -1828,10 +1823,9 @@ read_mnemonic_name:
 
 	switch (name->k_id) {
 
-	case KWD_static:
-do_static_prefix:
-	{
+	case KWD_static: {
 		int32_t val;
+do_static_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		val = do_parse_static_operands();
@@ -1844,12 +1838,11 @@ continue_after_prefix:
 		if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_PREFIX))
 			goto err;
 		goto read_mnemonic_name;
-	}
+	}	break;
 
-	case KWD_global:
-do_global_prefix:
-	{
+	case KWD_global: {
 		int32_t val;
+do_global_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		val = do_parse_global_operands();
@@ -1858,12 +1851,11 @@ do_global_prefix:
 		invoc.ai_prefix     = ASM_GLOBAL;
 		invoc.ai_prefix_id1 = (uint16_t)val;
 		goto continue_after_prefix;
-	}
+	}	break;
 
-	case KWD_local:
-do_local_prefix:
-	{
+	case KWD_local: {
 		int32_t val;
+do_local_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		val = do_parse_local_operands();
@@ -1872,13 +1864,13 @@ do_local_prefix:
 		invoc.ai_prefix     = ASM_LOCAL;
 		invoc.ai_prefix_id1 = (uint16_t)val;
 		goto continue_after_prefix;
-	}
+	}	break;
 
 #if 0
 	case KWD_push:
 #endif
-do_push_prefix:
 	{
+do_push_prefix:
 		/* Special case: either the push prefix, or the push instruction itself. */
 		if (TPP_ISKEYWORD(tok)) {
 			mnemonic = asm_mnemonic_lookup(token.t_kwd);
@@ -1891,11 +1883,10 @@ do_push_prefix:
 				goto got_mnemonic;
 			}
 		}
-		break;
-	}
+	}	break;
 
-do_extern_prefix:
 	{
+do_extern_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		if unlikely(do_parse_extern_operands(&invoc.ai_prefix_id1,
@@ -1903,11 +1894,11 @@ do_extern_prefix:
 		goto err;
 		invoc.ai_prefix = ASM_EXTERN;
 		goto continue_after_prefix;
-	}
+	}	break;
 
-do_stack_prefix:
 	{
 		int32_t val;
+do_stack_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
 		val = do_parse_stack_operands();
@@ -1916,7 +1907,7 @@ do_stack_prefix:
 		invoc.ai_prefix     = ASM_STACK;
 		invoc.ai_prefix_id1 = (uint16_t)val;
 		goto continue_after_prefix;
-	}
+	}	break;
 
 
 #define NAMEISKWD(x)                       \

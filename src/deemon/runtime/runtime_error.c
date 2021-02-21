@@ -395,7 +395,7 @@ INTERN ATTR_COLD int
 	                       distcnt);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_invalid_argc_missing_kw)(char const *__restrict argument_name,
                                     char const *function_name,
                                     size_t argc_cur, size_t argc_min, size_t argc_max) {
@@ -421,7 +421,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	}
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD int
 (DCALL err_invalid_argc)(char const *function_name, size_t argc_cur,
                          size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
@@ -437,7 +437,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	}
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD int
 (DCALL err_invalid_argc_len)(char const *function_name, size_t function_size,
                              size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
@@ -453,7 +453,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	}
 }
 
-INTERN ATTR_COLD NONNULL((1)) int
+INTERN ATTR_COLD int
 (DCALL err_invalid_argc_va)(char const *function_name, size_t argc_cur, size_t argc_min) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "function%s%s expects at least %Iu arguments when only %Iu w%s given",
@@ -717,17 +717,15 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                               char const *__restrict name,
                               int access) {
 	ASSERT_OBJECT(tp);
-	ASSERT(name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown attribute `%k.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK], tp, name);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unknown_attribute_len)(DeeTypeObject *__restrict tp,
-                                  char const *__restrict name,
-                                  size_t namelen,
+                                  char const *name, size_t namelen,
                                   int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
@@ -761,7 +759,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                   char const *__restrict name,
                                   int access) {
 	ASSERT_OBJECT(tp);
-	ASSERT(name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%k.%s'",
@@ -769,10 +766,10 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       tp, name);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
+INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_cant_access_attribute_len)(DeeTypeObject *__restrict tp,
-                                      char const *__restrict name,
-                                      size_t namelen, int access) {
+                                      char const *name, size_t namelen,
+                                      int access) {
 	ASSERT_OBJECT(tp);
 	ASSERT(!namelen || name);
 	ASSERT(DeeType_Check(tp));
@@ -792,8 +789,6 @@ get_desc_name(struct class_desc *__restrict desc) {
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_cant_access_attribute_c)(struct class_desc *__restrict desc,
                                     char const *__restrict name, int access) {
-	ASSERT(desc);
-	ASSERT(name);
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%s.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
@@ -804,7 +799,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_attribute)(DeeTypeObject *__restrict tp,
                               char const *__restrict name) {
 	ASSERT_OBJECT(tp);
-	ASSERT(name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%k.%s'",
@@ -814,8 +808,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_attribute_c)(struct class_desc *__restrict desc,
                                 char const *__restrict name) {
-	ASSERT(desc);
-	ASSERT(name);
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%s.%s'",
 	                       get_desc_name(desc), name);
@@ -903,7 +895,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unknown_key_str)(DeeObject *__restrict map, char const *__restrict key) {
 	ASSERT_OBJECT(map);
-	ASSERT(key);
 	return DeeError_Throwf(&DeeError_KeyError,
 	                       "Could not find key `%s' in %k `%k'",
 	                       key, Dee_TYPE(map), map);
@@ -912,7 +903,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unknown_key_str_len)(DeeObject *__restrict map, char const *__restrict key, size_t keylen) {
 	ASSERT_OBJECT(map);
-	ASSERT(key);
 	return DeeError_Throwf(&DeeError_KeyError,
 	                       "Could not find key `%$s' in %k `%k'",
 	                       keylen, key, Dee_TYPE(map), map);
@@ -969,7 +959,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
                                    struct class_attribute *__restrict member) {
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	ASSERT(member);
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot access %s member `%k' of class `%k'",
 	                       (member->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) ? "private" : "public",

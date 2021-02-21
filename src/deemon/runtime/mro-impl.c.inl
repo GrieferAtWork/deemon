@@ -3167,7 +3167,7 @@ type_member_typefor(struct type_member const *__restrict self);
 #endif
 
 #ifndef MRO_LEN
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
                        struct attribute_info *__restrict result,
                        struct attribute_lookup_rules const *__restrict rules) {
@@ -3251,10 +3251,11 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 				member_type = NULL;
 			}
 			inst = NULL;
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
-			else if (instance)
+			} else if (instance) {
 				inst = DeeInstance_DESC(item->mcs_attrib.a_desc, instance);
+			}
 			if (inst) {
 				rwlock_read(&inst->id_lock);
 				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {

@@ -229,7 +229,7 @@ import_module_by_name:
 			/* Package the newly written relative module
 			 * name and retrieve its base pointer. */
 			data = dec_reuselocal(num_dots + 1 + (size_t)(other_pathend - other_pathstr));
-			ASSERT(data); /* `dec_reuselocal()' never returns NULL */
+			/*ASSERT(data);*/ /* `dec_reuselocal()' never returns NULL */
 		}
 		addr     = dec_ptr2addr(data);
 		dec_curr = SC_IMPORTS;
@@ -339,7 +339,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			 *       a pointer to the first encountered symbol
 			 *       that was aliasing the current global variable
 			 *       associated with the current `normali' address. */
-			ASSERT(first_alias);
+			ASSERT(first_alias != NULL);
 			for (++first_alias; first_alias != symend; ++first_alias) {
 				if (!first_alias->ss_name)
 					continue;
@@ -807,7 +807,8 @@ err:
 }
 
 
-INTERN int (DCALL dec_putobjv)(uint16_t count, DeeObject **__restrict vec) {
+INTERN WUNUSED int
+(DCALL dec_putobjv)(uint16_t count, DeeObject **vec) {
 	uint16_t i;
 	if (dec_putw(count))
 		goto err; /* Dec_Objects.os_len */
@@ -837,7 +838,7 @@ PRIVATE struct dec_recursion_frame *dec_obj_recursion = NULL;
 		(dec_obj_recursion = _frame.drf_prev)
 #define DEC_RECURSION_END()    \
 		DEC_RECURSION_BREAK(); \
-	} __WHILE0
+	}	__WHILE0
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
@@ -854,7 +855,8 @@ PRIVATE struct dec_recursion_frame *dec_obj_recursion = NULL;
  * NOTE: This function must only be called
  *       before encoding any GC-able sequence object,
  *       such as a Cell, a List, a Set, or a Dict. */
-PRIVATE int (DCALL dec_recursion_check)(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL dec_recursion_check)(DeeObject *__restrict self) {
 	struct dec_recursion_frame *iter;
 	for (iter = dec_obj_recursion; iter;
 	     iter = iter->drf_prev) {
@@ -863,15 +865,15 @@ PRIVATE int (DCALL dec_recursion_check)(DeeObject *__restrict self) {
 	}
 	return 0;
 err_recursion:
-	DeeError_Throwf(&DeeError_NotImplemented,
-	                "Self-referencing %k %r cannot be encoded in a DEC file",
-	                Dee_TYPE(self), self);
-	return -1;
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Self-referencing %k %r cannot be encoded in a DEC file",
+	                       Dee_TYPE(self), self);
 }
 
 
 
-INTERN int (DCALL dec_putobj)(DeeObject *self) {
+/* Encode an object using DTYPE codes. */
+INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
 	DeeTypeObject *tp_self;
 	/* Special handling for encoding various different types of objects. */
 	uint16_t builtin_id;
@@ -1328,10 +1330,9 @@ err:
 }
 
 /* Emit a DDI-compatible string table and return a symbol for its starting address. */
-PRIVATE struct dec_sym *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct dec_sym *DCALL
 dec_putddi_strtab(DeeDDIObject *__restrict self,
-                  uint32_t const *__restrict vec,
-                  uint32_t length) {
+                  uint32_t const *vec, uint32_t length) {
 	struct dec_section *result, *old_sec;
 	/* Create a new section within which debug data will be placed. */
 	result = dec_newsection_after(SC_DEBUG_DATA);
@@ -1351,9 +1352,9 @@ err:
 }
 
 /* Generate a DDI-compatible string table and emit a pointer to it. */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putddi_strtab_ptr(DeeDDIObject *__restrict self,
-                      uint32_t const *__restrict vec,
+                      uint32_t const *vec,
                       uint32_t length, bool use_16bit) {
 	struct dec_sym *sym;
 	if (length) {
@@ -1372,7 +1373,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
                     struct Dee_ddi_exdat const *self,
                     bool use_16bit) {
@@ -1506,7 +1507,8 @@ err:
 
 
 
-INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 	bool use_8bit;
 	Dec_Code descr;
 	uint8_t *ptr;
@@ -1846,7 +1848,8 @@ err:
  *                       could not be encoded a DTYPE expression.
  * @return:  0: Successfully populated DEC sections.
  * @return: -1: An error occurred. */
-INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_generate)(DeeModuleObject *__restrict self) {
 	Dec_Ehdr *header;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	dec_curr = SC_HEADER;

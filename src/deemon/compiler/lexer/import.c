@@ -117,7 +117,7 @@ err:
 	return NULL;
 }
 
-INTERN struct module_symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 import_module_symbol(DeeModuleObject *__restrict mod,
                      struct TPPKeyword *__restrict name) {
 	dhash_t i, perturb;
@@ -228,7 +228,12 @@ err:
 }
 
 
-INTERN WUNUSED DREF DeeModuleObject *DCALL parse_module_byname(bool for_alias) {
+/* Parse a module name and return the associated module object.
+ * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
+ *                    or if no alias can be used where the name appears,
+ *                    else `false' */
+INTERN WUNUSED DREF DeeModuleObject *DCALL
+parse_module_byname(bool for_alias) {
 	DREF DeeModuleObject *result;
 	DREF DeeStringObject *module_name;
 	struct unicode_printer name = UNICODE_PRINTER_INIT;
@@ -248,7 +253,7 @@ err:
 	return NULL;
 }
 
-INTERN struct symbol *FCALL
+INTERN WUNUSED NONNULL((1)) struct symbol *FCALL
 ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
@@ -289,7 +294,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
 	struct symbol *extern_symbol;
 	extern_symbol = ast_parse_import_single_sym(import_name);
@@ -976,7 +981,7 @@ import_parse_list:
 					/* We're dealing with a module import list!
 					 * -> Import all items already parsed as modules. */
 					size_t i;
-					ASSERT(allow_modules);
+					ASSERT(allow_modules != false);
 					for (i = 0; i < item_c; ++i) {
 						if unlikely(ast_import_module(&item_v[i]))
 							goto err_item_v;
@@ -1046,6 +1051,7 @@ err:
 	return -1;
 }
 
+/* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_import_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result;

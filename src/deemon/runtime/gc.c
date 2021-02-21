@@ -176,7 +176,6 @@ again:
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Track(DeeObject *__restrict ob) {
 	struct gc_head *head;
-	ASSERT(ob);
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
 	ASSERT(DeeGC_Check(ob));
 	head = DeeGC_Head(ob);
@@ -220,7 +219,6 @@ DeeGC_Track(DeeObject *__restrict ob) {
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Untrack(DeeObject *__restrict ob) {
 	struct gc_head *head;
-	ASSERT(ob);
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
 	ASSERT(DeeGC_Check(ob));
 	head = DeeGC_Head(ob);
@@ -907,7 +905,7 @@ gc_trydestroy(struct gc_head *__restrict head,
 			i = end_used;                                  \
 		}                                                  \
 		ASSERT(last_used == visit.vd_deps.gd_cnt);         \
-	} __WHILE0
+	}	__WHILE0
 
 #ifdef NDEBUG
 	/* Check if something went wrong... */
@@ -1292,9 +1290,8 @@ PUBLIC void
 		return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (), \
 		                                (DeeObject_TryCalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *))));     \
 	}                                                                                                          \
-	PUBLIC void DCALL                                                                                          \
+	PUBLIC NONNULL((1)) void DCALL                                                                             \
 	DeeGCObject_SlabFree##size(void *__restrict ptr) {                                                         \
-		ASSERT(ptr);                                                                                           \
 		ASSERT_UNTRACKED(ptr);                                                                                 \
 		DeeSlab_Invoke(DeeObject_SlabFree, DEE_GC_HEAD_SIZE + size * sizeof(void *),                           \
 		               (DeeGC_Head((DeeObject *)ptr)),                                                         \

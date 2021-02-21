@@ -28,7 +28,7 @@
 DECL_BEGIN
 
 
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack,
                           struct ast *__restrict self, bool result_used) {
 	(void)result_used;

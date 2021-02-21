@@ -181,8 +181,6 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!tp)
 			goto err_nosuper;
 	}
-	ASSERT(ob);
-	ASSERT(tp);
 	self->s_self = ob;
 	self->s_type = tp;
 	Dee_Incref(ob);

@@ -1015,7 +1015,7 @@ siiter_init(SetIntersectionIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
 	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
-	if unlikely(!self)
+	if unlikely(!self->sii_iter)
 		goto err;
 	Dee_Incref(self->sii_intersect);
 	self->sii_other = self->sii_intersect->si_b;

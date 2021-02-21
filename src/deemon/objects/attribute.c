@@ -1372,9 +1372,6 @@ DeeAttribute_Lookup(DeeTypeObject *tp_self, DeeObject *self,
 	DeeTypeObject *iter = tp_self;
 	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
-	ASSERT(result);
-	ASSERT(rules);
-	ASSERT(rules->alr_name);
 	ASSERT_OBJECT_OPT(rules->alr_decl);
 	if (tp_self->tp_attr)
 		goto do_iter_attr;

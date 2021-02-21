@@ -98,9 +98,9 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	seq     = tp_self->tp_seq;
-	ASSERT(seq);
+	ASSERT(seq != NULL);
 	nsi = seq->tp_nsi;
-	ASSERT(nsi);
+	ASSERT(nsi != NULL);
 	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
 	if (nsi->nsi_seqlike.nsi_getitem_fast) {
 		DREF DeeObject *result;
@@ -125,9 +125,9 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	seq     = tp_self->tp_seq;
-	ASSERT(seq);
+	ASSERT(seq != NULL);
 	nsi = seq->tp_nsi;
-	ASSERT(nsi);
+	ASSERT(nsi != NULL);
 	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
 	if (nsi->nsi_seqlike.nsi_getitem_fast) {
 		result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, index);

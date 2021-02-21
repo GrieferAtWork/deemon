@@ -1657,7 +1657,6 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	}
 	if (DeeNone_Check(module)) {
 		DeeThreadObject *ts = DeeThread_Self();
-		ASSERT(ts);
 		if unlikely(!ts->t_execsz) {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "No module given, when the current "

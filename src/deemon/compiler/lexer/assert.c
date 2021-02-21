@@ -30,6 +30,7 @@ DECL_BEGIN
 #undef CONFIG_ASSERT_DDI_USES_EXPRESSION
 #define CONFIG_ASSERT_DDI_USES_EXPRESSION 1
 
+/* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_assert(bool needs_parenthesis) {
 	DREF struct ast *result, *message, *merge;
@@ -109,6 +110,7 @@ err:
 }
 
 
+/* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result, *message, *merge;

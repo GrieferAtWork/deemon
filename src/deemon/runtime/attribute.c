@@ -2195,7 +2195,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                                     dhash_t hash) {
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2272,7 +2271,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                                        dhash_t hash) {
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2441,7 +2439,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DeeTypeObject *iter;
 	DeeTypeObject *tp_self;
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2536,7 +2533,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DeeTypeObject *iter;
 	DeeTypeObject *tp_self;
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2718,7 +2714,6 @@ DeeObject_CallAttrStringHashKw(DeeObject *self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -2814,7 +2809,6 @@ DeeObject_CallAttrStringLenHashKw(DeeObject *self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3107,7 +3101,6 @@ DeeObject_GetAttrStringHash(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3184,7 +3177,6 @@ DeeObject_GetAttrStringLenHash(DeeObject *__restrict self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3262,7 +3254,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3344,7 +3335,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3428,7 +3418,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3511,7 +3500,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) int
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3596,7 +3584,6 @@ DeeObject_CallAttrStringHash(DeeObject *self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)
@@ -3689,7 +3676,6 @@ DeeObject_CallAttrStringLenHash(DeeObject *self,
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
-	ASSERT(attr_name);
 	iter = tp_self = Dee_TYPE(self);
 again:
 	if (iter->tp_attr)

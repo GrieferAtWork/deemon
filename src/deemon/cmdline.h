@@ -67,6 +67,7 @@ struct cmd_option {
 	                                      *  However, when `CMD_FLONG1DASH' is set, a single leading dash is accepted as well. */
 	union {
 		void       *co_hook;
+		WUNUSED
 		int (DCALL *co_func)(char *arg); /* [0..1][valid_if(!CMD_FGROUP)] Function called when the argument is encountered.
 		                                  *  When NULL, the command acts as a terminating sentinel.
 		                                  *  @param: arg: The NUL-terminated argument passed to the command,
@@ -113,7 +114,7 @@ struct cmd_option {
 INTDEF int DCALL
 cmd_parse(int    *__restrict pargc,
           char ***__restrict pargv,
-          struct cmd_option *__restrict options,
+          struct cmd_option const *__restrict options,
           bool exec_all);
 
 /* Execute all encountered commands with the `CMD_FRUNLATER' flag set. */

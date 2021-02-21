@@ -1474,9 +1474,11 @@ INTDEF ATTR_COLD int FCALL syn_class_not_thiscall(JITLexer *__restrict self);
 #define ATTR_ACCESS_SET     2
 #define ATTR_ACCESS_MASK    3
 
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_argc(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
+INTDEF ATTR_COLD int (DCALL err_invalid_argc)(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
+INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_c)(struct class_desc *__restrict desc, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_cant_access_attribute_c)(struct class_desc *__restrict desc, char const *__restrict name, int access);
+
+/* TODO: Dee_ASSUMED_VALUE-optimizations for all of the errors above! */
 
 DECL_END
 

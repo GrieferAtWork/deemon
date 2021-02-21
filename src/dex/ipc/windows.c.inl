@@ -929,7 +929,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_dojoin(Process *__restrict self,
                DWORD *__restrict proc_result,
                uint64_t timeout_microseconds) {
-	ASSERT(proc_result);
 again:
 	if (!(self->p_state & PROCESS_FDIDJOIN)) {
 		uint64_t timeout_end = (uint64_t)-1;
@@ -1557,7 +1556,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unbound_attribute(DeeTypeObject *__restrict tp,
                       char const *__restrict name) {
 	ASSERT_OBJECT(tp);
-	ASSERT(name);
 	ASSERT(DeeType_Check(tp));
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%k.%s'",

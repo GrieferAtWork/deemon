@@ -173,7 +173,7 @@ err:
 	do {                                                       \
 		if unlikely(tpp_pragma_message_printf printf_args < 0) \
 			goto err_label;                                    \
-	} __WHILE0
+	}	__WHILE0
 #define TPP_PRAGMA_MESSAGE_WRITE(err_label, str, length) \
 	TPP_PRAGMA_MESSAGE_PRINTF(err_label, ("%$s", (size_t)(length), str))
 
@@ -212,14 +212,14 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
 };
 
 
-INTERN char *DCALL advance_wraplf(char *__restrict p) {
+INTERN WUNUSED NONNULL((1)) char *DCALL advance_wraplf(char *__restrict p) {
 	++p;
 	while (SKIP_WRAPLF(p, token.t_file->f_end))
 		;
 	return p;
 }
 
-INTERN struct TPPKeyword *DCALL tok_without_underscores(void) {
+INTERN WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void) {
 	struct TPPKeyword *result = NULL;
 	if (TPP_ISKEYWORD(tok)) {
 		result = token.t_kwd;
@@ -241,19 +241,24 @@ INTERN struct TPPKeyword *DCALL tok_without_underscores(void) {
 	return result;
 }
 
-INTDEF char *TPPCALL skip_whitespace_and_comments(char *iter, char *end);
-INTERN char *DCALL peek_next_token(struct TPPFile **tok_file) {
+INTDEF WUNUSED NONNULL((1, 2)) char *TPPCALL
+skip_whitespace_and_comments(char *iter, char *end);
+
+INTERN WUNUSED char *DCALL
+peek_next_token(struct TPPFile **tok_file) {
 	if (tok_file)
 		*tok_file = token.t_file;
 	return peek_next_advance(token.t_end, tok_file);
 }
 
-INTERN char *DCALL peek_next_advance(char *p, struct TPPFile *__restrict *tok_file) {
-	char *result = p, *end, *file_begin;
+INTERN WUNUSED NONNULL((1)) char *DCALL
+peek_next_advance(char *p, struct TPPFile **tok_file) {
+	char *result, *end, *file_begin;
+	result = p;
 	struct TPPFile *curfile;
 	if (tok_file) {
 		curfile = *tok_file;
-		ASSERT(curfile);
+		ASSERT(curfile != NULL);
 	} else {
 		curfile = token.t_file;
 	}
@@ -306,11 +311,11 @@ err:
 
 
 #ifndef __INTELLISENSE__
-INTDEF struct TPPKeyword *TPPCALL
+INTDEF WUNUSED NONNULL((1)) struct TPPKeyword *TPPCALL
 lookup_escaped_keyword(char const *__restrict name, size_t namelen,
                        size_t unescaped_size, int create_missing);
 
-INTERN bool DCALL tpp_is_keyword_start(char ch) {
+INTERN ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch) {
 	uint8_t chflags = CH_ISALPHA;
 	if (HAVE_EXTENSION_EXTENDED_IDENTS)
 		chflags |= CH_ISANSI;
@@ -320,21 +325,21 @@ INTERN bool DCALL tpp_is_keyword_start(char ch) {
 	return true;
 }
 
-INTERN struct TPPKeyword *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL
 peek_keyword(struct TPPFile *__restrict tok_file,
              char *__restrict tok_begin, int create_missing) {
 	struct TPPKeyword *kwd_entry;
-	size_t name_escapesize, name_size = 1;
-	uint8_t chflags = CH_ISALPHA;
-	char *iter      = tok_begin, *end;
-	ASSERT(tok_file);
-	ASSERT(tok_begin);
+	size_t name_escapesize, name_size;
+	uint8_t chflags;
+	char *iter;
+	name_size = 1;
+	chflags   = CH_ISALPHA;
+	iter      = tok_begin;
 	ASSERT(tok_begin >= tok_file->f_begin);
 	ASSERT(tok_begin <= tok_file->f_end);
-	end = tok_file->f_end;
-	while (SKIP_WRAPLF(iter, end))
+	while (SKIP_WRAPLF(iter, tok_file->f_end))
 		;
-	if (iter == end)
+	if (iter == tok_file->f_end)
 		return NULL; /* EOF */
 	/* Set the ANSI flag if we're supporting those characters. */
 	if (HAVE_EXTENSION_EXTENDED_IDENTS)
@@ -348,7 +353,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	/* keyword: scan until a non-alnum character is found. */
 	if (HAVE_EXTENSION_DOLLAR_IS_ALPHA) {
 		for (;;) {
-			while (SKIP_WRAPLF(iter, end))
+			while (SKIP_WRAPLF(iter, tok_file->f_end))
 				;
 			if (!(chrattr[(uint8_t)*iter] & chflags))
 				break;
@@ -356,7 +361,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 		}
 	} else {
 		for (;;) {
-			while (SKIP_WRAPLF(iter, end))
+			while (SKIP_WRAPLF(iter, tok_file->f_end))
 				;
 			if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 				break;
@@ -373,7 +378,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	return kwd_entry;
 }
 
-INTERN struct TPPKeyword *DCALL
+INTERN WUNUSED struct TPPKeyword *DCALL
 peek_next_keyword(int create_missing) {
 	struct TPPFile *tok_file;
 	char *tok_begin = peek_next_token(&tok_file);
@@ -383,7 +388,7 @@ peek_next_keyword(int create_missing) {
 }
 
 #if 0
-INTERN hash_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) hash_t DCALL
 hashof_lower(void const *data, size_t size) {
 	hash_t result = 1;
 	unsigned char const *iter, *end;
@@ -394,12 +399,11 @@ hashof_lower(void const *data, size_t size) {
 }
 
 
-INTERN struct TPPKeyword *DCALL
+INTERN WUNUSED NONNULL((1)) struct TPPKeyword *DCALL
 lowercase_keyword(char const *__restrict name,
                   size_t namelen, int create_missing) {
 	hash_t namehash;
 	struct TPPKeyword *kwd_entry, **bucket;
-	ASSERT(TPPLexer_Current);
 	namehash = hashof_lower(name, namelen);
 	/* Try to rehash the keyword map. */
 	if (TPPKeywordMap_SHOULDHASH(&CURRENT.l_keywords)) {
@@ -446,7 +450,8 @@ lowercase_keyword(char const *__restrict name,
 	return *bucket             = kwd_entry;
 }
 
-INTERN bool DCALL token_replace_lowercase(int create_missing) {
+INTERN bool DCALL
+token_replace_lowercase(int create_missing) {
 	struct TPPKeyword *lowername;
 	if (!TPP_ISKEYWORD(tok))
 		return false;
@@ -463,7 +468,7 @@ INTERN bool DCALL token_replace_lowercase(int create_missing) {
 
 
 /* Return the error type used by a given warning number. */
-INTERN DeeTypeObject *DCALL
+INTERN ATTR_CONST WUNUSED DeeTypeObject *DCALL
 get_warning_error_class(int wnum) {
 	unsigned int wid = wnum2id(wnum);
 	if (wid_isvalid(wid)) {
@@ -495,19 +500,19 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 		if unlikely((temp = (*printer)(arg, p, s)) < 0) \
 			goto err;                                   \
 		result += temp;                                 \
-	} __WHILE0
+	}	__WHILE0
 #define printf(...)                                                           \
 	do {                                                                      \
 		if unlikely((temp = DeeFormat_Printf(printer, arg, __VA_ARGS__)) < 0) \
 			goto err;                                                         \
 		result += temp;                                                       \
-	} __WHILE0
+	}	__WHILE0
 #define printob(ob)                                                 \
 	do {                                                            \
 		if unlikely((temp = DeeObject_Print(ob, printer, arg)) < 0) \
 			goto err;                                               \
 		result += temp;                                             \
-	} __WHILE0
+	}	__WHILE0
 	DeeCompilerErrorObject *me;
 	dssize_t temp, result = 0;
 	size_t i, count;
@@ -611,7 +616,7 @@ err:
 /* Prefix inserted between a system library path and a include-header. */
 PRIVATE char const include_prefix[] = "include/";
 
-INTERN struct TPPFile *DCALL
+INTERN WUNUSED NONNULL((2)) struct TPPFile *DCALL
 tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
                  struct TPPKeyword **pkeyword_entry) {

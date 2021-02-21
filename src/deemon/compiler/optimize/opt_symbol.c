@@ -31,8 +31,9 @@
 
 DECL_BEGIN
 
-INTERN int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
-                                      struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack,
+                            struct ast *__restrict self, bool result_used) {
 	struct symbol *sym;
 	DREF DeeObject *symval;
 	ASSERT(self->a_type == AST_SYM);

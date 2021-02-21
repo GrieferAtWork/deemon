@@ -96,8 +96,8 @@ do_realloc:
 /* Find and return a short option with all bits
  * set in `req_flags', as well as matching `name'.
  * If not found, return `NULL' */
-PRIVATE struct cmd_option *DCALL
-find_short_option(struct cmd_option *__restrict options,
+PRIVATE struct cmd_option const *DCALL
+find_short_option(struct cmd_option const *__restrict options,
                   char const *__restrict name, size_t name_len,
                   uint16_t req_mask, uint16_t req_flags) {
 	if unlikely(!name_len)
@@ -118,8 +118,8 @@ done:
 }
 
 /* Same as `find_short_option', but for long names. */
-PRIVATE struct cmd_option *DCALL
-find_long_option(struct cmd_option *__restrict options,
+PRIVATE struct cmd_option const *DCALL
+find_long_option(struct cmd_option const *__restrict options,
                  char const *__restrict name, size_t name_len,
                  uint16_t req_mask, uint16_t req_flags) {
 	if unlikely(!name_len)
@@ -143,9 +143,9 @@ done:
 INTERN int DCALL
 cmd_parse(int    *__restrict pargc,
           char ***__restrict pargv,
-          struct cmd_option *__restrict options,
+          struct cmd_option const *__restrict options,
           bool exec_all) {
-	struct cmd_option *opt;
+	struct cmd_option const *opt;
 	int result  = 0;
 	int argc    = *pargc;
 	char **argv = *pargv;
@@ -260,7 +260,7 @@ check_short_options:
 		                cmd);
 		goto err;
 has_opt:
-		ASSERT(opt);
+		/*ASSERT(opt != NULL);*/
 		ASSERT(opt->co_func);
 		if (!arg && argc && !(opt->co_flags & CMD_FARGEQ) &&
 		    ((opt->co_flags & (CMD_FARG | CMD_FARGONLYIMM)) == (CMD_FARG) ||

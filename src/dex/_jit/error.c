@@ -686,9 +686,9 @@ syn_class_not_thiscall(JITLexer *__restrict self) {
 
 
 
-INTERN ATTR_COLD NONNULL((1)) int DCALL
-err_invalid_argc(char const *function_name, size_t argc_cur,
-                 size_t argc_min, size_t argc_max) {
+INTERN ATTR_COLD int
+(DCALL err_invalid_argc)(char const *function_name, size_t argc_cur,
+                         size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "function%s%s expects %Iu arguments when %Iu w%s given",
@@ -717,22 +717,18 @@ PRIVATE char const access_names[4][4] = {
 	/* [?]               = */ "",
 };
 
-INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-err_cant_access_attribute_c(struct class_desc *__restrict desc,
-                            char const *__restrict name,
-                            int access) {
-	ASSERT(desc);
-	ASSERT(name);
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_cant_access_attribute_c)(struct class_desc *__restrict desc,
+                                    char const *__restrict name,
+                                    int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s attribute `%s.%s'",
 	                       access_names[access & ATTR_ACCESS_MASK],
 	                       get_desc_name(desc), name);
 }
 
-INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name) {
-	ASSERT(desc);
-	ASSERT(name);
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_attribute_c)(struct class_desc *__restrict desc, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "Unbound attribute `%s.%s'",
 	                       get_desc_name(desc), name);

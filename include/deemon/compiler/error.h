@@ -86,7 +86,7 @@ INTDEF void DCALL parser_start(void);
 #define END_PARSER_CALLBACK()                                                       \
 		parser_errors_fini(&current_parser_errors);                                 \
 		memcpy(&current_parser_errors, &_old_errors, sizeof(struct parser_errors)); \
-	} __WHILE0
+	}	__WHILE0
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

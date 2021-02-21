@@ -28,8 +28,9 @@
 
 DECL_BEGIN
 
-INTERN int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack,
-                                      struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack,
+                            struct ast *__restrict self, bool result_used) {
 	ASSERT(self->a_type == AST_SWITCH);
 	(void)result_used;
 	if (ast_optimize(stack, self->a_switch.s_expr, true))

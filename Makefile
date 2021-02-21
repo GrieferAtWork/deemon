@@ -14,7 +14,7 @@ include $(MAKEFILE_PATH)/config.mk
 CFLAGS += -I$(SRC_ROOT)/include
 CORE_CFLAGS += -DCONFIG_BUILDING_DEEMON
 DEX_CFLAGS += -DCONFIG_BUILDING_DEX
-CFLAGS += -Wall -Wextra -Wno-address -Wno-nonnull-compare -Wno-comment -Wno-strict-aliasing
+CFLAGS += -Wall -Wextra -Wno-address -Wno-comment -Wno-strict-aliasing
 
 ifndef BIN_PATH
 BIN_PATH := $(BLD_ROOT)

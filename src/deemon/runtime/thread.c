@@ -1253,7 +1253,6 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 	DBG_ALIGNMENT_DISABLE();
 	caller = (DeeThreadObject *)thread_tls_get();
 	DBG_ALIGNMENT_ENABLE();
-	ASSERT(caller);
 	/* Clear the suspension-requested flag for the calling thread,
 	 * indicating that the thread is now being suspended. */
 	ATOMIC_FETCHAND(caller->t_state, ~THREAD_STATE_SUSPENDREQ);
@@ -1324,7 +1323,7 @@ next_interrupt:
 	interrupt_args = self->t_interrupt.ti_args; /* Inherit */
 	ASSERT_OBJECT_TYPE_EXACT_OPT(interrupt_args, &DeeTuple_Type);
 	if ((next = self->t_interrupt.ti_next) != NULL) {
-		ASSERT(interrupt_main);
+		ASSERT(interrupt_main != NULL);
 		/* Handle the case of more than one remaining action. */
 		ASSERT(next->ti_intr);
 		memcpy(&self->t_interrupt, next, sizeof(struct thread_interrupt));
@@ -1352,7 +1351,7 @@ next_interrupt:
 	                                 THREAD_STATE_INTERRUPTED));
 	/* Last interrupt action. */
 	if (interrupt_args) {
-		ASSERT(interrupt_main);
+		ASSERT(interrupt_main != NULL);
 		/* Call the given interrupt-object, thus executing it. */
 		callback_result = DeeObject_Call(interrupt_main,
 		                                 DeeTuple_SIZE(interrupt_args),
@@ -1407,7 +1406,6 @@ PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetThread(/*Thread*/ DeeObject *__restrict self,
                     dthread_t *__restrict pthread) {
-	ASSERT(pthread);
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 	if unlikely(!(((DeeThreadObject *)self)->t_state & THREAD_STATE_STARTED)) {
 		DeeError_Throwf(&DeeError_ValueError,
@@ -1913,7 +1911,6 @@ DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
                DREF DeeObject **__restrict pthread_result,
                uint64_t timeout_microseconds) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
-	ASSERT(pthread_result);
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 again:
 	if (!(me->t_state & THREAD_STATE_DIDJOIN)) {
@@ -2185,7 +2182,7 @@ relock_state:
 			current_alloc                  = req_alloc; /* Save how many error occurred. */
 			while (req_alloc--) {
 				/* Duplicate the exception frames themself and package errors in `Error.ThreadCrash'. */
-				ASSERT(frame_src);
+				ASSERT(frame_src != NULL);
 				DeeObject_Init(frame_dst->ef_error, &DeeError_ThreadCrash);
 				((DeeErrorObject *)frame_dst->ef_error)->e_message = NULL;
 				((DeeErrorObject *)frame_dst->ef_error)->e_inner   = frame_src->ef_error;
@@ -2226,7 +2223,6 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
                  dthreadid_t *__restrict pthreadid) {
-	ASSERT(pthreadid);
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 #if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
 	return DeeError_Throwf(&DeeError_SystemError,
@@ -3360,7 +3356,7 @@ restart:
 		frame_iter     = self->t_except;
 		for (i = 0; i < count; ++i) {
 			DREF DeeTupleObject *item;
-			ASSERT(frame_iter);
+			ASSERT(frame_iter != NULL);
 			/* Create the element tuple. */
 			item = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
 			                                                  2 * sizeof(DREF DeeObject *));

@@ -65,7 +65,12 @@ PRIVATE void DCALL ddi_load_symbols(void) {
 }
 
 
-PRIVATE int checkpoint_compare(const void *a, const void *b) {
+#ifndef __LIBCCALL
+#define __LIBCCALL /* nothing */
+#endif /* !__LIBCCALL */
+
+PRIVATE WUNUSED int __LIBCCALL
+checkpoint_compare(const void *a, const void *b) {
 	struct ddi_checkpoint *lhs;
 	struct ddi_checkpoint *rhs;
 	lhs = (struct ddi_checkpoint *)a;
@@ -92,9 +97,9 @@ struct ddi_gen_state {
 	struct TPPFile *tpp_file; /* [0..1] The current TPP file object. */
 };
 
-PRIVATE int32_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int32_t DCALL
 find_or_alloc_offset(uint32_t **__restrict pvector,
-                     uint32_t  *__restrict psize,
+                     uint32_t *__restrict psize,
                      uint32_t offset_value,
                      uint32_t max_size) {
 	/* Search for `offset_value' in the given vector and return its index.
@@ -128,7 +133,7 @@ err:
 	return -1;
 }
 
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) uint8_t *DCALL
 put_sleb(uint8_t *__restrict text, int value) {
 	uint8_t byte;
 	unsigned int temp;
@@ -150,7 +155,7 @@ put_sleb(uint8_t *__restrict text, int value) {
 	return text;
 }
 
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) uint8_t *DCALL
 put_uleb(uint8_t *__restrict text, unsigned int value) {
 	uint8_t byte;
 	unsigned int temp;
@@ -169,7 +174,7 @@ put_uleb(uint8_t *__restrict text, unsigned int value) {
 }
 
 
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) uint8_t *DCALL
 usp_transition(uint8_t *__restrict text,
                uint16_t old_usp,
                uint16_t new_usp) {
@@ -190,7 +195,7 @@ usp_transition(uint8_t *__restrict text,
  * This function assumes that sufficient memory is available inside `*text' to write any
  * potential transition that may exist.
  * NOTE: The caller is required to ensure that the new state's UIP is > the old state's. */
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) uint8_t *DCALL
 ddi_transition(uint8_t *__restrict text,
                struct ddi_gen_state *__restrict old_state,
                struct ddi_gen_state *__restrict new_state) {
@@ -325,12 +330,12 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	      sizeof(struct ddi_checkpoint),
 	      &checkpoint_compare);
 
-	ASSERT(current_basescope);
+	ASSERT(current_basescope != NULL);
 	if (current_basescope->bs_name) {
 		/* Allocate the name of the current function. */
 		ASSERT(strtab.ap_length == 0);
 		if (ascii_printer_print(&strtab, current_basescope->bs_name->k_name,
-		                        (current_basescope->bs_name->k_size + 1)) < 0)
+		                        current_basescope->bs_name->k_size + 1) < 0)
 			goto err_result_printer;
 		/* Link the initial symbol name for the main function. */
 		result->d_strings = (uint32_t *)Dee_Malloc(sizeof(uint32_t));
@@ -513,8 +518,8 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 						size_t new_alloc = old_alloc * 2;
 						DeeDDIObject *new_result;
 do_realloc_bind:
-						ASSERT(old_alloc);
-						ASSERT(new_alloc);
+						ASSERT(old_alloc != 0);
+						ASSERT(new_alloc != 0);
 						ASSERT(old_alloc != new_alloc);
 						new_result = (DeeDDIObject *)DeeObject_TryRealloc(result, offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
 						if unlikely(!new_result) {
@@ -578,8 +583,8 @@ do_last_transition:
 				size_t new_alloc = old_alloc * 2;
 				DeeDDIObject *new_result;
 do_realloc:
-				ASSERT(old_alloc);
-				ASSERT(new_alloc);
+				ASSERT(old_alloc != 0);
+				ASSERT(new_alloc != 0);
 				ASSERT(old_alloc != new_alloc);
 				new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,
 				                                                  offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);

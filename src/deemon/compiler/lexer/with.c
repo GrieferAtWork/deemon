@@ -28,7 +28,6 @@
 
 DECL_BEGIN
 
-
 /* The with-statement:
  * >> with (<foo>) {
  * >>     <bar>
@@ -53,6 +52,9 @@ DECL_BEGIN
  * >>     // `fp.operator leave()' here will invoke `fp.close()'
  * >> }
  */
+
+/* Parse a with-statement/expression.
+ * NOTE: This function expects the current token to be `with' */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_with(bool is_statement, bool allow_nonblock) {
 	struct ast_loc loc;
@@ -177,6 +179,7 @@ err_scope_r:
 }
 
 
+/* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_with_hybrid(unsigned int *pwas_expression) {
 	struct ast_loc loc;

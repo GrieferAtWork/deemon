@@ -570,9 +570,9 @@ do_alloc_new_vector:
 		}
 		return false;
 	}
-	ASSERT(new_size);
+	ASSERT(new_size != 0);
 	bend = (biter = modules_v) + modules_a;
-	for (; biter != bend; ++biter) {
+	for (; biter < bend; ++biter) {
 		iter = biter->mb_list;
 		while (iter) {
 			next = iter->mo_next;
@@ -614,9 +614,9 @@ do_alloc_new_vector:
 		}
 		return false;
 	}
-	ASSERT(new_size);
+	ASSERT(new_size != 0);
 	bend = (biter = modules_glob_v) + modules_glob_a;
-	for (; biter != bend; ++biter) {
+	for (; biter < bend; ++biter) {
 		iter = biter->mb_list;
 		while (iter) {
 			next = iter->mo_globnext;
@@ -647,10 +647,9 @@ add_file_module(DeeModuleObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_writing(&modules_lock));
 #endif /* !CONFIG_NO_THREADS */
-	if (modules_c >= modules_a &&
-	    !rehash_file_modules())
+	if (modules_c >= modules_a && !rehash_file_modules())
 		return false;
-	ASSERT(modules_a);
+	ASSERT(modules_a != 0);
 	/* Insert the module into the table. */
 	hash = fs_hashmodpath(self);
 	bucket = &modules_v[hash % modules_a];
@@ -673,10 +672,9 @@ add_glob_module(DeeModuleObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_writing(&modules_glob_lock));
 #endif /* !CONFIG_NO_THREADS */
-	if (modules_glob_c >= modules_glob_a &&
-	    !rehash_glob_modules())
+	if (modules_glob_c >= modules_glob_a && !rehash_glob_modules())
 		return false;
-	ASSERT(modules_glob_a);
+	ASSERT(modules_glob_a != 0);
 	/* Insert the module into the table. */
 	hash = fs_hashobj((DeeObject *)self->mo_name);
 	bucket = &modules_glob_v[hash % modules_glob_a];

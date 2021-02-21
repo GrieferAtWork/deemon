@@ -232,7 +232,6 @@ list_init_iterator(List *__restrict self,
 	DREF DeeObject *elem;
 	size_t size, alloc, new_alloc;
 	DREF DeeObject **vector, **new_vector;
-	ASSERT(self);
 	ASSERT_OBJECT(iterator);
 	ASSERT((DeeObject *)self != iterator);
 	size = alloc = 0;

@@ -884,7 +884,7 @@ done:
 	do {                                                     \
 		DeeNTSystem_ThrowErrorf(NULL, dwError, __VA_ARGS__); \
 		return NULL;                                         \
-	} __WHILE0
+	}	__WHILE0
 #define RETURN_ERROR_OR_FALSE  RETURN_ERROR
 #define RETURN_SUCCESS_OR_TRUE return_none
 #else

@@ -1093,7 +1093,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;      \
 			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);       \
 		}                                                      \
-	} __WHILE0
+	}	__WHILE0
 #define Dee_ATryMallocNoFail(p, s)                                \
 	do {                                                          \
 		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;               \
@@ -1107,7 +1107,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;         \
 			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);          \
 		}                                                         \
-	} __WHILE0
+	}	__WHILE0
 #define Dee_ACallocNoFail(p, s)                                                  \
 	do {                                                                         \
 		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                              \
@@ -1121,7 +1121,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
 			(void)DEE_AMALLOC_SKEW_ALLOCA((void *)(p), _s_ - DEE_AMALLOC_ALIGN); \
 		}                                                                        \
-	} __WHILE0
+	}	__WHILE0
 #define Dee_ATryCallocNoFail(p, s)                                               \
 	do {                                                                         \
 		size_t const _s_ = (s) + DEE_AMALLOC_ALIGN;                              \
@@ -1135,7 +1135,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;                        \
 			(void)DEE_AMALLOC_SKEW_ALLOCA((void *)(p), _s_ - DEE_AMALLOC_ALIGN); \
 		}                                                                        \
-	} __WHILE0
+	}	__WHILE0
 #endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
 #endif /* __CC__ */
 

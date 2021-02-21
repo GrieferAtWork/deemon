@@ -155,7 +155,7 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 		if unlikely(temp < 0)         \
 			goto err;                 \
 		result += temp;               \
-	} __WHILE0
+	}	__WHILE0
 
 PRIVATE char const decimals[2][17] = {
 	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x' },
@@ -371,8 +371,6 @@ DeeFormat_VPrintf(dformatprinter printer, void *arg,
 	size_t width, precision;
 	unsigned int flags;
 	unsigned int length;
-	ASSERT(printer);
-	ASSERT(format);
 	flush_start = format;
 next:
 	ch = *format++;
@@ -608,7 +606,7 @@ nextfmt:
 				precision -= bufsize;
 				if (precbufsize > precision)
 					precbufsize = precision;
-				ASSERT(precbufsize);
+				ASSERT(precbufsize != 0);
 				bufsize += precbufsize;
 				iter -= precbufsize;
 				memset(iter, '0', precbufsize);

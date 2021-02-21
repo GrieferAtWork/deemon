@@ -124,32 +124,32 @@ DeeString_CFormat(dformatprinter printer,
 		if unlikely((temp = (*printer)(arg, p, s)) < 0) \
 			goto err;                                   \
 		result += temp;                                 \
-	} __WHILE0
+	}	__WHILE0
 #define print_format(p, s)                                     \
 	do {                                                       \
 		if unlikely((temp = (*format_printer)(arg, p, s)) < 0) \
 			goto err;                                          \
 		result += temp;                                        \
-	} __WHILE0
+	}	__WHILE0
 #define printob(ob)                                                 \
 	do {                                                            \
 		if unlikely((temp = DeeObject_Print(ob, printer, arg)) < 0) \
 			goto err;                                               \
 		result += temp;                                             \
-	} __WHILE0
+	}	__WHILE0
 #define printf(...)                                                           \
 	do {                                                                      \
 		if unlikely((temp = DeeFormat_Printf(printer, arg, __VA_ARGS__)) < 0) \
 			goto err;                                                         \
 		result += temp;                                                       \
-	} __WHILE0
+	}	__WHILE0
 #define GETARG()                   \
 	do {                           \
 		if unlikely(!argc)         \
 			goto missing_argument; \
 		in_arg = *argv++;          \
 		--argc;                    \
-	} __WHILE0
+	}	__WHILE0
 	ASSERT(!argc || argv);
 	end = (iter = flush_start = (char *)format) + format_len;
 	while (iter != end) {

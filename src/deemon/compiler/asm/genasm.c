@@ -502,7 +502,7 @@ err:
 }
 
 
-INTERN struct module_symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name) {
 	dhash_t i, perturb;
@@ -2809,7 +2809,6 @@ action_in_without_const:
 		struct text_label *label;
 		struct asm_sym *sym;
 		label = self->a_label.l_label;
-		ASSERT(label);
 		if (!label->tl_goto) {
 			if (WARNAST(self, W_ASM_LABEL_NEVER_USED,
 			            text_label_name(label, self->a_flag & AST_FLABEL_CASE)))
@@ -2839,8 +2838,7 @@ action_in_without_const:
 		uint16_t old_stack;
 		/* Just to a specified symbol. */
 		label = self->a_goto.g_label;
-		ASSERT(label);
-		sym = label->tl_asym;
+		sym   = label->tl_asym;
 		if (!sym) {
 			sym = asm_newsym();
 			if unlikely(!sym)

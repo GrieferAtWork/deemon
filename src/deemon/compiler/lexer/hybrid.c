@@ -55,7 +55,6 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 	unsigned int was_expression;
 	switch (tok) {
 
-
 	case '{':
 		result = ast_parse_statement_or_braces(&was_expression);
 		if unlikely(!result)
@@ -161,6 +160,7 @@ err:
 
 
 
+/* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_if_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *tt_branch;
@@ -228,6 +228,7 @@ err:
 
 
 
+/* Parse a statement or a brace-expression, with the current token being a `{' */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 	DREF struct ast *result, **new_elemv;

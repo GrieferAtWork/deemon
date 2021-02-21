@@ -31,7 +31,7 @@
 DECL_BEGIN
 
 
-INTERN WUNUSED DREF struct ast *DCALL
+INTERN WUNUSED NONNULL((2)) DREF struct ast *DCALL
 ast_parse_argument_list(uint16_t mode,
                         DREF struct ast **__restrict pkeyword_labels) {
 	DREF struct ast *result;

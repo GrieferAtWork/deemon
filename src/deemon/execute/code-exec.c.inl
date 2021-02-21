@@ -127,7 +127,7 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
 	DREF DeeObject *result;
 	DeeObject *kw;
 	kwds = frame->cf_kw;
-	ASSERT(kwds);
+	ASSERT(kwds != NULL);
 	kw = kwds->fk_kw;
 	if likely(DeeKwds_Check(kw)) {
 		/* Most common case: Must create a wrapper around the kwds/argv hybrid descriptor,
@@ -871,10 +871,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #endif /* !_MSC_VER */
 
 
- ASSERTF(frame, "Invalid frame");
-	ASSERT_OBJECT(frame->cf_func);
 	code = frame->cf_func->fo_code;
-	ASSERT_OBJECT(code);
 	ASSERT((this_thread->t_execsz != 0) ==
 	       (this_thread->t_exec != NULL));
 
@@ -4100,12 +4097,12 @@ do_setattr_this_c:
 						pexcept_frame = &this_thread->t_except;
 						do {
 							except_frame = *pexcept_frame;
-							ASSERT(except_frame);
+							ASSERT(except_frame != NULL);
 							pexcept_frame = &except_frame->ef_prev;
 						} while (nth_except--);
 						/* Load the except_frame that we're supposed to get rid of. */
 						except_frame = *pexcept_frame;
-						ASSERT(except_frame);
+						ASSERT(except_frame != NULL);
 						/* Remove the exception frame from its chain. */
 						*pexcept_frame = except_frame->ef_prev;
 						--this_thread->t_exceptsz;
@@ -7127,7 +7124,7 @@ stack_fault:
 			DeeError_Throwf(&DeeError_SegFault, "Stack segment overflow");
 			HANDLE_EXCEPT();
 		}
-		ASSERT(new_size);
+		ASSERT(new_size != 0);
 		/* Allocate/Re-allocate the stack on the heap. */
 		if (frame->cf_stacksz) {
 			new_stack = (DeeObject **)Dee_Realloc(frame->cf_stack,

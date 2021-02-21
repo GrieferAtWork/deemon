@@ -702,7 +702,7 @@ err_result:
 		if (is_reusing_code_object) {
 			/* Recover the old code object. */
 recover_old_code_object:
-			ASSERT(is_reusing_code_object);
+			/*ASSERT(is_reusing_code_object);*/
 			current_code                                = current_assembler.a_sect[SECTION_TEXT].sec_code;
 			current_code->co_code[preexisting_codesize] = ASM_UD;
 			current_code->co_flags                      = old_co_flags;

@@ -29,7 +29,19 @@
 
 DECL_BEGIN
 
-INTERN WUNUSED DREF struct ast *FCALL
+/* Parse a cast expression suffix following parenthesis, or
+ * re-return the given `typeexpr' if there is no cast operand
+ * at the current lexer position:
+ * >> local x = (int)get_value();
+ *                   ^          ^
+ *                   entry      exit
+ * >> local y = (get_value());
+ *                           ^
+ *                           entry
+ *                           ^
+ *                           exit
+ */
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_cast(struct ast *__restrict typeexpr) {
 	uint32_t old_flags;
 	DREF struct ast *kw_labels;

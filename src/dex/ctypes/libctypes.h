@@ -58,7 +58,7 @@ DECL_BEGIN
 		} __except (ctypes_seh_guard((struct _EXCEPTION_POINTERS *)_exception_info())) { \
 			error;                                                                       \
 		}                                                                                \
-	} __WHILE0
+	}	__WHILE0
 
 #define CONFIG_HAVE_CTYPES_SEH_GUARD 1
 struct _EXCEPTION_POINTERS;
@@ -87,7 +87,7 @@ INTDEF void ctypes_kos_guard(void);
 			ctypes_kos_guard();          \
 			error;                       \
 		}                                \
-	} __WHILE0
+	}	__WHILE0
 #endif /* E_SEGFAULT */
 #endif /* TRY && EXCEPT */
 

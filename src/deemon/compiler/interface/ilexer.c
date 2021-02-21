@@ -46,7 +46,9 @@
 
 DECL_BEGIN
 
-INTERN tok_t DCALL
+/* @return: TOK_ERR: An error occurred (and was thrown)
+ * @return: -2:      A keyword wasn't found (and `create_missing' was false) */
+INTERN WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_str(char const *__restrict name, bool create_missing) {
 	switch (name[0]) {
 	case 0:
@@ -248,7 +250,7 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	}
 }
 
-INTERN tok_t DCALL
+INTERN WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_obj(DeeObject *__restrict obj, bool create_missing) {
 	unsigned int result;
 	if (DeeString_Check(obj))
@@ -309,6 +311,8 @@ STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
               (TOK_TWOCHAR_END - TOK_TWOCHAR_BEGIN));
 
 
+/* @return: NULL:      An error occurred (and was thrown)
+ * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
 INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
@@ -334,7 +338,7 @@ get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	                         STRING_ERROR_FIGNORE);
 }
 
-INTERN dhash_t DCALL
+INTERN WUNUSED dhash_t DCALL
 get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
@@ -1168,8 +1172,8 @@ lexer_del_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_file_compiler(DeeCompilerItemObject *__restrict obj) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_invalid_file_compiler)(DeeCompilerItemObject *__restrict obj) {
 	(void)obj;
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "File is associated with a different compiler");

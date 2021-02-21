@@ -411,9 +411,9 @@ err:
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
-	struct jit_state *st = self->ji_state;
+	struct jit_state *st;
 	unsigned char *old_pos;
-	ASSERT(st);
+	st = self->ji_state;
 	ASSERT(st != &self->ji_bstat);
 	switch (st->js_kind) {
 
@@ -653,7 +653,6 @@ JITYieldFunctionIterator_UnwindUntil(JITYieldFunctionIterator *__restrict self,
 		struct jit_state *curr;
 		struct jit_state *prev;
 		curr = self->ji_state;
-		ASSERT(curr);
 		ASSERT(curr != &self->ji_bstat);
 		/* Adjust for the scopes that are lost by this jump. */
 		if (JIT_STATE_KIND_HASSCOPE(curr->js_kind))
@@ -694,7 +693,6 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 	 * ended at that point) */
 	struct jit_state *st = self->ji_state;
 	for (; st != &self->ji_bstat; st = st->js_prev) {
-		ASSERT(st);
 		switch (st->js_kind) {
 
 		case JIT_STATE_KIND_DOWHILE:
@@ -1691,9 +1689,8 @@ service_exception_handlers:
 										struct except_frame *exc, **pexc;
 										exc = *(pexc = &ts->t_except);
 										while (ind--) {
-											ASSERT(exc);
-											ASSERT(exc->ef_prev);
-											exc = *(pexc = &exc->ef_prev);
+											pexc = &exc->ef_prev;
+											exc  = *pexc;
 										}
 										*pexc = exc->ef_prev;
 										--ts->t_exceptsz;
@@ -1851,7 +1848,7 @@ ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
 	/* Pop remaining scopes. */
 	tab = self->ji_ctx.jc_locals.otp_tab;
 	for (;;) {
-		ASSERT(tab);
+		ASSERT(tab != NULL);
 		JITObjectTable_Visit(tab, proc, arg);
 		if (tab == &self->ji_loc)
 			break;

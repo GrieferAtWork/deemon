@@ -98,9 +98,10 @@ struct ast_assumes {
  *       be modified by other threads running independently on the caller.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_assumes_setsymval)(struct ast_assumes *__restrict self,
-                                         struct symbol *__restrict sym,
-                                         DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assumes_setsymval)(struct ast_assumes *__restrict self,
+                              struct symbol *__restrict sym,
+                              DeeObject *value);
 
 /* Lookup the assumed value of a given symbol `sym', and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
@@ -137,9 +138,10 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * intersections of assumptions made before and after the loop.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
-                                      struct ast *__restrict branch,
-                                      bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
+                           struct ast *__restrict branch,
+                           bool result_used);
 
 
 
@@ -147,16 +149,19 @@ INTDEF int (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
  * assumptions for all previously made positive ones.
  * This must be done when encountering a label, as the state
  * of symbols would not be known at this point. */
-INTDEF int (DCALL ast_assumes_undefined)(struct ast_assumes *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_assumes_undefined)(struct ast_assumes *__restrict self);
+
 /* Override _all_ assumptions made within the current function. */
-INTDEF int (DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self);
 
 /* Initialize an empty set of ast assumptions. */
-INTDEF void DCALL
+INTDEF NONNULL((1)) void DCALL
 ast_assumes_init(struct ast_assumes *__restrict self);
 
 /* Finalize the given ast assumptions. */
-INTDEF void DCALL
+INTDEF NONNULL((1)) void DCALL
 ast_assumes_fini(struct ast_assumes *__restrict self);
 
 /* Setup AST assumption at the start of a conditional branch,
@@ -164,13 +169,15 @@ ast_assumes_fini(struct ast_assumes *__restrict self);
  * while assumptions already made until then are in `parent'
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_assumes_initcond)(struct ast_assumes *__restrict child,
-                                        struct ast_assumes const *__restrict parent);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assumes_initcond)(struct ast_assumes *__restrict child,
+                             struct ast_assumes const *__restrict parent);
 
 /* Initialize a set of assumptions for a child-function.
  * This also affects the limit of `ast_assumes_undefined_all()' */
-INTDEF int (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
-                                            struct ast_assumes const *__restrict parent);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
+                                 struct ast_assumes const *__restrict parent);
 
 /* Merge assumptions made in `child' and `sibling', such that
  * only assumptions made in both places still hold true, saving
@@ -201,8 +208,9 @@ INTDEF int (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child
  * WARNING: `sibling' (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
-                                         struct ast_assumes *sibling);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
+                              struct ast_assumes *sibling);
 
 /* Merge the assumptions made by `follower' with `self' in a situation
  * where `follower' is a piece of follow-up code to `self', resulting
@@ -212,8 +220,9 @@ INTDEF int (DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
  * those made by the parent-branch, after they had been merged with
  * each other.
  * WARNING: `follower' may have its data stolen. */
-INTDEF int (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
-                                     struct ast_assumes *__restrict follower);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
+                          struct ast_assumes *__restrict follower);
 #endif /* OPTIMIZE_FASSUME */
 
 
@@ -238,21 +247,21 @@ struct ast_optimize_stack {
  *       calling this function, and don't call it when it is set.
  * @return:  0: The branch was potentially optimized.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1)) int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used);
 
 /* Ast optimization sub-functions.
  * @param: self:        == stack->os_ast
  * @param: result_used: == stack->os_used */
-INTDEF int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
-INTDEF int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_multiple)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_symbol)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_conditional)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_loop)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_try)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 
 INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
@@ -260,11 +269,13 @@ INTDEF unsigned int optimizer_count;    /* Incremented each time `ast_optimize' 
 
 /* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
  * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */
-INTDEF int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used);
 
 /* Check if `a' and `b' are semantically speaking the same AST.
  * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_equal(struct ast *__restrict a, struct ast *__restrict b);
+INTDEF WUNUSED NONNULL((1, 2)) bool
+(DCALL ast_equal)(struct ast const *a, struct ast const *b);
 
 /* Check if the 2 given ASTs can be exchanged in such a way that
  * the second is executed prior to the first within assembly.
@@ -278,26 +289,28 @@ ast_can_exchange(struct ast *__restrict first,
 
 /* Check if the given ast `self' makes use of `sym' in any way.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
-ast_uses_symbol(struct ast *__restrict self,
-                struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1, 2)) bool
+(DCALL ast_uses_symbol)(struct ast *__restrict self,
+                        struct symbol *__restrict sym);
 
 /* Do a shallow assignment of `other' onto `self' */
-INTDEF int (DCALL ast_assign)(struct ast *__restrict self,
-                              struct ast *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assign)(struct ast *__restrict self,
+                   struct ast *__restrict other);
 
 /* Graft `other' onto `self', assigning it if both branches have the same scope,
  * or converting `self' into a single-expression multiple-ast containing `other.' */
-INTDEF int (DCALL ast_graft_onto)(struct ast *__restrict self,
-                                  struct ast *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL ast_graft_onto)(struct ast *__restrict self,
+                       struct ast *__restrict other);
 
 /* Finalize the contents of `self', but don't destroy the object itself. */
-INTDEF void DCALL ast_fini_contents(struct ast *__restrict self);
+INTDEF NONNULL((1)) void DCALL ast_fini_contents(struct ast *__restrict self);
 
 /* Copy scope and DDI information from `src' and assign them to `ast'.
  * When `ast' is NULL, don't do anything.
  * @return: * : Always re-returns `ast' */
-INTDEF struct ast *DCALL
+INTDEF WUNUSED NONNULL((2)) struct ast *DCALL
 ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src);
 
@@ -321,21 +334,25 @@ ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
  * @return  1: doesn't return
  * @return -1: always reachable / unpredictable
  * @return -2: always reachable / unpredictable & doesn't return */
-INTDEF int (DCALL ast_doesnt_return)(struct ast *__restrict self, unsigned int flags);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_doesnt_return)(struct ast *__restrict self, unsigned int flags);
 #define AST_DOESNT_RETURN_FNORMAL     0x0000
 #define AST_DOESNT_RETURN_FINLOOP     0x0001
 #define AST_DOESNT_RETURN_FINCATCH    0x0002
 #define AST_DOESNT_RETURN_FINCATCHALL 0x0004
 
 /* 0: false, > 0: true, < 0: unpredictable. */
-INTDEF int (DCALL ast_get_boolean)(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_get_boolean)(struct ast *__restrict self);
 
 /* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
-INTDEF int (DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
-INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL ast_predict_type(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ast_predict_type(struct ast *__restrict self);
 
 
 
@@ -346,11 +363,13 @@ INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL ast_predict_type(struct ast *__
 /* Return if the optimizer is allowed to perform
  * operations on/with a constant instance `self'.
  * @return: * : One of `CONSTEXPR_*' */
-INTDEF int (DCALL allow_constexpr)(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL allow_constexpr)(DeeObject *__restrict self);
 
 /* Check if a given object `type' is a type that implements a cast-constructor.
  * When `type' isn't derived from `DeeType_Type', always return `false' */
-INTDEF WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restrict type);
+INTDEF WUNUSED NONNULL((1)) bool
+(DCALL has_cast_constructor)(DeeObject *__restrict type);
 
 
 #ifndef __INTELLISENSE__
@@ -378,7 +397,8 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restric
 #define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
 #define OPTIMIZE_VERBOSE(...)        ast_optimize_verbose(self, __VA_ARGS__)
 #define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast, __VA_ARGS__)
-INTDEF void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
+INTDEF NONNULL((1, 2)) void
+ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
 #else /* !NDEBUG */
 #define OPTIMIZE_VERBOSE(...)       (void)0
 #define OPTIMIZE_VERBOSEAT(ast, ...) (void)0

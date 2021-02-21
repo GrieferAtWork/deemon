@@ -234,9 +234,7 @@ PUBLIC NONNULL((1, 2)) bool
 {
 	struct weakref_list *list;
 	struct weakref *next;
-	ASSERT(self);
-	ASSERT(ob);
-	ASSERT(ob->ob_refcnt);
+	ASSERT_OBJECT(ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 #ifdef __INTELLISENSE__
 	self->wr_del = callback;
@@ -278,8 +276,6 @@ PUBLIC NONNULL((1, 2)) void
                          struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
-	ASSERT(self);
-	ASSERT(other);
 	ASSERT(self != other);
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -321,8 +317,6 @@ PUBLIC void (DCALL Dee_weakref_copyassign)(struct weakref *__restrict self,
                                           struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
-	ASSERT(self);
-	ASSERT(other);
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -409,8 +403,6 @@ again:
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_weakref_moveassign(struct weakref *self,
                        struct weakref *other) {
-	ASSERT(self);
-	ASSERT(other);
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -516,8 +508,6 @@ again:
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_weakref_move(struct weakref *__restrict dst,
                  struct weakref *__restrict src) {
-	ASSERT(dst);
-	ASSERT(src);
 	ASSERT(dst != src);
 #ifndef NDEBUG
 	ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -564,7 +554,6 @@ again:
 /* Finalize a given weak reference. */
 PUBLIC NONNULL((1)) void DCALL
 Dee_weakref_fini(struct weakref *__restrict self) {
-	ASSERT(self);
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -600,7 +589,6 @@ again:
 
 PUBLIC NONNULL((1)) bool DCALL
 Dee_weakref_clear(struct weakref *__restrict self) {
-	ASSERT(self);
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -651,9 +639,7 @@ Dee_weakref_set(struct weakref *__restrict self,
                 DeeObject *__restrict ob) {
 	struct weakref_list *new_list;
 	struct weakref *next;
-	ASSERT(self);
-	ASSERT(ob);
-	ASSERT(ob->ob_refcnt);
+	ASSERT_OBJECT(ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 	new_list = WEAKREFS_GET(ob);
 	if unlikely(!WEAKREFS_OK(new_list, ob))
@@ -716,7 +702,6 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 #endif /* !__INTELLISENSE__ */
 {
 	DREF DeeObject *result;
-	ASSERT(self);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -755,7 +740,6 @@ PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__res
 #endif /* !__INTELLISENSE__ */
 {
 	DeeObject *curr;
-	ASSERT(self);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -790,7 +774,6 @@ Dee_weakref_cmpxch(struct weakref *__restrict self,
                    DeeObject *old_ob,
                    DeeObject *new_ob) {
 	DREF DeeObject *result;
-	ASSERT(self);
 	ASSERT_OBJECT_OPT(new_ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 again:

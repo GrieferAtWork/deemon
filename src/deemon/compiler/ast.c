@@ -101,22 +101,20 @@ INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 }
 #endif /* NDEBUG */
 
-INTERN void FCALL
+INTERN NONNULL((1)) void FCALL
 loc_here(struct ast_loc *__restrict info) {
-	ASSERT(info);
 	info->l_file = TPPLexer_Global.l_token.t_file;
 	/* Query line/column information for the current token's start position. */
 	TPPFile_LCAt(info->l_file, &info->l_lc,
 	             TPPLexer_Global.l_token.t_begin);
 }
 
-INTERN struct ast *FCALL
+INTERN NONNULL((2)) struct ast *FCALL
 ast_setddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL' for `ast'. */
 	ASSERT_AST(self);
-	ASSERT(info);
 	if unlikely(self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
 	if (tpp_is_reachable_file(info->l_file)) {
@@ -146,13 +144,12 @@ done:
 	return self;
 }
 
-INTERN struct ast *FCALL
+INTERN NONNULL((2)) struct ast *FCALL
 ast_putddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL' for `ast'. */
 	ASSERT_AST(self);
-	ASSERT(info);
 	if unlikely(self->a_ddi.l_file)
 		goto done;
 	if (tpp_is_reachable_file(info->l_file)) {
@@ -184,7 +181,7 @@ done:
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_incwrite(struct ast *__restrict self) {
 	switch (self->a_type) {
 
@@ -207,7 +204,7 @@ ast_incwrite(struct ast *__restrict self) {
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_incwriteonly(struct ast *__restrict self) {
 	switch (self->a_type) {
 
@@ -228,7 +225,7 @@ ast_incwriteonly(struct ast *__restrict self) {
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_decwrite(struct ast *__restrict self) {
 	switch (self->a_type) {
 
@@ -252,7 +249,7 @@ ast_decwrite(struct ast *__restrict self) {
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_decwriteonly(struct ast *__restrict self) {
 	switch (self->a_type) {
 
@@ -275,15 +272,15 @@ ast_decwriteonly(struct ast *__restrict self) {
 }
 
 #ifdef CONFIG_NO_AST_DEBUG
-#define DEFINE_AST_GENERATOR(name, args) \
-	INTERN WUNUSED DREF struct ast *(DCALL name)args
+#define DEFINE_AST_GENERATOR(attr, name, args) \
+	INTERN WUNUSED attr DREF struct ast *(DCALL name)args
 #else /* CONFIG_NO_AST_DEBUG */
-#define DEFINE_AST_GENERATOR(name, args) \
-	INTERN WUNUSED DREF struct ast *(DCALL name##_d)PRIVATE_AST_GENERATOR_UNPACK_ARGS args
+#define DEFINE_AST_GENERATOR(attr, name, args) \
+	INTERN WUNUSED attr DREF struct ast *(DCALL name##_d)PRIVATE_AST_GENERATOR_UNPACK_ARGS args
 #endif /* !CONFIG_NO_AST_DEBUG */
 
 
-DEFINE_AST_GENERATOR(ast_constexpr,
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_constexpr,
                      (DeeObject *__restrict constant_expression)) {
 	DREF struct ast *result = ast_new();
 	ASSERT_OBJECT(constant_expression);
@@ -296,10 +293,9 @@ DEFINE_AST_GENERATOR(ast_constexpr,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_sym,
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_sym,
                      (struct symbol * __restrict sym)) {
 	DREF struct ast *result = ast_new();
-	ASSERT(sym);
 	if likely(result) {
 		result->a_type = AST_SYM;
 		result->a_flag = 0; /* Start out as a read-reference. */
@@ -310,10 +306,9 @@ DEFINE_AST_GENERATOR(ast_sym,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_unbind,
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_unbind,
                      (struct symbol * __restrict sym)) {
 	DREF struct ast *result = ast_new();
-	ASSERT(sym);
 	if likely(result) {
 		result->a_type   = AST_UNBIND;
 		result->a_unbind = sym;
@@ -323,9 +318,9 @@ DEFINE_AST_GENERATOR(ast_unbind,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_bound, (struct symbol * __restrict sym)) {
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_bound,
+                     (struct symbol * __restrict sym)) {
 	DREF struct ast *result = ast_new();
-	ASSERT(sym);
 	if likely(result) {
 		result->a_type  = AST_BOUND;
 		result->a_bound = sym;
@@ -335,7 +330,7 @@ DEFINE_AST_GENERATOR(ast_bound, (struct symbol * __restrict sym)) {
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_operator_func,
+DEFINE_AST_GENERATOR(, ast_operator_func,
                      (uint16_t operator_name, struct ast *binding)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(binding);
@@ -350,9 +345,9 @@ DEFINE_AST_GENERATOR(ast_operator_func,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_multiple,
+DEFINE_AST_GENERATOR(, ast_multiple,
                      (uint16_t flags, size_t exprc,
-                      /*inherit*/ DREF struct ast **__restrict exprv)) {
+                      /*inherit*/ DREF struct ast **exprv)) {
 	DREF struct ast *result;
 	/* Prevent AST ambiguity by not allowing
 	 * keep-last, single-element multiple ASTs.
@@ -395,8 +390,8 @@ err:
 	return NULL;
 }
 
-DEFINE_AST_GENERATOR(ast_return,
-                     (struct ast * return_expr)) {
+DEFINE_AST_GENERATOR(, ast_return,
+                     (struct ast *return_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(return_expr);
 	result = ast_new();
@@ -409,8 +404,8 @@ DEFINE_AST_GENERATOR(ast_return,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_yield,
-                     (struct ast * __restrict yield_expr)) {
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_yield,
+                     (struct ast *__restrict yield_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(yield_expr);
 	result = ast_new();
@@ -423,8 +418,8 @@ DEFINE_AST_GENERATOR(ast_yield,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_throw,
-                     (struct ast * throw_expr)) {
+DEFINE_AST_GENERATOR(, ast_throw,
+                     (struct ast *throw_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(throw_expr);
 	result = ast_new();
@@ -437,8 +432,9 @@ DEFINE_AST_GENERATOR(ast_throw,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_try, (struct ast * __restrict guarded_expression, size_t catchc,
-                               /*inherit*/ struct catch_expr *__restrict catchv)) {
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_try,
+                     (struct ast *__restrict guarded_expression,
+                      size_t catchc, /*inherit*/ struct catch_expr *catchv)) {
 	DREF struct ast *result;
 	ASSERT_AST(guarded_expression);
 	if unlikely(!catchc) {
@@ -459,8 +455,8 @@ DEFINE_AST_GENERATOR(ast_try, (struct ast * __restrict guarded_expression, size_
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_tryfinally,
-                     (struct ast * __restrict guarded_expression,
+DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_tryfinally,
+                     (struct ast *__restrict guarded_expression,
                       struct ast *__restrict finally_expression)) {
 	struct catch_expr *catchv;
 	DREF struct ast *result;
@@ -474,7 +470,7 @@ DEFINE_AST_GENERATOR(ast_tryfinally,
 #ifdef CONFIG_NO_AST_DEBUG
 	result = ast_try(guarded_expression, 1, catchv);
 #else /* CONFIG_NO_AST_DEBUG */
-	result = ast_try_d(file, line, guarded_expression, 1, catchv);
+	result = ast_try_d(guarded_expression, 1, catchv, file, line);
 #endif /* !CONFIG_NO_AST_DEBUG */
 	if unlikely(!result) {
 		Dee_Free(catchv);
@@ -486,11 +482,9 @@ err:
 	return NULL;
 }
 
-DEFINE_AST_GENERATOR(ast_loop,
-                     (uint16_t flags,
-                      struct ast *elem_or_cond,
-                      struct ast *iter_or_next,
-                      struct ast *loop)) {
+DEFINE_AST_GENERATOR(, ast_loop,
+                     (uint16_t flags, struct ast *elem_or_cond,
+                      struct ast *iter_or_next, struct ast *loop)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(elem_or_cond);
 	ASSERT_AST_OPT(iter_or_next);
@@ -520,7 +514,7 @@ DEFINE_AST_GENERATOR(ast_loop,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags)) {
+DEFINE_AST_GENERATOR(, ast_loopctl, (uint16_t flags)) {
 	DREF struct ast *result;
 	result = ast_new();
 	if likely(result) {
@@ -531,11 +525,9 @@ DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags)) {
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_conditional,
-                     (uint16_t flags,
-                      struct ast *cond,
-                      struct ast *tt_expr,
-                      struct ast *ff_expr)) {
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_conditional,
+                     (uint16_t flags, struct ast *cond,
+                      struct ast *tt_expr, struct ast *ff_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(cond);
 	ASSERT_AST_OPT(tt_expr);
@@ -557,7 +549,7 @@ DEFINE_AST_GENERATOR(ast_conditional,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_bool,
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_bool,
                      (uint16_t flags, struct ast *__restrict expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(expr);
@@ -572,8 +564,8 @@ DEFINE_AST_GENERATOR(ast_bool,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_expand,
-                     (struct ast * __restrict expr)) {
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_expand,
+                     (struct ast *__restrict expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(expr);
 #if 0 /* This causes problems with code such as `([foo]...)' being \
@@ -599,8 +591,8 @@ DEFINE_AST_GENERATOR(ast_expand,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_function,
-                     (struct ast * __restrict function_code,
+DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_function,
+                     (struct ast *__restrict function_code,
                       DeeBaseScopeObject *__restrict scope)) {
 	DREF struct ast *result;
 	ASSERT_AST(function_code);
@@ -617,7 +609,7 @@ DEFINE_AST_GENERATOR(ast_function,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_operator1,
+DEFINE_AST_GENERATOR(NONNULL((3)), ast_operator1,
                      (uint16_t operator_name, uint16_t flags,
                       struct ast *__restrict opa)) {
 	DREF struct ast *result;
@@ -639,7 +631,7 @@ DEFINE_AST_GENERATOR(ast_operator1,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_operator2,
+DEFINE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2,
                      (uint16_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb)) {
@@ -663,7 +655,7 @@ DEFINE_AST_GENERATOR(ast_operator2,
 	}
 	return result;
 }
-DEFINE_AST_GENERATOR(ast_operator3,
+DEFINE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3,
                      (uint16_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb,
@@ -691,7 +683,7 @@ DEFINE_AST_GENERATOR(ast_operator3,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_operator4,
+DEFINE_AST_GENERATOR(NONNULL((3, 4, 5, 6)), ast_operator4,
                      (uint16_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb,
@@ -722,7 +714,7 @@ DEFINE_AST_GENERATOR(ast_operator4,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_action0,
+DEFINE_AST_GENERATOR(, ast_action0,
                      (uint16_t action_flags)) {
 	DREF struct ast *result;
 	ASSERT(AST_FACTION_ARGC_GT(action_flags) == 0);
@@ -738,7 +730,7 @@ DEFINE_AST_GENERATOR(ast_action0,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_action1,
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_action1,
                      (uint16_t action_flags,
                       struct ast *__restrict act0)) {
 	DREF struct ast *result;
@@ -757,7 +749,7 @@ DEFINE_AST_GENERATOR(ast_action1,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_action2,
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_action2,
                      (uint16_t action_flags,
                       struct ast *__restrict act0,
                       struct ast *__restrict act1)) {
@@ -782,7 +774,7 @@ DEFINE_AST_GENERATOR(ast_action2,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_action3,
+DEFINE_AST_GENERATOR(NONNULL((2, 3, 4)), ast_action3,
                      (uint16_t action_flags,
                       struct ast *__restrict act0,
                       struct ast *__restrict act1,
@@ -808,10 +800,10 @@ DEFINE_AST_GENERATOR(ast_action3,
 }
 
 
-DEFINE_AST_GENERATOR(ast_class,
-                     (struct ast * base, struct ast *__restrict descriptor,
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_class,
+                     (struct ast *base, struct ast *__restrict descriptor,
                       struct symbol *class_symbol, struct symbol *super_symbol,
-                      size_t memberc, struct class_member *__restrict memberv)) {
+                      size_t memberc, struct class_member *memberv)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(base);
 	ASSERT_AST(descriptor);
@@ -839,17 +831,16 @@ DEFINE_AST_GENERATOR(ast_class,
 			}
 		}
 		ast_xincref(base);
-		ast_xincref(descriptor);
+		ast_incref(descriptor);
 		INIT_REF(result);
 	}
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_label,
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_label,
                      (uint16_t flags, struct text_label *__restrict lbl,
                       DeeBaseScopeObject *__restrict base_scope)) {
 	DREF struct ast *result;
-	ASSERT(lbl);
 	result = ast_new();
 	if likely(result) {
 		result->a_type          = AST_LABEL;
@@ -861,11 +852,10 @@ DEFINE_AST_GENERATOR(ast_label,
 	}
 	return result;
 }
-DEFINE_AST_GENERATOR(ast_goto,
+DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_goto,
                      (struct text_label * __restrict lbl,
                       DeeBaseScopeObject *__restrict base_scope)) {
 	DREF struct ast *result;
-	ASSERT(lbl);
 	result = ast_new();
 	if likely(result) {
 		result->a_type         = AST_GOTO;
@@ -879,7 +869,7 @@ DEFINE_AST_GENERATOR(ast_goto,
 	}
 	return result;
 }
-DEFINE_AST_GENERATOR(ast_switch,
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_switch,
                      (uint16_t flags,
                       struct ast *__restrict expr,
                       struct ast *__restrict block,
@@ -909,21 +899,18 @@ DEFINE_AST_GENERATOR(ast_switch,
 
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-DEFINE_AST_GENERATOR(ast_assembly,
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_assembly,
                      (uint16_t flags, struct TPPString *__restrict text,
                       size_t num_o, size_t num_i, size_t num_l,
-                      /*inherit*/ struct asm_operand *__restrict opv))
+                      /*inherit*/ struct asm_operand *opv))
 #else /* !CONFIG_LANGUAGE_NO_ASM */
-DEFINE_AST_GENERATOR(ast_assembly,
+DEFINE_AST_GENERATOR(, ast_assembly,
                      (uint16_t flags,
                       size_t num_o, size_t num_i, size_t num_l,
-                      /*inherit*/ struct asm_operand *__restrict opv))
+                      /*inherit*/ struct asm_operand *opv))
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 {
 	DREF struct ast *result;
-#ifndef CONFIG_LANGUAGE_NO_ASM
-	ASSERT(text);
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 	ASSERT(!(num_o + num_i + num_l) || opv);
 	result = ast_new();
 	if likely(result) {
@@ -971,7 +958,7 @@ cleanup_switch_cases(struct text_label *switch_cases,
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
                    dvisit_t proc, void *arg) {
 	while (switch_cases) {
@@ -981,7 +968,7 @@ visit_switch_cases(struct text_label *switch_cases,
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_fini_contents(struct ast *__restrict self) {
 	switch (self->a_type) {
 
@@ -1128,7 +1115,7 @@ do_xdecref_3:
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 ast_visit_impl(struct ast *__restrict self,
                dvisit_t proc, void *arg) {
 	switch (self->a_type) {
@@ -1229,9 +1216,9 @@ do_xvisit_3:
 
 
 #ifdef CONFIG_AST_IS_STRUCT
-INTERN void DCALL ast_destroy(struct ast *__restrict self)
+INTERN NONNULL((1)) void DCALL ast_destroy(struct ast *__restrict self)
 #else /* CONFIG_AST_IS_STRUCT */
-PRIVATE void DCALL ast_fini(struct ast *__restrict self)
+PRIVATE NONNULL((1)) void DCALL ast_fini(struct ast *__restrict self)
 #endif /* !CONFIG_AST_IS_STRUCT */
 {
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));

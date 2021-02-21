@@ -36,7 +36,7 @@ DECL_BEGIN
 
 #define PUSH_RESULT  (gflags & ASM_G_FPUSHRES)
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_gpush2_duplast(struct ast *__restrict a,
                    struct ast *__restrict b,
                    struct ast *__restrict ddi_ast,
@@ -91,7 +91,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 asm_gpush3_duplast(struct ast *__restrict a,
                    struct ast *__restrict b,
                    struct ast *__restrict c,
@@ -155,7 +155,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 asm_gpush4_duplast(struct ast *__restrict a,
                    struct ast *__restrict b,
                    struct ast *__restrict c,
@@ -230,7 +230,7 @@ err:
 	return -1;
 }
 
-INTDEF struct module_symbol *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
@@ -636,10 +636,11 @@ err:
 }
 
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
-                                    struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+asm_check_thiscall(struct symbol *__restrict sym,
+                   struct ast *__restrict warn_ast);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_set_cattr_symbol(struct symbol *__restrict sym,
                      struct ast *__restrict value,
                      struct ast *__restrict ddi_ast,
@@ -1522,17 +1523,17 @@ err:
 	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 3))
-int (DCALL asm_gmov_ast_constexpr)(struct ast *__restrict dst,
-                                   DeeObject *__restrict src,
-                                   struct ast *__restrict src_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gmov_ast_constexpr)(struct ast *__restrict dst,
+                               DeeObject *__restrict src,
+                               struct ast *__restrict src_ast);
 
 
-INTERN WUNUSED NONNULL((1, 2, 3))
-int (DCALL asm_gstore)(struct ast *__restrict dst,
-                       struct ast *__restrict src,
-                       struct ast *ddi_ast,
-                       unsigned int gflags) {
+INTERN WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gstore)(struct ast *__restrict dst,
+                   struct ast *__restrict src,
+                   struct ast *ddi_ast,
+                   unsigned int gflags) {
 again:
 	switch (dst->a_type) {
 
@@ -2134,7 +2135,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 		break;
 
 	default:
-	default_case:
+default_case:
 		/* Emit a warning about an r-value store. */
 		if (WARNAST(self, W_ASM_STORE_TO_RVALUE))
 			goto err;

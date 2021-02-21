@@ -90,12 +90,12 @@
 	do {                                                                        \
 		if ((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) \
 			goto err;                                                           \
-	} __WHILE0
+	}	__WHILE0
 #define LOAD_LVALUE_OR_RETURN_ERROR(obj)                                        \
 	do {                                                                        \
 		if ((obj) == JIT_LVALUE && ((obj) = JITLexer_PackLValue(self)) == NULL) \
 			return NULL;                                                        \
-	} __WHILE0
+	}	__WHILE0
 
 #define IFELSE(if_eval, if_skip) if_eval
 #define IF_SKIP(...)             /* nothing */

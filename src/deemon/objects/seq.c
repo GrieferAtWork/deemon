@@ -888,10 +888,10 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 		return false;
 	if (DeeType_IsInherited(self, &DeeMapping_Type))
 		return false;
-	iter = self, found = 0;
+	iter  = self;
+	found = 0;
 	do {
 		struct type_seq *seq;
-		ASSERT(iter);
 		base = DeeType_Base(iter);
 		if ((seq = iter->tp_seq) != NULL) {
 			if (seq->tp_get && seq->tp_get != &seq_getitem &&
@@ -1004,7 +1004,6 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
 	iter = self, found = 0;
 	do {
 		struct type_seq *seq;
-		ASSERT(iter);
 		base = DeeType_Base(iter);
 		if ((seq = iter->tp_seq) != NULL) {
 			/* If sub-classes override both the get+size operators, then our stub-version is used. */

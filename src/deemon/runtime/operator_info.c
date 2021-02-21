@@ -157,7 +157,7 @@ Dee_OperatorFromName(DeeTypeObject *typetype,
 	do {               \
 		result = (id); \
 		goto done;     \
-	} __WHILE0
+	}	__WHILE0
 	uint16_t result = (uint16_t)-1;
 	switch (*name) {
 
@@ -1415,7 +1415,6 @@ DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
                           size_t argc, DeeObject *const *argv) {
-	ASSERT(pself);
 	return invoke_operator(*pself, pself, name, argc, argv);
 }
 

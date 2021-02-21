@@ -64,7 +64,7 @@ DECL_BEGIN
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
 #else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
 			return false;
@@ -943,13 +943,13 @@ time_format(struct unicode_printer *__restrict printer,
 		if unlikely((temp = unicode_printer_print(printer, p, s)) < 0) \
 			goto err;                                                  \
 		result += temp;                                                \
-	} __WHILE0
+	}	__WHILE0
 #define printf(...)                                                            \
 	do {                                                                       \
 		if unlikely((temp = unicode_printer_printf(printer, __VA_ARGS__)) < 0) \
 			goto err;                                                          \
 		result += temp;                                                        \
-	} __WHILE0
+	}	__WHILE0
 	unsigned int number;
 	char const *text;
 	dssize_t result = 0, temp;

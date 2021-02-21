@@ -37,7 +37,8 @@ DECL_BEGIN
 
 INTERN struct ast_tags current_tags;
 
-INTERN WUNUSED DREF struct ast *
+/* Apply & free annotations to the given `input' ast. */
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
                               /*inherit(always)*/ DREF struct ast *__restrict input) {
 	DREF struct ast *merge, **expr_v, *args;
@@ -127,12 +128,15 @@ err:
 }
 
 
-INTERN void (DCALL ast_annotations_get)(struct ast_annotations *__restrict result) {
+/* Capture all currently saved annotations. */
+INTERN NONNULL((1)) void
+(DCALL ast_annotations_get)(struct ast_annotations *__restrict result) {
 	memcpy(result, &current_tags.at_anno, sizeof(struct ast_annotations));
 	bzero(&current_tags.at_anno, sizeof(struct ast_annotations));
 }
 
-INTERN void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self) {
+INTERN NONNULL((1)) void
+(DCALL ast_annotations_free)(struct ast_annotations *__restrict self) {
 	if (!self->an_annov)
 		return;
 	while (self->an_annoc) {
@@ -150,7 +154,9 @@ INTERN void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self
 	}
 }
 
-INTERN int (DCALL ast_annotations_clear)(struct ast_annotations *__restrict self) {
+/* Clear annotations, and warn if some were given. */
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_annotations_clear)(struct ast_annotations *__restrict self) {
 	if (!self->an_annov)
 		goto done;
 	while (self->an_annoc) {
@@ -174,8 +180,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL ast_annotations_add)(struct ast *__restrict func,
-                                       uint16_t flag) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag) {
 	ASSERT(current_tags.at_anno.an_annoc <= current_tags.at_anno.an_annoa);
 	if (current_tags.at_anno.an_annoc >= current_tags.at_anno.an_annoa) {
 		struct ast_annotation *new_anno;
@@ -205,7 +211,7 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL ast_tags_clear)(void) {
+INTERN WUNUSED int (DCALL ast_tags_clear)(void) {
 	while (current_tags.at_anno.an_annoc) {
 		struct ast_annotation *anno;
 		anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
@@ -251,7 +257,7 @@ err:
 #endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
-PRIVATE int DCALL append_decl_string(void) {
+PRIVATE WUNUSED int DCALL append_decl_string(void) {
 	ASSERT(tok == TOK_STRING ||
 	       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
 	do {
@@ -279,11 +285,12 @@ err:
 	return -1;
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((2)) int DCALL
 convert_dot_tag_namespace(size_t tag_name_len,
                           char const *__restrict tag_name_str) {
 	if unlikely(tok == ':' || tok == TOK_COLLON_COLLON) {
-		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, tag_name_len, tag_name_str))
+		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
+		         tag_name_len, tag_name_str))
 			goto err;
 		tok = '.';
 	}
@@ -292,7 +299,7 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL parse_tags)(void) {
+INTERN WUNUSED int (DCALL parse_tags)(void) {
 	if (tok == '@') {
 		/* Line-style documentation string (terminated by a line-feed) */
 		char *doc_start = token.t_end;
@@ -545,7 +552,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL parse_tags_block(void) {
+INTERN WUNUSED int DCALL parse_tags_block(void) {
 	while (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;

@@ -44,7 +44,7 @@ DECL_BEGIN
 		T const _temp_ = (a);    \
 		(a)            = (b);    \
 		(b)            = _temp_; \
-	} __WHILE0
+	}	__WHILE0
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 #define MEDIUM_VALUE(x)                               \
 	(ASSERT(-1 <= (x)->ob_size && (x)->ob_size <= 1), \
@@ -1822,7 +1822,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 			goto err_b_a_table_z;                            \
 		Dee_XDecref(result);                                 \
 		result = temp;                                       \
-	} __WHILE0
+	}	__WHILE0
 
 	if (b->ob_size <= FIVEARY_CUTOFF) {
 		for (i = b->ob_size - 1; i >= 0; --i) {

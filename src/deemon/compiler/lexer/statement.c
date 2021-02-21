@@ -63,7 +63,19 @@ err:
 
 
 
-INTERN int32_t DCALL
+/* Parse the head header of a for-statement, returning the appropriate
+ * AST flags for creating the loop (usually `AST_FLOOP_NORMAL' or `AST_FLOOP_FOREACH'),
+ * as well as filling in the given pointers to used asts.
+ * NOTE: The caller is responsible for wrapping this function in its own
+ *       scope, should they choose to with initializers/loop element symbols
+ *       to be placed in their own scope.
+ * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
+ *       unless the loop is actually a foreach-loop, in which case they _must_ always
+ *       be present.
+ * WARNING: The caller is responsible for wrapping `*piter_or_next' in an `__iterself__()'
+ *          operator call when `AST_FLOOP_FOREACH' is part of the return mask, unless they wish
+ *          to enumerate an iterator itself (which is possible using the `__foreach' statement). */
+INTERN WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
 ast_parse_for_head(DREF struct ast **__restrict pinit,
                    DREF struct ast **__restrict pelem_or_cond,
                    DREF struct ast **__restrict piter_or_next) {
@@ -120,6 +132,17 @@ err:
 
 
 
+/* Parse a sequence of statements until `end_token' is
+ * encountered at the start of a statement, or until
+ * the end of the current input-file-stack is reached.
+ * NOTE: The returned ast is usually an `AST_MULTIPLE',
+ *       which will have the given `flags' assigned.
+ * WARNING: If only a single AST would be contained
+ *          and `flags' is `AST_FMULTIPLE_KEEPLAST',
+ *          the inner expression is automatically
+ *          returned instead.
+ * NOTE: If desired, the caller is responsible to setup
+ *       or teardown a new scope before/after this function. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 	size_t exprc, expra;
@@ -191,6 +214,7 @@ INTDEF void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
 
+/* Parse a regular, old statement. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_statement(bool allow_nonblock) {
 	DREF struct ast *result, *merge;

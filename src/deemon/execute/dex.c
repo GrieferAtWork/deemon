@@ -168,7 +168,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		struct dex_symbol const *sym = &symbols[symi];
 		dhash_t i, perturb, hash;
 		ASSERT(sym->ds_name);
-		ASSERTF(!sym->ds_obj || DeeObject_DoCheck(sym->ds_obj),
+		ASSERTF(!sym->ds_obj || DeeObject_Check(sym->ds_obj),
 		        "Invalid object %p exported: `%s' by `%s'",
 		        sym->ds_obj, sym->ds_name, DeeString_STR(input_file));
 		hash    = Dee_HashStr(sym->ds_name);

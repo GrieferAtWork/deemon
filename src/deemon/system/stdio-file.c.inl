@@ -254,7 +254,6 @@ DeeFile_OpenString(char const *__restrict filename,
 	char modbuf[16], *iter = modbuf;
 	DREF SystemFile *result;
 	FILE *fp;
-	ASSERT(filename);
 	if (oflags & OPEN_FCREAT) {
 		if (!(oflags & OPEN_FAPPEND)) {
 			*iter++ = 'a';

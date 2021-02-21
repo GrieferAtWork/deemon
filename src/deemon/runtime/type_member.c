@@ -121,7 +121,7 @@ type_obmeth_enum(DeeTypeObject *__restrict tp_self,
 	struct type_method const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_methods;
-	ASSERT(chain);
+	ASSERT(chain != NULL);
 	for (; chain->m_name; ++chain) {
 		temp = (*proc)((DeeObject *)tp_self, chain->m_name, chain->m_doc,
 		               ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_PERMCALL | ATTR_WRAPPER,
@@ -139,7 +139,7 @@ type_obprop_enum(DeeTypeObject *__restrict tp_self,
 	struct type_getset const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_getsets;
-	ASSERT(chain);
+	ASSERT(chain != NULL);
 	for (; chain->gs_name; ++chain) {
 		uint16_t perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PROPERTY | ATTR_WRAPPER;
 		if (chain->gs_get)
@@ -163,7 +163,7 @@ type_obmemb_enum(DeeTypeObject *__restrict tp_self,
 	struct type_member const *chain;
 	dssize_t temp, result = 0;
 	chain = tp_self->tp_members;
-	ASSERT(chain);
+	ASSERT(chain != NULL);
 	for (; chain->m_name; ++chain) {
 		uint16_t perm = ATTR_IMEMBER | ATTR_CMEMBER | ATTR_PERMGET | ATTR_WRAPPER;
 		if (!(chain->m_field.m_type & STRUCT_CONST))

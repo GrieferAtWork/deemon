@@ -425,7 +425,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 		} else {
 			/* Found it! */
 			sym = DeeModule_GetSymbolID(deemon, i);
-			ASSERT(sym);
+			ASSERT(sym != NULL);
 			if (UNICODE_PRINTER_PRINT(printer, "?D") < 0)
 				goto err;
 			/* NOTE: No need to use `decl_ast_escapename()' here. - We can assume that
@@ -799,9 +799,18 @@ err_noscope:
  *  - Escape any line-feed immediately following after another
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */
-INTDEF int DCALL decl_ast_escapetext8(uint8_t const *__restrict text, size_t text_len, struct unicode_printer *__restrict printer, struct unicode_printer *__restrict source_printer);
-INTDEF int DCALL decl_ast_escapetext16(uint16_t const *__restrict text, size_t text_len, struct unicode_printer *__restrict printer, struct unicode_printer *__restrict source_printer);
-INTDEF int DCALL decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len, struct unicode_printer *__restrict printer, struct unicode_printer *__restrict source_printer);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+decl_ast_escapetext8(uint8_t const *__restrict text, size_t text_len,
+                     struct unicode_printer *__restrict printer,
+                     struct unicode_printer *__restrict source_printer);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+decl_ast_escapetext16(uint16_t const *__restrict text, size_t text_len,
+                      struct unicode_printer *__restrict printer,
+                      struct unicode_printer *__restrict source_printer);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len,
+                      struct unicode_printer *__restrict printer,
+                      struct unicode_printer *__restrict source_printer);
 #ifndef __INTELLISENSE__
 #define N 8
 #include "decl-escape-text-impl.c.inl"
@@ -814,7 +823,7 @@ INTDEF int DCALL decl_ast_escapetext32(uint32_t const *__restrict text, size_t t
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 doctext_escape(struct unicode_printer *__restrict doctext) {
 	if (!UNICODE_PRINTER_ISEMPTY(doctext)) {
 		struct unicode_printer result = UNICODE_PRINTER_INIT;
@@ -1072,12 +1081,14 @@ err_type_expr:
 				if (elemc >= elema) {
 					struct decl_ast *new_elemv;
 					elema *= 2;
-					new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elema *
-					                                                     sizeof(struct decl_ast));
+					new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv,
+					                                              elema *
+					                                              sizeof(struct decl_ast));
 					if unlikely(!new_elemv) {
 						elema     = elemc + 1;
-						new_elemv = (struct decl_ast *)Dee_Realloc(elemv, elema *
-						                                                  sizeof(struct decl_ast));
+						new_elemv = (struct decl_ast *)Dee_Realloc(elemv,
+						                                           elema *
+						                                           sizeof(struct decl_ast));
 						if unlikely(!new_elemv)
 							goto err_elemv;
 					}
@@ -1086,8 +1097,9 @@ err_type_expr:
 			}
 		if (elema != elemc) {
 			struct decl_ast *new_elemv;
-			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elemc *
-			                                                     sizeof(struct decl_ast));
+			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv,
+			                                              elemc *
+			                                              sizeof(struct decl_ast));
 			if likely(new_elemv)
 				elemv = new_elemv;
 		}

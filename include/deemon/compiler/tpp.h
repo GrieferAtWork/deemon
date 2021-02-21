@@ -94,7 +94,7 @@ struct TPPKeyword;
  * we simply implement the unknown-file hook of TPP, allowing us to search the
  * default library path for a given filename whenever TPP couldn't find the file
  * as part of its own library path. */
-INTDEF struct TPPFile *DCALL
+INTDEF WUNUSED NONNULL((2)) struct TPPFile *DCALL
 tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
                  struct TPPKeyword **pkeyword_entry);
@@ -274,7 +274,7 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
 #define TPP_PUSHF()       do { uint32_t _old_flags = TPPLexer_Current->l_flags
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
-#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; } __WHILE0
+#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
 
 
 #ifndef __INTELLISENSE__
@@ -309,13 +309,13 @@ int skip(tok_t expected_tok, int wnum, ...);
 	    : 0))
 
 INTDEF struct TPPKeyword TPPKeyword_Empty;
-INTDEF struct TPPKeyword *DCALL tok_without_underscores(void);
-INTDEF char *DCALL peek_next_token(struct TPPFile **tok_file);
-INTDEF char *DCALL peek_next_advance(char *p, struct TPPFile *__restrict *tok_file);
-INTDEF bool DCALL tpp_is_keyword_start(char ch);
-INTDEF struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char *__restrict tok_begin, int create_missing);
-INTDEF struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
-INTDEF char *DCALL advance_wraplf(char *__restrict p);
+INTDEF WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void);
+INTDEF WUNUSED char *DCALL peek_next_token(struct TPPFile **tok_file);
+INTDEF WUNUSED NONNULL((1)) char *DCALL peek_next_advance(char *p, struct TPPFile **tok_file);
+INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
+INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char *__restrict tok_begin, int create_missing);
+INTDEF WUNUSED struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
+INTDEF WUNUSED NONNULL((1)) char *DCALL advance_wraplf(char *__restrict p);
 INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
 
 DECL_END

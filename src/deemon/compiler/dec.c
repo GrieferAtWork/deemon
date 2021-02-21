@@ -99,7 +99,7 @@ INTERN void DCALL dec_writer_fini(void) {
 
 /* Allocate `n_bytes' of data at the current
  * text position within the current section. */
-INTERN uint8_t *DCALL dec_alloc(size_t n_bytes) {
+INTERN WUNUSED uint8_t *DCALL dec_alloc(size_t n_bytes) {
 	struct dec_section *sec = dec_curr;
 	uint8_t *result         = sec->ds_iter;
 	size_t req_size, new_size;
@@ -139,7 +139,7 @@ end:
  * current section and either return a pointer to it, or append the
  * given data block at its end and return a pointer to where it starts.
  * If the later case fails to re-allocate the section buffer, `NULL' is returned. */
-INTERN uint8_t *DCALL
+INTERN WUNUSED NONNULL((1)) uint8_t *DCALL
 dec_allocstr(void const *__restrict data, size_t n_bytes) {
 	struct dec_section *sec = dec_curr;
 	uint8_t *result;
@@ -167,7 +167,7 @@ dec_allocstr(void const *__restrict data, size_t n_bytes) {
  * If such a copy could not be found or if the `DEC_WRITE_FREUSE_GLOBAL'
  * flag isn't set, `sym' is defined to point at the start of searched
  * data, located at `dec_curr:dec_addr-n_bytes'. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 dec_reuseglobal_define(struct dec_sym *__restrict sym, size_t n_bytes) {
 	ASSERT(dec_addr >= n_bytes);
 	if (current_dec.dw_flags & DEC_WRITE_FREUSE_GLOBAL) {
@@ -197,7 +197,13 @@ dec_reuseglobal_define(struct dec_sym *__restrict sym, size_t n_bytes) {
 	sym->ds_addr = (uint32_t)(dec_addr - n_bytes);
 }
 
-INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
+/* Similar to `dec_reuseglobal_define', but only operates within the current
+ * section, and is not bound by the rules of the `DEC_WRITE_FREUSE_GLOBAL'.
+ * The return value is a pointer to the first block of data found that
+ * equals the data described within the last `n_bytes' of written memory,
+ * or a pointer equal to `dec_ptr - n_bytes'. */
+INTERN ATTR_RETNONNULL WUNUSED uint8_t *DCALL
+dec_reuselocal(size_t n_bytes) {
 	uint8_t *result;
 	ASSERT(dec_addr >= n_bytes);
 	result = (uint8_t *)memmem(dec_curr->ds_begin,
@@ -224,7 +230,8 @@ INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
 /* Given some data encoded in host-endian, convert it to
  * little-endian and write it to the current text position
  * before advancing the text pointer. */
-INTERN int (DCALL dec_putb)(uint8_t byte) {
+INTERN WUNUSED int
+(DCALL dec_putb)(uint8_t byte) {
 	uint8_t *buf = dec_alloc(1);
 	if unlikely(!buf)
 		goto err;
@@ -234,7 +241,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putw)(uint16_t host_endian_word) {
+INTERN WUNUSED int
+(DCALL dec_putw)(uint16_t host_endian_word) {
 	uint8_t *buf = dec_alloc(2);
 	if unlikely(!buf)
 		goto err;
@@ -244,7 +252,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putl)(uint32_t host_endian_dword) {
+INTERN WUNUSED int
+(DCALL dec_putl)(uint32_t host_endian_dword) {
 	uint8_t *buf = dec_alloc(4);
 	if unlikely(!buf)
 		goto err;
@@ -254,7 +263,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putsleb)(int value) {
+INTERN WUNUSED int
+(DCALL dec_putsleb)(int value) {
 	uint8_t byte;
 	unsigned int temp;
 	byte = (unsigned int)value & 0x3f;
@@ -278,7 +288,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putptr)(uint32_t value) {
+INTERN WUNUSED int
+(DCALL dec_putptr)(uint32_t value) {
 	uint8_t byte;
 	unsigned int temp;
 	byte = value & 0x7f;
@@ -298,7 +309,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putieee754)(double value) {
+INTERN WUNUSED int
+(DCALL dec_putieee754)(double value) {
 	union {
 		double value;
 		uint64_t data;
@@ -318,10 +330,9 @@ err:
 
 /* Create, insert and return a new section that will
  * appear after `sect' in the resulting DEC file. */
-INTERN struct dec_section *DCALL
+INTERN WUNUSED NONNULL((1)) struct dec_section *DCALL
 dec_newsection_after(struct dec_section *__restrict sect) {
 	struct dec_section *result;
-	ASSERT(sect);
 	result = (struct dec_section *)Dee_Calloc(sizeof(struct dec_section));
 	if unlikely(!result)
 		goto done;
@@ -339,7 +350,7 @@ done:
  *       There is no unresolved-relocation error here.
  *       If you forget to define it, `dec_link' will crash
  *       with an assertion error. */
-INTERN struct dec_sym *DCALL dec_newsym(void) {
+INTERN WUNUSED struct dec_sym *DCALL dec_newsym(void) {
 	struct dec_sym *result = sym_alloc();
 	if likely(result) {
 		/* Keep track of the newly allocated symbol. */
@@ -356,7 +367,7 @@ INTERN struct dec_sym *DCALL dec_newsym(void) {
  * after the location of the previously allocated relocation.
  * WARNING: Multiple successive calls to this function
  *          may invalid previously returned pointers. */
-INTERN struct dec_rel *DCALL dec_newrel(void) {
+INTERN WUNUSED struct dec_rel *DCALL dec_newrel(void) {
 	struct dec_section *sec = dec_curr;
 	struct dec_rel *result  = sec->ds_relv;
 	ASSERT(sec->ds_relc <= sec->ds_rela);
@@ -394,7 +405,7 @@ done:
  * The caller must ensure that `sym' be only `NULL'
  * when the relocation associated with `type' doesn't
  * make use of a symbol. */
-INTERN int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym) {
+INTERN WUNUSED int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
 	if unlikely(!rel)
 		goto err;
@@ -408,8 +419,9 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL dec_putrelat)(uint32_t addr, uint8_t type,
-                               struct dec_sym *sym) {
+INTERN WUNUSED int
+(DCALL dec_putrelat)(uint32_t addr, uint8_t type,
+                     struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
 	if unlikely(!rel)
 		goto err;
@@ -434,7 +446,7 @@ dec_section_empty(struct dec_section *__restrict self) {
 
 /* @return: 0: Successfully linked all DEC sections.
  * @return: *: One of `DECREL_*' that was truncated, causing linking to fail. */
-INTERN uint8_t (DCALL dec_link)(void) {
+INTERN WUNUSED uint8_t (DCALL dec_link)(void) {
 	DEC_FOREACH_SECTION_VARS;
 	struct dec_section *sec;
 	struct dec_rel *iter, *end;
@@ -482,7 +494,7 @@ INTERN uint8_t (DCALL dec_link)(void) {
 				                  (uint32_t)(relsym->ds_sect->ds_iter - relsym->ds_sect->ds_begin));
 				break;
 
-				/* case DECREL_NONE: // Always skip empty relocations. */
+/*			case DECREL_NONE: // Always skip empty relocations. */
 
 			default: break;
 			}
@@ -513,7 +525,8 @@ INTERN void DCALL dec_setbases(void) {
  * using, meaning that `file_stream' should be derived from `DeeFile_Type'.
  * @return:  0: Successfully written the DEC file.
  * @return: -1: An error occurred while writing. */
-INTERN int (DCALL dec_write)(DeeObject *__restrict file_stream) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_write)(DeeObject *__restrict file_stream) {
 	DEC_FOREACH_SECTION_VARS;
 	struct dec_section *sec;
 	DEC_FOREACH_SECTION(sec) {
@@ -603,7 +616,9 @@ err:
 #endif /* NDEBUG || !... */
 
 
-INTERN int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict module) {
+/* Generate a link DEC text for the given module. */
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_generate_and_link)(DeeModuleObject *__restrict module) {
 	int result;
 again:
 	/* Generate DEC data for the given module. */
@@ -635,12 +650,15 @@ done:
 }
 
 #if 0
-INTERN int (DCALL dec_createfp)(DeeModuleObject *__restrict module,
-                                DeeObject *__restrict file_stream) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL dec_createfp)(DeeModuleObject *__restrict module,
+                     DeeObject *__restrict file_stream) {
 	struct dec_writer old_dec;
 	int result;
+
 	/* Save the previously active DEC context. */
 	memcpy(&old_dec, &current_dec, sizeof(struct dec_writer));
+
 	/* Initialize a new DEC context. */
 	dec_writer_init();
 
@@ -667,19 +685,21 @@ done:
 
 
 /* Create and emit a DEC file for the given module. */
-INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL dec_create)(DeeModuleObject *__restrict module) {
 	int result;
 	struct dec_writer old_dec;
 	DREF DeeObject *dec_filename;
 	DeeObject *config_filename;
-	/* Save the previously active DEC context. */
 
+	/* Save the previously active DEC context. */
 	memcpy(&old_dec, &current_dec, sizeof(struct dec_writer));
+
 	/* Initialize a new DEC context. */
 	dec_writer_init();
 
 	/* Load dec writer options from active compiler options. */
-	ASSERT(DeeCompiler_Current);
+	ASSERT(DeeCompiler_Current != NULL);
 	config_filename = NULL;
 	if (DeeCompiler_Current->cp_options) {
 		current_dec.dw_flags = DeeCompiler_Current->cp_options->co_decwriter;

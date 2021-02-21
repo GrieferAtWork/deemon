@@ -662,12 +662,12 @@ corrupt_heref(DecFile *__restrict self,
 	do {                                                \
 		corrupt_here(self, reader, __FILE__, __LINE__); \
 		goto sym;                                       \
-	} __WHILE0
+	}	__WHILE0
 #define GOTO_CORRUPTEDF(reader, sym, ...)                             \
 	do {                                                              \
 		corrupt_heref(self, reader, __FILE__, __LINE__, __VA_ARGS__); \
 		goto sym;                                                     \
-	} __WHILE0
+	}	__WHILE0
 #define SET_CORRUPTED(reader, expr) \
 	(corrupt_here(self, reader, __FILE__, __LINE__), expr)
 #define SET_CORRUPTEDF(reader, expr, ...) \

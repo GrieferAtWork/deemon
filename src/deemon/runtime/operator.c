@@ -829,7 +829,7 @@ DeeObject_Newf(DeeTypeObject *object_type,
 
 #ifdef DEFINE_TYPED_OPERATORS
 #define LOAD_TP_SELF   ASSERT_OBJECT_TYPE_A(self, tp_self)
-#define LOAD_TP_SELFP  ASSERT(pself); ASSERT_OBJECT_TYPE_A(*pself, tp_self)
+#define LOAD_TP_SELFP  ASSERT_OBJECT_TYPE_A(*pself, tp_self)
 #define LOAD_ITER      DeeTypeObject *iter = tp_self
 #define LOAD_ITERP     DeeTypeObject *iter = tp_self
 #define GET_TP_SELF()  tp_self
@@ -839,14 +839,12 @@ DeeObject_Newf(DeeTypeObject *object_type,
                        ASSERT_OBJECT(self);    \
                        tp_self = Dee_TYPE(self)
 #define LOAD_TP_SELFP  DeeTypeObject *tp_self; \
-                       ASSERT(pself);          \
                        ASSERT_OBJECT(*pself);  \
                        tp_self = Dee_TYPE(*pself)
 #define LOAD_ITER      DeeTypeObject *iter; \
                        ASSERT_OBJECT(self); \
                        iter = Dee_TYPE(self)
 #define LOAD_ITERP     DeeTypeObject *iter;   \
-                       ASSERT(pself);         \
                        ASSERT_OBJECT(*pself); \
                        iter = Dee_TYPE(*pself)
 #define GET_TP_SELF()  Dee_TYPE(self)
@@ -1123,7 +1121,6 @@ err_object_type:
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) {
 	DeeObject *objcopy, *old_object;
-	ASSERT(pself);
 	old_object = *pself;
 	ASSERT_OBJECT(old_object);
 	objcopy = DeeObject_DeepCopy(old_object);
@@ -5171,7 +5168,6 @@ DeeObject_Foreach(DeeObject *__restrict self,
 	dssize_t temp, result = 0;
 	DREF DeeObject *elem;
 	size_t fast_size;
-	ASSERT(proc);
 	fast_size = DeeFastSeq_GetSize(self);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		size_t i;

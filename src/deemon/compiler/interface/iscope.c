@@ -59,7 +59,7 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((2)) int DCALL
 set_astloc_from_obj(DeeObject *obj,
                     struct ast *__restrict result) {
 	if unlikely(get_astloc_from_obj(obj, &result->a_ddi))
@@ -71,7 +71,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((2)) int DCALL
 get_astloc_from_obj(DeeObject *obj,
                     struct ast_loc *__restrict result) {
 	DREF DeeObject *args[3];

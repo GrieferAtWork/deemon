@@ -356,7 +356,7 @@ readjust_stack_after_bad_init(uint16_t wnt_sp) {
 	 * offending segment of the stack. */
 	DeeScopeObject *scope;
 	scope = current_assembler.a_scope;
-	ASSERT(scope);
+	ASSERT(scope != NULL);
 	ASSERT(scope->s_base == current_basescope);
 	do {
 		struct symbol **bucket_iter, **bucket_end, *iter;

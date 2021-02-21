@@ -208,8 +208,14 @@ for (local x: util::range(128)) {
 /* Lookup mode used by secondary AST operands */
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
 
+/* Parser flags (Set of `PARSE_F*') */
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
-INTERN int DCALL maybe_expression_begin(void) {
+
+/* Return 1 if the current token may be the begin of an expression.
+ * @return: 1:  Yes
+ * @return: 0:  No
+ * @return: -1: Error */
+INTERN WUNUSED int DCALL maybe_expression_begin(void) {
 	switch (tok) {
 	case '+':
 	case '-':
@@ -297,7 +303,7 @@ err:
 }
 
 /* Same as `maybe_expression_begin()', but for the next (peeked) token. */
-INTERN int DCALL maybe_expression_begin_peek(void) {
+INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 	char *tok_begin, peek;
 	struct TPPFile *tok_file;
 	tok_begin = peek_next_token(&tok_file);
@@ -435,7 +441,7 @@ err:
 
 
 
-PRIVATE WUNUSED DREF struct ast *FCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *FCALL
 make_bound_expression(struct ast *__restrict base_expr,
                       struct ast_loc *__restrict loc) {
 	DREF struct ast *result;
@@ -543,7 +549,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED DREF DeeObject *FCALL ast_parse_string(void) {
+INTERN WUNUSED DREF DeeObject *FCALL
+ast_parse_string(void) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	do {
@@ -559,7 +566,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL ast_sym_import_from_deemon(void) {
+INTERN WUNUSED DREF struct ast *FCALL
+ast_sym_import_from_deemon(void) {
 	struct symbol *import_symbol;
 	import_symbol = new_unnamed_symbol();
 	if unlikely(!import_symbol)
@@ -665,9 +673,9 @@ mkconst:
 	case KWD_false:
 		constval = Dee_False;
 		goto mkconst;
-	}
+	}	break;
 
-	case KWD_bound:
+	case KWD_bound: {
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
@@ -684,12 +692,11 @@ mkconst:
 		if unlikely(!merge)
 			goto err;
 		result = merge;
-		break;
+	}	break;
 
 
-	{
+	case KWD_str: {
 		uint16_t opid; /* Unary expressions. */
-	case KWD_str:
 		opid = OPERATOR_STR;
 		goto do_unary_operator_kwd;
 	case KWD_repr:
@@ -898,10 +905,9 @@ do_else_branch:
 		                            );
 	}	break;
 
-	{
+	case KWD_final: {
 		struct TPPKeyword *class_name;
 		uint16_t class_flags;
-	case KWD_final:
 		class_flags = TP_FFINAL;
 		if unlikely(yield() < 0)
 			goto err;
@@ -1502,7 +1508,7 @@ err_merge_r:
 	goto err_r;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) {
 	DREF struct ast *merge;
 	DREF struct ast *other;
@@ -1609,7 +1615,7 @@ got_attr:
 			}
 			break;
 
-			case '[': {
+		case '[': {
 			/* sequence operator */
 			loc_here(&loc);
 			old_flags = TPPLexer_Current->l_flags;
@@ -1735,7 +1741,7 @@ err_other:
 			result = merge;
 		}	break;
 
-			case '(': {
+		case '(': {
 			DREF struct ast *kw_labels;
 			/* Call expression. */
 			loc_here(&loc);
@@ -1771,10 +1777,9 @@ err_other:
 				goto err_r;
 		}	break;
 
-		{
+		case TOK_INC: {
 			uint16_t opid;
 			/* Inplace operators. */
-		case TOK_INC:
 			opid = OPERATOR_INC;
 			goto do_inplace_op;
 		case TOK_DEC:
@@ -1829,7 +1834,7 @@ ast_parse_unary(unsigned int lookup_mode) {
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -1842,7 +1847,10 @@ ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_unary(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		merge = ast_setddi(ast_operator2(cmd == TOK_POW ? OPERATOR_POW : GET_CHOP(cmd), 0, lhs, rhs),
+		merge = ast_setddi(ast_operator2(cmd == TOK_POW
+		                                 ? OPERATOR_POW
+		                                 : GET_CHOP(cmd),
+		                                 0, lhs, rhs),
 		                   &loc);
 		ast_decref(rhs);
 		ast_decref(lhs);
@@ -1859,7 +1867,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -1894,7 +1902,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -1927,7 +1935,7 @@ err_r:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -1971,7 +1979,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2057,7 +2065,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2085,7 +2093,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2113,7 +2121,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2141,7 +2149,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2169,7 +2177,7 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2207,7 +2215,7 @@ err:
 }
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2252,7 +2260,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *merge, *tt, *ff;
 	struct ast_loc loc;
@@ -2350,7 +2358,7 @@ PRIVATE uint16_t const inplace_fops[] = {
 	/* [TOK_POW_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_POW
 };
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
@@ -2513,66 +2521,79 @@ ast_parse_assign(unsigned int lookup_mode) {
 		goto done;
 	switch (tok) {
 	CASE_TOKEN_IS_PROD:
-		if unlikely((result = ast_parse_prod_operand(result)) == NULL)
+		result = ast_parse_prod_operand(result);
+		if unlikely(!result)
 			goto done;
 		if (TOKEN_IS_SUM(tok)) {
 	CASE_TOKEN_IS_SUM:
-			if unlikely((result = ast_parse_sum_operand(result)) == NULL)
+			result = ast_parse_sum_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_SHIFT(tok)) {
 	CASE_TOKEN_IS_SHIFT:
-			if unlikely((result = ast_parse_shift_operand(result)) == NULL)
+			result = ast_parse_shift_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_CMP(tok)) {
 	CASE_TOKEN_IS_CMP:
-			if unlikely((result = ast_parse_cmp_operand(result)) == NULL)
+			result = ast_parse_cmp_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_CMPEQ(tok)) {
 	CASE_TOKEN_IS_CMPEQ:
-			if unlikely((result = ast_parse_cmpeq_operand(result)) == NULL)
+			result = ast_parse_cmpeq_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_AND(tok)) {
 	CASE_TOKEN_IS_AND:
-			if unlikely((result = ast_parse_and_operand(result)) == NULL)
+			result = ast_parse_and_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_XOR(tok)) {
 	CASE_TOKEN_IS_XOR:
-			if unlikely((result = ast_parse_xor_operand(result)) == NULL)
+			result = ast_parse_xor_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_OR(tok)) {
 	CASE_TOKEN_IS_OR:
-			if unlikely((result = ast_parse_or_operand(result)) == NULL)
+			result = ast_parse_or_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_AS(tok)) {
 	CASE_TOKEN_IS_AS:
-			if unlikely((result = ast_parse_as_operand(result)) == NULL)
+			result = ast_parse_as_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_LAND(tok)) {
 	CASE_TOKEN_IS_LAND:
-			if unlikely((result = ast_parse_land_operand(result)) == NULL)
+			result = ast_parse_land_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_LOR(tok)) {
 	CASE_TOKEN_IS_LOR:
-			if unlikely((result = ast_parse_lor_operand(result)) == NULL)
+			result = ast_parse_lor_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_COND(tok)) {
 	CASE_TOKEN_IS_COND:
-			if unlikely((result = ast_parse_cond_operand(result)) == NULL)
+			result = ast_parse_cond_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		if (TOKEN_IS_ASSIGN(tok)) {
 	CASE_TOKEN_IS_ASSIGN:
-			if unlikely((result = ast_parse_assign_operand(result)) == NULL)
+			result = ast_parse_assign_operand(result);
+			if unlikely(!result)
 				goto done;
 		}
 		break;
@@ -2586,32 +2607,71 @@ done:
 	if unlikely(!result)
 		goto done;
 	/* parse binary operators */
-	if (TOKEN_IS_PROD(tok) && unlikely((result = ast_parse_prod_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_SUM(tok) && unlikely((result = ast_parse_sum_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_SHIFT(tok) && unlikely((result = ast_parse_shift_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_CMP(tok) && unlikely((result = ast_parse_cmp_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_CMPEQ(tok) && unlikely((result = ast_parse_cmpeq_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_AND(tok) && unlikely((result = ast_parse_and_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_XOR(tok) && unlikely((result = ast_parse_xor_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_OR(tok) && unlikely((result = ast_parse_or_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_AS(tok) && unlikely((result = ast_parse_as_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_LAND(tok) && unlikely((result = ast_parse_land_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_LOR(tok) && unlikely((result = ast_parse_lor_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_COND(tok) && unlikely((result = ast_parse_cond_operand(result)) == NULL))
-		goto done;
-	if (TOKEN_IS_ASSIGN(tok) && unlikely((result = ast_parse_assign_operand(result)) == NULL))
-		goto done;
+	if (TOKEN_IS_PROD(tok)) {
+		result = ast_parse_prod_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_SUM(tok)) {
+		result = ast_parse_sum_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_SHIFT(tok)) {
+		result = ast_parse_shift_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_CMP(tok)) {
+		result = ast_parse_cmp_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_CMPEQ(tok)) {
+		result = ast_parse_cmpeq_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_AND(tok)) {
+		result = ast_parse_and_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_XOR(tok)) {
+		result = ast_parse_xor_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_OR(tok)) {
+		result = ast_parse_or_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_AS(tok)) {
+		result = ast_parse_as_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_LAND(tok)) {
+		result = ast_parse_land_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_LOR(tok)) {
+		result = ast_parse_lor_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_COND(tok)) {
+		result = ast_parse_cond_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
+	if (TOKEN_IS_ASSIGN(tok)) {
+		result = ast_parse_assign_operand(result);
+		if unlikely(!result)
+			goto done;
+	}
 done:
 	return result;
 #else
@@ -2625,38 +2685,77 @@ done:
 
 
 
-INTERN WUNUSED DREF struct ast *FCALL
+INTERN WUNUSED NONNULL((1)) DREF struct ast *FCALL
 ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr) {
 	baseexpr = ast_parse_unary_operand(baseexpr);
 	if unlikely(!baseexpr)
 		goto done;
 	/* parse binary operators */
-	if (TOKEN_IS_PROD(tok) && unlikely((baseexpr = ast_parse_prod_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_SUM(tok) && unlikely((baseexpr = ast_parse_sum_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_SHIFT(tok) && unlikely((baseexpr = ast_parse_shift_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_CMP(tok) && unlikely((baseexpr = ast_parse_cmp_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_CMPEQ(tok) && unlikely((baseexpr = ast_parse_cmpeq_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_AND(tok) && unlikely((baseexpr = ast_parse_and_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_XOR(tok) && unlikely((baseexpr = ast_parse_xor_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_OR(tok) && unlikely((baseexpr = ast_parse_or_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_AS(tok) && unlikely((baseexpr = ast_parse_as_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_LAND(tok) && unlikely((baseexpr = ast_parse_land_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_LOR(tok) && unlikely((baseexpr = ast_parse_lor_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_COND(tok) && unlikely((baseexpr = ast_parse_cond_operand(baseexpr)) == NULL))
-		goto done;
-	if (TOKEN_IS_ASSIGN(tok) && unlikely((baseexpr = ast_parse_assign_operand(baseexpr)) == NULL))
-		goto done;
+	if (TOKEN_IS_PROD(tok)) {
+		baseexpr = ast_parse_prod_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_SUM(tok)) {
+		baseexpr = ast_parse_sum_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_SHIFT(tok)) {
+		baseexpr = ast_parse_shift_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_CMP(tok)) {
+		baseexpr = ast_parse_cmp_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_CMPEQ(tok)) {
+		baseexpr = ast_parse_cmpeq_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_AND(tok)) {
+		baseexpr = ast_parse_and_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_XOR(tok)) {
+		baseexpr = ast_parse_xor_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_OR(tok)) {
+		baseexpr = ast_parse_or_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_AS(tok)) {
+		baseexpr = ast_parse_as_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_LAND(tok)) {
+		baseexpr = ast_parse_land_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_LOR(tok)) {
+		baseexpr = ast_parse_lor_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_COND(tok)) {
+		baseexpr = ast_parse_cond_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
+	if (TOKEN_IS_ASSIGN(tok)) {
+		baseexpr = ast_parse_assign_operand(baseexpr);
+		if unlikely(!baseexpr)
+			goto done;
+	}
 done:
 	return baseexpr;
 }

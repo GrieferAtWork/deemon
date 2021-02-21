@@ -31,13 +31,15 @@ DECL_BEGIN
 
 
 /* Return true if a given `AST_MULTIPLE' contains expand ASTs. */
-INTDEF WUNUSED NONNULL((1)) bool DCALL ast_chk_multiple_hasexpand(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+ast_chk_multiple_hasexpand(struct ast *__restrict self);
 
 /* Check if a given AST may cause an instance of `exception_type' to be
  * thrown, or when `exception_type' is `NULL', any kind of exception at all. */
-INTDEF bool DCALL ast_chk_maythrow(struct ast *__restrict self,
-                                   bool result_used,
-                                   DeeTypeObject *exception_type);
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+ast_chk_maythrow(struct ast *__restrict self,
+                 bool result_used,
+                 DeeTypeObject *exception_type);
 
 
 DECL_END

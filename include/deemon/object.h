@@ -320,20 +320,18 @@ struct Dee_object {
 
 
 #ifndef NDEBUG
-#define DeeObject_DoCheck(ob) \
-	((ob)->ob_refcnt &&       \
-	 (ob)->ob_type &&         \
-	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
 #define DeeObject_Check(ob) \
-	((ob) && DeeObject_DoCheck(ob))
+	((ob)->ob_refcnt &&     \
+	 (ob)->ob_type &&       \
+	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
 #define Dee_ASSERT_OBJECT(ob)                      (void)(DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_DoCheck(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_Check(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
 #define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
 #define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
 #define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
@@ -341,7 +339,6 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeOpt(char const *file, int li
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExact(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
 #else /* !NDEBUG */
-#define DeeObject_DoCheck(ob)                      true
 #define DeeObject_Check(ob)                        true
 #define Dee_ASSERT_OBJECT(ob)                      (void)0
 #define Dee_ASSERT_OBJECT_OPT(ob)                  (void)0
@@ -605,7 +602,7 @@ typedef Dee_visit_t  dvisit_t;
 			DeeObject *_dvv_ob = (object_vector)[_dvv_i]; \
 			Dee_Visit(_dvv_ob);                           \
 		}                                                 \
-	} __WHILE0
+	}	__WHILE0
 #define Dee_XVisitv(object_vector, object_count)          \
 	do {                                                  \
 		size_t _dvv_i, _count = (object_count);           \
@@ -613,7 +610,7 @@ typedef Dee_visit_t  dvisit_t;
 			DeeObject *_dvv_ob = (object_vector)[_dvv_i]; \
 			Dee_XVisit(_dvv_ob);                          \
 		}                                                 \
-	} __WHILE0
+	}	__WHILE0
 
 
 /* Used to undo object construction in generic sub-classes
@@ -910,7 +907,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 		DeeObject *const _drr_result_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
 		Dee_Incref(_drr_result_);                                             \
 		return _drr_result_;                                                  \
-	} __WHILE0
+	}	__WHILE0
 
 /* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
 #define Dee_return_reference_(ob) \
@@ -2662,7 +2659,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(De
  */
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_CallTuple(DeeObject *self, /*Tuple*/ DeeObject *args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_CallTupleKw(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_CallTupleKw(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTupleKw(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args, DeeObject *kw);
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */

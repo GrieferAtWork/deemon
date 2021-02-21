@@ -82,13 +82,13 @@ print_warning_message(struct unicode_printer *__restrict _printer,
 		if unlikely((_warnf_temp = unicode_printer_printf(_printer, __VA_ARGS__)) < 0) \
 			goto _warnf_err;                                                           \
 		_warnf_result += _warnf_temp;                                                  \
-	} __WHILE0
+	}	__WHILE0
 #define PRINT_SYMBOL_DECLARATION(sym)                                            \
 	do {                                                                         \
 		if unlikely((_warnf_temp = print_symbol_declaration(_printer, sym)) < 0) \
 			goto _warnf_err;                                                     \
 		_warnf_result += _warnf_temp;                                            \
-	} __WHILE0
+	}	__WHILE0
 #define MARK(x)    "`" x "'"
 #define Q(x)       MARK(x)
 #define TOK_S      MARK("%$s")
@@ -276,7 +276,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 		piter      = &caller->t_except;
 		while (num_errors--) {
 			iter = *piter;
-			ASSERT(iter);
+			ASSERT(iter != NULL);
 			if (DeeObject_InstanceOf(iter->ef_error, &DeeError_CompilerError)) {
 				/* This one's a compiler error. */
 				if (current_parser_errors.pe_errorc ==
@@ -407,13 +407,13 @@ err_handle_all_but_last:
 	if unlikely(current_parser_errors.pe_except >= num_errors)
 		goto err;
 	num_errors -= current_parser_errors.pe_except;
-	ASSERT(num_errors);
-	ASSERT(caller->t_except);
+	ASSERT(num_errors != 0);
+	ASSERT(caller->t_except != NULL);
 	piter = &caller->t_except->ef_prev;
 	/* Display any additional errors. */
 	while (num_errors--) {
 		iter = *piter;
-		ASSERT(iter);
+		ASSERT(iter != NULL);
 		*piter = iter->ef_prev;
 #ifndef CONFIG_NO_THREADS
 		if (DeeObject_IsInterrupt(iter->ef_error)) {
@@ -563,7 +563,7 @@ err:
 #endif
 }
 
-INTDEF DeeTypeObject *DCALL
+INTDEF ATTR_CONST WUNUSED DeeTypeObject *DCALL
 get_warning_error_class(int wnum);
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
@@ -737,15 +737,6 @@ INTERN ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...) {
 	return result;
 }
 
-INTERN ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...) {
-	va_list args;
-	int result;
-	va_start(args, wnum);
-	result = handle_compiler_warning(loc, false, true, wnum, args);
-	va_end(args);
-	return result;
-}
-
 INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
 	va_list args;
 	int result;
@@ -753,6 +744,15 @@ INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
 	result = handle_compiler_warning(loc, true, false, wnum, args);
 	va_end(args);
 	ASSERT(result != 0);
+	return result;
+}
+
+INTERN ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...) {
+	va_list args;
+	int result;
+	va_start(args, wnum);
+	result = handle_compiler_warning(loc, false, true, wnum, args);
+	va_end(args);
 	return result;
 }
 

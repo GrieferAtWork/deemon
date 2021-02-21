@@ -653,7 +653,7 @@ struct symbol {
 
 /* Return the alias of a `SYMBOL_TYPE_ALIAS'-typed symbol
  * `x', or `x' itself if it's some other kind of type. */
-FORCELOCAL struct symbol *DCALL
+FORCELOCAL ATTR_PURE WUNUSED NONNULL((1)) struct symbol *DCALL
 SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
 	while (x->s_type == SYMBOL_TYPE_ALIAS) {
 		Dee_ASSERT(x != x->s_alias);
@@ -668,9 +668,9 @@ SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
 	do {                                          \
 		if ((x)->s_type == SYMBOL_TYPE_ALIAS)     \
 			(x) = _priv_symbol_dounwind_alias(x); \
-	} __WHILE0
+	}	__WHILE0
 
-FORCELOCAL struct symbol *DCALL
+FORCELOCAL ATTR_PURE WUNUSED NONNULL((1)) struct symbol *DCALL
 _priv_symbol_dounwind_alias(struct symbol *__restrict x) {
 	do {
 		Dee_ASSERT(x != x->s_alias);
@@ -679,7 +679,8 @@ _priv_symbol_dounwind_alias(struct symbol *__restrict x) {
 	return x;
 }
 
-FORCELOCAL void DCALL _priv_symbol_incread(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_incread(struct symbol *__restrict x) {
 	for (;;) {
 		++x->s_nread;
 		if (x->s_type != SYMBOL_TYPE_ALIAS)
@@ -688,7 +689,8 @@ FORCELOCAL void DCALL _priv_symbol_incread(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_incwrite(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_incwrite(struct symbol *__restrict x) {
 	for (;;) {
 		++x->s_nwrite;
 		if (x->s_type != SYMBOL_TYPE_ALIAS)
@@ -697,7 +699,8 @@ FORCELOCAL void DCALL _priv_symbol_incwrite(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_incbound(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_incbound(struct symbol *__restrict x) {
 	for (;;) {
 		++x->s_nbound;
 		if (x->s_type != SYMBOL_TYPE_ALIAS)
@@ -706,7 +709,8 @@ FORCELOCAL void DCALL _priv_symbol_incbound(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_decread(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_decread(struct symbol *__restrict x) {
 	for (;;) {
 		Dee_ASSERT(x->s_nread);
 		--x->s_nread;
@@ -716,7 +720,8 @@ FORCELOCAL void DCALL _priv_symbol_decread(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_decwrite(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_decwrite(struct symbol *__restrict x) {
 	for (;;) {
 		Dee_ASSERT(x->s_nwrite);
 		--x->s_nwrite;
@@ -726,7 +731,8 @@ FORCELOCAL void DCALL _priv_symbol_decwrite(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_decbound(struct symbol *__restrict x) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_decbound(struct symbol *__restrict x) {
 	for (;;) {
 		Dee_ASSERT(x->s_nbound);
 		--x->s_nbound;
@@ -736,7 +742,8 @@ FORCELOCAL void DCALL _priv_symbol_decbound(struct symbol *__restrict x) {
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_addread(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_addread(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			x->s_nread += n;
@@ -747,7 +754,8 @@ FORCELOCAL void DCALL _priv_symbol_addread(struct symbol *__restrict x, uint32_t
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_addwrite(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_addwrite(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			x->s_nwrite += n;
@@ -758,7 +766,8 @@ FORCELOCAL void DCALL _priv_symbol_addwrite(struct symbol *__restrict x, uint32_
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_addbound(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_addbound(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			x->s_nbound += n;
@@ -769,7 +778,8 @@ FORCELOCAL void DCALL _priv_symbol_addbound(struct symbol *__restrict x, uint32_
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_subread(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_subread(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			Dee_ASSERT(x->s_nread >= n);
@@ -781,7 +791,8 @@ FORCELOCAL void DCALL _priv_symbol_subread(struct symbol *__restrict x, uint32_t
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_subwrite(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_subwrite(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			Dee_ASSERT(x->s_nwrite >= n);
@@ -793,7 +804,8 @@ FORCELOCAL void DCALL _priv_symbol_subwrite(struct symbol *__restrict x, uint32_
 	}
 }
 
-FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
+FORCELOCAL NONNULL((1)) void DCALL
+_priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 	if (n) {
 		for (;;) {
 			Dee_ASSERT(x->s_nbound >= n);
@@ -838,7 +850,7 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
 /* Clear the linkage of a given symbol `x', leaving `x->s_type',
  * as well as all type-specific fields undefined. */
 #define SYMBOL_CLEAR_WEAK(x) \
-       (symbol_fini(x), (x)->s_flag &= ~SYMBOL_FWEAK)
+	(symbol_fini(x), (x)->s_flag &= ~SYMBOL_FWEAK)
 
 /* Check if a given symbol `x' must be addressed as a reference */
 #define SYMBOL_MUST_REFERENCE(x)          \
@@ -875,11 +887,11 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
 #define SYMBOL_STACK_OFFSET(x)     ((x)->s_symid)           /* XXX: Remove me? */
 
 /* Finalize the given symbol. */
-INTDEF void DCALL symbol_fini(struct symbol *__restrict self);
+INTDEF NONNULL((1)) void DCALL symbol_fini(struct symbol *__restrict self);
 
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 /* Destroy a given symbol. */
-INTDEF void DCALL symbol_destroy(struct symbol *__restrict self);
+INTDEF NONNULL((1)) void DCALL symbol_destroy(struct symbol *__restrict self);
 #define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST))
 #define symbol_decref(x)  (void)(__hybrid_atomic_decfetch((x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0))
 #define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST)))
@@ -894,8 +906,9 @@ INTDEF void DCALL symbol_destroy(struct symbol *__restrict self);
 
 /* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
  * When `loc' is NULL, the current location is used. */
-INTDEF void DCALL symbol_addambig(struct symbol *__restrict self,
-                                  struct ast_loc *loc);
+INTDEF NONNULL((1)) void DCALL
+symbol_addambig(struct symbol *__restrict self,
+                struct ast_loc *loc);
 
 /* Check if `self' uses `other' when the specified operation is performed. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);
@@ -1062,16 +1075,16 @@ INTDEF DeeRootScopeObject  *current_rootscope; /* [lock(DeeCompiler_Lock)][1..1]
 
 /* Begin/end a new scope.
  * NOTE: The caller should then fill in special information in `current_scope'. */
-INTDEF int (DCALL scope_push)(void);
+INTDEF WUNUSED int (DCALL scope_push)(void);
 INTDEF void DCALL scope_pop(void);
 
 /* Enter a new class-scope. */
-INTDEF int (DCALL classscope_push)(void);
-INTDEF struct symbol *(DCALL get_current_this)(void);
+INTDEF WUNUSED int (DCALL classscope_push)(void);
+INTDEF WUNUSED struct symbol *(DCALL get_current_this)(void);
 
 /* Begin/end a new base-scope.
  * NOTE: The caller should then fill in special information in `current_basescope'. */
-INTDEF int (DCALL basescope_push)(void);
+INTDEF WUNUSED int (DCALL basescope_push)(void);
 INTDEF void DCALL basescope_pop(void);
 INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
 
@@ -1081,7 +1094,7 @@ INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict 
  *                   When NULL, the current location is used instead.
  * @return: * :      A new reference to the symbol requested.
  * @return: NULL:    An error occurred. */
-INTDEF struct symbol *DCALL
+INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
               struct ast_loc *warn_loc);
 #define LOOKUP_SYM_NORMAL    0x0000
@@ -1098,7 +1111,7 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
 
 /* Lookup the nth instance of `name' (starting at 1 for the first)
  * Return `NULL' if no such instance exists or if nth is 0 */
-INTDEF struct symbol *DCALL
+INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name);
 
 /* Check if `name' is a reserved symbol name. */
@@ -1107,23 +1120,27 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name);
 
 
 /* Lookup or create a label, given its name in the current base-scope. */
-INTDEF struct text_label *DCALL lookup_label(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
+lookup_label(struct TPPKeyword *__restrict name);
+
 /* Create a new case label for `expr'.
  * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set. */
-INTDEF struct text_label *DCALL new_case_label(struct ast *__restrict expr);
+INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
+new_case_label(struct ast *__restrict expr);
+
 /* Ensure existence and return the default label of a switch-statement.
  * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set.
  *       Additionally (if this is desired), it is the caller's task to warn if the
  *       default case had already been allocated before. - This function's only
  *       purpose is to lazily allocate a missing default case and initialize it. */
-INTDEF struct text_label *DCALL new_default_label(void);
+INTDEF WUNUSED struct text_label *DCALL new_default_label(void);
 
 
 /* Lookup a symbol in the given scope. */
-INTDEF struct symbol *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
              struct TPPKeyword *__restrict name);
-INTDEF struct symbol *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
                  size_t name_length);
@@ -1132,10 +1149,11 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
  * alongside defining them as symbols while duplicating default-values and the
  * var-args flag. - Basically, everything that may be inferred from an argument list.
  * This is done when creating superargs class operators. */
-INTDEF WUNUSED NONNULL((1)) int DCALL copy_argument_symbols(DeeBaseScopeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+copy_argument_symbols(DeeBaseScopeObject *__restrict other);
 
 /* Fully link all forward-defined symbols inside of a class scope. */
-INTDEF int DCALL link_forward_symbols(void);
+INTDEF WUNUSED int DCALL link_forward_symbols(void);
 
 /* Allocate and return a new symbol private to the current scope.
  * NOTE: The caller must ensure that no variable with the given name already exist.
@@ -1143,18 +1161,27 @@ INTDEF int DCALL link_forward_symbols(void);
  *       only one of which will actually be addressable.
  * NOTE: The caller is also required to initialize the returned
  *       symbol, who's class is undefined up until that point. */
-INTDEF struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc);
-INTDEF struct symbol *DCALL get_local_symbol(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL get_local_symbol(struct TPPKeyword *__restrict name);
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
+
 /* Delete a given local symbol, making it anonymous.
  * NOTE: The given `sym' doesn't necessarily need to be apart of the current scope. */
-INTDEF void DCALL del_local_symbol(struct symbol *__restrict sym);
-/* Create a new unnamed (aka. deleted) symbol. */
-INTDEF struct symbol *DCALL new_unnamed_symbol(void);
+INTDEF NONNULL((1)) void DCALL del_local_symbol(struct symbol *__restrict sym);
 
-INTDEF struct symbol *DCALL new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope);
-INTDEF struct symbol *DCALL new_local_symbol_in_scope(DeeScopeObject *__restrict scope, struct TPPKeyword *__restrict name, struct ast_loc *loc);
-INTDEF struct symbol *DCALL get_local_symbol_in_scope(DeeScopeObject *__restrict scope, struct TPPKeyword *__restrict name);
+/* Create a new unnamed (aka. deleted) symbol. */
+INTDEF WUNUSED struct symbol *DCALL
+new_unnamed_symbol(void);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL
+new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope);
+
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
+new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
+                          struct TPPKeyword *__restrict name,
+                          struct ast_loc *loc);
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
+get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
+                          struct TPPKeyword *__restrict name);
 
 
 #ifndef __INTELLISENSE__
@@ -1166,7 +1193,7 @@ INTDEF struct symbol *DCALL get_local_symbol_in_scope(DeeScopeObject *__restrict
 
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1, 2)) void DCALL
 decl_ast_move(struct decl_ast *__restrict dst,
               struct decl_ast *__restrict src) {
 	memcpy(dst, src, sizeof(struct decl_ast));
@@ -1177,7 +1204,7 @@ decl_ast_move(struct decl_ast *__restrict dst,
 }
 
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1, 2)) void DCALL
 decl_ast_initsym(struct decl_ast *__restrict self,
                  struct symbol *__restrict sym) {
 	self->da_type   = DAST_SYMBOL;
@@ -1186,7 +1213,7 @@ decl_ast_initsym(struct decl_ast *__restrict self,
 	symbol_incref(sym);
 }
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1, 2)) void DCALL
 decl_ast_initconst(struct decl_ast *__restrict self,
                    DeeObject *__restrict constval) {
 	self->da_type  = DAST_CONST;
@@ -1195,25 +1222,25 @@ decl_ast_initconst(struct decl_ast *__restrict self,
 	Dee_Incref(constval);
 }
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1)) void DCALL
 decl_ast_initalt(struct decl_ast *__restrict self, size_t altc,
-                 /*inherit(always)*/ struct decl_ast *__restrict altv) {
+                 /*inherit(always)*/ struct decl_ast *altv) {
 	self->da_type       = DAST_ALT;
 	self->da_flag       = DAST_FNORMAL;
 	self->da_alt.a_altc = altc;
 	self->da_alt.a_altv = altv;
 }
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1)) void DCALL
 decl_ast_inittuple(struct decl_ast *__restrict self, size_t itemc,
-                   /*inherit(always)*/ struct decl_ast *__restrict itemv) {
+                   /*inherit(always)*/ struct decl_ast *itemv) {
 	self->da_type          = DAST_TUPLE;
 	self->da_flag          = DAST_FNORMAL;
 	self->da_tuple.t_itemc = itemc;
 	self->da_tuple.t_itemv = itemv;
 }
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1, 2)) void DCALL
 decl_ast_initseq(struct decl_ast *__restrict self,
                  /*inherit(always)*/ struct decl_ast *__restrict item_type) {
 	self->da_type = DAST_SEQ;
@@ -1221,7 +1248,7 @@ decl_ast_initseq(struct decl_ast *__restrict self,
 	self->da_seq  = item_type;
 }
 
-FORCELOCAL void DCALL
+FORCELOCAL NONNULL((1, 3)) void DCALL
 decl_ast_initfunc(struct decl_ast *__restrict self,
                   /*inherit(always)*/ struct decl_ast *return_type,
                   DeeBaseScopeObject *__restrict function_scope) {
@@ -1233,7 +1260,7 @@ decl_ast_initfunc(struct decl_ast *__restrict self,
 	                 NULL);
 }
 
-FORCELOCAL WUNUSED DREF DeeBaseScopeObject *DCALL
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeBaseScopeObject *DCALL
 decl_ast_func_getscope(struct decl_ast const *__restrict self) {
 	Dee_ASSERT(self->da_type == DAST_FUNC);
 	return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);

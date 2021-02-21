@@ -178,8 +178,12 @@ XMLNode_InitFromString(XMLNode *__restrict self,
  * @param: parent:     The parent node for `self'.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The requested node does not exist. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL XMLNode_GetPrev(XMLNode *__restrict self, XMLNode *__restrict parent);
-INTDEF WUNUSED DREF XMLNode *DCALL XMLNode_GetNext(XMLNode *self, XMLNode *__restrict parent);
+INTDEF WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL
+XMLNode_GetPrev(XMLNode *__restrict self, XMLNode *__restrict parent);
+
+INTDEF WUNUSED NONNULL((2)) DREF XMLNode *DCALL
+XMLNode_GetNext(XMLNode *self, XMLNode *__restrict parent);
+
 #define XMLNode_GetFirst(self) XMLNode_GetNext(NULL, self)
 
 

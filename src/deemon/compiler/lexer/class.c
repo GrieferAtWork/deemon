@@ -485,10 +485,6 @@ class_maker_addmember(struct class_maker *__restrict self,
 	struct symbol *result;
 	DREF DeeStringObject *name_str;
 	struct class_attribute *attr;
-	ASSERT(ppusage_counter);
-	ASSERT(self);
-	ASSERT(self->cm_classsym);
-	ASSERT(self->cm_classsym->s_name);
 	name_str = (DREF DeeStringObject *)DeeString_NewSized(name->k_name,
 	                                                      name->k_size);
 	if unlikely(!name_str)
@@ -663,8 +659,6 @@ class_maker_addinit(struct class_maker *__restrict self,
                     struct ast_loc *__restrict loc) {
 	struct class_attribute *entry;
 	struct class_member *member;
-	ASSERT(self);
-	ASSERT(sym);
 	ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
 	ASSERT(sym->s_attr.a_class == self->cm_classsym);
 	ASSERT_AST(initializer);
@@ -1771,7 +1765,7 @@ define_operator:
 				 * >>     }
 				 * >> }; */
 				operator_name_kwd = TPPLexer_LookupKeyword("for", 3, 0);
-				ASSERT(operator_name_kwd);
+				ASSERT(operator_name_kwd != NULL);
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;
 				/* Parse a new function in its own member-method scope. */
@@ -2535,6 +2529,11 @@ err:
 	return NULL;
 }
 
+/* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
+ * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
+ * @param: class_flags:   Set of `TP_F* & 0xf'
+ * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name' != NULL).
+ * @param: symbol_mode:   The mode with which to create the class symbol. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode) {

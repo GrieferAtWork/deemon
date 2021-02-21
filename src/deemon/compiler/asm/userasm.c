@@ -1336,7 +1336,7 @@ struct cleanup_mode {
 	 (sym)->s_symid   = (lid))
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
 get_assembly_formatter_oprepr(struct ast *__restrict self,
                               char const *__restrict format, int mode,
                               struct cleanup_mode *__restrict cleanup,
@@ -1344,10 +1344,11 @@ get_assembly_formatter_oprepr(struct ast *__restrict self,
 	DREF DeeObject *result;
 	uint32_t option;
 	struct symbol *sym;
-	char const *format_start = format;
-	bool try_repr            = !!(mode & OPTION_MODE_TRY);
+	char const *format_start;
+	bool try_repr;
+	format_start = format;
+	try_repr     = (mode & OPTION_MODE_TRY) != 0;
 	mode &= ~OPTION_MODE_TRY;
-	ASSERT(cleanup);
 next_option:
 	option = 0;
 cont_option:
@@ -2032,7 +2033,7 @@ struct assembly_formatter {
 	                                    *  Vector of pre-allocated operand representations. */
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 	DREF DeeStringObject **iter, **end;
 	end = (iter = self->af_opreprv) + self->af_ast->a_assembly.as_opc;
@@ -2048,19 +2049,19 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 
 
 
-PRIVATE /*ref*/ struct TPPString *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) /*ref*/ struct TPPString *DCALL
 assembly_formatter_format(struct assembly_formatter *__restrict self,
                           struct TPPString *__restrict input) {
 #define print(p, s)                                                   \
 	do {                                                              \
 		if unlikely(ascii_printer_print(&self->af_printer, p, s) < 0) \
 			goto err;                                                 \
-	} __WHILE0
+	}	__WHILE0
 #define printf(...)                                                           \
 	do {                                                                      \
 		if unlikely(ascii_printer_printf(&self->af_printer, __VA_ARGS__) < 0) \
 			goto err;                                                         \
-	} __WHILE0
+	}	__WHILE0
 	char const *iter, *end, *flush_start;
 	char ch;
 	/*ref*/ struct TPPString *result;

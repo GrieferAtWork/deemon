@@ -519,7 +519,7 @@ DeeString_Reversed(String *__restrict self,
 	if (end <= begin)
 		return_reference_((String *)Dee_EmptyString); /* Empty string area. */
 	flip_size = (size_t)(end - begin);
-	ASSERT(flip_size);
+	ASSERT(flip_size != 0);
 	/* Actually perform the search for the given string. */
 	SWITCH_SIZEOF_WIDTH(width) {
 
@@ -6599,8 +6599,8 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		struct string_utf *rhs_utf;
 		lhs_utf = lhs->s_data;
 		rhs_utf = rhs->s_data;
-		ASSERT(lhs_utf);
-		ASSERT(rhs_utf);
+		ASSERT(lhs_utf != NULL);
+		ASSERT(rhs_utf != NULL);
 		ASSERT(lhs_utf->u_width != STRING_WIDTH_1BYTE);
 		ASSERT(rhs_utf->u_width != STRING_WIDTH_1BYTE);
 		/* Complex string comparison. */
@@ -6918,8 +6918,8 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		struct string_utf *rhs_utf;
 		lhs_utf = lhs->s_data;
 		rhs_utf = rhs->s_data;
-		ASSERT(lhs_utf);
-		ASSERT(rhs_utf);
+		ASSERT(lhs_utf != NULL);
+		ASSERT(rhs_utf != NULL);
 		ASSERT(lhs_utf->u_width != STRING_WIDTH_1BYTE);
 		ASSERT(rhs_utf->u_width != STRING_WIDTH_1BYTE);
 		/* Complex string comparison. */

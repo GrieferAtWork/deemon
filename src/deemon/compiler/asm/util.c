@@ -48,7 +48,7 @@
 
 DECL_BEGIN
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gpush_stack(uint16_t absolute_stack_addr) {
 	uint16_t offset;
 	ASSERTF(current_assembler.a_stackcur > absolute_stack_addr,
@@ -57,7 +57,7 @@ asm_gpush_stack(uint16_t absolute_stack_addr) {
 	return offset == 0 ? asm_gdup() : asm_gdup_n(offset - 1);
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gpop_stack(uint16_t absolute_stack_addr) {
 	uint16_t offset;
 	ASSERTF(current_assembler.a_stackcur > absolute_stack_addr,
@@ -69,7 +69,7 @@ asm_gpop_stack(uint16_t absolute_stack_addr) {
 	return offset == 0 ? asm_gpop() : asm_gpop_n(offset - 1);
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gadjstack(int16_t offset) {
 	switch (offset) {
 	case -1: return asm_gpop();
@@ -79,13 +79,14 @@ asm_gadjstack(int16_t offset) {
 	return _asm_gadjstack(offset);
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gsetstack(uint16_t absolute_stack_size) {
 	return asm_gadjstack((int16_t)absolute_stack_size -
 	                     (int16_t)current_assembler.a_stackcur);
 }
 
-INTERN int DCALL asm_glrot(uint16_t num_slots) {
+INTERN WUNUSED int DCALL
+asm_glrot(uint16_t num_slots) {
 	if (num_slots <= 1)
 		return 0;
 	if (num_slots == 2)
@@ -93,7 +94,8 @@ INTERN int DCALL asm_glrot(uint16_t num_slots) {
 	return _asm_glrot(num_slots - 3);
 }
 
-INTERN int DCALL asm_grrot(uint16_t num_slots) {
+INTERN WUNUSED int DCALL
+asm_grrot(uint16_t num_slots) {
 	if (num_slots <= 1)
 		return 0;
 	if (num_slots == 2)
@@ -101,7 +103,7 @@ INTERN int DCALL asm_grrot(uint16_t num_slots) {
 	return _asm_grrot(num_slots - 3);
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gpush_u32(uint32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
@@ -117,7 +119,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gpush_s32(int32_t value) {
 	DREF DeeObject *obj;
 	int32_t cid;
@@ -181,7 +183,7 @@ again:
 
 
 /* NOTE: _Always_ inherits references to `key' and `value' */
-INTERN void DCALL
+PRIVATE NONNULL((1, 3, 4)) void DCALL
 rodict_insert_nocheck(DeeRoDictObject *__restrict self,
                       dhash_t hash,
                       DREF DeeObject *__restrict key,
@@ -202,7 +204,7 @@ rodict_insert_nocheck(DeeRoDictObject *__restrict self,
 
 
 /* NOTE: _Always_ inherits references to `key' */
-INTERN void DCALL
+PRIVATE NONNULL((1, 3)) void DCALL
 roset_insert_nocheck(DeeRoSetObject *__restrict self,
                      dhash_t hash,
                      DREF DeeObject *__restrict key) {
@@ -231,7 +233,8 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
 
 
 #define STACK_PACK_THRESHOLD 16
-INTERN int (DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 	int32_t cid;
 	ASSERT_OBJECT(value);
 	if (DeeBool_Check(value)) {
@@ -881,17 +884,17 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD int (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
+PRIVATE ATTR_COLD WUNUSED int
+(DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
 	ASSERT(sym->s_type == SYMBOL_TYPE_AMBIG);
 	return ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL, sym);
 }
 
 
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL asm_gpush_symbol)(struct symbol *__restrict sym,
                          struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym)) {
 		if (current_assembler.a_flag & ASM_FARGREFS) {
@@ -1156,7 +1159,6 @@ err:
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
 asm_can_prefix_symbol(struct symbol *__restrict sym) {
-	ASSERT(sym);
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		return false;
@@ -1187,7 +1189,6 @@ check_sym_class:
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
 asm_can_prefix_symbol_for_read(struct symbol *__restrict sym) {
-	ASSERT(sym);
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		return false;
@@ -1220,10 +1221,10 @@ check_sym_class:
 }
 
 
-INTERN int (DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
-                                      struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
+                           struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 	(void)warn_ast;
 check_sym_class:
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
@@ -1299,10 +1300,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gprefix_symbol_for_read)(struct symbol *__restrict sym,
-                                               struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL asm_gprefix_symbol_for_read)(struct symbol *__restrict sym,
+                                    struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 	(void)warn_ast;
 check_sym_class:
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
@@ -1389,10 +1390,10 @@ err:
 //#define CONFIG_INLINE_GETSET_BINDING_CHECKER 1
 
 
-INTERN int (DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
-                                        struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
+                             struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		goto fallback;
@@ -1624,10 +1625,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
-                                  struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
+                        struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 check_sym_class:
 	if (!SYMBOL_MUST_REFERENCE(sym)) {
 		switch (sym->s_type) {
@@ -1889,10 +1890,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gpop_symbol)(struct symbol *__restrict sym,
-                                   struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL asm_gpop_symbol)(struct symbol *__restrict sym,
+                        struct ast *__restrict warn_ast) {
 	int32_t symid;
-	ASSERT(sym);
 check_sym_class:
 	if (!SYMBOL_MUST_REFERENCE(sym)) {
 		switch (sym->s_type) {
@@ -2221,7 +2222,7 @@ err:
 }
 
 /* Push the virtual argument known as `argid' */
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gpush_varg(uint16_t argid) {
 	if (argid < current_basescope->bs_argc) {
 		struct symbol *sym = current_basescope->bs_argv[argid];
@@ -2237,9 +2238,10 @@ asm_gpush_varg(uint16_t argid) {
 
 
 /* Store the value of the virtual argument `argid' in `dst' */
-INTERN int (DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
-                                 struct ast *__restrict warn_ast,
-                                 bool ignore_unbound) {
+INTERN WUNUSED NONNULL((1, 3)) int
+(DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
+                      struct ast *__restrict warn_ast,
+                      bool ignore_unbound) {
 	if (ignore_unbound &&
 	    argid >= current_basescope->bs_argc_min &&
 	    argid < current_basescope->bs_argc_max &&

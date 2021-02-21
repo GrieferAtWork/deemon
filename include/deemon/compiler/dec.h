@@ -146,13 +146,14 @@ INTDEF void DCALL dec_writer_fini(void);
  * text position within the current section.
  * WARNING: Multiple successive calls to this function
  *          may invalid previously returned pointers. */
-INTDEF uint8_t *DCALL dec_alloc(size_t n_bytes);
+INTDEF WUNUSED uint8_t *DCALL dec_alloc(size_t n_bytes);
 
 /* Search for an existing instance of `data...+=n_bytes' within the
  * current section and either return a pointer to it, or append the
  * given data block at its end and return a pointer to where it starts.
  * If the later case fails to re-allocate the section buffer, `NULL' is returned. */
-INTDEF uint8_t *DCALL dec_allocstr(void const *__restrict data, size_t n_bytes);
+INTDEF WUNUSED NONNULL((1)) uint8_t *DCALL
+dec_allocstr(void const *__restrict data, size_t n_bytes);
 
 /* Take a look at the last-written `n_bytes' of data and search
  * all sections (that could reasonably contain a mirror copy) for
@@ -164,20 +165,23 @@ INTDEF uint8_t *DCALL dec_allocstr(void const *__restrict data, size_t n_bytes);
  * If such a copy could not be found or if the `DEC_WRITE_FREUSE_GLOBAL'
  * flag isn't set, `sym' is defined to point at the start of searched
  * data, located at `dec_curr:dec_addr-n_bytes'. */
-INTDEF void DCALL dec_reuseglobal_define(struct dec_sym *__restrict sym, size_t n_bytes);
+INTDEF NONNULL((1)) void DCALL
+dec_reuseglobal_define(struct dec_sym *__restrict sym, size_t n_bytes);
+
 /* Similar to `dec_reuseglobal_define', but only operates within the current
  * section, and is not bound by the rules of the `DEC_WRITE_FREUSE_GLOBAL'.
  * The return value is a pointer to the first block of data found that
  * equals the data described within the last `n_bytes' of written memory,
  * or a pointer equal to `dec_ptr - n_bytes'. */
-INTDEF ATTR_RETNONNULL uint8_t *DCALL dec_reuselocal(size_t n_bytes);
+INTDEF ATTR_RETNONNULL WUNUSED uint8_t *DCALL
+dec_reuselocal(size_t n_bytes);
 
 /* Given some data encoded in host-endian, convert it to
  * little-endian and write it to the current text position
  * before advancing the text pointer. */
-INTDEF int (DCALL dec_putb)(uint8_t byte);
-INTDEF int (DCALL dec_putw)(uint16_t host_endian_word);
-INTDEF int (DCALL dec_putl)(uint32_t host_endian_dword);
+INTDEF WUNUSED int (DCALL dec_putb)(uint8_t byte);
+INTDEF WUNUSED int (DCALL dec_putw)(uint16_t host_endian_word);
+INTDEF WUNUSED int (DCALL dec_putl)(uint32_t host_endian_dword);
 #ifdef __INTELLISENSE__
 INTDEF int (DCALL dec_putc)(char ch);
 #else /* __INTELLISENSE__ */
@@ -202,7 +206,7 @@ INTDEF int (DCALL dec_putuleb)(unsigned int value);
 
 /* Create, insert and return a new section that will
  * appear after `sect' in the resulting DEC file. */
-INTDEF struct dec_section *DCALL
+INTDEF WUNUSED NONNULL((1)) struct dec_section *DCALL
 dec_newsection_after(struct dec_section *__restrict sect);
 
 /* Allocate a new, undefined DEC symbol.
@@ -211,7 +215,7 @@ dec_newsection_after(struct dec_section *__restrict sect);
  *       There is no unresolved-relocation error here.
  *       If you forget to define it, `dec_link' will crash
  *       with an assertion error. */
-INTDEF struct dec_sym *DCALL dec_newsym(void);
+INTDEF WUNUSED struct dec_sym *DCALL dec_newsym(void);
 
 
 /* Define the given symbol at the current text position. */
@@ -237,19 +241,20 @@ dec_defsymat(struct dec_sym *__restrict sym, uint32_t addr) {
  * after the location of the previously allocated relocation.
  * WARNING: Multiple successive calls to this function
  *          may invalid previously returned pointers. */
-INTDEF struct dec_rel *DCALL dec_newrel(void);
+INTDEF WUNUSED struct dec_rel *DCALL dec_newrel(void);
 
 /* Create a new relocation `type' against `sym' at the
  * current text address within the current section.
  * The caller must ensure that `sym' be only `NULL'
  * when the relocation associated with `type' doesn't
  * make use of a symbol. */
-INTDEF int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym);
-INTDEF int (DCALL dec_putrelat)(uint32_t addr, uint8_t type, struct dec_sym *sym);
+INTDEF WUNUSED int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym);
+INTDEF WUNUSED int (DCALL dec_putrelat)(uint32_t addr, uint8_t type, struct dec_sym *sym);
 
 /* @return: DECREL_NONE: Successfully linked all DEC sections.
  * @return: * :          One of `DECREL_*' that was truncated, causing linking to fail. */
-INTDEF uint8_t (DCALL dec_link)(void);
+INTDEF WUNUSED uint8_t (DCALL dec_link)(void);
+
 /* Assign base addresses to all allocated sections. */
 INTDEF void DCALL dec_setbases(void);
 
@@ -258,29 +263,35 @@ INTDEF void DCALL dec_setbases(void);
  * using, meaning that `file_stream' should be derived from `DeeFile_Type'.
  * @return:  0: Successfully written the DEC file.
  * @return: -1: An error occurred while writing. */
-INTDEF int (DCALL dec_write)(DeeObject *__restrict file_stream);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL dec_write)(DeeObject *__restrict file_stream);
 
 /* Generate DEC code for compiling the given module.
  * @throw NotImplemented Somewhere during generation process, a constant
  *                       could not be encoded a DTYPE expression.
  * @return:  0: Successfully populated DEC sections.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL dec_generate)(DeeModuleObject *__restrict mod);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL dec_generate)(DeeModuleObject *__restrict mod);
+
 /* Generate a link DEC text for the given module. */
-INTDEF int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict mod);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL dec_generate_and_link)(DeeModuleObject *__restrict mod);
 
 /* Encode an object using DTYPE codes. */
-INTDEF int (DCALL dec_putobj)(DeeObject *self);
-INTDEF int (DCALL dec_putcode)(DeeCodeObject *__restrict self);
-INTDEF int (DCALL dec_putobjv)(uint16_t count, DeeObject **__restrict vec); /* `Dec_Objects' */
+INTDEF WUNUSED int (DCALL dec_putobj)(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int (DCALL dec_putcode)(DeeCodeObject *__restrict self);
+INTDEF WUNUSED int (DCALL dec_putobjv)(uint16_t count, DeeObject **vec); /* `Dec_Objects' */
 
 /* Create and emit a DEC file for the given module. */
-INTDEF int (DCALL dec_create)(DeeModuleObject *__restrict mod);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL dec_create)(DeeModuleObject *__restrict mod);
 
 #if 0
 /* Similar to `dec_create', but write data to the given `file_stream' */
-INTDEF int (DCALL dec_createfp)(DeeModuleObject *__restrict mod,
-                                DeeObject *__restrict file_stream);
+INTDEF WUNUSED NONNULL((1, 2)) int
+(DCALL dec_createfp)(DeeModuleObject *__restrict mod,
+                     DeeObject *__restrict file_stream);
 #endif
 
 #ifndef __INTELLISENSE__

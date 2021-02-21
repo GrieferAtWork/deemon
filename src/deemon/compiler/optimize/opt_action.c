@@ -75,7 +75,7 @@ ast_iterator_is_nonempty(struct ast *__restrict self) {
 /* Flatten `(a, "foo", ("bar", 42), b)' into `(a, "foobar42", b)',
  * as can be done when `self' is used in a tostr context such as
  * `print' or `str' */
-INTERN int
+INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_flatten_tostr)(struct ast *__restrict self) {
 	while (self->a_type == AST_MULTIPLE &&
 	       self->a_flag == AST_FMULTIPLE_KEEPLAST) {
@@ -151,7 +151,7 @@ err:
 }
 
 
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_optimize_action)(struct ast_optimize_stack *__restrict stack,
                             struct ast *__restrict self, bool result_used) {
 	DREF DeeObject *expr_result;

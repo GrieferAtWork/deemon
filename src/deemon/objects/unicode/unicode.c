@@ -593,7 +593,7 @@ load_2byte_width:
 			if unlikely(!result)
 				goto err;
 			utf = ((String *)self)->s_data;
-			ASSERT(utf);
+			ASSERT(utf != NULL);
 			ASSERT(result == (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]);
 			*(uint16_t **)&utf->u_utf16 = result;
 			return result;
@@ -606,7 +606,7 @@ load_2byte_width:
 	}
 	/* The complicated case: the string probably
 	 * contains characters that need to be escaped. */
-	ASSERT(utf);
+	ASSERT(utf != NULL);
 	ASSERT(utf->u_width != STRING_WIDTH_1BYTE);
 	switch (utf->u_width) {
 
@@ -1486,7 +1486,6 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
 	struct string_utf *utf;
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1541,7 +1540,6 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	size_t i, length, utf8_length;
 	DREF String *result;
 	struct string_utf *utf;
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1592,7 +1590,7 @@ err:
 }
 
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
@@ -1602,7 +1600,6 @@ DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
 	int kind = 0; /* 0: UTF-16 w/o surrogates
 	               * 1: UTF-16 w surrogates
 	               * 2: UTF-16 w surrogates that produce character > 0xffff */
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1785,7 +1782,6 @@ DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	int kind = 0; /* 0: UTF-16 w/o surrogates
 	               * 1: UTF-16 w surrogates
 	               * 2: UTF-16 w surrogates that produce character > 0xffff */
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1931,13 +1927,12 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
 	DREF String *result;
 	struct string_utf *utf;
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -2016,7 +2011,6 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	size_t i, length, utf8_length;
 	DREF String *result;
 	struct string_utf *utf;
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -2076,7 +2070,7 @@ err:
 }
 
 #if 0 /* TODO: Expose as a codepage decoder function */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
                          unsigned int error_mode) {
 #ifdef CONFIG_HOST_WINDOWS
@@ -2087,7 +2081,6 @@ DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
 #define WC_ERR_INVALID_CHARS 0x00000080
 #endif /* !WC_ERR_INVALID_CHARS */
 	static DWORD wincall_flags = WC_ERR_INVALID_CHARS;
-	ASSERT(text);
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);

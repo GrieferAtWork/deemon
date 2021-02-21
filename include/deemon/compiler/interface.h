@@ -99,58 +99,80 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member Dee_tpconst DeeCompilerItem_Members[];
 INTDEF NONNULL((1)) void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
-INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
-INTDEF void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 
 INTDEF NONNULL((1)) void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit
 #define DeeCompilerWrapper_Members  DeeCompilerItem_Members
 
 struct symbol;
-INTDEF ATTR_COLD int DCALL err_invalid_ast_basescope(DeeCompilerAstObject *__restrict obj, struct base_scope_object *__restrict base_scope);
-INTDEF ATTR_COLD int DCALL err_invalid_ast_compiler(DeeCompilerAstObject *__restrict obj);
-INTDEF ATTR_COLD int DCALL err_invalid_file_compiler(DeeCompilerItemObject *__restrict obj);
-INTDEF ATTR_COLD int DCALL err_invalid_scope_compiler(DeeCompilerScopeObject *__restrict obj);
-INTDEF ATTR_COLD int DCALL err_invalid_symbol_compiler(DeeCompilerSymbolObject *__restrict obj);
-INTDEF ATTR_COLD int DCALL err_different_base_scope(void);
-INTDEF ATTR_COLD int DCALL err_different_root_scope(void);
-INTDEF ATTR_COLD int DCALL err_compiler_item_deleted(DeeCompilerItemObject *__restrict item);
-INTDEF ATTR_COLD int DCALL err_symbol_not_reachable(struct scope_object *__restrict scope, struct symbol *__restrict sym);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL scope_reaches_symbol(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_invalid_ast_basescope)(DeeCompilerAstObject *__restrict obj, struct base_scope_object *__restrict base_scope);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_ast_compiler)(DeeCompilerAstObject *__restrict obj);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_file_compiler)(DeeCompilerItemObject *__restrict obj);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_scope_compiler)(DeeCompilerScopeObject *__restrict obj);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_symbol_compiler)(DeeCompilerSymbolObject *__restrict obj);
+INTDEF ATTR_COLD int (DCALL err_different_base_scope)(void);
+INTDEF ATTR_COLD int (DCALL err_different_root_scope)(void);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_compiler_item_deleted)(DeeCompilerItemObject *__restrict item);
+INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_symbol_not_reachable)(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL scope_reaches_symbol)(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define err_invalid_ast_basescope(obj, base_scope) Dee_ASSUMED_VALUE(err_invalid_ast_basescope(obj, base_scope), -1)
+#define err_invalid_ast_compiler(obj)              Dee_ASSUMED_VALUE(err_invalid_ast_compiler(obj), -1)
+#define err_invalid_file_compiler(obj)             Dee_ASSUMED_VALUE(err_invalid_file_compiler(obj), -1)
+#define err_invalid_scope_compiler(obj)            Dee_ASSUMED_VALUE(err_invalid_scope_compiler(obj), -1)
+#define err_invalid_symbol_compiler(obj)           Dee_ASSUMED_VALUE(err_invalid_symbol_compiler(obj), -1)
+#define err_different_base_scope()                 Dee_ASSUMED_VALUE(err_different_base_scope(), -1)
+#define err_different_root_scope()                 Dee_ASSUMED_VALUE(err_different_root_scope(), -1)
+#define err_compiler_item_deleted(item)            Dee_ASSUMED_VALUE(err_compiler_item_deleted(item), -1)
+#define err_symbol_not_reachable(scope, sym)       Dee_ASSUMED_VALUE(err_symbol_not_reachable(scope, sym), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
 
 struct unicode_printer;
 
 /* @return: 0:  OK
  * @return: -1: Error. */
-INTDEF int DCALL get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result);
+INTDEF WUNUSED NONNULL((2)) int DCALL
+get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result);
+
 /* Helper functions for setting the DDI location of a given ast `dst'
  * WARNING: Previously set DDI information is overwritten,
  *          and the old DDI file will _NOT_ be decref'ed! */
-INTDEF int DCALL set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
+INTDEF WUNUSED NONNULL((2)) int DCALL
+set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
 
 /* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)' */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL print_ast_loc_repr(struct ast_loc *__restrict self, struct unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+print_ast_loc_repr(struct ast_loc *__restrict self,
+                   struct unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
  * @return: -2:      A keyword wasn't found (and `create_missing' was false) */
-INTDEF tok_t DCALL get_token_from_str(char const *__restrict name, bool create_missing);
-INTDEF tok_t DCALL get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
+INTDEF WUNUSED NONNULL((1)) tok_t DCALL
+get_token_from_str(char const *__restrict name, bool create_missing);
+INTDEF WUNUSED NONNULL((1)) tok_t DCALL
+get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
+
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
 INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
-INTDEF dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
+INTDEF WUNUSED dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
  * NOTE: `typing' doesn't necessarily need to be a type object!
  * @return: (uint16_t)-1: Error. */
-INTDEF WUNUSED NONNULL((1)) uint16_t DCALL get_ast_multiple_typing(DeeTypeObject *__restrict typing);
+INTDEF WUNUSED NONNULL((1)) uint16_t DCALL
+get_ast_multiple_typing(DeeTypeObject *__restrict typing);
 
 struct catch_expr;
 struct base_scope_object;
 
 /* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
-INTDEF struct catch_expr *DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict pcatch_c,
                          struct base_scope_object *__restrict base_scope);
@@ -175,12 +197,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid,
                 uint16_t *__restrict presult);
 
-INTDEF WUNUSED NONNULL((1)) int32_t DCALL get_action_by_name(char const *__restrict name);
-INTDEF WUNUSED char const *DCALL get_action_name(uint16_t action);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL
+get_action_by_name(char const *__restrict name);
+
+INTDEF WUNUSED char const *DCALL
+get_action_name(uint16_t action);
 
 
-
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 check_function_code_scope(DeeBaseScopeObject *code_scope,
                           DeeBaseScopeObject *ast_base_scope);
 

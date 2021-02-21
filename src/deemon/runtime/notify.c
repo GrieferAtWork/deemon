@@ -121,7 +121,7 @@ err:
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
 #else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
 			return false;
@@ -442,7 +442,6 @@ PUBLIC WUNUSED NONNULL((2)) int DCALL
 DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
 	size_t name_size;
 	dhash_t name_hash;
-	ASSERT(name);
 	name_size = strlen(name);
 	name_hash = (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 	            ? Dee_HashCasePtr(name, name_size * sizeof(char))

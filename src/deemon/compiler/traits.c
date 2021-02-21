@@ -41,7 +41,7 @@ ast_chk_multiple_hasexpand(struct ast *__restrict self) {
 	return false;
 }
 
-// INTERN bool DCALL
+// INTERN WUNUSED NONNULL((1)) bool DCALL
 // ast_chk_maythrow(struct ast *__restrict self,
 //                  bool result_used,
 //                  DeeTypeObject *exception_type) {

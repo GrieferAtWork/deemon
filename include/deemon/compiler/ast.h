@@ -607,8 +607,8 @@ struct ast {
 #ifdef CONFIG_BUILDING_DEEMON
 
 #ifdef CONFIG_AST_IS_STRUCT
-INTDEF void DCALL ast_destroy(struct ast *__restrict self);
-INTDEF void DCALL ast_visit_impl(struct ast *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL ast_destroy(struct ast *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL ast_visit_impl(struct ast *__restrict self, Dee_visit_t proc, void *arg);
 #define ast_visit(x)            ast_visit_impl(x, proc, arg)
 #define ast_shared(x)          ((x)->a_refcnt > 1)
 #define ast_incref(x)          (Dee_ASSERT((x)->a_refcnt), ++(x)->a_refcnt)
@@ -619,7 +619,7 @@ INTDEF void DCALL ast_visit_impl(struct ast *__restrict self, Dee_visit_t proc, 
 #define ast_xincref(x)         ((x) ? (void)(Dee_ASSERT((x)->a_refcnt), ++(x)->a_refcnt) : (void)0)
 #define ast_xdecref(x)         ((x) ? (Dee_ASSERT((x)->a_refcnt), --(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
 #define ast_xdecref_unlikely(x)((x) ? (Dee_ASSERT((x)->a_refcnt), --(x)->a_refcnt ? (void)0 : ast_destroy(x)) : (void)0)
-#define ASSERT_AST(ob)          Dee_ASSERT((ob) && ((ob)->a_refcnt >= 1))
+#define ASSERT_AST(ob)          Dee_ASSERT((ob)->a_refcnt >= 1)
 #define ASSERT_AST_OPT(ob)      Dee_ASSERT(!(ob) || ((ob)->a_refcnt >= 1))
 #else /* CONFIG_AST_IS_STRUCT */
 #define ast_visit(x)           Dee_Visit(x)
@@ -648,13 +648,13 @@ INTDEF DeeTypeObject DeeAst_Type;
  *       the current LC location in the active source file.
  * HINT: This function behaves as a noop when `self' is NULL
  * @return: * : == self */
-INTDEF struct ast *FCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF NONNULL((2)) struct ast *FCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
 INTDEF struct ast *FCALL ast_sethere(struct ast *self);
 /* Same as the set functions above, but don't override existing debug information. */
-INTDEF struct ast *FCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
+INTDEF NONNULL((2)) struct ast *FCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
 INTDEF struct ast *FCALL ast_puthere(struct ast *self);
 /* Fill the given AST location with the current source position. */
-INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
+INTDEF NONNULL((1)) void FCALL loc_here(struct ast_loc *__restrict info);
 
 /* NOTE: Functions below use `current_scope' to initialize `ast_scope', meaning
  *       that all of them expect the caller to be holding the compiler lock.
@@ -662,120 +662,120 @@ INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 
 #if defined(NDEBUG) || defined(__INTELLISENSE__)
 #define CONFIG_NO_AST_DEBUG 1
-#define DEFINE_AST_GENERATOR(name, args) \
-	INTDEF WUNUSED DREF struct ast *DCALL name args
+#define DEFINE_AST_GENERATOR(attr, name, args) \
+	INTDEF WUNUSED attr DREF struct ast *DCALL name args
 #else /* NDEBUG || __INTELLISENSE__ */
-#define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (char const *file, int line, __VA_ARGS__)
-#define DEFINE_AST_GENERATOR(name, args) \
-	INTDEF WUNUSED DREF struct ast *DCALL name##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args
+#define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (__VA_ARGS__, char const *file, int line)
+#define DEFINE_AST_GENERATOR(attr, name, args) \
+	INTDEF WUNUSED attr DREF struct ast *DCALL name##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args
 #endif /* !NDEBUG && !__INTELLISENSE__ */
 
 
 /* [AST_CONSTEXPR] */
-DEFINE_AST_GENERATOR(ast_constexpr, (DeeObject * __restrict constant_expression));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_constexpr, (DeeObject * __restrict constant_expression));
 /* [AST_SYM] */
-DEFINE_AST_GENERATOR(ast_sym, (struct symbol * __restrict sym));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_sym, (struct symbol * __restrict sym));
 /* [AST_UNBIND] */
-DEFINE_AST_GENERATOR(ast_unbind, (struct symbol * __restrict sym));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_unbind, (struct symbol * __restrict sym));
 /* [AST_BOUND] */
-DEFINE_AST_GENERATOR(ast_bound, (struct symbol * __restrict sym));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_bound, (struct symbol * __restrict sym));
 /* [AST_MULTIPLE] WARNING: Inherits a heap-allocated vector `exprv' upon success; @param: flags: Set of `AST_FMULTIPLE_*' */
-DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc, /*inherit*/ DREF struct ast **__restrict exprv));
+DEFINE_AST_GENERATOR(, ast_multiple, (uint16_t flags, size_t exprc, /*inherit*/ DREF struct ast **__restrict exprv));
 /* [AST_RETURN] NOTE: `return_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_return, (struct ast * return_expr));
+DEFINE_AST_GENERATOR(, ast_return, (struct ast *return_expr));
 /* [AST_YIELD] */
-DEFINE_AST_GENERATOR(ast_yield, (struct ast * __restrict yield_expr));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_yield, (struct ast *__restrict yield_expr));
 /* [AST_THROW] NOTE: `throw_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_throw, (struct ast * throw_expr));
+DEFINE_AST_GENERATOR(, ast_throw, (struct ast *throw_expr));
 /* [AST_TRY] WARNING: Inherits a heap-allocated vector `catchv' upon success */
-DEFINE_AST_GENERATOR(ast_try, (struct ast * __restrict guarded_expression, size_t catchc,
-                               /*inherit*/ struct catch_expr *__restrict catchv));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_try, (struct ast *__restrict guarded_expression, size_t catchc,
+                                             /*inherit*/ struct catch_expr *catchv));
 /* [AST_TRY] Helper function to create a simple try-finally expression using `a_try' */
-DEFINE_AST_GENERATOR(ast_tryfinally, (struct ast * __restrict guarded_expression,
-                                      struct ast *__restrict finally_expression));
+DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_tryfinally, (struct ast *__restrict guarded_expression,
+                                                       struct ast *__restrict finally_expression));
 /* [AST_LOOP] @parma: flags: Set of `AST_FLOOP_*' */
-DEFINE_AST_GENERATOR(ast_loop, (uint16_t flags, struct ast *elem_or_cond, struct ast *iter_or_next, struct ast *loop));
+DEFINE_AST_GENERATOR(, ast_loop, (uint16_t flags, struct ast *elem_or_cond, struct ast *iter_or_next, struct ast *loop));
 /* [AST_LOOPCTL] @parma: flags: Set of `AST_FLOOPCTL_**' */
-DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags));
+DEFINE_AST_GENERATOR(, ast_loopctl, (uint16_t flags));
 /* [AST_CONDITIONAL] @parma: flags: Set of `AST_FCOND_**' */
-DEFINE_AST_GENERATOR(ast_conditional, (uint16_t flags, struct ast *cond,
-                                       struct ast *tt_expr, struct ast *ff_expr));
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_conditional, (uint16_t flags, struct ast *cond,
+                                                     struct ast *tt_expr, struct ast *ff_expr));
 /* [AST_BOOL] @param: flags: Set of `AST_FBOOL_*' */
-DEFINE_AST_GENERATOR(ast_bool, (uint16_t flags, struct ast *__restrict expr));
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_bool, (uint16_t flags, struct ast *__restrict expr));
 /* [AST_EXPAND] */
-DEFINE_AST_GENERATOR(ast_expand, (struct ast * __restrict expr));
+DEFINE_AST_GENERATOR(NONNULL((1)), ast_expand, (struct ast *__restrict expr));
 /* [AST_FUNCTION] */
-DEFINE_AST_GENERATOR(ast_function, (struct ast * __restrict function_code, DeeBaseScopeObject *__restrict scope));
+DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_function, (struct ast *__restrict function_code, DeeBaseScopeObject *__restrict scope));
 /* [AST_OPERATOR_FUNC] */
-DEFINE_AST_GENERATOR(ast_operator_func, (uint16_t operator_name, struct ast *binding));
+DEFINE_AST_GENERATOR(, ast_operator_func, (uint16_t operator_name, struct ast *binding));
 /* [AST_OPERATOR] @param: operator_name: One of `OPERATOR_*'.
  *                @param: flags: Set of `AST_OPERATOR_F*' */
-DEFINE_AST_GENERATOR(ast_operator1, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
-DEFINE_AST_GENERATOR(ast_operator2, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
-DEFINE_AST_GENERATOR(ast_operator3, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
-DEFINE_AST_GENERATOR(ast_operator4, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
+DEFINE_AST_GENERATOR(NONNULL((3)), ast_operator1, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
+DEFINE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
+DEFINE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
+DEFINE_AST_GENERATOR(NONNULL((3, 4, 5, 6)), ast_operator4, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
 /* [AST_ACTION]  @param: action_flags: One of `AST_FACTION_*' (see above). */
-DEFINE_AST_GENERATOR(ast_action0, (uint16_t action_flags));
-DEFINE_AST_GENERATOR(ast_action1, (uint16_t action_flags, struct ast *__restrict act0));
-DEFINE_AST_GENERATOR(ast_action2, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1));
-DEFINE_AST_GENERATOR(ast_action3, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
+DEFINE_AST_GENERATOR(, ast_action0, (uint16_t action_flags));
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_action1, (uint16_t action_flags, struct ast *__restrict act0));
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_action2, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1));
+DEFINE_AST_GENERATOR(NONNULL((2, 3, 4)), ast_action3, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
 /* [AST_CLASS]   @param: class_flags: Set of `TP_F* & 0xf'.
  * WARNING: Inherits a heap-allocated vector `memberv' upon success. */
-DEFINE_AST_GENERATOR(ast_class, (struct ast * base, struct ast *__restrict descriptor,
-                                 struct symbol *class_symbol, struct symbol *super_symbol,
-                                 size_t memberc, struct class_member *__restrict memberv));
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_class, (struct ast *base, struct ast *__restrict descriptor,
+                                               struct symbol *class_symbol, struct symbol *super_symbol,
+                                               size_t memberc, struct class_member *memberv));
 /* [AST_LABEL] @param: flags: Set of `AST_FLABEL_*'. */
-DEFINE_AST_GENERATOR(ast_label, (uint16_t flags, struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_label, (uint16_t flags, struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_GOTO] */
-DEFINE_AST_GENERATOR(ast_goto, (struct text_label * __restrict lbl, DeeBaseScopeObject *__restrict base_scope));
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_goto, (struct text_label * __restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_SWITCH] @param: flags: Set of `AST_FSWITCH_*'.
  * WARNING: Inherits both `cases' and `default_case' upon success. */
-DEFINE_AST_GENERATOR(ast_switch, (uint16_t flags, struct ast *__restrict expr, struct ast *__restrict block,
-                                  struct text_label *cases, struct text_label *default_case));
+DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_switch, (uint16_t flags, struct ast *__restrict expr, struct ast *__restrict block,
+                                                   struct text_label *cases, struct text_label *default_case));
 /* [AST_ASSEMBLY] WARNING: Inherits a heap-allocated vector `opv' upon success; @param: flags: Set of `AST_FASSEMBLY_*' */
 #ifdef CONFIG_LANGUAGE_NO_ASM
-DEFINE_AST_GENERATOR(ast_assembly, (uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(, ast_assembly, (uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *opv));
 #else /* !CONFIG_LANGUAGE_NO_ASM */
-DEFINE_AST_GENERATOR(ast_assembly, (uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(NONNULL((2)), ast_assembly, (uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *opv));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #undef DEFINE_AST_GENERATOR
 
 #ifndef CONFIG_NO_AST_DEBUG
-#define ast_constexpr(constant_expression)                          ast_constexpr_d(__FILE__, __LINE__, constant_expression)
-#define ast_sym(sym)                                                ast_sym_d(__FILE__, __LINE__, sym)
-#define ast_unbind(sym)                                             ast_unbind_d(__FILE__, __LINE__, sym)
-#define ast_bound(sym)                                              ast_bound_d(__FILE__, __LINE__, sym)
-#define ast_multiple(flags, exprc, exprv)                           ast_multiple_d(__FILE__, __LINE__, flags, exprc, exprv)
-#define ast_return(return_expr)                                     ast_return_d(__FILE__, __LINE__, return_expr)
-#define ast_yield(yield_expr)                                       ast_yield_d(__FILE__, __LINE__, yield_expr)
-#define ast_throw(throw_expr)                                       ast_throw_d(__FILE__, __LINE__, throw_expr)
-#define ast_try(guarded_expression, catchc, catchv)                 ast_try_d(__FILE__, __LINE__, guarded_expression, catchc, catchv)
-#define ast_tryfinally(guarded_expression, finally_expression)      ast_tryfinally_d(__FILE__, __LINE__, guarded_expression, finally_expression)
-#define ast_loop(flags, elem_or_cond, iter_or_next, loop)           ast_loop_d(__FILE__, __LINE__, flags, elem_or_cond, iter_or_next, loop)
-#define ast_loopctl(flags)                                          ast_loopctl_d(__FILE__, __LINE__, flags)
-#define ast_conditional(flags, cond, tt_expr, ff_expr)              ast_conditional_d(__FILE__, __LINE__, flags, cond, tt_expr, ff_expr)
-#define ast_bool(flags, expr)                                       ast_bool_d(__FILE__, __LINE__, flags, expr)
-#define ast_expand(expr)                                            ast_expand_d(__FILE__, __LINE__, expr)
-#define ast_function(function_code, scope)                          ast_function_d(__FILE__, __LINE__, function_code, scope)
-#define ast_operator_func(operator_name, binding)                   ast_operator_func_d(__FILE__, __LINE__, operator_name, binding)
-#define ast_operator1(operator_name, flags, opa)                    ast_operator1_d(__FILE__, __LINE__, operator_name, flags, opa)
-#define ast_operator2(operator_name, flags, opa, opb)               ast_operator2_d(__FILE__, __LINE__, operator_name, flags, opa, opb)
-#define ast_operator3(operator_name, flags, opa, opb, opc)          ast_operator3_d(__FILE__, __LINE__, operator_name, flags, opa, opb, opc)
-#define ast_operator4(operator_name, flags, opa, opb, opc, opd)     ast_operator4_d(__FILE__, __LINE__, operator_name, flags, opa, opb, opc, opd)
-#define ast_action0(action_flags)                                   ast_action0_d(__FILE__, __LINE__, action_flags)
-#define ast_action1(action_flags, act0)                             ast_action1_d(__FILE__, __LINE__, action_flags, act0)
-#define ast_action2(action_flags, act0, act1)                       ast_action2_d(__FILE__, __LINE__, action_flags, act0, act1)
-#define ast_action3(action_flags, act0, act1, act2)                 ast_action3_d(__FILE__, __LINE__, action_flags, act0, act1, act2)
+#define ast_constexpr(constant_expression)                          ast_constexpr_d(constant_expression, __FILE__, __LINE__)
+#define ast_sym(sym)                                                ast_sym_d(sym, __FILE__, __LINE__)
+#define ast_unbind(sym)                                             ast_unbind_d(sym, __FILE__, __LINE__)
+#define ast_bound(sym)                                              ast_bound_d(sym, __FILE__, __LINE__)
+#define ast_multiple(flags, exprc, exprv)                           ast_multiple_d(flags, exprc, exprv, __FILE__, __LINE__)
+#define ast_return(return_expr)                                     ast_return_d(return_expr, __FILE__, __LINE__)
+#define ast_yield(yield_expr)                                       ast_yield_d(yield_expr, __FILE__, __LINE__)
+#define ast_throw(throw_expr)                                       ast_throw_d(throw_expr, __FILE__, __LINE__)
+#define ast_try(guarded_expression, catchc, catchv)                 ast_try_d(guarded_expression, catchc, catchv, __FILE__, __LINE__)
+#define ast_tryfinally(guarded_expression, finally_expression)      ast_tryfinally_d(guarded_expression, finally_expression, __FILE__, __LINE__)
+#define ast_loop(flags, elem_or_cond, iter_or_next, loop)           ast_loop_d(flags, elem_or_cond, iter_or_next, loop, __FILE__, __LINE__)
+#define ast_loopctl(flags)                                          ast_loopctl_d(flags, __FILE__, __LINE__)
+#define ast_conditional(flags, cond, tt_expr, ff_expr)              ast_conditional_d(flags, cond, tt_expr, ff_expr, __FILE__, __LINE__)
+#define ast_bool(flags, expr)                                       ast_bool_d(flags, expr, __FILE__, __LINE__)
+#define ast_expand(expr)                                            ast_expand_d(expr, __FILE__, __LINE__)
+#define ast_function(function_code, scope)                          ast_function_d(function_code, scope, __FILE__, __LINE__)
+#define ast_operator_func(operator_name, binding)                   ast_operator_func_d(operator_name, binding, __FILE__, __LINE__)
+#define ast_operator1(operator_name, flags, opa)                    ast_operator1_d(operator_name, flags, opa, __FILE__, __LINE__)
+#define ast_operator2(operator_name, flags, opa, opb)               ast_operator2_d(operator_name, flags, opa, opb, __FILE__, __LINE__)
+#define ast_operator3(operator_name, flags, opa, opb, opc)          ast_operator3_d(operator_name, flags, opa, opb, opc, __FILE__, __LINE__)
+#define ast_operator4(operator_name, flags, opa, opb, opc, opd)     ast_operator4_d(operator_name, flags, opa, opb, opc, opd, __FILE__, __LINE__)
+#define ast_action0(action_flags)                                   ast_action0_d(action_flags, __FILE__, __LINE__)
+#define ast_action1(action_flags, act0)                             ast_action1_d(action_flags, act0, __FILE__, __LINE__)
+#define ast_action2(action_flags, act0, act1)                       ast_action2_d(action_flags, act0, act1, __FILE__, __LINE__)
+#define ast_action3(action_flags, act0, act1, act2)                 ast_action3_d(action_flags, act0, act1, act2, __FILE__, __LINE__)
 #define ast_class(base, descriptor, class_symbol, super_symbol, memberc, memberv) \
-	ast_class_d(__FILE__, __LINE__, base, descriptor, class_symbol, super_symbol, memberc, memberv)
-#define ast_label(flags, lbl, base_scope)                           ast_label_d(__FILE__, __LINE__, flags, lbl, base_scope)
-#define ast_goto(lbl, base_scope)                                   ast_goto_d(__FILE__, __LINE__, lbl, base_scope)
-#define ast_switch(flags, expr, block, cases, default_case)         ast_switch_d(__FILE__, __LINE__, flags, expr, block, cases, default_case)
+	ast_class_d(base, descriptor, class_symbol, super_symbol, memberc, memberv, __FILE__, __LINE__)
+#define ast_label(flags, lbl, base_scope)                           ast_label_d(flags, lbl, base_scope, __FILE__, __LINE__)
+#define ast_goto(lbl, base_scope)                                   ast_goto_d(lbl, base_scope, __FILE__, __LINE__)
+#define ast_switch(flags, expr, block, cases, default_case)         ast_switch_d(flags, expr, block, cases, default_case, __FILE__, __LINE__)
 #ifdef CONFIG_LANGUAGE_NO_ASM
-#define ast_assembly(flags, num_o, num_i, num_l, opv)               ast_assembly_d(__FILE__, __LINE__, flags, num_o, num_i, num_l, opv)
+#define ast_assembly(flags, num_o, num_i, num_l, opv)               ast_assembly_d(flags, num_o, num_i, num_l, opv, __FILE__, __LINE__)
 #else /* CONFIG_LANGUAGE_NO_ASM */
-#define ast_assembly(flags, text, num_o, num_i, num_l, opv)         ast_assembly_d(__FILE__, __LINE__, flags, text, num_o, num_i, num_l, opv)
+#define ast_assembly(flags, text, num_o, num_i, num_l, opv)         ast_assembly_d(flags, text, num_o, num_i, num_l, opv, __FILE__, __LINE__)
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 #endif /* !CONFIG_NO_AST_DEBUG */
 

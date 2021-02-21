@@ -52,7 +52,7 @@ DECL_BEGIN
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
 #else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
 			return false;
@@ -1495,7 +1495,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	DREF DeeObject *old_stream;
 	ASSERT(id < DEE_STDCNT);
 	if (ITER_ISOK(file)) {
-		ASSERT(DeeObject_DoCheck(file));
+		Dee_ASSERT_OBJECT(file);
 		Dee_Incref(file);
 	}
 	rwlock_write(&dee_std_lock);

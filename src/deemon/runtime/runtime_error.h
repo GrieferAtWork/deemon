@@ -118,12 +118,12 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObjec
 #define ATTR_ACCESS_MASK    3
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_len(DeeTypeObject *__restrict tp, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_attribute_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_attribute_lookup(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nodoc_attribute(char const *base, char const *__restrict name);
 /* @param: access: One of `ATTR_ACCESS_*' */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_len(DeeTypeObject *__restrict tp, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_cant_access_attribute_len(DeeTypeObject *__restrict tp, char const *name, size_t namelen, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_cant_access_attribute_c(struct class_desc *__restrict desc, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name);

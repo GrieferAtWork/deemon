@@ -54,7 +54,7 @@ yes:
 }
 
 
-INTERN WUNUSED struct ast *DCALL
+INTERN WUNUSED NONNULL((1)) struct ast *DCALL
 ast_strip_seqcast(struct ast *__restrict self) {
 	for (;;) {
 		if (self->a_type == AST_MULTIPLE &&

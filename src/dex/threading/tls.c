@@ -377,7 +377,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tls_xchitem(Tls *self, DeeObject *value) {
 	DREF DeeObject **pitem, *result;
-	ASSERT(value != NULL);
 again:
 	pitem = thread_tls_get(self->t_index);
 	if unlikely(!pitem)
@@ -589,7 +588,6 @@ tls_setvalue(Tls *self, DeeObject *value) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tls_xchitem(Tls *self, DeeObject *value) {
 	DREF DeeObject *result;
-	ASSERT(value != NULL);
 again:
 	result = self->t_value; /* Inherit */
 	if unlikely(result == ITER_DONE) {

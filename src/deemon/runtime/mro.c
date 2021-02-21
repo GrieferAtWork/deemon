@@ -180,7 +180,7 @@ membercache_rehash(struct membercache *__restrict self) {
 	do {                                        \
 		if (!rwlock_trywrite(&(self)->mc_lock)) \
 			return;                             \
-	} __WHILE0
+	}	__WHILE0
 #else
 #define MEMBERCACHE_TRYWRITE_OR_RETURN(self) \
 	MEMBERCACHE_WRITE(self)

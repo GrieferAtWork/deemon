@@ -221,12 +221,12 @@ INTDEF struct compiler_options script_options; /* Options used to compile the us
 
 
 
-PRIVATE int DCALL compiler_setup(void *arg);
-PRIVATE int DCALL error_handler(struct compiler_error_object *__restrict error, int fatality_mode, void *arg);
-PRIVATE int DCALL cmd_version(char *arg);
-PRIVATE int DCALL cmd_help(char *arg);
+PRIVATE WUNUSED int DCALL compiler_setup(void *arg);
+PRIVATE WUNUSED NONNULL((1)) int DCALL error_handler(struct compiler_error_object *__restrict error, int fatality_mode, void *arg);
+PRIVATE WUNUSED int DCALL cmd_version(char *arg);
+PRIVATE WUNUSED int DCALL cmd_help(char *arg);
 
-PRIVATE int DCALL cmd_o(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
 	Dee_XDecref(script_options.co_decoutput);
 	if (strcmp(arg, "-") == 0)
 		/* Special case: output to stdout */
@@ -243,7 +243,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_O(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_O(char *arg) {
 	int level;
 	script_options.co_optimizer &= ~(OPTIMIZE_FENABLED | OPTIMIZE_FCSE |
 	                                 OPTIMIZE_FCONSTSYMS | OPTIMIZE_FNOUSESYMS
@@ -317,81 +317,81 @@ PRIVATE int DCALL cmd_O(char *arg) {
 	return 0;
 }
 
-PRIVATE int DCALL cmd_i(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_i(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_INTERACTIVE;
 	script_options.co_parser |= PARSE_FLFSTMT;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_E(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_E(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_PRINTPP;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_S(char *arg) {
+PRIVATE WUNUSED int DCALL cmd_S(char *arg) {
 	if (arg && *arg)
 		emitasm_flags = arg;
 	operation_mode = OPERATION_MODE_PRINTASM;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_F(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_F(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_FORMAT;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_P(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_P(char *UNUSED(arg)) {
 	emitpp_state |= EMITPP_FNOLINE;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_c(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_c(char *UNUSED(arg)) {
 	operation_mode = OPERATION_MODE_BUILDONLY;
 	script_options.co_assembler &= ~ASM_FNODEC;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_ppC(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_ppC(char *UNUSED(arg)) {
 	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTCOMMENTS;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_tok(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_tok(char *UNUSED(arg)) {
 	emitpp_state = (emitpp_state & ~EMITPP_MOUTLINE) | EMITPP_FOUTLINE_TOK;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_cpp(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_cpp(char *UNUSED(arg)) {
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_NO_MACROS |
 	                               TPPLEXER_FLAG_NO_DIRECTIVES |
 	                               TPPLEXER_FLAG_NO_BUILTIN_MACROS);
 	return 0;
 }
 
-PRIVATE int DCALL cmd_nocpp(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_nocpp(char *UNUSED(arg)) {
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_MACROS |
 	                              TPPLEXER_FLAG_NO_DIRECTIVES |
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
 	return 0;
 }
 
-PRIVATE int DCALL cmd_undef(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_undef(char *UNUSED(arg)) {
 	TPPLexer_DisableExtension(EXT_SYSTEM_MACROS);
 	return 0;
 }
 
-PRIVATE int DCALL cmd_trigraphs(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_trigraphs(char *UNUSED(arg)) {
 	TPPLexer_EnableExtension(EXT_TRIGRAPHS);
 	return 0;
 }
 
-PRIVATE int DCALL cmd_traditional(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_traditional(char *UNUSED(arg)) {
 	TPPLexer_EnableExtension(EXT_TRADITIONAL_MACRO);
 	TPPLexer_Current->l_extokens |= TPPLEXER_TOKEN_EQUALBINOP;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_L(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_L(char *arg) {
 	int result;
 	DREF DeeObject *path;
 	path = DeeString_NewUtf8(arg, strlen(arg),
@@ -405,20 +405,20 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_pp(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_pp(char *UNUSED(arg)) {
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_WANTSPACE | TPPLEXER_FLAG_WANTLF);
 	emitpp_state = (emitpp_state & ~EMITPP_MOUTLINE) | EMITPP_FOUTLINE_ZERO;
 	return 0;
 }
 
-PRIVATE int DCALL cmd_ftabstop(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_ftabstop(char *arg) {
 	script_options.co_tabwidth = (uint16_t)atoi(arg);
 	return 0;
 }
 
-PRIVATE int TPPCALL emitpp_reemit_pragma(void);
+PRIVATE WUNUSED int TPPCALL emitpp_reemit_pragma(void);
 
-PRIVATE int DCALL cmd_f(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_f(char *arg) {
 	bool disable = false;
 	if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-')
 		disable = true, arg += 3;
@@ -460,7 +460,7 @@ PRIVATE int DCALL cmd_f(char *arg) {
 	return 0;
 }
 
-PRIVATE int DCALL cmd_W(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_W(char *arg) {
 	wstate_t state = WSTATE_ERROR;
 	int error;
 	if (!strcmp(arg, "error")) {
@@ -492,10 +492,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_D(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_D(char *arg) {
 	char *macro_value;
 	size_t name_length;
-	ASSERT(arg);
 	macro_value = strchr(arg, '=');
 	if (macro_value) {
 		name_length = (size_t)((macro_value++) - arg);
@@ -511,14 +510,12 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_U(char *arg) {
-	ASSERT(arg);
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_U(char *arg) {
 	TPPLexer_Undef(arg, strlen(arg));
 	return 0;
 }
 
-PRIVATE int DCALL cmd_I(char *arg) {
-	ASSERT(arg);
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_I(char *arg) {
 	if (!TPPLexer_AddIncludePath(arg, strlen(arg)))
 		goto err;
 	return 0;
@@ -526,7 +523,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_A(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_A(char *arg) {
 	bool add = true;
 	char *val;
 	if (*arg == '-')
@@ -549,7 +546,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_message_format(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_message_format(char *arg) {
 	if (strcmp(arg, "gcc") == 0) {
 		TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_MSVC_MESSAGEFORMAT);
 	} else if (strcmp(arg, "msvc") == 0) {
@@ -562,14 +559,14 @@ PRIVATE int DCALL cmd_message_format(char *arg) {
 	return 0;
 }
 
-PRIVATE int DCALL cmdpp_name(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmdpp_name(char *arg) {
 	Dee_XDecref(script_options.co_filename);
 	script_options.co_filename = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
 	                                                                  STRING_ERROR_FIGNORE);
 	return script_options.co_filename ? 0 : -1;
 }
 
-PRIVATE int DCALL cmd_name(char *arg) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_name(char *arg) {
 	Dee_XDecref(script_options.co_rootname);
 	script_options.co_rootname = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
 	                                                                  STRING_ERROR_FIGNORE);
@@ -618,7 +615,7 @@ PRIVATE struct compiler_flag const compiler_flags[] = {
 };
 #undef FIELD
 
-PRIVATE int DCALL cmd_C(char *arg) {
+PRIVATE WUNUSED int DCALL cmd_C(char *arg) {
 	uint8_t disable = 0;
 	unsigned int i;
 	if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-')
@@ -670,7 +667,7 @@ PRIVATE char const doc_cmd_undef[]       = "Disable all builtin macros";
 PRIVATE char const doc_cmd_trigraphs[]   = "Enable recognition of trigraph character sequences";
 PRIVATE char const doc_cmd_traditional[] = "Enable recognition of traditional tokens & macros (Default: off)";
 
-PRIVATE struct cmd_option preprocessor_options[] = {
+PRIVATE struct cmd_option const preprocessor_options[] = {
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
@@ -707,20 +704,20 @@ PRIVATE struct cmd_option preprocessor_options[] = {
 	CMD_OPTION_SENTINEL
 };
 
-PRIVATE struct cmd_option assembler_options[] = {
+PRIVATE struct cmd_option const assembler_options[] = {
 	{ CMD_FARG | CMD_FARGIMM, "O", NULL, { (void *)&cmd_O }, doc_cmdO },
 	{ CMD_FJOINABLE | CMD_FARG | CMD_FARGIMM | CMD_FARGOPT | CMD_FARGEQ, "S", NULL, { (void *)&cmd_S }, doc_cmdS },
 	CMD_OPTION_SENTINEL
 };
 
-PRIVATE struct cmd_option linker_options[] = {
+PRIVATE struct cmd_option const linker_options[] = {
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmd_name }, doc_cmdname },
 	{ CMD_FARG | CMD_FARGIMM, "L", NULL, { (void *)&cmd_L }, doc_cmdL },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "library-path", { (void *)&cmd_L }, doc_cmdL },
 	CMD_OPTION_SENTINEL
 };
 
-PRIVATE struct cmd_option cmdline_options[] = {
+PRIVATE struct cmd_option const cmdline_options[] = {
 
 	/* Basic options. */
 	{ CMD_FNORMAL, "", "version", { (void *)&cmd_version }, "Display version information" },
@@ -779,7 +776,7 @@ PRIVATE int DCALL exit_ok(void) {
 	return -1;
 }
 
-PRIVATE int DCALL cmd_version(char *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL cmd_version(char *UNUSED(arg)) {
 	DREF DeeObject *fp;
 	fp = DeeFile_GetStd(DEE_STDERR);
 	if unlikely(!fp)
@@ -795,7 +792,7 @@ err_nofp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-display_help_namewidth(struct cmd_option *__restrict option,
+display_help_namewidth(struct cmd_option const *__restrict option,
                        char const *__restrict prefix) {
 	char const *name, *text, *arg_end, *line_end;
 	size_t name_length, width, result = 0;
@@ -838,9 +835,9 @@ print_text_space:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 5)) int DCALL
 display_help(dformatprinter printer, void *arg,
-             struct cmd_option *__restrict option,
+             struct cmd_option const *__restrict option,
              size_t name_width, char const *__restrict prefix) {
 	char const *name, *text, *arg_end, *line_end;
 	size_t name_length, width, prefix_length;
@@ -912,12 +909,12 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 display_help_group(dformatprinter printer, void *arg,
-                   struct cmd_option *__restrict group,
+                   struct cmd_option const *__restrict group,
                    char const *__restrict prefix) {
 	size_t temp, max_width = 0;
-	struct cmd_option *iter;
+	struct cmd_option const *iter;
 	for (iter = group; !CMD_OPTION_ISSENTINEL(iter); ++iter) {
 		temp = display_help_namewidth(iter, prefix);
 		if (max_width < temp)
@@ -934,9 +931,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 display_help_single(dformatprinter printer, void *arg,
-                    struct cmd_option *__restrict option,
+                    struct cmd_option const *__restrict option,
                     char const *__restrict prefix) {
 	if (option->co_flags & CMD_FGROUP) {
 		size_t prefix_length;
@@ -965,9 +962,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
 display_help_query(dformatprinter printer, void *arg,
-                   struct cmd_option *__restrict group,
+                   struct cmd_option const *__restrict group,
                    char const *__restrict query,
                    char const *__restrict prefix) {
 	char *comma = (char *)strchr(query, ',');
@@ -1013,7 +1010,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL cmd_help(char *arg) {
+PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 	DREF DeeObject *fp;
 	fp = DeeFile_GetStd(DEE_STDERR);
 	if unlikely(!fp)
@@ -1056,7 +1053,7 @@ err:
 }
 
 
-PRIVATE int DCALL compiler_setup(void *UNUSED(arg)) {
+PRIVATE WUNUSED int DCALL compiler_setup(void *UNUSED(arg)) {
 	/* Define a macro `__MAIN__' in order to indicate to script/module
 	 * hybrid source files that they are being executed as a script.
 	 * Using macros for this case is OK because when executed as a
@@ -1075,14 +1072,14 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_handler(struct compiler_error_object *__restrict error,
               int UNUSED(fatality_mode), void *UNUSED(arg)) {
 	return DeeFile_PrintObjectNl(DeeFile_DefaultStddbg, (DeeObject *)error);
 }
 
-PRIVATE int DCALL operation_mode_printpp(int argc, char **argv);
-PRIVATE int DCALL operation_mode_format(int argc, char **argv);
+PRIVATE WUNUSED int DCALL operation_mode_printpp(int argc, char **argv);
+PRIVATE WUNUSED int DCALL operation_mode_format(int argc, char **argv);
 
 #ifdef _MSC_VER
 PRIVATE void
@@ -1325,7 +1322,6 @@ int main(int argc, char *argv[]) {
 
 			/* With the root now open, invoke it using the system argument vector. */
 			user_module_args = Dee_GetArgv();
-			ASSERT(user_module_args);
 			user_module_result = DeeObject_Call(user_module_main,
 			                                    DeeTuple_SIZE(user_module_args),
 			                                    DeeTuple_ELEM(user_module_args));
@@ -1615,17 +1611,17 @@ LOCAL size_t DCALL get_file_offset(char *p) {
 	return result;
 }
 
-LOCAL int DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
 count_linefeeds(char const *iter, char const *end) {
 	int result = 0;
 	while (iter != end) {
 		if (*iter == '\r') {
-			if (iter != end - 1 &&
-			    iter[1] == '\n')
+			if (iter != end - 1 && iter[1] == '\n')
 				++iter;
 			++result;
-		} else if (*iter == '\n')
+		} else if (*iter == '\n') {
 			++result;
+		}
 		++iter;
 	}
 	return result;
@@ -1728,7 +1724,7 @@ PRIVATE void DCALL emitpp_emit(void) {
 	emitpp_emitraw();
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED int DCALL
 operation_mode_printpp(int argc, char **argv) {
 	if (!TPP_INITIALIZE())
 		goto err_nofin;
@@ -1793,8 +1789,8 @@ PRIVATE char const dformat_code_head[] = "[[[deemon";
 PRIVATE char const dformat_code_tail[] = "]]]";
 PRIVATE char const dformat_stop[]      = "[[[end]]]";
 
-PRIVATE char *DCALL
-compare_escaped(char *lf_escaped_text,
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char *DCALL
+compare_escaped(char const *lf_escaped_text,
                 char const *other_text) {
 	char ch;
 	while ((ch = *other_text++) != 0) {
@@ -1814,11 +1810,11 @@ compare_escaped(char *lf_escaped_text,
 		}
 		--other_text;
 	}
-	return lf_escaped_text;
+	return (char *)lf_escaped_text;
 }
 
-PRIVATE char *DCALL
-compare_escaped_rev(char *lf_escaped_text_end,
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 3)) char *DCALL
+compare_escaped_rev(char const *lf_escaped_text_end,
                     char const *other_text_end,
                     char const *other_text_start) {
 	char ch, escape_ch;
@@ -1840,14 +1836,14 @@ compare_escaped_rev(char *lf_escaped_text_end,
 		--lf_escaped_text_end;
 		++other_text_end;
 	}
-	return lf_escaped_text_end;
+	return (char *)lf_escaped_text_end;
 }
 
 
 #define COMMENT_TYPE_OTHER       0 /* Everything else. */
 #define COMMENT_TYPE_BLOCK_START 1 /* `[[[deemon*' */
 #define COMMENT_TYPE_BLOCK_END   2 /* `[[[end]]]' */
-PRIVATE int DCALL get_comment_type(void) {
+PRIVATE WUNUSED int DCALL get_comment_type(void) {
 	char *comment_start;
 	char *comment_end;
 	if (tok != TOK_COMMENT)
@@ -1906,7 +1902,7 @@ PRIVATE void DCALL clear_inner_tpp_state(void) {
 	/* Clear the remainder of the #include-stack. */
 	fileiter = TPPLexer_Current->l_token.t_file;
 	do {
-		ASSERT(fileiter);
+		ASSERT(fileiter != NULL);
 		filenext = fileiter->f_prev;
 		TPPFile_Decref(fileiter);
 	} while ((fileiter = filenext) != NULL);
@@ -1961,11 +1957,11 @@ out:
  * Upon return, the current token is set to the [[[end]]] comment, and if code was
  * executed and the source file was updated, the TPP file cache will have been reset
  * in order to re-sync it with the updated source file. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 try_exec_format_impl(DeeObject *__restrict stream,
                      char *filename, char *ddi_filename,
-                     char *__restrict format_code_start,
-                     char *__restrict format_code_end,
+                     char *format_code_start,
+                     char *format_code_end,
                      line_t format_code_start_line,
                      col_t format_code_start_col) {
 	struct TPPFile *file = token.t_file;
@@ -2246,11 +2242,11 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 try_exec_format(DeeObject *__restrict stream,
                 char *filename, char *ddi_filename,
-                char *__restrict format_code_start,
-                char *__restrict format_code_end,
+                char *format_code_start,
+                char *format_code_end,
                 line_t format_code_start_line,
                 col_t format_code_start_col) {
 	int result;
@@ -2298,7 +2294,7 @@ PRIVATE uint8_t const format_disabled_warnings[] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dformat_source_files(char *filename,
                      char *ddi_filename) {
 	struct TPPFile *file;
@@ -2469,7 +2465,8 @@ err_nofin:
 
 
 #ifdef CONFIG_HOST_WINDOWS
-PRIVATE NONNULL((1)) bool DCALL os_trychdir(char *__restrict path) {
+PRIVATE NONNULL((1)) bool DCALL
+os_trychdir(char *__restrict path) {
 	DREF DeeObject *pathob;
 	LPWSTR wpath;
 	DWORD dwError;
@@ -2626,7 +2623,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED int DCALL
 operation_mode_format(int argc, char **argv) {
 	int i;
 	/* Acquire a lock to the compiler sub-system to prevent

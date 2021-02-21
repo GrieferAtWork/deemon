@@ -135,7 +135,7 @@ PRIVATE FUNC(Slab) FUNC(slab) = {
 			if (ATOMIC_CMPXCH_WEAK(max, oldval, newval)) \
 				break;                                   \
 		}                                                \
-	} __WHILE0
+	}	__WHILE0
 #define ADD_MAXPAIR(cur, max, count)                     \
 	do {                                                 \
 		size_t newval = ATOMIC_ADDFETCH(cur, count);     \
@@ -147,7 +147,7 @@ PRIVATE FUNC(Slab) FUNC(slab) = {
 			if (ATOMIC_CMPXCH_WEAK(max, oldval, newval)) \
 				break;                                   \
 		}                                                \
-	} __WHILE0
+	}	__WHILE0
 #else /* !CONFIG_NO_OBJECT_SLAB_STATS */
 #define DEC_MAXPAIR(cur, max)        (void)0
 #define INC_MAXPAIR(cur, max)        do{}__WHILE0

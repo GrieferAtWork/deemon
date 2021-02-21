@@ -64,7 +64,8 @@ INTERN uint16_t optimizer_unwind_limit = 0;
 INTERN unsigned int optimizer_count    = 0;
 
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
-INTERN void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...) {
+INTERN NONNULL((1, 2)) void
+ast_optimize_verbose(struct ast *__restrict self, char const *format, ...) {
 	va_list args;
 	va_start(args, format);
 	if (self->a_ddi.l_file) {
@@ -81,8 +82,9 @@ INTERN void ast_optimize_verbose(struct ast *__restrict self, char const *format
 
 
 
-INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
-                                struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
+                     struct ast *__restrict self, bool result_used) {
 	struct ast_optimize_stack stack;
 	stack.os_prev = parent;
 	stack.os_ast  = self;
@@ -93,7 +95,8 @@ INTERN int (DCALL ast_optimize)(struct ast_optimize_stack *__restrict parent,
 	return ast_dooptimize(&stack, self, result_used);
 }
 
-INTERN int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_startoptimize)(struct ast *__restrict self, bool result_used) {
 	struct ast_optimize_stack stack;
 	int result;
 #ifdef OPTIMIZE_FASSUME
@@ -113,8 +116,9 @@ INTERN int (DCALL ast_startoptimize)(struct ast *__restrict self, bool result_us
 	return result;
 }
 
-INTERN int (DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack,
-                                  struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_dooptimize)(struct ast_optimize_stack *__restrict stack,
+                       struct ast *__restrict self, bool result_used) {
 	ASSERT_AST(self);
 	ASSERT(self->a_scope->s_del != (struct symbol *)1);
 again:
@@ -379,7 +383,8 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used) {
 	int result;
 	unsigned int old_value;
 	do {

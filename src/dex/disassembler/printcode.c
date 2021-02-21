@@ -62,7 +62,7 @@ PRIVATE char const question[] = "?" "?" "?" "?" "?" "?" "?";
 		if unlikely((temp = expr) < 0) \
 			goto err;                  \
 		result += temp;                \
-	} __WHILE0
+	}	__WHILE0
 #define print(p, s) INVOKE((*printer)(arg, p, s))
 #define PRINT(s)    INVOKE((*printer)(arg, s, COMPILER_STRLEN(s)))
 #define printf(...) INVOKE(DeeFormat_Printf(printer, arg, __VA_ARGS__))

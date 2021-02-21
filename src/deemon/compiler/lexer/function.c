@@ -151,7 +151,10 @@ do_realloc_symv:
 }
 
 
-INTERN int DCALL parse_arglist(void) {
+/* Parse the argument list of a function definition,
+ * automatically creating new symbols for arguments,
+ * as well as setting code flags for variadic arguments. */
+INTERN WUNUSED int DCALL parse_arglist(void) {
 	uint16_t defaulta, arga;
 	DREF DeeObject **new_defaultv;
 	struct symbol *arg;
@@ -511,7 +514,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
                            struct ast_loc *name_loc
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                            ,
-                           struct decl_ast *__restrict decl
+                           struct decl_ast *decl
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 ) {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
@@ -651,7 +654,6 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		goto err_decl;
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
-	ASSERT(current_basescope);
 	ASSERT(current_basescope->bs_scope.s_prev);
 	result->a_scope = current_basescope->bs_scope.s_prev;
 	Dee_Incref(result->a_scope);
@@ -742,7 +744,6 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		goto err;
 	/* Hack: The function AST itself must be located in the caller's scope. */
 	Dee_Decref(result->a_scope);
-	ASSERT(current_basescope);
 	ASSERT(current_basescope->bs_scope.s_prev);
 	result->a_scope = current_basescope->bs_scope.s_prev;
 	Dee_Incref(result->a_scope);

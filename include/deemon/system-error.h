@@ -106,11 +106,11 @@ typedef struct {
 		DeeSystemError_Load(_saved_syserr)
 #define DeeSystemError_Pop()                \
 		DeeSystemError_Load(_saved_syserr); \
-	} __WHILE0
+	}	__WHILE0
 #else /* DeeSystemError_HAVE_ANY */
 #define DeeSystemError_Push()  do {
 #define DeeSystemError_Break() (void)0
-#define DeeSystemError_Pop()   (void)0; } __WHILE0
+#define DeeSystemError_Pop()   (void)0; }	__WHILE0
 #endif /* !DeeSystemError_HAVE_ANY */
 
 

@@ -61,7 +61,6 @@ DeeSystem_DEFINE_memmem(dee_memmem)
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
-	ASSERT(self);
 	ASSERT(self->ap_length >= datalen);
 	/* This's actually all that needs to be
 	 * done with the current implementation. */
@@ -73,7 +72,6 @@ PUBLIC WUNUSED NONNULL((1)) char *
 	String *string;
 	size_t alloc_size;
 	char *result;
-	ASSERT(self);
 	if ((string = self->ap_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
 		 * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL' */
@@ -133,7 +131,6 @@ realloc_again:
 
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL Dee_ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
-	ASSERT(self);
 	/* Quick check: Can we print to an existing buffer. */
 	if (self->ap_string &&
 	    self->ap_length < self->ap_string->s_len) {
@@ -149,7 +146,7 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
+PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL Dee_ascii_printer_print)(void *__restrict self,
                                 char const *__restrict data,
                                 size_t datalen) {
@@ -157,7 +154,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
 	String *string;
 	size_t alloc_size;
 	me = (struct ascii_printer *)self;
-	ASSERT(me);
 	ASSERT(data || !datalen);
 	if ((string = me->ap_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
@@ -700,8 +696,8 @@ compare_strings(String *__restrict lhs,
 		struct string_utf *rhs_utf;
 		lhs_utf = lhs->s_data;
 		rhs_utf = rhs->s_data;
-		ASSERT(lhs_utf);
-		ASSERT(rhs_utf);
+		ASSERT(lhs_utf != NULL);
+		ASSERT(rhs_utf != NULL);
 		ASSERT(lhs_utf->u_width != STRING_WIDTH_1BYTE);
 		ASSERT(rhs_utf->u_width != STRING_WIDTH_1BYTE);
 		/* Complex string comparison. */

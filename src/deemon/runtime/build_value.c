@@ -988,8 +988,7 @@ PUBLIC WUNUSED NONNULL((3)) int
 	fmt_start   = format;
 	is_optional = false;
 	pargs       = (struct va_list_struct *)VALIST_ADDR(args);
-	ASSERT(format);
-	end = (iter = argv) + argc;
+	end         = (iter = argv) + argc;
 	for (;;) {
 		if (*format == '|') {
 			is_optional = true;
@@ -1156,7 +1155,7 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 				temp = Dee_VPUnpackf(argv[kwd_index], (char const **)&format, pargs);
 				if unlikely(temp)
 					return temp;
-				ASSERT(kw_argc);
+				ASSERT(kw_argc != 0);
 				if (!--kw_argc) {
 					if (is_optional ||
 					    (*format == '|' || *format == ':' || *format == '\0'))

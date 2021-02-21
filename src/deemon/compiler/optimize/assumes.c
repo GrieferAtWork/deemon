@@ -84,7 +84,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct ast_symbol_assume *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_getsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
 	dhash_t i, perturb, hash;
@@ -105,7 +105,7 @@ nope:
 	return NULL;
 }
 
-PRIVATE struct ast_symbol_assume *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_newsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
 	dhash_t i, perturb, hash;
@@ -145,7 +145,7 @@ err:
  *       be modified by other threads running independently on the caller.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_setsymval)(struct ast_assumes *__restrict self,
                               struct symbol *__restrict sym,
                               DeeObject *value) {
@@ -166,7 +166,7 @@ err:
 /* Lookup the assumed value of a given symbol `sym', and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
  *       unknown, `NULL' is returned, but no error is thrown. */
-INTERN WUNUSED DREF DeeObject *
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL ast_assumes_getsymval)(struct ast_assumes *__restrict self,
                               struct symbol *__restrict sym) {
 	if (!SYMBOL_ALLOW_ASSUMPTIONS(sym))
@@ -211,7 +211,7 @@ done:
  * intersections of assumptions made before and after the loop.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_gather)(struct ast_assumes *__restrict self,
                            struct ast *__restrict branch,
                            bool result_used) {
@@ -273,7 +273,7 @@ err:
  * assumptions for all previously made positive ones.
  * This must be done when encountering a label, as the state
  * of symbols would not be known at this point. */
-INTERN int
+INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_assumes_undefined)(struct ast_assumes *__restrict self) {
 	size_t i;
 	/* Mark all assumptions made locally as invalid. */
@@ -287,7 +287,7 @@ INTERN int
 	return 0;
 }
 
-INTERN int
+INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_assumes_undefined_all)(struct ast_assumes *__restrict self) {
 	size_t i;
 	struct ast_assumes const *iter;
@@ -318,7 +318,7 @@ err:
 }
 
 /* Initialize an empty set of ast assumptions. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_assumes_init(struct ast_assumes *__restrict self) {
 	self->aa_prev         = NULL;
 	self->aa_syms.sa_size = 0;
@@ -328,7 +328,7 @@ ast_assumes_init(struct ast_assumes *__restrict self) {
 }
 
 /* Finalize the given ast assumptions. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 ast_assumes_fini(struct ast_assumes *__restrict self) {
 	size_t i;
 	if (self->aa_syms.sa_elem) {
@@ -346,7 +346,7 @@ ast_assumes_fini(struct ast_assumes *__restrict self) {
  * while assumptions already made until then are in `parent'
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_initcond)(struct ast_assumes *__restrict child,
                              struct ast_assumes const *__restrict parent) {
 	child->aa_prev         = parent;
@@ -359,7 +359,7 @@ INTERN int
 
 /* Initialize a set of assumptions for a child-function.
  * This also affects the limit of `ast_assumes_undefined_all()' */
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
                                  struct ast_assumes const *__restrict parent) {
 	child->aa_prev         = parent;
@@ -414,7 +414,7 @@ same_constant_value(DeeObject *__restrict a,
  * WARNING: `sibling' (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
-INTERN int
+INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
                               struct ast_assumes *sibling) {
 	size_t i;
@@ -471,7 +471,7 @@ err:
  * those made by the parent-branch, after they had been merged with
  * each other.
  * WARNING: `follower' may have its data stolen. */
-INTERN int
+INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
                           struct ast_assumes *__restrict follower) {
 	size_t i;

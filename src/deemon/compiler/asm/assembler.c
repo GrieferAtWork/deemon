@@ -149,7 +149,7 @@ INTERN struct assembler current_assembler;
 
 #define INITIAL_TEXTALLOC 32
 
-INTERN struct ddi_checkpoint *DCALL asm_newddi(void) {
+INTERN WUNUSED struct ddi_checkpoint *DCALL asm_newddi(void) {
 	struct ddi_checkpoint *result;
 	ASSERT(current_assembler.a_ddi.da_checkc <=
 	       current_assembler.a_ddi.da_checka);
@@ -199,7 +199,7 @@ done:
 	return result;
 }
 
-INTERN struct TPPFile *DCALL
+INTERN WUNUSED NONNULL((1)) struct TPPFile *DCALL
 ddi_newfile(char const *__restrict filename,
             size_t filename_length) {
 	struct TPPFile *result;
@@ -249,10 +249,12 @@ err:
 
 
 #ifdef NDEBUG
-INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi)(struct ast *__restrict self)
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_putddi)(struct ast *__restrict self)
 #else /* NDEBUG */
-INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi_dbg)(struct ast *__restrict self,
-                                                       char const *file, int line)
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_putddi_dbg)(struct ast *__restrict self,
+                       char const *file, int line)
 #endif /* !NDEBUG */
 {
 	struct asm_sym *sym;
@@ -301,7 +303,7 @@ err:
 }
 
 
-PRIVATE struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
+PRIVATE WUNUSED struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
 	ASSERT(current_assembler.a_ddi.da_bndc <=
 	       current_assembler.a_ddi.da_bnda);
 	if (current_assembler.a_ddi.da_bndc ==
@@ -406,24 +408,21 @@ err:
 }
 
 
-INTERN int DCALL assembler_init(void) {
+INTERN void DCALL assembler_init(void) {
 	bzero(&current_assembler, sizeof(struct assembler));
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_TEXT];
 	/* Allocate an initial buffer for the text section. */
-	current_assembler.a_sect[SECTION_TEXT].sec_code = (DeeCodeObject *)
-	DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) + INITIAL_TEXTALLOC);
+	current_assembler.a_sect[SECTION_TEXT].sec_code  = (DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) + INITIAL_TEXTALLOC);
 	current_assembler.a_sect[SECTION_TEXT].sec_begin = current_assembler.a_sect[SECTION_TEXT].sec_code->co_code;
 	current_assembler.a_sect[SECTION_TEXT].sec_iter  = current_assembler.a_sect[SECTION_TEXT].sec_begin;
 	current_assembler.a_sect[SECTION_TEXT].sec_end   = current_assembler.a_sect[SECTION_TEXT].sec_begin + INITIAL_TEXTALLOC;
 	current_assembler.a_ddi.da_last                  = (code_addr_t)-1;
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	return userassembler_init();
-#else /* !CONFIG_LANGUAGE_NO_ASM */
-	return 0;
-#endif /* CONFIG_LANGUAGE_NO_ASM */
+	userassembler_init();
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
 }
 
-INTERN NONNULL((1, 2)) int DCALL
+INTERN NONNULL((1, 2)) void DCALL
 assembler_init_reuse(DeeCodeObject *__restrict code_obj,
                      instruction_t *__restrict text_end) {
 	bzero(&current_assembler, sizeof(struct assembler));
@@ -435,10 +434,8 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 	current_assembler.a_sect[SECTION_TEXT].sec_end   = text_end;
 	current_assembler.a_ddi.da_last                  = (code_addr_t)-1;
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	return userassembler_init();
-#else /* !CONFIG_LANGUAGE_NO_ASM */
-	return 0;
-#endif /* CONFIG_LANGUAGE_NO_ASM */
+	userassembler_init();
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
 }
 
 INTERN void DCALL assembler_fini(void) {
@@ -514,9 +511,11 @@ INTERN bool DCALL asm_delunused_symbols(void) {
 }
 
 #ifdef NDEBUG
-INTDEF struct asm_sym *DCALL asm_newsym(void)
+INTERN WUNUSED struct asm_sym *DCALL
+asm_newsym(void)
 #else /* NDEBUG */
-INTDEF struct asm_sym *DCALL asm_newsym_dbg(char const *file, int line)
+INTERN WUNUSED struct asm_sym *DCALL
+asm_newsym_dbg(char const *file, int line)
 #endif /* !NDEBUG */
 {
 	struct asm_sym *result;
@@ -548,7 +547,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL asm_realloc_exc(void) {
+PRIVATE WUNUSED int DCALL asm_realloc_exc(void) {
 	struct asm_exc *new_vector;
 	uint16_t new_alloc;
 	new_vector = current_assembler.a_exceptv;
@@ -578,7 +577,7 @@ do_realloc:
 	return 0;
 }
 
-INTERN struct asm_exc *(DCALL asm_newexc)(void) {
+INTERN WUNUSED struct asm_exc *(DCALL asm_newexc)(void) {
 	struct asm_exc *result;
 	ASSERT(current_assembler.a_exceptc <=
 	       current_assembler.a_excepta);
@@ -627,9 +626,8 @@ err:
 	return NULL;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 asm_defsym(struct asm_sym *__restrict self) {
-	ASSERT(self);
 	ASSERT(!ASM_SYM_DEFINED(self));
 	self->as_sect = (uint16_t)(current_assembler.a_curr - current_assembler.a_sect);
 	self->as_addr = ASM_SEC_ADDR(*current_assembler.a_curr);
@@ -1234,8 +1232,8 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
 			rel_value = iter->ar_sym->as_stck - *(int8_t *)target;
 			if unlikely(rel_value < INT8_MIN ||
-				         rel_value > INT8_MAX)
-			goto trunc;
+			            rel_value > INT8_MAX)
+				goto trunc;
 			*(int8_t *)target = (int8_t)rel_value;
 			break;
 
@@ -1243,8 +1241,8 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 			ASSERT(iter->ar_sym->as_stck != ASM_SYM_STCK_INVALID);
 			rel_value = iter->ar_sym->as_stck - (int16_t)UNALIGNED_GETLE16((uint16_t *)target);
 			if unlikely(rel_value < INT16_MIN ||
-				         rel_value > INT16_MAX)
-			goto trunc;
+			            rel_value > INT16_MAX)
+				goto trunc;
 			if (current_assembler.a_flag & ASM_FOPTIMIZE &&
 			    (int16_t)rel_value >= INT8_MIN &&
 			    (int16_t)rel_value <= INT8_MAX &&
@@ -1723,7 +1721,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_put)(instruction_t instr) {
+INTERN WUNUSED int
+(DCALL asm_put)(instruction_t instr) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t));
 	if unlikely(!result)
 		goto err;
@@ -1733,7 +1732,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_put16)(uint16_t instr) {
+INTERN WUNUSED int
+(DCALL asm_put16)(uint16_t instr) {
 	instruction_t *result;
 	if (!(instr & 0xff00))
 		return asm_put((instruction_t)instr);
@@ -1748,7 +1748,8 @@ err:
 }
 
 #if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
-INTERN WUNUSED int (DCALL asm_put_data16)(uint16_t data) {
+INTERN WUNUSED int
+(DCALL asm_put_data16)(uint16_t data) {
 	uint16_t *result;
 	result = (uint16_t *)asm_alloc(sizeof(uint16_t));
 	if unlikely(!result)
@@ -1760,7 +1761,8 @@ err:
 }
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
-INTERN WUNUSED int (DCALL asm_put_data32)(uint32_t data) {
+INTERN WUNUSED int
+(DCALL asm_put_data32)(uint32_t data) {
 	uint32_t *result;
 	result = (uint32_t *)asm_alloc(sizeof(uint32_t));
 	if unlikely(!result)
@@ -1771,7 +1773,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_put_data64)(uint64_t data) {
+INTERN WUNUSED int
+(DCALL asm_put_data64)(uint64_t data) {
 	uint64_t *result;
 	result = (uint64_t *)asm_alloc(sizeof(uint64_t));
 	if unlikely(!result)
@@ -1783,7 +1786,8 @@ err:
 }
 
 
-INTERN WUNUSED int (DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
+INTERN WUNUSED int
+(DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 1);
 	if likely(result) {
 		*(result + 0)            = instr;
@@ -1793,7 +1797,8 @@ INTERN WUNUSED int (DCALL asm_putimm8)(instruction_t instr, uint8_t imm8) {
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2) {
+INTERN WUNUSED int
+(DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
 	if likely(result) {
 		*(result + 0)            = instr;
@@ -1804,7 +1809,8 @@ INTERN WUNUSED int (DCALL asm_putimm8_8)(instruction_t instr, uint8_t imm8_1, ui
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3) {
+INTERN WUNUSED int
+(DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
 		*(result + 0)            = instr;
@@ -1816,7 +1822,8 @@ INTERN WUNUSED int (DCALL asm_putimm8_8_8)(instruction_t instr, uint8_t imm8_1, 
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2) {
+INTERN WUNUSED int
+(DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
 		*(result + 0)            = instr;
@@ -1827,7 +1834,8 @@ INTERN WUNUSED int (DCALL asm_putimm8_16)(instruction_t instr, uint8_t imm8_1, u
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
+INTERN WUNUSED int
+(DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 2);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1837,7 +1845,8 @@ INTERN WUNUSED int (DCALL asm_putimm16)(instruction_t instr, uint16_t imm16) {
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2) {
+INTERN WUNUSED int
+(DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 3);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1848,7 +1857,8 @@ INTERN WUNUSED int (DCALL asm_putimm16_8)(instruction_t instr, uint16_t imm16_1,
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2) {
+INTERN WUNUSED int
+(DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 4);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1859,7 +1869,8 @@ INTERN WUNUSED int (DCALL asm_putimm16_16)(instruction_t instr, uint16_t imm16_1
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3) {
+INTERN WUNUSED int
+(DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1871,7 +1882,8 @@ INTERN WUNUSED int (DCALL asm_putimm16_8_16)(instruction_t instr, uint16_t imm16
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3) {
+INTERN WUNUSED int
+(DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 5);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1883,7 +1895,8 @@ INTERN WUNUSED int (DCALL asm_putimm16_16_8)(instruction_t instr, uint16_t imm16
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3) {
+INTERN WUNUSED int
+(DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3) {
 	instruction_t *result = asm_alloc(sizeof(instruction_t) + 6);
 	if likely(result) {
 		*(result + 0) = instr;
@@ -1895,7 +1908,8 @@ INTERN WUNUSED int (DCALL asm_putimm16_16_16)(instruction_t instr, uint16_t imm1
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
+INTERN WUNUSED int
+(DCALL asm_putimm32)(instruction_t instr, uint32_t imm32) {
 	instruction_t *result;
 	result = asm_alloc(sizeof(instruction_t) + 4);
 	if unlikely(!result)
@@ -1907,7 +1921,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
+INTERN WUNUSED int
+(DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
 	instruction_t *result;
 	struct asm_rel *rel;
 	result = asm_alloc(sizeof(uint16_t) + 2);
@@ -2042,7 +2057,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL fix_relint(DeeObject **__restrict pobj) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fix_relint(DeeObject **__restrict pobj) {
 	tint_t value;
 	DREF DeeObject *intob;
 	DeeRelIntObject *relint = (DeeRelIntObject *)*pobj;
@@ -2066,7 +2082,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL fix_relint_r(DeeObject **__restrict pobj) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fix_relint_r(DeeObject **__restrict pobj) {
 	DeeObject *obj = *pobj;
 	if (DeeObject_IsShared(obj)) {
 		ASSERT(!DeeObject_InstanceOfExact(obj, &DeeRelInt_Type));
@@ -2134,16 +2151,18 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((2)) int DCALL
 asm_do_gjmp(instruction_t instr,
             struct asm_sym *__restrict target) {
 	instruction_t *data;
 	struct asm_rel *rel;
 	ASSERT(instr == ASM_JMP || instr == ASM_JT ||
 	       instr == ASM_JF || instr == ASM_FOREACH);
-	if unlikely((rel = asm_allocrel()) == NULL)
+	rel = asm_allocrel();
+	if unlikely(!rel)
 		goto err;
-	rel->ar_sym = target, ++target->as_used;
+	rel->ar_sym = target;
+	++target->as_used;
 	/* Let's get big-code assembly mode out of the way! */
 	if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 		if (instr == ASM_JMP) {
@@ -2208,7 +2227,7 @@ err:
 #define CONFIG_ASM_ENABLE_JCC_SYMBOLS 1
 
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 asm_do_gjcc(struct ast *cond,
             instruction_t instr,
             struct asm_sym *__restrict target,
@@ -2227,14 +2246,16 @@ asm_do_gjcc(struct ast *cond,
 		goto done;
 	}
 
-	if unlikely((rel = asm_allocrel()) == NULL)
+	rel = asm_allocrel();
+	if unlikely(!rel)
 		goto err;
 	/* Emit the symbol prefix. */
 	if (asm_putddi(ddi_ast))
 		goto err;
 	if (asm_gprefix_symbol_for_read(cond->a_sym, cond))
 		goto err;
-	rel->ar_sym = target, ++target->as_used;
+	rel->ar_sym = target;
+	++target->as_used;
 	/* Let's get big-code assembly mode out of the way! */
 	if unlikely(current_assembler.a_flag & ASM_FBIGCODE) {
 		/* >>    jnX   1f     // 2
@@ -2255,7 +2276,8 @@ asm_do_gjcc(struct ast *cond,
 	}
 	/* Generate 16-bit instructions by default.
 	 * If possible, these will be optimized to 8-bit ones later. */
-	if unlikely((data = asm_alloc(3)) == NULL)
+	data = asm_alloc(3);
+	if unlikely(!data)
 		goto err;
 	*(data + 0) = (instruction_t)(instr | 1); /* |1 to indicate a 16-bit immediate value. */
 	/* -2 to adjust for the ip offset of the immediate value itself. */
@@ -2278,7 +2300,8 @@ asm_gsetstack_s(struct asm_sym *__restrict target) {
 	struct asm_rel *rel;
 	if unlikely((rel = asm_allocrel()) == NULL)
 		goto err;
-	rel->ar_sym = target, ++target->as_used;
+	rel->ar_sym = target;
+	++target->as_used;
 	if unlikely((data = asm_alloc(4)) == NULL)
 		goto err;
 	*(data + 0) = (ASM16_ADJSTACK & 0xff00) >> 8;
@@ -2291,13 +2314,13 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
 	/* Generate code and a relocation to delete
 	 * unused text once `target' has been linked. */
 	uint16_t depth = current_assembler.a_handlerc;
 	struct handler_frame *iter;
 	struct asm_rel *rel;
-	ASSERT(target);
 	iter = current_assembler.a_handler;
 	ASSERT((iter != NULL) == (current_assembler.a_handlerc != 0));
 	/* Simple case: without any handlers active right
@@ -2314,7 +2337,7 @@ INTERN int (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
 	/* Save the number of instructions we're going to generate for cleanup. */
 	rel->ar_value = current_assembler.a_handlerc;
 	do {
-		ASSERT(depth);
+		ASSERT(depth != 0);
 		--depth;
 		/* Generate exception handler cleanup code.
 		 * This is literally the same as `asm_gunwind()' */
@@ -2326,8 +2349,11 @@ INTERN int (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
 			 *    code documented for the `ASM_ENDFINALLY' instruction. */
 			if (current_assembler.a_flag & ASM_FOPTIMIZE) {
 				while (iter->hf_prev &&
-				       (iter->hf_prev->hf_flags & EXCEPTION_HANDLER_FFINALLY))
-					iter = iter->hf_prev, ASSERT(depth), --depth;
+				       (iter->hf_prev->hf_flags & EXCEPTION_HANDLER_FFINALLY)) {
+					iter = iter->hf_prev;
+					ASSERT(depth != 0);
+					--depth;
+				}
 			}
 			if (asm_gendfinally_n(depth))
 				goto err_rel;
@@ -2345,13 +2371,14 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gunwind)(void) {
+INTERN WUNUSED int (DCALL asm_gunwind)(void) {
 	uint16_t depth = current_assembler.a_handlerc;
 	struct handler_frame *iter;
 	iter = current_assembler.a_handler;
 	ASSERT((iter != NULL) == (current_assembler.a_handlerc != 0));
 	for (; iter; iter = iter->hf_prev) {
-		ASSERT(depth), --depth;
+		ASSERT(depth);
+		--depth;
 		/* Generate exception handler cleanup code. */
 		if (iter->hf_flags & EXCEPTION_HANDLER_FFINALLY) {
 			if (asm_gendfinally_n(depth))
@@ -2368,7 +2395,8 @@ err:
 }
 
 
-INTERN int (DCALL asm_gjmps)(struct asm_sym *__restrict target) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gjmps)(struct asm_sym *__restrict target) {
 	if unlikely(asm_gadjhand(target))
 		goto err;
 	if unlikely(asm_gsetstack_s(target))
@@ -2378,10 +2406,11 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL asm_gjcc)(struct ast *cond,
-                                    instruction_t instr,
-                                    struct asm_sym *__restrict target,
-                                    struct ast *ddi_ast) {
+INTERN WUNUSED NONNULL((1, 3, 4)) int
+(DCALL asm_gjcc)(struct ast *cond,
+                 instruction_t instr,
+                 struct asm_sym *__restrict target,
+                 struct ast *ddi_ast) {
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
 	struct asm_sym *temp;
 	ASSERT(instr == ASM_JT || instr == ASM_JF);
@@ -2398,7 +2427,8 @@ INTERN WUNUSED int (DCALL asm_gjcc)(struct ast *cond,
 	 * >>    jmp       target.ip
 	 * >>1:
 	 */
-	if unlikely((temp = asm_newsym()) == NULL)
+	temp = asm_newsym();
+	if unlikely(!temp)
 		goto err;
 	if unlikely(asm_do_gjcc(cond, ASM_JX_NOT(instr), temp, ddi_ast))
 		goto err;
@@ -2430,12 +2460,14 @@ err:
 #endif /* !CONFIG_ASM_ENABLE_JCC_SYMBOLS */
 }
 
-INTERN WUNUSED int (DCALL asm_gjmp)(instruction_t instr,
-                                    struct asm_sym *__restrict target) {
+INTERN WUNUSED NONNULL((2)) int
+(DCALL asm_gjmp)(instruction_t instr, struct asm_sym *__restrict target) {
 	if (!(current_assembler.a_flag & ASM_FSTACKDISP))
 		return asm_do_gjmp(instr, target);
+
 	/* Generate special code to adjust the stack before jumping to `target'. */
 	switch (instr) {
+
 	/*case ASM_JMP:*/
 	default:
 		/* Simple case: Directly generate code to adjust the
@@ -2508,7 +2540,7 @@ err:
 }
 
 
-PRIVATE int DCALL check_resize_constants(void) {
+PRIVATE WUNUSED int DCALL check_resize_constants(void) {
 	/* Allocate more buffer memory when nothing is left. */
 	ASSERT(current_assembler.a_constc <= current_assembler.a_consta);
 	if (current_assembler.a_constc == current_assembler.a_consta) {
@@ -2782,7 +2814,6 @@ asm_gsymid(struct symbol *__restrict sym) {
 	struct TPPKeyword *name;
 	struct module_symbol *iter;
 	dhash_t perturb, i;
-	ASSERT(sym);
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
 	if (sym->s_flag & SYMBOL_FALLOC)
@@ -2887,7 +2918,6 @@ err:
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_lsymid(struct symbol *__restrict sym) {
 	int32_t new_index;
-	ASSERT(sym);
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
 	ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
 	if (sym->s_flag & SYMBOL_FALLOC)
@@ -2918,7 +2948,6 @@ err:
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_ssymid(struct symbol *__restrict sym) {
 	int32_t new_index;
-	ASSERT(sym);
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
 	ASSERT(sym->s_type == SYMBOL_TYPE_STATIC);
 	if (sym->s_flag & SYMBOL_FALLOC)
@@ -3148,7 +3177,6 @@ INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_esymid(struct symbol *__restrict sym) {
 	int32_t result;
 	DeeModuleObject *module;
-	ASSERT(sym);
 	ASSERT(sym->s_type == SYMBOL_TYPE_EXTERN);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
@@ -3171,7 +3199,6 @@ end:
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_msymid(struct symbol *__restrict sym) {
 	int32_t result;
-	ASSERT(sym);
 	ASSERT(sym->s_type == SYMBOL_TYPE_MODULE);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
@@ -3186,7 +3213,14 @@ end:
 	return result;
 }
 
-INTERN WUNUSED struct symbol *DCALL
+/* Search the export table of the builtin `deemon' module for `constval'.
+ * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN'
+ * symbol (allocated as part of `current_rootscope') that is bound to
+ * that specific export.
+ * @return: * :                              A `SYMBOL_TYPE_EXTERN' symbol, bound to `constval'
+ * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval' wasn't found in `deemon's exports
+ * @return: NULL:                            An error occurred. */
+INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 asm_bind_deemon_export(DeeObject *__restrict constval) {
 	uint16_t i;
 	if (!DeeType_Check(constval)) {
@@ -3453,8 +3487,7 @@ err_link:
 
 		/* Restart the assembly process in bigcode mode. */
 		assembler_fini();
-		if (assembler_init())
-			goto err;
+		assembler_init();
 		current_assembler.a_flag |= ASM_FBIGCODE;
 		goto restart;
 	}
@@ -3471,13 +3504,10 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
              /*out:inherit*/ struct asm_symbol_ref **__restrict prefv) {
 	struct assembler old_assembler;
 	DREF DeeCodeObject *result;
-	ASSERT(prefc);
-	ASSERT(prefv);
 
 	/* Copy the current, and create a new assembler. */
 	memcpy(&old_assembler, &current_assembler, sizeof(struct assembler));
-	if unlikely(assembler_init())
-		goto err;
+	assembler_init();
 
 	/* Keep the old assembler scope so that asts know where their influence ends. */
 	if (!first_function)
@@ -3502,13 +3532,10 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
 
 	/* Destroy the current assembler. */
 	assembler_fini();
-end:
+
 	/* Restore the old assembler. */
 	memcpy(&current_assembler, &old_assembler, sizeof(struct assembler));
 	return result;
-err:
-	result = NULL;
-	goto end;
 }
 
 INTERN WUNUSED NONNULL((1, 3, 4, 5, 6)) DREF DeeCodeObject *DCALL
@@ -3517,8 +3544,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
                      uint16_t *__restrict pargc, /*out:inherit*/ struct symbol ***__restrict pargv) {
 	struct assembler old_assembler;
 	DREF DeeCodeObject *result;
-	ASSERT(prefc);
-	ASSERT(prefv);
+
 	/* Check if the function even qualifies for argrefs. */
 	if unlikely(current_basescope->bs_argc_min < current_basescope->bs_argc_max ||
 	            (current_basescope->bs_flags & CODE_FVARARGS)) {
@@ -3530,8 +3556,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 
 	/* Copy the current, and create a new assembler. */
 	memcpy(&old_assembler, &current_assembler, sizeof(struct assembler));
-	if unlikely(assembler_init())
-		goto err;
+	assembler_init();
 
 	/* Keep the old assembler scope so that asts know where their influence ends. */
 	current_assembler.a_scope = old_assembler.a_scope;
@@ -3598,16 +3623,14 @@ end_fini:
 
 	/* Destroy the current assembler. */
 	assembler_fini();
-end:
+
 	/* Restore the old assembler. */
 	memcpy(&current_assembler, &old_assembler, sizeof(struct assembler));
 	return result;
+
 err_r:
 	Dee_Decref(result);
 	goto end_fini;
-err:
-	result = NULL;
-	goto end;
 }
 
 

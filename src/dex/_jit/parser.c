@@ -1121,8 +1121,6 @@ INTERN NONNULL((1, 2)) bool FCALL
 JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask) {
 	DeeTypeObject *thrown_object_type;
-	ASSERT(thrown_object);
-	ASSERT(typemask);
 	/* The runtime uses `instanceof' for dynamic catch-mask detection.
 	 * As such, the special case for `foo is none' applies, such that
 	 * a type mask of `none' must match itself! */

@@ -231,7 +231,6 @@ done:
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
 INTERN NONNULL((1)) void DCALL
 tuple_tp_free(void *__restrict ob) {
-	ASSERT(ob);
 	ASSERT(!DeeTuple_IsEmpty((DeeObject *)ob));
 	ASSERT(DeeTuple_SIZE((DeeObject *)ob) != 0);
 #ifndef NDEBUG

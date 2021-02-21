@@ -1454,7 +1454,7 @@ again:
 			/* The string isn't being shared, so we can just discard all unused data,
 			 * and keep on appending to the pre-generated multi-byte buffer. */
 			struct string_utf *utf = wstr->s_data;
-			ASSERT(utf);
+			ASSERT(utf != NULL);
 			/* WARNING: Just string UTF finalizer that doesn't free width data for `width' */
 			if (width == STRING_WIDTH_2BYTE && utf->u_data[STRING_WIDTH_4BYTE]) {
 				Dee_Free((size_t *)utf->u_data[STRING_WIDTH_4BYTE] - 1);

@@ -1204,10 +1204,9 @@ deq_nsi_xchitem(Deque *__restrict self,
 	}
 	/* Exchange the stored item. */
 	Dee_Incref(value);
-	oldval                  = DEQUE_ITEM(self, index);
+	oldval = DEQUE_ITEM(self, index);
 	DEQUE_ITEM(self, index) = value;
 	Deque_LockEndRead(self);
-	ASSERT(oldval);
 	return oldval;
 err:
 	return NULL;

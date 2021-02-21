@@ -29,12 +29,13 @@
 
 DECL_BEGIN
 
-INTDEF void DCALL ast_incwrite(struct ast *__restrict self);
-INTDEF void DCALL ast_decwrite(struct ast *__restrict self);
-INTDEF void DCALL ast_incwriteonly(struct ast *__restrict self);
+INTDEF NONNULL((1)) void DCALL ast_incwrite(struct ast *__restrict self);
+INTDEF NONNULL((1)) void DCALL ast_decwrite(struct ast *__restrict self);
+INTDEF NONNULL((1)) void DCALL ast_incwriteonly(struct ast *__restrict self);
 
-INTERN int (DCALL ast_assign)(struct ast *__restrict self,
-                              struct ast *__restrict other) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_assign)(struct ast *__restrict self,
+                   struct ast *__restrict other) {
 	uint8_t buffer[(sizeof(struct ast) - offsetof(struct ast, a_type))];
 	/* Use a temporary buffer for the variable portion of the AST.
 	 * Until we actually assign `other' to `self', we initialize it as a shallow copy of `other'. */
@@ -262,7 +263,7 @@ err:
 	return -1;
 }
 
-INTERN struct ast *DCALL
+INTERN WUNUSED NONNULL((2)) struct ast *DCALL
 ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src) {
 	if unlikely(!self)

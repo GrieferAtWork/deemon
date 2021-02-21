@@ -2603,7 +2603,6 @@ instancemember_get_doc(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
-	ASSERT(self);
 	if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
 	    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) {
 		if (!self->im_type->tp_class->cd_members[self->im_attribute->ca_addr + CLASS_GETSET_GET])
@@ -2614,7 +2613,6 @@ instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_candel(DeeInstanceMemberObject *__restrict self) {
-	ASSERT(self);
 	if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 		return_false;
 	if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -2627,7 +2625,6 @@ instancemember_get_candel(DeeInstanceMemberObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
-	ASSERT(self);
 	if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 		return_false;
 	if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -2750,7 +2747,6 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
 	DREF DeeInstanceMemberObject *result;
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	ASSERT(attr);
 	result = DeeObject_MALLOC(DeeInstanceMemberObject);
 	if unlikely(!result)
 		goto done;
@@ -3679,8 +3675,6 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -3734,8 +3728,6 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            DeeObject *__restrict this_arg,
                            struct class_attribute *__restrict attr) {
 	DREF DeeObject *result;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -3780,8 +3772,6 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct class_attribute *__restrict attr,
                           size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *callback;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -3836,8 +3826,6 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
                             struct class_attribute *__restrict attr,
                             char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *callback;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -3893,8 +3881,6 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             size_t argc, DeeObject *const *argv,
                             DeeObject *kw) {
 	DREF DeeObject *result, *callback;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -3950,8 +3936,6 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct class_attribute *__restrict attr,
                                DeeObject *args) {
 	DREF DeeObject *result, *callback;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -4006,8 +3990,6 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct class_attribute *__restrict attr,
                                  DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result, *callback;
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -4062,8 +4044,6 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	/* Make sure that the access is allowed. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -4122,8 +4102,6 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
                          DeeObject *this_arg,
                          struct class_attribute *__restrict attr,
                          DeeObject *value) {
-	ASSERT(self);
-	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
@@ -4177,8 +4155,6 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
                                        struct class_attribute *__restrict attr,
                                        DeeObject *__restrict value) {
 	DREF DeeObject *old_value;
-	ASSERT(self);
-	ASSERT(attr);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
@@ -4211,7 +4187,6 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 	struct code_frame *caller_frame;
 	ASSERT_OBJECT_TYPE(impl_class, &DeeType_Type);
 	ASSERT(DeeType_IsClass(impl_class));
-	ASSERT(self);
 	ASSERT(self->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
 	/* Only allow access if the calling code-frame originates from
 	 * a this-call who's this-argument derives from `class_type'. */

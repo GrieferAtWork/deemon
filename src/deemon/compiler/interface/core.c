@@ -92,7 +92,7 @@ DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg
 }
 
 INTDEF struct type_member tpconst DeeCompilerItem_Members[];
-INTERN struct type_member tpconst DeeCompilerItem_Members[] = {
+INTERN_CONST struct type_member tpconst DeeCompilerItem_Members[] = {
 	TYPE_MEMBER_FIELD_DOC("compiler", STRUCT_OBJECT,
 	                      offsetof(CompilerItem, ci_compiler),
 	                      "->?Ert:Compiler"),
@@ -261,7 +261,7 @@ done:
 
 
 /* Lookup or create a new compiler item for `value' */
-LOCAL WUNUSED DREF DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 get_compiler_item_impl(DeeTypeObject *__restrict type,
                        void *__restrict value,
                        bool is_an_object) {
@@ -269,8 +269,6 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	DeeCompilerObject *self = DeeCompiler_Current;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
-	ASSERT(value != NULL);
-	ASSERT(self);
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 again:
 	rwlock_read(&self->cp_items.ci_lock);
@@ -477,8 +475,8 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	return result;
 }
 
-INTERN ATTR_COLD int DCALL
-err_compiler_item_deleted(DeeCompilerItemObject *__restrict item) {
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_compiler_item_deleted)(DeeCompilerItemObject *__restrict item) {
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Compiler item of type %k was deleted",
 	                       item->ob_type);

@@ -164,7 +164,6 @@ intcache_clear(size_t max_clear) {
 INTERN NONNULL((1)) void DCALL
 DeeInt_Free(DeeIntObject *__restrict self) {
 	size_t n_digits;
-	ASSERT(self);
 	n_digits = (size_t)self->ob_size;
 	if (self->ob_size < 0)
 		n_digits = (size_t)-self->ob_size;

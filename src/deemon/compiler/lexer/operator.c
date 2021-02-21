@@ -122,7 +122,7 @@ ok:
 }
 
 
-INTERN WUNUSED DREF struct ast *DCALL
+INTERN WUNUSED NONNULL((3)) DREF struct ast *DCALL
 ast_build_operator(uint16_t name, uint16_t flags,
                    struct ast *__restrict args) {
 	ASSERT(!(flags & AST_OPERATOR_FVARARGS));
@@ -233,7 +233,7 @@ err:
 	return ast_operator1(name, flags | AST_OPERATOR_FVARARGS, args);
 }
 
-INTERN WUNUSED DREF struct ast *DCALL
+INTERN WUNUSED NONNULL((3, 4)) DREF struct ast *DCALL
 ast_build_bound_operator(uint16_t name, uint16_t flags,
                          struct ast *__restrict self,
                          struct ast *__restrict args) {
@@ -350,7 +350,7 @@ err:
 INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
 INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
 
-INTERN struct opinfo const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) struct opinfo const *DCALL
 find_opinfo(struct opinfo const *__restrict v, unsigned int c,
             char const *__restrict str, size_t len) {
 	unsigned int i;
@@ -363,7 +363,11 @@ find_opinfo(struct opinfo const *__restrict v, unsigned int c,
 }
 
 
-INTERN int32_t DCALL
+/* Parse and return an operator name.
+ * @param: features: Set of `P_OPERATOR_F*'
+ * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
+ * @return: -1: An error occurred. */
+INTERN WUNUSED int32_t DCALL
 ast_parse_operator_name(uint16_t features) {
 	int32_t result;
 	uint32_t old_flags;
@@ -816,6 +820,7 @@ unknown:
 		result = (int32_t)0; /* Default to whatever operator #0 is. */
 		goto done;
 	}	break;
+
 	}
 
 done_y1:

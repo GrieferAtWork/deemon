@@ -949,7 +949,7 @@ do_try_select:
 do_timed_select:
 		if (DeeThread_CheckInterrupt())
 			goto err;
-		ASSERT(timeout_microseconds);
+		ASSERT(timeout_microseconds != 0);
 		socket_read(self);
 		if (!(self->s_state & SOCKET_FOPENED) ||
 		    (self->s_state & SOCKET_FSHUTDOWN_R)) {
@@ -1571,7 +1571,6 @@ DeeSocket_SendTo(DeeSocketObject *__restrict self,
                  int flags, SockAddr const *__restrict target) {
 	dssize_t result;
 	uint64_t end_time = timeout_microseconds;
-	ASSERT(target);
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:
@@ -1695,7 +1694,6 @@ DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
 	dssize_t result;
 	socklen_t length;
 	uint64_t end_time = timeout_microseconds;
-	ASSERT(source);
 	if (timeout_microseconds && timeout_microseconds != (uint64_t)-1)
 		end_time = DeeThread_GetTimeMicroSeconds() + timeout_microseconds;
 again:

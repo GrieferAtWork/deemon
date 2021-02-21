@@ -50,7 +50,7 @@ DECL_BEGIN
 	(TPP_ISKEYWORD(tok) && (!KWD_ISUNARY(tok) || (tok) == KWD_none))
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 astlist_fini(struct astlist *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->ast_c; ++i)
@@ -87,7 +87,7 @@ do_realloc:
 	return 0;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 astlist_trunc(struct astlist *__restrict self) {
 	DREF struct ast **new_vector;
 	if (self->ast_c == self->ast_a)
@@ -142,7 +142,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_parse_lookup_mode(unsigned int *__restrict pmode) {
 next_modifier:
 	switch (tok) {

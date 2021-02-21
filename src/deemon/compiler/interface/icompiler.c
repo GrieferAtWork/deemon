@@ -55,7 +55,7 @@ DECLARE_OBJECT_CACHE(ast, struct ast)
 #endif /* !CONFIG_AST_IS_STRUCT */
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
@@ -451,6 +451,9 @@ done:
 	return result;
 }
 
+/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
+ * NOTE: `typing' doesn't necessarily need to be a type object!
+ * @return: (uint16_t)-1: Error. */
 INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
 	uint16_t result;
@@ -758,7 +761,8 @@ err:
 }
 
 
-INTERN struct catch_expr *DCALL
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers' */
+INTERN WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict pcatch_c,
                          DeeBaseScopeObject *__restrict base_scope) {
@@ -893,6 +897,7 @@ done:
 }
 
 
+/* Parse the flags for a loop-ast from a string (:rt:Compiler.makeloop) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_loop_flags(char const *__restrict flags,
                  uint16_t *__restrict presult) {
@@ -1068,6 +1073,7 @@ done:
 }
 
 
+/* Parse the flags for a conditional-ast from a string (:rt:Compiler.makeconditional) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_conditional_flags(char const *__restrict flags,
                         uint16_t *__restrict presult) {
@@ -1274,7 +1280,7 @@ done:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 check_function_code_scope(DeeBaseScopeObject *code_scope,
                           DeeBaseScopeObject *ast_base_scope) {
 	if unlikely(code_scope == ast_base_scope) {
@@ -1339,6 +1345,7 @@ done:
 	return result;
 }
 
+/* Parse the operator name and determine its ID. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 	if (DeeString_Check(opid)) {
@@ -1348,16 +1355,19 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 			return 0;
 		/* Resolve special operator names. */
 		switch (name[0]) {
+
 		case '+':
 			if (name[1])
 				goto unknown_str;
 			*presult = AST_OPERATOR_POS_OR_ADD;
 			break;
+
 		case '-':
 			if (name[1])
 				goto unknown_str;
 			*presult = AST_OPERATOR_NEG_OR_SUB;
 			break;
+
 		case '[':
 			if (name[1] == ':') {
 				if (name[2] != ']')
@@ -1373,11 +1383,13 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 				*presult = AST_OPERATOR_GETITEM_OR_SETITEM;
 			}
 			break;
+
 		case '.':
 			if (name[1])
 				goto unknown_str;
 			*presult = AST_OPERATOR_GETATTR_OR_SETATTR;
 			break;
+
 		default:
 unknown_str:
 			return DeeError_Throwf(&DeeError_ValueError,
@@ -1439,6 +1451,7 @@ done:
 	return result;
 }
 
+/* Parse the flags for an operator-ast from a string (:rt:Compiler.makeoperator) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_operator_flags(char const *__restrict flags,
                      uint16_t *__restrict presult) {
@@ -1613,7 +1626,7 @@ get_action_by_name(char const *__restrict name) {
 	do {               \
 		result = (id); \
 		goto done;     \
-	} __WHILE0
+	}	__WHILE0
 	int32_t result;
 	switch (name[0]) {
 	case 'a':
@@ -2255,7 +2268,7 @@ INTERN struct type_method tpconst compiler_methods[] = {
 };
 
 INTDEF struct type_member tpconst compiler_class_members[];
-INTERN struct type_member tpconst compiler_class_members[] = {
+INTERN_CONST struct type_member tpconst compiler_class_members[] = {
 	TYPE_MEMBER_CONST("Lexer", &DeeCompilerLexer_Type),
 	TYPE_MEMBER_CONST("Parser", &DeeCompilerParser_Type),
 	TYPE_MEMBER_CONST("Symbol", &DeeCompilerSymbol_Type),

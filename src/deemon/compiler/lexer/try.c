@@ -111,6 +111,7 @@ err_r:
 }
 
 
+/* Parse a try-statement/expression. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_try(bool is_statement) {
 	DREF struct ast *result, *merge;
@@ -307,6 +308,8 @@ err:
 }
 
 
+/* With the current token being `try', parse the construct and
+ * try to figure out if it's a statement or an expression. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_try_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result, *merge;

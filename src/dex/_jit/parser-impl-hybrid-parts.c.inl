@@ -255,9 +255,8 @@ err_handle_catch_except:
 						struct except_frame *exc, **pexc;
 						exc = *(pexc = &ts->t_except);
 						while (ind--) {
-							ASSERT(exc);
-							ASSERT(exc->ef_prev);
-							exc = *(pexc = &exc->ef_prev);
+							pexc = &exc->ef_prev;
+							exc  = *pexc;
 						}
 						*pexc = exc->ef_prev;
 						--ts->t_exceptsz;

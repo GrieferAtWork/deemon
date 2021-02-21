@@ -632,7 +632,7 @@ DECL_BEGIN
  *       in the context of the declaration being annotated,
  *       such that in the case of a function being annotated,
  *       argument variables are visible. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 doctext_compile(struct unicode_printer *__restrict doctext);
 
 

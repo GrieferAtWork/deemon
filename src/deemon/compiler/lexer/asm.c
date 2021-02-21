@@ -290,12 +290,11 @@ struct tpp_string_printer {
 	size_t            sp_length; /* Used string length. */
 };
 
-PRIVATE int
+PRIVATE NONNULL((3)) int
 (TPPCALL tpp_string_printer_append)(char const *__restrict buf, size_t bufsize,
                                     struct tpp_string_printer *__restrict self) {
 	struct TPPString *string;
 	size_t alloc_size;
-	ASSERT(self);
 	ASSERT(buf || !bufsize);
 	if ((string = self->sp_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
@@ -356,7 +355,7 @@ done:
 	return 0;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE NONNULL((1)) dssize_t DCALL
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
 	if unlikely(tpp_string_printer_append(buf, bufsize, (struct tpp_string_printer *)arg))
 		goto err;
@@ -520,6 +519,7 @@ ok:
 
 
 
+/* Parse a user-defined assembly block. */
 INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 	struct ast_loc loc;
 	bool is_asm_goto   = false;

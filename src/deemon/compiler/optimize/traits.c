@@ -423,7 +423,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_doesnt_return(struct ast *__restrict self,
                   unsigned int flags) {
 	int temp;
@@ -882,8 +882,8 @@ is_nothrow:
 }
 
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-ast_get_boolean(struct ast *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_get_boolean)(struct ast *__restrict self) {
 	/* NOTE: Assume that other operations on constant
 	 *       expressions have already been propagated. */
 	if (self->a_type == AST_CONSTEXPR &&
@@ -896,8 +896,8 @@ ast_get_boolean(struct ast *__restrict self) {
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-ast_get_boolean_noeffect(struct ast *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_get_boolean_noeffect)(struct ast *__restrict self) {
 	int result;
 	result = ast_get_boolean(self);
 	if (result >= 0 && ast_has_sideeffects(self))
@@ -906,9 +906,9 @@ ast_get_boolean_noeffect(struct ast *__restrict self) {
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-ast_uses_symbol(struct ast *__restrict self,
-                struct symbol *__restrict sym) {
+INTERN WUNUSED NONNULL((1, 2)) bool
+(DCALL ast_uses_symbol)(struct ast *__restrict self,
+                        struct symbol *__restrict sym) {
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
 		goto yup;
 	switch (self->a_type) {
@@ -1070,8 +1070,8 @@ yup:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-ast_equal_impl(struct ast *__restrict a,
-               struct ast *__restrict b) {
+ast_equal_impl(struct ast const *a,
+               struct ast const *b) {
 	if (a->a_type != b->a_type)
 		goto ne;
 	if (a->a_scope != b->a_scope) {
@@ -1180,8 +1180,8 @@ ne:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-ast_equal(struct ast *__restrict a,
-          struct ast *__restrict b) {
+ast_equal(struct ast const *a,
+          struct ast const *b) {
 	if (optimizer_flags & OPTIMIZE_FNOCOMPARE)
 		return false;
 	if (a == b)

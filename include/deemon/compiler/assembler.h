@@ -151,7 +151,7 @@ struct asm_rel {
 
 
 /* Delete a given relocation. */
-LOCAL void DCALL
+LOCAL NONNULL((1)) void DCALL
 asm_reldel(struct asm_rel *__restrict self) {
 	if (REL_HASSYM(self->ar_type)) {
 		Dee_ASSERT(self->ar_sym);
@@ -241,11 +241,12 @@ struct ddi_assembler {
  *          an undefined state and must be initialized by the caller.
  * HINT: If in the end there are multiple checkpoints for the same address,
  *       debug information provided by the one created first is used. */
-INTDEF struct ddi_checkpoint *DCALL asm_newddi(void);
+INTDEF WUNUSED struct ddi_checkpoint *DCALL asm_newddi(void);
 
 /* Lookup, or construct a fake TPP file for use in DDI checkpoints. */
-INTDEF struct TPPFile *DCALL ddi_newfile(char const *__restrict filename,
-                                         size_t filename_length);
+INTDEF WUNUSED NONNULL((1)) struct TPPFile *DCALL
+ddi_newfile(char const *__restrict filename,
+            size_t filename_length);
 
 struct handler_frame {
 	struct handler_frame *hf_prev;  /* [0..1] Previous exception handler descriptor, or NULL when not set. */
@@ -551,7 +552,7 @@ INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup(struct TPPKeyword *__restrict name);
 
 
-INTDEF int  DCALL userassembler_init(void);
+INTDEF void DCALL userassembler_init(void);
 INTDEF void DCALL userassembler_fini(void);
 #ifdef __INTELLISENSE__
 INTDEF struct user_assembler current_userasm;
@@ -561,7 +562,7 @@ INTDEF struct user_assembler current_userasm;
 
 /* Define a symbol from user-assembly.
  * WARNING: The caller must still check if the symbol had already been defined before. */
-#define uasm_defsym(sym) (asm_defsym(sym), current_userasm.ua_lasti = ASM_DELOP)
+#define uasm_defsym(sym) (void)(asm_defsym(sym), current_userasm.ua_lasti = ASM_DELOP)
 
 /* Parse (process tokens from TPP) user-define assembly. */
 INTDEF WUNUSED int FCALL uasm_parse(void);
@@ -806,8 +807,8 @@ struct assembler {
 	 : SYMBOL_MAY_REFERENCE(x))
 
 /* Initialize/Finalize the given assembler. */
-INTDEF int DCALL assembler_init(void);
-INTDEF NONNULL((1, 2)) int DCALL
+INTDEF void DCALL assembler_init(void);
+INTDEF NONNULL((1, 2)) void DCALL
 assembler_init_reuse(DeeCodeObject *__restrict code_obj,
                      instruction_t *__restrict text_end);
 INTDEF void DCALL assembler_fini(void);
@@ -901,9 +902,9 @@ INTDEF WUNUSED int DCALL asm_linkstack(void);
 
 /* Allocate and return a new assembly symbol. */
 #ifdef NDEBUG
-INTDEF struct asm_sym *(DCALL asm_newsym)(void);
+INTDEF WUNUSED struct asm_sym *(DCALL asm_newsym)(void);
 #else /* NDEBUG */
-INTDEF struct asm_sym *(DCALL asm_newsym_dbg)(char const *file, int line);
+INTDEF WUNUSED struct asm_sym *(DCALL asm_newsym_dbg)(char const *file, int line);
 #define asm_newsym() asm_newsym_dbg(__FILE__, __LINE__)
 #endif /* !NDEBUG */
 
@@ -924,7 +925,7 @@ INTDEF WUNUSED struct asm_exc *(DCALL asm_newexc)(void);
 INTDEF WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority);
 
 /* Define the given symbol `self' at the current text address. */
-INTDEF void (DCALL asm_defsym)(struct asm_sym *__restrict self);
+INTDEF NONNULL((1)) void (DCALL asm_defsym)(struct asm_sym *__restrict self);
 
 /* Generate a finalized code object from written assembly.
  * NOTE: The caller is required to ensure that the assembler is ready
@@ -1071,7 +1072,8 @@ INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_asymid_r(struct symbol *__restrict
  * @return: * :                              A `SYMBOL_TYPE_EXTERN' symbol, bound to `constval'
  * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval' wasn't found in `deemon's exports
  * @return: NULL:                            An error occurred. */
-INTDEF WUNUSED struct symbol *DCALL asm_bind_deemon_export(DeeObject *__restrict constval);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL
+asm_bind_deemon_export(DeeObject *__restrict constval);
 #define ASM_BIND_DEEMON_EXPORT_NOTFOUND ((struct symbol *)(uintptr_t)-1)
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
@@ -1139,10 +1141,12 @@ asm_ssymid_for_read(struct symbol *__restrict sym, /* `SYM_CLASS_VAR:SYM_FVAR_ST
  * the proper mechanism and creating the associated relocation.
  * The caller is required to ensure that the given `target' is defined at some point.
  * @param: instr: One of `ASM_JMP', `ASM_JT', `ASM_JF' or `ASM_FOREACH' */
-INTDEF WUNUSED int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
-INTDEF WUNUSED int DCALL asm_gjcc(struct ast *cond, instruction_t instr,
-                                  struct asm_sym *__restrict target,
-                                  struct ast *ddi_ast);
+INTDEF WUNUSED NONNULL((2)) int DCALL
+asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL
+asm_gjcc(struct ast *cond, instruction_t instr,
+         struct asm_sym *__restrict target,
+         struct ast *ddi_ast);
 
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
@@ -1154,7 +1158,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL asm_gadjhand(struct asm_sym *__restrict ta
 
 /* Generate code to unwind all active exception handlers.
  * This must be called before `return'-ing from within a catch/finally handler. */
-INTDEF int DCALL asm_gunwind(void);
+INTDEF WUNUSED int DCALL asm_gunwind(void);
 
 #define asm_private_gfunction_ii(code_cid, n_refs)                                          \
 	((code_cid) <= UINT8_MAX                                                                \
@@ -1518,29 +1522,31 @@ INTDEF int DCALL asm_gunwind(void);
 
 /* Push/pop the current top value into a location on the stack, given its absolute address.
  * HINT: These functions are useful because `asm_gdup_n()' / `asm_gpop_n()' use relative addresses. */
-INTDEF int DCALL asm_gpush_stack(uint16_t absolute_stack_addr);
-INTDEF int DCALL asm_gpop_stack(uint16_t absolute_stack_addr);
+INTDEF WUNUSED int DCALL asm_gpush_stack(uint16_t absolute_stack_addr);
+INTDEF WUNUSED int DCALL asm_gpop_stack(uint16_t absolute_stack_addr);
 /* Same as `_asm_gadjstack()', but automatically select other opcodes to generate minimal assembly. */
-INTDEF int DCALL asm_gadjstack(int16_t offset);
+INTDEF WUNUSED int DCALL asm_gadjstack(int16_t offset);
 /* Similar to `asm_gadjstack()', but set the absolute stack size. */
-INTDEF int DCALL asm_gsetstack(uint16_t absolute_stack_size);
+INTDEF WUNUSED int DCALL asm_gsetstack(uint16_t absolute_stack_size);
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gsetstack_s(struct asm_sym *__restrict target);
 
 /* High-level encoding of l/r-rot instructions. */
-INTDEF int DCALL asm_glrot(uint16_t num_slots);
-INTDEF int DCALL asm_grrot(uint16_t num_slots);
+INTDEF WUNUSED int DCALL asm_glrot(uint16_t num_slots);
+INTDEF WUNUSED int DCALL asm_grrot(uint16_t num_slots);
 
 /* Push the virtual argument known as `argid' */
-INTDEF int DCALL asm_gpush_varg(uint16_t argid);
+INTDEF WUNUSED int DCALL asm_gpush_varg(uint16_t argid);
+
 /* Store the value of the virtual argument `argid' in `dst' */
-INTDEF int DCALL asm_gmov_varg(struct symbol *__restrict dst, uint16_t argid,
-                               struct ast *__restrict warn_ast,
-                               bool ignore_unbound);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL
+asm_gmov_varg(struct symbol *__restrict dst, uint16_t argid,
+              struct ast *__restrict warn_ast,
+              bool ignore_unbound);
 
 
 /* Push the given value as an integer constant onto the stack. */
-INTDEF int DCALL asm_gpush_u32(uint32_t value);
-INTDEF int DCALL asm_gpush_s32(int32_t value);
+INTDEF WUNUSED int DCALL asm_gpush_u32(uint32_t value);
+INTDEF WUNUSED int DCALL asm_gpush_s32(int32_t value);
 #define asm_gpush_u16(value) asm_gpush_u32(value)
 #define asm_gpush_s16(value) asm_gpush_s32(value)
 
@@ -1601,7 +1607,7 @@ INTDEF WUNUSED int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num
 			goto err
 #define ASM_POP_SCOPE(num_preserve, err)    \
 		ASM_BREAK_SCOPE(num_preserve, err); \
-	} __WHILE0
+	}	__WHILE0
 
 #define ASM_PUSH_LOC(loc)                                     \
 	do {                                                      \
@@ -1612,7 +1618,7 @@ INTDEF WUNUSED int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num
 		current_assembler.a_error = _old_loc
 #define ASM_POP_LOC()    \
 		ASM_BREAK_LOC(); \
-	} __WHILE0
+	}	__WHILE0
 
 
 /* Assembly code generation flags (gflags) */
@@ -1850,7 +1856,7 @@ ast_genasm_set_one(struct ast *__restrict self, unsigned int gflags);
 
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
-INTDEF WUNUSED struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
 
 /* Generate text for a given `AST_SWITCH' branch. */
 INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_switch(struct ast *__restrict self);
@@ -2037,7 +2043,8 @@ INTDEF DeeTypeObject DeeRelInt_Type;
 
 /* Construct and register a new relocation-integer as a constant.
  * If `sym' is NULL, a regular integer is created instead. */
-INTDEF WUNUSED int32_t DCALL asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
+INTDEF WUNUSED int32_t DCALL
+asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
               tint_t addend, uint16_t mode);

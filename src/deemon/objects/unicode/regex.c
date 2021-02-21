@@ -1010,7 +1010,7 @@ save_variant_match:
 has_infinite_submatch:
 			if (backup_v) { /* NULL when in non-greedy mode. */
 				for (;;) {
-					ASSERT(match_count);
+					ASSERT(match_count != 0);
 					--match_count;
 					suffix_piter  = piter;
 					variant_diter = backup_v[match_count].mb_diter;
@@ -1410,8 +1410,8 @@ check_match:
 			/* Allow matched characters to be undone. */
 			new_diter = diter;
 			new_piter = piter;
-			ASSERT(match_length);
-			ASSERT(match_count);
+			ASSERT(match_length != 0);
+			ASSERT(match_count != 0);
 			error = regex_match_impl(&new_diter, dend,
 			                         &new_piter, pend,
 			                         data,

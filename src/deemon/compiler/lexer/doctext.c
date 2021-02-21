@@ -108,7 +108,7 @@ unicode_printer_erase_whitespace(struct unicode_printer *__restrict self,
 
 
 /* Returns a new pointer for `start' */
-PRIVATE NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 lstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
 	for (;;) {
@@ -125,7 +125,7 @@ lstrip_whitespace(/*utf-8*/ char const *start,
 }
 
 /* Returns a new pointer for `end' */
-PRIVATE NONNULL((1, 2)) /*utf-8*/ char const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 rstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
 	for (;;) {
@@ -142,7 +142,7 @@ rstrip_whitespace(/*utf-8*/ char const *start,
 }
 
 /* Check if the given start/end pointers contain a symbol-string */
-PRIVATE NONNULL((1, 2)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 is_symbol(/*utf-8*/ char const *start,
           /*utf-8*/ char const *end) {
 	uint32_t ch;
@@ -223,7 +223,7 @@ strip_trailing_whitespace(struct unicode_printer *__restrict printer,
 	printer->up_length = len;
 }
 
-PRIVATE NONNULL((1, 2)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 contains_only_decimals_dot_collon_or_backslash(/*utf-8*/ char const *text,
                                                /*utf-8*/ char const *end) {
 	uint32_t ch;
@@ -250,7 +250,7 @@ no:
 /* Find the first non-matching, non-escaped `find_close' character that
  * isn't balanced by another non-escaped `find_open'. If no such character
  * exists between text...end, return NULL instead. */
-PRIVATE NONNULL((1, 2)) char const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
 find_nonescaped_match(/*utf-8*/ char const *text,
                       /*utf-8*/ char const *end,
                       char find_open, char find_close) {
@@ -284,7 +284,7 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 /* Print the given string `text ... end' to `printer', but unescape
  * all \|-sequences into |-characters. - This function is used by the
  * line-printer functions used by tables. */
-PRIVATE NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
                                     /*utf-8*/ char const *text,
                                     /*utf-8*/ char const *end) {
@@ -329,7 +329,7 @@ err:
  * Additionally, skip over \-characters that are followed by one of:
  *      \ _ @ ` [ ] ( ) - + | = ~ * # : >
  */
-PRIVATE NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 print_escaped(struct unicode_printer *__restrict printer,
               /*utf-8*/ char const *text,
               /*utf-8*/ char const *end) {
@@ -384,7 +384,7 @@ err:
  * linefeed after less than that many characters.
  * All lines are also right-stripped of trailing space characters.
  * This function is used to dedent ```-style multi-line code blocks. */
-PRIVATE NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 print_escaped_dedent(struct unicode_printer *__restrict printer,
                      /*utf-8*/ char const *text,
                      /*utf-8*/ char const *end,
@@ -494,7 +494,7 @@ done:
 }
 
 
-PRIVATE NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
            struct unicode_printer *__restrict result_printer,
@@ -502,7 +502,7 @@ do_compile(/*utf-8*/ char const *text,
 
 /* Compile the string from `source_printer' and write the result to `result_printer'
  * NOTE: This function is allowed to modify `source_printer' */
-PRIVATE NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 do_compile_printer_to_printer(struct unicode_printer *__restrict result_printer,
                               struct unicode_printer *__restrict source_printer) {
 	if likely((source_printer->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
@@ -551,7 +551,7 @@ err:
 #endif /* _MSC_VER */
 
 
-PRIVATE NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
            struct unicode_printer *__restrict result_printer,
@@ -569,24 +569,24 @@ do_compile(/*utf-8*/ char const *text,
 	do {                        \
 		if unlikely((expr) < 0) \
 			goto err;           \
-	} __WHILE0
+	}	__WHILE0
 #define FLUSHTO(flushto)                                                        \
 	do {                                                                        \
 		ASSERT((flushto) >= flush_start);                                       \
 		if unlikely(unicode_printer_print(result_printer, flush_start,          \
 		                                  (size_t)((flushto)-flush_start)) < 0) \
 			goto err;                                                           \
-	} __WHILE0
+	}	__WHILE0
 #define PUTUNI(ch)                                       \
 	do {                                                 \
 		if (unicode_printer_put32(result_printer, (ch))) \
 			goto err;                                    \
-	} __WHILE0
+	}	__WHILE0
 #define PUTASCII(ch)                                        \
 	do {                                                    \
 		if (unicode_printer_putascii(result_printer, (ch))) \
 			goto err;                                       \
-	} __WHILE0
+	}	__WHILE0
 #define PRINT(ptr, len)      DO(unicode_printer_print(result_printer, ptr, len))
 #define PRINTASCII(ptr, len) DO(unicode_printer_printascii(result_printer, ptr, len))
 
@@ -907,7 +907,7 @@ do_switch_ch_at_start_of_line:
 				}
 				/* NOTE: ch/ch_start point at the first non-whitespace character of the top-left cell;
 				 *       iter points after that same character! */
-				ASSERT(vertical_ch);
+				ASSERT(vertical_ch != 0);
 				iter = ch_start;
 				for (;;) {
 					uint32_t prev_ch;
@@ -2620,7 +2620,7 @@ err:
  *       in the context of the declaration being annotated,
  *       such that in the case of a function being annotated,
  *       argument variables are visible. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 doctext_compile(struct unicode_printer *__restrict doctext) {
 	/* Fast-pass: no documentation text defined. */
 	if (UNICODE_PRINTER_ISEMPTY(doctext))

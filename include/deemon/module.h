@@ -467,8 +467,9 @@ struct Dee_compiler_error_object;
  *   - When no handler is set, the behavior is the same as though it always returned `0'
  *   - Upon entry, `error->ce_mode == fatality_mode'
  *   - Depending on return value, `error->ce_mode' is re-written before being saved. */
-typedef int (DCALL *Dee_compiler_error_handler_t)(struct Dee_compiler_error_object *__restrict error,
-                                                  int fatality_mode, void *arg);
+typedef WUNUSED NONNULL((1)) int
+(DCALL *Dee_compiler_error_handler_t)(struct Dee_compiler_error_object *__restrict error,
+                                      int fatality_mode, void *arg);
 #define Dee_COMPILER_ERROR_FATALITY_WARNING    0 /* The error is a mere warning and will not cause the
                                                   * the compiler to fail, and neither will it thrown
                                                   * once the function returns.
@@ -497,7 +498,7 @@ struct Dee_compiler_options {
 	                                                     *        This is also the filename returned by `__FILE__' and `__BASEFILE__',
 	                                                     *        if not otherwise overwritten using `#line' */
 	struct Dee_string_object     *co_rootname;          /* [0..1] The name of the root code object (as set in DDI) */
-	int                   (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
+	WUNUSED int           (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
 	                                                     *        This callback can be used to perform additional compiler
 	                                                     *        initialization, such as defining macros/assertions, or
 	                                                     *        adding addition include paths.
