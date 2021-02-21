@@ -2057,8 +2057,8 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	}
 
 	/* Figure out the absolute in-source file position where overriding will start. */
-	override_start_pos = (dpos_t)DeeFile_Tell(stream);
-	if unlikely((doff_t)override_start_pos < 0)
+	override_start_pos = DeeFile_Tell(stream);
+	if unlikely(override_start_pos == (dpos_t)-1)
 		goto err;
 	override_start_pos -= (size_t)(file->f_end - override_start_ptr);
 
@@ -2207,7 +2207,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			--result_end;
 		/* Now comes the part that it's been all about:
 		 * This is where we override the original source file's contents! */
-		if (DeeFile_Seek(stream, (doff_t)override_start_pos, SEEK_SET) < 0)
+		if unlikely(DeeFile_Seek(stream, (doff_t)override_start_pos, SEEK_SET) == (dpos_t)-1)
 			goto err_script_result;
 		/* Write data to the stream. */
 		new_text_size = (size_t)(result_end - result_start);

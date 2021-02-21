@@ -94,7 +94,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 DEFILE_FILE_OPERATOR(NONNULL((1, 2)), dssize_t, 0, -1, Readf, READ, ft_read, 3, (void *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
 DEFILE_FILE_OPERATOR(NONNULL((1, 2)), dssize_t, 0, -1, Writef, WRITE, ft_write, 3, (void const *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
-DEFILE_FILE_OPERATOR(NONNULL((1)), doff_t, 0, -1, Seek, SEEK, ft_seek, 2, (doff_t off, int whence), (off, whence))
+DEFILE_FILE_OPERATOR(NONNULL((1)), dpos_t, 0, (dpos_t)-1, Seek, SEEK, ft_seek, 2, (doff_t off, int whence), (off, whence))
 DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Sync, SYNC, ft_sync, 0, (), ())
 DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Trunc, TRUNC, ft_trunc, 1, (dpos_t size), (size))
 DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Close, CLOSE, ft_close, 0, (), ())
@@ -1887,6 +1887,7 @@ file_seek(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *whence_ob = NULL;
 	doff_t seek_off;
+	dpos_t result;
 	int whence = SEEK_SET;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(off), K(whence), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "I64d|o:seek", &seek_off, &whence_ob))
@@ -1921,23 +1922,23 @@ file_seek(DeeObject *self, size_t argc,
 			goto err;
 	}
 got_whence:
-	seek_off = DeeFile_Seek(self, seek_off, whence);
-	if unlikely(seek_off < 0)
+	result = DeeFile_Seek(self, seek_off, whence);
+	if unlikely(result == (dpos_t)-1)
 		goto err;
-	return DeeInt_NewU64((dpos_t)seek_off);
+	return DeeInt_NewU64(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	doff_t result;
+	dpos_t result;
 	if (DeeArg_Unpack(argc, argv, ":tell"))
 		goto err;
 	result = DeeFile_Tell(self);
-	if unlikely(result < 0)
+	if unlikely(result == (dpos_t)-1)
 		goto err;
-	return DeeInt_NewU64((dpos_t)result);
+	return DeeInt_NewU64(result);
 err:
 	return NULL;
 }
@@ -2045,21 +2046,20 @@ file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
 	while (DeeFileType_CheckExact(tp_self)) {
-		doff_t (DCALL *pseek)(DeeFileObject *__restrict self, doff_t off, int whence);
+		dpos_t (DCALL *pseek)(DeeFileObject *__restrict self, doff_t off, int whence);
 		if (tp_self->tp_features & TF_HASFILEOPS) {
 			pseek = ((DeeFileTypeObject *)tp_self)->ft_seek;
 			if (pseek) {
 				dpos_t old_pos, filesize;
-				old_pos = (dpos_t)(*pseek)((DeeFileObject *)self, 0, SEEK_CUR);
-				if unlikely((doff_t)old_pos < 0)
+				old_pos = (*pseek)((DeeFileObject *)self, 0, SEEK_CUR);
+				if unlikely(old_pos == (dpos_t)-1)
 					goto err;
 				/* Seek to the end to figure out how large the file is. */
-				filesize = (dpos_t)(*pseek)((DeeFileObject *)self, 0, SEEK_END);
+				filesize = (*pseek)((DeeFileObject *)self, 0, SEEK_END);
+				if unlikely(filesize == (dpos_t)-1)
+					goto err;
 				/* Return to the previous file position. */
-				if ((doff_t)filesize >= 0 &&
-				    (*pseek)((DeeFileObject *)self, (doff_t)old_pos, SEEK_SET) < 0)
-					filesize = (dpos_t)-1;
-				if unlikely(filesize < 0)
+				if unlikely((*pseek)((DeeFileObject *)self, (doff_t)old_pos, SEEK_SET) == (dpos_t)-1)
 					goto err;
 				/* Return the size of the file. */
 				return DeeInt_NewU64((uint64_t)filesize);

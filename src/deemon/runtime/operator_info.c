@@ -50,7 +50,7 @@ typedef DeeTypeObject Type;
 
 
 INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
-INTERN struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
+INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_CONSTRUCTOR]  = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_any_ctor),  "this",         "constructor", "tp_any_ctor" },
 	/* [OPERATOR_COPY]         = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
 	/* [OPERATOR_DEEPCOPY]     = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
@@ -123,7 +123,7 @@ PRIVATE struct opinfo const private_opinfo[(OPERATOR_PRIVMAX - OPERATOR_PRIVMIN)
 };
 
 INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
-INTERN struct opinfo const file_opinfo[FILE_OPERATOR_COUNT] = {
+INTERN_CONST struct opinfo const file_opinfo[FILE_OPERATOR_COUNT] = {
 	/* [FILE_OPERATOR_READ   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_read),   "read",   "read",   "ft_read",   },
 	/* [FILE_OPERATOR_WRITE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_write),  "write",  "write",  "ft_write",  },
 	/* [FILE_OPERATOR_SEEK   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_SEEK,                OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_seek),   "seek",   "seek",   "ft_seek",   },
@@ -1053,150 +1053,256 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 				/* Invoke file operators. */
 				switch (name) {
 
+					/* >> operator __read__(buf: <Buffer>): int;
+					 * >> operator __read__(buf: <Buffer>, max_size: int): int;
+					 * >> operator __read__(buf: <Buffer>, start: int, end: int): int;
+					 * >> operator __read__(max_bytes: int): Bytes; 
+					 * >> operator __read__(): Bytes; */
 				case FILE_OPERATOR_READ: {
-					size_t max_bytes;
-					max_bytes = (size_t)-1;
-					/* TODO: Support for reading into buffers */
-					if (DeeArg_Unpack(argc, argv, "|Iu:__read__", &max_bytes))
-						goto err;
-					return DeeFile_ReadText(self, max_bytes, false);
-				}
-
-				case FILE_OPERATOR_WRITE: {
-					DeeObject *data, *begin, *end;
+					DeeObject *data  = NULL;
+					DeeObject *begin = NULL;
+					DeeObject *end   = NULL;
+					DeeBuffer buf;
+					size_t buf_begin, buf_end;
 					dssize_t result;
-					begin = end = NULL;
-					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end))
+					if (DeeArg_Unpack(argc, argv, "|ooo:__read__", &data, &begin, &end))
 						goto err;
-					/* TODO: Support for writing buffers */
-					if (DeeObject_AssertTypeExact(data, &DeeString_Type))
-						goto err;
+					if (!data)
+						return DeeFile_ReadText(self, (size_t)-1, false);
 					if (end) {
-						dssize_t ibegin, iend;
-						if (DeeObject_AsSSize(begin, &ibegin))
+						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
 							goto err;
-						if (DeeObject_AsSSize(end, &iend))
+						if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
 							goto err;
-						if ((size_t)iend > DeeString_SIZE(data) * sizeof(char))
-							iend = (dssize_t)DeeString_SIZE(data) * sizeof(char);
-						if ((size_t)ibegin >= (size_t)iend)
-							return_reference_(&DeeInt_Zero);
-						result = DeeFile_Write(self, DeeString_STR(data) + ibegin, (size_t)(iend - ibegin));
 					} else if (begin) {
-						size_t max_size;
-						if (DeeObject_AsSize(begin, &max_size))
+						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
 							goto err;
-						if (max_size > DeeString_SIZE(data) * sizeof(char))
-							max_size = DeeString_SIZE(data) * sizeof(char);
-						result = DeeFile_Write(self, DeeString_STR(data), max_size);
+						buf_begin = 0;
 					} else {
-						result = DeeFile_Write(self, DeeString_STR(data),
-						                       DeeString_SIZE(data) * sizeof(char));
+						if (DeeInt_Check(data)) {
+							size_t max_bytes;
+							if (DeeInt_AsSize(data, &max_bytes))
+								goto err;
+							return DeeFile_ReadText(self, max_bytes, false);
+						}
+						buf_begin = 0;
+						buf_end   = (size_t)-1;
 					}
+					if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FWRITABLE))
+						goto err;
+					if (buf_end > buf.bb_size)
+						buf_end = buf.bb_size;
+					if (buf_begin >= buf_end) {
+						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
+						return_reference_(&DeeInt_Zero);
+					}
+					result = DeeFile_Read(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
+					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
 					if unlikely(result < 0)
 						goto err;
 					return DeeInt_NewSize((size_t)result);
-				}
-
-				case FILE_OPERATOR_SEEK: {
-					doff_t off;
-					int whence;
-					whence = SEEK_SET;
-					if (DeeArg_Unpack(argc, argv, "I64d|d:seek", &off, &whence))
-						goto err;
-					off = DeeFile_Seek(self, off, whence);
-					if unlikely(off < 0)
-						goto err;
-					return DeeInt_NewU64((uint64_t)off);
 				}	break;
 
-				case FILE_OPERATOR_SYNC:
-					if (DeeArg_Unpack(argc, argv, ":sync"))
+					/* >> operator __write__(buf: <Buffer>): int;
+					 * >> operator __write__(buf: <Buffer>, max_size: int): int;
+					 * >> operator __write__(buf: <Buffer>, start: int, end: int): int; */
+				case FILE_OPERATOR_WRITE: {
+					DeeObject *data  = NULL;
+					DeeObject *begin = NULL;
+					DeeObject *end   = NULL;
+					DeeBuffer buf;
+					size_t buf_begin, buf_end;
+					dssize_t result;
+					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end))
+						goto err;
+					if (end) {
+						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
+							goto err;
+						if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
+							goto err;
+					} else if (begin) {
+						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
+							goto err;
+						buf_begin = 0;
+					} else {
+						buf_begin = 0;
+						buf_end   = (size_t)-1;
+					}
+					if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FREADONLY))
+						goto err;
+					if (buf_end > buf.bb_size)
+						buf_end = buf.bb_size;
+					if (buf_begin >= buf_end) {
+						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
+						return_reference_(&DeeInt_Zero);
+					}
+					result = DeeFile_Write(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
+					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
+					if unlikely(result < 0)
+						goto err;
+					return DeeInt_NewSize((size_t)result);
+				}	break;
+
+					/* >> operator __seek__(off: int, whence: int): int; */
+				case FILE_OPERATOR_SEEK: {
+					doff_t off;
+					dpos_t result;
+					int whence;
+					whence = SEEK_SET;
+					if (DeeArg_Unpack(argc, argv, "I64d|d:__seek__", &off, &whence))
+						goto err;
+					result = DeeFile_Seek(self, off, whence);
+					if unlikely(result == (dpos_t)-1)
+						goto err;
+					return DeeInt_NewU64(result);
+				}	break;
+
+					/* >> operator __sync__(); */
+				case FILE_OPERATOR_SYNC: {
+					if (DeeArg_Unpack(argc, argv, ":__sync__"))
 						goto err;
 					if (DeeFile_Sync(self))
 						goto err;
 					goto return_none_;
+				}	break;
 
+					/* >> operator __trunc__(length: int);
+					 * >> operator __trunc__(): int; */
 				case FILE_OPERATOR_TRUNC: {
-					dpos_t length;
-					if (DeeArg_Unpack(argc, argv, "I64u:trunc", &length))
-						goto err;
-					if (DeeFile_Trunc(self, length))
-						goto err;
-					goto return_none_;
-				}
+					if (argc) {
+						dpos_t length;
+						if unlikely(argc != 1) {
+							err_invalid_argc("__turnc__", argc, 0, 1);
+							goto err;
+						}
+						if (DeeObject_AsUInt64(argv[0], &length))
+							goto err;
+						if (DeeFile_Trunc(self, length))
+							goto err;
+						goto return_none_;
+					} else {
+						dpos_t length;
+						if (DeeFile_TruncHere(self, &length))
+							goto err;
+						return DeeInt_NewU64(length);
+					}
+				}	break;
 
-				case FILE_OPERATOR_CLOSE:
-					if (DeeArg_Unpack(argc, argv, ":close"))
+					/* >> operator __close__() */
+				case FILE_OPERATOR_CLOSE: {
+					if (DeeArg_Unpack(argc, argv, ":__close__"))
 						goto err;
 					if (DeeFile_Close(self))
 						goto err;
 					goto return_none_;
+				}	break;
 
+					/* >> operator __pread__(buf: <Buffer>, pos: int): int;
+					 * >> operator __pread__(buf: <Buffer>, max_size: int, pos: int): int;
+					 * >> operator __pread__(buf: <Buffer>, start: int, end: int, pos: int): int;
+					 * >> operator __pread__(max_bytes: int, pos: int): Bytes; 
+					 * >> operator __pread__(pos: int): Bytes; */
 				case FILE_OPERATOR_PREAD: {
-					DeeObject *a, *b;
+					DeeObject *a;
+					DeeObject *b = NULL;
+					DeeObject *c = NULL;
+					DeeObject *d = NULL;
 					dpos_t pos;
-					size_t max_bytes;
-					b = NULL;
-					/* TODO: Support for reading into buffers */
-					if (DeeArg_Unpack(argc, argv, "o|o:__pread__", &a, &b))
-						goto err;
-					if (b) {
-						if (DeeObject_AsSize(a, &max_bytes))
-							goto err;
-						if (DeeObject_AsUInt64(b, &pos))
-							goto err;
-					} else {
-						max_bytes = (size_t)-1;
-						if (DeeObject_AsUInt64(a, &pos))
-							goto err;
-					}
-					return DeeFile_PReadText(self, max_bytes, pos, false);
-				}
-
-				case FILE_OPERATOR_PWRITE: {
-					DeeObject *data, *a, *b, *c;
+					size_t start, end;
 					dssize_t result;
-					dpos_t pos;
-					b = c = NULL;
-					if (DeeArg_Unpack(argc, argv, "oo|oo:__write__", &data, &a, &b, &c))
+					DeeBuffer buf;
+					if (DeeArg_Unpack(argc, argv, "o|ooo:__pread__", &a, &b, &c, &d))
 						goto err;
-					/* TODO: Support for writing buffers */
-					if (DeeObject_AssertTypeExact(data, &DeeString_Type))
-						goto err;
-					if (c) {
-						dssize_t ibegin, iend;
-						if (DeeObject_AsSSize(a, &ibegin))
+					if (d) {
+						if (DeeObject_AsUInt64(d, &pos))
 							goto err;
-						if (DeeObject_AsSSize(b, &iend))
+						if (DeeObject_AsSSize(c, (dssize_t *)&end))
 							goto err;
+						if (DeeObject_AsSSize(b, (dssize_t *)&start))
+							goto err;
+					} else if (c) {
 						if (DeeObject_AsUInt64(c, &pos))
 							goto err;
-						if ((size_t)iend > DeeString_SIZE(data) * sizeof(char))
-							iend = (dssize_t)DeeString_SIZE(data) * sizeof(char);
-						if ((size_t)ibegin >= (size_t)iend)
-							return_reference_(&DeeInt_Zero);
-						result = DeeFile_PWrite(self, DeeString_STR(data) + ibegin, (size_t)(iend - ibegin), pos);
+						if (DeeObject_AsSSize(b, (dssize_t *)&end))
+							goto err;
+						start = 0;
 					} else if (b) {
-						size_t max_size;
 						if (DeeObject_AsUInt64(b, &pos))
 							goto err;
-						if (DeeObject_AsSize(a, &max_size))
-							goto err;
-						if (max_size > DeeString_SIZE(data) * sizeof(char))
-							max_size = DeeString_SIZE(data) * sizeof(char);
-						result = DeeFile_PWrite(self, DeeString_STR(data), max_size, pos);
+						if (DeeInt_Check(a)) {
+							if (DeeObject_AsSSize(a, (dssize_t *)&end))
+								goto err;
+							return DeeFile_PReadText(self, end, pos, false);
+						}
+						start = 0;
+						end   = (size_t)-1;
 					} else {
 						if (DeeObject_AsUInt64(a, &pos))
 							goto err;
-						result = DeeFile_PWrite(self, DeeString_STR(data),
-						                        DeeString_SIZE(data) * sizeof(char),
-						                        pos);
+						return DeeFile_PReadText(self, (size_t)-1, pos, false);
 					}
+					if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FWRITABLE))
+						goto err;
+					if (end > buf.bb_size)
+						end = buf.bb_size;
+					if (start >= end) {
+						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
+						return_reference_(&DeeInt_Zero);
+					}
+					result = DeeFile_PRead(self, (uint8_t *)buf.bb_base + start, end - start, pos);
+					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
 					if unlikely(result < 0)
 						goto err;
 					return DeeInt_NewSize((size_t)result);
-				}
+				}	break;
+
+					/* >> operator __pwrite__(data: <Buffer>, pos: int): int;
+					 * >> operator __pwrite__(data: <Buffer>, max_size: int, pos: int): int;
+					 * >> operator __pwrite__(data: <Buffer>, start: int, end: int, pos: int): int; */
+				case FILE_OPERATOR_PWRITE: {
+					DeeObject *a;
+					DeeObject *b;
+					DeeObject *c = NULL;
+					DeeObject *d = NULL;
+					dpos_t pos;
+					size_t start, end;
+					dssize_t result;
+					DeeBuffer buf;
+					if (DeeArg_Unpack(argc, argv, "oo|oo:__pwrite__", &a, &b, &c, &d))
+						goto err;
+					if (d) {
+						if (DeeObject_AsUInt64(d, &pos))
+							goto err;
+						if (DeeObject_AsSSize(c, (dssize_t *)&end))
+							goto err;
+						if (DeeObject_AsSSize(b, (dssize_t *)&start))
+							goto err;
+					} else if (c) {
+						if (DeeObject_AsUInt64(c, &pos))
+							goto err;
+						if (DeeObject_AsSSize(b, (dssize_t *)&end))
+							goto err;
+						start = 0;
+					} else {
+						if (DeeObject_AsUInt64(b, &pos))
+							goto err;
+						start = 0;
+						end   = (size_t)-1;
+					}
+					if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FREADONLY))
+						goto err;
+					if (end > buf.bb_size)
+						end = buf.bb_size;
+					if (start >= end) {
+						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
+						return_reference_(&DeeInt_Zero);
+					}
+					result = DeeFile_PWrite(self, (uint8_t *)buf.bb_base + start, end - start, pos);
+					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
+					if unlikely(result < 0)
+						goto err;
+					return DeeInt_NewSize((size_t)result);
+				}	break;
 
 				case FILE_OPERATOR_GETC: {
 					int result;
@@ -1206,7 +1312,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					if unlikely(result == GETC_ERR)
 						goto err;
 					return DeeInt_NewInt(result);
-				}
+				}	break;
 
 				case FILE_OPERATOR_UNGETC: {
 					int ch;
@@ -1216,7 +1322,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					if unlikely(ch == GETC_ERR)
 						goto err;
 					return_bool_(ch != GETC_EOF);
-				}
+				}	break;
 
 				case FILE_OPERATOR_PUTC: {
 					int ch;
@@ -1226,7 +1332,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					if unlikely(ch == GETC_ERR)
 						goto err;
 					return_bool_(ch != GETC_EOF);
-				}
+				}	break;
 
 				default: break;
 				}
@@ -1275,6 +1381,31 @@ return_self:
 	}
 }
 
+/* Invoke an operator on a given object, given its ID and arguments.
+ * NOTE: Using these function, any operator can be invoked, including
+ *       extension operators as well as some operators marked as
+ *       `OPTYPE_SPECIAL' (most notably: `tp_int'), as well as throwing
+ *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
+ * Special handling is performed for the read/write operators
+ * of `DeeFileType_Type', which are invoked by passing Bytes
+ * objects back/forth:
+ *    - operator read(): Bytes;
+ *    - operator read(max_bytes: int): Bytes;
+ *    - operator write(data: Bytes): int;
+ *    - operator write(data: Bytes, max_bytes: int): int;
+ *    - operator write(data: Bytes, begin: int, end: int): int;
+ *    - operator pread(pos: int): Bytes;
+ *    - operator pread(max_bytes: int, pos: int): Bytes;
+ *    - operator pwrite(data: Bytes, pos: int): int;
+ *    - operator pwrite(data: Bytes, max_bytes: int, pos: int): int;
+ *    - operator pwrite(data: Bytes, begin: int, end: int, pos: int): int;
+ * Operators marked as `oi_private' cannot be invoked and
+ * attempting to do so will cause an `Error.TypeError' to be thrown.
+ * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
+ * HINT: `DeeObject_PInvokeOperator' can be used the same way `DeeObject_InvokeOperator'
+ *        can be, with the addition of allowing inplace operators to be executed.
+ *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
+ *        will cause an `Error.TypeError' to be thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv) {

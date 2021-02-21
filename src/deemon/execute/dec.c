@@ -694,8 +694,8 @@ DecFile_Init(DecFile *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(dec_pathname, &DeeString_Type);
 
 	/* Read the entirety of the given input_stream. */
-	old_pos = (dpos_t)DeeFile_Seek(input_stream, 0, SEEK_SET);
-	if unlikely((doff_t)old_pos < 0) {
+	old_pos = DeeFile_Seek(input_stream, 0, SEEK_SET);
+	if unlikely(old_pos == (dpos_t)-1) {
 err_seek_failed:
 #if 0 /* TODO */
 		if (DeeError_Catch(&DeeError_NotImplemented)) {
@@ -706,11 +706,11 @@ err_seek_failed:
 		goto err;
 	}
 	/* Determine the total size by seeking up to the end. */
-	total_size = (dpos_t)DeeFile_Seek(input_stream, 0, SEEK_END);
-	if unlikely((doff_t)total_size < 0)
+	total_size = DeeFile_Seek(input_stream, 0, SEEK_END);
+	if unlikely(total_size == (dpos_t)-1)
 		goto err_seek_failed;
 	/* Seek back to where we were before. */
-	if unlikely(DeeFile_Seek(input_stream, (doff_t)old_pos, SEEK_SET) < 0)
+	if unlikely(DeeFile_Seek(input_stream, (doff_t)old_pos, SEEK_SET) == (dpos_t)-1)
 		goto err_seek_failed;
 
 	/* Quick check: If the file is larger than the allowed limit,

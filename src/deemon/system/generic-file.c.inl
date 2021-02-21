@@ -108,10 +108,10 @@ sysfile_write(DeeFileObject *__restrict UNUSED(self),
 	return fs_unsupported();
 }
 
-PRIVATE doff_t DCALL
+PRIVATE dpos_t DCALL
 sysfile_seek(DeeFileObject *__restrict UNUSED(self),
              doff_t UNUSED(off), int UNUSED(whence)) {
-	return fs_unsupported();
+	return (dpos_t)(doff_t)fs_unsupported();
 }
 
 PRIVATE int DCALL

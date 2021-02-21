@@ -2229,18 +2229,18 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
  *       `OPTYPE_SPECIAL' (most notably: `tp_int'), as well as throwing
  *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
  * Special handling is performed for the read/write operators
- * of `DeeFileType_Type', which are invoked by passing string
+ * of `DeeFileType_Type', which are invoked by passing Bytes
  * objects back/forth:
- *    - operator read(): string;
- *    - operator read(int max_bytes): string;
- *    - operator write(string data): int;
- *    - operator write(string data, int max_bytes): int;
- *    - operator write(string data, int begin, int end): int;
- *    - operator pread(int pos): string;
- *    - operator pread(int max_bytes, int pos): string;
- *    - operator pwrite(string data, int pos): int;
- *    - operator pwrite(string data, int max_bytes, int pos): int;
- *    - operator pwrite(string data, int begin, int end, int pos): int;
+ *    - operator read(): Bytes;
+ *    - operator read(max_bytes: int): Bytes;
+ *    - operator write(data: Bytes): int;
+ *    - operator write(data: Bytes, max_bytes: int): int;
+ *    - operator write(data: Bytes, begin: int, end: int): int;
+ *    - operator pread(pos: int): Bytes;
+ *    - operator pread(max_bytes: int, pos: int): Bytes;
+ *    - operator pwrite(data: Bytes, pos: int): int;
+ *    - operator pwrite(data: Bytes, max_bytes: int, pos: int): int;
+ *    - operator pwrite(data: Bytes, begin: int, end: int, pos: int): int;
  * Operators marked as `oi_private' cannot be invoked and
  * attempting to do so will cause an `Error.TypeError' to be thrown.
  * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.

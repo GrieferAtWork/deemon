@@ -185,6 +185,23 @@ inline unsigned int (DCALL throw_if_nonzero)(int x) {
 		throw_last_deemon_exception();
 	return (unsigned int)x;
 }
+inline unsigned int (DCALL throw_if_minusone)(int x) {
+	if unlikely(x == -1)
+		throw_last_deemon_exception();
+	return (unsigned int)x;
+}
+inline unsigned long (DCALL throw_if_minusone)(long x) {
+	if unlikely(x == -1l)
+		throw_last_deemon_exception();
+	return (unsigned long)x;
+}
+#ifdef __COMPILER_HAVE_LONGLONG
+inline __ULONGLONG (DCALL throw_if_minusone)(__LONGLONG x) {
+	if unlikely(x == -1ll)
+		throw_last_deemon_exception();
+	return (__ULONGLONG)x;
+}
+#endif /* __COMPILER_HAVE_LONGLONG */
 inline unsigned int (DCALL throw_if_minusone)(unsigned int x) {
 	if unlikely(x == (unsigned int)-1)
 		throw_last_deemon_exception();

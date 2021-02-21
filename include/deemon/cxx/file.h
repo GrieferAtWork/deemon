@@ -88,13 +88,13 @@ public:
 		return throw_if_negative(DeeFile_PWriteAll(*this, buffer, bufsize, pos));
 	}
 	Dee_pos_t(seek)(Dee_off_t off, int whence = SEEK_SET) const {
-		return throw_if_negative(DeeFile_Seek(*this, off, whence));
+		return throw_if_minusone(DeeFile_Seek(*this, off, whence));
 	}
 	Dee_pos_t(tell)() const {
-		return throw_if_negative(DeeFile_Tell(*this));
+		return throw_if_minusone(DeeFile_Tell(*this));
 	}
 	void(rewind)() const {
-		throw_if_negative(DeeFile_Rewind(*this));
+		throw_if_minusone(DeeFile_Rewind(*this));
 	}
 	void(sync)() const {
 		throw_if_nonzero(DeeFile_Sync(*this));

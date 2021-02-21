@@ -107,9 +107,9 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) doff_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
 mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
-	doff_t result;
+	dpos_t result;
 	char *new_pointer;
 	DeeFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
@@ -125,7 +125,7 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 		if unlikely(self->mf_ptr + (size_t)off < self->mf_ptr)
 			goto err_overflow;
 		self->mf_ptr = self->mf_begin + (size_t)off;
-		result       = off;
+		result       = (dpos_t)off;
 		break;
 
 	case SEEK_CUR:
@@ -163,7 +163,7 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid seek mode %d",
 		                whence);
-		return -1;
+		goto err;
 	}
 	DeeFile_LockEndWrite(self);
 	return result;
@@ -171,12 +171,13 @@ err_invalid:
 	DeeFile_LockEndWrite(self);
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid seek pointer");
-	return -1;
+	goto err;
 err_overflow:
 	DeeFile_LockEndWrite(self);
 	DeeError_Throwf(&DeeError_IntegerOverflow,
 	                "Seek pointer is overflowing");
-	return -1;
+err:
+	return (dpos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -274,7 +275,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
+	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&mf_close,
@@ -408,10 +409,10 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) doff_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
 reader_seek(Reader *__restrict self,
             doff_t off, int whence) {
-	doff_t result;
+	dpos_t result;
 	char *new_pointer;
 	DeeFile_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
@@ -431,7 +432,7 @@ reader_seek(Reader *__restrict self,
 		if unlikely(self->r_ptr + (size_t)off < self->r_ptr)
 			goto err_overflow;
 		self->r_ptr = self->r_begin + (size_t)off;
-		result      = off;
+		result      = (dpos_t)off;
 		break;
 
 	case SEEK_CUR:
@@ -469,7 +470,7 @@ reader_seek(Reader *__restrict self,
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid seek mode %d",
 		                whence);
-		return -1;
+		goto err;
 	}
 	DeeFile_LockEndWrite(self);
 	return result;
@@ -477,12 +478,13 @@ err_invalid:
 	DeeFile_LockEndWrite(self);
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid seek pointer");
-	return -1;
+	goto err;
 err_overflow:
 	DeeFile_LockEndWrite(self);
 	DeeError_Throwf(&DeeError_IntegerOverflow,
 	                "Seek pointer is overflowing");
-	return -1;
+err:
+	return (dpos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -723,7 +725,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
+	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_sync,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_close,

@@ -537,21 +537,19 @@ sysfile_write(SystemFile *__restrict self,
 #endif /* !CONFIG_HAVE_write */
 }
 
-PRIVATE doff_t DCALL
+PRIVATE dpos_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 #if defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)
-	doff_t result;
+	dpos_t result;
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_lseek64
-	result = lseek64((int)self->sf_handle, (int64_t)off, whence);
+	result = (dpos_t)lseek64((int)self->sf_handle, (int64_t)off, whence);
 #else /* CONFIG_HAVE_lseek64 */
-	result = lseek((int)self->sf_handle, (off_t)off, whence);
+	result = (dpos_t)lseek((int)self->sf_handle, (off_t)off, whence);
 #endif /* !CONFIG_HAVE_lseek64 */
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result < 0) {
+	if unlikely(result == (dpos_t)-1)
 		error_file_io(self);
-		result = -1;
-	}
 	return result;
 #else /* CONFIG_HAVE_lseek || CONFIG_HAVE_lseek64 */
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
@@ -884,7 +882,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
 	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
-	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
+	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,

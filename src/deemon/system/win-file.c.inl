@@ -991,7 +991,7 @@ err:
 	return -1;
 }
 
-PRIVATE doff_t DCALL
+PRIVATE dpos_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	DWORD result;
 	LONG high;
@@ -1012,9 +1012,9 @@ again:
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (doff_t)result | ((doff_t)high << 32);
+	return (dpos_t)result | ((dpos_t)high << 32);
 err:
-	return -1;
+	return (dpos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
@@ -1051,19 +1051,23 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
-	doff_t old_pos = sysfile_seek(self, 0, SEEK_CUR);
-	if unlikely(old_pos < 0)
+	dpos_t old_pos = sysfile_seek(self, 0, SEEK_CUR);
+	if unlikely(old_pos == (dpos_t)-1)
 		goto err;
-	if unlikely((dpos_t)old_pos != size && sysfile_seek(self, (doff_t)size, SEEK_SET) < 0)
-		goto err;
+	if ((dpos_t)old_pos != size) {
+		if unlikely(sysfile_seek(self, (doff_t)size, SEEK_SET) < 0)
+			goto err;
+	}
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!SetEndOfFile(self->sf_handle)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely((dpos_t)old_pos != size && sysfile_seek(self, old_pos, SEEK_SET) < 0)
-		goto err;
+	if ((dpos_t)old_pos != size) {
+		if unlikely(sysfile_seek(self, old_pos, SEEK_SET) == (dpos_t)-1)
+			goto err;
+	}
 	return 0;
 err:
 	return -1;
@@ -1274,7 +1278,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
 	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
-	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
+	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,

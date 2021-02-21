@@ -513,40 +513,40 @@ sysfile_write(SystemFile *__restrict self,
 #endif /* !CONFIG_HAVE_fwrite */
 }
 
-PRIVATE doff_t DCALL
+PRIVATE dpos_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
-	doff_t result;
+	dpos_t result;
 	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 #if defined(CONFIG_HAVE_fseeko64) && defined(CONFIG_HAVE_ftello64)
 	DBG_ALIGNMENT_DISABLE();
-	if (fseeko64((FILE *)self->sf_handle, (__LONGLONG)off, whence)) {
+	if unlikely(fseeko64((FILE *)self->sf_handle, (__LONGLONG)off, whence) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
-	result = ftello64((FILE *)self->sf_handle);
+	result = (dpos_t)ftello64((FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
-	if (result == -1)
-		return error_file_io(self);
+	if unlikely(result == (dpos_t)-1)
+		error_file_io(self);
 #elif defined(CONFIG_HAVE_fseeko) && defined(CONFIG_HAVE_ftello)
 	DBG_ALIGNMENT_DISABLE();
-	if (fseeko((FILE *)self->sf_handle, (off64_t)off, whence)) {
+	if unlikely(fseeko((FILE *)self->sf_handle, (off64_t)off, whence) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
-	result = (doff_t)ftello((FILE *)self->sf_handle);
+	result = (dpos_t)ftello((FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
-	if (result == -1)
-		return error_file_io(self);
+	if (result == (dpos_t)-1)
+		error_file_io(self);
 #elif defined(CONFIG_HAVE_fseek) && defined(CONFIG_HAVE_ftell)
 	DBG_ALIGNMENT_DISABLE();
-	if (fseek((FILE *)self->sf_handle, (long)off, whence)) {
+	if unlikely(fseek((FILE *)self->sf_handle, (long)off, whence) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
-	result = (doff_t)ftello((FILE *)self->sf_handle);
+	result = (dpos_t)ftello((FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
-	if ((long)result == -1L)
+	if unlikely((unsigned long)result == (unsigned long)-1L)
 		return error_file_io(self);
 #else /* ... */
 	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
@@ -1095,7 +1095,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
 	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
-	/* .ft_seek   = */ (doff_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
+	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
