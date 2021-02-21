@@ -67,7 +67,7 @@ mf_fini(MemoryFile *__restrict self) {
 	Dee_Free((void *)self->mf_begin);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mf_read(MemoryFile *__restrict self, void *__restrict buffer,
         size_t bufsize, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -84,10 +84,10 @@ mf_read(MemoryFile *__restrict self, void *__restrict buffer,
 		*(uintptr_t *)&self->mf_ptr += result;
 	}
 	DeeFile_LockEndWrite(self);
-	return (dssize_t)result;
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
          size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -104,7 +104,7 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 		memcpy(buffer, self->mf_begin + (size_t)pos, result);
 	}
 	DeeFile_LockEndRead(self);
-	return (dssize_t)result;
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
@@ -273,13 +273,13 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
 	/* .ft_write  = */ NULL,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&mf_close,
-	/* .ft_pread  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&mf_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&mf_pread,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&mf_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&mf_ungetc,
@@ -314,40 +314,37 @@ done:
 
 PUBLIC NONNULL((1)) void DCALL
 DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
+	MemoryFile *me = (MemoryFile *)self;
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
-	if (!DeeObject_IsShared(self)) {
+	if (!DeeObject_IsShared(me)) {
 		/* The file also went away, so we can simply not free its data! */
 		Dee_DecrefNokill((DeeObject *)&DeeMemoryFile_Type);
-		DeeObject_FreeTracker(self);
-		DeeObject_Free(self);
+		DeeObject_FreeTracker(me);
+		DeeObject_Free(me);
 	} else {
 		/* Try to copy the data of the file in question. */
 		void *data_copy;
 		size_t size;
-		DeeFile_LockRead((MemoryFile *)self);
-		size = (size_t)(((MemoryFile *)self)->mf_end -
-		                ((MemoryFile *)self)->mf_begin);
-		DeeFile_LockEndRead((MemoryFile *)self);
+		DeeFile_LockRead(me);
+		size = (size_t)(me->mf_end - me->mf_begin);
+		DeeFile_LockEndRead(me);
 		data_copy = size ? Dee_TryMalloc(size) : NULL;
 		COMPILER_READ_BARRIER();
-		DeeFile_LockWrite((MemoryFile *)self);
+		DeeFile_LockWrite(me);
 		if likely(data_copy || !size) {
 			/* Copy the stream's data */
-			memcpy(data_copy,
-			       ((MemoryFile *)self)->mf_begin,
-			       (size_t)(((MemoryFile *)self)->mf_end -
-			                ((MemoryFile *)self)->mf_begin));
-			((MemoryFile *)self)->mf_end   = (char *)data_copy + (((MemoryFile *)self)->mf_end - ((MemoryFile *)self)->mf_begin);
-			((MemoryFile *)self)->mf_ptr   = (char *)data_copy + (((MemoryFile *)self)->mf_ptr - ((MemoryFile *)self)->mf_begin);
-			((MemoryFile *)self)->mf_begin = (char *)data_copy;
+			memcpy(data_copy, me->mf_begin, (size_t)(me->mf_end - me->mf_begin));
+			me->mf_end   = (char *)data_copy + (me->mf_end - me->mf_begin);
+			me->mf_ptr   = (char *)data_copy + (me->mf_ptr - me->mf_begin);
+			me->mf_begin = (char *)data_copy;
 		} else {
 			/* Failed to copy data. - Fallback by deleting the
 			 * stream's data so it becomes weak undefined behavior... */
-			((MemoryFile *)self)->mf_begin = NULL;
-			((MemoryFile *)self)->mf_end   = NULL;
-			((MemoryFile *)self)->mf_ptr   = NULL;
+			me->mf_begin = NULL;
+			me->mf_end   = NULL;
+			me->mf_ptr   = NULL;
 		}
-		DeeFile_LockEndWrite((MemoryFile *)self);
+		DeeFile_LockEndWrite(me);
 	}
 }
 
@@ -361,7 +358,7 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 reader_read(Reader *__restrict self, void *__restrict buffer,
             size_t bufsize, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -369,7 +366,7 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 	ASSERT(self->r_ptr >= self->r_begin);
 	if unlikely(!self->r_owner) {
 		DeeFile_LockEndWrite(self);
-		return (dssize_t)err_file_closed();
+		return (size_t)err_file_closed();
 	}
 	if (self->r_ptr >= self->r_end) {
 		result = 0;
@@ -382,10 +379,10 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 		*(uintptr_t *)&self->r_ptr += result;
 	}
 	DeeFile_LockEndWrite(self);
-	return (dssize_t)result;
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 reader_pread(Reader *__restrict self, void *__restrict buffer,
              size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -393,7 +390,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 	ASSERT(self->r_ptr >= self->r_begin);
 	if unlikely(!self->r_owner) {
 		DeeFile_LockEndRead(self);
-		return (dssize_t)err_file_closed();
+		return (size_t)err_file_closed();
 	}
 	result = (size_t)(self->r_end - self->r_begin) * sizeof(char);
 	if unlikely(pos >= (dpos_t)result) {
@@ -406,7 +403,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 		memcpy(buffer, self->r_begin + (size_t)pos, result);
 	}
 	DeeFile_LockEndRead(self);
-	return (dssize_t)result;
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
@@ -418,7 +415,7 @@ reader_seek(Reader *__restrict self,
 	ASSERT(self->r_ptr >= self->r_begin);
 	if unlikely(!self->r_owner) {
 		DeeFile_LockEndWrite(self);
-		return (dssize_t)err_file_closed();
+		return (dpos_t)err_file_closed();
 	}
 	switch (whence) {
 
@@ -495,7 +492,7 @@ reader_sync(Reader *__restrict self) {
 	if unlikely(!ATOMIC_READ(self->r_owner))
 #endif /* !CONFIG_NO_THREADS */
 	{
-		return (dssize_t)err_file_closed();
+		return err_file_closed();
 	}
 	return 0;
 }
@@ -723,13 +720,13 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
 	/* .ft_write  = */ NULL,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_sync,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_close,
-	/* .ft_pread  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&reader_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&reader_pread,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&reader_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&reader_ungetc,
@@ -770,7 +767,7 @@ done:
  * to open a generic object using the buffer-interface. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
-                         dssize_t begin, dssize_t end) {
+                         size_t begin, size_t end) {
 	DREF Reader *result;
 	result = DeeObject_MALLOC(Reader);
 	if unlikely(!result)
@@ -778,16 +775,16 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 	if (DeeObject_GetBuf(data, &result->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err_r;
 	/* Truncate the end-pointer. */
-	if ((size_t)end > result->r_buffer.bb_size)
-		end = (dssize_t)result->r_buffer.bb_size;
+	if (end > result->r_buffer.bb_size)
+		end = result->r_buffer.bb_size;
 	/* Handle empty read. */
-	if unlikely((size_t)begin >= (size_t)end)
-		begin = end = 0;
+	if unlikely(begin > end)
+		begin = end;
 	/* Fill in members. */
 	Dee_Incref(data);
 	result->r_owner = data;
-	result->r_begin = (char *)result->r_buffer.bb_base + (size_t)begin;
-	result->r_end   = (char *)result->r_buffer.bb_base + (size_t)end;
+	result->r_begin = (char *)result->r_buffer.bb_base + begin;
+	result->r_end   = (char *)result->r_buffer.bb_base + end;
 	result->r_ptr   = result->r_begin;
 	DeeLFileObject_Init(result, &DeeFileReader_Type);
 done:
@@ -1435,7 +1432,7 @@ err:
 INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 writer_write(Writer *__restrict self,
              uint8_t const *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {
@@ -1620,7 +1617,7 @@ done_unlock:
 	DeeFile_LockEndWrite(self);
 	return result;
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 
@@ -1670,7 +1667,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_class_members = */ NULL
 	},
 	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&writer_write,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&writer_write,
 	/* .ft_seek   = */ NULL,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,

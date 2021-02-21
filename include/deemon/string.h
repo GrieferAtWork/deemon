@@ -2839,10 +2839,10 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL Dee_unicode_printer_confirm32(str
 /* Find a given unicode character within the specified index-range.
  * @return: * : The index of the character, offset from the start of the printer.
  * @return: -1: The character wasn't found. */
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t /* TODO: Change return type to size_t */
 (DCALL Dee_unicode_printer_memchr)(struct Dee_unicode_printer *__restrict self,
                                    uint32_t chr, size_t start, size_t length);
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t /* TODO: Change return type to size_t */
 (DCALL Dee_unicode_printer_memrchr)(struct Dee_unicode_printer *__restrict self,
                                     uint32_t chr, size_t start, size_t length);
 

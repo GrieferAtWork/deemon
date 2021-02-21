@@ -809,7 +809,7 @@ systemerror_str(DeeSystemErrorObject *__restrict self) {
 		goto err;
 	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
 #ifdef CONFIG_HOST_WINDOWS
-		Dee_ssize_t unix_code_length;
+		dssize_t unix_code_length;
 #endif /* CONFIG_HOST_WINDOWS */
 		if unlikely(unicode_printer_putascii(&printer, '\n'))
 			goto err;
@@ -874,7 +874,7 @@ systemerror_str(DeeSystemErrorObject *__restrict self) {
 #ifdef CONFIG_HOST_WINDOWS
 	if (self->se_lasterror != NO_ERROR) {
 		int message_error;
-		Dee_ssize_t windows_code_length;
+		dssize_t windows_code_length;
 		if unlikely(unicode_printer_putascii(&printer, '\n'))
 			goto err;
 		windows_code_length = unicode_printer_printf(&printer, "nterr(%#I32x)", self->se_lasterror);
@@ -937,7 +937,7 @@ systemerror_repr(DeeSystemErrorObject *__restrict self) {
 	}
 	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
 		DREF DeeObject *errno_name;
-		Dee_ssize_t print_error;
+		dssize_t print_error;
 		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
 			goto err;
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, "errno: ") < 0)

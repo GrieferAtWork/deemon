@@ -109,6 +109,7 @@ local converter_map: {string: (string, string, string) | string} = {
 	"c:int32_t"    : ("I32d", "?Dint", "int32_t"),
 	"c:int64_t"    : ("I64d", "?Dint", "int64_t"),
 	"c:size_t"     : ("Iu", "?Dint",   "size_t"),
+	"c:dssize_t"   : ("Iu", "?Dint",   "dssize_t"),
 	"c:Dee_ssize_t": ("Iu", "?Dint",   "Dee_ssize_t"),
 	"c:ssize_t"    : "c:Dee_ssize_t",
 	"c:uintptr_t"  : ("Iu", "?Dint",   "uintptr_t"),

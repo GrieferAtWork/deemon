@@ -493,47 +493,45 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)&sysf_std[id];
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
 #ifdef CONFIG_HAVE_read
 	/* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
-	Dee_ssize_t result;
+	size_t result;
 	DBG_ALIGNMENT_DISABLE();
-	result = read((int)self->sf_handle, buffer, bufsize);
+	result = (size_t)read((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result < 0) {
+	if unlikely(result == (size_t)-1)
 		error_file_io(self);
-		result = -1;
-	}
-	return (dssize_t)result;
+	return result;
 #else /* CONFIG_HAVE_read */
-	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                  FILE_OPERATOR_READ);
+	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                           FILE_OPERATOR_READ);
+	return (size_t)-1;
 #endif /* !CONFIG_HAVE_read */
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer, size_t bufsize,
               dioflag_t flags) {
 #ifdef CONFIG_HAVE_write
 	/* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
-	Dee_ssize_t result;
+	size_t result;
 	DBG_ALIGNMENT_DISABLE();
-	result = write((int)self->sf_handle, buffer, bufsize);
+	result = (size_t)write((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result < 0) {
+	if unlikely(result == (size_t)-1)
 		error_file_io(self);
-		result = -1;
-	}
-	return (dssize_t)result;
+	return result;
 #else /* CONFIG_HAVE_write */
-	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                  FILE_OPERATOR_WRITE);
+	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                           FILE_OPERATOR_WRITE);
+	return (size_t)-1;
 #endif /* !CONFIG_HAVE_write */
 }
 
@@ -880,14 +878,14 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ sysfile_class_members
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
-	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-	/* .ft_pread  = */ NULL,
-	/* .ft_pwrite = */ NULL,
+	/* .ft_pread  = */ NULL, /* TODO: pread(2)! */
+	/* .ft_pwrite = */ NULL, /* TODO: pwrite(2)! */
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL

@@ -225,15 +225,15 @@ typedef void *DeeSysFD; /* FILE * */
 struct Dee_filetype_object {
 	DeeTypeObject       ft_base; /* Underlying type. */
 	/* File operators. (Ignored unless the `TF_HASFILEOPS' feature bit is set) */
-	WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
-	WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
 	/* @param: whence: One of `SEEK_*' from `<stdio.h>' */
-	WUNUSED NONNULL((1))    Dee_pos_t   (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	WUNUSED NONNULL((1))    int         (DCALL *ft_sync)(DeeFileObject *__restrict self);
-	WUNUSED NONNULL((1))    int         (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-	WUNUSED NONNULL((1))    int         (DCALL *ft_close)(DeeFileObject *__restrict self);
-	WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-	WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED NONNULL((1))    Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+	WUNUSED NONNULL((1))    int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
+	WUNUSED NONNULL((1))    int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
+	WUNUSED NONNULL((1))    int       (DCALL *ft_close)(DeeFileObject *__restrict self);
+	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 #define GETC_EOF (-1)
 #define GETC_ERR (-2)
 	/* Read and return one byte, or `GETC_EOF' for EOF and `GETC_ERR' if an error occurred. */
@@ -291,22 +291,24 @@ DDATDEF DeeFileTypeObject DeeFileBuffer_Type;
  *       correctly handle `self' not being a file at all. */
 
 
-/* File operator invocation. */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_Read(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_Readf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_Write(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_Writef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PRead(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PReadf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PWrite(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PWritef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+/* File operator invocation.
+ * @return: (size_t)-1: Error */
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_Read(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_Readf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_Write(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_Writef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PRead(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PReadf(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PWrite(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PWritef(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 /* Similar to functions above, but re-attempt to read/write until an error, or EOF.
  * >> Useful for unbuffered input/output streams that can only process data at a specific rate. */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_ReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
-/* @throw NotImplemented: The file does not support seeking. */
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_ReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
+/* @throw NotImplemented: The file does not support seeking.
+ * @return: (Dee_pos_t)-1: Error */
 DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
 #define DeeFile_Tell(self)        DeeFile_Seek(self, 0, SEEK_CUR)
 #define DeeFile_Rewind(self)      DeeFile_Seek(self, 0, SEEK_SET)
@@ -386,7 +388,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
 
-/* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)' */
+/* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
+ * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

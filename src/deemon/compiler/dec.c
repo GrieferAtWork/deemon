@@ -517,10 +517,10 @@ INTERN int (DCALL dec_write)(DeeObject *__restrict file_stream) {
 	DEC_FOREACH_SECTION_VARS;
 	struct dec_section *sec;
 	DEC_FOREACH_SECTION(sec) {
-		dssize_t temp;
+		size_t temp;
 		temp = DeeFile_WriteAll(file_stream, sec->ds_begin,
 		                        (size_t)(sec->ds_iter - sec->ds_begin));
-		if unlikely(temp < 0)
+		if unlikely(temp == (size_t)-1)
 			goto err;
 	}
 	return 0;
@@ -566,7 +566,7 @@ PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict mod) {
 	do {                                                            \
 		if (DeeFile_Printf(DeeFile_DefaultStddbg, __VA_ARGS__) < 0) \
 			goto err;                                               \
-	} __WHILE0
+	}	__WHILE0
 	unsigned int root_id;
 	size_t total_size = 0;
 	for (root_id = 0; root_id < DEC_SECTION_COUNT; ++root_id)

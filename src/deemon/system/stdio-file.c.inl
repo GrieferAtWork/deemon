@@ -100,17 +100,17 @@ extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputS
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 debugfile_write(DeeFileObject *__restrict UNUSED(self),
-                void const *__restrict buffer, size_t bufsize,
-                dioflag_t UNUSED(flags)) {
-	dssize_t result;
+                void const *__restrict buffer,
+                size_t bufsize, dioflag_t UNUSED(flags)) {
+	size_t result;
 	/* Forward all data to stderr. */
 	result = DeeFile_Write(DeeFile_DefaultStderr, buffer, bufsize);
-	if unlikely(result <= 0)
+	if unlikely(result == 0 || result == (size_t)-1)
 		goto done;
-	if (bufsize > (size_t)result)
-		bufsize = (size_t)result;
+	if (bufsize > result)
+		bufsize = result;
 	if (IsDebuggerPresent()) {
 #ifdef __ARCH_PAGESIZE_MIN
 		/* (ab-)use the fact that the kernel can't keep us from reading
@@ -470,7 +470,7 @@ dee_fwrite(void const *buf, size_t elemsize, size_t elemcount, FILE *stream) {
 #endif /* !CONFIG_HAVE_fwrite */
 
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {
 #if defined(CONFIG_HAVE_fread)
@@ -484,14 +484,15 @@ sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)result;
+	return result;
 #else /* CONFIG_HAVE_fread */
-	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                  FILE_OPERATOR_READ);
+	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                           FILE_OPERATOR_READ);
+	return (size_t)-1;
 #endif /* !CONFIG_HAVE_fread */
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer,
               size_t bufsize, dioflag_t UNUSED(flags)) {
@@ -506,10 +507,11 @@ sysfile_write(SystemFile *__restrict self,
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)result;
+	return result;
 #else /* CONFIG_HAVE_fwrite */
-	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                  FILE_OPERATOR_WRITE);
+	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                           FILE_OPERATOR_WRITE);
+	return (size_t)-1;
 #endif /* !CONFIG_HAVE_fwrite */
 }
 
@@ -549,8 +551,9 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	if unlikely((unsigned long)result == (unsigned long)-1L)
 		return error_file_io(self);
 #else /* ... */
-	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                    FILE_OPERATOR_SEEK);
+	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                           FILE_OPERATOR_SEEK);
+	result = (dpos_t)-1;
 #endif /* !... */
 	return result;
 }
@@ -1093,8 +1096,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ sysfile_class_members
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
-	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,

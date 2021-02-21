@@ -2491,7 +2491,7 @@ err_fd:
 #endif /* !fs_readlink_USE_WREADLINK */
 		int error;
 		size_t bufsize, new_size;
-		Dee_ssize_t req_size;
+		dssize_t req_size;
 		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 #ifdef fs_readlink_USE_WREADLINK
 		wpath = (wchar_t *)DeeString_AsWide(path);

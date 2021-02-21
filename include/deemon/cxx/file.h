@@ -52,40 +52,40 @@ public:
 		return obj_file(this->ptr());
 	}
 	size_t(read)(void *__restrict buffer, size_t bufsize) const {
-		return throw_if_negative(DeeFile_Read(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_Read(*this, buffer, bufsize));
 	}
 	size_t(read)(void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags) const {
-		return throw_if_negative(DeeFile_Readf(*this, buffer, bufsize, flags));
+		return throw_if_minusone(DeeFile_Readf(*this, buffer, bufsize, flags));
 	}
 	size_t(write)(void const *__restrict buffer, size_t bufsize) const {
-		return throw_if_negative(DeeFile_Write(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_Write(*this, buffer, bufsize));
 	}
 	size_t(write)(void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags) const {
-		return throw_if_negative(DeeFile_Writef(*this, buffer, bufsize, flags));
+		return throw_if_minusone(DeeFile_Writef(*this, buffer, bufsize, flags));
 	}
 	size_t(pread)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_negative(DeeFile_PRead(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PRead(*this, buffer, bufsize, pos));
 	}
 	size_t(pread)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) const {
-		return throw_if_negative(DeeFile_PReadf(*this, buffer, bufsize, pos, flags));
+		return throw_if_minusone(DeeFile_PReadf(*this, buffer, bufsize, pos, flags));
 	}
 	size_t(pwrite)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_negative(DeeFile_PWrite(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PWrite(*this, buffer, bufsize, pos));
 	}
 	size_t(pwrite)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) const {
-		return throw_if_negative(DeeFile_PWritef(*this, buffer, bufsize, pos, flags));
+		return throw_if_minusone(DeeFile_PWritef(*this, buffer, bufsize, pos, flags));
 	}
 	size_t(readall)(void *__restrict buffer, size_t bufsize) const {
-		return throw_if_negative(DeeFile_ReadAll(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_ReadAll(*this, buffer, bufsize));
 	}
 	size_t(writeall)(void const *__restrict buffer, size_t bufsize) const {
-		return throw_if_negative(DeeFile_WriteAll(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_WriteAll(*this, buffer, bufsize));
 	}
 	size_t(preadall)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_negative(DeeFile_PReadAll(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PReadAll(*this, buffer, bufsize, pos));
 	}
 	size_t(pwriteall)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_negative(DeeFile_PWriteAll(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PWriteAll(*this, buffer, bufsize, pos));
 	}
 	Dee_pos_t(seek)(Dee_off_t off, int whence = SEEK_SET) const {
 		return throw_if_minusone(DeeFile_Seek(*this, off, whence));
@@ -259,7 +259,7 @@ public:
 	static File(open_object)(DeeObject *__restrict data_owner, void const *data, size_t data_size) {
 		return inherit(DeeFile_OpenObjectMemory(data_owner, data, data_size));
 	}
-	static File(open_object)(DeeObject *__restrict data_owner, Dee_ssize_t begin, Dee_ssize_t end) {
+	static File(open_object)(DeeObject *__restrict data_owner, size_t begin, size_t end) {
 		return inherit(DeeFile_OpenObjectBuffer(data_owner, begin, end));
 	}
 };
@@ -356,7 +356,7 @@ public:
 		return this->operator<<(obj.ptr());
 	}
 	file_printer const &operator,(DeeObject *obj) const {
-		throw_if_negative(DeeFile_WriteAll(fp_file, " ", 1 * sizeof(char)));
+		throw_if_minusone(DeeFile_WriteAll(fp_file, " ", 1 * sizeof(char)));
 		throw_if_nonzero(DeeFile_PrintObject(fp_file, obj));
 		return *this;
 	}

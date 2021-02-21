@@ -1064,7 +1064,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					DeeObject *end   = NULL;
 					DeeBuffer buf;
 					size_t buf_begin, buf_end;
-					dssize_t result;
+					size_t result;
 					if (DeeArg_Unpack(argc, argv, "|ooo:__read__", &data, &begin, &end))
 						goto err;
 					if (!data)
@@ -1098,9 +1098,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					}
 					result = DeeFile_Read(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
 					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
-					if unlikely(result < 0)
+					if unlikely(result == (size_t)-1)
 						goto err;
-					return DeeInt_NewSize((size_t)result);
+					return DeeInt_NewSize(result);
 				}	break;
 
 					/* >> operator __write__(buf: <Buffer>): int;
@@ -1112,7 +1112,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					DeeObject *end   = NULL;
 					DeeBuffer buf;
 					size_t buf_begin, buf_end;
-					dssize_t result;
+					size_t result;
 					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end))
 						goto err;
 					if (end) {
@@ -1138,9 +1138,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					}
 					result = DeeFile_Write(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
 					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
-					if unlikely(result < 0)
+					if unlikely(result == (size_t)-1)
 						goto err;
-					return DeeInt_NewSize((size_t)result);
+					return DeeInt_NewSize(result);
 				}	break;
 
 					/* >> operator __seek__(off: int, whence: int): int; */
@@ -1209,7 +1209,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					DeeObject *d = NULL;
 					dpos_t pos;
 					size_t start, end;
-					dssize_t result;
+					size_t result;
 					DeeBuffer buf;
 					if (DeeArg_Unpack(argc, argv, "o|ooo:__pread__", &a, &b, &c, &d))
 						goto err;
@@ -1251,9 +1251,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					}
 					result = DeeFile_PRead(self, (uint8_t *)buf.bb_base + start, end - start, pos);
 					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
-					if unlikely(result < 0)
+					if unlikely(result == (size_t)-1)
 						goto err;
-					return DeeInt_NewSize((size_t)result);
+					return DeeInt_NewSize(result);
 				}	break;
 
 					/* >> operator __pwrite__(data: <Buffer>, pos: int): int;
@@ -1266,7 +1266,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					DeeObject *d = NULL;
 					dpos_t pos;
 					size_t start, end;
-					dssize_t result;
+					size_t result;
 					DeeBuffer buf;
 					if (DeeArg_Unpack(argc, argv, "oo|oo:__pwrite__", &a, &b, &c, &d))
 						goto err;
@@ -1299,9 +1299,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					}
 					result = DeeFile_PWrite(self, (uint8_t *)buf.bb_base + start, end - start, pos);
 					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
-					if unlikely(result < 0)
+					if unlikely(result == (size_t)-1)
 						goto err;
-					return DeeInt_NewSize((size_t)result);
+					return DeeInt_NewSize(result);
 				}	break;
 
 				case FILE_OPERATOR_GETC: {

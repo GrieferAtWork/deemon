@@ -160,7 +160,7 @@ libdisasm_public_printcode_f(size_t argc,
 	                            code->co_code + code->co_codebytes,
 	                            code, NULL, flags);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(error < 0)
+	if unlikely(error == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)error);
 err:

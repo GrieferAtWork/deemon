@@ -112,14 +112,14 @@ fs_copyfile(DeeObject *__restrict existing_file,
 		}
 	}
 	for (;;) {
-		dssize_t read_size;
+		size_t read_size;
 		read_size = DeeFile_Read(src, buffer, COPYFILE_BUFSIZE);
-		if unlikely(read_size < 0)
+		if unlikely(read_size == (size_t)-1)
 			goto err_dst;
 		if (!read_size)
 			break; /* EOF */
-		read_size = DeeFile_WriteAll(dst, buffer, (size_t)read_size);
-		if unlikely(read_size < 0)
+		read_size = DeeFile_WriteAll(dst, buffer, read_size);
+		if unlikely(read_size == (size_t)-1)
 			goto err_dst;
 		if (read_size != COPYFILE_BUFSIZE)
 			break; /* EOF */

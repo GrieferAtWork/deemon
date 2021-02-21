@@ -75,33 +75,33 @@ tpp_userstream_fopen(char const *__restrict filename) {
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 tpp_userstream_fread(DeeFileObject *__restrict self,
                      void *__restrict buffer, size_t bufsize) {
-	dssize_t result;
+	size_t result;
 	/* Check for interrupts so the user can stop very long compilation processes. */
 	if (DeeThread_CheckInterrupt())
-		result = -1;
-	else {
-		result = DeeFile_Read((DeeObject *)self, buffer, bufsize);
-	}
-	if unlikely(result < 0) {
-		/* Set the error flag. */
-		TPPLexer_SetErr();
-		result = 0;
-	}
-	return (size_t)result;
+		goto err;
+	result = DeeFile_Read((DeeObject *)self, buffer, bufsize);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return result;
+err:
+	/* Set the error flag. */
+	TPPLexer_SetErr();
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 tpp_userstream_fread_nonblock(DeeFileObject *__restrict self,
                               void *__restrict buffer, size_t bufsize) {
-	dssize_t result;
+	size_t result;
 	result = DeeFile_Readf((DeeObject *)self, buffer, bufsize,
 	                       Dee_FILEIO_FNONBLOCKING);
-	if unlikely(result < 0) {
-		/* Set the error flag. */
-		TPPLexer_SetErr();
-		result = 0;
-	}
-	return (size_t)result;
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return result;
+err:
+	/* Set the error flag. */
+	TPPLexer_SetErr();
+	return 0;
 }
 
 DECL_END
@@ -152,9 +152,9 @@ DECL_END
 
 
 /* Configure #pragma message to output text via deemon's stdout file. */
-PRIVATE Dee_ssize_t DCALL
+PRIVATE dssize_t DCALL
 tpp_pragma_message_printf(char const *format, ...) {
-	Dee_ssize_t result;
+	dssize_t result;
 	DREF DeeObject *stdout_file;
 	va_list args;
 	stdout_file = DeeFile_GetStd(DEE_STDOUT);

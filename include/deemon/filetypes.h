@@ -266,7 +266,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
  * to open a generic object using the buffer-interface. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
-                         Dee_ssize_t begin, Dee_ssize_t end);
+                         size_t begin, size_t end);
 
 
 struct Dee_file_writer_object {

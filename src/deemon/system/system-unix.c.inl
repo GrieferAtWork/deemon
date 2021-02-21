@@ -212,7 +212,7 @@ DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
 	char *buffer, *new_buffer;
 	int error;
 	size_t bufsize, new_size;
-	dssize_t req_size;
+	size_t req_size;
 	bufsize = PATH_MAX;
 	buffer  = unicode_printer_alloc_utf8(printer, bufsize);
 	if unlikely(!buffer)
@@ -222,8 +222,8 @@ DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
 		if (DeeThread_CheckInterrupt())
 			goto err_buf;
 		DBG_ALIGNMENT_DISABLE();
-		req_size = readlink(filename, buffer, bufsize + 1);
-		if unlikely(req_size < 0) {
+		req_size = (size_t)readlink(filename, buffer, bufsize + 1);
+		if unlikely(req_size == (size_t)-1) {
 handle_error:
 			DBG_ALIGNMENT_ENABLE();
 			error = DeeSystem_GetErrno();
@@ -233,7 +233,7 @@ handle_error:
 			goto err_buf;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		if ((size_t)req_size <= bufsize)
+		if (req_size <= bufsize)
 			break;
 		DBG_ALIGNMENT_DISABLE();
 		if (lstat(filename, &st))
@@ -254,7 +254,7 @@ handle_error:
 		bufsize = new_size;
 	}
 	/* Commit buffer data at the end of the printer. */
-	if (unicode_printer_confirm_utf8(printer, buffer, (size_t)req_size) < 0)
+	if (unicode_printer_confirm_utf8(printer, buffer, req_size) < 0)
 		goto err_buf;
 	return 0;
 err_buf:

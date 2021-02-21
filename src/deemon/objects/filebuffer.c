@@ -79,8 +79,8 @@ PRIVATE NONNULL((1)) void DCALL buffer_deltty(Buffer *__restrict self);
 
 PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL buffer_read_nolock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL buffer_write_nolock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_nolock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_nolock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
 PRIVATE dpos_t DCALL buffer_seek_nolock(Buffer *__restrict self, doff_t off, int whence);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict self, uint16_t mode);
 #define BUFFER_SYNC_FNORMAL          0x0000
@@ -422,11 +422,11 @@ PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_read_nolock(Buffer *__restrict self,
                    uint8_t *__restrict buffer,
                    size_t bufsize, dioflag_t flags) {
-	dssize_t read_size, result = 0;
+	size_t read_size, result = 0;
 	size_t bufavail;
 	uint16_t old_flags;
 	dpos_t next_data;
@@ -516,7 +516,7 @@ read_through:
 			read_size = DeeFile_Readf(file, buffer, bufsize, flags);
 			COMPILER_BARRIER();
 			Dee_Decref(file);
-			if unlikely(read_size < 0)
+			if unlikely(read_size == (size_t)-1)
 				goto err;
 			self->fb_fpos = next_data + bufsize;
 			result += read_size;
@@ -583,13 +583,13 @@ read_through:
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
-	if unlikely(read_size < 0)
+	if unlikely(read_size == (size_t)-1)
 		goto err;
 	if unlikely(read_size == 0)
 		goto done;
-	self->fb_fpos = next_data + (size_t)read_size;
+	self->fb_fpos = next_data + read_size;
 	self->fb_ptr  = self->fb_base;
-	self->fb_cnt  = (size_t)read_size;
+	self->fb_cnt  = read_size;
 	did_read_data = true;
 	goto again;
 
@@ -598,14 +598,14 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return -1;
+	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_write_nolock(Buffer *__restrict self,
                     uint8_t const *__restrict buffer,
                     size_t bufsize, dioflag_t flags) {
-	dssize_t result = 0;
+	size_t result = 0;
 	size_t new_bufsize;
 	size_t bufavail;
 	uint8_t *new_buffer;
@@ -685,9 +685,10 @@ again:
 	                      FILE_BUFFER_FREADING))) {
 		/* Buffer is too large or cannot be relocated.
 		 * >> Therefor, we must flush it, then try again. */
-		if ((self->fb_flag & FILE_BUFFER_FISATTY) &&
-		    DeeFileBuffer_SyncTTYs())
-			goto err;
+		if (self->fb_flag & FILE_BUFFER_FISATTY) {
+			if (DeeFileBuffer_SyncTTYs())
+				goto err;
+		}
 		COMPILER_BARRIER();
 		if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 			goto err;
@@ -699,7 +700,7 @@ again:
 		/* Check for special case: If the buffer is fixed to zero-length,
 		 *                         we must act as a write-through buffer. */
 		if (!self->fb_size) {
-			dssize_t temp;
+			size_t temp;
 do_writethrough:
 			file = self->fb_file;
 			Dee_Incref(file);
@@ -707,7 +708,7 @@ do_writethrough:
 			temp = DeeFile_Writef(file, buffer, bufsize, flags);
 			COMPILER_BARRIER();
 			Dee_Decref(file);
-			if unlikely(temp < 0)
+			if unlikely(temp == (size_t)-1)
 				goto err;
 			result += temp;
 			goto done;
@@ -754,7 +755,7 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 PRIVATE dpos_t DCALL
@@ -856,7 +857,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
 	dpos_t abs_chngpos;
 	size_t changed_size;
-	dssize_t temp;
+	size_t temp;
 	uint16_t old_flags;
 	DREF DeeObject *file;
 again:
@@ -897,7 +898,7 @@ again:
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
 	Dee_Decref(file);
-	if unlikely(temp < 0)
+	if unlikely(temp == (size_t)-1)
 		goto err;
 	if (changed_size == self->fb_chsz && self->fb_file &&
 	    abs_chngpos == self->fb_fblk + (self->fb_chng - self->fb_base)) {
@@ -928,13 +929,13 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags) {
 	uint8_t *new_buffer;
-	dssize_t read_size;
+	size_t read_size;
 	DREF DeeObject *file;
 	uint16_t old_flags;
 	int result;
@@ -1063,13 +1064,13 @@ read_through:
 	Dee_Decref(file);
 	self->fb_flag &= ~FILE_BUFFER_FREADING;
 	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
-	if unlikely(read_size < 0)
+	if unlikely(read_size == (size_t)-1)
 		goto err;
 	if unlikely(self->fb_cnt)
 		goto read_from_buffer;
 	if unlikely(self->fb_chsz)
 		goto again;
-	self->fb_fpos = next_data + (size_t)read_size;
+	self->fb_fpos = next_data + read_size;
 	/* Check for special case: EOF reached. */
 	if (!read_size)
 		result = GETC_EOF;
@@ -1182,22 +1183,22 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_read(Buffer *__restrict self,
             void *__restrict buffer,
             size_t bufsize, dioflag_t flags) {
-	dssize_t result;
+	size_t result;
 	buf_write(self);
 	result = buffer_read_nolock(self, (uint8_t *)buffer, bufsize, flags);
 	buf_endwrite(self);
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_write(Buffer *__restrict self,
              void const *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
-	dssize_t result;
+	size_t result;
 	buf_write(self);
 	result = buffer_write_nolock(self, (uint8_t const *)buffer, bufsize, flags);
 	buf_endwrite(self);
@@ -1799,8 +1800,8 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
-	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&buffer_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&buffer_trunc,

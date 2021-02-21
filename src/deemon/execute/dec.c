@@ -687,36 +687,22 @@ DecFile_Init(DecFile *__restrict self,
              DeeModuleObject *__restrict module,
              DeeStringObject *__restrict dec_pathname,
              struct compiler_options *options) {
-	dpos_t total_size, old_pos;
+	dpos_t total_size;
 	Dec_Ehdr *hdr;
 	ASSERT_OBJECT(input_stream);
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
 	ASSERT_OBJECT_TYPE_EXACT(dec_pathname, &DeeString_Type);
 
 	/* Read the entirety of the given input_stream. */
-	old_pos = DeeFile_Seek(input_stream, 0, SEEK_SET);
-	if unlikely(old_pos == (dpos_t)-1) {
-err_seek_failed:
-#if 0 /* TODO */
-		if (DeeError_Catch(&DeeError_NotImplemented)) {
-			/* If seeking isn't allowed within the input stream,
-			 * then try to read everything using buffered input. */
-		}
-#endif
-		goto err;
-	}
-	/* Determine the total size by seeking up to the end. */
-	total_size = DeeFile_Seek(input_stream, 0, SEEK_END);
+	total_size = DeeFile_GetSize(input_stream);
 	if unlikely(total_size == (dpos_t)-1)
-		goto err_seek_failed;
-	/* Seek back to where we were before. */
-	if unlikely(DeeFile_Seek(input_stream, (doff_t)old_pos, SEEK_SET) == (dpos_t)-1)
-		goto err_seek_failed;
+		goto err;
 
 	/* Quick check: If the file is larger than the allowed limit,
 	 *              don't even consider attempting to load it. */
 	if unlikely(total_size > DFILE_LIMIT)
 		goto end_not_a_dec;
+
 	/* Another quick check: If the file isn't even large enough for the
 	 *                      basic header, it's not a DEC file either. */
 	if unlikely(total_size < sizeof(Dec_Ehdr))
@@ -733,7 +719,7 @@ err_seek_failed:
 	 * TODO: Use `mmap()' or equivalent when possible and supported by the OS
 	 *       mmap() is __much__ more efficient that malloc()+read(), especially
 	 *       in cases where the entire file has to get mapped. */
-	if (DeeFile_ReadAll(input_stream, hdr, (size_t)total_size) < 0)
+	if (DeeFile_ReadAll(input_stream, hdr, (size_t)total_size) == (size_t)-1)
 		goto err_data;
 
 #if DECFILE_PADDING != 0
@@ -741,7 +727,7 @@ err_seek_failed:
 	 * NOTE: The padding is used to reduce the number of out-of-bound checks,
 	 *       as well as allow code to assume that the file ends with a whole
 	 *       bunch of ZERO-bytes. */
-	bzero((uint8_t *)hdr + total_size, DECFILE_PADDING);
+	bzero((uint8_t *)hdr + (size_t)total_size, DECFILE_PADDING);
 #endif /* DECFILE_PADDING != 0 */
 
 	/* All right! we've read the file.
@@ -761,13 +747,13 @@ err_seek_failed:
 	if unlikely(hdr->e_builtinset > DBUILTINS_MAX)
 		goto end_not_a_dec_data;
 	/* Validate pointers from the header. */
-	if unlikely(LETOH32(hdr->e_impoff) >= total_size)
+	if unlikely(LETOH32(hdr->e_impoff) >= (size_t)total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_depoff) >= total_size)
+	if unlikely(LETOH32(hdr->e_depoff) >= (size_t)total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_globoff) >= total_size)
+	if unlikely(LETOH32(hdr->e_globoff) >= (size_t)total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_rootoff) >= total_size)
+	if unlikely(LETOH32(hdr->e_rootoff) >= (size_t)total_size)
 		goto end_not_a_dec_data;
 	if unlikely(LETOH32(hdr->e_stroff) < hdr->e_size)
 		goto end_not_a_dec_data; /* Missing string table. */
@@ -779,7 +765,7 @@ err_seek_failed:
 		goto end_not_a_dec_data; /* Check for overflow */
 	if unlikely(LETOH32(hdr->e_stroff) +
 	            LETOH32(hdr->e_strsiz) >
-	            total_size)
+	            (size_t)total_size)
 		goto end_not_a_dec_data;
 
 	/* Save the given options in the DEC file descriptor. */

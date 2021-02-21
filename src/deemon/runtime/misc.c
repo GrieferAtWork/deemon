@@ -1789,9 +1789,9 @@ debug_printer(void *UNUSED(closure),
 			bufsize -= part;
 		}
 	}
-	return result;
+	return (dssize_t)result;
 #else /* CONFIG_HOST_WINDOWS */
-	return DeeFile_Write(DeeFile_DefaultStddbg, buffer, bufsize);
+	return (dssize_t)DeeFile_Write(DeeFile_DefaultStddbg, buffer, bufsize);
 #endif /* !CONFIG_HOST_WINDOWS */
 }
 #endif /* !NDEBUG */
@@ -1890,18 +1890,18 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 #endif /* !NDEBUG */
 }
 
-PUBLIC Dee_ssize_t
+PUBLIC dssize_t
 (DCALL _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
 #ifdef NDEBUG
 	(void)arg;
 	(void)data;
 	(void)datalen;
 #else /* NDEBUG */
-	Dee_ssize_t result;
+	dssize_t result;
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
 	if (!_Dee_dprint_enabled)
-		return (Dee_ssize_t)datalen;
+		return (dssize_t)datalen;
 	result = debug_printer(arg, data, datalen);
 	if (result < 0) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);

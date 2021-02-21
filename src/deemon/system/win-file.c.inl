@@ -74,17 +74,17 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 
 
-INTERN dssize_t DCALL
+PRIVATE size_t DCALL
 debugfile_write(DeeFileObject *__restrict UNUSED(self),
                 void const *__restrict buffer,
                 size_t bufsize, dioflag_t UNUSED(flags)) {
-	dssize_t result;
+	size_t result;
 	/* Forward all data to stderr. */
 	result = DeeFile_Write(DeeFile_DefaultStderr, buffer, bufsize);
-	if unlikely(result <= 0)
+	if unlikely(result == 0 || result == (size_t)-1)
 		goto done;
-	if (bufsize > (size_t)result)
-		bufsize = (size_t)result;
+	if (bufsize > result)
+		bufsize = result;
 	if (IsDebuggerPresent()) {
 #ifdef __ARCH_PAGESIZE_MIN
 		/* (ab-)use the fact that the kernel can't keep us from reading
@@ -500,7 +500,7 @@ nt_sysfile_trygettype(SystemFile *__restrict self) {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
@@ -558,11 +558,11 @@ again:
 		result = 0;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)result;
+	return result;
 err_io:
 	error_file_io(self);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 
@@ -716,7 +716,7 @@ err:
 
 
 /* @return: * : The number UTF-8! bytes processed. */
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 write_utf8_to_console(SystemFile *__restrict self,
                       unsigned char const *__restrict buffer,
                       size_t bufsize) {
@@ -738,8 +738,8 @@ write_utf8_to_console(SystemFile *__restrict self,
 	}
 	result = (size_t)(iter - buffer);
 	if (os_write_utf8_to_console(self, buffer, result))
-		result = (size_t)(dssize_t)-1;
-	return (dssize_t)result;
+		result = (size_t)-1;
+	return result;
 }
 
 
@@ -755,7 +755,7 @@ append_pending_utf8(SystemFile *__restrict self,
 again:
 	pending_count = ATOMIC_READ(self->sf_pendingc);
 	if unlikely(pending_count) {
-		dssize_t temp;
+		size_t temp;
 		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2];
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
 		memcpyc(with_pending, self->sf_pending, pending_count, sizeof(unsigned char));
@@ -763,16 +763,16 @@ again:
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
-		if unlikely(temp == (dssize_t)-1) {
+		if unlikely(temp == (size_t)-1) {
 			ATOMIC_CMPXCH(self->sf_pendingc, 0, pending_count);
 			goto err;
 		}
 		pending_count += bufsize;
-		ASSERT((size_t)temp <= pending_count);
-		pending_count -= (size_t)temp;
+		ASSERT(temp <= pending_count);
+		pending_count -= temp;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
 		if unlikely(pending_count)
-			return append_pending_utf8(self, with_pending + (size_t)temp, pending_count);
+			return append_pending_utf8(self, with_pending + temp, pending_count);
 	} else {
 		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, 0, bufsize))
@@ -788,7 +788,7 @@ write_to_console(SystemFile *__restrict self,
                  void const *__restrict buffer,
                  size_t bufsize) {
 	uint8_t pending_count;
-	dssize_t num_written;
+	size_t num_written;
 again:
 	if (!bufsize)
 		return 0;
@@ -808,15 +808,15 @@ again:
 		num_written = write_utf8_to_console(self,
 		                                    with_pending,
 		                                    total_length);
-		if unlikely(num_written == (dssize_t)-1) {
+		if unlikely(num_written == (size_t)-1) {
 			ATOMIC_CMPXCH(self->sf_pendingc, 0, pending_count);
 			goto err;
 		}
-		ASSERT((size_t)num_written <= total_length);
-		if ((size_t)num_written < total_length) {
+		ASSERT(num_written <= total_length);
+		if (num_written < total_length) {
 			if (append_pending_utf8(self,
-			                        with_pending + (size_t)num_written,
-			                        total_length - (size_t)num_written))
+			                        with_pending + num_written,
+			                        total_length - num_written))
 				goto err;
 		}
 		total_length -= pending_count;
@@ -828,13 +828,13 @@ again:
 	num_written = write_utf8_to_console(self,
 	                                    (unsigned char *)buffer,
 	                                    bufsize);
-	if unlikely(num_written == (dssize_t)-1)
+	if unlikely(num_written == (size_t)-1)
 		goto err;
-	ASSERT((size_t)num_written <= bufsize);
-	if ((size_t)num_written < bufsize) {
+	ASSERT(num_written <= bufsize);
+	if (num_written < bufsize) {
 		if (append_pending_utf8(self,
-		                        (uint8_t *)buffer + (size_t)num_written,
-		                        bufsize - (size_t)num_written))
+		                        (uint8_t *)buffer + num_written,
+		                        bufsize - num_written))
 			goto err;
 	}
 	return 0;
@@ -842,7 +842,7 @@ err:
 	return -1;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer,
               size_t bufsize, dioflag_t UNUSED(flags)) {
@@ -873,7 +873,7 @@ sysfile_write(SystemFile *__restrict self,
 		if unlikely(write_to_console(self, buffer, bufsize))
 			goto err;
 		/* TODO: Support for-, and emulation of `ENABLE_VIRTUAL_TERMINAL_PROCESSING' */
-		return (dssize_t)bufsize;
+		return bufsize;
 	}
 again:
 	DBG_ALIGNMENT_DISABLE();
@@ -890,9 +890,9 @@ again:
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)bytes_written;
+	return bytes_written;
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 
@@ -913,7 +913,7 @@ typedef union {
 	OVERLAPPED    ms;
 } my_OVERLAPPED;
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_pread(SystemFile *__restrict self,
               void *__restrict buffer,
               size_t bufsize, dpos_t pos,
@@ -947,12 +947,12 @@ again:
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)bytes_written;
+	return bytes_written;
 err:
-	return -1;
+	return (size_t)-1;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_pwrite(SystemFile *__restrict self,
                void const *__restrict buffer,
                size_t bufsize, dpos_t pos,
@@ -986,9 +986,9 @@ again:
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return (dssize_t)bytes_written;
+	return bytes_written;
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 PRIVATE dpos_t DCALL
@@ -1276,14 +1276,14 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ sysfile_class_members
 	},
-	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
-	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
 	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-	/* .ft_pread  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pread,
-	/* .ft_pwrite = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pwrite,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pread,
+	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pwrite,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL

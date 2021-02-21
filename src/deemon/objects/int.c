@@ -3069,10 +3069,10 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 	size_t digit_count;
 	digit last_digit;
 	digit_count = (size_t)self->ob_size;
-	if ((Dee_ssize_t)digit_count < 0) {
+	if ((dssize_t)digit_count < 0) {
 		if unlikely(!is_signed)
 			goto err_underflow;
-		digit_count = (size_t) - (Dee_ssize_t)digit_count;
+		digit_count = (size_t) - (dssize_t)digit_count;
 	}
 	while (digit_count && self->ob_digit[digit_count - 1] == 0)
 		--digit_count;

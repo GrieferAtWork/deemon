@@ -70,7 +70,7 @@ DECL_BEGIN
  * encode an entire commandline at once.
  * @return: * : The sum of return values of `printer'
  * @return: <0: The propagation of the first negative return value of `printer' (if any) */
-PRIVATE NONNULL((1, 3)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 3)) dssize_t DCALL
 process_cmdline_encode_argument(dformatprinter printer, void *arg,
                                 char const *arg_start, size_t arg_len);
 
@@ -102,7 +102,7 @@ process_cmdline_encode_argument(dformatprinter printer, void *arg,
  *     >ls New\ Folder<         { "ls", "New Folder" }
  *     >ls "" foo<              { "ls", "", "foo" }     // Empty argument!
  */
-PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 2)) dssize_t DCALL
 process_cmdline_decode(char *cmdline,
                        dformatprinter arg_printer,
                        void *arg_printer_arg);
@@ -174,14 +174,14 @@ struct cmdline_encode_argument_wrapper_data {
 	void          *wd_arg;
 };
 
-PRIVATE Dee_ssize_t __LIBCCALL
+PRIVATE dssize_t __LIBCCALL
 cmdline_encode_argument_wrapper_func(void *arg, char const *data, size_t datalen) {
 	struct cmdline_encode_argument_wrapper_data *p;
 	p = (struct cmdline_encode_argument_wrapper_data *)arg;
 	return (*p->wd_printer)(p->wd_arg, data, datalen);
 }
 
-PRIVATE NONNULL((1, 3)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 3)) dssize_t DCALL
 process_cmdline_encode_argument(dformatprinter printer, void *arg,
                                 char const *arg_start, size_t arg_len) {
 	struct cmdline_encode_argument_wrapper_data p;
@@ -195,7 +195,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 2)) dssize_t DCALL
 process_cmdline_decode(char *cmdline,
                        dformatprinter arg_printer,
                        void *arg_printer_arg) {
@@ -213,11 +213,11 @@ err:
 
 #else /* CONFIG_HAVE_LIBCMDLINE */
 
-LOCAL NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3, 4)) dssize_t DCALL
 encode_escape_backslash(dformatprinter printer, void *arg,
                         char const *arg_start,
                         char const *arg_end) {
-	Dee_ssize_t temp, result = 0;
+	dssize_t temp, result = 0;
 	uint32_t ch;
 	char const *flush_start = arg_start, *iter, *prev;
 	for (iter = prev = arg_start; (ch = utf8_readchar(&iter, arg_end)) != 0; prev = iter) {
@@ -244,11 +244,11 @@ err:
 	return temp;
 }
 
-LOCAL NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3, 4)) dssize_t DCALL
 encode_escape_spc(dformatprinter printer, void *arg,
                   char const *arg_start,
                   char const *arg_end) {
-	Dee_ssize_t temp, result = 0;
+	dssize_t temp, result = 0;
 	uint32_t ch;
 	char const *flush_start = arg_start, *iter, *prev;
 	for (iter = prev = arg_start; (ch = utf8_readchar(&iter, arg_end)) != 0; prev = iter) {
@@ -275,11 +275,11 @@ err:
 	return temp;
 }
 
-LOCAL NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3, 4)) dssize_t DCALL
 encode_escape_all(dformatprinter printer, void *arg,
                   char const *arg_start,
                   char const *arg_end) {
-	Dee_ssize_t temp, result = 0;
+	dssize_t temp, result = 0;
 	uint32_t ch;
 	char const *flush_start = arg_start, *iter, *prev;
 	for (iter = prev = arg_start; (ch = utf8_readchar(&iter, arg_end)) != 0; prev = iter) {
@@ -306,11 +306,11 @@ err:
 	return temp;
 }
 
-LOCAL NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3, 4)) dssize_t DCALL
 encode_escape_q(dformatprinter printer, void *arg,
                 char const *arg_start,
                 char const *arg_end, char qchar) {
-	Dee_ssize_t temp, result = 0;
+	dssize_t temp, result = 0;
 	uint32_t ch;
 	char const *flush_start = arg_start, *iter, *prev;
 	for (iter = prev = arg_start; (ch = utf8_readchar(&iter, arg_end)) != 0; prev = iter) {
@@ -337,12 +337,12 @@ err:
 	return temp;
 }
 
-LOCAL NONNULL((1, 3)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3)) dssize_t DCALL
 encode_quote(dformatprinter printer, void *arg,
              char const *arg_start,
              size_t arg_len, char qchar,
              unsigned int num_slash) {
-	Dee_ssize_t temp, result;
+	dssize_t temp, result;
 	result = (*printer)(arg, &qchar, 1);
 	if unlikely(result < 0)
 		goto done;
@@ -361,12 +361,12 @@ err:
 	return temp;
 }
 
-LOCAL NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+LOCAL NONNULL((1, 3, 4)) dssize_t DCALL
 encode_escape_quote(dformatprinter printer, void *arg,
                     char const *arg_start,
                     char const *arg_end,
                     char qchar) {
-	Dee_ssize_t temp, result;
+	dssize_t temp, result;
 	result = (*printer)(arg, &qchar, 1);
 	if unlikely(result < 0)
 		goto done;
@@ -384,10 +384,10 @@ err:
 	return temp;
 }
 
-PRIVATE NONNULL((1, 3)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 3)) dssize_t DCALL
 process_cmdline_encode_argument(dformatprinter printer, void *arg,
                                 char const *arg_start, size_t arg_len) {
-	Dee_ssize_t result;
+	dssize_t result;
 	uint32_t ch;
 	char const *iter, *arg_end;
 	unsigned int num_spaces, num_dquote, num_squote, num_slash;
@@ -473,12 +473,12 @@ escape_double_quote:
 #define cmdline_isquote(ch) ((ch) == '\'' || (ch) == '\"')
 #define cmdline_isbslsh(ch) ((ch) == '\\')
 
-PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE NONNULL((1, 2)) dssize_t DCALL
 process_cmdline_decode(char *cmdline,
                        dformatprinter arg_printer,
                        void *arg_printer_arg) {
 	char *cmdline_end;
-	Dee_ssize_t temp, result = 0;
+	dssize_t temp, result = 0;
 	char *next_ch, *arg_start;
 	uint32_t ch;
 	/* Skip leading space. */
@@ -632,7 +632,7 @@ struct process_cmdline_decode_full_data {
 	DREF DeeObject *dfd_resexe;   /* [0..1] Result exe. */
 };
 
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
 process_cmdline_decode_full_func(void *arg,
                                  char const *__restrict data,
                                  size_t datalen) {

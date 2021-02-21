@@ -784,8 +784,7 @@ PRIVATE int DCALL cmd_version(char *UNUSED(arg)) {
 	fp = DeeFile_GetStd(DEE_STDERR);
 	if unlikely(!fp)
 		goto err_nofp;
-	if (DeeFile_WriteAll(fp, str_version,
-	                     COMPILER_STRLEN(str_version)) < 0)
+	if (DeeFile_WriteAll(fp, str_version, COMPILER_STRLEN(str_version)) == (size_t)-1)
 		goto err;
 	Dee_Decref(fp);
 	return exit_ok();
@@ -1021,7 +1020,7 @@ PRIVATE int DCALL cmd_help(char *arg) {
 		goto err;
 	if (!arg) {
 		/* Display help on all options from `cmdline_options' */
-		if (DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage)) < 0)
+		if (DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage)) == (size_t)-1)
 			goto err_fp;
 		if (display_help_group((dformatprinter)&DeeFile_WriteAll, fp, cmdline_options, ""))
 			goto err_fp;
@@ -1156,10 +1155,10 @@ int main(int argc, char *argv[]) {
 		if unlikely(!fp)
 			goto err;
 		temp = DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage));
-		if (temp >= 0)
+		if (temp != (size_t)-1)
 			temp = DeeFile_WriteAll(fp, str_minhelp, COMPILER_STRLEN(str_minhelp));
 		Dee_Decref(fp);
-		if unlikely(temp < 0)
+		if unlikely(temp == (size_t)-1)
 			goto err;
 		goto done;
 	}
@@ -1247,18 +1246,18 @@ int main(int argc, char *argv[]) {
 				goto err;
 			}
 			for (;;) {
-				Dee_ssize_t error;
+				size_t error;
 				/* Pull items from the interactive module. */
 				value = DeeObject_IterNext(interactive_iterator);
 				if (!ITER_ISOK(value))
 					break;
-				error = DeeObject_PrintRepr(value,
-				                            (dformatprinter)&DeeFile_WriteAll,
-				                            interactive_output);
-				if likely(error >= 0)
+				error = (size_t)DeeObject_PrintRepr(value,
+				                                    (dformatprinter)&DeeFile_WriteAll,
+				                                    interactive_output);
+				if likely(error != (size_t)-1)
 					error = DeeFile_WriteAll(interactive_output, "\n", 1 * sizeof(char));
 				Dee_Decref(value);
-				if unlikely(error < 0) {
+				if unlikely(error == (size_t)-1) {
 					value = NULL;
 					break;
 				}
@@ -1512,7 +1511,7 @@ INTERN ATTR_NORETURN void __stack_chk_fail(void) {
 
 PRIVATE NONNULL((1)) void DCALL
 emitpp_writeout(void const *__restrict p, size_t s) {
-	if (DeeFile_WriteAll(script_options.co_decoutput, p, s) < 0)
+	if (DeeFile_WriteAll(script_options.co_decoutput, p, s) == (size_t)-1)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
@@ -2207,13 +2206,11 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			--result_end;
 		/* Now comes the part that it's been all about:
 		 * This is where we override the original source file's contents! */
-		if unlikely(DeeFile_Seek(stream, (doff_t)override_start_pos, SEEK_SET) == (dpos_t)-1)
+		if unlikely(DeeFile_SetPos(stream, override_start_pos) == (dpos_t)-1)
 			goto err_script_result;
 		/* Write data to the stream. */
 		new_text_size = (size_t)(result_end - result_start);
-		if (DeeFile_WriteAll(stream,
-		                     result_start,
-		                     new_text_size) < 0)
+		if (DeeFile_WriteAll(stream, result_start, new_text_size) == (size_t)-1)
 			goto err_script_result_restore;
 
 		if (has_leading_linefeed) {
@@ -2226,7 +2223,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		/* Write all data we weren't supposed to override. */
 		if (DeeFile_WriteAll(stream,
 		                     override_end_ptr,
-		                     (size_t)(file->f_end - override_end_ptr)) < 0)
+		                     (size_t)(file->f_end - override_end_ptr)) == (size_t)-1)
 			goto err_script_result_restore;
 		if (new_text_size < (size_t)(override_end_ptr - override_start_ptr)) {
 			/* Must truncate the file to its new size. */
@@ -2643,15 +2640,15 @@ operation_mode_format(int argc, char **argv) {
 		filename = argv[i];
 		if (argc > 1) {
 			DREF DeeObject *fp;
-			dssize_t temp;
+			size_t temp;
 			fp = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!fp)
 				goto err;
 			temp = DeeFile_WriteAll(fp, filename, strlen(filename));
-			if (temp >= 0)
+			if likely(temp != (size_t)-1)
 				temp = DeeFile_WriteAll(fp, ":\n", 2);
 			Dee_Decref(fp);
-			if unlikely(temp < 0)
+			if unlikely(temp == (size_t)-1)
 				goto err;
 		}
 		if (dchdir_and_format_source_files(filename))

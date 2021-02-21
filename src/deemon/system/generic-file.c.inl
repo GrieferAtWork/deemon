@@ -92,20 +92,20 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 }
 
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_read(DeeFileObject *__restrict UNUSED(self),
              void *__restrict UNUSED(buffer),
              size_t UNUSED(bufsize),
              dioflag_t UNUSED(flags)) {
-	return fs_unsupported();
+	return (size_t)fs_unsupported();
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE size_t DCALL
 sysfile_write(DeeFileObject *__restrict UNUSED(self),
               void const *__restrict UNUSED(buffer),
               size_t UNUSED(bufsize),
               dioflag_t UNUSED(flags)) {
-	return fs_unsupported();
+	return (size_t)fs_unsupported();
 }
 
 PRIVATE dpos_t DCALL
