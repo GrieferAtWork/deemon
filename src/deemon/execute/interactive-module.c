@@ -1200,7 +1200,6 @@ imod_init(InteractiveModule *__restrict self,
 		root_scope->rs_scope.bs_argv[0] = dots;
 		root_scope->rs_scope.bs_varargs = dots;
 		root_scope->rs_scope.bs_flags |= INTERACTIVE_MODULE_CODE_FLAGS;
-		root_scope->rs_globalc;
 	}
 
 	{

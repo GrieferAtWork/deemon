@@ -1722,7 +1722,9 @@ INTERN DeeTypeObject SharedVector_Type = {
  * from the given vector once `DeeSharedVector_Decref()' is called.
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
- *       vector itself! */
+ *       vector itself!
+ * NOTE: The returned object cannot be used to change out the elements
+ *       of the given `vector', meaning that _it_ can still be [const] */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	DREF SharedVector *result;
@@ -1739,7 +1741,7 @@ done:
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `sv_vector',
- * but still decref() all contained object.
+ * but still decref() all contained objects.
  * Otherwise, try to allocate a new vector with a length of `sv_length'.
  * If doing so fails, don't raise an error but replace `sv_vector' with
  * `NULL' and `sv_length' with `0' before decref()-ing all elements
@@ -1750,7 +1752,9 @@ done:
  * to the SharedVector object.
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers. */
+ *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
+ * NOTE: During decref(), objects are destroyed in reverse order,
+ *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	DREF DeeObject *const *begin, *const *iter;

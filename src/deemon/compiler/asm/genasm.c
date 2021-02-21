@@ -272,7 +272,7 @@ STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NORMAL | PRINT_MODE_FILE) == ASM16_FPR
 STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_SP | PRINT_MODE_FILE) == ASM16_FPRINT_C_SP);
 STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NL | PRINT_MODE_FILE) == ASM16_FPRINT_C_NL);
 
-PRIVATE WUNUSED ATTR_PURE NONNULL((1)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 constexpr_is_empty_string(DeeObject *__restrict self) {
 	if (DeeString_Check(self) && DeeString_IsEmpty(self))
 		goto yes;
@@ -285,7 +285,7 @@ yes:
 	return true;
 }
 
-PRIVATE WUNUSED ATTR_PURE NONNULL((1)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 ast_is_empty_string(struct ast *__restrict self) {
 	while (self->a_type == AST_MULTIPLE &&
 	       self->a_flag == AST_FMULTIPLE_KEEPLAST) {

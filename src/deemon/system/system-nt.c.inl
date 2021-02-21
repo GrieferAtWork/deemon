@@ -337,7 +337,8 @@ err:
 }
 
 
-PUBLIC WUNUSED bool DCALL DeeNTSystem_IsUncError(DeeNT_DWORD error) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsUncError(DeeNT_DWORD error) {
 	switch (error) {
 
 		/* TODO: Figure out the real UNC error codes. */
@@ -363,7 +364,8 @@ PUBLIC WUNUSED bool DCALL DeeNTSystem_IsUncError(DeeNT_DWORD error) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(DeeNT_DWORD error) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsFileNotFoundError(DeeNT_DWORD error) {
 	switch (error) {
 
 		/* XXX: Check if these are all the possible
@@ -393,7 +395,8 @@ PUBLIC WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(DeeNT_DWORD error) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(DeeNT_DWORD error) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsAccessDeniedError(DeeNT_DWORD error) {
 	switch (error) {
 
 #ifdef ERROR_ACCESS_DENIED
@@ -448,7 +451,8 @@ PUBLIC WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(DeeNT_DWORD error) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(DeeNT_DWORD error) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsBadAllocError(DeeNT_DWORD error) {
 	switch (error) {
 
 #ifdef ERROR_OUTOFMEMORY
@@ -518,7 +522,8 @@ PUBLIC WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(DeeNT_DWORD error) {
 
 
 
-PUBLIC bool DCALL DeeNTSystem_IsBusy(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsBusy(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_CURRENT_DIRECTORY
@@ -606,7 +611,8 @@ PUBLIC bool DCALL DeeNTSystem_IsBusy(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsExists(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsExists(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_FILE_EXISTS
@@ -628,7 +634,8 @@ PUBLIC bool DCALL DeeNTSystem_IsExists(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsNotDir(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsNotDir(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_DIRECTORY
@@ -647,7 +654,8 @@ PUBLIC bool DCALL DeeNTSystem_IsNotDir(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsNotEmpty(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsNotEmpty(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_DIR_NOT_EMPTY
@@ -669,7 +677,8 @@ PUBLIC bool DCALL DeeNTSystem_IsNotEmpty(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsBadF(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsBadF(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_INVALID_HANDLE
@@ -682,7 +691,8 @@ PUBLIC bool DCALL DeeNTSystem_IsBadF(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsXDev(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsXDev(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_NOT_SAME_DEVICE
@@ -695,7 +705,8 @@ PUBLIC bool DCALL DeeNTSystem_IsXDev(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC bool DCALL DeeNTSystem_IsUnsupportedError(DeeNT_DWORD dwError) {
+PUBLIC ATTR_CONST WUNUSED bool DCALL
+DeeNTSystem_IsUnsupportedError(DeeNT_DWORD dwError) {
 	switch (dwError) {
 
 #ifdef ERROR_NOT_SUPPORTED
@@ -969,7 +980,7 @@ PUBLIC bool DCALL DeeNTSystem_IsUnsupportedError(DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL
+PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError) {
 	switch (dwError) {
 
@@ -983,7 +994,7 @@ DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL
+PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError) {
 	switch (dwError) {
 
@@ -1003,7 +1014,7 @@ DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL
+PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError) {
 	switch (dwError) {
 
@@ -1062,7 +1073,7 @@ DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
-PUBLIC WUNUSED bool DCALL
+PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError) {
 	switch (dwError) {
 
@@ -1662,7 +1673,7 @@ PRIVATE struct nt2errno_ent const nt2errno[] = {
  * deemon within a windows environment.
  * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()' to translate
  *       the given NT error code into an errno. */
-PUBLIC WUNUSED /*errno_t*/ int DCALL
+PUBLIC ATTR_CONST WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 #ifdef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
 	return errno_nt2kos(dwError);
@@ -1745,7 +1756,7 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 #elif defined(EACCES)
 #define HAVE_RETURN 1
 	return EACCES;
-#endif
+#endif /* ... */
 #endif /* NT2ERRNO_SRC_CYGWIN || NT2ERRNO_SRC_MSVC */
 #ifndef HAVE_RETURN
 	return Dee_SYSTEM_ERROR_UNKNOWN;
@@ -1756,7 +1767,7 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 
 
 /* Do the reverse of `DeeNTSystem_TranslateErrno()' */
-DFUNDEF WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
+DFUNDEF ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value) {
 #ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
 	return errno_kos2nt(errno_value);
@@ -1781,11 +1792,11 @@ DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value) {
  * When no error code is given, `GetLastError()' is called internally.
  * When `tp' is `NULL', the proper error type is automatically determined using the `DeeNTSystem_Is*' functions.
  * @return: -1: These functions always return -1 */
-PUBLIC NONNULL((3)) int DCALL
-DeeNTSystem_VThrowErrorf(DeeTypeObject *tp,
-                         DeeNT_DWORD dwError,
-                         char const *__restrict format,
-                         va_list args) {
+PUBLIC ATTR_COLD NONNULL((3)) int
+(DCALL DeeNTSystem_VThrowErrorf)(DeeTypeObject *tp,
+                                 DeeNT_DWORD dwError,
+                                 char const *__restrict format,
+                                 va_list args) {
 	int result;
 	/* Automatically select the proper error class. */
 	if (!tp) {
@@ -1866,10 +1877,10 @@ err:
 	goto done;
 }
 
-PUBLIC NONNULL((2)) int DCALL
-DeeNTSystem_VThrowLastErrorf(DeeTypeObject *tp,
-                             char const *__restrict format,
-                             va_list args) {
+PUBLIC ATTR_COLD NONNULL((2)) int
+(DCALL DeeNTSystem_VThrowLastErrorf)(DeeTypeObject *tp,
+                                     char const *__restrict format,
+                                     va_list args) {
 	int result;
 	DeeNT_DWORD dwError;
 	dwError = GetLastError();
@@ -1880,10 +1891,10 @@ DeeNTSystem_VThrowLastErrorf(DeeTypeObject *tp,
 	return result;
 }
 
-PUBLIC NONNULL((3)) int
-DeeNTSystem_ThrowErrorf(DeeTypeObject *tp,
-                        DeeNT_DWORD dwError,
-                        char const *__restrict format, ...) {
+PUBLIC ATTR_COLD NONNULL((3)) int
+(DeeNTSystem_ThrowErrorf)(DeeTypeObject *tp,
+                          DeeNT_DWORD dwError,
+                          char const *__restrict format, ...) {
 	int result;
 	va_list args;
 	va_start(args, format);
@@ -1892,9 +1903,9 @@ DeeNTSystem_ThrowErrorf(DeeTypeObject *tp,
 	return result;
 }
 
-PUBLIC NONNULL((2)) int
-DeeNTSystem_ThrowLastErrorf(DeeTypeObject *tp,
-                            char const *__restrict format, ...) {
+PUBLIC ATTR_COLD NONNULL((2)) int
+(DeeNTSystem_ThrowLastErrorf)(DeeTypeObject *tp,
+                              char const *__restrict format, ...) {
 	int result;
 	va_list args;
 	va_start(args, format);

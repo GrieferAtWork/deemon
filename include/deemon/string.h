@@ -583,11 +583,11 @@ _DeeString_WSiz(DeeStringObject *__restrict self) {
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Return the hash of `self', or calculate it if it wasn't already. */
-INTDEF WUNUSED ATTR_PURE NONNULL((1)) Dee_hash_t DCALL DeeString_Hash(DeeObject *__restrict self);
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeString_Hash(DeeObject *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeString_Hash(self)   DeeObject_Hash(self)
 #endif /* !CONFIG_BUILDING_DEEMON */
-DFUNDEF WUNUSED ATTR_PURE NONNULL((1)) Dee_hash_t DCALL DeeString_HashCase(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeString_HashCase(DeeObject *__restrict self);
 
 /* Delete cached buffer encodings from a given 1-byte string. */
 PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
@@ -2992,8 +2992,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
  * >> }
  * >> if (has_builtin_codec(name))
  * >>     return builtin_encode(self, name, error_mode); // or decode...
- * The following is a list of the recognized builtin codecs,
- * as well as the types of objects returned by either.
+ * The following is a list of the recognized builtin codecs.
  *  - "ascii", "646", "us-ascii"
  *  - "latin-1", "iso8859-1", "iso8859", "8859", "cp819", "latin", "latin1", "l1"
  *  - "utf-8", "utf8", "u8", "utf"
@@ -3011,8 +3010,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
  *                depends on `self' and is usually a bytes, or string object.
  *                In most cases, `DeeCodec_Decode()' returns a string object,
  *                while `DeeCodec_Encode()' returns a Bytes object.
- * @return: NULL: An error occurred.
- */
+ * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode);

@@ -1408,7 +1408,6 @@ err_bad_module_name:
 	dst[module_namesize + 4] = '\0';
 	len  = (size_t)(dst - buf) + module_namesize + 4;
 	hash = fs_hashutf8(buf, len);
-	("check: '%.*s'\n", (int)len, buf);
 again_search_fs_modules:
 
 	/* Search for modules that have already been cached. */

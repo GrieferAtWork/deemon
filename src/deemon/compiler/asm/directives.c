@@ -495,12 +495,11 @@ except_err_mask:
 		except->ex_end   = except_end;
 		except->ex_addr  = except_entry;
 		except->ex_flags = except_flags;
-		except_entry->as_stck;
 		++except_start->as_used;
 		++except_end->as_used;
 		++except_entry->as_used;
-
 		goto done;
+
 except_err:
 		Dee_XDecref(except_mask);
 		goto err;

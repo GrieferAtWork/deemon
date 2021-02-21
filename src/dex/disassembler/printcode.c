@@ -426,7 +426,6 @@ textjumps_print(dformatprinter printer, void *arg,
 		}
 		break;
 	}
-	lines[line_length];
 	if (has_origin && has_target) {
 		lines[line_length + 0] = LINE_HORI;
 		lines[line_length + 1] = ARROW_LEFT;

@@ -9906,9 +9906,9 @@ for (local x: [1:n+1]) {
 #define DeeSystem_DlOpen_USE_DLFCN 1
 #elif defined(CONFIG_HOST_WINDOWS)
 #define DeeSystem_DlOpen_USE_LOADLIBRARY 1
-#else
+#else /* ... */
 #define DeeSystem_DlOpen_USE_STUB 1
-#endif
+#endif /* !... */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

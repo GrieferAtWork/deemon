@@ -839,6 +839,37 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
 }
 
 
+/* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
+ * These functions will start by normalizing `name', checking if it refers to
+ * one of the builtin codecs, and if it doesn't, make an external function
+ * call to `encode from codecs' / `decode from codecs':
+ * >> name = name.casefold().replace("_", "-");
+ * >> if (name.startswith("iso-"))
+ * >>     name = "iso" + name[4:];
+ * >> else if (name.startswith("cp-")) {
+ * >>     name = "cp" + name[3:];
+ * >> }
+ * >> if (has_builtin_codec(name))
+ * >>     return builtin_encode(self, name, error_mode); // or decode...
+ * The following is a list of the recognized builtin codecs.
+ *  - "ascii", "646", "us-ascii"
+ *  - "latin-1", "iso8859-1", "iso8859", "8859", "cp819", "latin", "latin1", "l1"
+ *  - "utf-8", "utf8", "u8", "utf"
+ *  - "utf-16", "utf16", "u16"
+ *  - "utf-16-le", "utf16-le", "u16-le", "utf-16le", "utf16le", "u16le"
+ *  - "utf-16-be", "utf16-be", "u16-be", "utf-16be", "utf16be", "u16be"
+ *  - "utf-32", "utf32", "u32"
+ *  - "utf-32-le", "utf32-le", "u32-le", "utf-32le", "utf32le", "u32le"
+ *  - "utf-32-be", "utf32-be", "u32-be", "utf-32be", "utf32be", "u32be"
+ *  - "string-escape", "backslash-escape", "c-escape"
+ * @throw: ValueError: The given `name' is not a recognized codec name.
+ * @param: error_mode: One of `STRING_ERROR_F*'
+ * @return: * :   The encoded/decoded variant of `self'
+ *                The type of this object is unrelated to `self', but rather
+ *                depends on `self' and is usually a bytes, or string object.
+ *                In most cases, `DeeCodec_Decode()' returns a string object,
+ *                while `DeeCodec_Encode()' returns a Bytes object.
+ * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {

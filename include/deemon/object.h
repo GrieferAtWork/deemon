@@ -38,8 +38,8 @@
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
-#elif !defined(CONFIG_HAVE_STRING_H) && \
-      (defined(__NO_has_include) || __has_include(<string.h>))
+#elif (!defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__NO_has_include) || __has_include(<string.h>)))
 #define CONFIG_HAVE_STRING_H 1
 #endif
 
@@ -144,11 +144,11 @@ typedef Dee_funptr_t dfunptr_t;
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCasePtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashStr)(char const *__restrict str);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCasePtr)(void const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashStr)(char const *__restrict str);
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restrict str);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restrict str);
 #else /* __INTELLISENSE__ */
 #define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
 #endif /* !__INTELLISENSE__ */
@@ -158,24 +158,24 @@ DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restr
  * thus allowing this hashing function to return the same value for a string
  * encoded in utf-8, as `Dee_Hash2Byte()' would for a 2-byte, and Dee_Hash4Byte() for
  * a 4-byte string. */
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
 
 /* Same as the regular hashing function, but with the guaranty that
  * for integer arrays where all items contain values `<= 0xff', the
  * return value is identical to a call to `Dee_HashPtr()' with the array
  * contents down-casted to the fitting data type. */
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
 #else /* __INTELLISENSE__ */
 #define Dee_Hash1Byte(ptr, n_bytes)     Dee_HashPtr(ptr, n_bytes)
 #define Dee_HashCase1Byte(ptr, n_bytes) Dee_HashCasePtr(ptr, n_bytes)
 #endif /* !__INTELLISENSE__ */
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_Hash2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_Hash4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCase2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash2Byte)(uint16_t const *__restrict ptr, size_t n_words);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase2Byte)(uint16_t const *__restrict ptr, size_t n_words);
+DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
 
 /* Generic object hashing: Use the address of the object.
  * HINT: We ignore the lower 6 bits because they're
@@ -295,9 +295,9 @@ struct Dee_object {
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 #ifdef DEE_SOURCE
-#define OBJECT_HEAD       Dee_OBJECT_HEAD
-#define OBJECT_HEAD_EX    Dee_OBJECT_HEAD_EX
-#define OBJECT_HEAD_INIT  Dee_OBJECT_HEAD_INIT
+#define OBJECT_HEAD      Dee_OBJECT_HEAD
+#define OBJECT_HEAD_EX   Dee_OBJECT_HEAD_EX
+#define OBJECT_HEAD_INIT Dee_OBJECT_HEAD_INIT
 #endif /* DEE_SOURCE */
 
 
@@ -326,14 +326,14 @@ struct Dee_object {
 	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
 #define DeeObject_Check(ob) \
 	((ob) && DeeObject_DoCheck(ob))
-#define Dee_ASSERT_OBJECT(ob)                      (DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (!(ob) || DeeObject_DoCheck(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE(ob, type)           ((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         ((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     ((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT(ob)                      (void)(DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_DoCheck(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_DoCheck(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_DoCheck(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
@@ -385,9 +385,9 @@ struct Dee_weakref {
 };
 #define Dee_WEAKREF_INIT { NULL, NULL, NULL, NULL }
 #ifdef __cplusplus
-#define Dee_WEAKREF(T)     struct ::Dee_weakref
+#define Dee_WEAKREF(T) struct ::Dee_weakref
 #else /* __cplusplus */
-#define Dee_WEAKREF(T)     struct Dee_weakref
+#define Dee_WEAKREF(T) struct Dee_weakref
 #endif /* !__cplusplus */
 
 

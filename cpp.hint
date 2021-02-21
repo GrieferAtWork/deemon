@@ -406,6 +406,15 @@
 #define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name
 #define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name
 
+#define DeePrivateSystem_IF_E1(errno,e1,...)
+#define DeePrivateSystem_IF_E2(errno,e1,e2,...)
+#define DeePrivateSystem_IF_E3(errno,e1,e2,e3,...)
+#define DeePrivateSystem_IF_E4(errno,e1,e2,e3,e4,...)
+#define DeeSystem_IF_E1(errno,e1,...)
+#define DeeSystem_IF_E2(errno,e1,e2,...)
+#define DeeSystem_IF_E3(errno,e1,e2,e3,...)
+#define DeeSystem_IF_E4(errno,e1,e2,e3,e4,...)
+
 
 #define likely
 #define unlikely

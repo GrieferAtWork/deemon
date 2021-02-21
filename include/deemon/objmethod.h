@@ -99,10 +99,11 @@ DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
 /* Returns the name of the function bound by the given
  * objmethod, or `NULL' if the name could not be determined. */
-DFUNDEF char const *DCALL DeeObjMethod_GetName(DeeObject *__restrict self);
-DFUNDEF char const *DCALL DeeObjMethod_GetDoc(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetDoc(DeeObject const *__restrict self);
 /* Returns the type that is implementing the bound method. */
-DFUNDEF ATTR_RETNONNULL DeeTypeObject *DCALL DeeObjMethod_GetType(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeObjMethod_GetType(DeeObject const *__restrict self);
 
 struct Dee_clsmethod_object {
 	Dee_OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
@@ -138,8 +139,8 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type, Dee_kwobjmethod_t func);
 
 /* Returns the name of the function bound by the given
  * clsmethod, or `NULL' if the name could not be determined. */
-DFUNDEF WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetName(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetDoc(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetDoc(DeeObject const *__restrict self);
 
 
 
@@ -171,8 +172,8 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
 
 /* Returns the name of the function bound by the given
  * clsproperty, or `NULL' if the name could not be determined. */
-DFUNDEF WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetName(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetDoc(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetName(DeeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetDoc(DeeObject const *__restrict self);
 
 
 

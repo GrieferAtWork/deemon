@@ -308,7 +308,7 @@ extern void __debugbreak(void);
 PRIVATE void TPPCALL tpp_vlogerrf(char const *format, va_list args) {
 #ifdef _WIN32
 	char buffer[4096];
-	vsprintf(buffer, format, args);
+	(void)vsprintf(buffer, format, args);
 	DBG_ALIGNMENT_DISABLE();
 	OutputDebugStringA(buffer);
 	fwrite(buffer, sizeof(char), strlen(buffer), stderr);
@@ -404,18 +404,18 @@ tpp_assertion_failed(char const *expr, char const *file, int line,
 #define TPP_EXPAND_FORMAT(...) __VA_ARGS__
 
 #ifdef TPP_BREAKPOINT
-#define assert(expr)     ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
+#define assert(expr)     (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
 #ifdef TPP_EXPAND_FORMAT
-#define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), TPP_BREAKPOINT(), 0))
+#define assertf(expr, f) (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), TPP_BREAKPOINT(), 0))
 #else /* TPP_EXPAND_FORMAT */
-#define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
+#define assertf(expr, f) (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
 #endif /* !TPP_EXPAND_FORMAT */
 #else /* TPP_BREAKPOINT */
-#define assert(expr)     ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
+#define assert(expr)     (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
 #ifdef TPP_EXPAND_FORMAT
-#define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), 0))
+#define assertf(expr, f) (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), 0))
 #else /* TPP_EXPAND_FORMAT */
-#define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
+#define assertf(expr, f) (void)((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
 #endif /* !TPP_EXPAND_FORMAT */
 #endif /* !TPP_BREAKPOINT */
 
@@ -3646,7 +3646,7 @@ def_putch:
 				char tri_char = map_trichar(iter[1]);
 				if (tri_char) {
 					/* Warn about use of trigraph sequences. */
-					WARN(W_ENCOUNTERED_TRIGRAPH, iter - 1);
+					(void)WARN(W_ENCOUNTERED_TRIGRAPH, iter - 1);
 					ch = tri_char;
 					iter += 2;
 					goto put_ch;
@@ -8328,7 +8328,7 @@ PRIVATE void TPPCALL on_popfile(struct TPPFile *file) {
 	while (CURRENT.l_ifdef.is_slotc &&
 	       (slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1],
 	        slot->iss_file == file)) {
-		WARN(W_IF_WITHOUT_ENDIF, slot);
+		(void)WARN(W_IF_WITHOUT_ENDIF, slot);
 		--CURRENT.l_ifdef.is_slotc;
 	}
 }
@@ -8457,7 +8457,7 @@ PRIVATE int TPPCALL parse_include_string(char **begin, char **end) {
 			token.t_file->f_pos = (*end) + 1;
 		}
 	} else {
-		WARN(W_EXPECTED_INCLUDE_STRING);
+		(void)WARN(W_EXPECTED_INCLUDE_STRING);
 		token.t_file->f_pos = token.t_begin;
 		result              = 0;
 	}
@@ -8602,19 +8602,20 @@ def_skip_until_lf:
 			struct TPPKeyword *keyword;
 			TPPLexer_YieldRaw();
 			if (!TPP_ISKEYWORD(tok)) {
-				WARN(W_EXPECTED_KEYWORD_AFTER_UNDEF);
+				(void)WARN(W_EXPECTED_KEYWORD_AFTER_UNDEF);
 			} else {
 				keyword = token.t_kwd;
 				assert(keyword);
 				if (keyword->k_macro) {
-					if (TPPKeyword_GetFlags(keyword, 0) & TPP_KEYWORDFLAG_LOCKED)
-						WARN(W_CANT_UNDEF_LOCKED_KEYWORD, keyword);
-					else
+					if (TPPKeyword_GetFlags(keyword, 0) & TPP_KEYWORDFLAG_LOCKED) {
+						(void)WARN(W_CANT_UNDEF_LOCKED_KEYWORD, keyword);
+					} else {
 						TPPKeyword_Undef(keyword);
+					}
 				} else if (TPP_ISBUILTINMACRO(tok)) {
-					WARN(W_CANT_UNDEF_BUILTIN_MACRO, keyword);
+					(void)WARN(W_CANT_UNDEF_BUILTIN_MACRO, keyword);
 				} else {
-					WARN(W_MACRO_NOT_DEFINED, keyword);
+					(void)WARN(W_MACRO_NOT_DEFINED, keyword);
 				}
 			}
 		}	goto def_skip_until_lf;
@@ -8645,7 +8646,7 @@ def_skip_until_lf:
 						TPPString_Decref(textfile->f_textfile.f_usedname);
 					textfile->f_textfile.f_usedname = val.c_data.c_string; /* Inherit data. */
 				} else {
-					WARN(W_EXPECTED_STRING_AFTER_LINE, &val);
+					(void)WARN(W_EXPECTED_STRING_AFTER_LINE, &val);
 				}
 			}
 		}	goto def_skip_until_lf;
@@ -8715,7 +8716,7 @@ def_skip_until_lf:
 				ifndef_keyword = token.t_kwd;
 				assert(ifndef_keyword);
 			} else {
-				WARN(W_EXPECTED_KEYWORD_AFTER_IFDEF);
+				(void)WARN(W_EXPECTED_KEYWORD_AFTER_IFDEF);
 				ifndef_keyword = NULL;
 			}
 			if (block_mode) {
@@ -8829,7 +8830,7 @@ not_a_guard:
 				if unlikely(!TPPLexer_Eval(&ifval))
 					goto err;
 				if (!TPPConst_IsBool(&ifval)) {
-					WARN(W_EXPECTED_BOOL, &ifval);
+					(void)WARN(W_EXPECTED_BOOL, &ifval);
 					TPPConst_ToBool(&ifval);
 				}
 				block_mode = (int)ifval.c_data.c_int;
@@ -8843,9 +8844,9 @@ not_a_guard:
 			if (!CURRENT.l_ifdef.is_slotc ||
 			    (else_slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1],
 			     else_slot->iss_file != token.t_file)) {
-				WARN(W_ELIF_WITHOUT_IF);
+				(void)WARN(W_ELIF_WITHOUT_IF);
 			} else if (else_slot->iss_mode & TPP_IFDEFMODE_ELSE) {
-				WARN(W_ELIF_AFTER_ELSE, else_slot);
+				(void)WARN(W_ELIF_AFTER_ELSE, else_slot);
 			} else if (else_slot->iss_mode == TPP_IFDEFMODE_TRUE) {
 				/* Some chunk of this block was already enabled before.
 				 * >> Must skip this #elif block! */
@@ -8857,7 +8858,7 @@ not_a_guard:
 				if unlikely(!TPPLexer_Eval(&elif_val))
 					goto err;
 				if (!TPPConst_IsBool(&elif_val)) {
-					WARN(W_EXPECTED_BOOL, &elif_val);
+					(void)WARN(W_EXPECTED_BOOL, &elif_val);
 					TPPConst_ToBool(&elif_val);
 				}
 				else_slot->iss_mode = (int)elif_val.c_data.c_int;
@@ -8885,9 +8886,9 @@ skip_block_and_parse:
 			if (!CURRENT.l_ifdef.is_slotc ||
 			    (else_slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1],
 			     else_slot->iss_file != token.t_file)) {
-				WARN(W_ELSE_WITHOUT_IF);
+				(void)WARN(W_ELSE_WITHOUT_IF);
 			} else if (else_slot->iss_mode & TPP_IFDEFMODE_ELSE) {
-				WARN(W_ELSE_AFTER_ELSE, else_slot);
+				(void)WARN(W_ELSE_AFTER_ELSE, else_slot);
 			} else {
 				else_slot->iss_mode ^= (TPP_IFDEFMODE_TRUE | TPP_IFDEFMODE_ELSE);
 				if (else_slot->iss_mode & TPP_IFDEFMODE_TRUE)
@@ -8902,7 +8903,7 @@ skip_block_and_parse:
 			/* End an enabled preprocessor block. */
 			if (!CURRENT.l_ifdef.is_slotc ||
 			    (CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1].iss_file != token.t_file)) {
-				WARN(W_ENDIF_WITHOUT_IF);
+				(void)WARN(W_ENDIF_WITHOUT_IF);
 			} else {
 				--CURRENT.l_ifdef.is_slotc;
 			}
@@ -8965,8 +8966,8 @@ skip_block_and_parse:
 			                                 &kwd_entry);
 			if unlikely(!include_file) {
 				token.t_begin = include_begin;
-				WARN(W_FILE_NOT_FOUND, include_begin,
-				     (size_t)(include_end - include_begin));
+				(void)WARN(W_FILE_NOT_FOUND, include_begin,
+				           (size_t)(include_end - include_begin));
 				break;
 			}
 			if unlikely(mode & TPPLEXER_OPENFILE_MODE_IMPORT) {
@@ -8989,7 +8990,7 @@ skip_block_and_parse:
 			}
 			/* Make sure we're not exceeding the #include recursion limit. */
 			if (include_file->f_textfile.f_cacheinc >= CURRENT.l_limit_incl) {
-				WARN(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, include_file);
+				(void)WARN(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, include_file);
 				break;
 			}
 			final_file = TPPFile_CopyForInclude(include_file);
@@ -9020,7 +9021,7 @@ skip_block_and_parse:
 				assertion_kwd = token.t_kwd;
 				TPPLexer_YieldRaw();
 			} else {
-				WARN(W_EXPECTED_KEYWORD_AFTER_ASSERT);
+				(void)WARN(W_EXPECTED_KEYWORD_AFTER_ASSERT);
 				assertion_kwd = NULL;
 			}
 			if (tok != '(') {
@@ -9029,7 +9030,7 @@ skip_block_and_parse:
 					keyword_clrassert(assertion_kwd);
 					goto def_skip_until_lf;
 				}
-				WARN(W_EXPECTED_LPAREN);
+				(void)WARN(W_EXPECTED_LPAREN);
 			} else {
 				TPPLexer_YieldRaw();
 			}
@@ -9047,11 +9048,11 @@ skip_block_and_parse:
 				}
 				TPPLexer_YieldRaw();
 			} else if (assertion_kwd) {
-				WARN(W_EXPECTED_KEYWORD_AFTER_PREDICATE, assertion_kwd);
+				(void)WARN(W_EXPECTED_KEYWORD_AFTER_PREDICATE, assertion_kwd);
 			}
-			if (tok != ')')
-				WARN(W_EXPECTED_LPAREN);
-			else {
+			if (tok != ')') {
+				(void)WARN(W_EXPECTED_LPAREN);
+			} else {
 				TPPLexer_YieldRaw();
 			}
 		}	goto def_skip_until_lf;
@@ -9334,10 +9335,10 @@ again:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			TPPLexer_Yield();
-			if (tok == '(')
+			if (tok == '(') {
 				TPPLexer_Yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			/* At this point, we should be hovering over a string.
 			 * >> Evaluating a constant expression here might be overkill,
@@ -9348,9 +9349,9 @@ err_pragmaf:
 				return TOK_ERR;
 			}
 			if (tok != ')')
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 			if (pragma_const.c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_AFTER_PRAGMA, &pragma_const);
+				(void)WARN(W_EXPECTED_STRING_AFTER_PRAGMA, &pragma_const);
 				pragma_error = 0;
 			} else {
 				pragma_file = TPPFile_NewExplicitInherited(pragma_const.c_data.c_string);
@@ -9434,11 +9435,11 @@ create_string_file:
 				goto seterr;
 			timenow = time(NULL);
 			tmnow   = localtime(&timenow);
-			if (!tmnow)
-				strcpy(string_text->s_text, "\"??:??:??\"");
-			else {
-				sprintf(string_text->s_text, "\"%02d:%02d:%02d\"",
-				        tmnow->tm_hour, tmnow->tm_min, tmnow->tm_sec);
+			if (!tmnow) {
+				(void)strcpy(string_text->s_text, "\"??:??:??\"");
+			} else {
+				(void)sprintf(string_text->s_text, "\"%02d:%02d:%02d\"",
+				              tmnow->tm_hour, tmnow->tm_min, tmnow->tm_sec);
 			}
 			goto create_string_file;
 		case KWD___DATE__:
@@ -9448,11 +9449,11 @@ create_string_file:
 			timenow = time(NULL);
 			tmnow   = localtime(&timenow);
 			if (!tmnow) {
-				strcpy(string_text->s_text, "\"??" "? ?? ??" "??\"");
+				(void)strcpy(string_text->s_text, "\"??" "? ?? ??" "??\"");
 			} else {
-				sprintf(string_text->s_text, "\"%s %2d %4d\"",
-				        date_month_names[tmnow->tm_mon],
-				        tmnow->tm_mday, tmnow->tm_year + 1900);
+				(void)sprintf(string_text->s_text, "\"%s %2d %4d\"",
+				              date_month_names[tmnow->tm_mon],
+				              tmnow->tm_mday, tmnow->tm_year + 1900);
 			}
 			goto create_string_file;
 #ifndef NO_EXTENSION_TIMESTAMP
@@ -9465,13 +9466,13 @@ create_string_file:
 			timenow = time(NULL);
 			tmnow   = localtime(&timenow);
 			if (!tmnow) {
-				strcpy(string_text->s_text, "\"??? ??? ?? ??:??:?? ????\"");
+				(void)strcpy(string_text->s_text, "\"??? ??? ?? ??:??:?? ????\"");
 			} else {
-				sprintf(string_text->s_text, "\"%s %s%3d %.2d:%.2d:%.2d %4d\"",
-				        date_wday_names[tmnow->tm_wday],
-				        date_month_names[tmnow->tm_mon],
-				        tmnow->tm_mday, tmnow->tm_hour, tmnow->tm_min,
-				        tmnow->tm_sec, 1900 + tmnow->tm_year);
+				(void)sprintf(string_text->s_text, "\"%s %s%3d %.2d:%.2d:%.2d %4d\"",
+				              date_wday_names[tmnow->tm_wday],
+				              date_month_names[tmnow->tm_mon],
+				              tmnow->tm_mday, tmnow->tm_hour, tmnow->tm_min,
+				              tmnow->tm_sec, 1900 + tmnow->tm_year);
 			}
 			goto create_string_file;
 #endif /* !NO_EXTENSION_TIMESTAMP */
@@ -9586,7 +9587,7 @@ create_int_file:
 			TPPLexer_YieldPP();
 			popf();
 			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
+				(void)WARN(W_EXPECTED_LPAREN);
 			keyword_begin = token.t_end, file_end = token.t_file->f_end;
 			keyword_begin = skip_whitespace_and_comments(keyword_begin, file_end);
 			/* Special handling if the next token is a string/number. */
@@ -9598,7 +9599,7 @@ create_int_file:
 					name.c_data.c_int = 0;
 				}
 				if (tok != ')')
-					WARN(W_EXPECTED_RPAREN);
+					(void)WARN(W_EXPECTED_RPAREN);
 				/* Special handling for __has_extension("-fname"), etc. */
 				switch (mode) {
 
@@ -9672,7 +9673,7 @@ create_int_file:
 				file_pos            = skip_whitespace_and_comments(keyword_end, file_end);
 				token.t_file->f_pos = file_pos;
 				if (*file_pos != ')') {
-					WARN(W_EXPECTED_RPAREN);
+					(void)WARN(W_EXPECTED_RPAREN);
 					keyword_end = keyword_begin;
 				} else {
 					++token.t_file->f_pos; /* Skip the `)' character. */
@@ -9825,7 +9826,7 @@ create_int_file:
 			TPPLexer_YieldPP();
 			popf();
 			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
+				(void)WARN(W_EXPECTED_LPAREN);
 			if unlikely(!parse_include_string(&include_begin, &include_end))
 				break;
 			assert(include_end > include_begin);
@@ -9852,8 +9853,8 @@ create_int_file:
 			       !(incfile->f_prev));
 #ifndef NO_EXTENSION_TPP_LOAD_FILE
 			if (function == KWD___TPP_LOAD_FILE && !incfile) {
-				WARN(W_FILE_NOT_FOUND, include_begin,
-				     (size_t)(include_end - include_begin));
+				(void)WARN(W_FILE_NOT_FOUND, include_begin,
+				           (size_t)(include_end - include_begin));
 			}
 #endif /* !NO_EXTENSION_TPP_LOAD_FILE */
 			pushf();
@@ -9863,7 +9864,7 @@ create_int_file:
 			TPPLexer_YieldPP();
 			popf();
 			if (tok != ')') {
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 				assert(token.t_begin >= token.t_file->f_begin);
 				assert(token.t_begin <= token.t_file->f_pos);
 				assert(token.t_begin <= token.t_file->f_end);
@@ -9990,7 +9991,7 @@ create_int_file:
 			if (tok == '(')
 				TPPLexer_Yield();
 			else {
-				WARN(W_EXPECTED_LPAREN);
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			/* WARNING: We leave macros turned on for this, because (perhaps surprisingly),
 			 *          visual studio _does_ expand macros inside its __pragma helper. */
@@ -10018,13 +10019,14 @@ create_int_file:
 				}
 #if 1
 				if (tok != ')')
-					WARN(W_EXPECTED_RPAREN);
+					(void)WARN(W_EXPECTED_RPAREN);
 #else
-				if (tok == ')')
+				if (tok == ')') {
 					TPPLexer_Yield();
-				else
-					WARN(W_EXPECTED_RPAREN)
-					/*,tok = 0*/; /* NOTE: Set tok to 0 to force a reload below. */
+				} else {
+					(void)WARN(W_EXPECTED_RPAREN);
+					/*tok = 0;*/ /* NOTE: Set tok to 0 to force a reload below. */
+				}
 #endif
 			}
 			if (!pragma_error)
@@ -10035,9 +10037,9 @@ create_int_file:
 #else /* TPPLEXER_FLAG_PRAGMA_KEEPMASK */
 			popf();
 #endif /* !TPPLEXER_FLAG_PRAGMA_KEEPMASK */
-			if (!pragma_error)
+			if (!pragma_error) {
 				TPPLexer_YieldPP(); /* Don't parse pragmas again to prevent infinite recursion. */
-			else /*if (!tok)*/ {
+			} else /*if (!tok)*/ {
 				goto again;         /* If we managed to parse the pragma, continue parsing afterwards. */
 			}
 			result = tok;
@@ -10058,10 +10060,10 @@ create_int_file:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok == '(')
+			if (tok == '(') {
 				yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			/* Evaluate a constant preprocessor-expression. */
 			eval_error = TPPLexer_Eval(&val);
@@ -10069,7 +10071,7 @@ create_int_file:
 			if unlikely(!eval_error)
 				return TOK_ERR;
 			if (tok != ')') {
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 				token.t_file->f_pos = token.t_begin;
 			}
 			val_str = TPPConst_ToString(&val);
@@ -10108,10 +10110,10 @@ create_int_file:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if likely(tok == '(')
+			if likely(tok == '(') {
 				yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			if unlikely(!TPPLexer_Eval(&val)) {
 err_cnttokf:
@@ -10122,7 +10124,7 @@ err_cnttokf:
 			            !WARN(W_EXPECTED_STRING_AFTER_TPP_CNTTOK, &val))
 				goto err_cnttokf;
 			if unlikely(tok != ')')
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 			popf();
 			intval = 0;
 			if unlikely(val.c_kind != TPP_CONST_STRING)
@@ -10179,8 +10181,8 @@ err_cnttokf:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if likely(tok != '(')
-				WARN(W_EXPECTED_LPAREN);
+			if unlikely(tok != '(')
+				(void)WARN(W_EXPECTED_LPAREN);
 			popf();
 			file_end        = token.t_file->f_end;
 			ident_start     = skip_whitespace_and_comments(token.t_end, file_end);
@@ -10253,10 +10255,10 @@ err_cnttokf:
 			token.t_begin = ident_start;
 			token.t_end   = ident_end;
 			token.t_id    = token.t_kwd->k_id;
-			if likely(*rparen_pos == ')')
+			if likely(*rparen_pos == ')') {
 				++rparen_pos;
-			else {
-				WARN(W_EXPECTED_RPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_RPAREN);
 			}
 			token.t_file->f_pos = rparen_pos;
 			result              = token.t_id;
@@ -10276,10 +10278,10 @@ err_cnttokf:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok == '(')
+			if (tok == '(') {
 				yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			/* Evaluate a constant preprocessor-expression. */
 			if unlikely(!TPPLexer_Eval(&val)) {
@@ -10301,7 +10303,7 @@ err_randomf:
 			}
 			popf();
 			if (tok != ')') {
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 				token.t_file->f_pos = token.t_begin;
 			}
 			/* Generate a random integer between `random_begin..random_end-1' */
@@ -10335,10 +10337,10 @@ err_randomf:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok == '(')
+			if (tok == '(') {
 				yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			/* Evaluate a constant preprocessor-expression. */
 			/* WARNING: `val' may be the unmodified text of the calling file (as loaded by `__TPP_LOAD_FILE').
@@ -10349,12 +10351,12 @@ err_randomf:
 				return TOK_ERR;
 			}
 			if (tok != ')') {
-				WARN(W_EXPECTED_RPAREN);
+				(void)WARN(W_EXPECTED_RPAREN);
 				token.t_file->f_pos = token.t_begin;
 			}
 			popf();
 			if (val.c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_AFTER_TPP_STRD, &val);
+				(void)WARN(W_EXPECTED_STRING_AFTER_TPP_STRD, &val);
 				goto again;
 			} else if (!val.c_data.c_string->s_size) {
 				/* Special case: Empty string (No need to push anything) */
@@ -10382,10 +10384,10 @@ err_randomf:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok == '(')
+			if (tok == '(') {
 				yield();
-			else {
-				WARN(W_EXPECTED_LPAREN);
+			} else {
+				(void)WARN(W_EXPECTED_LPAREN);
 			}
 			allocsize = cursize = 0;
 			string_text = NULL;
@@ -10453,25 +10455,25 @@ err_randomf:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
-			else {
+			if unlikely(tok != '(') {
+				(void)WARN(W_EXPECTED_LPAREN);
+			} else {
 				yield();
 			}
 			if unlikely(!TPPLexer_Eval(&val)) {
 				breakf();
 				return TOK_ERR;
 			}
-			if (val.c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_AFTER_TPP_STRAT, &val);
+			if unlikely(val.c_kind != TPP_CONST_STRING) {
+				(void)WARN(W_EXPECTED_STRING_AFTER_TPP_STRAT, &val);
 				basestring = empty_string;
 				TPPString_Incref(empty_string);
 			} else {
 				basestring = val.c_data.c_string; /* Inherit reference. */
 			}
-			if (tok != ',')
-				WARN(W_EXPECTED_COMMA);
-			else {
+			if (tok != ',') {
+				(void)WARN(W_EXPECTED_COMMA);
+			} else {
 				yield();
 			}
 			if unlikely(!TPPLexer_Eval(&val)) {
@@ -10506,8 +10508,8 @@ err_substr:
 			}
 			if (sublen >= basestring->s_size - subindex)
 				sublen = basestring->s_size - subindex;
-			if (tok != ')')
-				WARN(W_EXPECTED_RPAREN);
+			if unlikely(tok != ')')
+				(void)WARN(W_EXPECTED_RPAREN);
 			popf();
 			sub_end = (sub_begin = basestring->s_text + subindex) + sublen;
 			assert(sub_begin <= sub_end);
@@ -10536,20 +10538,20 @@ err_substr:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
-			else {
+			if unlikely(tok != '(') {
+				(void)WARN(W_EXPECTED_LPAREN);
+			} else {
 				yield();
 			}
 			if unlikely(!TPPLexer_Eval(&val)) {
 				breakf();
 				return TOK_ERR;
 			}
-			if (tok != ')')
-				WARN(W_EXPECTED_RPAREN);
+			if unlikely(tok != ')')
+				(void)WARN(W_EXPECTED_RPAREN);
 			popf();
 			if (val.c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_AFTER_TPP_STRAT, &val);
+				(void)WARN(W_EXPECTED_STRING_AFTER_TPP_STRAT, &val);
 				intval = 0;
 			} else {
 				intval = (tint_t)val.c_data.c_string->s_size;
@@ -10628,9 +10630,9 @@ predef_macro:
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
 			yield();
-			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
-			else {
+			if unlikely(tok != '(') {
+				(void)WARN(W_EXPECTED_LPAREN);
+			} else {
 				yield();
 			}
 			suffix_size = strlen(suffix);
@@ -10646,8 +10648,8 @@ predef_macro:
 			memcpy(argstring->s_text + argsize, suffix, suffix_size * sizeof(char));
 			if (tok != ')')
 				yield();
-			if (tok != ')')
-				WARN(W_EXPECTED_RPAREN);
+			if unlikely(tok != ')')
+				(void)WARN(W_EXPECTED_RPAREN);
 			popf();
 			argfile = TPPFile_NewExplicitInherited(argstring);
 			if unlikely(!argfile) {
@@ -12591,9 +12593,9 @@ eval_call_builtin(struct TPPConst *__restrict result) {
 	if unlikely((argc = get_builtin_argc(function)) < 0)
 		goto ret;
 	yield();
-	if (tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 #ifdef alloca
@@ -12612,15 +12614,15 @@ eval_call_builtin(struct TPPConst *__restrict result) {
 				goto err_iter;
 			if (++iter >= end)
 				break;
-			if (tok != ',')
-				WARN(W_EXPECTED_COMMA);
-			else {
+			if unlikely(tok != ',') {
+				(void)WARN(W_EXPECTED_COMMA);
+			} else {
 				yield();
 			}
 		}
-	if (tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	/* The argument list has been parsed. - Time for the big function-switch. */
@@ -12779,7 +12781,7 @@ again_unary:
 		eval_unary(result);
 		if (result) {
 			if (!TPPConst_IsBool(result)) {
-				WARN(W_EXPECTED_BOOL_UNARY, result);
+				(void)WARN(W_EXPECTED_BOOL_UNARY, result);
 				TPPConst_ToBool(result);
 			}
 			result->c_data.c_int ^= 1;
@@ -12845,10 +12847,10 @@ again_unary:
 					break;
 				}
 			}
-			if (tok == ')')
+			if likely(tok == ')') {
 				yield();
-			else {
-				WARN(W_EXPECTED_RPAREN_AFTER_CAST);
+			} else {
+				(void)WARN(W_EXPECTED_RPAREN_AFTER_CAST);
 			}
 			try_parse_value = 1;
 			goto again_unary;
@@ -12862,7 +12864,7 @@ again_unary:
 				 * >> #define foo()
 				 * >> __TPP_EVAL((__builtin_constant_p(42)) : )
 				 */
-				WARN(W_STATEMENT_IN_EXPRESSION);
+				(void)WARN(W_STATEMENT_IN_EXPRESSION);
 				TPPConst_ZERO(result);
 			}
 			while (tok > 0) {
@@ -12873,10 +12875,10 @@ again_unary:
 					break;
 				}
 			}
-			if (tok == '}')
+			if likely(tok == '}') {
 				yield();
-			else {
-				WARN(W_EXPECTED_RBRACE_AFTER_STATEMENT);
+			} else {
+				(void)WARN(W_EXPECTED_RBRACE_AFTER_STATEMENT);
 			}
 			goto rparen_after_expression;
 		}
@@ -12891,10 +12893,10 @@ begin_after_paren:
 				TPPConst_Quit(result);
 		}
 rparen_after_expression:
-		if (tok == ')')
+		if likely(tok == ')') {
 			yield();
-		else {
-			WARN(W_EXPECTED_RPAREN_IN_EXPRESSION);
+		} else {
+			(void)WARN(W_EXPECTED_RPAREN_IN_EXPRESSION);
 		}
 		break;
 
@@ -12916,15 +12918,17 @@ rparen_after_expression:
 				TPPLexer_YieldRaw();
 				result->c_kind = TPP_CONST_INTEGRAL;
 				if unlikely(!TPP_ISKEYWORD(tok)) {
-					WARN(W_EXPECTED_KEYWORD_AFTER_EXPR_PRED, ass_keyword);
+					(void)WARN(W_EXPECTED_KEYWORD_AFTER_EXPR_PRED, ass_keyword);
 					goto res_zero;
 				}
 				/* Lookup an assertion */
 				result->c_data.c_int = (tint_t)keyword_hasassert(ass_keyword, token.t_kwd);
 				TPPLexer_YieldRaw();
-				if unlikely(tok != ')')
-					WARN(W_EXPECTED_RPAREN);
-				else TPPLexer_YieldRaw();
+				if unlikely(tok != ')') {
+					(void)WARN(W_EXPECTED_RPAREN);
+				} else {
+					TPPLexer_YieldRaw();
+				}
 			} else {
 				/* `#foo' checks if any assertion has been defined. */
 				result->c_data.c_int = (ass_keyword->k_rare &&
@@ -12938,7 +12942,7 @@ rparen_after_expression:
 #ifndef NO_EXTENSION_STRINGOPS
 		if (!HAVE_EXTENSION_STRINGOPS) {
 			if (result) {
-				WARN(W_EXPECTED_KEYWORD_AFTER_EXPR_HASH);
+				(void)WARN(W_EXPECTED_KEYWORD_AFTER_EXPR_HASH);
 res_zero:
 				TPPConst_ZERO(result);
 			}
@@ -12947,8 +12951,8 @@ res_zero:
 #endif /* !NO_EXTENSION_STRINGOPS */
 		eval_unary(result);
 		if (result) {
-			if (result->c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_IN_EXPRESSION, result);
+			if unlikely(result->c_kind != TPP_CONST_STRING) {
+				(void)WARN(W_EXPECTED_STRING_IN_EXPRESSION, result);
 			} else {
 				/* Extract the length of a string (in characters). */
 				size_t length = result->c_data.c_string->s_size;
@@ -12987,9 +12991,9 @@ res_zero:
 			}
 			TPPLexer_YieldPP();
 		} else if (result) {
-			WARN(with_paren
-			     ? W_EXPECTED_KEYWORD_AFTER_DEFINED
-			     : W_EXPECTED_KWDLPAR_AFTER_DEFINED);
+			(void)WARN(with_paren
+			           ? W_EXPECTED_KEYWORD_AFTER_DEFINED
+			           : W_EXPECTED_KWDLPAR_AFTER_DEFINED);
 			if (with_paren) {
 				while (tok > 0 && tok != ')')
 					TPPLexer_YieldPP();
@@ -12998,10 +13002,10 @@ res_zero:
 			result->c_data.c_int = 0;
 		}
 		if (with_paren) {
-			if (tok == ')')
+			if (tok == ')') {
 				TPPLexer_YieldPP();
-			else if (result) {
-				WARN(W_EXPECTED_RPAREN_AFTER_DEFINED);
+			} else if (result) {
+				(void)WARN(W_EXPECTED_RPAREN_AFTER_DEFINED);
 			}
 		}
 	}	break;
@@ -13014,19 +13018,19 @@ res_zero:
 			goto defch;
 #endif /* !TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
 		yield();
-		if (tok != '(')
-			WARN(W_EXPECTED_LPAREN);
-		else {
+		if unlikely(tok != '(') {
+			(void)WARN(W_EXPECTED_LPAREN);
+		} else {
 			yield();
 		}
 		eval_question(result);
-		if (tok != ')')
-			WARN(W_EXPECTED_RPAREN);
-		else {
+		if unlikely(tok != ')') {
+			(void)WARN(W_EXPECTED_RPAREN);
+		} else {
 			yield();
 		}
-		if (result && !TPPConst_IsBool(result)) {
-			WARN(W_EXPECTED_BOOL, result);
+		if unlikely(result && !TPPConst_IsBool(result)) {
+			(void)WARN(W_EXPECTED_BOOL, result);
 			TPPConst_ToBool(result);
 		}
 		is_true = !result || result->c_data.c_int;
@@ -13037,15 +13041,15 @@ res_zero:
 			if (tok != KWD_elif)
 				break;
 			yield();
-			if (tok != '(')
-				WARN(W_EXPECTED_LPAREN);
-			else {
+			if unlikely(tok != '(') {
+				(void)WARN(W_EXPECTED_LPAREN);
+			} else {
 				yield();
 			}
 			eval_question(is_true ? NULL : result);
-			if (tok != ')')
-				WARN(W_EXPECTED_RPAREN);
-			else {
+			if unlikely(tok != ')') {
+				(void)WARN(W_EXPECTED_RPAREN);
+			} else {
 				yield();
 			}
 			assert(result || is_true);
@@ -13063,8 +13067,8 @@ res_zero:
 			eval_question(is_true ? NULL : result);
 			while (tok == ';')
 				yield();
-		} else if (!is_true) {
-			WARN(W_EXPECTED_ELSE_IN_EXPRESSION);
+		} else if unlikely(!is_true) {
+			(void)WARN(W_EXPECTED_ELSE_IN_EXPRESSION);
 			assert(result);
 			TPPConst_ZERO(result);
 		}
@@ -13076,9 +13080,9 @@ res_zero:
 		size_t old_warncount;
 		int eval_error;
 		yield();
-		if (tok != '(')
-			WARN(W_EXPECTED_LPAREN);
-		else {
+		if unlikely(tok != '(') {
+			(void)WARN(W_EXPECTED_LPAREN);
+		} else {
 			yield();
 		}
 		old_warncount = CURRENT.l_warncount;
@@ -13103,14 +13107,14 @@ res_zero:
 		 * But the main purpose is for implicit, extended
 		 * compatibility with existing code like this:
 		 * >> extern uint16_t __arch_bswap16_impl(uint16_t x);
-		 * >> #define __arch_bswap16(x) \
-		 * >> ({ typeof(x) _x = (x); \
-		 * >>    if (cpu_version() >= 2) { \
+		 * >> #define __arch_bswap16(x)                            \
+		 * >> ({ typeof(x) _x = (x);                               \
+		 * >>    if (cpu_version() >= 2) {                         \
 		 * >>      __asm__("call i386_bswamp16_v2\n" : "+a" (_x)); \
-		 * >>    } else { \
-		 * >>      _x = __arch_bswap16_impl(_x); \
-		 * >>    } \
-		 * >>    _x; \
+		 * >>    } else {                                          \
+		 * >>      _x = __arch_bswap16_impl(_x);                   \
+		 * >>    }                                                 \
+		 * >>    _x;                                               \
 		 * >> })
 		 * >> #define __compiler_bswap16(x) ((x) >> 8 | (x) << 8)
 		 * >> #define bswap16(x) (__builtin_constant_p(x) ? __compiler_bswap16(x) : __arch_bswap16(x))
@@ -13135,9 +13139,9 @@ res_zero:
 		}
 restore_warnings:
 		CURRENT.l_warncount = old_warncount;
-		if (tok != ')')
-			WARN(W_EXPECTED_RPAREN);
-		else {
+		if (tok != ')') {
+			(void)WARN(W_EXPECTED_RPAREN);
+		} else {
 			yield();
 		}
 	}	break;
@@ -13145,35 +13149,37 @@ restore_warnings:
 	case KWD___builtin_choose_expr: {
 		int is_true;
 		yield();
-		if unlikely(tok != '(')
-			WARN(W_EXPECTED_LPAREN);
-		else yield();
+		if unlikely(tok != '(') {
+			(void)WARN(W_EXPECTED_LPAREN);
+		} else {
+			yield();
+		}
 		if unlikely(!TPPLexer_Eval(result))
 			return;
 		is_true = 0;
 		if (result) {
 			if (!TPPConst_IsBool(result))
-				WARN(W_EXPECTED_BOOL, result);
+				(void)WARN(W_EXPECTED_BOOL, result);
 			is_true = TPPConst_IsTrue(result);
 			TPPConst_Quit(result);
 		}
-		if unlikely(tok != ',')
-			WARN(W_EXPECTED_COMMA);
-		else {
+		if unlikely(tok != ',') {
+			(void)WARN(W_EXPECTED_COMMA);
+		} else {
 			yield();
 		}
 		if unlikely(!TPPLexer_Eval(is_true ? result : NULL))
 			return;
-		if unlikely(tok != ',')
-			WARN(W_EXPECTED_COMMA);
-		else {
+		if unlikely(tok != ',') {
+			(void)WARN(W_EXPECTED_COMMA);
+		} else {
 			yield();
 		}
 		if unlikely(!TPPLexer_Eval(is_true ? NULL : result))
 			return;
-		if unlikely(tok != ')')
-			WARN(W_EXPECTED_RPAREN);
-		else {
+		if unlikely(tok != ')') {
+			(void)WARN(W_EXPECTED_RPAREN);
+		} else {
 			yield();
 		}
 	}	break;
@@ -13193,7 +13199,7 @@ defch:
 		if (try_parse_value)
 			goto set_zero;
 		if (result)
-			WARN(W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO);
+			(void)WARN(W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO);
 		if (TPP_ISKEYWORD(tok)) {
 			yield();
 #if TPP_CONFIG_GCCFUNC || 1 /* Recursively skip paren-style arguments to an imaginary function. */
@@ -13235,8 +13241,8 @@ skip_array_deref:
 				eval_question(NULL);
 		} else {
 			struct TPPConst temp;
-			if (result->c_kind != TPP_CONST_STRING) {
-				WARN(W_EXPECTED_STRING_IN_EXPRESSION);
+			if unlikely(result->c_kind != TPP_CONST_STRING) {
+				(void)WARN(W_EXPECTED_STRING_IN_EXPRESSION);
 				goto skip_array_deref;
 			}
 
@@ -13253,8 +13259,8 @@ skip_array_deref:
 				index_begin = (ptrdiff_t)temp.c_data.c_int;
 				if (index_begin < 0)
 					index_begin = (ptrdiff_t)result->c_data.c_string->s_size + index_begin;
-				if (index_begin < 0 || (size_t)index_begin >= result->c_data.c_string->s_size) {
-					WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index_begin);
+				if unlikely(index_begin < 0 || (size_t)index_begin >= result->c_data.c_string->s_size) {
+					(void)WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index_begin);
 					index_begin %= (result->c_data.c_string->s_size + 1);
 					if (index_begin < 0)
 						index_begin += result->c_data.c_string->s_size;
@@ -13268,8 +13274,8 @@ skip_array_deref:
 					index_end = (ptrdiff_t)temp.c_data.c_int;
 					if (index_end < 0)
 						index_end = (ptrdiff_t)result->c_data.c_string->s_size + index_end;
-					if (index_end < 0 || (size_t)index_end >= result->c_data.c_string->s_size) {
-						WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index_end);
+					if unlikely(index_end < 0 || (size_t)index_end >= result->c_data.c_string->s_size) {
+						(void)WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index_end);
 						index_end %= (result->c_data.c_string->s_size + 1);
 						if (index_end < 0)
 							index_end += result->c_data.c_string->s_size;
@@ -13287,17 +13293,16 @@ skip_array_deref:
 					/* Regular case: Partial sub-range. */
 					newstring = TPPString_New(result->c_data.c_string->s_text + index_begin,
 					                          (size_t)(index_end - index_begin));
-					if
-						unlikely(!newstring)
-					goto err_r;
+					if unlikely(!newstring)
+						goto err_r;
 					TPPString_Decref(result->c_data.c_string);
 					result->c_data.c_string = newstring; /* Inherit reference. */
 				}
 			} else {
 				char ch; /* Access character at `begin'. */
 				ptrdiff_t index = (ptrdiff_t)temp.c_data.c_int;
-				if (index < 0 || (size_t)index >= result->c_data.c_string->s_size) {
-					WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index);
+				if unlikely(index < 0 || (size_t)index >= result->c_data.c_string->s_size) {
+					(void)WARN(W_INDEX_OUT_OF_BOUNDS, result->c_data.c_string, index);
 					index %= result->c_data.c_string->s_size;
 					if (index < 0)
 						index += result->c_data.c_string->s_size;
@@ -13309,10 +13314,10 @@ skip_array_deref:
 				result->c_data.c_int = (tint_t)ch;
 			}
 		}
-		if (tok == ']')
+		if likely(tok == ']') {
 			yield();
-		else {
-			WARN(W_EXPECTED_RBRACKET_IN_EXPRESSION);
+		} else {
+			(void)WARN(W_EXPECTED_RBRACKET_IN_EXPRESSION);
 		}
 		break;
 #endif /* !NO_EXTENSION_STRINGOPS */
@@ -13341,13 +13346,13 @@ PRIVATE void EVAL_CALL eval_prod(struct TPPConst *result) {
 			if (result) {
 				TPPConst_ToInt(result);
 				TPPConst_ToInt(&result2);
-				if (t == '*')
+				if (t == '*') {
 					result->c_data.c_int *= result2.c_data.c_int;
-				else if (!result2.c_data.c_int)
-					WARN(W_DIVIDE_BY_ZERO);
-				else if (t == '/')
+				} else if unlikely(!result2.c_data.c_int) {
+					(void)WARN(W_DIVIDE_BY_ZERO);
+				} else if (t == '/') {
 					result->c_data.c_int /= result2.c_data.c_int;
-				else {
+				} else {
 					result->c_data.c_int %= result2.c_data.c_int;
 				}
 			}
@@ -13391,9 +13396,9 @@ PRIVATE void EVAL_CALL eval_sum(struct TPPConst *result) {
 				{
 					TPPConst_ToInt(result);
 					TPPConst_ToInt(&result2);
-					if (t == '+')
+					if (t == '+') {
 						result->c_data.c_int += result2.c_data.c_int;
-					else {
+					} else {
 						result->c_data.c_int -= result2.c_data.c_int;
 					}
 				}
@@ -13420,9 +13425,9 @@ PRIVATE void EVAL_CALL eval_shift(struct TPPConst *result) {
 			if (result) {
 				TPPConst_ToInt(result);
 				TPPConst_ToInt(&result2);
-				if (t == TOK_SHL)
+				if (t == TOK_SHL) {
 					result->c_data.c_int <<= result2.c_data.c_int;
-				else {
+				} else {
 					result->c_data.c_int >>= result2.c_data.c_int;
 				}
 			}
@@ -13592,7 +13597,7 @@ PRIVATE void EVAL_CALL eval_land(struct TPPConst *result) {
 			yield();
 			if (result) {
 				if (!TPPConst_IsBool(result)) {
-					WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
+					(void)WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
 					TPPConst_ToBool(result);
 				}
 				if (!result->c_data.c_int)
@@ -13600,7 +13605,7 @@ PRIVATE void EVAL_CALL eval_land(struct TPPConst *result) {
 				//TPPConst_Quit(result); /* Unnecessary. */
 				eval_or(result);
 				if (!TPPConst_IsBool(result)) {
-					WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
+					(void)WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
 					TPPConst_ToBool(result);
 				}
 			} else {
@@ -13608,9 +13613,8 @@ nullop2:
 				eval_or(NULL);
 			}
 		} while (tok == TOK_LAND);
-		if (result && tok == TOK_LOR) {
-			WARN(W_CONSIDER_PAREN_AROUND_LAND);
-		}
+		if (result && unlikely(tok == TOK_LOR))
+			(void)WARN(W_CONSIDER_PAREN_AROUND_LAND);
 	}
 }
 
@@ -13621,13 +13625,13 @@ PRIVATE void EVAL_CALL eval_lxor(struct TPPConst *result) {
 		if (result) {
 			int oldbool;
 			if (!TPPConst_IsBool(result)) {
-				WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
+				(void)WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
 				TPPConst_ToBool(result);
 			}
 			oldbool = !!result->c_data.c_int;
 			eval_land(result);
 			if (!TPPConst_IsBool(result)) {
-				WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
+				(void)WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
 				TPPConst_ToBool(result);
 			}
 			result->c_data.c_int ^= oldbool;
@@ -13643,7 +13647,7 @@ PRIVATE void EVAL_CALL eval_lor(struct TPPConst *result) {
 		yield();
 		if (result) {
 			if (!TPPConst_IsBool(result)) {
-				WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
+				(void)WARN(W_EXPECTED_BOOL_BINARY_LHS, result);
 				TPPConst_ToBool(result);
 			}
 			if (result->c_data.c_int)
@@ -13651,7 +13655,7 @@ PRIVATE void EVAL_CALL eval_lor(struct TPPConst *result) {
 			//TPPConst_Quit(result); /* Unnecessary. */
 			eval_lxor(result);
 			if (!TPPConst_IsBool(result)) {
-				WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
+				(void)WARN(W_EXPECTED_BOOL_BINARY_RHS, result);
 				TPPConst_ToBool(result);
 			}
 		} else {
@@ -13679,7 +13683,7 @@ PRIVATE void EVAL_CALL eval_question(struct TPPConst *result) {
 				/* NOTE: Only warn about non-boolean condition if
 				 *       this isn't a gcc if-then-else-style expression. */
 				if (!TPPConst_IsBool(result))
-					WARN(W_EXPECTED_BOOL, result);
+					(void)WARN(W_EXPECTED_BOOL, result);
 				TPPConst_Quit(result);
 				eval_lor(was_true ? result : NULL);
 				if (tok == ':') {
@@ -13776,7 +13780,7 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
 	        (uint_least64_t)ftLastModified.dwHighDateTime << 32);
 #elif defined(NO_INCLUDE_SYS_STAT_H)
 	return 0;
-#else
+#else /* ... */
 	struct stat st;
 	DBG_ALIGNMENT_DISABLE();
 #if !defined(TPP_CONFIG_USERSTREAMS) && !defined(NO_FSTAT)
@@ -13793,7 +13797,7 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return st.st_mtime;
-#endif
+#endif /* !... */
 }
 
 
@@ -13870,17 +13874,17 @@ PRIVATE int TPPCALL parse_pragma_pushpop_macro(int is_push_macro) {
 	struct TPPConst const_val;
 	int should_undef;
 	yield();
-	if (tok == '(')
+	if (tok == '(') {
 		yield();
-	else {
-		WARN(W_EXPECTED_LPAREN);
+	} else {
+		(void)WARN(W_EXPECTED_LPAREN);
 	}
 	should_undef = tok == KWD_undef;
 	if (should_undef) {
 		yield();
-		if (tok != ',')
-			WARN(W_EXPECTED_COMMA);
-		else {
+		if (tok != ',') {
+			(void)WARN(W_EXPECTED_COMMA);
+		} else {
 			yield();
 		}
 	}
@@ -13888,7 +13892,7 @@ PRIVATE int TPPCALL parse_pragma_pushpop_macro(int is_push_macro) {
 		if unlikely(!TPPLexer_Eval(&const_val))
 			goto err;
 		if (const_val.c_kind != TPP_CONST_STRING) {
-			WARN(W_EXPECTED_STRING_AFTER_PUSHMACRO, &const_val);
+			(void)WARN(W_EXPECTED_STRING_AFTER_PUSHMACRO, &const_val);
 		} else {
 			keyword = TPPLexer_LookupKeyword(const_val.c_data.c_string->s_text,
 			                                 const_val.c_data.c_string->s_size, 1);
@@ -13909,9 +13913,9 @@ PRIVATE int TPPCALL parse_pragma_pushpop_macro(int is_push_macro) {
 			break;
 		yield();
 	}
-	if (tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if (tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -13977,7 +13981,7 @@ PRIVATE int TPPCALL parse_pragma_message(void) {
 	if unlikely(!TPPLexer_Eval(&message))
 		goto err;
 	if (message.c_kind != TPP_CONST_STRING) {
-		WARN(W_EXPECTED_STRING_AFTER_MESSAGE, &message);
+		(void)WARN(W_EXPECTED_STRING_AFTER_MESSAGE, &message);
 	} else {
 #ifdef TPP_PRAGMA_MESSAGE_BEGIN
 		TPP_PRAGMA_MESSAGE_BEGIN(err);
@@ -14011,9 +14015,9 @@ PRIVATE int TPPCALL parse_pragma_message(void) {
 #endif /* TPP_PRAGMA_MESSAGE_END */
 	}
 	TPPConst_Quit(&message);
-	if (with_paren && unlikely(tok != ')'))
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if (with_paren && unlikely(tok != ')')) {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14027,9 +14031,9 @@ PRIVATE int TPPCALL parse_pragma_error(void) {
 	struct TPPConst error_message;
 	int warning_error;
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	if unlikely(!TPPLexer_Eval(&error_message))
@@ -14044,9 +14048,9 @@ PRIVATE int TPPCALL parse_pragma_error(void) {
 		if unlikely(!warning_error)
 			goto err;
 	}
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14059,9 +14063,9 @@ PRIVATE int TPPCALL parse_pragma_deprecated(void) {
 	struct TPPConst ident_name;
 	struct TPPKeyword *keyword;
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	if unlikely(!TPPLexer_Eval(&ident_name))
@@ -14077,9 +14081,9 @@ PRIVATE int TPPCALL parse_pragma_deprecated(void) {
 			goto err;
 		keyword->k_rare->kr_flags |= TPP_KEYWORDFLAG_IS_DEPRECATED;
 	}
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14093,16 +14097,16 @@ PRIVATE int TPPCALL parse_pragma_tpp_exec(void) {
 	struct TPPConst exec_code;
 	struct TPPFile *exec_file;
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	if unlikely(!TPPLexer_Eval(&exec_code))
 		goto err;
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	if unlikely(exec_code.c_kind != TPP_CONST_STRING) {
@@ -14129,7 +14133,6 @@ PRIVATE int TPPCALL parse_pragma_tpp_exec(void) {
 		                     TPPLEXER_FLAG_NO_BUILTIN_MACROS |
 		                     TPPLEXER_FLAG_EOF_ON_PAREN);
 		pusheof();
-		CURRENT.l_eof_paren;
 		/* Yield everything from this file. */
 		while (TPPLexer_Yield() > 0)
 			;
@@ -14159,15 +14162,15 @@ PRIVATE int TPPCALL parse_pragma_tpp_set_keyword_flags(void) {
 	struct TPPKeyword *keyword;
 	uint32_t new_flags;
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	if unlikely(!TPPLexer_Eval(&const_val))
 		goto err;
 	if (const_val.c_kind != TPP_CONST_STRING) {
-		WARN(W_EXPECTED_STRING_AFTER_TPP_SETF, &const_val);
+		(void)WARN(W_EXPECTED_STRING_AFTER_TPP_SETF, &const_val);
 		keyword = NULL;
 	} else {
 		keyword = TPPLexer_LookupKeyword(const_val.c_data.c_string->s_text,
@@ -14176,18 +14179,18 @@ PRIVATE int TPPCALL parse_pragma_tpp_set_keyword_flags(void) {
 		if unlikely(!keyword || !TPPKeyword_API_MAKERARE(keyword))
 			goto err;
 	}
-	if unlikely(tok != ',')
-		WARN(W_EXPECTED_COMMA);
-	else {
+	if unlikely(tok != ',') {
+		(void)WARN(W_EXPECTED_COMMA);
+	} else {
 		yield();
 	}
 	if unlikely(!TPPLexer_Eval(&const_val))
 		goto err;
 	TPPConst_ToInt(&const_val);
 	new_flags = (uint32_t)const_val.c_data.c_int;
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	if likely(keyword) {
@@ -14221,9 +14224,9 @@ PRIVATE int TPPCALL parse_pragma_warning(void) {
 	/* Configure warning behavior by group/id.
 	 * NOTE: Warning IDs have been chosen for backwards-compatibility with the old TPP. */
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	for (;;) {
@@ -14366,9 +14369,9 @@ next_command:
 			break;
 		yield();
 	}
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14382,9 +14385,9 @@ PRIVATE int TPPCALL parse_pragma_extension(void) {
 	/* Configure TPP extensions from usercode. */
 	struct TPPConst extname;
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	for (;;) {
@@ -14429,9 +14432,9 @@ next_command:
 			break;
 		yield();
 	}
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14450,9 +14453,9 @@ PRIVATE int TPPCALL parse_pragma_TPP_include_path(void) {
 	 * >> #include <stdlib.h> // FILE NOT FOUND
 	 */
 	yield();
-	if unlikely(tok != '(')
-		WARN(W_EXPECTED_LPAREN);
-	else {
+	if unlikely(tok != '(') {
+		(void)WARN(W_EXPECTED_LPAREN);
+	} else {
 		yield();
 	}
 	while (tok != ')') {
@@ -14491,7 +14494,7 @@ yield_after_include_path:
 		if unlikely(!TPPLexer_Eval(&path_string))
 			goto err;
 		if (path_string.c_kind != TPP_CONST_STRING) {
-			WARN(W_EXPECTED_STRING_AFTER_TPP_INCPTH, &path_string);
+			(void)WARN(W_EXPECTED_STRING_AFTER_TPP_INCPTH, &path_string);
 		} else {
 			char *path;
 			size_t size = path_string.c_data.c_string->s_size;
@@ -14511,9 +14514,9 @@ yield_after_include_path:
 			if unlikely(error == 2)
 				error = 0;
 			if unlikely(!error) {
-				WARN(mode ? W_INCLUDE_PATH_ALREADY_EXISTS
-				          : W_UNKNOWN_INCLUDE_PATH,
-				     path, size);
+				(void)WARN(mode ? W_INCLUDE_PATH_ALREADY_EXISTS
+				                : W_UNKNOWN_INCLUDE_PATH,
+				           path, size);
 			}
 			if (path != path_string.c_data.c_string->s_text)
 				free(path);
@@ -14524,9 +14527,9 @@ next_include_path_arg:
 			break;
 		yield();
 	}
-	if unlikely(tok != ')')
-		WARN(W_EXPECTED_RPAREN);
-	else {
+	if unlikely(tok != ')') {
+		(void)WARN(W_EXPECTED_RPAREN);
+	} else {
 		yield();
 	}
 	return 1;
@@ -14695,8 +14698,8 @@ yield_after_gcc_warning:
 		assert(!depfile || !(mode & TPPLEXER_OPENFILE_FLAG_NEXT) ||
 		       !(depfile->f_prev));
 		if (!depfile) {
-			WARN(W_FILE_NOT_FOUND, include_begin,
-			     (size_t)(include_end - include_begin));
+			(void)WARN(W_FILE_NOT_FOUND, include_begin,
+			           (size_t)(include_end - include_begin));
 			return 1;
 		}
 		return check_file_dependency(depfile);

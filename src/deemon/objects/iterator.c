@@ -1205,7 +1205,10 @@ err:
 	return (size_t)-1;
 }
 
-/* Set the Iterator's position
+/* Set the iterator's position
+ * If the given `new_index' is greater than the max allowed index,
+ * the iterator is set to an exhausted state (i.e. points at the
+ * end of the associated sequence)
  * @return:  0: Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1238,7 +1241,7 @@ err:
 	return -1;
 }
 
-/* Rewind the Iterator to its starting position
+/* Rewind the iterator to its starting position
  * @return:  0: Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1460,29 +1463,32 @@ done:
 	return 0;
 }
 
-/* Revert the Iterator by at most `step' (When `step' is too large, same as `rewind')
+/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
  * @return:  0: Success (new relative position wasn't determined)
- * @return:  1: Success (the Iterator has reached its starting position)
- * @return:  2: Success (the Iterator hasn't reached its starting position)
+ * @return:  1: Success (the iterator has reached its starting position)
+ * @return:  2: Success (the iterator hasn't reached its starting position)
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
 	return iterator_do_revert(self, step, NULL, NULL);
 }
 
-/* Advance the Iterator by at most `step' (When `step' is too large, exhaust the Iterator)
+/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
  * @return:  0: Success (new relative position wasn't determined)
- * @return:  1: Success (the Iterator has become exhausted)
- * @return:  2: Success (the Iterator hasn't become exhausted)
+ * @return:  1: Success (the iterator has become exhausted)
+ * @return:  2: Success (the iterator hasn't become exhausted)
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
 	return iterator_do_advance(self, step, NULL, NULL);
 }
 
-/* Decrement the Iterator by 1.
+/* Decrement the iterator by 1.
  * @return:  0: Success
  * @return:  1: The iterator was already at its starting location
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Prev(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
@@ -1748,22 +1754,24 @@ err:
 	return -1;
 }
 
-/* Increment the Iterator, but don't generate a value
+/* Increment the iterator, but don't generate a value
  * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
- *       meaning that (also unlike `tp_iter_next()'), the Iterator's index should
+ *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
  *       only ever be incremented by 1.
  * @return:  0: Success
  * @return:  1: The iterator had already been exhausted
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Next(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Next(DeeObject *__restrict self) {
 	return iterator_do_advance(self, 1, &DeeInt_One, &DeeInt_MinusOne);
 }
 
-/* Check if the Iterator is at its starting location
+/* Check if the iterator is at its starting location
  * @return:  0: No, it isn't
  * @return:  1: Yes, it is
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeIterator_HasPrev(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
 		DREF DeeObject *temp, *temp2;
@@ -1841,9 +1849,10 @@ err:
 	return -1;
 }
 
-/* Peek the next iterator value, but don't actually advance the Iterator.
+/* Peek the next iterator value, but don't actually advance the iterator.
  * @return: ITER_DONE: The iterator has already been exhausted. */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeIterator_Peek(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *temp;
 	int error;

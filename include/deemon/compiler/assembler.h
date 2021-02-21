@@ -936,27 +936,30 @@ INTDEF WUNUSED struct except_handler *(DCALL asm_pack_exceptv)(void);
 /* Set the current text section.
  * @param: section_id: One of `SECTION_*' */
 #define asm_setcur(section_id) \
-	(current_assembler.a_curr = &current_assembler.a_sect[section_id])
+	(void)(current_assembler.a_curr = &current_assembler.a_sect[section_id])
 #define asm_getcur() \
 	((uint16_t)(current_assembler.a_curr - current_assembler.a_sect))
 
 /* Adjust the current stack depth. */
-#define asm_addsp(n)  ((current_assembler.a_stackmax >= (current_assembler.a_stackcur += (n))) || \
-                       (current_assembler.a_stackmax =   current_assembler.a_stackcur, 1))
-#define asm_subsp(n)   (Dee_ASSERT(current_assembler.a_stackcur >= (n)), current_assembler.a_stackcur -= (n))
-#define asm_incsp()   ((current_assembler.a_stackmax >= ++current_assembler.a_stackcur) || \
-                       (current_assembler.a_stackmax =    current_assembler.a_stackcur, 1))
-#define asm_decsp()    (Dee_ASSERT(current_assembler.a_stackcur), --current_assembler.a_stackcur)
-#define asm_dicsp()    (Dee_ASSERT(current_assembler.a_stackcur >= 1)) /* asm_decsp(), asm_incsp() */
-#define asm_ddcsp()    (Dee_ASSERT(current_assembler.a_stackcur >= 2), current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp() */
-#define asm_dddcsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 3), current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp() */
-#define asm_ddddcsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 4), current_assembler.a_stackcur -= 4) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp() */
-#define asm_ddicsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 2), --current_assembler.a_stackcur) /* asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_dddicsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 3), current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_ddddicsp() (Dee_ASSERT(current_assembler.a_stackcur >= 4), current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
-#define asm_ddiicsp()  (Dee_ASSERT(current_assembler.a_stackcur >= 2)) /* asm_decsp(), asm_decsp(), asm_incsp(), asm_incsp() */
-#define asm_dNiNcsp(n) (Dee_ASSERT(current_assembler.a_stackcur >= (n))) /* [asm_decsp()]*n, [asm_incsp()]*n */
-#define asm_diicsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 1), asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
+#define asm_addsp(n)                                                                  \
+	(void)((current_assembler.a_stackmax >= (current_assembler.a_stackcur += (n))) || \
+	       (current_assembler.a_stackmax = current_assembler.a_stackcur, 1))
+#define asm_subsp(n) \
+	(void)(Dee_ASSERT(current_assembler.a_stackcur >= (n)), current_assembler.a_stackcur -= (n))
+#define asm_incsp()                                                            \
+	(void)((current_assembler.a_stackmax >= ++current_assembler.a_stackcur) || \
+	       (current_assembler.a_stackmax = current_assembler.a_stackcur, 1))
+#define asm_decsp()    (void)(Dee_ASSERT(current_assembler.a_stackcur), --current_assembler.a_stackcur)
+#define asm_dicsp()    (void)(Dee_ASSERT(current_assembler.a_stackcur >= 1)) /* asm_decsp(), asm_incsp() */
+#define asm_ddcsp()    (void)(Dee_ASSERT(current_assembler.a_stackcur >= 2), current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp() */
+#define asm_dddcsp()   (void)(Dee_ASSERT(current_assembler.a_stackcur >= 3), current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp() */
+#define asm_ddddcsp()  (void)(Dee_ASSERT(current_assembler.a_stackcur >= 4), current_assembler.a_stackcur -= 4) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp() */
+#define asm_ddicsp()   (void)(Dee_ASSERT(current_assembler.a_stackcur >= 2), --current_assembler.a_stackcur) /* asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_dddicsp()  (void)(Dee_ASSERT(current_assembler.a_stackcur >= 3), current_assembler.a_stackcur -= 2) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_ddddicsp() (void)(Dee_ASSERT(current_assembler.a_stackcur >= 4), current_assembler.a_stackcur -= 3) /* asm_decsp(), asm_decsp(), asm_decsp(), asm_decsp(), asm_incsp() */
+#define asm_ddiicsp()  (void)(Dee_ASSERT(current_assembler.a_stackcur >= 2)) /* asm_decsp(), asm_decsp(), asm_incsp(), asm_incsp() */
+#define asm_dNiNcsp(n) (void)(Dee_ASSERT(current_assembler.a_stackcur >= (n))) /* [asm_decsp()]*n, [asm_incsp()]*n */
+#define asm_diicsp()   (void)(Dee_ASSERT(current_assembler.a_stackcur >= 1), asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
 
 /* Allocate a new, uninitialized relocation within the current text section. */
 INTDEF WUNUSED struct asm_rel *FCALL asm_allocrel(void);

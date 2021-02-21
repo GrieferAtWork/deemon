@@ -51,13 +51,15 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
  * deemon C-core, meaning that its size can quickly be determined,
  * and items can quickly be accessed, given their index.
  * The following types function as fast-sequence-compatible:
- *  - tuple
- *  - list
- *  - _refvector      (Returned by `DeeRefVector_New()')
- *  - _sharedvector   (Created by a `ASM_CALL_SEQ' instruction -- `call top, {#X}')
- *  - _subrange       (Only if the sub-ranged sequence is a fast-sequence)
- *  - _transformation (Only if the sequence being transformed is a fast-sequence)
- *  - _intrange
+ *  - Tuple
+ *  - List
+ *  - _SharedVector      (Created by a `ASM_CALL_SEQ' instruction -- `call top, {#X}')
+ *  - _SeqSubRange       (Only if the sub-ranged sequence is a fast-sequence)
+ *  - _SeqSubRangeN      (*ditto*)
+ *  - _SeqTransformation (Only if the sequence being transformed is a fast-sequence)
+ *  - _SeqIntRange
+ *  - string
+ *  - Bytes
  * Sub-classes of these types are not fast-sequence-compatible. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self) {
@@ -66,14 +68,20 @@ DeeFastSeq_GetSize(DeeObject *__restrict self) {
 	struct type_nsi const *nsi;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if ((seq = tp_self->tp_seq) != NULL &&
-	    (nsi = seq->tp_nsi) != NULL &&
-	    (nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) &&
-	    (nsi->nsi_seqlike.nsi_getsize_fast)) {
-		ASSERT(nsi->nsi_seqlike.nsi_getitem ||
-		       nsi->nsi_seqlike.nsi_getitem_fast);
-		return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
-	}
+	seq     = tp_self->tp_seq;
+	if (!seq)
+		goto nope;
+	nsi = seq->tp_nsi;
+	if (!nsi)
+		goto nope;
+	if (nsi->nsi_class != TYPE_SEQX_CLASS_SEQ)
+		goto nope;
+	if (!nsi->nsi_seqlike.nsi_getsize_fast)
+		goto nope;
+	ASSERT(nsi->nsi_seqlike.nsi_getitem ||
+	       nsi->nsi_seqlike.nsi_getitem_fast);
+	return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
+nope:
 	return DEE_FASTSEQ_NOTFAST;
 }
 

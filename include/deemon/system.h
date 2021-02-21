@@ -141,21 +141,21 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
 
 /* Check if a given error code indicates a UNC-path problem that should be
  * addressed by fixing the path using `DeeNTSystem_FixUncPath()', then trying again. */
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsUncError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBusy(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsExists(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNotDir(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNotEmpty(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBadF(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUncError(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBusy(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsExists(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotDir(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotEmpty(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadF(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
 
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
@@ -166,11 +166,11 @@ DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
  * deemon within a windows environment.
  * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()' to translate
  *       the given NT error code into an errno. */
-DFUNDEF WUNUSED /*errno_t*/ int DCALL
+DFUNDEF ATTR_CONST WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError);
 
 /* Do the reverse of `DeeNTSystem_TranslateErrno()' */
-DFUNDEF WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
+DFUNDEF ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value);
 
 /* Work around a problem with long path names. (Note: also handles interrupts)
@@ -253,10 +253,18 @@ DeeNTSystem_FormatErrorMessage(DeeNT_DWORD dwError);
  * When no error code is given, `GetLastError()' is called internally.
  * When `tp' is `NULL', the proper error type is automatically determined using the `DeeNTSystem_Is*' functions.
  * @return: -1: These functions always return -1 */
-DFUNDEF NONNULL((3)) int DeeNTSystem_ThrowErrorf(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, ...);
-DFUNDEF NONNULL((2)) int DeeNTSystem_ThrowLastErrorf(DeeTypeObject *tp, char const *__restrict format, ...);
-DFUNDEF NONNULL((3)) int DCALL DeeNTSystem_VThrowErrorf(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, va_list args);
-DFUNDEF NONNULL((2)) int DCALL DeeNTSystem_VThrowLastErrorf(DeeTypeObject *tp, char const *__restrict format, va_list args);
+DFUNDEF ATTR_COLD NONNULL((3)) int (DeeNTSystem_ThrowErrorf)(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, ...);
+DFUNDEF ATTR_COLD NONNULL((2)) int (DeeNTSystem_ThrowLastErrorf)(DeeTypeObject *tp, char const *__restrict format, ...);
+DFUNDEF ATTR_COLD NONNULL((3)) int (DCALL DeeNTSystem_VThrowErrorf)(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, va_list args);
+DFUNDEF ATTR_COLD NONNULL((2)) int (DCALL DeeNTSystem_VThrowLastErrorf)(DeeTypeObject *tp, char const *__restrict format, va_list args);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define DeeNTSystem_ThrowErrorf(tp, dwError, ...)           Dee_ASSUMED_VALUE(DeeNTSystem_ThrowErrorf(tp, dwError, __VA_ARGS__), -1)
+#define DeeNTSystem_ThrowLastErrorf(tp, ...)                Dee_ASSUMED_VALUE(DeeNTSystem_ThrowLastErrorf(tp, __VA_ARGS__), -1)
+#define DeeNTSystem_VThrowErrorf(tp, dwError, format, args) Dee_ASSUMED_VALUE(DeeNTSystem_VThrowErrorf(tp, dwError, format, args), -1)
+#define DeeNTSystem_VThrowLastErrorf(tp, format, args)      Dee_ASSUMED_VALUE(DeeNTSystem_VThrowLastErrorf(tp, format, args), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
 #endif /* CONFIG_HOST_WINDOWS */
 
 
@@ -339,12 +347,18 @@ DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 /* Throw an exception alongside an errno error-code `error'
  * When `tp' is `NULL', automatically select an appropriate
  * error type based on the value of `error' */
-DFUNDEF NONNULL((3)) int
-DeeUnixSystem_ThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
-                          char const *__restrict format, ...);
-DFUNDEF NONNULL((3)) int DCALL
-DeeUnixSystem_VThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
-                           char const *__restrict format, va_list args);
+DFUNDEF ATTR_COLD NONNULL((3)) int
+(DeeUnixSystem_ThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                            char const *__restrict format, ...);
+DFUNDEF ATTR_COLD NONNULL((3)) int
+(DCALL DeeUnixSystem_VThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                                   char const *__restrict format, va_list args);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define DeeUnixSystem_ThrowErrorf(tp, errno_value, ...)           Dee_ASSUMED_VALUE(DeeUnixSystem_ThrowErrorf(tp, errno_value, __VA_ARGS__), -1)
+#define DeeUnixSystem_VThrowErrorf(tp, errno_value, format, args) Dee_ASSUMED_VALUE(DeeUnixSystem_VThrowErrorf(tp, errno_value, format, args), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
 
 /* Value set for `errno_t' when the error is not known. */
 #ifndef Dee_SYSTEM_ERROR_UNKNOWN

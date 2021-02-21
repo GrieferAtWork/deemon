@@ -4441,7 +4441,7 @@ do_setattr_this_c:
 					old_object = *pslot;
 					*pslot     = TOP;
 					Dee_Decref(old_object);
-					POP();
+					(void)POP();
 					DISPATCH();
 				}
 

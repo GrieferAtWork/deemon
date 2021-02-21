@@ -50,7 +50,7 @@ DECL_BEGIN
 
 /* NOTE: These are no `DeeSeq_Check()' macros because they wouldn't make sense.
  *       Being derived from `DeeSeq_Type' is _NOT_ mandatory when writing a
- *       sequence class. The only thing that it does do is allow userspace
+ *       sequence class. The only thing that it does do is allow usercode
  *       to safely query whether or not an object implement all of the standard
  *       sequence functions.
  * Instead, a sequence object `ob' should be
@@ -245,6 +245,7 @@ struct Dee_type_nii {
 			 * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
 			WUNUSED NONNULL((1))
 			DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
+
 			/* Get the iterator's position
 			 * NOTE: Unbound sequence indices also count for this operation
 			 * @return: * :         The iterator's current position, where the a starting position is 0
@@ -254,6 +255,7 @@ struct Dee_type_nii {
 			 * @return: (size_t)-1: Error */
 			WUNUSED NONNULL((1))
 			size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
+
 			/* Set the iterator's position
 			 * If the given `new_index' is greater than the max allowed index,
 			 * the iterator is set to an exhausted state (i.e. points at the
@@ -263,11 +265,13 @@ struct Dee_type_nii {
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
+
 			/* Rewind the iterator to its starting position
 			 * @return:  0: Success
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_rewind)(DeeObject *__restrict self);
+
 			/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
 			 * @return:  0: Success (new relative position couldn't be determined)
 			 * @return:  1: Success (the iterator has reached its starting position)
@@ -275,6 +279,7 @@ struct Dee_type_nii {
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
+
 			/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
 			 * @return:  0: Success (new relative position couldn't be determined)
 			 * @return:  1: Success (the iterator has become exhausted)
@@ -282,6 +287,7 @@ struct Dee_type_nii {
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
+
 			/* Decrement the iterator by 1.
 			 * @return:  0: Success
 			 * @return:  1: The iterator was already at its starting location,
@@ -289,6 +295,7 @@ struct Dee_type_nii {
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_prev)(DeeObject *__restrict self);
+
 			/* Increment the iterator, but don't generate a value
 			 * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
 			 *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
@@ -299,12 +306,14 @@ struct Dee_type_nii {
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_next)(DeeObject *__restrict self);
+
 			/* Check if the iterator has a predecessor
 			 * @return:  0: No, it doesn't have one (index == 0)
 			 * @return:  1: Yes, it does have one (index != 0)
 			 * @return: -1: Error */
 			WUNUSED NONNULL((1))
 			int             (DCALL *nii_hasprev)(DeeObject *__restrict self);
+
 			/* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
 			/* Peek the next iterator value, but don't actually advance the iterator.
 			 * @return: ITER_DONE: The iterator has already been exhausted. */
@@ -343,18 +352,22 @@ struct Dee_type_nsi {
 		Dee_funptr_t       _nsi_class_functions[22];
 
 		struct {
-			WUNUSED NONNULL((1)) size_t (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* [1..1] ERROR: (size_t)-1 */
+			WUNUSED NONNULL((1)) size_t (DCALL *nsi_getsize)(DeeObject *__restrict self);
 		}                   nsi_common;
 
 		struct { /* TYPE_SEQX_CLASS_SEQ */
 			/* NOTE: If provided, these functions are only ever called as extensions to the
-			*       regular sequence operators, meaning that if you implement `nsi_getsize',
-			*       you are also _required_ to implement `tp_size'
-			* NOTE: Any object implementing sequence extensions _must_ at
-			*       the very least provide the operators for `nsi_getsize'!
-			* NOTE: The `*_fast' variants are allowed to assume:
-			*      `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
-			WUNUSED NONNULL((1))    size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			 *       regular sequence operators, meaning that if you implement `nsi_getsize',
+			 *       you are also _required_ to implement `tp_size'
+			 * NOTE: Any object implementing sequence extensions _must_ at
+			 *       the very least provide the operators for `nsi_getsize'!
+			 * NOTE: The `*_fast' variants are allowed to assume:
+			 *      `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
+
+			/* [1..1] ERROR: (size_t)-1 */
+			WUNUSED NONNULL((1))    size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
+
 			/* Same as `nsi_getsize', but never throw any errors, and simply return (size_t)-1 to indicate failure.
 			 * HINT: This callback is used to implement `DeeFastSeq_GetSize()', with
 			 *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
@@ -365,12 +378,15 @@ struct Dee_type_nsi {
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
 			WUNUSED NONNULL((1))    int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_setitem)(DeeObject *self, size_t index, DeeObject *value);
+
 			/* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound. */
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
+
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
 			WUNUSED NONNULL((1, 4)) int             (DCALL *nsi_setrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_setrange_n)(DeeObject *self, Dee_ssize_t start, DeeObject *values); /* end: Dee_None */
+
 			/* NOTE: start/end in here operate differently (and simpler) than in ranges:
 			 *       If either value is `>= nsi_getsize()', truncate it to that length.
 			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
@@ -379,18 +395,22 @@ struct Dee_type_nsi {
 			 * @return: (size_t)-2: Error. */
 			WUNUSED NONNULL((1, 4)) size_t          (DCALL *nsi_find)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
 			WUNUSED NONNULL((1, 4)) size_t          (DCALL *nsi_rfind)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
+
 			WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *nsi_xch)(DeeObject *self, size_t index, DeeObject *value);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_insert)(DeeObject *self, size_t index, DeeObject *value);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_insertall)(DeeObject *self, size_t index, DeeObject *values);
 			WUNUSED NONNULL((1))    int             (DCALL *nsi_insertvec)(DeeObject *self, size_t index, size_t insertc, DeeObject *const *insertv);
+
 			/* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
 			 *       first, such that `nsi_pop(self, -1)' is equivalent to a `popback()' function call. */
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
+
 			/* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
 			 *       while delrange is allowed to leave the index range as unbound.
 			 * @return: * : Number or erased items.
 			 * @return: (size_t)-1: Error. */
 			WUNUSED NONNULL((1))    size_t          (DCALL *nsi_erase)(DeeObject *__restrict self, size_t index, size_t count);
+
 			/* Remove or unbind the first/last/all instance(s) of `elem'
 			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
 			 * @return: 0 : Element not found.
@@ -398,6 +418,7 @@ struct Dee_type_nsi {
 			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 4)) int             (DCALL *nsi_remove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
 			WUNUSED NONNULL((1, 4)) int             (DCALL *nsi_rremove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
+
 			/* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
 			 * @return: * : The number of removed items.
 			 * @return: (size_t)-1: Error. */
@@ -406,24 +427,30 @@ struct Dee_type_nsi {
 		}                   nsi_seqlike;
 
 		struct { /* TYPE_SEQX_CLASS_MAP */
-			WUNUSED NONNULL((1))      size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* [1..1] ERROR: (size_t)-1 */
+			WUNUSED NONNULL((1))      size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
+
 			/* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
 			 * however only return the key / value, rather than a key-value tuple.
 			 * @param: iterator: An iterator object, as returned by `mapping.operator iter()' */
 			WUNUSED NONNULL((1))      DREF DeeObject *(DCALL *nsi_nextkey)(DeeObject *__restrict iterator);
 			WUNUSED NONNULL((1))      DREF DeeObject *(DCALL *nsi_nextvalue)(DeeObject *__restrict iterator);
+
 			/* Lookup the given `key' and return its association, or `defl' if it doesn't yet exist.
 			 * WARNING: `defl' may be ITER_DONE, in which case you really shouldn't incref() it! */
 			WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL *nsi_getdefault)(DeeObject *self, DeeObject *key, DeeObject *defl);
+
 			/* Check if the mapping contains a element for `key' and return that element's value, or
 			 * insert a new element for `key', setting its value to `defl', then returning `defl'. */
 			WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL *nsi_setdefault)(DeeObject *self, DeeObject *key, DeeObject *defl);
+
 			/* Update an existing mapping element
 			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
 			 * @return: 1:  The existing key was updated.
 			 * @return: 0: `key' doesn't exist. (*poldvalue is left unchanged)
 			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 2, 3)) int             (DCALL *nsi_updateold)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **poldvalue);
+
 			/* Insert a new mapping element, but don't change a pre-existing one
 			 * @param: poldvalue: When non-NULL, store a reference to the old item here.
 			 * @return: 1:  A new element was inserted.
@@ -433,12 +460,15 @@ struct Dee_type_nsi {
 		}                   nsi_maplike;
 
 		struct { /* TYPE_SEQX_CLASS_SET */
-			WUNUSED NONNULL((1))    size_t (DCALL *nsi_getsize)(DeeObject *__restrict self); /* [1..1] ERROR: (size_t)-1 */
+			/* [1..1] ERROR: (size_t)-1 */
+			WUNUSED NONNULL((1))    size_t (DCALL *nsi_getsize)(DeeObject *__restrict self);
+
 			/* Insert a new `key' into the set
 			 * @return: 1:  The given `key' was inserted.
 			 * @return: 0:  A identical key was already apart of the set.
 			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 2)) int    (DCALL *nsi_insert)(DeeObject *self, DeeObject *key);
+
 			/* Remove a given `key' from the set
 			 * @return: 1:  The given `key' was removed.
 			 * @return: 0:  The given `key' could not be found within the set.
@@ -514,8 +544,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsResizable(DeeObject *__restrict s
  *       but all objects derived from `DeeSeq_Type' automatically implement
  *       all of them as member functions.
  *       With that in mind, any type implementing the `tp_seq' interface
- *       with the intention of behaving as an iterable, should probably
- *       be derived from `DeeSeq_Type' as this allows userspace to query
+ *       with the intention of behaving as an Iterable, should probably
+ *       be derived from `DeeSeq_Type' as this allows usercode to query
  *       for a general purpose sequence by writing `x is sequence from deemon' */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__restrict self, size_t index);
@@ -759,7 +789,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `sv_vector',
- * but still decref() all contained object.
+ * but still decref() all contained objects.
  * Otherwise, try to allocate a new vector with a length of `sv_length'.
  * If doing so fails, don't raise an error but replace `sv_vector' with
  * `NULL' and `sv_length' with `0' before decref()-ing all elements
@@ -823,14 +853,15 @@ DeeSharedMap_Decref(DREF DeeObject *__restrict self);
  * deemon C-core, meaning that its size can quickly be determined,
  * and items can quickly be accessed, given their index.
  * The following types function as fast-sequence-compatible:
- *  - tuple
- *  - list
- *  - _sharedvector   (Created by a `ASM_CALL_SEQ' instruction -- `call top, {#X}')
- *  - _subrange       (Only if the sub-ranged sequence is a fast-sequence)
- *  - _transformation (Only if the sequence being transformed is a fast-sequence)
- *  - _intrange
+ *  - Tuple
+ *  - List
+ *  - _SharedVector      (Created by a `ASM_CALL_SEQ' instruction -- `call top, {#X}')
+ *  - _SeqSubRange       (Only if the sub-ranged sequence is a fast-sequence)
+ *  - _SeqSubRangeN      (*ditto*)
+ *  - _SeqTransformation (Only if the sequence being transformed is a fast-sequence)
+ *  - _SeqIntRange
  *  - string
- *  - bytes
+ *  - Bytes
  * Sub-classes of these types are not fast-sequence-compatible. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self);

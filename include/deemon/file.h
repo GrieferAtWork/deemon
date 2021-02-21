@@ -178,7 +178,7 @@ typedef int DeeSysFD;
 #if !defined(GUARD_DEEMON_SYSTEM_FEATURES_H) || defined(CONFIG_HAVE_fclose)
 #define DeeSysFD_Close(x) fclose(x)
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H || CONFIG_HAVE_fclose */
-#define DeeSysFD_SIGNED  0
+#undef  DeeSysFD_SIGNED
 #define DeeSysFD_SIZE    __SIZEOF_POINTER__
 #define DeeSysFD_INVALID NULL
 typedef void *DeeSysFD; /* FILE * */
@@ -200,25 +200,17 @@ typedef void *DeeSysFD; /* FILE * */
 
 
 #ifdef DEE_SOURCE
-/* The object passed to the `write' operator is an implementation-specific
- * buffer object that must implement at least `operator str', allowing it
- * to be converted to a byte (UTF-8) encoded string.
- * Implementations are however also allowed to pass string objects directly,
- * as strings also implement the `operator str -> string' requirement.
- * XXX: Deemon does the later right now -> Change that and introduce such a hidden type.
- *      Maybe even expand on this by adding a general-purpose `bytes' object for
- *      interacting with raw data without the use of strings. */
-#define FILE_OPERATOR_READ   OPERATOR_EXTENDED(0x0000) /* `operator read(int max_bytes) -> string'  */
-#define FILE_OPERATOR_WRITE  OPERATOR_EXTENDED(0x0001) /* `operator write(object data) -> int' */
-#define FILE_OPERATOR_SEEK   OPERATOR_EXTENDED(0x0002)
-#define FILE_OPERATOR_SYNC   OPERATOR_EXTENDED(0x0003)
-#define FILE_OPERATOR_TRUNC  OPERATOR_EXTENDED(0x0004)
-#define FILE_OPERATOR_CLOSE  OPERATOR_EXTENDED(0x0005)
-#define FILE_OPERATOR_PREAD  OPERATOR_EXTENDED(0x0006)
-#define FILE_OPERATOR_PWRITE OPERATOR_EXTENDED(0x0007)
-#define FILE_OPERATOR_GETC   OPERATOR_EXTENDED(0x0008)
-#define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009)
-#define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a)
+#define FILE_OPERATOR_READ   OPERATOR_EXTENDED(0x0000) /* `operator read(buf: Bytes): int'  */
+#define FILE_OPERATOR_WRITE  OPERATOR_EXTENDED(0x0001) /* `operator write(buf: Bytes): int' */
+#define FILE_OPERATOR_SEEK   OPERATOR_EXTENDED(0x0002) /* `operator seek(off: int, whence: int): int' */
+#define FILE_OPERATOR_SYNC   OPERATOR_EXTENDED(0x0003) /* `operator sync()' */
+#define FILE_OPERATOR_TRUNC  OPERATOR_EXTENDED(0x0004) /* `operator trunc()'  or  `operator trunc(size: int)' */
+#define FILE_OPERATOR_CLOSE  OPERATOR_EXTENDED(0x0005) /* `operator close()' */
+#define FILE_OPERATOR_PREAD  OPERATOR_EXTENDED(0x0006) /* `operator pread(buf: Bytes, pos: int): int' */
+#define FILE_OPERATOR_PWRITE OPERATOR_EXTENDED(0x0007) /* `operator pwrite(buf: Bytes, pos: int): int' */
+#define FILE_OPERATOR_GETC   OPERATOR_EXTENDED(0x0008) /* `operator getc(): int' */
+#define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009) /* `operator ungetc(ch: int): int' */
+#define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a) /* `operator putc(ch: int): int' */
 #define FILE_OPERATOR_COUNT                    0x000b
 #endif /* DEE_SOURCE */
 

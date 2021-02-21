@@ -153,10 +153,10 @@
  * under the assumption that it always evaluates to `value'. Used to
  * wrap functions that always return the same value.
  *
- * If the compiler knows that their return values are _always_ `-1', it
- * can (rightfully so) assume the contents of the return value register,
- * which can then lead to further optimizations where it won't need to
- * re-load the return value for code like:
+ * For example: if the compiler knows that a function's return values
+ * is _always_ `-1', it can (rightfully so) assume the contents of the
+ * return value register, which can then lead to further optimizations
+ * where it won't need to re-load the return value for code like:
  * >> int foo() {
  * >>      if (a) {
  * >>          DeeError_Throw(...);
@@ -470,8 +470,8 @@ DFUNDEF __SSIZE_TYPE__ (DCALL _Dee_dprinter)(void *arg, char const *__restrict d
 #ifndef NDEBUG
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
-#define Dee_ASSERT(expr)       ((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), BREAKPOINT(), 0))
-#define Dee_ASSERTF(expr, ...) ((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), BREAKPOINT(), 0))
+#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), BREAKPOINT(), 0))
+#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), BREAKPOINT(), 0))
 #elif !defined(__NO_builtin_assume)
 #define Dee_ASSERT(expr)       __builtin_assume(expr)
 #define Dee_ASSERTF(expr, ...) __builtin_assume(expr)

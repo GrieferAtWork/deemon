@@ -50,9 +50,9 @@
 DECL_BEGIN
 
 
-PUBLIC NONNULL((3)) int DCALL
-DeeUnixSystem_VThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
-                           char const *__restrict format, va_list args) {
+PUBLIC ATTR_COLD NONNULL((3)) int
+(DCALL DeeUnixSystem_VThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                                   char const *__restrict format, va_list args) {
 	int result;
 	if (!tp) {
 		/* Automatically determine the error type to-be thrown. */
@@ -126,9 +126,9 @@ err:
 	goto done;
 }
 
-PUBLIC NONNULL((3)) int
-DeeUnixSystem_ThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
-                          char const *__restrict format, ...) {
+PUBLIC ATTR_COLD NONNULL((3)) int
+(DeeUnixSystem_ThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                            char const *__restrict format, ...) {
 	va_list args;
 	int result;
 	va_start(args, format);

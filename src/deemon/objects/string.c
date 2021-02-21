@@ -440,7 +440,7 @@ string_bool(String *__restrict self) {
 	return !DeeString_IsEmpty(self);
 }
 
-INTERN WUNUSED ATTR_PURE NONNULL((1)) dhash_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) dhash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
 	dhash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -470,7 +470,7 @@ DeeString_Hash(DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_PURE NONNULL((1)) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) dhash_t DCALL
 DeeString_HashCase(DeeObject *__restrict self) {
 	dhash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
