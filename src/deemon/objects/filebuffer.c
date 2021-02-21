@@ -929,7 +929,7 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	return (size_t)-1;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

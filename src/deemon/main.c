@@ -1149,13 +1149,13 @@ int main(int argc, char *argv[]) {
 
 	if (!argc) {
 		DREF DeeObject *fp;
-		dssize_t temp;
+		size_t temp;
 		/* When no arguments were passed, print a short help-message and exit. */
 		fp = DeeFile_GetStd(DEE_STDERR);
 		if unlikely(!fp)
 			goto err;
 		temp = DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage));
-		if (temp != (size_t)-1)
+		if likely(temp != (size_t)-1)
 			temp = DeeFile_WriteAll(fp, str_minhelp, COMPILER_STRLEN(str_minhelp));
 		Dee_Decref(fp);
 		if unlikely(temp == (size_t)-1)

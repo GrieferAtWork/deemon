@@ -200,21 +200,21 @@ F(float_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(float_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return DeeInt_NewS64((int64_t)value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(float_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return NEW_FLOAT(+value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 F(float_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
