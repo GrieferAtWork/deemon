@@ -40,12 +40,6 @@
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
 
-#undef SSIZE_MIN
-#undef SSIZE_MAX
-#include <hybrid/limitcore.h>
-#define SSIZE_MIN __SSIZE_MIN__
-#define SSIZE_MAX __SSIZE_MAX__
-
 DECL_BEGIN
 
 typedef DeeMemoryFileObject MemoryFile;
@@ -118,21 +112,13 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 	case SEEK_SET:
 		if unlikely(off < 0)
 			goto err_invalid;
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(off >= SIZE_MAX)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
-		if unlikely(self->mf_ptr + (size_t)off < self->mf_ptr)
+		if unlikely(self->mf_begin + (size_t)off < self->mf_begin)
 			goto err_overflow;
 		self->mf_ptr = self->mf_begin + (size_t)off;
 		result       = (dpos_t)off;
 		break;
 
 	case SEEK_CUR:
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
 		result = (size_t)(self->mf_ptr - self->mf_begin);
 		result += (dssize_t)off;
 		if unlikely(result < 0)
@@ -146,12 +132,8 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 	case SEEK_END:
 		result = (size_t)(self->mf_end - self->mf_begin);
 		result += (dssize_t)off;
-		if unlikely(result < 0)
+		if unlikely((doff_t)result < 0)
 			goto err_invalid;
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(result >= SSIZE_MIN)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
 		new_pointer = self->mf_begin + result;
 		if unlikely(new_pointer < self->mf_begin)
 			goto err_overflow;
@@ -422,21 +404,13 @@ reader_seek(Reader *__restrict self,
 	case SEEK_SET:
 		if unlikely(off < 0)
 			goto err_invalid;
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(off >= SIZE_MAX)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
-		if unlikely(self->r_ptr + (size_t)off < self->r_ptr)
+		if unlikely(self->r_begin + (size_t)off < self->r_begin)
 			goto err_overflow;
 		self->r_ptr = self->r_begin + (size_t)off;
 		result      = (dpos_t)off;
 		break;
 
 	case SEEK_CUR:
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
 		result = (size_t)(self->r_ptr - self->r_begin);
 		result += (dssize_t)off;
 		if unlikely(result < 0)
@@ -450,12 +424,8 @@ reader_seek(Reader *__restrict self,
 	case SEEK_END:
 		result = (size_t)(self->r_end - self->r_begin);
 		result += (dssize_t)off;
-		if unlikely(result < 0)
+		if unlikely((doff_t)result < 0)
 			goto err_invalid;
-#if __SIZEOF_POINTER__ < 8
-		if unlikely(result >= SSIZE_MIN)
-			goto err_overflow;
-#endif /* __SIZEOF_POINTER__ < 8 */
 		new_pointer = self->r_begin + result;
 		if unlikely(new_pointer < self->r_begin)
 			goto err_overflow;
