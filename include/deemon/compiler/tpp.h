@@ -75,7 +75,15 @@ INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
 INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
-DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
+DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define parser_errf(...)             Dee_ASSUMED_VALUE(parser_errf(__VA_ARGS__), -1)
+#define parser_erratf(loc, ...)      Dee_ASSUMED_VALUE(parser_erratf(loc, __VA_ARGS__), -1)
+#define parser_erratrf(loc, ...)     Dee_ASSUMED_VALUE(parser_erratrf(loc, __VA_ARGS__), -1)
+#define parser_errastf(loc_ast, ...) Dee_ASSUMED_VALUE(parser_errastf(loc_ast, __VA_ARGS__), -1)
+#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 struct TPPFile;
 struct TPPKeyword;

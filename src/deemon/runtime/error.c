@@ -144,8 +144,8 @@ handle_error:
 	return;
 }
 
-PUBLIC NONNULL((1)) int DCALL
-DeeError_Throw(DeeObject *__restrict ob) {
+PUBLIC NONNULL((1)) int
+(DCALL DeeError_Throw)(DeeObject *__restrict ob) {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT_OBJECT(ob);
@@ -170,10 +170,10 @@ done:
 	return -1;
 }
 
-PUBLIC NONNULL((1, 2)) int DCALL
-DeeError_VThrowf(DeeTypeObject *__restrict tp,
-                 char const *__restrict format,
-                 va_list args) {
+PUBLIC NONNULL((1, 2)) int
+(DCALL DeeError_VThrowf)(DeeTypeObject *__restrict tp,
+                         char const *__restrict format,
+                         va_list args) {
 	int result;
 	DREF DeeObject *argv[1], *error_ob;
 	/* Create the message string. */
@@ -196,8 +196,8 @@ err:
 }
 
 PUBLIC NONNULL((1, 2)) int
-DeeError_Throwf(DeeTypeObject *__restrict tp,
-                char const *__restrict format, ...) {
+(DeeError_Throwf)(DeeTypeObject *__restrict tp,
+                  char const *__restrict format, ...) {
 	va_list args;
 	int result;
 	va_start(args, format);

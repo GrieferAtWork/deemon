@@ -10321,7 +10321,8 @@ string_rematches(String *self, size_t argc, DeeObject *const *argv) {
 	                             args.re_flags);
 	if unlikely(result == (size_t)-1)
 		goto err;
-	return_bool(args.re_dataptr +
+	return_bool(result != 0 &&
+	            args.re_dataptr +
 	            args.re_datalen ==
 	            data_endptr);
 err:

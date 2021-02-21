@@ -167,8 +167,8 @@ DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
 			dpos_t trunc_pos;
 			int result;
 			if unlikely(!((DeeFileTypeObject *)tp_self)->ft_trunc ||
-				         !((DeeFileTypeObject *)tp_self)->ft_seek)
-			break;
+			            !((DeeFileTypeObject *)tp_self)->ft_seek)
+				break;
 			/* Determine the current position and truncate the file there. */
 			trunc_pos = (dpos_t)(*((DeeFileTypeObject *)tp_self)->ft_seek)((DeeFileObject *)self, 0, SEEK_CUR);
 			if unlikely((doff_t)trunc_pos < 0)

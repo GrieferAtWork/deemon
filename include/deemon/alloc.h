@@ -182,7 +182,11 @@ DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
 
 /* Throw a bad-allocation error for `req_bytes' bytes.
  * @return: -1: Always returns -1. */
-DFUNDEF ATTR_COLD int DCALL Dee_BadAlloc(size_t req_bytes);
+DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define Dee_BadAlloc(req_bytes) Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 #endif /* __CC__ */
 
 /* Default malloc/free functions used for object allocation. */

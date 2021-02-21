@@ -1470,17 +1470,19 @@ do_generic_string_2:
 #endif /* AF_INET */
 
 		default:
+#ifdef AF_INET
+#define SOCKADDR_CTOR_ARGC_LIST "1, 2 or 5"
+#elif defined(AF_INET6)
+#define SOCKADDR_CTOR_ARGC_LIST "1 or 2"
+#else /* ... */
+#define SOCKADDR_CTOR_ARGC_LIST "1 or 2"
+#endif /* !... */
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family %K requires "
-#ifdef AF_INET
-			                "1, 2 or 5 "
-#elif defined(AF_INET6)
-			                "1 or 2 "
-#else
-			                "1 or 2 "
-#endif
-			                "arguments, but %Iu were given",
+			                SOCKADDR_CTOR_ARGC_LIST
+			                " arguments, but %Iu were given",
 			                sock_getafnameorid(family), argc);
+#undef SOCKADDR_CTOR_ARGC_LIST
 			break;
 		}
 	}	break;

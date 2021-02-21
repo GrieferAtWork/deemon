@@ -655,8 +655,8 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor        = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor   = */ NULL,
-				/* .tp_deep_ctor   = */ NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor   = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(Attr),
 				/* .tp_any_ctor_kw = */ (dfunptr_t)&attribute_init
@@ -752,7 +752,7 @@ do_realloc:
 err:
 	return -1;
 }
-#endif
+#endif /* !CONFIG_LONGJMP_ENUMATTR */
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -803,7 +803,7 @@ enumattr_init(EnumAttr *__restrict self,
 		self->ea_attrc = list.al_c;
 		self->ea_attrv = list.al_v; /* Inherit. */
 	}
-#endif
+#endif /* !CONFIG_LONGJMP_ENUMATTR */
 	return 0;
 err:
 	return -1;
@@ -820,7 +820,7 @@ enumattr_fini(EnumAttr *__restrict self) {
 			Dee_Decref(self->ea_attrv[i]);
 	}
 	Dee_Free(self->ea_attrv);
-#endif
+#endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -833,7 +833,7 @@ enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
 		for (i = 0; i < self->ea_attrc; ++i)
 			Dee_Visit(self->ea_attrv[i]);
 	}
-#endif
+#endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -1028,8 +1028,8 @@ enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ei_seq);
 }
 
-#ifdef CONFIG_LONGJMP_ENUMATTR
 
+#ifdef CONFIG_LONGJMP_ENUMATTR
 PRIVATE dssize_t DCALL
 enumattr_longjmp(DeeObject *__restrict declarator,
                  char const *__restrict attr_name, char const *attr_doc,
@@ -1090,7 +1090,7 @@ err_collect:
 
 #if defined(CONFIG_HOST_WINDOWS) && defined(__x86_64__)
 ATTR_MSABI
-#endif
+#endif /* CONFIG_HOST_WINDOWS && __x86_64__ */
 PRIVATE ATTR_NOINLINE ATTR_NORETURN ATTR_USED void
 enumattr_start(EnumAttrIter *__restrict self) {
 	dssize_t enum_error;
@@ -1128,7 +1128,7 @@ enumattr_start(EnumAttrIter *__restrict self) {
 	longjmp(self->ei_break, BRKSIG_STOP);
 	__builtin_unreachable();
 }
-#endif
+#endif /* CONFIG_LONGJMP_ENUMATTR */
 
 PRIVATE WUNUSED NONNULL((1)) DREF Attr *DCALL
 enumattriter_next(EnumAttrIter *__restrict self) {

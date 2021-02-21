@@ -1402,6 +1402,7 @@ done:
 		DBG_ALIGNMENT_DISABLE();
 #if (defined(_CRTDBG_MAP_ALLOC) && \
      defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
+#ifdef _DEBUG
 #ifdef CONFIG_HOST_WINDOWS
 		if (!IsDebuggerPresent())
 #endif /* CONFIG_HOST_WINDOWS */
@@ -1416,6 +1417,7 @@ done:
 		if ((_CrtDumpMemoryLeaks)())
 			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
 		DEE_CHECKMEMORY();
+#endif /* _DEBUG */
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 	}
 	return result;

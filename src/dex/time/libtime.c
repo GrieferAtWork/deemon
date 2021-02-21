@@ -922,13 +922,15 @@ do_set_year:
 done:
 	return 0;
 err_invalid_value:
-	DeeError_Throwf(&DeeError_ValueError,
 #ifdef HAVE_128BIT_TIME
+	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid value %K for %s", DeeInt_NewS128(value),
-#else /* HAVE_128BIT_TIME */
-	                "Invalid value %I64d for %s", value,
-#endif /* !HAVE_128BIT_TIME */
 	                get_repr_name(repr));
+#else /* HAVE_128BIT_TIME */
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid value %I64d for %s", value,
+	                get_repr_name(repr));
+#endif /* !HAVE_128BIT_TIME */
 	return -1;
 }
 

@@ -35,7 +35,7 @@ DECL_BEGIN
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
  * Upon first access, `DeeExec_GetHome()' will pre-initialize the home-path as follows:
- * >> deemon_home = fs.environ["DEEMON_HOME"];
+ * >> deemon_home = fs.environ.get("DEEMON_HOME");
  * >> if (deemon_home !is none) {
  * >>     deemon_home = fs.abspath(deemon_home);
  * >> } else {
@@ -73,8 +73,8 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  *          the first encouter of a -L option will call `DeeModule_GetPath()'
  *          before pre-pending the following string at the front of the list,
  *          following other -L paths prepended before then.
- * >> fs.env.get("DEEMON_PATH", "").split(fs.delim)...;
- * >> fs.join(DeeExec_GetHome(), "lib")
+ * >> fs.environ.get("DEEMON_PATH", "").split(fs.DELIM)...;
+ * >> fs.joinpath(DeeExec_GetHome(), "lib")
  *
  * This list is also used to locate system-include paths for the preprocessor,
  * in that every entry that is a string is an include-path after appending "/include":
@@ -100,7 +100,7 @@ DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
 
 /* High-level functionality for registering at-exit hooks.
  * When executed, at-exit callbacks are run in order of being registered.
- * NOTE: This function makes use of libC's `atexit()' function (if available).
+ * NOTE: This function makes use of libc's `atexit()' function (if available).
  * @param args: A tuple object the is used to invoke `callback'
  * @return:  0: Successfully registered the given callback.
  * @return: -1: An error occurred or atexit() can no longer be used
@@ -170,7 +170,7 @@ struct Dee_compiler_options;
  *                          as the fact that peephole and other optimizations are
  *                          forced to be disabled, or DEC files are never generated,
  *                          all for reasons that should be quite obvious.
- * @param: default_symbols: A mapping-like object of type `{(string, Object)...}', that
+ * @param: default_symbols: A mapping-like object of type `{string: Object}', that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
  *                          variables.
@@ -285,7 +285,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  * that deemon cannot be shutdown through conventional means.
  * To oversimplify such a situation, imagine user-code like this:
  * >> global global_instance;
- * >> 
+ * >>
  * >> class SelfRevivingDestructor {
  * >>     ~this() {
  * >>         // Allowed: The destructor revives itself by generating
@@ -296,7 +296,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  * >> }
  * >> // Kick-start the evil...
  * >> SelfRevivingDestructor();
- * >> 
+ *
  * Now code like this might seem evil, however is 100% allowed, and even
  * when something like this is done, deemon will continue to try shutting
  * down normally, and without breaking any rules (just slightly altering
@@ -309,14 +309,14 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  *   - We use `tp_visit' to recursively visit all GC-objects,
  *     where for every `code' object that we encounter, we
  *     simply do an ATOMIC_WRITE of the first instruction byte
- *    (unless the code is empty?), to set it to `ASM_RET_NONE'
- *   - `code' objects are also GC objects, meaning that we can
+ *     (unless the code is empty?), to set it to `ASM_RET_NONE'
+ *   - `Code' objects are also GC objects, meaning that we can
  *     be sure that every existing piece of user-code can be
  *     reached by simply iterating all GC objects and filtering
  *     instances of `DeeCode_Type'.
- *     >> import deemon;
+ *     >> import deemon, rt;
  *     >> for (local x: deemon.gc) {
- *     >>     if (x !is deemon.code)
+ *     >>     if (x !is rt.Code)
  *     >>         continue;
  *     >>     ...
  *     >> }

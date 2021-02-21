@@ -1533,7 +1533,10 @@ struct Dee_type_math {
 	WUNUSED NONNULL((1, 2)) int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
 	WUNUSED NONNULL((1, 2)) int (DCALL *tp_int64)(DeeObject *__restrict self, int64_t *__restrict result);
 	WUNUSED NONNULL((1, 2)) int (DCALL *tp_double)(DeeObject *__restrict self, double *__restrict result);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self); /* Cast to `int' (Must return an `DeeInt_Type' object) */
+
+	/* Cast to `int' (Must return an `DeeInt_Type' object) */
+	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self);
+
 	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_inv)(DeeObject *__restrict self);
 	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_pos)(DeeObject *__restrict self);
 	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_neg)(DeeObject *__restrict self);
@@ -1548,6 +1551,7 @@ struct Dee_type_math {
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_or)(DeeObject *self, DeeObject *some_object);
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_xor)(DeeObject *self, DeeObject *some_object);
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
+
 	/* Inplace operators (Optional; Implemented using functions above when not available) */
 	WUNUSED NONNULL((1)) int (DCALL *tp_inc)(DeeObject **__restrict pself);
 	WUNUSED NONNULL((1)) int (DCALL *tp_dec)(DeeObject **__restrict pself);
@@ -1573,6 +1577,7 @@ struct Dee_type_cmp {
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
 	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
+
 	/* Optional iterator-extensions for providing optimized (but
 	 * less generic) variants for various iterator operations.
 	 * NOTE: The compare sub-structure was chosen for this, as native
@@ -1593,6 +1598,7 @@ struct Dee_type_seq {
 	WUNUSED NONNULL((1, 2, 3))    DREF DeeObject *(DCALL *tp_range_get)(DeeObject *self, DeeObject *begin, DeeObject *end);
 	WUNUSED NONNULL((1, 2, 3))    int             (DCALL *tp_range_del)(DeeObject *self, DeeObject *begin, DeeObject *end);
 	WUNUSED NONNULL((1, 2, 3, 4)) int             (DCALL *tp_range_set)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
+
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
 	struct Dee_type_nsi Dee_tpconst *tp_nsi;
@@ -1989,9 +1995,9 @@ struct Dee_type_member {
 #define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
 	offsetof(struct_type, field) + (sizeof(((struct_type *)0)->field) - \
 	                                (1 + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)))
-#else /* ... */
+#else /* __BYTE_ORDER__ == ... */
 #error "Unsupported endian"
-#endif /* !... */
+#endif /* __BYTE_ORDER__ != ... */
 #define Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, doc)           \
 	Dee_TYPE_MEMBER_FIELD_DOC(name, (flags) | Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(flagmask),      \
 	                          Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, flagmask), \
@@ -2025,9 +2031,9 @@ struct Dee_membercache {
 };
 
 #ifndef CONFIG_NO_THREADS
-#define Dee_MEMBERCACHE_INIT  { NULL, NULL, 0, 0, NULL, RWLOCK_INIT }
+#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL, RWLOCK_INIT }
 #else /* !CONFIG_NO_THREADS */
-#define Dee_MEMBERCACHE_INIT  { NULL, NULL, 0, 0, NULL }
+#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL }
 #endif /* CONFIG_NO_THREADS */
 
 #ifdef DEE_SOURCE
@@ -2040,70 +2046,70 @@ struct Dee_membercache {
 #define Dee_OPERATOR_EXTENDED(x) (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #ifdef DEE_SOURCE
 /* Universal operator codes. */
-#define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...): Object'                                  - `__constructor__' - `tp_any_ctor'. */
-#define OPERATOR_COPY         0x0001 /* `operator copy(): Object'                                         - `__copy__'        - `tp_copy_ctor'. */
-#define OPERATOR_DEEPCOPY     0x0002 /* `operator deepcopy(): Object'                                     - `__deepcopy__'    - `tp_deep_ctor'. */
-#define OPERATOR_DESTRUCTOR   0x0003 /* `operator ~this(): none'                                          - `__destructor__'  - `tp_dtor'. */
-#define OPERATOR_ASSIGN       0x0004 /* `operator := (other: Object): type(this)'                         - `__assign__'      - `tp_assign'. */
-#define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (other: Object): type(this)'                    - `__moveassign__'  - `tp_move_assign'. */
-#define OPERATOR_STR          0x0006 /* `operator str(): string'                                          - `__str__'         - `tp_str'. */
-#define OPERATOR_REPR         0x0007 /* `operator repr(): string'                                         - `__repr__'        - `tp_repr'. */
-#define OPERATOR_BOOL         0x0008 /* `operator bool(): bool'                                           - `__bool__'        - `tp_bool'. */
-#define OPERATOR_ITERNEXT     0x0009 /* `operator next(): Object'                                         - `__next__'        - `tp_iter_next'. */
-#define OPERATOR_CALL         0x000a /* `operator ()(args...): Object'                                    - `__call__'        - `tp_call'. */
-#define OPERATOR_INT          0x000b /* `operator int(): int'                                             - `__int__'         - `tp_int'. */
-#define OPERATOR_FLOAT        0x000c /* `operator float(): float'                                         - `__float__'       - `tp_double'. */
-#define OPERATOR_INV          0x000d /* `operator ~ (): Object'                                           - `__inv__'         - `tp_inv'. */
-#define OPERATOR_POS          0x000e /* `operator + (): Object'                                           - `__pos__'         - `tp_pos'. */
-#define OPERATOR_NEG          0x000f /* `operator - (): Object'                                           - `__neg__'         - `tp_neg'. */
-#define OPERATOR_ADD          0x0010 /* `operator + (other: Object): Object'                              - `__add__'         - `tp_add'. */
-#define OPERATOR_SUB          0x0011 /* `operator - (other: Object): Object'                              - `__sub__'         - `tp_sub'. */
-#define OPERATOR_MUL          0x0012 /* `operator * (other: Object): Object'                              - `__mul__'         - `tp_mul'. */
-#define OPERATOR_DIV          0x0013 /* `operator / (other: Object): Object'                              - `__div__'         - `tp_div'. */
-#define OPERATOR_MOD          0x0014 /* `operator % (other: Object): Object'                              - `__mod__'         - `tp_mod'. */
-#define OPERATOR_SHL          0x0015 /* `operator << (other: Object): Object'                             - `__shl__'         - `tp_shl'. */
-#define OPERATOR_SHR          0x0016 /* `operator >> (other: Object): Object'                             - `__shr__'         - `tp_shr'. */
-#define OPERATOR_AND          0x0017 /* `operator & (other: Object): Object'                              - `__and__'         - `tp_and'. */
-#define OPERATOR_OR           0x0018 /* `operator | (other: Object): Object'                              - `__or__'          - `tp_or'. */
-#define OPERATOR_XOR          0x0019 /* `operator ^ (other: Object): Object'                              - `__xor__'         - `tp_xor'. */
-#define OPERATOR_POW          0x001a /* `operator ** (other: Object): Object'                             - `__pow__'         - `tp_pow'. */
-#define OPERATOR_INC          0x001b /* `operator ++ (): type(this)'                                      - `__inc__'         - `tp_inc'. */
-#define OPERATOR_DEC          0x001c /* `operator -- (): type(this)'                                      - `__dec__'         - `tp_dec'. */
-#define OPERATOR_INPLACE_ADD  0x001d /* `operator += (other: Object): type(this)'                         - `__iadd__'        - `tp_inplace_add'. */
-#define OPERATOR_INPLACE_SUB  0x001e /* `operator -= (other: Object): type(this)'                         - `__isub__'        - `tp_inplace_sub'. */
-#define OPERATOR_INPLACE_MUL  0x001f /* `operator *= (other: Object): type(this)'                         - `__imul__'        - `tp_inplace_mul'. */
-#define OPERATOR_INPLACE_DIV  0x0020 /* `operator /= (other: Object): type(this)'                         - `__idiv__'        - `tp_inplace_div'. */
-#define OPERATOR_INPLACE_MOD  0x0021 /* `operator %= (other: Object): type(this)'                         - `__imod__'        - `tp_inplace_mod'. */
-#define OPERATOR_INPLACE_SHL  0x0022 /* `operator <<= (other: Object): type(this)'                        - `__ishl__'        - `tp_inplace_shl'. */
-#define OPERATOR_INPLACE_SHR  0x0023 /* `operator >>= (other: Object): type(this)'                        - `__ishr__'        - `tp_inplace_shr'. */
-#define OPERATOR_INPLACE_AND  0x0024 /* `operator &= (other: Object): type(this)'                         - `__iand__'        - `tp_inplace_and'. */
-#define OPERATOR_INPLACE_OR   0x0025 /* `operator |= (other: Object): type(this)'                         - `__ior__'         - `tp_inplace_or'. */
-#define OPERATOR_INPLACE_XOR  0x0026 /* `operator ^= (other: Object): type(this)'                         - `__ixor__'        - `tp_inplace_xor'. */
-#define OPERATOR_INPLACE_POW  0x0027 /* `operator **= (other: Object): type(this)'                        - `__ipow__'        - `tp_inplace_pow'. */
-#define OPERATOR_HASH         0x0028 /* `operator hash(): int'                                            - `__hash__'        - `tp_hash'. */
-#define OPERATOR_EQ           0x0029 /* `operator == (other: Object): Object'                             - `__eq__'          - `tp_eq'. */
-#define OPERATOR_NE           0x002a /* `operator != (other: Object): Object'                             - `__ne__'          - `tp_ne'. */
-#define OPERATOR_LO           0x002b /* `operator < (other: Object): Object'                              - `__lo__'          - `tp_lo'. */
-#define OPERATOR_LE           0x002c /* `operator <= (other: Object): Object'                             - `__le__'          - `tp_le'. */
-#define OPERATOR_GR           0x002d /* `operator > (other: Object): Object'                              - `__gr__'          - `tp_gr'. */
-#define OPERATOR_GE           0x002e /* `operator >= (other: Object): Object'                             - `__ge__'          - `tp_ge'. */
-#define OPERATOR_ITERSELF     0x002f /* `operator iter(): Object'                                         - `__iter__'        - `tp_iter_self'. */
-#define OPERATOR_SIZE         0x0030 /* `operator # (): Object'                                           - `__size__'        - `tp_size'. */
-#define OPERATOR_CONTAINS     0x0031 /* `operator contains(other: Object): Object'                        - `__contains__'    - `tp_contains'. */
-#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object'                             - `__getitem__'     - `tp_get'. */
-#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object): none'                            - `__delitem__'     - `tp_del'. */
-#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object): type(value)'        - `__setitem__'     - `tp_set'. */
-#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object'               - `__getrange__'    - `tp_range_get'. */
-#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object): none'              - `__delrange__'    - `tp_range_del'. */
-#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object): type(value)' - `__setrange__' - `tp_range_set'. */
-#define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object'                                - `__getattr__'     - `tp_getattr'. */
-#define OPERATOR_DELATTR      0x0039 /* `operator del . (string attr): none'                              - `__delattr__'     - `tp_delattr'. */
-#define OPERATOR_SETATTR      0x003a /* `operator . = (string attr, value: Object): type(value)'          - `__setattr__'     - `tp_setattr'. */
-#define OPERATOR_ENUMATTR     0x003b /* `operator enumattr(): {attribute...}'                             - `__enumattr__'    - `tp_enumattr'. */
-#define OPERATOR_ENTER        0x003c /* `operator enter(): none'                                          - `__enter__'       - `tp_enter'. */
-#define OPERATOR_LEAVE        0x003d /* `operator leave(): none'                                          - `__leave__'       - `tp_leave'. */
+#define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...)'                                    - `__constructor__' - `tp_any_ctor'. */
+#define OPERATOR_COPY         0x0001 /* `operator copy(other: type(this))'                          - `__copy__'        - `tp_copy_ctor'. */
+#define OPERATOR_DEEPCOPY     0x0002 /* `operator deepcopy(other: type(this))'                      - `__deepcopy__'    - `tp_deep_ctor'. */
+#define OPERATOR_DESTRUCTOR   0x0003 /* `operator ~this()'                                          - `__destructor__'  - `tp_dtor'. */
+#define OPERATOR_ASSIGN       0x0004 /* `operator := (other: Object)'                               - `__assign__'      - `tp_assign'. */
+#define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (other: type(this))'                      - `__moveassign__'  - `tp_move_assign'. */
+#define OPERATOR_STR          0x0006 /* `operator str(): string'                                    - `__str__'         - `tp_str'. */
+#define OPERATOR_REPR         0x0007 /* `operator repr(): string'                                   - `__repr__'        - `tp_repr'. */
+#define OPERATOR_BOOL         0x0008 /* `operator bool(): bool'                                     - `__bool__'        - `tp_bool'. */
+#define OPERATOR_ITERNEXT     0x0009 /* `operator next(): Object'                                   - `__next__'        - `tp_iter_next'. */
+#define OPERATOR_CALL         0x000a /* `operator ()(args...): Object'                              - `__call__'        - `tp_call'. */
+#define OPERATOR_INT          0x000b /* `operator int(): int'                                       - `__int__'         - `tp_int'. */
+#define OPERATOR_FLOAT        0x000c /* `operator float(): float'                                   - `__float__'       - `tp_double'. */
+#define OPERATOR_INV          0x000d /* `operator ~ (): Object'                                     - `__inv__'         - `tp_inv'. */
+#define OPERATOR_POS          0x000e /* `operator + (): Object'                                     - `__pos__'         - `tp_pos'. */
+#define OPERATOR_NEG          0x000f /* `operator - (): Object'                                     - `__neg__'         - `tp_neg'. */
+#define OPERATOR_ADD          0x0010 /* `operator + (other: Object): Object'                        - `__add__'         - `tp_add'. */
+#define OPERATOR_SUB          0x0011 /* `operator - (other: Object): Object'                        - `__sub__'         - `tp_sub'. */
+#define OPERATOR_MUL          0x0012 /* `operator * (other: Object): Object'                        - `__mul__'         - `tp_mul'. */
+#define OPERATOR_DIV          0x0013 /* `operator / (other: Object): Object'                        - `__div__'         - `tp_div'. */
+#define OPERATOR_MOD          0x0014 /* `operator % (other: Object): Object'                        - `__mod__'         - `tp_mod'. */
+#define OPERATOR_SHL          0x0015 /* `operator << (other: Object): Object'                       - `__shl__'         - `tp_shl'. */
+#define OPERATOR_SHR          0x0016 /* `operator >> (other: Object): Object'                       - `__shr__'         - `tp_shr'. */
+#define OPERATOR_AND          0x0017 /* `operator & (other: Object): Object'                        - `__and__'         - `tp_and'. */
+#define OPERATOR_OR           0x0018 /* `operator | (other: Object): Object'                        - `__or__'          - `tp_or'. */
+#define OPERATOR_XOR          0x0019 /* `operator ^ (other: Object): Object'                        - `__xor__'         - `tp_xor'. */
+#define OPERATOR_POW          0x001a /* `operator ** (other: Object): Object'                       - `__pow__'         - `tp_pow'. */
+#define OPERATOR_INC          0x001b /* `operator ++ (): type(this)'                                - `__inc__'         - `tp_inc'. */
+#define OPERATOR_DEC          0x001c /* `operator -- (): type(this)'                                - `__dec__'         - `tp_dec'. */
+#define OPERATOR_INPLACE_ADD  0x001d /* `operator += (other: Object): type(this)'                   - `__iadd__'        - `tp_inplace_add'. */
+#define OPERATOR_INPLACE_SUB  0x001e /* `operator -= (other: Object): type(this)'                   - `__isub__'        - `tp_inplace_sub'. */
+#define OPERATOR_INPLACE_MUL  0x001f /* `operator *= (other: Object): type(this)'                   - `__imul__'        - `tp_inplace_mul'. */
+#define OPERATOR_INPLACE_DIV  0x0020 /* `operator /= (other: Object): type(this)'                   - `__idiv__'        - `tp_inplace_div'. */
+#define OPERATOR_INPLACE_MOD  0x0021 /* `operator %= (other: Object): type(this)'                   - `__imod__'        - `tp_inplace_mod'. */
+#define OPERATOR_INPLACE_SHL  0x0022 /* `operator <<= (other: Object): type(this)'                  - `__ishl__'        - `tp_inplace_shl'. */
+#define OPERATOR_INPLACE_SHR  0x0023 /* `operator >>= (other: Object): type(this)'                  - `__ishr__'        - `tp_inplace_shr'. */
+#define OPERATOR_INPLACE_AND  0x0024 /* `operator &= (other: Object): type(this)'                   - `__iand__'        - `tp_inplace_and'. */
+#define OPERATOR_INPLACE_OR   0x0025 /* `operator |= (other: Object): type(this)'                   - `__ior__'         - `tp_inplace_or'. */
+#define OPERATOR_INPLACE_XOR  0x0026 /* `operator ^= (other: Object): type(this)'                   - `__ixor__'        - `tp_inplace_xor'. */
+#define OPERATOR_INPLACE_POW  0x0027 /* `operator **= (other: Object): type(this)'                  - `__ipow__'        - `tp_inplace_pow'. */
+#define OPERATOR_HASH         0x0028 /* `operator hash(): int'                                      - `__hash__'        - `tp_hash'. */
+#define OPERATOR_EQ           0x0029 /* `operator == (other: Object): Object'                       - `__eq__'          - `tp_eq'. */
+#define OPERATOR_NE           0x002a /* `operator != (other: Object): Object'                       - `__ne__'          - `tp_ne'. */
+#define OPERATOR_LO           0x002b /* `operator < (other: Object): Object'                        - `__lo__'          - `tp_lo'. */
+#define OPERATOR_LE           0x002c /* `operator <= (other: Object): Object'                       - `__le__'          - `tp_le'. */
+#define OPERATOR_GR           0x002d /* `operator > (other: Object): Object'                        - `__gr__'          - `tp_gr'. */
+#define OPERATOR_GE           0x002e /* `operator >= (other: Object): Object'                       - `__ge__'          - `tp_ge'. */
+#define OPERATOR_ITERSELF     0x002f /* `operator iter(): Object'                                   - `__iter__'        - `tp_iter_self'. */
+#define OPERATOR_SIZE         0x0030 /* `operator # (): Object'                                     - `__size__'        - `tp_size'. */
+#define OPERATOR_CONTAINS     0x0031 /* `operator contains(other: Object): Object'                  - `__contains__'    - `tp_contains'. */
+#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object'                       - `__getitem__'     - `tp_get'. */
+#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object)'                            - `__delitem__'     - `tp_del'. */
+#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object)'               - `__setitem__'     - `tp_set'. */
+#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object'         - `__getrange__'    - `tp_range_get'. */
+#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)'              - `__delrange__'    - `tp_range_del'. */
+#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)' - `__setrange__'    - `tp_range_set'. */
+#define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object'                          - `__getattr__'     - `tp_getattr'. */
+#define OPERATOR_DELATTR      0x0039 /* `operator del . (string attr)'                              - `__delattr__'     - `tp_delattr'. */
+#define OPERATOR_SETATTR      0x003a /* `operator .= (string attr, value: Object)'                  - `__setattr__'     - `tp_setattr'. */
+#define OPERATOR_ENUMATTR     0x003b /* `operator enumattr(): {attribute...}'                       - `__enumattr__'    - `tp_enumattr'. */
+#define OPERATOR_ENTER        0x003c /* `operator enter()'                                          - `__enter__'       - `tp_enter'. */
+#define OPERATOR_LEAVE        0x003d /* `operator leave()'                                          - `__leave__'       - `tp_leave'. */
 #define OPERATOR_USERCOUNT    0x003e /* Number of user-accessible operators. (Used by `class' types) */
-#define OPERATOR_EXTENDED(x) (0x1000+(x)) /* Extended operator codes. (Type-specific; may be re-used) */
+#define OPERATOR_EXTENDED(x)  (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #define OPERATOR_ISINPLACE(x) ((x) >= OPERATOR_INC && (x) <= OPERATOR_INPLACE_POW)
 
 /* Operators not exposed to user-code. */
@@ -2183,8 +2189,8 @@ struct Dee_membercache {
 #endif /* DEE_SOURCE */
 
 struct Dee_opinfo {
-	unsigned int const oi_type : 12;    /* The operator must be used as inplace. */
-	unsigned int const oi_class : 3;    /* The class associated with the operator (One of `OPCLASS_*') */
+	unsigned int const oi_type : 12;    /* The operator type (s.a. `OPTYPE_*'). */
+	unsigned int const oi_class : 3;    /* The class associated with the operator (one of `OPCLASS_*') */
 	unsigned int const oi_private : 1;  /* The operator is private. */
 	uint16_t const     oi_offset;       /* Offset to where the c-function of this operator can be found. */
 	char const         oi_uname[12];    /* `+' */
@@ -2220,7 +2226,7 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
  *       extension operators as well as some operators marked as
- *      `OPTYPE_SPECIAL' (most notably: `tp_int'), as well as throwing
+ *       `OPTYPE_SPECIAL' (most notably: `tp_int'), as well as throwing
  *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
  * Special handling is performed for the read/write operators
  * of `DeeFileType_Type', which are invoked by passing string
@@ -2515,6 +2521,10 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertType)(DeeObject *self
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type);
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define DeeObject_TypeAssertFailed(self, required_type) \
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 #define DeeObject_AssertTypeOrNone(self, required_type) \
 	(DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
 #define DeeObject_AssertTypeExactOrNone(self, required_type) \

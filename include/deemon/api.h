@@ -149,6 +149,41 @@
 #endif /* __GNUC__ */
 
 
+/* Evaluate `expr' at runtime, and instruct compile-time optimizations
+ * under the assumption that it always evaluates to `value'. Used to
+ * wrap functions that always return the same value.
+ *
+ * If the compiler knows that their return values are _always_ `-1', it
+ * can (rightfully so) assume the contents of the return value register,
+ * which can then lead to further optimizations where it won't need to
+ * re-load the return value for code like:
+ * >> int foo() {
+ * >>      if (a) {
+ * >>          DeeError_Throw(...);
+ * >>          goto err;
+ * >>      }
+ * >>      if (b) {
+ * >>          DeeError_Throw(...);
+ * >>          goto err;
+ * >>      }
+ * >>      return 0;
+ * >>  err:
+ * >>      return -1;
+ * >> }
+ *
+ * If the compiler knows that `goto err' is only ever called with the
+ * return value register already containing `-1', then it won't have
+ * to load that value back into the register yet again! */
+#ifndef Dee_ASSUMED_VALUE
+#ifndef __NO_builtin_unreachable
+#define Dee_ASSUMED_VALUE(expr, value) ((expr) == (value) ? (value) : (__builtin_unreachable(), value))
+#else /* __NO_builtin_unreachable */
+#define Dee_ASSUMED_VALUE_IS_NOOP 1
+#define Dee_ASSUMED_VALUE(expr, value) (expr)
+#endif /* !__NO_builtin_unreachable */
+#endif /* !Dee_ASSUMED_VALUE */
+
+
 DECL_BEGIN
 
 /* #define CONFIG_NO_THREADS 1 */

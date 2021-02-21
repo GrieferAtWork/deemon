@@ -69,7 +69,7 @@ DECL_BEGIN
  *                          as the fact that peephole and other optimizations are
  *                          forced to be disabled, or DEC files are never generated,
  *                          all for reasons that should be quite obvious.
- * @param: default_symbols: A mapping-like object of type `{(string, Object)...}', that
+ * @param: default_symbols: A mapping-like object of type `{string: Object}', that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
  *                          variables.
@@ -530,7 +530,7 @@ PRIVATE void __LIBCCALL atexit_callback(void) {
 
 /* High-level functionality for registering at-exit hooks.
  * When executed, at-exit callbacks are run in order of being registered.
- * NOTE: This function makes use of libC's `atexit()' function (if available).
+ * NOTE: This function makes use of libc's `atexit()' function (if available).
  * @param args: A tuple object the is used to invoke `callback'
  * @return:  0: Successfully registered the given callback.
  * @return: -1: An error occurred or atexit() can no longer be used
@@ -588,9 +588,8 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 Dee_AtExit(DeeObject *UNUSED(callback),
            DeeObject *UNUSED(args)) {
-	DeeError_Throwf(&DeeError_NotImplemented,
-	                "Deemon was built without atexit() support");
-	return -1;
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Deemon was built without atexit() support");
 }
 
 PUBLIC int DCALL
@@ -662,7 +661,7 @@ LOCAL uint64_t parse_timestamp(void) {
 	 * NOTE: That's also the reason why everything is written without
 	 *       loops, or the use of api functions such as sscanf().
 	 *       Additionally, every variable is assigned to once (potentially
-	 *       in different branches of the same of-statement who's condition
+	 *       in different branches of the same if-statement who's condition
 	 *       should already be known at compile-time), meaning that constant
 	 *       propagation should be fairly easy to achieve. */
 	monthday = (((TIMESTAMP_MDAY[0] - '0') * 10) + (TIMESTAMP_MDAY[1] - '0')) - 1;

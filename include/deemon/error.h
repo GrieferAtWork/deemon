@@ -208,17 +208,25 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict
 
 /* Throw a given object `ob' as an error.
  * @return: -1: Always returns `-1' */
-DFUNDEF NONNULL((1)) int DCALL DeeError_Throw(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) int (DCALL DeeError_Throw)(DeeObject *__restrict ob);
 
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/
 DFUNDEF NONNULL((1, 2)) int
-DeeError_Throwf(DeeTypeObject *__restrict tp,
-                char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 2)) int DCALL
-DeeError_VThrowf(DeeTypeObject *__restrict tp,
-                 char const *__restrict format, va_list args);
+(DeeError_Throwf)(DeeTypeObject *__restrict tp,
+                  char const *__restrict format, ...);
+DFUNDEF NONNULL((1, 2)) int
+(DCALL DeeError_VThrowf)(DeeTypeObject *__restrict tp,
+                         char const *__restrict format, va_list args);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define DeeError_Throw(ob)                 Dee_ASSUMED_VALUE(DeeError_Throw(ob), -1)
+#define DeeError_Throwf(tp, ...)           Dee_ASSUMED_VALUE(DeeError_Throwf(tp, __VA_ARGS__), -1)
+#define DeeError_VThrowf(tp, format, args) Dee_ASSUMED_VALUE(DeeError_VThrowf(tp, format, args), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
+
 
 /* Return the currently effective error, or NULL if none is. */
 DFUNDEF WUNUSED DeeObject *DCALL DeeError_Current(void);
@@ -235,12 +243,12 @@ DeeError_CurrentIs(DeeTypeObject *__restrict tp);
 DFUNDEF bool DCALL
 DeeError_Print(char const *reason, unsigned int handle_errors);
 
-#define Dee_ERROR_PRINT_DONTHANDLE 0
-#define Dee_ERROR_PRINT_DOHANDLE   1
+#define Dee_ERROR_PRINT_DONTHANDLE 0 /* Don't handle errors (only print them) */
+#define Dee_ERROR_PRINT_DOHANDLE   1 /* Handle errors with `ERROR_HANDLED_RESTORE' */
 #ifdef CONFIG_NO_THREADS
 #define Dee_ERROR_PRINT_HANDLEINTR Dee_ERROR_PRINT_DOHANDLE
 #else /* CONFIG_NO_THREADS */
-#define Dee_ERROR_PRINT_HANDLEINTR 2
+#define Dee_ERROR_PRINT_HANDLEINTR 2 /* Handle errors with `ERROR_HANDLED_INTERRUPT' */
 #endif /* !CONFIG_NO_THREADS */
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
