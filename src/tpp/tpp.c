@@ -474,7 +474,7 @@ for (local i = 0; i < 256; ++i) {
 		flags |= CH_ISALPHA;
 	if (i >= '0' && i <= '9')
 		flags |= CH_ISDIGIT;
-	if (i <= 32)
+	if (i <= 32 && i != 0)
 		flags |= CH_ISSPACE;
 	if (i in ['=','(','/',')','\'','<','!','>','-','?'])
 		flags |= CH_ISTRIGRAPH;
@@ -496,7 +496,7 @@ for (local i = 0; i < 256; ++i) {
 		print;
 }
 ]]]*/
-	0x84,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x44,0x04,0x04,0x44,0x04,0x04,
+	0x80,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x44,0x04,0x04,0x44,0x04,0x04,
 	0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,
 	0x04,0x30,0x00,0x20,0x01,0x20,0x20,0x10,0x10,0x10,0x20,0x20,0x00,0x30,0x20,0x30,
 	0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x20,0x00,0x30,0x30,0x30,0x10,
@@ -624,48 +624,80 @@ PRIVDEF void TPPCALL on_popfile(struct TPPFile *file);
 
 
 /* Given two pointer `iter' and `end', skip a wrapped linefeed
- * in `iter' so long as it doesn't overflow into `end'.
- * @return: 0: No wrapped linefeed was found.
- * @return: 1: A wrapped linefeed was skipped.
- * TODO: This macro is overkill in a lot of places
- *       when `*end' is known to equal `\0'
- *    >> It would be much faster to use a version stripped of end-checks */
-#define SKIP_WRAPLF(iter, end)                                 \
-	(*(iter) == '\\' && (iter) != (end)-1                      \
-	 ? ((iter)[1] == '\n'                                      \
-	    ? ((iter) += 2, 1)                                     \
-	    : (iter)[1] == '\r'                                    \
-	      ? ((iter) +=                                         \
-	         ((iter) != (end)-2 && (iter)[2] == '\n') ? 3 : 2, \
-	         1)                                                \
-	      : 0)                                                 \
-	 : 0)
-#define SKIP_WRAPLF_REV(iter, begin)                                          \
-	((iter)[-1] == '\n' && (iter) != (begin) + 1                              \
-	 ? ((iter)[-2] == '\\'                                                    \
-	    ? ((iter) -= 2, 1)                                                    \
-	    : ((iter)[-2] == '\r' && (iter) != (begin) + 2 && (iter)[-3] == '\\') \
-	      ? ((iter) -= 3, 1)                                                  \
-	      : 0)                                                                \
-	 : (((iter)[-1] == '\r' && (iter) != (begin) + 1 && (iter)[-2] == '\\')   \
-	    ? ((iter) -= 2, 1)                                                    \
-	    : 0))
-
-#define LSTRIP_SPACE(begin, end)        \
-	while ((begin) != (end)) {          \
-		while (SKIP_WRAPLF(begin, end)) \
-			;                           \
-		if (!tpp_isspace(*(begin)))     \
-			break;                      \
-		++(begin);                      \
+ * in `iter' so long as it doesn't overflow into `end'. */
+LOCAL char *tpp_skip_wraplf(char const *iter, char const *end) {
+	for (;;) {
+		if (*iter != '\\')
+			break;
+		if (iter >= end - 1)
+			break;
+		if (iter[1] == '\n') {
+			iter += 2;
+		} else if (iter[1] == '\r') {
+			iter += 2;
+			if (iter < end && *iter == '\n')
+				++iter;
+		} else {
+			break;
+		}
 	}
-#define RSTRIP_SPACE(begin, end)            \
-	while ((end) != (begin)) {              \
-		while (SKIP_WRAPLF_REV(end, begin)) \
-			;                               \
-		if (!tpp_isspace((end)[-1]))        \
-			break;                          \
-		--(end);                            \
+	return (char *)iter;
+}
+
+LOCAL char *tpp_skip_wraplf_z(char const *iter) {
+	for (;;) {
+		if (*iter != '\\')
+			break;
+		if (iter[1] == '\n') {
+			iter += 2;
+		} else if (iter[1] == '\r') {
+			iter += 2;
+			if (*iter == '\n')
+				++iter;
+		} else {
+			break;
+		}
+	}
+	return (char *)iter;
+}
+
+LOCAL char *tpp_rskip_wraplf(char const *iter, char const *begin) {
+	while (iter > begin + 1) {
+		if (iter[-1] == '\n') {
+			if (iter[-2] == '\\') {
+				iter -= 2;
+				continue;
+			}
+			if (iter[-2] == '\r' && iter > begin + 2 && iter[-3] == '\\') {
+				iter -= 3;
+				continue;
+			}
+		} else if (iter[-1] == '\r') {
+			if (iter[-2] == '\\') {
+				iter -= 2;
+				continue;
+			}
+		}
+		break;
+	}
+	return (char *)iter;
+}
+
+#define LSTRIP_SPACE(begin, end)             \
+	while ((begin) != (end)) {               \
+		begin = tpp_skip_wraplf(begin, end); \
+		if (!tpp_isspace(*(begin)))          \
+			break;                           \
+		++(begin);                           \
+	}
+#define RSTRIP_SPACE(begin, end)              \
+	for (;;) {                                \
+		(end) = tpp_rskip_wraplf(end, begin); \
+		if ((end) <= (begin))                 \
+			break;                            \
+		if (!tpp_isspace((end)[-1]))          \
+			break;                            \
+		--(end);                              \
 	}
 
 #ifdef _MSC_VER
@@ -1678,8 +1710,7 @@ skip_whitespace_and_comments(char *iter, char *end) {
 	assert(iter <= end);
 	while (iter != end) {
 		while (iter != end) {
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 			if (!tpp_isspace(*iter))
 				break;
 			++iter;
@@ -1688,8 +1719,7 @@ skip_whitespace_and_comments(char *iter, char *end) {
 			break;
 		if (*iter == '/' && iter + 1 != end) {
 			char *forward = iter + 1;
-			while (SKIP_WRAPLF(forward, end))
-				;
+			forward = tpp_skip_wraplf(forward, end);
 			if (*forward == '*' &&
 			    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 				++forward;
@@ -1698,8 +1728,7 @@ skip_whitespace_and_comments(char *iter, char *end) {
 						++forward;
 					if (forward == end || ++forward == end)
 						return forward;
-					while (SKIP_WRAPLF(forward, end))
-						;
+					forward = tpp_skip_wraplf(forward, end);
 					if (*forward == '/') {
 						++forward;
 						break;
@@ -1733,31 +1762,30 @@ skip_whitespace_and_comments_rev(char *iter, char *begin) {
 	char *forward;
 	assert(iter >= begin);
 next:
-	while (iter != begin) {
-		while (iter != begin) {
-			while (SKIP_WRAPLF_REV(iter, begin))
-				;
+	while (iter > begin) {
+		for (;;) {
+			iter = tpp_rskip_wraplf(iter, begin);
+			if (iter <= begin)
+				break;
 			if (!tpp_isspace_nolf(iter[-1]))
 				break;
 			--iter;
 		}
 		if (iter == begin)
 			break;
-		if (iter[-1] == '/' && iter - 1 != begin) {
+		if (iter[-1] == '/') {
 			forward = iter - 1;
-			while (SKIP_WRAPLF_REV(forward, begin))
-				;
-			if (forward[-1] == '*' &&
+			forward = tpp_rskip_wraplf(forward, begin);
+			if (forward > begin && forward[-1] == '*' &&
 			    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 				--forward;
-				while (forward != begin) {
-					while (forward != begin && forward[-1] != '*')
+				while (forward > begin) {
+					while (forward > begin && forward[-1] != '*')
 						--forward;
 					if (forward == begin || --forward == begin)
 						return forward;
-					while (SKIP_WRAPLF_REV(forward, begin))
-						;
-					if (forward[-1] == '/') {
+					forward = tpp_rskip_wraplf(forward, begin);
+					if (forward > begin && forward[-1] == '/') {
 						--forward;
 						break;
 					}
@@ -1767,7 +1795,7 @@ next:
 			}
 		}
 		if (tpp_islf(iter[-1])) {
-			/* HINT: This linefeed is known not to be escaped, due to the 'SKIP_WRAPLF_REV' above. */
+			/* HINT: This linefeed is known not to be escaped, due to the 'tpp_rskip_wraplf' above. */
 			if (CURRENT.l_extokens & TPPLEXER_TOKEN_CPP_COMMENT) {
 				/* Check for a C++-style comment. */
 				forward = iter - 1;
@@ -1797,10 +1825,11 @@ next:
 PRIVATE char *TPPCALL
 skip_whitespacenolf_and_comments_rev(char *iter, char *begin) {
 	assert(iter >= begin);
-	while (iter != begin) {
-		while (iter != begin) {
-			while (SKIP_WRAPLF_REV(iter, begin))
-				;
+	while (iter > begin) {
+		for (;;) {
+			iter = tpp_rskip_wraplf(iter, begin);
+			if (iter <= begin)
+				break;
 			if ((chrattr[(uint8_t)iter[-1]] & (CH_ISSPACE | CH_ISLF | CH_ISZERO)) != CH_ISSPACE)
 				break;
 			--iter;
@@ -1810,18 +1839,16 @@ skip_whitespacenolf_and_comments_rev(char *iter, char *begin) {
 		if (iter[-1] == '/' && iter - 1 != begin &&
 		    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			char *forward = iter - 1;
-			while (SKIP_WRAPLF_REV(forward, begin))
-				;
-			if (forward[-1] == '*') {
+			forward = tpp_rskip_wraplf(forward, begin);
+			if (forward > begin && forward[-1] == '*') {
 				--forward;
-				while (forward != begin) {
-					while (forward != begin && forward[-1] != '*')
+				while (forward > begin) {
+					while (forward > begin && forward[-1] != '*')
 						--forward;
-					if (forward == begin || --forward == begin)
+					if (forward <= begin || --forward <= begin)
 						return forward;
-					while (SKIP_WRAPLF_REV(forward, begin))
-						;
-					if (forward[-1] == '/') {
+					forward = tpp_rskip_wraplf(forward, begin);
+					if (forward >= begin && forward[-1] == '/') {
 						--forward;
 						break;
 					}
@@ -2146,8 +2173,7 @@ string_find_eol_after_comments(char *iter, char *end) {
 		} else if (*iter == '/' &&
 		         (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			if (++iter != end) {
-				while (SKIP_WRAPLF(iter, end))
-					;
+				iter = tpp_skip_wraplf(iter, end);
 			}
 			if (*iter == '/') {
 				++iter;
@@ -2160,8 +2186,7 @@ string_find_eol_after_comments(char *iter, char *end) {
 						++iter;
 					if (iter == end)
 						break;
-					while (SKIP_WRAPLF(iter, end))
-						;
+					iter = tpp_skip_wraplf(iter, end);
 					if (*++iter == '/')
 						break;
 				}
@@ -3326,16 +3351,14 @@ search_suitable_end_again:
 					if (mode & MODE_INCOMMENT) {
 						/* End multi-line comment. */
 						if (ch == '*') {
-							while (SKIP_WRAPLF(iter, end))
-								;
+							iter = tpp_skip_wraplf(iter, end);
 							if (*iter == '/')
 								mode &= ~(MODE_INCOMMENT);
 							++iter;
 						}
 					} else if (!(mode & (MODE_INSTRING | MODE_INCHAR))) {
 						if (ch == '/') {
-							while (SKIP_WRAPLF(iter, end))
-								;
+							iter = tpp_skip_wraplf(iter, end);
 							ch = *iter;
 							if (ch == '*') {
 								/* Multi-line comment. */
@@ -3356,8 +3379,7 @@ skip_line_comment:
 						}
 #ifdef CONFIG_BUILDING_DEEMON
 						else if (ch == '@') {
-							while (SKIP_WRAPLF(iter, end))
-								;
+							iter = tpp_skip_wraplf(iter, end);
 							if (*iter == '@')
 								goto skip_line_comment;
 						}
@@ -4033,8 +4055,7 @@ wraplf_memlen(char const *__restrict iter, size_t n) {
 	char const *end = iter + n;
 	size_t result   = 0;
 	while (iter != end) {
-		while (SKIP_WRAPLF(iter, end))
-			;
+		iter = tpp_skip_wraplf(iter, end);
 		if (iter == end)
 			break;
 		++iter, ++result;
@@ -4046,8 +4067,7 @@ LOCAL void TPPCALL
 wraplf_memcpy(char *__restrict dst, char const *__restrict src, size_t n) {
 	char const *end = src + n;
 	while (src != end) {
-		while (SKIP_WRAPLF(src, end))
-			;
+		src = tpp_skip_wraplf(src, end);
 		if (src == end)
 			break;
 		*dst++ = *src++;
@@ -4193,8 +4213,7 @@ next:
 		ch = *iter;
 		if (ch == '/' && (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			char *comment_start = iter++;
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 			if (*iter == '*') {
 				if likely(iter != end)
 					++iter;
@@ -4202,8 +4221,7 @@ next:
 skipcom:
 				while (iter != end && *iter++ != '*')
 					;
-				while (SKIP_WRAPLF(iter, end))
-					;
+				iter = tpp_skip_wraplf(iter, end);
 				if (iter != end && *iter != '/')
 					goto skipcom;
 				if likely(iter != end)
@@ -4237,16 +4255,14 @@ skipcom:
 			/* keyword: scan until a non-alnum character is found. */
 			if (HAVE_EXTENSION_DOLLAR_IS_ALPHA) {
 				for (;;) {
-					while (SKIP_WRAPLF(iter, end))
-						;
+					iter = tpp_skip_wraplf(iter, end);
 					if (!(chrattr[(uint8_t)*iter] & chflags))
 						break;
 					++iter, ++name_size;
 				}
 			} else {
 				for (;;) {
-					while (SKIP_WRAPLF(iter, end))
-						;
+					iter = tpp_skip_wraplf(iter, end);
 					if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 						break;
 					++iter, ++name_size;
@@ -4332,8 +4348,7 @@ skipcom:
 		}
 		/* Skip escaped linefeeds. */
 		if (ch == '\\') {
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 		}
 		if (tpp_islforzero(ch))
 			break;
@@ -4734,8 +4749,7 @@ TPPFile_NewDefine(void) {
 		if (!WARN(W_REDEFINING_BUILTIN_KEYWORD, keyword_entry))
 			return NULL;
 	}
-	while (SKIP_WRAPLF(curfile->f_pos, curfile->f_end))
-		;
+	curfile->f_pos = tpp_skip_wraplf_z(curfile->f_pos/*, curfile->f_end*/);
 	/* Check the character immediately after the name of the macro. */
 	switch (*curfile->f_pos) {
 
@@ -4955,8 +4969,7 @@ skip_argument_name:
 		/* Skip whitespace at the front. */
 		if (!(CURRENT.l_flags & TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE)) {
 			while (result->f_begin != curfile->f_end) {
-				while (SKIP_WRAPLF(result->f_begin, curfile->f_end))
-					;
+				result->f_begin = tpp_skip_wraplf_z(result->f_begin/*, curfile->f_end*/);
 				if (result->f_begin == curfile->f_end ||
 				    tpp_isnospace_orlf(*result->f_begin))
 					break;
@@ -4972,10 +4985,9 @@ skip_argument_name:
 	/* Trim down the end of the macro's text block. */
 	assert(result->f_end >= result->f_begin);
 	if (!(CURRENT.l_flags & TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE)) {
-		while (result->f_end != result->f_begin) {
-			while (SKIP_WRAPLF_REV(result->f_end, result->f_begin))
-				;
-			if (result->f_end == result->f_begin ||
+		while (result->f_end > result->f_begin) {
+			result->f_end = tpp_rskip_wraplf(result->f_end, result->f_begin);
+			if (result->f_end <= result->f_begin ||
 			    !tpp_isspace(result->f_end[-1]))
 				break;
 			--result->f_end;
@@ -7484,14 +7496,28 @@ done:
 
 
 
+
+/* Disable warnings about `forward' being used uninitialized.
+ * If you look at the function, you'll notice that `forward'
+ * is only initialized when `tpp_ismultichar(ch)'.
+ * But because that variable ends up only being used after
+ * repeated checks to `tpp_ismultichar(ch)', these compilers
+ * aren't able to realize that the second use of `tpp_ismultichar(ch)'
+ * becomes true exactly in those cases where `forward' had
+ * actually been initialized! */
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4701 4703)
 #endif /* _MSC_VER */
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif /* __GNUC__ */
+
 PUBLIC tok_t TPPCALL TPPLexer_YieldRaw(void) {
 	struct TPPFile *file, *prev_file;
-	char *iter, *end;
+	char *iter;
 	tok_t ch;
 	char *forward;
 	assert(TPPLexer_Current);
@@ -7512,40 +7538,35 @@ again:
 		}
 	}
 	assert(file);
-	iter = file->f_pos, end = file->f_end;
+	iter = file->f_pos;
 	/* Skip some leading wrapped linefeeds. */
 startover_iter:
-	assert(!*end);
-	assert(iter <= end);
-	while (SKIP_WRAPLF(iter, end))
-		;
+	assert(!*file->f_end);
+	assert(iter <= file->f_end);
+	iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 	token.t_begin = iter;
-	assert(iter <= end);
+	assert(iter <= file->f_end);
 	/* Start reading data. */
 	ch = (unsigned char)*iter++;
 	if (tpp_ismultichar(ch)) {
-	parse_multichar:
+parse_multichar:
 		/* Common code for multi-char sequences such as `<<' or `!=' */
 		forward = iter;
-		while (SKIP_WRAPLF(forward, end))
-			;
+		forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 	}
-	assert(end == file->f_end);
 	switch (ch) {
 
 	case '\0':
 		/* Sporadic \0-character (interpret as whitespace). */
-		if
-			unlikely(iter < end)
-		goto whitespace;
-		if
-			unlikely(iter > end)
-		iter = end;
+		if unlikely(iter < file->f_end)
+			goto whitespace;
+		if unlikely(iter > file->f_end)
+			iter = file->f_end;
 		/* Don't allow seek if the EOB flag is set or
 		 * the EOB file matches the current one. */
 		if ((CURRENT.l_flags & TPPLEXER_FLAG_NO_SEEK_ON_EOB) ||
-		    CURRENT.l_eob_file == file) {
-		eof:
+		    (CURRENT.l_eob_file == file)) {
+eof:
 			token.t_begin = iter;
 			goto settok;
 		}
@@ -7558,15 +7579,15 @@ startover_iter:
 #elif TPPLEXER_FLAG_NONBLOCKING == TPPFILE_NEXTCHUNK_FLAG_NOBLCK
 		if (TPPFile_NextChunk(file, CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING))
 			goto again;
-#else
+#else /* ... */
 		if (TPPFile_NextChunk(file, CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING
 		                            ? TPPFILE_NEXTCHUNK_FLAG_NOBLCK
 		                            : TPPFILE_NEXTCHUNK_FLAG_NONE))
 			goto again;
-#endif
-		iter = file->f_pos, end = file->f_end;
+#endif /* !... */
+		iter = file->f_pos;
 		if ((CURRENT.l_flags & TPPLEXER_FLAG_NO_POP_ON_EOF) ||
-		    CURRENT.l_eof_file == file)
+		    (CURRENT.l_eof_file == file))
 			goto eof;
 		/* EOF (Check the include stack for more files) */
 		if ((prev_file = file->f_prev) == NULL) {
@@ -7580,7 +7601,8 @@ startover_iter:
 		file->f_prev = NULL;
 		on_popfile(file);
 		TPPFile_Decref(file);
-		token.t_file = file = prev_file;
+		file         = prev_file;
+		token.t_file = file;
 		goto again; /* Load the file again. */
 
 	case '\r':
@@ -7597,26 +7619,26 @@ startover_iter:
 	case '\'':
 	case '\"':
 		/* Scan forward until the end of the string/character. */
-		while (iter != end) {
-			while (SKIP_WRAPLF(iter, end))
-				;
-			if (*iter == (char)ch)
-				break;
-			if ((CURRENT.l_flags & TPPLEXER_FLAG_TERMINATE_STRING_LF) && tpp_islforzero(*iter)) {
-				if
-					unlikely(!WARN(W_STRING_TERMINATED_BY_LINEFEED))
-				goto err;
+		for (;;) {
+			if (!*iter && iter >= file->f_end) {
+				if unlikely(!WARN(W_STRING_TERMINATED_BY_EOF))
+					goto err;
 				break;
 			}
-			if (*iter == '\\' && iter != end &&
-			    !(CURRENT.l_flags & TPPLEXER_FLAG_INCLUDESTRING))
+			iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
+			if (*iter == (char)ch) {
+				++iter;
+				break;
+			}
+			if ((CURRENT.l_flags & TPPLEXER_FLAG_TERMINATE_STRING_LF) && tpp_islforzero(*iter)) {
+				if unlikely(!WARN(W_STRING_TERMINATED_BY_LINEFEED))
+					goto err;
+				break;
+			}
+			if (*iter == '\\' && !(CURRENT.l_flags & TPPLEXER_FLAG_INCLUDESTRING))
 				++iter;
 			++iter;
 		}
-		if (*iter == (char)ch)
-			++iter;
-		else if (iter == end && unlikely(!WARN(W_STRING_TERMINATED_BY_EOF)))
-			goto err;
 		/* Warn amount if multi-char constants if they are not enabled. */
 		if (ch == '\'' && !HAVE_EXTENSION_MULTICHAR_CONST) {
 			char *char_begin = token.t_begin + 1, *char_end = iter;
@@ -7625,10 +7647,9 @@ startover_iter:
 				--char_end;
 			if (TPP_SizeofUnescape(char_begin, (size_t)(char_end - char_begin),
 			                       sizeof(char)) != sizeof(char)) {
-				if
-					unlikely(!WARN(W_MULTICHAR_NOT_ALLOWED, char_begin,
-					               (size_t)(char_end - char_begin)))
-				goto err;
+				if unlikely(!WARN(W_MULTICHAR_NOT_ALLOWED, char_begin,
+				                  (size_t)(char_end - char_begin)))
+					goto err;
 			}
 		}
 		/* The string/char token ID is the startup character. */
@@ -7636,8 +7657,7 @@ startover_iter:
 
 #ifndef NO_FEATURE_TRIGRAPHS
 	case '?': /* Check for trigraphs. */
-		if (HAVE_FEATURE_TRIGRAPHS &&
-		    (iter <= end - 1 && *iter == '?')) {
+		if (HAVE_FEATURE_TRIGRAPHS && *iter == '?') {
 			char tri_ch = map_trichar(iter[1]);
 			if (!tri_ch)
 				goto settok;
@@ -7657,14 +7677,12 @@ startover_iter:
 	case '>':
 		if (*forward == (char)ch) {
 			iter = ++forward;
-			while (SKIP_WRAPLF(forward, end))
-				;
+			forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 			/* Check for tri-char: `<<<' / `>>>' */
 			if (*forward == ch) {
 				if (CURRENT.l_extokens & TPPLEXER_TOKEN_ANGLE3_EQUAL) {
 					char *forward2 = forward + 1;
-					while (SKIP_WRAPLF(forward2, end))
-						;
+					forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 					if (*forward2 == '=') {
 						ch   = (ch == '<' ? TOK_LANGLE3_EQUAL : TOK_RANGLE3_EQUAL);
 						iter = ++forward2;
@@ -7713,8 +7731,7 @@ startover_iter:
 		if (*forward == '=') {
 			if (CURRENT.l_extokens & TPPLEXER_TOKEN_EQUAL3) {
 				char *forward2 = forward + 1;
-				while (SKIP_WRAPLF(forward2, end))
-					;
+				forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 				if (*forward2 == '=') {
 					iter = ++forward2;
 					ch   = TOK_EQUAL3;
@@ -7760,8 +7777,7 @@ startover_iter:
 		case '*':
 			if (CURRENT.l_extokens & TPPLEXER_TOKEN_STARSTAR) {
 				char *forward2 = forward + 1;
-				while (SKIP_WRAPLF(forward2, end))
-					;
+				forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 				if (*forward2 == '*') {
 					iter = ++forward2;
 					ch   = TOK_POW_EQUAL;
@@ -7781,15 +7797,13 @@ startover_iter:
 		case '>': {
 			char *forward2;
 			forward2 = forward + 1;
-			while (SKIP_WRAPLF(forward2, end))
-				;
+			forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 			if (*forward2 == *forward) {
 				iter = ++forward2;
 				ch   = (*forward2 == '<') ? TOK_LANGLE2_EQUAL : TOK_RANGLE2_EQUAL;
 				if (CURRENT.l_extokens & TPPLEXER_TOKEN_ANGLE3_EQUAL) {
 					/* Check for 3-range inplace tokens. */
-					while (SKIP_WRAPLF(forward2, end))
-						;
+					forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 					if (*forward2 == ch) {
 						iter = ++forward2;
 						ch   = (ch == '<') ? TOK_LANGLE3_EQUAL : TOK_RANGLE3_EQUAL;
@@ -7807,8 +7821,7 @@ startover_iter:
 		if (*forward == '=') {
 			if (CURRENT.l_extokens & TPPLEXER_TOKEN_EQUAL3) {
 				char *forward2 = forward + 1;
-				while (SKIP_WRAPLF(forward2, end))
-					;
+				forward2 = tpp_skip_wraplf_z(forward2/*, file->f_end*/);
 				if (*forward2 == '=') {
 					iter = ++forward2;
 					ch   = TOK_NOT_EQUAL3;
@@ -7828,8 +7841,7 @@ startover_iter:
 		}
 		if (*forward == '.') {
 			char *after_second = ++forward;
-			while (SKIP_WRAPLF(forward, end))
-				;
+			forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 			if (*forward == '.') {
 				ch   = TOK_DOTS;
 				iter = forward + 1;
@@ -7869,8 +7881,7 @@ startover_iter:
 		    (CURRENT.l_extokens & (TPPLEXER_TOKEN_ARROW | TPPLEXER_TOKEN_ARROWSTAR))) {
 			char *after_arrow = ++forward;
 			if (CURRENT.l_flags & TPPLEXER_TOKEN_ARROWSTAR) {
-				while (SKIP_WRAPLF(forward, end))
-					;
+				forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 				if (*forward == '*') {
 					iter = forward;
 					ch   = TOK_ARROW_STAR; /* "->*". */
@@ -7888,8 +7899,7 @@ startover_iter:
 		if (*forward == '*' &&
 		    (CURRENT.l_extokens & TPPLEXER_TOKEN_STARSTAR)) {
 			char *after_start = forward++;
-			while (SKIP_WRAPLF(forward, end))
-				;
+			forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 			if (*forward == '=') {
 				ch = TOK_POW_EQUAL;
 				goto settok_forward1;
@@ -7917,36 +7927,30 @@ startover_iter:
 		    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			/* Parse a multi-line-comment. */
 			++forward;
-			if (forward == end)
-				ch = 0;
-			else {
-				for (;;) {
-					ch = *forward;
-					if (!ch && forward == end) {
-						if unlikely(!WARN(W_COMMENT_TERMINATED_BY_EOF))
-							goto err;
+			for (;;) {
+				ch = *forward;
+				if (!ch && forward >= file->f_end) {
+					if unlikely(!WARN(W_COMMENT_TERMINATED_BY_EOF))
+						goto err;
+					break;
+				}
+				++forward;
+				if (ch == '*') {
+					forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
+					if (*forward == '/')
 						break;
-					}
-					++forward;
-					if (ch == '*') {
-						while (SKIP_WRAPLF(forward, end))
-							;
-						if (*forward == '/')
-							break;
-					} else if (ch == '/') {
-						char *slash_pos = forward - 1;
-						while (SKIP_WRAPLF(forward, end))
-							;
-						if (*forward == '*' &&
-						    !WARN(W_SLASHSTAR_INSIDE_OF_COMMENT, slash_pos))
-							goto err;
-					}
+				} else if (ch == '/') {
+					char *slash_pos = forward - 1;
+					forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
+					if (*forward == '*' &&
+					    !WARN(W_SLASHSTAR_INSIDE_OF_COMMENT, slash_pos))
+						goto err;
 				}
 			}
 			iter = forward;
 			if (ch)
 				++iter;
-			assert(iter <= end);
+			assert(iter <= file->f_end);
 			if unlikely(!(CURRENT.l_flags & TPPLEXER_FLAG_WANTCOMMENTS))
 				goto startover_iter;
 			goto set_comment;
@@ -7956,11 +7960,10 @@ startover_iter:
 			/* Parse a line-comment. */
 			do {
 				char *lf_start = ++forward;
-				if (SKIP_WRAPLF(forward, end)) {
+				if (forward[0] == '\\' && tpp_islf(forward[1])) {
 					int intended = 0;
 					for (;;) {
-						while (SKIP_WRAPLF(forward, end))
-							;
+						forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 						if (!tpp_isspace(*forward))
 							break;
 						++forward;
@@ -7974,8 +7977,7 @@ startover_iter:
 					 */
 					if (forward[0] == '/') {
 						++forward;
-						while (SKIP_WRAPLF(forward, end))
-							;
+						forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 						if (forward[0] == '/')
 							intended = 1;
 					}
@@ -8006,8 +8008,7 @@ set_comment:
 			}
 			if (*forward == ':') {
 				iter = ++forward;
-				while (SKIP_WRAPLF(forward, end))
-					;
+				forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 				if (*forward == '#') { /* %:# --> ## */
 glue_tok:
 					ch = TOK_GLUE;
@@ -8015,8 +8016,7 @@ glue_tok:
 				}
 				if (*forward == '%') { /* %:%: --> ## */
 					++forward;
-					while (SKIP_WRAPLF(forward, end))
-						;
+					forward = tpp_skip_wraplf_z(forward/*, file->f_end*/);
 					if (*forward == ':')
 						goto glue_tok;
 				}
@@ -8100,22 +8100,23 @@ glue_tok:
 		if (ch != '\"' && ch != '\'')
 			goto do_keyword;
 		iter = forward + 1;
-		while (iter != end) {
-			while (SKIP_WRAPLF(iter, end))
-				;
-			if (*iter == (char)ch)
+		for (;;) {
+			iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
+			if (*iter == (char)ch) {
+				++iter;
 				break;
+			}
+			if (!*iter && iter >= file->f_end) {
+				if unlikely(!WARN(W_STRING_TERMINATED_BY_EOF))
+					goto err;
+				break;
+			}
 			if ((CURRENT.l_flags & TPPLEXER_FLAG_TERMINATE_STRING_LF) && tpp_islforzero(*iter)) {
 				if unlikely(!WARN(W_STRING_TERMINATED_BY_LINEFEED))
 					goto err;
 				break;
 			}
 			++iter;
-		}
-		if (*iter == (char)ch)
-			++iter;
-		else if (iter == end && unlikely(!WARN(W_STRING_TERMINATED_BY_EOF))) {
-			goto err;
 		}
 		/* Warn amount if multi-char constants if they are not enabled. */
 		if (ch == '\'' && !HAVE_EXTENSION_MULTICHAR_CONST) {
@@ -8154,16 +8155,14 @@ do_keyword:
 			/* keyword: scan until a non-alnum character is found. */
 			if (HAVE_EXTENSION_DOLLAR_IS_ALPHA) {
 				for (;;) {
-					while (SKIP_WRAPLF(iter, end))
-						;
+					iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 					if (!(chrattr[(uint8_t)*iter] & chflags))
 						break;
 					++iter, ++name_size;
 				}
 			} else {
 				for (;;) {
-					while (SKIP_WRAPLF(iter, end))
-						;
+					iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 					if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 						break;
 					++iter, ++name_size;
@@ -8200,8 +8199,7 @@ do_keyword:
 			/* Integer/float. */
 			token.t_id = TOK_INT;
 			for (;;) {
-				while (SKIP_WRAPLF(iter, end))
-					;
+				iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 continue_int:
 				if (!tpp_isalnum(*iter)) {
 					switch (*iter) {
@@ -8220,8 +8218,7 @@ continue_int:
 						if (token.t_id != TOK_FLOAT)
 							goto done;
 						++iter;
-						while (SKIP_WRAPLF(iter, end))
-							;
+						iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 						/* If it's not a `+' or `-', parse the character normally. */
 						if (*iter != '+' && *iter != '-')
 							goto continue_int;
@@ -8239,9 +8236,8 @@ continue_int:
 whitespace:
 			/* Parse space tokens. */
 			for (;;) {
-				while (SKIP_WRAPLF(iter, end))
-					;
-				if (!tpp_isspace_nolf(*iter) || iter == end)
+				iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
+				if (!tpp_isspace_nolf(*iter) || iter >= file->f_end)
 					break;
 				++iter;
 			}
@@ -8258,11 +8254,9 @@ settok:
 		token.t_id = (tok_t)ch;
 		break;
 	}
-	assert(end == file->f_end);
 done:
-	assert(end == file->f_end);
 	assert(iter >= file->f_pos);
-	assert(iter <= end);
+	assert(iter <= file->f_end);
 	file->f_pos = iter;
 	token.t_end = iter;
 	++token.t_num;
@@ -8273,6 +8267,10 @@ err:
 	ch = (tok_t)TOK_ERR;
 	goto settok;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif /* __GNUC__ */
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -9535,7 +9533,7 @@ create_int_file:
      !defined(NO_EXTENSION_TPP_UNIQUE) ||     \
      !defined(NO_EXTENSION_TPP_COUNTER))
 		{ /* Check various attributes of keyword. */
-			char *keyword_begin, *keyword_end, *file_end, *file_pos;
+			char *keyword_begin, *keyword_end, *file_pos;
 			size_t keyword_rawsize, keyword_realsize;
 			struct TPPKeyword *keyword;
 			tok_t mode;
@@ -9588,8 +9586,8 @@ create_int_file:
 			popf();
 			if (tok != '(')
 				(void)WARN(W_EXPECTED_LPAREN);
-			keyword_begin = token.t_end, file_end = token.t_file->f_end;
-			keyword_begin = skip_whitespace_and_comments(keyword_begin, file_end);
+			keyword_begin = token.t_end;
+			keyword_begin = skip_whitespace_and_comments(keyword_begin, token.t_file->f_end);
 			/* Special handling if the next token is a string/number. */
 			if (*keyword_begin == '\"' || tpp_isdigit(*keyword_begin)) {
 				struct TPPConst name;
@@ -9663,16 +9661,15 @@ create_int_file:
 				}
 			} else {
 				keyword_end = keyword_begin;
-				while (keyword_end != file_end) {
-					while (SKIP_WRAPLF(keyword_end, file_end))
-						;
+				for (;;) {
+					keyword_end = tpp_skip_wraplf_z(keyword_end/*, token.t_file->f_end*/);
 					if (!tpp_isalnum(*keyword_end))
-						break;
+						break; /* NOTE: This also handles the NUL when `keyword_end >= token.t_file->f_end' */
 					++keyword_end;
 				}
-				file_pos            = skip_whitespace_and_comments(keyword_end, file_end);
+				file_pos = skip_whitespace_and_comments(keyword_end, token.t_file->f_end);
 				token.t_file->f_pos = file_pos;
-				if (*file_pos != ')') {
+				if unlikely(*file_pos != ')') {
 					(void)WARN(W_EXPECTED_RPAREN);
 					keyword_end = keyword_begin;
 				} else {
@@ -11327,8 +11324,7 @@ TPPLexer_ExpandFunctionMacro(struct TPPFile *__restrict macro) {
 		iter = arguments_file->f_pos;
 		end  = arguments_file->f_end;
 		while (iter != end) {
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 			if (!tpp_isspace(*iter))
 				goto at_next_non_whitespace;
 			++iter;
@@ -11600,9 +11596,7 @@ at_next_non_whitespace:
 									arguments_file->f_pos = token.t_begin + 1;
 								} else {
 									arguments_file->f_pos = token.t_begin + 1;
-									while (SKIP_WRAPLF(arguments_file->f_pos,
-									                   arguments_file->f_end))
-										;
+									arguments_file->f_pos = tpp_skip_wraplf_z(arguments_file->f_pos/*, arguments_file->f_end*/);
 									assert(arguments_file->f_pos[0] == '>');
 									;
 									++arguments_file->f_pos;
@@ -11622,8 +11616,7 @@ at_next_non_whitespace:
 									--arguments_file->f_pos; /* Parse the `=' again. */
 							}
 							++token.t_begin;
-							while (SKIP_WRAPLF(token.t_begin, token.t_end))
-								;
+							token.t_begin = tpp_skip_wraplf(token.t_begin, token.t_end);
 							assert(*token.t_begin == '>');
 							++token.t_begin;
 						} else if (paren_recursion[RECURSION_ANGLE] >= 2) {
@@ -11633,8 +11626,8 @@ at_next_non_whitespace:
 								       arguments_file->f_pos[-1] == '>');
 								--arguments_file->f_pos; /* Parse the `=' again. */
 								if (arguments_file->f_pos[0] != '>') {
-									while (SKIP_WRAPLF_REV(arguments_file->f_pos, arguments_file->f_begin))
-										;
+									arguments_file->f_pos = tpp_rskip_wraplf(arguments_file->f_pos, arguments_file->f_begin);
+									assert(arguments_file->f_pos > arguments_file->f_begin);
 									assert(arguments_file->f_pos[-1] == '>');
 									--arguments_file->f_pos; /* Parse the `>=' again. */
 								}
@@ -11649,8 +11642,7 @@ at_next_non_whitespace:
 							       *token.t_begin == '=');
 							if (*token.t_begin == '=') {
 								++token.t_begin;
-								while (SKIP_WRAPLF(token.t_begin, arguments_file->f_end))
-									;
+								token.t_begin = tpp_skip_wraplf_z(token.t_begin/*, arguments_file->f_end*/);
 							}
 							--paren_recursion[RECURSION_ANGLE];
 							arguments_file->f_pos = token.t_begin + 1; /* Parse the `>>' / `>>=' / `>' / `>>' again. */
@@ -12072,11 +12064,9 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 		numsys = 10;
 	else {
 		++begin;
-		if (begin != end) {
-			while (SKIP_WRAPLF(begin, end))
-				;
-		}
-		if (begin == end)
+		if (begin < end)
+			begin = tpp_skip_wraplf(begin, end);
+		if (begin >= end)
 			goto done;
 		ch = *begin;
 		ch = tolower(ch);
@@ -12090,10 +12080,9 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 			numsys = 8;
 		}
 	}
-	while (begin != end) {
-		while (SKIP_WRAPLF(begin, end))
-			;
-		ch = *begin;
+	while (begin < end) {
+		begin = tpp_skip_wraplf(begin, end);
+		ch    = *begin;
 		if (ch >= '0' && ch <= '9')
 			more = (tint_t)(ch - '0');
 		else if (ch >= 'A' && ch <= 'F')
@@ -12115,10 +12104,10 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 		++begin;
 	}
 	/* Parse a suffix. */
-	while (begin != end) {
-		while (SKIP_WRAPLF(begin, end))
-			;
-		ch = *begin, ch = tolower(ch);
+	while (begin < end) {
+		begin = tpp_skip_wraplf(begin, end);
+		ch    = *begin;
+		ch    = tolower(ch);
 		if (ch == 'u' && !(result & TPP_ATOI_UNSIGNED)) {
 			result |= TPP_ATOI_UNSIGNED;
 		} else if (ch == 'l' && !(result & TPP_ATOI_TYPE_LONGLONG)) {
@@ -12141,8 +12130,7 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 			if (ch == 'i') {
 				char *forward = begin + 1;
 				if (forward != end)
-					while (SKIP_WRAPLF(forward, end))
-						;
+					forward = tpp_skip_wraplf(forward, end);
 				if (forward == end)
 					goto wrong_suffix;
 				ch = *forward++;
@@ -12152,8 +12140,7 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 				} else if (ch == '1' || ch == '3' || ch == '6') {
 					char ch2;
 					if (forward != end)
-						while (SKIP_WRAPLF(forward, end))
-							;
+						forward = tpp_skip_wraplf(forward, end);
 					if (forward == end)
 						goto wrong_suffix;
 					ch2 = *forward++;
@@ -12266,19 +12253,16 @@ PUBLIC int TPPCALL TPP_Atof(TPP(tfloat_t) * __restrict pfloat) {
 	if (*iter == '0') {
 		if (++iter == end)
 			goto done_zero;
-		while (SKIP_WRAPLF(iter, end))
-			;
+		iter = tpp_skip_wraplf(iter, end);
 		if (*iter == 'x' || *iter == 'X') {
 			if (++iter == end)
 				goto done_zero;
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 			numsys = 16;
 		} else if (*iter == 'b' || *iter == 'B') {
 			if (++iter == end)
 				goto done_zero;
-			while (SKIP_WRAPLF(iter, end))
-				;
+			iter = tpp_skip_wraplf(iter, end);
 			numsys = 2;
 		} else if (*iter == '.') {
 			numsys = 10;
@@ -12375,15 +12359,13 @@ flt_ext:
 #define float_extension_off more
 	float_extension_pos = 1;
 	float_extension_off = 0;
-	while (SKIP_WRAPLF(iter, end))
-		;
+	iter = tpp_skip_wraplf(iter, end);
 	if (iter == end) {
 		--iter;
 		goto sfx;
 	}
 	ch = *iter++;
-	while (SKIP_WRAPLF(iter, end))
-		;
+	iter = tpp_skip_wraplf(iter, end);
 	if (ch == '-' || ch == '+') {
 		float_extension_pos = (ch == '+');
 		if (iter == end) {
@@ -12391,16 +12373,14 @@ flt_ext:
 			goto sfx;
 		}
 		ch = *iter++;
-		while (SKIP_WRAPLF(iter, end))
-			;
+		iter = tpp_skip_wraplf(iter, end);
 	}
 	while (ch >= '0' && ch <= '9') {
 		float_extension_off = float_extension_off * 10 + (ch - '0');
 		if (iter == end)
 			break;
 		ch = *iter++;
-		while (SKIP_WRAPLF(iter, end))
-			;
+		iter = tpp_skip_wraplf(iter, end);
 	}
 	float_extension_mult = 1;
 	while (float_extension_off != 0) {
@@ -13812,27 +13792,25 @@ check_file_dependency(struct TPPFile *__restrict depfile) {
 	if (depmod > srcmod) {
 		/* Dependency has been modified after we were. */
 		char *reason, *reason_end;
-		char *file_end = token.t_file->f_end;
-		reason         = token.t_end;
+		reason = token.t_end;
 		for (;; ++reason) {
-			while (SKIP_WRAPLF(reason, file_end))
-				;
+			reason = tpp_skip_wraplf_z(reason/*, token.t_file->f_end*/);
 			if (tpp_isspace(*reason))
 				continue;
-			if (!*reason && reason < file_end)
-				continue;
+			if (!*reason && reason >= token.t_file->f_end)
+				break;
 			break;
 		}
 		reason_end = reason;
 		for (; *reason_end; ++reason_end) {
-			while (SKIP_WRAPLF(reason_end, file_end))
-				;
-			if (*reason_end == '\r' || *reason_end == '\n')
+			reason = tpp_skip_wraplf_z(reason/*, token.t_file->f_end*/);
+			if (tpp_islf(*reason_end))
 				break;
 		}
-		while (reason_end > reason) {
-			if (SKIP_WRAPLF_REV(reason_end, reason))
-				continue;
+		for (;;) {
+			reason_end = tpp_rskip_wraplf(reason_end, reason);
+			if (reason_end <= reason)
+				break;
 			if (!tpp_isspaceorzero(reason_end[-1]))
 				break;
 			--reason_end;

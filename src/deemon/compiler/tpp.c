@@ -193,8 +193,6 @@ err:
 #define NO_INCLUDE_ALLOCA_H   1
 
 #ifndef __INTELLISENSE__
-#undef SKIP_WRAPLF
-#undef SKIP_WRAPLF_REV
 #include "../../tpp/tpp.c"
 #endif /* !__INTELLISENSE__ */
 
