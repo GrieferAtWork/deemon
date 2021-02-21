@@ -2469,7 +2469,7 @@ do_this_as_typesym_ref:
 								symid = asm_rsymid(typesym);
 								if unlikely(symid < 0)
 									goto err;
-								if (asm_gsuper_this_r(symid))
+								if (asm_gsuper_this_r((uint16_t)symid))
 									goto err;
 								goto done;
 							}

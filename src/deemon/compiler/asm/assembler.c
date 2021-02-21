@@ -2314,7 +2314,8 @@ INTERN int (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
 	/* Save the number of instructions we're going to generate for cleanup. */
 	rel->ar_value = current_assembler.a_handlerc;
 	do {
-		ASSERT(depth), --depth;
+		ASSERT(depth);
+		--depth;
 		/* Generate exception handler cleanup code.
 		 * This is literally the same as `asm_gunwind()' */
 		if (iter->hf_flags & EXCEPTION_HANDLER_FFINALLY) {
@@ -3007,8 +3008,9 @@ asm_rsymid(struct symbol *__restrict sym) {
 		if unlikely(new_size <= result)
 			new_size = UINT16_MAX;
 do_realloc:
-		new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv, new_size *
-		                                                                               sizeof(struct asm_symbol_ref));
+		new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv,
+		                                                     new_size *
+		                                                     sizeof(struct asm_symbol_ref));
 		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;

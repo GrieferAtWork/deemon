@@ -121,7 +121,7 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 	case SEEK_CUR:
 		result = (size_t)(self->mf_ptr - self->mf_begin);
 		result += (dssize_t)off;
-		if unlikely(result < 0)
+		if unlikely((doff_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->mf_ptr + (dssize_t)off;
 		if unlikely(off > 0 && new_pointer < self->mf_ptr)
@@ -413,7 +413,7 @@ reader_seek(Reader *__restrict self,
 	case SEEK_CUR:
 		result = (size_t)(self->r_ptr - self->r_begin);
 		result += (dssize_t)off;
-		if unlikely(result < 0)
+		if unlikely((doff_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->r_ptr + (dssize_t)off;
 		if unlikely(off > 0 && new_pointer < self->r_ptr)

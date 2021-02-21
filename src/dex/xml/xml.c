@@ -271,7 +271,7 @@ eof_in_attr:
 			goto done;
 		}
 		ch = *iter;
-		if (ch > 0x7f) {
+		if ((unsigned char)ch > 0x7f) {
 			uint32_t ch32;
 			ch32 = utf8_readchar((char const **)&iter, end);
 			if (!DeeUni_IsSpace(ch32))

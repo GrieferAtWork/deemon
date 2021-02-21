@@ -1055,7 +1055,7 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	if unlikely(old_pos == (dpos_t)-1)
 		goto err;
 	if ((dpos_t)old_pos != size) {
-		if unlikely(sysfile_seek(self, (doff_t)size, SEEK_SET) < 0)
+		if unlikely(sysfile_seek(self, (doff_t)size, SEEK_SET) == (dpos_t)-1)
 			goto err;
 	}
 	DBG_ALIGNMENT_DISABLE();

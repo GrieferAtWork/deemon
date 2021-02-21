@@ -718,13 +718,15 @@ check_function_class:
 			if (!this_sym) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if (asm_ggetcmember_r(symid, attr->ca_addr))
-						goto err; /* args..., func */
+					if unlikely(symid < 0)
+						goto err;
+					if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr)) /* args..., func */
+						goto err;
 				} else {
-					if (asm_gpush_symbol(class_sym, warn_ast))
-						goto err; /* args..., class_sym */
-					if (asm_ggetcmember(attr->ca_addr))
-						goto err; /* args..., func */
+					if (asm_gpush_symbol(class_sym, warn_ast)) /* args..., class_sym */
+						goto err;
+					if (asm_ggetcmember(attr->ca_addr))        /* args..., func */
+						goto err;
 				}
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
@@ -982,13 +984,15 @@ check_sym_class:
 		if (!this_sym) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if (asm_ggetcmember_r(symid, attr->ca_addr))
-					goto err; /* func */
+				if unlikely(symid < 0)
+					goto err;
+				if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr)) /* func */
+					goto err;
 			} else {
-				if (asm_gpush_symbol(class_sym, warn_ast))
-					goto err; /* class_sym */
-				if (asm_ggetcmember(attr->ca_addr))
-					goto err; /* func */
+				if (asm_gpush_symbol(class_sym, warn_ast)) /* class_sym */
+					goto err;
+				if (asm_ggetcmember(attr->ca_addr))        /* func */
+					goto err;
 			}
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				/* Must invoke the getter callback. */
@@ -1734,13 +1738,15 @@ del_class_attribute:
 					/* Must invoke the getter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if (asm_ggetcmember_r(symid, attr->ca_addr + CLASS_GETSET_DEL))
-							goto err; /* func */
+						if unlikely(symid < 0)
+							goto err;
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL)) /* func */
+							goto err;
 					} else {
-						if (asm_gpush_symbol(class_sym, warn_ast))
-							goto err; /* class_sym */
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_DEL))
-							goto err; /* func */
+						if (asm_gpush_symbol(class_sym, warn_ast))             /* class_sym */
+							goto err;
+						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_DEL)) /* func */
+							goto err;
 					}
 					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 						if (asm_gpush_symbol(class_sym, warn_ast))
@@ -1924,11 +1930,11 @@ check_sym_class:
 				symid = asm_newconst_string(sym->s_name->k_name,
 				                            sym->s_name->k_size);
 				/* Must ensure that the write is only written once! */
-				if (asm_gpush_this_module())
-					goto err; /* value, this_module */
-				if (asm_gswap())
-					goto err;                     /* this_module, value */
-				return asm_gsetattr_const(symid); /* this_module.<SYMBOL> = value */
+				if (asm_gpush_this_module())                /* value, this_module */
+					goto err;
+				if (asm_gswap())                            /* this_module, value */
+					goto err;
+				return asm_gsetattr_const((uint16_t)symid); /* this_module.<SYMBOL> = value */
 			}
 			return asm_gpop_global((uint16_t)symid);
 
@@ -2043,21 +2049,23 @@ set_class_attribute:
 					/* Must invoke the getter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if (asm_ggetcmember_r(symid, attr->ca_addr + CLASS_GETSET_SET))
-							goto err; /* value, func */
+						if unlikely(symid < 0)
+							goto err;
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET)) /* value, func */
+							goto err;
 					} else {
-						if (asm_gpush_symbol(class_sym, warn_ast))
-							goto err; /* value, class_sym */
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET))
-							goto err; /* value, func */
+						if (asm_gpush_symbol(class_sym, warn_ast))             /* value, class_sym */
+							goto err;
+						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)) /* value, func */
+							goto err;
 					}
 					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
-						if (asm_gpush_symbol(class_sym, warn_ast))
-							goto err; /* value, setter, class */
-						if (asm_glrot(3))
-							goto err; /* setter, class, value */
-						if (asm_gcall(2))
-							goto err; /* discard */
+						if (asm_gpush_symbol(class_sym, warn_ast)) /* value, setter, class */
+							goto err;
+						if (asm_glrot(3))                          /* setter, class, value */
+							goto err;
+						if (asm_gcall(2))                          /* discard */
+							goto err;
 					} else {
 						if (asm_gswap())
 							goto err; /* setter, value */
@@ -2303,7 +2311,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	Dee_Decref(constlid);
 	if unlikely(temp_id < 0)
 		goto err;
-	if (asm_gpush_const(temp_id))
+	if (asm_gpush_const((uint16_t)temp_id))
 		goto err; /* Push the ID of the faulting local */
 	temp_id = asm_newmodule(DeeModule_GetDeemon());
 	if unlikely(temp_id < 0)

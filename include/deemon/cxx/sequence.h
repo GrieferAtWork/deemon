@@ -393,16 +393,10 @@ class Sequence: public detail::sequence_base {
 		    : m_ptr(right.m_ptr)
 		    , m_key(right.m_key) {}
 		bool(has)() const {
-			int result = DeeObject_HasItem(m_ptr, m_key);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItem(m_ptr, m_key)) != 0;
 		}
 		bool(bound)(bool allow_missing = true) const {
-			int result = DeeObject_BoundItem(m_ptr, m_key, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItem(m_ptr, m_key, allow_missing)) > 0;
 		}
 		DREF DeeObject *(getref)() const {
 			return DeeObject_GetItem(m_ptr, m_key);
@@ -434,23 +428,18 @@ class Sequence: public detail::sequence_base {
 		    : m_ptr(right.m_ptr)
 		    , m_idx(right.m_idx) {}
 		bool(has)() const {
-			int result = DeeObject_HasItemIndex(m_ptr, m_idx);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItemIndex(m_ptr, m_idx)) != 0;
 		}
 		bool(bound)(bool allow_missing = true) const {
-			int result = DeeObject_BoundItemIndex(m_ptr, m_idx, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItemIndex(m_ptr, m_idx, allow_missing)) > 0;
 		}
 		DREF DeeObject *(getref)() const {
 			return DeeObject_GetItemIndex(m_ptr, m_idx);
 		}
 		DREF DeeObject *(getref_def)(DeeObject *def) const {
-			DREF DeeObject *result, *index_ob = throw_if_null(DeeInt_NewSize(m_idx));
-			result = DeeObject_GetItemDef(m_ptr, index_ob, def);
+			DREF DeeObject *result, *index_ob;
+			index_ob = throw_if_null(DeeInt_NewSize(m_idx));
+			result   = DeeObject_GetItemDef(m_ptr, index_ob, def);
 			Dee_Decref(index_ob);
 			return inherit(result);
 		}
@@ -485,16 +474,10 @@ class Sequence: public detail::sequence_base {
 		    , m_str(right.m_str)
 		    , m_hsh(right.m_hsh) {}
 		bool(has)() const {
-			int result = DeeObject_HasItemString(m_ptr, m_str, m_hsh);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItemString(m_ptr, m_str, m_hsh)) != 0;
 		}
 		bool(bound)(bool allow_missing = true) const {
-			int result = DeeObject_BoundItemString(m_ptr, m_str, m_hsh, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItemString(m_ptr, m_str, m_hsh, allow_missing)) > 0;
 		}
 		DREF DeeObject *(getref)() const {
 			return DeeObject_GetItemString(m_ptr, m_str, m_hsh);
@@ -532,16 +515,10 @@ class Sequence: public detail::sequence_base {
 		    , m_len(right.m_len)
 		    , m_hsh(right.m_hsh) {}
 		bool(has)() const {
-			int result = DeeObject_HasItemStringLen(m_ptr, m_str, m_len, m_hsh);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItemStringLen(m_ptr, m_str, m_len, m_hsh)) != 0;
 		}
 		bool(bound)(bool allow_missing = true) const {
-			int result = DeeObject_BoundItemStringLen(m_ptr, m_str, m_len, m_hsh, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItemStringLen(m_ptr, m_str, m_len, m_hsh, allow_missing)) > 0;
 		}
 		DREF DeeObject *(getref)() const {
 			return DeeObject_GetItemStringLen(m_ptr, m_str, m_len, m_hsh);
@@ -766,8 +743,9 @@ public: /* sequence from deemon */
 		return inherit(DeeObject_GetItemIndex(*this, index));
 	}
 	WUNUSED T(getitem)(size_t index, DeeObject *def) const {
-		DREF DeeObject *result, *index_ob = throw_if_null(DeeInt_NewSize(index));
-		result = DeeObject_GetItemDef(*this, index_ob, def);
+		DREF DeeObject *result, *index_ob;
+		index_ob = throw_if_null(DeeInt_NewSize(index));
+		result   = DeeObject_GetItemDef(*this, index_ob, def);
 		Dee_Decref(index_ob);
 		return inherit(result);
 	}

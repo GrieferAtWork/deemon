@@ -587,7 +587,7 @@ check_delattr_sym:
 					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
-				return asm_gdelattr_this_const(attrid);
+				return asm_gdelattr_this_const((uint16_t)attrid);
 
 			case SYMBOL_TYPE_MYMOD: {
 				struct symbol *globsym;
@@ -622,7 +622,7 @@ check_delattr_sym:
 			goto err;
 		if (asm_putddi(ddi_ast))
 			goto err;
-		return asm_gdelattr_const(attrid);
+		return asm_gdelattr_const((uint16_t)attrid);
 	}
 	if (ast_genasm(base, ASM_G_FPUSHRES))
 		goto err;
@@ -669,7 +669,7 @@ set_class_attribute:
 				goto err;
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				if (asm_ggetcmember_r(symid, attr->ca_addr + CLASS_GETSET_SET))
+				if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET))
 					goto err; /* [result], func */
 			} else {
 				if (asm_gpush_symbol(class_sym, ddi_ast))

@@ -424,7 +424,9 @@ invoke_cattr_funsym_small:
 							goto err;
 						if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 							symid = asm_rsymid(class_sym);
-							if (asm_ggetcmember_r(symid, attr->ca_addr))
+							if unlikely(symid < 0)
+								goto err;
+							if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr))
 								goto err;
 						} else {
 							if (asm_gpush_symbol(class_sym, func))
@@ -853,7 +855,9 @@ invoke_cattr_funsym_tuple:
 						goto err;
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
-						if (asm_ggetcmember_r(symid, attr->ca_addr))
+						if unlikely(symid < 0)
+							goto err;
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr))
 							goto err;
 					} else {
 						if (asm_gpush_symbol(class_sym, func))
@@ -1397,7 +1401,9 @@ invoke_cattr_funsym_argv:
 					goto err;
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
-					if (asm_ggetcmember_r(symid, attr->ca_addr))
+					if unlikely(symid < 0)
+						goto err;
+					if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr))
 						goto err;
 				} else {
 					if (asm_gpush_symbol(class_sym, func))

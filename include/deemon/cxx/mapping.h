@@ -93,16 +93,10 @@ class Mapping: public detail::mapping_base {
 		item_proxy_obj(item_proxy_obj const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
 		    , m_key(right.m_key) {}
 		bool has() const {
-			int result = DeeObject_HasItem(m_ptr, m_key);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItem(m_ptr, m_key)) != 0;
 		}
 		bool bound(bool allow_missing = true) const {
-			int result = DeeObject_BoundItem(m_ptr, m_key, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItem(m_ptr, m_key, allow_missing)) > 0;
 		}
 		DREF DeeObject *getref() const {
 			return DeeObject_GetItem(m_ptr, m_key);
@@ -142,16 +136,10 @@ class Mapping: public detail::mapping_base {
 		    , m_str(right.m_str)
 		    , m_hsh(right.m_hsh) {}
 		bool has() const {
-			int result = DeeObject_HasItemString(m_ptr, m_str, m_hsh);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItemString(m_ptr, m_str, m_hsh)) != 0;
 		}
 		bool bound(bool allow_missing = true) const {
-			int result = DeeObject_BoundItemString(m_ptr, m_str, m_hsh, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItemString(m_ptr, m_str, m_hsh, allow_missing)) > 0;
 		}
 		DREF DeeObject *getref() const {
 			return DeeObject_GetItemString(m_ptr, m_str, m_hsh);
@@ -191,16 +179,10 @@ class Mapping: public detail::mapping_base {
 		    , m_len(right.m_len)
 		    , m_hsh(right.m_hsh) {}
 		bool has() const {
-			int result = DeeObject_HasItemStringLen(m_ptr, m_str, m_len, m_hsh);
-			if (result < 0)
-				throw_last_deemon_exception();
-			return result != 0;
+			return throw_if_negative(DeeObject_HasItemStringLen(m_ptr, m_str, m_len, m_hsh)) != 0;
 		}
 		bool bound(bool allow_missing = true) const {
-			int result = DeeObject_BoundItemStringLen(m_ptr, m_str, m_len, m_hsh, allow_missing);
-			if (result == -1)
-				throw_last_deemon_exception();
-			return result > 0;
+			return throw_if_minusone(DeeObject_BoundItemStringLen(m_ptr, m_str, m_len, m_hsh, allow_missing)) > 0;
 		}
 		DREF DeeObject *getref() const {
 			return DeeObject_GetItemStringLen(m_ptr, m_str, m_len, m_hsh);
