@@ -129,6 +129,11 @@
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 #endif /* __CC__ */
 
+
+/* Disable some problematic compiler warnings when DEE_SOURCE is defined.
+ * The later is the case for the deemon core, and (usually) dex-modules. */
+#ifdef DEE_SOURCE
+
 #ifdef _MSC_VER
 #pragma warning(disable: 4054) /* Cast from function pointer to `void *' */
 #pragma warning(disable: 4152) /* Literally the same thing as `4054', but emit for static initializers. */
@@ -138,15 +143,23 @@
 #if __GNUC__ >= 8
 /* Disable warnings about casting incompatible function pointers (for now)
  * While I really welcome these warnings, they pose one big problem with the
- * way in which I've introduced support for keyword-enabled functions.
- * When declared, the function pointer still has to be cast to the non-kwd-enabled
- * variant, alongside setting the appropriate flag. However, this causes the GCC
- * warning that is disabled here
- * XXX: Somehow change how kwd-enabled functions are declared such that we don't
- *      have to disable this warning */
+ * way in which I've introduced support for keyword-enabled functions, and
+ * with how casts to `dfunptr_t' work. */
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+
+/* When declaring DeeTypeObject objects and the like, we often skip
+ * the initializers for various fields that have no reason of being
+ * explicitly initialized by the static initializer. This mainly affects
+ * `tp_cache' and `tp_class_cache'. However, the default (zero-/NULL-)
+ * initializer already does what we need it to do, meaning that
+ * initializing it explicitly would just add unnecessary code bloat!
+ *
+ * As such, disable warnings about static struct initializers that
+ * initialize some fields, but don't initialize _all_ fields. */
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif /* __GNUC__ >= 8 */
 #endif /* __GNUC__ */
+#endif /* DEE_SOURCE */
 
 
 /* Evaluate `expr' at runtime, and instruct compile-time optimizations
