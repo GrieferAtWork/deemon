@@ -212,7 +212,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 					break;                                                       \
 				if (datalen < 2)                                                 \
 					break;                                                       \
-				DeeUni_ToFolded(data[1], buf);                                   \
+				(void)DeeUni_ToFolded(data[1], buf);                             \
 				if (buf[0] == fold[1])                                           \
 					goto ok_2;                                                   \
 			} else if (buflen == 2) {                                            \
@@ -221,7 +221,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 				if (buf[1] == fold[0]) {                                         \
 					if (datalen < 2)                                             \
 						break;                                                   \
-					DeeUni_ToFolded(data[1], buf);                               \
+					(void)DeeUni_ToFolded(data[1], buf);                         \
 					if (buf[0] == fold[1])                                       \
 						goto ok_2;                                               \
 				}                                                                \
@@ -233,7 +233,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 				if (buf[2] == fold[0]) {                                         \
 					if (datalen < 2)                                             \
 						break;                                                   \
-					DeeUni_ToFolded(data[1], buf);                               \
+					(void)DeeUni_ToFolded(data[1], buf);                         \
 					if (buf[0] == fold[1])                                       \
 						goto ok_2;                                               \
 				}                                                                \
@@ -251,7 +251,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 				if (buflen == 1) {                                               \
 					if (datalen < 3)                                             \
 						break;                                                   \
-					DeeUni_ToFolded(data[2], buf);                               \
+					(void)DeeUni_ToFolded(data[2], buf);                         \
 					if (buf[0] == fold[2])                                       \
 						goto ok_3;                                               \
 				} else {                                                         \
@@ -262,7 +262,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 				if (buf[0] == fold[0] && buf[1] == fold[1]) {                    \
 					if (datalen < 2)                                             \
 						break;                                                   \
-					DeeUni_ToFolded(data[1], buf);                               \
+					(void)DeeUni_ToFolded(data[1], buf);                         \
 					if (buf[0] == fold[2])                                       \
 						goto ok_2;                                               \
 				}                                                                \
@@ -275,7 +275,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 					if (buflen == 1) {                                           \
 						if (datalen < 3)                                         \
 							break;                                               \
-						DeeUni_ToFolded(data[2], buf);                           \
+						(void)DeeUni_ToFolded(data[2], buf);                     \
 						if (buf[0] == fold[2])                                   \
 							goto ok_3;                                           \
 					} else {                                                     \
@@ -289,7 +289,7 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 				if (buf[1] == fold[0] && buf[2] == fold[1]) {                    \
 					if (datalen < 2)                                             \
 						break;                                                   \
-					DeeUni_ToFolded(data[1], buf);                               \
+					(void)DeeUni_ToFolded(data[1], buf);                         \
 					if (buf[0] == fold[2])                                       \
 						goto ok_2;                                               \
 				}                                                                \

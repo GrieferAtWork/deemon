@@ -348,7 +348,7 @@ DeeError_InstallKeyboardInterrupt(void) {
 
 #elif defined(CONFIG_HOST_UNIX)
 
-PRIVATE void sigint_handler(int signo) {
+PRIVATE void sigint_handler(int UNUSED(signo)) {
 	INC_KEYBOARD_INTERRUPT_COUNTER();
 #if 0 /* Not async-safe. */
 	DeeThread_Wake((DeeObject *)&DeeThread_Main);

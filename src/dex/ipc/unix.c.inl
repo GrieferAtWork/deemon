@@ -1127,6 +1127,7 @@ PRIVATE struct type_method tpconst process_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_files(Process *__restrict self) {
 	/* TODO: opendir("/proc/%d/fd/") */
+	(void)self;
 	ipc_unimplemented();
 	return NULL;
 }
@@ -1358,7 +1359,8 @@ process_get_environ_from_nulterm_bytes(char const *data,
 			if unlikely(!value)
 				goto err;
 		} else {
-			value = Dee_EmptyString;
+			keylen = len;
+			value  = Dee_EmptyString;
 			Dee_Incref(value);
 		}
 		error = DeeDict_SetItemStringLen(result, data, keylen,
@@ -1453,6 +1455,7 @@ process_get_memory(Process *__restrict self) {
 	if (self == &this_process)
 		; /* TODO */
 #endif
+	(void)self;
 	/* TODO: /proc/%d/mem */
 	ipc_unimplemented();
 	return NULL;
@@ -2004,7 +2007,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_argv(Process *self, DeeObject *value) {
-	DREF DeeObject *old_argv, *new_argv;
+	DREF DeeObject *old_argv;
 	if (self == &this_process) {
 err_started:
 		DeeError_Throwf(&DeeError_ValueError,
@@ -2017,9 +2020,9 @@ err_started:
 		rwlock_endwrite(&self->p_lock);
 		goto err_started;
 	}
-	Dee_Incref(new_argv);
+	Dee_Incref(value);
 	old_argv     = self->p_argv;
-	self->p_argv = new_argv;
+	self->p_argv = value;
 	rwlock_endwrite(&self->p_lock);
 	Dee_XDecref(old_argv);
 	return 0;

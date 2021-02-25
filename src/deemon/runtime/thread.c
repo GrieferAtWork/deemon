@@ -536,7 +536,8 @@ do_tickcount:
 #define sys_threadstartup  sys_threadstartup
 PRIVATE void suspend_signal_handler(int signo);
 
-PRIVATE NONNULL((1)) void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+sys_threadstartup(DeeThreadObject *__restrict UNUSED(self)) {
 #ifdef USE_SUSPEND_SIGNALS
 #ifndef SA_NODEFER
 #error "The suspension signal handler needs to be able to recurse"
@@ -561,7 +562,8 @@ PRIVATE NONNULL((1)) void DCALL sys_threadstartup(DeeThreadObject *__restrict se
 
 #ifdef USE_SUSPEND_SIGNALS
 #define sys_threadshutdown sys_threadshutdown
-PRIVATE NONNULL((1)) void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+sys_threadshutdown(DeeThreadObject *__restrict UNUSED(self)) {
 	DBG_ALIGNMENT_DISABLE();
 	signal(PTHREAD_INTERRUPT_SIGNAL, SIG_IGN);
 	DBG_ALIGNMENT_ENABLE();

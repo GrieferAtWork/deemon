@@ -384,7 +384,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
 #ifdef JIT_EVAL
-				SYNTAXERROR("Yield statements are not supported at this location");
+				(void)SYNTAXERROR("Yield statements are not supported at this location");
 				goto err;
 #else /* JIT_EVAL */
 				JITLexer_Yield(self);

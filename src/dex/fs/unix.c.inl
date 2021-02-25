@@ -848,7 +848,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_islnk(DeeObject *self, size_t argc, DeeObject *const *argv) {
+stat_class_islnk(DeeObject *UNUSED(self),
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;

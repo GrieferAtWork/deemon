@@ -412,6 +412,10 @@ err:
 
 #ifdef fs_chtime_USE_STUB
 #define WANT_ERR_UNSUPPORTED 1
+	(void)path;
+	(void)atime;
+	(void)mtime;
+	(void)ctime;
 	return errUnsupported("chtime");
 #endif /* fs_chtime_USE_STUB */
 }
@@ -2473,7 +2477,7 @@ err_fd:
 		if (DeeInt_Check(path)) {
 			int fd; /* Support for descriptor-based readlink() */
 			if (DeeObject_AsInt(path, &fd))
-				goto err_printer_buffer;
+				goto err_printer;
 			path = DeeSystem_GetFilenameOfFD(fd);
 		} else {
 			path = DeeFile_Filename(path);

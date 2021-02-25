@@ -46,11 +46,10 @@ WITHOUT_DEX_SPECIFIC=""
 WITH_DEBUG=""
 WITH_THREADS=""
 WITH_LIBFFI=""
+WITH_SYSTEM_LIBFFI=""
 WITH_OPTIMIZE=""
 CONFIG_PTHREAD=""
 WITH_KOS_SYSTEM_HEADERS=""
-# One of (yes, no, auto)
-PROBE_SYSTEM_FEATURES=auto
 
 
 # del_feature(MACRO_NAME)
@@ -139,6 +138,7 @@ set_with_feature() {
 	optimize=*)              WITH_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
 	threads)                 WITH_THREADS="$2" ;;
 	libffi)                  WITH_LIBFFI="$2" ;;
+	system-libffi)           WITH_SYSTEM_LIBFFI="$2" ;;
 	trace-refchanges)        set_feature_pair "CONFIG_TRACE_REFCHANGES" "CONFIG_NO_TRACE_REFCHANGES" "$2" ;;
 	badrefcnt-checks)        set_feature_pair "CONFIG_BADREFCNT_CHECKS" "CONFIG_NO_BADREFCNT_CHECKS" "$2" ;;
 	calltuple-optimizations) set_feature_pair "CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS" "CONFIG_NO_CALLTUPLE_OPTIMIZATIONS" "$2" ;;
@@ -201,6 +201,7 @@ print_help_features() {
 	echo "    optimize=*               Additional compiler options for optimization (default: '-O2')"
 	echo "    threads                  Multi-threading support (default: yes)"
 	echo "    libffi                   Use libffi to allow ctypes to perform native function calls"
+	echo "    system-libffi            Use a system-provided libffi instead of our own, static one (default: no)"
 	echo ""
 	echo "Features controlling config options:"
 	echo "    trace-refchanges         [def:#if !0]"
@@ -311,8 +312,6 @@ print_help() {
 	echo "    --conf=NAME                Same as --conf=NAME=1"
 	echo "    --with-FEATURE             Enable the specified FEATURE (s.a. --help=features)"
 	echo "    --without-FEATURE          Disable the specified FEATURE (s.a. --help=features)"
-	echo "    --probe-system-features=(yes|no|auto)"
-	echo "                               Specify is system features (akin to autoconf) should be performed"
 	echo "    --help                     Display this help"
 	echo "    --help=features            Disable available options for --with-FEATURE and --without-FEATURE"
 }
@@ -356,7 +355,6 @@ while [[ $# -gt 0 ]]; do
 	--without-*) set_with_feature "${1:10}" "0" ;;
 	--help)          print_help; exit 1 ;;
 	--help=features) print_help_features; exit 1 ;;
-	--probe-system-features=*) PROBE_SYSTEM_FEATURES="$(echo "$1" | cut -d '=' -f 2)" ;;
 	*)
 		echo "Invalid argument $1 (run './configure --help' for options)"
 		exit 1
@@ -377,6 +375,7 @@ if [ -z "$WITH_DEBUG" ]; then WITH_DEBUG="1"; fi
 if [ -z "$WITH_OPTIMIZE" ]; then WITH_OPTIMIZE="-O2"; fi
 if [ -z "$WITH_THREADS" ]; then WITH_THREADS="1"; fi
 if [ -z "$WITH_LIBFFI" ]; then WITH_LIBFFI="1"; fi
+if [ -z "$WITH_SYSTEM_LIBFFI" ]; then WITH_SYSTEM_LIBFFI="0"; fi
 
 ########################################################################################
 ## Setup configure logging
@@ -564,7 +563,15 @@ if [[ "$WITHOUT_DEX_SPECIFIC" == *"CTYPES"* ]]; then
 	CONFIG_DEX_CTYPES_LDFLAGS=""
 	CONFIG_DEX_CTYPES_LIBS=""
 else
-	if [[ "$WITH_LIBFFI" == "1" ]]; then
+	if [[ "$WITH_LIBFFI" != "1" ]]; then
+		CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS=""
+	elif [[ "$WITH_SYSTEM_LIBFFI" == "1" ]]; then
+		CONFIG_DEX_CTYPES_CFLAGS=""
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS="-lffi"
+	else
 		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
 			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
@@ -648,10 +655,6 @@ else
 		CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
 		CONFIG_DEX_CTYPES_LDFLAGS=""
 		CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
-	else
-		CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
-		CONFIG_DEX_CTYPES_LDFLAGS=""
-		CONFIG_DEX_CTYPES_LIBS=""
 	fi
 	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
 	case "$TARGET" in
@@ -780,38 +783,20 @@ fi
 
 ########################################################################################
 ## Probe system features
-if [[ "$PROBE_SYSTEM_FEATURES" == auto ]]; then
-	# For a couple of targets, we can make use of compile-time feature probing
-	# For other targets (or for when our compile-time assuptions lead to compiler
-	# errors, we must use configure-time probing, though this adds the necessity
-	# of a config file to be generated)
-	case "$TARGET" in
-## From testing, this works well enough on cygwin, but I feel better if this is off by default...
-#	*CYGWIN* | *Cygwin* | *cygwin* | *kos*)
-#		PROBE_SYSTEM_FEATURES=no
-#		;;
-## Better leave autoconf enabled on linux... (just in case)
-#	*linux*)
-#		PROBE_SYSTEM_FEATURES=no
-#		;;
-	*)
-		PROBE_SYSTEM_FEATURES=yes
-		;;
-	esac
-fi
-if [[ "$PROBE_SYSTEM_FEATURES" == yes ]]; then
-	CONFINC="$BLD_ROOT/include/deemon/config.h"
-	if ! [ -f "$CONFINC" ]; then
-		cmd mkdir -p "$BLD_ROOT/include/deemon"
-		cat > "$CONFINC" <<EOF
+CONFINC="$BLD_ROOT/include/deemon/config.h"
+if ! [ -f "$CONFINC" ]; then
+	cmd mkdir -p "$BLD_ROOT/include/deemon"
+	cat > "$CONFINC" <<EOF
 /* Automatically generated file (by ./configure). - Do not edit! */
 EOF
-	fi
-	CONFTEST_H="$BLD_ROOT/conftest.h"
-	CONFTEST="$BLD_ROOT/conftest.c"
-	CONFTEST_OUT="$BLD_ROOT/conftest.o"
-	CONFTEST_MAIN="int main()"
-	cat > "$CONFTEST_H" <<EOF
+fi
+
+CONFTEST_H="$BLD_ROOT/conftest.h"
+CONFTEST="$BLD_ROOT/conftest.c"
+CONFTEST_OUT="$BLD_ROOT/conftest.o"
+CONFTEST_MAIN="int main()"
+
+cat > "$CONFTEST_H" <<EOF
 #define _ATFILE_SOURCE 1
 #define _KOS_SOURCE 1
 #define _GNU_SOURCE 1
@@ -828,40 +813,293 @@ EOF
 #define _DOS_SOURCE 1
 #define _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE 1
 EOF
-	# Try to compile the current conftest
-	try_compile() {
-		echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -include $CONFINC -include $CONFTEST_H -c -o $CONFTEST_OUT $CONFTEST" >> "$CONFIG_LOG"
-		"$CONFIG_CC" $CONFIG_CFLAGS -Werror \
-			-include "$CONFINC" -include "$CONFTEST_H" \
-			-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
-	}
-	# e.g. try_check_feature "STDIO_H" "header <$1>"
-	try_check_feature() {
-		echo -n "[?] Checking for $2..."
-		echo "Checking for $2..." >> "$CONFIG_LOG"
-		if try_compile; then
-			echo -e "\r[+] Checking for $2... (yes)"
-			echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
-			return 0
-		else
-			echo -e "\r[-] Checking for $2... (no)"
-			local FPROC=$(cat "$CONFTEST")
-			FPROC="| ${FPROC//
+CONFTEST_H_MODIFIED=yes
+CC_HAS_GCH=yes
+
+# Try to compile the current conftest
+try_compile() {
+	echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -include $CONFTEST_H -include $CONFINC -c -o $CONFTEST_OUT $CONFTEST" >> "$CONFIG_LOG"
+	if test x"$CC_HAS_GCH" = xyes; then
+		if test x"$CONFTEST_H_MODIFIED" = xyes; then
+			if "$CONFIG_CC" $CONFIG_CFLAGS -Werror -o "${CONFTEST_H}.gch" "$CONFTEST_H" > /dev/null 2>&1; then
+				CONFTEST_H_MODIFIED=no
+			else
+				CC_HAS_GCH=no
+			fi
+		fi
+		if test x"$CONFTEST_H_MODIFIED" = xno; then
+			"$CONFIG_CC" $CONFIG_CFLAGS -Werror \
+				-include "$CONFTEST_H" -include "$CONFINC" \
+				-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
+			return $?
+		fi
+	fi
+	"$CONFIG_CC" $CONFIG_CFLAGS -Werror \
+		-include "$CONFTEST_H" -include "$CONFINC" \
+		-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
+	return $?
+}
+try_compile_raw() {
+	echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -include $CONFINC -c -o $CONFTEST_OUT $CONFTEST" >> "$CONFIG_LOG"
+	"$CONFIG_CC" $CONFIG_CFLAGS -Werror -include "$CONFINC" \
+		-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
+	return $?
+}
+
+# e.g. try_check_feature "STDIO_H" "header <$1>"
+try_check_feature() {
+	echo -n "[?] Checking for $2..."
+	echo "Checking for $2..." >> "$CONFIG_LOG"
+	if try_compile; then
+		echo -e "\r[+] Checking for $2... (yes)"
+		echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
+		return 0
+	else
+		echo -e "\r[-] Checking for $2... (no)"
+		local FPROC=$(cat "$CONFTEST")
+		FPROC="| ${FPROC//
 /
 | }"
-			cat >> "$CONFIG_LOG" <<EOF
+		cat >> "$CONFIG_LOG" <<EOF
 Checking for $2... (no)
 The failing program was:
 $FPROC
 --------------------------------------------------------------------------------
 EOF
-			return 1
+		return 1
+	fi
+}
+try_check_feature_raw() {
+	echo -n "[?] Checking for $2..."
+	echo "Checking for $2..." >> "$CONFIG_LOG"
+	if try_compile_raw; then
+		echo -e "\r[+] Checking for $2... (yes)"
+		echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
+		return 0
+	else
+		echo -e "\r[-] Checking for $2... (no)"
+		local FPROC=$(cat "$CONFTEST")
+		FPROC="| ${FPROC//
+/
+| }"
+		cat >> "$CONFIG_LOG" <<EOF
+Checking for $2... (no)
+The failing program was:
+$FPROC
+--------------------------------------------------------------------------------
+EOF
+		return 1
+	fi
+}
+
+# e.g. check_feature "STDIO_H" "header <$1>"
+# Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
+check_feature() {
+	if try_check_feature "$1" "$2"; then
+		echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+		return 0
+	else
+		echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+		return 1
+	fi
+}
+check_feature_raw() {
+	if try_check_feature_raw "$1" "$2"; then
+		echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+		return 0
+	else
+		echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+		return 1
+	fi
+}
+
+# e.g. check_header "stdio.h"
+check_header() {
+	cat > "$CONFTEST" <<EOF
+#include <$1>
+$CONFTEST_MAIN{return 0;}
+EOF
+	local FN="${1^^}"
+	FN="${FN////_}"
+	FN="${FN//./_}"
+	if check_feature_raw "$FN" "header <$1>"; then
+		echo "#include <$1>" >> "$CONFTEST_H"
+		CONFTEST_H_MODIFIED=yes
+		return 0
+	fi
+	return 1
+}
+
+# e.g. check_generic "_Exit"  "_Exit(0);"
+check_generic() {
+	cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{${2}}
+EOF
+	check_feature "$1" "$1"
+	return $?
+}
+
+# Check if we need to add argc/argv to conftest files
+echo -n "Checking how to compile a simple source file..."
+echo "Checking how to compile a simple source file..." >> "$CONFIG_LOG"
+cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return 0;}
+EOF
+
+if ! try_compile_raw; then
+	CONFTEST_MAIN="int main(int argc, char *argv[])"
+	cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return 0;}
+EOF
+	if ! try_compile_raw; then
+		echo "Cannot compile a simple source file" | tee -a "$CONFIG_LOG"
+		exit 1
+	fi
+fi
+
+echo " ('$CONFTEST_MAIN { ... }')"
+echo "Checking how to compile a simple source file... ('$CONFTEST_MAIN { ... }')" >> "$CONFIG_LOG"
+
+# Check for features
+in_features_region=no
+while read line; do
+	if [[ "$in_features_region" == "yes" ]]; then
+		if [[ "$line" == *"END:FEATURES"* ]]; then
+			in_features_region=no
+		else
+			case "$line" in
+			*( )header*( )\(\"* | *( )header_nostdinc*( )\(\"*)
+				line="${line#*\"}"
+				line="${line%%\"*}"
+				check_header "$line"
+				;;
+			*( )func*( )\(\"* | *( )var*( )\(\"* | *( )feature*( )\(\"*)
+				line="${line#*\"}"
+				n="${line%%\"*}"
+				line="${line#*\"}"
+				case "$line" in
+					*test*( ):*( )\"* )
+						t="${line#*test*( ):*( )\"}"
+						t="${t%%\"*}"
+						;;
+					*test*( ):*( )\'* )
+						t="${line#*test*( ):*( )\'}"
+						t="${t%%\'*}"
+						;;
+					*)
+						t="return (int)*&$n;"
+						;;
+				esac
+				check_generic "$n" "$t"
+				;;
+			*( )func*( )\(\'* | *( )var*( )\(\'* | *( )feature*( )\(\'*)
+				line="${line#*\'}"
+				n="${line%%\'*}"
+				line="${line#*\'}"
+				case "$line" in
+					*test*( ):*( )\"* )
+						t="${line#*test*( ):*( )\"}"
+						t="${t%%\"*}"
+						;;
+					*test*( ):*( )\'* )
+						t="${line#*test*( ):*( )\'}"
+						t="${t%%\'*}"
+						;;
+					*)
+						t="(void)&$n; return 0;"
+						;;
+				esac
+				check_generic "$n" "$t"
+				;;
+			*( )functest*( )\(\"*)
+				line="${line#*\"}"
+				t="${line%%\"*}"
+				n="${t%%\(*}"
+				t="return (int)!$t;"
+				check_generic "$n" "$t"
+				;;
+			*( )functest*( )\(\'*)
+				line="${line#*\'}"
+				t="${line%%\'*}"
+				n="${t%%\(*}"
+				t="return (int)!$t;"
+				check_generic "$n" "$t"
+				;;
+			*( )typ*( )\(\'*)
+				line="${line#*\'}"
+				t="${line%%\'*}"
+				n="${t%%\(*}"
+				t="$t x = ($t)123; return (int)x;"
+				check_generic "$n" "$t"
+				;;
+			*( )typ*( )\(\"*)
+				line="${line#*\"}"
+				t="${line%%\"*}"
+				n="${t%%\(*}"
+				t="$t x = ($t)123; return (int)x;"
+				check_generic "$n" "$t"
+				;;
+			*( )constant*( )\(\"*)
+				n="${line#*\"}"
+				n="${n%%\"*}"
+				t="return (int)$n;"
+				check_generic "$n" "$t"
+				;;
+			*( )constant*( )\(\'*)
+				n="${line#*\'}"
+				n="${n%%\'*}"
+				t="return (int)$n;"
+				check_generic "$n" "$t"
+				;;
+			*( )constant_nonzero*( )\(\"*)
+				n="${line#*\"}"
+				n="${n%%\"*}"
+				cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return (int)$n;}
+EOF
+				if try_check_feature "$n" "$n"; then
+					cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{typedef int myT[$n != 0 ? 1 : -1]; extern myT foo; return foo[0];}
+EOF
+					check_feature "$n" "$n being non-zero"
+				else
+					echo "#define CONFIG_NO_$n 1 /* Missing! */" >> "$CONFINC"
+				fi
+				;;
+			*( )print*( )\"*)
+				line="${line#*\"}"
+				line="${line%%\"*}"
+				echo "$line" >> "$CONFTEST_H"
+				CONFTEST_H_MODIFIED=yes
+				;;
+			*( )print*( )\'*)
+				line="${line#*\'}"
+				line="${line%%\'*}"
+				echo "$line" >> "$CONFTEST_H"
+				CONFTEST_H_MODIFIED=yes
+				;;
+			*( )print*( )\;*)
+				echo "" >> "$CONFTEST_H"
+				CONFTEST_H_MODIFIED=yes
+				;;
+			*)
+				;;
+			esac
 		fi
-	}
-	# e.g. check_feature "STDIO_H" "header <$1>"
-	# Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
-	check_feature() {
-		if try_check_feature "$1" "$2"; then
+	else
+		if [[ "$line" == *"BEGIN:FEATURES"* ]]; then
+			in_features_region=yes
+		fi
+	fi
+done < "$SRC_ROOT/include/deemon/system-features.h"
+
+if [[ "$WITH_SYSTEM_LIBFFI" == 1 ]]; then
+	check_ffi_cc() {
+		cat > "$CONFTEST" <<EOF
+#include <ffi.h>
+$CONFTEST_MAIN{return $1;}
+EOF
+		if try_check_feature "$1" "$1"; then
 			echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
 			return 0
 		else
@@ -869,180 +1107,26 @@ EOF
 			return 1
 		fi
 	}
-	# e.g. check_header "stdio.h"
-	check_header() {
-		cat > "$CONFTEST" <<EOF
-#include <$1>
-$CONFTEST_MAIN{return 0;}
-EOF
-		local FN="${1^^}"
-		FN="${FN////_}"
-		FN="${FN//./_}"
-		if check_feature "$FN" "header <$1>"; then
-			echo "#include <$1>" >> "$CONFTEST_H"
-			return 0
-		fi
-		return 1
-	}
-	# e.g. check_generic "_Exit"  "_Exit(0);"
-	check_generic() {
-		cat > "$CONFTEST" <<EOF
-$CONFTEST_MAIN{${2}}
-EOF
-		check_feature "$1" "$1"
-		return $?
-	}
-	# Check if we need to add argc/argv to conftest files
-	echo -n "Checking how to compile a simple source file..."
-	echo "Checking how to compile a simple source file..." >> "$CONFIG_LOG"
-	cat > "$CONFTEST" <<EOF
-$CONFTEST_MAIN{return 0;}
-EOF
-	if ! try_compile; then
-		CONFTEST_MAIN="int main(int argc, char *argv[])"
-		cat > "$CONFTEST" <<EOF
-$CONFTEST_MAIN{return 0;}
-EOF
-		if ! try_compile; then
-			echo "Cannot compile a simple source file" | tee -a "$CONFIG_LOG"
-			exit 1
-		fi
-	fi
-	echo " ('$CONFTEST_MAIN { ... }')"
-	echo "Checking how to compile a simple source file... ('$CONFTEST_MAIN { ... }')" >> "$CONFIG_LOG"
-	# Check for features
-	in_features_region=no
-	while read line; do
-		if [[ "$in_features_region" == "yes" ]]; then
-			if [[ "$line" == *"END:FEATURES"* ]]; then
-				in_features_region=no
-			else
-				case "$line" in
-				*( )header*( )\(\"* | *( )header_nostdinc*( )\(\"*)
-					line="${line#*\"}"
-					line="${line%%\"*}"
-					check_header "$line"
-					;;
-				*( )func*( )\(\"* | *( )var*( )\(\"* | *( )feature*( )\(\"*)
-					line="${line#*\"}"
-					n="${line%%\"*}"
-					line="${line#*\"}"
-					case "$line" in
-						*test*( ):*( )\"* )
-							t="${line#*test*( ):*( )\"}"
-							t="${t%%\"*}"
-							;;
-						*test*( ):*( )\'* )
-							t="${line#*test*( ):*( )\'}"
-							t="${t%%\'*}"
-							;;
-						*)
-							t="(void)&$n; return 0;"
-							;;
-					esac
-					check_generic "$n" "$t"
-					;;
-				*( )func*( )\(\'* | *( )var*( )\(\'* | *( )feature*( )\(\'*)
-					line="${line#*\'}"
-					n="${line%%\'*}"
-					line="${line#*\'}"
-					case "$line" in
-						*test*( ):*( )\"* )
-							t="${line#*test*( ):*( )\"}"
-							t="${t%%\"*}"
-							;;
-						*test*( ):*( )\'* )
-							t="${line#*test*( ):*( )\'}"
-							t="${t%%\'*}"
-							;;
-						*)
-							t="(void)&$n; return 0;"
-							;;
-					esac
-					check_generic "$n" "$t"
-					;;
-				*( )functest*( )\(\"*)
-					line="${line#*\"}"
-					t="${line%%\"*}"
-					n="${t%%\(*}"
-					t="return (int)!$t;"
-					check_generic "$n" "$t"
-					;;
-				*( )functest*( )\(\'*)
-					line="${line#*\'}"
-					t="${line%%\'*}"
-					n="${t%%\(*}"
-					t="return (int)!$t;"
-					check_generic "$n" "$t"
-					;;
-				*( )typ*( )\(\'*)
-					line="${line#*\'}"
-					t="${line%%\'*}"
-					n="${t%%\(*}"
-					t="$t x = ($t)123; return (int)x;"
-					check_generic "$n" "$t"
-					;;
-				*( )typ*( )\(\"*)
-					line="${line#*\"}"
-					t="${line%%\"*}"
-					n="${t%%\(*}"
-					t="$t x = ($t)123; return (int)x;"
-					check_generic "$n" "$t"
-					;;
-				*( )constant*( )\(\"*)
-					n="${line#*\"}"
-					n="${n%%\"*}"
-					t="return (int)$n;"
-					check_generic "$n" "$t"
-					;;
-				*( )constant*( )\(\'*)
-					n="${line#*\'}"
-					n="${n%%\'*}"
-					t="return (int)$n;"
-					check_generic "$n" "$t"
-					;;
-				*( )constant_nonzero*( )\(\"*)
-					n="${line#*\"}"
-					n="${n%%\"*}"
-					cat > "$CONFTEST" <<EOF
-$CONFTEST_MAIN{return (int)$n;}
-EOF
-					if try_check_feature "$n" "$n"; then
-						cat > "$CONFTEST" <<EOF
-$CONFTEST_MAIN{typedef int myT[$n != 0 ? 1 : -1]; extern myT foo; return foo[0];}
-EOF
-						check_feature "$n" "$n being non-zero"
-					else
-						echo "#define CONFIG_NO_$n 1 /* Missing! */" >> "$CONFINC"
-					fi
-					;;
-				*( )print*( )\"*)
-					line="${line#*\"}"
-					line="${line%%\"*}"
-					echo "$line" >> "$CONFTEST_H"
-					;;
-				*( )print*( )\'*)
-					line="${line#*\'}"
-					line="${line%%\'*}"
-					echo "$line" >> "$CONFTEST_H"
-					;;
-				*( )print*( )\;*)
-					echo "" >> "$CONFTEST_H"
-					;;
-				*)
-					;;
-				esac
-			fi
-		else
-			if [[ "$line" == *"BEGIN:FEATURES"* ]]; then
-				in_features_region=yes
-			fi
-		fi
-	done < "$SRC_ROOT/include/deemon/system-features.h"
-	unlink "$CONFTEST" > /dev/null 2>&1
-	unlink "$CONFTEST_H" > /dev/null 2>&1
-	unlink "$CONFTEST_OUT" > /dev/null 2>&1
+	echo "#define CONFIG_HAVE_SYSTEM_FFI 1" >> "$CONFINC"
+	check_ffi_cc FFI_SYSV
+	check_ffi_cc FFI_STDCALL
+	check_ffi_cc FFI_THISCALL
+	check_ffi_cc FFI_FASTCALL
+	check_ffi_cc FFI_MS_CDECL
+	check_ffi_cc FFI_PASCAL
+	check_ffi_cc FFI_REGISTER
+	check_ffi_cc FFI_WIN64
+	check_ffi_cc FFI_UNIX64
+	check_ffi_cc FFI_GNUW64
+	check_ffi_cc FFI_EFI64
 fi
+
+unlink "$CONFTEST" > /dev/null 2>&1
+unlink "${CONFTEST_H}.gch" > /dev/null 2>&1
+unlink "$CONFTEST_H" > /dev/null 2>&1
+unlink "$CONFTEST_OUT" > /dev/null 2>&1
+
+
 
 if [ -f "$BLD_ROOT/include/deemon/config.h.old" ]; then
 	if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then

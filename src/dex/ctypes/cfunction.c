@@ -54,30 +54,66 @@ cc_getname(ctypes_cc_t UNUSED(cc)) {
 #else /* CONFIG_NO_CFUNCTION */
 
 struct cc_entry {
-	char name[12];
+	char        name[12];
 	ctypes_cc_t cc;
 };
 
-PRIVATE struct cc_entry const cc_db[] = {
+#ifndef CONFIG_HAVE_SYSTEM_FFI
 #ifdef X86_WIN32
-	{ "sysv", FFI_SYSV },
-	{ "stdcall", FFI_STDCALL },
-	{ "thiscall", FFI_THISCALL },
-	{ "fastcall", FFI_FASTCALL },
-	{ "ms_cdecl", FFI_MS_CDECL },
-	{ "pascal", FFI_PASCAL },
-	{ "register", FFI_REGISTER },
+#define CONFIG_HAVE_FFI_SYSV     1
+#define CONFIG_HAVE_FFI_STDCALL  1
+#define CONFIG_HAVE_FFI_THISCALL 1
+#define CONFIG_HAVE_FFI_FASTCALL 1
+#define CONFIG_HAVE_FFI_MS_CDECL 1
+#define CONFIG_HAVE_FFI_PASCAL   1
+#define CONFIG_HAVE_FFI_REGISTER 1
 #elif defined(X86_WIN64)
-	{ "win64", FFI_WIN64 },
-#else
+#define CONFIG_HAVE_FFI_WIN64 1
+#else /* ... */
+#define CONFIG_HAVE_FFI_SYSV     1
+#define CONFIG_HAVE_FFI_UNIX64   1
+#define CONFIG_HAVE_FFI_THISCALL 1
+#define CONFIG_HAVE_FFI_FASTCALL 1
+#define CONFIG_HAVE_FFI_STDCALL  1
+#define CONFIG_HAVE_FFI_PASCAL   1
+#define CONFIG_HAVE_FFI_REGISTER 1
+#endif /* !... */
+#endif /* !CONFIG_HAVE_SYSTEM_FFI */
+
+PRIVATE struct cc_entry const cc_db[] = {
+#ifdef CONFIG_HAVE_FFI_SYSV
 	{ "sysv", FFI_SYSV },
-	{ "unix64", FFI_UNIX64 },
-	{ "thiscall", FFI_THISCALL },
-	{ "fastcall", FFI_FASTCALL },
+#endif /* CONFIG_HAVE_FFI_SYSV */
+#ifdef CONFIG_HAVE_FFI_STDCALL
 	{ "stdcall", FFI_STDCALL },
+#endif /* CONFIG_HAVE_FFI_STDCALL */
+#ifdef CONFIG_HAVE_FFI_THISCALL
+	{ "thiscall", FFI_THISCALL },
+#endif /* CONFIG_HAVE_FFI_THISCALL */
+#ifdef CONFIG_HAVE_FFI_FASTCALL
+	{ "fastcall", FFI_FASTCALL },
+#endif /* CONFIG_HAVE_FFI_FASTCALL */
+#ifdef CONFIG_HAVE_FFI_MS_CDECL
+	{ "ms_cdecl", FFI_MS_CDECL },
+#endif /* CONFIG_HAVE_FFI_MS_CDECL */
+#ifdef CONFIG_HAVE_FFI_PASCAL
 	{ "pascal", FFI_PASCAL },
+#endif /* CONFIG_HAVE_FFI_PASCAL */
+#ifdef CONFIG_HAVE_FFI_REGISTER
 	{ "register", FFI_REGISTER },
-#endif
+#endif /* CONFIG_HAVE_FFI_REGISTER */
+#ifdef CONFIG_HAVE_FFI_WIN64
+	{ "win64", FFI_WIN64 },
+#endif /* CONFIG_HAVE_FFI_WIN64 */
+#ifdef CONFIG_HAVE_FFI_UNIX64
+	{ "unix64", FFI_UNIX64 },
+#endif /* CONFIG_HAVE_FFI_UNIX64 */
+#ifdef CONFIG_HAVE_FFI_GNUW64
+	{ "gnuw64", FFI_GNUW64 },
+#endif /* CONFIG_HAVE_FFI_GNUW64 */
+#ifdef CONFIG_HAVE_FFI_EFI64
+	{ "efi64", FFI_EFI64 },
+#endif /* CONFIG_HAVE_FFI_EFI64 */
 	{ "", FFI_DEFAULT_ABI },
 	{ "default", FFI_DEFAULT_ABI },
 };

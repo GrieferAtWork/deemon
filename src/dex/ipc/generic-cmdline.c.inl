@@ -135,7 +135,7 @@ PRIVATE void *libcmdline = NULL;
 
 #define HAVE_LIBCMDLINE_FINI 1
 PRIVATE NONNULL((1)) void DCALL
-libcmdline_fini(DeeDexObject *__restrict self) {
+libcmdline_fini(DeeDexObject *__restrict UNUSED(self)) {
 	if (libcmdline)
 		dlclose(libcmdline);
 }

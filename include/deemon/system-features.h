@@ -8216,6 +8216,12 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #define doserrno _doserrno
 #endif /* doserrno = _doserrno */
 
+/* Really not needed on KOS... */
+#ifdef __KOS__
+#undef CONFIG_HAVE_doserrno
+#undef CONFIG_HAVE__doserrno
+#endif /* __KOS__ */
+
 
 #if defined(_MSC_VER) || defined(__USE_DOS)
 #define EXEC_STRING_VECTOR_TYPE char const *const *

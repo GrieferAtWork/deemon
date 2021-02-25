@@ -184,7 +184,7 @@ PRIVATE struct type_method tpconst process_methods[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_get_files(Process *__restrict self) {
+process_get_files(Process *__restrict UNUSED(self)) {
 	ipc_unimplemented();
 	return NULL;
 }

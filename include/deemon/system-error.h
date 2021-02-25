@@ -73,8 +73,8 @@ typedef struct {
 #ifdef DeeSystemError_HAVE_DOSERRNO
 #define DeeSystemError_HAVE_ANY 1
 	int    se_doserrno;     /* Saved `doserrno' value */
-#define _DeeSystemError_SAVE_DOSERRNO(st) ((st).se_errno = doserrno)
-#define _DeeSystemError_LOAD_DOSERRNO(st) (doserrno = (st).se_errno)
+#define _DeeSystemError_SAVE_DOSERRNO(st) ((st).se_doserrno = doserrno)
+#define _DeeSystemError_LOAD_DOSERRNO(st) (doserrno = (st).se_doserrno)
 #else /* DeeSystemError_HAVE_DOSERRNO */
 #define _DeeSystemError_SAVE_DOSERRNO(st) (void)0
 #define _DeeSystemError_LOAD_DOSERRNO(st) (void)0

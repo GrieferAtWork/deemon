@@ -437,6 +437,7 @@ fs_setenv(DeeObject *__restrict name,
 	/* TODO: setenv() */
 	/* TODO: putenv() */
 	(void)name;
+	(void)value;
 	DERROR_NOTIMPLEMENTED();
 	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, name);
 }
