@@ -2260,7 +2260,7 @@ object_id_get(DeeObject *__restrict self) {
 PRIVATE DEFINE_CLSPROPERTY(object_id_get_cobj, &DeeObject_Type, &object_id_get, NULL, NULL);
 PRIVATE struct type_member tpconst object_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("id", &object_id_get_cobj,
-	                      "Alias for ?#id to speed up expressions such as ${Object.id}"),
+	                      "Alias for ?#{i:id} to speed up expressions such as ${Object.id}"),
 	TYPE_MEMBER_END
 };
 

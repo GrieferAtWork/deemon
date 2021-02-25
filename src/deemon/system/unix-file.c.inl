@@ -501,6 +501,7 @@ sysfile_read(SystemFile *__restrict self,
 	/* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
 	size_t result;
+	(void)flags;
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)read((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
@@ -508,6 +509,10 @@ sysfile_read(SystemFile *__restrict self,
 		error_file_io(self);
 	return result;
 #else /* CONFIG_HAVE_read */
+	(void)self;
+	(void)buffer;
+	(void)bufsize;
+	(void)flags;
 	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                           FILE_OPERATOR_READ);
 	return (size_t)-1;
@@ -522,6 +527,7 @@ sysfile_write(SystemFile *__restrict self,
 	/* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
 	size_t result;
+	(void)flags;
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)write((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
@@ -529,6 +535,10 @@ sysfile_write(SystemFile *__restrict self,
 		error_file_io(self);
 	return result;
 #else /* CONFIG_HAVE_write */
+	(void)self;
+	(void)buffer;
+	(void)bufsize;
+	(void)flags;
 	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                           FILE_OPERATOR_WRITE);
 	return (size_t)-1;

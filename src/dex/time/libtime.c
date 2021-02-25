@@ -1553,6 +1553,8 @@ time_timepart_set(DeeTimeObject *self,
 	dtime_half_t addend;
 	if (object_as_time_half(value, &addend))
 		goto err;
+	/* FIXME: a 32-bit `dutime_half_t' doesn't go all the way up to a full day (this is bad...)
+	 *        24*60*60*1000*1000 == 86400000000 == 0x141DD76000 */
 	if unlikely((dutime_half_t)addend > MICROSECONDS_PER_DAY) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Time-value %k is greater than one day",

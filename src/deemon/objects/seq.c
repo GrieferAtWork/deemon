@@ -2340,7 +2340,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If no such element exists, return ${-1} instead\n"
 	      "Depending on the nearest implemented group of operators, "
 	      "one of the following implementations is chosen\n"
-	      "For ${operator []} and ${operator #}:\n"
+	      "For ${operator []} and ${operator ##}:\n"
 	      "${"
 	      "function find(elem: int, start: int, end: int, key: Callable) {\n"
 	      "	import int, Error from deemon;\n"
@@ -2425,7 +2425,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If no such element exists, return ${-1} instead\n"
 	      "Depending on the nearest implemented group of operators, "
 	      "one of the following implementations is chosen\n"
-	      "For ${operator []} and ${operator #}:\n"
+	      "For ${operator []} and ${operator ##}:\n"
 	      "${"
 	      "function rfind(elem: int, start: int, end: int, key: Callable) {\n"
 	      "	import int from deemon;\n"
@@ -2591,7 +2591,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "as items are retrieved by index. Otherwise, all elements from @this Sequence "
 	      "are loaded at once when #combinations is called first.\n"
 	      "When @r is greater than ${##this}, an empty Sequence is returned (${{}})\n"
-	      "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations itertools.combinations}") },
+	      "Hint: The python equivalent of this function is "
+	      /**/ "#A{itertools.combinations|https://docs.python.org/3/library/itertools.html##itertools.combinations}") },
 	{ "repeatcombinations",
 	  &seq_repeatcombinations,
 	  DOC("(r:?Dint)->?S?DSequence\n"
@@ -2607,7 +2608,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "are loaded at once when #repeatcombinations is called first.\n"
 	      "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
 	      "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
-	      "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.combinations_with_replacement itertools.combinations_with_replacement}") },
+	      "Hint: The python equivalent of this function is "
+	      /**/ "#A{itertools.combinations_with_replacement|https://docs.python.org/3/library/itertools.html##itertools.combinations_with_replacement}") },
 	{ "permutations",
 	  &seq_permutations,
 	  DOC("(r:?Dint=!N)->?S?DSequence\n"
@@ -2625,7 +2627,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "are loaded at once when #repeatcombinations is called first.\n"
 	      "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
 	      "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
-	      "Hint: The python equivalent of this function is %{link https://docs.python.org/3/library/itertools.html#itertools.permutations itertools.permutations}") },
+	      "Hint: The python equivalent of this function is "
+	      /**/ "#A{itertools.permutations|https://docs.python.org/3/library/itertools.html##itertools.permutations}") },
 
 	/* TODO: unique(key:?DCallable=!N)->?DSequence
 	 * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,
@@ -3118,7 +3121,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "	start = (int)start;\n"
 	      "	end = (int)end;\n"
 	      "	local mylen = ##this;\n"
-	      "	if (end > mylen) end = mylen;\n"
+	      "	if (end > mylen)\n"
+	      "		end = mylen;\n"
 	      "	if (end > start) {\n"
 	      "		local i = end;\n"
 	      "		if (key !is none)\n"
@@ -3400,7 +3404,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "function removeif(should: Callable, start: int, end: int): int {\n"
 	      "	local count = 0;\n"
 	      "	local mylen = ##this;\n"
-	      "	if (end > mylen) end = mylen;\n"
+	      "	if (end > mylen)\n"
+	      "		end = mylen;\n"
 	      "	if (end > start) {\n"
 	      "		local i = end;\n"
 	      "		do {\n"
@@ -3948,7 +3953,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "Same as the ?#nonempty member function\n"
 	                         "Depending on the nearest implemented group of operators, "
 	                         "one of the following implementations is chosen\n"
-	                         "For ${operator #}:\n"
+	                         "For ${operator ##}:\n"
 	                         "${"
 	                         "operator bool() {\n"
 	                         "	return !!##this;\n"
@@ -4079,7 +4084,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 	                         "#->\n"
 	                         "Returns the length of @this Sequence, as determinable by enumeration\n"
-	                         "When not implemented by a sub-class, this operator is implemented as defined by :Sequence as follows\n"
+	                         "When not implemented by a sub-class, this operator is implemented by :Sequence as follows\n"
 	                         "${"
 	                         "operator # () {\n"
 	                         "	local result = 0;\n"
@@ -4093,7 +4098,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "Returns ?t/?f indicative of @item being apart of @this Sequence\n"
 	                         "This operator is an alias for the #contains member function, "
 	                         "which allows the use of an additional key function\n"
-	                         "When not implemented by a sub-class, this operator is implemented as defined by :Sequence as follows\n"
+	                         "When not implemented by a sub-class, this operator is implemented by :Sequence as follows\n"
 	                         "${"
 	                         "operator contains(item: Object) {\n"
 	                         "	for (local my_elem: this) {\n"
@@ -4168,7 +4173,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 
 	                         "\n"
 	                         "iter->\n"
-	                         "Returns a general-purpose Iterator using ${operator []} (getitem) and ${operator #} (size) "
+	                         "Returns a general-purpose Iterator using ${operator []} (getitem) and ${operator ##} (size) "
 	                         "to enumerate a Sequence that is implemented using a size+index approach\n"
 	                         "${"
 	                         "class Iterator: Iterator from deemon {\n"
@@ -4177,7 +4182,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "	private m_len;\n"
 	                         "	this(seq: Sequence) {\n"
 	                         "		m_seq = seq;\n"
-	                         "		m_len = #seq;\n"
+	                         "		m_len = ##seq;\n"
 	                         "	}\n"
 	                         "	operator next(): Object {\n"
 	                         "		import Error, Signal from deemon;\n"

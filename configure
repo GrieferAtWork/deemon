@@ -123,61 +123,61 @@ set_dex_specific() {
 
 set_with_feature() {
 	case "$1" in
-		assembly-interpreter)    WITH_ASSEMBLY_INTERPRETER="$2" ;;
-		dex)                     WITH_DEX="$2" ;;
-		dex-ctypes)              set_dex_specific "CTYPES" "$2" ;;
-		dex-net)                 set_dex_specific "NET" "$2" ;;
-		dex-posix)               set_dex_specific "POSIX" "$2" ;;
-		dex-math)                set_dex_specific "MATH" "$2" ;;
-		dex-ipc)                 set_dex_specific "IPC" "$2" ;;
-		dex-fs)                  set_dex_specific "FS" "$2" ;;
-		dex-threading)           set_dex_specific "THREADING" "$2" ;;
-		dex-time)                set_dex_specific "TIME" "$2" ;;
-		dex-win32)               set_dex_specific "WIN32" "$2" ;;
-		kos-system-headers)      WITH_KOS_SYSTEM_HEADERS="$2" ;;
-		debug)                   WITH_DEBUG="$2" ;;
-		optimize=*)              WITH_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
-		threads)                 WITH_THREADS="$2" ;;
-		libffi)                  WITH_LIBFFI="$2" ;;
-		trace-refchanges)        set_feature_pair "CONFIG_TRACE_REFCHANGES" "CONFIG_NO_TRACE_REFCHANGES" "$2" ;;
-		badrefcnt-checks)        set_feature_pair "CONFIG_BADREFCNT_CHECKS" "CONFIG_NO_BADREFCNT_CHECKS" "$2" ;;
-		calltuple-optimizations) set_feature_pair "CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS" "CONFIG_NO_CALLTUPLE_OPTIMIZATIONS" "$2" ;;
-		object-slabs)            set_feature_pair "" "CONFIG_NO_OBJECT_SLABS" "$2" ;;
-		nobase-optimized-class-operators) set_feature_pair "CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS" "CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS" "$2" ;;
-		deemon-home-environ)
-			set_feature_pair "" "CONFIG_NO_DEEMON_HOME_ENVIRON" "$2"
-			;;
-		deemon-home-environ=*)
-			del_feature "CONFIG_NO_DEEMON_HOME_ENVIRON"
-			del_feature_startswith "CONFIG_DEEMON_HOME_ENVIRON="
-			add_feature "CONFIG_DEEMON_HOME_ENVIRON=$(echo "$1" | cut -d '=' -f 2)"
-			;;
-		deemon-home=*)
-			del_feature_startswith "CONFIG_DEEMON_HOME="
-			add_feature "CONFIG_DEEMON_HOME=\"$(echo "$1" | cut -d '=' -f 2)\""
-			;;
-		deemon-path-environ)
-			set_feature_pair "" "CONFIG_NO_DEEMON_PATH_ENVIRON" "$2"
-			;;
-		deemon-path-environ=*)
-			del_feature "CONFIG_NO_DEEMON_PATH_ENVIRON"
-			del_feature_startswith "CONFIG_DEEMON_PATH_ENVIRON="
-			add_feature "CONFIG_DEEMON_PATH_ENVIRON=$(echo "$1" | cut -d '=' -f 2)"
-			;;
-		deemon-path=*)
-			del_feature_startswith "CONFIG_DEEMON_PATH="
-			local PATH_EXPR=""
-			# https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
-			IFS=';' read -ra PATH_LIST <<< "$(echo "$1" | cut -d '=' -f 2)"
-			for p in "${PATH_LIST[@]}"; do
-				PATH_EXPR="${PATH_EXPR}p(\"${p}\")"
-			done
-			add_feature "CONFIG_DEEMON_PATH=(p)$PATH_EXPR"
-			;;
-		*)
-			echo "Unknown with-feature $1"
-			exit 1
-			;;
+	assembly-interpreter)    WITH_ASSEMBLY_INTERPRETER="$2" ;;
+	dex)                     WITH_DEX="$2" ;;
+	dex-ctypes)              set_dex_specific "CTYPES" "$2" ;;
+	dex-net)                 set_dex_specific "NET" "$2" ;;
+	dex-posix)               set_dex_specific "POSIX" "$2" ;;
+	dex-math)                set_dex_specific "MATH" "$2" ;;
+	dex-ipc)                 set_dex_specific "IPC" "$2" ;;
+	dex-fs)                  set_dex_specific "FS" "$2" ;;
+	dex-threading)           set_dex_specific "THREADING" "$2" ;;
+	dex-time)                set_dex_specific "TIME" "$2" ;;
+	dex-win32)               set_dex_specific "WIN32" "$2" ;;
+	kos-system-headers)      WITH_KOS_SYSTEM_HEADERS="$2" ;;
+	debug)                   WITH_DEBUG="$2" ;;
+	optimize=*)              WITH_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
+	threads)                 WITH_THREADS="$2" ;;
+	libffi)                  WITH_LIBFFI="$2" ;;
+	trace-refchanges)        set_feature_pair "CONFIG_TRACE_REFCHANGES" "CONFIG_NO_TRACE_REFCHANGES" "$2" ;;
+	badrefcnt-checks)        set_feature_pair "CONFIG_BADREFCNT_CHECKS" "CONFIG_NO_BADREFCNT_CHECKS" "$2" ;;
+	calltuple-optimizations) set_feature_pair "CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS" "CONFIG_NO_CALLTUPLE_OPTIMIZATIONS" "$2" ;;
+	object-slabs)            set_feature_pair "" "CONFIG_NO_OBJECT_SLABS" "$2" ;;
+	nobase-optimized-class-operators) set_feature_pair "CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS" "CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS" "$2" ;;
+	deemon-home-environ)
+		set_feature_pair "" "CONFIG_NO_DEEMON_HOME_ENVIRON" "$2"
+		;;
+	deemon-home-environ=*)
+		del_feature "CONFIG_NO_DEEMON_HOME_ENVIRON"
+		del_feature_startswith "CONFIG_DEEMON_HOME_ENVIRON="
+		add_feature "CONFIG_DEEMON_HOME_ENVIRON=$(echo "$1" | cut -d '=' -f 2)"
+		;;
+	deemon-home=*)
+		del_feature_startswith "CONFIG_DEEMON_HOME="
+		add_feature "CONFIG_DEEMON_HOME=\"$(echo "$1" | cut -d '=' -f 2)\""
+		;;
+	deemon-path-environ)
+		set_feature_pair "" "CONFIG_NO_DEEMON_PATH_ENVIRON" "$2"
+		;;
+	deemon-path-environ=*)
+		del_feature "CONFIG_NO_DEEMON_PATH_ENVIRON"
+		del_feature_startswith "CONFIG_DEEMON_PATH_ENVIRON="
+		add_feature "CONFIG_DEEMON_PATH_ENVIRON=$(echo "$1" | cut -d '=' -f 2)"
+		;;
+	deemon-path=*)
+		del_feature_startswith "CONFIG_DEEMON_PATH="
+		local PATH_EXPR=""
+		# https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
+		IFS=';' read -ra PATH_LIST <<< "$(echo "$1" | cut -d '=' -f 2)"
+		for p in "${PATH_LIST[@]}"; do
+			PATH_EXPR="${PATH_EXPR}p(\"${p}\")"
+		done
+		add_feature "CONFIG_DEEMON_PATH=(p)$PATH_EXPR"
+		;;
+	*)
+		echo "Unknown with-feature $1"
+		exit 1
+		;;
 	esac
 }
 
@@ -319,48 +319,48 @@ print_help() {
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-		--target=*)
-			## e.g. i386-kos
-			## e.g. x86_64-linux-gnu
-			## e.g. x86_64-pc-cygwin
-			TARGET="$(echo "$1" | cut -d '=' -f 2)"
-			;;
-		--libffi-target=*)
-			LIBFFI_TARGET="$(echo "$1" | cut -d '=' -f 2)"
-			;;
-		--build-root=*)           BLD_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--source-root=*)          SRC_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--bin-path=*)             BIN_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--build-path=*)           BLD_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--cross-prefix=*)         CONFIG_CROSS_PREFIX="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-exe-extension=*) CONFIG_EXE="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-dll-extension=*) CONFIG_DLL="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-cc=*)            CONFIG_CC="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-cxx=*)           CONFIG_CXX="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-cflags=*)        CONFIG_CFLAGS="$CONFIG_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-ldflags=*)       CONFIG_LDFLAGS="$CONFIG_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libs=*)          CONFIG_LIBS="$CONFIG_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libm=*)          CONFIG_LIBM="$CONFIG_LIBM $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libdl=*)         CONFIG_LIBDL="$CONFIG_LIBDL $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libsocket=*)     CONFIG_LIBSOCKET="$CONFIG_LIBSOCKET $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-dex-cc=*)        CONFIG_DEX_CC="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-dex-cflags=*)    CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-dex-ldflags=*)   CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-dex-libs=*)      CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-core-cflags=*)   CONFIG_CORE_CFLAGS="$CONFIG_CORE_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-core-ldflags=*)  CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-core-libs=*)     CONFIG_CORE_LIBS="$CONFIG_CORE_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-pthread=*)       CONFIG_PTHREAD="$CONFIG_PTHREAD $(echo "$1" | cut -d '=' -f 2)" ;;
-		--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
-		--with-*)    set_with_feature "${1:7}" "1" ;;
-		--without-*) set_with_feature "${1:10}" "0" ;;
-		--help)          print_help; exit 1 ;;
-		--help=features) print_help_features; exit 1 ;;
-		--probe-system-features=*) PROBE_SYSTEM_FEATURES="$(echo "$1" | cut -d '=' -f 2)" ;;
-		*)
-			echo "Invalid argument $1 (run './configure --help' for options)"
-			exit 1
-			;;
+	--target=*)
+		## e.g. i386-kos
+		## e.g. x86_64-linux-gnu
+		## e.g. x86_64-pc-cygwin
+		TARGET="$(echo "$1" | cut -d '=' -f 2)"
+		;;
+	--libffi-target=*)
+		LIBFFI_TARGET="$(echo "$1" | cut -d '=' -f 2)"
+		;;
+	--build-root=*)           BLD_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--source-root=*)          SRC_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--bin-path=*)             BIN_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--build-path=*)           BLD_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--cross-prefix=*)         CONFIG_CROSS_PREFIX="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-exe-extension=*) CONFIG_EXE="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-dll-extension=*) CONFIG_DLL="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-cc=*)            CONFIG_CC="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-cxx=*)           CONFIG_CXX="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-cflags=*)        CONFIG_CFLAGS="$CONFIG_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-ldflags=*)       CONFIG_LDFLAGS="$CONFIG_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-libs=*)          CONFIG_LIBS="$CONFIG_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-libm=*)          CONFIG_LIBM="$CONFIG_LIBM $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-libdl=*)         CONFIG_LIBDL="$CONFIG_LIBDL $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-libsocket=*)     CONFIG_LIBSOCKET="$CONFIG_LIBSOCKET $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-dex-cc=*)        CONFIG_DEX_CC="$(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-dex-cflags=*)    CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-dex-ldflags=*)   CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-dex-libs=*)      CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-core-cflags=*)   CONFIG_CORE_CFLAGS="$CONFIG_CORE_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-core-ldflags=*)  CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-core-libs=*)     CONFIG_CORE_LIBS="$CONFIG_CORE_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
+	--config-pthread=*)       CONFIG_PTHREAD="$CONFIG_PTHREAD $(echo "$1" | cut -d '=' -f 2)" ;;
+	--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
+	--with-*)    set_with_feature "${1:7}" "1" ;;
+	--without-*) set_with_feature "${1:10}" "0" ;;
+	--help)          print_help; exit 1 ;;
+	--help=features) print_help_features; exit 1 ;;
+	--probe-system-features=*) PROBE_SYSTEM_FEATURES="$(echo "$1" | cut -d '=' -f 2)" ;;
+	*)
+		echo "Invalid argument $1 (run './configure --help' for options)"
+		exit 1
+		;;
 	esac
 	shift
 done
@@ -440,12 +440,12 @@ fi
 if [ -z "$CONFIG_DEX_CC" ]; then
 	CONFIG_DEX_CC="$CONFIG_CC"
 	case "$TARGET" in
-		*CYGWIN* | *Cygwin* | *cygwin*)
-			# Need to use a c++ compiler on windows (actually: Need to do so on any PE-platform)
-			CONFIG_DEX_CC="$CONFIG_CXX"
-			;;
-		*)
-			;;
+	*CYGWIN* | *Cygwin* | *cygwin*)
+		# Need to use a c++ compiler on windows (actually: Need to do so on any PE-platform)
+		CONFIG_DEX_CC="$CONFIG_CXX"
+		;;
+	*)
+		;;
 	esac
 fi
 
@@ -455,10 +455,10 @@ fi
 ########################################################################################
 if [ -z "$WITH_DEX" ]; then
 	case "$TARGET" in
-		# Blacklist of targets without dex goes here
-		*)
-			WITH_DEX="1"
-			;;
+	# Blacklist of targets without dex goes here
+	*)
+		WITH_DEX="1"
+		;;
 	esac
 fi
 
@@ -468,28 +468,28 @@ fi
 if [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
 	WITH_ASSEMBLY_INTERPRETER="0"
 	case "$TARGET_CPU" in
-		i?86)
-			printf "checking if one can compile an AT&T assembly source file..."
-			unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
-			unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
-			cat > "$BLD_ROOT/test.S" <<EOF
+	i?86)
+		printf "checking if one can compile an AT&T assembly source file..."
+		unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
+		unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
+		cat > "$BLD_ROOT/test.S" <<EOF
 foo:
 	movl  $42, %eax
 	lodsl
 	stosl
 	ret $8
 EOF
-			if "$CONFIG_CC" -c -o "$BLD_ROOT/test.o" "$BLD_ROOT/test.S" > /dev/null 2>&1; then
-				printf " yes\n"
-				WITH_ASSEMBLY_INTERPRETER="1"
-			else
-				printf " no\n"
-			fi
-			unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
-			unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
-			;;
-		*)
-			;;
+		if "$CONFIG_CC" -c -o "$BLD_ROOT/test.o" "$BLD_ROOT/test.S" > /dev/null 2>&1; then
+			printf " yes\n"
+			WITH_ASSEMBLY_INTERPRETER="1"
+		else
+			printf " no\n"
+		fi
+		unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
+		unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
+		;;
+	*)
+		;;
 	esac
 fi
 
@@ -498,13 +498,13 @@ fi
 ########################################################################################
 if [[ "$WITH_ASSEMBLY_INTERPRETER" == "1" ]]; then
 	case "$TARGET_CPU" in
-		i?86)
-			WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec-386.o"
-			;;
-		*)
-			echo "Error: No assembly interpreter exists for this platform" | tee -a "$CONFIG_LOG"
-			exit 1
-			;;
+	i?86)
+		WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec-386.o"
+		;;
+	*)
+		echo "Error: No assembly interpreter exists for this platform" | tee -a "$CONFIG_LOG"
+		exit 1
+		;;
 	esac
 else
 	WITH_ASSEMBLY_INTERPRETER=""
@@ -518,13 +518,13 @@ fi
 ########################################################################################
 if [ -z "$WITH_KOS_SYSTEM_HEADERS" ]; then
 	case "$TARGET" in
-		*-kos | *-kos-*)
-			# The system already provides the needed headers
-			WITH_KOS_SYSTEM_HEADERS="0"
-			;;
-		*)
-			WITH_KOS_SYSTEM_HEADERS="1"
-			;;
+	*-kos | *-kos-*)
+		# The system already provides the needed headers
+		WITH_KOS_SYSTEM_HEADERS="0"
+		;;
+	*)
+		WITH_KOS_SYSTEM_HEADERS="1"
+		;;
 	esac
 fi
 
@@ -534,22 +534,22 @@ fi
 ########################################################################################
 if ! [ -z "$TARGET_IS_AUTO" ]; then
 	case "$TARGET" in
-		*CYGWIN* | *Cygwin* | *cygwin*)
-			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--out-implib=${BIN_PATH}/libdeemon.dll.a"
-			case "$TARGET_CPU" in
-				i?86)
-					CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc.def"
-					CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,4194304"
-					;;
-				*x86_64* | *x86-64*)
-					CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,8388608"
-					;;
-				*)
-					;;
-			esac
+	*CYGWIN* | *Cygwin* | *cygwin*)
+		CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--out-implib=${BIN_PATH}/libdeemon.dll.a"
+		case "$TARGET_CPU" in
+		i?86)
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,${SRC_ROOT}/src/deemon/linker-scripts/link-deemon-gcc.def"
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,4194304"
+			;;
+		*x86_64* | *x86-64*)
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--stack,8388608"
 			;;
 		*)
 			;;
+		esac
+		;;
+	*)
+		;;
 	esac
 fi
 
@@ -572,14 +572,14 @@ else
 			cd "$BLD_PATH/libffi"
 			if [ -z "$LIBFFI_TARGET" ]; then
 				case "$TARGET" in
-					*-kos | *-kos-*)
-						# libffi doesn't know KOS, but it's close
-						# enough to linux, so we just use that
-						LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
-						;;
-					*)
-						LIBFFI_TARGET="$TARGET"
-						;;
+				*-kos | *-kos-*)
+					# libffi doesn't know KOS, but it's close
+					# enough to linux, so we just use that
+					LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
+					;;
+				*)
+					LIBFFI_TARGET="$TARGET"
+					;;
 				esac
 			fi
 			(
@@ -655,21 +655,21 @@ else
 	fi
 	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
 	case "$TARGET" in
-		*-kos | *-kos-*)
-			# In order to allow the handling of exceptions with <kos/except.h>,
-			# we have to compile the ctypes dex in c++ (thus allowing the use of
-			# try...catch for the purpose of handling handling exceptions)
-			CONFIG_DEX_CTYPES_CC="$CONFIG_CXX"
-			CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
-			# Enable NOSTDLIB for ctypes to prevent libstdc++ from
-			# being linked in, when we don't actually make use of it.
-			CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib -static-libgcc"
-			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
-			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
-			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lgcc"
-			;;
-		*)
-			;;
+	*-kos | *-kos-*)
+		# In order to allow the handling of exceptions with <kos/except.h>,
+		# we have to compile the ctypes dex in c++ (thus allowing the use of
+		# try...catch for the purpose of handling handling exceptions)
+		CONFIG_DEX_CTYPES_CC="$CONFIG_CXX"
+		CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
+		# Enable NOSTDLIB for ctypes to prevent libstdc++ from
+		# being linked in, when we don't actually make use of it.
+		CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib -static-libgcc"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lgcc"
+		;;
+	*)
+		;;
 	esac
 fi
 
@@ -681,33 +681,33 @@ fi
 ########################################################################################
 if [ -z "$CONFIG_LIBM" ]; then
 	case "$TARGET" in
-		*-kos | *-kos-*)
-			# KOS includes libm as part of libc
-			;;
-		*)
-			CONFIG_LIBM="-lm"
-			;;
+	*-kos | *-kos-*)
+		# KOS includes libm as part of libc
+		;;
+	*)
+		CONFIG_LIBM="-lm"
+		;;
 	esac
 fi
 if [ -z "$CONFIG_LIBDL" ]; then
 	case "$TARGET" in
-		*CYGWIN* | *Cygwin* | *cygwin*)
-			# Cygwin includes libdl as part of libc
-			;;
-		*)
-			CONFIG_LIBDL="-ldl"
-			;;
+	*CYGWIN* | *Cygwin* | *cygwin*)
+		# Cygwin includes libdl as part of libc
+		;;
+	*)
+		CONFIG_LIBDL="-ldl"
+		;;
 	esac
 fi
 if [ -z "$CONFIG_LIBSOCKET" ]; then
 	case "$TARGET" in
-		*CYGWIN* | *Cygwin* | *cygwin*)
-			# Cygwin includes libdl as part of libc
-			CONFIG_LIBSOCKET="-lWs2_32"
-			;;
-		*)
-			CONFIG_LIBSOCKET=""
-			;;
+	*CYGWIN* | *Cygwin* | *cygwin*)
+		# Cygwin includes libdl as part of libc
+		CONFIG_LIBSOCKET="-lWs2_32"
+		;;
+	*)
+		CONFIG_LIBSOCKET=""
+		;;
 	esac
 fi
 if [ -z "$CONFIG_PTHREAD" ] && [[ "$WITH_THREADS" == "1" ]]; then
@@ -725,23 +725,23 @@ if ! [ -z "$CONFIG_PTHREAD" ]; then
 	CONFIG_LDFLAGS="$CONFIG_LDFLAGS $CONFIG_PTHREAD";
 fi
 case "$TARGET" in
-	*CYGWIN* | *Cygwin* | *cygwin*)
-		CONFIG_EXE=".exe"
-		CONFIG_DLL=".dll"
-		if [[ "$WITH_DEX" == "1" ]]; then
-			CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -L${BIN_PATH}"
-			CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS -ldeemon"
-		fi
-		;;
-	*)
-		CONFIG_EXE=""
-		CONFIG_DLL=".so"
-		if [[ "$WITH_DEX" == "1" ]]; then
-			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--export-dynamic"
-			CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -Wl,--allow-shlib-undefined"
-			CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS -fPIC"
-		fi
-		;;
+*CYGWIN* | *Cygwin* | *cygwin*)
+	CONFIG_EXE=".exe"
+	CONFIG_DLL=".dll"
+	if [[ "$WITH_DEX" == "1" ]]; then
+		CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -L${BIN_PATH}"
+		CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS -ldeemon"
+	fi
+	;;
+*)
+	CONFIG_EXE=""
+	CONFIG_DLL=".so"
+	if [[ "$WITH_DEX" == "1" ]]; then
+		CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--export-dynamic"
+		CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -Wl,--allow-shlib-undefined"
+		CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS -fPIC"
+	fi
+	;;
 esac
 
 
@@ -786,16 +786,17 @@ if [[ "$PROBE_SYSTEM_FEATURES" == auto ]]; then
 	# errors, we must use configure-time probing, though this adds the necessity
 	# of a config file to be generated)
 	case "$TARGET" in
-		*CYGWIN* | *Cygwin* | *cygwin* | *kos*)
-			PROBE_SYSTEM_FEATURES=no
-			;;
+## From testing, this works well enough on cygwin, but I feel better if this is off by default...
+#	*CYGWIN* | *Cygwin* | *cygwin* | *kos*)
+#		PROBE_SYSTEM_FEATURES=no
+#		;;
 ## Better leave autoconf enabled on linux... (just in case)
-#		*linux*)
-#			PROBE_SYSTEM_FEATURES=no
-#			;;
-		*)
-			PROBE_SYSTEM_FEATURES=yes
-			;;
+#	*linux*)
+#		PROBE_SYSTEM_FEATURES=no
+#		;;
+	*)
+		PROBE_SYSTEM_FEATURES=yes
+		;;
 	esac
 fi
 if [[ "$PROBE_SYSTEM_FEATURES" == yes ]]; then

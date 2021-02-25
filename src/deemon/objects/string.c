@@ -1449,7 +1449,7 @@ err:
 
 PRIVATE struct type_method tpconst string_class_methods[] = {
 	{ "chr", &string_class_chr,
-	  DOC("(ch:?.)->?.\n"
+	  DOC("(ch:?Dint)->?.\n"
 	      "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
 	      "@return A single-character string matching the unicode-character @ch") },
 	{ "fromseq", &string_class_fromseq,

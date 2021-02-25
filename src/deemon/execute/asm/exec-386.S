@@ -38,55 +38,6 @@
 #endif
 
 
-
-/*
-
-CODE_PC = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
-CODE_SIZE = (*(unsigned int *)((*(unsigned int *)(EBP - 16)) + 28))
-CODE = (*(unsigned int *)(EBP - 16))
-CODE_DDI = (*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)))
-CODE_DDI_STRTAB = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5))
-CODE_DDI_SYMBOL_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[0]
-CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[(*(unsigned short *)(*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)) + (4 * 16)))]
-
-*/
-
-
-#ifndef CONFIG_HOST_WINDOWS
-#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
-    defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
-    defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
-    defined(_WIN32_WCE) || defined(WIN32_WCE) || defined(_MSC_VER)
-#define CONFIG_HOST_WINDOWS 1
-#endif /* Windows... */
-#endif /* !CONFIG_HOST_WINDOWS */
-
-#ifndef __USER_LABEL_PREFIX__
-#ifdef CONFIG_HOST_WINDOWS
-#   define __USER_LABEL_PREFIX__ _
-#else /* CONFIG_HOST_WINDOWS */
-#   define __USER_LABEL_PREFIX__ /* nothing */
-#endif /* !CONFIG_HOST_WINDOWS */
-#endif /* !__USER_LABEL_PREFIX__ */
-
-
-#ifdef __ELF__
-#define END(x)   .size x, . - x
-#else /* __ELF__ */
-#define END(x)   /* nothing */
-#endif /* !__ELF__ */
-
-#define SYM3(x, y) x##y
-#define SYM2(x, y) SYM3(x, y)
-#define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
-#define fSYM(x, s) ASSEMBLY_NAME(x, s)
-
-#ifdef CONFIG_NO_THREADS
-#define LOCK_PREFIX  /* nothing */
-#else /* CONFIG_NO_THREADS */
-#define LOCK_PREFIX  lock
-#endif /* !CONFIG_NO_THREADS */
-
 /* Reminder: Optimization:
  * >>	testl %eax, %eax
  * >>	jnz   .except
@@ -102,6 +53,60 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/alloc.h>
+
+
+/*
+
+CODE_PC = (ESI - ((*(unsigned int *)(EBP - 16)) + (60)))
+CODE_SIZE = (*(unsigned int *)((*(unsigned int *)(EBP - 16)) + 28))
+CODE = (*(unsigned int *)(EBP - 16))
+CODE_DDI = (*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)))
+CODE_DDI_STRTAB = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5))
+CODE_DDI_SYMBOL_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[0]
+CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (3 * 4))) + (4 * 5)) + ((unsigned int *)(*(unsigned int *)((*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8))) + (7 * 4))))[(*(unsigned short *)(*(unsigned int *)(*(unsigned int *)(EBP - 16) + (48 + 8)) + (4 * 16)))]
+
+*/
+
+
+#ifndef CONFIG_HOST_WINDOWS
+#if (defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) ||            \
+     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) ||          \
+     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
+     defined(_WIN32_WCE) || defined(WIN32_WCE))
+#define CONFIG_HOST_WINDOWS 1
+#endif /* Windows... */
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#ifndef __USER_LABEL_PREFIX__
+#ifdef CONFIG_HOST_WINDOWS
+#   define __USER_LABEL_PREFIX__ _
+#else /* CONFIG_HOST_WINDOWS */
+#   define __USER_LABEL_PREFIX__ /* nothing */
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !__USER_LABEL_PREFIX__ */
+
+
+#undef END
+#ifdef __ELF__
+#define END(x)   .size x, . - x
+#else /* __ELF__ */
+#define END(x)   /* nothing */
+#endif /* !__ELF__ */
+
+#undef SYM3
+#undef SYM2
+#undef SYM
+#undef fSYM
+#define SYM3(x, y) x##y
+#define SYM2(x, y) SYM3(x, y)
+#define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
+#define fSYM(x, s) ASSEMBLY_NAME(x, s)
+
+#ifdef CONFIG_NO_THREADS
+#define LOCK_PREFIX  /* nothing */
+#else /* CONFIG_NO_THREADS */
+#define LOCK_PREFIX  lock
+#endif /* !CONFIG_NO_THREADS */
 
 #if defined(CONFIG_HAVE_EXEC_ASM) || defined(__DEEMON__)
 

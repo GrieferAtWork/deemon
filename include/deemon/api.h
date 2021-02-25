@@ -146,7 +146,8 @@
  * way in which I've introduced support for keyword-enabled functions, and
  * with how casts to `dfunptr_t' work. */
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-
+#endif /* __GNUC__ >= 8 */
+#if __GNUC__ >= 4
 /* When declaring DeeTypeObject objects and the like, we often skip
  * the initializers for various fields that have no reason of being
  * explicitly initialized by the static initializer. This mainly affects
@@ -157,7 +158,7 @@
  * As such, disable warnings about static struct initializers that
  * initialize some fields, but don't initialize _all_ fields. */
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif /* __GNUC__ >= 8 */
+#endif /* __GNUC__ >= 4 */
 #endif /* __GNUC__ */
 #endif /* DEE_SOURCE */
 

@@ -6100,7 +6100,6 @@ again:
 	if likely(result)
 		return result;
 	CloseHandle(hResult);
-	PROCESS_QUERY_INFORMATION;
 err:
 	return NULL;
 }

@@ -731,7 +731,7 @@ again_primary:
 				"format" : "(format from python.builtins)",
 				"frozenset" : "(frozenset from python.builtins)",
 				"getattr" : "(getattr from operators)",
-				"globals" : "([]{ import __me = .; return (module from deemon).__exports__(__me); })",
+				"globals" : "([]{ import __me = .; return (Module from deemon).__exports__(__me); })",
 				"hash" : "(hash from operators)",
 				"hasattr" : "(hasattr from operators)",
 				"help" : "(Doc from doc)", /* Kind-of... */

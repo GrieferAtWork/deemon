@@ -2608,7 +2608,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 			}
 			/* Back back to the original folder. */
 			*iter = '\0';
-			os_trychdir(buffer);
+			(void)os_trychdir(buffer);
 			if (buffer != filename)
 				Dee_AFree(buffer);
 			return result;

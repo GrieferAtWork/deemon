@@ -297,8 +297,8 @@ sfx:
 	goto done;
 err_invalid_suffix:
 	--iter;
-	SYNTAXERROR("Invalid floating point number %$q",
-	            length, start);
+	(void)SYNTAXERROR("Invalid floating point number %$q",
+	                  length, start);
 	return NULL;
 done_zero:
 	return DeeFloat_New(0.0);

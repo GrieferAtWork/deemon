@@ -65,7 +65,9 @@ typedef uint32_t dutime_half_t;
 
 #endif /* !__INT128_TYPE__ || !__UINT128_TYPE__ */
 
-/* NOTE: Everything >= day can be represented using `dtime_half_t' */
+/* FIXME: 24*60*60*1000*1000 == 86400000000 == 0x141DD76000
+ *        That doesn't fit into a 32-bit integer, but many places
+ *        in this library assume that it does (this is bad...) */
 
 
 

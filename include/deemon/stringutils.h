@@ -158,9 +158,9 @@ DFUNDEF NONNULL((1)) void
 			Dee_SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {  \
 			                                                  \
 			Dee_CASE_WIDTH_1BYTE: {                           \
-				char *iter, *end;                             \
-				iter = (char *)_str_;                         \
-				end  = (char *)_str_ + _len_;                 \
+				uint8_t *iter, *end;                          \
+				iter = (uint8_t *)_str_;                      \
+				end  = (uint8_t *)_str_ + _len_;              \
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \

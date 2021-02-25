@@ -96,7 +96,19 @@
 #endif /* !CONFIG_HAVE_LINUX_NETLINK_H */
 
 #ifdef CONFIG_HAVE_SYS_UN_H
+#ifdef CONFIG_HOST_WINDOWS
+/* Under certain cygwin configurations, stuff from <sys/un.h>
+ * breaks due to prior definitions from <WinSock2.h> */
+#define sockaddr         unix_sockaddr
+#define sockaddr_storage unix_sockaddr_storage
+#define linger           unix_linger
 #include <sys/un.h>
+#undef sockaddr
+#undef sockaddr_storage
+#undef linger
+#else /* CONFIG_HOST_WINDOWS */
+#include <sys/un.h>
+#endif /* !CONFIG_HOST_WINDOWS */
 #else /* CONFIG_HAVE_SYS_UN_H */
 #ifndef CONFIG_HOST_WINDOWS
 #undef AF_UNIX
