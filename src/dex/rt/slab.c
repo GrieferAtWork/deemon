@@ -489,7 +489,7 @@ PRIVATE struct type_getset tpconst si_getsets[] = {
 #undef DEFINE_FIELD
 	{ "__index__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_index, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "Index of @this slab within :rt:SlabStat") },
+	      "Index of @this slab within ?GSlabStat") },
 	{ NULL }
 };
 
@@ -521,7 +521,7 @@ PRIVATE struct type_cmp si_cmp = {
 INTERN DeeTypeObject SlabInfo_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SlabInfo",
-	/* .tp_doc      = */ DOC("Element type for :rt:SlabStat"),
+	/* .tp_doc      = */ DOC("Element type for ?GSlabStat"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

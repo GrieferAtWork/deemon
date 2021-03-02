@@ -1770,7 +1770,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqTypesIterator", (DeeObject *)&librt_get_SeqTypesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* SeqTypesIterator_Type */
 	{ "SeqClasses", (DeeObject *)&librt_get_SeqClasses, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqClasses_Type */
 	{ "SeqClassesIterator", (DeeObject *)&librt_get_SeqClassesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqClassesIterator_Type */
-	                                                                                                                                                     /* Seq-each wrapper types. */
+	/* Seq-each wrapper types. */
 	{ "SeqEach", (DeeObject *)&librt_get_SeqEach, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqEach_Type */
 	{ "SeqEachOperator", (DeeObject *)&librt_get_SeqEachOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqEachOperator_Type */
 	{ "SeqEachOperatorIterator", (DeeObject *)&librt_get_SeqEachOperatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachOperatorIterator_Type */
@@ -1824,7 +1824,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "RefVector", (DeeObject *)&librt_get_RefVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* RefVector_Type */
 	{ "RefVectorIterator", (DeeObject *)&librt_get_RefVectorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* RefVectorIterator_Type */
 
-	/* Internal types used to drive sequence operations on `bytes' */
+	/* Internal types used to drive sequence operations on `Bytes' */
 	{ "BytesFind", (DeeObject *)&librt_get_BytesFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* BytesFind_Type */
 	{ "BytesFindIterator", (DeeObject *)&librt_get_BytesFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* BytesFindIterator_Type */
 	{ "BytesCaseFind", (DeeObject *)&librt_get_BytesCaseFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* BytesCaseFind_Type */
@@ -1894,8 +1894,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "BlackListVarkwds", /* BlackListVarkwds_Type */
 	  (DeeObject *)&librt_get_BlackListVarkwds,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("A ${{(string, Object)...}}-like mapping that is used to exclude positional "
-	      "keyword arguments for a variable-keywords user-code function, then that "
+	  DOC("A ${{string: Object}}-like mapping that is used to exclude positional "
+	      "keyword arguments for a variable-keywords user-code function, when that "
 	      "function is invoked with regular keywords being passed:\n"
 	      "${"
 	      "function foo(a, **kwds) {\n"
@@ -1910,7 +1910,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "BlackListMapping", /* BlackListMapping_Type */
 	  (DeeObject *)&librt_get_BlackListMapping,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("A ${{(string, Object)...}}-like mapping that is similar to ?GBlackListVarkwds, "
+	  DOC("A ${{string: Object}}-like mapping that is similar to ?GBlackListVarkwds, "
 	      "however gets used when the function is invoked using a custom keyword "
 	      "protocol, rather than conventional keyword arguments that store their "
 	      "values as part of the argument vector:\n"
@@ -1970,9 +1970,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "KwObjMethod", (DeeObject *)&DeeKwObjMethod_Type, MODSYM_FREADONLY },         /* C-variant of `InstanceMethod' (with keyword support) */
 	{ "ClassMethod", (DeeObject *)&DeeClsMethod_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance method (e.g. `string.lower') */
 	{ "KwClassMethod", (DeeObject *)&DeeKwClsMethod_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance method (with keyword support) */
-	{ "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance getset (e.g. `sequence.length') */
-	{ "ClassMember", (DeeObject *)&DeeClsMember_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance member (e.g. `type.__name__') */
-	{ "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY },               /* `type(file)' -- The typetype for file types. */
+	{ "ClassProperty", (DeeObject *)&DeeClsProperty_Type, MODSYM_FREADONLY },       /* C-variant of an unbound class->instance getset (e.g. `Sequence.length') */
+	{ "ClassMember", (DeeObject *)&DeeClsMember_Type, MODSYM_FREADONLY },           /* C-variant of an unbound class->instance member (e.g. `Type.__name__') */
+	{ "FileType", (DeeObject *)&DeeFileType_Type, MODSYM_FREADONLY },               /* `type(File)' -- The typetype for file types. */
 	{ "YieldFunction", (DeeObject *)&DeeYieldFunction_Type, MODSYM_FREADONLY },
 	{ "YieldFunctionIterator", (DeeObject *)&DeeYieldFunctionIterator_Type, MODSYM_FREADONLY },
 	{ "RoDict", (DeeObject *)&DeeRoDict_Type, MODSYM_FREADONLY },                                                                    /* A read-only variant of the builtin `Dict' type (used by the compiler to construct constant, generic mapping expression) */
@@ -1981,7 +1981,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "RoSetIterator", (DeeObject *)&librt_get_RoSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* RoSetIterator_Type */
 	{ "Kwds", (DeeObject *)&DeeKwds_Type, MODSYM_FREADONLY },                                                                        /* The type used to represent keyword arguments being mapped onto positional arguments. */
 	{ "KwdsIterator", (DeeObject *)&librt_get_KwdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* DeeKwdsIterator_Type */
-	{ "KwdsMapping", (DeeObject *)&DeeKwdsMapping_Type, MODSYM_FREADONLY },                                                          /* A wrapper around `kwds' and the associated argc/argv to create a proper mapping object */
+	{ "KwdsMapping", (DeeObject *)&DeeKwdsMapping_Type, MODSYM_FREADONLY },                                                          /* A wrapper around `Kwds' and the associated argc/argv to create a proper Mapping object */
 	{ "KwdsMappingIterator", (DeeObject *)&librt_get_KwdsMappingIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeKwdsMappingIterator_Type */
 	{ "Ddi", (DeeObject *)&DeeDDI_Type, MODSYM_FREADONLY },                                                                          /* The type used to hold debug information for user-defined code objects. */
 	{ "NoMemory_instance", (DeeObject *)&DeeError_NoMemory_instance, MODSYM_FREADONLY },
