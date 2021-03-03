@@ -1100,6 +1100,7 @@ int main(int argc, char *argv[]) {
 #else /* EXIT_SUCCESS */
 	int result = 0;
 #endif /* !EXIT_SUCCESS */
+
 #ifdef __CYGWIN__
 	/* Cygwin writes some garbage before passing control to main()
 	 * Since it fails to print a terminating line-feed, this is the
@@ -1107,17 +1108,27 @@ int main(int argc, char *argv[]) {
 	 * appended to its. */
 	DEE_DPRINT("\n");
 #endif /* __CYGWIN__ */
+
 #ifdef CONFIG_HOST_WINDOWS
 	/* Reset the default console-output code page to fix UTF-8 output.
 	 * See the explanation in `/src/deemon/system/win-file.c.inl:sysfile_write'
 	 * for why this needs to be done in order to get proper UTF-8 support. */
 	SetConsoleOutputCP(GetOEMCP());
 #endif /* CONFIG_HOST_WINDOWS */
+
 #ifdef _MSC_VER
+	/* The following stuff is required to correct errno-behavior when doing
+	 * (possibly) invalid stuff like `close(42)' (where `42' isn't an open
+	 * file). This is required since we expose functions such as `close' to
+	 * user-code via `import posix', and without the following, user-code
+	 * doing something bad would result in an assertion-failure-like error
+	 * message box being displayed on-screen, rather than the normal, expected
+	 * `errno=EBADFD' -> `throw FileClosed()' exception dispatching. */
 	_set_invalid_parameter_handler((_invalid_parameter_handler)&noop_invalid_parameter_handler);
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_HFILE_ERROR);
 #endif /* _MSC_VER */
+
 	DBG_ALIGNMENT_ENABLE();
 
 	/*_CrtSetBreakAlloc(280);*/

@@ -112,12 +112,13 @@ print "/" "**" "/";
 #define posix_dup3_USE_DUP3 1
 #elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_dup2_USE_STUB)
 #define posix_dup3_USE_DUP2 1
-#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_fcntl) && \
-    (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
-    (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL))
+#elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_fcntl) &&                \
+       (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) &&      \
+                                            defined(CONFIG_HAVE_FD_CLOEXEC))) && \
+       (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
 #define posix_dup3_USE_DUP2_FCNTL 1
-#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_get_osfhandle) && \
-      defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC)
+#elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_get_osfhandle) && \
+       defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC))
 #define posix_dup3_USE_DUP2_SETHANDLEINFORMATION 1
 #else
 #define posix_dup3_USE_STUB 1
