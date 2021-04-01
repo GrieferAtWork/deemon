@@ -190,6 +190,7 @@ header("semaphore.h", addparen(linux) + " || " + addparen(kos));
 header("time.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/time.h", addparen(linux) + " || " + addparen(kos));
 header("sys/mman.h", addparen(linux) + " || " + addparen(kos));
+header("sys/resource.h", addparen(linux) + " || " + addparen(kos));
 header("sys/wait.h", unix);
 header("wait.h", addparen(linux) + " || " + addparen(kos));
 header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
@@ -229,36 +230,36 @@ func("exit", stdc, test: "exit(0);");
 func("atexit", stdc, test: "extern void foo(void); return atexit(&foo);");
 
 func("execv", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execv("a", argv);');
-func("_execv", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execv("a", argv);');
+func("_execv", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execv("a", argv);');
 func("execve", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execve("a", argv, argv);');
-func("_execve", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execve("a", argv, argv);');
+func("_execve", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execve("a", argv, argv);');
 func("execvp", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execvp("a", argv);');
-func("_execvp", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvp("a", argv);');
+func("_execvp", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvp("a", argv);');
 func("execvpe", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execvpe("a", argv, argv);');
-func("_execvpe", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvpe("a", argv, argv);');
+func("_execvpe", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvpe("a", argv, argv);');
 func("wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecv(s, argv);");
-func("_wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
+func("_wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
 func("wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecve(s, argv, argv);");
-func("_wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
-func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvp(s, argv);)");
-func("_wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);");
+func("_wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
+func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvp(s, argv);");
+func("_wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);");
 func("wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvpe(s, argv, argv);");
-func("_wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
-func("spawnv", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnv(42, "a", argv);');
+func("_wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
+func("spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnv(42, "a", argv);');
 func("_spawnv", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
-func("spawnve", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnve(42, "a", argv, argv);');
+func("spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnve(42, "a", argv, argv);');
 func("_spawnve", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
-func("spawnvp", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvp(42, "a", argv);');
+func("spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvp(42, "a", argv);');
 func("_spawnvp", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
-func("spawnvpe", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvpe(42, "a", argv, argv);');
+func("spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvpe(42, "a", argv, argv);');
 func("_spawnvpe", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
-func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnv(42, s, argv);");
+func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnv(42, s, argv);");
 func("_wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
-func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnve(42, s, argv, argv);");
+func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnve(42, s, argv, argv);");
 func("_wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
-func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvp(42, s, argv);");
+func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvp(42, s, argv);");
 func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
-func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
+func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
 func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
 func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return fexecve(42, argv, argv);');
 
@@ -519,13 +520,13 @@ func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)
 func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)", test: "struct timespec64 ts; return clock_gettime64(0, &ts);");
 constant("CLOCK_REALTIME", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
 func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)", test: "struct timeval tv; return gettimeofday(&tv, NULL);");
-func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: "struct timeval tv; return gettimeofday64(&tv, NULL);");
+func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: "struct timeval64 tv; return gettimeofday64(&tv, NULL);");
 func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes("foo", tv);');
-func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
+func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
 func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
 func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes64("foo", tv);');
 func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
-func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
+func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
 
 
 print "#ifdef _MSC_VER";
@@ -553,7 +554,7 @@ func("pwrite64", "defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || define
 functest("close(1)", unix);
 functest("_close(1)", msvc);
 
-functest("sync()", unix);
+func("sync", unix, test: "sync(); return 0;");
 functest("fsync(1)", isenabled("_POSIX_FSYNC") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
 functest("fdatasync(1)", unix);
 functest("_commit(1)", msvc);
@@ -575,10 +576,10 @@ functest("dup3(1, 2, 0)", "defined(__USE_GNU)");
 functest("isatty(1)", unix);
 functest("_isatty(1)", msvc);
 
-func("getcwd", unix, test: 'char buf[256]; return getcwd(buf, 256);');
-func("_getcwd", msvc, test: 'char buf[256]; return _getcwd(buf, 256);');
-func("wgetcwd", test: 'wchar_t buf[256]; return wgetcwd(buf, 256);');
-func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; return _wgetcwd(buf, 256);');
+func("getcwd", unix, test: 'char buf[256]; char *p = getcwd(buf, 256); return return != 0;');
+func("_getcwd", msvc, test: 'char buf[256]; char *p = _getcwd(buf, 256); return return != 0;');
+func("wgetcwd", test: 'wchar_t buf[256]; wchar_t *p = wgetcwd(buf, 256); return return != 0;');
+func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; wchar_t *p = _wgetcwd(buf, 256); return return != 0;');
 
 functest('unlink("foo.txt")', unix);
 functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
@@ -729,8 +730,8 @@ func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr
 func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
 functest('atoi("42")', stdc);
 functest('strlen("foo")', stdc);
-functest('strchr("foo", \'f\')', stdc);
-functest('strrchr("foo", \'f\')', stdc);
+functest('strchr("foo", 102)', stdc);
+functest('strrchr("foo", 102)', stdc);
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
@@ -764,57 +765,57 @@ func("memmove", stdc, test: "extern void *a; extern void const *b; return memmov
 func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
 
 func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
-func("memcpyw", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyw(a, b, 16); return 0;");
-func("memcpyl", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyl(a, b, 16); return 0;");
-func("memcpyq", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyq(a, b, 16); return 0;");
+func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyw(a, b, 16); return 0;");
+func("memcpyl", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyl(a, b, 16); return 0;");
+func("memcpyq", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyq(a, b, 16); return 0;");
 func("memmovec", "defined(__USE_KOS)", test: "extern char *a, *b; memmovec(a, b, 16, sizeof(char)); return 0;");
-func("memmovew", "defined(__USE_KOS)", test: "extern char *a, *b; memmovew(a, b, 16); return 0;");
-func("memmovel", "defined(__USE_KOS)", test: "extern char *a, *b; memmovel(a, b, 16); return 0;");
-func("memmoveq", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveq(a, b, 16); return 0;");
-func("memmoveup", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveup(a, b, 16); return 0;");
+func("memmovew", "defined(__USE_KOS)", test: "extern void *a, *b; memmovew(a, b, 16); return 0;");
+func("memmovel", "defined(__USE_KOS)", test: "extern void *a, *b; memmovel(a, b, 16); return 0;");
+func("memmoveq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveq(a, b, 16); return 0;");
+func("memmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveup(a, b, 16); return 0;");
 func("memmoveupc", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupc(a, b, 16, sizeof(char)); return 0;");
-func("memmoveupw", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupw(a, b, 16); return 0;");
-func("memmoveupl", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupl(a, b, 16); return 0;");
-func("memmoveupq", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupq(a, b, 16); return 0;");
-func("memmovedown", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedown(a, b, 16); return 0;");
+func("memmoveupw", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupw(a, b, 16); return 0;");
+func("memmoveupl", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupl(a, b, 16); return 0;");
+func("memmoveupq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupq(a, b, 16); return 0;");
+func("memmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedown(a, b, 16); return 0;");
 func("memmovedownc", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownc(a, b, 16, sizeof(char)); return 0;");
-func("memmovedownw", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownw(a, b, 16); return 0;");
-func("memmovedownl", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownl(a, b, 16); return 0;");
-func("memmovedownq", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownq(a, b, 16); return 0;");
-func("memsetw", "defined(__USE_KOS)", test: "extern char *a; memsetw(a, 0xcc, 16); return 0;");
-func("memsetl", "defined(__USE_KOS)", test: "extern char *a; memsetl(a, 0xcc, 16); return 0;");
-func("memsetq", "defined(__USE_KOS)", test: "extern char *a; memsetq(a, 0xcc, 16); return 0;");
-func("memchrw", "defined(__USE_KOS)", test: "extern char *a; memchrw(a, 0xcc, 16); return 0;");
-func("memchrl", "defined(__USE_KOS)", test: "extern char *a; memchrl(a, 0xcc, 16); return 0;");
-func("memchrq", "defined(__USE_KOS)", test: "extern char *a; memchrq(a, 0xcc, 16); return 0;");
-func("memrchrw", "defined(__USE_KOS)", test: "extern char *a; memrchrw(a, 0xcc, 16); return 0;");
-func("memrchrl", "defined(__USE_KOS)", test: "extern char *a; memrchrl(a, 0xcc, 16); return 0;");
-func("memrchrq", "defined(__USE_KOS)", test: "extern char *a; memrchrq(a, 0xcc, 16); return 0;");
+func("memmovedownw", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownw(a, b, 16); return 0;");
+func("memmovedownl", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownl(a, b, 16); return 0;");
+func("memmovedownq", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownq(a, b, 16); return 0;");
+func("memsetw", "defined(__USE_KOS)", test: "extern void *a; memsetw(a, 0xcc, 16); return 0;");
+func("memsetl", "defined(__USE_KOS)", test: "extern void *a; memsetl(a, 0xcc, 16); return 0;");
+func("memsetq", "defined(__USE_KOS)", test: "extern void *a; memsetq(a, 0xcc, 16); return 0;");
+func("memchrw", "defined(__USE_KOS)", test: "extern void const *a; return memchrw(a, 0xcc, 16) != 0;");
+func("memchrl", "defined(__USE_KOS)", test: "extern void const *a; return memchrl(a, 0xcc, 16) != 0;");
+func("memchrq", "defined(__USE_KOS)", test: "extern void const *a; return memchrq(a, 0xcc, 16) != 0;");
+func("memrchrw", "defined(__USE_KOS)", test: "extern void const *a; return memrchrw(a, 0xcc, 16) != 0;");
+func("memrchrl", "defined(__USE_KOS)", test: "extern void const *a; return memrchrl(a, 0xcc, 16) != 0;");
+func("memrchrq", "defined(__USE_KOS)", test: "extern void const *a; return memrchrq(a, 0xcc, 16) != 0;");
 func("memcmpw", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpw(a, b, 16) == 0;");
 func("memcmpl", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpl(a, b, 16) == 0;");
 func("memcmpq", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpq(a, b, 16) == 0;");
 
-func("rawmemrchr", "defined(__USE_KOS)", test: "extern char *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
-func("memend", "defined(__USE_KOS)", test: "extern char *buf; void *p = memend(buf, '!', 123); return p == buf;");
-func("memrend", "defined(__USE_KOS)", test: "extern char *buf; void *p = memrend(buf, '!', 123); return p == buf;");
-func("memlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = memlen(buf, '!', 123); return s == 0;");
-func("memrlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = memrlen(buf, '!', 123); return s == 0;");
-func("rawmemlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = rawmemlen(buf, '!'); return s == 0;");
-func("rawmemrlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = rawmemrlen(buf, '!'); return s == 0;");
-func("memrev", "defined(__USE_KOS)", test: "extern char *buf; void *p = memrev(buf, 123); return p == buf;");
-func("strend", "defined(__USE_KOS)", test: "extern char *buf; char *p = strend(buf); return p == buf + 123;");
-func("strnend", "defined(__USE_KOS)", test: "extern char *buf; char *p = strnend(buf, 3); return p == buf + 3;");
+func("rawmemrchr", "defined(__USE_KOS)", test: "extern void const *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
+func("memend", "defined(__USE_KOS)", test: "extern void const *buf; void *p = memend(buf, '!', 123); return p == buf;");
+func("memrend", "defined(__USE_KOS)", test: "extern void const *buf; void *p = memrend(buf, '!', 123); return p == buf;");
+func("memlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = memlen(buf, '!', 123); return s == 0;");
+func("memrlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = memrlen(buf, '!', 123); return s == 0;");
+func("rawmemlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemlen(buf, '!'); return s == 0;");
+func("rawmemrlen", "defined(__USE_KOS)", test: "extern void const *buf; size_t s = rawmemrlen(buf, '!'); return s == 0;");
+func("memrev", "defined(__USE_KOS)", test: "extern void *buf; void *p = memrev(buf, 123); return p == buf;");
+func("strend", "defined(__USE_KOS)", test: "extern char const *buf; char *p = strend(buf); return p == buf + 123;");
+func("strnend", "defined(__USE_KOS)", test: "extern char const *buf; char *p = strnend(buf, 3); return p == buf + 3;");
 
-func("memxend", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = memxend(buf, '!', 123); return p == buf;");
-func("memxlen", "defined(__USE_STRING_XCHR)", test: "extern char *buf; size_t s = memxlen(buf, '!', 123); return s == 0;");
-func("memxchr", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
-func("rawmemxchr", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
-func("rawmemxlen", "defined(__USE_STRING_XCHR)", test: "extern char *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
-func("memxrchr", test: "extern char *buf; void *p = memxrchr(buf, '!', 123); return p != NULL;");
-func("memxrend", test: "extern char *buf; void *p = memxrend(buf, '!', 123); return p == buf;");
-func("memxrlen", test: "extern char *buf; size_t s = memxrlen(buf, '!', 123); return s == 0;");
-func("rawmemxrchr", test: "extern char *buf; void *p = rawmemxrchr(buf, '!'); return p == buf;");
-func("rawmemxrlen", test: "extern char *buf; size_t s = rawmemxrlen(buf, '!'); return s == 0;");
+func("memxend", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxend(buf, '!', 123); return p == buf;");
+func("memxlen", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = memxlen(buf, '!', 123); return s == 0;");
+func("memxchr", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
+func("rawmemxchr", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
+func("rawmemxlen", "defined(__USE_STRING_XCHR)", test: "extern void const *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
+func("memxrchr", test: "extern void const *buf; void *p = memxrchr(buf, '!', 123); return p != NULL;");
+func("memxrend", test: "extern void const *buf; void *p = memxrend(buf, '!', 123); return p == buf;");
+func("memxrlen", test: "extern void const *buf; size_t s = memxrlen(buf, '!', 123); return s == 0;");
+func("rawmemxrchr", test: "extern void const *buf; void *p = rawmemxrchr(buf, '!'); return p == buf;");
+func("rawmemxrlen", test: "extern void const *buf; size_t s = rawmemxrlen(buf, '!'); return s == 0;");
 
 functest("tolower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 functest("toupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
@@ -927,7 +928,7 @@ func("realpath", "", test: 'extern char const path[]; extern char buf[]; char c 
 func("frealpath", "", test: 'extern char buf[]; char c = *frealpath(2, buf, 42); return c != 0;');
 func("frealpath4", "", test: 'extern char buf[]; char c = *frealpath4(2, buf, 42, 0); return c != 0;');
 func("frealpathat", "", test: 'extern char buf[]; char c = *frealpathat(2, "foobar", buf, 42, 0); return c != 0;');
-func("resolvepath", "", test: 'extern char buf[]; return frealpathat("/foobar", buf, 42);');
+func("resolvepath", "", test: 'extern char buf[]; return resolvepath("/foobar", buf, 42);');
 
 // dirent.h
 constant("DT_UNKNOWN", "defined(CONFIG_HAVE_DIRENT_H)");
@@ -939,8 +940,8 @@ constant("DT_REG", "defined(CONFIG_HAVE_DIRENT_H)");
 constant("DT_LNK", "defined(CONFIG_HAVE_DIRENT_H)");
 constant("DT_SOCK", "defined(CONFIG_HAVE_DIRENT_H)");
 constant("DT_WHT", "defined(CONFIG_HAVE_DIRENT_H)");
-func("IFTODT", "defined(CONFIG_HAVE_DIRENT_H)", test: "IFTODT(42)");
-func("DTTOIF", "defined(CONFIG_HAVE_DIRENT_H)", test: "DTTOIF(42)");
+func("IFTODT", "defined(CONFIG_HAVE_DIRENT_H)", test: "return IFTODT(42);");
+func("DTTOIF", "defined(CONFIG_HAVE_DIRENT_H)", test: "return DTTOIF(42);");
 func("opendir", "defined(CONFIG_HAVE_DIRENT_H)", test: 'DIR *d = opendir("/"); return d != 0;');
 func("fdopendir", "", test: 'DIR *d = fdopendir(1); return d != 0;');
 func("closedir", "", test: 'extern DIR *d; return closedir(d);');
@@ -1199,6 +1200,14 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
       (__has_include(<sys/mman.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
 #define CONFIG_HAVE_SYS_MMAN_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_RESOURCE_H
+#undef CONFIG_HAVE_SYS_RESOURCE_H
+#elif !defined(CONFIG_HAVE_SYS_RESOURCE_H) && \
+      (__has_include(<sys/resource.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_SYS_RESOURCE_H 1
 #endif
 
 #ifdef CONFIG_NO_SYS_WAIT_H
@@ -1511,6 +1520,10 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif /* CONFIG_HAVE_SYS_MMAN_H */
+
+#ifdef CONFIG_HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif /* CONFIG_HAVE_SYS_RESOURCE_H */
 
 #ifdef CONFIG_HAVE_SYS_WAIT_H
 #include <sys/wait.h>
@@ -6964,97 +6977,97 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #if defined(CONFIG_HAVE__execv) && !defined(CONFIG_HAVE_execv)
 #define CONFIG_HAVE_execv 1
 #undef execv
-#define execv _execv
+#define execv(path, argv) _execv(path, (char const *const *)(argv))
 #endif /* execv = _execv */
 
 #if defined(CONFIG_HAVE__execve) && !defined(CONFIG_HAVE_execve)
 #define CONFIG_HAVE_execve 1
 #undef execve
-#define execve _execve
+#define execve(path, argv, envp) _execve(path, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* execve = _execve */
 
 #if defined(CONFIG_HAVE__execvp) && !defined(CONFIG_HAVE_execvp)
 #define CONFIG_HAVE_execvp 1
 #undef execvp
-#define execvp _execvp
+#define execvp(file, argv) _execvp(file, (char const *const *)(argv))
 #endif /* execvp = _execvp */
 
 #if defined(CONFIG_HAVE__execvpe) && !defined(CONFIG_HAVE_execvpe)
 #define CONFIG_HAVE_execvpe 1
 #undef execvpe
-#define execvpe _execvpe
+#define execvpe(file, argv, envp) _execvpe(file, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* execvpe = _execvpe */
 
 #if defined(CONFIG_HAVE__wexecv) && !defined(CONFIG_HAVE_wexecv)
 #define CONFIG_HAVE_wexecv 1
 #undef wexecv
-#define wexecv _wexecv
+#define wexecv(path, argv) _wexecv(path, (wchar_t const *const *)(argv))
 #endif /* wexecv = _wexecv */
 
 #if defined(CONFIG_HAVE__wexecve) && !defined(CONFIG_HAVE_wexecve)
 #define CONFIG_HAVE_wexecve 1
 #undef wexecve
-#define wexecve _wexecve
+#define wexecve(path, argv, envp) _wexecve(path, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wexecve = _wexecve */
 
 #if defined(CONFIG_HAVE__wexecvp) && !defined(CONFIG_HAVE_wexecvp)
 #define CONFIG_HAVE_wexecvp 1
 #undef wexecvp
-#define wexecvp _wexecvp
+#define wexecvp(file, argv) _wexecvp(file, (wchar_t const *const *)(argv))
 #endif /* wexecvp = _wexecvp */
 
 #if defined(CONFIG_HAVE__wexecvpe) && !defined(CONFIG_HAVE_wexecvpe)
 #define CONFIG_HAVE_wexecvpe 1
 #undef wexecvpe
-#define wexecvpe _wexecvpe
+#define wexecvpe(file, argv, envp) _wexecvpe(file, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wexecvpe = _wexecvpe */
 
 #if defined(CONFIG_HAVE__spawnv) && !defined(CONFIG_HAVE_spawnv)
 #define CONFIG_HAVE_spawnv 1
 #undef spawnv
-#define spawnv _spawnv
+#define spawnv(mode, path, argv) _spawnv(mode, path, (char const *const *)(argv))
 #endif /* spawnv = _spawnv */
 
 #if defined(CONFIG_HAVE__spawnve) && !defined(CONFIG_HAVE_spawnve)
 #define CONFIG_HAVE_spawnve 1
 #undef spawnve
-#define spawnve _spawnve
+#define spawnve(mode, path, argv, envp) _spawnve(mode, path, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* spawnve = _spawnve */
 
 #if defined(CONFIG_HAVE__spawnvp) && !defined(CONFIG_HAVE_spawnvp)
 #define CONFIG_HAVE_spawnvp 1
 #undef spawnvp
-#define spawnvp _spawnvp
+#define spawnvp(mode, file, argv) _spawnvp(mode, file, (char const *const *)(argv))
 #endif /* spawnvp = _spawnvp */
 
 #if defined(CONFIG_HAVE__spawnvpe) && !defined(CONFIG_HAVE_spawnvpe)
 #define CONFIG_HAVE_spawnvpe 1
 #undef spawnvpe
-#define spawnvpe _spawnvpe
+#define spawnvpe(mode, file, argv, envp) _spawnvpe(mode, file, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* spawnvpe = _spawnvpe */
 
 #if defined(CONFIG_HAVE__wspawnv) && !defined(CONFIG_HAVE_wspawnv)
 #define CONFIG_HAVE_wspawnv 1
 #undef wspawnv
-#define wspawnv _wspawnv
+#define wspawnv(mode, path, argv) _wspawnv(mode, path, (wchar_t const *const *)(argv))
 #endif /* wspawnv = _wspawnv */
 
 #if defined(CONFIG_HAVE__wspawnve) && !defined(CONFIG_HAVE_wspawnve)
 #define CONFIG_HAVE_wspawnve 1
 #undef wspawnve
-#define wspawnve _wspawnve
+#define wspawnve(mode, path, argv, envp) _wspawnve(mode, path, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wspawnve = _wspawnve */
 
 #if defined(CONFIG_HAVE__wspawnvp) && !defined(CONFIG_HAVE_wspawnvp)
 #define CONFIG_HAVE_wspawnvp 1
 #undef wspawnvp
-#define wspawnvp _wspawnvp
+#define wspawnvp(mode, file, argv) _wspawnvp(mode, file, (wchar_t const *const *)(argv))
 #endif /* wspawnvp = _wspawnvp */
 
 #if defined(CONFIG_HAVE__wspawnvpe) && !defined(CONFIG_HAVE_wspawnvpe)
 #define CONFIG_HAVE_wspawnvpe 1
 #undef wspawnvpe
-#define wspawnvpe _wspawnvpe
+#define wspawnvpe(mode, file, argv, envp) _wspawnvpe(mode, file, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wspawnvpe = _wspawnvpe */
 
 #if defined(CONFIG_HAVE__wstat) && !defined(CONFIG_HAVE_wstat)
@@ -8223,11 +8236,11 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #endif /* __KOS__ */
 
 
-#if defined(_MSC_VER) || defined(__USE_DOS)
+#if defined(_MSC_VER) || defined(__USE_DOS_ALTERATIONS)
 #define EXEC_STRING_VECTOR_TYPE char const *const *
-#else /* _MSC_VER || __USE_DOS */
+#else /* _MSC_VER || __USE_DOS_ALTERATIONS */
 #define EXEC_STRING_VECTOR_TYPE char *const *
-#endif /* !_MSC_VER && !__USE_DOS */
+#endif /* !_MSC_VER && !__USE_DOS_ALTERATIONS */
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
