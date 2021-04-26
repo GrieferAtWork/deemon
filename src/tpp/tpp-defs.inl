@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -458,6 +458,10 @@ PRIVATE tint_t tpp_parity(tint_t i) {
  * NOTE: These are not part of the min-gcc-func configuration. */
 HAS_BUILTIN_IF(__builtin_constant_p, HAS(EXT_BUILTIN_FUNCTIONS))
 HAS_BUILTIN_IF(__builtin_choose_expr, HAS(EXT_BUILTIN_FUNCTIONS))
+#if TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+DEF_K(__builtin_constant_p)
+DEF_K(__builtin_choose_expr)
+#endif /* TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS */
 #endif /* TPP_CONFIG_MINGCCFUNC < 2 */
 
 #if TPP_CONFIG_MINGCCFUNC == 0
@@ -515,7 +519,7 @@ PREDEFINED_BUILTIN_FUNCTION(__builtin_FILE, 0, {
 	char const *filename = TPPLexer_FILE(&length);
 	struct TPPString *s  = TPPString_New(filename, length);
 	if unlikely(!s)
-		SETERR();
+		TPPLexer_SetErr();
 	RETURN_STRING(s);
 })
 PREDEFINED_BUILTIN_FUNCTION(__builtin_LINE, 0, { RETURN_INT(TPPLexer_LINE()); })
@@ -760,12 +764,12 @@ WGROUP(WG_DEPENDENCY,           "dependency",           WSTATE_WARN)
 /*24*/ WARNING(W_UNUSED_24, (WG_VALUE), WSTATE_DISABLED)       /* OLD(TPPWarn_ExpectedRParenAfterTPPRandom). */
 /*25*/ DEF_WARNING(W_REDEFINING_MACRO, (WG_MACROS), WSTATE_WARN, { /* [struct TPPKeyword *] OLD(TPPWarn_MacroAlreadyDefined). */
 	struct TPPFile *textfile;
-	struct TPPKeyword *kwd = ARG(struct TPPKeyword *);
-	assert(kwd->k_macro);
-	assert(kwd->k_macro->f_kind == TPPFILE_KIND_MACRO);
-	assert((kwd->k_macro->f_macro.m_flags & TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_EXPANDED);
-	WARNF("Redefining macro " Q("%s") "\n", kwd->k_name);
-	textfile = kwd->k_macro->f_macro.m_deffile;
+	struct TPPKeyword *redef_kwd = ARG(struct TPPKeyword *);
+	assert(redef_kwd->k_macro);
+	assert(redef_kwd->k_macro->f_kind == TPPFILE_KIND_MACRO);
+	assert((redef_kwd->k_macro->f_macro.m_flags & TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_EXPANDED);
+	WARNF("Redefining macro " Q("%s") "\n", redef_kwd->k_name);
+	textfile = redef_kwd->k_macro->f_macro.m_deffile;
 	if (textfile) {
 		assert(textfile->f_kind == TPPFILE_KIND_TEXT);
 		WARNF(TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
@@ -774,8 +778,8 @@ WGROUP(WG_DEPENDENCY,           "dependency",           WSTATE_WARN)
 		      textfile->f_textfile.f_usedname
 		      ? textfile->f_textfile.f_usedname->s_text
 		      : textfile->f_name,
-		      (int)(kwd->k_macro->f_macro.m_defloc.lc_line + 1),
-		      (int)(kwd->k_macro->f_macro.m_defloc.lc_col + 1));
+		      (int)(redef_kwd->k_macro->f_macro.m_defloc.lc_line + 1),
+		      (int)(redef_kwd->k_macro->f_macro.m_defloc.lc_col + 1));
 		WARNF("See reference to previous definition");
 	}
 })
@@ -878,11 +882,10 @@ WGROUP(WG_DEPENDENCY,           "dependency",           WSTATE_WARN)
 /*62*/ DEF_WARNING(W_DIVIDE_BY_ZERO, (WG_VALUE), WSTATE_ERROR, WARNF("Divide by ZERO")) /* OLD(TPPWarn_DivideByZero|TPPWarn_ModuloByZero). */
 /*63*/ DEF_WARNING(W_ARGUMENT_NAMED_ALREADY_TAKEN, (WG_MACROS, WG_SYNTAX), WSTATE_ERROR, {
 	/* [tok_t] OLD(TPPWarn_ReusedMacroParameter). */
-	struct TPPKeyword *kwd;
-	kwd = TPPLexer_LookupKeywordID(ARG(tok_t));
+	struct TPPKeyword *name_kwd;
+	name_kwd = TPPLexer_LookupKeywordID(ARG(tok_t));
 	WARNF("Argument name " Q("%s") " is already in use",
-	      kwd ? kwd->k_name : (char *)"??"
-	                                  "?");
+	      name_kwd ? name_kwd->k_name : (char *)"??" "?");
 })
 #if !defined(TPP_CONFIG_EXTENSION_VA_ARGS) || TPP_CONFIG_EXTENSION_VA_ARGS ||   \
     !defined(TPP_CONFIG_EXTENSION_VA_COMMA) || TPP_CONFIG_EXTENSION_VA_COMMA || \

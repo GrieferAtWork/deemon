@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -1191,7 +1191,7 @@ struct TPPCallbacks {
 	 * @param: mode:                    Set of `TPPLEXER_OPENFILE_FLAG_*' that are being used to open the file.
 	 * @return: NULL:                   Still failed to find the file (unless a lexer error was set, only emit a warning)
 	 * @return: * :                     The file we now managed to successfully open.
-	 * @return: TPP_UNKNOWN_FILE_RETRY: Instruction the file loader to try again (without invoking this function once again)
+	 * @return: TPP_UNKNOWN_FILE_RETRY: Instruct the file loader to try again (without invoking this function on that try)
 	 * WARNING: This callback is responsible to caching the file in a keyword entry!
 	 */
 	struct TPPFile *(TPPCALL *c_unknown_file)(int mode, char *__restrict filename,
@@ -1207,7 +1207,7 @@ struct TPPCallbacks {
 #endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
 
 
-struct TPPWarningStateEx {   /* Extended state for a 11-warning (aka. `WSTATE_SUPPRESS'). */
+struct TPPWarningStateEx {   /* Extended state for a 0b11-warning (aka. `WSTATE_SUPPRESS'). */
 	int           wse_wid;      /* Warning/group ID. */
 	unsigned int  wse_suppress; /* Amount of remaining times this warning should be suppressed.
 	                             * NOTE: When ZERO(0), this slot is unused.
@@ -1231,7 +1231,7 @@ struct TPPWarningState {
 	size_t                    ws_extendeda; /* Allocated members for the `ws_extendedv' vector. */
 	struct TPPWarningStateEx *ws_extendedv; /* [0..ws_extendedc|alloc(ws_extendeda)][owned] Extended warning state data (Sorted by `wse_num'). */
 	struct TPPWarningState   *ws_prev;      /* [0..1][owned_if(!= &:w_basestate)] Previous warning state.
-	                                         *   NOTE: Always NULL if `self == &:w_basestate' */
+	                                         * NOTE: Always NULL if `self == &:w_basestate' */
 };
 struct TPPWarnings {
 	struct TPPWarningState *w_curstate;  /* [1..1][owned_if(!= &w_basestate)] Current warning state. */
@@ -1483,9 +1483,9 @@ TPPFUN struct TPPFile *TPPCALL TPPLexer_Basefile(void);
 
 #define TPPLexer_FILE(plength)     TPPFile_Filename(TPPLexer_Textfile(), plength)
 #define TPPLexer_BASEFILE(plength) TPPFile_Filename(TPPLexer_Basefile(), plength)
-TPP_LOCAL void TPPCALL TPPLexer_LC(struct TPPLCInfo *__restrict info) { struct TPPFile *f = TPPLexer_Textfile(); TPPFile_LCAt(f,info,f->f_pos); }
-TPP_LOCAL TPP(line_t) TPPCALL TPPLexer_LINE(void) { struct TPPFile *f = TPPLexer_Textfile(); return TPPFile_LineAt(f,f->f_pos); }
-TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexer_Textfile(); return TPPFile_ColumnAt(f,f->f_pos); }
+TPP_LOCAL void TPPCALL TPPLexer_LC(struct TPPLCInfo *__restrict info) { struct TPPFile *f = TPPLexer_Textfile(); TPPFile_LCAt(f, info, f->f_pos); }
+TPP_LOCAL TPP(line_t) TPPCALL TPPLexer_LINE(void) { struct TPPFile *f = TPPLexer_Textfile(); return TPPFile_LineAt(f, f->f_pos); }
+TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexer_Textfile(); return TPPFile_ColumnAt(f, f->f_pos); }
 
 
 /* Lexer state flags. */
@@ -1627,7 +1627,7 @@ struct TPPLexer {
 	struct TPPCallbacks   l_callbacks;  /* User-defined lexer callbacks. */
 #endif /* TPP_CONFIG_DYN_CALLBACKS */
 	TPP(tok_t)            l_noerror;    /* Old token ID before `TPPLEXER_FLAG_ERROR' was set. */
-	TPP(tint_t)            l_counter;    /* Value returned the next time `__COUNTER__' is expanded (Initialized to ZERO(0)). */
+	TPP(tint_t)           l_counter;    /* Value returned the next time `__COUNTER__' is expanded (Initialized to ZERO(0)). */
 };
 
 #ifndef TPPLEXER_DEFAULT_LIMIT_ECNT

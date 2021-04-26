@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Griefer@Work                                            *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -258,6 +258,7 @@
 #endif /* !ATTR_FALLTHROUGH */
 
 
+
 #ifndef DBG_ALIGNMENT_DISABLE
 #define NO_DBG_ALIGNMENT 1
 #define DBG_ALIGNMENT_DISABLE() (void)0
@@ -272,7 +273,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #if !defined(__USE_GNU) && !defined(memrchr)
-#define memrchr  tpp_memrchr
+#define memrchr tpp_memrchr
 LOCAL void *
 tpp_memrchr(void const *p, int c, size_t n) {
 	uint8_t *iter = (uint8_t *)p + n;
@@ -283,6 +284,45 @@ tpp_memrchr(void const *p, int c, size_t n) {
 	return NULL;
 }
 #endif /* !__USE_GNU && !memrchr */
+
+#ifdef tolower
+#undef tolower
+#endif /* tolower */
+#define tolower(c) (char)((c) >= 'A' && (c) <= 'Z' ? ((c) + ('a' - 'A')) : (c))
+
+#if !defined(__USE_GNU) && !defined(strcasecmp)
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#else /* _MSC_VER */
+#define strcasecmp tpp_strcasecmp
+LOCAL int tpp_strcasecmp(char const *s1, char const *s2) {
+	char c1, c2;
+	do {
+		if ((c1 = *s1++) != (c2 = *s2++) && ((c1 = tolower(c1)) != (c2 = tolower(c2))))
+			return (int)((unsigned char)c1 - (unsigned char)c2);
+	} while (c1);
+	return 0;
+}
+#endif /* !_MSC_VER */
+#endif /* !__USE_GNU && !strcasecmp */
+
+#if !defined(__USE_GNU) && !defined(strncasecmp)
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#else /* _MSC_VER */
+#define strncasecmp tpp_strcasecmp
+LOCAL int tpp_strcasecmp(char const *s1, char const *s2, size_t maxlen) {
+	char c1, c2;
+	do {
+		if (!maxlen--)
+			break;
+		if ((c1 = *s1++) != (c2 = *s2++) && ((c1 = tolower(c1)) != (c2 = tolower(c2))))
+			return (int)((unsigned char)c1 - (unsigned char)c2);
+	} while (c1);
+	return 0;
+}
+#endif /* !_MSC_VER */
+#endif /* !__USE_GNU && !strncasecmp */
 
 #if !defined(__USE_KOS) && !defined(strend)
 #define strend(s) ((s) + strlen(s))
@@ -6420,10 +6460,6 @@ PRIVATE struct tpp_extension const tpp_extensions[] = {
 	{ 0, NULL, 0 },
 };
 
-#ifdef tolower
-#undef tolower
-#endif /* tolower */
-#define tolower(c) (char)((c) >= 'A' && (c) <= 'Z' ? ((c) + ('a' - 'A')) : (c))
 
 
 #if 0
@@ -9609,11 +9645,16 @@ create_int_file:
 			/* Special handling if the next token is a string/number. */
 			if (*keyword_begin == '\"' || tpp_isdigit(*keyword_begin)) {
 				struct TPPConst name;
+				pushf();
+				CURRENT.l_flags &= ~(TPPLEXER_FLAG_WANTCOMMENTS |
+				                     TPPLEXER_FLAG_WANTSPACE |
+				                     TPPLEXER_FLAG_WANTLF);
 				yield();
 				if (!TPPLexer_Eval(&name)) {
 					name.c_kind       = TPP_CONST_INTEGRAL;
 					name.c_data.c_int = 0;
 				}
+				popf();
 				if (tok != ')')
 					(void)WARN(W_EXPECTED_RPAREN);
 				/* Special handling for __has_extension("-fname"), etc. */
@@ -13755,7 +13796,7 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
 	DBG_ALIGNMENT_DISABLE();
 #ifndef TPP_CONFIG_USERSTREAMS
 	if (fp->f_textfile.f_stream != TPP_STREAM_INVALID &&
-	    GetFileTime(hFile, NULL, NULL, &ftLastModified))
+	    GetFileTime(fp->f_textfile.f_stream, NULL, NULL, &ftLastModified))
 		;
 	else
 #endif /* !TPP_CONFIG_USERSTREAMS */
@@ -13926,7 +13967,7 @@ err:
 /* Figure out how to output text from `#pragma message' */
 #if !defined(TPP_PRAGMA_MESSAGE_PRINTF) && !defined(TPP_PRAGMA_MESSAGE_WRITE)
 #define TPP_PRAGMA_MESSAGE_WRITE(err_label, str, length)  \
-	fwrite((str), sizeof(char), (length), stdout)
+	fwrite((str), sizeof(char), (length), stderr)
 #define TPP_PRAGMA_MESSAGE_PRINTF(err_label, printf_args) \
 	printf printf_args
 #elif !defined(TPP_PRAGMA_MESSAGE_PRINTF)
@@ -14839,7 +14880,6 @@ PUBLIC int TPPVCALL TPPLexer_Warn(int wnum, ...) {
 	va_list args;
 	char const *true_filename;
 	char const *macro_name = NULL;
-	struct TPPKeyword *kwd;
 	int macro_name_size, behavior;
 	wgroup_t const *wgroups;
 	struct TPPString *temp_string = NULL;
@@ -14853,7 +14893,6 @@ PUBLIC int TPPVCALL TPPLexer_Warn(int wnum, ...) {
 #define ARG(T)      va_arg(args, T)
 #define FILENAME()  (ARG(struct TPPFile *)->f_name)
 #define KWDNAME()   (ARG(struct TPPKeyword *)->k_name)
-#define TOK_NAME()  (kwd = TPPLexer_LookupKeywordID(ARG(tok_t)), kwd ? kwd->k_name : (char *)"??" "?")
 #define CONST_STR() (temp_string = TPPConst_ToString(ARG(struct TPPConst *)), temp_string ? temp_string->s_text : NULL)
 	{
 		struct TPPFile *macro_file;
