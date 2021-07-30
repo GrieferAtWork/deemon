@@ -24,8 +24,8 @@
 
 #if defined(_MSC_VER) && !defined(__clang__)
 /* MSVC already has this kind of functionality built into the compiler. */
-#define __HYBRID_FUNCPTR32(return, cc, name, args) return (CC * __ptr32 name)args
-#define __HYBRID_FUNCPTR64(return, cc, name, args) return (CC * __ptr64 name)args
+#define __HYBRID_FUNCPTR32(return, cc, name, args) return (CC * __ptr32 name) args
+#define __HYBRID_FUNCPTR64(return, cc, name, args) return (CC * __ptr64 name) args
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #define __HYBRID_PTR32(...) __VA_ARGS__ *__ptr32
 #define __HYBRID_PTR64(...) __VA_ARGS__ *__ptr64
@@ -46,21 +46,36 @@ __CXXDECL_BEGIN
 #undef __POINTER_CXX_CV_QUAL
 #undef __POINTER_CXX_IS_VOID
 
+/* Normal pointer types. */
 #define __POINTER_CXX_CV_QUAL /* nothing */
 #include "__pointer-cxx-impl.h"
 #define __POINTER_CXX_CV_QUAL const
-#define __POINTER_CXX_CV_QUAL_IS_CONST 1
+#define __POINTER_CXX_CV_QUAL_IS_CONST
 #include "__pointer-cxx-impl.h"
 #define __POINTER_CXX_CV_QUAL volatile
-#define __POINTER_CXX_CV_QUAL_IS_VOLATILE 1
+#define __POINTER_CXX_CV_QUAL_IS_VOLATILE
 #include "__pointer-cxx-impl.h"
 #define __POINTER_CXX_CV_QUAL const volatile
-#define __POINTER_CXX_CV_QUAL_IS_CONST 1
-#define __POINTER_CXX_CV_QUAL_IS_VOLATILE 1
+#define __POINTER_CXX_CV_QUAL_IS_CONST
+#define __POINTER_CXX_CV_QUAL_IS_VOLATILE
 #include "__pointer-cxx-impl.h"
 
-#define __POINTER_CXX_IS_VOID 1
+/* void-pointer specializations. */
+#define __POINTER_CXX_IS_VOID
 #define __POINTER_CXX_CV_QUAL /* nothing */
+#include "__pointer-cxx-impl.h"
+#define __POINTER_CXX_IS_VOID
+#define __POINTER_CXX_CV_QUAL const
+#define __POINTER_CXX_CV_QUAL_IS_CONST
+#include "__pointer-cxx-impl.h"
+#define __POINTER_CXX_IS_VOID
+#define __POINTER_CXX_CV_QUAL volatile
+#define __POINTER_CXX_CV_QUAL_IS_VOLATILE
+#include "__pointer-cxx-impl.h"
+#define __POINTER_CXX_IS_VOID
+#define __POINTER_CXX_CV_QUAL const volatile
+#define __POINTER_CXX_CV_QUAL_IS_CONST
+#define __POINTER_CXX_CV_QUAL_IS_VOLATILE
 #include "__pointer-cxx-impl.h"
 
 /* Implement pointer difference operators for cases where the first operand is a regular pointer */

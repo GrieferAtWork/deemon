@@ -709,7 +709,11 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __LOCAL      static __ATTR_INLINE
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
-#if __has_attribute(__gnu_inline__)
+#ifdef __INTELLISENSE__
+#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
+#define __EXTERN_INLINE      static
+#define __EXTERN_FORCEINLINE static
+#elif __has_attribute(__gnu_inline__)
 #define __EXTERN_INLINE      extern __ATTR_INLINE __attribute__((__gnu_inline__))
 #define __EXTERN_FORCEINLINE extern __ATTR_FORCEINLINE __attribute__((__gnu_inline__))
 #elif defined(__GNUC_GNU_INLINE__)
@@ -740,6 +744,12 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 
 #define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[]
+
+#define _Complex_I (__extension__ 1.0iF)
+#if __STDC_VERSION__ < 199901
+#define _Complex __complex__
+#endif /* __STDC_VERSION__ < 199901 */
+
 
 #ifdef __clang_tidy__
 /* I don't know if the  proper clang really supports  this, but clang-tidy keeps  on

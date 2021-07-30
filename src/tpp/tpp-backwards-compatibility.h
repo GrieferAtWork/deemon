@@ -103,10 +103,10 @@ typedef TPP(tok_t) TPPTokenID;
 #define TPPTokenID_IS_USER_KEYWORD TPP_ISUSERKEYWORD
 #define TPPTokenID_IS_INT(id)      ((id) == TPP_TOK_INT || (id) == TPP_TOK_CHR)
 
-typedef TPP(int_t) TPPInteger;
-typedef TPP(int_t) TPPUInteger;
-typedef TPP(int_t) TPPCounter;
-typedef size_t     TPPKeywordHash;
+typedef TPP(tint_t) TPPInteger;
+typedef TPP(tint_t) TPPUInteger;
+typedef TPP(tint_t) TPPCounter;
+typedef size_t      TPPKeywordHash;
 
 #define TPPMacroCallingConvention_PAREN   0
 #define TPPMacroCallingConvention_BRACKET 1

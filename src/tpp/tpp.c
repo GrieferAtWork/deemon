@@ -1700,10 +1700,10 @@ LOCAL funop_t *TPPCALL
 funop_putarg(funop_t *piter, size_t arg) {
 	size_t temp, shift;
 	temp = arg, shift = 0;
-	do
-		temp >>= 7,
+	do {
+		temp >>= 7;
 		shift += 7;
-	while (temp);
+	} while (temp);
 	do {
 		uint8_t byte;
 		shift -= 7;
@@ -5671,7 +5671,7 @@ PUBLIC int TPPCALL TPPLexer_PushWarnings(void) {
 	if unlikely(!newstate)
 		return 0;
 	if ((newstate->ws_extendeda = curstate->ws_extendeda) != 0) {
-		/* todo: maybe only copy slots that are actually in use? */
+		/* XXX: maybe only copy slots that are actually in use? */
 		size_t extended_size   = newstate->ws_extendeda * sizeof(struct TPPWarningStateEx);
 		newstate->ws_extendedv = (struct TPPWarningStateEx *)API_MALLOC(extended_size);
 		if unlikely(!newstate->ws_extendedv) {
@@ -9358,7 +9358,13 @@ again:
 			if (!macro->f_macro.m_function.f_expansions ||
 			    macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_SELFEXPAND) {
 				/* Function-style macro. */
-				switch (TPPLexer_ExpandFunctionMacro(macro)) {
+				int status;
+				/* Keep a reference to the macro, in case it gets #undef'd
+				 * while we're expanding the arguments to-be passed to it. */
+				TPPFile_Incref(macro);
+				status = TPPLexer_ExpandFunctionMacro(macro);
+				TPPFile_Decref(macro);
+				switch (status) {
 				case 2: goto end;   /* Macro was not expanded. */
 				case 1: goto again; /* Macro was expanded. */
 				default: return TOK_ERR;
@@ -9633,6 +9639,7 @@ create_int_file:
 #endif /* !NO_EXTENSION_TPP_COUNTER */
 			mode = tok;
 			pushf();
+			/* FIXME: Must disable deprecation warnings when parsing a keyword here! */
 			CURRENT.l_flags &= ~(TPPLEXER_FLAG_WANTCOMMENTS |
 			                     TPPLEXER_FLAG_WANTSPACE |
 			                     TPPLEXER_FLAG_WANTLF);
@@ -10062,15 +10069,20 @@ create_int_file:
 				pragma_error = 1;
 			while (token.t_file != CURRENT.l_eof_file)
 				TPPLexer_PopFile();
-			if (!tok && *token.t_begin == ')')
+			if (!tok && *token.t_begin == ')') {
 				tok = ')';
+				if (token.t_file->f_pos == token.t_begin)
+					tok = TPPLexer_YieldRaw();
+			}
 			if (pragma_error) {
 				int recursion = 1;
 				while (tok > 0) {
-					/* */ if (tok == '(')
+					if (tok == '(') {
 						++recursion;
-					else if (tok == ')' && !--recursion)
-						break;
+					} else if (tok == ')') {
+						if (!--recursion)
+							break;
+					}
 					TPPLexer_Yield();
 				}
 #if 1
@@ -10760,6 +10772,7 @@ argcache_genexpand(struct argcache_t *__restrict self,
 	char *buf_begin, *buf_end, *buf_pos;
 	char *tok_begin, *tok_end, *new_buf;
 	size_t reqsize, sizeavail, newsize;
+	size_t old_ifdef_size;
 	file = token.t_file;
 	assert(file);
 	assert(file->f_text);
@@ -10777,6 +10790,7 @@ argcache_genexpand(struct argcache_t *__restrict self,
 	/* Parse tokens until EOF is reached, appending the begin..end
 	 * string regions of each to the expansion buffer.
 	 * NOTE: We use yield to allow for recursion, as well as expansion of macros. */
+	old_ifdef_size = CURRENT.l_ifdef.is_slotc;
 	while (TPPLexer_Yield() > 0) {
 		if unlikely(tok < 0)
 			goto err_buffer;
@@ -10804,6 +10818,17 @@ argcache_genexpand(struct argcache_t *__restrict self,
 		buf_pos += reqsize;
 		assert(buf_pos <= buf_end);
 	}
+
+	/* Make sure that all started #if-blocks are closed before the argument ends! */
+	if unlikely(CURRENT.l_ifdef.is_slotc != old_ifdef_size) {
+		while (CURRENT.l_ifdef.is_slotc > old_ifdef_size) {
+			struct TPPIfdefStackSlot *slot;
+			slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1];
+			(void)WARN(W_IF_WITHOUT_ENDIF, slot);
+			--CURRENT.l_ifdef.is_slotc;
+		}
+	}
+
 	/* NOTE: Not ZERO-terminated! */
 	self->ac_expand_size = (size_t)(buf_pos - buf_begin);
 	if (buf_pos != buf_end) {
@@ -10842,7 +10867,6 @@ expand_function_macro_impl(struct TPPFile *__restrict macro,
 	char *dest_iter, *dest_end, *source_iter, *source_end;
 	size_t expanded_text_size;
 	funop_t *code;
-	size_t expanded_string_size;
 	assert(macro);
 	assert(macro->f_kind == TPPFILE_KIND_MACRO);
 	assert((macro->f_macro.m_flags & TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_FUNCTION);
@@ -10863,7 +10887,7 @@ expand_function_macro_impl(struct TPPFile *__restrict macro,
 		TPPString_Incref(result_text);
 		result->f_text = result_text; /* Inherit reference. */
 		/* Setup the resulting macro to reference the original's text. */
-		result->f_pos =
+		result->f_pos   = macro->f_begin;
 		result->f_begin = macro->f_begin;
 		result->f_end   = macro->f_end;
 		/* Sub-values to not cleanup anything below. */
@@ -10878,24 +10902,32 @@ expand_function_macro_impl(struct TPPFile *__restrict macro,
 	expanded_text_size = (size_t)(macro->f_end - macro->f_begin);
 	expanded_text_size -= macro->f_macro.m_function.f_deltotal;
 	for (; iter != end; ++iter, ++arg_iter) {
-		if (iter->ai_ins_str) {
-			/* Figure out and cache how long the stringy-fied version of this is. */
-			expanded_string_size = 2 + TPP_SizeofEscape(arg_iter->ac_begin,
-			                                            (size_t)(arg_iter->ac_end - arg_iter->ac_begin));
-			expanded_text_size += (iter->ai_ins_str * expanded_string_size);
-		}
+		/* NOTE: Must handle `ai_ins_exp' first, because `argcache_genexpand()'
+		 *       might alter the source text in certain cases (such as when it
+		 *       references `__has_include()', in which case the source file
+		 *       text may be altered)
+		 * Technically, source text shouldn't be allowed to be altered in such
+		 * a situation, however still doing so is more efficient, and this is
+		 * such a rare and unlikely cornercase, that any user-visible effects
+		 * are negligible. */
 		if (iter->ai_ins_exp) {
 			/* Expand and cache the argument. */
-			/* todo: maybe optimize the memory footprint of this by not
-			 *       ~really~ needing to create an explicit malloc()-block
-			 *       when the argument's expanded text doesn't differ
-			 *       from the original. (e.g.: simple arguments like `add(10,20)') */
+			/* XXX: maybe optimize the memory footprint of this by not
+			 *      ~really~ needing to create an explicit malloc()-block
+			 *      when the argument's expanded text doesn't differ
+			 *      from the original. (e.g.: simple arguments like `add(10,20)') */
 			if (!argcache_genexpand(arg_iter, arg_iter->ac_begin, arg_iter->ac_end))
 				goto err_argcache;
 			expanded_text_size += (iter->ai_ins_exp * arg_iter->ac_expand_size);
 		}
-		if (iter->ai_ins) {
+		if (iter->ai_ins)
 			expanded_text_size += (iter->ai_ins * (size_t)(arg_iter->ac_end - arg_iter->ac_begin));
+		if (iter->ai_ins_str) {
+			size_t expanded_string_size;
+			/* Figure out and cache how long the stringy-fied version of this is. */
+			expanded_string_size = 2 + TPP_SizeofEscape(arg_iter->ac_begin,
+			                                            (size_t)(arg_iter->ac_end - arg_iter->ac_begin));
+			expanded_text_size += (iter->ai_ins_str * expanded_string_size);
 		}
 	}
 	/* Adjust for __VA_COMMA__ and __VA_NARGS__. */
@@ -11478,7 +11510,7 @@ at_next_non_whitespace:
 		size_t va_size        = 0;
 		uintptr_t text_offset;
 
-		TPPLexer_YieldPP();
+		TPPLexer_YieldRaw();
 		/* NOTE: In order to reduce special cases below, we simply parse
 		 *       one argument for no-args functions, then later check
 		 *       to make sure that that argument is empty (except for whitespace) */
@@ -11487,7 +11519,7 @@ at_next_non_whitespace:
 		/* Allocate a local buffer used to track argument offsets. */
 		if (macro->f_macro.m_function.f_argbuf) {
 			/* Take the preallocated lazy buffer. */
-			argv                               = (struct argcache_t *)macro->f_macro.m_function.f_argbuf;
+			argv = (struct argcache_t *)macro->f_macro.m_function.f_argbuf;
 			macro->f_macro.m_function.f_argbuf = NULL;
 		} else {
 #if TPP_CONFIG_DEBUG
@@ -11743,7 +11775,7 @@ err_argv:
 					goto done_args;
 				break;
 			}
-			TPPLexer_YieldPP(); /* YieldPP: Allow preprocessor directives in macro arguments. */
+			TPPLexer_YieldRaw();
 		}
 done_args:
 		if (va_size < effective_argc)
@@ -11751,6 +11783,7 @@ done_args:
 		else {
 			va_size -= (effective_argc - 1);
 		}
+
 		assert(token.t_file == arguments_file);
 		if (arg_iter != arg_last) {
 			if (macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC &&
@@ -11777,6 +11810,7 @@ done_args:
 				}
 			}
 		}
+
 		/* All the arguments have been parsed and the file pointer of the arguments file
 		 * (which at this point is also the #include-stack top-file) is set to point
 		 * directly after the closing parenthesis.
@@ -11804,18 +11838,27 @@ done_args:
 			            !WARN(W_TOO_MANY_MACRO_ARGUMENTS, macro))
 				goto err_argv;
 		}
+
 		/* If the variadic portion of varargs function is empty, the variadic size drops to ZERO(0).
 		 * >> This is required to properly implement __VA_COMMA__/__VA_NARGS__ semantics. */
 		if (macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC &&
-		    arg_last->ac_begin == arg_last->ac_end)
-			assert(va_size), --va_size;
+		    arg_last->ac_begin == arg_last->ac_end) {
+			assert(va_size);
+			--va_size;
+		}
 
 #if HAVELOG(LOG_CALLMACRO) /* DEBUG: Log calls to macros. */
 		{
 			arg_end = (arg_iter = argv) + effective_argc;
-			LOG(LOG_CALLMACRO | LOG_RAW, ("[DEBUG] Calling: %.*s(\n", (int)macro->f_namesize, macro->f_name));
+			LOG(LOG_CALLMACRO | LOG_RAW,
+			    ("[DEBUG] Calling: %.*s(\n",
+			     (int)macro->f_namesize, macro->f_name));
 			for (; arg_iter != arg_end; ++arg_iter) {
-				LOG(LOG_CALLMACRO | LOG_RAW, ("\t[%.*s],\n", (int)(arg_iter->ac_end - arg_iter->ac_begin), arg_iter->ac_begin));
+				LOG(LOG_CALLMACRO | LOG_RAW,
+				    ("\t[%.*s],\n",
+				     (int)(arg_iter->ac_end -
+				           arg_iter->ac_begin),
+				     arg_iter->ac_begin));
 			}
 			LOG(LOG_CALLMACRO | LOG_RAW, (")\n"));
 		}
@@ -11833,6 +11876,7 @@ done_args:
 		}
 		if unlikely(!expand_file)
 			goto end0;
+
 		/* Sanity checks. */
 		assert(expand_file->f_kind == TPPFILE_KIND_MACRO);
 		assert((expand_file->f_macro.m_flags & TPP_MACROFILE_KIND) ==
@@ -11864,8 +11908,10 @@ done_args:
 				file_iter = file_iter->f_prev;
 			}
 		}
+
 		/* Track the amount of times this macro is being expanded on the stack. */
 		++macro->f_macro.m_function.f_expansions;
+
 		/* Insert the new macro file into the expansion stack. */
 		expand_file->f_prev = token.t_file;
 		token.t_file        = expand_file;
@@ -11929,8 +11975,8 @@ TPPConst_ToString(struct TPPConst const *__restrict self) {
  *    With this calling convention, the result-argument doesn't need to be
  *    re-push onto the stack every time the next lower level is called.
  */
-#if defined(__GNUC__) && \
-(defined(__i386__) || defined(__i386) || defined(i386))
+#if (defined(__GNUC__) && \
+     (defined(__i386__) || defined(__i386) || defined(i386)))
 #define EVAL_CALL __attribute__((__fastcall__))
 #elif defined(_MSC_VER)
 #define EVAL_CALL __fastcall
@@ -12005,8 +12051,9 @@ TPPLexer_ParseStringEx(size_t sizeof_char)
 			reqsize = result->s_size + TPP_SizeofUnescapeRaw(string_begin,
 			                                                 (size_t)(string_end - string_begin));
 			if (reqsize > allocsize) {
-				newbuffer = (struct TPPString *)API_REALLOC(result, TPP_OFFSETOF(struct TPPString, s_text) +
-				                                                    (reqsize + sizeof(char)));
+				newbuffer = (struct TPPString *)API_REALLOC(result,
+				                                            TPP_OFFSETOF(struct TPPString, s_text) +
+				                                            (reqsize + sizeof(char)));
 				if unlikely(!newbuffer) {
 					free(result);
 					goto err;
@@ -12505,18 +12552,19 @@ done_zero:
 }
 
 
-PUBLIC int TPPCALL TPP_PrintToken(printer_t printer, void *closure) {
+PUBLIC ptrdiff_t TPPCALL TPP_PrintToken(printer_t printer, void *closure) {
 	char *flush_start, *iter, *end, arg[1], temp;
-	int error = 0;
+	ptrdiff_t status, result = 0;
 #define print(s, l)                                   \
 	do {                                              \
-		if ((error = (*printer)(s, l, closure)) != 0) \
-			goto done;                                \
+		if ((status = (*printer)(closure, s, l)) < 0) \
+			goto err;                                 \
+		result += status;                             \
 	} while (FALSE)
-#define return_print(s, l)                 \
-	do {                                   \
-		error = (*printer)(s, l, closure); \
-		goto done;                         \
+#define return_print(s, l)                  \
+	do {                                    \
+		result = (*printer)(closure, s, l); \
+		goto done;                          \
 	} while (FALSE)
 	assert(TPPLexer_Current);
 	assert(printer);
@@ -12570,16 +12618,17 @@ PUBLIC int TPPCALL TPP_PrintToken(printer_t printer, void *closure) {
 next:
 		++iter;
 	}
-	if (iter != flush_start) {
-		error = (*printer)(flush_start, (size_t)(iter - flush_start), closure);
-	}
+	if (iter != flush_start)
+		print(flush_start, (size_t)(iter - flush_start));
 done:
-	return error;
+	return result;
+err:
+	return status;
 #undef return_print
 #undef print
 }
 
-PUBLIC int TPPCALL TPP_PrintComment(printer_t printer, void *closure) {
+PUBLIC ptrdiff_t TPPCALL TPP_PrintComment(printer_t printer, void *closure) {
 	(void)printer, (void)closure;
 	return 0; /* TODO */
 }
@@ -12867,12 +12916,12 @@ again_unary:
 		if (TPP_ISKEYWORD(tok) &&
 		    (TPP_ISUSERKEYWORD(tok) || (
 #if TPP_CONFIG_GCCFUNC
-		                               get_builtin_argc(tok) == -1 &&
-		                               tok != KWD___builtin_constant_p &&
-		                               tok != KWD___builtin_choose_expr &&
+		                                get_builtin_argc(tok) == -1 &&
+		                                tok != KWD___builtin_constant_p &&
+		                                tok != KWD___builtin_choose_expr &&
 #endif /* TPP_CONFIG_GCCFUNC */
-		                               tok != KWD_defined &&
-		                               tok != KWD_if))) {
+		                                tok != KWD_defined &&
+		                                tok != KWD_if))) {
 			unsigned int recursion = 1;
 			/* Keyword without any special meaning associated to it.
 			 * >> Assume c-style casting and recursively skip it. */
@@ -13366,8 +13415,8 @@ skip_array_deref:
 	return;
 err_r:
 	TPPConst_Quit(result);
-	/*err:*/ TPPLexer_SetErr();
-	return;
+/*err:*/
+	TPPLexer_SetErr();
 }
 
 PRIVATE void EVAL_CALL eval_prod(struct TPPConst *result) {
@@ -14369,7 +14418,7 @@ set_warning_newstate:
 			goto set_warning_newstate;
 		} else if (val.c_kind == TPP_CONST_STRING) {
 			/* Very nice-looking warning directives:
-			 * >> #pragma warning(push,"-Wno-syntax")
+			 * >> #pragma warning(push, "-Wno-syntax")
 			 * >> ... // Do something ~nasty~.
 			 * >> #pragma warning(pop)
 			 */
@@ -14525,10 +14574,12 @@ yield_after_include_path:
 			}
 		}
 		mode = 1;
-		if (tok == '+')
+		if (tok == '+') {
 			yield();
-		else if (tok == '-')
-			mode = 0, yield();
+		} else if (tok == '-') {
+			mode = 0;
+			yield();
+		}
 		if unlikely(!TPPLexer_Eval(&path_string))
 			goto err;
 		if (path_string.c_kind != TPP_CONST_STRING) {

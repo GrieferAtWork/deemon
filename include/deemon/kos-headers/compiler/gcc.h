@@ -119,7 +119,6 @@
                                             *  - __GCC_VERSION_NUM >= 30200
                                             *  - __GCC_VERSION_NUM >= 30500
                                             * The internet isn't unanimous about this one... */
-
 #endif
 #if __GCC_VERSION_NUM >= 30300
 #define __GCC_HAS_ATTRIBUTE___nothrow__
@@ -259,7 +258,7 @@
      (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0) || \
      (__GCC_VERSION_NUM >= 40300 && (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)))
 #define __STATIC_ASSERT_IS_STATIC_ASSERT
-#if (defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411) && !defined(__INTELLISENSE__)
+#if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
 #define __STATIC_ASSERT(expr) static_assert(expr, #expr)
@@ -697,7 +696,11 @@ extern "C++" { template<class T> struct __compiler_alignof { char __x; T __y; };
 #define __LOCAL      static __ATTR_INLINE
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
-#if __has_attribute(__gnu_inline__)
+#ifdef __INTELLISENSE__
+#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
+#define __EXTERN_INLINE      static
+#define __EXTERN_FORCEINLINE static
+#elif __has_attribute(__gnu_inline__)
 #define __EXTERN_INLINE      extern __ATTR_INLINE __attribute__((__gnu_inline__))
 #define __EXTERN_FORCEINLINE extern __ATTR_FORCEINLINE __attribute__((__gnu_inline__))
 #elif defined(__GNUC_GNU_INLINE__)
@@ -855,6 +858,9 @@ __extension__ typedef unsigned long long __ulonglong_t;
 /* Support for complex numbers (test for with `#ifdef _Complex_I') */
 #if __GCC_VERSION_NUM >= 29700
 #define _Complex_I (__extension__ 1.0iF)
+#if __STDC_VERSION__ < 199901
+#define _Complex __complex__
+#endif /* __STDC_VERSION__ < 199901 */
 #elif __GCC_VERSION_NUM >= 20700
 #define _Complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
