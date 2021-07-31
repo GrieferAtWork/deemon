@@ -310,8 +310,8 @@ LOCAL int tpp_strcasecmp(char const *s1, char const *s2) {
 #ifdef _MSC_VER
 #define strncasecmp _strnicmp
 #else /* _MSC_VER */
-#define strncasecmp tpp_strcasecmp
-LOCAL int tpp_strcasecmp(char const *s1, char const *s2, size_t maxlen) {
+#define strncasecmp tpp_strncasecmp
+LOCAL int tpp_strncasecmp(char const *s1, char const *s2, size_t maxlen) {
 	char c1, c2;
 	do {
 		if (!maxlen--)
