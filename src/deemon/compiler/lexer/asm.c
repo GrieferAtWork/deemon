@@ -290,9 +290,9 @@ struct tpp_string_printer {
 	size_t            sp_length; /* Used string length. */
 };
 
-PRIVATE NONNULL((3)) int
-(TPPCALL tpp_string_printer_append)(char const *__restrict buf, size_t bufsize,
-                                    struct tpp_string_printer *__restrict self) {
+PRIVATE NONNULL((1)) int
+(TPPCALL tpp_string_printer_append)(struct tpp_string_printer *__restrict self,
+                                    char const *__restrict buf, size_t bufsize) {
 	struct TPPString *string;
 	size_t alloc_size;
 	ASSERT(buf || !bufsize);
@@ -357,7 +357,7 @@ done:
 
 PRIVATE NONNULL((1)) dssize_t DCALL
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
-	if unlikely(tpp_string_printer_append(buf, bufsize, (struct tpp_string_printer *)arg))
+	if unlikely(tpp_string_printer_append((struct tpp_string_printer *)arg, buf, bufsize))
 		goto err;
 	return (dssize_t)bufsize;
 err:
