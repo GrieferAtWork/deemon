@@ -290,7 +290,7 @@ struct tpp_string_printer {
 	size_t            sp_length; /* Used string length. */
 };
 
-PRIVATE NONNULL((1)) int
+PRIVATE NONNULL((1)) ptrdiff_t
 (TPPCALL tpp_string_printer_append)(struct tpp_string_printer *__restrict self,
                                     char const *__restrict buf, size_t bufsize) {
 	struct TPPString *string;

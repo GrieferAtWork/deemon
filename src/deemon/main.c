@@ -1522,9 +1522,8 @@ emitpp_writeout(void const *__restrict p, size_t s) {
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
 
-PRIVATE int TPPCALL
-emitpp_printout(char const *buf, size_t bufsize,
-                void *UNUSED(closure)) {
+PRIVATE ptrdiff_t TPPCALL
+emitpp_printout(void *UNUSED(closure), char const *buf, size_t bufsize) {
 	emitpp_writeout(buf, bufsize * sizeof(char));
 	return 0;
 }
