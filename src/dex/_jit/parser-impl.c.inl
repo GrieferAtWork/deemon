@@ -719,6 +719,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
 		if unlikely(!first_key)
 			goto err;
 #endif /* JIT_EVAL */
+		JITLexer_Yield(self);
 		if (self->jl_tok != '=') {
 			syn_brace_expected_equals_after_dot(self);
 			goto err;
@@ -3641,8 +3642,6 @@ again:
 	if (self->jl_tok != ',')
 		goto done;
 	JITLexer_Yield(self);
-	if (!JITLexer_MaybeExpressionBegin(self))
-		goto done;
 	/* Parse the next key. */
 	if (self->jl_tok == '.') {
 		JITLexer_Yield(self);
@@ -3657,11 +3656,14 @@ again:
 		if unlikely(!lhs)
 			goto err_r;
 #endif /* JIT_EVAL */
+		JITLexer_Yield(self);
 		if (self->jl_tok != '=') {
 			syn_brace_expected_equals_after_dot(self);
 			goto err_lhs;
 		}
 	} else {
+		if (!JITLexer_MaybeExpressionBegin(self))
+			goto done;
 		lhs = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
 		if (ISERR(lhs))
 			goto err_r;
