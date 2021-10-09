@@ -1912,10 +1912,78 @@ ast_parse_statement ::= (
 	 *       Constant expressions will either be handled the same, or
 	 *       make use of a hidden constant tuple/dict for mapping
 	 *       switch expressions to IP/SP pairs that are then loaded
-	 *       using the `jmp pop' or `jmp pop, #pop' instructions. */
+	 *       using the `jmp pop' or `jmp pop, #pop' instructions.
+	 *
+	 * It is implementation-specific if "case" and "default" may only
+	 * appear within the immediate sub-scope of `switch', or also within
+	 * deeper-nested scopes. Implementations are only required to support:
+	 *    `switch (foo) { case 1: a(); break; case 2: case 3: b(); break; default: c(); break; } '
+	 * Case labels in nested scopes are non-portable:
+	 *    `switch (foo) { case 1: if (a()) { case 2: print "a"; } print "b"; }'                           // Non-Portable
+	 *    `switch (foo) { case 1: if (a()) print "a"; print "b"; break; case 2: print "a"; print "b"; }'  // Portable
+	 * Even case-label fallthrough following any sort of statement or expression (even an empty statement) is non-portable:
+	 *    `switch (foo) { case 1: a(); case 2: b(); break; }'             // Non-portable
+	 *    `switch (foo) { case 1: a(); break; case 2: a(); b(); break; }' // Portable
+	 *    `switch (foo) { case 1: ; case 2: a(); break; }'                // Non-portable
+	 *    `switch (foo) { case 1: case 2: a(); break; }'                  // Portable
+	 * Declaration of variables at unreachable code locations is also non-portable,
+	 * which also implies that following the leading "{" of a switch, the only portable
+	 * statements which may appear are "case" and "default" followed by normal statements,
+	 * followed by "break" or the end of the switch-statement:
+	 *    `switch (foo) { local x; case 1: x = 10; print x; break; }'                             // Non-Portable
+	 *    `local x; switch (foo) { case 1: x = 10; print x; break; }'                             // Portable
+	 *    `switch (foo) { case 1: local x = 10; print x; break; }'                                // Portable
+	 *    `switch (foo) { case 1: local x = 10; print x; break; case 2: x = 20; print x; }'       // Non-Portable
+	 *    `switch (foo) { case 1: local x = 10; print x; break; case 2: local x = 20; print x; }' // Portable
+	 *    `local x; switch (foo) { case 1: x = 10; print x; break; case 2: x = 20; print x; }'    // Portable
+	 *
+	 * Of course, the standard encourages implementations to support as many of the "Non-Portable"
+	 * use cases seen above as possible, but it is understood that matching the behavior of C's
+	 * `switch' statement completely would require require functionality of equal power as is also
+	 * required for labels. On that note, implementations that choose to support case labels within
+	 * nested scopes aren't required (but still encouraged) to support them in statement-expressions
+	 * also: Support for `switch (foo) { case 1: if (a()) { case 2: print "FOO"; } }' doesn't imply
+	 * support for `switch (foo) { case 1: if (a()) { ({ case 2:; }); print "FOO"; } }'
+	 *
+	 * NOTE: case-expressions are allowed to be non-constant expressions. This is a mandatory feature
+	 *       that all implementations must support! When cases are used with expressions that have
+	 *       side-effects, the evaluation order of individual expressions is undefined. It is also
+	 *       undefined if expressions not yet evaluated will still be evaluated once one is found
+	 *       that matches the switch-expression. Though this standard does guaranty that no further
+	 *       case-expressions are evaluated after execution has jumped to the start of the statement
+	 *       attached to the case.
+	 *
+	 * The comparison between the switch-expression and case expressions is defined as follows:
+	 * >> switch (foo) {
+	 * >> case bar:
+	 * >>     print "HERE";
+	 * >>     break;
+	 * >> }
+	 * same as:
+	 * >> function switch_eq(a, b) {
+	 * >>     try {
+	 * >>         return a == b;
+	 * >>     } catch (TypeError | NotImplemented) {
+	 * >>         return false;
+	 * >>     }
+	 * >> }
+	 * >> if (switch_eq(foo, bar))
+	 * >>     print "HERE";
+	 */
+#if FULL_SUPPORT_FOR_SWITCH_STATEMENTS
 	(DDI('case') ast_parse_expr ':' ast_parse_statement) |
 	(DDI('default') ':' ast_parse_statement) |
 	(DDI('switch') '(' ast_parse_comma(false, true) ')' ast_parse_statement) |
+#else /* FULL_SUPPORT_FOR_SWITCH_STATEMENTS */
+	(DDI('switch') '(' ast_parse_comma(false, true) ')' '{'
+		[(
+			/* The `default' case may not appear more than once */
+			((('case' ast_parse_expr) | 'default') ':')...
+				ast_parse_statement...
+				['break' ';'] /* Only optional if followed by the trailing '}' of the switch-statement */
+		)...]
+	'}') |
+#endif /* !FULL_SUPPORT_FOR_SWITCH_STATEMENTS */
 
 	/* Fallback: parse a comma-expression.
 	 * NOTE: `INTERNAL(AST_COMMA_PARSESEMI)' is enabled for this call! */
