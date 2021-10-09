@@ -1184,7 +1184,15 @@ ast_parse_unary_operand ::= (
 		/* Encode a call-expression. */
 		(DDI('(') [ast_parse_argument_list] ')') |
 
-		/* Trailing increment/decrement */
+		/* Trailing increment/decrement. These must be implemented as:
+		 * >> foo++;  // Compiled as ({ __stack local __x = copy foo; ++foo; __x; })
+		 * >> foo--;  // Compiled as ({ __stack local __x = copy foo; --foo; __x; })
+		 * ... unless the compiler can prove that the copied value of `foo'
+		 *     is never used (and would just be discarded unconditionally),
+		 *     in which case the invocation of the `copy' operator may be
+		 *     omitted. Note though that such behavior is entirely optional
+		 *     and that compilers are always allowed to blindly perform the
+		 *     copy (regardless if doing, or not doing, so has side-effects) */
 		DDI('++') |
 		DDI('--') |
 
