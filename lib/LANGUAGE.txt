@@ -2015,6 +2015,11 @@ ast_parse_catchmask ::= (
 	 *       In other words, the following two catch-handler are the same:
 	 *    >> catch (int | string as foo)
 	 *    >> catch ((int, string) as foo)
+	 *
+	 * When (one of) the catch expression(s) results in another error being
+	 * thrown during its evaluation at runtime, that error is handled the
+	 * same as though it were thrown by an imaginary statement inserted
+	 * before the first statement within the associated catch-body.
 	 */
 	'|' ~~ ast_parse_unary...
 );
@@ -2043,7 +2048,9 @@ ast_parse_try(is_statement) ::= (
 					/* Masked-catch statement.
 					 * Additionally, a symbol name that can be used to address
 					 * the generated exception may be specified after 'as' or '->',
-					 * where the arrow is deprecated and a reminant from the old deemon. */
+					 * where the arrow is deprecated and a reminant from the old deemon
+					 * that need not be supported by other implementations; only 'as'
+					 * is considered portable. */
 					('|' ~~ ast_parse_unary... [('->' | 'as') _keyword])
 				) ')'
 #if is_statement
@@ -2057,7 +2064,10 @@ ast_parse_try(is_statement) ::= (
 );
 
 ast_parse_class ::= (
-	/* Optional base expression. */
+	/* Optional base expression.
+	 * Only ": <base>" is portable; the other syntax forms only exist
+	 * for backwards compatibility with deemon 100+ and need not be
+	 * supported by other implementations */
 	[	((':' | 'extends') ast_parse_unaryhead) |
 		('(' ast_parse_expr ')')
 	]
@@ -2128,7 +2138,9 @@ parse_constructor_initializers ::= (
 	',' ~~ (
 		/* NOTE: `_keyword' is only allowed as super-initializer
 		 *        when the class's base expression is a symbol
-		 *        who's name is then matched by `_keyword' */
+		 *        who's name is then matched by `_keyword'
+		 * This form of addressing is non-portable, and only use
+		 * of `super' should be considered portable */
 		(DDI('super' | _keyword) '(' [ast_parse_comma(false, false)] ')') |
 		/* Member initializer. */
 		(DDI(_keyword) (
@@ -2250,7 +2262,8 @@ parse_arglist ::= (
 );
 
 ast_parse_function_noargs(parse_semicollon) ::= (
-	(	/* Arrow-return function (same as `{ return <expr>; }') */
+	(	/* Arrow-return function (same as `{ return <expr>; }',
+		 * or `{ yield <expr>; }' when trailed by '...') */
 		'->'
 		ast_parse_expr
 #if parse_semicollon
@@ -2340,7 +2353,7 @@ ast_parse_operator_name(allow_class_operators) ::= (
 	/* Internal keyword names.
 	 * Internal names include all of the __*__ names found in comments
 	 * above, as well as at least the following.
-	 * Operator name comparising is performed case-sensitive after
+	 * Operator name comparison is performed case-sensitive after
 	 * stripping leading/trailing underscores from both the given
 	 * keyword, as well as names found in the operator database:
 	 *   - `__read__' (File operator extension)
@@ -2370,12 +2383,12 @@ ast_parse_operator_name(allow_class_operators) ::= (
 /* Loop (aka. generator) expressions.
  * These may appear in any unary expression and are
  * translated to lambda-function calls:
- * >> local x = (for (local item: get_items()) if (item != "foo") "ITEM("+item+")");
+ * >> local x = (for (local item: get_items()) if (item != "foo") "ITEM(" + item + ")");
  * Same as:
  * >> local x = []{
  * >>     for (local item: get_items())
  * >>         if (item != "foo")
- * >>             yield "ITEM("+item+")";
+ * >>             yield "ITEM(" + item + ")";
  * >> }();
  */
 parse_generator_loop ::= (
@@ -2440,9 +2453,9 @@ ast_parse_assert(need_parenthesis) ::= (
 ast_parse_import ::= (
 	/* Special rules apply to symbols that are imported from
 	 * modules, as well as module objects imported as symbols:
-	 *   - Variables (symbols) defined to referr to imports are always
+	 *   - Variables (symbols) defined to refer to imports are always
 	 *     declared in the current scope and will never link against
-	 *     symbols of the same found in parent scopes.
+	 *     symbols of the same name found in parent scopes.
 	 *     This is the same as though imported symbols were prefixed by `local'
 	 *     With that in mind, imported symbols are not re-exported by the importing
 	 *     module, regardless of those symbols being defined in the global scope,
@@ -2456,24 +2469,24 @@ ast_parse_import ::= (
 	 *      - Such local symbols have special behavior, in that they are weakly
 	 *        linked and can easily be overwritten by one's own symbols:
 	 *        >> import * from deemon;
-	 *        >> local bytes = "foo".bytes();
-	 *        >> print repr bytes;
-	 *        Even though `deemon' exports a symbol `bytes', which _is_ made
+	 *        >> local Bytes = "foo".bytes();
+	 *        >> print repr Bytes;
+	 *        Even though `deemon' exports a symbol `Bytes', which _is_ made
 	 *        available by the import statement, that symbol is re-defined
-	 *        because of the explicit declaration of a `local bytes'.
+	 *        because of the explicit declaration of a `local Bytes'.
 	 *        Should the code have been written as follows, this would
 	 *        not have been done:
 	 *        >> import * from deemon;
-	 *        >> bytes = "foo".bytes(); // No `local' prefix
-	 *        >> print repr bytes;
+	 *        >> Bytes = "foo".bytes(); // No `local' prefix
+	 *        >> print repr Bytes;
 	 *        Similarly, and just like any other kind of variable, the code
 	 *        above may have also been written as follows:
 	 *        >> import * from deemon;
 	 *        >> {
-	 *        >>     local bytes = "foo".bytes();
-	 *        >>     print repr bytes; // "foo".bytes()
+	 *        >>     local Bytes = "foo".bytes();
+	 *        >>     print repr Bytes; // "foo".bytes()
 	 *        >> }
-	 *        >> print repr bytes;  // bytes
+	 *        >> print repr Bytes;  // Bytes
 	 *      - Another special side-effect of weakly linked symbols is that in the
 	 *        event of 2 such symbols colliding, compilation will continue and only
 	 *        cause an error when such a colliding symbol is being used:
@@ -2487,41 +2500,41 @@ ast_parse_import ::= (
 	 *      - Another special behavior implemented by symbols declared by an `import *'
 	 *        statement is the fact that they will not re-declare, or cause a compiler
 	 *        error if a symbol of the same name has already been defined explicitly:
-	 *        >> local bytes = "foobar".bytes();
-	 *        >> import * from deemon; // `deemon' exports a symbol `bytes'
-	 *        >> print repr bytes; // "foobar".bytes()
+	 *        >> local Bytes = "foobar".bytes();
+	 *        >> import * from deemon; // `deemon' exports a symbol `Bytes'
+	 *        >> print repr Bytes; // "foobar".bytes()
 	 *      - Note that even after an `import *' statement, any imported symbol can
 	 *        be marked as strongly linked by importing that symbol a second time,
 	 *        but doing so explicitly:
-	 *        >> import *, bytes from deemon; // Import everything from deemon, but link `bytes' strongly
+	 *        >> import *, Bytes from deemon; // Import everything from deemon, but link `Bytes' strongly
 	 *        Could also be written as 2 seperate statements, that don't even have
 	 *        to follow after each other:
 	 *        >> import * from deemon;
-	 *        >> import bytes from deemon;
+	 *        >> import Bytes from deemon;
 	 *   - Note that all of these special cases only apply when `*' is used to
 	 *     import all variables (symbols) exported by a module. Symbols imported
 	 *     explicitly behave just like regular variables, with the addition of
 	 *     causing a compiler error when an explicitly imported symbol's name
 	 *     has already been declared as a local variable:
-	 *     >> local bytes = "foobar".bytes();
-	 *     >> import bytes from deemon; // ERROR: `bytes' was already declared
+	 *     >> local Bytes = "foobar".bytes();
+	 *     >> import Bytes from deemon; // ERROR: `Bytes' was already declared
 	 *     In this case you could do one of the following to fix the problem:
-	 *     >> local bytes = "foobar".bytes();
+	 *     >> local Bytes = "foobar".bytes();
 	 *     >> {
-	 *     >>     import bytes from deemon; // OK: No _local_ variable `bytes' exists here
+	 *     >>     import Bytes from deemon; // OK: No _local_ variable `Bytes' exists here
 	 *     >> }
 	 *     or:
-	 *     >> local bytes = "foobar".bytes();
-	 *     >> import bytes as deemon_bytes from deemon; // OK: choose a different name
-	 *     >> import deemon_bytes = bytes from deemon;  // OK: Same as the previous line
+	 *     >> local Bytes = "foobar".bytes();
+	 *     >> import Bytes as deemon_bytes from deemon; // OK: choose a different name
+	 *     >> import deemon_bytes = Bytes from deemon;  // OK: Same as the previous line
 	 *   - Another special case is when a symbol is imported 2 or more times
 	 *     within the same scope, where any import after the first is a no-op:
 	 *     >> import * from deemon;
 	 *     >> import * from deemon; // Second import * is entirely a no-op
-	 *     >> import deemon_bytes = bytes from deemon;
-	 *     >> import bytes as deemon_bytes from deemon;    // No-op
-	 *     >> import deemon_bytes = int from deemon;       // ERROR: `deemon_bytes' was already defined
-	 *     >> import deemon_bytes = bytes from not_deemon; // ERROR: `deemon_bytes' was already defined
+	 *     >> import deemon_bytes = Bytes from deemon;
+	 *     >> import Bytes as deemon_bytes from deemon;    // No-op
+	 *     >> import deemon_bytes = int from deemon;       // ERROR: `deemon_bytes' was already defined differently
+	 *     >> import deemon_bytes = Bytes from not_deemon; // ERROR: `deemon_bytes' was already defined differently
 	 */
 	(
 		DDI('from')
@@ -2618,13 +2631,13 @@ ast_parse_symbol_name ::= (
 ast_parse_module_name ::= (
 	(	/* Constant token strings/keywords separated by dots */
 		/* NOTE: A module name is generated by taking the formatted preprocessor-output
-		 *       of these tokens and adding them together after discarding intermitten
+		 *       of these tokens and adding them together after discarding intermittent
 		 *       whitespace tokens:
-		 *    >> foo = import foo.bar;
-		 *    >> foo = import "foo.bar";
-		 *    >> foo = import "foo"."bar";
-		 *    >> foo = import "foo" . "bar";
-		 *    >> foo = import "foo" .bar;
+		 *    >> import foo = foo.bar;
+		 *    >> import foo = "foo.bar";
+		 *    >> import foo = "foo"."bar";
+		 *    >> import foo = "foo" . "bar";
+		 *    >> import foo = "foo" .bar;
 		 *    >> ...
 		 *       You get the idea... (All of those are the same module name)
 		 */
@@ -2637,7 +2650,7 @@ compiler_annotation ::= (
 	'interrupt' | /* For `class': When thrown, instances behave as interrupts
 	               * For `catch': The guard is allowed to handle interrupts */
 	'copyable' |  /* For yield-functions: Allow iterators of the function to be copied,
-	               * making it possible to perform a varienty of iterator-based operations
+	               * making it possible to perform a variety of iterator-based operations
 	               * on iterators. - Note however that in allowing this, the actual execution
 	               * frame must be copied, meaning that it becomes unclear to the interpreter
 	               * if local variables should be copied by-value or by-ref (the actual behavior
@@ -2663,11 +2676,11 @@ compiler_annotation ::= (
 
 	/* Compiler-specific annotations (maybe warn
 	 * (but _not_ error out) if not supported):
-	 * NOTE: The argument list is skipped with while accounting
-	 *       for recursive parenthesis. For this purpose, all of
-	 *       the following examples are valid annotation constructs
-	 *       that may only produce a warning, but not cause a compiler
-	 *       error:
+	 * NOTE: The argument list is skipped while accounting for
+	 *       recursive parenthesis. For this purpose, all of the
+	 *       following examples are valid annotation constructs
+	 *       that may only produce a warning, but not cause a
+	 *       compiler error:
 	 * >> @[mycompiler.unknown_annotation]
 	 * >> @[mycompiler.unknown_annotation()]
 	 * >> @[mycompiler.unknown_annotation(foobar)]
