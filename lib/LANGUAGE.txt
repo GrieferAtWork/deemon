@@ -117,10 +117,10 @@
  *    >> import * from doc;
  *    >> // Print documentation on the constructor of `string from deemon'
  *    >> print Doc("deemon/string/op:constructor");
- *    >> // Print documentation on the `keys' class-member of `dict from deemon'
- *    >> print Doc("deemon/dict/c:keys");
- *    >> // Print documentation on the `keys' member-function of `dict from deemon'
- *    >> print Doc("deemon/dict/i:keys");
+ *    >> // Print documentation on the `keys' class-member of `Dict from deemon'
+ *    >> print Doc("deemon/Dict/c:keys");
+ *    >> // Print documentation on the `keys' member-function of `Dict from deemon'
+ *    >> print Doc("deemon/Dict/i:keys");
  *    The exports functionality for much more than this, and a neat
  *    usage-example is the doc-server itself found in `/deemon/doc-server.dee'.
  *
@@ -152,7 +152,7 @@
  *
  *  - Introduction of ASP (Abstract Sequence Proxy)-like objects/types
  *    An ASP is a light-weight sequence type usually derived from
- *    `sequence from deemon'. However instead of pre-calculating
+ *    `Sequence from deemon'. However instead of pre-calculating
  *    their values when being created, they instead save all important
  *    parameters, from which point on they can be iterated or casted,
  *    leaving their items to only be generated once being accessed:
@@ -167,7 +167,7 @@
  *    never be used, or had already been used from clobbering the heap.
  *    Since an ASP is still a proper sequence in all respects (implementing
  *    index- & range-based item access, as well as `operator #', and
- *    all of the sequence functions provided by `sequence from deemon',
+ *    all of the sequence functions provided by `Sequence from deemon',
  *    such as `find()' or `sorted()'), this transition should have no
  *    effect on 99% of existing code.
  *    The only existing code that might be affected is code that relied on
@@ -350,7 +350,7 @@
  *
  *  - Changes to a varienty of member functions previously found
  *    in various sequence types, and now found as part of the
- *    ABC (Abstract Base Class) known as `sequence from deemon'
+ *    ABC (Abstract Base Class) known as `Sequence from deemon'
  *    New functions:
  *      - reduce(merger: Callable): Object
  *        reduce(merger: Callable, init: Object): Object
@@ -909,7 +909,7 @@ ast_parse_unaryhead ::= (
 	 *       entirely optional. */
 
 	/* Backwards-compatibility with deemon v100's cell-syntax.
-	 * Newer code should instead make use of on `cell from deemon':
+	 * Newer code should instead make use of on `Cell from deemon':
 	 * >> local x = (Cell from deemon)();  // Empty cell
 	 * >> local y = (Cell from deemon)(x); // A cell containing `x'
 	 */
@@ -1011,7 +1011,7 @@ ast_parse_unaryhead ::= (
 		 * having to #include <util> as one had to before deemon 200, I've
 		 * decided to add a dedicated syntax just for creating ranges.
 		 */
-		([ast_parse_expr] ':' [ast_parse_expr] [',' ast_parse_expr] ']') |
+		([ast_parse_expr] ':' ast_parse_expr [',' ast_parse_expr] ']') |
 		/* List expression.
 		 * NOTE: Ambiguity with lambda for `[]' is resolved by looking at the
 		 *       token following. When it's a '(', '{' or '->', it's a lambda.
@@ -1070,8 +1070,11 @@ ast_parse_unaryhead ::= (
 			 * The given `ast_parse_expr' must be a constant expression.
 			 * An implementation is allowed and encouraged to perform
 			 * constant propagation when an expression is given, however
-			 * it is allowed allowed to choose to emit an error in this case.
-			 */
+			 * is also allowed to emit an error when anything other than
+			 * <TOK_INT> appears between the parenthesis.
+			 *
+			 * As such, the only portable use of `__nth' is `__nth(1)',
+			 * `__nth(2)', `__nth(3)', ..., `__nth(9999999)', ... */
 			('__nth' '(' ast_parse_expr ')')
 		]
 
@@ -1105,7 +1108,7 @@ ast_parse_unary_operand ::= (
 
 			/* Returns the effective class of the accompanying expression.
 			 * This is usually identical to it's `type', but for super-wrappers,
-			 * it is the described type, rather than  */
+			 * it is the described type, rather than `Super from deemon' */
 			'class' |
 
 			/* Bind an operator function to a specific object:
@@ -1117,8 +1120,8 @@ ast_parse_unary_operand ::= (
 			 * >> print operator - (42,10); // 32
 			 * An implementation is allowed to freely choose how to construct the
 			 * operator wrappers used for this purpose, however as already shown
-			 * in the example above, care must to ensure that ambiguous operators
-			 * can be resolved at runtime.
+			 * in the example above, care must be taken to ensure that ambiguous
+			 * operators can be resolved at runtime.
 			 * Due to the fact that an implementation is required to also provide
 			 * the `operators' module, it is recommended that at least unambiguous
 			 * operator functions be bound to their respective symbol found in said
@@ -1126,8 +1129,11 @@ ast_parse_unary_operand ::= (
 			 * Note however that `x + y', `operator + (x,y)' and `x.operator + (y)',
 			 * while allowed to generate difference code, should still be considered
 			 * syntactically identical and are all allowed to be implemented through
-			 * deticated options, `(add from operators)(x,y)' is different and must
+			 * dedicated code paths, `(add from operators)(x, y)' is different and must
 			 * perform an external symbol call to `add from operators' at runtime.
+			 *
+			 * Iow: If overwriting `add from operators' has an effect on anything
+			 * other than `(add from operators)(x, y)' is implementation specific.
 			 */
 			('operator' ast_parse_operator_name(false)) |
 
@@ -1154,23 +1160,22 @@ ast_parse_unary_operand ::= (
 		) ']') |
 
 		/* Brace initializer-suffix:
-		 * >> local x = list { 10, 20, 30 };
-		 * Internally, the resulting expression is done as follows:
+		 * >> local x = List { 10, 20, 30 };
+		 * Internally, the resulting expression is encoded as follows:
 		 *    <expr> { <expr>... }  ---> <expr>(GENERIC_SEQUENCE(<expr>...))
 		 * In other words, the first expression is invoked with a single
-		 * argument that is some undefined iterable object which can then be
-		 * iterated to retrieve the individual items found within the braces.
+		 * argument that is some undefined iterable object derived from the
+		 * base class `Sequence from deemon' and can be iterated to retrieve
+		 * the individual items found within the braces.
 		 * NOTE: Unlike in the old deemon, no guaranty is made as to what
 		 *       the exact type of that sequence is, only that it is derived
-		 *       from `sequence from deemon' and implements the iterable
+		 *       from `Sequence from deemon' and implements the iterable
 		 *       iterface, including some iterator class that is (as always)
-		 *       accessible with the `iterator' attribute of the type.
-		 *
-		 */
+		 *       accessible with the `Iterator' attribute of the type. */
 		ast_parse_expr |
 
 		/* Encode a call-expression with optional parenthesis.
-		 * >> foo pack 10,20,30; // Same as foo(10,20,30); */
+		 * >> foo pack 10, 20, 30; // Same as foo(10, 20, 30); */
 		(DDI('pack') (
 			('(' [ast_parse_argument_list] ')') |
 			[ast_parse_argument_list]
@@ -1197,7 +1202,7 @@ ast_parse_unary ::= (
 
 ast_parse_argument_list ::= (
 	(
-		/* Regular argument list (e.g. `foo(10,20)') */
+		/* Regular argument list (e.g. `foo(10, 20)') */
 		ast_parse_comma(false, false)
 	) | (
 		/* Argument list with keyword labels (e.g. `foo(x: 10, y: 20)')
@@ -1258,9 +1263,9 @@ ast_parse_cmpeq ::= (
 		(DDI(['!'...] 'is' ['!'...] 'bound')) |
 
 		(
-			(	/* The result of In and Is expression can
+			(	/* The result of `in' and `is' expression can
 				 * be inverted by surrounding '!' tokens.
-				 * NOTE: Inversion of the result only happens the sum of '!' tokens is uneven.
+				 * NOTE: Inversion of the result only happens when the sum of '!' tokens is uneven.
 				 *       In the case of `in', the result of the expression is left unchanged
 				 *       when no inversion takes place, meaning that should `rhs.operator contains'
 				 *       return a non-bool return value, that value is not casted to boolean.
@@ -1292,21 +1297,23 @@ ast_parse_cmpeq ::= (
 				DDI('!=')
 
 				/* Same/different object comparison
-				 * `x === y' is are semantically equivalent to
-				 * `(object from deemon).id(x) == (object from deemon).id(y)'
-				 * A compiler is allowed to interchange the internal representation
-				 * of these 2 representations if it pleases, meaning that the builtin
-				 * member function (here accesses as an unbound member function wrapper)
-				 * `object.id' cannot be reliably overwritten by sub-classes with the
-				 * guaranty that the overwritten version is consistently called.
+				 * `x === y' is semantically equivalent to
+				 * `(Object from deemon).id(x) == (Object from deemon).id(y)'
+				 * - Compilers are allowed to interchange the internal representation
+				 *   of these 2 representations if it pleases, meaning that the builtin
+				 *   member function (here accesses as an unbound member function wrapper)
+				 * - `Object.id' cannot be reliably overwritten by sub-classes with the
+				 *   guaranty that the overwritten version is consistently called.
 				 * ---
-				 * The most notably usage case for same-object comparisons are type
-				 * objects which do not implement regular comparison operators:
-				 * >> import int, object from deemon;
-				 * >> print int == object;  // Error.RuntimeError.NotImplemented: `type.operator ==' is not implemented
-				 * >> print int != object;  // Error.RuntimeError.NotImplemented: `type.operator !=' is not implemented
-				 * >> print int === object; // false
-				 * >> print int !== object; // true
+				 * >> local a = [10,20];
+				 * >> local b = copy a;
+				 * >> local c = a;
+				 * >> print a == a;   // true
+				 * >> print a == b;   // true
+				 * >> print a == c;   // true
+				 * >> print a === a;  // true
+				 * >> print a === b;  // false
+				 * >> print a === c;  // true
 				 * ---
 				 * The same-object/different-object operators cannot be overwritten, thus
 				 * allowing the compiler to perform extended optimization on the object.
@@ -1320,6 +1327,9 @@ ast_parse_cmpeq ::= (
 				 * faced with different (or even same) compiler options, and may even be
 				 * influenced by related module being loaded from source code, or from a
 				 * pre-compiled DEC (optional, implementation-specific file format) file.
+				 * The only exceptions are the singleton objects, such as `none', `true',
+				 * `false', as well as all builtin types, and generally all types that are
+				 * only constructed once.
 				 * ---
 				 * Due to the special object-check case resulting from `x is none', which
 				 * checks if `x' is the none-singleton object, the expression `x === none'
@@ -1345,8 +1355,8 @@ ast_parse_or ::= (ast_parse_xor [('|' ast_parse_xor)...]);
  * left-hand-side operand, using the expression found in the right-hand-side operand
  * as the type with which the first operand should be viewed.
  * For more information on super-view objects, see their class documentation,
- * as easily viewable through `/deemon/doc-server.dee' (/modules/deemon/super)
- * The expression `x as y' is therefor equivalent to `(super_ from deemon)(x,y)',
+ * as easily viewable through `/util/doc-server.dee' (/modules/deemon/Super)
+ * The expression `x as y' is therefor equivalent to `(Super from deemon)(x, y)',
  * and a compiler is allowed to interchange these 2 representations, as most symbols
  * exported from the builtin `deemon' module (including this one) cannot be overwritten. */
 ast_parse_as ::= (ast_parse_or [('as' ast_parse_or)...]);
@@ -1385,20 +1395,20 @@ ast_parse_cond ::= (
 
 ast_parse_assign := (
 	ast_parse_cond
-	/* Inplace operators and assign. (Note: differs from store) */
+	/* Inplace operators and assign. (Note: assign differs from store) */
 	(
-		DDI(':=') |
-		DDI('+=') |
-		DDI('-=') |
-		DDI('*=') |
-		DDI('/=') |
-		DDI('%=') |
-		DDI('<<=') |
-		DDI('>>=') |
-		DDI('&=') |
-		DDI('|=') |
-		DDI('^=') |
-		DDI('**=')
+		DDI(':=') |   /* x := y;  // x.operator := (y); */
+		DDI('+=') |   /* x += y;  // x = (x += y); // Implicit re-assign; "+=" falls back on "+" if not explicitly defined */
+		DDI('-=') |   /* x -= y;  // x = (x -= y); // Implicit re-assign; "-=" falls back on "-" if not explicitly defined */
+		DDI('*=') |   /* x *= y;  // x = (x *= y); // Implicit re-assign; "*=" falls back on "*" if not explicitly defined */
+		DDI('/=') |   /* x /= y;  // x = (x /= y); // Implicit re-assign; "/=" falls back on "/" if not explicitly defined */
+		DDI('%=') |   /* x %= y;  // x = (x %= y); // Implicit re-assign; "%=" falls back on "%" if not explicitly defined */
+		DDI('<<=') |  /* x <<= y;  // x = (x <<= y); // Implicit re-assign; "<<=" falls back on "<<" if not explicitly defined */
+		DDI('>>=') |  /* x >>= y;  // x = (x >>= y); // Implicit re-assign; ">>=" falls back on ">>" if not explicitly defined */
+		DDI('&=') |   /* x &= y;  // x = (x &= y); // Implicit re-assign; "&=" falls back on "&" if not explicitly defined */
+		DDI('|=') |   /* x |= y;  // x = (x |= y); // Implicit re-assign; "|=" falls back on "|" if not explicitly defined */
+		DDI('^=') |   /* x ^= y;  // x = (x ^= y); // Implicit re-assign; "^=" falls back on "^" if not explicitly defined */
+		DDI('**=')    /* x **= y;  // x = (x **= y); // Implicit re-assign; "**=" falls back on "**" if not explicitly defined */
 	)
 	ast_parse_cond
 );
@@ -1432,7 +1442,7 @@ _inner_comma_expression ::= (
 	ast_parse_expr
 );
 
-ast_parse_comma(strict_comma,allow_vardecl) ::= (
+ast_parse_comma(strict_comma, allow_vardecl) ::= (
 
 #if allow_vardecl
 	[(
@@ -1461,7 +1471,7 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 		             *   of the module, or another module that imported the symbol.
 		             *   This differs from local variables, which can only be read
 		             *   from as ref-variables and not modified by-value, but only
-		             *   by-reference (s.a. `cell from deemon' on how to store
+		             *   by-reference (s.a. `Cell from deemon' on how to store
 		             *   by-value objects in by-reference data slots):
 		             * >> global x = 10;
 		             * >> local  y = 20;
@@ -1476,10 +1486,10 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 		             * >> }
 		             * >> print y; // 10
 		             * >> increment_y();
-		             * >> print y; // 10 (assuming a previos compiler error was ignored)
+		             * >> print y; // 10 (assuming a previous compiler error was ignored)
 		             */
 
-		/* Variable scope-modifiers (only one is allowed) */
+		/* Variable storage-modifiers (only one is allowed) */
 		'static' |
 		'__stack'   /* Create a variable that is kept on the stack.
 		             * An implementation is not required to support this functionality,
@@ -1506,13 +1516,13 @@ ast_parse_comma(strict_comma,allow_vardecl) ::= (
 #endif
 
 #if INTERNAL(AST_COMMA_PARSESEMI)
-	/* A semicollon is only required when called from `ast_parse_statement'.
-	 * Furthermore, no semicollon is required when the last parsed
+	/* A semicolon is only required when called from `ast_parse_statement'.
+	 * Furthermore, no semicolon is required when the last parsed
 	 * _inner_comma_expression was a class, or a function with braces:
 	 * >> class MyClass {
-	 * >> } // No semicollon required
+	 * >> } // No semicolon required
 	 * >> function my_function() {
-	 * >> } // No semicollon required
+	 * >> } // No semicolon required
 	 */
 	';'
 #endif
@@ -1546,7 +1556,7 @@ asm_parse_operands(kind) ::= (
 #else
 		/* The operand constraints.
 		 * The contents and meaning of this string are implementation-defined,
-		 * however, the following behavior must supported by all implementations:
+		 * however, the following behavior must be supported by all implementations:
 		 * #if kind == OPERAND_TYPE_OUTPUT
 		 *    - If the string starts with `+', that character is
 		 *      consumed and the operand is marked as input/output.
@@ -1558,13 +1568,13 @@ asm_parse_operands(kind) ::= (
 		 *        - `foo[bar] = 42;'
 		 *        - `foo[bar:baz] = 42;'
 		 *      The assembler should then choose a suitable representation
-		 *     (e.g. a register, or memory location) for the operand, that
+		 *      (e.g. a register, or memory location) for the operand, that
 		 *      either already matches the source operand, or is populated
-		 *      upon entry with the operands old value, and written back to
-		 *      the operand upon user-assembly returning normally.
+		 *      upon entry with the operand's old value, and written back
+		 *      to the operand upon user-assembly returning normally.
 		 *      >> local x = [10];
 		 *      >> print repr x; // [10]
-		 *      >> __asm__("add %0, $1" : "+p" (x[0]));
+		 *      >> __asm__("add %0, $1" : "+p" (x[0])); // Assuming acceptance by the implementation
 		 *      >> print repr x; // [11]
 		 *    - If the string starts with `=', that character is
 		 *      consumed, and the operand is marked as output-only
@@ -1589,8 +1599,8 @@ asm_parse_operands(kind) ::= (
 		 *   >> __asm__("" : "+x" (foo));
 		 *      As far as the compiler is concerned, this piece of code
 		 *      read from & writes to an expression `foo', meaning that
-		 *     `foo' cannot be optimized away as a constant, or be deleted
-		 *      when not used otherwise.
+		 *      `foo' cannot be optimized away as a constant, or be
+		 *      deleted when not used otherwise.
 		 *   >> __asm__("<code>" : "+x" (foo[6]));
 		 *      LOAD(UNDEFINED_01 = foo.operator getitem(6))
 		 *      <code>
@@ -1635,7 +1645,10 @@ asm_parse_clobber ::= (
 		 *    >>     print "Reachable #2";
 		 *    >> }
 		 *  - "noreturn":
-		 *    Indicates that a
+		 *    Indicates that the assembly statement doesn't return normally.
+		 *    Instead, it may not return by any means, return by jumping to
+		 *    some other __asm__ statement, cause the function to return, or
+		 *    unconditionally cause an error to be thrown
 		 *
 		 *  - *:
 		 *    Anything else is implementation-specific and should result
@@ -1647,7 +1660,7 @@ asm_parse_clobber ::= (
 );
 
 /* Inline-assembly.
- * NOTE: Even though this is a standartized way of writing implementation-specific
+ * NOTE: Even though this is a standardized way of writing implementation-specific
  *       inline assembly, the actual syntax, meaning, and structure of inline assembly
  *       is entirely implementation-specific, and an implementation is even allowed
  *       to omit support for some kind of assembly-meta-language by causing a compiler
@@ -1712,7 +1725,10 @@ ast_parse_asm ::= (
 			 * >>     return a + b;
 			 * >> #endif
 			 * >> }
-			 */
+			 *
+			 * Note though that use of the preprocessor here should be treated with care,
+			 * as the mere presence of a preprocessor is an optional feature not supported
+			 * by all implementations. */
 			DDI(<TOK_STRING>...) |
 
 			/* A different way of writing assembly is by writing the text
@@ -1774,7 +1790,7 @@ assembly_format ::= (
  * been inlined. */
 assembly_format_arg ::= (
 	'%' | /* EMIT("%"); */
-	'=' | /* EMIT("%Iu" % get_unique_number()); */
+	'=' | /* EMIT(str(get_unique_number())); */
 
 	/* Operand reference.
 	 * When used, an implementation-specific representation
@@ -1795,7 +1811,7 @@ assembly_format_arg ::= (
 		 * Operand indices are incremented left-to-right, within the
 		 * operand list, and are not reset at any point, meaning that...
 		 * >> __asm__("mov %0, %1" : "=p" (x) : "P" (42));
-		 * ... the `%0' referrs to `x' and `%1' to `42' */
+		 * ... the `%0' refers to `x' and `%1' to `42' */
 		('0'...'9')##...
 	)
 );
