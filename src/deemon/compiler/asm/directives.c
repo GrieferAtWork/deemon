@@ -223,7 +223,7 @@ uasm_parse_directive(void) {
 #endif
 		backup                = *ONE_CHAR_BEFORE_NAME;
 		*ONE_CHAR_BEFORE_NAME = '.';
-		label_name            = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME - 1, name->k_size + 1, 1);
+		label_name            = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME, name->k_size + 1, 1);
 		*ONE_CHAR_BEFORE_NAME = backup;
 		if unlikely(!label_name)
 			goto err;
