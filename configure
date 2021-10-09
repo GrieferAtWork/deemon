@@ -625,7 +625,7 @@ else
 			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			cd "$BLD_PATH/libffi"
 			trycmd make -j $(grep -c ^processor /proc/cpuinfo) || {
-				local error=$?
+				error=$?
 				# libffi relies on libtool, which in turn contains some bashism,
 				# though rather than being called by /bin/bash, it's called by
 				# /bin/sh instead. So if you've just seen errors like this:
