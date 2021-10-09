@@ -1890,10 +1890,20 @@ ast_parse_statement ::= (
 	/* Exception handling using try...catch/finally */
 	ast_parse_try(true) |
 
-	/* Goto label. */
+	/* Goto label. Note that `goto' and label declarations are an optional
+	 * (but highly recommended) implementations feature, meaning that they
+	 * may not be supported by all implementations, or in all contexts (e.g.
+	 * an implementation is allowed not to support goto at all, or only when
+	 * used in a statement (iow: not in `x = ({ if (y) goto bar; 10; });'),
+	 * or anywhere statements can appear).
+	 *
+	 * It is also implementation-specific if there are any restrictions on
+	 * where jumps are allowed to lead, such as jump in/out of try/catch or
+	 * or finally bodies, or into secondary operands of expressions with the
+	 * exact behavior of e.g. "goto foo; local x = 10 + ({ foo: 20; });"
+	 * being completely implementation-defined (if allowed at all) */
 	(DDI('goto') _keyword) |
-	/* Label declaration. */
-	(_keyword ':' ast_parse_statement) |
+	(_keyword ':' ast_parse_statement) | /* Label declaration. */
 
 	/* Case label + switch statements.
 	 * NOTE: The expression following `case' is allowed to non-constant,
