@@ -4339,7 +4339,10 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
+/* TODO: Sequence compare appears broken:
+ * >> assert [10] < [20];
+ * >> assert (10,) < (20,);
+ */
 
 
 DECL_END

@@ -2500,7 +2500,7 @@ target_lrot:
 	pushl  (%edx) /* SAVE: *(SP - SHIFT); */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	decl    %eax
+	addl    $2, %eax
 	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #else /* __KOS__ */
@@ -2539,11 +2539,11 @@ target_rrot:
 	pushl   %edx /* SAVE: SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	decl    %eax
+	addl    $2, %eax
 	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #else /* __KOS__ */
-	addl    $4, %ecx
+	subl    $4, %ecx
 	pushl   %ecx /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #endif /* !__KOS__ */
