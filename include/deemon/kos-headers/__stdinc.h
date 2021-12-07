@@ -216,11 +216,11 @@
 #endif /* !__NO_RPC_EXCEPTIONS */
 
 #if defined(__COMPILER_HAVE_AUTOTYPE) && !defined(__NO_XBLOCK)
-#define __COMPILER_UNUSED(expr) __XBLOCK({ __auto_type __expr = (expr); __expr; })
+#define __COMPILER_UNUSED(expr) __XBLOCK({ __auto_type __cu_expr = (expr); __cu_expr; })
 #elif defined(__COMPILER_HAVE_TYPEOF) && !defined(__NO_XBLOCK)
-#define __COMPILER_UNUSED(expr) __XBLOCK({ __typeof__(expr) __expr = (expr); __expr; })
+#define __COMPILER_UNUSED(expr) __XBLOCK({ __typeof__(expr) __cu_expr = (expr); __cu_expr; })
 #else /* ... */
-#define __COMPILER_UNUSED(expr) (expr)
+#define __COMPILER_UNUSED /* nothing */
 #endif /* !... */
 
 #ifndef __DEFINE_PUBLIC_ALIAS
@@ -379,7 +379,7 @@
 
 /* COMDAT function definitions:
  * When applied to  a function, an  attempt will  be made to  ensure that  multiple
- * instances  of the same  function, which may exist  in multiple compilation units
+ * instances of the same function, which  may exist in multiple compilation  units,
  * get merged into a single  instance at link-time. No  guaranty is made that  this
  * will actually be the case, meaning that as a fall-back, these macros are allowed
  * to  simply declare functions as static (with the exception of `__PUBLIC_COMDAT',
@@ -760,7 +760,16 @@
 #if !defined(__SIZE_TYPE__) || !defined(__UINTPTR_TYPE__)
 #include "hybrid/typecore.h"
 #endif /* !__SIZE_TYPE__ || !__UINTPTR_TYPE__ */
-#define __COMPILER_OFFSETAFTER(s, m)               ((__SIZE_TYPE__)(&((s *)0)->m + 1))
+#if __has_builtin(__builtin_offsetof) || defined(__GNUC__)
+/* Needed,  because some compilers (like GCC) will otherwise
+ * claim that `offsetafter()' is a "non-constant" expression
+ * (even though it  clearly isn't). So  work around this  by
+ * using the native offsetof() builtin, in conjunection with
+ * sizeof(), both of which are _required_ to be constant! */
+#define __COMPILER_OFFSETAFTER(s, m) (__builtin_offsetof(s, m) + sizeof(((s *)0)->m))
+#else /* __has_builtin(__builtin_offsetof) || __GNUC__ */
+#define __COMPILER_OFFSETAFTER(s, m) ((__SIZE_TYPE__)(&((s *)0)->m + 1))
+#endif /* !__has_builtin(__builtin_offsetof) && !__GNUC__ */
 #define __COMPILER_CONTAINER_OF(ptr, type, member) ((type *)((__UINTPTR_TYPE__)(ptr) - __builtin_offsetof(type, member)))
 #endif /* !__INTELLISENSE__ */
 #endif /* __CC__ */

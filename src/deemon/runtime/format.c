@@ -1037,6 +1037,10 @@ encode_hex:
 				if (iter + 1 < end) {
 					uint8_t next_ch = iter[1];
 					/* Prevent ambiguity in something like "\x12ff" supposed to be "\x12" "ff" by using "\u0012ff" */
+					/* FIXME: This whole way of escaping is broken!
+					 *        Doing "\xFF" isn't the same as "\u00FF"!
+					 *        The later encode the unicode character U+00FF (possibly as utf-8;
+					 *        iow: \xC3\xBF), while the former encodes a single byte 0xFF / 255 */
 					if ((next_ch >= 'a' && next_ch <= 'f') ||
 					    (next_ch >= 'A' && next_ch <= 'F')) {
 encode_uni:

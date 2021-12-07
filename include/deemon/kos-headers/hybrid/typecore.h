@@ -268,20 +268,20 @@
 #define __PRIVATE_MIN_S1  (-__INT8_C(127)-__INT8_C(1))
 #define __PRIVATE_MAX_S1    __INT8_C(127)
 #define __PRIVATE_MIN_U1    __UINT8_C(0)
-#define __PRIVATE_MAX_U1    __UINT8_C(0xff)
+#define __PRIVATE_MAX_U1    __UINT8_C(0xff) /* 255 */
 #define __PRIVATE_MIN_S2  (-__INT16_C(32767)-__INT16_C(1))
 #define __PRIVATE_MAX_S2    __INT16_C(32767)
 #define __PRIVATE_MIN_U2    __UINT16_C(0)
-#define __PRIVATE_MAX_U2    __UINT16_C(0xffff)
+#define __PRIVATE_MAX_U2    __UINT16_C(0xffff) /* 65535 */
 #define __PRIVATE_MIN_S4  (-__INT32_C(2147483647)-__INT32_C(1))
 #define __PRIVATE_MAX_S4    __INT32_C(2147483647)
 #define __PRIVATE_MIN_U4    __UINT32_C(0)
-#define __PRIVATE_MAX_U4    __UINT32_C(0xffffffff)
+#define __PRIVATE_MAX_U4    __UINT32_C(0xffffffff) /* 4294967295 */
 #ifdef __INT64_C
 #define __PRIVATE_MIN_S8  (-__INT64_C(9223372036854775807)-__INT64_C(1))
 #define __PRIVATE_MAX_S8    __INT64_C(9223372036854775807)
 #define __PRIVATE_MIN_U8    __UINT64_C(0)
-#define __PRIVATE_MAX_U8    __UINT64_C(0xffffffffffffffff)
+#define __PRIVATE_MAX_U8    __UINT64_C(0xffffffffffffffff) /* 18446744073709551615 */
 #endif /* __INT64_C */
 #ifdef __INT128_C
 #define __PRIVATE_MIN_S16 (-__INT128_C(170141183460469231731687303715884105727)-__INT128_C(1))
@@ -1145,14 +1145,23 @@
 
 
 #if __SIZEOF_POINTER__ <= 2
+#define __SIZEOF_INTPTR_HALF_T__ 1
 #define __INTPTR_HALF_TYPE__  __INT8_TYPE__
 #define __UINTPTR_HALF_TYPE__ __UINT8_TYPE__
 #elif __SIZEOF_POINTER__ <= 4
-#define __INTPTR_HALF_TYPE__  __INT16_TYPE__
-#define __UINTPTR_HALF_TYPE__ __UINT16_TYPE__
+#define __SIZEOF_INTPTR_HALF_T__ 2
+#define __SIZEOF_INTPTR_QUARTER_T__ 1
+#define __INTPTR_HALF_TYPE__     __INT16_TYPE__
+#define __UINTPTR_HALF_TYPE__    __UINT16_TYPE__
+#define __INTPTR_QUARTER_TYPE__  __INT8_TYPE__
+#define __UINTPTR_QUARTER_TYPE__ __UINT8_TYPE__
 #else /* __SIZEOF_POINTER__ <= ... */
-#define __INTPTR_HALF_TYPE__  __INT32_TYPE__
-#define __UINTPTR_HALF_TYPE__ __UINT32_TYPE__
+#define __SIZEOF_INTPTR_HALF_T__ 4
+#define __SIZEOF_INTPTR_QUARTER_T__ 2
+#define __INTPTR_HALF_TYPE__     __INT32_TYPE__
+#define __UINTPTR_HALF_TYPE__    __UINT32_TYPE__
+#define __INTPTR_QUARTER_TYPE__  __INT16_TYPE__
+#define __UINTPTR_QUARTER_TYPE__ __UINT16_TYPE__
 #endif /* __SIZEOF_POINTER__ > ... */
 
 #ifndef __BYTE_TYPE__
@@ -1205,21 +1214,48 @@
 #endif /* !__WINT_UNSIGNED__ */
 #endif /* !__WINT_TYPE__ */
 
+#ifndef __WINT16_TYPE__
+#if __SIZEOF_WINT_T__ == 2
+#define __WINT16_TYPE__ __WINT_TYPE__
+#elif defined(__WINT_UNSIGNED__)
+#define __WINT16_TYPE__ __UINT16_TYPE__
+#else /* ... */
+#define __WINT16_TYPE__ __INT16_TYPE__
+#endif /* !... */
+#endif /* !__WINT16_TYPE__ */
+
+#ifndef __WINT32_TYPE__
+#if __SIZEOF_WINT_T__ == 4
+#define __WINT32_TYPE__ __WINT_TYPE__
+#elif defined(__WINT_UNSIGNED__)
+#define __WINT32_TYPE__ __UINT32_TYPE__
+#else /* ... */
+#define __WINT32_TYPE__ __INT32_TYPE__
+#endif /* !... */
+#endif /* !__WINT32_TYPE__ */
+
 #ifndef __CHAR16_TYPE__
 #define __CHAR16_TYPE__ __UINT16_TYPE__
 #endif /* !__CHAR16_TYPE__ */
 #ifndef __CHAR32_TYPE__
 #define __CHAR32_TYPE__ __UINT32_TYPE__
 #endif /* !__CHAR32_TYPE__ */
+
+/* Most efficient type to-be used as RHS-operator of shift operations. */
+#ifndef __SHIFT_TYPE__
+#define __SIZEOF_SHIFT_T__ 1
+#define __SHIFT_TYPE__     __UINT8_TYPE__
+#endif /* !__SHIFT_TYPE__ */
+
 #ifndef __SIG_ATOMIC_TYPE__
 #define __SIG_ATOMIC_TYPE__ int
 #endif /* !__SIG_ATOMIC_TYPE__ */
 
 #ifndef __SIZEOF_FLOAT__
-#define __SIZEOF_FLOAT__       4
+#define __SIZEOF_FLOAT__  4
 #endif /* !__SIZEOF_FLOAT__ */
 #ifndef __SIZEOF_DOUBLE__
-#define __SIZEOF_DOUBLE__      8
+#define __SIZEOF_DOUBLE__ 8
 #endif /* !__SIZEOF_DOUBLE__ */
 
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
@@ -1356,7 +1392,7 @@
 #ifdef __SIZEOF_LONG_DOUBLE__
 #undef __ARCH_LONG_DOUBLE_IS_DOUBLE
 #if __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__
-#define __ARCH_LONG_DOUBLE_IS_DOUBLE 1
+#define __ARCH_LONG_DOUBLE_IS_DOUBLE
 #endif /* __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__ */
 
 #ifndef __ALIGNOF_LONG_DOUBLE__
@@ -1509,8 +1545,8 @@
 #undef __CHAR32_TYPE__
 #define __CHAR16_TYPE__ char16_t
 #define __CHAR32_TYPE__ char32_t
-#define __char16_t_defined        1
-#define __native_char16_t_defined 1
+#define __char16_t_defined
+#define __native_char16_t_defined
 #endif /* ... */
 
 
@@ -1522,34 +1558,34 @@
  * in arbitrary source files...) */
 
 #ifdef __x86_64__
-#define __SIZE_TYPE_IS_LONG_LONG__    1 /* Should be `long' for elf, but isn't */
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
-#define __INTPTR_TYPE_IS_LONG_LONG__  1 /* Should be `long' for elf, but isn't */
+#define __SIZE_TYPE_IS_LONG_LONG__ /* Should be `long' for elf, but isn't */
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
+#define __INTPTR_TYPE_IS_LONG_LONG__ /* Should be `long' for elf, but isn't */
 #elif defined(__i386__)
-#define __SIZE_TYPE_IS_INT__    1 /* Should be `long' for elf, but isn't */
-#define __PTRDIFF_TYPE_IS_INT__ 1
-#define __INTPTR_TYPE_IS_INT__  1 /* Should be `long' for elf, but isn't */
+#define __SIZE_TYPE_IS_INT__ /* Should be `long' for elf, but isn't */
+#define __PTRDIFF_TYPE_IS_INT__
+#define __INTPTR_TYPE_IS_INT__ /* Should be `long' for elf, but isn't */
 #elif __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-#define __SIZE_TYPE_IS_INT__    1
-#define __PTRDIFF_TYPE_IS_INT__ 1
-#define __INTPTR_TYPE_IS_INT__  1
+#define __SIZE_TYPE_IS_INT__
+#define __PTRDIFF_TYPE_IS_INT__
+#define __INTPTR_TYPE_IS_INT__
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
-#define __PTRDIFF_TYPE_IS_LONG__   1
-#define __INTPTR_TYPE_IS_LONG__    1
+#define __SIZE_TYPE_IS_LONG_LONG__
+#define __PTRDIFF_TYPE_IS_LONG__
+#define __INTPTR_TYPE_IS_LONG__
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 
-#define __INT8_TYPE_IS_CHAR__   1
-#define __INT16_TYPE_IS_SHORT__ 1
+#define __INT8_TYPE_IS_CHAR__
+#define __INT16_TYPE_IS_SHORT__
 #if __SIZEOF_INT__ == 4
-#define __INT32_TYPE_IS_INT__ 1
+#define __INT32_TYPE_IS_INT__
 #elif __SIZEOF_LONG__ == 4
-#define __INT32_TYPE_IS_LONG__ 1
+#define __INT32_TYPE_IS_LONG__
 #endif /* ... */
 #if __SIZEOF_LONG__ == 8
-#define __INT64_TYPE_IS_LONG__ 1
+#define __INT64_TYPE_IS_LONG__
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 8
-#define __INT64_TYPE_IS_LONG_LONG__ 1
+#define __INT64_TYPE_IS_LONG_LONG__
 #endif /* ... */
 
 #else /* __INTELLISENSE__ */
@@ -1583,23 +1619,23 @@
 #define __longlong_t  +9 /* signed long long */
 #define __ulonglong_t +9 /* unsigned long long */
 #ifndef __int8
-#define __HYBRID_TYPECORE_DEFINES_INT8 1
+#define __HYBRID_TYPECORE_DEFINES_INT8
 #define __int8   +64
 #endif /* !__int8 */
 #ifndef __int16
-#define __HYBRID_TYPECORE_DEFINES_INT16 1
+#define __HYBRID_TYPECORE_DEFINES_INT16
 #define __int16  +128
 #endif /* !__int16 */
 #ifndef __int32
-#define __HYBRID_TYPECORE_DEFINES_INT32 1
+#define __HYBRID_TYPECORE_DEFINES_INT32
 #define __int32  +256
 #endif /* !__int32 */
 #ifndef __int64
-#define __HYBRID_TYPECORE_DEFINES_INT64 1
+#define __HYBRID_TYPECORE_DEFINES_INT64
 #define __int64  +512
 #endif /* !__int64 */
 #ifndef __int128
-#define __HYBRID_TYPECORE_DEFINES_INT128 1
+#define __HYBRID_TYPECORE_DEFINES_INT128
 #define __int128 +1024
 #endif /* !__int128 */
 #ifndef __NO_ATTR_W64
@@ -1619,28 +1655,28 @@
 
 #ifdef __INT8_TYPE__
 #if __T_ISCHAR(__INT8_TYPE__)
-#define __INT8_TYPE_IS_CHAR__ 1
+#define __INT8_TYPE_IS_CHAR__
 #elif __T_ISSHORT(__INT8_TYPE__)
-#define __INT8_TYPE_IS_SHORT__ 1
+#define __INT8_TYPE_IS_SHORT__
 #elif __T_ISINT(__INT8_TYPE__)
-#define __INT8_TYPE_IS_INT__ 1
+#define __INT8_TYPE_IS_INT__
 #elif __T_ISLONG(__INT8_TYPE__)
-#define __INT8_TYPE_IS_LONG__ 1
+#define __INT8_TYPE_IS_LONG__
 #elif __T_ISLLONG(__INT8_TYPE__)
-#define __INT8_TYPE_IS_LONG_LONG__ 1
+#define __INT8_TYPE_IS_LONG_LONG__
 #elif __T_ISINT8(__INT8_TYPE__)
 #ifndef __COMPILER_INT8_IS_UNIQUE_TYPE
 /* Must guess the most likely type */
 #if __SIZEOF_CHAR__ == 1
-#define __INT8_TYPE_IS_CHAR__ 1
+#define __INT8_TYPE_IS_CHAR__
 #elif __SIZEOF_SHORT__ == 1
-#define __INT8_TYPE_IS_SHORT__ 1
+#define __INT8_TYPE_IS_SHORT__
 #elif __SIZEOF_INT__ == 1
-#define __INT8_TYPE_IS_INT__ 1
+#define __INT8_TYPE_IS_INT__
 #elif __SIZEOF_LONG__ == 1
-#define __INT8_TYPE_IS_LONG__ 1
+#define __INT8_TYPE_IS_LONG__
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 1
-#define __INT8_TYPE_IS_LONG_LONG__ 1
+#define __INT8_TYPE_IS_LONG_LONG__
 #endif /* __SIZEOF_...__ == 1 */
 #endif /* !__COMPILER_INT8_IS_UNIQUE_TYPE */
 #endif /* ... */
@@ -1648,28 +1684,28 @@
 
 #ifdef __INT16_TYPE__
 #if __T_ISSHORT(__INT16_TYPE__)
-#define __INT16_TYPE_IS_SHORT__ 1
+#define __INT16_TYPE_IS_SHORT__
 #elif __T_ISINT(__INT16_TYPE__)
-#define __INT16_TYPE_IS_INT__ 1
+#define __INT16_TYPE_IS_INT__
 #elif __T_ISLONG(__INT16_TYPE__)
-#define __INT16_TYPE_IS_LONG__ 1
+#define __INT16_TYPE_IS_LONG__
 #elif __T_ISLLONG(__INT16_TYPE__)
-#define __INT16_TYPE_IS_LONG_LONG__ 1
+#define __INT16_TYPE_IS_LONG_LONG__
 #elif __T_ISCHAR(__INT16_TYPE__)
-#define __INT16_TYPE_IS_CHAR__ 1
+#define __INT16_TYPE_IS_CHAR__
 #elif __T_ISINT16(__INT16_TYPE__)
 #ifndef __COMPILER_INT16_IS_UNIQUE_TYPE
 /* Must guess the most likely type */
 #if __SIZEOF_SHORT__ == 2
-#define __INT16_TYPE_IS_SHORT__ 1
+#define __INT16_TYPE_IS_SHORT__
 #elif __SIZEOF_INT__ == 2
-#define __INT16_TYPE_IS_INT__ 1
+#define __INT16_TYPE_IS_INT__
 #elif __SIZEOF_LONG__ == 2
-#define __INT16_TYPE_IS_LONG__ 1
+#define __INT16_TYPE_IS_LONG__
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 2
-#define __INT16_TYPE_IS_LONG_LONG__ 1
+#define __INT16_TYPE_IS_LONG_LONG__
 #elif __SIZEOF_CHAR__ == 2
-#define __INT16_TYPE_IS_CHAR__ 1
+#define __INT16_TYPE_IS_CHAR__
 #endif /* __SIZEOF_...__ == 2 */
 #endif /* !__COMPILER_INT16_IS_UNIQUE_TYPE */
 #endif /* ... */
@@ -1677,28 +1713,28 @@
 
 #ifdef __INT32_TYPE__
 #if __T_ISINT(__INT32_TYPE__)
-#define __INT32_TYPE_IS_INT__ 1
+#define __INT32_TYPE_IS_INT__
 #elif __T_ISLONG(__INT32_TYPE__)
-#define __INT32_TYPE_IS_LONG__ 1
+#define __INT32_TYPE_IS_LONG__
 #elif __T_ISLLONG(__INT32_TYPE__)
-#define __INT32_TYPE_IS_LONG_LONG__ 1
+#define __INT32_TYPE_IS_LONG_LONG__
 #elif __T_ISSHORT(__INT32_TYPE__)
-#define __INT32_TYPE_IS_SHORT__ 1
+#define __INT32_TYPE_IS_SHORT__
 #elif __T_ISCHAR(__INT32_TYPE__)
-#define __INT32_TYPE_IS_CHAR__ 1
+#define __INT32_TYPE_IS_CHAR__
 #elif __T_ISINT32(__INT32_TYPE__)
 #ifndef __COMPILER_INT32_IS_UNIQUE_TYPE
 /* Must guess the most likely type */
 #if __SIZEOF_INT__ == 4
-#define __INT32_TYPE_IS_INT__ 1
+#define __INT32_TYPE_IS_INT__
 #elif __SIZEOF_LONG__ == 4
-#define __INT32_TYPE_IS_LONG__ 1
+#define __INT32_TYPE_IS_LONG__
 #elif __SIZEOF_SHORT__ == 4
-#define __INT32_TYPE_IS_SHORT__ 1
+#define __INT32_TYPE_IS_SHORT__
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 4
-#define __INT32_TYPE_IS_LONG_LONG__ 1
+#define __INT32_TYPE_IS_LONG_LONG__
 #elif __SIZEOF_CHAR__ == 4
-#define __INT32_TYPE_IS_CHAR__ 1
+#define __INT32_TYPE_IS_CHAR__
 #endif /* __SIZEOF_...__ == 4 */
 #endif /* !__COMPILER_INT32_IS_UNIQUE_TYPE */
 #endif /* ... */
@@ -1706,213 +1742,213 @@
 
 #ifdef __INT64_TYPE__
 #if __T_ISLONG(__INT64_TYPE__)
-#define __INT64_TYPE_IS_LONG__ 1
+#define __INT64_TYPE_IS_LONG__
 #elif __T_ISLLONG(__INT64_TYPE__)
-#define __INT64_TYPE_IS_LONG_LONG__ 1
+#define __INT64_TYPE_IS_LONG_LONG__
 #elif __T_ISINT(__INT64_TYPE__)
-#define __INT64_TYPE_IS_INT__ 1
+#define __INT64_TYPE_IS_INT__
 #elif __T_ISSHORT(__INT64_TYPE__)
-#define __INT64_TYPE_IS_SHORT__ 1
+#define __INT64_TYPE_IS_SHORT__
 #elif __T_ISCHAR(__INT64_TYPE__)
-#define __INT64_TYPE_IS_CHAR__ 1
+#define __INT64_TYPE_IS_CHAR__
 #elif __T_ISINT64(__INT64_TYPE__)
 #ifndef __COMPILER_INT64_IS_UNIQUE_TYPE
 /* Must guess the most likely type */
 #if __SIZEOF_LONG__ == 8
-#define __INT64_TYPE_IS_LONG__ 1
+#define __INT64_TYPE_IS_LONG__
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 8
-#define __INT64_TYPE_IS_LONG_LONG__ 1
+#define __INT64_TYPE_IS_LONG_LONG__
 #elif __SIZEOF_INT__ == 8
-#define __INT64_TYPE_IS_INT__ 1
+#define __INT64_TYPE_IS_INT__
 #elif __SIZEOF_SHORT__ == 8
-#define __INT64_TYPE_IS_SHORT__ 1
+#define __INT64_TYPE_IS_SHORT__
 #elif __SIZEOF_CHAR__ == 8
-#define __INT64_TYPE_IS_CHAR__ 1
+#define __INT64_TYPE_IS_CHAR__
 #endif /* __SIZEOF_...__ == 8 */
 #endif /* !__COMPILER_INT64_IS_UNIQUE_TYPE */
 #endif /* ... */
 #endif /* __INT64_TYPE__ */
 
 #if __T_ISINT(__SIZE_TYPE__)
-#define __SIZE_TYPE_IS_INT__ 1
+#define __SIZE_TYPE_IS_INT__
 #elif __T_ISLONG(__SIZE_TYPE__)
-#define __SIZE_TYPE_IS_LONG__ 1
+#define __SIZE_TYPE_IS_LONG__
 #elif __T_ISLLONG(__SIZE_TYPE__)
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
+#define __SIZE_TYPE_IS_LONG_LONG__
 #elif __T_ISSHORT(__SIZE_TYPE__)
-#define __SIZE_TYPE_IS_SHORT__ 1
+#define __SIZE_TYPE_IS_SHORT__
 #elif __T_ISCHAR(__SIZE_TYPE__)
-#define __SIZE_TYPE_IS_CHAR__ 1
+#define __SIZE_TYPE_IS_CHAR__
 #elif __T_ISINT8(__SIZE_TYPE__)
 #ifdef __INT8_TYPE_IS_CHAR__
-#define __SIZE_TYPE_IS_CHAR__ 1
+#define __SIZE_TYPE_IS_CHAR__
 #elif defined(__INT8_TYPE_IS_SHORT__)
-#define __SIZE_TYPE_IS_SHORT__ 1
+#define __SIZE_TYPE_IS_SHORT__
 #elif defined(__INT8_TYPE_IS_INT__)
-#define __SIZE_TYPE_IS_INT__ 1
+#define __SIZE_TYPE_IS_INT__
 #elif defined(__INT8_TYPE_IS_LONG__)
-#define __SIZE_TYPE_IS_LONG__ 1
+#define __SIZE_TYPE_IS_LONG__
 #elif defined(__INT8_TYPE_IS_LONG_LONG__)
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
+#define __SIZE_TYPE_IS_LONG_LONG__
 #endif /* __INT8_TYPE_IS_...__ */
 #elif __T_ISINT16(__SIZE_TYPE__)
 #ifdef __INT16_TYPE_IS_SHORT__
-#define __SIZE_TYPE_IS_SHORT__ 1
+#define __SIZE_TYPE_IS_SHORT__
 #elif defined(__INT16_TYPE_IS_INT__)
-#define __SIZE_TYPE_IS_INT__ 1
+#define __SIZE_TYPE_IS_INT__
 #elif defined(__INT16_TYPE_IS_CHAR__)
-#define __SIZE_TYPE_IS_CHAR__ 1
+#define __SIZE_TYPE_IS_CHAR__
 #elif defined(__INT16_TYPE_IS_LONG__)
-#define __SIZE_TYPE_IS_LONG__ 1
+#define __SIZE_TYPE_IS_LONG__
 #elif defined(__INT16_TYPE_IS_LONG_LONG__)
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
+#define __SIZE_TYPE_IS_LONG_LONG__
 #endif /* __INT16_TYPE_IS_...__ */
 #elif __T_ISINT32(__SIZE_TYPE__)
 #ifdef __INT32_TYPE_IS_INT__
-#define __SIZE_TYPE_IS_INT__ 1
+#define __SIZE_TYPE_IS_INT__
 #elif defined(__INT32_TYPE_IS_LONG__)
-#define __SIZE_TYPE_IS_LONG__ 1
+#define __SIZE_TYPE_IS_LONG__
 #elif defined(__INT32_TYPE_IS_SHORT__)
-#define __SIZE_TYPE_IS_SHORT__ 1
+#define __SIZE_TYPE_IS_SHORT__
 #elif defined(__INT32_TYPE_IS_CHAR__)
-#define __SIZE_TYPE_IS_CHAR__ 1
+#define __SIZE_TYPE_IS_CHAR__
 #elif defined(__INT32_TYPE_IS_LONG_LONG__)
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
+#define __SIZE_TYPE_IS_LONG_LONG__
 #endif /* __INT32_TYPE_IS_...__ */
 #elif __T_ISINT64(__SIZE_TYPE__)
 #ifdef __INT64_TYPE_IS_LONG__
-#define __SIZE_TYPE_IS_LONG__ 1
+#define __SIZE_TYPE_IS_LONG__
 #elif defined(__INT64_TYPE_IS_LONG_LONG__)
-#define __SIZE_TYPE_IS_LONG_LONG__ 1
+#define __SIZE_TYPE_IS_LONG_LONG__
 #elif defined(__INT64_TYPE_IS_INT__)
-#define __SIZE_TYPE_IS_INT__ 1
+#define __SIZE_TYPE_IS_INT__
 #elif defined(__INT64_TYPE_IS_SHORT__)
-#define __SIZE_TYPE_IS_SHORT__ 1
+#define __SIZE_TYPE_IS_SHORT__
 #elif defined(__INT64_TYPE_IS_CHAR__)
-#define __SIZE_TYPE_IS_CHAR__ 1
+#define __SIZE_TYPE_IS_CHAR__
 #endif /* __INT64_TYPE_IS_...__ */
 #endif /* ... */
 
 #ifdef __PTRDIFF_TYPE__
 #if __T_ISINT(__PTRDIFF_TYPE__)
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif __T_ISLONG(__PTRDIFF_TYPE__)
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif __T_ISLLONG(__PTRDIFF_TYPE__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #elif __T_ISSHORT(__PTRDIFF_TYPE__)
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif __T_ISCHAR(__PTRDIFF_TYPE__)
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #elif __T_ISINT8(__PTRDIFF_TYPE__)
 #ifdef __INT8_TYPE_IS_CHAR__
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #elif defined(__INT8_TYPE_IS_SHORT__)
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif defined(__INT8_TYPE_IS_INT__)
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif defined(__INT8_TYPE_IS_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif defined(__INT8_TYPE_IS_LONG_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #endif /* __INT8_TYPE_IS_...__ */
 #elif __T_ISINT16(__PTRDIFF_TYPE__)
 #ifdef __INT16_TYPE_IS_SHORT__
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif defined(__INT16_TYPE_IS_INT__)
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif defined(__INT16_TYPE_IS_CHAR__)
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #elif defined(__INT16_TYPE_IS_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif defined(__INT16_TYPE_IS_LONG_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #endif /* __INT16_TYPE_IS_...__ */
 #elif __T_ISINT32(__PTRDIFF_TYPE__)
 #ifdef __INT32_TYPE_IS_INT__
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif defined(__INT32_TYPE_IS_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif defined(__INT32_TYPE_IS_SHORT__)
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif defined(__INT32_TYPE_IS_CHAR__)
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #elif defined(__INT32_TYPE_IS_LONG_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #endif /* __INT32_TYPE_IS_...__ */
 #elif __T_ISINT64(__PTRDIFF_TYPE__)
 #ifdef __INT64_TYPE_IS_LONG__
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif defined(__INT64_TYPE_IS_LONG_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #elif defined(__INT64_TYPE_IS_INT__)
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif defined(__INT64_TYPE_IS_SHORT__)
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif defined(__INT64_TYPE_IS_CHAR__)
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #endif /* __INT64_TYPE_IS_...__ */
 #endif /* ... */
 #endif /* __PTRDIFF_TYPE__ */
 
 #ifdef __INTPTR_TYPE__
 #if __T_ISINT(__INTPTR_TYPE__)
-#define __INTPTR_TYPE_IS_INT__ 1
+#define __INTPTR_TYPE_IS_INT__
 #elif __T_ISLONG(__INTPTR_TYPE__)
-#define __INTPTR_TYPE_IS_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG__
 #elif __T_ISLLONG(__INTPTR_TYPE__)
-#define __INTPTR_TYPE_IS_LONG_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG_LONG__
 #elif __T_ISSHORT(__INTPTR_TYPE__)
-#define __INTPTR_TYPE_IS_SHORT__ 1
+#define __INTPTR_TYPE_IS_SHORT__
 #elif __T_ISCHAR(__INTPTR_TYPE__)
-#define __INTPTR_TYPE_IS_CHAR__ 1
+#define __INTPTR_TYPE_IS_CHAR__
 #elif __T_ISINT8(__INTPTR_TYPE__)
 #ifdef __INT8_TYPE_IS_CHAR__
-#define __INTPTR_TYPE_IS_CHAR__ 1
+#define __INTPTR_TYPE_IS_CHAR__
 #elif defined(__INT8_TYPE_IS_SHORT__)
-#define __INTPTR_TYPE_IS_SHORT__ 1
+#define __INTPTR_TYPE_IS_SHORT__
 #elif defined(__INT8_TYPE_IS_INT__)
-#define __INTPTR_TYPE_IS_INT__ 1
+#define __INTPTR_TYPE_IS_INT__
 #elif defined(__INT8_TYPE_IS_LONG__)
-#define __INTPTR_TYPE_IS_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG__
 #elif defined(__INT8_TYPE_IS_LONG_LONG__)
-#define __INTPTR_TYPE_IS_LONG_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG_LONG__
 #endif /* __INT8_TYPE_IS_...__ */
 #elif __T_ISINT16(__INTPTR_TYPE__)
 #ifdef __INT16_TYPE_IS_SHORT__
-#define __INTPTR_TYPE_IS_SHORT__ 1
+#define __INTPTR_TYPE_IS_SHORT__
 #elif defined(__INT16_TYPE_IS_INT__)
-#define __INTPTR_TYPE_IS_INT__ 1
+#define __INTPTR_TYPE_IS_INT__
 #elif defined(__INT16_TYPE_IS_CHAR__)
-#define __INTPTR_TYPE_IS_CHAR__ 1
+#define __INTPTR_TYPE_IS_CHAR__
 #elif defined(__INT16_TYPE_IS_LONG__)
-#define __INTPTR_TYPE_IS_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG__
 #elif defined(__INT16_TYPE_IS_LONG_LONG__)
-#define __INTPTR_TYPE_IS_LONG_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG_LONG__
 #endif /* __INT16_TYPE_IS_...__ */
 #elif __T_ISINT32(__INTPTR_TYPE__)
 #ifdef __INT32_TYPE_IS_INT__
-#define __INTPTR_TYPE_IS_INT__ 1
+#define __INTPTR_TYPE_IS_INT__
 #elif defined(__INT32_TYPE_IS_LONG__)
-#define __INTPTR_TYPE_IS_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG__
 #elif defined(__INT32_TYPE_IS_SHORT__)
-#define __INTPTR_TYPE_IS_SHORT__ 1
+#define __INTPTR_TYPE_IS_SHORT__
 #elif defined(__INT32_TYPE_IS_CHAR__)
-#define __INTPTR_TYPE_IS_CHAR__ 1
+#define __INTPTR_TYPE_IS_CHAR__
 #elif defined(__INT32_TYPE_IS_LONG_LONG__)
-#define __INTPTR_TYPE_IS_LONG_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG_LONG__
 #endif /* __INT32_TYPE_IS_...__ */
 #elif __T_ISINT64(__INTPTR_TYPE__)
 #ifdef __INT64_TYPE_IS_LONG__
-#define __INTPTR_TYPE_IS_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG__
 #elif defined(__INT64_TYPE_IS_LONG_LONG__)
-#define __INTPTR_TYPE_IS_LONG_LONG__ 1
+#define __INTPTR_TYPE_IS_LONG_LONG__
 #elif defined(__INT64_TYPE_IS_INT__)
-#define __INTPTR_TYPE_IS_INT__ 1
+#define __INTPTR_TYPE_IS_INT__
 #elif defined(__INT64_TYPE_IS_SHORT__)
-#define __INTPTR_TYPE_IS_SHORT__ 1
+#define __INTPTR_TYPE_IS_SHORT__
 #elif defined(__INT64_TYPE_IS_CHAR__)
-#define __INTPTR_TYPE_IS_CHAR__ 1
+#define __INTPTR_TYPE_IS_CHAR__
 #endif /* __INT64_TYPE_IS_...__ */
 #endif /* ... */
 #endif /* __INTPTR_TYPE__ */
@@ -2070,15 +2106,15 @@
 #else /* ... */
 #define __PTRDIFF_TYPE__ __SSIZE_TYPE__
 #ifdef __SIZE_TYPE_IS_INT__
-#define __PTRDIFF_TYPE_IS_INT__ 1
+#define __PTRDIFF_TYPE_IS_INT__
 #elif defined(__SIZE_TYPE_IS_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG__
 #elif defined(__SIZE_TYPE_IS_LONG_LONG__)
-#define __PTRDIFF_TYPE_IS_LONG_LONG__ 1
+#define __PTRDIFF_TYPE_IS_LONG_LONG__
 #elif defined(__SIZE_TYPE_IS_SHORT__)
-#define __PTRDIFF_TYPE_IS_SHORT__ 1
+#define __PTRDIFF_TYPE_IS_SHORT__
 #elif defined(__SIZE_TYPE_IS_CHAR__)
-#define __PTRDIFF_TYPE_IS_CHAR__ 1
+#define __PTRDIFF_TYPE_IS_CHAR__
 #endif /* ... */
 #endif /* !... */
 #endif /* !__PTRDIFF_TYPE__ */

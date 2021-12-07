@@ -6853,6 +6853,9 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 					filename = slash; /* Trim at start-of-file. */
 					if (slash != text_end)
 						++filename;
+					/* For the purpose of removing "foo/.." sequences,
+					 * also move up the base-address used by that logic. */
+					base = filename;
 				} else if (slash == text_end) {
 					text_iter[-1] = '\0';
 				} else {
@@ -7246,7 +7249,11 @@ TPPLexer_OpenFile(int mode, char *__restrict filename, size_t filename_size,
 			filename = mfilename;
 		}
 		fix_filename(filename, &filename_size);
+	} else {
+		/* Even without normalization, must ensure NUL-terminated filenames! */
+		filename[filename_size] = '\0';
 	}
+
 #ifdef HAVE_CALLBACK_UNKNOWN_FILE
 retry:
 #endif /* HAVE_CALLBACK_UNKNOWN_FILE */
@@ -7905,10 +7912,6 @@ eof:
 				iter = after_second;
 			}
 		}
-		goto settok;
-
-	case '…': /* Why not? */
-		ch = TOK_DOTS;
 		goto settok;
 
 	case '+':

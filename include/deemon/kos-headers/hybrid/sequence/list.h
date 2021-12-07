@@ -27,6 +27,13 @@
 #include "../pp/__va_nargs.h"
 #endif /* !__HYBRID_LIST_RESTRICT_API */
 
+#if defined(NDEBUG) || defined(NDEBUG_QUEUE)
+#define __HYBRID_Q_ASSERT_(expr) /* nothing */
+#else /* NDEBUG || NDEBUG_QUEUE */
+#include "../__assert.h"
+#define __HYBRID_Q_ASSERT_(expr) __hybrid_assert(expr),
+#endif /* !NDEBUG && !NDEBUG_QUEUE */
+
 /*
  * General purpose macros to defining various types of intrusive linked lists.
  * NOTE: On KOS, this header is also used to implement <sys/queue.h>, with all
@@ -91,6 +98,8 @@
  * [1              ]  T*   [*]_PREV_UNSAFE(elem, self, [type], key)           (Return predecessor (undef if no prev-elem exists))
  * [        1      ]  T*   [*]_LOOP_PREV(self, elem, key)                     (NOTE: *_PREV(elem, key) for RINGQ)
  * [---------------]
+ * [N              ]  void [*]_COUNT(self, [presult], [type], key)  # TODO: Implement for all sequence types
+ * [---------------]
  * [1 1 1     1 1  ]  void [*]_INSERT_AFTER(predecessor, elem, key)
  * [      1 1      ]  void [*]_INSERT_AFTER(self, predecessor, elem, key)
  * [1 1 1     1 1  ]  void [*]_INSERT_AFTER_R(predecessor, lo_elem, hi_elem, key)      { ..., predecessor, lo_elem...hi_elem, predecessor.next, ... }
@@ -120,7 +129,7 @@
  * [---------------]
  * [N N N N N   N  ]  void [*]_REMOVE_IF(self, out_pelem, [type], key, condition)
  * |               |             NOTE: `*out_pelem' is written to before `condition' is
- * |               |                   evaluated to test is `*out_pelem' should be removed
+ * |               |                   evaluated to test if `*out_pelem' should be removed
  * |               |             Assumes that `condition' is true for at least 1 element.
  * [  N N          ]  void [*]_TRYREMOVE(self, elem, [type], key, on_failure)
  * [N N N N N   N  ]  void [*]_TRYREMOVE_IF(self, out_pelem, [type], key, condition, on_failure)
@@ -197,9 +206,9 @@
 #define __HYBRID_Q_KEY(key, item)     (item)->key
 #define __HYBRID_Q_PTH(getpath, item) getpath(item)
 #undef __HYBRID_Q_BADPTR
-#ifdef NDEBUG
+#if defined(NDEBUG) || defined(NDEBUG_QUEUE)
 #define __HYBRID_Q_BADPTR(field) (void)0
-#else /* NDEBUG */
+#else /* NDEBUG || NDEBUG_QUEUE */
 #include "../typecore.h"
 #if __SIZEOF_POINTER__ == 4
 #define __HYBRID_Q_BADPTR(field) (void)(*(void **)&(field) = (void *)__UINT32_C(0xcccccccc))
@@ -215,7 +224,7 @@
 #else /* __SIZEOF_POINTER__ == ... */
 #define __HYBRID_Q_BADPTR(field) (void)0
 #endif /* __SIZEOF_POINTER__ != ... */
-#endif /* !NDEBUG */
+#endif /* !NDEBUG && !NDEBUG_QUEUE */
 #if defined(__cplusplus) && !defined(__HYBRID_LIST_RESTRICT_API)
 #undef __HYBRID_Q_STRUCT
 #undef __HYBRID_Q_CLASS
@@ -467,15 +476,36 @@
 #define LIST_P_PREV_P(p_elem, self, type, getpath)                                 ((p_elem) == &(self)->lh_first ? __NULLPTR : (__HYBRID_Q_STRUCT type *)((__SIZE_TYPE__)(p_elem) - (__SIZE_TYPE__)&getpath((T *)0).le_next))
 #define LIST_P_PREV_UNSAFE_P(p_elem, type, getpath)                                (__HYBRID_Q_STRUCT type *)((__SIZE_TYPE__)(p_elem) - (__SIZE_TYPE__)&getpath((T *)0).le_next)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
+#if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
+#define __HYBRID_LIST_COUNT_2(self, key)                                                   __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_3(self, &__hlc_res, key); __XRETURN __hlc_res; })
+#define __HYBRID_LIST_COUNT_3(self, presult, key)                                          __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_COUNT_4(self, presult, type, key)                                    __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_COUNT_P_2(self, getpath)                                             __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_P_3(self, &__hlc_res, getpath); __XRETURN __hlc_res; })
+#define __HYBRID_LIST_COUNT_P_3(self, presult, getpath)                                    __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_LIST_COUNT_P_4(self, presult, type, getpath)                              __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_COUNT(...)   __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_COUNT_, (__VA_ARGS__))(__VA_ARGS__)   /* LIST_COUNT(self, [presult], [type], key) */
+#define LIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* LIST_COUNT_P(self, [presult], [type], getpath) */
+#else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
+#define LIST_COUNT(self, presult, type, key)       __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define LIST_COUNT_P(self, presult, type, getpath) __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
-
+#define __HYBRID_LIST_COUNT(self, presult, T, X, _)     \
+	/* Sorry, this one must be a statement */           \
+	do {                                                \
+		T *__hlc_iter;                                  \
+		*(presult) = 0;                                 \
+		for (__hlc_iter = (self)->lh_first; __hlc_iter; \
+		     __hlc_iter = X(_, __hlc_iter).le_next)     \
+			++*(presult);                               \
+	}	__WHILE0
 #define __HYBRID_LIST_CONCAT(dst, src, T, X, _)                               \
 	/* Sorry, this one must be a statement */                                 \
 	do {                                                                      \
 		if ((src)->lh_first != __NULLPTR) {                                   \
 			T **__hlc_dst_last = &(dst)->lh_first;                            \
 			while (*__hlc_dst_last)                                           \
-				__hlc_dst_last = &X(_, *__hlc_dst_last)->le_next;             \
+				__hlc_dst_last = &X(_, *__hlc_dst_last).le_next;              \
 			X(_, *__hlc_dst_last = (src)->lh_first).le_prev = __hlc_dst_last; \
 			(src)->lh_first = __NULLPTR;                                      \
 		}                                                                     \
@@ -494,6 +524,14 @@
 	 ? (void)(X(_, (dst)->lh_first).le_prev = &(dst)->lh_first, \
 	          (src)->lh_first               = __NULLPTR)        \
 	 : (void)0)
+#define __HYBRID_LIST_Q_ASSERT_NEXTLINK_(elem, X, _) \
+	__HYBRID_Q_ASSERT_(X(_, X(_, elem).le_next).le_prev == &X(_, elem).le_next)
+#define __HYBRID_LIST_Q_ASSERT_PREVLINK_(elem, X, _) \
+	__HYBRID_Q_ASSERT_(*X(_, elem).le_prev == (elem))
+#define __HYBRID_LIST_Q_ASSERT_P_PREVLINK_(p_elem, X, _) \
+	__HYBRID_Q_ASSERT_(X(_, *(p_elem)).le_prev == (p_elem))
+#define __HYBRID_LIST_Q_ASSERT_FIRSTLINK_(self, X, _) \
+	__HYBRID_Q_ASSERT_(X(_, (self)->lh_first).le_prev == &(self)->lh_first)
 #define __HYBRID_LIST_PREV3(elem, self, T, key)   ((elem) == (self)->lh_first ? __NULLPTR : __COMPILER_CONTAINER_OF((elem)->key.le_prev, T, key.le_next))
 #define __HYBRID_LIST_PREV4(elem, self, T, X, _)  ((elem) == (self)->lh_first ? __NULLPTR : (T *)((__SIZE_TYPE__)X(_, elem).le_prev - (__SIZE_TYPE__)&X(_, (T *)0).le_next))
 #define __HYBRID_LIST_PREV_UNSAFE3(elem, T, key)  __COMPILER_CONTAINER_OF((elem)->key.le_prev, T, key.le_next)
@@ -502,33 +540,38 @@
 	__HYBRID_LIST_INSERT_AFTER_R(predecessor, elem, elem, X, _)
 #define __HYBRID_LIST_INSERT_AFTER_R(predecessor, lo_elem, hi_elem, X, _)                               \
 	(void)((X(_, hi_elem).le_next = *(X(_, lo_elem).le_prev = &X(_, predecessor).le_next)) != __NULLPTR \
-	       ? (void)(X(_, X(_, hi_elem).le_next).le_prev = &X(_, hi_elem).le_next)                       \
+	       ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(predecessor, X, _)                                 \
+	                X(_, X(_, hi_elem).le_next).le_prev = &X(_, hi_elem).le_next)                       \
 	       : (void)0,                                                                                   \
 	       X(_, predecessor).le_next = (lo_elem))
 #define __HYBRID_LIST_INSERT_BEFORE(successor, elem, X, _) \
 	__HYBRID_LIST_INSERT_BEFORE_R(successor, elem, elem, X, _)
 #define __HYBRID_LIST_INSERT_BEFORE_R(successor, lo_elem, hi_elem, X, _)    \
-	(void)(*(X(_, lo_elem).le_prev = X(_, successor).le_prev)  = (lo_elem), \
+	(void)(__HYBRID_LIST_Q_ASSERT_PREVLINK_(successor, X, _)                \
+	       *(X(_, lo_elem).le_prev = X(_, successor).le_prev)  = (lo_elem), \
 	       *(X(_, successor).le_prev = &X(_, hi_elem).le_next) = (successor))
 #define __HYBRID_LIST_INSERT_HEAD(self, elem, X, _) \
 	__HYBRID_LIST_INSERT_HEAD_R(self, elem, elem, X, _)
 #define __HYBRID_LIST_INSERT_HEAD_R(self, lo_elem, hi_elem, X, _)            \
 	(void)((X(_, hi_elem).le_next = (self)->lh_first) != __NULLPTR           \
-	       ? (void)(X(_, (self)->lh_first).le_prev = &X(_, hi_elem).le_next) \
+	       ? (void)(__HYBRID_LIST_Q_ASSERT_FIRSTLINK_(self, X, _)            \
+	                X(_, (self)->lh_first).le_prev = &X(_, hi_elem).le_next) \
 	       : (void)0,                                                        \
 	       *(X(_, lo_elem).le_prev = &(self)->lh_first) = (lo_elem))
-#define __HYBRID_LIST_P_INSERT_BEFORE_R(p_successor, lo_elem, hi_elem, X, _)               \
-	(void)((X(_, hi_elem).le_next = *(X(_, lo_elem).le_prev = (p_successor))) != __NULLPTR \
-	       ? (void)(X(_, X(_, hi_elem).le_next).le_prev = &X(_, hi_elem).le_next)          \
-	       : (void)0,                                                                      \
-	       *(p_successor) = (lo_elem))
 #define __HYBRID_LIST_P_INSERT_BEFORE(p_successor, elem, X, _) \
 	__HYBRID_LIST_P_INSERT_BEFORE_R(p_successor, elem, elem, X, _)
+#define __HYBRID_LIST_P_INSERT_BEFORE_R(p_successor, lo_elem, hi_elem, X, _)               \
+	(void)((X(_, hi_elem).le_next = *(X(_, lo_elem).le_prev = (p_successor))) != __NULLPTR \
+	       ? (void)(__HYBRID_LIST_Q_ASSERT_P_PREVLINK_(p_successor, X, _)                  \
+	                X(_, X(_, hi_elem).le_next).le_prev = &X(_, hi_elem).le_next)          \
+	       : (void)0,                                                                      \
+	       *(p_successor) = (lo_elem))
 #define __HYBRID_LIST_P_REMOVE(p_elem, X, _) \
 	__HYBRID_LIST_P_REMOVE_R(p_elem, *(p_elem), X, _)
 #define __HYBRID_LIST_P_REMOVE_R(p_lo_elem, hi_elem, X, _)       \
 	((*(p_lo_elem) = X(_, hi_elem).le_next) != __NULLPTR         \
-	 ? (void)(X(_, X(_, hi_elem).le_next).le_prev = (p_lo_elem)) \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(hi_elem, X, _)    \
+	          X(_, X(_, hi_elem).le_next).le_prev = (p_lo_elem)) \
 	 : (void)0,                                                  \
 	 __HYBRID_Q_BADPTR(X(_, hi_elem).le_next),                   \
 	 __HYBRID_Q_BADPTR(X(_, (*p_lo_elem)).le_prev))
@@ -537,31 +580,36 @@
 #define __HYBRID_LIST_P_REPLACE_R(p_old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, X, _) \
 	(*(X(_, new_lo_elem).le_prev = p_old_lo_elem) = (new_lo_elem),                            \
 	 (X(_, new_hi_elem).le_next = X(_, old_hi_elem).le_next) != __NULLPTR                     \
-	 ? (void)(X(_, X(_, new_hi_elem).le_next).le_prev = &X(_, new_hi_elem).le_next)           \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(old_hi_elem, X, _)                             \
+	          X(_, X(_, new_hi_elem).le_next).le_prev = &X(_, new_hi_elem).le_next)           \
 	 : (void)0,                                                                               \
 	 __HYBRID_Q_BADPTR(X(_, *(p_old_lo_elem)).le_prev),                                       \
 	 __HYBRID_Q_BADPTR(X(_, old_hi_elem).le_next))
 #define __HYBRID_LIST_REMOVE_AFTER(elem, X, _)                            \
 	(__HYBRID_Q_BADPTR(X(_, X(_, elem).le_next).le_prev),                 \
 	 (X(_, elem).le_next = X(_, X(_, elem).le_next).le_next) != __NULLPTR \
-	 ? (void)(X(_, X(_, elem).le_next).le_prev = &X(_, elem).le_next)     \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(elem, X, _)                \
+	          X(_, X(_, elem).le_next).le_prev = &X(_, elem).le_next)     \
 	 : (void)0)
 #define __HYBRID_LIST_REMOVE_HEAD(self, X, _)                         \
 	(__HYBRID_Q_BADPTR(X(_, (self)->lh_first).le_prev),               \
 	 ((self)->lh_first = X(_, (self)->lh_first).le_next) != __NULLPTR \
-	 ? (void)(X(_, (self)->lh_first).le_prev = &(self)->lh_first)     \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_FIRSTLINK_(self, X, _)           \
+	          X(_, (self)->lh_first).le_prev = &(self)->lh_first)     \
 	 : (void)0)
 #define __HYBRID_LIST_REMOVE(elem, X, _) \
 	__HYBRID_LIST_REMOVE_R(elem, elem, X, _)
 #define __HYBRID_LIST_REMOVE_R(lo_elem, hi_elem, X, _)                     \
 	((*X(_, lo_elem).le_prev = X(_, hi_elem).le_next) != __NULLPTR         \
-	 ? (void)(X(_, X(_, hi_elem).le_next).le_prev = X(_, lo_elem).le_prev) \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(hi_elem, X, _)              \
+	          X(_, X(_, hi_elem).le_next).le_prev = X(_, lo_elem).le_prev) \
 	 : (void)0,                                                            \
 	 __HYBRID_Q_BADPTR(X(_, hi_elem).le_next),                             \
 	 __HYBRID_Q_BADPTR(X(_, lo_elem).le_prev))
 #define __HYBRID_LIST_UNBIND(elem, X, _)                                   \
 	(void)((*X(_, elem).le_prev = X(_, elem).le_next) != __NULLPTR         \
-	       ? (void)(X(_, X(_, elem).le_next).le_prev = X(_, elem).le_prev) \
+	       ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(elem, X, _)           \
+	                X(_, X(_, elem).le_next).le_prev = X(_, elem).le_prev) \
 	       : (void)0,                                                      \
 	       __HYBRID_Q_BADPTR(X(_, elem).le_next),                          \
 	       X(_, elem).le_prev = __NULLPTR)
@@ -570,7 +618,8 @@
 #define __HYBRID_LIST_REPLACE_R(old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, X, _) \
 	(*(X(_, new_lo_elem).le_prev = X(_, old_lo_elem).le_prev) = (new_lo_elem),            \
 	 (X(_, new_hi_elem).le_next = X(_, old_hi_elem).le_next) != __NULLPTR                 \
-	 ? (void)(X(_, X(_, new_hi_elem).le_next).le_prev = &X(_, new_hi_elem).le_next)       \
+	 ? (void)(__HYBRID_LIST_Q_ASSERT_NEXTLINK_(old_hi_elem, X, _)                         \
+	          X(_, X(_, new_hi_elem).le_next).le_prev = &X(_, new_hi_elem).le_next)       \
 	 : (void)0,                                                                           \
 	 __HYBRID_Q_BADPTR(X(_, old_lo_elem).le_prev),                                        \
 	 __HYBRID_Q_BADPTR(X(_, old_hi_elem).le_next))
@@ -583,7 +632,7 @@
 		while (*__hlitr_piter != __NULLPTR)                          \
 			__hlitr_piter = &X(_, *__hlitr_piter).le_next;           \
 		*(X(_, lo_elem).le_prev = __hlitr_piter) = (lo_elem);        \
-		X(_, hi_elem).le_next              = __NULLPTR;              \
+		X(_, hi_elem).le_next   = __NULLPTR;                         \
 	}	__WHILE0
 #define __HYBRID_LIST_REMOVE_IF(self, out_pelem, T, X, _, condition)   \
 	/* Sorry, this one must be a statement */                          \
@@ -989,14 +1038,8 @@
 	                                 __ATOMIC_RELEASE, __ATOMIC_RELAXED))
 #define __HYBRID_SLIST_REMOVE_HEAD(self, X, _) \
 	(void)((self)->slh_first = X(_, (self)->slh_first).sle_next)
-#ifdef NDEBUG
 #define __HYBRID_SLIST_REMOVE_PREVPTR(p_elem, elem, X, _) \
-	(void)(*(p_elem) = X(_, elem).sle_next)
-#else /* NDEBUG */
-#include "../__assert.h"
-#define __HYBRID_SLIST_REMOVE_PREVPTR(p_elem, elem, X, _) \
-	(void)(__hybrid_assert(*(p_elem) == (elem)), *(p_elem) = X(_, elem).sle_next)
-#endif /* !NDEBUG */
+	(void)(__HYBRID_Q_ASSERT_(*(p_elem) == (elem)) *(p_elem) = X(_, elem).sle_next)
 #define __HYBRID_SLIST_REMOVE_AFTER(elem, X, _) \
 	(void)(X(_, elem).sle_next = X(_, X(_, elem).sle_next).sle_next)
 #define __HYBRID_SLIST_REMOVE(self, elem, T, X, _)        \
@@ -1119,8 +1162,17 @@
 			}                                                                   \
 		}                                                                       \
 	}	__WHILE0
+#if (defined(NDEBUG) || defined(NDEBUG_QUEUE) || \
+     !defined(__COMPILER_HAVE_TYPEOF) || defined(__NO_XBLOCK))
 #define __HYBRID_SLIST_P_REMOVE(p_elem, X, _) \
-	__HYBRID_SLIST_P_REMOVE_R(p_elem, *(p_elem), X, _)
+	(void)(*(p_elem) = X(_, *(p_elem)).sle_next)
+#else /* ... */
+#define __HYBRID_SLIST_P_REMOVE(p_elem, X, _)                  \
+	__XBLOCK({                                                 \
+		__typeof__(*(p_elem)) __hslpr_elem = *(p_elem);        \
+		__HYBRID_SLIST_P_REMOVE_R(p_elem, __hslpr_elem, X, _); \
+	})
+#endif /* !... */
 #define __HYBRID_SLIST_P_REMOVE_R(p_lo_elem, hi_elem, X, _) \
 	(void)(*(p_lo_elem) = X(_, hi_elem).sle_next,           \
 	       __HYBRID_Q_BADPTR(X(_, hi_elem).sle_next))
@@ -2248,10 +2300,10 @@
 #define TAILQ_INSERT_BEFORE_R(successor, lo_elem, hi_elem, key)                              __HYBRID_TAILQ_INSERT_BEFORE_R(successor, lo_elem, hi_elem, __HYBRID_Q_KEY, key)
 #define TAILQ_INSERT_BEFORE_R_P(successor, lo_elem, hi_elem, getpath)                        __HYBRID_TAILQ_INSERT_BEFORE_R(successor, lo_elem, hi_elem, __HYBRID_Q_PTH, getpath)
 #define TAILQ_INSERT_HEAD_P(self, elem, getpath)                                             __HYBRID_TAILQ_INSERT_HEAD(self, elem, __HYBRID_Q_PTH, getpath)
-#define TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, getpath)                                 __HYBRID_TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, __HYBRID_Q_PTH, getpath)
+#define TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, key)                                     __HYBRID_TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, __HYBRID_Q_KEY, key)
 #define TAILQ_INSERT_HEAD_R_P(self, lo_elem, hi_elem, getpath)                               __HYBRID_TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, __HYBRID_Q_PTH, getpath)
 #define TAILQ_INSERT_TAIL_P(self, elem, getpath)                                             __HYBRID_TAILQ_INSERT_TAIL(self, elem, __HYBRID_Q_PTH, getpath)
-#define TAILQ_INSERT_TAIL_R(self, lo_elem, hi_elem, getpath)                                 __HYBRID_TAILQ_INSERT_TAIL_R(self, lo_elem, hi_elem, __HYBRID_Q_PTH, getpath)
+#define TAILQ_INSERT_TAIL_R(self, lo_elem, hi_elem, key)                                     __HYBRID_TAILQ_INSERT_TAIL_R(self, lo_elem, hi_elem, __HYBRID_Q_KEY, key)
 #define TAILQ_INSERT_TAIL_R_P(self, lo_elem, hi_elem, getpath)                               __HYBRID_TAILQ_INSERT_TAIL_R(self, lo_elem, hi_elem, __HYBRID_Q_PTH, getpath)
 #define TAILQ_ISBOUND(elem, key)                                                             ((elem)->key.tqe_prev != __NULLPTR)
 #define TAILQ_ISBOUND_P(elem, getpath)                                                       (getpath(elem).tqe_prev != __NULLPTR)
@@ -2400,7 +2452,7 @@
 	(__HYBRID_Q_BADPTR(X(_, (self)->tqh_first).tqe_prev),                \
 	 ((self)->tqh_first = X(_, (self)->tqh_first).tqe_next) != __NULLPTR \
 	 ? (void)(X(_, (self)->tqh_first).tqe_prev = &(self)->tqh_first)     \
-	 : (void)((self)->tqh_last = X(_, (self)->tqh_first).tqe_prev))
+	 : (void)((self)->tqh_last = &(self)->tqh_first))
 #define __HYBRID_TAILQ_REMOVE(self, elem, X, _) \
 	__HYBRID_TAILQ_REMOVE_R(self, elem, elem, X, _)
 #define __HYBRID_TAILQ_REMOVE_R(self, lo_elem, hi_elem, X, _)                 \

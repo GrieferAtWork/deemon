@@ -33,6 +33,12 @@
 
 #include "intellisense-common.h"
 
+#if 0 /* This  adds auto-completion for stuff like `#ifdef __INTELLISENSE__',
+       * as VS only auto completes macros that are defined somewhere (luckily
+       * even when only defined in "#if 0"-blocks) */
+#define __INTELLISENSE__ 1
+#endif
+
 /* Native GCC support in intellisense */
 #define __INTELLISENSE_GCC__ 1
 
@@ -139,10 +145,12 @@ static_assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__, "WTF Intellisense?");
 
 #define _Thread_local __thread
 
+#if defined(__x86_64__) || defined(__i386__)
 #define __seg_fs /* nothing */
 #define __seg_gs /* nothing */
 #define __SEG_FS 1
 #define __SEG_GS 1
+#endif /* __x86_64__ || __i386__ */
 
 #if __cplusplus == 201406L
 #undef __cplusplus
@@ -810,7 +818,7 @@ int __builtin_fesetexceptflag(void const *, int);
 int __builtin_fesetround(int);
 int __builtin_fetestexcept(int);
 int __builtin_feupdateenv(void const *);
-void *__builtin_alloca_with_align_and_max(__INTELLISENSE_SIZE_TYPE__, __INTELLISENSE_SIZE_TYPE__, __INTELLISENSE_SIZE_TYPE__);
+void *__builtin_alloca_with_align_and_max(__INTELLISENSE_SIZE_TYPE__, __INTELLISENSE_SIZE_TYPE__, __INTELLISENSE_SIZE_TYPE__ max_size);
 __INTELLISENSE_SIZE_TYPE__ __builtin_strnlen(char const *, __INTELLISENSE_SIZE_TYPE__);
 long __builtin_expect_with_probability(long __exp, long __c, double __probability);
 int __builtin_strcmp_eq(void const *, void const *, __INTELLISENSE_SIZE_TYPE__); /* Yes, that's the prototype... */

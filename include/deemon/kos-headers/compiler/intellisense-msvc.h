@@ -276,13 +276,13 @@
 #define __INTMAX_C(c)  c##i64
 #define __UINTMAX_C(c) c##ui64
 
-#define __CHAR16_TYPE__     ::__intern::____INTELLISENSE_char16_t
-#define __CHAR32_TYPE__     ::__intern::____INTELLISENSE_char32_t
-#define __WCHAR_TYPE__      wchar_t
-#define __WINT_TYPE__       unsigned int
-#define __SIZEOF_WCHAR_T__  2 /* Psht... */
-#define __native_wchar_t_defined 1 /* Psht... */
-#define __wchar_t_defined   1 /* Psht... */
+#define __CHAR16_TYPE__          ::__intern::____INTELLISENSE_char16_t
+#define __CHAR32_TYPE__          ::__intern::____INTELLISENSE_char32_t
+#define __WCHAR_TYPE__           wchar_t
+#define __WINT_TYPE__            unsigned int
+#define __SIZEOF_WCHAR_T__       2 /* Psht... */
+#define __native_wchar_t_defined   /* Psht... */
+#define __wchar_t_defined          /* Psht... */
 
 #define __DBL_DECIMAL_DIG__        17
 #define __DBL_DENORM_MIN__       ((double)4.94065645841246544177e-324L)
@@ -1007,13 +1007,13 @@ template<> struct ____INTELLISENSE_static_if_helper<true> { bool __is_true__(); 
 #endif /* __cplusplus */
 
 #ifdef __x86_64__
-typedef char *__builtin_va_list[1],*__gnuc_va_list[1];
+typedef char *__builtin_va_list[1], *__gnuc_va_list[1];
 namespace __intern {
 template<class __T> __T ____INTELLISENSE_va_arg_heper(char *(&)[1]);
 template<class __T> __T ____INTELLISENSE_va_arg_heper(char **&);
 }
 #else /* __x86_64__ */
-typedef char *__builtin_va_list,*__gnuc_va_list;
+typedef char *__builtin_va_list, *__gnuc_va_list;
 namespace __intern {
 template<class __T> __T ____INTELLISENSE_va_arg_heper(__builtin_va_list &);
 }

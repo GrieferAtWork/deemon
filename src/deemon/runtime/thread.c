@@ -987,7 +987,6 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 	/* WARNING: Once we release this lock, the main thread is allowed to assume that we no longer exist.
 	 *          With that in mind, _ALL_ cleanup _MUST_ be done before this point! */
 	recursive_rwlock_endwrite(&globthread_lock);
-	DEE_CHECKMEMORY();
 }
 
 #ifndef __NO_ATTR_THREAD
@@ -1527,11 +1526,9 @@ early_err:
 	}
 
 	/* Invoke the thread's main() callback. */
-	DEE_CHECKMEMORY();
 	result = DeeObject_Call(threadmain,
 	                        DeeTuple_SIZE(threadargs),
 	                        DeeTuple_ELEM(threadargs));
-	DEE_CHECKMEMORY();
 
 	Dee_Decref(threadmain);
 done_nomain:
@@ -1583,7 +1580,6 @@ set_result:
 
 	/* As the last set, destroy the thread descriptor.
 	 * (Although destroy is the wrong term. - Rather: clear()+decref()) */
-	DEE_CHECKMEMORY();
 	destroy_thread_self(self);
 	/* Don't write a new TLS value. - There'd be no point
 	 * and we are no longer guarantied to continue running! */
