@@ -3579,7 +3579,7 @@ DeeList_LoI(List *lhs, DeeObject *rhs) {
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeList_CompareS(List *lhs, DeeObject *rhs) {
 	int result;
 	size_t rhs_size;
@@ -3615,7 +3615,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_lo(List *self, DeeObject *other) {
 	int result = DeeList_CompareS(self, other);
 	if unlikely(result == -2)

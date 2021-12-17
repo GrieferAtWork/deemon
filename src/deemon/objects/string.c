@@ -812,16 +812,26 @@ compare_strings(String *__restrict lhs,
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_lo(String *self, DeeObject *some_object) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+string_compare(String *lhs, DeeObject *rhs) {
 	int result;
-	if (DeeBytes_Check(some_object))
-		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
+	if (DeeBytes_Check(rhs))
+		result = compare_string_bytes(lhs, (DeeBytesObject *)rhs);
 	else {
-		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(rhs, &DeeString_Type))
 			goto err;
-		result = compare_strings(self, (String *)some_object);
+		result = compare_strings(lhs, (String *)rhs);
 	}
+	return result;
+err:
+	return -2;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_lo(String *self, DeeObject *some_object) {
+	int result = string_compare(self, some_object);
+	if unlikely(result == -2)
+		goto err;
 	return_bool_(result < 0);
 err:
 	return NULL;
@@ -829,14 +839,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_le(String *self, DeeObject *some_object) {
-	int result;
-	if (DeeBytes_Check(some_object))
-		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
-	else {
-		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			goto err;
-		result = compare_strings(self, (String *)some_object);
-	}
+	int result = string_compare(self, some_object);
+	if unlikely(result == -2)
+		goto err;
 	return_bool_(result <= 0);
 err:
 	return NULL;
@@ -844,14 +849,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_gr(String *self, DeeObject *some_object) {
-	int result;
-	if (DeeBytes_Check(some_object))
-		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
-	else {
-		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			goto err;
-		result = compare_strings(self, (String *)some_object);
-	}
+	int result = string_compare(self, some_object);
+	if unlikely(result == -2)
+		goto err;
 	return_bool_(result > 0);
 err:
 	return NULL;
@@ -859,14 +859,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_ge(String *self, DeeObject *some_object) {
-	int result;
-	if (DeeBytes_Check(some_object))
-		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
-	else {
-		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-			goto err;
-		result = compare_strings(self, (String *)some_object);
-	}
+	int result = string_compare(self, some_object);
+	if unlikely(result == -2)
+		goto err;
 	return_bool_(result >= 0);
 err:
 	return NULL;

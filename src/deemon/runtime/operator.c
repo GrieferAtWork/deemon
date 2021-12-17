@@ -3390,15 +3390,102 @@ DeeObject_CompareNe(DeeObject *self, DeeObject *some_object) {
 	return result;
 }
 
-/* @return: == -2: An error occurred.
- * @return: == -1: `self < some_object'
- * @return: == 0:  Objects compare as equal
- * @return: == 1:  `self > some_object' */
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeObject_Compare(DeeObject *self, DeeObject *some_object) {
-	int result;
-	/* TODO: Special optimization for certain types (including generic sequence types) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL /* From "../objects/seq.c" */
+seq_lo(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* From "../objects/seq.c" */
+DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL /* From "../objects/tuple.c" */
+tuple_lo(DeeTupleObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL /* From "../objects/list.c" */
+list_lo(DeeListObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* From "../objects/list.c" */
+DeeList_CompareS(DeeListObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* From "../objects/string.c" */
+string_compare(DeeStringObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL /* From "../objects/string.c" */
+string_lo(DeeStringObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* From "../objects/bytes.c" */
+bytes_compare(DeeBytesObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* From "../objects/bytes.c" */
+bytes_lo(DeeBytesObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_lo(DeeSuperObject *self, DeeObject *some_object);
 
+
+/* @return: == -2: An error occurred.
+ * @return: == -1: `lhs < rhs'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `lhs > rhs' */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_Compare(DeeObject *lhs, DeeObject *rhs) {
+#if 1
+	DeeTypeObject *tp_lhs;
+	ASSERT_OBJECT(lhs);
+	ASSERT_OBJECT(rhs);
+	tp_lhs = Dee_TYPE(lhs);
+again:
+	do {
+		if (tp_lhs->tp_cmp) {
+			int opval;
+			DREF DeeObject *opres;
+			WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
+			tp_lo = tp_lhs->tp_cmp->tp_lo;
+
+			/* Check for special operators for which we provide optimizations. */
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_lo)
+				return DeeSeq_CompareVS(DeeTuple_ELEM(lhs), DeeTuple_SIZE(lhs), rhs);
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_lo)
+				return DeeList_CompareS((DeeListObject *)lhs, rhs);
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seq_lo)
+				return DeeSeq_Compare(lhs, rhs);
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo)
+				return string_compare((DeeStringObject *)lhs, rhs);
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_lo)
+				return bytes_compare((DeeBytesObject *)lhs, rhs);
+			if (tp_lo == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_lo) {
+				/* Unwind super wrappers */
+				tp_lhs = DeeSuper_TYPE(lhs);
+				lhs    = DeeSuper_SELF(lhs);
+				goto again;
+			}
+
+			/* Fallback: do 1/2 operator invocations, based on those operators that are available. */
+			if (tp_lo) {
+				opres = (*tp_lo)(lhs, rhs);
+			} else if (tp_lhs->tp_cmp->tp_ge) {
+				opres = invoke_not((*tp_lhs->tp_cmp->tp_ge)(lhs, rhs));
+			} else {
+				break;
+			}
+			if unlikely(!opres)
+				return -2;
+			opval = DeeObject_Bool(opres);
+			Dee_Decref(opres);
+			if (opval != 0)
+				return unlikely(opval < 0) ? -2 : -1;
+
+			/* At this point we know that: "!(lhs < rhs)"
+			 * -> Now check if "lhs == rhs" */
+			if (tp_lhs->tp_cmp->tp_eq) {
+				opres = (*tp_lhs->tp_cmp->tp_eq)(lhs, rhs);
+			} else if (tp_lhs->tp_cmp->tp_ne) {
+				opres = invoke_not((*tp_lhs->tp_cmp->tp_ne)(lhs, rhs));
+			} else {
+				err_unimplemented_operator(tp_lhs, OPERATOR_LO);
+				return -2;
+			}
+			if unlikely(!opres)
+				return -2;
+			opval = DeeObject_Bool(opres);
+			Dee_Decref(opres);
+			if likely(opval >= 0)
+				opval = !opval;
+			return opval;
+		}
+	} while (type_inherit_compare(tp_lhs));
+	err_unimplemented_operator(tp_lhs, OPERATOR_LO);
+	return -2;
+#else
 	/* Fallback: use the normal compare operators.
 	 * For this purpose, we always use "operator <" and "operator ==" */
 	result = DeeObject_CompareLo(self, some_object);
@@ -3408,6 +3495,7 @@ DeeObject_Compare(DeeObject *self, DeeObject *some_object) {
 	if likely(result >= 0)
 		result = !result;
 	return result;
+#endif
 }
 
 #endif /* !DEFINE_TYPED_OPERATORS */

@@ -780,7 +780,7 @@ DeeSeq_Eq(DeeObject *lhs, DeeObject *rhs) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *lhs_iter;
@@ -815,7 +815,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_lo(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Compare(self, other);
 	if unlikely(result == -2)

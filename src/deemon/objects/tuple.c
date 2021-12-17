@@ -1706,7 +1706,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_lo(Tuple *self, DeeObject *other) {
 	int result;
 	result = DeeSeq_CompareVS(DeeTuple_ELEM(self),

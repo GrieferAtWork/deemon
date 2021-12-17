@@ -1051,8 +1051,39 @@ dee_memxcmp(void const *a, size_t asiz,
 	return 1;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+bytes_compare(Bytes *lhs, DeeObject *rhs) {
+	uint8_t *other_data;
+	size_t other_size;
+	if (DeeString_Check(rhs))
+		return -compare_string_bytes((DeeStringObject *)rhs, lhs);
+	if (DeeObject_AssertTypeExact(rhs, &DeeBytes_Type))
+		goto err;
+	other_data = DeeBytes_DATA(rhs);
+	other_size = DeeBytes_SIZE(rhs);
+	return memxcmp(DeeBytes_DATA(lhs),
+	               DeeBytes_SIZE(lhs),
+	               other_data,
+	               other_size);
+err:
+	return -2;
+}
+
+
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_BYTES_COMPARE(name, op)                   \
+	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Bytes *self, DeeObject *other) {                \
+		int diff = bytes_compare(self, other);           \
+		if unlikely(diff == -2)                          \
+			goto err;                                    \
+		return_bool(diff op 0);                          \
+	err:                                                 \
+		return NULL;                                     \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_BYTES_COMPARE(name, op)                                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
+	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
 	name(Bytes *self, DeeObject *other) {                                           \
 		uint8_t *other_data;                                                        \
 		size_t other_size;                                                          \
@@ -1069,6 +1100,7 @@ dee_memxcmp(void const *a, size_t asiz,
 	err:                                                                            \
 		return NULL;                                                                \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_BYTES_COMPARE(bytes_lo, <)
 DEFINE_BYTES_COMPARE(bytes_le, <=)
 DEFINE_BYTES_COMPARE(bytes_gr, >)

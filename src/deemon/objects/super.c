@@ -492,7 +492,7 @@ super_ne(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareNeObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_lo(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareLoObject(self->s_type, self->s_self, some_object);
 }
