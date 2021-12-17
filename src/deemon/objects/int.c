@@ -1011,7 +1011,7 @@ parse_ch:
 				uni    = utf8_readchar((char const **)&begin, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
-				 * want to support any kind of digit, have `int("²")' evaluate to 2,
+				 * want to support any kind of digit, have `int("ï¿½")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
 				 * decimals by using `string.isdecimal()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */
@@ -1373,7 +1373,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				uni    = utf8_readchar_rev((char const **)&iter, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
-				 * want to support any kind of digit, have `int("²")' evaluate to 2,
+				 * want to support any kind of digit, have `int("ï¿½")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
 				 * decimals by using `string.isdecimal()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */
@@ -3257,17 +3257,13 @@ PRIVATE struct type_method tpconst int_class_methods[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_sizeof(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+int_sizeof(DeeIntObject *self) {
 	size_t int_size;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
 	int_size = (size_t)self->ob_size;
 	if ((dssize_t)int_size < 0)
 		int_size = (size_t) - (dssize_t)int_size;
 	return DeeInt_NewSize(offsetof(DeeIntObject, ob_digit) +
 	                      (int_size * sizeof(digit)));
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
@@ -3339,9 +3335,6 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	      "Return the number of bits needed to represent @this integer in base-2"),
 	  TYPE_METHOD_FKWDS },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_sizeof,
-	  DOC("->?Dint") },
 	{ "__forcecopy__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_forcecopy,
 	  DOC("->?Dint\n"
@@ -3423,6 +3416,9 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	  DOC("->?Dint\n"
 	      "Returns the minimum number of bytes that are required "
 	      "in order to encode @this integer in unsigned two's complement") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

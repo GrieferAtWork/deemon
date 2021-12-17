@@ -1290,23 +1290,24 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_sizeof(ClassDescriptor *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	return DeeInt_NewSize(offsetof(ClassDescriptor, cd_iattr_list) +
-	                      ((self->cd_iattr_mask + 1) * sizeof(struct class_attribute)) +
-	                      (self->cd_cattr_list == empty_class_attributes ? 0 : (self->cd_cattr_mask + 1) * sizeof(struct class_attribute)) +
-	                      (self->cd_clsop_list == empty_class_operators ? 0 : (self->cd_clsop_mask + 1) * sizeof(struct class_operator)));
-err:
- return NULL;
+cd_sizeof(ClassDescriptor *self) {
+	size_t result;
+	result = offsetof(ClassDescriptor, cd_iattr_list);
+	result += (self->cd_iattr_mask + 1) * sizeof(struct class_attribute);
+	if (self->cd_cattr_list != empty_class_attributes)
+		result += (self->cd_cattr_mask + 1) * sizeof(struct class_attribute);
+	if (self->cd_clsop_list != empty_class_operators)
+		result += (self->cd_clsop_mask + 1) * sizeof(struct class_operator);
+	return DeeInt_NewSize(result);
 }
 
+#if 1
+#define cd_methods NULL
+#else
 PRIVATE struct type_method tpconst cd_methods[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cd_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
+#endif
 
 PRIVATE struct type_getset tpconst cd_getsets[] = {
 	{ "flags",
@@ -1337,6 +1338,9 @@ PRIVATE struct type_getset tpconst cd_getsets[] = {
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
 	  DOC("->?#AttributeTable\n"
 	      "Enumerate user-defined class ($static) attributes as a mapping-like ?Dstring-?#Attribute sequence") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cd_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

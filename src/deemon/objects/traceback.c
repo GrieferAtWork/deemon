@@ -722,11 +722,9 @@ PRIVATE struct type_gc tpconst traceback_gc = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-traceback_sizeof(DeeTracebackObject *self, size_t argc, DeeObject *const *argv) {
+traceback_sizeof(DeeTracebackObject *self) {
 	size_t result;
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
 	result = offsetof(DeeTracebackObject, tb_frames) +
 	         (self->tb_numframes * sizeof(struct code_frame));
 	for (i = 0; i < self->tb_numframes; ++i) {
@@ -738,17 +736,14 @@ traceback_sizeof(DeeTracebackObject *self, size_t argc, DeeObject *const *argv) 
 			result += self->tb_frames[i].cf_stacksz * sizeof(DREF DeeObject *);
 	}
 	return DeeInt_NewSize(result);
-err:
-	return NULL;
 }
 
-PRIVATE struct type_method tpconst traceback_methods[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&traceback_sizeof,
+PRIVATE struct type_getset tpconst traceback_getsets[] = {
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&traceback_sizeof, NULL, NULL,
 	  DOC("->?Dint") },
 	{ NULL }
 };
-
 
 PUBLIC DeeTypeObject DeeTraceback_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -786,8 +781,8 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ traceback_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ traceback_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ traceback_class_getsets,

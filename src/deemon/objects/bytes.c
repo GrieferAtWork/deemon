@@ -1507,6 +1507,14 @@ bytes_dellast(Bytes *__restrict self) {
 	return bytes_setlast(self, Dee_None);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_sizeof(Bytes *self) {
+	size_t result = offsetof(Bytes, b_data);
+	if (self->b_buffer.bb_base == self->b_data)
+		result += self->b_buffer.bb_size;
+	return DeeInt_NewSize(result);
+}
+
 
 PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	{ "isreadonly",
@@ -1537,6 +1545,9 @@ PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	      "@throw ValueError @this Bytes object is empty\n"
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
 	      "Access the last byte of @this Bytes object") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

@@ -1119,21 +1119,21 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_sizeof(FixedList *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+fl_sizeof(FixedList *self) {
 	return DeeInt_NewSize(offsetof(FixedList, fl_elem) +
 	                      (self->fl_size * sizeof(DREF DeeObject *)));
-err:
-	return NULL;
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
 	{ "clear",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_clear_meth,
 	  DOC("()") },
+	{ NULL }
+};
+
+PRIVATE struct type_getset tpconst fl_getsets[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_sizeof, NULL, NULL,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -1232,7 +1232,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ fl_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ fl_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

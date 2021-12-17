@@ -1631,13 +1631,9 @@ tuple_hash(Tuple *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_sizeof(Tuple *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+tuple_sizeof(Tuple *self) {
 	return DeeInt_NewSize(offsetof(Tuple, t_elem) +
 	                      (self->t_size * sizeof(DeeObject *)));
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1661,22 +1657,14 @@ err_empty:
 }
 
 
-PRIVATE struct type_method tpconst tuple_methods[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tuple_sizeof,
-	  DOC("->?Dint") },
-	{ NULL }
-};
-
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first,
-	  NULL,
-	  NULL },
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first, NULL, NULL },
 	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last,
-	  NULL,
-	  NULL },
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last, NULL, NULL },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -2037,7 +2025,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ tuple_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ tuple_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ tuple_class_methods,

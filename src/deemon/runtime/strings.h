@@ -132,6 +132,10 @@ STRING(__module__)
 STRING(first)
 STRING(last)
 
+#ifndef STR___sizeof__
+#define STR___sizeof__ "__sizeof__"
+#endif /* !STR___sizeof__ */
+
 #ifdef DeeSysFD_GETSET
 STRING2(str_getsysfd, DeeSysFD_GETSET)
 #endif /* DeeSysFD_GETSET */

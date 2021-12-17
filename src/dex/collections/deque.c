@@ -1398,11 +1398,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_sizeof(Deque *self, size_t argc, DeeObject *const *argv) {
-	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	result = sizeof(Deque);
+deq_sizeof(Deque *self) {
+	size_t result = sizeof(Deque);
 	Deque_LockRead(self);
 	ASSERT((self->d_head != NULL) == (self->d_tail != NULL));
 	if (self->d_head) {
@@ -1414,8 +1411,6 @@ deq_sizeof(Deque *self, size_t argc, DeeObject *const *argv) {
 	}
 	Deque_LockEndRead(self);
 	return DeeInt_NewSize(result);
-err:
-	return NULL;
 }
 
 
@@ -1491,8 +1486,12 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	      "x.rrrot(3);\n"
 	      "print repr x; /* { 10, 20, 50, 30, 40 } */"
 	      "}") },
+	{ NULL }
+};
+
+PRIVATE struct type_getset tpconst deq_getsets[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_sizeof, NULL, NULL,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -1611,7 +1610,7 @@ INTERN DeeTypeObject Deque_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ deq_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ deq_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

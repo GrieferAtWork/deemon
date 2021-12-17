@@ -2465,13 +2465,9 @@ err:
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_sizeof(List *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+list_sizeof(List *self) {
 	return DeeInt_NewSize(sizeof(List) +
 	                      (WEAK_READSIZE(self) * sizeof(DeeObject *)));
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3021,17 +3017,16 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	  DOC("->\n"
 	      "@return The last item from @this List") },
 	{ "frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_frozen,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_frozen, NULL, NULL,
 	  DOC("->?DTuple\n"
 	      "Return a copy of the contents of @this List as an immutable sequence") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_method tpconst list_methods[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_sizeof },
 	{ DeeString_STR(&str_append),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_append,
 	  DOC("(items!)\n"

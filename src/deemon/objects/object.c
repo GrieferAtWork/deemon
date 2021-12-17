@@ -1411,14 +1411,14 @@ PRIVATE char const meth_setattr[]    = "oo:__setattr__";
 PRIVATE char const meth_enumattr[]   = ":__enumattr__";
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_sizeof(DeeObject *self, size_t argc, DeeObject *const *argv) {
+object_sizeof(DeeObject *self) {
 	DeeTypeObject *type;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+
 	/* Individual sub-types should override this function and add the proper value.
 	 * This implementation is merely used for any generic fixed-length type that
 	 * doesn't do any custom heap allocations. */
 	type = Dee_TYPE(self);
+
 	/* Variable types lack a standardized way of determining their size in bytes. */
 	if unlikely(type->tp_flags & TP_FVARIABLE)
 		goto err_isvar;
@@ -2159,11 +2159,6 @@ DEFINE_DEPRECATED_INPLACE_BINARY(ipow, DeeObject_InplacePow)
 
 
 PRIVATE struct type_method tpconst object_methods[] = {
-	/* Utility function: Return the size of a given object (in bytes) */
-	{ "__sizeof__", &object_sizeof,
-	  DOC("->?Dint\n"
-	      "Return the size of @this object in bytes") },
-
 	/* Operator invocation functions. */
 	{ meth_copy+1,       &object_copy, DOC("->\n@return A copy of @this object") },
 	{ meth_deepcopy+1,   &object_deepcopy, DOC("->\n@return A deep copy of @this object") },
@@ -2294,10 +2289,16 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	      "For non-user-defined classes (aka. when ${this.class.__isclass__} "
 	      "is ?f), an empty sequence is returned\n"
 	      "The class-attribute table can be accessed through :Type.__ctable__") },
+
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	{ "id", &object_id_get, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Returns a unique id identifying this specific object instance") },
+
+	/* Utility function: Return the size of a given object (in bytes) */
+	{ STR___sizeof__, &object_sizeof, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Return the size of @this object in bytes") },
 	{ NULL }
 };
 

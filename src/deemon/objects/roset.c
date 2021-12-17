@@ -36,6 +36,7 @@
 #include <hybrid/atomic.h>
 
 #include "../runtime/runtime_error.h"
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -557,26 +558,22 @@ PRIVATE struct type_seq roset_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-roset_sizeof(Set *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+roset_sizeof(Set *self) {
 	return DeeInt_NewSize(offsetof(Set, rs_elem) +
 	                      ((self->rs_mask + 1) *
 	                       sizeof(struct roset_item)));
-err:
-	return NULL;
 }
 
 PRIVATE struct type_method tpconst roset_methods[] = {
 	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSequence */
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&roset_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

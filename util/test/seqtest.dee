@@ -137,7 +137,7 @@ function testSequenceType(typ: Type, cls: string) {
 				assert obj.length == #(obj as Sequence);
 				assert (obj as Sequence).length == #obj;
 				assert (obj as Sequence).length == #(obj as Sequence);
-				assert obj.__sizeof__() != 0;
+				assert obj.__sizeof__ != 0;
 				if (obj) {
 					assert obj.first in rawTestInput;
 					assert obj.last in rawTestInput;

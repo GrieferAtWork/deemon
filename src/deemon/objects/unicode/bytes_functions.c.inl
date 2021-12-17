@@ -4398,20 +4398,6 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_sizeof(Bytes *self, size_t argc, DeeObject *const *argv) {
-	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	result = offsetof(Bytes, b_data);
-	if (self->b_buffer.bb_base == self->b_data)
-		result += self->b_buffer.bb_size;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-
 
 INTDEF struct type_method tpconst bytes_methods[];
 INTERN struct type_method tpconst bytes_methods[] = {
@@ -5471,10 +5457,6 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "This function is similar to ?#segments, but instead of being given the "
 	      "amount of sub-strings and figuring out their lengths, this function takes "
 	      "the length of sub-strings and figures out their amount") },
-
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sizeof,
-	  DOC("->?Dint") },
 
 	{ NULL }
 };

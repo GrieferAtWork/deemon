@@ -1247,14 +1247,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_sizeof(UDict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+udict_sizeof(UDict *self) {
 	return DeeInt_NewSize(sizeof(UDict) +
 	                      ((self->d_mask + 1) *
 	                       sizeof(struct udict_item)));
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1318,6 +1314,9 @@ PRIVATE struct type_getset tpconst udict_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoDict_FromUDict, NULL, NULL,
 	  DOC("->?AFrozen?.\n"
 	      "Returns a read-only (frozen) copy of @this dict") },
+	{ "__sizeof__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -1383,9 +1382,6 @@ PRIVATE struct type_method tpconst udict_methods[] = {
 	  DOC("(items:?S?T2?O?O)\n"
 	      "Iterate @items and unpack each element into 2 others, using them as "
 	      "key and value to insert into @this Dict") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -2065,14 +2061,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-urodict_sizeof(URoDict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+urodict_sizeof(URoDict *self) {
 	return DeeInt_NewSize(offsetof(URoDict, rd_elem) +
 	                      ((self->rd_mask + 1) *
 	                       sizeof(struct udict_item)));
-err:
-	return NULL;
 }
 
 
@@ -2081,14 +2073,14 @@ PRIVATE struct type_method tpconst urodict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&urodict_get,
 	  DOC_GET("(key,def=!N)->\n"
 	          "@return The value associated with @key or @def when @key has no value associated") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&urodict_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_getset tpconst urodict_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ "__sizeof__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

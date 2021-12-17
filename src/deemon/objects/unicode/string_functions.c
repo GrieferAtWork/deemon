@@ -10910,38 +10910,6 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_sizeof(String *self, size_t argc, DeeObject *const *argv) {
-	size_t result;
-	struct string_utf *utf;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	result = offsetof(String, s_str);
-	result += (self->s_len + 1) * sizeof(char);
-	utf = self->s_data;
-	if (utf) {
-		unsigned int i;
-		result += sizeof(struct string_utf);
-		for (i = 1; i < STRING_WIDTH_COUNT; ++i) {
-			if (!utf->u_data[i])
-				continue;
-			result += STRING_MUL_SIZEOF_WIDTH(WSTR_LENGTH(utf->u_data[i]), i);
-		}
-		if (utf->u_data[STRING_WIDTH_1BYTE] &&
-		    utf->u_data[STRING_WIDTH_1BYTE] != (size_t *)DeeString_STR(self))
-			result += WSTR_LENGTH(utf->u_data[STRING_WIDTH_1BYTE]) * 1;
-		if (utf->u_utf8 && utf->u_utf8 != (char *)DeeString_STR(self) &&
-		    utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE])
-			result += WSTR_LENGTH(utf->u_utf8) * 1;
-		if (utf->u_utf16 && (uint16_t *)utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
-			result += WSTR_LENGTH(utf->u_utf16) * 2;
-	}
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-
 INTDEF struct type_method tpconst string_methods[];
 INTERN_CONST struct type_method tpconst string_methods[] = {
 
@@ -12574,10 +12542,6 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}") },
-
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sizeof,
-	  DOC("->?Dint") },
 
 	/* Deprecated functions. */
 	{ "reverse",

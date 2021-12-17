@@ -938,14 +938,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodict_sizeof(Dict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+rodict_sizeof(Dict *self) {
 	return DeeInt_NewSize(offsetof(Dict, rd_elem) +
 	                      ((self->rd_mask + 1) *
 	                       sizeof(struct rodict_item)));
-err:
-	return NULL;
 }
 
 INTDEF struct keyword seq_byhash_kwlist[];
@@ -974,14 +970,14 @@ PRIVATE struct type_method tpconst rodict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_byhash,
 	  DOC_GET(map_byhash_doc),
 	  TYPE_METHOD_FKWDS },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
 PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

@@ -894,17 +894,15 @@ struct Dee_yield_function_object {
 	Dee_OBJECT_HEAD 
 	/* TODO: Turn this object into a variable-length one,
 	 *       with elements of `yf_args' being stored in-line. */
-	DREF DeeFunctionObject       *yf_func; /* [1..1][const] The function we are derived from.
-	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
-	DREF struct Dee_tuple_object *yf_args; /* [1..1][const] Arguments that we are called with.
-	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+	DREF DeeFunctionObject       *yf_func; /* [1..1][const] The function we are derived from. */
+	DREF struct Dee_tuple_object *yf_args; /* [1..1][const] Arguments that we are called with. */
 	struct Dee_code_frame_kwds   *yf_kw;   /* [0..1][owned][const] Keyword arguments. */
 	DREF DeeObject               *yf_this; /* [0..1][const] 'this' object during callback. */
 };
 
 struct Dee_yield_function_iterator_object {
 	Dee_OBJECT_HEAD /* GC Object. */
-	DREF DeeYieldFunctionObject *yi_func;  /* [0..1] The yield function instance that created us.
+	DREF DeeYieldFunctionObject *yi_func;  /* [0..1][lock(yi_lock)] The yield function instance that created us.
 	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
 	struct Dee_code_frame        yi_frame; /* [lock(yi_lock)]
 	                                        * [owned(.cf_frame)]

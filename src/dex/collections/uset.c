@@ -765,11 +765,21 @@ err:
 
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_sizeof(USet *self) {
+	return DeeInt_NewSize(sizeof(USet) +
+	                      ((self->s_mask + 1) *
+	                       sizeof(struct uset_item)));
+}
+
 PRIVATE struct type_getset tpconst uset_getsets[] = {
 	{ "frozen",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoSet_FromUSet, NULL, NULL,
 	  DOC("->?AFrozen?.\n"
 	      "Returns a read-only (frozen) copy of @this set") },
+	{ "__sizeof__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -1188,17 +1198,6 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_sizeof(USet *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	return DeeInt_NewSize(sizeof(USet) +
-	                      ((self->s_mask + 1) *
-	                       sizeof(struct uset_item)));
-err:
-	return NULL;
-}
-
 
 
 
@@ -1268,9 +1267,6 @@ PRIVATE struct type_method tpconst uset_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_remove,
 	  DOC("(ob)->?Dbool\n"
 	      "Deprecated alias for ?#remove") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -1980,27 +1976,19 @@ uroset_fini(URoSet *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uroset_sizeof(URoSet *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+uroset_sizeof(URoSet *self) {
 	return DeeInt_NewSize(offsetof(URoSet, rs_elem) +
 	                      ((self->rs_mask + 1) *
 	                       sizeof(struct uset_item)));
-err:
-	return NULL;
 }
-
-PRIVATE struct type_method tpconst uroset_methods[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uroset_sizeof,
-	  DOC("->?Dint") },
-	{ NULL }
-};
 
 PRIVATE struct type_getset tpconst uroset_getsets[] = {
 	{ "frozen", &DeeObject_NewRef, NULL, NULL,
 	  DOC("->?AFrozen?.\n"
 	      "Simply re-return @this object") },
+	{ "__sizeof__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -2054,7 +2042,7 @@ INTERN DeeTypeObject URoSet_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ uroset_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ uroset_getsets,
 	/* .tp_members       = */ uroset_members,
 	/* .tp_class_methods = */ NULL,

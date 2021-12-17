@@ -1958,14 +1958,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_sizeof(Dict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+dict_sizeof(Dict *self) {
 	return DeeInt_NewSize(sizeof(Dict) +
 	                      ((self->d_mask + 1) *
 	                       sizeof(struct dict_item)));
-err:
-	return NULL;
 }
 
 INTDEF struct keyword seq_byhash_kwlist[];
@@ -2048,9 +2044,6 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_byhash,
 	  DOC_GET(map_byhash_doc),
 	  TYPE_METHOD_FKWDS },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_sizeof,
-	  DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
 	{ "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
@@ -2069,27 +2062,19 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL set_set_maxloadfactor(DeeObject *__rest
 INTDEF struct type_getset tpconst dict_getsets[];
 INTERN struct type_getset tpconst dict_getsets[] = {
 	{ "keys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys, NULL, NULL,
 	  DOC("->?AKeys?.\n"
 	      "@return A proxy sequence for viewing the keys of @this :Dict") },
 	{ "values",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values, NULL, NULL,
 	  DOC("->?AValues?.\n"
 	      "@return A proxy sequence for viewing the values of @this :Dict") },
 	{ "items",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items, NULL, NULL,
 	  DOC("->?AItems?.\n"
 	      "@return A proxy sequence for viewing the key-value pairs of @this :Dict") },
 	{ "frozen",
-	  &DeeRoDict_FromSequence,
-	  NULL,
-	  NULL,
+	  &DeeRoDict_FromSequence, NULL, NULL,
 	  DOC("->?Ert:RoDict\n"
 	      "Returns a read-only (frozen) copy of @this Dict") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -2100,6 +2085,9 @@ INTERN struct type_getset tpconst dict_getsets[] = {
 	  DOC("->?Dfloat\n"
 	      "Deprecated. Always returns ${1.0}, with del/set being ignored") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

@@ -1820,14 +1820,10 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_sizeof(Set *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
+hashset_sizeof(Set *self) {
 	return DeeInt_NewSize(sizeof(Set) +
 	                      ((self->s_mask + 1) *
 	                       sizeof(struct hashset_item)));
-err:
-	return NULL;
 }
 
 
@@ -1874,9 +1870,6 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
 	      "Deprecated alias for ?#remove") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&hashset_sizeof,
-	  DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
 	{ "insert_all",
@@ -1922,6 +1915,9 @@ INTERN struct type_getset tpconst hashset_getsets[] = {
 	  DOC("->?Dfloat\n"
 	      "Deprecated. Always returns ${1.0}, with del/set being ignored") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&hashset_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 

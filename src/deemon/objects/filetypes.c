@@ -987,6 +987,18 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+writer_sizeof(Writer *self) {
+	size_t result;
+	DeeFile_LockRead(self);
+	result = sizeof(Writer) + (self->w_printer.up_buffer
+	                           ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
+	                              STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
+	                           : 0);
+	DeeFile_LockEndRead(self);
+	return DeeInt_NewSize(result);
+}
+
 PRIVATE struct type_getset tpconst writer_getsets[] = {
 	{ DeeString_STR(&str_string),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeFileWriter_GetString,
@@ -994,6 +1006,9 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&writer_setstring,
 	  DOC("->?Dstring\n"
 	      "Get/set the currently written text string") },
+	{ STR___sizeof__,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&writer_sizeof, NULL, NULL,
+	  DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -1036,22 +1051,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-writer_sizeof(Writer *self, size_t argc, DeeObject *const *argv) {
-	size_t result;
-	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
-		goto err;
-	DeeFile_LockRead(self);
-	result = sizeof(Writer) + (self->w_printer.up_buffer
-	                           ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
-	                              STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
-	                           : 0);
-	DeeFile_LockEndRead(self);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
 PRIVATE struct type_method tpconst writer_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
@@ -1069,9 +1068,6 @@ PRIVATE struct type_method tpconst writer_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_allocated,
 	  DOC("->?Dint\n"
 	      "Returns the currently allocated buffer size (in bytes)") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_sizeof,
-	  DOC("->?Dint") },
 	{ NULL }
 };
 
