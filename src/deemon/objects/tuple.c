@@ -1709,12 +1709,12 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_lo(Tuple *self, DeeObject *other) {
 	int result;
-	result = DeeSeq_LoVS(DeeTuple_ELEM(self),
-	                     DeeTuple_SIZE(self),
-	                     other);
-	if unlikely(result < 0)
+	result = DeeSeq_CompareVS(DeeTuple_ELEM(self),
+	                          DeeTuple_SIZE(self),
+	                          other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result < 0);
 err:
 	return NULL;
 }
@@ -1722,12 +1722,12 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_le(Tuple *self, DeeObject *other) {
 	int result;
-	result = DeeSeq_LeVS(DeeTuple_ELEM(self),
-	                     DeeTuple_SIZE(self),
-	                     other);
-	if unlikely(result < 0)
+	result = DeeSeq_CompareVS(DeeTuple_ELEM(self),
+	                          DeeTuple_SIZE(self),
+	                          other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result <= 0);
 err:
 	return NULL;
 }
@@ -1735,12 +1735,12 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_gr(Tuple *self, DeeObject *other) {
 	int result;
-	result = DeeSeq_LeVS(DeeTuple_ELEM(self),
-	                     DeeTuple_SIZE(self),
-	                     other);
-	if unlikely(result < 0)
+	result = DeeSeq_CompareVS(DeeTuple_ELEM(self),
+	                          DeeTuple_SIZE(self),
+	                          other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result > 0);
 err:
 	return NULL;
 }
@@ -1748,19 +1748,18 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_ge(Tuple *self, DeeObject *other) {
 	int result;
-	result = DeeSeq_LoVS(DeeTuple_ELEM(self),
-	                     DeeTuple_SIZE(self),
-	                     other);
-	if unlikely(result < 0)
+	result = DeeSeq_CompareVS(DeeTuple_ELEM(self),
+	                          DeeTuple_SIZE(self),
+	                          other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result >= 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tuple_concat(Tuple *self,
-             DeeObject *other) {
+tuple_concat(Tuple *self, DeeObject *other) {
 	DeeObject **dst;
 	DREF DeeObject *result, *new_result;
 	DREF DeeObject *elem, *iterator;
@@ -1801,6 +1800,7 @@ tuple_concat(Tuple *self,
 		}
 		goto done;
 	}
+
 	/* Fallback: use iterator. */
 	result = DeeTuple_NewUninitialized(my_length + 8);
 	if unlikely(!result)
@@ -1853,6 +1853,7 @@ tuple_repeat(Tuple *self,
 		goto return_empty;
 	if (count == 1)
 		return_reference_((DeeObject *)self);
+
 	/* Repeat `self' `count' number of times. */
 	my_length = DeeTuple_SIZE(self);
 	if (my_length == 0)
@@ -1862,9 +1863,11 @@ tuple_repeat(Tuple *self,
 	result = DeeTuple_NewUninitialized(total_length);
 	if unlikely(!result)
 		goto err;
+
 	/* Create all the new references that will be contained in the new tuple. */
 	for (i = 0; i < my_length; ++i)
 		Dee_Incref_n(DeeTuple_GET(self, i), count);
+
 	/* Fill in the resulting tuple with repetitions of ourself. */
 	dst = DeeTuple_ELEM(result);
 	while (count--) {

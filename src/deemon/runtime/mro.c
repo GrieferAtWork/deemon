@@ -52,10 +52,11 @@ PRIVATE struct membercache *membercache_list;
 #define streq(a, b) (strcmp(a, b) == 0)
 LOCAL NONNULL((1, 2)) bool DCALL
 streq_len(char const *zero_zterminated,
-          char const *comparand, size_t comparand_length) {
-	if (strlen(zero_zterminated) != comparand_length)
+          char const *compare_to, size_t compare_to_length) {
+	/* TODO: return strcmpz(zero_zterminated, compare_to, compare_to_length) == 0; */
+	if (strlen(zero_zterminated) != compare_to_length)
 		return false;
-	return memcmp(zero_zterminated, comparand, comparand_length) == 0;
+	return memcmp(zero_zterminated, compare_to, compare_to_length) == 0;
 }
 
 

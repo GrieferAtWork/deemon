@@ -552,37 +552,38 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__re
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRange(DeeObject *__restrict self, size_t begin, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRangeN(DeeObject *__restrict self, size_t begin);
 
-/* General-purpose iterator/sequence compare functions.
- * NOTE: The iterator-compare functions compare the _ELEMENTS_
- *       they yield, not the abstract iterator positions. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Eq(DeeObject *self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Lo(DeeObject *self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Le(DeeObject *self, DeeObject *other);
+/* @return: == -2: An error occurred.
+ * @return: == -1: `self < some_object'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `self > some_object' */
+INTDEF WUNUSED                 int DCALL DeeSeq_CompareVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR <=> VECTOR */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR <=> DeeFastSeq */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <=> ITERATOR */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <=> SEQUENCE */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc, DeeObject *const *rhsv, size_t rhsc);         /* DeeFastSeq <=> VECTOR */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFF(DeeObject *lhs, size_t lhsc, DeeObject *rhs, size_t rhsc);                 /* DeeFastSeq <=> DeeFastSeq */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                              /* DeeFastSeq <=> ITERATOR */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                              /* DeeFastSeq <=> SEQUENCE */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_CompareIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);                      /* ITERATOR <=> VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);                              /* ITERATOR <=> DeeFastSeq */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareII(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> ITERATOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIS(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> SEQUENCE */
 
-/* Perform a generic sequence comparison. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Eq(DeeObject *self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Lo(DeeObject *self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Le(DeeObject *self, DeeObject *other);
-
-INTDEF WUNUSED              int DCALL DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc);             /* VECTOR == VECTOR */
-INTDEF WUNUSED NONNULL((2)) int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);                     /* VECTOR == DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR == ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR == SEQUENCE */
-INTDEF WUNUSED              int DCALL DeeSeq_LoVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR < VECTOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR < DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR < ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR < SEQUENCE */
-INTDEF WUNUSED              int DCALL DeeSeq_LeVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR <= VECTOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR <= DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <= ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR <= SEQUENCE */
-
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR == DeeFastSeq */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LoIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR < VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LoIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR < DeeFastSeq */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LeIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR <= VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LeIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR <= DeeFastSeq */
+/* @return: == -1: An error occurred.
+ * @return: == 0:  Sequences differ
+ * @return: == 1:  Sequences are equal */
+INTDEF WUNUSED                 int DCALL DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc); /* VECTOR == VECTOR */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);         /* VECTOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == ITERATOR */
+INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == SEQUENCE */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqFV(DeeObject *lhs, DeeObject *const *rhsv, size_t elemc);         /* DeeFastSeq == VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc);                 /* DeeFastSeq == DeeFastSeq */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_EqFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                  /* DeeFastSeq == ITERATOR */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                  /* DeeFastSeq == SEQUENCE */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);          /* ITERATOR == VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);                  /* ITERATOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqII(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == ITERATOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == SEQUENCE */
 
 /* Construct new concat-proxy-sequence objects. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *self, DeeObject *other);

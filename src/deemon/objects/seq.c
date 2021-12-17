@@ -765,6 +765,36 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_nsi       = */ &seq_nsi,
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_Eq(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *lhs_iter;
+	size_t lhs_size;
+	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
+		return DeeSeq_EqFS(lhs, lhs_size, rhs);
+	lhs_iter = DeeObject_IterSelf(lhs);
+	if unlikely(!lhs_iter)
+		return -1;
+	result = DeeSeq_EqIS(lhs_iter, rhs);
+	Dee_Decref(lhs_iter);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *lhs_iter;
+	size_t lhs_size;
+	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
+		return DeeSeq_CompareFS(lhs, lhs_size, rhs);
+	lhs_iter = DeeObject_IterSelf(lhs);
+	if unlikely(!lhs_iter)
+		return -2;
+	result = DeeSeq_CompareIS(lhs_iter, rhs);
+	Dee_Decref(lhs_iter);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_eq(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Eq(self, other);
@@ -787,40 +817,40 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_lo(DeeObject *self, DeeObject *other) {
-	int result = DeeSeq_Lo(self, other);
-	if unlikely(result < 0)
+	int result = DeeSeq_Compare(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result < 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_le(DeeObject *self, DeeObject *other) {
-	int result = DeeSeq_Le(self, other);
-	if unlikely(result < 0)
+	int result = DeeSeq_Compare(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result <= 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_gr(DeeObject *self, DeeObject *other) {
-	int result = DeeSeq_Le(self, other);
-	if unlikely(result < 0)
+	int result = DeeSeq_Compare(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result > 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_ge(DeeObject *self, DeeObject *other) {
-	int result = DeeSeq_Lo(self, other);
-	if unlikely(result < 0)
+	int result = DeeSeq_Compare(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result >= 0);
 err:
 	return NULL;
 }

@@ -1314,11 +1314,6 @@ again_deletefile:
  * >>     return DeeInt_AsInt(ob);
  * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET)); catch (AttributeError);
  * >> return DeeObject_AsInt(ob);
- * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
- * of the available functions, meaning that in both scenarios we are able
- * to get access to the underlying HANDLE. However, should deemon ever be
- * linked against a windows libc without this function, then only the
- * `DeeSysFD_HANDLE_GETSET' variant will be usable.
  * @return: * : Success (the actual handle value)
  * @return: -1: Error (handle translation failed)
  *              In case the actual handle value stored inside of `ob'

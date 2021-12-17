@@ -106,7 +106,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
  * C:
  * >> DeeObject_TAdd(MyClass, inst, 7);
  * >> func = MyClass->tp_math->tp_add; // func == &instance_add
- * >> // Invocing `func' directly at this point would result in
+ * >> // Invoking `func' directly at this point would result in
  * >> // all information about `MyClass' being referred to, to
  * >> // be lost, resulting in `MySubClass.operator + ' to be
  * >> // invoked instead.
@@ -115,12 +115,12 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
  * >> } else {
  * >>     (*func)(inst, 7);
  * >> }
- * >> // The solution to manually check for this case, and invoke
- * >> // the typed class function when that happens.
+ * >> // The solution is to manually check for this case, and
+ * >> // invoke the typed class function when that happens.
  * NOTE: This problem only arises in a super-context:
  * >> DeeObject_Add(inst, 7); // Same as DeeObject_TAdd(MySubSubClass, inst, 7)
  * >> FIND_FRIST_MATCH(tp_math->tp_add); // Found in `MySubClass'
- * >> INHERIT_MATCH();                   // Inherit `operator +' from `MySubClass' into `MyClass'
+ * >> INHERIT_MATCH();                   // Inherit `operator +' from `MySubClass' into `MySubSubClass'
  * >>                                    // NOTE: This will only inherit the C-wrapper for the operator,
  * >>                                    //       essentially meaning:
  * >>                                    //       >> MySubSubClass->tp_math = MySubClass->tp_math;
@@ -850,7 +850,7 @@ DeeObject_Newf(DeeTypeObject *object_type,
 #define GET_TP_SELF()  Dee_TYPE(self)
 #define GET_TP_PSELF() Dee_TYPE(*pself)
 #endif /* !DEFINE_TYPED_OPERATORS */
- 
+
 
 
 STATIC_ASSERT(offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
@@ -871,7 +871,7 @@ DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)
 				if (tp_self->tp_init.tp_alloc.tp_copy_ctor)
 					goto got_normal_copy;
 			}
-			/* when neither a deepcopy, nor a regular copy operator are present
+			/* when neither a deepcopy, nor a regular copy operator are present,
 			 * assume that the object is immutable and re-return the object itself. */
 			return_reference_(self);
 		}
@@ -885,7 +885,7 @@ got_normal_copy:
 	}
 got_deep_copy:
 
-	/* Check if this object is already been constructed. */
+	/* Check if this object is already being constructed. */
 	result = deepcopy_lookup(thread_self, self, tp_self);
 	if (result)
 		return_reference_(result);
@@ -3389,6 +3389,27 @@ DeeObject_CompareNe(DeeObject *self, DeeObject *some_object) {
 	Dee_Decref(val);
 	return result;
 }
+
+/* @return: == -2: An error occurred.
+ * @return: == -1: `self < some_object'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `self > some_object' */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_Compare(DeeObject *self, DeeObject *some_object) {
+	int result;
+	/* TODO: Special optimization for certain types (including generic sequence types) */
+
+	/* Fallback: use the normal compare operators.
+	 * For this purpose, we always use "operator <" and "operator ==" */
+	result = DeeObject_CompareLo(self, some_object);
+	if (result != 0)
+		return unlikely(result < 0) ? -2 : -1;
+	result = DeeObject_CompareEq(self, some_object);
+	if likely(result >= 0)
+		result = !result;
+	return result;
+}
+
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -5227,7 +5248,7 @@ err:
 	return -1;
 }
 
-#endif
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS

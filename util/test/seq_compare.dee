@@ -1,0 +1,87 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from collections;
+
+function assertAloBImpl(a, b) {
+	assert  (a <  b);
+	assert  (a <= b);
+	assert !(a == b);
+	assert  (a != b);
+	assert !(a >  b);
+	assert !(a >= b);
+}
+
+global final TYPES = { none, List, Tuple, Deque };
+
+function assertAloB2(a, b) {
+	for (local T: TYPES) {
+		local tb = b;
+		if (T !is none) {
+			tb = T(b);
+			assert !(tb <  b);
+			assert  (tb <= b);
+			assert  (tb == b);
+			assert !(tb != b);
+			assert !(tb >  b);
+			assert  (tb >= b);
+			assert !(b <  tb);
+			assert  (b <= tb);
+			assert  (b == tb);
+			assert !(b != tb);
+			assert !(b >  tb);
+			assert  (b >= tb);
+		}
+		assertAloBImpl(a, tb);
+	}
+}
+
+function assertAloB(a, b) {
+	for (local T: TYPES) {
+		local ta = a;
+		if (T !is none) {
+			ta = T(a);
+			assert !(ta <  a);
+			assert  (ta <= a);
+			assert  (ta == a);
+			assert !(ta != a);
+			assert !(ta >  a);
+			assert  (ta >= a);
+			assert !(a <  ta);
+			assert  (a <= ta);
+			assert  (a == ta);
+			assert !(a != ta);
+			assert !(a >  ta);
+			assert  (a >= ta);
+		}
+		assertAloB2(ta, b);
+	}
+}
+
+assertAloB({10}, {20});
+assertAloB({10}, {20, 30});
+assertAloB({10, 30}, {20});
+assertAloB({10, 30}, {20, 30});
+assertAloB({20, 10}, {20, 20});
+assertAloB({20, 10, 30}, {20, 20});
+assertAloB({20, 10}, {20, 20, 30});
+assertAloB({20, 10, 30}, {20, 20, 30});

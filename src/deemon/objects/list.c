@@ -3478,54 +3478,44 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeList_LoV(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
+DeeList_CompareV(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 	size_t i;
-	DREF DeeObject *lhs_elem;
 	DeeList_LockRead(lhs);
 	for (i = 0;; ++i) {
-		int temp;
+		int diff;
+		DREF DeeObject *lhs_elem;
 		if (i >= DeeList_SIZE(lhs)) {
-			size_t my_size = DeeList_SIZE(lhs);
+			size_t lhsc = DeeList_SIZE(lhs);
 			DeeList_LockEndRead(lhs);
-			return my_size < rhsc;
+			return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 		}
 		if (i >= rhsc)
 			break;
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		temp = DeeObject_CompareLo(lhs_elem, rhsv[i]);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0) {
-				Dee_Decref(lhs_elem);
-				return temp;
-			}
-			temp = DeeObject_CompareLo(rhsv[i], lhs_elem);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				Dee_Decref(lhs_elem);
-				if unlikely(temp < 0)
-					return temp;
-				return 0; /* return false */
-			}
-		}
+		diff = DeeObject_Compare(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
+		if (diff != 0)
+			return diff;
 		DeeList_LockRead(lhs);
 	}
 	DeeList_LockEndRead(lhs);
-	return 0; /* size:greater */
+	return 1; /* COUNT(lhs) > COUNT(rhs) */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeList_LoF(List *lhs, DeeObject *rhs, size_t rhsc) {
 	size_t i;
-	DREF DeeObject *lhs_elem, *rhs_elem;
 	DeeList_LockRead(lhs);
 	for (i = 0;; ++i) {
-		int temp;
+		int diff;
+		DREF DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
 		if (i >= DeeList_SIZE(lhs)) {
-			size_t my_size = DeeList_SIZE(lhs);
+			size_t lhsc = DeeList_SIZE(lhs);
 			DeeList_LockEndRead(lhs);
-			return my_size < rhsc;
+			return lhsc < rhsc ? -1 : lhsc > rhsc ? 1 : 0;
 		}
 		if (i >= rhsc)
 			break;
@@ -3535,231 +3525,74 @@ DeeList_LoF(List *lhs, DeeObject *rhs, size_t rhsc) {
 		rhs_elem = DeeFastSeq_GetItem(rhs, i);
 		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
-			goto err;
+			return -2;
 		}
-		temp = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0) {
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return temp;
-			}
-			temp = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				if unlikely(temp < 0)
-					return temp;
-				return 0; /* return false */
-			}
-		}
+		diff = DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
+		if (diff != 0)
+			return diff;
 		DeeList_LockRead(lhs);
 	}
 	DeeList_LockEndRead(lhs);
-	return 0; /* size:greater */
-err:
-	return -1;
+	return 1; /* COUNT(lhs) > COUNT(rhs) */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeList_LoI(List *lhs, DeeObject *rhs) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	int result;
 	size_t i;
 	DeeList_LockRead(lhs);
 	for (i = 0;; ++i) {
-		if (i >= DeeList_SIZE(lhs))
-			break;
-		lhs_elem = DeeList_GET(lhs, i);
-		Dee_Incref(lhs_elem);
-		DeeList_LockEndRead(lhs);
-		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return (unlikely(!rhs_elem))
-			       ? -1
-			       : 0; /* size:greater */
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
-		DeeList_LockRead(lhs);
-	}
-	DeeList_LockEndRead(lhs);
-	if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-		return (unlikely(!rhs_elem))
-		       ? -1
-		       : 0; /* size:equal */
-	Dee_Decref(rhs_elem);
-	return 1; /* size:lower */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LoS(List *lhs, DeeObject *seq) {
-	int result;
-	size_t fast_size;
-	if (DeeTuple_Check(seq))
-		return DeeList_LoV(lhs, DeeTuple_ELEM(seq), DeeTuple_SIZE(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
-		return DeeList_LoF(lhs, seq, fast_size);
-	seq = DeeObject_IterSelf(seq);
-	if unlikely(!seq)
-		goto err;
-	result = DeeList_LoI(lhs, seq);
-	Dee_Decref(seq);
-	return result;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeList_LeV(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
-	size_t i;
-	DREF DeeObject *lhs_elem;
-	DeeList_LockRead(lhs);
-	for (i = 0;; ++i) {
-		int temp;
+		int diff;
+		DREF DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
 		if (i >= DeeList_SIZE(lhs)) {
-			size_t my_size = DeeList_SIZE(lhs);
+			size_t lhsc = DeeList_SIZE(lhs);
 			DeeList_LockEndRead(lhs);
-			return my_size <= rhsc;
+			if unlikely(lhsc < i)
+				return -1; /* COUNT(lhs) < COUNT(rhs) */
+			rhs_elem = DeeObject_IterNext(rhs);
+			if (!ITER_ISOK(rhs_elem)) {
+				if unlikely(rhs_elem != ITER_DONE)
+					return -2;
+				return 0; /* COUNT(lhs) == COUNT(rhs) */
+			}
+			Dee_Decref(rhs_elem);
+			return -1; /* COUNT(lhs) < COUNT(rhs) */
 		}
-		if (i >= rhsc)
-			break;
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		temp = DeeObject_CompareLo(lhs_elem, rhsv[i]);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0) {
-				Dee_Decref(lhs_elem);
-				return temp;
-			}
-			temp = DeeObject_CompareLo(rhsv[i], lhs_elem);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				Dee_Decref(lhs_elem);
-				if unlikely(temp < 0)
-					return temp;
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(lhs_elem);
-		DeeList_LockRead(lhs);
-	}
-	DeeList_LockEndRead(lhs);
-	return 0; /* size:greater */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeF(List *lhs, DeeObject *rhs, size_t rhsc) {
-	size_t i;
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	DeeList_LockRead(lhs);
-	for (i = 0;; ++i) {
-		int temp;
-		if (i >= DeeList_SIZE(lhs)) {
-			size_t my_size = DeeList_SIZE(lhs);
-			DeeList_LockEndRead(lhs);
-			return my_size <= rhsc;
-		}
-		if (i >= rhsc)
-			break;
-		lhs_elem = DeeList_GET(lhs, i);
-		Dee_Incref(lhs_elem);
-		DeeList_LockEndRead(lhs);
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem) {
+		rhs_elem = DeeObject_IterNext(rhs);
+		if (!ITER_ISOK(rhs_elem)) {
 			Dee_Decref(lhs_elem);
-			goto err;
+			if unlikely(rhs_elem != ITER_DONE)
+				return -2;
+			return 1; /* COUNT(lhs) > COUNT(rhs) */
 		}
-		temp = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0) {
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return temp;
-			}
-			temp = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				if unlikely(temp < 0)
-					return temp;
-				return 0; /* return false */
-			}
-		}
+		diff = DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
+		if (diff != 0)
+			return diff;
 		DeeList_LockRead(lhs);
 	}
-	DeeList_LockEndRead(lhs);
-	return 0; /* size:greater */
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeI(List *lhs, DeeObject *rhs) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
+DeeList_CompareS(List *lhs, DeeObject *rhs) {
 	int result;
-	size_t i;
-	DeeList_LockRead(lhs);
-	for (i = 0;; ++i) {
-		if (i >= DeeList_SIZE(lhs))
-			break;
-		lhs_elem = DeeList_GET(lhs, i);
-		Dee_Incref(lhs_elem);
-		DeeList_LockEndRead(lhs);
-		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-			return (unlikely(!rhs_elem))
-			       ? -1
-			       : 0; /* size:greater */
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
-		DeeList_LockRead(lhs);
-	}
-	DeeList_LockEndRead(lhs);
-	return 1; /* size:lower_or_equal */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeS(List *lhs, DeeObject *seq) {
-	int result;
-	size_t fast_size;
-	if (DeeTuple_Check(seq))
-		return DeeList_LeV(lhs, DeeTuple_ELEM(seq), DeeTuple_SIZE(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
-		return DeeList_LeF(lhs, seq, fast_size);
-	seq = DeeObject_IterSelf(seq);
-	if unlikely(!seq)
-		goto err;
-	result = DeeList_LeI(lhs, seq);
-	Dee_Decref(seq);
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs))
+		return DeeList_CompareV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
+	if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST)
+		return DeeList_LoF(lhs, rhs, rhs_size);
+	rhs = DeeObject_IterSelf(rhs);
+	if unlikely(!rhs)
+		return -2;
+	result = DeeList_LoI(lhs, rhs);
+	Dee_Decref(rhs);
 	return result;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3784,40 +3617,40 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_lo(List *self, DeeObject *other) {
-	int result = DeeList_LoS(self, other);
-	if unlikely(result < 0)
+	int result = DeeList_CompareS(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result < 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_le(List *self, DeeObject *other) {
-	int result = DeeList_LeS(self, other);
-	if unlikely(result < 0)
+	int result = DeeList_CompareS(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(result);
+	return_bool_(result <= 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_gr(List *self, DeeObject *other) {
-	int result = DeeList_LeS(self, other);
-	if unlikely(result < 0)
+	int result = DeeList_CompareS(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result > 0);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_ge(List *self, DeeObject *other) {
-	int result = DeeList_LoS(self, other);
-	if unlikely(result < 0)
+	int result = DeeList_CompareS(self, other);
+	if unlikely(result == -2)
 		goto err;
-	return_bool_(!result);
+	return_bool_(result >= 0);
 err:
 	return NULL;
 }
@@ -4338,11 +4171,6 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
-
-/* TODO: Sequence compare appears broken:
- * >> assert [10] < [20];
- * >> assert (10,) < (20,);
- */
 
 
 DECL_END

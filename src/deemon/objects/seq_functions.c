@@ -1685,774 +1685,610 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *
 
 
 
-/* General-purpose iterator/sequence compare functions.
- * NOTE: The iterator-compare functions compare the _ELEMENTS_
- *       they yield, not the abstract iterator positions. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Lo(DeeObject *lhs, DeeObject *rhs) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	int result;
-	/* TODO: Recursive sequence objects? */
-	ASSERT_OBJECT(lhs);
-	ASSERT_OBJECT(rhs);
-	do {
-		lhs_elem = DeeObject_IterNext(lhs);
-		if (!ITER_ISOK(lhs_elem)) {
-			if unlikely(!lhs_elem)
-				goto err;
-			rhs_elem = DeeObject_IterNext(rhs);
-			if (!ITER_ISOK(rhs_elem)) {
-				if unlikely(!rhs_elem)
-					goto err;
-				return 0; /* size:equal */
-			}
-			Dee_Decref(rhs_elem);
-			return 1; /* size:lower */
-		}
-		rhs_elem = DeeObject_IterNext(rhs);
-		if (!ITER_ISOK(rhs_elem)) {
-			Dee_Decref(lhs_elem);
-			if unlikely(!rhs_elem)
-				goto err;
-			return 0; /* size:greater */
-		}
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	} while (result == 0);
-	return result;
-err:
-	return -1;
-}
 
-/* General-purpose iterator/sequence compare functions.
- * NOTE: The iterator-compare functions compare the _ELEMENTS_
- *       they yield, not the abstract iterator positions. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Le(DeeObject *lhs, DeeObject *rhs) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	int result;
-	/* TODO: Recursive sequence objects? */
-	ASSERT_OBJECT(lhs);
-	ASSERT_OBJECT(rhs);
-	do {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs)))
-			return (unlikely(!lhs_elem))
-			       ? -1
-			       : 1; /* size:equal_or_lower */
-		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs))) {
-			Dee_Decref(lhs_elem);
-			return (unlikely(!rhs_elem))
-			       ? -1
-			       : 0; /* size:greater */
-		}
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	} while (result == 0);
-	return result;
-err:
-	return -1;
-}
+/************************************************************************/
+/* Sequence compare                                                     */
+/************************************************************************/
 
-/* General-purpose iterator/sequence compare functions.
- * NOTE: The iterator-compare functions compare the _ELEMENTS_
- *       they yield, not the abstract iterator positions. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Eq(DeeObject *lhs, DeeObject *rhs) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	int result;
-	/* TODO: Recursive sequence objects? */
-	ASSERT_OBJECT(lhs);
-	ASSERT_OBJECT(rhs);
-	do {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-			if unlikely(!lhs_elem)
-				goto err;
-			if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs)))
-				return (unlikely(!rhs_elem))
-				       ? -1
-				       : 1; /* size:equal */
-			Dee_Decref(rhs_elem);
-			return 0; /* size:lower */
-		}
-		if (!ITER_ISOK(rhs_elem = DeeObject_IterNext(rhs))) {
-			Dee_Decref(lhs_elem);
-			return (unlikely(!rhs_elem))
-			       ? -1
-			       : 0; /* size:greater */
-		}
-		result = DeeObject_CompareEq(lhs_elem, rhs_elem);
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	} while (result > 0);
-	return result;
-err:
-	return -1;
-}
-
+/* @return: == -2: An error occurred.
+ * @return: == -1: `self < some_object'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `self > some_object' */
 INTERN WUNUSED int DCALL
-DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc) {
-	size_t i;
-	int temp;
-	for (i = 0; i < elemc; ++i) {
-		temp = DeeObject_CompareEq(lhsv[i], rhsv[i]);
-		if (temp <= 0)
-			goto err;
+DeeSeq_CompareVV(DeeObject *const *lhsv, size_t lhsc,
+                 DeeObject *const *rhsv, size_t rhsc) {
+	size_t i, common = MIN(lhsc, rhsc);
+	for (i = 0; i < common; ++i) {
+		int diff;
+		diff = DeeObject_Compare(lhsv[i], rhsv[i]);
+		if (diff != 0)
+			return diff;
 	}
-	return 1;
-err:
-	return temp;
+	return lhsc < rhsc ? -1 : 0;
 }
 
-INTERN WUNUSED NONNULL((2)) int DCALL
-DeeSeq_EqVF(DeeObject *const *lhsv,
-            DeeObject *rhs,
-            size_t elemc) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_CompareVF(DeeObject *const *lhsv, size_t lhsc,
+                 DeeObject *rhs, size_t rhsc) {
+	size_t i, common = MIN(lhsc, rhsc);
+	for (i = 0; i < common; ++i) {
+		int diff;
+		DREF DeeObject *rhs_item;
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item)
+			return -2;
+		diff = DeeObject_Compare(lhsv[i], rhs_item);
+		Dee_Decref(rhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	return lhsc < rhsc ? -1 : 0;
+}
+
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_CompareVI(DeeObject *const *lhsv, size_t lhsc,
+                 DeeObject *rhs) {
 	size_t i;
-	int temp;
+	DREF DeeObject *rhs_item;
+	for (i = 0; i < lhsc; ++i) {
+		int diff;
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			if (rhs_item == ITER_DONE)
+				return 1; /* COUNT(LHS) > COUNT(RHS) */
+			return -2;
+		}
+		diff = DeeObject_Compare(lhsv[i], rhs_item);
+		Dee_Decref(rhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	rhs_item = DeeObject_IterNext(rhs);
+	if (!ITER_ISOK(rhs_item)) {
+		if (rhs_item == ITER_DONE)
+			return 0; /* COUNT(LHS) == COUNT(RHS) */
+		return -2;
+	}
+	Dee_Decref(rhs_item);
+	return -1; /* COUNT(LHS) < COUNT(RHS) */
+}
+
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc,
+                 DeeObject *rhs) {
+	int result;
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		result = DeeSeq_CompareVV(lhsv, lhsc, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		result = DeeSeq_CompareVF(lhsv, lhsc, rhs, rhs_size);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -2;
+		result = DeeSeq_CompareVI(lhsv, lhsc, rhs_iter);
+		Dee_Decref(rhs_iter);
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc,
+                 DeeObject *const *rhsv, size_t rhsc) {
+	size_t i, common = MIN(lhsc, rhsc);
+	for (i = 0; i < common; ++i) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -2;
+		diff = DeeObject_Compare(lhs_item, rhsv[i]);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	return lhsc < rhsc ? -1 : 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_CompareFF(DeeObject *lhs, size_t lhsc, DeeObject *rhs, size_t rhsc) {
+	size_t i, common = MIN(lhsc, rhsc);
+	for (i = 0; i < common; ++i) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -2;
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item) {
+			Dee_Decref(lhs_item);
+			return -2;
+		}
+		diff = DeeObject_Compare(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	return lhsc < rhsc ? -1 : 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_CompareFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
+	size_t i;
+	DREF DeeObject *rhs_item;
+	for (i = 0; i < lhsc; ++i) {
+		DREF DeeObject *lhs_item;
+		int diff;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -2;
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			Dee_Decref(lhs_item);
+			if (rhs_item == ITER_DONE)
+				return 1; /* COUNT(LHS) > COUNT(RHS) */
+			return -2;
+		}
+		diff = DeeObject_Compare(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	rhs_item = DeeObject_IterNext(rhs);
+	if (!ITER_ISOK(rhs_item)) {
+		if (rhs_item == ITER_DONE)
+			return 0; /* COUNT(LHS) == COUNT(RHS) */
+		return -2;
+	}
+	Dee_Decref(rhs_item);
+	return -1; /* COUNT(LHS) < COUNT(RHS) */
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_CompareFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
+	int result;
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		result = DeeSeq_CompareFV(lhs, lhsc, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		result = DeeSeq_CompareFF(lhs, lhsc, rhs, rhs_size);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -2;
+		result = DeeSeq_CompareFI(lhs, lhsc, rhs_iter);
+		Dee_Decref(rhs_iter);
+	}
+	return result;
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_CompareIV(DeeObject *lhs,
+                 DeeObject *const *rhsv, size_t rhsc) {
+	size_t i;
+	DREF DeeObject *lhs_item;
+	for (i = 0; i < rhsc; ++i) {
+		int diff;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if (lhs_item == ITER_DONE)
+				return -1; /* COUNT(LHS) < COUNT(RHS) */
+			return -2;
+		}
+		diff = DeeObject_Compare(lhs_item, rhsv[i]);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	lhs_item = DeeObject_IterNext(lhs);
+	if (!ITER_ISOK(lhs_item)) {
+		if (lhs_item == ITER_DONE)
+			return 0; /* COUNT(LHS) == COUNT(RHS) */
+		return -2;
+	}
+	Dee_Decref(lhs_item);
+	return 1; /* COUNT(LHS) > COUNT(RHS) */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_CompareIF(DeeObject *lhs,
+                 DeeObject *rhs, size_t rhsc) {
+	size_t i;
+	DREF DeeObject *lhs_item;
+	for (i = 0; i < rhsc; ++i) {
+		int diff;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if (lhs_item == ITER_DONE)
+				return -1; /* COUNT(LHS) < COUNT(RHS) */
+			return -2;
+		}
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item) {
+			Dee_Decref(lhs_item);
+			return -2;
+		}
+		diff = DeeObject_Compare(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+	lhs_item = DeeObject_IterNext(lhs);
+	if (!ITER_ISOK(lhs_item)) {
+		if (lhs_item == ITER_DONE)
+			return 0; /* COUNT(LHS) == COUNT(RHS) */
+		return -2;
+	}
+	Dee_Decref(lhs_item);
+	return 1; /* COUNT(LHS) > COUNT(RHS) */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_CompareII(DeeObject *lhs,
+                 DeeObject *rhs) {
+	for (;;) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if unlikely(lhs_item != ITER_DONE)
+				return -2;
+			rhs_item = DeeObject_IterNext(rhs);
+			if (!ITER_ISOK(rhs_item)) {
+				if unlikely(rhs_item != ITER_DONE)
+					return -2;
+				return 0; /* COUNT(LHS) == COUNT(RHS) */
+			}
+			Dee_Decref(rhs_item);
+			return -1; /* COUNT(LHS) < COUNT(RHS) */
+		}
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			Dee_Decref(lhs_item);
+			if unlikely(rhs_item != ITER_DONE)
+				return -2;
+			return 1; /* COUNT(LHS) > COUNT(RHS) */
+		}
+		diff = DeeObject_Compare(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff != 0)
+			return diff;
+	}
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_CompareIS(DeeObject *lhs,
+                 DeeObject *rhs) {
+	int result;
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		result = DeeSeq_CompareIV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		result = DeeSeq_CompareIF(lhs, rhs, rhs_size);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -2;
+		result = DeeSeq_CompareII(lhs, rhs_iter);
+		Dee_Decref(rhs_iter);
+	}
+	return result;
+}
+
+
+
+/* @return: == -1: An error occurred.
+ * @return: == 0:  Sequences differ
+ * @return: == 1:  Sequences are equal */
+INTERN WUNUSED int DCALL
+DeeSeq_EqVV(DeeObject *const *lhsv,
+            DeeObject *const *rhsv, size_t elemc) {
+	size_t i;
 	for (i = 0; i < elemc; ++i) {
-		DREF DeeObject *rhs_elem;
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			goto err_m1;
-		temp = DeeObject_CompareEq(lhsv[i], rhs_elem);
-		Dee_Decref(rhs_elem);
-		if (temp <= 0)
-			goto err;
+		int diff;
+		diff = DeeObject_CompareEq(lhsv[i], rhsv[i]);
+		if (diff <= 0)
+			return diff;
 	}
 	return 1;
-err_m1:
-	temp = -1;
-err:
-	return temp;
+}
+
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_EqVF(DeeObject *const *lhsv,
+            DeeObject *rhs, size_t elemc) {
+	size_t i;
+	for (i = 0; i < elemc; ++i) {
+		int diff;
+		DREF DeeObject *rhs_item;
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item)
+			return -2;
+		diff = DeeObject_CompareEq(lhsv[i], rhs_item);
+		Dee_Decref(rhs_item);
+		if (diff <= 0)
+			return diff;
+	}
+	return 1;
 }
 
 INTERN WUNUSED NONNULL((3)) int DCALL
 DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc,
             DeeObject *rhs) {
 	size_t i;
-	int temp;
-	DREF DeeObject *rhs_elem;
+	DREF DeeObject *rhs_item;
 	for (i = 0; i < lhsc; ++i) {
-		rhs_elem = DeeObject_IterNext(rhs);
-		if (!ITER_ISOK(rhs_elem)) {
-			if unlikely(!rhs_elem)
-				goto err_m1;
-			return 0;
+		int diff;
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			if (rhs_item == ITER_DONE)
+				return 0; /* COUNT(LHS) > COUNT(RHS) */
+			return -1;
 		}
-		temp = DeeObject_CompareEq(lhsv[i], rhs_elem);
-		Dee_Decref(rhs_elem);
-		if (temp <= 0)
-			goto err;
+		diff = DeeObject_CompareEq(lhsv[i], rhs_item);
+		Dee_Decref(rhs_item);
+		if (diff <= 0)
+			return diff;
 	}
-	rhs_elem = DeeObject_IterNext(rhs);
-	if (rhs_elem != ITER_DONE) {
-		if unlikely(!rhs_elem)
-			goto err_m1;
-		Dee_Decref(rhs_elem);
-		return 0;
+	rhs_item = DeeObject_IterNext(rhs);
+	if (!ITER_ISOK(rhs_item)) {
+		if (rhs_item == ITER_DONE)
+			return 1; /* COUNT(LHS) == COUNT(RHS) */
+		return -1;
 	}
-	return 1;
-err_m1:
-	temp = -1;
-err:
-	return temp;
+	Dee_Decref(rhs_item);
+	return 0; /* COUNT(LHS) < COUNT(RHS) */
 }
 
 INTERN WUNUSED NONNULL((3)) int DCALL
 DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *seq) {
-	int result;
-	size_t fast_size;
-	DREF DeeObject *iterator;
-	if (DeeTuple_Check(seq)) {
-		if (lhsc != DeeTuple_SIZE(seq))
-			return 0;
-		return DeeSeq_EqVV(lhsv, DeeTuple_ELEM(seq), lhsc);
-	}
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		if (lhsc != fast_size)
-			return 0;
-		return DeeSeq_EqVF(lhsv, seq, lhsc);
-	}
-	iterator = DeeObject_IterSelf(seq);
-	if unlikely(!iterator)
-		goto err;
-	result = DeeSeq_EqVI(lhsv, lhsc, iterator);
-	Dee_Decref(iterator);
-	return result;
-err:
-	return -1;
-}
-
-INTERN WUNUSED int DCALL
-DeeSeq_LoVV(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *const *rhsv, size_t rhsc) {
-	int temp;
-	size_t i, common = MIN(lhsc, rhsc);
-	for (i = 0; i < common; ++i) {
-		temp = DeeObject_CompareLo(lhsv[i], rhsv[i]);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				goto err;
-			temp = DeeObject_CompareLo(rhsv[i], lhsv[i]);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				if unlikely(temp < 0)
-					goto err;
-				return 0; /* return false */
-			}
-		}
-	}
-	return lhsc < rhsc;
-err:
-	return temp;
-}
-
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LoVF(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *rhs, size_t rhsc) {
-	int temp;
-	DREF DeeObject *rhs_elem;
-	size_t i, common = MIN(lhsc, rhsc);
-	for (i = 0; i < common; ++i) {
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			goto err;
-		temp = DeeObject_CompareLo(lhsv[i], rhs_elem);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				goto err_rhs_elem;
-			temp = DeeObject_CompareLo(rhs_elem, lhsv[i]);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				if unlikely(temp < 0)
-					goto err_rhs_elem;
-				Dee_Decref(rhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-	}
-	return lhsc < rhsc;
-err_rhs_elem:
-	Dee_Decref(rhs_elem);
-	return temp;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LoVI(DeeObject *const *lhsv, size_t lhsc,
             DeeObject *rhs) {
-	DREF DeeObject *rhs_elem;
 	int result;
-	size_t i;
-	for (i = 0; i < lhsc; ++i) {
-		rhs_elem = DeeObject_IterNext(rhs);
-		if (!ITER_ISOK(rhs_elem)) {
-			if unlikely(!rhs_elem)
-				goto err;
-			return 0; /* size:greater */
-		}
-		result = DeeObject_CompareLo(lhsv[i], rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhsv[i]);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		if (result != 0)
-			return result;
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		if (lhsc != DeeTuple_SIZE(rhs))
+			return 0;
+		result = DeeSeq_EqVV(lhsv, DeeTuple_ELEM(rhs), lhsc);
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		if (lhsc != rhs_size)
+			return 0;
+		result = DeeSeq_EqVF(lhsv, rhs, rhs_size);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -1;
+		result = DeeSeq_EqVI(lhsv, lhsc, rhs_iter);
+		Dee_Decref(rhs_iter);
 	}
-	rhs_elem = DeeObject_IterNext(rhs);
-	if (!ITER_ISOK(rhs_elem)) {
-		if unlikely(!rhs_elem)
-			goto err;
-		return 0; /* size:equal */
-	}
-	Dee_Decref(rhs_elem);
-	return 1; /* size:lower */
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LoVS(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *seq) {
-	int result;
-	size_t fast_size;
-	DREF DeeObject *iterator;
-	if (DeeTuple_Check(seq))
-		return DeeSeq_LoVV(lhsv, lhsc, DeeTuple_ELEM(seq), DeeTuple_SIZE(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
-		return DeeSeq_LoVF(lhsv, lhsc, seq, fast_size);
-	iterator = DeeObject_IterSelf(seq);
-	if unlikely(!iterator)
-		goto err;
-	result = DeeSeq_LoVI(lhsv, lhsc, iterator);
-	Dee_Decref(iterator);
 	return result;
-err:
-	return -1;
 }
 
-INTERN WUNUSED int DCALL
-DeeSeq_LeVV(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *const *rhsv, size_t rhsc) {
-	int temp;
-	size_t i, common = MIN(lhsc, rhsc);
-	for (i = 0; i < common; ++i) {
-		temp = DeeObject_CompareLo(lhsv[i], rhsv[i]);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				goto err;
-			temp = DeeObject_CompareLo(rhsv[i], lhsv[i]);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				if unlikely(temp < 0)
-					goto err;
-				return 0; /* return false */
-			}
-		}
-	}
-	return lhsc <= rhsc;
-err:
-	return temp;
-}
-
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LeVF(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *rhs, size_t rhsc) {
-	int temp;
-	DREF DeeObject *rhs_elem;
-	size_t i, common = MIN(lhsc, rhsc);
-	for (i = 0; i < common; ++i) {
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem)
-			goto err;
-		temp = DeeObject_CompareLo(lhsv[i], rhs_elem);
-		if (temp <= 0) { /* *lhs < *rhs : false */
-			if unlikely(temp < 0)
-				goto err_rhs_elem;
-			temp = DeeObject_CompareLo(rhs_elem, lhsv[i]);
-			if (temp != 0) { /* *rhs < *lhs : true */
-				if unlikely(temp < 0)
-					goto err_rhs_elem;
-				Dee_Decref(rhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-	}
-	return lhsc <= rhsc;
-err_rhs_elem:
-	Dee_Decref(rhs_elem);
-	return temp;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LeVI(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *rhs) {
-	DREF DeeObject *rhs_elem;
-	int result;
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_EqFV(DeeObject *lhs,
+            DeeObject *const *rhsv, size_t elemc) {
 	size_t i;
-	for (i = 0; i < lhsc; ++i) {
-		rhs_elem = DeeObject_IterNext(rhs);
-		if (!ITER_ISOK(rhs_elem)) {
-			if unlikely(!rhs_elem)
-				goto err;
-			return 0; /* size:greater */
-		}
-		result = DeeObject_CompareLo(lhsv[i], rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhsv[i]);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		if (result != 0)
-			return result;
+	for (i = 0; i < elemc; ++i) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -1;
+		diff = DeeObject_CompareEq(lhs_item, rhsv[i]);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
 	}
-	return 1; /* size:equal_or_lower */
-err:
-	return -1;
+	return 1;
 }
 
-INTERN WUNUSED NONNULL((3)) int DCALL
-DeeSeq_LeVS(DeeObject *const *lhsv, size_t lhsc,
-            DeeObject *seq) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc) {
+	size_t i;
+	for (i = 0; i < elemc; ++i) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -1;
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item) {
+			Dee_Decref(lhs_item);
+			return -1;
+		}
+		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
+	}
+	return 1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_EqFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
+	size_t i;
+	DREF DeeObject *rhs_item;
+	for (i = 0; i < lhsc; ++i) {
+		DREF DeeObject *lhs_item;
+		int diff;
+		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		if unlikely(!lhs_item)
+			return -1;
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			Dee_Decref(lhs_item);
+			if (rhs_item == ITER_DONE)
+				return 0; /* COUNT(LHS) > COUNT(RHS) */
+			return -1;
+		}
+		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
+	}
+	rhs_item = DeeObject_IterNext(rhs);
+	if (!ITER_ISOK(rhs_item)) {
+		if (rhs_item == ITER_DONE)
+			return 1; /* COUNT(LHS) == COUNT(RHS) */
+		return -1;
+	}
+	Dee_Decref(rhs_item);
+	return 0; /* COUNT(LHS) < COUNT(RHS) */
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 	int result;
-	size_t fast_size;
-	if (DeeTuple_Check(seq))
-		return DeeSeq_LeVV(lhsv, lhsc, DeeTuple_ELEM(seq), DeeTuple_SIZE(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
-		return DeeSeq_LeVF(lhsv, lhsc, seq, fast_size);
-	seq = DeeObject_IterSelf(seq);
-	if unlikely(!seq)
-		goto err;
-	result = DeeSeq_LeVI(lhsv, lhsc, seq);
-	Dee_Decref(seq);
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		if (DeeTuple_SIZE(rhs) != lhsc)
+			return 0;
+		result = DeeSeq_EqFV(lhs, DeeTuple_ELEM(rhs), lhsc);
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		if (rhs_size != lhsc)
+			return 0;
+		result = DeeSeq_EqFF(lhs, rhs, rhs_size);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -1;
+		result = DeeSeq_EqFI(lhs, lhsc, rhs_iter);
+		Dee_Decref(rhs_iter);
+	}
 	return result;
-err:
-	return -1;
 }
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_EqIV(DeeObject *lhs,
-            DeeObject *const *rhsv,
-            size_t rhsc) {
+            DeeObject *const *rhsv, size_t rhsc) {
 	size_t i;
-	int temp;
-	DREF DeeObject *lhs_elem;
+	DREF DeeObject *lhs_item;
 	for (i = 0; i < rhsc; ++i) {
-		lhs_elem = DeeObject_IterNext(lhs);
-		if (!ITER_ISOK(lhs_elem)) {
-			if unlikely(!lhs_elem)
-				goto err_m1;
-			return 0;
+		int diff;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if (lhs_item == ITER_DONE)
+				return 0; /* COUNT(LHS) < COUNT(RHS) */
+			return -1;
 		}
-		temp = DeeObject_CompareEq(lhs_elem, rhsv[i]);
-		Dee_Decref(lhs_elem);
-		if (temp <= 0)
-			goto err;
+		diff = DeeObject_CompareEq(lhs_item, rhsv[i]);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
 	}
-	lhs_elem = DeeObject_IterNext(lhs);
-	if (lhs_elem != ITER_DONE) {
-		if unlikely(!lhs_elem)
-			goto err_m1;
-		Dee_Decref(lhs_elem);
-		return 0;
+	lhs_item = DeeObject_IterNext(lhs);
+	if (!ITER_ISOK(lhs_item)) {
+		if (lhs_item == ITER_DONE)
+			return 1; /* COUNT(LHS) == COUNT(RHS) */
+		return -1;
 	}
-	return 1;
-err_m1:
-	temp = -1;
-err:
-	return temp;
+	Dee_Decref(lhs_item);
+	return 0; /* COUNT(LHS) > COUNT(RHS) */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_EqIF(DeeObject *lhs,
-            DeeObject *rhs,
-            size_t rhsc) {
+            DeeObject *rhs, size_t rhsc) {
 	size_t i;
-	int temp;
-	DREF DeeObject *lhs_elem, *rhs_elem;
+	DREF DeeObject *lhs_item;
 	for (i = 0; i < rhsc; ++i) {
-		lhs_elem = DeeObject_IterNext(lhs);
-		if (!ITER_ISOK(lhs_elem))
-			return lhs_elem ? 0 : -1;
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem) {
-			Dee_Decref(lhs_elem);
-			goto err_m1;
+		int diff;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if (lhs_item == ITER_DONE)
+				return 0; /* COUNT(LHS) < COUNT(RHS) */
+			return -1;
 		}
-		temp = DeeObject_CompareEq(lhs_elem, rhs_elem);
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (temp <= 0)
-			goto err;
-		if (DeeThread_CheckInterrupt())
-			goto err_m1;
-	}
-	lhs_elem = DeeObject_IterNext(lhs);
-	if (lhs_elem != ITER_DONE) {
-		if unlikely(!lhs_elem)
-			goto err_m1;
-		Dee_Decref(lhs_elem);
-		return 0;
-	}
-	return 1;
-err_m1:
-	temp = -1;
-err:
-	return temp;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_LoIV(DeeObject *lhs,
-            DeeObject *const *rhsv,
-            size_t rhsc) {
-	DREF DeeObject *lhs_elem;
-	int result;
-	size_t i;
-	ASSERT_OBJECT(lhs);
-	for (i = 0; i < rhsc; ++i) {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-			if unlikely(!lhs_elem)
-				goto err;
-			return 1; /* size:lower */
+		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		if unlikely(!rhs_item) {
+			Dee_Decref(lhs_item);
+			return -1;
 		}
-		result = DeeObject_CompareLo(lhs_elem, rhsv[i]);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhsv[i], lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
+		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
 	}
-	return 0; /* size:greater */
-err:
-	return -1;
+	lhs_item = DeeObject_IterNext(lhs);
+	if (!ITER_ISOK(lhs_item)) {
+		if (lhs_item == ITER_DONE)
+			return 1; /* COUNT(LHS) == COUNT(RHS) */
+		return -1;
+	}
+	Dee_Decref(lhs_item);
+	return 0; /* COUNT(LHS) > COUNT(RHS) */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_LoIF(DeeObject *lhs,
-            DeeObject *rhs,
-            size_t rhsc) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
-	int result;
-	size_t i;
-	ASSERT_OBJECT(lhs);
-	for (i = 0; i < rhsc; ++i) {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-			if unlikely(!lhs_elem)
-				goto err;
-			return 1; /* size:lower */
-		}
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem) {
-			Dee_Decref(lhs_elem);
-			goto err;
-		}
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
+DeeSeq_EqII(DeeObject *lhs, DeeObject *rhs) {
+	for (;;) {
+		int diff;
+		DREF DeeObject *lhs_item;
+		DREF DeeObject *rhs_item;
+		lhs_item = DeeObject_IterNext(lhs);
+		if unlikely(!ITER_ISOK(lhs_item)) {
+			if unlikely(lhs_item != ITER_DONE)
+				return -1;
+			rhs_item = DeeObject_IterNext(rhs);
+			if (!ITER_ISOK(rhs_item)) {
+				if unlikely(rhs_item != ITER_DONE)
+					return -1;
+				return 1; /* COUNT(LHS) == COUNT(RHS) */
 			}
+			Dee_Decref(rhs_item);
+			return 0; /* COUNT(LHS) < COUNT(RHS) */
 		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	return 0; /* size:greater */
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_LeIV(DeeObject *lhs,
-            DeeObject *const *rhsv,
-            size_t rhsc) {
-	DREF DeeObject *lhs_elem;
-	int result;
-	size_t i;
-	ASSERT_OBJECT(lhs);
-	for (i = 0; i < rhsc; ++i) {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-			if unlikely(!lhs_elem)
-				goto err;
-			return 1; /* size:lower */
+		rhs_item = DeeObject_IterNext(rhs);
+		if unlikely(!ITER_ISOK(rhs_item)) {
+			Dee_Decref(lhs_item);
+			if unlikely(rhs_item != ITER_DONE)
+				return -1;
+			return 0; /* COUNT(LHS) > COUNT(RHS) */
 		}
-		result = DeeObject_CompareLo(lhs_elem, rhsv[i]);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhsv[i], lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
-		if (DeeThread_CheckInterrupt())
-			goto err;
+		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		Dee_Decref(rhs_item);
+		Dee_Decref(lhs_item);
+		if (diff <= 0)
+			return diff;
 	}
-	if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-		if unlikely(!lhs_elem)
-			goto err;
-		return 1; /* size:equal */
-	}
-	Dee_Decref(lhs_elem);
-	return 0; /* size:greater */
-err:
-	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_LeIF(DeeObject *lhs,
-            DeeObject *rhs,
-            size_t rhsc) {
-	DREF DeeObject *lhs_elem, *rhs_elem;
+DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs) {
 	int result;
-	size_t i;
-	ASSERT_OBJECT(lhs);
-	for (i = 0; i < rhsc; ++i) {
-		if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-			if unlikely(!lhs_elem)
-				goto err;
-			return 1; /* size:lower */
-		}
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
-		if unlikely(!rhs_elem) {
-			Dee_Decref(lhs_elem);
-			goto err;
-		}
-		result = DeeObject_CompareLo(lhs_elem, rhs_elem);
-		if (result == 0) { /* *lhs < *rhs : false */
-			result = DeeObject_CompareLo(rhs_elem, lhs_elem);
-			if (result > 0) { /* *rhs < *lhs : true */
-				Dee_Decref(rhs_elem);
-				Dee_Decref(lhs_elem);
-				return 0; /* return false */
-			}
-		}
-		Dee_Decref(rhs_elem);
-		Dee_Decref(lhs_elem);
-		if (result != 0)
-			return result;
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	if (!ITER_ISOK(lhs_elem = DeeObject_IterNext(lhs))) {
-		if unlikely(!lhs_elem)
-			goto err;
-		return 1; /* size:equal */
-	}
-	Dee_Decref(lhs_elem);
-	return 0; /* size:greater */
-err:
-	return -1;
-}
-
-
-
-
-/* Perform a generic sequence comparison. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Eq(DeeObject *self,
-          DeeObject *some_object) {
-	DeeObject *iter_self, *iter_rhs;
-	int result;
-	size_t other_size;
-	iter_self = DeeObject_IterSelf(self);
-	if unlikely(!iter_self)
-		goto err;
-	if (DeeTuple_Check(some_object)) {
-		result = DeeSeq_EqIV(iter_self,
-		                     DeeTuple_ELEM(some_object),
-		                     DeeTuple_SIZE(some_object));
-	} else if ((other_size = DeeFastSeq_GetSize(some_object)) != DEE_FASTSEQ_NOTFAST) {
-		result = DeeSeq_EqIF(iter_self, some_object, other_size);
+	size_t rhs_size;
+	if (DeeTuple_Check(rhs)) {
+		result = DeeSeq_EqIV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
+	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+		result = DeeSeq_EqIF(lhs, rhs, rhs_size);
 	} else {
-		iter_rhs = DeeObject_IterSelf(some_object);
-		if unlikely(!iter_rhs) {
-			result = -1;
-			goto err1;
-		}
-		result = DeeIter_Eq(iter_self, iter_rhs);
-		Dee_Decref(iter_rhs);
+		DREF DeeObject *rhs_iter;
+		rhs_iter = DeeObject_IterSelf(rhs);
+		if unlikely(!rhs_iter)
+			return -1;
+		result = DeeSeq_EqII(lhs, rhs_iter);
+		Dee_Decref(rhs_iter);
 	}
-err1:
-	Dee_Decref(iter_self);
 	return result;
-err:
-	return -1;
 }
 
-/* Perform a generic sequence comparison. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Lo(DeeObject *self,
-          DeeObject *some_object) {
-	DeeObject *iter_self, *iter_rhs;
-	int result;
-	size_t other_size;
-	iter_self = DeeObject_IterSelf(self);
-	if unlikely(!iter_self)
-		goto err;
-	if (DeeTuple_Check(some_object)) {
-		result = DeeSeq_LoIV(iter_self,
-		                     DeeTuple_ELEM(some_object),
-		                     DeeTuple_SIZE(some_object));
-	} else if ((other_size = DeeFastSeq_GetSize(some_object)) != DEE_FASTSEQ_NOTFAST) {
-		result = DeeSeq_LoIF(iter_self, some_object, other_size);
-	} else {
-		iter_rhs = DeeObject_IterSelf(some_object);
-		if unlikely(!iter_rhs) {
-			result = -1;
-			goto err1;
-		}
-		result = DeeIter_Lo(iter_self, iter_rhs);
-		Dee_Decref(iter_rhs);
-	}
-err1:
-	Dee_Decref(iter_self);
-	return result;
-err:
-	return -1;
-}
-
-/* Perform a generic sequence comparison. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Le(DeeObject *self,
-          DeeObject *some_object) {
-	DeeObject *iter_self, *iter_rhs;
-	int result;
-	size_t other_size;
-	iter_self = DeeObject_IterSelf(self);
-	if unlikely(!iter_self)
-		goto err;
-	if (DeeTuple_Check(some_object)) {
-		result = DeeSeq_LeIV(iter_self,
-		                     DeeTuple_ELEM(some_object),
-		                     DeeTuple_SIZE(some_object));
-	} else if ((other_size = DeeFastSeq_GetSize(some_object)) != DEE_FASTSEQ_NOTFAST) {
-		result = DeeSeq_LeIF(iter_self, some_object, other_size);
-	} else {
-		iter_rhs = DeeObject_IterSelf(some_object);
-		if unlikely(!iter_rhs) {
-			result = -1;
-			goto err1;
-		}
-		result = DeeIter_Le(iter_self, iter_rhs);
-		Dee_Decref(iter_rhs);
-	}
-err1:
-	Dee_Decref(iter_self);
-	return result;
-err:
-	return -1;
-}
 
 
 DECL_END
