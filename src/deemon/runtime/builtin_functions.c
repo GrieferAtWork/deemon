@@ -29,6 +29,7 @@
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -121,6 +122,36 @@ err:
 }
 
 INTERN DEFINE_CMETHOD(builtin_bounditem, &f_builtin_bounditem);
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *result;
+	DeeObject *lhs, *rhs;
+	int diff;
+	PRIVATE struct keyword kwlist[] = { K(lhs), K(rhs), KEND };
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:compare", &lhs, &rhs))
+		goto err;
+	diff = DeeObject_Compare(lhs, rhs);
+	switch (diff) {
+	case -2:
+		goto err;
+	case -1:
+		result = &DeeInt_MinusOne;
+		break;
+	case 0:
+		result = &DeeInt_Zero;
+		break;
+	case 1:
+		result = &DeeInt_One;
+		break;
+	default: __builtin_unreachable();
+	}
+	return_reference_(result);
+err:
+	return NULL;
+}
+
+INTERN DEFINE_KWCMETHOD(builtin_compare, &f_builtin_compare);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {

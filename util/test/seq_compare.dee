@@ -29,6 +29,7 @@ function assertAloBImpl(a, b) {
 	assert  (a != b);
 	assert !(a >  b);
 	assert !(a >= b);
+	assert compare(a, b) < 0;
 }
 
 global final TYPES = { none, List, Tuple, Deque };
@@ -50,6 +51,8 @@ function assertAloB2(a, b) {
 			assert !(b != tb);
 			assert !(b >  tb);
 			assert  (b >= tb);
+			assert compare(tb, b) == 0;
+			assert compare(b, tb) == 0;
 		}
 		assertAloBImpl(a, tb);
 	}
@@ -72,6 +75,8 @@ function assertAloB(a, b) {
 			assert !(a != ta);
 			assert !(a >  ta);
 			assert  (a >= ta);
+			assert compare(ta, a) == 0;
+			assert compare(a, ta) == 0;
 		}
 		assertAloB2(ta, b);
 	}
