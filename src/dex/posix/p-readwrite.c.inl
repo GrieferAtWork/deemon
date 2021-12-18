@@ -869,11 +869,11 @@ err:
 #define POSIX_PWRITE_DEF                                          \
 	{ "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL,       \
 	  DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint") },
+	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint") },
 #define POSIX_PWRITE_DEF_DOC(doc)                                 \
 	{ "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL,       \
 	  DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
+	      "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint,offset:?Dint)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_pwrite_USE_STUB
 	dssize_t result;

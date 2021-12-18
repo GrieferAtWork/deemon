@@ -996,6 +996,12 @@ done_y1:
 #endif /* JIT_EVAL */
 				}
 			}
+			if (self->jl_tok != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
+				result = CALL_SECONDARY(Operand, result);
+				if (ISERR(result))
+					goto err;
+				/*was_expression = AST_PARSE_WASEXPR_YES;*/
+			}
 		} else
 #endif
 		if (self->jl_tok == ')') {

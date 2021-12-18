@@ -1103,6 +1103,12 @@ do_create_class:
 					result                   = merge; /* Inherit reference. */
 				}
 			}
+			if (tok != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
+				result = ast_parse_postexpr(result);
+				if unlikely(!result)
+					goto err_r;
+				/*was_expression = AST_PARSE_WASEXPR_YES;*/
+			}
 		} else if (tok == ')') {
 			/* Empty tuple. */
 			result     = ast_constexpr(Dee_EmptyTuple);
@@ -2759,11 +2765,6 @@ ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr) {
 done:
 	return baseexpr;
 }
-
-
-
-
-
 
 DECL_END
 

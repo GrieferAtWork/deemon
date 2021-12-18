@@ -313,7 +313,8 @@ default_case:
 		                     AST_COMMA_ALLOWVARDECLS |
 		                     AST_COMMA_ALLOWTYPEDECL |
 		                     AST_COMMA_PARSESEMI,
-		                     IF_EVAL(&DeeTuple_Type, ) & comma_mode);
+		                     IF_EVAL(&DeeTuple_Type, )
+		                     &comma_mode);
 		if (ISERR(result))
 			goto err;
 #ifdef JIT_EVAL
@@ -327,9 +328,10 @@ default_case:
 				if ((comma_mode & (AST_COMMA_OUT_FNEEDSEMI | AST_COMMA_OUT_FMULTIPLE)) ==
 				    /*         */ (AST_COMMA_OUT_FNEEDSEMI)) {
 					DREF DeeObject *seq;
+					LOAD_LVALUE(result, err_popscope);
 					seq = DeeTuple_NewVectorSymbolic(1, (DeeObject *const *)&result);
 					if unlikely(!seq)
-						goto err_r;
+						goto err_r_popscope;
 					result = seq;
 				}
 #endif /* JIT_EVAL */
@@ -408,6 +410,8 @@ parse_remainder_after_statement:
 	}
 	return result;
 #ifdef JIT_EVAL
+err_r_popscope:
+	DECREF_MAYBE_LVALUE(result);
 err_popscope:
 	IF_EVAL(JITContext_PopScope(self->jl_context));
 	goto err;
