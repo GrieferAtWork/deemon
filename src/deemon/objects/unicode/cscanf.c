@@ -32,6 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/atomic.h>
 
@@ -54,7 +55,7 @@ typedef struct {
 	char               *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
 	char               *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t            si_lock;    /* Lock for modifying the data and format pointers.
+	atomic_lock_t       si_lock;    /* Lock for modifying the data and format pointers.
 	                                 * NOTE: Not required to be held when reading those pointers! */
 #endif /* !CONFIG_NO_THREADS */
 	char               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
@@ -491,12 +492,12 @@ done:
 	self->si_datiter = data;
 	self->si_fmtiter = format;
 #else /* CONFIG_NO_THREADS */
-	rwlock_write(&self->si_lock);
+	atomic_lock_acquire(&self->si_lock);
 	/* Check if another thread extracted a value in the mean time. */
 	if unlikely(self->si_datiter != orig_data ||
 	            self->si_fmtiter != orig_format) {
 		/* Race condition! -> Loop back and try to read a value once again. */
-		rwlock_endwrite(&self->si_lock);
+		atomic_lock_release(&self->si_lock);
 		if (ITER_ISOK(result))
 			Dee_Decref(result);
 		goto again;
@@ -504,7 +505,7 @@ done:
 	/* Save the updated data & format pointers. */
 	self->si_datiter = data;
 	self->si_fmtiter = format;
-	rwlock_endwrite(&self->si_lock);
+	atomic_lock_release(&self->si_lock);
 #endif /* !CONFIG_NO_THREADS */
 	return result;
 out_dataend:
@@ -565,11 +566,11 @@ PRIVATE struct type_member tpconst ssi_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(StringScanIterator *__restrict self,
          StringScanIterator *__restrict other) {
-	rwlock_read(&other->si_lock);
+	atomic_lock_acquire(&other->si_lock);
 	self->si_datiter = other->si_datiter;
 	self->si_fmtiter = other->si_fmtiter;
-	rwlock_endread(&other->si_lock);
-	rwlock_init(&self->si_lock);
+	atomic_lock_release(&other->si_lock);
+	atomic_lock_init(&self->si_lock);
 	self->si_scanner = other->si_scanner;
 	Dee_Incref(self->si_scanner);
 	self->si_datend = other->si_datend;
@@ -669,7 +670,7 @@ ss_iter(StringScanner *__restrict self) {
 		result->si_fmtiter = (char *)DeeBytes_DATA(self->ss_format);
 		result->si_fmtend  = result->si_fmtiter + DeeBytes_SIZE(self->ss_format);
 	}
-	rwlock_init(&result->si_lock);
+	atomic_lock_init(&result->si_lock);
 	result->si_scanner = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &StringScanIterator_Type);

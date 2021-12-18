@@ -30,10 +30,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/util/lock.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
@@ -57,7 +54,7 @@ typedef struct {
 	DeeObject    *const *c_pseq; /* [1..1][1..1][lock(c_lock)][in(c_cat)] The current sequence. */
 	DREF Cat            *c_cat;  /* [1..1][const] The underly sequence cat. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t             c_lock; /* Lock for this iterator. */
+	atomic_rwlock_t      c_lock; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */
 } CatIterator;
 
@@ -71,7 +68,7 @@ catiterator_ctor(CatIterator *__restrict self) {
 	if unlikely(!self->c_curr)
 		goto err_cat;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat);
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 err_cat:
 	Dee_Decref(self->c_cat);
@@ -83,18 +80,18 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_copy(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
-	rwlock_read(&other->c_lock);
+	atomic_rwlock_read(&other->c_lock);
 	iterator     = other->c_curr;
 	self->c_pseq = other->c_pseq;
 	Dee_Incref(iterator);
-	rwlock_endread(&other->c_lock);
+	atomic_rwlock_endread(&other->c_lock);
 	self->c_curr = DeeObject_Copy(iterator);
 	Dee_Decref(iterator);
 	if unlikely(!self->c_curr)
 		goto err;
 	self->c_cat = other->c_cat;
 	Dee_Incref(self->c_cat);
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 err:
 	return -1;
@@ -105,11 +102,11 @@ catiterator_deep(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
 	size_t sequence_index;
-	rwlock_read(&other->c_lock);
+	atomic_rwlock_read(&other->c_lock);
 	iterator       = other->c_curr;
 	sequence_index = other->c_pseq - DeeTuple_ELEM(other->c_cat);
 	Dee_Incref(iterator);
-	rwlock_endread(&other->c_lock);
+	atomic_rwlock_endread(&other->c_lock);
 	self->c_curr = DeeObject_DeepCopy(iterator);
 	Dee_Decref(iterator);
 	if unlikely(!self->c_curr)
@@ -118,7 +115,7 @@ catiterator_deep(CatIterator *__restrict self,
 	if unlikely(!self->c_cat)
 		goto err_curr;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat) + sequence_index;
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 err_curr:
 	Dee_Decref(self->c_curr);
@@ -138,7 +135,7 @@ catiterator_init(CatIterator *__restrict self,
 	if unlikely(!self->c_curr)
 		goto err;
 	Dee_Incref(self->c_cat);
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 err:
 	return -1;
@@ -162,10 +159,10 @@ catiterator_bool(CatIterator *__restrict self) {
 	DeeObject *const *iterpos;
 	DeeObject *const *catend;
 	DREF DeeObject *curr;
-	rwlock_read(&self->c_lock);
+	atomic_rwlock_read(&self->c_lock);
 	curr = self->c_curr;
 	Dee_Incref(curr);
-	rwlock_endread(&self->c_lock);
+	atomic_rwlock_endread(&self->c_lock);
 	/* Check if the current iterator has remaining elements. */
 	result = DeeObject_Bool(curr);
 	Dee_Decref(curr);
@@ -194,16 +191,16 @@ done:
 		DREF DeeObject *result;                                                     \
 		DREF DeeObject *my_curr, *ot_curr;                                          \
 		DREF DeeObject **my_pseq, **ot_pseq;                                        \
-		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))              \
 			return NULL;                                                            \
 		if (self == other)                                                          \
 			if_equal;                                                               \
 		for (;;) {                                                                  \
-			rwlock_read(&self->c_lock);                                             \
-			if (!rwlock_tryread(&other->c_lock)) {                                  \
-				rwlock_endread(&self->c_lock);                                      \
-				rwlock_read(&other->c_lock);                                        \
-				if (!rwlock_tryread(&self->c_lock))                                 \
+			atomic_rwlock_read(&self->c_lock);                                      \
+			if (!atomic_rwlock_tryread(&other->c_lock)) {                           \
+				atomic_rwlock_endread(&self->c_lock);                               \
+				atomic_rwlock_read(&other->c_lock);                                 \
+				if (!atomic_rwlock_tryread(&self->c_lock))                          \
 					continue;                                                       \
 			}                                                                       \
 			break;                                                                  \
@@ -211,16 +208,16 @@ done:
 		my_pseq = (DREF DeeObject **)self->c_pseq;                                  \
 		ot_pseq = (DREF DeeObject **)other->c_pseq;                                 \
 		if (my_pseq != ot_pseq) {                                                   \
-			rwlock_endread(&other->c_lock);                                         \
-			rwlock_endread(&self->c_lock);                                          \
+			atomic_rwlock_endread(&other->c_lock);                                  \
+			atomic_rwlock_endread(&self->c_lock);                                   \
 			if_diffseq;                                                             \
 		}                                                                           \
 		my_curr = self->c_curr;                                                     \
 		Dee_Incref(my_curr);                                                        \
 		ot_curr = other->c_curr;                                                    \
 		Dee_Incref(ot_curr);                                                        \
-		rwlock_endread(&other->c_lock);                                             \
-		rwlock_endread(&self->c_lock);                                              \
+		atomic_rwlock_endread(&other->c_lock);                                      \
+		atomic_rwlock_endread(&self->c_lock);                                       \
 		result = compare_object(my_curr, ot_curr);                                  \
 		Dee_Decref(ot_curr);                                                        \
 		Dee_Decref(my_curr);                                                        \
@@ -250,11 +247,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_next(CatIterator *__restrict self) {
 	DREF DeeObject *iter, *result;
 again_locked:
-	rwlock_read(&self->c_lock);
+	atomic_rwlock_read(&self->c_lock);
 again:
 	iter = self->c_curr;
 	Dee_Incref(iter);
-	rwlock_endread(&self->c_lock);
+	atomic_rwlock_endread(&self->c_lock);
 do_iter:
 	result = DeeObject_IterNext(iter);
 	Dee_Decref(iter);
@@ -262,12 +259,14 @@ do_iter:
 		DeeObject *const *pnext;
 		if unlikely(!result)
 			goto err;
-		rwlock_write(&self->c_lock);
+		atomic_rwlock_write(&self->c_lock);
+
 		/* Check if the iterator has changed. */
 		if (self->c_curr != iter) {
-			rwlock_downgrade(&self->c_lock);
+			atomic_rwlock_downgrade(&self->c_lock);
 			goto again;
 		}
+
 		/* Load the next sequence. */
 		pnext = self->c_pseq + 1;
 		ASSERT(pnext > DeeTuple_ELEM(self->c_cat));
@@ -275,29 +274,34 @@ do_iter:
 		if unlikely(pnext == (DeeTuple_ELEM(self->c_cat) +
 		                      DeeTuple_SIZE(self->c_cat))) {
 			/* Fully exhausted. */
-			rwlock_endwrite(&self->c_lock);
+			atomic_rwlock_endwrite(&self->c_lock);
 			return ITER_DONE;
 		}
-		rwlock_endwrite(&self->c_lock);
+		atomic_rwlock_endwrite(&self->c_lock);
+
 		/* Create an iterator for this sequence. */
 		iter = DeeObject_IterSelf(*pnext);
 		if unlikely(!iter)
 			goto err;
-		rwlock_write(&self->c_lock);
+		atomic_rwlock_write(&self->c_lock);
 		COMPILER_READ_BARRIER();
+
 		/* Check if the sequence was changed by someone else. */
 		if (self->c_pseq != pnext - 1) {
-			rwlock_endwrite(&self->c_lock);
+			atomic_rwlock_endwrite(&self->c_lock);
 			Dee_Decref(iter);
 			goto again_locked;
 		}
+
 		/* Update the current sequence pointer. */
 		self->c_pseq = pnext;
+
 		/* Store our new iterator, replacing the previous one. */
 		result       = self->c_curr;
 		self->c_curr = iter;
 		Dee_Incref(iter); /* The reference now stored in `self->c_curr' */
-		rwlock_endwrite(&self->c_lock);
+		atomic_rwlock_endwrite(&self->c_lock);
+
 		/* Drop the old iterator. */
 		Dee_Decref(result);
 		goto do_iter;
@@ -310,20 +314,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_seq_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->c_lock);
+	atomic_rwlock_read(&self->c_lock);
 	result = *self->c_pseq;
 	Dee_Incref(result);
-	rwlock_endread(&self->c_lock);
+	atomic_rwlock_endread(&self->c_lock);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_curr_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->c_lock);
+	atomic_rwlock_read(&self->c_lock);
 	result = self->c_curr;
 	Dee_Incref(result);
-	rwlock_endread(&self->c_lock);
+	atomic_rwlock_endread(&self->c_lock);
 	return result;
 }
 
@@ -334,10 +338,10 @@ catiterator_curr_set(CatIterator *__restrict self,
 	if (DeeGC_ReferredBy(value, (DeeObject *)self))
 		return err_reference_loop((DeeObject *)self, value);
 	Dee_Incref(value);
-	rwlock_write(&self->c_lock);
+	atomic_rwlock_write(&self->c_lock);
 	oldval       = self->c_curr;
 	self->c_curr = value;
-	rwlock_endread(&self->c_lock);
+	atomic_rwlock_endread(&self->c_lock);
 	Dee_Decref(oldval);
 	return 0;
 }
@@ -423,9 +427,7 @@ cat_iter(Cat *__restrict self) {
 	result->c_pseq = DeeTuple_ELEM(self);
 	result->c_cat  = self;
 	Dee_Incref(self);
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->c_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&result->c_lock);
 	DeeObject_Init(result, &SeqConcatIterator_Type);
 done:
 	return result;

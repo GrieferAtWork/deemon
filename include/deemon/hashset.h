@@ -22,14 +22,11 @@
 
 #include "api.h"
 
-#include "object.h"
-
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
-
 #include <stdbool.h>
 #include <stddef.h>
+
+#include "object.h"
+#include "util/lock.h"
 
 DECL_BEGIN
 
@@ -56,7 +53,7 @@ struct Dee_hashset_object {
 	struct Dee_hashset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
 	                                  * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t             s_lock; /* Lock used for accessing this set. */
+	Dee_atomic_rwlock_t      s_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 };
@@ -144,34 +141,19 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 #define DeeHashSet_HashIt(self, i)     (((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((DeeHashSetObject *)(self))->s_mask))
 
 
-
-#ifndef CONFIG_NO_THREADS
-#define DeeHashSet_LockReading(x)    rwlock_reading(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockWriting(x)    rwlock_writing(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTryread(x)    rwlock_tryread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTrywrite(x)   rwlock_trywrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockRead(x)       rwlock_read(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockWrite(x)      rwlock_write(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockTryUpgrade(x) rwlock_tryupgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockUpgrade(x)    rwlock_upgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockDowngrade(x)  rwlock_downgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEndWrite(x)   rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEndRead(x)    rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define DeeHashSet_LockEnd(x)        rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#else /* !CONFIG_NO_THREADS */
-#define DeeHashSet_LockReading(x)          1
-#define DeeHashSet_LockWriting(x)          1
-#define DeeHashSet_LockTryread(x)          1
-#define DeeHashSet_LockTrywrite(x)         1
-#define DeeHashSet_LockRead(x)       (void)0
-#define DeeHashSet_LockWrite(x)      (void)0
-#define DeeHashSet_LockTryUpgrade(x)       1
-#define DeeHashSet_LockUpgrade(x)          1
-#define DeeHashSet_LockDowngrade(x)  (void)0
-#define DeeHashSet_LockEndWrite(x)   (void)0
-#define DeeHashSet_LockEndRead(x)    (void)0
-#define DeeHashSet_LockEnd(x)        (void)0
-#endif /* CONFIG_NO_THREADS */
+/* Locking helpers. */
+#define DeeHashSet_LockReading(x)    Dee_atomic_rwlock_reading(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockWriting(x)    Dee_atomic_rwlock_writing(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTryread(x)    Dee_atomic_rwlock_tryread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockRead(x)       Dee_atomic_rwlock_read(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockWrite(x)      Dee_atomic_rwlock_write(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEndRead(x)    Dee_atomic_rwlock_endread(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define DeeHashSet_LockEnd(x)        Dee_atomic_rwlock_end(&((DeeHashSetObject *)Dee_REQUIRES_OBJECT(x))->s_lock)
 
 DECL_END
 

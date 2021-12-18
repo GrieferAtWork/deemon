@@ -141,6 +141,7 @@
     <ClInclude Include="..\include\deemon\tuple.h" />
     <ClInclude Include="..\include\deemon\util\bytewriter.h" />
     <ClInclude Include="..\include\deemon\util\cache.h" />
+    <ClInclude Include="..\include\deemon\util\lock.h" />
     <ClInclude Include="..\include\deemon\util\objectlist.h" />
     <ClInclude Include="..\include\deemon\util\recursive-rwlock.h" />
     <ClInclude Include="..\include\deemon\util\rwlock.h" />

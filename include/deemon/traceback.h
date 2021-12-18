@@ -27,10 +27,9 @@
 
 #include "code.h"
 #include "object.h"
-
-#ifndef CONFIG_NO_THREADS
+#include "util/lock.h"
+#include "util/recursive-rwlock.h"
 #include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -48,7 +47,7 @@ struct Dee_traceback_object {
 	Dee_OBJECT_HEAD /* GC object. */
 	DREF struct Dee_thread_object                 *tb_thread;     /* [0..1][const] The thread for which this is a traceback. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                                   tb_lock;       /* Lock for accessing this traceback. */
+	Dee_atomic_lock_t                              tb_lock;       /* Lock for accessing this traceback. */
 #endif /* !CONFIG_NO_THREADS */
 	uint16_t                                       tb_numframes;  /* [const] The amount of allocated frames. */
 	uint16_t                                       tb_padding[3]; /* ... */
@@ -74,10 +73,10 @@ struct empty_traceback_object {
 	Dee_OBJECT_HEAD
 	DREF struct Dee_thread_object *tb_thread;
 #ifndef CONFIG_NO_THREADS
-	rwlock_t                   tb_lock;
+	Dee_atomic_lock_t              tb_lock;
 #endif /* !CONFIG_NO_THREADS */
-	uint16_t                   tb_numframes;
-	uint16_t                   tb_padding[3];
+	uint16_t                       tb_numframes;
+	uint16_t                       tb_padding[3];
 };
 INTDEF struct empty_traceback_object empty_traceback;
 #else /* GUARD_DEEMON_OBJECTS_TRACEBACK_C */

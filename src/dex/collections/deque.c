@@ -596,9 +596,7 @@ Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_ctor(Deque *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	self->d_head      = NULL;
 	self->d_tail      = NULL;
 	self->d_size      = 0;
@@ -636,9 +634,7 @@ deq_copy(Deque *__restrict self,
 	DequeBucket *copy;
 	DequeBucket *copy_tail;
 	DequeBucket *next;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	self->d_version = 0;
 again:
 	Deque_LockRead(other);
@@ -810,9 +806,7 @@ deq_init(Deque *__restrict self,
 		                "Invalid bucket size: 0");
 		goto err;
 	}
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	self->d_head     = NULL;
 	self->d_tail     = NULL;
 	self->d_size     = 0;
@@ -862,7 +856,7 @@ deq_assign(Deque *__restrict self,
 		bTemp.d_head_use  = 0;
 		bTemp.d_tail_sz   = 0;
 		bTemp.d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
-		rwlock_init(&bTemp.d_lock);
+		atomic_rwlock_init(&bTemp.d_lock);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 		if (DeeObject_Foreach(seq, (dforeach_t)&Deque_PushBack, &bTemp) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
@@ -1002,9 +996,7 @@ deq_iter(Deque *__restrict self) {
 	result = DeeObject_MALLOC(DequeIteratorObject);
 	if unlikely(!result)
 		goto done;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->di_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&result->di_lock);
 	result->di_ver = self->d_version;
 	COMPILER_READ_BARRIER();
 	DequeIterator_InitBegin(&result->di_iter, self);
@@ -1621,9 +1613,7 @@ INTERN DeeTypeObject Deque_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_ctor(DequeIteratorObject *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->di_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->di_lock);
 	self->di_deq = (DREF Deque *)DeeObject_NewDefault(&Deque_Type);
 	if unlikely(!self->di_deq)
 		goto err;
@@ -1637,32 +1627,32 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deqiter_copy(DequeIteratorObject *__restrict self,
              DequeIteratorObject *__restrict other) {
-	rwlock_init(&self->di_lock);
+	atomic_rwlock_init(&self->di_lock);
 	self->di_deq = other->di_deq;
 	Dee_Incref(self->di_deq);
-	rwlock_read(&other->di_lock);
+	atomic_rwlock_read(&other->di_lock);
 	self->di_ver  = other->di_ver;
 	self->di_iter = other->di_iter;
-	rwlock_endread(&other->di_lock);
+	atomic_rwlock_endread(&other->di_lock);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 deqiter_getindex(DequeIteratorObject *__restrict self) {
 	size_t result;
-	rwlock_read(&self->di_lock);
+	atomic_rwlock_read(&self->di_lock);
 	Deque_LockRead(self->di_deq);
 	result = (unlikely(self->di_ver != self->di_deq->d_version))
 	         ? (size_t)-1
 	         : DequeIterator_GetIndex(&self->di_iter, self->di_deq);
 	Deque_LockEndRead(self->di_deq);
-	rwlock_endread(&self->di_lock);
+	atomic_rwlock_endread(&self->di_lock);
 	return result;
 }
 
 PRIVATE NONNULL((1)) void DCALL
 deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
-	rwlock_write(&self->di_lock);
+	atomic_rwlock_write(&self->di_lock);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
 	if unlikely(index >= self->di_deq->d_size)
@@ -1673,7 +1663,7 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 		                     index);
 	}
 	Deque_LockEndRead(self->di_deq);
-	rwlock_endwrite(&self->di_lock);
+	atomic_rwlock_endwrite(&self->di_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1694,7 +1684,7 @@ deqiter_deep(DequeIteratorObject *__restrict self,
 		                     index);
 	}
 	Deque_LockEndRead(self->di_deq);
-	rwlock_init(&self->di_lock);
+	atomic_rwlock_init(&self->di_lock);
 	return 0;
 err:
 	return -1;
@@ -1708,9 +1698,7 @@ deqiter_init(DequeIteratorObject *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(self->di_deq, &Deque_Type))
 		goto err;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->di_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->di_lock);
 	Dee_Incref(self->di_deq);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
@@ -1739,16 +1727,16 @@ deqiter_visit(DequeIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_bool(DequeIteratorObject *__restrict self) {
 	int result;
-	rwlock_read(&self->di_lock);
+	atomic_rwlock_read(&self->di_lock);
 	result = (self->di_ver == self->di_deq->d_version);
-	rwlock_endread(&self->di_lock);
+	atomic_rwlock_endread(&self->di_lock);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deqiter_next(DequeIteratorObject *__restrict self) {
 	DREF DeeObject *result;
-	rwlock_read(&self->di_lock);
+	atomic_rwlock_write(&self->di_lock);
 	Deque_LockRead(self->di_deq);
 	if (self->di_ver != self->di_deq->d_version)
 		result = ITER_DONE;
@@ -1762,7 +1750,7 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 		}
 	}
 	Deque_LockEndRead(self->di_deq);
-	rwlock_endread(&self->di_lock);
+	atomic_rwlock_endwrite(&self->di_lock);
 	return result;
 }
 

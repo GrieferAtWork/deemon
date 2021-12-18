@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "object.h"
-#include "util/rwlock.h"
+#include "util/lock.h"
 
 /*
  * Automatically generated operators / constructors:
@@ -503,7 +503,7 @@ struct Dee_class_desc {
 	                                                       /* [0..1][owned][lock(WRITE_ONCE)][*]
 	                                                        * Table of cached operator callbacks. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                              cd_lock;     /* Lock for accessing the class member table. */
+	Dee_atomic_rwlock_t                       cd_lock;     /* Lock for accessing the class member table. */
 #endif /* !CONFIG_NO_THREADS */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, cd_members); /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
 	                                                        * The class member table (also contains
@@ -554,7 +554,7 @@ struct Dee_class_desc {
 
 struct Dee_instance_desc {
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                              id_lock;  /* Lock that must be held when accessing  */
+	Dee_atomic_rwlock_t                       id_lock;  /* Lock that must be held when accessing  */
 #endif /* !CONFIG_NO_THREADS */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, id_vtab); /* [0..1][lock(id_lock)]
 	                                                     * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]

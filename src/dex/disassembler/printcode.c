@@ -1058,7 +1058,7 @@ prefix_except_prefix:
 	}
 	if (!(flags & PCODE_FNOINNER) && code) {
 		size_t i;
-		rwlock_read(&code->co_static_lock);
+		atomic_rwlock_read(&code->co_static_lock);
 		for (i = 0; i < code->co_staticc; ++i) {
 			DREF DeeCodeObject *inner_code;
 			char const *kind = "code";
@@ -1067,7 +1067,7 @@ prefix_except_prefix:
 				if (!DeeFunction_Check(inner_code)) {
 					if (DeeClassDescriptor_Check(inner_code)) {
 						Dee_Incref(inner_code);
-						rwlock_endread(&code->co_static_lock);
+						atomic_rwlock_endread(&code->co_static_lock);
 						temp = libdisasm_printclass(printer, arg,
 						                            (DeeClassDescriptorObject *)inner_code,
 						                            i, line_prefix);
@@ -1075,7 +1075,7 @@ prefix_except_prefix:
 						if unlikely(temp < 0)
 							goto err;
 						result += temp;
-						rwlock_read(&code->co_static_lock);
+						atomic_rwlock_read(&code->co_static_lock);
 					}
 					continue;
 				}
@@ -1083,7 +1083,7 @@ prefix_except_prefix:
 				kind       = "function";
 			}
 			Dee_Incref(inner_code);
-			rwlock_endread(&code->co_static_lock);
+			atomic_rwlock_endread(&code->co_static_lock);
 			temp = DeeFormat_Printf(printer, arg,
 			                        "%s.const %Iu = %s {\n",
 			                        line_prefix ? line_prefix : "",
@@ -1116,9 +1116,9 @@ prefix_except_prefix:
 			Dee_Decref(inner_code);
 			if unlikely(temp < 0)
 				goto err;
-			rwlock_read(&code->co_static_lock);
+			atomic_rwlock_read(&code->co_static_lock);
 		}
-		rwlock_endread(&code->co_static_lock);
+		atomic_rwlock_endread(&code->co_static_lock);
 	}
 done:
 	if (code)

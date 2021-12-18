@@ -23,10 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -36,17 +33,17 @@ DECL_BEGIN
  * code objects, etc. etc. etc... */
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject  *rv_owner;    /* [1..1] The object that is actually owning the vector. */
-	size_t           rv_length;   /* [const] The number of items in this vector. */
-	DREF DeeObject **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
-	                               * The vector of objects that is being referenced.
-	                               * NOTE: Elements of this vector must not be changed. */
+	DREF DeeObject      *rv_owner;    /* [1..1] The object that is actually owning the vector. */
+	size_t               rv_length;   /* [const] The number of items in this vector. */
+	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
+	                                   * The vector of objects that is being referenced.
+	                                   * NOTE: Elements of this vector must not be changed. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t        *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
-	                               * Also: when non-NULL, items of the vector can be modified. */
+	Dee_atomic_rwlock_t *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
+	                                   * Also: when non-NULL, items of the vector can be modified. */
 #define RefVector_IsWritable(self) ((self)->rv_plock != NULL)
 #else /* !CONFIG_NO_THREADS */
-	bool             rv_writable; /* [const] Set to true if items of the vector can be modified. */
+	bool                 rv_writable; /* [const] Set to true if items of the vector can be modified. */
 #define RefVector_IsWritable(self) ((self)->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 } RefVector;
@@ -66,7 +63,7 @@ INTDEF DeeTypeObject RefVectorIterator_Type;
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t               sv_lock;   /* Lock for this shared-vector. */
+	Dee_atomic_rwlock_t    sv_lock;   /* Lock for this shared-vector. */
 #endif /* !CONFIG_NO_THREADS */
 	size_t                 sv_length; /* [lock(sv_lock)] The number of items in this vector. */
 	DREF DeeObject *const *sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]

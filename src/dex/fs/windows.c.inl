@@ -37,12 +37,7 @@
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
-
-#include "_res.h"
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/util/lock.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
@@ -50,6 +45,7 @@
 #include <Windows.h>
 
 #include "../time/libtime.h"
+#include "_res.h"
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -2539,28 +2535,28 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Dir        *d_dir;  /* [1..1][const] The associated directory. */
-	HANDLE           d_hnd;  /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(d_lock)]
-	                          * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
-	WIN32_FIND_DATAW d_data; /* [lock(d_lock)] The file data for the next matching entry. */
+	DREF Dir        *di_dir;  /* [1..1][const] The associated directory. */
+	HANDLE           di_hnd;  /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(di_lock)]
+	                           * The iteration handle or INVALID_HANDLE_VALUE when exhausted. */
+	WIN32_FIND_DATAW di_data; /* [lock(di_lock)] The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         d_lock;
+	atomic_lock_t    di_lock;
 #endif /* !CONFIG_NO_THREADS */
 } DirIterator;
 
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DirIterator *__restrict self) {
-	if (self->d_hnd != INVALID_HANDLE_VALUE) {
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
 		DBG_ALIGNMENT_DISABLE();
-		FindClose(self->d_hnd);
+		FindClose(self->di_hnd);
 		DBG_ALIGNMENT_ENABLE();
 	}
-	Dee_Decref(self->d_dir);
+	Dee_Decref(self->di_dir);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DirIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->d_dir);
+	Dee_Visit(self->di_dir);
 }
 
 #if 0 /* Find-handles aren't real handles! */
@@ -2568,26 +2564,26 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 diriter_copy(DirIterator *__restrict self,
              DirIterator *__restrict other) {
 	HANDLE prochnd = GetCurrentProcess();
-	rwlock_read(&other->d_lock);
-	if (other->d_hnd == INVALID_HANDLE_VALUE) {
+	rwlock_read(&other->di_lock);
+	if (other->di_hnd == INVALID_HANDLE_VALUE) {
 		/* The other directory has been exhausted. */
-		self->d_hnd = INVALID_HANDLE_VALUE;
+		self->di_hnd = INVALID_HANDLE_VALUE;
 	} else {
 		DBG_ALIGNMENT_DISABLE();
-		if (!DuplicateHandle(prochnd, other->d_hnd,
-		                     prochnd, &self->d_hnd,
+		if (!DuplicateHandle(prochnd, other->di_hnd,
+		                     prochnd, &self->di_hnd,
 		                     0, TRUE, DUPLICATE_SAME_ACCESS)) {
 			DBG_ALIGNMENT_ENABLE();
-			rwlock_endread(&other->d_lock);
+			rwlock_endread(&other->di_lock);
 			return DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
 			                               "Failed to duplicate Find-handle");
 		}
 		DBG_ALIGNMENT_ENABLE();
-		memcpy(&self->d_data, &other->d_data, sizeof(WIN32_FIND_DATAW));
+		memcpy(&self->di_data, &other->di_data, sizeof(WIN32_FIND_DATAW));
 	}
-	self->d_dir = other->d_dir;
-	Dee_Incref(self->d_dir);
-	rwlock_endread(&other->d_lock);
+	self->di_dir = other->di_dir;
+	Dee_Incref(self->di_dir);
+	rwlock_endread(&other->di_lock);
 	return 0;
 }
 #endif
@@ -2608,34 +2604,34 @@ diriter_next(DirIterator *__restrict self) {
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	rwlock_write(&self->d_lock);
+	atomic_lock_acquire(&self->di_lock);
 	/* Quick check: Has the iterator been exhausted. */
-	if (self->d_hnd == INVALID_HANDLE_VALUE) {
-		rwlock_endwrite(&self->d_lock);
+	if (self->di_hnd == INVALID_HANDLE_VALUE) {
+		atomic_lock_release(&self->di_lock);
 iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:
-	begin = self->d_data.cFileName, length = 0;
-	for (; length < COMPILER_LENOF(self->d_data.cFileName) && begin[length]; ++length)
+	begin = self->di_data.cFileName, length = 0;
+	for (; length < COMPILER_LENOF(self->di_data.cFileName) && begin[length]; ++length)
 		;
 	if (length <= 2 && begin[0] == '.' &&
 	    (length == 1 || begin[1] == '.')) {
 		/* Skip self/parent directories. */
 		DBG_ALIGNMENT_DISABLE();
-		if (!FindNextFileW(self->d_hnd, &self->d_data)) {
+		if (!FindNextFileW(self->di_hnd, &self->di_data)) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			if (dwError == ERROR_NO_MORE_FILES) {
-				HANDLE hnd  = self->d_hnd;
-				self->d_hnd = INVALID_HANDLE_VALUE;
-				rwlock_endwrite(&self->d_lock);
+				HANDLE hnd  = self->di_hnd;
+				self->di_hnd = INVALID_HANDLE_VALUE;
+				atomic_lock_release(&self->di_lock);
 				DBG_ALIGNMENT_DISABLE();
 				FindClose(hnd);
 				DBG_ALIGNMENT_ENABLE();
 				goto iter_done;
 			}
-			rwlock_endwrite(&self->d_lock);
+			atomic_lock_release(&self->di_lock);
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
@@ -2648,23 +2644,23 @@ read_filename:
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
 	if unlikely(!result_string) {
-		rwlock_endwrite(&self->d_lock);
+		atomic_lock_release(&self->di_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
 		goto err;
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpyw(result_string, self->d_data.cFileName, length);
+	memcpyw(result_string, self->di_data.cFileName, length);
 	result_string[length] = 0;
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();
-	if (!FindNextFileW(self->d_hnd, &self->d_data)) {
+	if (!FindNextFileW(self->di_hnd, &self->di_data)) {
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(dwError != ERROR_NO_MORE_FILES) {
-			rwlock_endwrite(&self->d_lock);
+			atomic_lock_release(&self->di_lock);
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
@@ -2672,21 +2668,21 @@ read_filename:
 			}
 			goto err_read_failed;
 		}
-		hnd         = self->d_hnd;
-		self->d_hnd = INVALID_HANDLE_VALUE;
-		rwlock_endwrite(&self->d_lock);
+		hnd         = self->di_hnd;
+		self->di_hnd = INVALID_HANDLE_VALUE;
+		atomic_lock_release(&self->di_lock);
 		DBG_ALIGNMENT_DISABLE();
 		FindClose(hnd);
 		DBG_ALIGNMENT_ENABLE();
 	} else {
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_endwrite(&self->d_lock);
+		atomic_lock_release(&self->di_lock);
 	}
 	/* Manually construct a string object and fill
 	 * it with data read from the directory entry. */
 	return (DREF DeeStringObject *)DeeString_PackWideBuffer(result_string, STRING_ERROR_FREPLAC);
 err_read_failed:
-	err_handle_findnextfile(dwError, (DeeObject *)self->d_dir->d_path);
+	err_handle_findnextfile(dwError, (DeeObject *)self->di_dir->d_path);
 err:
 	return NULL;
 }
@@ -2742,11 +2738,11 @@ dir_iter(Dir *__restrict self) {
 	wpattern[wname_length++] = '*';
 	wpattern[wname_length]   = 0;
 	DBG_ALIGNMENT_DISABLE();
-	result->d_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &result->d_data,
+	result->di_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &result->di_data,
 	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if unlikely(result->d_hnd == INVALID_HANDLE_VALUE) {
+	if unlikely(result->di_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -2759,8 +2755,8 @@ dir_iter(Dir *__restrict self) {
 	}
 	/* Finish initializing misc. members. */
 	Dee_Incref(self);
-	result->d_dir = self;
-	rwlock_init(&result->d_lock);
+	result->di_dir = self;
+	atomic_lock_init(&result->di_lock);
 	DeeObject_Init(result, &DeeDirIterator_Type);
 	return result;
 err_r:
@@ -2770,7 +2766,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst diriter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, d_dir), "->?Gdir"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, di_dir), "->?Gdir"),
 	TYPE_MEMBER_END
 };
 
@@ -2985,36 +2981,36 @@ queryiter_next(QueryIterator *__restrict self) {
 again:
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	rwlock_write(&self->q_iter.d_lock);
+	atomic_lock_acquire(&self->q_iter.di_lock);
 	/* Quick check: Has the iterator been exhausted. */
-	if (self->q_iter.d_hnd == INVALID_HANDLE_VALUE) {
-		rwlock_endwrite(&self->q_iter.d_lock);
+	if (self->q_iter.di_hnd == INVALID_HANDLE_VALUE) {
+		atomic_lock_release(&self->q_iter.di_lock);
 iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:
-	begin = self->q_iter.d_data.cFileName, length = 0;
-	for (; length < COMPILER_LENOF(self->q_iter.d_data.cFileName) - 1 &&
+	begin = self->q_iter.di_data.cFileName, length = 0;
+	for (; length < COMPILER_LENOF(self->q_iter.di_data.cFileName) - 1 &&
 	       begin[length];
 	     ++length)
 		;
-	(COMPILER_ENDOF(self->q_iter.d_data.cFileName)[-1]) = 0; /* Ensure validity. */
+	(COMPILER_ENDOF(self->q_iter.di_data.cFileName)[-1]) = 0; /* Ensure validity. */
 	if ((length <= 2 && begin[0] == '.' &&
 	     (length == 1 || begin[1] == '.')) ||
 	    wild_match(begin, self->q_wild) != 0) {
 		/* Skip self/parent directories. */
 		DBG_ALIGNMENT_DISABLE();
-		if (!FindNextFileW(self->q_iter.d_hnd, &self->q_iter.d_data)) {
+		if (!FindNextFileW(self->q_iter.di_hnd, &self->q_iter.di_data)) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			if (dwError == ERROR_NO_MORE_FILES) {
-				HANDLE hnd         = self->q_iter.d_hnd;
-				self->q_iter.d_hnd = INVALID_HANDLE_VALUE;
-				rwlock_endwrite(&self->q_iter.d_lock);
+				HANDLE hnd         = self->q_iter.di_hnd;
+				self->q_iter.di_hnd = INVALID_HANDLE_VALUE;
+				atomic_lock_release(&self->q_iter.di_lock);
 				FindClose(hnd);
 				goto iter_done;
 			}
-			rwlock_endwrite(&self->q_iter.d_lock);
+			atomic_lock_release(&self->q_iter.di_lock);
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
@@ -3027,23 +3023,23 @@ read_filename:
 	}
 	result_string = (WCHAR *)Dee_TryMalloc(sizeof(size_t) + 4 + length * 2);
 	if unlikely(!result_string) {
-		rwlock_endwrite(&self->q_iter.d_lock);
+		atomic_lock_release(&self->q_iter.di_lock);
 		if (Dee_CollectMemory(sizeof(size_t) + 4 + length * 2))
 			goto again;
 		goto err;
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpyw(result_string, self->q_iter.d_data.cFileName, length);
+	memcpyw(result_string, self->q_iter.di_data.cFileName, length);
 	result_string[length] = 0;
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();
-	if (!FindNextFileW(self->q_iter.d_hnd, &self->q_iter.d_data)) {
+	if (!FindNextFileW(self->q_iter.di_hnd, &self->q_iter.di_data)) {
 		HANDLE hnd;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(dwError != ERROR_NO_MORE_FILES) {
-			rwlock_endwrite(&self->q_iter.d_lock);
+			atomic_lock_release(&self->q_iter.di_lock);
 			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
@@ -3051,21 +3047,21 @@ read_filename:
 			}
 			goto err_read_failed;
 		}
-		hnd                = self->q_iter.d_hnd;
-		self->q_iter.d_hnd = INVALID_HANDLE_VALUE;
-		rwlock_endwrite(&self->q_iter.d_lock);
+		hnd                = self->q_iter.di_hnd;
+		self->q_iter.di_hnd = INVALID_HANDLE_VALUE;
+		atomic_lock_release(&self->q_iter.di_lock);
 		DBG_ALIGNMENT_DISABLE();
 		FindClose(hnd);
 		DBG_ALIGNMENT_ENABLE();
 	} else {
 		DBG_ALIGNMENT_ENABLE();
-		rwlock_endwrite(&self->q_iter.d_lock);
+		atomic_lock_release(&self->q_iter.di_lock);
 	}
 	/* Manually construct a string object and fill
 	 * it with data read from the directory entry. */
 	return (DREF DeeStringObject *)DeeString_PackWideBuffer(result_string, STRING_ERROR_FREPLAC);
 err_read_failed:
-	err_handle_findnextfile(dwError, (DeeObject *)self->q_iter.d_dir->d_path);
+	err_handle_findnextfile(dwError, (DeeObject *)self->q_iter.di_dir->d_path);
 err:
 	return NULL;
 }
@@ -3167,12 +3163,12 @@ again_wname:
 	wpattern[wname_length++] = '*';
 	wpattern[wname_length]   = 0;
 	DBG_ALIGNMENT_DISABLE();
-	result->q_iter.d_hnd = FindFirstFileExW(wpattern, FindExInfoBasic,
-	                                        &result->q_iter.d_data,
+	result->q_iter.di_hnd = FindFirstFileExW(wpattern, FindExInfoBasic,
+	                                        &result->q_iter.di_data,
 	                                        FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
 	Dee_AFree(wpattern);
-	if unlikely(result->q_iter.d_hnd == INVALID_HANDLE_VALUE) {
+	if unlikely(result->q_iter.di_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
@@ -3196,8 +3192,8 @@ again_wname:
 	}
 	/* Finish initializing misc. members. */
 	Dee_Incref(self);
-	result->q_iter.d_dir = self;
-	rwlock_init(&result->q_iter.d_lock);
+	result->q_iter.di_dir = self;
+	atomic_lock_init(&result->q_iter.di_lock);
 	DeeObject_Init(&result->q_iter, &DeeQueryIterator_Type);
 	return result;
 err_r:

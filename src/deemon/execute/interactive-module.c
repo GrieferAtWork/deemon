@@ -452,13 +452,15 @@ do_exec_code:
 		                                                           sizeof(DREF DeeObject *));
 		if unlikely(!current_assembler.a_constv)
 			goto done_assembler_fini;
+
 		/* Copy over static variables. */
-		rwlock_read(&current_code->co_static_lock);
+		atomic_rwlock_read(&current_code->co_static_lock);
 		for (i = 0; i < current_assembler.a_constc; ++i) {
 			current_assembler.a_constv[i] = current_code->co_staticv[i];
 			Dee_Incref(current_assembler.a_constv[i]);
 		}
-		rwlock_endread(&current_code->co_static_lock);
+		atomic_rwlock_endread(&current_code->co_static_lock);
+
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
 		if unlikely(!text)
@@ -716,9 +718,7 @@ recover_old_code_object:
 			current_code->co_argc_max                   = 0;
 			current_code->co_framesize                  = old_co_framesize;
 			current_code->co_codebytes                  = (code_size_t)(preexisting_codesize + 1);
-#ifndef CONFIG_NO_THREADS
-			rwlock_init(&current_code->co_static_lock);
-#endif /* !CONFIG_NO_THREADS */
+			atomic_rwlock_init(&current_code->co_static_lock);
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
@@ -1346,9 +1346,7 @@ err_compiler_basefile:
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&init_code->co_static_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&init_code->co_static_lock);
 		init_code->co_module   = (DREF struct module_object *)self;
 		init_code->co_defaultv = NULL;
 		init_code->co_staticv  = NULL;

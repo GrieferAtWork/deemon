@@ -29,8 +29,9 @@
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/none.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* bzeroc(), ... */
+#include <deemon/thread.h>
+#include <deemon/util/lock.h>
 
 #include "libthreading.h"
 
@@ -112,10 +113,10 @@ thread_tls_visit(struct tls_descriptor *__restrict data,
 
 
 /* Lock for registering TLS objects. */
-PRIVATE rwlock_t tls_reglock = RWLOCK_INIT;
-PRIVATE uint8_t *tls_inuse = NULL; /* [lock(tls_reglock)][0..(tls_nexti+7)/8][owned] Bitset of all TLS indices currently in use. */
-PRIVATE size_t tls_nexti   = 0;    /* [lock(tls_reglock)] The next TLS index used when all others are already in use. */
-PRIVATE size_t tls_count   = 0;    /* [lock(tls_reglock)] The total number of TLS indices currently assigned. */
+PRIVATE atomic_lock_t tls_reglock = ATOMIC_LOCK_INIT;
+PRIVATE uint8_t      *tls_inuse   = NULL; /* [lock(tls_reglock)][0..(tls_nexti+7)/8][owned] Bitset of all TLS indices currently in use. */
+PRIVATE size_t        tls_nexti   = 0;    /* [lock(tls_reglock)] The next TLS index used when all others are already in use. */
+PRIVATE size_t        tls_count   = 0;    /* [lock(tls_reglock)] The total number of TLS indices currently assigned. */
 
 /* Allocate a new TLS index.
  * @return: * :         The newly allocated TLS index.
@@ -131,7 +132,7 @@ PRIVATE void DCALL tls_free(size_t index);
 PRIVATE WUNUSED size_t DCALL tls_alloc(void) {
 	size_t result;
 again:
-	rwlock_write(&tls_reglock);
+	atomic_lock_acquire(&tls_reglock);
 	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
 	if (tls_nexti != tls_count) {
 		/* Not all existing indices are in use. */
@@ -161,7 +162,7 @@ again:
 		new_bitset = (uint8_t *)Dee_TryRealloc(tls_inuse, ((tls_nexti / 8) + 1) * sizeof(uint8_t));
 		/* The the realloc failed, return `(size_t)-1'. */
 		if unlikely(!new_bitset) {
-			rwlock_endwrite(&tls_reglock);
+			atomic_lock_release(&tls_reglock);
 			/* Try to collect some memory. */
 			if (Dee_CollectMemory(((tls_nexti / 8) + 1) * sizeof(uint8_t)))
 				goto again;
@@ -178,12 +179,12 @@ again:
 done:
 	/* Track the total number of allocated indices. */
 	++tls_count;
-	rwlock_endwrite(&tls_reglock);
+	atomic_lock_release(&tls_reglock);
 	return result;
 }
 
 PRIVATE void DCALL tls_free(size_t index) {
-	rwlock_write(&tls_reglock);
+	atomic_lock_acquire(&tls_reglock);
 	ASSERTF(tls_count, "No indices allocated");
 	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
 	ASSERTF(index <= tls_nexti, "Invalid index");
@@ -199,7 +200,7 @@ PRIVATE void DCALL tls_free(size_t index) {
 		tls_inuse = NULL;
 		tls_nexti = 0;
 	}
-	rwlock_endwrite(&tls_reglock);
+	atomic_lock_release(&tls_reglock);
 }
 
 

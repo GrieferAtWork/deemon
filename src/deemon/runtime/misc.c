@@ -31,6 +31,8 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/thread.h>
+#include <deemon/util/lock.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -1973,6 +1975,155 @@ PUBLIC void
 	_DeeAssert_Failf(expr, file, line, NULL);
 }
 #endif /* !NDEBUG */
+
+
+
+/************************************************************************/
+/* Shared lock (scheduler-level blocking lock)                          */
+/************************************************************************/
+
+/* Blocking acquire/wait-for a given lock.
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_lock_acquire)(Dee_shared_lock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_LOCK_USES_ATOMIC_LOCK)
+	int result = 0;
+	while (!shared_lock_tryacquire(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_lock_waitfor)(Dee_shared_lock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_LOCK_USES_ATOMIC_LOCK)
+	int result = 0;
+	while (!shared_lock_available(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+
+
+
+/************************************************************************/
+/* Shared r/w-lock (scheduler-level blocking lock)                      */
+/************************************************************************/
+
+/* Blocking acquire/wait-for a given lock.
+ * @return: 0 : Success.
+ * @return: -1: An exception was thrown. */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_rwlock_read)(Dee_shared_rwlock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_RWLOCK_USES_ATOMIC_RWLOCK)
+	int result = 0;
+	while (!shared_rwlock_tryread(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_rwlock_write)(Dee_shared_rwlock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_RWLOCK_USES_ATOMIC_RWLOCK)
+	int result = 0;
+	while (!shared_rwlock_trywrite(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_rwlock_waitread)(Dee_shared_rwlock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_RWLOCK_USES_ATOMIC_RWLOCK)
+	int result = 0;
+	while (!shared_rwlock_canread(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL Dee_shared_rwlock_waitwrite)(Dee_shared_rwlock_t *__restrict self) {
+#if 0
+	/* Os-specific implementations... */
+#elif defined(DEE_CONFIG_SHARED_RWLOCK_USES_ATOMIC_RWLOCK)
+	int result = 0;
+	while (!shared_rwlock_canwrite(self)) {
+		result = DeeThread_CheckInterrupt();
+		if unlikely(result != 0)
+			break;
+		SCHED_YIELD();
+	}
+	return result;
+#elif defined(CONFIG_NO_THREADS)
+	/* For binary compatibility */
+	(void)self;
+	COMPILER_IMPURE();
+	return 0;
+#endif
+}
+
+
+
+
 
 DECL_END
 

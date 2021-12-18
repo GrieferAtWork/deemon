@@ -3814,13 +3814,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 	DeeObject *slot;
 	DREF DeeModuleObject *result = NULL;
-	rwlock_read(&my_class->cd_lock);
+	atomic_rwlock_read(&my_class->cd_lock);
 	slot = my_class->cd_members[addr];
 	if (slot && DeeFunction_Check(slot)) {
 		result = ((DeeFunctionObject *)slot)->fo_code->co_module;
 		Dee_Incref(result);
 	}
-	rwlock_endread(&my_class->cd_lock);
+	atomic_rwlock_endread(&my_class->cd_lock);
 	return (DREF DeeObject *)result;
 }
 
@@ -4235,7 +4235,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 
 #ifdef CONFIG_TRACE_REFCHANGES
 #ifndef CONFIG_NO_THREADS
-PRIVATE rwlock_t reftracker_lock = RWLOCK_INIT;
+PRIVATE atomic_lock_t reftracker_lock = ATOMIC_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
@@ -4348,14 +4348,14 @@ INTERN NONNULL((1)) void DCALL
 dump_reference_history(DeeObject *__restrict obj) {
 	if (!obj->ob_trace)
 		return;
-	rwlock_read(&reftracker_lock);
+	atomic_lock_acquire(&reftracker_lock);
 	print_refchanges(obj->ob_trace->rt_last, 1);
-	rwlock_endread(&reftracker_lock);
+	atomic_lock_release(&reftracker_lock);
 }
 
 PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 	struct Dee_reftracker *iter;
-	rwlock_read(&reftracker_lock);
+	atomic_lock_acquire(&reftracker_lock);
 	for (iter = reftracker_list; iter; iter = iter->rt_next) {
 		REFLEAK_PRINTF("Object at %p of instance %s leaked %Iu references:\n",
 		               iter->rt_obj, iter->rt_obj->ob_type->tp_name,
@@ -4363,26 +4363,26 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 		print_refchanges(iter->rt_last, 1);
 		REFLEAK_PRINTS("\n");
 	}
-	rwlock_endread(&reftracker_lock);
+	atomic_lock_release(&reftracker_lock);
 }
 
 
 PRIVATE NONNULL((1)) void DCALL
 add_reftracker(struct Dee_reftracker *__restrict self) {
-	rwlock_write(&reftracker_lock);
+	atomic_lock_acquire(&reftracker_lock);
 	self->rt_pself = &reftracker_list;
 	if ((self->rt_next = reftracker_list) != NULL)
 		reftracker_list->rt_pself = &self->rt_next;
 	reftracker_list = self;
-	rwlock_endwrite(&reftracker_lock);
+	atomic_lock_release(&reftracker_lock);
 }
 
 PRIVATE NONNULL((1)) void DCALL
 del_reftracker(struct Dee_reftracker *__restrict self) {
-	rwlock_write(&reftracker_lock);
+	atomic_lock_acquire(&reftracker_lock);
 	if ((*self->rt_pself = self->rt_next) != NULL)
 		self->rt_next->rt_pself = self->rt_pself;
-	rwlock_endwrite(&reftracker_lock);
+	atomic_lock_release(&reftracker_lock);
 }
 
 /* Reference count tracing. */

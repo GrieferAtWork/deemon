@@ -51,7 +51,7 @@ DeeCell_New(DeeObject *__restrict item) {
 	DeeObject_Init(result, &DeeCell_Type);
 	Dee_Incref(item);
 	result->c_item = item;
-	rwlock_init(&result->c_lock);
+	atomic_rwlock_init(&result->c_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -60,7 +60,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_ctor(Cell *__restrict self) {
 	self->c_item = NULL;
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 }
 
@@ -71,7 +71,7 @@ cell_copy(Cell *__restrict self,
 	self->c_item = other->c_item;
 	Dee_XIncref(self->c_item);
 	DeeCell_LockEndRead(other);
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 }
 
@@ -81,7 +81,7 @@ cell_init(Cell *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))
 		goto err;
 	Dee_Incref(self->c_item);
-	rwlock_init(&self->c_lock);
+	atomic_rwlock_init(&self->c_lock);
 	return 0;
 err:
 	return -1;
@@ -127,9 +127,9 @@ DeeCell_TryGet(DeeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE void DCALL err_empty_cell(void) {
-	DeeError_Throwf(&DeeError_ValueError,
-	                "The cell is empty");
+PRIVATE int DCALL err_empty_cell(void) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "The cell is empty");
 }
 
 

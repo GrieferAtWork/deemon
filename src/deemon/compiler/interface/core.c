@@ -40,14 +40,14 @@ typedef DeeCompilerWrapperObject CompilerWrapper;
 INTERN NONNULL((1)) void DCALL
 DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
-	rwlock_write(&com->cp_items.ci_lock);
+	atomic_rwlock_write(&com->cp_items.ci_lock);
 	ASSERT(com->cp_items.ci_size);
 	if (self->ci_pself) {
 		if ((*self->ci_pself = self->ci_next) != NULL)
 			self->ci_next->ci_pself = self->ci_pself;
 		--com->cp_items.ci_size;
 	}
-	rwlock_endwrite(&com->cp_items.ci_lock);
+	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
 #ifdef CONFIG_NO_THREADS
 	Dee_Decref(com);
 #else /* CONFIG_NO_THREADS */
@@ -67,14 +67,14 @@ DeeCompilerItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
 INTERN NONNULL((1)) void DCALL
 DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
-	rwlock_write(&com->cp_items.ci_lock);
+	atomic_rwlock_write(&com->cp_items.ci_lock);
 	ASSERT(com->cp_items.ci_size);
 	ASSERTF(self->ci_pself != NULL,
 	        "Compiler object-items must not be deleted externally");
 	if ((*self->ci_pself = self->ci_next) != NULL)
 		self->ci_next->ci_pself = self->ci_pself;
 	--com->cp_items.ci_size;
-	rwlock_endwrite(&com->cp_items.ci_lock);
+	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
 	COMPILER_BEGIN(com);
 	ASSERT_OBJECT((DeeObject *)self->ci_value);
 	Dee_Decref((DeeObject *)self->ci_value);
@@ -271,7 +271,7 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 again:
-	rwlock_read(&self->cp_items.ci_lock);
+	atomic_rwlock_read(&self->cp_items.ci_lock);
 	if (self->cp_items.ci_list) {
 		result = self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
 		for (; result; result = result->ci_next) {
@@ -280,17 +280,19 @@ again:
 			if unlikely(!Dee_IncrefIfNotZero(result))
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(result, type);
-			rwlock_endread(&self->cp_items.ci_lock);
+			atomic_rwlock_endread(&self->cp_items.ci_lock);
 			return (DREF DeeObject *)result;
 		}
 	}
-	rwlock_endread(&self->cp_items.ci_lock);
+	atomic_rwlock_endread(&self->cp_items.ci_lock);
+
 	/* Construct a new item. */
 	result = DeeObject_MALLOC(CompilerItem);
 	if unlikely(!result)
 		goto done;
-	rwlock_write(&self->cp_items.ci_lock);
+
 	/* Make sure that the item wasn't created in the mean time! */
+	atomic_rwlock_write(&self->cp_items.ci_lock);
 	if (self->cp_items.ci_list) {
 		new_result = self->cp_items.ci_list[Dee_HashPointer(value) & self->cp_items.ci_mask];
 		for (; new_result; new_result = new_result->ci_next) {
@@ -299,7 +301,7 @@ again:
 			if unlikely(!Dee_IncrefIfNotZero(new_result))
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(new_result, type);
-			rwlock_endread(&self->cp_items.ci_lock);
+			atomic_rwlock_endread(&self->cp_items.ci_lock);
 			DeeObject_FREE(result);
 			return (DREF DeeObject *)new_result;
 		}
@@ -313,7 +315,7 @@ again:
 		new_map = (DeeCompilerItemObject **)Dee_TryCalloc((new_mask + 1) *
 		                                                  sizeof(DeeCompilerItemObject *));
 		if unlikely(!new_map && !self->cp_items.ci_list) {
-			rwlock_endwrite(&self->cp_items.ci_lock);
+			atomic_rwlock_endwrite(&self->cp_items.ci_lock);
 			DeeObject_FREE(result);
 			goto again;
 		}
@@ -351,7 +353,7 @@ again:
 	Dee_Incref(self);
 	if (is_an_object)
 		Dee_Incref((DeeObject *)value);
-	rwlock_endwrite(&self->cp_items.ci_lock);
+	atomic_rwlock_endwrite(&self->cp_items.ci_lock);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -396,9 +398,9 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	if (!com)
 		return false;
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
-	rwlock_write(&com->cp_items.ci_lock);
+	atomic_rwlock_write(&com->cp_items.ci_lock);
 	if unlikely(!com->cp_items.ci_list) {
-		rwlock_endwrite(&com->cp_items.ci_lock);
+		atomic_rwlock_endwrite(&com->cp_items.ci_lock);
 		return false;
 	}
 	item = com->cp_items.ci_list[Dee_HashPointer(value) & com->cp_items.ci_mask];
@@ -426,7 +428,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 		item->ci_pself = NULL;
 		break;
 	}
-	rwlock_endwrite(&com->cp_items.ci_lock);
+	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
 	return item != NULL;
 }
 
@@ -450,7 +452,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
 	if (!com)
 		return false;
-	rwlock_write(&com->cp_items.ci_lock);
+	atomic_rwlock_write(&com->cp_items.ci_lock);
 	if (com->cp_items.ci_size) {
 		ASSERT(com->cp_items.ci_list != NULL);
 		for (i = 0; i <= com->cp_items.ci_mask; ++i) {
@@ -471,7 +473,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 			}
 		}
 	}
-	rwlock_endwrite(&com->cp_items.ci_lock);
+	atomic_rwlock_endwrite(&com->cp_items.ci_lock);
 	return result;
 }
 

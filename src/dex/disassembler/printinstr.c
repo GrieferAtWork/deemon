@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strlen(), ... */
+#include <deemon/util/lock.h>
 
 /**/
 #include "libdisasm.h"
@@ -700,10 +701,10 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "const %u /* invalid cid */", (unsigned int)cid);
 		}
-		rwlock_read(&code->co_static_lock);
+		atomic_rwlock_read(&code->co_static_lock);
 		constval = code->co_staticv[cid];
 		Dee_Incref(constval);
-		rwlock_endread(&code->co_static_lock);
+		atomic_rwlock_endread(&code->co_static_lock);
 		if (DeeInt_Check(constval)) {
 			dssize_t temp, result = 0;
 			unsigned int numsys;
@@ -760,10 +761,10 @@ libdisasm_printstatic(dformatprinter printer, void *arg,
 #if 0
 		if (readonly && !(flags & PCODE_FNOARGCOMMENT)) {
 			DREF DeeObject *init;
-			rwlock_read(&code->co_static_lock);
+			atomic_rwlock_read(&code->co_static_lock);
 			init = code->co_staticv[sid];
 			Dee_Incref(init);
-			rwlock_endread(&code->co_static_lock);
+			atomic_rwlock_endread(&code->co_static_lock);
 			return DeeFormat_Printf(printer, arg, "static %u /* %R */", sid, init);
 		}
 #endif
@@ -985,7 +986,7 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 	DREF DeeClassDescriptorObject *result;
 	uint16_t i;
 	bool has_child_code = false;
-	rwlock_read(&code->co_static_lock);
+	atomic_rwlock_read(&code->co_static_lock);
 	for (i = 0; i < code->co_staticc; ++i) {
 		result = (DeeClassDescriptorObject *)code->co_staticv[i];
 		if (!DeeClassDescriptor_Check(result)) {
@@ -999,7 +1000,7 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 			continue;
 		/* Found it! */
 		Dee_Incref(result);
-		rwlock_endread(&code->co_static_lock);
+		atomic_rwlock_endread(&code->co_static_lock);
 		return result;
 	}
 	if (has_child_code) {
@@ -1009,16 +1010,16 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 			child_code = (DREF DeeCodeObject *)code->co_staticv[i];
 			if (!DeeCode_Check(child_code))
 				continue;
-			rwlock_endread(&code->co_static_lock);
+			atomic_rwlock_endread(&code->co_static_lock);
 			result = find_class_descriptor_in_constants(child_code, class_name);
 			if (result) {
 				Dee_Decref(child_code);
 				return result;
 			}
-			rwlock_read(&code->co_static_lock);
+			atomic_rwlock_read(&code->co_static_lock);
 		}
 	}
-	rwlock_endread(&code->co_static_lock);
+	atomic_rwlock_endread(&code->co_static_lock);
 	return NULL;
 }
 
@@ -1046,17 +1047,17 @@ libdisasm_printmembername(dformatprinter printer, void *arg,
 				    !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN))) {
 					DREF DeeObject *class_type;
 					DeeClassDescriptorObject *desc;
-					rwlock_read(&mod->mo_lock);
+					atomic_rwlock_read(&mod->mo_lock);
 					class_type = mod->mo_globalv[class_sym->ss_index];
 					Dee_XIncref(class_type);
-					rwlock_endread(&mod->mo_lock);
+					atomic_rwlock_endread(&mod->mo_lock);
 					if (!class_type) {
 						DREF DeeCodeObject *root;
 search_module_root_constants:
-						rwlock_read(&mod->mo_lock);
+						atomic_rwlock_read(&mod->mo_lock);
 						root = mod->mo_root;
 						Dee_XIncref(root);
-						rwlock_endread(&mod->mo_lock);
+						atomic_rwlock_endread(&mod->mo_lock);
 						if (root) {
 							desc = find_class_descriptor_in_constants(root, class_name);
 							Dee_Decref(root);

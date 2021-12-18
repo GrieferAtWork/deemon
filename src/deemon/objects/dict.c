@@ -111,9 +111,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 			}
 		}
 	}
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&result->d_lock);
 	/* Initialize and start tracking the new Dict. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeDict_Type);
@@ -164,9 +162,7 @@ dict_init_iterator(Dict *self, DeeObject *iterator) {
 	self->d_size = 0;
 	self->d_used = 0;
 	self->d_elem = (struct dict_item *)empty_dict_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	if unlikely(dict_insert_iterator(self, iterator)) {
 		dict_fini(self);
@@ -196,9 +192,7 @@ dict_init_sequence(Dict *__restrict self,
 	if (tp == &DeeRoDict_Type) {
 		struct dict_item *iter, *end;
 		DeeRoDictObject *src = (DeeRoDictObject *)sequence;
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&self->d_lock);
 		self->d_mask = src->rd_mask;
 		self->d_used = self->d_size = src->rd_size;
 		if unlikely(!self->d_size)
@@ -277,9 +271,7 @@ dict_ctor(Dict *__restrict self) {
 	self->d_size = 0;
 	self->d_used = 0;
 	self->d_elem = (struct dict_item *)empty_dict_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -288,9 +280,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_copy(Dict *__restrict self,
           Dict *__restrict other) {
 	struct dict_item *iter, *end;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 again:
 	DeeDict_LockRead(other);
 	self->d_mask = other->d_mask;

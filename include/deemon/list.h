@@ -22,14 +22,11 @@
 
 #include "api.h"
 
-#include "object.h"
-
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
-
 #include <stdarg.h>
 #include <stddef.h>
+
+#include "object.h"
+#include "util/lock.h"
 
 DECL_BEGIN
 
@@ -42,42 +39,27 @@ typedef struct Dee_list_object DeeListObject;
 struct Dee_list_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
 	Dee_OBJECT_HEAD /* GC Object */
-	size_t           l_alloc; /* [lock(l_lock)][>= l_size] Allocated list size. */
-	size_t           l_size;  /* [lock(l_lock)] List size. */
-	DREF DeeObject **l_elem;  /* [1..1][0..l_size|ALLOC(l_alloc)][owned][lock(l_lock)] List elements. */
+	size_t              l_alloc; /* [lock(l_lock)][>= l_size] Allocated list size. */
+	size_t              l_size;  /* [lock(l_lock)] List size. */
+	DREF DeeObject    **l_elem;  /* [1..1][0..l_size|ALLOC(l_alloc)][owned][lock(l_lock)] List elements. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t     l_lock;  /* Lock used for accessing this list. */
+	Dee_atomic_rwlock_t l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 };
 
-#ifndef CONFIG_NO_THREADS
-#define DeeList_LockReading(x)    Dee_rwlock_reading(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockWriting(x)    Dee_rwlock_writing(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTryread(x)    Dee_rwlock_tryread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTrywrite(x)   Dee_rwlock_trywrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockRead(x)       Dee_rwlock_read(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockWrite(x)      Dee_rwlock_write(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockTryUpgrade(x) Dee_rwlock_tryupgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockUpgrade(x)    Dee_rwlock_upgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockDowngrade(x)  Dee_rwlock_downgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEndWrite(x)   Dee_rwlock_endwrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEndRead(x)    Dee_rwlock_endread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#define DeeList_LockEnd(x)        Dee_rwlock_end(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
-#else /* !CONFIG_NO_THREADS */
-#define DeeList_LockReading(x)          1
-#define DeeList_LockWriting(x)          1
-#define DeeList_LockTryread(x)          1
-#define DeeList_LockTrywrite(x)         1
-#define DeeList_LockRead(x)       (void)0
-#define DeeList_LockWrite(x)      (void)0
-#define DeeList_LockTryUpgrade(x)       1
-#define DeeList_LockUpgrade(x)          1
-#define DeeList_LockDowngrade(x)  (void)0
-#define DeeList_LockEndWrite(x)   (void)0
-#define DeeList_LockEndRead(x)    (void)0
-#define DeeList_LockEnd(x)        (void)0
-#endif /* CONFIG_NO_THREADS */
+#define DeeList_LockReading(x)    Dee_atomic_rwlock_reading(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockWriting(x)    Dee_atomic_rwlock_writing(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTryread(x)    Dee_atomic_rwlock_tryread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockRead(x)       Dee_atomic_rwlock_read(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockWrite(x)      Dee_atomic_rwlock_write(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEndRead(x)    Dee_atomic_rwlock_endread(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
+#define DeeList_LockEnd(x)        Dee_atomic_rwlock_end(&((DeeListObject *)Dee_REQUIRES_OBJECT(x))->l_lock)
 
 #define DeeList_IsEmpty(ob)   (!DeeList_SIZE(ob))
 #define DeeList_CAPACITY(ob)  ((DeeListObject *)Dee_REQUIRES_OBJECT(ob))->l_alloc

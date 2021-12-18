@@ -23,9 +23,7 @@
 #include "api.h"
 
 #include "object.h"
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
+#include "util/lock.h"
 
 DECL_BEGIN
 
@@ -238,7 +236,7 @@ struct dee_kwds_mapping_object {
 	                               * NOTE: May be NULL, even when `kmo_kwds->kw_size' is non-zero, in which
 	                               *       case code should operate as though `kmo_kwds->kw_size' was zero. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t        kmo_lock; /* Lock for unsharing the argument vector. */
+	Dee_atomic_rwlock_t kmo_lock; /* Lock for unsharing the argument vector. */
 #endif /* !CONFIG_NO_THREADS */
 };
 

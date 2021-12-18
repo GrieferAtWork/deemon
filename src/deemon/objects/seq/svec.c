@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/atomic.h>
 
@@ -96,13 +97,13 @@ rveciter_next(RefVectorIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_THREADS
 		if (vector->rv_plock)
-			rwlock_read(vector->rv_plock);
+			atomic_rwlock_read(vector->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		result = *presult;
 		Dee_XIncref(result);
 #ifndef CONFIG_NO_THREADS
 		if (vector->rv_plock)
-			rwlock_endread(vector->rv_plock);
+			atomic_rwlock_endread(vector->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		/* Skip NULL entires. */
 		if (result)
@@ -293,13 +294,13 @@ rvec_contains(RefVector *self,
 		DREF DeeObject *item;
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
-			rwlock_read(self->rv_plock);
+			atomic_rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		item = self->rv_vector[index];
 		Dee_XIncref(item);
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
-			rwlock_endread(self->rv_plock);
+			atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		if (!item)
 			continue;
@@ -331,13 +332,13 @@ rvec_getitem(RefVector *self,
 	}
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_read(self->rv_plock);
+		atomic_rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	result = self->rv_vector[index];
 	if unlikely(!result) {
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
-			rwlock_endread(self->rv_plock);
+			atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
@@ -345,7 +346,7 @@ rvec_getitem(RefVector *self,
 	Dee_Incref(result);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_endread(self->rv_plock);
+		atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	return result;
 err:
@@ -364,12 +365,7 @@ rvec_setitem(RefVector *__restrict self,
              DeeObject *value) {
 	size_t index;
 	DREF DeeObject *old_item;
-#ifndef CONFIG_NO_THREADS
-	if (!self->rv_plock)
-#else /* !CONFIG_NO_THREADS */
-	if (!self->rv_writable)
-#endif /* CONFIG_NO_THREADS */
-	{
+	if (!RefVector_IsWritable(self)) {
 		err_readonly_rvec();
 		goto err;
 	}
@@ -382,14 +378,10 @@ rvec_setitem(RefVector *__restrict self,
 		goto err;
 	}
 	Dee_XIncref(value); /* Value may be NULL for the delitem callback. */
-#ifndef CONFIG_NO_THREADS
-	rwlock_write(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
-	old_item               = self->rv_vector[index];
+	atomic_rwlock_write(self->rv_plock);
+	old_item = self->rv_vector[index];
 	self->rv_vector[index] = value;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	Dee_XDecref(old_item);
 	return 0;
 err:
@@ -418,13 +410,13 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 	}
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_read(self->rv_plock);
+		atomic_rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	result = self->rv_vector[index];
 	if unlikely(!result) {
 #ifndef CONFIG_NO_THREADS
 		if (self->rv_plock)
-			rwlock_endread(self->rv_plock);
+			atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 		err_unbound_index((DeeObject *)self, index);
 		return NULL;
@@ -432,7 +424,7 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 	Dee_Incref(result);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_endread(self->rv_plock);
+		atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	return result;
 }
@@ -442,29 +434,18 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
 		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
-#ifndef CONFIG_NO_THREADS
-	if (self->rv_plock)
-		rwlock_write(self->rv_plock);
-	else
-#else /* !CONFIG_NO_THREADS */
-	if (!self->rv_writable)
-#endif /* CONFIG_NO_THREADS */
-	{
+	if unlikely(!RefVector_IsWritable(self))
 		return err_readonly_rvec();
-	}
+	atomic_rwlock_write(self->rv_plock);
 	oldobj = self->rv_vector[index];
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	if unlikely(!oldobj) {
-#ifndef CONFIG_NO_THREADS
-		rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_endwrite(self->rv_plock);
 		return err_unbound_index((DeeObject *)self, index);
 	}
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->rv_vector[index] = NULL;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 	Dee_Decref(oldobj);
 #else /* CONFIG_ERROR_DELETE_UNBOUND */
@@ -477,17 +458,11 @@ PRIVATE NONNULL((1)) void DCALL
 rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
-#ifndef CONFIG_NO_THREADS
-	ASSERT(self->rv_plock);
-	rwlock_write(self->rv_plock);
-#else /* !CONFIG_NO_THREADS */
-	ASSERT(self->rv_writable);
-#endif /* CONFIG_NO_THREADS */
-	oldobj                 = self->rv_vector[index];
+	ASSERT(RefVector_IsWritable(self));
+	atomic_rwlock_write(self->rv_plock);
+	oldobj = self->rv_vector[index];
 	self->rv_vector[index] = NULL;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	Dee_XDecref(oldobj);
 }
 
@@ -496,17 +471,11 @@ rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
                       /*inherit(always)*/ DREF DeeObject *__restrict value) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
-#ifndef CONFIG_NO_THREADS
-	ASSERT(self->rv_plock);
-	rwlock_write(self->rv_plock);
-#else /* !CONFIG_NO_THREADS */
-	ASSERT(self->rv_writable);
-#endif /* CONFIG_NO_THREADS */
-	oldobj                 = self->rv_vector[index];
+	ASSERT(RefVector_IsWritable(self));
+	atomic_rwlock_write(self->rv_plock);
+	oldobj = self->rv_vector[index];
 	self->rv_vector[index] = value;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	Dee_XDecref(oldobj);
 }
 
@@ -516,22 +485,13 @@ rvec_nsi_setitem(RefVector *__restrict self, size_t index,
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
 		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
-#ifndef CONFIG_NO_THREADS
-	if (self->rv_plock) {
-		rwlock_write(self->rv_plock);
-	} else
-#else /* !CONFIG_NO_THREADS */
-	if (!self->rv_writable)
-#endif /* CONFIG_NO_THREADS */
-	{
+	if unlikely(!RefVector_IsWritable(self))
 		return err_readonly_rvec();
-	}
 	Dee_Incref(value);
-	oldobj                 = self->rv_vector[index];
+	atomic_rwlock_write(self->rv_plock);
+	oldobj = self->rv_vector[index];
 	self->rv_vector[index] = value;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	Dee_XDecref(oldobj);
 	return 0;
 }
@@ -542,13 +502,13 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 	ASSERT(index < self->rv_length);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_read(self->rv_plock);
+		atomic_rwlock_read(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	result = self->rv_vector[index];
 	Dee_XIncref(result);
 #ifndef CONFIG_NO_THREADS
 	if (self->rv_plock)
-		rwlock_endread(self->rv_plock);
+		atomic_rwlock_endread(self->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
 	return result;
 }
@@ -561,30 +521,20 @@ rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
 		goto err;
 	}
-#ifndef CONFIG_NO_THREADS
-	if (self->rv_plock) {
-		rwlock_write(self->rv_plock);
-	} else
-#else /* !CONFIG_NO_THREADS */
-	if (!self->rv_writable)
-#endif /* CONFIG_NO_THREADS */
-	{
+	if unlikely(!RefVector_IsWritable(self)) {
 		err_readonly_rvec();
 		goto err;
 	}
+	atomic_rwlock_write(self->rv_plock);
 	result = self->rv_vector[index];
 	if unlikely(!result) {
-#ifndef CONFIG_NO_THREADS
-		rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_endwrite(self->rv_plock);
 		err_unbound_index((DeeObject *)self, index);
 		goto err;
 	}
 	Dee_Incref(value);
 	self->rv_vector[index] = value;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	return result;
 err:
 	return NULL;
@@ -594,22 +544,14 @@ PRIVATE bool DCALL
 rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
                     DeeObject *__restrict old_value) {
 	ASSERT(index < self->rv_length);
-#ifndef CONFIG_NO_THREADS
-	ASSERT(self->rv_plock);
-	rwlock_write(self->rv_plock);
-#else /* !CONFIG_NO_THREADS */
-	ASSERT(self->rv_writable);
-#endif /* CONFIG_NO_THREADS */
+	ASSERT(RefVector_IsWritable(self));
+	atomic_rwlock_write(self->rv_plock);
 	if unlikely(self->rv_vector[index] != old_value) {
-#ifndef CONFIG_NO_THREADS
-		rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_endwrite(self->rv_plock);
 		return false;
 	}
 	self->rv_vector[index] = NULL;
-#ifndef CONFIG_NO_THREADS
-	rwlock_endwrite(self->rv_plock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_endwrite(self->rv_plock);
 	Dee_Decref(old_value);
 	return true;
 }
@@ -1005,11 +947,7 @@ PRIVATE struct type_member tpconst rvec_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_get_writable(RefVector *__restrict self) {
-#ifndef CONFIG_NO_THREADS
- return_bool_(self->rv_plock != NULL);
-#else /* !CONFIG_NO_THREADS */
- return_bool_(self->rv_writable);
-#endif /* CONFIG_NO_THREADS */
+	return_bool(RefVector_IsWritable(self));
 }
 
 PRIVATE struct type_getset tpconst rvec_getsets[] = {
@@ -1097,7 +1035,7 @@ PUBLIC WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *owner, size_t length,
                  DeeObject **vector,
 #ifndef CONFIG_NO_THREADS
-                 rwlock_t *plock
+                 Dee_atomic_rwlock_t *plock
 #else /* !CONFIG_NO_THREADS */
                  bool writable
 #endif /* CONFIG_NO_THREADS */
@@ -1167,16 +1105,16 @@ sveciter_next(SharedVectorIterator *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	for (;;) {
 		size_t index;
-		rwlock_read(&vec->sv_lock);
+		atomic_rwlock_read(&vec->sv_lock);
 		index = ATOMIC_READ(self->si_index);
 		if (self->si_index >= vec->sv_length) {
-			rwlock_endread(&vec->sv_lock);
+			atomic_rwlock_endread(&vec->sv_lock);
 			break;
 		}
 		result = vec->sv_vector[index];
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result);
-		rwlock_endread(&vec->sv_lock);
+		atomic_rwlock_endread(&vec->sv_lock);
 		if (ATOMIC_CMPXCH(self->si_index, index, index + 1))
 			break;
 		/* If some other thread stole the index, drop their value. */
@@ -1413,12 +1351,12 @@ svec_contains(SharedVector *self,
               DeeObject *other) {
 	size_t index;
 	int temp;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	for (index = 0; index < self->sv_length; ++index) {
 		DREF DeeObject *item;
 		item = self->sv_vector[index];
 		Dee_Incref(item);
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		temp = DeeObject_CompareEq(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1426,9 +1364,9 @@ svec_contains(SharedVector *self,
 				goto err;
 			return_true;
 		}
-		rwlock_read(&self->sv_lock);
+		atomic_rwlock_read(&self->sv_lock);
 	}
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return_false;
 err:
 	return NULL;
@@ -1441,16 +1379,16 @@ svec_getitem(SharedVector *self,
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	if unlikely(index >= self->sv_length) {
 		size_t my_length = self->sv_length;
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
 		goto err;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return result;
 err:
 	return NULL;
@@ -1470,30 +1408,30 @@ svec_nsi_getsize(SharedVector *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	if unlikely(index >= self->sv_length) {
 		size_t my_length = self->sv_length;
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		err_index_out_of_bounds((DeeObject *)self, index, my_length);
 		return NULL;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	if unlikely(index >= self->sv_length) {
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		return NULL;
 	}
 	result = self->sv_vector[index];
 	Dee_Incref(result);
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return result;
 }
 
@@ -1503,13 +1441,13 @@ svec_nsi_find(SharedVector *__restrict self,
               DeeObject *__restrict keyed_search_item,
               DeeObject *key) {
 	size_t i = start;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	for (; i < end && i < self->sv_length; ++i) {
 		DREF DeeObject *item;
 		int temp;
 		item = self->sv_vector[i];
 		Dee_Incref(item);
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1517,9 +1455,9 @@ svec_nsi_find(SharedVector *__restrict self,
 				goto err;
 			return i;
 		}
-		rwlock_read(&self->sv_lock);
+		atomic_rwlock_read(&self->sv_lock);
 	}
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return (size_t)-1;
 err:
 	return (size_t)-2;
@@ -1531,7 +1469,7 @@ svec_nsi_rfind(SharedVector *__restrict self,
                DeeObject *__restrict keyed_search_item,
                DeeObject *key) {
 	size_t i = end;
-	rwlock_read(&self->sv_lock);
+	atomic_rwlock_read(&self->sv_lock);
 	for (;;) {
 		DREF DeeObject *item;
 		int temp;
@@ -1542,7 +1480,7 @@ svec_nsi_rfind(SharedVector *__restrict self,
 		--i;
 		item = self->sv_vector[i];
 		Dee_Incref(item);
-		rwlock_endread(&self->sv_lock);
+		atomic_rwlock_endread(&self->sv_lock);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
@@ -1550,9 +1488,9 @@ svec_nsi_rfind(SharedVector *__restrict self,
 				goto err;
 			return i;
 		}
-		rwlock_read(&self->sv_lock);
+		atomic_rwlock_read(&self->sv_lock);
 	}
-	rwlock_endread(&self->sv_lock);
+	atomic_rwlock_endread(&self->sv_lock);
 	return (size_t)-1;
 err:
 	return (size_t)-2;
@@ -1610,7 +1548,7 @@ PRIVATE struct type_member tpconst svec_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_ctor(SharedVector *__restrict self) {
-	rwlock_init(&self->sv_lock);
+	atomic_rwlock_init(&self->sv_lock);
 	self->sv_length = 0;
 	self->sv_vector = NULL;
 	return 0;
@@ -1621,12 +1559,12 @@ svec_copy(SharedVector *__restrict self,
           SharedVector *__restrict other) {
 	size_t i;
 again:
-	rwlock_read(&other->sv_lock);
+	atomic_rwlock_read(&other->sv_lock);
 	self->sv_length = other->sv_length;
 	self->sv_vector = (DREF DeeObject **)Dee_TryMalloc(self->sv_length *
 	                                                   sizeof(DREF DeeObject *));
 	if unlikely(!self->sv_vector) {
-		rwlock_endread(&other->sv_lock);
+		atomic_rwlock_endread(&other->sv_lock);
 		if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
@@ -1637,8 +1575,8 @@ again:
 	        sizeof(DREF DeeObject *));
 	for (i = 0; i < self->sv_length; ++i)
 		Dee_Incref(self->sv_vector[i]);
-	rwlock_endread(&other->sv_lock);
-	rwlock_init(&self->sv_lock);
+	atomic_rwlock_endread(&other->sv_lock);
+	atomic_rwlock_init(&self->sv_lock);
 	return 0;
 err:
 	return -1;
@@ -1732,7 +1670,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &SharedVector_Type);
-	rwlock_init(&result->sv_lock);
+	atomic_rwlock_init(&result->sv_lock);
 	result->sv_length = length;
 	result->sv_vector = vector;
 done:
@@ -1772,7 +1710,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 		return;
 	}
 	/* Difficult case: must duplicate the vector. */
-	rwlock_write(&me->sv_lock);
+	atomic_rwlock_write(&me->sv_lock);
 	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sv_length *
 	                                               sizeof(DREF DeeObject *));
 	if unlikely(!vector_copy)
@@ -1786,7 +1724,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	/* Give the SharedVector its very own copy
 	 * which it will take to its grave. */
 	me->sv_vector = vector_copy;
-	rwlock_endwrite(&me->sv_lock);
+	atomic_rwlock_endwrite(&me->sv_lock);
 	Dee_Decref(me);
 	return;
 
@@ -1796,7 +1734,7 @@ err_cannot_inherit:
 	/* Override with an empty vector. */
 	me->sv_vector = NULL;
 	me->sv_length = 0;
-	rwlock_endwrite(&me->sv_lock);
+	atomic_rwlock_endwrite(&me->sv_lock);
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	while (iter-- != begin)
 		Dee_Decref(*iter);

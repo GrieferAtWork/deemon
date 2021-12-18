@@ -3009,7 +3009,7 @@ PUBLIC DeeListObject DeeModule_Path = {
 	/* .l_elem  = */ NULL
 #ifndef CONFIG_NO_THREADS
 	,
-	/* .l_lock  = */ RWLOCK_INIT
+	/* .l_lock  = */ ATOMIC_RWLOCK_INIT
 #endif /* !CONFIG_NO_THREADS */
 };
 

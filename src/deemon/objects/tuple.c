@@ -34,14 +34,12 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
-
-#include <stddef.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
+
+#include <stddef.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -89,17 +87,9 @@ struct tuple_cache {
 	size_t                c_count; /* [lock(c_lock)][<= CONFIG_TUPLE_CACHE_MAXSIZE] Amount of cached objects int `c_head' */
 	struct cached_object *c_head;  /* [lock(c_lock)][0..1] Linked list of cached tuple objects. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t              c_lock;  /* Lock for this tuple cache. */
+	Dee_atomic_lock_t     c_lock;  /* Lock for this tuple cache. */
 #endif /* !CONFIG_NO_THREADS */
 };
-
-#ifdef CONFIG_NO_THREADS
-#define LOCK(x)   (void)0
-#define UNLOCK(x) (void)0
-#else /* CONFIG_NO_THREADS */
-#define LOCK(x)   rwlock_write(&(x))
-#define UNLOCK(x) rwlock_endwrite(&(x))
-#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE struct tuple_cache cache[CONFIG_TUPLE_CACHE_MAXCOUNT];
 
@@ -110,7 +100,7 @@ tuplecache_clear(size_t max_clear) {
 	for (iter = cache;
 	     iter != COMPILER_ENDOF(cache); ++iter) {
 		struct cached_object *elem;
-		LOCK(iter->c_lock);
+		atomic_lock_acquire(&iter->c_lock);
 		while ((elem = iter->c_head) != NULL && result < max_clear) {
 			iter->c_head = elem->co_next;
 			ASSERT(iter->c_count);
@@ -121,7 +111,7 @@ tuplecache_clear(size_t max_clear) {
 		}
 		ASSERT((iter->c_head != NULL) ==
 		       (iter->c_count != 0));
-		UNLOCK(iter->c_lock);
+		atomic_lock_release(&iter->c_lock);
 		if (result >= max_clear)
 			break;
 	}
@@ -147,7 +137,7 @@ DeeTuple_NewUninitialized(size_t n) {
 	if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[n - 1];
 		if (c->c_count) {
-			LOCK(c->c_lock);
+			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
 			if (c->c_head)
@@ -159,10 +149,10 @@ DeeTuple_NewUninitialized(size_t n) {
 				--c->c_count;
 				ASSERT((c->c_count == 0) == (c->c_head == NULL));
 				ASSERT(result->t_size == n);
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 				goto got_result;
 			}
-			UNLOCK(c->c_lock);
+			atomic_lock_release(&c->c_lock);
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
@@ -192,7 +182,7 @@ DeeTuple_TryNewUninitialized(size_t n) {
 	if (n < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[n - 1];
 		if (c->c_count) {
-			LOCK(c->c_lock);
+			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
 			if (c->c_head)
@@ -204,10 +194,10 @@ DeeTuple_TryNewUninitialized(size_t n) {
 				--c->c_count;
 				ASSERT((c->c_count == 0) == (c->c_head == NULL));
 				ASSERT(result->t_size == n);
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 				goto got_result;
 			}
-			UNLOCK(c->c_lock);
+			atomic_lock_release(&c->c_lock);
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
@@ -242,7 +232,7 @@ tuple_tp_free(void *__restrict ob) {
 	if (DeeTuple_SIZE((DeeObject *)ob) < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[DeeTuple_SIZE((DeeObject *)ob) - 1];
 		if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE) {
-			LOCK(c->c_lock);
+			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
 			if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE)
@@ -253,10 +243,10 @@ tuple_tp_free(void *__restrict ob) {
 				cob->co_next = c->c_head;
 				c->c_head    = cob;
 				++c->c_count;
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 				return;
 			}
-			UNLOCK(c->c_lock);
+			atomic_lock_release(&c->c_lock);
 		}
 	}
 	DeeObject_Free(ob);
@@ -300,7 +290,7 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 	if (new_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[new_size - 1];
 		if (c->c_count) {
-			LOCK(c->c_lock);
+			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
 			if (c->c_head)
@@ -312,7 +302,7 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 				new_tuple = (DREF DeeTupleObject *)c->c_head;
 				c->c_head = ((struct cached_object *)new_tuple)->co_next;
 				--c->c_count;
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 				memcpyc(new_tuple, self,
 				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
@@ -330,7 +320,7 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 				new_tuple->t_size = new_size;
 				return (DREF DeeObject *)new_tuple;
 			}
-			UNLOCK(c->c_lock);
+			atomic_lock_release(&c->c_lock);
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
@@ -377,7 +367,7 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
 	if (new_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[new_size - 1];
 		if (c->c_count) {
-			LOCK(c->c_lock);
+			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
 			if (c->c_head)
@@ -387,7 +377,7 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
 				new_tuple = (DREF DeeTupleObject *)c->c_head;
 				c->c_head = ((struct cached_object *)new_tuple)->co_next;
 				--c->c_count;
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 				memcpyc(new_tuple, self,
 				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
@@ -405,7 +395,7 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
 				new_tuple->t_size = new_size;
 				return (DREF DeeObject *)new_tuple;
 			}
-			UNLOCK(c->c_lock);
+			atomic_lock_release(&c->c_lock);
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
@@ -563,7 +553,7 @@ err_cleanup:
 			DREF DeeTupleObject *new_tuple;
 			struct tuple_cache *c = &cache[used_size - 1];
 			if (c->c_count) {
-				LOCK(c->c_lock);
+				atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 				COMPILER_READ_BARRIER();
 				if (c->c_head)
@@ -573,7 +563,7 @@ err_cleanup:
 					new_tuple = (DREF DeeTupleObject *)c->c_head;
 					c->c_head = ((struct cached_object *)new_tuple)->co_next;
 					--c->c_count;
-					UNLOCK(c->c_lock);
+					atomic_lock_release(&c->c_lock);
 					/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 					ASSERT(used_size < DeeTuple_SIZE(result));
 					memcpyc(new_tuple, result,
@@ -585,7 +575,7 @@ err_cleanup:
 					ASSERT(new_tuple->ob_refcnt == 1);
 					return (DREF DeeObject *)new_tuple;
 				}
-				UNLOCK(c->c_lock);
+				atomic_lock_release(&c->c_lock);
 			}
 		}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */

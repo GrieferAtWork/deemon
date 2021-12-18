@@ -290,11 +290,11 @@ do_get_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		rwlock_read(&code->co_static_lock);
+		atomic_rwlock_read(&code->co_static_lock);
 		result = code->co_staticv[imm_val];
 		ASSERT_OBJECT(result);
 		Dee_Incref(result);
-		rwlock_endread(&code->co_static_lock);
+		atomic_rwlock_endread(&code->co_static_lock);
 		break;
 
 	case ASM_EXTERN:
@@ -473,10 +473,10 @@ do_get_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		rwlock_write(&code->co_static_lock);
+		atomic_rwlock_write(&code->co_static_lock);
 		result                    = code->co_staticv[imm_val]; /* Inherit reference. */
 		code->co_staticv[imm_val] = value;                     /* Inherit reference. */
-		rwlock_endwrite(&code->co_static_lock);
+		atomic_rwlock_endwrite(&code->co_static_lock);
 		ASSERT_OBJECT(result);
 		break;
 
@@ -663,11 +663,11 @@ do_set_static:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_staticc);
 #endif /* !EXEC_SAFE */
-		rwlock_write(&code->co_static_lock);
+		atomic_rwlock_write(&code->co_static_lock);
 		old_value                 = code->co_staticv[imm_val];
 		code->co_staticv[imm_val] = value;
 		ASSERT_OBJECT(old_value);
-		rwlock_endwrite(&code->co_static_lock);
+		atomic_rwlock_endwrite(&code->co_static_lock);
 		Dee_Decref(old_value);
 		break;
 
@@ -967,47 +967,32 @@ inc_execsz_start:
 #define STATICimm             code->co_staticv[imm_val]
 #define CONSTimm              code->co_staticv[imm_val]
 #define CONSTimm2             code->co_staticv[imm_val2]
-#ifdef CONFIG_NO_THREADS
-#define EXTERN_LOCKREAD()       (void)0
-#define EXTERN_LOCKENDREAD()    (void)0
-#define EXTERN_LOCKWRITE()      (void)0
-#define EXTERN_LOCKENDWRITE()   (void)0
-#define GLOBAL_LOCKREAD()       (void)0
-#define GLOBAL_LOCKENDREAD()    (void)0
-#define GLOBAL_LOCKWRITE()      (void)0
-#define GLOBAL_LOCKENDWRITE()   (void)0
-#define STATIC_LOCKREAD()       (void)0
-#define STATIC_LOCKENDREAD()    (void)0
-#define STATIC_LOCKWRITE()      (void)0
-#define STATIC_LOCKENDWRITE()   (void)0
-#else /* CONFIG_NO_THREADS */
-#define EXTERN_LOCKREAD()       rwlock_read(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKENDREAD()    rwlock_endread(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKWRITE()      rwlock_write(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define EXTERN_LOCKENDWRITE()   rwlock_endwrite(&code->co_module->mo_importv[imm_val]->mo_lock)
-#define GLOBAL_LOCKREAD()       rwlock_read(&code->co_module->mo_lock)
-#define GLOBAL_LOCKENDREAD()    rwlock_endread(&code->co_module->mo_lock)
-#define GLOBAL_LOCKWRITE()      rwlock_write(&code->co_module->mo_lock)
-#define GLOBAL_LOCKENDWRITE()   rwlock_endwrite(&code->co_module->mo_lock)
-#define STATIC_LOCKREAD()       rwlock_read(&code->co_static_lock)
-#define STATIC_LOCKENDREAD()    rwlock_endread(&code->co_static_lock)
-#define STATIC_LOCKWRITE()      rwlock_write(&code->co_static_lock)
-#define STATIC_LOCKENDWRITE()   rwlock_endwrite(&code->co_static_lock)
-#endif /* !CONFIG_NO_THREADS */
-#define THIS                 (frame->cf_this)
-#define TOP                  sp[-1]
-#define FIRST                sp[-1]
-#define SECOND               sp[-2]
-#define THIRD                sp[-3]
-#define FOURTH               sp[-4]
-#define POP()                (*--sp)
-#define POPREF()             (--sp, Dee_Decref(*sp))
-#define PUSH(ob)             (*sp = (ob), ++sp)
-#define PUSHREF(ob)          (*sp = (ob), Dee_Incref(*sp), ++sp)
-#define STACK_BEGIN          frame->cf_stack
-#define STACK_END            (frame->cf_stack+code->co_framesize)
-#define STACKUSED            (sp - frame->cf_stack)
-#define STACKPREALLOC        ((uint16_t)((code->co_framesize/sizeof(DeeObject *))-code->co_localc))
+#define EXTERN_LOCKREAD()     atomic_rwlock_read(&code->co_module->mo_importv[imm_val]->mo_lock)
+#define EXTERN_LOCKENDREAD()  atomic_rwlock_endread(&code->co_module->mo_importv[imm_val]->mo_lock)
+#define EXTERN_LOCKWRITE()    atomic_rwlock_write(&code->co_module->mo_importv[imm_val]->mo_lock)
+#define EXTERN_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_module->mo_importv[imm_val]->mo_lock)
+#define GLOBAL_LOCKREAD()     atomic_rwlock_read(&code->co_module->mo_lock)
+#define GLOBAL_LOCKENDREAD()  atomic_rwlock_endread(&code->co_module->mo_lock)
+#define GLOBAL_LOCKWRITE()    atomic_rwlock_write(&code->co_module->mo_lock)
+#define GLOBAL_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_module->mo_lock)
+#define STATIC_LOCKREAD()     atomic_rwlock_read(&code->co_static_lock)
+#define STATIC_LOCKENDREAD()  atomic_rwlock_endread(&code->co_static_lock)
+#define STATIC_LOCKWRITE()    atomic_rwlock_write(&code->co_static_lock)
+#define STATIC_LOCKENDWRITE() atomic_rwlock_endwrite(&code->co_static_lock)
+#define THIS                  (frame->cf_this)
+#define TOP                   sp[-1]
+#define FIRST                 sp[-1]
+#define SECOND                sp[-2]
+#define THIRD                 sp[-3]
+#define FOURTH                sp[-4]
+#define POP()                 (*--sp)
+#define POPREF()              (--sp, Dee_Decref(*sp))
+#define PUSH(ob)              (*sp = (ob), ++sp)
+#define PUSHREF(ob)           (*sp = (ob), Dee_Incref(*sp), ++sp)
+#define STACK_BEGIN           frame->cf_stack
+#define STACK_END             (frame->cf_stack+code->co_framesize)
+#define STACKUSED             (sp - frame->cf_stack)
+#define STACKPREALLOC         ((uint16_t)((code->co_framesize/sizeof(DeeObject *))-code->co_localc))
 #ifdef USE_SWITCH
 #define RAW_TARGET2(op, _op) case op&0xff: target##_op:
 #else /* USE_SWITCH */

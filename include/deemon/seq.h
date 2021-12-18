@@ -758,7 +758,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *owner, size_t length,
                  DeeObject **vector,
 #ifndef CONFIG_NO_THREADS
-                 Dee_rwlock_t *plock
+                 Dee_atomic_rwlock_t *plock
 #else /* !CONFIG_NO_THREADS */
                  bool writable
 #endif /* CONFIG_NO_THREADS */

@@ -400,9 +400,7 @@ udict_init_iterator(UDict *self, DeeObject *iterator) {
 	self->d_size = 0;
 	self->d_used = 0;
 	self->d_elem = (struct udict_item *)empty_dict_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	if unlikely(udict_insert_iterator(self, iterator)) {
 		udict_fini(self);
@@ -439,9 +437,7 @@ udict_ctor(UDict *__restrict self) {
 	self->d_size = 0;
 	self->d_used = 0;
 	self->d_elem = (struct udict_item *)empty_dict_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -450,9 +446,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_copy(UDict *__restrict self,
            UDict *__restrict other) {
 	struct udict_item *iter, *end;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->d_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->d_lock);
 again:
 	UDict_LockRead(other);
 	self->d_mask = other->d_mask;

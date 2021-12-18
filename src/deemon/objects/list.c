@@ -155,7 +155,7 @@ list_ctor(List *__restrict self) {
 	self->l_alloc = 0;
 	self->l_size  = 0;
 	self->l_elem  = NULL;
-	rwlock_init(&self->l_lock);
+	atomic_rwlock_init(&self->l_lock);
 	return 0;
 }
 
@@ -166,7 +166,7 @@ list_copy(List *__restrict self,
 	size_t count;
 	ASSERT(self != other);
 	weakref_support_init(self);
-	rwlock_init(&self->l_lock);
+	atomic_rwlock_init(&self->l_lock);
 again:
 	DeeList_LockRead(other);
 	count = other->l_size;
@@ -271,7 +271,7 @@ do_realloc:
 	self->l_elem  = vector;
 	self->l_size  = size;
 	weakref_support_init(self);
-	rwlock_init(&self->l_lock);
+	atomic_rwlock_init(&self->l_lock);
 	return 0;
 err:
 	while (size--)
@@ -290,7 +290,7 @@ DeeList_NewHint(size_t n_prealloc) {
 	result->l_alloc = n_prealloc;
 	result->l_size  = 0;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	if likely(n_prealloc) {
 		result->l_elem = (DREF DeeObject **)Dee_TryMalloc(n_prealloc *
 		                                                  sizeof(DREF DeeObject *));
@@ -317,7 +317,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 	result->l_alloc = n_elem;
 	result->l_size  = n_elem;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	/*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
 done:
 	return (DREF DeeObject *)result;
@@ -364,7 +364,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
 	if unlikely(!result)
 		goto err;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	result->l_elem = DeeSeq_AsHeapVectorWithAlloc(self,
 	                                              &result->l_size,
 	                                              &result->l_alloc);
@@ -410,7 +410,7 @@ DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
 	result->l_size  = objc;
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -445,7 +445,7 @@ DeeList_Copy(DeeObject *__restrict self) {
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -550,7 +550,7 @@ allocate_new_vector:
 		result->l_alloc = result->l_size = list_size + argc;
 		result->l_elem                   = new_vector;
 		weakref_support_init(result);
-		rwlock_init(&result->l_lock);
+		atomic_rwlock_init(&result->l_lock);
 		DeeGC_Track((DeeObject *)result);
 	}
 	return (DREF DeeObject *)result;
@@ -1182,7 +1182,7 @@ list_init_sequence(List *__restrict self,
 		self->l_elem = elem;
 		self->l_size = self->l_alloc = fast_size;
 		weakref_support_init(self);
-		rwlock_init(&self->l_lock);
+		atomic_rwlock_init(&self->l_lock);
 		return 0;
 err_elem:
 		while (i--)
@@ -1226,7 +1226,7 @@ list_init(List *__restrict self,
 		}
 		self->l_alloc = self->l_size = list_size;
 		weakref_support_init(self);
-		rwlock_init(&self->l_lock);
+		atomic_rwlock_init(&self->l_lock);
 		return 0;
 	}
 	return list_init_sequence(self, sequence);
@@ -1424,7 +1424,7 @@ again:
 	DeeObject_Init(result, &DeeList_Type);
 	result->l_size = result->l_alloc = (size_t)end;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	result->l_elem = new_vector;
 	/* Start tracking it as a GC object. */
 	DeeGC_Track((DeeObject *)result);
@@ -1476,7 +1476,7 @@ again:
 	DeeObject_Init(result, &DeeList_Type);
 	result->l_size = result->l_alloc = (size_t)new_size;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	result->l_elem = new_vector;
 	/* Start tracking it as a GC object. */
 	DeeGC_Track((DeeObject *)result);
@@ -3242,7 +3242,7 @@ again:
 	result->l_alloc = result_length;
 	result->l_size  = result_length;
 	weakref_support_init(result);
-	rwlock_init(&result->l_lock);
+	atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
 	DeeGC_Track((DeeObject *)result);
 	return result;

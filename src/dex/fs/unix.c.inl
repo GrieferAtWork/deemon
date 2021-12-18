@@ -20,22 +20,22 @@
 #ifndef GUARD_DEX_FS_UNIX_C_INL
 #define GUARD_DEX_FS_UNIX_C_INL 1
 #ifndef DEE_SOURCE
-#define DEE_SOURCE      1
+#define DEE_SOURCE 1
 #endif /* !DEE_SOURCE */
 #ifndef _KOS_SOURCE
-#define _KOS_SOURCE     1
+#define _KOS_SOURCE 1
 #endif /* !_KOS_SOURCE */
 #ifndef _BSD_SOURCE
-#define _BSD_SOURCE     1
+#define _BSD_SOURCE 1
 #endif /* !_BSD_SOURCE */
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE     1
+#define _GNU_SOURCE 1
 #endif /* !_GNU_SOURCE */
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #endif /* !_POSIX_C_SOURCE */
 #ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE   500
+#define _XOPEN_SOURCE 500
 #endif /* !_XOPEN_SOURCE */
 
 #include "libfs.h"
@@ -50,16 +50,12 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system.h>
 #include <deemon/system-features.h>
-
-#include "_res.h"
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
+#include <deemon/system.h>
+#include <deemon/util/lock.h>
 
 #include "../time/libtime.h"
+#include "_res.h"
 
 #ifdef _MSC_VER
 typedef int ssize_t;
@@ -1047,24 +1043,24 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Dir *d_dir; /* [1..1][const] The associated directory. */
-	DREF DIR *d_hnd; /* [0..1][lock(d_lock)] The directory being iterated. */
+	DREF Dir     *di_dir;  /* [1..1][const] The associated directory. */
+	DREF DIR     *di_hnd;  /* [0..1][lock(di_lock)] The directory being iterated. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t d_lock;
-#endif
+	atomic_lock_t di_lock; /* Lock for this iterator. */
+#endif /* !CONFIG_NO_THREADS */
 } DirIterator;
 
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DirIterator *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
-	closedir(self->d_hnd);
+	closedir(self->di_hnd);
 	DBG_ALIGNMENT_ENABLE();
-	Dee_Decref(self->d_dir);
+	Dee_Decref(self->di_dir);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DirIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->d_dir);
+	Dee_Visit(self->di_dir);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1076,35 +1072,35 @@ diriter_next(DirIterator *__restrict self) {
 	struct dirent *ent;
 	size_t result_length;
 /*again:*/
-	rwlock_write(&self->d_lock);
+	atomic_lock_acquire(&self->di_lock);
 	/* Quick check: Has the iterator been exhausted. */
-	if (!self->d_hnd) {
-		rwlock_endwrite(&self->d_lock);
+	if (!self->di_hnd) {
+		atomic_lock_release(&self->di_lock);
 iter_done:
 		return (DREF DeeStringObject *)ITER_DONE;
 	}
 read_filename:
 	errno = 0;
 	DBG_ALIGNMENT_DISABLE();
-	ent = readdir(self->d_hnd);
+	ent = readdir(self->di_hnd);
 	DBG_ALIGNMENT_ENABLE();
 	if (!ent) {
 		/* End of directory / error. */
 		int error = errno;
 		if likely(error == 0) {
-			DIR *dfd = self->d_hnd;
+			DIR *dfd = self->di_hnd;
 			/* End of directory. */
-			self->d_hnd = NULL;
-			rwlock_endwrite(&self->d_lock);
+			self->di_hnd = NULL;
+			atomic_lock_release(&self->di_lock);
 			DBG_ALIGNMENT_DISABLE();
 			closedir(dfd);
 			DBG_ALIGNMENT_ENABLE();
 			goto iter_done;
 		}
-		rwlock_endwrite(&self->d_lock);
+		atomic_lock_release(&self->di_lock);
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to read entires from directory %r",
-		                          self->d_dir->d_path);
+		                          self->di_dir->d_path);
 		goto err;
 	}
 	/* Skip self/parent directories. */
@@ -1114,7 +1110,7 @@ read_filename:
 		goto read_filename;
 	result_length = strlen(ent->d_name);
 	result        = (DREF DeeStringObject *)DeeString_TryNewSized(ent->d_name, result_length);
-	rwlock_endwrite(&self->d_lock);
+	atomic_lock_release(&self->di_lock);
 	if unlikely(!result) {
 		Dee_BadAlloc(offsetof(DeeStringObject, s_str) +
 		             (result_length + 1) * sizeof(char));
@@ -1156,15 +1152,15 @@ dir_iter(Dir *__restrict self) {
 	if unlikely(!utf8)
 		goto err_r;
 	DBG_ALIGNMENT_DISABLE();
-	result->d_hnd = opendir(utf8);
+	result->di_hnd = opendir(utf8);
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!result->d_hnd) {
+	if unlikely(!result->di_hnd) {
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}
 	Dee_Incref(self);
-	result->d_dir = self;
-	rwlock_init(&result->d_lock);
+	result->di_dir = self;
+	atomic_lock_init(&result->di_lock);
 	DeeObject_Init(result, &DeeDirIterator_Type);
 	return result;
 err_r:
@@ -1174,7 +1170,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst diriter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, d_dir), "->?Gdir"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DirIterator, di_dir), "->?Gdir"),
 	TYPE_MEMBER_END
 };
 
@@ -1461,8 +1457,8 @@ query_iter(Dir *__restrict self) {
 	query_start = (char *)memrchr(query_str, '/', WSTR_LENGTH(query_str));
 	if (!query_start) {
 		/* Open a directory descriptor. */
-		result->q_iter.d_hnd = opendir(".");
-		query_start          = query_str;
+		result->q_iter.di_hnd = opendir(".");
+		query_start           = query_str;
 	} else {
 		/* Open a directory descriptor. */
 		if (DeeObject_IsShared(self->d_path)) {
@@ -1475,7 +1471,7 @@ query_iter(Dir *__restrict self) {
 			memcpyc(temp_filename, query_str, temp_filesize, sizeof(char));
 			temp_filename[temp_filesize] = '\0'; /* Override the '/' to terminate the string. */
 			DBG_ALIGNMENT_DISABLE();
-			result->q_iter.d_hnd = opendir(temp_filename);
+			result->q_iter.di_hnd = opendir(temp_filename);
 			/* Free the temporary buffer, but preserve errno. */
 			old_errno = errno;
 			Dee_AFree(temp_filename);
@@ -1485,20 +1481,20 @@ query_iter(Dir *__restrict self) {
 			/* Cheat a bit so we don't have to allocate a second buffer. */
 			*query_start = '\0';
 			DBG_ALIGNMENT_DISABLE();
-			result->q_iter.d_hnd = opendir(query_str);
+			result->q_iter.di_hnd = opendir(query_str);
 			DBG_ALIGNMENT_ENABLE();
 			*query_start = '/';
 		}
 		++query_start;
 	}
-	if unlikely(!result->q_iter.d_hnd) {
+	if unlikely(!result->q_iter.di_hnd) {
 		err_handle_opendir((DeeObject *)self->d_path);
 		goto err_r;
 	}
 	Dee_Incref(self);
-	result->q_wild       = query_start;
-	result->q_iter.d_dir = self;
-	rwlock_init(&result->q_iter.d_lock);
+	result->q_wild        = query_start;
+	result->q_iter.di_dir = self;
+	atomic_lock_init(&result->q_iter.di_lock);
 	DeeObject_Init(&result->q_iter, &DeeQueryIterator_Type);
 	return result;
 err_r:

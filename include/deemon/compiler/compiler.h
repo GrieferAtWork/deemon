@@ -25,7 +25,7 @@
 
 #ifndef CONFIG_NO_THREADS
 #include "../util/recursive-rwlock.h"
-#include "../util/rwlock.h"
+#include "../util/lock.h"
 #endif /* !CONFIG_NO_THREADS */
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -104,9 +104,9 @@ INTDEF NONNULL((1)) void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict
 struct Dee_compiler_items {
 	size_t                  ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
 	size_t                  ci_mask; /* [lock(ci_lock)] Hash-map mask. */
-	DeeCompilerItemObject **ci_list; /* [0..1][0..ci_mask+1][owned] Hash-map of compiler items. */
+	DeeCompilerItemObject **ci_list; /* [0..1][0..ci_mask+1][owned][lock(ci_lock)] Hash-map of compiler items. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t            ci_lock; /* Lock for compiler items. */
+	Dee_atomic_rwlock_t     ci_lock; /* Lock for compiler items. */
 #endif /* !CONFIG_NO_THREADS */
 };
 #endif /* CONFIG_BUILDING_DEEMON */

@@ -32,7 +32,7 @@
 
 #ifndef CONFIG_NO_THREADS
 #include "util/recursive-rwlock.h"
-#include "util/rwlock.h"
+#include "util/lock.h"
 #endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
@@ -502,7 +502,7 @@ struct Dee_code_object {
 	                                          * NOTE: `X' is the minimum stack depth required by this code object. */
 	Dee_code_size_t          co_codebytes;   /* [const] The total number of code bytes. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t             co_static_lock; /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `co_staticv'. */
+	Dee_atomic_rwlock_t      co_static_lock; /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `co_staticv'. */
 #endif /* !CONFIG_NO_THREADS */
 	union {
 		DREF struct Dee_module_object
@@ -542,8 +542,8 @@ struct Dee_code_object {
 };
 
 #ifndef CONFIG_NO_THREADS
-#define _DEE_CODE_CO_STATIC_LOCK_FIELD Dee_rwlock_t co_static_lock;
-#define _DEE_CODE_CO_STATIC_LOCK_INIT  Dee_RWLOCK_INIT,
+#define _DEE_CODE_CO_STATIC_LOCK_FIELD Dee_atomic_rwlock_t co_static_lock;
+#define _DEE_CODE_CO_STATIC_LOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,
 #else /* !CONFIG_NO_THREADS */
 #define _DEE_CODE_CO_STATIC_LOCK_FIELD /* nothing */
 #define _DEE_CODE_CO_STATIC_LOCK_INIT  /* nothing */

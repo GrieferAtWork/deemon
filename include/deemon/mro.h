@@ -23,10 +23,7 @@
 #include "api.h"
 
 #include "object.h"
-
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
+#include "util/lock.h"
 
 DECL_BEGIN
 
@@ -91,17 +88,10 @@ struct Dee_membercache_slot {
 };
 
 #ifdef DEE_SOURCE
-#ifndef CONFIG_NO_THREADS
-#define MEMBERCACHE_READ(self)     Dee_rwlock_read(&(self)->mc_lock)
-#define MEMBERCACHE_WRITE(self)    Dee_rwlock_write(&(self)->mc_lock)
-#define MEMBERCACHE_ENDREAD(self)  Dee_rwlock_endread(&(self)->mc_lock)
-#define MEMBERCACHE_ENDWRITE(self) Dee_rwlock_endwrite(&(self)->mc_lock)
-#else /* !CONFIG_NO_THREADS */
-#define MEMBERCACHE_READ(self)     (void)0
-#define MEMBERCACHE_WRITE(self)    (void)0
-#define MEMBERCACHE_ENDREAD(self)  (void)0
-#define MEMBERCACHE_ENDWRITE(self) (void)0
-#endif /* CONFIG_NO_THREADS */
+#define MEMBERCACHE_READ(self)          Dee_atomic_rwlock_read(&(self)->mc_lock)
+#define MEMBERCACHE_WRITE(self)         Dee_atomic_rwlock_write(&(self)->mc_lock)
+#define MEMBERCACHE_ENDREAD(self)       Dee_atomic_rwlock_endread(&(self)->mc_lock)
+#define MEMBERCACHE_ENDWRITE(self)      Dee_atomic_rwlock_endwrite(&(self)->mc_lock)
 #define MEMBERCACHE_HASHST(self, hash)  ((hash) & (self)->mc_mask)
 #define MEMBERCACHE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define MEMBERCACHE_HASHIT(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))

@@ -1136,23 +1136,26 @@ err:
 #ifndef CONFIG_NO_THREADS
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
-                                  rwlock_t *__restrict plock) {
+                                  Dee_atomic_rwlock_t *__restrict plock) {
 	DREF DeeObject *temp, *copy;
+
 	/* Step #1: Extract the existing object. */
-	rwlock_read(plock);
+	atomic_rwlock_read(plock);
 	temp = *pself;
 	Dee_Incref(temp);
-	rwlock_endread(plock);
+	atomic_rwlock_endread(plock);
+
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
 	Dee_Decref(temp);
 	if unlikely(!copy)
 		goto err;
+
 	/* Step #3: Write back the newly created deep copy. */
-	rwlock_write(plock);
+	atomic_rwlock_write(plock);
 	temp   = *pself; /* Inherit */
 	*pself = copy;   /* Inherit */
-	rwlock_endwrite(plock);
+	atomic_rwlock_endwrite(plock);
 	Dee_Decref(temp);
 	return 0;
 err:
@@ -1161,27 +1164,30 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
-                                   rwlock_t *__restrict plock) {
+                                   Dee_atomic_rwlock_t *__restrict plock) {
 	DREF DeeObject *temp, *copy;
+
 	/* Step #1: Extract the existing object. */
-	rwlock_read(plock);
+	atomic_rwlock_read(plock);
 	temp = *pself;
 	if (!temp) {
 		rwlock_endread(plock);
 		goto done;
 	}
 	Dee_Incref(temp);
-	rwlock_endread(plock);
+	atomic_rwlock_endread(plock);
+
 	/* Step #2: Create a deep copy for it. */
 	copy = DeeObject_DeepCopy(temp);
 	Dee_Decref(temp);
 	if unlikely(!copy)
 		goto err;
+
 	/* Step #3: Write back the newly created deep copy. */
-	rwlock_write(plock);
+	atomic_rwlock_write(plock);
 	temp   = *pself; /* Inherit */
 	*pself = copy;   /* Inherit */
-	rwlock_endwrite(plock);
+	atomic_rwlock_endwrite(plock);
 	Dee_XDecref(temp);
 done:
 	return 0;

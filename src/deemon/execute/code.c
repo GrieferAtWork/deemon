@@ -750,10 +750,10 @@ code_visit(DeeCodeObject *__restrict self,
 		Dee_XVisit(self->co_defaultv[i]);
 
 	/* Visit static variables. */
-	rwlock_read(&self->co_static_lock);
+	atomic_rwlock_read(&self->co_static_lock);
 	for (i = 0; i < self->co_staticc; ++i)
 		Dee_Visit(self->co_staticv[i]);
-	rwlock_endread(&self->co_static_lock);
+	atomic_rwlock_endread(&self->co_static_lock);
 
 	/* Visit exception information. */
 	for (i = 0; i < self->co_exceptc; ++i)
@@ -769,7 +769,7 @@ code_clear(DeeCodeObject *__restrict self) {
 	size_t i, bufi = 0;
 	/* Clear out static variables. */
 restart:
-	rwlock_write(&self->co_static_lock);
+	atomic_rwlock_write(&self->co_static_lock);
 	for (i = 0; i < self->co_staticc; ++i) {
 		DREF DeeObject *ob = self->co_staticv[i];
 		if (DeeNone_Check(ob) || DeeString_Check(ob))
@@ -789,14 +789,14 @@ restart:
 			buffer[bufi] = ob; /* Inherit reference */
 			++bufi;
 			if (bufi >= COMPILER_LENOF(buffer)) {
-				rwlock_endwrite(&self->co_static_lock);
+				atomic_rwlock_endwrite(&self->co_static_lock);
 				Dee_Decrefv(buffer, bufi);
 				bufi = 0;
 				goto restart;
 			}
 		}
 	}
-	rwlock_endwrite(&self->co_static_lock);
+	atomic_rwlock_endwrite(&self->co_static_lock);
 	Dee_Decrefv(buffer, bufi);
 }
 
@@ -1054,10 +1054,10 @@ code_hash(DeeCodeObject *__restrict self) {
 		uint16_t i;
 		for (i = 0; i < self->co_staticc; ++i) {
 			DREF DeeObject *ob;
-			rwlock_read(&self->co_static_lock);
+			atomic_rwlock_read(&self->co_static_lock);
 			ob = self->co_staticv[i];
 			Dee_Incref(ob);
-			rwlock_endread(&self->co_static_lock);
+			atomic_rwlock_endread(&self->co_static_lock);
 			result ^= DeeObject_Hash(ob);
 			Dee_Decref(ob);
 		}
@@ -1143,14 +1143,14 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		uint16_t i;
 		for (i = 0; i < self->co_staticc; ++i) {
 			DREF DeeObject *lhs, *rhs;
-			rwlock_read(&self->co_static_lock);
+			atomic_rwlock_read(&self->co_static_lock);
 			lhs = self->co_staticv[i];
 			Dee_Incref(lhs);
-			rwlock_endread(&self->co_static_lock);
-			rwlock_read(&other->co_static_lock);
+			atomic_rwlock_endread(&self->co_static_lock);
+			atomic_rwlock_read(&other->co_static_lock);
 			rhs = other->co_staticv[i];
 			Dee_Incref(rhs);
-			rwlock_endread(&other->co_static_lock);
+			atomic_rwlock_endread(&other->co_static_lock);
 			temp = DeeObject_CompareEq(lhs, rhs);
 			Dee_Decref(rhs);
 			Dee_Decref(lhs);
@@ -1250,7 +1250,7 @@ code_copy(DeeCodeObject *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
-	rwlock_init(&result->co_static_lock);
+	atomic_rwlock_init(&result->co_static_lock);
 	if (result->co_keywords) {
 		if (!result->co_argc_max)
 			result->co_keywords = NULL;
@@ -1285,12 +1285,12 @@ code_copy(DeeCodeObject *__restrict self) {
 		                                                   sizeof(DREF DeeObject *));
 		if unlikely(!result->co_staticv)
 			goto err_r_default;
-		rwlock_read(&self->co_static_lock);
+		atomic_rwlock_read(&self->co_static_lock);
 		memcpyc((void *)result->co_staticv, self->co_staticv,
 		        result->co_staticc, sizeof(DREF DeeObject *));
 		for (i = 0; i < result->co_staticc; ++i)
 			Dee_Incref(result->co_staticv[i]);
-		rwlock_endread(&self->co_static_lock);
+		atomic_rwlock_endread(&self->co_static_lock);
 	}
 	if (!result->co_exceptc)
 		result->co_exceptv = NULL;
@@ -1353,7 +1353,8 @@ code_deepcopy(DeeCodeObject *__restrict self) {
 	}
 	if (result->co_staticv) {
 		for (i = 0; i < result->co_staticc; ++i) {
-			if (DeeObject_InplaceDeepCopyWithLock((DeeObject **)&result->co_staticv[i], &result->co_static_lock))
+			if (DeeObject_InplaceDeepCopyWithLock((DeeObject **)&result->co_staticv[i],
+			                                      &result->co_static_lock))
 				goto err_r;
 		}
 	}
@@ -1796,7 +1797,7 @@ got_flag:
 	result->co_framesize = (nlocal + nstack) * sizeof(DREF DeeObject *);
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
-	rwlock_init(&result->co_static_lock);
+	atomic_rwlock_init(&result->co_static_lock);
 
 	/* Initialize the new code object, and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);

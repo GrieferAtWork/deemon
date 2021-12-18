@@ -76,7 +76,7 @@
 #ifdef CONFIG_LONGJMP_ENUMATTR
 #include <setjmp.h>
 
-#include "util/rwlock.h"
+#include "util/lock.h"
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 
 #include <stddef.h>
@@ -139,7 +139,9 @@ struct Dee_enumattr_iterator_object {
 	Dee_OBJECT_HEAD
 	DREF DeeEnumAttrObject   *ei_seq;              /* [1..1] The enumattr object that is being iterated. */
 #ifdef CONFIG_LONGJMP_ENUMATTR
-	Dee_rwlock_t              ei_lock;             /* Lock for accessing the iterator. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_lock_t         ei_lock;             /* Lock for accessing the iterator. */
+#endif /* !CONFIG_NO_THREADS */
 	DREF DeeAttributeObject  *ei_buffer[CONFIG_LONGJMP_ENUMATTR_CLUSTER]; /* [?..1][*][lock(ei_lock)] Attribute cluster buffer. */
 	DREF DeeAttributeObject **ei_bufpos;           /* [0..1][in(ei_buffer)][lock(ei_lock)] Pointer to the next unused (in-enum) or full (outside-enum) item.
 	                                                *  NOTE: Initially, this pointer is set to NULL.

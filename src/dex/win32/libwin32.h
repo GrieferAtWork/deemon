@@ -25,7 +25,6 @@
 #include <deemon/dex.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/rwlock.h>
 
 #include <Windows.h>
 

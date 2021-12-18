@@ -56,11 +56,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
+#include <deemon/util/lock.h>
 #include <deemon/weakref.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
 
 #include <hybrid/atomic.h>
 #include <hybrid/byteorder.h>
@@ -2475,8 +2472,8 @@ err_kwds_i:
 	        header.co_textsiz,
 	        sizeof(instruction_t));
 #ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->co_static_lock);
-#endif
+	atomic_rwlock_init(&result->co_static_lock);
+#endif /* !CONFIG_NO_THREADS */
 
 	/* Fill in remaining, basic fields of the resulting code object. */
 	result->co_flags  = header.co_flags;
@@ -2704,12 +2701,12 @@ struct mtime_entry {
 
 struct mtime_cache {
 	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entires currently in use. */
-	size_t              mc_mask; /* [lock(d_lock)] Allocated hash-vector size -1 / hash-mask. */
+	size_t              mc_mask; /* [lock(mc_lock)] Allocated hash-vector size -1 / hash-mask. */
 	struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
 	                              * [owned_if(!= empty_mtime_items)]
 	                              * Filename -> last-modified mappings. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t            mc_lock; /* Lock for synchronizing access to the cache. */
+	Dee_atomic_rwlock_t mc_lock; /* Lock for synchronizing access to the cache. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -2725,7 +2722,7 @@ PRIVATE struct mtime_cache mtime_cache = {
 	/* .mc_list = */ empty_mtime_items
 #ifndef CONFIG_NO_THREADS
 	,
-	/* .mc_lock = */ RWLOCK_INIT
+	/* .mc_lock = */ DEE_ATOMIC_RWLOCK_INIT
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -2734,7 +2731,7 @@ INTERN size_t DCALL
 DecTime_ClearCache(size_t UNUSED(max_clear)) {
 	size_t result, old_mask;
 	struct mtime_entry *old_list;
-	rwlock_write(&mtime_cache.mc_lock);
+	atomic_rwlock_write(&mtime_cache.mc_lock);
 	ASSERT((mtime_cache.mc_mask == 0) ==
 	       (mtime_cache.mc_list == empty_mtime_items));
 	old_mask            = mtime_cache.mc_mask;
@@ -2742,7 +2739,7 @@ DecTime_ClearCache(size_t UNUSED(max_clear)) {
 	mtime_cache.mc_size = 0;
 	mtime_cache.mc_mask = 0;
 	mtime_cache.mc_list = empty_mtime_items;
-	rwlock_endwrite(&mtime_cache.mc_lock);
+	atomic_rwlock_endwrite(&mtime_cache.mc_lock);
 	/* Check for special case: no mask was allocated. */
 	if (!old_mask)
 		return 0;
@@ -2767,7 +2764,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 	bool result = false;
 	dhash_t i, perturb;
 	dhash_t hash = fs_hashobj(path);
-	rwlock_read(&mtime_cache.mc_lock);
+	atomic_rwlock_read(&mtime_cache.mc_lock);
 	perturb = i = MCACHE_HASHST(hash);
 	for (;; MCACHE_HASHNX(i, perturb)) {
 		struct mtime_entry *item = MCACHE_HASHIT(i);
@@ -2787,7 +2784,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 		result   = true;
 		break;
 	}
-	rwlock_endread(&mtime_cache.mc_lock);
+	atomic_rwlock_endread(&mtime_cache.mc_lock);
 	return result;
 }
 
@@ -2838,7 +2835,7 @@ mtime_cache_insert(DeeObject *__restrict path,
 	size_t mask;
 	dhash_t i, perturb, hash;
 	hash = fs_hashobj(path);
-	rwlock_write(&mtime_cache.mc_lock);
+	atomic_rwlock_write(&mtime_cache.mc_lock);
 again:
 	mask    = mtime_cache.mc_mask;
 	perturb = i = hash & mask;
@@ -2876,7 +2873,7 @@ again:
 	if (mtime_cache_rehash())
 		goto again;
 done:
-	rwlock_endwrite(&mtime_cache.mc_lock);
+	atomic_rwlock_endwrite(&mtime_cache.mc_lock);
 }
 
 

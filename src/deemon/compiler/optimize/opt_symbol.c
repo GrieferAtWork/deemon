@@ -28,6 +28,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -89,10 +90,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			/* The module is not initialized. */
 			ASSERT(sym->s_extern.e_symbol->ss_index <
 			       symmod->mo_globalc);
-			rwlock_read(&symmod->mo_lock);
+			atomic_rwlock_read(&symmod->mo_lock);
 			symval = symmod->mo_globalv[sym->s_extern.e_symbol->ss_index];
 			Dee_XIncref(symval);
-			rwlock_endread(&symmod->mo_lock);
+			atomic_rwlock_endread(&symmod->mo_lock);
 			/* Make sure that the symbol value is allowed
 			 * to be expanded in constant expression. */
 			if likely(symval) {

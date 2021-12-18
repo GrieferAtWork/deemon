@@ -274,9 +274,7 @@ USet_InitEmpty(USet *__restrict self) {
 	self->s_size = 0;
 	self->s_used = 0;
 	self->s_elem = empty_set_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->s_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -584,9 +582,7 @@ USet_InitSequence(USet *__restrict self,
 	if (type == &DeeHashSet_Type) {
 		DeeHashSetObject *src;
 		src = (DeeHashSetObject *)sequence;
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&self->s_lock);
 again_hashset:
 		USet_LockRead(src);
 		self->s_used = self->s_size = src->s_used;
@@ -618,9 +614,7 @@ again_hashset:
 	}
 	if (type == &URoSet_Type) {
 		URoSet *src = (URoSet *)sequence;
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&self->s_lock);
 		self->s_used = self->s_size = src->rs_size;
 		if unlikely(!self->s_size) {
 			self->s_mask = 0;
@@ -642,9 +636,7 @@ again_hashset:
 		size_t i;
 		DeeRoSetObject *src;
 		src = (DeeRoSetObject *)sequence;
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&self->s_lock);
 		self->s_used = self->s_size = src->rs_size;
 		if unlikely(!self->s_size) {
 			self->s_mask = 0;
@@ -711,9 +703,7 @@ again_hashset:
 				}
 				USet_DoInsertUnlocked(self, key);
 			}
-#ifndef CONFIG_NO_THREADS
-			rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+			atomic_rwlock_init(&self->s_lock);
 			weakref_support_init(self);
 			return 0;
 		}
@@ -799,9 +789,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitCopy(USet *__restrict self,
               USet *__restrict other) {
 	struct uset_item *iter, *end;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->s_lock);
 again:
 	USet_LockRead(other);
 	self->s_mask = other->s_mask;

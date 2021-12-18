@@ -119,17 +119,14 @@
 #pragma warning(pop)
 #endif /* _MSC_VER */
 
-#include <deemon/file.h>
 #include <deemon/dex.h>
-
-#ifndef CONFIG_NO_THREADS
-#include <deemon/util/rwlock.h>
-#endif /* !CONFIG_NO_THREADS */
-
-#include <stdint.h>
+#include <deemon/file.h>
+#include <deemon/util/lock.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+
+#include <stdint.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #undef EWOULDBLOCK
@@ -670,16 +667,18 @@ sock_getmsgflagsnameorid(int flags);
 
 struct socket_object {
 	OBJECT_HEAD
-	rwlock_t s_lock;     /* Lock for this socket. */
-	sock_t   s_socket;   /* [lock(s_lock)] System-specific socket handle.
-	                      *  NOTE: Set to `INVALID_SOCKET' when closed. */
-	SockAddr s_sockaddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                      *  Local socket address (family is the `af' constructor argument) */
-	SockAddr s_peeraddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                      *  Local socket address (family is the `af' constructor argument) */
-	int      s_type;     /* [const] Socket type (`type' constructor argument). */
-	int      s_proto;    /* [const] Socket protocol (`proto' constructor argument). */
-	uint16_t s_state;    /* [lock(s_lock) + ATOMIC] Socket state (Set of `SOCKET_F*') */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t s_lock;     /* Lock for this socket. */
+#endif /* !CONFIG_NO_THREADS */
+	sock_t              s_socket;   /* [lock(s_lock)] System-specific socket handle.
+	                                 *  NOTE: Set to `INVALID_SOCKET' when closed. */
+	SockAddr            s_sockaddr; /* [const(.sa.sa_family)][lock(s_lock)]
+	                                 *  Local socket address (family is the `af' constructor argument) */
+	SockAddr            s_peeraddr; /* [const(.sa.sa_family)][lock(s_lock)]
+	                                 *  Local socket address (family is the `af' constructor argument) */
+	int                 s_type;     /* [const] Socket type (`type' constructor argument). */
+	int                 s_proto;    /* [const] Socket protocol (`proto' constructor argument). */
+	uint16_t            s_state;    /* [lock(s_lock) + ATOMIC] Socket state (Set of `SOCKET_F*') */
 #define SOCKET_FNORMAL         0x0000 /* Normal flags. */
 #define SOCKET_FBINDING        0x0001 /* Socket is current being bound. */
 #define SOCKET_FBOUND          0x0002 /* Socket was bound. */
@@ -700,19 +699,18 @@ struct socket_object {
 };
 INTDEF DeeTypeObject DeeSocket_Type;
 
-#define socket_reading(x)       atomic_rwlock_reading(&(x)->s_lock)
-#define socket_writing(x)       atomic_rwlock_writing(&(x)->s_lock)
-#define socket_tryread(self)    atomic_rwlock_tryread(&(self)->s_lock)
-#define socket_trywrite(self)   atomic_rwlock_trywrite(&(self)->s_lock)
-#define socket_read(self)       atomic_rwlock_read(&(self)->s_lock)
-#define socket_write(self)      atomic_rwlock_write(&(self)->s_lock)
-#define socket_tryupgrade(self) atomic_rwlock_tryupgrade(&(self)->s_lock)
-#define socket_upgrade(self)    atomic_rwlock_upgrade(&(self)->s_lock)
-#define socket_downgrade(self)  atomic_rwlock_downgrade(&(self)->s_lock)
-#define socket_endwrite(self)   atomic_rwlock_endwrite(&(self)->s_lock)
-#define socket_endread(self)    atomic_rwlock_endread(&(self)->s_lock)
-#define socket_end(self)        atomic_rwlock_end(&(self)->s_lock)
-
+#define socket_reading(x)       Dee_atomic_rwlock_reading(&(x)->s_lock)
+#define socket_writing(x)       Dee_atomic_rwlock_writing(&(x)->s_lock)
+#define socket_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->s_lock)
+#define socket_trywrite(self)   Dee_atomic_rwlock_trywrite(&(self)->s_lock)
+#define socket_read(self)       Dee_atomic_rwlock_read(&(self)->s_lock)
+#define socket_write(self)      Dee_atomic_rwlock_write(&(self)->s_lock)
+#define socket_tryupgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->s_lock)
+#define socket_upgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->s_lock)
+#define socket_downgrade(self)  Dee_atomic_rwlock_downgrade(&(self)->s_lock)
+#define socket_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->s_lock)
+#define socket_endread(self)    Dee_atomic_rwlock_endread(&(self)->s_lock)
+#define socket_end(self)        Dee_atomic_rwlock_end(&(self)->s_lock)
 
 
 /* Try to retrieve the local (sock) / remote (peer) address of a given socket.

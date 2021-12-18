@@ -56,8 +56,8 @@ INTERN struct empty_traceback_object empty_traceback = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),
 	/* .tb_thread    = */ &DeeThread_Main,
 #ifndef CONFIG_NO_THREADS
-	/* .tb_lock      = */ RWLOCK_INIT,
-#endif
+	/* .tb_lock      = */ ATOMIC_LOCK_INIT,
+#endif /* !CONFIG_NO_THREADS */
 	/* .tb_numframes = */ 0,
 	/* .tb_padding   = */ { 0, 0, 0 }
 };
@@ -76,7 +76,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		result->tb_numframes = thread->t_execsz;
 		result->tb_thread    = thread;
 		Dee_Incref(thread);
-		rwlock_init(&result->tb_lock);
+		atomic_lock_init(&result->tb_lock);
 		dst = result->tb_frames + thread->t_execsz;
 		src = thread->t_exec;
 		while (dst-- != result->tb_frames) {
@@ -163,7 +163,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 		return; /* Different frame. */
 	if unlikely(self->tb_thread != DeeThread_Self())
 		return; /* Different thread. */
-	rwlock_write(&self->tb_lock);
+	atomic_lock_acquire(&self->tb_lock);
 	if unlikely(dst->cf_stacksz)
 		goto done; /* Frame already initialized */
 	ASSERT(!dst->cf_sp);
@@ -188,7 +188,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 		}
 	}
 done:
-	rwlock_endwrite(&self->tb_lock);
+	atomic_lock_release(&self->tb_lock);
 }
 
 
@@ -508,7 +508,7 @@ PRIVATE NONNULL((1, 2)) void DCALL
 traceback_visit(DeeTracebackObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	struct code_frame *iter, *end;
-	rwlock_read(&self->tb_lock);
+	atomic_lock_acquire(&self->tb_lock);
 	Dee_Visit(self->tb_thread);
 	end = (iter = self->tb_frames) + self->tb_numframes;
 	for (; iter != end; ++iter) {
@@ -535,7 +535,7 @@ traceback_visit(DeeTracebackObject *__restrict self,
 		if (ITER_ISOK(iter->cf_result))
 			Dee_Visit(iter->cf_result);
 	}
-	rwlock_endread(&self->tb_lock);
+	atomic_lock_release(&self->tb_lock);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -543,7 +543,7 @@ traceback_clear(DeeTracebackObject *__restrict self) {
 	DREF DeeObject *decref_later_buffer[64], **decref_later;
 	struct code_frame *iter, *end;
 	decref_later = decref_later_buffer;
-	rwlock_write(&self->tb_lock);
+	atomic_lock_acquire(&self->tb_lock);
 	end = (iter = self->tb_frames) + self->tb_numframes;
 	for (; iter != end; ++iter) {
 		DREF DeeObject **oiter, **oend;
@@ -620,12 +620,12 @@ traceback_clear(DeeTracebackObject *__restrict self) {
 			}
 		}
 	}
-	rwlock_endwrite(&self->tb_lock);
+	atomic_lock_release(&self->tb_lock);
 	while (decref_later-- != decref_later_buffer)
 		Dee_Decref(*decref_later);
 	return;
 clear_buffer:
-	rwlock_endwrite(&self->tb_lock);
+	atomic_lock_release(&self->tb_lock);
 	while (decref_later-- != decref_later_buffer)
 		Dee_Decref(*decref_later);
 	decref_later = decref_later_buffer;
@@ -658,11 +658,11 @@ traceback_repr(DeeTracebackObject *__restrict self) {
 		DREF DeeCodeObject *code;
 		code_addr_t ip;
 		dssize_t error;
-		rwlock_read(&self->tb_lock);
+		atomic_lock_acquire(&self->tb_lock);
 		code = self->tb_frames[i].cf_func->fo_code;
 		Dee_Incref(code);
 		ip = (code_addr_t)(self->tb_frames[i].cf_ip - code->co_code);
-		rwlock_endread(&self->tb_lock);
+		atomic_lock_release(&self->tb_lock);
 		error = print_ddi(&printer, code, ip);
 		Dee_Decref(code);
 		if unlikely(error < 0)

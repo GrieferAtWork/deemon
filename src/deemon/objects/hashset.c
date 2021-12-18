@@ -114,9 +114,7 @@ next_key:
 			}
 		}
 	}
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&result->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&result->s_lock);
 	/* Initialize and start tracking the new set. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
@@ -139,9 +137,7 @@ set_init_iterator(Set *__restrict self,
 	self->s_size = 0;
 	self->s_used = 0;
 	self->s_elem = empty_set_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->s_lock);
 	weakref_support_init(self);
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		if unlikely(DeeHashSet_Insert((DeeObject *)self, elem) < 0)
@@ -178,9 +174,7 @@ set_init_sequence(Set *__restrict self,
 	if (tp == &DeeRoSet_Type) {
 		struct hashset_item *iter, *end;
 		DeeRoSetObject *src = (DeeRoSetObject *)sequence;
-#ifndef CONFIG_NO_THREADS
-		rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+		atomic_rwlock_init(&self->s_lock);
 		self->s_mask = src->rs_mask;
 		self->s_used = self->s_size = src->rs_size;
 		if unlikely(!self->s_size)
@@ -252,9 +246,7 @@ set_ctor(Set *__restrict self) {
 	self->s_size = 0;
 	self->s_used = 0;
 	self->s_elem = empty_set_items;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->s_lock);
 	weakref_support_init(self);
 	return 0;
 }
@@ -263,9 +255,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_copy(Set *__restrict self,
          Set *__restrict other) {
 	struct hashset_item *iter, *end;
-#ifndef CONFIG_NO_THREADS
-	rwlock_init(&self->s_lock);
-#endif /* !CONFIG_NO_THREADS */
+	atomic_rwlock_init(&self->s_lock);
 again:
 	DeeHashSet_LockRead(other);
 	self->s_mask = other->s_mask;

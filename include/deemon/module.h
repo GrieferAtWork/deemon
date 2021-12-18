@@ -28,6 +28,7 @@
 #include <stddef.h>
 
 #include "object.h"
+#include "util/lock.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "gc.h"
@@ -36,10 +37,6 @@
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h"
 #endif /* GUARD_DEEMON_EXECUTE_MODPATH_C */
-
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -310,7 +307,7 @@ struct Dee_module_object {
 	                                            * HINT: Other code objects are addressed through constant/static variables.
 	                                            * HINT: When this field has been assigned a non-NULL value, it can be assumed that `MODULE_FDIDLOAD' has been set! */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                 mo_lock;      /* Lock for this module. */
+	Dee_atomic_rwlock_t          mo_lock;      /* Lock for this module. */
 	struct Dee_thread_object    *mo_loader;    /* [?..1][valid_if((MODULE_FLOADING && !MODULE_FDIDLOAD) ||
 	                                            *                 (MODULE_FINITIALIZING && !MODULE_FDIDINIT))]
 	                                            * The thread currently loading/initializing this module.
@@ -529,7 +526,7 @@ struct Dee_compiler_options {
 	                                                     * This flag also suppresses the need of non-module dependencies to
 	                                                     * even exist (such as the module's original source file), though
 	                                                     * executing a DEC file without the original source at hand is not
-	                                                     * intended behavior per-sé. */
+	                                                     * intended behavior per-sï¿½. */
 #define Dee_DEC_FUNTRUSTED        0x0004                /* The origin of the DEC source is not trusted.
 	                                                     * When this flag is set, all generated code objects have the `CODE_FASSEMBLY'
 	                                                     * flag set, as well as have their text followed by `INSTRLEN_MAX'

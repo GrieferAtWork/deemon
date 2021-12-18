@@ -32,9 +32,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifndef CONFIG_NO_THREADS
-#include "util/rwlock.h"
-#endif /* !CONFIG_NO_THREADS */
+#include "util/lock.h"
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
@@ -2023,12 +2021,12 @@ struct Dee_membercache {
 	size_t                       mc_size;  /* [lock(mc_lock)] Amount of used table entries. */
 	struct Dee_membercache_slot *mc_table; /* [0..mc_mask+1][owned] Member cache table. */
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t                 mc_lock;  /* Lock used for accessing this cache. */
+	Dee_atomic_rwlock_t          mc_lock;  /* Lock used for accessing this cache. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
 #ifndef CONFIG_NO_THREADS
-#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL, RWLOCK_INIT }
+#define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL, DEE_ATOMIC_RWLOCK_INIT }
 #else /* !CONFIG_NO_THREADS */
 #define Dee_MEMBERCACHE_INIT { NULL, NULL, 0, 0, NULL }
 #endif /* CONFIG_NO_THREADS */
@@ -2612,8 +2610,8 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * >> #endif // !IS_XDEEPCOPY
  * >> return 0;
  */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_rwlock_t *__restrict plock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_rwlock_t *__restrict plock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_atomic_rwlock_t *__restrict plock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_atomic_rwlock_t *__restrict plock);
 #else /* !CONFIG_NO_THREADS */
 #define DeeObject_InplaceDeepCopyWithLock(pself, plock)  DeeObject_InplaceDeepCopy(pself)
 #define DeeObject_XInplaceDeepCopyWithLock(pself, plock) DeeObject_XInplaceDeepCopy(pself)

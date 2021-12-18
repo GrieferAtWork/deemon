@@ -210,11 +210,11 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 			break;
 		my_class = DeeClass_DESC(tp_iter);
 		desc     = my_class->cd_desc;
-		rwlock_read(&my_class->cd_lock);
+		atomic_rwlock_read(&my_class->cd_lock);
 		for (addr = 0; addr < desc->cd_cmemb_size; ++addr) {
 			if (my_class->cd_members[addr] != self->im_func)
 				continue;
-			rwlock_endread(&my_class->cd_lock);
+			atomic_rwlock_endread(&my_class->cd_lock);
 			/* Found the address at which the function is located. */
 			for (i = 0; i <= desc->cd_iattr_mask; ++i) {
 				result = &desc->cd_iattr_list[i];
@@ -240,9 +240,9 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 					*pdecl_type = tp_iter;
 				return result;
 			}
-			rwlock_read(&my_class->cd_lock);
+			atomic_rwlock_read(&my_class->cd_lock);
 		}
-		rwlock_endread(&my_class->cd_lock);
+		atomic_rwlock_endread(&my_class->cd_lock);
 	} while ((tp_iter = DeeType_Base(tp_iter)) != NULL);
 	return NULL;
 }
@@ -254,16 +254,17 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 	if (!attr)
 		goto return_attr;
 	return_reference_((DeeObject *)attr->ca_name);
-return_attr: {
-	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_AttributeError) ||
-		    DeeError_Catch(&DeeError_NotImplemented))
-			return_none;
+	{
+		DREF DeeObject *result;
+return_attr:
+		result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
+		if unlikely(!result) {
+			if (DeeError_Catch(&DeeError_AttributeError) ||
+			    DeeError_Catch(&DeeError_NotImplemented))
+				return_none;
+		}
+		return result;
 	}
-	return result;
-}
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -275,16 +276,17 @@ instancemethod_get_doc(InstanceMethod *__restrict self) {
 	if (!attr->ca_doc)
 		return_none;
 	return_reference_((DeeObject *)attr->ca_doc);
-return_attr: {
-	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___doc__);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_AttributeError) ||
-		    DeeError_Catch(&DeeError_NotImplemented))
-			return_none;
+	{
+		DREF DeeObject *result;
+return_attr:
+		result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___doc__);
+		if unlikely(!result) {
+			if (DeeError_Catch(&DeeError_AttributeError) ||
+			    DeeError_Catch(&DeeError_NotImplemented))
+				return_none;
+		}
+		return result;
 	}
-	return result;
-}
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

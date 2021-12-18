@@ -25,7 +25,7 @@
 #include <deemon/file.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/util/rwlock.h>
+#include <deemon/util/lock.h>
 
 DECL_BEGIN
 
@@ -53,28 +53,28 @@ typedef struct deque_bucket {
 typedef struct deque {
 	Dee_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t d_lock;      /* Lock for this deque. */
+	Dee_atomic_rwlock_t d_lock;      /* Lock for this deque. */
 #endif /* !CONFIG_NO_THREADS */
-	DequeBucket *d_head;      /* [lock(d_lock)][0..1] Head bucket. */
-	DequeBucket *d_tail;      /* [lock(d_lock)][0..1] Tail bucket. */
-	size_t       d_size;      /* [lock(d_lock)] Total number of objects stored in this deque. */
-	size_t       d_head_idx;  /* [lock(d_lock)][< d_bucket_sz][if(d_size == 0, [== 0])]
-	                           * Absolute index where the head starts. */
-	size_t       d_head_use;  /* [lock(d_lock)][<= d_bucket_sz][if(d_size == 0, [== 0])]
-	                           * Amount of indices in use in `d_head'. */
-	size_t       d_tail_sz;   /* [lock(d_lock)][if(d_head == d_tail, [== 0])]
-	                           * [if(d_head && d_head != d_tail, [!= 0])][<= d_bucket_sz]
-	                           * Number of items in use by the tail-bucket (only when there are more than 2 buckets). */
-	size_t       d_bucket_sz; /* [lock(d_lock)][!0] Size of a bucket (in objects) */
-	size_t       d_version;   /* [lock(d_lock)] Incremented every time the deque changes. */
+	DequeBucket        *d_head;      /* [lock(d_lock)][0..1] Head bucket. */
+	DequeBucket        *d_tail;      /* [lock(d_lock)][0..1] Tail bucket. */
+	size_t              d_size;      /* [lock(d_lock)] Total number of objects stored in this deque. */
+	size_t              d_head_idx;  /* [lock(d_lock)][< d_bucket_sz][if(d_size == 0, [== 0])]
+	                                  * Absolute index where the head starts. */
+	size_t              d_head_use;  /* [lock(d_lock)][<= d_bucket_sz][if(d_size == 0, [== 0])]
+	                                  * Amount of indices in use in `d_head'. */
+	size_t              d_tail_sz;   /* [lock(d_lock)][if(d_head == d_tail, [== 0])]
+	                                  * [if(d_head && d_head != d_tail, [!= 0])][<= d_bucket_sz]
+	                                  * Number of items in use by the tail-bucket (only when there are more than 2 buckets). */
+	size_t              d_bucket_sz; /* [lock(d_lock)][!0] Size of a bucket (in objects) */
+	size_t              d_version;   /* [lock(d_lock)] Incremented every time the deque changes. */
 	Dee_WEAKREF_SUPPORT
 } Deque;
 
-#define Deque_LockRead(self)      rwlock_read(&(self)->d_lock)
-#define Deque_LockWrite(self)     rwlock_write(&(self)->d_lock)
-#define Deque_LockEndRead(self)   rwlock_endread(&(self)->d_lock)
-#define Deque_LockEndWrite(self)  rwlock_endwrite(&(self)->d_lock)
-#define Deque_LockDowngrade(self) rwlock_downgrade(&(self)->d_lock)
+#define Deque_LockRead(self)      Dee_atomic_rwlock_read(&(self)->d_lock)
+#define Deque_LockWrite(self)     Dee_atomic_rwlock_write(&(self)->d_lock)
+#define Deque_LockEndRead(self)   Dee_atomic_rwlock_endread(&(self)->d_lock)
+#define Deque_LockEndWrite(self)  Dee_atomic_rwlock_endwrite(&(self)->d_lock)
+#define Deque_LockDowngrade(self) Dee_atomic_rwlock_downgrade(&(self)->d_lock)
 
 #define DEQUE_BUCKETSZ(x) ((x)->d_bucket_sz)
 #define DEQUE_HEADFREE(x) ((x)->d_head_idx)
@@ -329,13 +329,13 @@ DequeIterator_NextItemPointer(DequeIterator *__restrict self,
 typedef struct {
 	Dee_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	Dee_rwlock_t  di_lock; /* Lock for this iterator. */
+	Dee_atomic_rwlock_t di_lock; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */
-	DequeIterator di_iter; /* [lock(di_lock)] The C-level iterator used to implement this one. */
-	DREF Deque   *di_deq;  /* [1..1][const] The deque in question. */
-	size_t        di_ver;  /* [lock(di_lock)] The deque version for this this iterator was created.
-	                        * When this number doesn't match `di_deq->d_version', then the
-	                        * iterator behaves as though it was exhausted. */
+	DequeIterator       di_iter; /* [lock(di_lock)] The C-level iterator used to implement this one. */
+	DREF Deque         *di_deq;  /* [1..1][const] The deque in question. */
+	size_t              di_ver;  /* [lock(di_lock)] The deque version for this this iterator was created.
+	                              * When this number doesn't match `di_deq->d_version', then the
+	                              * iterator behaves as though it was exhausted. */
 } DequeIteratorObject;
 
 /* The deque type, and its iterator. */
@@ -398,14 +398,14 @@ struct udict_item {
 
 struct udict_object {
 	OBJECT_HEAD /* GC Object */
-	size_t             d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
-	size_t             d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
-	                            *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
-	size_t             d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
-	struct udict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
-	                            * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
+	size_t              d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
+	size_t              d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
+	                             *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
+	size_t              d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
+	struct udict_item  *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
+	                             * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t           d_lock; /* Lock used for accessing this Dict. */
+	Dee_atomic_rwlock_t d_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	WEAKREF_SUPPORT
 };
@@ -414,34 +414,18 @@ struct udict_object {
 #define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define UDict_HashIt(self, i)     (((UDict *)Dee_REQUIRES_OBJECT(self))->d_elem + ((i) & ((UDict *)(self))->d_mask))
 
-#ifndef CONFIG_NO_THREADS
-#define UDict_LockReading(x)    rwlock_reading(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockWriting(x)    rwlock_writing(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTryread(x)    rwlock_tryread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTrywrite(x)   rwlock_trywrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockRead(x)       rwlock_read(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockWrite(x)      rwlock_write(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockTryUpgrade(x) rwlock_tryupgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockUpgrade(x)    rwlock_upgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockDowngrade(x)  rwlock_downgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEndWrite(x)   rwlock_endwrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEndRead(x)    rwlock_endread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#define UDict_LockEnd(x)        rwlock_end(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
-#else /* !CONFIG_NO_THREADS */
-#define UDict_LockReading(x)          1
-#define UDict_LockWriting(x)          1
-#define UDict_LockTryread(x)          1
-#define UDict_LockTrywrite(x)         1
-#define UDict_LockRead(x)       (void)0
-#define UDict_LockWrite(x)      (void)0
-#define UDict_LockTryUpgrade(x)       1
-#define UDict_LockUpgrade(x)          1
-#define UDict_LockDowngrade(x)  (void)0
-#define UDict_LockEndWrite(x)   (void)0
-#define UDict_LockEndRead(x)    (void)0
-#define UDict_LockEnd(x)        (void)0
-#endif /* CONFIG_NO_THREADS */
-
+#define UDict_LockReading(x)    Dee_atomic_rwlock_reading(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockWriting(x)    Dee_atomic_rwlock_writing(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTryread(x)    Dee_atomic_rwlock_tryread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockRead(x)       Dee_atomic_rwlock_read(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockWrite(x)      Dee_atomic_rwlock_write(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEndRead(x)    Dee_atomic_rwlock_endread(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
+#define UDict_LockEnd(x)        Dee_atomic_rwlock_end(&((UDict *)Dee_REQUIRES_OBJECT(x))->d_lock)
 
 struct urodict_object {
 	OBJECT_HEAD
@@ -498,14 +482,14 @@ struct uset_iterator_object {
 
 struct uset_object {
 	OBJECT_HEAD /* GC Object */
-	size_t            s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
-	size_t            s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
-	                           * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
-	size_t            s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
-	struct uset_item *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
-	                           * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
+	size_t              s_mask; /* [lock(s_lock)][> s_size || s_mask == 0] Allocated set size. */
+	size_t              s_used; /* [lock(s_lock)][<= s_size] Amount of keys actually in use.
+	                             * HINT: The difference to `s_size' is the number of dummy keys currently in use. */
+	size_t              s_size; /* [lock(s_lock)][< s_mask || s_mask == 0] Amount of non-NULL keys. */
+	struct uset_item   *s_elem; /* [1..s_size|ALLOC(s_mask+1)][lock(s_lock)]
+	                             * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t          s_lock; /* Lock used for accessing this set. */
+	Dee_atomic_rwlock_t s_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	WEAKREF_SUPPORT
 };
@@ -514,33 +498,18 @@ struct uset_object {
 #define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define USet_HashIt(self, i)     (((USet *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((USet *)(self))->s_mask))
 
-#ifndef CONFIG_NO_THREADS
-#define USet_LockReading(x)    rwlock_reading(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockWriting(x)    rwlock_writing(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTryread(x)    rwlock_tryread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTrywrite(x)   rwlock_trywrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockRead(x)       rwlock_read(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockWrite(x)      rwlock_write(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockTryUpgrade(x) rwlock_tryupgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockUpgrade(x)    rwlock_upgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockDowngrade(x)  rwlock_downgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEndWrite(x)   rwlock_endwrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEndRead(x)    rwlock_endread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#define USet_LockEnd(x)        rwlock_end(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
-#else /* !CONFIG_NO_THREADS */
-#define USet_LockReading(x)          1
-#define USet_LockWriting(x)          1
-#define USet_LockTryread(x)          1
-#define USet_LockTrywrite(x)         1
-#define USet_LockRead(x)       (void)0
-#define USet_LockWrite(x)      (void)0
-#define USet_LockTryUpgrade(x)       1
-#define USet_LockUpgrade(x)          1
-#define USet_LockDowngrade(x)  (void)0
-#define USet_LockEndWrite(x)   (void)0
-#define USet_LockEndRead(x)    (void)0
-#define USet_LockEnd(x)        (void)0
-#endif /* CONFIG_NO_THREADS */
+#define USet_LockReading(x)    Dee_atomic_rwlock_reading(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockWriting(x)    Dee_atomic_rwlock_writing(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTryread(x)    Dee_atomic_rwlock_tryread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTrywrite(x)   Dee_atomic_rwlock_trywrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockRead(x)       Dee_atomic_rwlock_read(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockWrite(x)      Dee_atomic_rwlock_write(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockTryUpgrade(x) Dee_atomic_rwlock_tryupgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockUpgrade(x)    Dee_atomic_rwlock_upgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockDowngrade(x)  Dee_atomic_rwlock_downgrade(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEndWrite(x)   Dee_atomic_rwlock_endwrite(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEndRead(x)    Dee_atomic_rwlock_endread(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
+#define USet_LockEnd(x)        Dee_atomic_rwlock_end(&((USet *)Dee_REQUIRES_OBJECT(x))->s_lock)
 
 
 struct uroset_iterator_object {

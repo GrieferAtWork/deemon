@@ -369,6 +369,9 @@
     <ClInclude Include="..\include\deemon\compiler\traits.h">
       <Filter>include\deemon\compiler</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\util\lock.h">
+      <Filter>include\deemon\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

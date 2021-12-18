@@ -19,6 +19,7 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_C
 #define GUARD_DEEMON_OBJECTS_CLASS_C 1
+
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -53,7 +54,7 @@ class_fini(DeeTypeObject *__restrict self) {
 	buflen = 0;
 	size   = my_class->cd_desc->cd_cmemb_size;
 again:
-	rwlock_write(&my_class->cd_lock);
+	atomic_rwlock_write(&my_class->cd_lock);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -64,13 +65,13 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&my_class->cd_lock);
+			atomic_rwlock_endwrite(&my_class->cd_lock);
 			Dee_Decref(ob);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&my_class->cd_lock);
+			atomic_rwlock_write(&my_class->cd_lock);
 			goto again;
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
@@ -91,19 +92,19 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				rwlock_endwrite(&my_class->cd_lock);
+				atomic_rwlock_endwrite(&my_class->cd_lock);
 				Dee_Decref(ob);
 				while (buflen) {
 					--buflen;
 					Dee_Decref(buffer[buflen]);
 				}
-				rwlock_write(&my_class->cd_lock);
+				atomic_rwlock_write(&my_class->cd_lock);
 				goto again;
 			}
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	rwlock_endwrite(&my_class->cd_lock);
+	atomic_rwlock_endwrite(&my_class->cd_lock);
 	if (buflen) {
 		/* Clear the buffer. */
 		while (buflen) {
@@ -140,7 +141,7 @@ class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	uint16_t i, size;
 	my_class = DeeClass_DESC(self);
 	size     = my_class->cd_desc->cd_cmemb_size;
-	rwlock_read(&my_class->cd_lock);
+	atomic_rwlock_read(&my_class->cd_lock);
 	for (i = 0; i < size; ++i)
 		Dee_XVisit(my_class->cd_members[i]);
 	/* Also free all cached operators. */
@@ -153,7 +154,7 @@ class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg) {
 		for (j = 0; j < CLASS_HEADER_OPC2; ++j)
 			Dee_XVisit(table->co_operators[j]);
 	}
-	rwlock_endread(&my_class->cd_lock);
+	atomic_rwlock_endread(&my_class->cd_lock);
 	/* Only ever references strings itself, so no point in visiting this one! */
 	/*Dee_Visit(my_class->cd_desc);*/
 }
@@ -169,7 +170,7 @@ class_clear(DeeTypeObject *__restrict self) {
 	buflen = 0;
 	size   = my_class->cd_desc->cd_cmemb_size;
 again:
-	rwlock_write(&my_class->cd_lock);
+	atomic_rwlock_write(&my_class->cd_lock);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -180,13 +181,13 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&my_class->cd_lock);
+			atomic_rwlock_endwrite(&my_class->cd_lock);
 			Dee_Decref(ob);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&my_class->cd_lock);
+			atomic_rwlock_write(&my_class->cd_lock);
 			goto again;
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
@@ -207,19 +208,19 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				rwlock_endwrite(&my_class->cd_lock);
+				atomic_rwlock_endwrite(&my_class->cd_lock);
 				Dee_Decref(ob);
 				while (buflen) {
 					--buflen;
 					Dee_Decref(buffer[buflen]);
 				}
-				rwlock_write(&my_class->cd_lock);
+				atomic_rwlock_write(&my_class->cd_lock);
 				goto again;
 			}
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	rwlock_endwrite(&my_class->cd_lock);
+	atomic_rwlock_endwrite(&my_class->cd_lock);
 	if (buflen) {
 		/* Clear the buffer. */
 		while (buflen) {
@@ -244,7 +245,7 @@ class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 	buflen = 0;
 	size   = my_class->cd_desc->cd_cmemb_size;
 again:
-	rwlock_write(&my_class->cd_lock);
+	atomic_rwlock_write(&my_class->cd_lock);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = my_class->cd_members[i];
@@ -257,13 +258,13 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&my_class->cd_lock);
+			atomic_rwlock_endwrite(&my_class->cd_lock);
 			Dee_Decref(ob);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&my_class->cd_lock);
+			atomic_rwlock_write(&my_class->cd_lock);
 			goto again;
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
@@ -286,19 +287,19 @@ again:
 				continue;
 			/* We're responsible for destroying this member! */
 			if (buflen == COMPILER_LENOF(buffer)) {
-				rwlock_endwrite(&my_class->cd_lock);
+				atomic_rwlock_endwrite(&my_class->cd_lock);
 				Dee_Decref(ob);
 				while (buflen) {
 					--buflen;
 					Dee_Decref(buffer[buflen]);
 				}
-				rwlock_write(&my_class->cd_lock);
+				atomic_rwlock_write(&my_class->cd_lock);
 				goto again;
 			}
 			buffer[buflen++] = ob; /* Inherit reference. */
 		}
 	}
-	rwlock_endwrite(&my_class->cd_lock);
+	atomic_rwlock_endwrite(&my_class->cd_lock);
 	if (buflen) {
 		/* Clear the buffer. */
 		while (buflen) {
@@ -352,14 +353,14 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 		struct class_optable *table;
 		table = self->cd_ops[name / CLASS_HEADER_OPC2];
 		if likely(table) {
-			rwlock_read(&self->cd_lock);
+			atomic_rwlock_read(&self->cd_lock);
 			result = table->co_operators[name % CLASS_HEADER_OPC2];
 			if likely(result) {
 				Dee_Incref(result);
-				rwlock_endread(&self->cd_lock);
+				atomic_rwlock_endread(&self->cd_lock);
 				return result;
 			}
-			rwlock_endread(&self->cd_lock);
+			atomic_rwlock_endread(&self->cd_lock);
 		}
 	}
 	/* Lookup extended, or un-cached operators. */
@@ -373,15 +374,15 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 			continue;
 		/* Found the entry! */
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
-		rwlock_read(&self->cd_lock);
+		atomic_rwlock_read(&self->cd_lock);
 		result = self->cd_members[entry->co_addr];
 		if unlikely(!result) {
-			rwlock_endread(&self->cd_lock);
+			atomic_rwlock_endread(&self->cd_lock);
 			err_unimplemented_operator(tp_self, name);
 			return NULL;
 		}
 		Dee_Incref(result);
-		rwlock_endread(&self->cd_lock);
+		atomic_rwlock_endread(&self->cd_lock);
 		/* Try to cache the associated operator (if possible) */
 		if (name < CLASS_OPERATOR_USERCOUNT)
 			calls_desc_cache_operator(self, name, result);
@@ -409,17 +410,17 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
 			if likely(table) {
-				rwlock_read(&iter_class->cd_lock);
+				atomic_rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
-					rwlock_endread(&iter_class->cd_lock);
+					atomic_rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
-				rwlock_endread(&iter_class->cd_lock);
+				atomic_rwlock_endread(&iter_class->cd_lock);
 			}
 		}
 		/* Search the operator table of the type. */
@@ -435,14 +436,14 @@ DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			}
 			/* Found the entry! */
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
-			rwlock_read(&iter_class->cd_lock);
+			atomic_rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
 			if unlikely(!result) {
-				rwlock_endread(&iter_class->cd_lock);
+				atomic_rwlock_endread(&iter_class->cd_lock);
 				goto done; /* Deleted operator. */
 			}
 			Dee_Incref(result);
-			rwlock_endread(&iter_class->cd_lock);
+			atomic_rwlock_endread(&iter_class->cd_lock);
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
@@ -475,17 +476,17 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			struct class_optable *table;
 			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
 			if likely(table) {
-				rwlock_read(&iter_class->cd_lock);
+				atomic_rwlock_read(&iter_class->cd_lock);
 				result = table->co_operators[name % CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
-					rwlock_endread(&iter_class->cd_lock);
+					atomic_rwlock_endread(&iter_class->cd_lock);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
-				rwlock_endread(&iter_class->cd_lock);
+				atomic_rwlock_endread(&iter_class->cd_lock);
 			}
 		}
 		/* Search the operator table of the type. */
@@ -501,14 +502,14 @@ DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name) {
 			}
 			/* Found the entry! */
 			ASSERT(entry->co_addr < desc->cd_cmemb_size);
-			rwlock_read(&iter_class->cd_lock);
+			atomic_rwlock_read(&iter_class->cd_lock);
 			result = iter_class->cd_members[entry->co_addr];
 			if unlikely(!result) {
-				rwlock_endread(&iter_class->cd_lock);
+				atomic_rwlock_endread(&iter_class->cd_lock);
 				return NULL; /* Deleted operator. */
 			}
 			Dee_Incref(result);
-			rwlock_endread(&iter_class->cd_lock);
+			atomic_rwlock_endread(&iter_class->cd_lock);
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
@@ -543,14 +544,14 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		}
 		/* Found the entry! */
 		ASSERT(entry->co_addr < desc->cd_cmemb_size);
-		rwlock_read(&self_class->cd_lock);
+		atomic_rwlock_read(&self_class->cd_lock);
 		result = self_class->cd_members[entry->co_addr];
 		if unlikely(!result) {
-			rwlock_endread(&self_class->cd_lock);
+			atomic_rwlock_endread(&self_class->cd_lock);
 			break; /* Deleted operator. */
 		}
 		Dee_Incref(result);
-		rwlock_endread(&self_class->cd_lock);
+		atomic_rwlock_endread(&self_class->cd_lock);
 		return result;
 	}
 	return NULL;
@@ -564,7 +565,7 @@ instance_clear_members(struct instance_desc *__restrict self, uint16_t size) {
 	uint16_t i;
 	buflen = 0;
 again:
-	rwlock_write(&self->id_lock);
+	atomic_rwlock_write(&self->id_lock);
 	for (i = 0; i < size; ++i) {
 		DeeObject *ob;
 		ob = self->id_vtab[i];
@@ -575,18 +576,18 @@ again:
 			continue;
 		/* We're responsible for destroying this member! */
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&self->id_lock);
+			atomic_rwlock_endwrite(&self->id_lock);
 			Dee_Decref(ob);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&self->id_lock);
+			atomic_rwlock_write(&self->id_lock);
 			goto again;
 		}
 		buffer[buflen++] = ob; /* Inherit reference. */
 	}
-	rwlock_endwrite(&self->id_lock);
+	atomic_rwlock_endwrite(&self->id_lock);
 	if (buflen) {
 		/* Clear the buffer. */
 		while (buflen) {
@@ -828,7 +829,7 @@ instance_tcopy(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -870,7 +871,7 @@ instance_tdeepcopy(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -928,16 +929,16 @@ instance_builtin_tcopy(DeeTypeObject *tp_self,
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 	/* Initialize the members of this instance as
 	 * references to the same also found in `other'. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	rwlock_read(&other_instance->id_lock);
+	atomic_rwlock_read(&other_instance->id_lock);
 	memcpyc(instance->id_vtab,
 	        other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(instance->id_vtab[i]);
-	rwlock_endread(&other_instance->id_lock);
+	atomic_rwlock_endread(&other_instance->id_lock);
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -961,16 +962,16 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 	/* Initialize the members of this instance as
 	 * references to the same also found in `other'. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	rwlock_read(&other_instance->id_lock);
+	atomic_rwlock_read(&other_instance->id_lock);
 	memcpyc(instance->id_vtab,
 	        other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(instance->id_vtab[i]);
-	rwlock_endread(&other_instance->id_lock);
+	atomic_rwlock_endread(&other_instance->id_lock);
 	return 0;
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
@@ -1068,21 +1069,21 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 	if unlikely(!old_items)
 		goto err;
 	/* Load member values from `others' */
-	rwlock_read(&other_instance->id_lock);
+	atomic_rwlock_read(&other_instance->id_lock);
 	memcpyc(old_items, other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(old_items[i]);
-	rwlock_endread(&other_instance->id_lock);
+	atomic_rwlock_endread(&other_instance->id_lock);
 	/* Exchange our own member values with those loaded from `other' */
-	rwlock_write(&instance->id_lock);
+	atomic_rwlock_write(&instance->id_lock);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
 		temp                 = instance->id_vtab[i];
 		instance->id_vtab[i] = old_items[i];
 		old_items[i]         = temp;
 	}
-	rwlock_endwrite(&instance->id_lock);
+	atomic_rwlock_endwrite(&instance->id_lock);
 	/* Decref all the old items. */
 	for (i = 0; i < size; ++i)
 		Dee_XDecref(old_items[i]);
@@ -1115,22 +1116,22 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 	if unlikely(!old_items)
 		goto err;
 	/* Load member values from `others', while also unbinding all members. */
-	rwlock_write(&other_instance->id_lock);
+	atomic_rwlock_write(&other_instance->id_lock);
 	memcpyc(old_items, other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
 	bzeroc(other_instance->id_vtab,
 	       size,
 	       sizeof(DREF DeeObject *));
-	rwlock_endread(&other_instance->id_lock);
+	atomic_rwlock_endread(&other_instance->id_lock);
 	/* Exchange our own member values with those loaded from `other' */
-	rwlock_write(&instance->id_lock);
+	atomic_rwlock_write(&instance->id_lock);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
 		temp                 = instance->id_vtab[i];
 		instance->id_vtab[i] = old_items[i];
 		old_items[i]         = temp;
 	}
-	rwlock_endwrite(&instance->id_lock);
+	atomic_rwlock_endwrite(&instance->id_lock);
 	/* Decref all the old items. */
 	for (i = 0; i < size; ++i)
 		Dee_XDecref(old_items[i]);
@@ -1288,7 +1289,7 @@ instance_super_tctor(DeeTypeObject *__restrict tp_self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1362,7 +1363,7 @@ instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1438,7 +1439,7 @@ instance_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1511,7 +1512,7 @@ instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1589,7 +1590,7 @@ instance_super_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1663,7 +1664,7 @@ instance_kwsuper_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1736,7 +1737,7 @@ instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1788,7 +1789,7 @@ instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 	if (DeeObject_AssertTypeExact(DeeTuple_GET(args, 0), &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1844,7 +1845,7 @@ instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1896,7 +1897,7 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if (DeeObject_AssertTypeExact(DeeTuple_GET(args, 0), &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -1953,7 +1954,7 @@ instance_builtin_super_tinitkw(DeeTypeObject *tp_self,
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2006,7 +2007,7 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
 	if (DeeObject_AssertTypeExact(DeeTuple_GET(args, 0), &DeeTuple_Type))
 		goto err_args;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2056,7 +2057,7 @@ instance_tctor(DeeTypeObject *__restrict tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2099,7 +2100,7 @@ instance_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2143,7 +2144,7 @@ instance_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2187,7 +2188,7 @@ instance_nobase_tctor(DeeTypeObject *__restrict tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2220,7 +2221,7 @@ instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2254,7 +2255,7 @@ instance_nobase_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2291,7 +2292,7 @@ instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2334,7 +2335,7 @@ instance_inherited_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2372,7 +2373,7 @@ instance_builtin_tctor(DeeTypeObject *__restrict tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2399,7 +2400,7 @@ instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	}
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2438,7 +2439,7 @@ instance_builtin_tinitkw(DeeTypeObject *tp_self,
 		}
 	}
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2463,7 +2464,7 @@ instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2479,7 +2480,7 @@ instance_builtin_nobase_tinit(DeeTypeObject *tp_self,
 	if unlikely(argc != 0)
 		return err_unimplemented_constructor(tp_self, argc, argv);
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2507,7 +2508,7 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self,
 		}
 	}
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2525,7 +2526,7 @@ instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2548,7 +2549,7 @@ instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2577,7 +2578,7 @@ instance_builtin_inherited_tinitkw(DeeTypeObject *tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -2958,14 +2959,14 @@ instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__rest
 		goto err;
 	if (unicode_printer_putc(&printer, '('))
 		goto err;
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < count; ++i) {
 		size_t attr_index;
 		ob = instance->id_vtab[i];
 		if (!ob)
 			continue;
 		Dee_Incref(ob);
-		rwlock_endread(&instance->id_lock);
+		atomic_rwlock_endread(&instance->id_lock);
 		for (attr_index = 0;
 		     attr_index <= desc->cd_desc->cd_iattr_mask; ++attr_index) {
 			struct class_attribute *at;
@@ -2990,9 +2991,9 @@ instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__rest
 			break;
 		}
 		Dee_Decref(ob);
-		rwlock_read(&instance->id_lock);
+		atomic_rwlock_read(&instance->id_lock);
 	}
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 	if (unicode_printer_putc(&printer, ')'))
 		goto err;
 	return unicode_printer_pack(&printer);
@@ -3021,7 +3022,7 @@ instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3075,7 +3076,7 @@ instance_auto_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3122,7 +3123,7 @@ instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3161,7 +3162,7 @@ instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3227,7 +3228,7 @@ instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3267,7 +3268,7 @@ instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	if unlikely(!func)
 		goto err;
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3300,7 +3301,7 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3326,7 +3327,7 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	struct class_desc *desc        = DeeClass_DESC(tp_self);
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
-	rwlock_init(&instance->id_lock);
+	atomic_rwlock_init(&instance->id_lock);
 	bzeroc(instance->id_vtab,
 	       desc->cd_desc->cd_imemb_size,
 	       sizeof(DREF DeeObject *));
@@ -3386,18 +3387,18 @@ instance_builtin_thash(DeeTypeObject *__restrict tp_self,
 	dhash_t result = 0;
 	desc           = DeeClass_DESC(tp_self);
 	instance       = DeeInstance_DESC(desc, self);
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];
 		if (!member)
 			continue;
 		Dee_Incref(member);
-		rwlock_endread(&instance->id_lock);
+		atomic_rwlock_endread(&instance->id_lock);
 		result ^= DeeObject_Hash(member);
 		Dee_Decref(member);
-		rwlock_read(&instance->id_lock);
+		atomic_rwlock_read(&instance->id_lock);
 	}
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 	return result;
 }
 
@@ -3417,7 +3418,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3425,12 +3426,12 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 		rhs_val = other_instance->id_vtab[i];
 		if (lhs_val != rhs_val) {
 			if (!lhs_val || !rhs_val) {
-				rwlock_endread(&instance->id_lock);
+				atomic_rwlock_endread(&instance->id_lock);
 				return 0; /* Different NULL values. */
 			}
 			Dee_Incref(lhs_val);
 			Dee_Incref(rhs_val);
-			rwlock_endread(&instance->id_lock);
+			atomic_rwlock_endread(&instance->id_lock);
 			/* Compare the two members. */
 			temp = DeeObject_CompareEq(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
@@ -3439,7 +3440,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 				return temp; /* Error, or non-equal */
 		}
 	}
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 	return 1; /* All elements are equal */
 }
 
@@ -3456,7 +3457,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3464,7 +3465,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 		rhs_val = other_instance->id_vtab[i];
 		if (lhs_val != rhs_val) {
 			if (!lhs_val || !rhs_val) {
-				rwlock_endread(&instance->id_lock);
+				atomic_rwlock_endread(&instance->id_lock);
 				/* Different NULL values. */
 				return lhs_val ? 0 : /* NON_NULL < *    --> false */
 				       rhs_val ? 1 : /* NULL < NON_NULL --> true */
@@ -3472,7 +3473,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 			}
 			Dee_Incref(lhs_val);
 			Dee_Incref(rhs_val);
-			rwlock_endread(&instance->id_lock);
+			atomic_rwlock_endread(&instance->id_lock);
 			/* Compare the two members. */
 			temp = DeeObject_CompareLo(lhs_val, rhs_val);
 			if (temp != 0) {
@@ -3487,7 +3488,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 				return temp; /* Error, or non-qual */
 		}
 	}
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 	return 0; /* All elements are equal */
 }
 
@@ -3504,7 +3505,7 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 	instance       = DeeInstance_DESC(desc, self);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *lhs_val;
 		DREF DeeObject *rhs_val;
@@ -3513,7 +3514,7 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 		if (lhs_val != rhs_val) {
 			size_t j;
 			if (!lhs_val || !rhs_val) {
-				rwlock_endread(&instance->id_lock);
+				atomic_rwlock_endread(&instance->id_lock);
 				/* Different NULL values. */
 				return !lhs_val ? 1 : /* NULL <= *        --> true */
 				       0;             /* NON_NULL <= NULL --> false */
@@ -3527,13 +3528,13 @@ impl_instance_builtin_le(DeeTypeObject *tp_self,
 					goto non_last_member;
 			}
 			/* Last member! */
-			rwlock_endread(&instance->id_lock);
+			atomic_rwlock_endread(&instance->id_lock);
 			temp = DeeObject_CompareLe(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			return temp;
 non_last_member:
-			rwlock_endread(&instance->id_lock);
+			atomic_rwlock_endread(&instance->id_lock);
 			/* Compare the two members. */
 			temp = DeeObject_CompareLo(lhs_val, rhs_val);
 			if (temp != 0) {
@@ -3548,7 +3549,7 @@ non_last_member:
 				return temp; /* Error, or non-qual */
 		}
 	}
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 	return 1; /* All elements are equal */
 }
 
@@ -4406,10 +4407,10 @@ instance_tvisit(DeeTypeObject *__restrict tp_self,
 	struct instance_desc *instance;
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
-	rwlock_read(&instance->id_lock);
+	atomic_rwlock_read(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i)
 		Dee_XVisit(instance->id_vtab[i]);
-	rwlock_endread(&instance->id_lock);
+	atomic_rwlock_endread(&instance->id_lock);
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -4423,7 +4424,7 @@ instance_tclear(DeeTypeObject *__restrict tp_self,
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	buflen   = 0;
-	rwlock_write(&instance->id_lock);
+	atomic_rwlock_write(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
 		if (!instance->id_vtab[i])
@@ -4434,18 +4435,18 @@ again_i:
 			continue;
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&instance->id_lock);
+			atomic_rwlock_endwrite(&instance->id_lock);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&instance->id_lock);
+			atomic_rwlock_write(&instance->id_lock);
 			goto again_i;
 		}
 		buffer[buflen++]     = instance->id_vtab[i]; /* Steal reference. */
 		instance->id_vtab[i] = NULL;
 	}
-	rwlock_endwrite(&instance->id_lock);
+	atomic_rwlock_endwrite(&instance->id_lock);
 	while (buflen) {
 		--buflen;
 		Dee_Decref(buffer[buflen]);
@@ -4464,7 +4465,7 @@ instance_tpclear(DeeTypeObject *__restrict tp_self,
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	buflen   = 0;
-	rwlock_write(&instance->id_lock);
+	atomic_rwlock_write(&instance->id_lock);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
 		if (!instance->id_vtab[i])
@@ -4477,18 +4478,18 @@ again_i:
 			continue;
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
-			rwlock_endwrite(&instance->id_lock);
+			atomic_rwlock_endwrite(&instance->id_lock);
 			while (buflen) {
 				--buflen;
 				Dee_Decref(buffer[buflen]);
 			}
-			rwlock_write(&instance->id_lock);
+			atomic_rwlock_write(&instance->id_lock);
 			goto again_i;
 		}
 		buffer[buflen++]     = instance->id_vtab[i]; /* Steal this reference. */
 		instance->id_vtab[i] = NULL;
 	}
-	rwlock_endwrite(&instance->id_lock);
+	atomic_rwlock_endwrite(&instance->id_lock);
 	while (buflen) {
 		--buflen;
 		Dee_Decref(buffer[buflen]);
@@ -4815,7 +4816,7 @@ err_custom_allocator:
 	}
 	result_class->cd_desc = desc;
 	Dee_Incref(desc);
-	rwlock_cinit(&result_class->cd_lock);
+	atomic_rwlock_cinit(&result_class->cd_lock);
 
 	if likely(desc->cd_name) {
 		result->tp_name = DeeString_STR(desc->cd_name);
