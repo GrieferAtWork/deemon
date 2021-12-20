@@ -357,21 +357,22 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(DREF DeeObject **__restrict pself,
+DeeRoSet_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
                 DeeObject *__restrict key) {
 	int error;
-	Set *me = (Set *)*pself;
+	DREF Set *me = (Set *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
 	ASSERT(key != (DeeObject *)me);
 	if unlikely(me->rs_size * 2 > me->rs_mask) {
 		size_t old_size = me->rs_size;
 		size_t new_mask = (me->rs_mask << 1) | 1;
-		me              = rehash(me, me->rs_mask, new_mask);
+		me = rehash(me, me->rs_mask, new_mask);
 		if unlikely(!me)
 			goto err;
 		me->rs_mask = new_mask;
 		me->rs_size = old_size; /* `rs_size' is not saved by `rehash()' */
+		*pself = (DREF DeeObject *)me;
 	}
 	/* Insert the new key/value-pair into the set. */
 	Dee_Incref(key);
