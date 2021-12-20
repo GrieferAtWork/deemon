@@ -83,7 +83,7 @@ struct class_attribute;
  *        "<START_OF_LINE>(" ("," ~~ (
  *            ["<ARGUMENT_NAME>"]
  *            ["?" | "!" | "!!"]           // Optional / Varargs / Kwds indicators
- *            [":" "<ARGUMENT_TYPE>"]      // Type defaults to "object" (encoded as "?O")
+ *            [":" "<ARGUMENT_TYPE>"]      // Type defaults to "Object" (encoded as "?O")
  *            ["=" ["<ARGUMENT_DEFAULT>"]]
  *        )...) ")" ["->" "<RETURN_TYPE>"] "<END_OF_LINE>"
  *    
@@ -113,7 +113,7 @@ struct class_attribute;
  *    RETURN_TYPE:   An encoded type description of the intended return type of the function
  *                   When "->" is omitted, the programmer intended the function to return `none'
  *                   When "<RETURN_TYPE>" is omitted but "->" is present, the programmer
- *                   intended the function to return `object' (aka anything / unspecified)
+ *                   intended the function to return `Object' (aka anything / unspecified)
  *
  *
  * PATTERN: "->"  (Only when the line doesn't match the "<START_OF_LINE>(" pattern)
@@ -131,7 +131,7 @@ struct class_attribute;
  *
  *    RETURN_TYPE: An encoded type description of the occupant's intended type.
  *                 When "<RETURN_TYPE>" is omitted, the programmer
- *                 intended the field to contain anything (`object' / aka anything / unspecified)
+ *                 intended the field to contain anything (`Object' / aka anything / unspecified)
  *
  *
  * OPERATOR DECLARATION:
@@ -142,7 +142,7 @@ struct class_attribute;
  *        ["(" ("," ~~ (
  *            ["<ARGUMENT_NAME>"]
  *            ["?" | "!" | "!!"]                  // Optional / Varargs / Kwds indicators
- *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "object" (encoded as "?O")
+ *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "Object" (encoded as "?O")
  *            ["=" "<ARGUMENT_DEFAULT>"]          // Default value (not allowed for optional, varargs, or Kwds arguments)
  *        )...) ")"]
  *        "->"    // Like seen in the "->" pattern
@@ -240,7 +240,7 @@ struct class_attribute;
  *
  *   ?.              --- Referring to the current type in an operator or static/instance member.
  *   ?N              --- Referring to `none' (or in this context: `type none')
- *   ?O              --- Referring to `object from deemon'
+ *   ?O              --- Referring to `Object from deemon'
  *   ?#<NAME>        --- Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
  *   ?D<NAME>        --- Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
  *   ?U<NAME>        --- Referring to an undefined/private symbol
@@ -252,8 +252,8 @@ struct class_attribute;
  *   ?C<TYPE><TYPE>    --- Referring to a Cell <FIRST_TYPE> containing an element of type <SECOND_TYPE> (SECOND_TYPE
  *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-
  *                         attribute `value', with when accessed should yield an element of <SECOND_TYPE>)
- *                         This type of encoding is used to represent `WeakRef with object',
- *                        `Tls with object' or `Cell with object'
+ *                         This type of encoding is used to represent `WeakRef with Object',
+ *                        `Tls with Object' or `Cell with Object'
  *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
  *                         e.g.: `?T2?Dstring?Dint' --- `(string, int)'
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
@@ -375,8 +375,8 @@ struct class_attribute;
 #define DAST_TUPLE   0x0004 /* `(int, string, float)' Declaration describes an n-element Tuple of values. */
 #define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
 #define DAST_FUNC    0x0006 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_ATTR    0x0007 /* `list.Iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `WeakRef with object' Extended type information to describe Cell-like objects */
+#define DAST_ATTR    0x0007 /* `List.Iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
 #define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 #define DAST_FNORMAL 0x0000 /* Normal declaration ast flags */
@@ -397,7 +397,7 @@ struct decl_ast {
 		}                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length Tuple containing known types. */
 		struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
 		struct {
-			struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `object' or `none' is returned) */
+			struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `Object' or `none' is returned) */
 			Dee_WEAKREF(DeeBaseScopeObject) f_scope; /* [1..1] The scope containing function argument info, as well as associated
 			                                          * type declaration information (through `struct symbol::s_decltype') */
 		}                   da_func;   /* [DAST_FUNC] The representation is a function. */
@@ -441,7 +441,7 @@ decl_ast_getobj(struct decl_ast const *__restrict self);
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isnone(struct decl_ast const *__restrict self);
 
-/* Check if `self' refers to `object from deemon' */
+/* Check if `self' refers to `Object from deemon' */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isobject(struct decl_ast const *__restrict self);
 
@@ -1266,8 +1266,8 @@ decl_ast_func_getscope(struct decl_ast const *__restrict self) {
 	return (DREF DeeBaseScopeObject *)Dee_weakref_lock(&self->da_func.f_scope);
 }
 
-#define DAST_ATTR    0x0007 /* `list.Iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0008 /* `WeakRef with object' Extended type information to describe Cell-like objects */
+#define DAST_ATTR    0x0007 /* `List.Iterator' Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0008 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
 #define DAST_STRING  0x0009 /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 

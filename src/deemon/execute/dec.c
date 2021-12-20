@@ -603,6 +603,25 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 //[[[end]]]
 
 
+/* Return the ID of a given object.
+ * If the given object isn't a builtin object, `DEC_BUILTINID_UNKNOWN' is returned.
+ * The set and ID of the returned identifier can be extracted through
+ * use of the `DEC_BUILTINID_SETOF' and `DEC_BUILTINID_IDOF' macros below.
+ * To qualify as a builtin object, the object must be defined as an object
+ * exported publicly by the deemon core, such that this includes the builtin
+ * error types, as well as pretty much all other types found in deemon headers.
+ * However there may be exceptions to this rule as there would be no point to
+ * have an object like `DeeObjMethod_Type' or `DeeCMethod_Type' be made available
+ * as a builtin object, considering access to those should happen through use of
+ * the builtin `deemon' module.
+ * The main idea behind builtin ids is to be able to encode the builtin error
+ * types, because without a way of encoding them, we couldn't be using them
+ * as compile-time exception masks in user-defined exception handlers (because
+ * if we still did this, the resulting code object could not be saved to a DEC
+ * compiled source files)
+ * Note however that the compiler is very much aware of what can be used as a
+ * builtin object, and will automatically prevent constant propagation if there
+ * is no way of encoding the resulting object as a DEC constant expression. */
 INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 Dec_BuiltinID(DeeObject *__restrict obj) {
 	struct builtin_desc *iter;
@@ -614,7 +633,12 @@ Dec_BuiltinID(DeeObject *__restrict obj) {
 	return DEC_BUILTINID_UNKNOWN;
 }
 
-/* Builtin object database. */
+/* Return the builtin object associated with `id'
+ * within `set', return `NULL' when the given `set'
+ * is unknown, or `id' is unassigned.
+ * NOTE: The caller is responsible for passing an `id' that is located
+ *       within the inclusive bounds `DTYPE_BUILTIN_MIN...DTYPE_BUILTIN_MAX'.
+ *       This function internally asserts this and crashes if that is not the case. */
 INTERN WUNUSED DeeObject *DCALL
 Dec_GetBuiltin(uint8_t set, uint8_t id) {
 	ASSERT(id >= DTYPE_BUILTIN_MIN);
@@ -633,10 +657,10 @@ PRIVATE void DCALL
 corrupt_here(DecFile *__restrict self,
              void const *reader,
              char const *file, int line) {
-	DEE_DPRINTF("%s(%d) : %k", file, line, self->df_name);
+	Dee_DPRINTF("%s(%d) : %k", file, line, self->df_name);
 	if (reader)
-		DEE_DPRINTF("@%#Ix", (size_t)((uint8_t *)reader - self->df_base));
-	DEE_DPRINT(" : ERROR : Module corruption detected\n");
+		Dee_DPRINTF("@%#Ix", (size_t)((uint8_t *)reader - self->df_base));
+	Dee_DPRINT(" : ERROR : Module corruption detected\n");
 }
 
 PRIVATE void
@@ -645,14 +669,14 @@ corrupt_heref(DecFile *__restrict self,
               char const *file, int line,
               char const *format, ...) {
 	va_list args;
-	DEE_DPRINTF("%s(%d) : %k", file, line, self->df_name);
+	Dee_DPRINTF("%s(%d) : %k", file, line, self->df_name);
 	if (reader)
-		DEE_DPRINTF("@%#Ix", (size_t)((uint8_t *)reader - self->df_base));
-	DEE_DPRINT(" : ERROR : Module corruption detected : ");
+		Dee_DPRINTF("@%#Ix", (size_t)((uint8_t *)reader - self->df_base));
+	Dee_DPRINT(" : ERROR : Module corruption detected : ");
 	va_start(args, format);
-	DEE_VDPRINTF(format, args);
+	Dee_VDPRINTF(format, args);
 	va_end(args);
-	DEE_DPRINT("\n");
+	Dee_DPRINT("\n");
 }
 #define HAVE_GOTO_CORRUPTED 1
 #define GOTO_CORRUPTED(reader, sym)                     \
@@ -678,6 +702,11 @@ corrupt_heref(DecFile *__restrict self,
 
 
 
+/* Initialize a DEC file, given an input stream, as well as its pathname.
+ * @return:  1: The given `input_stream' doesn't describe a valid DEC file.
+ * @return:  0: Successfully initialized the DEC file.
+ * @return: -1: An error occurred while attempting to read the DEC's data,
+ *              or failed to allocate a sufficient buffer for the DEC. */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              DeeObject *__restrict input_stream,
@@ -797,6 +826,9 @@ DecFile_Fini(DecFile *__restrict self) {
 	Dee_Free(self->df_data);
 }
 
+/* Return a string for the entire strtab of a given DEC-file.
+ * Upon error, NULL is returned.
+ * NOTE: The return value is _NOT_ a reference! */
 INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
 DecFile_Strtab(DecFile *__restrict self) {
 	DeeStringObject *result;
@@ -812,6 +844,11 @@ DecFile_Strtab(DecFile *__restrict self) {
 
 
 
+/* Check if a given DEC file is up to date, or if it must not be loaded.
+ * because it a dependency has changed since it was created.
+ * @return:  0: The file is up-to-date.
+ * @return:  1: The file is not up-to-date.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
 	Dec_Ehdr *hdr = self->df_ehdr;
@@ -1916,9 +1953,11 @@ corrupt:
 }
 
 
-/* @return: * :        Newly heap-allocated vector of objects (length is stored in `*pcount').
- * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The DEC file has been corrupted. */
+/* @param: allow_dtype_null: When true, individual vector elements are allowed
+ *                           to be `NULL' as the result of `DTYPE_NULL'
+ * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
+ * @return: NULL:            An error occurred.
+ * @return: ITER_DONE:       The DEC file has been corrupted. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
@@ -2041,6 +2080,9 @@ err:
 }
 
 
+/* @return: * :        New reference to a ddi object.
+ * @return: NULL:      An error occurred.
+ * @return: ITER_DONE: The DEC file has been corrupted. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeDDIObject *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t *__restrict reader,
@@ -2167,7 +2209,7 @@ handle_map_error:
 }
 
 
-/* @return: * :        New reference to the code object.
+/* @return: * :        New reference to a code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
@@ -2554,6 +2596,10 @@ corrupt:
 
 INTDEF struct module_symbol empty_module_buckets[];
 
+/* Load a given DEC file and fill in the given `module'.
+ * @return:  0: Successfully loaded the given DEC file.
+ * @return:  1: The DEC file has been corrupted or is out of date.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
 	DeeModuleObject *module;
@@ -2626,6 +2672,9 @@ err:
 	return result;
 }
 
+/* @return:  0: Successfully loaded the given DEC file.
+ * @return:  1: The DEC file was out of date or had been corrupted.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_OpenDec(DeeModuleObject *__restrict module,
                   DeeObject *__restrict input_stream,
@@ -2636,7 +2685,7 @@ DeeModule_OpenDec(DeeModuleObject *__restrict module,
 	/* Initialize the file */
 	if ((result = DecFile_Init(&file, input_stream, module, module->mo_path, options)) != 0)
 		goto done;
-	DEE_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
+	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
 	if ((!options || !(options->co_decloader & DEC_FLOADOUTDATED)) &&
 	    (result = DecFile_IsUpToDate(&file)) != 0)
@@ -2727,6 +2776,7 @@ PRIVATE struct mtime_cache mtime_cache = {
 };
 
 
+/* Try to free up memory from the dec time-cache. */
 INTERN size_t DCALL
 DecTime_ClearCache(size_t UNUSED(max_clear)) {
 	size_t result, old_mask;
@@ -2878,6 +2928,13 @@ done:
 
 
 
+/* Return the last-modified time (in microseconds since 01.01.1970).
+ * For this purpose, an internal cache is kept that is consulted
+ * before and populated after making an attempt at contacting the
+ * host operating system for the required information.
+ * @return: * :           Last-modified time (in microseconds since 01.01.1970).
+ * @return: 0 :           The given file could not be found.
+ * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename) {
 	uint64_t result;

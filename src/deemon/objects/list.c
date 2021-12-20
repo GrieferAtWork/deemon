@@ -396,6 +396,7 @@ done:
 	return result;
 }
 
+/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
                                /*inherit(on_success)*/ DREF DeeObject **objv) {
@@ -416,6 +417,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+/* Create a new list object from a vector. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVector(size_t objc, DeeObject *const *objv) {
 	DREF DeeObject *result;
@@ -455,6 +457,8 @@ err_r:
 }
 
 
+/* Concat a list and some generic sequence,
+ * inheriting a reference from `self' in the process. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *self,
                DeeObject *sequence) {
@@ -559,6 +563,8 @@ err:
 }
 
 
+/* @return: * :   The popped element.
+ * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
 	DREF DeeObject *delob;
@@ -587,6 +593,8 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
 	return delob;
 }
 
+/* @return: * : The actual number of deleted items.
+ * @return: (size_t)-1: Error. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count) {
@@ -1243,6 +1251,8 @@ list_visit(List *__restrict self,
 	DeeList_LockEndRead(self);
 }
 
+/* Clear the given list.
+ * Returns `true' if the list wasn't empty before. */
 PUBLIC NONNULL((1)) bool DCALL
 DeeList_Clear(DeeObject *__restrict self) {
 	List *me = (List *)self;

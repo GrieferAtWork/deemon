@@ -586,7 +586,7 @@ dee_memcasecmpb(uint8_t const *a, size_t a_size,
 
 
 
-/* ASCII case-insensitive functions (for `bytes'). */
+/* ASCII case-insensitive functions (for `Bytes'). */
 LOCAL bool DCALL
 dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {

@@ -26,6 +26,8 @@
 
 #include <math.h> /* FIXME: This needs a feature check! */
 
+/* Print a string representation of the given floating point value.
+ * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
 #ifdef PRINT_LONG_DOUBLE
 #define FLOAT_TYPE  long double
 PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL

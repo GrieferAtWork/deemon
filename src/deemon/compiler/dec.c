@@ -751,7 +751,7 @@ INTERN WUNUSED NONNULL((1)) int
 	} else {
 		Dee_Incref(dec_filename);
 	}
-	DEE_DPRINTF("DECGEN: %r -> %r\n", module->mo_path, dec_filename);
+	Dee_DPRINTF("DECGEN: %r -> %r\n", module->mo_path, dec_filename);
 	ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 
 	if (DeeString_Check(dec_filename)) {

@@ -1000,36 +1000,36 @@ PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
 	BADREFCNT_BEGIN();
-	DEE_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
+	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
 	            file, line, ob);
-	DEE_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
-		DEE_DPRINTF("type : %s (%p)", type->tp_name, type);
+		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
 	} else {
-		DEE_DPRINTF("type : <INVALID> - %p", type);
+		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
-	DEE_DPRINTF("\n\n\n");
+	Dee_DPRINTF("\n\n\n");
 	BADREFCNT_END();
-	BREAKPOINT();
+	Dee_BREAKPOINT();
 }
 
 PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
 	BADREFCNT_BEGIN();
-	DEE_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
+	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
 	            file, line, ob);
-	DEE_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
+	Dee_DPRINTF("refcnt : %Iu (%IX)\n", ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {
-		DEE_DPRINTF("type : %s (%p)", type->tp_name, type);
+		Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
 	} else {
-		DEE_DPRINTF("type : <INVALID> - %p", type);
+		Dee_DPRINTF("type : <INVALID> - %p", type);
 	}
-	DEE_DPRINTF("\n\n\n");
+	Dee_DPRINTF("\n\n\n");
 	BADREFCNT_END();
-	BREAKPOINT();
+	Dee_BREAKPOINT();
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 PUBLIC void DCALL
@@ -1133,17 +1133,17 @@ again:
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (self->ob_refcnt != 0) {
 		BADREFCNT_BEGIN();
-		DEE_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DESTROY(%p)\n",
+		Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DESTROY(%p)\n",
 		            file, line, self);
-		DEE_DPRINTF("refcnt : %Iu (%IX)\n", self->ob_refcnt, self->ob_refcnt);
+		Dee_DPRINTF("refcnt : %Iu (%IX)\n", self->ob_refcnt, self->ob_refcnt);
 		if (DeeObject_Check(type) && DeeType_Check(type)) {
-			DEE_DPRINTF("type : %s (%p)", type->tp_name, type);
+			Dee_DPRINTF("type : %s (%p)", type->tp_name, type);
 		} else {
-			DEE_DPRINTF("type : <INVALID> - %p", type);
+			Dee_DPRINTF("type : <INVALID> - %p", type);
 		}
-		DEE_DPRINTF("\n\n\n");
+		Dee_DPRINTF("\n\n\n");
 		BADREFCNT_END();
-		BREAKPOINT();
+		Dee_BREAKPOINT();
 	}
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #if 0
@@ -1154,7 +1154,7 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 #endif
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 	if (type->tp_flags & TP_FGC) {
 		/* Special handling to track/untrack GC objects during destructor calls. */
@@ -1177,7 +1177,7 @@ again:
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-				DEE_CHECKMEMORY();
+				Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
 				if unlikely(self->ob_refcnt != 0) {
@@ -1245,7 +1245,7 @@ again:
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-				DEE_CHECKMEMORY();
+				Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
 				/* Special case: The destructor managed to revive the object. */
 				if unlikely(self->ob_refcnt != 0) {
@@ -4242,14 +4242,14 @@ PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 /* #define REFLEAK_PRINTF(...) fprintf(stderr, __VA_ARGS__) */
 
 #ifndef REFLEAK_PRINTF
-#define REFLEAK_PRINT  DEE_DPRINT
-#define REFLEAK_PRINTF DEE_DPRINTF
+#define REFLEAK_PRINT  Dee_DPRINT
+#define REFLEAK_PRINTF Dee_DPRINTF
 #endif /* !REFLEAK_PRINTF */
 #ifndef REFLEAK_PRINT
 #define REFLEAK_PRINT(str)  REFLEAK_PRINTF("%s", str)
 #define REFLEAK_PRINTS(STR) REFLEAK_PRINTF("%s", STR)
 #else /* !REFLEAK_PRINT */
-#define REFLEAK_PRINTS DEE_DPRINT
+#define REFLEAK_PRINTS Dee_DPRINT
 #endif /* REFLEAK_PRINT */
 
 PRIVATE NONNULL((1)) size_t DCALL

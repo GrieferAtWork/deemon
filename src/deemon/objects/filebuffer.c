@@ -294,9 +294,10 @@ err:
  * @param: file: The file that is meant to be buffered.
  *               NOTE: If this is another file buffer, its pointed-to
  *                     file is unwound, so-long at it hasn't been closed.
- * @param: mode: One of `FILE_BUFFER_MODE_*'
- * @param: size: The size of the buffer, or ZERO(0)
- *               to allow it to change dynamically. */
+ * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with
+ *                      `FILE_BUFFER_FREADONLY', `FILE_BUFFER_FSYNC' and
+ *                      `FILE_BUFFER_FCLOFILE'
+ * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
                   uint16_t mode, size_t size) {
@@ -316,9 +317,8 @@ err_r:
 }
 
 /* Change the operations mode of a given buffer.
- * @param: mode: One of `FILE_BUFFER_MODE_*'
- * @param: size: The size of the buffer, or ZERO(0)
- *               to allow it to change dynamically. */
+ * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with `FILE_BUFFER_FSYNC'
+ * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size) {
@@ -394,9 +394,10 @@ err:
 
 
 /* Synchronize unwritten data of all interactive TTY devices.
- * NOTE: The first time a TTY device is changed, this function
- *       is added to the `atexit()' chain unless deemon was
- *       built with the CONFIG_HAVE_atexit option disabled. */
+ * NOTE: The first time a buffered TTY device is written to, this
+ *       function is added to the `atexit()' chain unless deemon
+ *       was built with the `CONFIG_NO_STDLIB' option enabled.
+ * NOTE: This function can be called as `(File from deemon).buffer.sync()' */
 PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
 	int result = 0;
 	for (;;) {

@@ -322,14 +322,14 @@ struct Dee_object {
 	((ob)->ob_refcnt &&     \
 	 (ob)->ob_type &&       \
 	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
-#define Dee_ASSERT_OBJECT(ob)                      (void)(DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_Check(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT(ob)                      (void)(DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(!(ob) || DeeObject_Check(ob) || (DeeAssert_BadObjectOpt(__FILE__, __LINE__, (DeeObject *)(ob)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type)) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectType(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type))) || (DeeAssert_BadObjectTypeOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExact(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type)) || (DeeAssert_BadObjectTypeExactOpt(__FILE__, __LINE__, (DeeObject *)(ob), (DeeTypeObject *)(type)), Dee_BREAKPOINT(), 0))
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(char const *file, int line, DeeObject const *ob);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
@@ -2276,7 +2276,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 #define Dee_TP_FABSTRACT        0x0080 /* Member functions and getsets of this type are type-generic and may
                                         * even be invoked when being passed objects that do not fulfill the
                                         * requirement of `DeeObject_InstanceOf(ob, self)' (where `self' is this type).
-                                        * For example: Abstract base classes have this flag set, such as `object', `sequence' or `iterator'
+                                        * For example: Abstract base classes have this flag set, such as `Object', `Sequence' or `Iterator'
                                         * NOTE: This flag is not inherited.
                                         * When this flag is set, the type may also be used to construct super-wrappers
                                         * for any other kind of object, even if that object isn't derived from the type. */
@@ -2717,27 +2717,27 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__
 #define DeeObject_AsXInt(size, self, result)       DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)
 #define DeeObject_AsXUInt(size, self, result)      DEE_PRIVATE_OBJECT_AS_UINT(size)(self, result)
 #ifdef __CHAR_UNSIGNED__
-#define DeeObject_AsChar(self, result)    DeeObject_AsXUInt(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(char *, result))
+#define DeeObject_AsChar(self, result)    DeeObject_AsXUInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #else /* __CHAR_UNSIGNED__ */
-#define DeeObject_AsChar(self, result)    DeeObject_AsXInt(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(char *, result))
+#define DeeObject_AsChar(self, result)    DeeObject_AsXInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #endif /* !__CHAR_UNSIGNED__ */
-#define DeeObject_AsSChar(self, result)   DeeObject_AsXInt(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(signed char *, result))
-#define DeeObject_AsUChar(self, result)   DeeObject_AsXUInt(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(unsigned char *, result))
-#define DeeObject_AsShort(self, result)   DeeObject_AsXInt(__SIZEOF_SHORT__, self, DEE_REQUIRES_TYPE(short *, result))
-#define DeeObject_AsUShort(self, result)  DeeObject_AsXUInt(__SIZEOF_SHORT__, self, DEE_REQUIRES_TYPE(unsigned short *, result))
-#define DeeObject_AsInt(self, result)     DeeObject_AsXInt(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(int *, result))
-#define DeeObject_AsUInt(self, result)    DeeObject_AsXUInt(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(unsigned int *, result))
-#define DeeObject_AsLong(self, result)    DeeObject_AsXInt(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(long *, result))
-#define DeeObject_AsULong(self, result)   DeeObject_AsXUInt(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(unsigned long *, result))
+#define DeeObject_AsSChar(self, result)   DeeObject_AsXInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(signed char *, result))
+#define DeeObject_AsUChar(self, result)   DeeObject_AsXUInt(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
+#define DeeObject_AsShort(self, result)   DeeObject_AsXInt(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(short *, result))
+#define DeeObject_AsUShort(self, result)  DeeObject_AsXUInt(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
+#define DeeObject_AsInt(self, result)     DeeObject_AsXInt(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, result))
+#define DeeObject_AsUInt(self, result)    DeeObject_AsXUInt(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
+#define DeeObject_AsLong(self, result)    DeeObject_AsXInt(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(long *, result))
+#define DeeObject_AsULong(self, result)   DeeObject_AsXUInt(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
 #ifdef __COMPILER_HAVE_LONGLONG
-#define DeeObject_AsLLong(self, result)   DeeObject_AsXInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__LONGLONG *, result))
-#define DeeObject_AsULLong(self, result)  DeeObject_AsXUInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__ULONGLONG *, result))
+#define DeeObject_AsLLong(self, result)   DeeObject_AsXInt(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__LONGLONG *, result))
+#define DeeObject_AsULLong(self, result)  DeeObject_AsXUInt(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
 #endif /* __COMPILER_HAVE_LONGLONG */
-#define DeeObject_AsSize(self, result)    DeeObject_AsXUInt(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, result))
-#define DeeObject_AsSSize(self, result)   DeeObject_AsXInt(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, result))
-#define DeeObject_AsPtrdiff(self, result) DeeObject_AsXInt(__SIZEOF_PTRDIFF_T__, self, DEE_REQUIRES_TYPE(ptrdiff_t *, result))
-#define DeeObject_AsIntptr(self, result)  DeeObject_AsXInt(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(intptr_t *, result))
-#define DeeObject_AsUIntptr(self, result) DeeObject_AsXUInt(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(uintptr_t *, result))
+#define DeeObject_AsSize(self, result)    DeeObject_AsXUInt(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
+#define DeeObject_AsSSize(self, result)   DeeObject_AsXInt(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, result))
+#define DeeObject_AsPtrdiff(self, result) DeeObject_AsXInt(__SIZEOF_PTRDIFF_T__, self, Dee_REQUIRES_TYPE(ptrdiff_t *, result))
+#define DeeObject_AsIntptr(self, result)  DeeObject_AsXInt(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, result))
+#define DeeObject_AsUIntptr(self, result) DeeObject_AsXUInt(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 
 
 /* Math operator invocation. */
@@ -2901,7 +2901,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */
 typedef WUNUSED NONNULL((2)) Dee_ssize_t
-(DCALL *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
+(DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
 #ifdef DEE_SOURCE
 typedef Dee_formatprinter_t dformatprinter;
 #endif /* DEE_SOURCE */

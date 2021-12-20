@@ -38,7 +38,7 @@
 #define INDEX    DeeSlab_IndexOf(ITEMSIZE)
 
 #if 0
-#define LOG_SLAB(...) DEE_DPRINTF(__VA_ARGS__)
+#define LOG_SLAB(...) Dee_DPRINTF(__VA_ARGS__)
 #else
 #define LOG_SLAB(...) (void)0
 #endif

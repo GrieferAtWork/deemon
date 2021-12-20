@@ -443,7 +443,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(DREF DeeObject **__restrict pself,
+DeeRoDict_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
                  DeeObject *key, DeeObject *value) {
 	DREF Dict *me = (Dict *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
@@ -456,9 +456,9 @@ DeeRoDict_Insert(DREF DeeObject **__restrict pself,
 		me              = rehash(me, me->rd_mask, new_mask);
 		if unlikely(!me)
 			goto err;
-		*pself      = (DREF DeeObject *)me;
 		me->rd_mask = new_mask;
 		me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
+		*pself = (DREF DeeObject *)me;
 	}
 	/* Insert the new key/value-pair into the Dict. */
 	Dee_Incref(key);
@@ -1054,6 +1054,7 @@ err:
 
 
 
+/* The main `_RoDict' container class. */
 PUBLIC DeeTypeObject DeeRoDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDict",

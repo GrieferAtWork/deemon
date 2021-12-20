@@ -155,6 +155,7 @@ lookup_code_info(DeeCodeObject *self,
 	info->fi_doc    = NULL;
 	info->fi_opname = (uint16_t)-1;
 	info->fi_getset = (uint16_t)-1;
+
 	/* Step #1: Search the code object's module for the given `function' */
 	module = self->co_module;
 	if unlikely(!module)
@@ -186,6 +187,7 @@ lookup_code_info(DeeCodeObject *self,
 			rwlock_read(&module->mo_lock);
 		}
 	}
+
 	/* Do another pass, this time looking for class objects
 	 * which the function may be defined to be apart of. */
 	for (addr = 0; addr < module->mo_globalc; ++addr) {
@@ -223,6 +225,8 @@ without_module:
 				return result;
 		}
 	}
+
+
 	/* If we still haven't found anything about the function it's
 	 * probably been locally created as part of a caller's stack-frame.
 	 * That, or it's been bound externally, before being deleted from its
@@ -249,14 +253,14 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeCode_GetInfo(DeeObject *__restrict self,
+DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
                 struct function_info *__restrict info) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
 	return lookup_code_info((DeeCodeObject *)self, NULL, info);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFunction_GetInfo(DeeObject *__restrict self,
+DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
                     struct function_info *__restrict info) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFunction_Type);
 	return lookup_code_info(((DeeFunctionObject *)self)->fo_code,

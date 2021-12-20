@@ -3209,7 +3209,7 @@ class Doc: WeakRefAble {
 				return;
 			}
 			if (doc_parent_or_path is Type) {
-				/* Doc(type) */
+				/* Doc(Type) */
 				local type_module;
 load_type_input:
 				object = doc_parent_or_path;

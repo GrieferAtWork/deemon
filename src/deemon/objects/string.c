@@ -147,9 +147,9 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t
-(DCALL Dee_ascii_printer_print)(void *__restrict self,
-                                char const *__restrict data,
-                                size_t datalen) {
+(DPRINTER_CC Dee_ascii_printer_print)(void *__restrict self,
+                                      char const *__restrict data,
+                                      size_t datalen) {
 	struct ascii_printer *me;
 	String *string;
 	size_t alloc_size;
@@ -209,7 +209,7 @@ realloc_again:
 		string->s_len = alloc_size;
 	}
 	/* Copy text into the dynamic string. */
-	/*DEE_DPRINTF("PRINT: %IX - `%.*s'\n", datalen, (int)datalen, data);*/
+	/*Dee_DPRINTF("PRINT: %IX - `%.*s'\n", datalen, (int)datalen, data);*/
 	memcpyc(string->s_str + me->ap_length,
 	        data, datalen, sizeof(char));
 	me->ap_length += datalen;
@@ -268,6 +268,9 @@ err:
 
 STATIC_ASSERT(STRING_WIDTH_1BYTE < 1);
 
+/* Resize a single-byte string to have a length of `num_bytes' bytes.
+ * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
+ * in order to allocate and return a new buffer. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	DREF String *result;
@@ -330,6 +333,8 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	return (DREF DeeObject *)result;
 }
 
+/* Construct an uninitialized single-byte string,
+ * capable of representing up to `num_bytes' bytes of text. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_NewBuffer(size_t num_bytes) {
 	DREF String *result;
@@ -364,6 +369,7 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
 	Dee_string_utf_free(utf);
 }
 
+/* Construct strings with basic width-data. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length) {
 	DREF DeeObject *result;
@@ -388,6 +394,9 @@ DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t lengt
 	return result;
 }
 
+/* Construct a new, non-decoded single-byte-per-character string `str'.
+ * The string itself may contain characters above 127, which are then
+ * interpreted as part of the unicode character-range U+0080...U+00FF. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_New(/*unsigned*/ char const *__restrict str) {
 	return DeeString_NewSized(str, strlen(str));
@@ -420,6 +429,7 @@ err:
 	return NULL;
 }
 
+/* Construct a new string using printf-like (and deemon-enhanced) format-arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 DeeString_Newf(/*utf-8*/ char const *__restrict format, ...) {
 	va_list args;
@@ -1578,6 +1588,7 @@ PRIVATE struct type_buffer string_buffer = {
 };
 
 
+/* `string from deemon' */
 PUBLIC DeeTypeObject DeeString_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_string),

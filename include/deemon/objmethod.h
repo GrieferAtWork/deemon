@@ -82,37 +82,40 @@ DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 #define DeeObjMethod_SELF(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_this
 #define DeeObjMethod_FUNC(x)         ((DeeObjMethodObject *)Dee_REQUIRES_OBJECT(x))->om_func
-#define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `objmethod' is final. */
+#define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `_ObjMethod' is final. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeObjMethod_Type)
-#define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `kwobjmethod' is final. */
+#define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod' is final. */
 #define DeeKwObjMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type)
 #define Dee_DEFINE_OBJMETHOD(name, func, self) \
 	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeObjMethod_Type), func, self }
 #define Dee_DEFINE_KWOBJMETHOD(name, func, self) \
 	DeeKwObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), func, self }
 
-/* Construct a new `objmethod' object. */
+/* Construct a new `_ObjMethod' object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
 /* Returns the name of the function bound by the given
- * objmethod, or `NULL' if the name could not be determined. */
+ * `_ObjMethod', or `NULL' if the name could not be determined. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetName(DeeObject const *__restrict self);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeObjMethod_GetDoc(DeeObject const *__restrict self);
+
 /* Returns the type that is implementing the bound method. */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject const *__restrict self);
 
 struct Dee_clsmethod_object {
-	Dee_OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	/* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	Dee_OBJECT_HEAD
 	Dee_objmethod_t     cm_func; /* [1..1] C-level object function. */
 	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
 };
 
 struct Dee_kwclsmethod_object {
-	Dee_OBJECT_HEAD /* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	/* Unbound member function (`classmethod') (may be invoked as a thiscall object). */
+	Dee_OBJECT_HEAD
 	Dee_kwobjmethod_t   cm_func; /* [1..1] C-level object function. */
 	DREF DeeTypeObject *cm_type; /* [1..1] The type that this-arguments must match. */
 };
@@ -121,9 +124,9 @@ DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 #define DeeClsMethod_FUNC(x)       ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
 #define DeeClsMethod_TYPE(x)       ((DeeClsMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_type
-#define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_classmethod' is final. */
+#define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod' is final. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)
-#define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_kwclassmethod' is final. */
+#define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
 #define DeeKwClsMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type)
 #define Dee_DEFINE_CLSMETHOD(name, func, type) \
 	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), func, type }
@@ -131,14 +134,14 @@ DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 	DeeKwClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), func, type }
 
 
-/* Construct a new `classmethod' object. */
+/* Construct a new `_ClassMethod' object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type, Dee_objmethod_t func);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type, Dee_kwobjmethod_t func);
 
 /* Returns the name of the function bound by the given
- * clsmethod, or `NULL' if the name could not be determined. */
+ * `_ClsMethod', or `NULL' if the name could not be determined. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetName(DeeObject const *__restrict self);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsMethod_GetDoc(DeeObject const *__restrict self);
 
@@ -157,7 +160,7 @@ DDATDEF DeeTypeObject DeeClsProperty_Type;
 #define DeeClsProperty_GET(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_get
 #define DeeClsProperty_DEL(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_del
 #define DeeClsProperty_SET(x)          ((DeeClsPropertyObject *)Dee_REQUIRES_OBJECT(x))->cp_set
-#define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_classproperty' is final. */
+#define DeeClsProperty_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
 #define DeeClsProperty_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
 #define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) \
 	DeeClsPropertyObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsProperty_Type), get, type, del, set }
@@ -171,7 +174,7 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
                    Dee_setmethod_t set);
 
 /* Returns the name of the function bound by the given
- * clsproperty, or `NULL' if the name could not be determined. */
+ * `_ClassProperty', or `NULL' if the name could not be determined. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetName(DeeObject const *__restrict self);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL DeeClsProperty_GetDoc(DeeObject const *__restrict self);
 
@@ -185,7 +188,7 @@ struct Dee_clsmember_object {
 };
 DDATDEF DeeTypeObject DeeClsMember_Type;
 
-/* Create a new unbound class property object. */
+/* Create a new unbound class member object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*ClsMember*/ DeeObject *DCALL
 DeeClsMember_New(DeeTypeObject *__restrict type,
                  struct Dee_type_member const *desc);
@@ -207,9 +210,9 @@ struct Dee_kwcmethod_object {
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
-#define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_cmethod' is final. */
+#define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
-#define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_kwcmethod' is final. */
+#define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
 #define Dee_DEFINE_CMETHOD(name, func) \
 	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), func }

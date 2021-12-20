@@ -40,7 +40,8 @@ DECL_BEGIN
 
 typedef DeeCellObject Cell;
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+/* Construct a new Cell object. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_New(DeeObject *__restrict item) {
 	DREF Cell *result;
 	ASSERT_OBJECT(item);
@@ -116,7 +117,13 @@ cell_deepload(Cell *__restrict self) {
 }
 
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+/* Get/Del/Set the value associated with a given Cell.
+ * HINT:  These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
+ *        With that in mind, `DeeCell_Del()' and `DeeCell_Set()'
+ *        always return `0' indicative of a successful callback.
+ * NOTE: `DeeCell_Get' will return `NULL' and throw an `AttributeError' if the `self' is
+ *        empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_TryGet(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -127,14 +134,14 @@ DeeCell_TryGet(DeeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL err_empty_cell(void) {
+PRIVATE ATTR_COLD int DCALL err_empty_cell(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "The cell is empty");
 }
 
 
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_Get(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeCell_TryGet(self);
@@ -146,9 +153,10 @@ DeeCell_Get(DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeCell_Xch(DeeObject *self,
-            DeeObject *value) {
+/* Exchange the Cell's value.
+ * NOTE: `DeeCell_XchNonNull()' will only set the new value when the old was non-NULL. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_Xch(DeeObject *self, DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
 	ASSERT_OBJECT_OPT(value);
@@ -161,9 +169,8 @@ DeeCell_Xch(DeeObject *self,
 	return result;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeCell_XchNonNull(DeeObject *self,
-                   DeeObject *value) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_XchNonNull(DeeObject *self, DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
 	ASSERT_OBJECT_OPT(value);
@@ -181,7 +188,8 @@ DeeCell_XchNonNull(DeeObject *self,
 	return result;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+/* Perform a compare-exchange, returning the old value of the Cell. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_CmpXch(DeeObject *self,
                DeeObject *old_value,
                DeeObject *new_value) {
@@ -202,7 +210,7 @@ DeeCell_CmpXch(DeeObject *self,
 	return result;
 }
 
-PUBLIC NONNULL((1)) int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCell_Del(DeeObject *__restrict self) {
 	DREF DeeObject *old_value;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -216,7 +224,7 @@ DeeCell_Del(DeeObject *__restrict self) {
 	return 0;
 }
 
-PUBLIC NONNULL((1)) int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCell_Set(DeeObject *self, DeeObject *value) {
 	DREF DeeObject *old_value;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);

@@ -61,7 +61,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self);
 
 /* Taking some object, return the effective super-class of it.
  * HINT: When `self' is another super-object, this is identical to
- *      `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
+ *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
  * WARNING: This function may perform non-shared
  *          optimizations by re-using `self' when allowed.
  * @throws: Error.TypeError: The class of `self' has no super-class. */

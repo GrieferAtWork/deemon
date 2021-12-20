@@ -69,12 +69,12 @@ ast_optimize_verbose(struct ast *__restrict self, char const *format, ...) {
 	va_list args;
 	va_start(args, format);
 	if (self->a_ddi.l_file) {
-		DEE_DPRINTF("%s(%d,%d) : ",
+		Dee_DPRINTF("%s(%d,%d) : ",
 		            TPPFile_Filename(self->a_ddi.l_file, NULL),
 		            self->a_ddi.l_line + 1,
 		            self->a_ddi.l_col + 1);
 	}
-	DEE_VDPRINTF(format, args);
+	Dee_VDPRINTF(format, args);
 	va_end(args);
 }
 #endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */

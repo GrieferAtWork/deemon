@@ -488,8 +488,9 @@ PRIVATE SystemFile sysf_std[] = {
 	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 },
 };
 
-PUBLIC ATTR_RETNONNULL
-DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
+/* Return the the default stream for a given STD number. */
+PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)&sysf_std[id];
 }
 

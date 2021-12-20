@@ -84,7 +84,7 @@ DDATDEF DeeObject        DeeTuple_Empty;
 #define Dee_return_empty_tuple  Dee_return_reference_(Dee_EmptyTuple)
 
 DDATDEF DeeTypeObject DeeTuple_Type;
-#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `tuple' is final */
+#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `Tuple' is final */
 #define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeTuple_Type)
 
 
@@ -92,6 +92,8 @@ DDATDEF DeeTypeObject DeeTuple_Type;
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeTuple_NewUninitialized(size_t n);
 
+/* Same as `DeeTuple_NewUninitialized()', but
+ * doesn't throw an exception when returning `NULL' */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n);
 

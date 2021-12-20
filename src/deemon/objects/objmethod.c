@@ -43,6 +43,7 @@
 
 DECL_BEGIN
 
+/* Construct a new `_ObjMethod' object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeObjMethodObject *result;
@@ -119,6 +120,8 @@ typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
 	return NULL;
 }
 
+/* Returns the name of the function bound by the given
+ * `_ObjMethod', or `NULL' if the name could not be determined. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeObjMethod_GetName(DeeObject const *__restrict self) {
 	dobjmethod_t func;
@@ -172,6 +175,7 @@ DeeObjMethod_GetDoc(DeeObject const *__restrict self) {
 	return NULL;
 }
 
+/* Returns the type that is implementing the bound method. */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject const *__restrict self) {
 	dobjmethod_t func;
@@ -198,6 +202,8 @@ DeeObjMethod_GetType(DeeObject const *__restrict self) {
 	return Dee_TYPE(DeeObjMethod_SELF(self));
 }
 
+/* Returns the name of the function bound by the given
+ * `_ClsMethod', or `NULL' if the name could not be determined. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetName(DeeObject const *__restrict self) {
 	dobjmethod_t func;
@@ -937,6 +943,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 };
 
 
+/* Construct a new `_ClassMethod' object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type,
                  dobjmethod_t func) {
@@ -1314,6 +1321,8 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 
 
+/* Returns the name of the function bound by the given
+ * `_ClassProperty', or `NULL' if the name could not be determined. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeClsProperty_GetName(DeeObject const *__restrict self) {
 	struct type_getset const *iter;
@@ -1349,6 +1358,7 @@ DeeClsProperty_GetDoc(DeeObject const *__restrict self) {
 }
 
 
+/* Create a new unbound class property object. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
                    dgetmethod_t get,
@@ -1679,7 +1689,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 
 
 
-/* Create a new unbound class property object. */
+/* Create a new unbound class member object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMember*/ DeeObject *DCALL
 DeeClsMember_New(DeeTypeObject *__restrict type,
                  struct type_member const *desc) {
@@ -2350,16 +2360,36 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 };
 
 
+
+/* Invoke a given c-function callback.
+ * Since this is the main way through which external functions are invoked,
+ * we use this point to add some debug checks for proper use of exceptions.
+ * That means we assert that the exception depth is manipulated as follows:
+ * >> Dee_ASSERT(old_except_depth == new_except_depth + (return == NULL ? 1 : 0));
+ * This way we can quickly determine improper use of exceptions in most cases,
+ * even before the interpreter would crash because it tried to handle exceptions
+ * when there were none.
+ * A very common culprit for improper exception propagation is the return value
+ * of printf-style format functions. Usually, code can just check for a non-zero
+ * return value to determine if an integer-returning function has failed.
+ * However, printf-style format functions return a negative value when that
+ * happens, but return the positive sum of all printer calls on success (which
+ * unless nothing was printed, is also non-zero).
+ * This can easily be fixed by replacing:
+ * >> if (DeeFormat_Printf(...)) goto err;
+ * with this:
+ * >> if (DeeFormat_Printf(...) < 0) goto err;
+ */
 #ifndef NDEBUG
 PRIVATE ATTR_NORETURN void DCALL
 fatal_invalid_except(DeeObject *__restrict return_value,
                      uint16_t excepted, void *callback_addr) {
-	DEE_DPRINTF("Exception depth was improperly modified:\n"
+	Dee_DPRINTF("Exception depth was improperly modified:\n"
 	            "After a return value %p from C-function %p, the exception "
 	            "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
-	BREAKPOINT();
+	Dee_BREAKPOINT();
 #ifdef CONFIG_HAVE__Exit
 	_Exit(EXIT_FAILURE);
 #else /* CONFIG_HAVE__Exit */

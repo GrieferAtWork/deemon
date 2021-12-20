@@ -409,6 +409,25 @@ DECL_END
 
 DECL_BEGIN
 
+/* Handle a breakpoint having been triggered in `frame'.
+ * NOTE: This function is called to deal with an encounter
+ *       of a breakpoint during execution of code.
+ * @param: frame: [in|out][OVERRIDE(->cf_result, DREF)]
+ *                 The execution frame that triggered the breakpoint.
+ *                 Anything and everything about the state described
+ *                 within this frame is subject to change by this
+ *                 function, including PC/SP, as well as the running
+ *                 code itself.
+ *                  - The stack pointer is the stack location as
+ *                    it is at the breakpoint instruction, as well
+ *                    as the instruction following thereafter.
+ *                  - The instruction pointer points to the instruction
+ *                    following the breakpoint, meaning that no further
+ *                    adjustment is required if all that's supposed to
+ *                    happen is execution continuing normally.
+ *                  - The valid stack size is always stored in `cf_stacksz'
+ * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
+ *                 should continue once the breakpoint has been dealt with. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct code_frame *__restrict frame) {
 	/* TODO: Add some sort of hook that allows for debugging. */
@@ -418,29 +437,26 @@ trigger_breakpoint(struct code_frame *__restrict frame) {
 
 
 
-
-
-
-PUBLIC WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid) {
 	/* Argument */
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
-	if (((DeeCodeObject *)self)->co_keywords &&
-	    aid < ((DeeCodeObject *)self)->co_argc_max)
-		return DeeString_STR(((DeeCodeObject *)self)->co_keywords[aid]);
+	DeeCodeObject const *me = (DeeCodeObject const *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeCode_Type);
+	if (me->co_keywords && aid < me->co_argc_max)
+		return DeeString_STR(me->co_keywords[aid]);
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid) {
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetSSymbolName(DeeObject const *__restrict self, uint16_t sid) {
 	/* Static symbol name */
-	DeeDDIObject *ddi;
-	uint8_t *reader;
+	DeeDDIObject const *ddi;
+	uint8_t const *reader;
 	uint32_t offset;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
-	ddi = ((DeeCodeObject *)self)->co_ddi;
+	ddi = ((DeeCodeObject const *)self)->co_ddi;
 	if (ddi->d_exdat) {
-		reader = (uint8_t *)ddi->d_exdat->dx_data;
+		reader = ddi->d_exdat->dx_data;
 		for (;;) {
 			uint8_t op = *reader++;
 			switch (op) {
@@ -449,24 +465,24 @@ DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid) {
 				goto done_exdat;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP8:
-				if (*(uint8_t *)(reader + 0) == sid) {
-					offset = *(uint8_t *)(reader + 1);
+				if (*(uint8_t const *)(reader + 0) == sid) {
+					offset = *(uint8_t const *)(reader + 1);
 					goto return_strtab_offset;
 				}
 				reader += 1 + 1;
 				break;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP16:
-				if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == sid) {
-					offset = UNALIGNED_GETLE16((uint16_t *)(reader + 2));
+				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == sid) {
+					offset = UNALIGNED_GETLE16((uint16_t const *)(reader + 2));
 					goto return_strtab_offset;
 				}
 				reader += 2 + 2;
 				break;
 
 			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP32:
-				if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == sid) {
-					offset = UNALIGNED_GETLE32((uint32_t *)(reader + 2));
+				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == sid) {
+					offset = UNALIGNED_GETLE32((uint32_t const *)(reader + 2));
 					goto return_strtab_offset;
 				}
 				reader += 2 + 4;
@@ -499,16 +515,16 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid) {
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 	/* Reference symbol name */
-	DeeDDIObject *ddi;
-	uint8_t *reader;
+	DeeDDIObject const *ddi;
+	uint8_t const *reader;
 	uint32_t offset;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
-	ddi = ((DeeCodeObject *)self)->co_ddi;
+	ddi = ((DeeCodeObject const *)self)->co_ddi;
 	if (ddi->d_exdat) {
-		reader = (uint8_t *)ddi->d_exdat->dx_data;
+		reader = ddi->d_exdat->dx_data;
 		for (;;) {
 			uint8_t op = *reader++;
 			switch (op) {
@@ -517,24 +533,24 @@ DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid) {
 				goto done_exdat;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8:
-				if (*(uint8_t *)(reader + 0) == rid) {
-					offset = *(uint8_t *)(reader + 1);
+				if (*(uint8_t const *)(reader + 0) == rid) {
+					offset = *(uint8_t const *)(reader + 1);
 					goto return_strtab_offset;
 				}
 				reader += 1 + 1;
 				break;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16:
-				if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == rid) {
-					offset = UNALIGNED_GETLE16((uint16_t *)(reader + 2));
+				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == rid) {
+					offset = UNALIGNED_GETLE16((uint16_t const *)(reader + 2));
 					goto return_strtab_offset;
 				}
 				reader += 2 + 2;
 				break;
 
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32:
-				if (UNALIGNED_GETLE16((uint16_t *)(reader + 0)) == rid) {
-					offset = UNALIGNED_GETLE32((uint32_t *)(reader + 2));
+				if (UNALIGNED_GETLE16((uint16_t const *)(reader + 0)) == rid) {
+					offset = UNALIGNED_GETLE32((uint32_t const *)(reader + 2));
 					goto return_strtab_offset;
 				}
 				reader += 2 + 4;
@@ -567,12 +583,12 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 	/* DDI String */
-	DeeDDIObject *ddi;
+	DeeDDIObject const *ddi;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
-	ddi = ((DeeCodeObject *)self)->co_ddi;
+	ddi = ((DeeCodeObject const *)self)->co_ddi;
 	if (id < ddi->d_nstring)
 		return DeeString_STR(ddi->d_strtab) + ddi->d_strings[id];
 	return NULL;
@@ -582,7 +598,7 @@ DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
 
 
 
-/* Define the special, empty_code object. */
+/* Define the special `empty_code' object. */
 #define empty_code empty_code_head.ob
 INTERN DEFINE_CODE(empty_code_head,
                    /* co_flags:     */ CODE_FCOPYABLE,
@@ -608,14 +624,15 @@ INTERN DEFINE_CODE(empty_code_head,
 /* @return: 0: The code is not contained.
  * @return: 1: The code is contained.
  * @return: 2: The frame chain is incomplete, but code wasn't found thus far. */
-PRIVATE WUNUSED int DCALL
-frame_chain_contains_code(struct code_frame *__restrict iter, uint16_t count,
+PRIVATE WUNUSED NONNULL((2)) int DCALL
+frame_chain_contains_code(struct code_frame *iter, uint16_t count,
                           DeeCodeObject *__restrict code) {
 	while (count--) {
 		if (!iter || iter == CODE_FRAME_NOT_EXECUTING)
 			return 2;
 		if (iter->cf_func->fo_code == code)
 			return 1;
+		iter = iter->cf_prev;
 	}
 	return 0;
 }
@@ -625,10 +642,12 @@ DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
 	DeeCodeObject *me = (DeeCodeObject *)self;
 	DeeThreadObject *caller;
 	ASSERT_OBJECT_TYPE(self, &DeeCode_Type);
+
 	/* Simple case: the assembly flag is already set. */
 	if (me->co_flags & CODE_FASSEMBLY)
 		return 0;
 	caller = DeeThread_Self();
+
 	/* Assume that the calling thread's execution chain
 	 * is consistent (which it _really_ should be). */
 	if (frame_chain_contains_code(caller->t_exec, caller->t_execsz, me))
@@ -654,8 +673,10 @@ check_other_threads:
 			if (!temp)
 				continue; /* Unused. */
 			COMPILER_READ_BARRIER();
+
 			/* Resume execution of all the other threads. */
 			DeeThread_ResumeAll();
+
 			/* Unclear, or is being used. */
 			if (temp == 2) {
 				/* Unclear. - Wait for the thread to turn its stack consistent, then try again. */
@@ -664,9 +685,11 @@ check_other_threads:
 				DeeThread_SleepNoInterrupt(100);
 				goto check_other_threads;
 			}
+
 			/* The code object is currently being executed (or at least was being...) */
 			goto already_executing;
 		}
+
 		/* Having confirmed that the code object isn't running, set the assembly
 		 * flag before resuming all the other threads so we can still ensure that
 		 * it will become visible as soon as the other threads start running again. */

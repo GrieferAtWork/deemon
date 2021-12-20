@@ -766,6 +766,11 @@ Dee_unicode_printer_printstring(struct unicode_printer *__restrict self,
 }
 
 
+/* Print the text of `self' to `printer', encoded as a UTF-8 string.
+ * NOTE: If `printer' is `&unicode_printer_print', special optimization
+ *       is done, meaning that this is the preferred method of printing
+ *       an object to a unicode printer.
+ * NOTE: This optimization is also done when `DeeObject_Print' is used. */
 INTERN dssize_t DCALL
 DeeString_PrintUtf8(DeeObject *__restrict self,
                     dformatprinter printer,
@@ -877,6 +882,8 @@ err:
 	return -1;
 }
 
+/* Print the escape-encoded variant of `self'
+ * @param: flags: Set of `FORMAT_QUOTE_F*' (from <deemon/format.h>) */
 PUBLIC dssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
                     dformatprinter printer,
@@ -2265,6 +2272,7 @@ case STRING_ENCODING_-- - MBCS: {
 INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
+/* Construct a string from a UTF-8 character sequence. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_NewUtf8(char const *__restrict str, size_t length,
                   unsigned int error_mode) {
@@ -2474,6 +2482,11 @@ err:
 }
 
 
+/* Given a string `self' that has previously been allocated as a
+ * byte-buffer string (such as `DeeString_NewSized()'), convert
+ * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.
+ * This function _always_ inherits a reference to `self', and will
+ * return `NULL' on error. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode) {
@@ -3989,7 +4002,7 @@ PUBLIC WUNUSED NONNULL((1)) int
  * HINT: This function is intentionally designed as compatible with `dformatprinter'
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
 Dee_unicode_printer_print(void *__restrict self,
                           /*utf-8*/ char const *__restrict text,
                           size_t textlen) {
@@ -4923,6 +4936,7 @@ err:
 
 
 
+/* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
 	char utf8_repr[UTF8_MAX_MBLEN];
@@ -5823,6 +5837,13 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 
 
 
+/* Construct a string from the given escape-sequence.
+ * This function automatically deals with escaped characters above
+ * the single-byte range, and expects the input to be structured as
+ * UTF-8 text.
+ *  - Surrounding quotation marks should be stripped before calling this function.
+ *  - Escaped linefeeds are implicitly parsed, too.
+ * @param: error_mode: One of `STRING_ERROR_F*' */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode) {
@@ -6024,9 +6045,9 @@ err:
 
 /* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
- * dformatprinter-compatible callback for generating data to-be
- * written into a Bytes object. */
-PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ * Dee_formatprinter_t-compatible callback for generating data
+ * to-be written into a Bytes object. */
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
 Dee_bytes_printer_print(void *__restrict self,
                         /*utf-8*/ char const *__restrict text,
                         size_t textlen) {
@@ -6107,6 +6128,8 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return unlikely(bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
 }
 
+/* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
+ * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text,

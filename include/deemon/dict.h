@@ -61,11 +61,11 @@ struct Dee_dict_object {
 
 /* The main `Dict' container class (and all related types):
  * >> class Dict: Mapping { ... };
- * >> class Dict.Proxy: sequence { ... };
+ * >> class Dict.Proxy: Sequence { ... };
  * >> class Dict.Keys: Dict.Proxy { ... };
  * >> class Dict.Values: Dict.Proxy { ... };
  * >> class Dict.Items: Dict.Proxy { ... };
- * >> class Dict.Iterator: iterator { ... };
+ * >> class Dict.Iterator: Iterator { ... };
  * >> class Dict.Proxy.Iterator: Dict.Iterator { ... };
  * >> class Dict.Keys.Iterator: Dict.Proxy.Iterator { ... };
  * >> class Dict.Values.Iterator: Dict.Proxy.Iterator { ... };

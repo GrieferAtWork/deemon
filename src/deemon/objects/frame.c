@@ -93,6 +93,9 @@ typedef DeeFrameObject Frame;
 #define PLOCK_ENDWRITE(x) (void)0
 #endif /* CONFIG_NO_THREADS */
 
+/* Construct a frame object owned by `owner'
+ * The intended use of this is for tracebacks and yield_function-iterators.
+ * @param: flags: Set of `DEEFRAME_F*' */
 #ifndef CONFIG_NO_THREADS
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,

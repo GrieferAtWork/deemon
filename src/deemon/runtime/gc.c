@@ -172,7 +172,8 @@ again:
  * has been allocated using `DeeGCObject_Malloc' and friends,
  * though constructions of non-variadic GC objects don't need
  * to call this function on the passed object. - That call will
- * automatically be done when the function returns successfully. */
+ * automatically be done when the function returns successfully.
+ * @return: * : == ob */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Track(DeeObject *__restrict ob) {
 	struct gc_head *head;
@@ -659,7 +660,7 @@ again:
 	self = (DeeObject *)tp_self;
 	goto again;
 do_the_visit:
-	/*DEE_DPRINTF("VISIT: %k at %p (%u refs)\n", tp_self, self, self->ob_refcnt);*/
+	/*Dee_DPRINTF("VISIT: %k at %p (%u refs)\n", tp_self, self, self->ob_refcnt);*/
 
 	/* Check if this is a known dependency */
 	perturb = i = VD_HASHOF(&data->vd_deps, self);
@@ -1020,6 +1021,8 @@ done:
 
 
 
+/* Try to collect at most `max_objects' GC-objects,
+ * returning the actual amount collected. */
 PUBLIC size_t DCALL DeeGC_Collect(size_t max_objects) {
 	struct gc_head *iter;
 	size_t temp, result;
@@ -1070,7 +1073,7 @@ restart:
 #endif
 #endif /* !CONFIG_NO_THREADS */
 #ifdef CONFIG_GC_CHECK_MEMORY
-		DEE_CHECKMEMORY();
+		Dee_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
 		temp = gc_trydestroy(iter,
 		                     &dep_buffer,
@@ -1082,7 +1085,7 @@ restart:
 #endif /* CONFIG_GC_TRACK_LEAFS */
 		                     );
 #ifdef CONFIG_GC_CHECK_MEMORY
-		DEE_CHECKMEMORY();
+		Dee_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
 		if (temp) {
 			if ((result += temp) >= max_objects) {
@@ -1117,6 +1120,13 @@ done_nolock:
 	return result;
 }
 
+/* Return `true' if there any GC objects with a
+ * non-zero reference counter are being tracked.
+ * NOTE: In addition, this function does not return `true' when
+ *       all that's left are dex objects (which are destroyed
+ *       at a later point during deemon shutdown, than the point
+ *       when this function is called to determine if the GC must
+ *       continue to run) */
 INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
 	struct gc_head *iter;
 	GCLOCK_ACQUIRE_S();
@@ -1140,6 +1150,72 @@ is_nonempty:
 }
 
 
+/* Used internally to prevent any further execution of user-code
+ * and is called during `Dee_Shutdown()' when it becomes obvious
+ * that deemon cannot be shutdown through conventional means.
+ * To oversimplify such a situation, imagine user-code like this:
+ * >> global global_instance;
+ * >>
+ * >> class SelfRevivingDestructor {
+ * >>     ~this() {
+ * >>         // Allowed: The destructor revives itself by generating
+ * >>         //          a new reference to itself within some global,
+ * >>         //          or otherwise outside variable.
+ * >>         global_instance = this;
+ * >>     }
+ * >> }
+ * >> // Kick-start the evil...
+ * >> SelfRevivingDestructor();
+ *
+ * Now code like this might seem evil, however is 100% allowed, and even
+ * when something like this is done, deemon will continue to try shutting
+ * down normally, and without breaking any rules (just slightly altering
+ * them in a way that remains consistent without introducing undefined
+ * behavior).
+ * How is this done? Well. If the name of this function hasn't
+ * answered that yet, let me make it plain obvious:
+ *   >> By killing all existing code objects.
+ * This is quite the simple task as a matter of fact:
+ *   - We use `tp_visit' to recursively visit all GC-objects,
+ *     where for every `code' object that we encounter, we
+ *     simply do an ATOMIC_WRITE of the first instruction byte
+ *     (unless the code is empty?), to set it to `ASM_RET_NONE'
+ *   - `Code' objects are also GC objects, meaning that we can
+ *     be sure that every existing piece of user-code can be
+ *     reached by simply iterating all GC objects and filtering
+ *     instances of `DeeCode_Type'.
+ *     >> import deemon, rt;
+ *     >> for (local x: deemon.gc) {
+ *     >>     if (x !is rt.Code)
+ *     >>         continue;
+ *     >>     ...
+ *     >> }
+ *   - That might seem dangerous, but consider the implications:
+ *      - Assuming that the caller will continue to use `DeeThread_JoinAll()'
+ *        to join any new threads that may appear, we can also assume
+ *        that any running user-code function will eventually return
+ *        to its caller. However: any further calls to other user-code
+ *        functions will immediately return `none' (or throw StopIteration),
+ *        meaning that while existing usercode can finish execution
+ *        (unless it's assembly text describes a loop that jumps back
+ *        to code address +0000, in which case the loop will terminate
+ *        the next time it tries to wrap around), no new functions can
+ *        be started (unless user-code _really_ _really_ tries super-hard
+ *        to counteract this by somehow managing to re-compile itself?)
+ *      - The caller (`Dee_Shutdown()') will have joined all existing
+ *        threads, meaning that no user-code can still be running, also
+ *        meaning that we are safe to modify any existing piece of user-text
+ *        that might exist. (Otherwise, we'd have to do some complicated
+ *        trickery by taking `DeeThread_SuspendAll()' into account)
+ *   - Anyways. This way (assuming that all C code is free of reference leaks),
+ *     it should be possible to stop intentional reference loops (such as
+ *     the one caused by the persistent instance of `SelfRevivingDestructor'
+ *     in the example above), still allowing ~actual~ destructors to do
+ *     their work prior to this function being used to give the user a slap
+ *     on the wrists, while all C-level cleanup functions can continue to
+ *     operate normally and do all the cleanup that we can trust (or at
+ *     least hope to be able to trust) not to cause something like this.
+ * @return: * : The amount of code objects that were affected. */
 INTERN size_t DCALL DeeExec_KillUserCode(void) {
 	struct gc_head *iter;
 	size_t result = 0;
@@ -1205,6 +1281,12 @@ LOCAL void *gc_initob(void *ptr) {
 	return ptr;
 }
 
+/* GC object alloc/free.
+ * Don't you think these functions allocate some magical memory
+ * that can somehow track what objects it references. - No!
+ * All these do is allocate a block of memory of `n_bytes' that
+ * includes some storage at negative offsets to hold a `struct gc_head',
+ * as is required for objects that should later be tracked by the GC. */
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
 	return gc_initob(DeeObject_Malloc(DEE_GC_HEAD_SIZE + n_bytes));
 }
@@ -1312,7 +1394,7 @@ INTERN void DCALL gc_dump_all(void) {
 	struct gc_head *iter;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		ASSERT(iter != iter->gc_next);
-		DEE_DPRINTF("GC Object at %p: Instance of %s (%u refs)\n",
+		Dee_DPRINTF("GC Object at %p: Instance of %s (%u refs)\n",
 		            &iter->gc_object, iter->gc_object.ob_type->tp_name,
 		            iter->gc_object.ob_refcnt);
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -1654,6 +1736,15 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 };
 
 
+/* An generic sequence singleton that can be
+ * iterated to yield all tracked GC objects.
+ * This object also offsets a hand full of member functions
+ * that user-space an invoke to trigger various GC-related
+ * functionality:
+ *   - collect(int max = -1) -> int;
+ * Also: remember that this derives from `sequence', so you
+ *       can use all its functions, like `empty()', etc.
+ * NOTE: This object is exported as `gc from deemon' */
 PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 	OBJECT_HEAD_INIT(&GCEnum_Type)
 };

@@ -67,7 +67,7 @@ struct Dee_property_object {
 	DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
 };
 
-DDATDEF DeeTypeObject DeeProperty_Type;
+DDATDEF DeeTypeObject DeeProperty_Type; /* `Property from deemon' */
 #define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob, &DeeProperty_Type)
 #define DeeProperty_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeProperty_Type)
 

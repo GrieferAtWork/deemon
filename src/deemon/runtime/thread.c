@@ -294,6 +294,10 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 
 
 
+/* Implementation detail required to implement recursive deepcopy.
+ * To see how this function must be used, look at the documentation for `tp_deepload'
+ * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
+ *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED! */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_DeepCopyAddAssoc)(DeeObject *new_object,
                              DeeObject *old_object) {
@@ -349,6 +353,8 @@ again:
 	return -1;
 }
 
+/* Lookup a GC association of `old_object', who's
+ * new object is an exact instance of `new_type' */
 INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
                 DeeTypeObject *new_type) {
@@ -461,6 +467,7 @@ PRIVATE WCHAR const kernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 PRIVATE ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
 #endif /* CONFIG_HOST_WINDOWS */
 
+/* Get the current time (offset from some undefined point) in microseconds. */
 PUBLIC WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
 #ifdef CONFIG_HOST_WINDOWS
 	uint64_t result;
@@ -548,7 +555,7 @@ sys_threadstartup(DeeThreadObject *__restrict UNUSED(self)) {
 	/* Install the custom signal handler. */
 	DBG_ALIGNMENT_DISABLE();
 	if (sigaction(PTHREAD_INTERRUPT_SIGNAL, &action, NULL))
-		BREAKPOINT();
+		Dee_BREAKPOINT();
 	DBG_ALIGNMENT_ENABLE();
 #else /* USE_SUSPEND_SIGNALS */
 	/* Even when we don't need it for suspension
@@ -620,7 +627,7 @@ restart:
 			error = pthread_kill(self->t_thread, PTHREAD_INTERRUPT_SIGNAL);
 			DBG_ALIGNMENT_ENABLE();
 			if (error)
-				BREAKPOINT();
+				Dee_BREAKPOINT();
 			/* Since signal delivery happens asynchronously, we need to
 			 * wait for the thread to acknowledge the suspend request. */
 			while (ATOMIC_READ(self->t_state) & THREAD_STATE_SUSPENDREQ) {
@@ -670,13 +677,31 @@ do_resume_thread(DeeThreadObject *__restrict self) {
 PRIVATE DEFINE_RECURSIVE_RWLOCK(globthread_lock);
 
 
-/* Similar to `DeeThread_SuspendAll()', keep a lock
- * to `globthread_lock' while suspending other others.
- * That way, only a single thread can ever suspend any
- * others and we prevent the race condition arising from
- * 2 threads attempting to suspend each other. */
+
+/* Suspend/resume execution of the given thread.
+ * NOTE: If the thread is not actually running, this behaves as a no-op.
+ * WARNING: On unix-based systems, this function may use `SIGUSR1', meaning
+ *          that linked libraries should not make use of that signal.
+ * WARNING: To prevent deadlocks, you must _NEVER_ acquire _ANY_ sort
+ *          of blocking locks while suspending another thread, for the
+ *          chance that the thread that got suspended was (is) holding
+ *          the lock, but was robbed of the chance to release it.
+ *          Additionally, only async-safe functions must be called
+ *         (`DeeThread_Suspend()' and `DeeThread_Resume()' are async-safe)
+ * WARNING: Do _NOT_ expose these functions to user-code. They are not
+ *          safe in such a context and cannot be made safe either.
+ * WARNING: Do not attempt to suspend more than a single thread at once using this
+ *          method. If you need to suspend more, use `DeeThread_SuspendAll()' instead!
+ * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
+ *       actually become suspended, meaning that once it returns, the caller is allowed
+ *       to assume that the given thread is no longer capable of executing instructions. */
 PUBLIC NONNULL((1)) void DCALL
 DeeThread_Suspend(DeeThreadObject *__restrict self) {
+	/* Similar to `DeeThread_SuspendAll()', keep a lock
+	 * to `globthread_lock' while suspending other others.
+	 * That way, only a single thread can ever suspend any
+	 * others and we prevent the race condition arising from
+	 * 2 threads attempting to suspend each other. */
 	recursive_rwlock_write(&globthread_lock);
 	do_suspend_thread(self);
 }
@@ -687,6 +712,37 @@ DeeThread_Resume(DeeThreadObject *__restrict self) {
 	recursive_rwlock_endwrite(&globthread_lock);
 }
 
+/* Safely suspend/resume all threads but the calling.
+ * The same restrictions that apply to `DeeThread_Suspend()'
+ * and `DeeThread_Resume()' also apply to this function pair.
+ * Additionally, overhead caused by these functions is quite considerable
+ * and the main reason as to why they're even here, is to allow for an
+ * easy way for debuggers to inspect the traceback, or other thread-private
+ * parts of the execution context of other threads (e.g.: This is used
+ * when attempting to set the CODE_FASSEMBLY flag after the fact when
+ * ensuring that the code object isn't already running)
+ * WARNING: Do _NOT_ expose these functions to user-code. They are not
+ *          safe in such a context and cannot be made safe either.
+ * NOTE: Only threads created and started using deemon, or those that
+ *       had called `DeeThread_Self()' beforehand will be affected.
+ * WARNING: These functions are non-recursive. Any call to `DeeThread_SuspendAll()'
+ *          _MUST_ be followed by a call to `DeeThread_ResumeAll()' before
+ *         `DeeThread_SuspendAll()' may be called again. This is because in addition
+ *          to suspending execution of all threads but the callers, in order to prevent
+ *          a potential deadlock that could arise when 2 threads simultaneously attempt
+ *          to suspend all thread other than themself, or to prevent the possibility
+ *          of some other thread that wasn't tracked before suddenly appearing,
+ *          calls to `DeeThread_Self()' from threads that weren't tracked previously
+ *          will block until `DeeThread_ResumeAll()' is called.
+ *          Note however that in order to identify (and exclude) the calling thread,
+ *          `DeeThread_SuspendAll()' internally calls `DeeThread_Self()', meaning
+ *          that the calling thread will always be tracked (and therefor needs to
+ *          call `DeeThread_Shutdown()' before terminating) after using this function.
+ * NOTE: `DeeThread_SuspendAll()' returns a pointer to a thread object that can
+ *        be used to enumerate all the threads that have been suspended using
+ *        the macro `DeeThread_FOREACH()'
+ *        Note however that this list is in no particular order
+ *        and also contains the calling thread among all the others. */
 PUBLIC WUNUSED ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
 	/* Acquire the calling thread's context (this
 	 * ensures that the caller is tracked and identifiable) */
@@ -1154,6 +1210,12 @@ PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
 #endif /* !THREAD_SELF_TLS_USE_PTHREAD_KEY */
 
 
+/* Initialize/Finalize the threading sub-system.
+ * NOTE: `DeeThread_Init()' must be called by the thread
+ *        main before any other part of deemon's API,
+ *        whilst `DeeThread_Fini()' can optionally be called
+ *       (if only to prevent resource leaks cleaned up by the OS in any case)
+ *        once no other API function is going to run. */
 PUBLIC void DCALL DeeThread_Init(void) {
 #ifdef THREAD_SELF_TLS_USE_PTHREAD_KEY
 	int error;
@@ -1197,6 +1259,16 @@ PUBLIC void DCALL DeeThread_Fini(void) {
 }
 #endif /* !THREAD_SELF_TLS_USE_TLS_ALLOC */
 
+/* Should be called at the end of any kind of custom-created thread
+ * that may have invoked `DeeThread_Self()' during any point in its
+ * lifetime.
+ * This function will drop the thread's reference to its own
+ * descriptor (if allocated at any point), as well as set its
+ * state to indicate termination.
+ * WARNING: This function must _NOT_ be called by the same
+ *          thread that initially called `DeeThread_Init()'!
+ * HINT: This function may be called multiple times where
+ *       all but the first call behave as nops. */
 PUBLIC void DCALL DeeThread_Shutdown(void) {
 	DREF DeeThreadObject *self;
 	DBG_ALIGNMENT_DISABLE();
@@ -1211,6 +1283,23 @@ PUBLIC void DCALL DeeThread_Shutdown(void) {
 	DBG_ALIGNMENT_ENABLE();
 }
 
+/* Return the thread controller object for the calling thread.
+ * This object is usually allocated when the thread is created
+ * through use of `DeeThread_New()', though if the calling thread
+ * was created using some other API, this function can be used
+ * to lazily allocate the associated thread object at a later
+ * point in time.
+ * Note however, that if allocation fails at that point, the
+ * application will terminate in order to ensure compliance
+ * with a non-NULL return value, as well as the fact that without
+ * a current-thread object, deemon would have no way of actually
+ * throwing an `Error.NoMemory()'.
+ * So with that in mind, if you choose to use deemon in your project,
+ * you should probably always use its threading API for creating any
+ * thread that might eventually invoke any function from deemon's API.
+ * WARNING: Much of deemon's core functionality calls this function
+ *          internally, including throwing any kind of exception,
+ *          or attempting to execute user-code. */
 PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(void) {
 	DeeThreadObject *result;
 #ifdef THREAD_SELF_TLS_USE_TLS_ALLOC
@@ -1288,6 +1377,8 @@ INTERN uint8_t keyboard_interrupt_counter = 0;
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
 
+/* Same as `DeeThread_CheckInterrupt()', but faster
+ * if the caller already knows their own thread object. */
 INTERN WUNUSED NONNULL((1)) int
 (DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict self) {
 	DREF DeeObject *interrupt_main;
@@ -1399,11 +1490,19 @@ done_nopop:
 	return 0;
 }
 
+/* Check for an interrupt exception and throw it if there is one.
+ * This function should be called before any blocking system call and is
+ * invoked by the interpreter before execution of any JMP-instruction, or
+ * only those that jump backwards in code (aka. is guarantied to be checked
+ * periodically during execution of any kind of infinite-loop). */
 PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 	return DeeThread_CheckInterruptSelf(DeeThread_Self());
 }
 
 
+/* Lookup the descriptor/id of a given thread object.
+ * NOTE: When such an object isn't associated, a ValueError is
+ *       thrown an -1 is returned, otherwise 0 is returned. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetThread(/*Thread*/ DeeObject *__restrict self,
                     dthread_t *__restrict pthread) {
@@ -1587,6 +1686,10 @@ set_result:
 	return 0;
 }
 
+/* Start execution of the given thread.
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
+ * @return:  0: Successfully started the thread.
+ * @return:  1: The thread had already been started. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 	uint16_t state;
@@ -3553,6 +3656,7 @@ PRIVATE struct type_member tpconst thread_members[] = {
 #endif /* !CONFIG_HAVE_useconds_t */
 #endif /* DeeThread_Sleep_USE_USLEEP */
 
+/* Sleep for the specified number of microseconds (1/1000000 seconds). */
 PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
 #ifdef DeeThread_Sleep_USE_SLEEPEX
 	uint64_t end_time;
@@ -4066,6 +4170,11 @@ err:
 
 
 
+/* Capture a snapshot of the given thread's execution stack, returning
+ * a traceback object describing what is actually being run by it.
+ * Note that this is just a snapshot that by no means will remain
+ * consistent once this function returns.
+ * NOTE: If the given thread is the caller's this is identical `(traceback from deemon)()' */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
@@ -4183,7 +4292,7 @@ done_traceback:
 			DeeObject_Init(result, &DeeTraceback_Type);
 			/* Tracebacks are GC objects, so we need to start tracking it here. */
 			DeeGC_Track((DeeObject *)result);
-			DEE_CHECKMEMORY();
+			Dee_CHECKMEMORY();
 			return (DREF DeeObject *)result;
 err_free_result:
 			Dee_Free(heap.lh_base);

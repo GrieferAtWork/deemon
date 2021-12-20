@@ -22,6 +22,7 @@
 
 #include "api.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "object.h"
@@ -105,13 +106,13 @@ struct Dee_except_frame {
 	struct Dee_except_frame          *ef_prev;  /* [0..1][lock(PRIVATE(DeeThread_Self()))][owned] Previous frame. */
 	DREF DeeObject                   *ef_error; /* [1..1][const] The actual error object that got thrown. */
 	DREF struct Dee_traceback_object *ef_trace; /* [0..1][const] A copy of the execution stack at the time of the error being thrown.
-	                                         * NOTE: When `ITER_DONE' the traceback has yet to be allocated.
-	                                         * NOTE: Set to `NULL' when there is no traceback. */
+	                                             * NOTE: When `ITER_DONE' the traceback has yet to be allocated.
+	                                             * NOTE: Set to `NULL' when there is no traceback. */
 };
 #define Dee_except_frame_tryalloc() DeeSlab_TRYMALLOC(struct Dee_except_frame)
 #define Dee_except_frame_alloc()    DeeSlab_MALLOC(struct Dee_except_frame)
-#define Dee_except_frame_free(ptr)  DeeSlab_FREE(DEE_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
-#define Dee_except_frame_xfree(ptr) DeeSlab_XFREE(DEE_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#define Dee_except_frame_free(ptr)  DeeSlab_FREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#define Dee_except_frame_xfree(ptr) DeeSlab_XFREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Returns the traceback of a given exception-frame, or
@@ -125,12 +126,12 @@ struct Dee_repr_frame {
 	DeeObject             *rf_obj;  /* [1..1][const] The object for which the `__str__' or `__repr__' operator is being invoked. */
 #if !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
 	DeeTypeObject         *rf_type; /* [1..1][const] The type of object that is being converted to a string.
-	                                 *  NOTE: On architectures where it isn't a fault to access memory past
-	                                 *        the allocated end of local variables, we don't need to allocate
-	                                 *        a field for the object's type when we're not required to track
-	                                 *        it. Additionally, when we do actually track it, it doesn't matter
-	                                 *        when this field contains undefined contents as we only read it
-	                                 *        for a comparison check, but don't actually dereference the pointer. */
+	                                 * NOTE: On architectures where it isn't a fault to access memory past
+	                                 *       the allocated end of local variables, we don't need to allocate
+	                                 *       a field for the object's type when we're not required to track
+	                                 *       it. Additionally, when we do actually track it, it doesn't matter
+	                                 *       when this field contains undefined contents as we only read it
+	                                 *       for a comparison check, but don't actually dereference the pointer. */
 #endif /* !__i386__ && !__x86_64__ && !__arm__ */
 };
 
@@ -172,8 +173,8 @@ struct Dee_trepr_frame {
 
 struct Dee_deep_assoc_entry {
 	DREF DeeObject *de_old; /* [0..1] The old object that is being copied.
-	                         *  NOTE: NULL is used to indicate a sentinel entry.
-	                         *  NOTE: For the purposes of hashing, `Dee_HashPointer(de_old) ^ Dee_HashPointer(Dee_TYPE(de_new))' is used. */
+	                         * NOTE: NULL is used to indicate a sentinel entry.
+	                         * NOTE: For the purposes of hashing, `Dee_HashPointer(de_old) ^ Dee_HashPointer(Dee_TYPE(de_new))' is used. */
 	DREF DeeObject *de_new; /* [?..1][valid_if(da_old)] The new object that results the copy operation. */
 };
 
@@ -245,6 +246,7 @@ Dee_DeepCopyAddAssoc(DeeObject *new_object,
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
                 DeeTypeObject *new_type);
+
 /* Begin/end a deepcopy operation after a lookup fails. */
 #define deepcopy_begin(thread_self) (++(thread_self)->t_deepassoc.da_recursion)
 #define deepcopy_end(thread_self)   (--(thread_self)->t_deepassoc.da_recursion || (deepcopy_clear(thread_self), 0))
@@ -364,7 +366,7 @@ struct Dee_thread_object {
  * WARNING: The information returned by these is highly volatile and
  *          only a snapshot of what used to be at a certain point. */
 #ifndef CONFIG_NO_THREADS
-#define DeeThread_IsRunning(x)      ((((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & (Dee_THREAD_STATE_STARTED|Dee_THREAD_STATE_TERMINATED)) == Dee_THREAD_STATE_STARTED)
+#define DeeThread_IsRunning(x)      ((((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & (Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_TERMINATED)) == Dee_THREAD_STATE_STARTED)
 #define DeeThread_HasStarted(x)     (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_STARTED)
 #define DeeThread_WasDetached(x)    (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_DETACHED)
 #define DeeThread_HasTerminated(x)  (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_TERMINATED)
@@ -603,7 +605,7 @@ DFUNDEF bool (DCALL DeeThread_ClearTls)(void);
 #if defined(CONFIG_BUILDING_LIBTHREADING) || \
     defined(CONFIG_BUILDING_DEEMON)
 #ifdef DEE_SOURCE
-#define Dee_tls_callback_hooks  tls_callback_hooks
+#define Dee_tls_callback_hooks tls_callback_hooks
 #endif /* DEE_SOURCE */
 /* TLS implementation library hooks.
  * NOTE: These are exported publicly because there'd be no point in hiding them.

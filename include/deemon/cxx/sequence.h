@@ -703,7 +703,7 @@ class Sequence: public detail::sequence_base {
 		}
 	};
 
-public: /* sequence from deemon */
+public: /* `Sequence from deemon' */
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Sequence, sequence_base)
 	typedef detail::cxx_iterator<T> iterator;
 	iterator(begin)() const {

@@ -43,51 +43,51 @@ DECL_BEGIN
  *     A missing key causes a `KeyError' to be thrown.
  *   - The getrange operator is not implemented.
  *
- * Using `mapping from deemon' (aka. `DeeMapping_Type') as a base class, it will
+ * Using `Mapping from deemon' (aka. `DeeMapping_Type') as a base class, it will
  * automatically provide for the following member functions and operators:
  *   - `operator getrange()'
  *      - Always thrown a NotImplement error, overriding `sequence.operator getrange'.
- *   - `operator | (mapping other): Mapping'
- *   - `operator & (mapping other): Mapping'
+ *   - `operator | (other: Mapping): Mapping'
+ *   - `operator & (other: Mapping): Mapping'
  *      - Returns a mapping consisting of the union, or intersection of keys from `this' and `other'
- *   - `operator contains(key: object): bool'
+ *   - `operator contains(key: Object): bool'
  *      - Returns `true' / `false' indicative of there being a key-item pair for `key'
  *   - `operator tp_repr() -> string'
  *      - Returns a representation of the contents of the mapping,
  *        following the generic-mapping syntax of `{ key: item, ... }'
- *   - `class member proxy: Type'
+ *   - `class member Proxy: Type'
  *      - Returns the common base-class of `keys', `values' and `items'
  *        By default, this is `DeeMappingProxy_Type'
- *   - `class member keys: Type'
- *      - Returns the return type of the `keys' member function
+ *   - `class member Keys: Type'
+ *      - Returns the return type of the `keys' member property
  *        By default, this is `DeeMappingKeys_Type'
- *   - `class member values: Type'
- *      - Returns the return type of the `values' member function
+ *   - `class member Values: Type'
+ *      - Returns the return type of the `values' member property
  *        By default, this is `DeeMappingValues_Type'
- *   - `class member items: Type'
- *      - Returns the return type of the `items' member function
+ *   - `class member Items: Type'
+ *      - Returns the return type of the `items' member property
  *        By default, this is `DeeMappingItems_Type'
- *   - `function keys(): Mapping.Keys'
+ *   - `property keys: Mapping.Keys'
  *      - Returns a sequence that can be enumerated to view only the keys of a mapping
- *   - `function values(): Mapping.Values'
+ *   - `property values: Mapping.Values'
  *      - Returns a sequence that can be enumerated to view only the values of a mapping
- *   - `function items(): Mapping.Items'
+ *   - `property items: Mapping.Items'
  *      - Returns a sequence that can be enumerated to view the key-item pairs as
  *        2-element sequences, the same way they could be viewed if the mapping itself
  *        was being iterated.
  *        Note however that the returned object is a pure sequence, meaning that it
  *        implements an index-based getitem operator, as well as a getrange operator.
- *   - `function get(key: object, object def = none) -> object'
+ *   - `function get(key: Object, def: Object = none): Object'
  *      - Same as `operator []', but if `key' doesn't exist, `def' is returned instead.
- * NOTE: `DeeMapping_Type' itself is derived from `sequence from deemon' (aka. `DeeSeq_Type')
+ * NOTE: `DeeMapping_Type' itself is derived from `Sequence from deemon' (aka. `DeeSeq_Type')
  * NOTE: Because `DeeMapping_Type' inherits from `DeeSeq_Type', all member functions that
  *       it provides, as well as its operators (such as `bool', compare, etc.), are
  *       implicitly inherited, and also provided by objects derived from `DeeMapping_Type',
- *       and `mapping from deemon' itself.
- *       This also means that sub-classes of `mapping from deemon' should respect the
- *      `iterator' interface, provided a `class member iterator: Type' which represents
+ *       and `Mapping from deemon' itself.
+ *       This also means that sub-classes of `Mapping from deemon' should respect the
+ *       iterator interface, provided a `class member Iterator: Type' which represents
  *       the iterator type used by the mapping. */
-DDATDEF DeeTypeObject DeeMapping_Type;  /* `mapping from deemon' */
+DDATDEF DeeTypeObject DeeMapping_Type; /* `Mapping from deemon' */
 
 /* An empty instance of a generic mapping object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by

@@ -1309,6 +1309,45 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 
+/* Pack a new value, given a special format string `string'.
+ * Format language syntax:
+ *     __main__ ::= object;
+ *     object ::= ('n' | '-')         // `none'
+ *              | ref_object          // `Object' <-- `va_arg(DeeObject *)'
+ *              | ref_int             // `int'    <-- `va_arg(...)'
+ *              | ref_float           // `float'  <-- `va_arg(...)'
+ *              | ref_bool            // `bool'   <-- `va_arg(...)'
+ *              | ref_str             // `string' <-- `va_arg(...)'
+ *              | '[' [objects] ']'   // `List'
+ *              | '(' [objects] ')'   // `Tuple'
+ *              | '{' [objects] '}'   // `Set'
+ *              | '<' [object] '>'    // `Cell' (When `object')
+ *     ;
+ *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
+ *     
+ *     ref_object ::= 'o' | 'O'; // `DeeObject *' (Uppercase `O' inherits a reference from `va_arg' and causes `Dee_Packf' to propagate an error when `NULL')
+ *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u' and `x' create unsigned integers
+ *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
+ *                  | 'hh' // char
+ *                  | 'h'  // short
+ *                  | ''   // int (Default when nothing else was given)
+ *                  | 'l'  // long
+ *                  | 'll' // long long (__(U)LONGLONG)
+ *     ;
+ *     ref_float  ::= 'f'  // float / double
+ *                  | 'LD' // long double
+ *     ;
+ *     ref_bool   ::= ref_intlen 'b';
+ *     ref_str    ::= [ '.<int>'  // str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), <int>));
+ *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '.?'      // max = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, MIN(strlen(str), max));
+ *                    | '$'       // len = va_arg(size_t); str = va_arg(char *); DeeString_NewSized(str, len);
+ *                    ] 's';      // DeeString_New(va_arg(char *));
+ *
+ * Example:
+ * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");
+ * >> // (10, <20>, 42, "foobar")
+ */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 Dee_Packf(char const *__restrict format, ...) {
 	struct va_list_struct args;
@@ -1321,6 +1360,9 @@ Dee_Packf(char const *__restrict format, ...) {
 	return result;
 }
 
+/* Similar to `Dee_Packf', but parse any number of formated values and
+ * put them in a tuple, essentially doing the same as `Dee_Packf' when
+ * the entire `format' string was surrounded by `(' and `)'. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 DeeTuple_Newf(char const *__restrict format, ...) {
 	DREF DeeObject *result;
@@ -1331,6 +1373,42 @@ DeeTuple_Newf(char const *__restrict format, ...) {
 	return result;
 }
 
+/* Unpack values from an object.
+ * Format language syntax:
+ *     __main__   ::= object;
+ *     object     ::= ('n' | '-')          // Ignore / skip this object. (Do not advance `va_arg')
+ *                  | ref_object           // `va_arg(DeeObject **)'
+ *                  | ref_int              //
+ *                  | ref_float            //
+ *                  | ref_bool             //
+ *                  | ref_str              // `char **'
+ *                  | '(' [objects...] ')' // Enumerate elements of a sequence
+ *     ;
+ *     objects    ::= [(object   // Parse some object from the sequence.
+ *                    | ','      // `,' is simply ignored, but can be used to prevent ambiguity.
+ *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
+ *                      )...];
+ *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
+ *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
+ *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)
+ *                  | 'l' 's'    // `va_arg(wchar_t **)'
+ *                  | 'U16' 's'  // `va_arg(uint16_t **)'
+ *                  | 'U32' 's'  // `va_arg(uint32_t **)'
+ *                  | 's'        // `va_arg(char **)'
+ *                  ;
+ *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
+ *                  | 'hh' // `va_arg(char *)'
+ *                  | 'h'  // `va_arg(short *)'
+ *                  | ''   // `va_arg(int *)' (Default when nothing else was given)
+ *                  | 'l'  // `va_arg(long *)'
+ *                  | 'll' // `va_arg(long long *)' (__(U)LONGLONG *)
+ *     ;
+ *     ref_float  ::= 'f'  // `va_arg(float *)'
+ *                  | 'D'  // `va_arg(double *)'
+ *                  | 'LD' // `va_arg(long double *)'
+ *     ;
+ *     ref_bool   ::= 'b'; // `va_arg(bool)'
+ */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (Dee_Unpackf)(DeeObject *__restrict self,
               char const *__restrict format, ...) {

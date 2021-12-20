@@ -514,7 +514,7 @@ DeeFile_ReadAll(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DPRINTER_CC
 DeeFile_WriteAll(DeeObject *__restrict self,
                  void const *__restrict buffer,
                  size_t bufsize) {
@@ -1447,6 +1447,10 @@ done:
 }
 
 
+/* Return a file stream for a standard file number `id'.
+ * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
+ * @param: file: The file to use, or `NULL' to unbind that stream.
+ * `DeeFile_GetStd()' will throw an `UnboundLocal' error if the stream isn't assigned. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
@@ -1490,6 +1494,8 @@ done:
 	return result;
 }
 
+/* Returns the old stream, `NULL' when none was assigned,
+ * or `ITER_DONE' when it hadn't been allocated yet */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	DREF DeeObject *old_stream;
@@ -1557,6 +1563,10 @@ PRIVATE bool DCALL clear_files_module(void) {
 	return mod != NULL;
 }
 
+/* Reset all standard stream (called during the cleanup phase prior to shutdown)
+ * @return: true:  A non-default file had been assigned to at
+ *                 least one of the known standard streams.
+ * @return: false: All streams had already been reset. */
 PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	bool result     = clear_files_module();
 	unsigned int id = 0;
@@ -1713,11 +1723,11 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	TYPE_MEMBER_CONST("System", (DeeObject *)&DeeSystemFile_Type),
 	TYPE_MEMBER_CONST_DOC("io", (DeeObject *)&DeeFile_Type,
 	                      "Deprecated alias for backwards-compatible access to "
-	                      /**/ "std-streams that used to be located in ${file.io.stdxxx}\n"
+	                      /**/ "std-streams that used to be located in ${File.io.stdxxx}\n"
 	                      /**/ "Starting with deemon v200, these streams can now be found "
-	                      /**/ "under ${file.stdxxx} and the ${file.io} type has been "
+	                      /**/ "under ${File.stdxxx} and the ${File.io} type has been "
 	                      /**/ "renamed to ?#System\n"
-	                      /**/ "With that in mind, this field is now simply an alias for :file"),
+	                      /**/ "With that in mind, this field is now simply an alias for :File"),
 	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
 	                      "Deprecated argument for #?seek (Use the string $\"set\" instead"),
 	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
@@ -1746,6 +1756,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		Dee_Decref(result);
 		if unlikely(error)
 			goto err;
+
 		/* Ensure that the file isn't too large. */
 		if unlikely(resval == (dpos_t)-1) {
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1755,6 +1766,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		}
 		return resval;
 	}
+
 	/* Failed to call the size() member function. */
 	if (DeeFileType_CheckExact(Dee_TYPE(self)) &&
 	    DeeError_Catch(&DeeError_AttributeError)) {
@@ -2070,13 +2082,16 @@ file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 				old_pos = (*pseek)((DeeFileObject *)self, 0, SEEK_CUR);
 				if unlikely(old_pos == (dpos_t)-1)
 					goto err;
+
 				/* Seek to the end to figure out how large the file is. */
 				filesize = (*pseek)((DeeFileObject *)self, 0, SEEK_END);
 				if unlikely(filesize == (dpos_t)-1)
 					goto err;
+
 				/* Return to the previous file position. */
 				if unlikely((*pseek)((DeeFileObject *)self, (doff_t)old_pos, SEEK_SET) == (dpos_t)-1)
 					goto err;
+
 				/* Return the size of the file. */
 				return DeeInt_NewU64((uint64_t)filesize);
 			}
@@ -2407,7 +2422,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "${operator read(size: int): Bytes}|"
 		                         /**/ "Reads up to size bytes and returns a buffer (usually a :string) containing read data"
 		                         "&"
-		                         /**/ "${operator write(buf: bytes): int}|"
+		                         /**/ "${operator write(buf: Bytes): int}|"
 		                         /**/ "Writes data from buf into the file and returns the number of bytes written"
 		                         "&"
 		                         /**/ "${operator seek(off: int, whence: int): int}|"
@@ -2426,11 +2441,11 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "Close the file. This operator is invoked during destruction, but "
 		                         /**/ /**/ "can also be invoked before then using the ?#close member function"
 		                         "&"
-		                         /**/ "${operator pread(size: int, pos: int): bytes}|"
+		                         /**/ "${operator pread(size: int, pos: int): Bytes}|"
 		                         /**/ "Similar to ${operator read}, but data is read from the given "
 		                         /**/ /**/ "absolute file position pos"
 		                         "&"
-		                         /**/ "${operator pwrite(buf: bytes, pos: int): int}|"
+		                         /**/ "${operator pwrite(buf: Bytes, pos: int): int}|"
 		                         /**/ "Similar to ${operator write}, but data is written to the given "
 		                         /**/ /**/ "absolute file position pos"
 		                         "&"
@@ -2495,16 +2510,16 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-#if 0 /* Even though `file' is technically a sequence, don't spam its
+#if 0 /* Even though `File' is technically a sequence, don't spam its
        * members with all the additional functions provided by `DeeSeq_Type'.
-       * Especially considering that `file' does its own handling for
+       * Especially considering that `File' does its own handling for
        * operations such as `a|b' (creating a multi-targeted file), whereas
        * `sequence' already implements that operator as a union (in the case
        * of file: of all lines in either file).
        * Besides: A lot of sequence functions expect to be able to re-run
        *          iterators multiple times, yet file iterators expect the
        *          user to rewind the file before they can be iterated again,
-       *          meaning that in that respect, `file' isn't 100% compliant
+       *          meaning that in that respect, `File' isn't 100% compliant
        *          to the `sequence' interface, meaning we're kind-of not
        *          even allowed to consider ourselves a sequence.
        *          But as already said: that's a good thing, because

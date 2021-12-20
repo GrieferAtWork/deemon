@@ -329,17 +329,17 @@ public:
 	 * NOTE: Only one of `operator iter()' and `operator for()' can ever be supplied for
 	 *       any single class.
 	 *
-	 * Additionally, classes derived from `file' may implement the following operators:
+	 * Additionally, classes derived from `File' may implement the following operators:
 	 *
 	 * SYMBOL    NAME    ARGC PROTOTYPE                               USAGE                             INPLACE
-	 *           read    2    `operator read(count: int): bytes'      `this.read(count)'                no
-	 *           write   2    `operator write(data: bytes): int'      `this.write(data)'                no
+	 *           read    2    `operator read(count: int): Bytes'      `this.read(count)'                no
+	 *           write   2    `operator write(data: Bytes): int'      `this.write(data)'                no
 	 *           seek    3    `operator seek(off: int, whence: int): int' `this.seek(off, whence)'      no
 	 *           sync    1    `operator sync()'                       `this.sync()'                     no
 	 *           trunc   2    `operator trunc(len: int)'              `this.trunc(len)'                 no
 	 *           close   1    `operator close()'                      `this.close()'                    no
-	 *           pread   3    `operator pread(count: int, pos: int): bytes' `this.pread(count, pos)'    no
-	 *           pwrite  3    `operator pwrite(data: bytes, pos: int): int' `this.pwrite(data, pos)'    no
+	 *           pread   3    `operator pread(count: int, pos: int): Bytes' `this.pread(count, pos)'    no
+	 *           pwrite  3    `operator pwrite(data: Bytes, pos: int): int' `this.pwrite(data, pos)'    no
 	 *           getc    1    `operator getc(): int'                  `this.getc()'                     no
 	 *           ungetc  2    `operator ungetc(ch: int): bool'        `this.ungetc(ch)'                 no
 	 *           putc    2    `operator putc(ch: int): bool'          `this.putc(ch)'                   no

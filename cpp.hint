@@ -92,8 +92,12 @@
 #define DWEAK
 #define __LIBCCALL
 #define DCALL
+#define FCALL
+#define DPRINTER_CC
 #define __NULLPTR 0
 #define NULL 0
+#define __IF0 if(0)
+#define __IF1 if(1)
 
 #define DECL_BEGIN extern "C" {
 #define __DECL_BEGIN extern "C" {

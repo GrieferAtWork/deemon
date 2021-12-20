@@ -453,6 +453,7 @@ EXPORTS
 	DeeObject_CallTupleKw@12=_DeeObject_CallTupleKw@12
 	DeeObject_Class@4=_DeeObject_Class@4
 	DeeObject_Clear@4=_DeeObject_Clear@4
+	DeeObject_Compare@8=_DeeObject_Compare@8
 	DeeObject_CompareEq@8=_DeeObject_CompareEq@8
 	DeeObject_CompareEqObject@8=_DeeObject_CompareEqObject@8
 	DeeObject_CompareGe@8=_DeeObject_CompareGe@8
@@ -889,6 +890,12 @@ EXPORTS
 	Dee_ddi_next_state@12=_Dee_ddi_next_state@12
 	Dee_ddi_state_fini@4=_Dee_ddi_state_fini@4
 	Dee_ddi_state_init@12=_Dee_ddi_state_init@12
+	Dee_shared_lock_acquire@4=_Dee_shared_lock_acquire@4
+	Dee_shared_lock_waitfor@4=_Dee_shared_lock_waitfor@4
+	Dee_shared_rwlock_read@4=_Dee_shared_rwlock_read@4
+	Dee_shared_rwlock_waitread@4=_Dee_shared_rwlock_waitread@4
+	Dee_shared_rwlock_waitwrite@4=_Dee_shared_rwlock_waitwrite@4
+	Dee_shared_rwlock_write@4=_Dee_shared_rwlock_write@4
 	Dee_unicode_printer_alloc_utf16@8=_Dee_unicode_printer_alloc_utf16@8
 	Dee_unicode_printer_alloc_utf32@8=_Dee_unicode_printer_alloc_utf32@8
 	Dee_unicode_printer_alloc_utf8@8=_Dee_unicode_printer_alloc_utf8@8

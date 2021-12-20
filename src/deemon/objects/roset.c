@@ -327,6 +327,7 @@ err:
 	return -1;
 }
 
+/* Internal functions for constructing a read-only set object. */
 PUBLIC WUNUSED DREF DeeObject *DCALL DeeRoSet_New(void) {
 	DREF Set *result;
 	result = ROSET_ALLOC(ROSET_INITIAL_MASK);
@@ -643,6 +644,7 @@ err:
 
 
 
+/* The main `_RoSet' container class. */
 PUBLIC DeeTypeObject DeeRoSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoSet",

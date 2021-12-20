@@ -128,6 +128,7 @@ tuplecache_clear(size_t UNUSED(max_clear)) {
 #endif /* !CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 
+/* Create new tuple objects. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_NewUninitialized(size_t n) {
 	DREF DeeTupleObject *result;
@@ -173,6 +174,8 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+/* Same as `DeeTuple_NewUninitialized()', but
+ * doesn't throw an exception when returning `NULL' */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n) {
 	DREF DeeTupleObject *result;
@@ -263,7 +266,7 @@ DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self) {
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
+DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                              size_t new_size) {
 	DREF DeeTupleObject *new_tuple;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
@@ -345,7 +348,7 @@ err:
 }
 
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
-DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
+DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                                size_t new_size) {
 	DREF DeeTupleObject *new_tuple;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
@@ -409,6 +412,7 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
 }
 
 
+/* Create a new tuple from a given vector. */
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv) {
 	DREF DeeObject *result;
@@ -433,12 +437,13 @@ done:
 }
 
 
+/* Create a new tuple object from a sequence or iterator. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_FromSequence(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	size_t i, seq_length;
 	ASSERT_OBJECT(self);
-	/* Optimizations for specific types such as `tuple' and `list' */
+	/* Optimizations for specific types such as `Tuple' and `List' */
 	if (DeeTuple_CheckExact(self))
 		return_reference_(self);
 	if (DeeList_CheckExact(self)) {
@@ -593,6 +598,7 @@ err:
 	return NULL;
 }
 
+/* Return a new tuple object containing the types of each object of the given tuple. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_Types(DeeObject *__restrict self) {
 	size_t i, count;
@@ -665,6 +671,7 @@ done:
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
+/* Create new tuple objects. */
 PUBLIC WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...) {
 	DREF DeeObject *result;
 	va_list args;
@@ -684,6 +691,18 @@ PUBLIC WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, ...) {
 }
 
 
+/* Decrement the reference counter of a tuple object filled with symbolic references.
+ * >> If the reference counter hits ZERO(0), simply free() the tuple object
+ *    without decrementing the reference counters of contained objects.
+ *    Otherwise (In case the tuple is being used elsewhere), increment
+ *    the reference counters of all contained objects.
+ * >> This function is used to safely clean up temporary, local
+ *    tuples that are not initialized to contain ~real~ references.
+ *    Using this function such tuples can be released with regards
+ *    to fixing incorrect reference counters of contained objects.
+ *    NOTE: Doing this is still ok, because somewhere further up
+ *          the call chain, a caller owns another reference to each
+ *          contained object, even before we fix reference counters. */
 PUBLIC NONNULL((1)) void DCALL
 DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
@@ -697,8 +716,10 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 	}
 }
 
+/* Append all elements from an iterator to a tuple.
+ * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_AppendIterator(DREF DeeObject *__restrict self,
+DeeTuple_AppendIterator(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                         DeeObject *__restrict iterator) {
 	DREF DeeObject *elem, *result;
 	size_t incfactor = 2;
@@ -729,7 +750,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_Append(DREF DeeObject *__restrict self,
+DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                 DeeObject *__restrict item) {
 	DREF DeeObject *result;
 	size_t index;
@@ -776,6 +797,8 @@ err:
 	return NULL;
 }
 
+/* Concat a tuple and some generic sequence,
+ * inheriting a reference from `self' in the process. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *sequence) {
 	DREF DeeTupleObject *result;
@@ -1524,10 +1547,9 @@ tuple_visit(Tuple *__restrict self,
 	           DeeTuple_SIZE(self));
 }
 
-/* Print all bytes from `self' encoded as UTF-8.
- * In other words, bytes that are non-ASCII (aka. 80-FF) are
- * encoded as 2-byte UTF-8 sequences (aka: as LATIN-1), allowing
- * them to be properly interpreted by the given `printer' */
+/* Print all elements of the given tuple without any separators in-between
+ * elements. This is equivalent to `Tuple.operator str' and is realted to
+ * the change introduced for handling `print("foo", "bar");'-like statements */
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeTuple_Print(DeeObject *__restrict self,
                Dee_formatprinter_t printer, void *arg) {

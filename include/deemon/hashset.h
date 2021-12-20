@@ -39,9 +39,9 @@ DECL_BEGIN
 typedef struct Dee_hashset_object DeeHashSetObject;
 
 struct Dee_hashset_item {
-	DREF DeeObject *si_key;   /* [0..1][lock(:s_lock)] Set item key. */
-	Dee_hash_t      si_hash;  /* [valis_if(si_key)][lock(:s_lock)] Hash of `si_key' (with a starting value of `0').
-	                           * NOTE: Some random value when `si_key' is the dummy key. */
+	DREF DeeObject *si_key;  /* [0..1][lock(:s_lock)] Set item key. */
+	Dee_hash_t      si_hash; /* [valis_if(si_key)][lock(:s_lock)] Hash of `si_key' (with a starting value of `0').
+	                          * NOTE: Some random value when `si_key' is the dummy key. */
 };
 
 struct Dee_hashset_object {

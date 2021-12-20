@@ -4185,6 +4185,8 @@ illegal:
 
 
 
+/* Check if the current execution context allows access to `self',
+ * which is either an instance or class method of `impl_class' */
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
                                DeeTypeObject *__restrict impl_class) {
@@ -4203,6 +4205,9 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 }
 
 
+/* Lookup class / instance attributes within the given class descriptor.
+ * @return: * :   A pointer to attribute that was found.
+ * @return: NULL: Attribute could not be found (no error is thrown) */
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
                                                /*String*/ DeeObject *name, dhash_t hash) {

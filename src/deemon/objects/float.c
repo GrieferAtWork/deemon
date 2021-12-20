@@ -63,6 +63,7 @@ done:
 	return result;
 }
 
+/* Create and return a new floating point object. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFloat_New(double value) {
 	/* Allocate a new float object descriptor. */

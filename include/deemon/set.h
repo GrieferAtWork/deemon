@@ -32,59 +32,55 @@ DECL_BEGIN
 
 /* Base class for set-style sequence types (e.g. `HashSet')
  * :: Characteristics of a set type::
- *   - class member iterator -> iterator;
- *   - operator iter():
- *     sequence item through iteration yields another
- *     sequence consisting of 2 elements: `key' = `value'
- *     This sub-sequence is usually often implemented as a tuple,
- *     and code should be optimized for that code, however this
- *     is not a requirement.
- *   - operator contains(ob: object): bool:
+ *   - `class member Iterator: Iterator from deemon;'
+ *   - `operator iter(): Set.Iterator;'
+ *     Enumerate set elements in some arbitrary order.
+ *   - `operator contains(ob: Object): bool':
  *     Returns ?t if @ob is apart of @this set
  *   - The getitem operator is not implemented.
  *   - The getrange operator is not implemented.
  *
- * Using `set from deemon' (aka. `DeeSet_Type') as a base class, it will
+ * Using `Set from deemon' (aka. `DeeSet_Type') as a base class, it will
  * automatically provide for the following member functions and operators:
  *
- * difference(set other) -> set;
- * operator - (set other) -> set;
+ * difference(other: Set): Set;
+ * operator - (other: Set): Set;
  *     Returns a set of all objects from @this, excluding those also found in @other
  * 
- * intersection(set other) -> set;
- * operator & (set other) -> set;
+ * intersection(other: Set): Set;
+ * operator & (other: Set): Set;
  *     Returns the intersection of @this and @other
  * 
- * isdisjoint(set other): bool;
+ * isdisjoint(other: Set): bool;
  *     Returns ?t if ${##(this & other) == 0}
  *     In other words: If @this and @other have no items in common.
  *
- * union(set other) -> set;
- * operator | (set other) -> set;
- * operator + (set other) -> set;
+ * union(other: Set): Set;
+ * operator | (other: Set): Set;
+ * operator + (other: Set): Set;
  *     Returns the union of @this and @other
  * 
- * symmetric_difference(set other) -> set;
- * operator ^ (set other) -> set;
+ * symmetric_difference(other: Set): Set;
+ * operator ^ (other: Set): Set;
  *     Returns a set containing objects only found in either
  *     @this or @other, but not those found in both.
  * 
- * issubset(set other): bool;
- * operator <= (set other): bool;
+ * issubset(other: Set): bool;
+ * operator <= (other: Set): bool;
  *     Returns ?t if all items found in @this set can also be found in @other
  * 
- * operator == (set other): bool;
+ * operator == (other: Set): bool;
  *     Returns ?t if @this set contains the same
  *     items as @other, and not any more than that
  * 
- * operator < (set other): bool;
+ * operator < (other: Set): bool;
  *     The result of ${this <= other && this != other}
  *
- * issuperset(set other): bool;
- * operator >= (set other): bool;
+ * issuperset(other: Set): bool;
+ * operator >= (other: Set): bool;
  *     Returns ?t if all items found in @other can also be found in @this set
  *
- * operator ~ () -> set;
+ * operator ~ (): Set;
  *     Returns a symbolic set that behaves as though it contained
  *     any feasible object that isn't already apart of `this' set.
  *     Note however that due to the impossibility of such a set,
@@ -94,17 +90,17 @@ DECL_BEGIN
  *     `operator &' in order to create a sub-set that doesn't
  *     contain a certain set of sub-elements:
  *     >> local items = HashSet({ 10, 11, 15, 20, 30 });
- *     >> print repr(items & ~set({ 11, 15 }))
+ *     >> print repr(items & ~({ 11, 15 } as Set))
  *
- * NOTE: `DeeSet_Type' itself is derived from `sequence from deemon' (aka. `DeeSeq_Type')
+ * NOTE: `DeeSet_Type' itself is derived from `Sequence from deemon' (aka. `DeeSeq_Type')
  * NOTE: Because `DeeSet_Type' inherits from `DeeSeq_Type', all member functions that
  *       it provides, as well as its operators (such as `bool', compare, etc.), are
  *       implicitly inherited, and also provided by objects derived from `DeeSet_Type',
- *       and `mapping from deemon' itself.
- *       This also means that sub-classes of `mapping from deemon' should respect the
- *      `iterator' interface, provided a `class member iterator: Type' which represents
+ *       and `HashSet from deemon' itself.
+ *       This also means that sub-classes of `Mapping from deemon' should respect the
+ *       `Iterator' interface, provided a `class member Iterator: Type' which represents
  *       the iterator type used by the mapping. */
-DDATDEF DeeTypeObject DeeSet_Type;  /* `set from deemon' */
+DDATDEF DeeTypeObject DeeSet_Type; /* `Set from deemon' */
 
 /* An empty instance of a generic set object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
@@ -152,7 +148,7 @@ struct Dee_inverse_set_object {
 #define DeeInverseSet_SET(ob) (((DeeInverseSetObject *)Dee_REQUIRES_OBJECT(ob))->is_set)
 
 DDATDEF DeeTypeObject DeeInverseSet_Type;
-#define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeInverseSet_Type) /* _inverseset is final */
+#define DeeInverseSet_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeInverseSet_Type) /* _InverseSet is final */
 #define DeeInverseSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeInverseSet_Type)
 
 

@@ -300,7 +300,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
 	type_inherit_constructors(base);
 	ASSERT((base->tp_flags & TP_FVARIABLE) ==
 	       (self->tp_flags & TP_FVARIABLE));
-	DEE_DPRINTF("[RT] Inherit constructors from %q into %q\n",
+	Dee_DPRINTF("[RT] Inherit constructors from %q into %q\n",
 	            base->tp_name, self->tp_name);
 	if (self->tp_flags & TP_FVARIABLE) {
 		self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
@@ -1278,7 +1278,7 @@ STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
 		if (!base ||                                               \
 		    (!base->field && !name(base)))                         \
 			return false;                                          \
-		DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
+		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
 		            base->tp_name, self->tp_name);                 \
 		self->field = base->field;                                 \
 		return true;                                               \
@@ -1290,7 +1290,7 @@ STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
 		if (!base ||                                               \
 		    (!base->field && !base->field2 && !name(base)))        \
 			return false;                                          \
-		DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
+		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
 		            base->tp_name, self->tp_name);                 \
 		self->field  = base->field;                                \
 		self->field2 = base->field2;                               \
@@ -1898,7 +1898,7 @@ type_inherit_int(DeeTypeObject *__restrict self) {
 	       !base_math->tp_int64 && !base_math->tp_double)) &&
 	     !type_inherit_int(base)))
 		return false;
-	DEE_DPRINTF("[RT] Inherit `operator int' from %q into %q\n",
+	Dee_DPRINTF("[RT] Inherit `operator int' from %q into %q\n",
 	            base->tp_name, self->tp_name);
 	base_math = base->tp_math;
 	if (!self->tp_math) {
@@ -2684,7 +2684,7 @@ err:
 		       !base_math->tp_inplace_##field)) &&                             \
 		     !name(base)))                                                     \
 			return false;                                                      \
-		DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n",             \
+		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n",             \
 		            base->tp_name, self->tp_name);                             \
 		if (self->tp_math) {                                                   \
 			self->tp_math->tp_##field         = base_math->tp_##field;         \
@@ -2704,7 +2704,7 @@ err:
 		      !base_math->tp_##field) &&                           \
 		     !name(base)))                                         \
 			return false;                                          \
-		DEE_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
+		Dee_DPRINTF("[RT] Inherit `" opname "' from %q into %q\n", \
 		            base->tp_name, self->tp_name);                 \
 		base_math = base->tp_math;                                 \
 		if (self->tp_math) {                                       \
@@ -2738,7 +2738,7 @@ INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) 
 	       !base_math->tp_inc && !base_math->tp_dec)) &&
 	     !type_inherit_add(base)))
 		return false;
-	DEE_DPRINTF("[RT] Inherit `operator add' from %q into %q\n",
+	Dee_DPRINTF("[RT] Inherit `operator add' from %q into %q\n",
 	            base->tp_name, self->tp_name);
 	base_math = base->tp_math;
 	if (self->tp_math) {
@@ -3301,7 +3301,7 @@ type_inherit_compare(DeeTypeObject *__restrict self) {
 	       !base_cmp->tp_gr && !base_cmp->tp_ge)) &&
 	     !type_inherit_compare(base)))
 		return false;
-	DEE_DPRINTF("[RT] Inherit `operator <compare>' from %q into %q\n",
+	Dee_DPRINTF("[RT] Inherit `operator <compare>' from %q into %q\n",
 	            base->tp_name, self->tp_name);
 	base_cmp = base->tp_cmp;
 	if (self->tp_cmp) {

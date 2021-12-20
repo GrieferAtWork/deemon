@@ -442,14 +442,14 @@ err_r:
 
 PRIVATE struct type_seq bf_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bf_iter,
-	/* .tp_size      = */ NULL, /* TODO: bytes.count() */
-	/* .tp_contains  = */ NULL, /* TODO: bytes.substr() == needle */
+	/* .tp_size      = */ NULL, /* TODO: Bytes.count() */
+	/* .tp_contains  = */ NULL, /* TODO: Bytes.substr() == needle */
 };
 
 PRIVATE struct type_seq bcf_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bcf_iter,
-	/* .tp_size      = */ NULL, /* TODO: bytes.casecount() */
-	/* .tp_contains  = */ NULL, /* TODO: bytes.substr(...).casecompare(needle) == 0 */
+	/* .tp_size      = */ NULL, /* TODO: Bytes.casecount() */
+	/* .tp_contains  = */ NULL, /* TODO: Bytes.substr(...).casecompare(needle) == 0 */
 };
 
 
@@ -496,7 +496,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL  /* TODO: bytes.contains() */
+		/* .tp_bool = */ NULL  /* TODO: Bytes.contains() */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,
@@ -541,7 +541,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL  /* TODO: bytes.casecontains() */
+		/* .tp_bool = */ NULL  /* TODO: Bytes.casecontains() */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bf_visit,

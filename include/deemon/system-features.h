@@ -647,7 +647,8 @@ functest("pause()", unix);
 functest("select(0, NULL, NULL, NULL, NULL)", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
 functest("pselect(0, NULL, NULL, NULL, (struct timespec *)0, (sigset_t *)0)", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
 
-func("__iob_func", msvc, test: "return __iob_func() == (FILE *)0;");
+func("__iob_func", addparen(msvc) + " && !defined(_ACRTIMP_ALT)", test: "return __iob_func() == (FILE *)0;");
+func("__acrt_iob_func", addparen(msvc) + " && defined(_ACRTIMP_ALT)", test: "return __acrt_iob_func(0) == (FILE *)0;");
 
 func("fseek", "defined(CONFIG_HAVE_STDIO_H)", test: "extern FILE *fp; return fseek(fp, 0, SEEK_SET);");
 func("ftell", "defined(CONFIG_HAVE_STDIO_H)", test: "extern FILE *fp; return ftell(fp) != 0;");
@@ -5029,8 +5030,17 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO___iob_func
 #undef CONFIG_HAVE___iob_func
 #elif !defined(CONFIG_HAVE___iob_func) && \
-      (defined(__iob_func) || defined(____iob_func_defined) || defined(_MSC_VER))
+      (defined(__iob_func) || defined(____iob_func_defined) || (defined(_MSC_VER) && \
+       !defined(_ACRTIMP_ALT)))
 #define CONFIG_HAVE___iob_func 1
+#endif
+
+#ifdef CONFIG_NO___acrt_iob_func
+#undef CONFIG_HAVE___acrt_iob_func
+#elif !defined(CONFIG_HAVE___acrt_iob_func) && \
+      (defined(__acrt_iob_func) || defined(____acrt_iob_func_defined) || (defined(_MSC_VER) && \
+       defined(_ACRTIMP_ALT)))
+#define CONFIG_HAVE___acrt_iob_func 1
 #endif
 
 #ifdef CONFIG_NO_fseek

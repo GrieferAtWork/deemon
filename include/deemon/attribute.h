@@ -158,7 +158,7 @@ struct Dee_enumattr_iterator_object {
 };
 
 
-DDATDEF DeeTypeObject DeeAttribute_Type;        /* `attribute from deemon' */
+DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).Iterator' */
 #define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type) /* `enumattr' is final */

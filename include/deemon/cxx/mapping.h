@@ -206,7 +206,7 @@ class Mapping: public detail::mapping_base {
 		}
 	};
 
-public: /* mapping from deemon */
+public: /* `Mapping from deemon' */
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Mapping, mapping_base)
 	WUNUSED item_proxy_obj item(KeyType const &key) const {
 		return item_proxy_obj(*this, key);

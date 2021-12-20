@@ -98,7 +98,8 @@ DECL_BEGIN
 
 
 #ifndef CONFIG_NO_OBJECT_SLABS
-LOCAL size_t DCALL get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
+LOCAL ATTR_CONST WUNUSED NONNULL((1)) size_t DCALL
+get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
 #define CHECK_SIZE(index, size)                 \
 	if (tp_free == &DeeObject_SlabFree##size || \
 	    tp_free == &DeeGCObject_SlabFree##size) \
@@ -1158,6 +1159,10 @@ err:
 	return NULL;
 }
 
+/* Terminate the application the same way `deemon.Error.AppExit.exit()' would,
+ * either through use of `exit()' from <stdlib.h>, or by throwing an exception.
+ * NOTE: When available, calling stdlib's `exit()' is identical to this.
+ * @return: -1: If this function returns at all, it always returns `-1' */
 PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 #ifdef CONFIG_HAVE__Exit
 #ifdef CONFIG_HAVE_exit

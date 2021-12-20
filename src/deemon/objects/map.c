@@ -1469,6 +1469,7 @@ PRIVATE struct type_member tpconst map_class_members[] = {
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
+/* `Mapping from deemon' */
 PUBLIC DeeTypeObject DeeMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Mapping),

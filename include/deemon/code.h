@@ -422,21 +422,21 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 unsigned int flags);
 
 /* Return the name for a specific assembly symbol which may be found in code. */
-DFUNDEF WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
-DFUNDEF WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
-DFUNDEF WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
-DFUNDEF WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid); /* Argument */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetSSymbolName(DeeObject const *__restrict self, uint16_t sid); /* Static */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Reference */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
 #define DeeCode_NAME(x)                                       \
 	DeeCode_GetDDIString((DeeObject *)Dee_REQUIRES_OBJECT(x), \
 	                     ((DeeCodeObject *)(x))->co_ddi->d_start.dr_name)
 
-#define DeeDDI_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `ddi' is final. */
-#define DeeDDI_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
+#define DeeDDI_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `_Ddi' is final. */
+#define DeeDDI_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
 DDATDEF DeeTypeObject DeeDDI_Type;
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -649,7 +649,8 @@ DDATDEF DeeTypeObject DeeCode_Type;
  *     to potential code-tearing, as well as the resulting inconsistencies that may
  *     cause running code to throw errors, but not cause the interpreter to crash.
  * Note that this function may also fail because an interrupt was send to the calling thread! */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
 
 
 /* Extended frame information for functions invoked with keyword arguments.
@@ -742,7 +743,7 @@ struct Dee_code_frame {
 
 /* Continue execution of the given code frame until it returns.
  * NOTE: `DeeCode_ExecFrameFast' should be used unless the `CODE_FASSEMBLY'
- *        flag is set in the code object associated with the frame.
+ *       flag is set in the code object associated with the frame.
  * @return: * :         A new reference to the object returned by the code.
  * @return: NULL:       An error occurred that could not be handled by user-code.
  * @return: ITER_DONE: [CODE_FYIELDING] The iterator of the frame as finished.
@@ -814,8 +815,7 @@ DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
  *                    happen is execution continuing normally.
  *                  - The valid stack size is always stored in `cf_stacksz'
  * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
- *                 should continue once the breakpoint has been dealt with.
- */
+ *                 should continue once the breakpoint has been dealt with. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -959,10 +959,10 @@ struct Dee_function_info {
  * @return:  1: The function couldn't be found (all fields in `info' are set to indicate <unknown>)
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeFunction_GetInfo(DeeObject *__restrict self,
+DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
                     struct Dee_function_info *__restrict info);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeCode_GetInfo(DeeObject *__restrict self,
+DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
                 struct Dee_function_info *__restrict info);
 
 

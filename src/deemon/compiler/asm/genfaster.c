@@ -114,7 +114,7 @@ INTERN WUNUSED NONNULL((1)) int
 	self = ast_strip_seqcast(self);
 	if (self->a_type == AST_CONSTEXPR) {
 		/* The inner sequence is a constant expression.
-		 * -> Compile it as a _roset object. */
+		 * -> Compile it as a _RoSet object. */
 		DREF DeeObject *inner_set;
 		int result;
 		inner_set = DeeRoSet_FromSequence(self->a_constexpr);

@@ -2123,11 +2123,11 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	      /**/ "function set becomes available. Also note that for full support, an Iterator should "
 	      /**/ "also implement ?#seq, ?#{op:assign}, ?#{op:copy} and ?#{op:eq} or ?#{op:ne}\n"
 	      "#T{Function|Prototype|Description~"
-	      "?#{op:dec}|${operator -- (): iterator}|Decrement the Iterator by one&"
-	      "?#{op:isub}|${operator -= (step: int): iterator}|Revert the Iterator by $step&"
-	      "?#{op:sub}|${operator - (step: int): iterator}|Create a new iterator reverted by $step&"
-	      "?#{op:iadd}|${operator += (step: int): iterator}|Advance the Iterator by $step (which may be negative)&"
-	      "?#{op:add}|${operator + (step: int): iterator}|Create a new iterator advanced by $step (which may be negative)&"
+	      "?#{op:dec}|${operator -- (): Iterator}|Decrement the Iterator by one&"
+	      "?#{op:isub}|${operator -= (step: int): Iterator}|Revert the Iterator by $step&"
+	      "?#{op:sub}|${operator - (step: int): Iterator}|Create a new iterator reverted by $step&"
+	      "?#{op:iadd}|${operator += (step: int): Iterator}|Advance the Iterator by $step (which may be negative)&"
+	      "?#{op:add}|${operator + (step: int): Iterator}|Create a new iterator advanced by $step (which may be negative)&"
 	      "?#revert|${function revert(step: int)}|Revert the Iterator by $step (same as ?#{op:isub})&"
 	      "?#advance|${function advance(step: int)}|Advance the Iterator by $step (which may be negative) (same as ?#{op:iadd})&"
 	      "?#index|${property index: int = { get(); set(); }}|Get/set the exact index of the Iterator within its sequence&"
@@ -2415,7 +2415,7 @@ INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 
-/* General-purpose iterator type sub-class. */
+/* `Iterator from deemon' */
 PUBLIC DeeTypeObject DeeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Iterator),

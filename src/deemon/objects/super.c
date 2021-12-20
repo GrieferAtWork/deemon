@@ -45,6 +45,11 @@ DECL_BEGIN
 
 typedef DeeSuperObject Super;
 
+/* Create a new super-wrapper for `tp_self:self'.
+ * NOTE: This function automatically checks the given operands for validity:
+ *        - DeeType_Check(tp_self);
+ *        - DeeObject_InstanceOf(self, tp_self);
+ *       It also automatically unwraps `self' should it already be a super-object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF Super *result;
@@ -79,6 +84,12 @@ err:
 	return NULL;
 }
 
+/* Taking some object, return the effective super-class of it.
+ * HINT: When `self' is another super-object, this is identical to
+ *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
+ * WARNING: This function may perform non-shared
+ *          optimizations by re-using `self' when allowed.
+ * @throws: Error.TypeError: The class of `self' has no super-class. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSuper_Of(DeeObject *__restrict self) {
 	DeeTypeObject *base;
@@ -94,12 +105,14 @@ DeeSuper_Of(DeeObject *__restrict self) {
 		}
 		return DeeSuper_New(base, DeeSuper_SELF(self));
 	}
+
 	/* Create a new super-object for the base-type of the given object. */
 	base = DeeType_Base(Dee_TYPE(self));
 	if unlikely(!base)
 		goto nosuper;
 	return DeeSuper_New(base, self);
 nosuper:
+
 	/* Special case: There is no super-class to dereference. */
 	err_no_super_class(DeeSuper_Check(self)
 	                   ? DeeSuper_TYPE(self)
@@ -151,6 +164,7 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:Super", &ob, &tp))
 		goto err;
+
 	/* Special handling when the base-object is another super-object. */
 	if (DeeSuper_Check(ob)) {
 		if (!tp) {
@@ -187,6 +201,7 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	Dee_Incref(tp);
 	return 0;
 err_nosuper:
+
 	/* Special case: There is no super-class to dereference. */
 	err_no_super_class(DeeSuper_Check(self)
 	                   ? DeeSuper_TYPE(self)

@@ -260,7 +260,7 @@ DDATDEF DeeFileTypeObject DeeFile_Type;
  * NOTE: When not implemented by the host, attempting to use these
  *       types will cause an `Error.RuntimeError.NotImplemented'. */
 DDATDEF DeeFileTypeObject DeeSystemFile_Type; /* A system file. (Usually contains a generic descriptor, such as `int', `HANDLE' or `FILE *') */
-DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created using `file.open(...)') */
+DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created using `File.open(...)') */
 #define DeeSystemFile_Check(ob) DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeSystemFile_Type)
 
 /*  A buffering file that is basically what stdio's `FILE' is to a HANDLE/fd.
@@ -279,9 +279,7 @@ DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created us
 DDATDEF DeeFileTypeObject DeeFileBuffer_Type;
 
 
-/* HINT: All operator invocation functions below
- *       correctly handle `self' not being a file at all. */
-
+/* HINT: All operator invocation functions below correctly handle `self' not being a file at all. */
 
 /* File operator invocation.
  * @return: (size_t)-1: Error */
@@ -296,7 +294,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PWritef(DeeObject *__restri
 /* Similar to functions above, but re-attempt to read/write until an error, or EOF.
  * >> Useful for unbuffered input/output streams that can only process data at a specific rate. */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_ReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize);
-DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DPRINTER_CC DeeFile_WriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize);
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PReadAll(DeeObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos);
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
 /* @throw NotImplemented: The file does not support seeking.
@@ -348,7 +346,7 @@ DFUNDEF WUNUSED NONNULL((1)) DeeSysFD DCALL DeeFile_GetSysFD(DeeObject *__restri
 
 /* Retrieve and return the filename used to open the given file.
  * NOTE: This function automatically asserts that `self'
- *       is a `file', throwing a TypeError if it isn't.
+ *       is a `File', throwing a TypeError if it isn't.
  * For this purpose, `DeeSystemFile_Filename()' is invoked if `self'
  * is a system file, however if it isn't, `self.filename' will be
  * retrieved (using `operator getattr()') and after asserting the

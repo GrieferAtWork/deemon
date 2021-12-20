@@ -288,6 +288,7 @@ err:
 
 
 
+/* Fix the given filename and extend it to an absolute UNC path. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 	DREF DeeObject *result;
@@ -337,6 +338,8 @@ err:
 }
 
 
+/* Check if a given error code indicates a UNC-path problem that should be
+ * addressed by fixing the path using `DeeNTSystem_FixUncPath()', then trying again. */
 PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeNTSystem_IsUncError(DeeNT_DWORD error) {
 	switch (error) {
@@ -2240,8 +2243,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			                                                            name_GetMappedFileNameW);
 		}
 		if (!lpGetMappedFileNameW) {
-			HMODULE hModule;
-			hModule = LoadLibraryW(wPsapiDll);
+			HMODULE hModule = LoadLibraryW(wPsapiDll);
 			if (hModule) {
 				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
 				if (!lpGetMappedFileNameW)
@@ -2249,8 +2251,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			}
 		}
 		if (!lpGetMappedFileNameW) {
-			HMODULE hModule;
-			hModule = LoadLibraryW(wKernel32);
+			HMODULE hModule = LoadLibraryW(wKernel32);
 			if (hModule) {
 				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
 				if (!lpGetMappedFileNameW)

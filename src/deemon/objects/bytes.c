@@ -211,6 +211,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		bzero(dst, num_bytes);
 		return 0;
 	}
+
 	if (DeeString_Check(seq)) {
 		/* Special case: `string' */
 		uint8_t *data = DeeString_AsBytes(seq, false);
@@ -223,8 +224,9 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		memcpy(dst, data, num_bytes);
 		return 0;
 	}
+
 	if (DeeBytes_Check(seq)) {
-		/* Optional optimization for `bytes' (though this one
+		/* Optional optimization for `Bytes' (though this one
 		 * would also function using the fallback code below). */
 		if (DeeBytes_SIZE(seq) != num_bytes) {
 			err_invalid_unpack_size(seq, num_bytes, DeeBytes_SIZE(seq));
@@ -234,6 +236,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		memmove(dst, DeeBytes_DATA(seq), num_bytes);
 		return 0;
 	}
+
 	fast_size = DeeFastSeq_GetSize(seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		if (fast_size != num_bytes) {
@@ -252,6 +255,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		}
 		return 0;
 	}
+
 	/* Fallback: use an iterator. */
 	iter = DeeObject_IterSelf(seq);
 	if unlikely(!iter)
@@ -1846,7 +1850,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "the memory of any object implementing the buffer interface, or "
 	                         "to allocate fixed-length buffers for raw bytes which "
 	                         "can then be loaded with arbitrary data (most notably "
-	                         "through use of :file.readinto)\n"
+	                         "through use of :File.readinto)\n"
 	                         "A Bytes object implements the sequence interface as a ${{int...}}-like sequence, "
 	                         "with each integer being a value between $0 and $0xff\n"
 
@@ -1885,7 +1889,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "objects also implement this overload\n"
 	                         "However, given the reason for the existence of a Bytes object, as well as "
 	                         "the fact that a sequence object may also implement a buffer interface, which "
-	                         "the ${Bytes(ob: object)} overload above makes use of, that overload is always "
+	                         "the ${Bytes(ob: Object)} overload above makes use of, that overload is always "
 	                         "preferred over this one. In situations where this might cause ambiguity, "
 	                         "it is recommended that the ?#fromseq class method be used to construct the "
 	                         "Bytes object instead.\n"
@@ -2103,7 +2107,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
-PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dssize_t DPRINTER_CC
 Dee_bytes_printer_append(struct bytes_printer *__restrict self,
                          uint8_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;

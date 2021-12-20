@@ -42,28 +42,32 @@ DECL_BEGIN
  * by compiler optimizations in order to optimize generic set expressions
  * in various locations, when sequence arguments are constant.
  * The main usage case is to optimize code such as:
+ *
  * >> if (get_item() in [10, 20, 17, 19, 11, 3]) {
  * >>     print "Well... It's one of 'em!";
  * >> }
  * ASM:
- * >>     push  @_roset { 10, 20, 17, 19, 11, 3 }
+ * >>     push  @_RoSet { 10, 20, 17, 19, 11, 3 }
  * >>     push  call global @get_item, #0
  * >>     contains top, pop
  * >>     jf    pop, 1f
  * >>     print @"Well... It's one of 'em!", nl
  * >> 1:
+ *
  * As the name implies, this type of set is read-only, in a sense being
- * for `HashSet' what `tuple' is for `list'.
+ * for `HashSet' what `Tuple' is for `List'.
+ *
  * Because read-only sets cannot be modified, this allows them to operate
  * using an inline hash-vector, as well as not requiring the use of any
  * sort of lock.
- * NOTE: `_roset' is exported as `deemon.HashSet.Frozen'. */
+ *
+ * NOTE: `_RoSet' is exported as `deemon.HashSet.Frozen'. */
 typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {
-	DREF DeeObject *si_key;   /* [0..1][const] Set item key. */
-	Dee_hash_t      si_hash;  /* [valis_if(si_key)][const]
-	                           * Hash of `si_key' (with a starting value of `0'). */
+	DREF DeeObject *si_key;  /* [0..1][const] Set item key. */
+	Dee_hash_t      si_hash; /* [valis_if(si_key)][const]
+	                          * Hash of `si_key' (with a starting value of `0'). */
 };
 
 struct Dee_roset_object {
@@ -73,9 +77,9 @@ struct Dee_roset_object {
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_roset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
 };
 
-/* The main `_roset' container class. */
+/* The main `_RoSet' container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;
-#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_roset' is final */
+#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet' is final */
 #define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self);

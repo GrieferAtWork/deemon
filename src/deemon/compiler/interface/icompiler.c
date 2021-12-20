@@ -2243,7 +2243,7 @@ INTERN struct type_method tpconst compiler_methods[] = {
 	      "$\"all\"|${a && ...}|1|Evaluate to ?t if all elements from @a evaluate to ?t or when @a is empty, or ?f otherwise, with the side-effect of enumerating @a&"
 	      "$\"store\"|${a = b}|2|Store the expression in @b into the branch @a (@a may be a ?#makesym, ?#makemultiple, or a $\"getitem\", $\"getrange\", or $\"getattr\" #makeoperator branch)&"
 	      "$\"assert\"|${assert(a)} or ${assert(a, b)}|1 or 2|Assert that @a evaluates to ?t when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
-	                                                         "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :file.stdout&"
+	                                                         "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :File.stdout&"
 	      "$\"boundattr\"|${a.operator . (b) is bound}|2|Evaluate to ?t / ?f when attribute @b of @a is bound at runtime&"
 	      "$\"sameobj\"|${a === b is bound}|2|Evaluate to ?t when @a and @b are the same object at runtime, or ?f otherwise&"
 	      "$\"diffobj\"|${a !== b is bound}|2|Evaluate to ?t when @a and @b are different objects at runtime, or ?f otherwise&"

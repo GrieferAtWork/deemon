@@ -80,7 +80,6 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  * in that every entry that is a string is an include-path after appending "/include":
  * >> function get_include_paths() { for (local x: DeeModule_Path) if (x is string) yield x.rstrip("/")+"/include"; }
  */
-
 DDATDEF struct Dee_list_object DeeModule_Path;
 DFUNDEF void DCALL DeeModule_InitPath(void);
 #define DeeModule_FiniPath() DeeList_Clear((DeeObject *)&DeeModule_Path)
@@ -304,7 +303,7 @@ DFUNDEF size_t DCALL Dee_Shutdown(void);
  * behavior).
  * How is this done? Well. If the name of this function hasn't
  * answered that yet, let me make it plain obvious:
- *   >> By killing™ all existing code objects.
+ *   >> By killing all existing code objects.
  * This is quite the simple task as a matter of fact:
  *   - We use `tp_visit' to recursively visit all GC-objects,
  *     where for every `code' object that we encounter, we

@@ -64,6 +64,10 @@
 
 #ifdef CONFIG_HAVE_UNICODE_H
 #include <unicode.h>
+/* TODO: Following a change to KOS's <unicode.h> header, this check right here no longer
+ *       works, meaning we no longer take advantage of KOS's libc-embedded unicode database.
+ * -> Rework the deemon unicode system is it once again becomes ABI-compatible with KOS, or
+ *    becomes generic enough such that it doesn't need to make use of KOS libc internals. */
 #if !defined(__utf8_seqlen_defined) || !defined(__UNICODE_FPRINT) || !defined(__UNICODE_FALPHA) || \
     !defined(__UNICODE_FSPACE) || !defined(__UNICODE_FLF) || !defined(__UNICODE_FLOWER) || \
     !defined(__UNICODE_FUPPER) || !defined(__UNICODE_FTITLE) || !defined(__UNICODE_FCNTRL) || \
@@ -426,7 +430,7 @@ DDATDEF struct Dee_empty_string_struct DeeString_Empty;
 #endif /* DEE_SOURCE */
 
 
-DDATDEF DeeTypeObject DeeString_Type;
+DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_Check(x)      DeeObject_InstanceOfExact(x, &DeeString_Type)
 #define DeeString_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeString_Type)
 
@@ -684,6 +688,7 @@ Dee_wchar_t *DeeString_AsWide(DeeObject *__restrict self);
 /* Construct an uninitialized single-byte string,
  * capable of representing up to `num_bytes' bytes of text. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeString_NewBuffer(size_t num_bytes);
+
 /* Resize a single-byte string to have a length of `num_bytes' bytes.
  * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
  * in order to allocate and return a new buffer. */
@@ -763,7 +768,7 @@ DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 	 * what we'd expect of a string instance. */
 	if (((uintptr_t)base & ~(__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)str & ~(__ARCH_PAGESIZE_MIN - 1)) &&
 	    ((uintptr_t)base & (sizeof(void *) - 1)) == 0) {
-		/* Most important check: Does the object type indicate that it's a string. */
+		/* Most important check: Does the object type indicate that it's a string? */
 		if (base->ob_type == &DeeString_Type) {
 			/* Check that the object's reference counter is non-zero.
 			 * The combination of these 2 checks can verify a string object
@@ -1976,7 +1981,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr32)(uint32_t ch);
 #define Dee_UNICODE_FUPPER   0x0020 /* Upper-case. */
 #define Dee_UNICODE_FTITLE   0x0040 /* Title-case. */
 #define Dee_UNICODE_FCNTRL   0x0080 /* Control character. */
-#define Dee_UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `²' (sqare; `ut_digit' is `2') */
+#define Dee_UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `ï¿½' (sqare; `ut_digit' is `2') */
 #define Dee_UNICODE_FDECIMAL 0x0200 /* The character is a decimal. e.g: `5' (ascii; `ut_digit' is `5') */
 #define Dee_UNICODE_FSYMSTRT 0x0400 /* The character can be used as the start of an identifier. */
 #define Dee_UNICODE_FSYMCONT 0x0800 /* The character can be used to continue an identifier. */
@@ -2283,7 +2288,7 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 
 
 /* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
 Dee_ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
 DFUNDEF WUNUSED NONNULL((1)) char *DCALL
@@ -2593,9 +2598,9 @@ WUNUSED NONNULL((1)) int
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL Dee_unicode_printer_print)(void *__restrict self,
-                                  /*utf-8*/ char const *__restrict text,
-                                  size_t textlen);
+(DPRINTER_CC Dee_unicode_printer_print)(void *__restrict self,
+                                        /*utf-8*/ char const *__restrict text,
+                                        size_t textlen);
 
 /* Append UTF-16 text to the back of the given printer.
  * @return: textlen: Successfully appended the string.

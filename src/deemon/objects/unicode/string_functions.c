@@ -1921,6 +1921,8 @@ err:
 	return NULL;
 }
 
+/* Construct strings from UTF-16/32 encoded content.
+ * @param: error_mode: One of `STRING_ERROR_F*' */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewUtf16(uint16_t const *__restrict str,
                    size_t length,

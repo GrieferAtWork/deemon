@@ -203,7 +203,7 @@ print_ddi_file_and_line(instruction_t *addr_ptr) {
 do_print:
 			--iter;
 		}
-		DEE_DPRINTF("%s(%d,%d) : ",
+		Dee_DPRINTF("%s(%d,%d) : ",
 		            iter->dc_loc.l_file->f_name,
 		            iter->dc_loc.l_line + 1,
 		            iter->dc_loc.l_col + 1);
@@ -212,7 +212,7 @@ do_print:
 	if (current_assembler.a_ddi.da_checkc &&
 	    iter[-1].dc_sym->as_addr == addr)
 		goto do_print;
-	DEE_DPRINT("?(?) : ");
+	Dee_DPRINT("?(?) : ");
 }
 #endif /* CONFIG_LOG_PEEPHOLE_OPTS || CONFIG_VALIDATE_STACK_DEPTH */
 
@@ -235,13 +235,13 @@ validate_stack_depth(code_addr_t ip, uint16_t stacksz) {
 		if (!iter->as_used)
 			continue;
 		if unlikely(iter->as_stck != stacksz) {
-			DEE_DPRINTF("Invalid stack-depth at %.4X (expected %u, but got %u)\n"
+			Dee_DPRINTF("Invalid stack-depth at %.4X (expected %u, but got %u)\n"
 			            "%s(%d) : See symbol allocated here\n",
 			            (unsigned)ip, (unsigned)iter->as_stck,
 			            (unsigned)stacksz, iter->as_file, iter->as_line);
 			print_ddi_file_and_line(sc_main.sec_begin + ip);
-			DEE_DPRINTF("See reference to nearest DDI checkpoint\n");
-			BREAKPOINT();
+			Dee_DPRINTF("See reference to nearest DDI checkpoint\n");
+			Dee_BREAKPOINT();
 		}
 	}
 }
@@ -263,10 +263,10 @@ peephole_opt(char const *file, int line, instruction_t *addr_ptr)
 {
 #ifdef CONFIG_LOG_PEEPHOLE_SOURCE
 	print_ddi_file_and_line(addr_ptr);
-	DEE_DPRINTF("Peephole at +%.4I32X\n",
+	Dee_DPRINTF("Peephole at +%.4I32X\n",
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
 #else /* CONFIG_LOG_PEEPHOLE_SOURCE */
-	DEE_DPRINTF("%s(%d) : Peephole at +%.4I32X\n", file, line,
+	Dee_DPRINTF("%s(%d) : Peephole at +%.4I32X\n", file, line,
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
 #endif /* !CONFIG_LOG_PEEPHOLE_SOURCE */
 }
@@ -285,21 +285,21 @@ peephole_optf(char const *file, int line, instruction_t *addr_ptr,
 	va_list args;
 #ifdef CONFIG_LOG_PEEPHOLE_SOURCE
 	print_ddi_file_and_line(addr_ptr);
-	DEE_DPRINTF("Peephole at +%.4I32X : ",
+	Dee_DPRINTF("Peephole at +%.4I32X : ",
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
 #else /* CONFIG_LOG_PEEPHOLE_SOURCE */
-	DEE_DPRINTF("%s(%d) : Peephole at +%.4I32X : ", file, line,
+	Dee_DPRINTF("%s(%d) : Peephole at +%.4I32X : ", file, line,
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin));
 #endif /* !CONFIG_LOG_PEEPHOLE_SOURCE */
 	va_start(args, format);
-	DEE_VDPRINTF(format, args);
+	Dee_VDPRINTF(format, args);
 	va_end(args);
-	DEE_DPRINT("\n");
+	Dee_DPRINT("\n");
 }
 
 PRIVATE ATTR_NOINLINE void DCALL
 peephole_opt2(char const *file, int line, instruction_t *addr_ptr, instruction_t *addr_ptr2) {
-	DEE_DPRINTF("%s(%d) : Peephole at +%.4I32x and +%.4I32x\n", file, line,
+	Dee_DPRINTF("%s(%d) : Peephole at +%.4I32x and +%.4I32x\n", file, line,
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin),
 	            (code_addr_t)(addr_ptr2 - sc_main.sec_begin));
 }
@@ -899,7 +899,7 @@ do_noreturn_optimization:
 				 * symbols defined for the same address. */
 				if (sym_iter->as_addr == nearest_symbol_addr &&
 				    sym_iter->as_stck != nearest_symbol->as_stck) {
-					DEE_DPRINTF("Conflicting symbol definitions at address +%I32x:\n"
+					Dee_DPRINTF("Conflicting symbol definitions at address +%I32x:\n"
 					            "%s(%d) : See 1st symbol allocated here (stack %I16u)\n"
 					            "%s(%d) : See 2nd symbol allocated here (stack %I16u)\n",
 					            nearest_symbol_addr,
@@ -910,8 +910,8 @@ do_noreturn_optimization:
 					            sym_iter->as_line,
 					            sym_iter->as_stck);
 					print_ddi_file_and_line(sc_main.sec_begin + nearest_symbol_addr);
-					DEE_DPRINTF("See reference to nearest DDI checkpoint\n");
-					BREAKPOINT();
+					Dee_DPRINTF("See reference to nearest DDI checkpoint\n");
+					Dee_BREAKPOINT();
 				}
 #endif /* CONFIG_VALIDATE_STACK_DEPTH */
 				if (sym_iter->as_addr < current_symbol_addr)

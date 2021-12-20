@@ -1065,7 +1065,7 @@ done:
 #endif
 
 #if 0
-#define HEAP_CHECK()  DEE_CHECKMEMORY()
+#define HEAP_CHECK()  Dee_CHECKMEMORY()
 #else
 #define HEAP_CHECK()  (void)0
 #endif
@@ -1758,7 +1758,7 @@ extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputS
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
 
-PRIVATE dssize_t DCALL
+PRIVATE dssize_t DPRINTER_CC
 debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {
 #ifdef CONFIG_HOST_WINDOWS
@@ -1893,7 +1893,7 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 }
 
 PUBLIC dssize_t
-(DCALL _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
+(DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
 #ifdef NDEBUG
 	(void)arg;
 	(void)data;

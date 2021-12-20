@@ -30,7 +30,7 @@ DECL_BEGIN
 
 typedef struct {
 	/* Joined files are created when `operator |' is used on
-	 * a type derived from `file', in which case the 2 files
+	 * a type derived from `File', in which case the 2 files
 	 * are used to create a so-called joined file type. */
 	FILE_OBJECT_HEAD
 	size_t                                    j_count;  /* [const] Amount of files that are being joined together. */
@@ -45,8 +45,10 @@ INTDEF DeeFileTypeObject Joined_Type; /* TODO: Not implemented. */
 
 typedef struct {
 	/* General-purpose file data de/en-coder
+	 *
 	 * This file type is used as an intermitten wrapper type
-	 * for `file.open' when the file is being opened in text-mode.
+	 * for `File.open' when the file is being opened in text-mode.
+	 *
 	 * It is not only used to automatically detect the encoding of a
 	 * file, but also be able to encode/decode its contents to/from UTF-8. */
 	FILE_OBJECT_HEAD

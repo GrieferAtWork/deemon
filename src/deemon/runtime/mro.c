@@ -244,7 +244,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addmethod(struct membercache *self,
                       DeeTypeObject *decl, dhash_t hash,
                       struct type_method const *method) {
-	DEE_DPRINTF("[RT] Caching method `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching method `%s.%s' in `%s'\n",
 	            decl->tp_name, method->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	MEMBERCACHE_ADDENTRY(method->m_name, {
@@ -257,7 +257,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addinstancemethod(struct membercache *self,
                               DeeTypeObject *decl, dhash_t hash,
                               struct type_method const *method) {
-	DEE_DPRINTF("[RT] Caching instance_method `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching instance_method `%s.%s' in `%s'\n",
 	            decl->tp_name, method->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
@@ -271,7 +271,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addgetset(struct membercache *self,
                       DeeTypeObject *decl, dhash_t hash,
                       struct type_getset const *getset) {
-	DEE_DPRINTF("[RT] Caching getset `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching getset `%s.%s' in `%s'\n",
 	            decl->tp_name, getset->gs_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	MEMBERCACHE_ADDENTRY(getset->gs_name, {
@@ -284,7 +284,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addinstancegetset(struct membercache *self,
                               DeeTypeObject *decl, dhash_t hash,
                               struct type_getset const *getset) {
-	DEE_DPRINTF("[RT] Caching instance_getset `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching instance_getset `%s.%s' in `%s'\n",
 	            decl->tp_name, getset->gs_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
@@ -298,7 +298,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addmember(struct membercache *self,
                       DeeTypeObject *decl, dhash_t hash,
                       struct type_member const *member) {
-	DEE_DPRINTF("[RT] Caching member `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching member `%s.%s' in `%s'\n",
 	            decl->tp_name, member->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	MEMBERCACHE_ADDENTRY(member->m_name, {
@@ -311,7 +311,7 @@ INTERN NONNULL((1, 2, 4)) void DCALL
 membercache_addinstancemember(struct membercache *self,
                               DeeTypeObject *decl, dhash_t hash,
                               struct type_member const *member) {
-	DEE_DPRINTF("[RT] Caching instance_member `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching instance_member `%s.%s' in `%s'\n",
 	            decl->tp_name, member->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
@@ -326,7 +326,7 @@ membercache_addattrib(struct membercache *self,
                       DeeTypeObject *decl, dhash_t hash,
                       struct class_attribute *attrib) {
 	char const *name = DeeString_STR(attrib->ca_name);
-	DEE_DPRINTF("[RT] Caching attribute `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching attribute `%s.%s' in `%s'\n",
 	            decl->tp_name, name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	MEMBERCACHE_ADDENTRY(name, {
@@ -342,7 +342,7 @@ membercache_addinstanceattrib(struct membercache *self,
                               DeeTypeObject *decl, dhash_t hash,
                               struct class_attribute *attrib) {
 	char const *name = DeeString_STR(attrib->ca_name);
-	DEE_DPRINTF("[RT] Caching instance_attribute `%s.%s' in `%s'\n",
+	Dee_DPRINTF("[RT] Caching instance_attribute `%s.%s' in `%s'\n",
 	            decl->tp_name, name,
 	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);

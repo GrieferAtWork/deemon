@@ -188,7 +188,7 @@ dict_init_sequence(Dict *__restrict self,
 	DeeTypeObject *tp = Dee_TYPE(sequence);
 	if (tp == &DeeDict_Type)
 		return dict_copy(self, (Dict *)sequence);
-	/* Optimizations for `_rodict' */
+	/* Optimizations for `_RoDict' */
 	if (tp == &DeeRoDict_Type) {
 		struct dict_item *iter, *end;
 		DeeRoDictObject *src = (DeeRoDictObject *)sequence;

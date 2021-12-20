@@ -401,6 +401,8 @@ done:
 }
 
 
+/* Write the value of an integer as signed/unsigned LEB data.
+ * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeInt_GetSleb(DeeObject *__restrict self,
                uint8_t *__restrict writer) {
@@ -1105,6 +1107,9 @@ err:
 }
 
 
+/* Convert an integer to/from a string.
+ * WARNING: The caller is responsible not to pass a radix equal to `1'.
+ *          When a radix equal to `0', it is automatically determined from the passed string. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags) {
@@ -1632,6 +1637,9 @@ err:
 	return -1;
 }
 
+/* @return:  0: Successfully parsed an integer.
+ * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
+ * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
 PUBLIC WUNUSED NONNULL((1, 4)) int
 (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags,
@@ -1744,6 +1752,10 @@ PRIVATE char const int_digits[2][18] = {
 };
 
 
+/* Print an integer to a given format-printer.
+ * Radix must be one of `2', `4', `8', `10' or `16' and
+ * if it isn't, a `NotImplemented' error is thrown.
+ * This list of supported radices may be extended in the future. */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
              dformatprinter printer, void *arg) {
@@ -1869,6 +1881,11 @@ err:
 
 
 
+/* Extract the 32-, 64- or 128-bit value of the given integer.
+ * NOTE: In theory, deemon integers can have arbitrarily large
+ *       values, however in deemon's C api, we must limit ourself
+ *       to only a set number of bits.
+ * @return: One of `INT_*' (See above) */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs8(DeeObject *__restrict self,
               int8_t *__restrict value) {
@@ -2130,6 +2147,7 @@ overflow:
 	return INT_UNSIGNED;
 }
 
+/* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
 PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS8)(DeeObject *__restrict self,
                        int8_t *__restrict value) {
@@ -2231,6 +2249,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 }
 
 
+/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
+ * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_As8)(DeeObject *__restrict self, int8_t *__restrict value) {
 	int result = DeeInt_TryAs8(self, value);
@@ -2281,6 +2301,9 @@ err_overflow:
 	return err_integer_overflow(self, 128, result == INT_POS_OVERFLOW);
 }
 
+/* Read the signed/unsigned values from the given integer.
+ * @return: 0:  Successfully read the value.
+ * @return: -1: An error occurred (Integer overflow). */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value) {
 	int error = DeeInt_As8(self, value);
@@ -2382,6 +2405,7 @@ err_overflow:
 }
 
 
+/* Convert an integer to a binary-encoded data array. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
                        void *__restrict dst, size_t length,
@@ -2532,6 +2556,7 @@ err:
 	return -1;
 }
 
+/* Convert a binary-encoded data array into an integer. */
 PUBLIC WUNUSED DREF DeeObject *
 (DCALL DeeInt_FromBytes)(void const *buf, size_t length,
                          bool little_endian, bool as_signed) {

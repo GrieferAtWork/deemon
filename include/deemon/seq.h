@@ -55,9 +55,9 @@ DECL_BEGIN
  *       sequence functions.
  * Instead, a sequence object `ob' should be
  * detected using `DeeType_IsSequence(Dee_TYPE(ob))'.
- * The following things are required from sub-class of `sequence':
+ * The following things are required from sub-class of `Sequence':
  *     - Must either implement `tp_iter_self' or `tp_size' + `tp_get'
- * The following things are implemented by `sequence':
+ * The following things are implemented by `Sequence':
  *     - Abstraction that automatically defines the following operators:
  *        - tp_iter_self
  *        - tp_size
@@ -79,7 +79,7 @@ DECL_BEGIN
  *     - Abstraction that automatically defines the following getsets:
  *        - `length'  (Read-only; same as `tp_size')
  *     - Abstraction that automatically defines the following class getsets:
- *        - `iterator'
+ *        - `Iterator'
  *           Evaluates to the internally used iterator type when `DeeObject_IterSelf()' would return it.
  *           Otherwise accessing this field raises an `Error.AttributeError'.
  *           The intention here is that a sub-class defining its own iterator
@@ -111,35 +111,35 @@ DECL_BEGIN
  *           - Same as `reduce([](a, b) -> key(a, b) ? a : b);'
  *        - `max(key: Callable = none): Object'
  *           - Same as `reduce([](a, b) -> key(a, b) ? b : a);'
- *        - `count(ob: object, key: Callable = none): int'
- *        - `locate(ob: object, key: Callable = none): Object'
- *        - `rlocate(ob: object, key: Callable = none): Object'
- *        - `locateall(ob: object, key: Callable = none): Sequence'
+ *        - `count(ob: Object, key: Callable = none): int'
+ *        - `locate(ob: Object, key: Callable = none): Object'
+ *        - `rlocate(ob: Object, key: Callable = none): Object'
+ *        - `locateall(ob: Object, key: Callable = none): Sequence'
  *        - `transform(callable transformation): Sequence'
  *           - Invoke `transformation()' on all items and return a sequence of all the results.
  *           - Same as `(for (local x: this) transformation(x));'
- *        - `contains(ob: object, key: Callable = none): bool'
+ *        - `contains(ob: Object, key: Callable = none): bool'
  *           - Same as the `tp_contains' operator, but allows for a key function to be used.
- *        - `partition(ob: object, key: Callable = none): (Sequence, (ob), Sequence)'
- *        - `rpartition(ob: object, key: Callable = none): (Sequence, (ob), Sequence)'
- *        - `startswith(ob: object, key: Callable = none): bool'
- *        - `endswith(ob: object, key: Callable = none): bool'
- *        - `find(ob: object, key: Callable = none): int'
- *        - `rfind(ob: object, key: Callable = none): int'
- *        - `index(ob: object, key: Callable = none): int'
- *        - `rindex(ob: object, key: Callable = none): int'
+ *        - `partition(ob: Object, key: Callable = none): (Sequence, (ob), Sequence)'
+ *        - `rpartition(ob: Object, key: Callable = none): (Sequence, (ob), Sequence)'
+ *        - `startswith(ob: Object, key: Callable = none): bool'
+ *        - `endswith(ob: Object, key: Callable = none): bool'
+ *        - `find(ob: Object, key: Callable = none): int'
+ *        - `rfind(ob: Object, key: Callable = none): int'
+ *        - `index(ob: Object, key: Callable = none): int'
+ *        - `rindex(ob: Object, key: Callable = none): int'
  *        - `join(items: Sequence): Sequence'
- *        - `strip(ob: object, key: Callable = none): Sequence'
- *        - `lstrip(ob: object, key: Callable = none): Sequence'
- *        - `rstrip(ob: object, key: Callable = none): Sequence'
+ *        - `strip(ob: Object, key: Callable = none): Sequence'
+ *        - `lstrip(ob: Object, key: Callable = none): Sequence'
+ *        - `rstrip(ob: Object, key: Callable = none): Sequence'
  *        - `split(sep: Object, key: Callable = none): Sequence'
  *        - `reversed(): Sequence'
  *        - `sorted(key: Callable = none): Sequence'
  *        - `segments(segsize: int): Sequence'
  *        - `countseq(seq: Sequence, key: Callable = none): int'
  *        - `containsseq(seq: Sequence, key: Callable = none): bool'
- *        - `partitionseq(seq: Sequence, key: Callable = none): (sequence,seq, Sequence)'
- *        - `rpartitionseq(seq: Sequence, key: Callable = none): (sequence,seq, Sequence)'
+ *        - `partitionseq(seq: Sequence, key: Callable = none): (Sequence, Sequence, Sequence)'
+ *        - `rpartitionseq(seq: Sequence, key: Callable = none): (Sequence, Sequence, Sequence)'
  *        - `startswithseq(seq: Sequence, key: Callable = none): bool'
  *        - `endswithseq(seq: Sequence, key: Callable = none): bool'
  *        - `findseq(seq: Sequence, key: Callable = none): int'
@@ -149,7 +149,7 @@ DECL_BEGIN
  *        - `stripseq(items: Sequence, key: Callable = none): Sequence'
  *        - `lstripseq(items: Sequence, key: Callable = none): Sequence'
  *        - `rstripseq(items: Sequence, key: Callable = none): Sequence'
- *        - `splitseq(sequence sep_seq, key: Callable = none): Sequence'
+ *        - `splitseq(sep_seq: Sequence, key: Callable = none): Sequence'
  * Some operations (Such as `tp_add') will create instances of special objects
  * that will only start invoking underlying operators when worked with:
  * >> function foo() {
@@ -180,11 +180,11 @@ DECL_BEGIN
  * HINT: Instantiating `seq' as-is will yield `Dee_EmptySeq',
  *       which in return is re-used internally as a placeholder
  *       to represent an empty, general-purpose sequence. */
-DDATDEF DeeTypeObject DeeSeq_Type;  /* `sequence from deemon' */
+DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
 
 /* Similar to what `DeeSeq_Type' is for all sequence-style types,
  * `DeeIterator_Type' is the the same for all iterator-type types.
- * The following things are implemented by `iterator':
+ * The following things are implemented by `Iterator':
  *     - Abstraction that automatically defines the following operators:
  *        - tp_bool
  *           - Copy the iterator and return true if invoking tp_iter_next() yields a value.
@@ -208,7 +208,7 @@ DDATDEF DeeTypeObject DeeSeq_Type;  /* `sequence from deemon' */
  * as in some cases it even is impossible to pull off (such as for yield-
  * functions not marked as copyable or using non-copyable local variables).
  */
-DDATDEF DeeTypeObject DeeIterator_Type; /* `iterator from deemon' */
+DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
 
 /* An empty instance of a generic sequence object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
@@ -546,7 +546,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsResizable(DeeObject *__restrict s
  *       With that in mind, any type implementing the `tp_seq' interface
  *       with the intention of behaving as an Iterable, should probably
  *       be derived from `DeeSeq_Type' as this allows usercode to query
- *       for a general purpose sequence by writing `x is sequence from deemon' */
+ *       for a general purpose sequence by writing `x is Sequence from deemon' */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRange(DeeObject *__restrict self, size_t begin, size_t end);
@@ -887,11 +887,11 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
  *    -> However, an atomic lock doesn't count as something that would block,
  *       yet because this means that `DeeFastSeq_GetItemNB()' can never throw
  *       an exception, it also means that any sequence who's size could change
- *       at any time (such as `list') cannot be used here.
+ *       at any time (such as `List') cannot be used here.
  * The following types function as fast-sequence-compatible-nb:
- *  - tuple
- *  - _sharedvector   (If the sequence is cleared while being used here, `none' will be returned)
- *  - _subrange       (Only if the sub-ranged sequence is a fast-sequence-nb) */
+ *  - Tuple
+ *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
+ *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSizeNB(DeeObject *__restrict self);
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL

@@ -400,6 +400,7 @@ property_call(Property *self, size_t argc, DeeObject *const *argv) {
 }
 
 
+/* `Property from deemon' */
 PUBLIC DeeTypeObject DeeProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Property),

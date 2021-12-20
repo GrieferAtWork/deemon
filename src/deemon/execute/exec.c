@@ -464,6 +464,11 @@ PRIVATE struct atexit_entry *atexit_list = NULL;
 PRIVATE uint16_t atexit_mode = ATEXIT_FNORMAL;
 
 
+/* Run callbacks that have been registered using `Dee_AtExit()'
+ * @return:  0: Successfully executed all callbacks.
+ * @return: -1: An error occurred (never returned when `DEE_RUNATEXIT_FRUNALL' is passed)
+ * NOTE: This function is automatically called when `exit()'
+ *       from stdlib is used to stop execution of the program. */
 PUBLIC int DCALL
 Dee_RunAtExit(uint16_t flags) {
 	struct atexit_entry *list;
@@ -615,6 +620,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_NO_DEC */
 
+/* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__' */
 PUBLIC char const DeeExec_Timestamp[] = __DATE__ "|" __TIME__;
 
 #define TIMESTAMP_MON  (DeeExec_Timestamp)
@@ -717,6 +723,10 @@ LOCAL uint64_t parse_timestamp(void) {
 	        ((uint64_t)second * MICROSECONDS_PER_SECOND));
 }
 
+/* Return the time (in milliseconds since 01.01.1970) when deemon was compiled.
+ * This value is also used to initialize the `mo_ctime' value of the builtin
+ * `deemon' module, automatically forcing user-code to be recompiled if the
+ * associated deemon core has changed, and if they are using the `deemon' module. */
 PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 	uint64_t result = exec_timestamp;
 	if (!HAS_EXEC_TIMESTAMP) {
@@ -731,8 +741,16 @@ PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
 
 /* A reference to the user-code ARGV tuple. */
 PRIVATE DREF DeeTupleObject *usercode_argv = (DREF DeeTupleObject *)Dee_EmptyTuple;
-#ifdef CONFIG_NO_THREADS
 
+/* Get/Set the user-code argument vector that is
+ * accessible from module-scope code using `...':
+ * >> local argv = [...];
+ * >> print repr argv; // ["my_script.dee", "these", "are", "from", "the", "commandline"]
+ * With that in mind, module root-code objects are varargs functions that are
+ * invoked using the Argv tuple modifiable using this pair of functions.
+ * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.
+ * NOTE: By default, an empty tuple is set for argv. */
+#ifdef CONFIG_NO_THREADS
 PUBLIC ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
 	result = usercode_argv;
@@ -750,9 +768,7 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 	usercode_argv = argv;
 	Dee_Decref(old_argv);
 }
-
 #else /* CONFIG_NO_THREADS */
-
 PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
 	for (;;) {
@@ -856,6 +872,11 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* CONFIG_HOST_WINDOWS */
 
 
+/* Keep clearing global hooks while invoking the GC to
+ * finalize all user-objects that may still be loaded.
+ * This function can be called any number of times, but
+ * is intended to be called once before deemon gets unloaded.
+ * @return: * : The total number of GC object that were collected. */
 PUBLIC size_t DCALL Dee_Shutdown(void) {
 	size_t result = 0, temp;
 	size_t num_gc = 0, num_empty_gc = 0;
@@ -889,10 +910,10 @@ do_kill_user:
 				gc_dump_all();
 				
 #ifdef CONFIG_TRACE_REFCHANGES
-				DEE_DPRINT("\n\n\nReference Leaks:\n");
+				Dee_DPRINT("\n\n\nReference Leaks:\n");
 				Dee_DumpReferenceLeaks();
 #endif /* CONFIG_TRACE_REFCHANGES */
-				BREAKPOINT();
+				Dee_BREAKPOINT();
 #else /* !NDEBUG */
 				/* Silently hide the shame when not built for debug mode... */
 #endif /* NDEBUG */
@@ -936,9 +957,9 @@ do_kill_user:
 
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 	DeeDex_Finalize();
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 #endif /* !CONFIG_NO_DEX */
 
 	/* Free up cached objects. They're not actually memory leaks, mkay?
@@ -971,13 +992,13 @@ do_kill_user:
 	 */
 #if !defined(NDEBUG) || defined(CONFIG_TRACE_REFCHANGES)
 	DeeExec_SetHome(NULL);
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 	DeeThread_Fini();
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 #endif /* !NDEBUG || CONFIG_TRACE_REFCHANGES */
 #ifndef NDEBUG
 	DeeMem_ClearCaches((size_t)-1);
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 #endif /* !NDEBUG */
 
 	/* Deallocate slab caches. */

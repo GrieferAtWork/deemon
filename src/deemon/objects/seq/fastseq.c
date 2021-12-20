@@ -87,9 +87,10 @@ nope:
 
 
 /* Returns the `index'th item of `self'.
- * The caller is responsible that `index < DeeFastSeq_GetSize(self)'
- * when `self' is an immutable sequence (anything other than `list' and `_sharedvector').
- * WARNING: These function may _ONLY_ be used if `DeeFastSeq_Check(self)' is true. */
+ * The caller is responsible that `index < DeeFastSeq_GetSize(self)' when
+ * `self' is an immutable sequence (anything other than `List' and `_SharedVector').
+ * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize(self)'
+ *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
@@ -114,7 +115,7 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
 }
 
-/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE an error
+/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE if an error
  * occurred, and `NULL' if the item has been marked as unbound. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
@@ -145,6 +146,17 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
 
 
 
+/* An alternative (and more restrictive) variant of the FastSeq-interface:
+ *  - Semantically, these functions are used the same way as the regular interface
+ *  - Unlike the functions above, these are guarantied to be non-blocking
+ *    -> However, an atomic lock doesn't count as something that would block,
+ *       yet because this means that `DeeFastSeq_GetItemNB()' can never throw
+ *       an exception, it also means that any sequence who's size could change
+ *       at any time (such as `List') cannot be used here.
+ * The following types function as fast-sequence-compatible-nb:
+ *  - Tuple
+ *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
+ *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;

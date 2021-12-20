@@ -145,7 +145,8 @@ PRIVATE struct type_member tpconst invset_members[] = {
 PUBLIC DeeTypeObject DeeInverseSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_InverseSet",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(set:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -927,6 +928,7 @@ PRIVATE struct type_seq set_seq = {
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
+/* `Set from deemon' */
 PUBLIC DeeTypeObject DeeSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Set),

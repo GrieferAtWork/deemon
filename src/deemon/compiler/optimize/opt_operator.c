@@ -118,7 +118,7 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		/* Must emulate encode() and decode() functions, so they don't
 		 * call into libcodecs, which should only be loaded at runtime!
 		 * However, builtin codecs are still allowed!
-		 * NOTE: Both `string' and `bytes' use the same underlying
+		 * NOTE: Both `string' and `Bytes' use the same underlying
 		 *       function in order to implement `encode' and `decode'! */
 		dobjmethod_t method;
 		DeeObject *meth_self = DeeObjMethod_SELF(self);

@@ -84,7 +84,7 @@
 
 /* Disable garbage */
 #define _CRT_SECURE_NO_DEPRECATE 1
-#define _CRT_SECURE_NO_WARNINGS 1
+#define _CRT_SECURE_NO_WARNINGS  1
 #define _CRT_NONSTDC_NO_WARNINGS 1
 
 #include <__stdinc.h> /* __CC__ */
@@ -100,11 +100,12 @@
 
 #ifdef CONFIG_NO_CRTDBG_H
 #undef CONFIG_HAVE_CRTDBG_H
-#elif !defined(CONFIG_HAVE_CRTDBG_H) && \
-      (__has_include(<crtdbg.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
-       defined(__KOS_SYSTEM_HEADERS__))))
+#elif (!defined(CONFIG_HAVE_CRTDBG_H) && \
+       (__has_include(<crtdbg.h>) ||     \
+        (defined(__NO_has_include) &&    \
+         (defined(_MSC_VER) || defined(__KOS_SYSTEM_HEADERS__)))))
 #define CONFIG_HAVE_CRTDBG_H 1
-#endif
+#endif /* ... */
 
 #if defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG)
 #define _CRTDBG_MAP_ALLOC 1 /* Enable debug-malloc */
@@ -322,16 +323,16 @@ DECL_BEGIN
 #if (defined(__unix__) || defined(__unix) || defined(unix) ||           \
      defined(__linux__) || defined(__linux) || defined(linux) ||        \
      defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
-     defined(__DragonFly__))
+     defined(__solaris__) || defined(__DragonFly__))
 #define CONFIG_HOST_UNIX 1
 #endif /* Unix... */
 
 
-#if (!defined(__i386__) && !defined(__x86_64__)) || \
-    (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX))
+#if ((!defined(__i386__) && !defined(__x86_64__)) || \
+     (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
 #undef CONFIG_NO_OBJECT_SLABS
 #define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
-#endif
+#endif /* ... */
 
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -393,21 +394,23 @@ DECL_BEGIN
 /* Highlight invalid usage of `NULL' in functions returning `int' */
 #undef NULL
 #define NULL nullptr
-#endif
+#endif /* __INTELLISENSE__ && __cplusplus */
 
+#ifndef Dee_BREAKPOINT
 #ifdef _MSC_VER
 extern void (__debugbreak)(void);
 #pragma intrinsic(__debugbreak)
-#define BREAKPOINT() __debugbreak()
+#define Dee_BREAKPOINT() __debugbreak()
 #elif defined(__COMPILER_HAVE_GCC_ASM) && (defined(__i386__) || defined(__x86_64__))
 #ifdef __NO_XBLOCK
-#define BREAKPOINT() __asm__ __volatile__("int {$}3" : )
+#define Dee_BREAKPOINT() __asm__ __volatile__("int {$}3" : )
 #else /* __NO_XBLOCK */
-#define BREAKPOINT() XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
+#define Dee_BREAKPOINT() XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
 #endif /* !__NO_XBLOCK */
-#else
-#define BREAKPOINT() (void)0
-#endif
+#else /* ... */
+#define Dee_BREAKPOINT() (void)0
+#endif /* !... */
+#endif /* !Dee_BREAKPOINT */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #   define DFUNDEF __EXPDEF
@@ -425,18 +428,51 @@ extern void (__debugbreak)(void);
 #define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS 1
 #endif /* __GNUC__ */
 
-#define DCALL ATTR_STDCALL
+/* Calling convention used for the deemon API */
+#ifndef DCALL
+#if defined(__i386__) && !defined(__x86_64__)
+#define DCALL __ATTR_STDCALL
+#else /* __i386__ && !__x86_64__ */
+#define DCALL /* nothing (use default calling convention) */
+#endif /* !__i386__ || __x86_64__ */
+#endif /* !DCALL */
+
+/* Calling convention for `dformatprinter' */
+#ifndef DPRINTER_CC
+#if defined(__KOS__) && __KOS_VERSION__ >= 400
+/* We want to be ABI-compatible with KOS's native `pformatprinter' system. */
+#if defined(__KOS_SYSTEM_HEADERS__) || __has_include(<bits/crt/format-printer.h>)
+#include <bits/crt/format-printer.h>
+#define DPRINTER_CC __FORMATPRINTER_CC
+#elif __has_include(<format-printer.h>)
+#include <format-printer.h>
+#define DPRINTER_CC FORMATPRINTER_CC
+#endif /* ... */
+#endif /* __KOS__ && __KOS_VERSION__ >= 400 */
+#ifndef DPRINTER_CC
+#define DPRINTER_CC DCALL
+#endif /* !DPRINTER_CC */
+#endif /* !DPRINTER_CC */
+
+#ifndef DREF
 #define DREF  /* Annotation for pointer: transfer/storage of a reference.
                * NOTE: When returned by a function, a return value
                *       of NULL indicates a newly raised exception. */
+#endif /* !DREF */
+#ifndef DWEAK
 #define DWEAK /* Annotation for data that is thread-volatile. */
+#endif /* !DWEAK */
 
 
-#ifdef __NO_ATTR_FASTCALL
-#define FCALL /* nothing */
-#else /* __NO_ATTR_FASTCALL */
-#define FCALL __ATTR_FASTCALL
-#endif /* !__NO_ATTR_FASTCALL */
+#ifdef DEE_SOURCE
+#ifndef FCALL
+#if defined(__i386__) && !defined(__x86_64__)
+#define FCALL __ATTR_FASTCALL /* arg0: %ecx, arg1: %edx, argN: 4+N*4(%esp) (callee-cleanup) */
+#else /* __i386__ && !__x86_64__ */
+#define FCALL /* nothing (use default calling convention) */
+#endif /* !__i386__ || __x86_64__ */
+#endif /* !FCALL */
+#endif /* DEE_SOURCE */
 
 
 #ifdef _MSC_VER
@@ -450,9 +486,9 @@ extern void (__debugbreak)(void);
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
-#define DEE_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), (_CrtCheckMemory)(), DBG_ALIGNMENT_ENABLE())
+#define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), (_CrtCheckMemory)(), DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
-extern ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
+extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
 #else /* !_MSC_VER || _DLL */
 extern int (ATTR_CDECL _CrtCheckMemory)(void);
 #endif /* _MSC_VER && !_DLL */
@@ -462,21 +498,21 @@ extern int (ATTR_CDECL _CrtCheckMemory)(void);
 
 #ifdef __INTELLISENSE__
 extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
-#define DEE_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
+#define Dee_REQUIRES_TYPE(T, x)  ____INTELLISENSE_req_type<T>(x)
 #else /* __INTELLISENSE__ */
-#define DEE_REQUIRES_TYPE(T, x) (x)
+#define Dee_REQUIRES_TYPE(T, x) (x)
 #endif /* !__INTELLISENSE__ */
 
 #ifndef NDEBUG
-#define DEE_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
-#define DEE_DPRINTER               _Dee_dprinter
-#define DEE_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
-#define DEE_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format' may mandate a decref() operation! */
+#define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
+#define Dee_DPRINTER               _Dee_dprinter
+#define Dee_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
+#define Dee_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format' may mandate a decref() operation! */
 DDATDEF int _Dee_dprint_enabled;
 DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);
 DFUNDEF void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args);
-DFUNDEF __SSIZE_TYPE__ (DCALL _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
+DFUNDEF __SSIZE_TYPE__ (DPRINTER_CC _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen);
 #endif /* !NDEBUG */
 
 
@@ -484,15 +520,15 @@ DFUNDEF __SSIZE_TYPE__ (DCALL _Dee_dprinter)(void *arg, char const *__restrict d
 #ifndef NDEBUG
 DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line);
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
-#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), BREAKPOINT(), 0))
-#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), BREAKPOINT(), 0))
+#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT(), 0))
 #elif !defined(__NO_builtin_assume)
 #define Dee_ASSERT(expr)       __builtin_assume(expr)
 #define Dee_ASSERTF(expr, ...) __builtin_assume(expr)
-#else
+#else /* ... */
 #define Dee_ASSERT(expr)       (void)0
 #define Dee_ASSERTF(expr, ...) (void)0
-#endif
+#endif /* !... */
 #endif /* !Dee_ASSERT */
 #ifndef Dee_ASSERTF
 #define Dee_ASSERTF(expr, ...) Dee_ASSERT(expr)
@@ -501,22 +537,22 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 #ifdef DEE_SOURCE
 #undef ASSERT
 #undef ASSERTF
-#define ASSERT     Dee_ASSERT
-#define ASSERTF    Dee_ASSERTF
+#define ASSERT  Dee_ASSERT
+#define ASSERTF Dee_ASSERTF
 #endif /* DEE_SOURCE */
 
 
-#ifndef DEE_DPRINT
+#ifndef Dee_DPRINT
 #define DEE_NO_DPRINTF             1
-#define DEE_DPRINT(message)        (void)0
-#define DEE_DPRINTF(...)           (void)0
-#define DEE_VDPRINTF(format, args) (void)0
-#endif /* !DEE_DPRINT */
+#define Dee_DPRINT(message)        (void)0
+#define Dee_DPRINTF(...)           (void)0
+#define Dee_VDPRINTF(format, args) (void)0
+#endif /* !Dee_DPRINT */
 
-#ifndef DEE_CHECKMEMORY
-#define DEE_NO_CHECKMEMORY         1
-#define DEE_CHECKMEMORY()          (void)0
-#endif /* !DEE_CHECKMEMORY */
+#ifndef Dee_CHECKMEMORY
+#define DEE_NO_CHECKMEMORY 1
+#define Dee_CHECKMEMORY()  (void)0
+#endif /* !Dee_CHECKMEMORY */
 
 #endif /* __CC__ */
 
@@ -788,16 +824,23 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 
 /* NOTE: This config option only affects internal documentation strings. */
 #ifndef CONFIG_NO_DOC
-#define DOC(x)           x
-#define DOC_DEF(name, x) INTERN_CONST char const name[] = x
-#define DOC_REF(name)    INTDEF char const name[]
-#define DOC_GET(name)    name
+#define Dee_DOC(x)           x
+#define Dee_DOC_DEF(name, x) INTERN_CONST char const name[] = x
+#define Dee_DOC_REF(name)    INTDEF char const name[]
+#define Dee_DOC_GET(name)    name
 #else /* !CONFIG_NO_DOC */
-#define DOC(x)           ((char *)NULL)
-#define DOC_DEF(name, x) /* nothing */
-#define DOC_REF(name)    /* nothing */
-#define DOC_GET(name)    ((char *)NULL)
+#define Dee_DOC(x)           ((char *)NULL)
+#define Dee_DOC_DEF(name, x) /* nothing */
+#define Dee_DOC_REF(name)    /* nothing */
+#define Dee_DOC_GET(name)    ((char *)NULL)
 #endif /* CONFIG_NO_DOC */
+
+#ifdef DEE_SOURCE
+#define DOC     Dee_DOC
+#define DOC_DEF Dee_DOC_DEF
+#define DOC_REF Dee_DOC_REF
+#define DOC_GET Dee_DOC_GET
+#endif /* DEE_SOURCE */
 
 DECL_END
 

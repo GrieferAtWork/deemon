@@ -708,7 +708,7 @@ done:
 
 /* Try to get a human-readable description on what went wrong during a call
  * to `DeeSystem_DlOpen[String]()' that caused `DEESYSTEM_DLOPEN_FAILED' to
- * be returned.
+ * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
  * @return: * :        The human-readable error description
  * @return: NULL:      A deemon callback failed and an error was thrown.
  * @return: ITER_DONE: No description is available. */
@@ -1089,6 +1089,10 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 
 
 /* Try to unlink() the given `filename'
+ * WARNING: When `filename' is an empty directory, it is system-specific if
+ *          that directory will be removed or not (basically, this function
+ *          may be implemented using the STD-C `remove()' function)
+ * NOTE:    Even upon error, there exists a chance that the file was deleted.
  * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
  * @return: 0 : The unlink() operation was successful
  * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */

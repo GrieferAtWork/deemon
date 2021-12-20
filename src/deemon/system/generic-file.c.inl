@@ -84,8 +84,9 @@ DeeFile_Open(/*String*/ DeeObject *__restrict UNUSED(filename),
 
 PRIVATE DeeFileObject std_file = { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type) };
 
-PUBLIC ATTR_RETNONNULL
-DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
+/* Return the the default stream for a given STD number. */
+PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+DeeFile_DefaultStd(unsigned int id) {
 	ASSERT(id <= DEE_STDDBG);
 	(void)id;
 	return (DeeObject *)&std_file;

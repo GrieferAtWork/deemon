@@ -77,11 +77,11 @@ struct Dee_bytes_object {
 #define DeeBytes_SIZE(x)       ((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size
 #define DeeBytes_TERM(x)       (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
 #define DeeBytes_WRITABLE(x)   (((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_flags & Dee_BUFFER_FWRITABLE)
-#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `bytes' is final. */
+#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
 #define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
 #define DeeBytes_IsEmpty(x)    (((DeeBytesObject *)Dee_REQUIRES_OBJECT(x))->b_size == 0)
 
-/* The builtin `bytes' data type.
+/* The builtin `Bytes' data type.
  * This type offers functionality identical to what can also be found in
  * the string API, however in addition, functions to inplace-modify the
  * data of a buffer are provided as well (such as `tolower()')
@@ -259,12 +259,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 
 /* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
- * Dee_formatprinter_t-compatible callback for generating data to-be
- * written into a Bytes object. */
+ * Dee_formatprinter_t-compatible callback for generating data
+ * to-be written into a Bytes object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL Dee_bytes_printer_print)(void *__restrict self,
-                                /*utf-8*/ char const *__restrict text,
-                                size_t textlen);
+(DPRINTER_CC Dee_bytes_printer_print)(void *__restrict self,
+                                      /*utf-8*/ char const *__restrict text,
+                                      size_t textlen);
 
 /* Append a single UTF-8 character. */
 DFUNDEF WUNUSED NONNULL((1)) int
@@ -287,9 +287,9 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
-(DCALL Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
-                                 uint8_t const *__restrict data,
-                                 size_t datalen);
+(DPRINTER_CC Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
+                                       uint8_t const *__restrict data,
+                                       size_t datalen);
 
 /* Allocate a buffer of `datalen' bytes at the end of the printer. */
 DFUNDEF WUNUSED NONNULL((1)) uint8_t *

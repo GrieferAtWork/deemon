@@ -603,6 +603,7 @@ PRIVATE struct type_method tpconst attr_class_methods[] = {
 
 
 
+/* `Attribute from deemon' */
 PUBLIC DeeTypeObject DeeAttribute_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Attribute),
@@ -908,6 +909,7 @@ PRIVATE struct type_member tpconst enumattr_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+/* `enumattr from deemon' */
 PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
@@ -1248,6 +1250,7 @@ PRIVATE struct type_member tpconst enumattriter_members[] = {
 	TYPE_MEMBER_END
 };
 
+/* `(enumattr from deemon).Iterator' */
 PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_EnumAttrIterator",
@@ -1358,6 +1361,13 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
                 DeeObject *self, denum_t proc, void *arg);
 
 
+/* Lookup the descriptor for a attribute, given a set of lookup rules.
+ * @param: rules: The result of follow for the lookup.
+ * @return:  0: Successfully queried the attribute.
+ *              The given `result' was filled, and the must finalize
+ *              it through use of `attribute_info_fini()'.
+ * @return:  1: No attribute matching the given requirements was found.
+ * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeAttribute_Lookup(DeeTypeObject *tp_self, DeeObject *self,
                     struct attribute_info *__restrict result,

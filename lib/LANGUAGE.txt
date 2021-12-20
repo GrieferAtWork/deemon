@@ -2946,10 +2946,6 @@ class MyClass {
 		print self.missing_symbol;                      /* Dynamic */
 		print self.operator . ("missing_symbol");       /* Dynamic */
 	}
-
-	function my_getattr(name: string) {
-		print this.operator . (name);                   /* Dynamic */
-	}
 }
 
 function worker(self: MyClass) {
@@ -3007,8 +3003,8 @@ worker2(x);
  *         ... the access _must_ happen statically.
  *       - >> class MyClass { ... function fun() { this.operator . ("attrib"); } }
  *         >> class MyClass { ... function fun() { local self = this; self.operator . ("attrib"); } }
- *         >> class MyClass { ... } function foo(self: MyClass) { self.attrib; }' or
- *         >> class MyClass { ... } function foo(self: MyClass) { self.operator . ("attrib"); }':
+ *         >> class MyClass { ... } function foo(self: MyClass) { self.attrib; }
+ *         >> class MyClass { ... } function foo(self: MyClass) { self.operator . ("attrib"); }
  *         ... the access may happen statically.
  *  #4: Any attribute, no matter how it may have been declared, can always
  *      be accessed statically via `MyClass.attrib.get(this)' (`*.del(this)'
@@ -3018,6 +3014,6 @@ worker2(x);
  *
  * If user-code defines a class to have any non-final, public members, as well as
  * at least one of `operator getattr', `operator delattr' or `operator setattr',
- * the compiler may issue a warning, since none of the non-final, public members
+ * the compiler may issue a warning, since all of the non-final, public members
  * of the class can only be accessed as `MyClass.attrib.get(this)'.
  ************************************************************************************/

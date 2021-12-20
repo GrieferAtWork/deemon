@@ -1074,14 +1074,14 @@ inc_execsz_start:
 
 next_instr:
 #if 0
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 #endif
 #if 0
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
 		code_addr_t ip_addr = ip.ptr - code->co_code;
 		if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
-			DEE_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
+			Dee_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
 		} else {
 			struct ddi_xregs *iter;
 			char const *path, *file, *name;
@@ -1094,7 +1094,7 @@ next_instr:
 				else {
 					path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
 				}
-				DEE_DPRINTF("%s%s%s(%d,%d) : %s+%.4I32X",
+				Dee_DPRINTF("%s%s%s(%d,%d) : %s+%.4I32X",
 				            path ? path : "",
 				            path ? "/" : "",
 				            file ? file : "",
@@ -1107,9 +1107,9 @@ next_instr:
 				            ip_addr);
 				if (name != base_name && *base_name) {
 					/* Also print the name of the base-function */
-					DEE_DPRINTF(" (%s)", base_name);
+					Dee_DPRINTF(" (%s)", base_name);
 				}
-				DEE_DPRINTF(" [sp=%I16u]\n", (uint16_t)STACKUSED);
+				Dee_DPRINTF(" [sp=%I16u]\n", (uint16_t)STACKUSED);
 			}
 			DDI_STATE_WHILE(iter, &state);
 			Dee_ddi_state_fini(&state);
@@ -4219,7 +4219,7 @@ do_setattr_this_c:
 				}
 
 				RAW_TARGET(ASM_CALL_SEQ) {
-					/* Sequence constructor invocation (Implemented using `_sharedvector'). */
+					/* Sequence constructor invocation (Implemented using `_SharedVector'). */
 					uint8_t n_args = READ_imm8();
 					DREF DeeObject *callback_result;
 #ifdef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND

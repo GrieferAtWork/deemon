@@ -665,7 +665,7 @@ PRIVATE NONNULL((1)) bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
 	struct module_bucket *bucket;
-	DEE_DPRINTF("[RT] Cached global module %r loaded from %r\n",
+	Dee_DPRINTF("[RT] Cached global module %r loaded from %r\n",
 	            self->mo_name, self->mo_path ? self->mo_path : (DeeStringObject *)Dee_EmptyString);
 	ASSERT(!self->mo_globpself);
 	ASSERT(self->mo_name);
@@ -1208,6 +1208,7 @@ err:
 	return NULL;
 }
 
+/* Create a new module object that has yet to be initialized or loaded. */
 PUBLIC WUNUSED DREF /*Module*/ DeeObject *DCALL
 DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	DeeModuleObject *result;
@@ -1333,7 +1334,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	char *buf, *dst, *module_name_start;
 	size_t i, len;
 	dhash_t hash;
-	DEE_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
+	Dee_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
 	            module_global_name ? "global module " : "module",
 	            module_global_name ? module_global_name : Dee_EmptyString,
 	            module_pathsize, module_path,
@@ -1344,9 +1345,9 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5 + 1) * sizeof(char));
 #elif !defined(CONFIG_NO_DEX)
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1) * sizeof(char));
-#else
+#else /* ... */
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 4 + 1) * sizeof(char));
-#endif
+#endif /* !... */
 	if unlikely(!buf)
 		goto err;
 	dst = buf;
@@ -2667,8 +2668,13 @@ err:
 
 
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
- * return the module or the module's root function used to describe the code
- * that is being executed. */
+ * return the module used to describe the code that is being executed, or
+ * some unspecified, callable object which (when invoked) executed the given
+ * input code in one way or another.
+ * It is up to the implementation if an associated module should simply be
+ * generated, before that module's root is returned, or if the given user-code
+ * is only executed when the function is called, potentially allowing for
+ * JIT-like execution of simple expressions such as `10 + 20' */
 PUBLIC WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode,
@@ -3002,6 +3008,22 @@ err:
 
 
 
+/* List of strings that should be used as base paths when searching for global modules.
+ * Access to this list should go through `DeeModule_InitPath()', which will
+ * automatically initialize the list to the following default contents upon access:
+ *
+ * >> Commandline: `-L...' where every occurrance is pre-pended before the home-path.
+ *    NOTE: These paths are not added by `DeeModule_InitPath()', but instead
+ *          the first encouter of a -L option will call `DeeModule_GetPath()'
+ *          before pre-pending the following string at the front of the list,
+ *          following other -L paths prepended before then.
+ * >> fs.environ.get("DEEMON_PATH", "").split(fs.DELIM)...;
+ * >> fs.joinpath(DeeExec_GetHome(), "lib")
+ *
+ * This list is also used to locate system-include paths for the preprocessor,
+ * in that every entry that is a string is an include-path after appending "/include":
+ * >> function get_include_paths() { for (local x: DeeModule_Path) if (x is string) yield x.rstrip("/")+"/include"; }
+ */
 PUBLIC DeeListObject DeeModule_Path = {
 	OBJECT_HEAD_INIT(&DeeList_Type),
 	/* .l_alloc = */ 0,
@@ -3288,6 +3310,8 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
 	return (DREF DeeObject *)result;
 }
 
+/* Set the new home folder, overwriting whatever was set before.
+ * HINT: You may pass `NULL' to cause the default home path to be re-created. */
 PUBLIC void DCALL
 DeeExec_SetHome(/*String*/ DeeObject *new_home) {
 	DREF DeeStringObject *old_home;

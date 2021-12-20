@@ -3840,7 +3840,7 @@ seq_class_range(DeeObject *UNUSED(self),
 	/*  Offering the same functionality as the legacy `util::range()',
 	 * `Sequence.range()' is the new builtin way of getting this
 	 *  behavior from a core function (since `Sequence' is a
-	 *  builtin type like `list', `tuple', etc.). */
+	 *  builtin type like `List', `Tuple', etc.). */
 	DeeObject *start, *end = NULL, *step = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|oo:range", &start, &end, &step))
 		goto err;
@@ -3953,6 +3953,7 @@ INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 
+/* `Sequence from deemon' */
 PUBLIC DeeTypeObject DeeSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Sequence),

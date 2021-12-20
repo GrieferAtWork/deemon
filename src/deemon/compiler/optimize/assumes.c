@@ -78,7 +78,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 	}
 	self->aa_syms.sa_mask = new_mask;
 	self->aa_syms.sa_elem = new_vector;
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 	return 0;
 err:
 	return -1;
@@ -100,7 +100,7 @@ ast_assumes_getsymbol(struct ast_assumes *__restrict self,
 		if (item->sa_sym == sym)
 			return item;
 	}
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 nope:
 	return NULL;
 }

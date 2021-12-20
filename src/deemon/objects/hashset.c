@@ -55,6 +55,11 @@ PRIVATE struct hashset_item empty_set_items[1] = {
 
 #define dummy      (&DeeDict_Dummy)
 
+/* Create a new HashSet by inheriting a set of passed key-item pairs.
+ * @param: items:     A vector containing `num_items' elements,
+ *                    even ones being keys and odd ones being items.
+ * @param: num_items: The number of items passed.
+ * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeHashSet_NewItemsInherited(size_t num_items,
                              /*inherit(on_success)*/ DREF DeeObject **items) {
@@ -170,7 +175,7 @@ set_init_sequence(Set *__restrict self,
 	DeeTypeObject *tp = Dee_TYPE(sequence);
 	if (tp == &DeeHashSet_Type)
 		return set_copy(self, (Set *)sequence);
-	/* Optimizations for `_roset' */
+	/* Optimizations for `_RoSet' */
 	if (tp == &DeeRoSet_Type) {
 		struct hashset_item *iter, *end;
 		DeeRoSetObject *src = (DeeRoSetObject *)sequence;
@@ -639,6 +644,9 @@ err:
 	return NULL;
 }
 
+/* @return:  1: Successfully inserted/removed the object.
+ * @return:  0: An identical object already exists/was already removed.
+ * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_Insert(DeeObject *self,
                   DeeObject *search_item) {
@@ -1043,6 +1051,9 @@ again_lock:
 
 
 
+/* @return:  1/true:  The object exists.
+ * @return:  0/false: No such object exists.
+ * @return: -1:       An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_Contains(DeeObject *self, DeeObject *search_item) {
 	Set *me = (Set *)self;
@@ -1693,7 +1704,7 @@ set_init(Set *__restrict self,
 	int error;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
 		goto err;
-	/* TODO: Support for initialization from `_roset' */
+	/* TODO: Support for initialization from `_RoSet' */
 	/* TODO: Optimization for fast-sequence types. */
 	if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
 		goto err;

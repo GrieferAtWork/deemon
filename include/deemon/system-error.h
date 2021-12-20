@@ -24,12 +24,6 @@
 
 #include "system-features.h"
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
-DECL_BEGIN
-
 /* Helper macros for saving/restoring the current:
  *   - errno
  *   - _doserrno
@@ -47,6 +41,12 @@ DECL_BEGIN
 #ifdef CONFIG_HAVE_doserrno
 #define DeeSystemError_HAVE_DOSERRNO 1
 #endif /* CONFIG_HAVE_doserrno */
+
+#ifdef DeeSystemError_HAVE_GETLASTERROR
+#include <Windows.h>
+#endif /* DeeSystemError_HAVE_GETLASTERROR */
+
+DECL_BEGIN
 
 #undef DeeSystemError_HAVE_ANY
 typedef struct {

@@ -357,8 +357,10 @@ PRIVATE SystemFile sysf_std[] = {
 	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), NULL }
 #endif /* CONFIG_HOST_WINDOWS */
 };
-PUBLIC ATTR_RETNONNULL
-DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
+
+/* Return the the default stream for a given STD number. */
+PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+DeeFile_DefaultStd(unsigned int id) {
 	ASSERT(id <= DEE_STDERR);
 	return &sysf_std[id];
 }
@@ -370,12 +372,13 @@ PRIVATE SystemFile sysf_std[] = {
 	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
 #ifdef CONFIG_HOST_WINDOWS
 	,
-	{ LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(uintptr_t)-1, NULL, NULL }
+	{ LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(uintptr_t)-1, (void *)-1, NULL }
 #endif /* CONFIG_HOST_WINDOWS */
 };
 
-PUBLIC ATTR_RETNONNULL
-DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
+/* Return the the default stream for a given STD number. */
+PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+DeeFile_DefaultStd(unsigned int id) {
 	SystemFile *result;
 	ASSERT(id <= DEE_STDDBG);
 	result = &sysf_std[id];
@@ -383,7 +386,9 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 		FILE *new_file;
 #ifdef CONFIG_HAVE___iob_func
 		new_file = (__iob_func() + id);
-#else /* CONFIG_HAVE___iob_func */
+#elif defined(CONFIG_HAVE___acrt_iob_func)
+		new_file = __acrt_iob_func(id);
+#else /* ... */
 		switch (id) {
 
 		case DEE_STDIN:
@@ -398,7 +403,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 			new_file = stderr;
 			break;
 		}
-#endif /* !CONFIG_HAVE___iob_func */
+#endif /* !... */
 		DeeFile_LockWrite(result);
 		/* Make sure not to re-open an std-file that was already closed. */
 		if (!(sysf_std_closed & (1 << id))) {

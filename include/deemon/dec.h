@@ -46,15 +46,15 @@ DECL_BEGIN
 #define DFILE_LIMIT  0xffffff
 
 
-#define DI_MAG0    0    /* File identification byte 0 index */
-#define DECMAG0    0x7f /* Magic number byte 0 */
-#define DI_MAG1    1    /* File identification byte 1 index */
-#define DECMAG1   'D'   /* Magic number byte 1 */
-#define DI_MAG2    2    /* File identification byte 2 index */
-#define DECMAG2   'E'   /* Magic number byte 2 */
-#define DI_MAG3    3    /* File identification byte 3 index */
-#define DECMAG3   'C'   /* Magic number byte 3 */
-#define DI_NIDENT  4    /* Number of identification bytes */
+#define DI_MAG0   0    /* File identification byte 0 index */
+#define DECMAG0   0x7f /* Magic number byte 0 */
+#define DI_MAG1   1    /* File identification byte 1 index */
+#define DECMAG1   'D'  /* Magic number byte 1 */
+#define DI_MAG2   2    /* File identification byte 2 index */
+#define DECMAG2   'E'  /* Magic number byte 2 */
+#define DI_MAG3   3    /* File identification byte 3 index */
+#define DECMAG3   'C'  /* Magic number byte 3 */
+#define DI_NIDENT 4    /* Number of identification bytes */
 
 
 
@@ -655,6 +655,7 @@ DeeModule_OpenDec(struct module_object *__restrict module,
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader);
+
 /* @param: allow_dtype_null: When true, individual vector elements are allowed
  *                           to be `NULL' as the result of `DTYPE_NULL'
  * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
@@ -672,6 +673,7 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader);
+
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */

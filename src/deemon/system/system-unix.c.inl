@@ -50,6 +50,9 @@
 DECL_BEGIN
 
 
+/* Throw an exception alongside an errno error-code `error'
+ * When `tp' is `NULL', automatically select an appropriate
+ * error type based on the value of `error' */
 PUBLIC ATTR_COLD NONNULL((3)) int
 (DCALL DeeUnixSystem_VThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
                                    char const *__restrict format, va_list args) {

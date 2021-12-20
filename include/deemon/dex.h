@@ -161,6 +161,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDex_New(DeeObject *__restri
 
 /* Clear global data caches of all loaded dex modules. */
 INTDEF bool DCALL DeeDex_Cleanup(void);
+
 /* Unload all loaded dex modules. */
 INTDEF void DCALL DeeDex_Finalize(void);
 #endif /* CONFIG_BUILDING_DEEMON */

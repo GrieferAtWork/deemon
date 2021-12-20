@@ -665,34 +665,34 @@ DFUNDEF WUNUSED DREF DeeObject *
 #define DeeInt_AsU(size, self, val)       DEE_PRIVATE_GETUINT(size)(self, val)
 
 #ifdef __CHAR_UNSIGNED__
-#define DeeInt_AsChar(self, result)    DeeInt_AsU(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(char *, result))
+#define DeeInt_AsChar(self, result)    DeeInt_AsU(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #else /* __CHAR_UNSIGNED__ */
-#define DeeInt_AsChar(self, result)    DeeInt_AsS(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(char *, result))
+#define DeeInt_AsChar(self, result)    DeeInt_AsS(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(char *, result))
 #endif /* !__CHAR_UNSIGNED__ */
-#define DeeInt_AsSChar(self, result)   DeeInt_AsS(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(signed char *, result))
-#define DeeInt_AsUChar(self, result)   DeeInt_AsU(__SIZEOF_CHAR__, self, DEE_REQUIRES_TYPE(unsigned char *, result))
-#define DeeInt_AsShort(self, result)   DeeInt_AsS(__SIZEOF_SHORT__, self, DEE_REQUIRES_TYPE(short *, result))
-#define DeeInt_AsUShort(self, result)  DeeInt_AsU(__SIZEOF_SHORT__, self, DEE_REQUIRES_TYPE(unsigned short *, result))
-#define DeeInt_AsInt(self, result)     DeeInt_AsS(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(int *, result))
-#define DeeInt_AsUInt(self, result)    DeeInt_AsU(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(unsigned int *, result))
-#define DeeInt_AsLong(self, result)    DeeInt_AsS(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(long *, result))
-#define DeeInt_AsULong(self, result)   DeeInt_AsU(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(unsigned long *, result))
-#ifdef __COMPILER_HAVE_LONGLONG
-#define DeeInt_AsLLong(self, result)   DeeInt_AsS(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__LONGLONG *, result))
-#define DeeInt_AsULLong(self, result)  DeeInt_AsU(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__ULONGLONG *, result))
-#endif /* __COMPILER_HAVE_LONGLONG */
-#define DeeInt_AsSize(self, result)    DeeInt_AsU(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, result))
-#define DeeInt_AsSSize(self, result)   DeeInt_AsS(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, result))
-#define DeeInt_AsPtrdiff(self, result) DeeInt_AsS(__SIZEOF_PTRDIFF_T__, self, DEE_REQUIRES_TYPE(ptrdiff_t *, result))
-#define DeeInt_AsIntptr(self, result)  DeeInt_AsS(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(intptr_t *, result))
-#define DeeInt_AsUIntptr(self, result) DeeInt_AsU(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(uintptr_t *, result))
+#define DeeInt_AsSChar(self, result)   DeeInt_AsS(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(signed char *, result))
+#define DeeInt_AsUChar(self, result)   DeeInt_AsU(__SIZEOF_CHAR__, self, Dee_REQUIRES_TYPE(unsigned char *, result))
+#define DeeInt_AsShort(self, result)   DeeInt_AsS(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(short *, result))
+#define DeeInt_AsUShort(self, result)  DeeInt_AsU(__SIZEOF_SHORT__, self, Dee_REQUIRES_TYPE(unsigned short *, result))
+#define DeeInt_AsInt(self, result)     DeeInt_AsS(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, result))
+#define DeeInt_AsUInt(self, result)    DeeInt_AsU(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, result))
+#define DeeInt_AsLong(self, result)    DeeInt_AsS(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(long *, result))
+#define DeeInt_AsULong(self, result)   DeeInt_AsU(__SIZEOF_LONG__, self, Dee_REQUIRES_TYPE(unsigned long *, result))
+#ifdef __SIZEOF_LONG_LONG__
+#define DeeInt_AsLLong(self, result)   DeeInt_AsS(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__LONGLONG *, result))
+#define DeeInt_AsULLong(self, result)  DeeInt_AsU(__SIZEOF_LONG_LONG__, self, Dee_REQUIRES_TYPE(__ULONGLONG *, result))
+#endif /* __SIZEOF_LONG_LONG__ */
+#define DeeInt_AsSize(self, result)    DeeInt_AsU(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, result))
+#define DeeInt_AsSSize(self, result)   DeeInt_AsS(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, result))
+#define DeeInt_AsPtrdiff(self, result) DeeInt_AsS(__SIZEOF_PTRDIFF_T__, self, Dee_REQUIRES_TYPE(ptrdiff_t *, result))
+#define DeeInt_AsIntptr(self, result)  DeeInt_AsS(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, result))
+#define DeeInt_AsUIntptr(self, result) DeeInt_AsU(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, result))
 
-#define DeeInt_TryAsSSize(self, val)   DeeInt_TryAsS(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, val))
-#define DeeInt_TryAsSize(self, val)    DeeInt_TryAsU(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, val))
-#define DeeInt_TryAsInt(self, val)     DeeInt_TryAsS(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(int *, val))
-#define DeeInt_TryAsUInt(self, val)    DeeInt_TryAsS(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(unsigned int *, val))
-#define DeeInt_TryAsIntptr(self, val)  DeeInt_TryAsS(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(intptr_t *, val))
-#define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsU(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(uintptr_t *, val))
+#define DeeInt_TryAsSSize(self, val)   DeeInt_TryAsS(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(Dee_ssize_t *, val))
+#define DeeInt_TryAsSize(self, val)    DeeInt_TryAsU(__SIZEOF_SIZE_T__, self, Dee_REQUIRES_TYPE(size_t *, val))
+#define DeeInt_TryAsInt(self, val)     DeeInt_TryAsS(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(int *, val))
+#define DeeInt_TryAsUInt(self, val)    DeeInt_TryAsS(__SIZEOF_INT__, self, Dee_REQUIRES_TYPE(unsigned int *, val))
+#define DeeInt_TryAsIntptr(self, val)  DeeInt_TryAsS(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(intptr_t *, val))
+#define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsU(__SIZEOF_POINTER__, self, Dee_REQUIRES_TYPE(uintptr_t *, val))
 
 
 

@@ -1843,7 +1843,7 @@ ast_genasm_one(struct ast *__restrict self, unsigned int gflags);
  *    sequence types.
  *  - ast_genasm_set() is sued to generate the sequence-expression
  *    in an in/contains expression, allowing a constant sequence of
- *    the expression to be compiled as an _roset, maximizing runtime
+ *    the expression to be compiled as an _RoSet, maximizing runtime
  *    performance.
  *    Additionally, ast_genasm_set() will try to strip unnecessary sequence
  *    casts from the expression, the same way `ast_genasm_asp()' would. */

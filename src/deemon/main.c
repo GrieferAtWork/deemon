@@ -1106,7 +1106,7 @@ int main(int argc, char *argv[]) {
 	 * Since it fails to print a terminating line-feed, this is the
 	 * best we can do to at least prevent our first line from being
 	 * appended to its. */
-	DEE_DPRINT("\n");
+	Dee_DPRINT("\n");
 #endif /* __CYGWIN__ */
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -1370,7 +1370,7 @@ done:
 	Dee_XDecref(script_options.co_rootname);
 	Dee_XDecref(import_options.co_rootname);
 
-	DEE_CHECKMEMORY();
+	Dee_CHECKMEMORY();
 
 	/* Run functions registered for atexit(). */
 	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
@@ -1422,7 +1422,7 @@ done:
 		}
 		if ((_CrtDumpMemoryLeaks)())
 			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
-		DEE_CHECKMEMORY();
+		Dee_CHECKMEMORY();
 #endif /* _DEBUG */
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 	}

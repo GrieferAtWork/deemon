@@ -29,16 +29,16 @@ DECL_BEGIN
 
 
 #ifdef DEE_SOURCE
-#define dee_kwds_entry           kwds_entry
-#define Dee_string_object        string_object
-#define dee_kwds_object          kwds_object
-#define dee_kwds_mapping_object  kwds_mapping_object
-#define dee_keyword              keyword
-#define DEFINE_KWDS              Dee_DEFINE_KWDS
-#define K                        Dee_KEYWORD
-#define KS                       Dee_KEYWORD_STR
-#define KEND                     Dee_KEYWORD_END
-#define DEFINE_KWLIST            Dee_DEFINE_KWLIST
+#define dee_kwds_entry          kwds_entry
+#define Dee_string_object       string_object
+#define dee_kwds_object         kwds_object
+#define dee_kwds_mapping_object kwds_mapping_object
+#define dee_keyword             keyword
+#define DEFINE_KWDS             Dee_DEFINE_KWDS
+#define K                       Dee_KEYWORD
+#define KS                      Dee_KEYWORD_STR
+#define KEND                    Dee_KEYWORD_END
+#define DEFINE_KWLIST           Dee_DEFINE_KWLIST
 #endif /* DEE_SOURCE */
 
 

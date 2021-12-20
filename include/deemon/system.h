@@ -142,20 +142,22 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
 /* Check if a given error code indicates a UNC-path problem that should be
  * addressed by fixing the path using `DeeNTSystem_FixUncPath()', then trying again. */
 DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUncError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBusy(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsExists(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotDir(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotEmpty(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadF(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);
-DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
+
+/* Check for a number of different NT error classes. */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsFileNotFoundError(/*DWORD*/ DeeNT_DWORD dwError); /* ENOENT */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsAccessDeniedError(/*DWORD*/ DeeNT_DWORD dwError); /* EACCES */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadAllocError(/*DWORD*/ DeeNT_DWORD dwError);     /* ENOMEM */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBusy(/*DWORD*/ DeeNT_DWORD dwError);              /* EBUSY */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsExists(/*DWORD*/ DeeNT_DWORD dwError);            /* EEXIST */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotDir(/*DWORD*/ DeeNT_DWORD dwError);            /* ENOTDIR */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNotEmpty(/*DWORD*/ DeeNT_DWORD dwError);          /* ENOTEMPTY */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBadF(/*DWORD*/ DeeNT_DWORD dwError);              /* EBADF */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);              /* EXDEV */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);  /* ENOTSUP */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);              /* EINTR */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);    /* ERANGE */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);   /* EINVAL */
+DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);            /* EINVAL (for readlink(2): not a symbolic link) */
 
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
@@ -275,9 +277,9 @@ DFUNDEF ATTR_COLD NONNULL((2)) int (DCALL DeeNTSystem_VThrowLastErrorf)(DeeTypeO
 #define DeeSystem_SHEXT  ".dll"
 #elif defined(CONFIG_HOST_UNIX)
 #define DeeSystem_SHEXT  ".so"
-#else
+#else /* ... */
 #define DeeSystem_SHEXT  ".so" /* ??? */
-#endif
+#endif /* !... */
 
 /* Open a shared library
  * @return: * :                      A handle for the shared library.

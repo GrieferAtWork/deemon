@@ -362,6 +362,45 @@ strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 }
 
 
+/* General-purpose printing of formatted data to the given `printer'.
+ * These functions implement c's `printf()' standard (except for the
+ * wide-string part) with the following extensions:
+ *   - `%I...': Length prefix: sizeof(size_t)
+ *   - `%I8...', `%I16...', `%I32...', `%I64...': Absolute length prefix.
+ *   - `%q': Print quoted (escaped) string from a UTF-8 source. - Prefix with `%#q' to omit surrounding quotes.
+ *   - `%I8q': Print quoted (escaped) string from a 1-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
+ *   - `%I16q': Print quoted (escaped) string from a 2-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
+ *   - `%I32q': Print quoted (escaped) string from a 4-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
+ *   - `%s': Print a UTF-8 string.
+ *   - `%I8s': Print a 1-byte-per-character string.
+ *   - `%I16s': Print a 2-byte-per-character string.
+ *   - `%I32s': Print a 4-byte-per-character string.
+ *   - `%I8c': Print a character from the range U+0000 - U+00FF (Same as the regular `%c')
+ *   - `%I16c': Print a character from the range U+0000 - U+FFFF
+ *   - `%I32c': Print a character from the range U+00000000 - U+FFFFFFFF
+ *   - `%$s', `%$q': Take the absolute length of the string as a `size_t' (may also be combined with I* prefixes)
+ *   - `%C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"') (Same as the regular `%C')
+ *   - `%I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%#C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters) (Same as the regular `%C')
+ *   - `%#I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%.?s', `%.?q': Take the max length of the string or precision as a `size_t' (may also be combined with I* prefixes)
+ *   - `%:?s', `%:?q': Same as `%$s' / `%$q'
+ *   - `%:DIGIT: Similar to `%.DIGIT', but set the absolute length of the string, rather than its maximum length
+ *               This is to `%.DIGIT' what `%$s' is to `%.?s'
+ *   - `%?...': Take the width of the output text as a `size_t'
+ *   - `%b': Integer option: Same as `o', but output as a binary.
+ *   - `%k': Taking a `DeeObject *', print `__str__' or `none' when `NULL' was passed.
+ *   - `%r': Taking a `DeeObject *', print `__repr__' or `none' when `NULL' was passed.
+ *   - `%K': Same as `%k', but decref() the object afterwards.
+ *   - `%R': Same as `%r', but decref() the object afterwards.
+ * HINT: To guaranty fulfillment of `K' and `R' operands,
+ *       the format string is _always_ fully processed.
+ * @return: * :  The sum of all return values from calls to `*printer'
+ * @return: < 0: The first negative return value of a call to `*printer' */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_VPrintf(dformatprinter printer, void *arg,
                   char const *__restrict format, va_list args) {
@@ -538,7 +577,7 @@ nextfmt:
 #if __SIZEOF_POINTER__ > VA_SIZE
 			if (!length)
 				length = LENGTH_SIZE;
-#endif
+#endif /* __SIZEOF_POINTER__ > VA_SIZE */
 	case 'X':
 			flags |= F_UPPER;
 	case 'x':
@@ -734,12 +773,12 @@ nextfmt:
 				                        (uint8_t *)string, string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
 				                        flags & F_PREFIX
-#else
+#else /* F_PREFIX == FORMAT_QUOTE_FPRINTRAW */
 				                        flags & F_PREFIX
 				                        ? FORMAT_QUOTE_FPRINTRAW
 				                        : FORMAT_QUOTE_FNORMAL
-#endif
-				);
+#endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
+				                        );
 			} else {
 				temp = DeeFormat_Print8(printer, arg, (uint8_t *)string, string_length);
 			}
@@ -758,12 +797,12 @@ nextfmt:
 				                         (uint16_t *)string, string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
 				                         flags & F_PREFIX
-#else
+#else /* F_PREFIX == FORMAT_QUOTE_FPRINTRAW */
 				                         flags & F_PREFIX
 				                         ? FORMAT_QUOTE_FPRINTRAW
 				                         : FORMAT_QUOTE_FNORMAL
-#endif
-				);
+#endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
+				                         );
 			} else {
 				temp = DeeFormat_Print16(printer, arg, (uint16_t *)string, string_length);
 			}
@@ -782,12 +821,12 @@ nextfmt:
 				                         (uint32_t *)string, string_length,
 #if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
 				                         flags & F_PREFIX
-#else
+#else /* F_PREFIX == FORMAT_QUOTE_FPRINTRAW */
 				                         flags & F_PREFIX
 				                         ? FORMAT_QUOTE_FPRINTRAW
 				                         : FORMAT_QUOTE_FNORMAL
-#endif
-				);
+#endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
+				                         );
 			} else {
 				temp = DeeFormat_Print32(printer, arg, (uint32_t *)string, string_length);
 			}
@@ -836,14 +875,14 @@ nextfmt:
 		if (length == LENGTH_L) {
 			long double value;
 			value = va_arg(args, long double);
-#if F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
-    F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-    F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-    F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-    F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-    F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
+     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
+     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_LPrint(value, printer, arg, width, precision, flags);
-#else
+#else /* ... */
 			{
 				unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
 				if (flags & F_LJUST)
@@ -860,20 +899,20 @@ nextfmt:
 					float_flags |= DEEFLOAT_PRINT_FPRECISION;
 				temp = DeeFloat_LPrint(value, printer, arg, width, precision, float_flags);
 			}
-#endif
+#endif /* !... */
 		} else
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 		{
 			double value;
 			value = va_arg(args, double);
-#if F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
-    F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-    F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-    F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-    F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-    F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
+     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
+     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_Print(value, printer, arg, width, precision, flags);
-#else
+#else /* ... */
 		{
 			unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
 			if (flags & F_LJUST)
@@ -890,7 +929,7 @@ nextfmt:
 				float_flags |= DEEFLOAT_PRINT_FPRECISION;
 			temp = DeeFloat_Print(value, printer, arg, width, precision, float_flags);
 		}
-#endif
+#endif /* !... */
 		}
 		if unlikely(temp < 0)
 			goto err;
@@ -1086,6 +1125,8 @@ err:
 	return temp;
 }
 
+
+/* Format-quote 16-bit, and 32-bit text. */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text, size_t textlen,
@@ -1442,6 +1483,10 @@ err:
 	return temp;
 }
 
+
+/* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
+ * NOTE: This function always generates pure ASCII, and is therefor safe to be used
+ *       when targeting an `ascii_printer' */
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote(dformatprinter printer, void *arg,
                 /*utf-8*/ char const *__restrict text, size_t textlen,
@@ -1658,6 +1703,7 @@ err:
 }
 
 
+/* Repeat the given `ch' a total of `count' times. */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
@@ -1684,6 +1730,8 @@ err:
 
 
 
+/* Repeat `str...+=length' such that a total of `total_characters'
+ * characters (not bytes, but characters) are printed. */
 DFUNDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
@@ -1741,7 +1789,7 @@ err:
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
 sprintf_callback(char **__restrict pbuffer,
                  char const *__restrict data, size_t datalen) {
 	memcpyc(*pbuffer, data, datalen, sizeof(char));
@@ -1754,7 +1802,7 @@ struct snprintf_data {
 	size_t siz;
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
 snprintf_callback(struct snprintf_data *__restrict arg,
                   char const *__restrict data, size_t datalen) {
 	if (arg->siz) {
@@ -1795,6 +1843,13 @@ err:
 	return NULL;
 }
 
+/* Both of these functions return a pointer to the target address where
+ * printing has/would have stopped (excluding a terminating \0-character).
+ * In the event that the buffer provided to `Dee_snprintf' is insufficient,
+ * at most `bufsize' characters will have been written, and the exact required
+ * size can be determined by `((return - buffer) + 1) * sizeof(char)'.
+ * In the event of an error (only possible when `format' contains
+ * something like `%k' or `%r'), `NULL' will be returned. */
 PUBLIC NONNULL((1, 2)) char *
 Dee_sprintf(char *__restrict buffer,
             char const *__restrict format, ...) {
@@ -1819,8 +1874,10 @@ Dee_snprintf(char *__restrict buffer, size_t bufsize,
 
 
 
-/* ==========? Extensible formating functions ?========== */
 
+/************************************************************************/
+/* Extensible formating functions                                       */
+/************************************************************************/
 
 LOCAL WUNUSED NONNULL((1)) struct kwds_entry *DCALL
 kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {

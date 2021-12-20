@@ -355,7 +355,7 @@ done:
 	return 0;
 }
 
-PRIVATE NONNULL((1)) dssize_t DCALL
+PRIVATE NONNULL((1)) dssize_t DPRINTER_CC
 tpp_string_printer_print(void *arg, char const *__restrict buf, size_t bufsize) {
 	if unlikely(tpp_string_printer_append((struct tpp_string_printer *)arg, buf, bufsize))
 		goto err;

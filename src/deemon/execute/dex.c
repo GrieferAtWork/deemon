@@ -67,6 +67,10 @@ DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
 
+/* Try to load an extension file.
+ * NOTE: This isn't where the dex gets initialized!
+ * @return:  0: The extension was successfully loaded.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 dex_load_handle(DeeDexObject *__restrict self,
                 void *handle,
@@ -307,6 +311,7 @@ PRIVATE rwlock_t dex_lock = RWLOCK_INIT;
 /* [0..1][lock(dex_lock)] Global chain of loaded dex extensions. */
 PRIVATE DREF DeeDexObject *dex_chain;
 
+/* Clear global data caches of all loaded dex modules. */
 INTERN bool DCALL DeeDex_Cleanup(void) {
 	bool result = false;
 	DREF DeeDexObject *dex;
@@ -329,6 +334,7 @@ INTERN bool DCALL DeeDex_Cleanup(void) {
 	return result;
 }
 
+/* Unload all loaded dex modules. */
 INTERN void DCALL DeeDex_Finalize(void) {
 	DREF DeeDexObject *dex;
 again:
@@ -347,6 +353,7 @@ again:
 }
 
 
+/* Initialize the given dex module. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 dex_initialize(DeeDexObject *__restrict self) {
 	int (DCALL *func)(DeeDexObject * __restrict self);

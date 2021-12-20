@@ -38,21 +38,20 @@ DECL_BEGIN
 #define RODICT_HASHIT     DeeRoDict_HashIt
 #endif /* DEE_SOURCE */
 
-/* A read-only variant of a Dict object, who's main purpose is to be used
- * by compiler optimizations in order to optimize generic mapping expressions
+/* A read-only variant of a Dict object, who's main purpose is to be used by
+ * compiler optimizations in order to optimize generic mapping expressions
  * in various locations, when mapping arguments are constant.
+ *
  * As the name implies, this type of mapping is read-only, in a sense being
- * for `Dict' what `tuple' is for `list'.
+ * for `Dict' what `Tuple' is for `List'.
+ *
  * The read-only Dict type inherits from `mapping', meaning that mapping
  * proxy types are automatically provided for by abstract base classes.
  * Secondly, because read-only dicts cannot be modified, this allows them
  * to operate using an inline hash-vector, as well as not requiring the
  * use of any sort of lock.
- * NOTE: `_rodict' is not exported by deemon, as it is an implementation-specific
- *        sequence type that is not required to implement the deemon standard
- *        programming interface.
- *        However GriferAtWork's implementation uses it to solve the problem
- *        caused by having Dict objects appear as constant variables. */
+ *
+ * NOTE: `_RoDict' is exported as `deemon.Dict.Frozen' */
 typedef struct Dee_rodict_object DeeRoDictObject;
 
 struct Dee_rodict_item {
@@ -68,8 +67,9 @@ struct Dee_rodict_object {
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_rodict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
 };
 
+/* The main `_RoDict' container class. */
 DDATDEF DeeTypeObject DeeRoDict_Type;
-#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_rodict' is final */
+#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
 #define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromSequence(DeeObject *__restrict self);
@@ -80,7 +80,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHin
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_New(void);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(DREF DeeObject **__restrict pself,
+DeeRoDict_Insert(/*in|out*/ DREF DeeObject **__restrict pself,
                  DeeObject *key, DeeObject *value);
 
 

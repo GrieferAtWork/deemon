@@ -47,9 +47,9 @@ DECL_BEGIN
  *       but all objects derived from `DeeSeq_Type' automatically implement
  *       all of them as member functions.
  *       With that in mind, any type implementing the `tp_seq' interface
- *       with the intention of behaving as an iterable, should probably
- *       be derived from `DeeSeq_Type' as this allows userspace to query
- *       for a general purpose sequence by writing `x is sequence from deemon' */
+ *       with the intention of behaving as an Iterable, should probably
+ *       be derived from `DeeSeq_Type' as this allows usercode to query
+ *       for a general purpose sequence by writing `x is Sequence from deemon' */
 INTERN WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *elem;
 	size_t result = 0;

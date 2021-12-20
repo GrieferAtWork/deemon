@@ -2111,7 +2111,7 @@ err:
 }
 
 
-/* The string decode() and encode() member functions also function for `bytes' objects.
+/* The string decode() and encode() member functions also function for `Bytes' objects.
  * As a matter of fact: they'd work for any kind of object, however built-in
  *                      codecs only function for bytes and string objects! */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL

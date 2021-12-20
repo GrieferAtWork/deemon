@@ -64,6 +64,9 @@ INTERN struct empty_traceback_object empty_traceback = {
 
 
 
+/* Try to create a new traceback, but don't throw
+ * an error and return `NULL' if doing so failed.
+ * NOTE: The given `thread' must be the caller's. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct thread_object *__restrict thread) {
 	DREF DeeTracebackObject *result;
@@ -148,6 +151,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 	return result;
 }
 
+/* Fill in stack information in the given traceback for `frame'. */
 INTERN NONNULL((1, 2)) void DCALL
 DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
                       struct code_frame *__restrict frame,

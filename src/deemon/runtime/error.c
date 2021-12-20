@@ -43,6 +43,9 @@
 
 DECL_BEGIN
 
+/* Try to catch (and thereby handle) an instance of `type',
+ * returning true if doing so was possible.
+ * Upon success, the actual error object thrown is discarded during this process. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeError_Catch(DeeTypeObject *__restrict type) {
 	DeeObject *current;
@@ -111,17 +114,17 @@ DeeError_Display(char const *reason,
 	        DeeString_STR(error_str));
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
-	DEE_DPRINT(reason);
-	DEE_DPRINT(">> ");
-	DEE_DPRINT(Dee_TYPE(error)->tp_name);
-	DEE_DPRINT(": ");
-	DEE_DPRINT(DeeString_STR(error_str));
-	DEE_DPRINT("\n");
+	Dee_DPRINT(reason);
+	Dee_DPRINT(">> ");
+	Dee_DPRINT(Dee_TYPE(error)->tp_name);
+	Dee_DPRINT(": ");
+	Dee_DPRINT(DeeString_STR(error_str));
+	Dee_DPRINT("\n");
 	Dee_Decref(error_str);
 	if (traceback) {
 		error_str = (DeeStringObject *)DeeObject_Repr(traceback);
 		if unlikely(!error_str) {
-			DEE_DPRINT("Failed to print traceback\n");
+			Dee_DPRINT("Failed to print traceback\n");
 #if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 			DBG_ALIGNMENT_DISABLE();
 			fprintf(stderr, "Failed to print traceback\n");
@@ -134,8 +137,8 @@ DeeError_Display(char const *reason,
 		fprintf(stderr, "%s\n", DeeString_STR(error_str));
 		DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
-		DEE_DPRINT(DeeString_STR(error_str));
-		DEE_DPRINT("\n");
+		Dee_DPRINT(DeeString_STR(error_str));
+		Dee_DPRINT("\n");
 		Dee_Decref(error_str);
 	}
 	return;
@@ -144,6 +147,8 @@ handle_error:
 	return;
 }
 
+/* Throw a given object `ob' as an error.
+ * @return: -1: Always returns `-1' */
 PUBLIC NONNULL((1)) int
 (DCALL DeeError_Throw)(DeeObject *__restrict ob) {
 	struct except_frame *frame;
@@ -165,7 +170,7 @@ PUBLIC NONNULL((1)) int
 	ts->t_except    = frame;
 	Dee_Incref(ob);
 	++ts->t_exceptsz;
-	DEE_DPRINTF("[RT] Throw exception: %r (%I16u)\n", ob, ts->t_exceptsz);
+	Dee_DPRINTF("[RT] Throw exception: %r (%I16u)\n", ob, ts->t_exceptsz);
 done:
 	return -1;
 }
@@ -195,6 +200,9 @@ err:
 	return -1;
 }
 
+/* Throw a new error of type `tp', using a printf-formatted
+ * message passed through `format' and varargs.
+ * @return: -1: Always returns `-1'*/
 PUBLIC NONNULL((1, 2)) int
 (DeeError_Throwf)(DeeTypeObject *__restrict tp,
                   char const *__restrict format, ...) {
@@ -255,6 +263,10 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 }
 #endif /* !CONFIG_NO_THREADS */
 
+/* Handle the current error, discarding it in the process.
+ * @param: mode:   One of `ERROR_HANDLED_*'
+ * @return: true:  The current error was handled.
+ * @return: false: No error could be handled. */
 #ifdef CONFIG_NO_THREADS
 PUBLIC bool (DCALL DeeError_HandledNoSMP)(void)
 #else /* CONFIG_NO_THREADS */
@@ -289,6 +301,7 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
 	return true;
 }
 
+/* Return the currently effective error, or NULL if none is. */
 PUBLIC WUNUSED DeeObject *DCALL DeeError_Current(void) {
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
@@ -306,6 +319,7 @@ PUBLIC WUNUSED NONNULL((1)) bool DCALL DeeError_CurrentIs(DeeTypeObject *__restr
 
 
 
+/* Install the keyboard interrupt handler. */
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_NO_THREADS
 INTERN void DCALL DeeError_InstallKeyboardInterrupt(void) {

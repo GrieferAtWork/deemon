@@ -219,7 +219,7 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 #define DEE_FMT_SSIZE_T "Id"
 
 #define DEE_FMT_S_INT8  ""    /* Due to integer promotions, we can assume that any 8-bit integral always
-                                 * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+                               * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
 #define DEE_FMT_S_INT16 "I16"
 #define DEE_FMT_S_INT32 "I32"
 #define DEE_FMT_S_INT64 "I64"
