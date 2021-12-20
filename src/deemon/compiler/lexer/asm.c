@@ -530,7 +530,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 	uint32_t old_flags;
 	bool has_paren;
 	bzero(&operands, sizeof(struct operand_list));
-	/*ASSERT(tok == KWD___asm__);*/
+	/*ASSERT(tok == KWD___asm || tok == KWD___asm__);*/
 	if unlikely(yield() < 0)
 		goto err;
 	while (TPP_ISKEYWORD(tok)) {

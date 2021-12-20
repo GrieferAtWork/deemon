@@ -217,10 +217,8 @@ PRIVATE bool DCALL is_statement(void) {
 	case KWD_with:
 	case KWD_try:
 	case KWD_del:
-#ifndef CONFIG_LANGUAGE_NO_ASM
 	case KWD___asm:
 	case KWD___asm__:
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
 	case KWD_goto:
 	case KWD_switch:
 		return true;

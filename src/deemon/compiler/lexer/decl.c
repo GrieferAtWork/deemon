@@ -972,6 +972,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 	switch (tok) {
 
 
+	case KWD___asm:
 	case KWD___asm__:
 		if unlikely(yield() < 0)
 			goto err;
@@ -979,16 +980,27 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM))
 			goto err_flags;
-		/* TODO: Custom, user-defined encoding:
+		/* Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
+		 * >>     ...
 		 * >> } */
-		self->da_type = DAST_NONE;
-
+		if likely(tok == TOK_STRING ||
+		          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+			DREF DeeStringObject *text;
+			text = (DREF DeeStringObject *)ast_parse_string();
+			if unlikely(!text)
+				goto err_flags;
+			self->da_type   = DAST_STRING;
+			self->da_string = text; /* Inherit reference */
+		} else {
+			if (WARN(W_EXPECTED_STRING_AFTER_ASM))
+				goto err_flags;
+			self->da_type = DAST_NONE;
+		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
 			goto err_r;
 		break;
-
 
 	case KWD_none:
 		/* None-type. */
