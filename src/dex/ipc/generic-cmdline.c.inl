@@ -632,7 +632,7 @@ struct process_cmdline_decode_full_data {
 	DREF DeeObject *dfd_resexe;   /* [0..1] Result exe. */
 };
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) dssize_t DPRINTER_CC
 process_cmdline_decode_full_func(void *arg,
                                  char const *__restrict data,
                                  size_t datalen) {

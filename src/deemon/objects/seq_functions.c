@@ -2004,7 +2004,7 @@ DeeSeq_EqVV(DeeObject *const *lhsv,
 	return 1;
 }
 
-INTERN WUNUSED NONNULL((3)) int DCALL
+INTERN WUNUSED NONNULL((2)) int DCALL
 DeeSeq_EqVF(DeeObject *const *lhsv,
             DeeObject *rhs, size_t elemc) {
 	size_t i;
@@ -2092,7 +2092,7 @@ DeeSeq_EqFV(DeeObject *lhs,
 	return 1;
 }
 
-INTERN WUNUSED NONNULL((1, 3)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc) {
 	size_t i;
 	for (i = 0; i < elemc; ++i) {

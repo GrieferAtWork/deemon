@@ -150,15 +150,15 @@ did_handle:
 #ifdef CONFIG_HAVE_CTYPES_KOS_GUARD
 INTERN void ctypes_kos_guard(void) {
 	struct exception_data *data;
-	data = error_data();
+	data = except_data();
 	switch (data->e_class) {
 
 #ifdef E_SEGFAULT
-	case ERROR_CLASS(ERROR_CODEOF(E_SEGFAULT)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_SEGFAULT)):
 		DeeError_Throwf(&DeeError_SegFault, "Segmentation fault when %s %p",
-		                data->e_subclass == ERROR_SUBCLASS(E_SEGFAULT_NOTEXECUTABLE)
+		                data->e_subclass == EXCEPT_SUBCLASS(E_SEGFAULT_NOTEXECUTABLE)
 		                ? "executing"
-		                : data->e_subclass == ERROR_SUBCLASS(E_SEGFAULT_READONLY)
+		                : data->e_subclass == EXCEPT_SUBCLASS(E_SEGFAULT_READONLY)
 		                  ? "writing to"
 		                  : "reading from",
 		                data->e_args.e_segfault.s_addr);
@@ -166,21 +166,21 @@ INTERN void ctypes_kos_guard(void) {
 #endif /* E_SEGFAULT */
 
 #ifdef E_DIVIDE_BY_ZERO
-	case ERROR_CLASS(ERROR_CODEOF(E_DIVIDE_BY_ZERO)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_DIVIDE_BY_ZERO)):
 		DeeError_Throwf(&DeeError_DivideByZero, "Integer divide by zero");
 		break;
 #endif /* E_DIVIDE_BY_ZERO */
 
 #ifdef E_OVERFLOW
-	case ERROR_CLASS(ERROR_CODEOF(E_OVERFLOW)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_OVERFLOW)):
 		DeeError_Throwf(&DeeError_IntegerOverflow, "Integer overflow");
 		break;
 #endif /* E_OVERFLOW */
 
 #ifdef E_ILLEGAL_INSTRUCTION
-	case ERROR_CLASS(ERROR_CODEOF(E_ILLEGAL_INSTRUCTION)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_ILLEGAL_INSTRUCTION)):
 #ifdef E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE
-		if (data->e_subclass == ERROR_SUBCLASS(E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE)) {
+		if (data->e_subclass == EXCEPT_SUBCLASS(E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE)) {
 			DeeError_Throwf(&DeeError_IllegalInstruction, "Privileged instruction");
 			break;
 		}
@@ -190,19 +190,19 @@ INTERN void ctypes_kos_guard(void) {
 #endif /* E_ILLEGAL_INSTRUCTION */
 
 #ifdef E_STACK_OVERFLOW
-	case ERROR_CLASS(ERROR_CODEOF(E_STACK_OVERFLOW)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_STACK_OVERFLOW)):
 		DeeError_Throwf(&DeeError_StackOverflow, "Stack overflow");
 		break;
 #endif /* E_STACK_OVERFLOW */
 
 #ifdef E_INDEX_ERROR
-	case ERROR_CLASS(ERROR_CODEOF(E_INDEX_ERROR)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_INDEX_ERROR)):
 		DeeError_Throwf(&DeeError_IndexError, "Array bounds exceeded");
 		break;
 #endif /* E_INDEX_ERROR */
 
 #ifdef E_INVALID_ALIGNMENT
-	case ERROR_CLASS(ERROR_CODEOF(E_INVALID_ALIGNMENT)):
+	case EXCEPT_CLASS(EXCEPT_CODEOF(E_INVALID_ALIGNMENT)):
 		DeeError_Throwf(&DeeError_SegFault, "Data misalignment");
 		break;
 #endif /* E_INVALID_ALIGNMENT */

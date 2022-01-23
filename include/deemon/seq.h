@@ -573,7 +573,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIS(DeeObject *lhs, DeeObj
  * @return: == 0:  Sequences differ
  * @return: == 1:  Sequences are equal */
 INTDEF WUNUSED                 int DCALL DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc); /* VECTOR == VECTOR */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);         /* VECTOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((2))    int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);         /* VECTOR == DeeFastSeq */
 INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == ITERATOR */
 INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == SEQUENCE */
 INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqFV(DeeObject *lhs, DeeObject *const *rhsv, size_t elemc);         /* DeeFastSeq == VECTOR */

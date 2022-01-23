@@ -624,7 +624,7 @@ INTERN DEFINE_CODE(empty_code_head,
 /* @return: 0: The code is not contained.
  * @return: 1: The code is contained.
  * @return: 2: The frame chain is incomplete, but code wasn't found thus far. */
-PRIVATE WUNUSED NONNULL((2)) int DCALL
+PRIVATE WUNUSED NONNULL((3)) int DCALL
 frame_chain_contains_code(struct code_frame *iter, uint16_t count,
                           DeeCodeObject *__restrict code) {
 	while (count--) {

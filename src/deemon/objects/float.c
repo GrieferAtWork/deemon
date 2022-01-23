@@ -288,19 +288,21 @@ DEFINE_INT15(float_radix, __FLT_RADIX__);
 DEFINE_INT15(float_radix, 2);
 #endif
 
-#ifdef _DBL_ROUNDS
-DEFINE_INT15(float_rounds, _DBL_ROUNDS);
-#elif defined(DBL_ROUNDS)
-DEFINE_INT15(float_rounds, DBL_ROUNDS);
-#elif defined(__DBL_ROUNDS__)
-DEFINE_INT15(float_rounds, __DBL_ROUNDS__);
-#elif defined(FLT_ROUNDS)
-DEFINE_INT15(float_rounds, FLT_ROUNDS);
-#elif defined(__FLT_ROUNDS__)
-DEFINE_INT15(float_rounds, __FLT_ROUNDS__);
-#else
-DEFINE_INT15(float_rounds, 1);
-#endif
+/* TODO: `DBL_ROUNDS' isn't a preprocessor constant,
+ *       but (may) be defined as a function call! */
+//TODO:#ifdef _DBL_ROUNDS
+//TODO:DEFINE_INT15(float_rounds, _DBL_ROUNDS);
+//TODO:#elif defined(DBL_ROUNDS)
+//TODO:DEFINE_INT15(float_rounds, DBL_ROUNDS);
+//TODO:#elif defined(__DBL_ROUNDS__)
+//TODO:DEFINE_INT15(float_rounds, __DBL_ROUNDS__);
+//TODO:#elif defined(FLT_ROUNDS)
+//TODO:DEFINE_INT15(float_rounds, FLT_ROUNDS);
+//TODO:#elif defined(__FLT_ROUNDS__)
+//TODO:DEFINE_INT15(float_rounds, __FLT_ROUNDS__);
+//TODO:#else
+//TODO:DEFINE_INT15(float_rounds, 1);
+//TODO:#endif
 
 PRIVATE struct type_member tpconst float_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("min", &float_min, "The lowest possible floating point value"),
@@ -313,7 +315,7 @@ PRIVATE struct type_member tpconst float_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("mant_dig", &float_mant_dig, "the number of bits in mantissa"),
 	TYPE_MEMBER_CONST_DOC("epsilon", &float_epsilon, "Difference between ${1.0} and the next floating point value, such that ${1.0 + float.epsilon != 1.0}"),
 	TYPE_MEMBER_CONST_DOC("radix", &float_radix, "Exponent radix"),
-	TYPE_MEMBER_CONST_DOC("rounds", &float_rounds, "Rounding mode"),
+//	TYPE_MEMBER_CONST_DOC("rounds", &float_rounds, "Rounding mode"),
 	TYPE_MEMBER_END
 };
 
