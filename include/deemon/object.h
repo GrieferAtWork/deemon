@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2021 Griefer@Work                                       *
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -694,23 +694,23 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_DecrefIfNotOne_untraced(x)  ((x)->ob_refcnt > 1 ? (--(x)->ob_refcnt, true) : false)
 #define Dee_IncrefIfNotZero_untraced(x) ((x)->ob_refcnt ? (++(x)->ob_refcnt, true) : false)
 #else /* CONFIG_NO_THREADS */
-#if defined(_MSC_VER) && defined(CONFIG_HOST_WINDOWS)
+#ifdef _MSC_VER
 /* NOTE: The atomic functions from hybrid would work for this case just as well,  but
  *       they have a rather large compile-time overhead and add a lot of unnecessary
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor, try to bypass them here to speed up compile-time and ease debugging. */
-#if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)) - 1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)) + 1)
-#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
+#if __SIZEOF_POINTER__ == __SIZEOF_LONG__
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)&(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)&(x)) + 1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)&(x)))
 #elif __SIZEOF_POINTER__ == 8
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)) - 1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)) + 1)
-#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)&(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)&(x)) + 1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)&(x)))
 #endif
-#endif /* _MSC_VER && CONFIG_HOST_WINDOWS */
+#endif /* _MSC_VER */
 #ifndef _DeeRefcnt_FetchInc
 #define _DeeRefcnt_FetchInc(x) __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchDec(x) __hybrid_atomic_fetchdec(x, __ATOMIC_SEQ_CST)
