@@ -296,7 +296,7 @@ process_pack_argv_fast(DeeObject *__restrict seq, size_t fastlen,
 	char **result, *utf8;
 	DREF DeeObject *elem, **obj_vector;
 	size_t i;
-	result = (char **)Dee_Malloc((fastlen + 1) * sizeof(char *));
+	result = (char **)Dee_Malloc((fastlen + 2) * sizeof(char *));
 	if (!result)
 		goto done;
 	obj_vector = (DREF DeeObject **)Dee_Malloc(fastlen * sizeof(DREF DeeObject *));
@@ -311,10 +311,10 @@ process_pack_argv_fast(DeeObject *__restrict seq, size_t fastlen,
 		utf8 = DeeString_AsUtf8(elem);
 		if unlikely(!utf8)
 			goto err_elem;
-		result[i]     = utf8;
+		result[i + 1] = utf8;
 		obj_vector[i] = elem; /* Inherit reference. */
 	}
-	result[fastlen] = NULL;
+	result[fastlen + 1] = NULL;
 	*pobj_vector = obj_vector;
 done:
 	return result;
@@ -339,13 +339,13 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 	DREF DeeObject *elem;
 	result_len   = 0;
 	result_alloc = 8;
-	result       = (char **)Dee_TryMalloc((result_alloc + 1) * sizeof(char *));
+	result       = (char **)Dee_TryMalloc((result_alloc + 2) * sizeof(char *));
 	obj_vector   = (DREF DeeObject **)Dee_TryMalloc(result_alloc * sizeof(DREF DeeObject *));
 	if (!result || !obj_vector) {
 		Dee_Free(result);
 		Dee_Free(obj_vector);
 		result_alloc = 0;
-		result = (char **)Dee_Malloc((result_alloc + 1) * sizeof(char *));
+		result = (char **)Dee_Malloc((result_alloc + 2) * sizeof(char *));
 		if unlikely(!result)
 			goto done;
 		obj_vector = NULL;
@@ -374,17 +374,17 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 					goto err_elem;
 			}
 			obj_vector = new_obj_vector;
-			new_result = (char **)Dee_TryRealloc(result, (new_alloc + 1) * sizeof(char *));
+			new_result = (char **)Dee_TryRealloc(result, (new_alloc + 2) * sizeof(char *));
 			if unlikely(!new_result) {
 				new_alloc = result_alloc + 1;
-				new_result = (char **)Dee_Realloc(result, (new_alloc + 1) * sizeof(char *));
+				new_result = (char **)Dee_Realloc(result, (new_alloc + 2) * sizeof(char *));
 				if unlikely(!new_result)
 					goto err_elem;
 			}
 			result       = new_result;
 			result_alloc = new_alloc;
 		}
-		result[result_len]     = elem_utf8;
+		result[result_len + 1] = elem_utf8;
 		obj_vector[result_len] = elem; /* Inherit reference. */
 		++result_len;
 	}
@@ -392,7 +392,7 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 		goto err;
 	ASSERT(result_len <= result_alloc);
 	if (result_len < result_alloc) {
-		new_result = (char **)Dee_TryRealloc(result, (result_len + 1) * sizeof(char *));
+		new_result = (char **)Dee_TryRealloc(result, (result_len + 2) * sizeof(char *));
 		if likely(new_result)
 			result = new_result;
 		new_obj_vector = (DREF DeeObject **)Dee_TryRealloc(obj_vector,
@@ -403,7 +403,7 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 	}
 	*pobj_length = result_len;
 	*pobj_vector = obj_vector;
-	result[result_len] = NULL;
+	result[result_len + 1] = NULL;
 done:
 	return result;
 err_elem:
@@ -675,18 +675,24 @@ again:
 	                              &argv_objlength);
 	if unlikely(!used_argv)
 		goto done_procenv;
+
+	/* Always inject the exe name as the initial argument. */
+	used_argv[0] = used_exe;
+
 	/* Load the environment table */
 	if (procenv) {
 		used_envp = process_pack_envp(procenv);
 		if unlikely(!used_envp)
 			goto done_procenv_argv;
 	}
+
 	/* Load the initial working directory */
 	if (pwd) {
 		used_pwd = DeeString_AsUtf8((DeeObject *)pwd);
 		if unlikely(!used_pwd)
 			goto done_procenv_envp;
 	}
+
 	/* Load std file handles */
 	if (procin) {
 		used_stdin = DeeUnixSystem_GetFD(procin);
@@ -726,7 +732,11 @@ again:
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to spawn new process");
 	} else {
+		rwlock_write(&self->p_lock);
+		/* Set the started and child flags now that the processed is running. */
+		self->p_state |= (PROCESS_FSTARTED | PROCESS_FCHILD);
 		self->p_pid = cpid;
+		rwlock_endwrite(&self->p_lock);
 		result = Dee_None;
 		Dee_Incref(Dee_None);
 	}
@@ -934,7 +944,7 @@ again:
 		 * >>     }
 		 * >>     return result;
 		 * >> }
-		 * >> 
+		 * >>
 		 */
 		/* TODO */
 #else /* Proper */
