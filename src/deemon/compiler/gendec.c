@@ -69,6 +69,12 @@ DECL_BEGIN
 #define SEP '/'
 #endif /* !CONFIG_HOST_WINDOWS */
 
+#ifdef CONFIG_HOST_WINDOWS
+#define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch) || (var) == ((lower_ch) - 'a' + 'A'))
+#else /* CONFIG_HOST_WINDOWS */
+#define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch))
+#endif /* !CONFIG_HOST_WINDOWS */
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
 	DeeModuleObject **iter, **end;
@@ -120,8 +126,7 @@ import_module_by_name:
 				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
 				/* NOTE: No need to check for alternative separators
 				 *       because the path has been sanitized. */
-				while (module_pathstr != module_pathend &&
-				       module_pathend[-1] != SEP)
+				while (module_pathstr < module_pathend && module_pathend[-1] != SEP)
 					--module_pathend;
 			}
 			self_pathstr = module_pathstr;
@@ -130,8 +135,8 @@ import_module_by_name:
 			 *       slashes, because the path has been sanitized. */
 			self_pathpart  = self_pathstr;
 			other_pathpart = other_pathstr;
-			while (self_pathpart != self_pathend &&
-			       other_pathpart != other_pathend) {
+			while (self_pathpart < self_pathend &&
+			       other_pathpart < other_pathend) {
 #ifdef CONFIG_HOST_WINDOWS
 				/* Do a case-insensitive match on windows. */
 				if (DeeUni_ToLower(*self_pathpart) !=
@@ -141,7 +146,8 @@ import_module_by_name:
 				if (*self_pathpart != *other_pathpart)
 					break;
 #endif /* !CONFIG_HOST_WINDOWS */
-				++self_pathpart, ++other_pathpart;
+				++self_pathpart;
+				++other_pathpart;
 				if (self_pathpart[-1] == SEP) {
 					/* Save the first character after the last matching separator. */
 					self_pathstr  = self_pathpart;
@@ -165,25 +171,14 @@ import_module_by_name:
 				goto import_module_by_name;
 			if (other_pathend[-4] != '.')
 				goto import_module_by_name;
-#ifdef CONFIG_HOST_WINDOWS
-			if (other_pathend[-3] != 'd' && other_pathend[-3] != 'D')
+			if (!PATH_CASECMP(other_pathend[-3], 'd'))
 				goto import_module_by_name;
-			if (other_pathend[-2] != 'e' && other_pathend[-2] != 'E')
+			if (!PATH_CASECMP(other_pathend[-2], 'e'))
 				goto import_module_by_name;
-			if (other_pathend[-1] != 'c' && other_pathend[-1] != 'C' &&
-			    other_pathend[-1] != 'e' && other_pathend[-1] != 'E')
+			if (!PATH_CASECMP(other_pathend[-1], 'c') &&
+			    !PATH_CASECMP(other_pathend[-1], 'e'))
 				goto import_module_by_name;
-			is_dec_file = (other_pathend[-1] == 'c' || other_pathend[-1] == 'C');
-#else /* CONFIG_HOST_WINDOWS */
-			if (other_pathend[-3] != 'd')
-				goto import_module_by_name;
-			if (other_pathend[-2] != 'e')
-				goto import_module_by_name;
-			if (other_pathend[-1] != 'c' &&
-			    other_pathend[-1])
-				goto import_module_by_name;
-			is_dec_file = (other_pathend[-1] == 'c');
-#endif /* !CONFIG_HOST_WINDOWS */
+			is_dec_file = PATH_CASECMP(other_pathend[-1], 'c');
 			other_pathend -= 4;
 
 			/* Write all of the dots. */

@@ -3620,16 +3620,16 @@ target_instanceof:
 	cmpl   $(SYM(DeeNone_Singleton)), %edx
 	/* Special case: The deemon specs allow `none' to be
 	 *               written as the second argument to `is' */
-	je     1f
-	pushl  %edx /* FIRST */
+	je     1f                            /* if (DeeNone_Check(FIRST)) goto 1f; */
+	pushl  %edx                          /* DeeType_IsInherited:1:inherited_type=FIRST */
 	ADJUST_CFA_OFFSET(4)
 	movl   ob_type(%ecx), %eax
 	cmpl   $(SYM(DeeSuper_Type)), %eax
-	jne    3f
+	jne    3f                            /* if (!DeeSuper_Check(SECOND)) goto 3f; */
 	/* Check against the effective class of the
 	 * super-wrapper, not the super-type itself. */
 	movl   s_type(%ecx), %eax
-3:	pushl  %eax
+3:	pushl  %eax                          /* DeeType_IsInherited:0:test_type */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeType_IsInherited,8)
 	ADJUST_CFA_OFFSET(-8)

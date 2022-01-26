@@ -643,7 +643,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
  * @return:  1: The DEC file was out of date or had been corrupted.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_OpenDec(struct module_object *__restrict module,
+DeeModule_OpenDec(struct module_object *__restrict mod,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *options);
 

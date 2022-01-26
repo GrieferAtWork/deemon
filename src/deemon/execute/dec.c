@@ -962,44 +962,46 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		                                                              self->df_options ? self->df_options->co_inner : NULL,
 		                                                              false);
 		if unlikely(!ITER_ISOK(module)) {
-			if (module) {
-				/* Don't throw an error for this when `module_name' describes
-				 * the name of a global module. - This could happen if the
-				 * module library path was set up differently when this DEC file
-				 * was generated last, now resulting in that module no longer being
-				 * reachable as one that is global.
-				 * Technically, this is a problem with how the DEC encoder generates
-				 * dependency names, as it no longer knows if the original source
-				 * addressed its dependencies as relative, or global modules, forcing
-				 * it to guess which one it should choose.
-				 * However, since DEC files are intended as simple caches, rather than
-				 * stand-alone object files, or even executables all-together, we can
-				 * simply indicate that the DEC cache has been corrupted, or has fallen
-				 * out-of-date, and have the caller re-compile the module, thus updating
-				 * the dependency, and loading the required module via its actual location. */
-				if (*module_name != '.')
-					goto stop_imports;
-				/* A missing relative import is something that even re-compiling won't
-				 * fix, so we may as well throw the error now, and include some helpful
-				 * context information about where the dependency came from.
-				 * -> This can happen if global modules that were previously used
-				 *    suddenly disappear between execution cycles. */
-				DeeError_Throwf(&DeeError_FileNotFound,
-				                "Dependency %q of module %r in %$q could not be found",
-				                strtab + off, self->df_module->mo_name,
-				                module_pathlen, module_pathstr);
-			}
+			if (!module)
+				goto err_imports;
+			/* Don't throw an error for this when `module_name' describes
+			 * the name of a global module. - This could happen if the
+			 * module library path was set up differently when this DEC file
+			 * was generated last, now resulting in that module no longer being
+			 * reachable as one that is global.
+			 * Technically, this is a problem with how the DEC encoder generates
+			 * dependency names, as it no longer knows if the original source
+			 * addressed its dependencies as relative, or global modules, forcing
+			 * it to guess which one it should choose.
+			 * However, since DEC files are intended as simple caches, rather than
+			 * stand-alone object files, or even executables all-together, we can
+			 * simply indicate that the DEC cache has been corrupted, or has fallen
+			 * out-of-date, and have the caller re-compile the module, thus updating
+			 * the dependency, and loading the required module via its actual location. */
+			if (*module_name != '.')
+				GOTO_CORRUPTEDF(reader, stop_imports, "module_name = %q", module_name);
+
+			/* A missing relative import is something that even re-compiling won't
+			 * fix, so we may as well throw the error now, and include some helpful
+			 * context information about where the dependency came from.
+			 * -> This can happen if global modules that were previously used
+			 *    suddenly disappear between execution cycles. */
+			DeeError_Throwf(&DeeError_FileNotFound,
+			                "Dependency %q of module %r in %$q could not be found",
+			                strtab + off, self->df_module->mo_name,
+			                module_pathlen, module_pathstr);
 			goto err_imports;
 		}
+
 		/* Check if the module has changed. */
 		if (!self->df_options || !(self->df_options->co_decloader & DEC_FLOADOUTDATED)) {
 			uint64_t modtime = DeeModule_GetCTime((DeeObject *)module);
 			if unlikely(modtime == (uint64_t)-1)
-				goto err_imports_module;
+				GOTO_CORRUPTED(reader, err_imports_module);
 			/* If the module has changed since the time
 			 * described on the DEC header, stop loading. */
 			if unlikely(modtime > timestamp)
-				goto stop_imports_module;
+				GOTO_CORRUPTED(reader, stop_imports_module);
 		}
 		*moditer = module; /* Inherit */
 	}
@@ -2676,22 +2678,33 @@ err:
  * @return:  1: The DEC file was out of date or had been corrupted.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_OpenDec(DeeModuleObject *__restrict module,
+DeeModule_OpenDec(DeeModuleObject *__restrict mod,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *options) {
 	DecFile file;
 	int result;
-	ASSERT(module->mo_path);
+	ASSERT(mod->mo_path);
 	/* Initialize the file */
-	if ((result = DecFile_Init(&file, input_stream, module, module->mo_path, options)) != 0)
+	result = DecFile_Init(&file, input_stream, mod, mod->mo_path, options);
+	if unlikely(result != 0)
 		goto done;
 	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
+
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
-	if ((!options || !(options->co_decloader & DEC_FLOADOUTDATED)) &&
-	    (result = DecFile_IsUpToDate(&file)) != 0)
-		goto done_file;
+	if (!options || !(options->co_decloader & DEC_FLOADOUTDATED)) {
+		result = DecFile_IsUpToDate(&file);
+		if (result != 0) {
+			Dee_DPRINTF("[LD] Dec file for %r is out-of-date\n", file.df_name);
+			goto done_file;
+		}
+	}
+
 	/* With all that out of the way, actually load the file. */
 	result = DecFile_Load(&file);
+#ifndef DEE_NO_DPRINTF
+	if unlikely(result > 0)
+		Dee_DPRINTF("[LD] Dec file for %r is corrupted\n", file.df_name);
+#endif /* !DEE_NO_DPRINTF */
 done_file:
 	DecFile_Fini(&file);
 done:
