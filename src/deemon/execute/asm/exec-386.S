@@ -41,12 +41,12 @@
 /* Reminder: Optimization:
  * >>	testl %eax, %eax
  * >>	jnz   .except
- * >>	jmp   .disp
+ * >>	jmp    .disp
  * Considering that the except-branch
  * is unlikely, this can be written as:
  * >>	testl %eax, %eax
- * >>	jz    .disp
- * >>	jmp   .except
+ * >>	jz     .disp
+ * >>	jmp    .except
  * When written as such, the more likely
  * success-branch uses 1 less instruction! */
 
@@ -1017,7 +1017,7 @@ delete_exceptions:
 	call   fSYM(DeeError_Print,8)
 	ADJUST_CFA_OFFSET(-8)
 	loop   1b
-	jmp   .end_load_result
+	jmp    .end_load_result
 
 .section .rodata
 99: .string "Discarding secondary error\n"
@@ -1049,7 +1049,7 @@ run_finally_after_return:
 	/* Found one that must be executed! */
 	jmp    run_except_handler_in_edx
 2:	loop   1b
-	jmp   .end_without_finally
+	jmp    .end_without_finally
 
 
 
@@ -1060,35 +1060,35 @@ run_finally_after_return:
 .except_decref_xpop_x4:
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      .except_decref_xpop_x3
-	decref  %edx
+	decref %edx
 .except_decref_xpop_x3:
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      .except_decref_xpop_x2
-	decref  %edx
+	decref %edx
 .except_decref_xpop_x2:
 .except_decref_pop_x2 = .except_decref_xpop_x2
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      .except_decref_xpop
-	decref  %edx
+	decref %edx
 .except_decref_xpop:
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      .except
-	jmp     .except_decref_edx
+	jmp    .except_decref_edx
 
 	ADJUST_CFA_OFFSET(4)
 .except_decref_pop:
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
 .except_decref_edx:
-	decref  %edx
+	decref %edx
 	jmp    .except
 
 	ADJUST_CFA_OFFSET(24)
@@ -1198,7 +1198,7 @@ run_finally_after_return:
 fail_with_exception:
 	unset_result %eax
 	movl   $0, FRAME_RESULT
-	jmp   .end_return
+	jmp    .end_return
 9:	popl   %ecx
 	popl   %eax
 	jmp    2b
@@ -1249,10 +1249,10 @@ run_except_handler_in_edx:
 	jb     2f /* if (current_stack_depth < required_stack_depth) goto 1f; */
 	/* Adjust by popping values (potentially does nothing). */
 	subl   %eax, %ecx
-	jz    .disp /* Simply continue without adjustment when nothing needed to be done. */
+	jz     .disp /* Simply continue without adjustment when nothing needed to be done. */
 1:	sp_popref    %eax, 0, 1, 0
 	loop   1b
-	jmp   .disp
+	jmp    .disp
 2:	/* Adjust by pushing `none' (never does nothing) */
 	subl   %ecx, %eax
 	movl   %eax, %ecx
@@ -1260,7 +1260,7 @@ run_except_handler_in_edx:
 	leal   SYM(DeeNone_Singleton), %eax
 1:	sp_push %eax, 1
 	loop   1b
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1289,7 +1289,7 @@ stack_overflow:
 	addl   $8, %esp
 	ADJUST_CFA_OFFSET(-8)
 	xorl   %eax, %eax /* return NULL; */
-	jmp   .end_without_unlink
+	jmp    .end_without_unlink
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
 exec_on_altstack:
@@ -1350,7 +1350,7 @@ invop:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_illegal_instruction,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -1367,10 +1367,10 @@ target_ret_none:
 	jz     1f
 	repeat_instruction
 	movl   $(ITER_DONE), FRAME_RESULT
-	jmp   .end_return
+	jmp    .end_return
 1:	movl   $(SYM(DeeNone_Singleton)), FRAME_RESULT
 	incref_addr SYM(DeeNone_Singleton)
-	jmp   .end_return
+	jmp    .end_return
 
 
 target_ret:
@@ -1388,7 +1388,7 @@ target_setret:
 	unset_result %eax
 	sp_pop %eax
 	movl   %eax, FRAME_RESULT
-	jmp   .disp
+	jmp    .disp
 
 
 target_yieldall:
@@ -1401,15 +1401,15 @@ target_yieldall:
 	ADJUST_CFA_OFFSET(-4)
 	/* Check for errors. */
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	/* Check for iterator-exhausted. */
 	cmpl   $(ITER_DONE), %eax
 	je     1f
 	repeat_instruction
 	movl   %eax, FRAME_RESULT
-	jmp   .end_without_finally
+	jmp    .end_without_finally
 1:	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1419,7 +1419,7 @@ target_throw:
 	call   fSYM(DeeError_Throw,4)
 	ADJUST_CFA_OFFSET(-4)
 	sp_popref %eax
-	jmp   .except
+	jmp    .except
 
 
 
@@ -1434,7 +1434,7 @@ target_rethrow:
 	movl   t_except(%eax),     %ecx
 	testl  %ecx, %ecx
 	/* if (!this_thread->t_except) err_no_active_exception(); */
-	jz    .except_no_active_exception
+	jz     .except_no_active_exception
 	movl   ef_error(%ecx),     %ecx
 	ASSERT_NONZERO(%ecx)
 	/* Rethrow an exception of the caller. */
@@ -1442,10 +1442,10 @@ target_rethrow:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeError_Throw,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 .except_no_active_exception:
 	call   fSYM(err_no_active_exception,0)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -1467,7 +1467,7 @@ target_endcatch:
 	call   fSYM(DeeError_Handled,4)
 	ADJUST_CFA_OFFSET(-4)
 #endif
-	jmp   .disp
+	jmp    .disp
 target_endcatch_n:
 	lodsb  /* EAX = nth_except */
 	incl   %eax
@@ -1516,7 +1516,7 @@ target_endcatch_n:
 	call   fSYM(Dee_Free,4)     /* Free the frame */
 #endif
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1531,7 +1531,7 @@ target_endfinally:
 	movw   t_exceptsz(%eax), %ax
 	cmpw   %ax, L_EXCEPT_RECURSION
 	je    .disp
-	jmp   .except
+	jmp    .except
 target_endfinally_n:
 	lodsb  /* EAX = min_except */
 	/* If a return value has been assigned, stop execution. */
@@ -1545,7 +1545,7 @@ target_endfinally_n:
 	cmpw   %cx, t_exceptsz(%edx)
 	jna   .disp /* if (!(this_thread->t_exceptsz > except_recursion+min_except+1))
 	             *       goto .disp; */
-	jmp   .except
+	jmp    .except
 
 
 
@@ -1553,7 +1553,7 @@ target_push_this_module:
 	LOAD_CODE(%eax)
 	movl   co_module(CODE_OR_EAX), %eax
 	sp_push %eax, 1
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1583,7 +1583,7 @@ target_push_bnd_extern:
 	setnz  %dl
 	leal   SYM(Dee_FalseTrue)(,%edx,8), %eax
 	sp_push %eax, 1 /* PUSHREF(DeeBool_For(EXTERNimm != NULL)) */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1597,7 +1597,7 @@ target_push_bnd_global:
 	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 	movl   mo_globalv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %eax
-	jmp   .push_eax_nonnull
+	jmp    .push_eax_nonnull
 
 
 
@@ -1608,7 +1608,7 @@ target_push_bnd_local:
 	lodsb
 1:	movl   FRAME_FRAME, %ecx
 	movl   (%ecx,%eax,4), %eax
-	jmp   .push_eax_nonnull
+	jmp    .push_eax_nonnull
 
 
 
@@ -1666,7 +1666,7 @@ target_jf:
 #else
 .disp_checkip = .disp
 #endif
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1709,7 +1709,7 @@ target_jt:
 #endif
 	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %ecx /* POPREF() */
-	jmp   .disp_checkip
+	jmp    .disp_checkip
 
 
 
@@ -1725,7 +1725,7 @@ prefix_target_jf16:
 	cmpl   $0, %eax
 	je    .Ldo_jmp_prefix_16   /* if (IS_FALSE) goto DO_JUMP; */
 	jl    .except_decref_pop
-	jmp   .Ldont_jmp_prefix_16 /* else goto DONT_JUMP; */
+	jmp    .Ldont_jmp_prefix_16 /* else goto DONT_JUMP; */
 	ADJUST_CFA_OFFSET(-4)
 prefix_target_jt16:
 	call   get_prefix_object
@@ -1750,14 +1750,14 @@ prefix_target_jt16:
 	jno   .disp_checkip
 	assert_failed() /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
 #endif
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
 .Ldont_jmp_prefix_16:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	decref %edx
 	addl   $2, PC
-	jmp   .disp
+	jmp    .disp
 
 prefix_target_jf:
 	call   get_prefix_object
@@ -1771,7 +1771,7 @@ prefix_target_jf:
 	cmpl   $0, %eax
 	je    .Ldo_jmp_prefix_8   /* if (IS_FALSE) goto DO_JUMP; */
 	jl    .except_decref_pop
-	jmp   .Ldont_jmp_prefix_8 /* else goto DONT_JUMP; */
+	jmp    .Ldont_jmp_prefix_8 /* else goto DONT_JUMP; */
 	ADJUST_CFA_OFFSET(-4)
 prefix_target_jt:
 	call   get_prefix_object
@@ -1796,14 +1796,14 @@ prefix_target_jt:
 	jno   .disp_checkip
 	assert_failed() /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
 #endif
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
 .Ldont_jmp_prefix_8:
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	decref %edx
 	incl   PC
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -1830,7 +1830,7 @@ target32_jmp:
 	jno   .disp_checkip
 	assert_failed() /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
 #endif
-	jmp   .disp
+	jmp    .disp
 target_jmp16:
 	lodsw
 	movswl %ax, %eax
@@ -1851,7 +1851,7 @@ target_jmp16:
 1:
 #endif
 	addl   %eax, PC /* ip += Simm16 */
-	jmp   .disp_checkip
+	jmp    .disp_checkip
 target_jmp:
 	lodsb
 	movsbl %al, %eax
@@ -1872,7 +1872,7 @@ target_jmp:
 1:
 #endif
 	addl   %eax, PC /* ip += Simm8 */
-	jmp   .disp_checkip
+	jmp    .disp_checkip
 
 
 
@@ -1888,7 +1888,7 @@ target_iterself:
 	call   fSYM(DeeObject_IterSelf,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Store the result onto the stack. */
 	decref %eax
 	cmpb   $(ASM_FOREACH), 0(PC)
@@ -1907,12 +1907,12 @@ target_foreach:
 	popl   %edx /* Jump-offset */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except /* Check for exception */
+	jz     .except /* Check for exception */
 	cmpl   $(ITER_DONE), %eax
 	je     2f /* Check for iterator exhaustion */
 	/* Leave the iterator and push the element. */
 	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 2:
 #ifndef CONFIG_NO_THREADS
 	cmpl   $0, %edx
@@ -1932,7 +1932,7 @@ target_foreach:
 #endif
 	addl   %edx, PC /* ip += Simm8/16 */
 	sp_popref %eax
-	jmp   .disp_checkip
+	jmp    .disp_checkip
 
 
 
@@ -1986,7 +1986,7 @@ target_jmp_pop:
 	ADJUST_CFA_OFFSET(-4)
 1:	movl   %eax,     PC
 #endif
-	jmp   .disp_checkip
+	jmp    .disp_checkip
 
 target_jmp_pop_pop:
 	subl   $8, %esp /* absstk, absip */
@@ -2019,10 +2019,10 @@ target_jmp_pop_pop:
 	jb     2f /* if (current_stack_depth < required_stack_depth) goto 1f; */
 	/* Adjust by popping values (potentially do nothing). */
 	subl   %eax, %ecx
-	jz    .jmp_abs_pop /* Simply continue without adjustment when nothing needed to be done. */
+	jz     .jmp_abs_pop /* Simply continue without adjustment when nothing needed to be done. */
 1:	sp_popref %eax, 0, 1, 0 /* Preserve ECX in during this operation. */
 	loop   1b
-	jmp   .jmp_abs_pop
+	jmp    .jmp_abs_pop
 2:	/* Adjust by pushing `none' (never does nothing) */
 	subl   %ecx, %eax
 	movl   %eax, %ecx
@@ -2030,7 +2030,7 @@ target_jmp_pop_pop:
 	leal   SYM(DeeNone_Singleton), %eax
 1:	sp_push %eax, 1
 	loop   1b
-	jmp   .jmp_abs_pop /* Pop the target address from the stack and jump to it. */
+	jmp    .jmp_abs_pop /* Pop the target address from the stack and jump to it. */
 ADJUST_CFA_OFFSET(-4)
 
 
@@ -2053,7 +2053,7 @@ target_call:
 	call   fSYM(DeeObject_Call,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	popl   %edx /* EDX = SP - n_args; */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl  -4(%edx), %eax /* Store the result onto the stack. */
@@ -2061,10 +2061,10 @@ target_call:
 	popl   %ecx /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %ecx, %ecx
-	jz    .disp
+	jz     .disp
 1:	sp_popref %eax, 0, 1, 0
 	loop   1b
-	jmp   .disp
+	jmp    .disp
 
 
 target_call_seq:
@@ -2082,7 +2082,7 @@ target_call_seq:
 	call   fSYM(DeeSharedVector_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4
+	jz     .except_x4
 	popl   SP              /* SP = new_sp (from the backup) */
 	ADJUST_CFA_OFFSET(-4)
 	pushl  %eax            /* backup(shared_vector) / callback-argv[0] */
@@ -2107,12 +2107,12 @@ target_call_seq:
 	 * to release vector-ownership of the shared-vector. */
 	call   fSYM(DeeSharedVector_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
 99:	/* Must still release vector ownership (shared_vector is still in 0(%esp)) */
 	call   fSYM(DeeSharedVector_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 
 
 target_call_map:
@@ -2130,7 +2130,7 @@ target_call_map:
 	call   fSYM(DeeSharedMap_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4
+	jz     .except_x4
 	popl   SP              /* SP = new_sp (from the backup) */
 	ADJUST_CFA_OFFSET(-4)
 	pushl  %eax            /* backup(shared_map) / callback-argv[0] */
@@ -2155,12 +2155,12 @@ target_call_map:
 	 * to release vector-ownership of the shared-vector. */
 	call   fSYM(DeeSharedMap_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
 99:	/* Must still release vector ownership (shared_map is still in 0(%esp)) */
 	call   fSYM(DeeSharedMap_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -2172,11 +2172,11 @@ target_call_tuple:
 	call   fSYM(DeeObject_CallTuple,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for error */
+	jz     .except /* Check for error */
 	xchgl  SECOND, %eax /* Push the function return value. */
 	decref %eax /* Decref the called function. */
 	sp_popref %eax /* Pop the argument tuple */
-	jmp   .disp
+	jmp    .disp
 
 
 target_thiscall_tuple:
@@ -2189,12 +2189,12 @@ target_thiscall_tuple:
 	call   fSYM(DeeObject_ThisCallTuple,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  THIRD, %eax
 	decref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -2228,7 +2228,7 @@ target_call_kw:
 	call   fSYM(DeeObject_CallKw,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	popl   %edx          /* EDX = new_sp */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl  %eax, -4(%edx)/* Save result on the stack. */
@@ -2237,10 +2237,10 @@ target_call_kw:
 	ADJUST_CFA_OFFSET(-4)
 	/* Pop arguments form the stack. */
 	testl  %ecx, %ecx
-	jz    .disp
+	jz     .disp
 1:	sp_popref %eax, 0, 1, 0
 	loop   1b
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -2261,26 +2261,26 @@ target_call_tuple_kw:
 	call   fSYM(DeeObject_CallTupleKw,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  %eax, SECOND  /* Save the result on the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 target_call_tuple_kwds:
-	pushl   FIRST        /* DeeObject_CallTupleKw:kw */
+	pushl  FIRST        /* DeeObject_CallTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND       /* DeeObject_CallTupleKw:args */
+	pushl  SECOND       /* DeeObject_CallTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   THIRD        /* DeeObject_CallTupleKw:self */
+	pushl  THIRD        /* DeeObject_CallTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallTupleKw,12)
+	call   fSYM(DeeObject_CallTupleKw,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   %eax, THIRD  /* Save the result on the stack. */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	sp_popref %eax
 	jmp    .disp
@@ -2310,7 +2310,7 @@ target_operator:
 	call   fSYM(DeeObject_InvokeOperator,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	popl   %edx /* EDX = SP - n_args */
 	ADJUST_CFA_OFFSET(-4)
 	popl   %ecx /* ECX = n_args */
@@ -2318,10 +2318,10 @@ target_operator:
 	xchgl  %eax, -4(%edx) /* Save the result onto the stack. */
 	decref %eax, 0, 1, 0
 	testl  %ecx, %ecx /* Pop arguments. */
-	jz    .disp
+	jz     .disp
 1:	sp_popref %eax, 0, 1, 0
 	loop   1b
-	jmp   .disp
+	jmp    .disp
 
 target16_operator_tuple:
 	lodsw
@@ -2342,11 +2342,11 @@ target_operator_tuple:
 	call   fSYM(DeeObject_InvokeOperator,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  SECOND, %eax /* Save the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 prefix_target16_operator:
 	call   get_prefix_object
@@ -2391,7 +2391,7 @@ prefix_target_operator:
 	ADJUST_CFA_OFFSET(8)
 99:	addl   $8, %esp
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except_decref_pop
+	jmp    .except_decref_pop
 ADJUST_CFA_OFFSET(-4)
 
 
@@ -2419,7 +2419,7 @@ prefix_target_operator_tuple:
 	call   fSYM(DeeObject_PInvokeOperator,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	xchgl  TOP, %eax    /* Save the result onto the stack. */
 	decref %eax
 	popl   %edx         /* Write back the new prefix object. */
@@ -2456,67 +2456,67 @@ target_del_global:
 #endif /* !CONFIG_NO_THREADS */
 	/* Drop a reference from the exchanged value when it is non-NULL. */
 	testl  %ecx, %ecx
-	jz    .disp
+	jz     .disp
 	decref %ecx
-	jmp   .disp
+	jmp    .disp
 
 
 
 target16_del_local:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_del_local:
 	lodsb
-1:	movl    FRAME_FRAME, %ecx
-	xorl    %edx, %edx
+1:	movl   FRAME_FRAME, %ecx
+	xorl   %edx, %edx
 	xchgl   %ecx, (%ecx,%eax,4) /* Exchange the local variable with `NULL' */
 	/* Drop a reference from the exchanged value when it is non-NULL. */
-	testl   %ecx, %ecx
+	testl  %ecx, %ecx
 	jz     .disp
-	decref  %ecx
+	decref %ecx
 	jmp    .disp
 
 
 
 target_swap:
-	movl    FIRST, %eax
+	movl   FIRST, %eax
 	xchgl   SECOND, %eax
-	movl    %eax, FIRST
+	movl   %eax, FIRST
 	jmp    .disp
 
 
 
 target16_lrot:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_lrot:
 	lodsb
 	/* NOTE: This assembly implementation is a bit complicated.
 	 *       If you wish to understand what happens here,
 	 *       I suggest looking at the C implementation. */
-1:	leal    12(,%eax,4), %ecx /* SHIFT = (eax * 4) + 12; (aka. `SHIFT = (eax + 3) * 4;') */
-	movl    SP, %edx
-	subl    %ecx, %edx /* EDX = SP - SHIFT; */
+1:	leal   12(,%eax,4), %ecx /* SHIFT = (eax * 4) + 12; (aka. `SHIFT = (eax + 3) * 4;') */
+	movl   SP, %edx
+	subl   %ecx, %edx /* EDX = SP - SHIFT; */
 	pushl  (%edx) /* SAVE: *(SP - SHIFT); */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
 	addl    $2, %eax
-	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
+	pushl  %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #else /* __KOS__ */
-	subl    $4, %ecx
-	pushl   %ecx /* memmove.arg(2): SHIFT - 1; */
+	subl   $4, %ecx
+	pushl  %ecx /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #endif /* !__KOS__ */
-	pushl   %edx /* memmove.arg(1): SP - (SHIFT - 1); */
+	pushl  %edx /* memmove.arg(1): SP - (SHIFT - 1); */
 	ADJUST_CFA_OFFSET(4)
 	addl    $4, (%esp)
-	pushl   %edx /* memmove.arg(0): SP - SHIFT; */
+	pushl  %edx /* memmove.arg(0): SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	call    SYM(memmovedownl)
+	call   SYM(memmovedownl)
 #else /* __KOS__ */
-	call    SYM(memmove)
+	call   SYM(memmove)
 #endif /* !__KOS__ */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
@@ -2525,37 +2525,37 @@ target_lrot:
 	jmp    .disp
 target16_rrot:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_rrot:
 	lodsb
 	/* NOTE: This assembly implementation is a bit complicated.
 	 *       If you wish to understand what happens here,
 	 *       I suggest looking at the C implementation. */
-1:	leal    12(,%eax,4), %ecx /* SHIFT = (eax * 4) + 12; (aka. `SHIFT = (eax + 3) * 4;') */
-	movl    SP, %edx
-	subl    %ecx, %edx /* EDX = SP - SHIFT; */
-	pushl   TOP /* SAVE: *(SP - 1); */
+1:	leal   12(,%eax,4), %ecx /* SHIFT = (eax * 4) + 12; (aka. `SHIFT = (eax + 3) * 4;') */
+	movl   SP, %edx
+	subl   %ecx, %edx /* EDX = SP - SHIFT; */
+	pushl  TOP /* SAVE: *(SP - 1); */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx /* SAVE: SP - SHIFT; */
+	pushl  %edx /* SAVE: SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
 	addl    $2, %eax
-	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
+	pushl  %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #else /* __KOS__ */
-	subl    $4, %ecx
-	pushl   %ecx /* memmove.arg(2): SHIFT - 1; */
+	subl   $4, %ecx
+	pushl  %ecx /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
 #endif /* !__KOS__ */
-	pushl   %edx /* memmove.arg(1): SP - SHIFT; */
+	pushl  %edx /* memmove.arg(1): SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 	addl    $4, %edx
-	pushl   %edx /* memmove.arg(0): SP - (SHIFT - 1); */
+	pushl  %edx /* memmove.arg(0): SP - (SHIFT - 1); */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	call    SYM(memmoveupl)
+	call   SYM(memmoveupl)
 #else /* __KOS__ */
-	call    SYM(memmove)
+	call   SYM(memmove)
 #endif /* !__KOS__ */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
@@ -2568,12 +2568,12 @@ target_rrot:
 
 
 target_dup:
-	movl    TOP, %eax
+	movl   TOP, %eax
 	sp_push %eax, 1
 	jmp    .disp
 target16_dup_n:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_dup_n:
 	lodsb
 1:	/* dup #n loads an object offset by n+2:
@@ -2587,9 +2587,9 @@ target_dup_n:
 	 * >> Therefor, we add an offset of +2, preventing
 	 *    redundancy as well as the possibility of an
 	 *    illegal memory access. */
-	leal    8(,%eax,4), %eax /* eax = (eax * 4) + 8 (aka. `eax = (eax + 2) * 4') */
-	movl    SP, %edx
-	subl    %eax, %edx
+	leal   8(,%eax,4), %eax /* eax = (eax * 4) + 8 (aka. `eax = (eax + 2) * 4') */
+	movl   SP, %edx
+	subl   %eax, %edx
 	ASSERT_ABOVE_EQUAL(%edx,FRAME_STACK) /* ERROR: Stack underflow. */
 	ASSERT_BELOW(%edx,L_STACK_END) /* ERROR: Stack overflow. */
 	movl   (%edx), %edx /* Dereference the requested stack object. */
@@ -2603,16 +2603,16 @@ target_pop:
 	jmp    .disp
 target16_pop_n:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_pop_n:
 	lodsb
-1:	leal    8(,%eax,4), %eax /* eax = (eax * 4) + 8. (offset = (offset + 2) * 4) */
-	movl    TOP, %ecx
-	movl    SP, %edx
-	subl    %eax, %edx
+1:	leal   8(,%eax,4), %eax /* eax = (eax * 4) + 8. (offset = (offset + 2) * 4) */
+	movl   TOP, %ecx
+	movl   SP, %edx
+	subl   %eax, %edx
 	xchgl  (%edx), %ecx /* Write the value of TOP to the pop target. */
-	subl    $4, SP /* Pop top. */
-	decref  %ecx /* Drop the old object that was overwritten. */
+	subl   $4, SP /* Pop top. */
+	decref %ecx /* Drop the old object that was overwritten. */
 	jmp    .disp
 
 
@@ -2620,11 +2620,11 @@ target_pop_n:
 target16_adjstack:
 	lodsw
 	movswl  %ax, %ecx
-	jmp     1f
+	jmp    1f
 target_adjstack:
 	lodsb
 	movsbl  %al, %ecx
-1:	cmpl    $0, %ecx
+1:	cmpl   $0, %ecx
 	jge     2f /* if (ECX >= 0) goto 2f; */
 	/* while (imm_val++) POPREF(); */
 	negl    %ecx
@@ -2634,7 +2634,7 @@ target_adjstack:
 2:	jz     .disp /* Unlikely case: ECX == 0 (Would indicate an redundant instruction, but is allowed by the specs) */
 	/* NOTE: We could write this part as `lock addl %ecx, ob_refcnt(%eax); rep stosl', but since we're usually dealing
 	 *       with very small numbers here, the resulting overhead would be too much. */
-	leal    SYM(DeeNone_Singleton), %eax
+	leal   SYM(DeeNone_Singleton), %eax
 	/* while (imm_val--) PUSHREF(Dee_None); */
 1:	sp_push %eax, 1
 	loop    1b
@@ -2644,22 +2644,22 @@ target_adjstack:
 
 target_super:
 	/* Create the super-wrapper. */
-	pushl   SECOND
+	pushl  SECOND
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST
+	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSuper_New,8)
+	call   fSYM(DeeSuper_New,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   SECOND, %eax /* Store the result onto the stack. */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	jmp    .disp
 
 target16_super_this_r:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_super_this_r:
 	lodsb
 1:
@@ -2667,70 +2667,70 @@ target_super_this_r:
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_refc(CODE_OR_ECX))
 #endif
-	pushl   FRAME_THIS
+	pushl  FRAME_THIS
 	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %ecx
-	pushl   fo_refv(%ecx,%eax,4)
+	movl   FRAME_FUNC, %ecx
+	pushl  fo_refv(%ecx,%eax,4)
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSuper_New,8)
+	call   fSYM(DeeSuper_New,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	sp_push %eax
 	jmp    .disp
 target16_super_this_e:
 	lodsw
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_super_this_e:
 	lodsb
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsb
-	jmp     1f
+	jmp    1f
 target16_super_this_g:
 	lodsw
-	jmp     2f
+	jmp    2f
 target_super_this_g:
 	lodsb
 2:	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_read mo_lock(%ecx), %edx
 	popl    %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif
-	movl    mo_globalv(%ecx), %edx
+	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      99f
 	incref  %edx
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread mo_lock(%ecx)
 #endif
-	pushl   %edx /* Save EDX */
+	pushl  %edx /* Save EDX */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS
+	pushl  FRAME_THIS
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSuper_New,8)
+	call   fSYM(DeeSuper_New,8)
 	ADJUST_CFA_OFFSET(-8)
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	decref  %edx, 1, 0, 0 /* Preserve EAX */
-	testl   %eax, %eax
+	decref %edx, 1, 0, 0 /* Preserve EAX */
+	testl  %eax, %eax
 	jz     .except
 	sp_push %eax /* Push the new super-wrapper. */
 	jmp    .disp
@@ -2738,129 +2738,129 @@ target_super_this_g:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread mo_lock(%ecx)
 #endif
-	pushl   %eax /* GID */
+	pushl  %eax /* GID */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx /* MODULE */
+	pushl  %ecx /* MODULE */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_unbound_global,8)
+	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-8)
 	jmp    .except
 
 
 
 target_isnone:
-	movl    TOP, %ecx
+	movl   TOP, %ecx
 	/* Manually do the decref() due to our custom code to restore ECX. */
 	LOCK_PREFIX subl $1, ob_refcnt(%ecx)
-	jnz     1f
-	pushl   %ecx
+	jnz    1f
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_Destroy,4)
+	call   fSYM(DeeObject_Destroy,4)
 	ADJUST_CFA_OFFSET(-4)
-	movl    TOP, %ecx
-	xorl    %eax, %eax
-1:	cmpl    $(SYM(DeeNone_Singleton)), %ecx
+	movl   TOP, %ecx
+	xorl   %eax, %eax
+1:	cmpl   $(SYM(DeeNone_Singleton)), %ecx
 	/* NOTE: No need to clear EAX because dispatch will
 	 *       have left all but the lower 8 bits clear,
 	 *       because EAX contains the instruction being
 	 *       executed opon target entry. */
 	sete    %al
-	leal    SYM(Dee_FalseTrue)(,%eax,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref  %eax
-	movl    %eax, TOP
+	movl   %eax, TOP
 	jmp    .disp
 
 
 
 target16_pop_static:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_pop_static:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_write co_static_lock(CODE_OR_ECX), %edx
 	popl    %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	sp_pop  %edx
-	movl    co_staticv(CODE_OR_ECX), %ecx
+	movl   co_staticv(CODE_OR_ECX), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
 	rwlock_endwrite co_static_lock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_NONZERO(%edx)
-	decref  %edx
-	jmp   .disp
+	decref %edx
+	jmp    .disp
 
 
 
 target16_pop_extern:
 	lodsw
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsw
-	jmp     2f
+	jmp    2f
 target_pop_extern:
 	lodsb
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsb
-	jmp     2f
+	jmp    2f
 
 target16_pop_global:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_pop_global:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 2:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_write mo_lock(%ecx), %edx
 	popl    %eax
 	ADJUST_CFA_OFFSET(-4)
-	pushl   %ecx
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
 #endif
 	sp_pop  %edx /* Pop the value to-be written to globals */
-	movl    mo_globalv(%ecx), %ecx
+	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx
 #ifndef CONFIG_NO_THREADS
 	popl    %ecx
 	ADJUST_CFA_OFFSET(-4)
 	rwlock_endwrite mo_lock(%ecx)
 #endif
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz     .disp
-	decref  %edx /* Drop a reference from the old global variable. */
+	decref %edx /* Drop a reference from the old global variable. */
 	jmp    .disp
 
 
 
 target16_pop_local:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_pop_local:
 	lodsb
 1:	sp_pop  %ecx
-	movl    FRAME_FRAME, %edx
+	movl   FRAME_FRAME, %edx
 	xchgl   (%edx,%eax,4), %ecx /* Store the popped value in locals */
-	testl   %ecx, %ecx
+	testl  %ecx, %ecx
 	jz     .disp
-	decref  %ecx /* decref the previous value. */
+	decref %ecx /* decref the previous value. */
 	jmp    .disp
 
 
@@ -2868,11 +2868,11 @@ target_pop_local:
 /* Push various values onto the stack. */
 target16_push_ref:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_push_ref:
 	lodsb
-1:	movl    FRAME_FUNC, %ecx
-	movl    fo_refv(%ecx,%eax,4), %eax
+1:	movl   FRAME_FUNC, %ecx
+	movl   fo_refv(%ecx,%eax,4), %eax
 	sp_push %eax, 1
 	jmp    .disp
 
@@ -2880,41 +2880,41 @@ target_push_ref:
 
 target16_push_bnd_arg:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_push_bnd_arg:
 	lodsb
-1:	subl    FRAME_ARGC, %eax
+1:	subl   FRAME_ARGC, %eax
 	jb      target_push_true /* if (imm_val < frame->cf_argc) return_true; */
-	movl    FRAME_KW, %edx
-	testl   %edx, %edx
+	movl   FRAME_KW, %edx
+	testl  %edx, %edx
 	jz      target_push_false /* if (!frame->cf_kw) return_false; */
-	xorl    %ecx, %ecx
-	cmpl    $0, fk_kargv(%edx,%eax,4)
+	xorl   %ecx, %ecx
+	cmpl   $0, fk_kargv(%edx,%eax,4)
 	setne   %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	sp_push %eax, 1
 	jmp    .disp
 
 
 target16_push_arg:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_push_arg:
 	lodsb
-1:	cmpl    FRAME_ARGC, %eax
+1:	cmpl   FRAME_ARGC, %eax
 	jnb     1f
 	/* Simple case: Direct argument/default reference. */
-	movl    FRAME_ARGV, %edx
+	movl   FRAME_ARGV, %edx
 	movl   (%edx,%eax,4), %eax
 	sp_push %eax, 1
 	jmp    .disp
 	/* Check for the argument within the kwds argument overlay */
-1:	movl    FRAME_KW, %edx
-	testl   %edx, %edx
+1:	movl   FRAME_KW, %edx
+	testl  %edx, %edx
 	jz      2f
-	subl    FRAME_ARGC, %eax
-	movl    fk_kargv(%edx,%eax,4), %edx
-	testl   %edx, %edx
+	subl   FRAME_ARGC, %eax
+	movl   fk_kargv(%edx,%eax,4), %edx
+	testl  %edx, %edx
 	jz      1f
 	sp_push %edx, 1
 	jmp    .disp
@@ -2922,152 +2922,152 @@ target_push_arg:
 	/* Check for the argument within the code's default argument vector */
 2:	LOAD_CODE(%ecx)
 	subw    co_argc_min(CODE_OR_ECX), %ax
-	movl    co_defaultv(CODE_OR_ECX), %edx
-	movl    (%edx,%eax,4), %edx
-	testl   %edx, %edx
+	movl   co_defaultv(CODE_OR_ECX), %edx
+	movl   (%edx,%eax,4), %edx
+	testl  %edx, %edx
 	jz      1f
 	sp_push %edx, 1
 	jmp    .disp
 1:	addw    co_argc_min(CODE_OR_ECX), %ax
 	/* Unbound argument */
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_PC
+	pushl  FRAME_PC
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC
+	pushl  CODE_OR_LOC
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_unbound_arg,12)
+	call   fSYM(err_unbound_arg,12)
 	ADJUST_CFA_OFFSET(-12)
 	jmp    .except
 
 
 target_push_varargs:
-	movl    FRAME_VARARGS, %eax
-	testl   %eax, %eax
+	movl   FRAME_VARARGS, %eax
+	testl  %eax, %eax
 	jz      1f
 	sp_push %eax, 1
 	jmp    .disp
 1:	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
 	movzwl  co_argc_max(CODE_OR_ECX), %eax
-	movl    FRAME_ARGC, %edx
+	movl   FRAME_ARGC, %edx
 	/* if (frame->cf_argc <= code->co_argc_max) */
-	cmpl    %eax, %edx
+	cmpl   %eax, %edx
 	jnbe    1f
 	/* { */
-	leal    SYM(DeeTuple_Empty), %eax
-	movl    %eax, FRAME_VARARGS
+	leal   SYM(DeeTuple_Empty), %eax
+	movl   %eax, FRAME_VARARGS
 	incref_n %eax, 2
 	sp_push %eax
 	jmp    .disp
 	/* } */
 1:	/* Must construct the varargs tuple. */
-	movl    FRAME_ARGV, %edx
-	leal    (%edx,%eax,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
-	movl    FRAME_ARGC, %ecx
-	subl    %eax, %ecx          /* ECX = frame->cf_argc - code->co_argc_max */
-	pushl   %edx
+	movl   FRAME_ARGV, %edx
+	leal   (%edx,%eax,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
+	movl   FRAME_ARGC, %ecx
+	subl   %eax, %ecx          /* ECX = frame->cf_argc - code->co_argc_max */
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeTuple_NewVector,8)
+	call   fSYM(DeeTuple_NewVector,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Store the generated varargs object. */
-	movl    %eax, FRAME_VARARGS
+	movl   %eax, FRAME_VARARGS
 	sp_push %eax, 1
 	jmp    .disp
 
 
 target_push_varkwds:
-	movl    FRAME_KW, %edx
-	testl   %edx, %edx
+	movl   FRAME_KW, %edx
+	testl  %edx, %edx
 	jz      70f
-	movl    fk_varkwds(%edx), %eax
-	testl   %eax, %eax
+	movl   fk_varkwds(%edx), %eax
+	testl  %eax, %eax
 	jz      1f
 	sp_push %eax, 1
 	jmp    .disp
 1:	/* construct_varkwds_mapping() { */
-	movl    fk_kw(%edx), %eax
+	movl   fk_kw(%edx), %eax
 	/* if likely(DeeKwds_Check(kw)) */
-	cmpl    $SYM(DeeKwds_Type), ob_type(%eax)
-	jne     1f
+	cmpl   $SYM(DeeKwds_Type), ob_type(%eax)
+	jne    1f
 	/* { */
-	movl    FRAME_ARGC, %ecx
-	movl    FRAME_ARGV, %edx
-	leal    (%edx,%ecx,4), %ecx
-	pushl   %ecx /* frame->cf_argv + frame->cf_argc */
+	movl   FRAME_ARGC, %ecx
+	movl   FRAME_ARGV, %edx
+	leal   (%edx,%ecx,4), %ecx
+	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* kw */
+	pushl  %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_New,16)
+	call   fSYM(BlackListVarkwds_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp     60f
+	jmp    60f
 	/* } else { */
-1:	pushl   %eax          /* kw */
+1:	pushl  %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListMapping_New,12)
+	call   fSYM(BlackListMapping_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	/* } */
-60:	testl   %eax, %eax
+60:	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
-	movl    FRAME_KW, %ecx
+	movl   FRAME_KW, %ecx
 #ifdef CONFIG_NO_THREADS
-	movl    fk_varkwds(%ecx), %edx
-	testl   %edx, %edx
-	jnz     61f
-	movl    %eax, fk_varkwds(%ecx) /* Inherit reference */
+	movl   fk_varkwds(%ecx), %edx
+	testl  %edx, %edx
+	jnz    61f
+	movl   %eax, fk_varkwds(%ecx) /* Inherit reference */
 	sp_push %eax, 1
 	jmp    .disp
 61:	sp_push %edx, 1
-	decref  %eax
+	decref %eax
 	jmp    .disp
 #else /* CONFIG_NO_THREADS */
-	movl    %eax, %edx
-	xorl    %eax, %eax
+	movl   %eax, %edx
+	xorl   %eax, %eax
 	/* EAX = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,EDX); */
 	cmpxchgl %edx, fk_varkwds(%ecx)
 	/* if (EAX != NULL) */
-	jnz     1f
+	jnz    1f
 	/* { */
 	sp_push %edx, 1
 	jmp    .disp
 	/* } */
 1:	/* Another thread already loaded `EAX'. */
 	sp_push %eax, 1
-	movl    ob_type(%edx), %ecx
-	cmpl    $SYM(DeeKwdsMapping_Type), %ecx
-	jne     1f
+	movl   ob_type(%edx), %ecx
+	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
+	jne    1f
 	/* Cleanup: DeeKwdsMapping_CheckExact() */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwdsMapping_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp     .disp
-1:	cmpl    $SYM(BlackListVarkwds_Type), %ecx
-	jne     1f
+	jmp    .disp
+1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
+	jne    1f
 	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_Decref,4)
+	call   fSYM(BlackListVarkwds_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp     .disp
+	jmp    .disp
 	/* Cleanup: Dee_Decref() */
-1:	decref  %edx
+1:	decref %edx
 	jmp    .disp
 #endif /* !CONFIG_NO_THREADS */
-70:	leal    SYM(DeeMapping_EmptyInstance), %edx
+70:	leal   SYM(DeeMapping_EmptyInstance), %edx
 	sp_push %edx, 1
 	jmp    .disp
 
@@ -3100,7 +3100,7 @@ target_push_static:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread co_static_lock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3115,7 +3115,7 @@ target_push_const:
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	sp_push %edx, 1 /* Push the static variable. */
-	jmp   .disp
+	jmp    .disp
 #endif
 
 
@@ -3161,7 +3161,7 @@ target_push_global:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
 #endif
-	jmp   .disp
+	jmp    .disp
 99:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
@@ -3172,7 +3172,7 @@ target_push_global:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -3190,7 +3190,7 @@ target_push_local:
 	testl  %edx, %edx
 	jz     99f /* Check for unbound locals. */
 	sp_push %edx, 1
-	jmp   .disp
+	jmp    .disp
 99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_PC /* PC */
@@ -3199,7 +3199,7 @@ target_push_local:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_local,12)
 	ADJUST_CFA_OFFSET(-12)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -3220,11 +3220,11 @@ target_pack_tuple:
 	call   fSYM(DeeTuple_NewVectorSymbolic,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4 /* Check for errors. */
+	jz     .except_x4 /* Check for errors. */
 	popl   SP /* Load the new SP */
 	ADJUST_CFA_OFFSET(-4)
 	sp_push %eax /* Push the new tuple. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3245,11 +3245,11 @@ target_pack_list:
 	call   fSYM(DeeList_NewVectorInherited,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4 /* Check for errors. */
+	jz     .except_x4 /* Check for errors. */
 	popl   SP /* Load the new SP */
 	ADJUST_CFA_OFFSET(-4)
 	sp_push %eax /* Push the new list. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3280,11 +3280,11 @@ target_unpack:
 	ADJUST_CFA_OFFSET(-4)
 	leal   (SP,%eax,4), SP /* SP += objc; */
 	decref %edx
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(8)
 99:	addl   $4, %esp
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except_decref_pop
+	jmp    .except_decref_pop
 	ADJUST_CFA_OFFSET(-4)
 
 
@@ -3298,7 +3298,7 @@ prefix_target_unpack:
 	call   get_prefix_object
 	xorl   %eax, %eax
 	lodsb
-	jmp   .unpack_sequence_edx_count_eax
+	jmp    .unpack_sequence_edx_count_eax
 
 
 /* Unpack varargs. */
@@ -3315,7 +3315,7 @@ target_varargs_unpack:
 	jne    80f /* Check if unpack size matches actual size. */
 	/* Now to do the actual unpack! */
 	testl  %ecx, %ecx
-	jz    .disp
+	jz     .disp
 	pushl  %esi
 	ADJUST_CFA_OFFSET(4)
 	movl   FRAME_ARGV, %esi
@@ -3337,7 +3337,7 @@ target_varargs_unpack:
 #endif
 	popl   %esi
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .disp
+	jmp    .disp
 70:	xorl   %ecx, %ecx
 	jmp    71b
 80:	pushl  %edx /* va_size */
@@ -3346,7 +3346,7 @@ target_varargs_unpack:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_invalid_va_unpack_size,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 
 target_push_varkwds_ne:
@@ -3354,111 +3354,111 @@ target_push_varkwds_ne:
 	LOAD_CODE(%eax)
 	ASSERT_BIT(w,$(CODE_FVARKWDS),co_flags(CODE_OR_EAX))
 #endif
-	movl    FRAME_KW, %edx
-	testl   %edx, %edx
+	movl   FRAME_KW, %edx
+	testl  %edx, %edx
 	jz      target_push_false
-	movl    fk_varkwds(%edx), %eax
-	testl   %eax, %eax
+	movl   fk_varkwds(%edx), %eax
+	testl  %eax, %eax
 	jz      1f
 .Ltarget_push_varkwds_ne_impl:
-	pushl   %eax /* DeeObject_Bool:self */
+	pushl  %eax /* DeeObject_Bool:self */
 	ADJUST_CFA_OFFSET(4)
 .Ltarget_push_varkwds_ne_impl_onstack:
-	call    fSYM(DeeObject_Bool,4)
+	call   fSYM(DeeObject_Bool,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl    %ecx, %ecx
-	cmpl    $0, %eax
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
 	jl     .except
 	setg    %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	sp_push %eax, 1
 	jmp    .disp
 1:	/* construct_varkwds_mapping() { */
-	movl    fk_kw(%edx), %eax
+	movl   fk_kw(%edx), %eax
 	/* if likely(DeeKwds_Check(kw)) */
-	cmpl    $SYM(DeeKwds_Type), ob_type(%eax)
-	jne     1f
+	cmpl   $SYM(DeeKwds_Type), ob_type(%eax)
+	jne    1f
 	/* { */
-	movl    FRAME_ARGC, %ecx
-	movl    FRAME_ARGV, %edx
-	leal    (%edx,%ecx,4), %ecx
-	pushl   %ecx /* frame->cf_argv + frame->cf_argc */
+	movl   FRAME_ARGC, %ecx
+	movl   FRAME_ARGV, %edx
+	leal   (%edx,%ecx,4), %ecx
+	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* kw */
+	pushl  %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_New,16)
+	call   fSYM(BlackListVarkwds_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp     60f
+	jmp    60f
 	/* } else { */
-1:	pushl   %eax          /* kw */
+1:	pushl  %eax          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListMapping_New,12)
+	call   fSYM(BlackListMapping_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	/* } */
-60:	testl   %eax, %eax
+60:	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
-	movl    FRAME_KW, %ecx
+	movl   FRAME_KW, %ecx
 #ifdef CONFIG_NO_THREADS
-	movl    fk_varkwds(%ecx), %edx
-	testl   %edx, %edx
-	jnz     61f
-	movl    %eax, fk_varkwds(%ecx) /* Inherit reference */
+	movl   fk_varkwds(%ecx), %edx
+	testl  %edx, %edx
+	jnz    61f
+	movl   %eax, fk_varkwds(%ecx) /* Inherit reference */
 	jmp    .Ltarget_push_varkwds_ne_impl
-61:	decref  %eax, 0, 0, 1 /* Preserve EDX */
-	pushl   %edx
+61:	decref %eax, 0, 0, 1 /* Preserve EDX */
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
 #else /* CONFIG_NO_THREADS */
-	movl    %eax, %edx
-	xorl    %eax, %eax
+	movl   %eax, %edx
+	xorl   %eax, %eax
 	/* EAX = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,EDX); */
 	cmpxchgl %edx, fk_varkwds(%ecx)
 	/* if (EAX != NULL) */
-	jnz     1f
+	jnz    1f
 	/* { */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
 	/* } */
 1:	/* Another thread already loaded `EAX'. */
-	movl    ob_type(%edx), %ecx
-	cmpl    $SYM(DeeKwdsMapping_Type), %ecx
-	jne     1f
+	movl   ob_type(%edx), %ecx
+	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
+	jne    1f
 	/* Cleanup: DeeKwdsMapping_CheckExact() */
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwdsMapping_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
-1:	cmpl    $SYM(BlackListVarkwds_Type), %ecx
-	jne     1f
+1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
+	jne    1f
 	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_Decref,4)
+	call   fSYM(BlackListVarkwds_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
 	/* Cleanup: Dee_Decref() */
-1:	pushl   %eax
+1:	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	decref  %edx
+	decref %edx
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
@@ -3480,9 +3480,9 @@ target_varargs_getsize:
 	call   fSYM(DeeInt_NewU32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 2:	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 1:	leal   SYM(DeeInt_Zero), %eax
 	incref %eax
 	jmp    2b
@@ -3502,7 +3502,7 @@ target_varargs_cmp_eq_sz:
 	sete   %al
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	sp_push %eax, 1 /* PUSHREF(DeeBool_For(va_size == READ_imm8())) */
-	jmp   .disp
+	jmp    .disp
 
 target_varargs_cmp_gr_sz:
 	LOAD_CODE(%ecx)
@@ -3519,7 +3519,7 @@ target_varargs_cmp_gr_sz:
 	setg   %al
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	sp_push %eax, 1 /* PUSHREF(DeeBool_For(va_size == READ_imm8())) */
-	jmp   .disp
+	jmp    .disp
 
 target_varargs_getitem:
 	subl   $4, %esp /* Target memory for `DeeObject_AsSize' */
@@ -3535,7 +3535,7 @@ target_varargs_getitem:
 	sp_popref %eax
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .varargs_getitem_eax
+	jmp    .varargs_getitem_eax
 
 target_varargs_getitem_i:
 	lodsb
@@ -3549,7 +3549,7 @@ target_varargs_getitem_i:
 	movl   FRAME_ARGV, %edx
 	movl   (%edx,%eax,4), %eax /* EAX = frame->cf_argv[index]; */
 	sp_push %eax, 1
-	jmp   .disp
+	jmp    .disp
 80:	subl   %ecx, %eax       /* EAX = index; */
 	movl   FRAME_ARGC, %ecx
 	LOAD_CODE(%edx)
@@ -3561,7 +3561,7 @@ target_varargs_getitem_i:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_va_index_out_of_bounds,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -3588,7 +3588,7 @@ target_typeof:
 	incref %eax /* Incref the object's type. */
 	xchgl  TOP, %eax /* Exchange the object with its type. */
 	decref %eax /* decref the object. */
-	jmp   .disp
+	jmp    .disp
 target_classof:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
@@ -3597,7 +3597,7 @@ target_classof:
 	incref %eax /* Incref the object's class. */
 	xchgl  TOP, %eax /* Exchange the object with its class. */
 	decref %eax /* decref the object. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3607,10 +3607,10 @@ target_superof:
 	call   fSYM(DeeSuper_Of,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  TOP, %eax
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3640,7 +3640,7 @@ target_instanceof:
 	xchgl  SECOND, %eax /* Exchange the lower-order operand with the boolean object. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 1:	cmpl   $(SYM(DeeNone_Singleton)), %ecx /* `x is none' - Return true if `x' is the none-singleton. */
 	sete   %al
 	jmp    2b
@@ -3660,7 +3660,7 @@ target_bool:
 	incref %eax
 	xchgl  TOP, %eax /* Exchange the stack-object with its boolean value. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3677,7 +3677,7 @@ target_not:
 	incref %eax
 	xchgl  TOP, %eax /* Exchange the stack-object with its boolean value. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 target_iternext:
@@ -3686,18 +3686,18 @@ target_iternext:
 	call   fSYM(DeeObject_IterNext,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	cmpl   $(ITER_DONE), %eax
 	je     1f
 	xchgl  TOP, %eax /* Load the iter-result onto the stack. */
 	decref %eax /* Drop a reference from the iterator. */
-	jmp   .disp
+	jmp    .disp
 1:	/* Throw the stop-iteration signal. */
 	pushl  SYM(DeeError_StopIteration_instance)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeError_Throw,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -3712,7 +3712,7 @@ target_assign:
 	jnz   .except
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3727,7 +3727,7 @@ target_move_assign:
 	jnz   .except
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3735,16 +3735,16 @@ target_move_assign:
 target_push_this_function:
 	movl   FRAME_FUNC, %eax
 	sp_push %eax, 1 /* Simply push the current function. */
-	jmp   .disp
+	jmp    .disp
 target_push_except:
 	movl   L_THIS_THREAD, %eax
 	movl   t_except(%eax), %eax
 	testl  %eax, %eax
-	jz    .except_no_active_exception /* Check if an exception has been set. */
+	jz     .except_no_active_exception /* Check if an exception has been set. */
 	movl   ef_error(%eax), %eax
 	ASSERT_NONZERO(%eax)
 	sp_push %eax, 1 /* Push a new reference to the current exception. */
-	jmp   .disp
+	jmp    .disp
 
 target_push_this:
 #ifndef NDEBUG
@@ -3753,7 +3753,7 @@ target_push_this:
 #endif
 	movl   FRAME_THIS, %eax
 	sp_push %eax, 1 /* Push a new reference to the this-argument. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3769,7 +3769,7 @@ target_push_module:
 	movl   (%edx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
 	sp_push %edx, 1 /* Push a new reference to the imported module. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3781,10 +3781,10 @@ target_concat:
 	call   fSYM(DeeObject_ConcatInherited,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	movl   %eax, SECOND /* Save the concat in the second slot. */
 	sp_popref %eax /* Pop the sequence that was appended */
-	jmp   .disp
+	jmp    .disp
 target_extend:
 	lodsb  /* EAX = n_args */
 	leal   (,%eax,4), %ecx /* ECX = EAX*4 */
@@ -3801,11 +3801,11 @@ target_extend:
 	call   fSYM(DeeObject_ExtendInherited,12) /* Extend the sequence. */
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except_x4 /* Check for errors. */
+	jz     .except_x4 /* Check for errors. */
 	popl   SP        /* SP = new_sp */
 	ADJUST_CFA_OFFSET(-4)
 	movl   %eax, TOP /* Save the concat-sequence. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3816,10 +3816,10 @@ target_extend:
 	call   \function
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Store EAX in TOP. */
 	decref %eax /* Drop a reference from the old object in TOP. */
-	jmp   .disp
+	jmp    .disp
 .endm
 .macro define_binary_op, target, function
 \target:
@@ -3830,11 +3830,11 @@ target_extend:
 	call   \function
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	sp_popref %ecx, 1, 0, 0 /* Preserve EAX */
 	xchgl  TOP, %eax /* Store EAX in TOP. */
 	decref %eax /* Drop a reference from the old object in TOP. */
-	jmp   .disp
+	jmp    .disp
 .endm
 
 /* Object control operators. */
@@ -3864,7 +3864,7 @@ target_cmp_so:
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax
 	movl   %eax, TOP
-	jmp   .disp
+	jmp    .disp
 target_cmp_do:
 	sp_pop %edx
 	decref %edx
@@ -3875,7 +3875,7 @@ target_cmp_do:
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax
 	movl   %eax, TOP
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -3895,10 +3895,10 @@ target_class_c:
 	call   fSYM(DeeClass_New,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  TOP, %eax
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 target16_class_ec:
 	lodsw
@@ -3928,7 +3928,7 @@ target_class_ec:
 	ASSERT_BELOW(%dx,mo_importc(%eax))
 	movl   mo_importv(%eax), %eax
 	movl   (%eax,%edx,4), %edx            /* EDX = IMPORTS[MID] */
-	jmp   .create_class_module_edx
+	jmp    .create_class_module_edx
 	ADJUST_CFA_OFFSET(-8)
 
 target16_class_gc:
@@ -3982,12 +3982,12 @@ target_class_gc:
 	call   fSYM(DeeClass_New,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	sp_push %eax
 	popl   %eax  /* BACKUP(base) */
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 99:	rwlock_endread mo_lock(%edx)
 	pushl  %eax /* GID */
 	ADJUST_CFA_OFFSET(4)
@@ -3995,7 +3995,7 @@ target_class_gc:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 target_class:
 	movl   TOP, %eax
@@ -4008,11 +4008,11 @@ target_class:
 	call   fSYM(DeeClass_New,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  SECOND, %eax  /* Save the result onto the stack. */
 	decref %eax          /* Pop the base */
 	sp_popref %eax       /* Pop the descriptor */
-	jmp   .disp
+	jmp    .disp
 
 99:	pushl  $SYM(DeeClassDescriptor_Type)
 	ADJUST_CFA_OFFSET(4)
@@ -4020,7 +4020,7 @@ target_class:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeObject_TypeAssertFailed,8)
 	ADJUST_CFA_OFFSET(-8)
-	jmp   .except
+	jmp    .except
 
 
 target16_defcmember:
@@ -4091,7 +4091,7 @@ target_callcmember_this_r:
 	call   fSYM(DeeClass_GetMember,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax           /* BACKUP(callback) */
 	ADJUST_CFA_OFFSET(4)
 	subl   $12, %esp      /* Reserve memory for a call to `DeeObject_ThisCall()' + backup for `argc' */
@@ -4100,7 +4100,7 @@ target_callcmember_this_r:
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax           /* DeeObject_ThisCall:self */
 	ADJUST_CFA_OFFSET(4)
-	xorl   %eax, %eax
+	xorl   %eax, %eax     /* In case of `target16_callcmember_this_r', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb                 /* EAX = argc */
 	movl   %eax, 8(%esp)  /* DeeObject_ThisCall:argc */
 	movl   %eax, 16(%esp) /* argc_backup = argc; */
@@ -4113,7 +4113,7 @@ target_callcmember_this_r:
 	popl   %ecx           /* ECX = argc_backup */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	/* Pop all function arguments */
 	testl  %ecx, %ecx
 	jz     1f
@@ -4123,72 +4123,72 @@ target_callcmember_this_r:
 	popl   %eax           /* callback */
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
 target16_getmember_this:
 	/* `push getmember this, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_getmember_this:
 	/* `push getmember this, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
+1:	pushl  %eax               /* DeeInstance_GetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	pushl  FRAME_THIS /* DeeInstance_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	pushl  TOP                /* DeeInstance_GetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_GetMemberSafe,12)
+	call   fSYM(DeeInstance_GetMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 
 target16_boundmember_this:
 	/* `push boundmember this, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_boundmember_this:
 	/* `push boundmember this, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
+1:	pushl  %eax               /* DeeInstance_GetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	pushl  FRAME_THIS /* DeeInstance_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	pushl  TOP                /* DeeInstance_GetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_BoundMemberSafe,12)
+	call   fSYM(DeeInstance_BoundMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	xorl    %ecx, %ecx
-	cmpl    $0, %eax
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
 	jl     .except
 	setnz   %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	incref  %eax
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 
 target16_delmember_this:
 	/* `delmember this, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_delmember_this:
 	/* `delmember this, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax               /* DeeInstance_GetMember:index */
+1:	pushl  %eax               /* DeeInstance_GetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	pushl  FRAME_THIS /* DeeInstance_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeInstance_GetMember:tp_self */
+	pushl  TOP                /* DeeInstance_GetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_DelMemberSafe,12)
+	call   fSYM(DeeInstance_DelMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except
 	sp_popref
 	jmp    .disp
@@ -4196,21 +4196,21 @@ target_delmember_this:
 target16_setmember_this:
 	/* `setmember this, pop, $<imm16>, pop' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_setmember_this:
 	/* `setmember this, pop, $<imm8>, pop' */
 	lodsb
-1:	pushl   FIRST              /* DeeInstance_GetMember:value */
+1:	pushl  FIRST              /* DeeInstance_GetMember:value */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax               /* DeeInstance_GetMember:index */
+	pushl  %eax               /* DeeInstance_GetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	pushl  FRAME_THIS /* DeeInstance_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND             /* DeeInstance_GetMember:tp_self */
+	pushl  SECOND             /* DeeInstance_GetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_SetMemberSafe,16)
+	call   fSYM(DeeInstance_SetMemberSafe,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except
 	sp_popref
 	sp_popref
@@ -4221,29 +4221,29 @@ target_setmember_this:
 target16_getmember_this_r:
 	/* `push getmember this, ref <imm16>, $<imm16>' */
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_getmember_this_r:
 	/* `push getmember this, ref <imm8>, $<imm8>' */
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 1:
 #ifndef NDEBUG
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 #endif
-	pushl   %eax                 /* DeeInstance_GetMember:index */
+	pushl  %eax                 /* DeeInstance_GetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_GetMember:self */
+	pushl  FRAME_THIS /* DeeInstance_GetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_GetMember:tp_self */
+	movl   FRAME_FUNC, %edx
+	pushl  fo_refv(%edx,%ecx,4) /* DeeInstance_GetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_GetMember,12)
+	call   fSYM(DeeInstance_GetMember,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	sp_push %eax
 	jmp    .disp
@@ -4251,61 +4251,61 @@ target_getmember_this_r:
 target16_boundmember_this_r:
 	/* `push boundmember this, ref <imm16>, $<imm16>' */
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_boundmember_this_r:
 	/* `push boundmember this, ref <imm8>, $<imm8>' */
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 1:
 #ifndef NDEBUG
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 #endif
-	pushl   %eax                 /* DeeInstance_BoundMember:index */
+	pushl  %eax                 /* DeeInstance_BoundMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_BoundMember:self */
+	pushl  FRAME_THIS /* DeeInstance_BoundMember:self */
 	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_BoundMember:tp_self */
+	movl   FRAME_FUNC, %edx
+	pushl  fo_refv(%edx,%ecx,4) /* DeeInstance_BoundMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_BoundMember,12)
+	call   fSYM(DeeInstance_BoundMember,12)
 	ADJUST_CFA_OFFSET(-12)
-	xorl    %ecx, %ecx
-	testl   %eax, %eax
+	xorl   %ecx, %ecx
+	testl  %eax, %eax
 	setnz   %cl
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	sp_push %eax, 1
 	jmp    .disp
 
 target16_delmember_this_r:
 	/* `delmember this, ref <imm16>, $<imm16>' */
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_delmember_this_r:
 	/* `delmember this, ref <imm8>, $<imm8>' */
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 1:
 #ifndef NDEBUG
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 #endif
-	pushl   %eax                 /* DeeInstance_DelMember:index */
+	pushl  %eax                 /* DeeInstance_DelMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS /* DeeInstance_DelMember:self */
+	pushl  FRAME_THIS /* DeeInstance_DelMember:self */
 	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_DelMember:tp_self */
+	movl   FRAME_FUNC, %edx
+	pushl  fo_refv(%edx,%ecx,4) /* DeeInstance_DelMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_DelMember,12)
+	call   fSYM(DeeInstance_DelMember,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .disp
 	jmp    .except
 
@@ -4313,29 +4313,29 @@ target_delmember_this_r:
 target16_setmember_this_r:
 	/* `setmember this, ref <imm16>, $<imm16>, pop' */
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_setmember_this_r:
 	/* `setmember this, ref <imm8>, $<imm8>, pop' */
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 1:
 #ifndef NDEBUG
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 #endif
-	pushl   TOP                  /* DeeInstance_SetMember:value */
+	pushl  TOP                  /* DeeInstance_SetMember:value */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax                 /* DeeInstance_SetMember:index */
+	pushl  %eax                 /* DeeInstance_SetMember:index */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS           /* DeeInstance_SetMember:self */
+	pushl  FRAME_THIS           /* DeeInstance_SetMember:self */
 	ADJUST_CFA_OFFSET(4)
-	movl    FRAME_FUNC, %edx
-	pushl   fo_refv(%edx,%ecx,4) /* DeeInstance_SetMember:tp_self */
+	movl   FRAME_FUNC, %edx
+	pushl  fo_refv(%edx,%ecx,4) /* DeeInstance_SetMember:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_SetMember,16)
+	call   fSYM(DeeInstance_SetMember,16)
 	ADJUST_CFA_OFFSET(-16)
 	sp_popref
 	jmp    .disp
@@ -4344,22 +4344,22 @@ target_setmember_this_r:
 target16_getmember:
 	/* `getmember top, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_getmember:
 	/* `getmember top, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax   /* DeeInstance_GetMemberSafe:addr */
+1:	pushl  %eax   /* DeeInstance_GetMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_GetMemberSafe:self */
+	pushl  SECOND /* DeeInstance_GetMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_GetMemberSafe:tp_self */
+	pushl  FIRST  /* DeeInstance_GetMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_GetMemberSafe,12)
+	call   fSYM(DeeInstance_GetMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   SECOND, %eax
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	jmp    .disp
 
@@ -4367,26 +4367,26 @@ target_getmember:
 target16_boundmember:
 	/* `boundmember top, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_boundmember:
 	/* `boundmember top, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax   /* DeeInstance_BoundMemberSafe:addr */
+1:	pushl  %eax   /* DeeInstance_BoundMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_BoundMemberSafe:self */
+	pushl  SECOND /* DeeInstance_BoundMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_BoundMemberSafe:tp_self */
+	pushl  FIRST  /* DeeInstance_BoundMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_BoundMemberSafe,12)
+	call   fSYM(DeeInstance_BoundMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	xorl    %ecx, %ecx
-	cmpl    $0, %eax
+	xorl   %ecx, %ecx
+	cmpl   $0, %eax
 	jl     .except
 	setne   %cl /* cl = EAX != 0 */
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	incref  %eax
 	xchgl   SECOND, %eax /* Save the result onto the stack */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	jmp    .disp
 
@@ -4394,19 +4394,19 @@ target_boundmember:
 target16_delmember:
 	/* `delmember pop, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_delmember:
 	/* `delmember pop, pop, $<imm8>' */
 	lodsb
-1:	pushl   %eax   /* DeeInstance_DelMemberSafe:addr */
+1:	pushl  %eax   /* DeeInstance_DelMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_DelMemberSafe:self */
+	pushl  SECOND /* DeeInstance_DelMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST  /* DeeInstance_DelMemberSafe:tp_self */
+	pushl  FIRST  /* DeeInstance_DelMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_DelMemberSafe,12)
+	call   fSYM(DeeInstance_DelMemberSafe,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except
 	sp_popref %eax
 	sp_popref %eax
@@ -4416,21 +4416,21 @@ target_delmember:
 target16_setmember:
 	/* `setmember pop, pop, $<imm16>' */
 	lodsw
-	jmp     1f
+	jmp    1f
 target_setmember:
 	/* `setmember pop, pop, $<imm8>' */
 	lodsb
-1:	pushl   FIRST  /* DeeInstance_SetMemberSafe:value */
+1:	pushl  FIRST  /* DeeInstance_SetMemberSafe:value */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax   /* DeeInstance_SetMemberSafe:addr */
+	pushl  %eax   /* DeeInstance_SetMemberSafe:addr */
 	ADJUST_CFA_OFFSET(4)
-	pushl   THIRD  /* DeeInstance_SetMemberSafe:self */
+	pushl  THIRD  /* DeeInstance_SetMemberSafe:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND /* DeeInstance_SetMemberSafe:tp_self */
+	pushl  SECOND /* DeeInstance_SetMemberSafe:tp_self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInstance_SetMemberSafe,16)
+	call   fSYM(DeeInstance_SetMemberSafe,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except
 	sp_popref %eax
 	sp_popref %eax
@@ -4447,43 +4447,43 @@ target_setmember:
  * for code and immediate values for refs. */
 target16_function_c_16:
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
 	jmp    .do_function_c
 target16_function_c:
 	lodsw
-	movl    %eax, %ecx
-	xorl    %eax, %eax
+	movl   %eax, %ecx
+	xorl   %eax, %eax
 	lodsb
 	jmp    .do_function_c
 target_function_c_16:
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
 	jmp    .do_function_c
 target_function_c:
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 .do_function_c:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
-	movl    co_staticv(CODE_OR_EDX), %edx
+	movl   co_staticv(CODE_OR_EDX), %edx
 	incl    %eax /* EAX = refc */
-	subl    $8, %esp
+	subl   $8, %esp
 	ADJUST_CFA_OFFSET(8)
-	pushl   %eax            /* DeeFunction_NewInherited:refc */
+	pushl  %eax            /* DeeFunction_NewInherited:refc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */
+	pushl  (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */
 	ADJUST_CFA_OFFSET(4)
-	movl    SP, %edx
-	leal    (,%eax,4), %ecx
-	subl    %ecx, %edx      /* EDX = SP - refc */
-	movl    %edx, 8(%esp)   /* DeeFunction_NewInherited:refv */
-	movl    %edx, 12(%esp)  /* BACKUP(SP - refc) */
-	call    fSYM(DeeFunction_NewInherited,12)
+	movl   SP, %edx
+	leal   (,%eax,4), %ecx
+	subl   %ecx, %edx      /* EDX = SP - refc */
+	movl   %edx, 8(%esp)   /* DeeFunction_NewInherited:refv */
+	movl   %edx, 12(%esp)  /* BACKUP(SP - refc) */
+	call   fSYM(DeeFunction_NewInherited,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x4
 	popl    SP              /* SP = SP - refc */
 	ADJUST_CFA_OFFSET(-4)
@@ -4495,66 +4495,66 @@ target_function_c:
 
 
 target_reduce_min:
-	pushl   $0
+	pushl  $0
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSeq_Min,8)
+	call   fSYM(DeeSeq_Min,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 target_reduce_max:
-	pushl   $0
+	pushl  $0
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSeq_Max,8)
+	call   fSYM(DeeSeq_Max,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 target_reduce_sum:
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSeq_Sum,4)
+	call   fSYM(DeeSeq_Sum,4)
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 target_reduce_any:
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSeq_Any,4)
+	call   fSYM(DeeSeq_Any,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl    %ecx, %ecx /* clear out ECX */
-	cmpl    $0, %eax
+	xorl   %ecx, %ecx /* clear out ECX */
+	cmpl   $0, %eax
 	jl     .except /* EAX < 0 */
 	setne   %cl /* cl = EAX != 0 */
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	incref  %eax
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 target_reduce_all:
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSeq_All,4)
+	call   fSYM(DeeSeq_All,4)
 	ADJUST_CFA_OFFSET(-4)
-	xorl    %ecx, %ecx /* clear out ECX */
-	cmpl    $0, %eax
+	xorl   %ecx, %ecx /* clear out ECX */
+	cmpl   $0, %eax
 	jl     .except /* EAX < 0 */
 	setne   %cl /* cl = EAX != 0 */
-	leal    SYM(Dee_FalseTrue)(,%ecx,8), %eax
+	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax
 	incref  %eax
 	xchgl   TOP, %eax
-	decref  %eax
+	decref %eax
 	jmp    .disp
 
 
@@ -4591,16 +4591,16 @@ define_binary_op target_pow, fSYM(DeeObject_Pow,8)
 .endif
 .endif
 .endif
-	pushl   %eax /* The second operand. */
+	pushl  %eax /* The second operand. */
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call    \function
+	call   \function
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except /* Check for errors in the math operation. */
 	xchgl   TOP, %eax /* Put the operator result onto the stack. */
-	decref  %eax /* decref the old (left) operand. */
+	decref %eax /* decref the old (left) operand. */
 	jmp    .disp
 .endm
 
@@ -4643,7 +4643,7 @@ target_print:
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4658,14 +4658,14 @@ target_print:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax /* DeeFile_Stdout */
-	jmp   .disp
+	jmp    .disp
 target_print_sp:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4680,14 +4680,14 @@ target_print_sp:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_print_nl:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4702,14 +4702,14 @@ target_print_nl:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_printall:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4724,14 +4724,14 @@ target_printall:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_printall_sp:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4746,14 +4746,14 @@ target_printall_sp:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_printall_nl:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -4768,14 +4768,14 @@ target_printall_nl:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_printnl:
 	pushl  $(DEE_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  %eax /* DeeFile_Stdout */
@@ -4787,7 +4787,7 @@ target_printnl:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprint:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4798,7 +4798,7 @@ target_fprint:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprint_sp:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4809,7 +4809,7 @@ target_fprint_sp:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprint_nl:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4820,7 +4820,7 @@ target_fprint_nl:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprintall:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4831,7 +4831,7 @@ target_fprintall:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprintall_sp:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4842,7 +4842,7 @@ target_fprintall_sp:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprintall_nl:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -4853,15 +4853,15 @@ target_fprintall_nl:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_fprintnl:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_PrintNl,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 
 
 
@@ -4882,7 +4882,7 @@ target_print_c:
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	movl   %eax, 4(%esp) /* Backup DeeFile_Stdout */
 	pushl  %eax /* DeeFile_Stdout */
 	ADJUST_CFA_OFFSET(4)
@@ -4893,7 +4893,7 @@ target_print_c:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax /* DeeFile_Stdout */
-	jmp   .disp /* Check for errors. */
+	jmp    .disp /* Check for errors. */
 target16_print_c_sp:
 	lodsw
 	jmp    1f
@@ -4911,7 +4911,7 @@ target_print_c_sp:
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	movl   %eax, 4(%esp) /* Backup DeeFile_Stdout */
 	pushl  %eax /* DeeFile_Stdout */
 	ADJUST_CFA_OFFSET(4)
@@ -4922,7 +4922,7 @@ target_print_c_sp:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax /* DeeFile_Stdout */
-	jmp   .disp /* Check for errors. */
+	jmp    .disp /* Check for errors. */
 target16_print_c_nl:
 	lodsw
 	jmp    1f
@@ -4940,7 +4940,7 @@ target_print_c_nl:
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_x8
+	jz     .except_x8
 	movl   %eax, 4(%esp) /* Backup DeeFile_Stdout */
 	pushl  %eax /* DeeFile_Stdout */
 	ADJUST_CFA_OFFSET(4)
@@ -4951,7 +4951,7 @@ target_print_c_nl:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax /* DeeFile_Stdout */
-	jmp   .disp /* Check for errors. */
+	jmp    .disp /* Check for errors. */
 
 
 
@@ -4970,8 +4970,8 @@ target_fprint_c:
 	call   fSYM(DeeFile_PrintObject,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 target16_fprint_c_sp:
 	lodsw
 	jmp    1f
@@ -4987,8 +4987,8 @@ target_fprint_c_sp:
 	call   fSYM(DeeFile_PrintObjectSp,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 target16_fprint_c_nl:
 	lodsw
 	jmp    1f
@@ -5004,8 +5004,8 @@ target_fprint_c_nl:
 	call   fSYM(DeeFile_PrintObjectNl,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 
 
 
@@ -5020,9 +5020,9 @@ target_range_0_i16:
 	call   fSYM(DeeRange_NewInt,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 target_range_0_i32:
 	lodsl
 	testl  $0x80000000, %eax
@@ -5037,7 +5037,7 @@ target_range_0_i32:
 	call   fSYM(DeeInt_NewU32,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	pushl  %eax /* backup */
 	ADJUST_CFA_OFFSET(4)
 	pushl  $(SYM(DeeInt_One)) /* step */
@@ -5049,12 +5049,12 @@ target_range_0_i32:
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	sp_push %eax /* Push the new range onto the stack. */
 	popl   %edx /* Drop our temporary object. */
 	ADJUST_CFA_OFFSET(-4)
 	decref %edx
-	jmp   .disp
+	jmp    .disp
 
 target_range:
 	/* General-purpose range (using objects passed through the stack) */
@@ -5071,11 +5071,11 @@ target_range:
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  SECOND, %eax
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_range_def:
 	subl   $4, %esp /* backup(begin) */
 	ADJUST_CFA_OFFSET(4)
@@ -5090,20 +5090,20 @@ target_range_def:
 	call   fSYM(DeeObject_NewDefault,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_x12
+	jz     .except_x12
 	movl   %eax, 8(%esp) /* backup(begin) = begin; */
 	pushl  %eax /* begin */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	xchgl  TOP, %eax
 	decref %eax
 	popl   %eax /* backup(begin) */
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_range_step:
 	/* General-purpose range (using objects passed through the stack) */
 	movl   FIRST, %eax
@@ -5123,12 +5123,12 @@ target_range_step:
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  THIRD, %eax
 	decref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_range_step_def:
 	/* General-purpose range (using objects passed through the stack) */
 	subl   $4, %esp /* backup(begin) */
@@ -5148,21 +5148,21 @@ target_range_step_def:
 	call   fSYM(DeeObject_NewDefault,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_x12
+	jz     .except_x12
 	movl   %eax, 8(%esp) /* backup(begin) */
 	pushl  %eax /* begin */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeRange_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	xchgl  SECOND, %eax
 	decref %eax
 	sp_popref %eax
 	popl   %eax /* backup(begin) */
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -5172,8 +5172,8 @@ target_enter:
 	call   fSYM(DeeObject_Enter,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 target_leave:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
@@ -5182,7 +5182,7 @@ target_leave:
 	testl  %eax, %eax
 	jnz   .except
 	sp_popref %eax /* unlike ENTER, LEAVE pops the operand. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -5203,7 +5203,7 @@ target_setitem:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_delitem:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5215,7 +5215,7 @@ target_delitem:
 	jnz   .except
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5226,12 +5226,12 @@ target_getrange:
 	call   fSYM(DeeObject_GetRange,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  THIRD, %eax /* Push the result onto the stack. */
 	decref %eax /* decref() the old object. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_delrange:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5246,7 +5246,7 @@ target_delrange:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5264,7 +5264,7 @@ target_setrange:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 target_bounditem:
 	pushl  $1     /* DeeObject_BoundItem:allow_missing */
@@ -5285,7 +5285,7 @@ target_bounditem:
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 target16_contains_c:
@@ -5303,10 +5303,10 @@ target_contains_c:
 	call   fSYM(DeeObject_ContainsObject,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Push the result onto the stack. */
 	decref %eax /* decref() the sequence. */
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -5325,10 +5325,10 @@ target_getitem_c:
 	call   fSYM(DeeObject_GetItem,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Push the result onto the stack. */
 	decref %eax /* decref() the sequence. */
-	jmp   .disp
+	jmp    .disp
 target16_setitem_c:
 	lodsw
 	jmp    1f
@@ -5349,7 +5349,7 @@ target_setitem_c:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getitem_i:
 	lodsw
 	movswl %ax, %eax
@@ -5360,10 +5360,10 @@ target_getitem_i:
 	call   fSYM(DeeObject_GetItemIndex,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Push the result onto the stack. */
 	decref %eax /* Decref the sequence */
-	jmp   .disp
+	jmp    .disp
 target_setitem_i:
 	lodsw
 	movswl %ax, %eax
@@ -5379,7 +5379,7 @@ target_setitem_i:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 target_getrange_pn:
 	pushl  $(SYM(DeeNone_Singleton))
@@ -5391,11 +5391,11 @@ target_getrange_pn:
 	call   fSYM(DeeObject_GetRange,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange_np:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5406,11 +5406,11 @@ target_getrange_np:
 	call   fSYM(DeeObject_GetRange,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange_pi:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5423,11 +5423,11 @@ target_getrange_pi:
 	call   fSYM(DeeObject_GetRangeEndIndex,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange_ip:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5440,11 +5440,11 @@ target_getrange_ip:
 	call   fSYM(DeeObject_GetRangeBeginIndex,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange_ni:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5457,10 +5457,10 @@ target_getrange_ni:
 	call   fSYM(DeeObject_GetRangeEndIndex,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  FIRST, %eax /* Store the result onto the stack. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_getrange_in:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5473,10 +5473,10 @@ target_getrange_in:
 	call   fSYM(DeeObject_GetRangeBeginIndex,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  FIRST, %eax /* Store the result onto the stack. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_pn:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5493,7 +5493,7 @@ target_setrange_pn:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_np:
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
@@ -5510,7 +5510,7 @@ target_setrange_np:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_pi:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5529,7 +5529,7 @@ target_setrange_pi:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_ip:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5548,7 +5548,7 @@ target_setrange_ip:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_ni:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5566,7 +5566,7 @@ target_setrange_ni:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_setrange_in:
 	lodsw
 	movswl %ax, %eax /* Sign-extend index. */
@@ -5584,7 +5584,7 @@ target_setrange_in:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 target_getrange_ii:
 	lodsw
@@ -5600,27 +5600,27 @@ target_getrange_ii:
 	call   fSYM(DeeObject_GetRangeIndex,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	xchgl  TOP, %eax /* Store the result onto the stack. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 
 target_setrange_ii:
 	lodsw
 	movswl  %ax, %ecx /* Sign-extend begin-index. */
 	lodsw
 	movswl  %ax, %eax /* Sign-extend end-index. */
-	pushl   FIRST
+	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND
+	pushl  SECOND
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_SetRangeIndex,16)
+	call   fSYM(DeeObject_SetRangeIndex,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except
 	sp_popref %eax
 	sp_popref %eax
@@ -5631,32 +5631,32 @@ target_setrange_ii:
 /* Call attribute instructions. */
 target_callattr:
 	lodsb
-	leal    (,%eax,4), %ecx
-	movl    SP, %edx
-	subl    %ecx, %edx
-	pushl   %eax /* BACKUP(n_args) */
+	leal   (,%eax,4), %ecx
+	movl   SP, %edx
+	subl   %ecx, %edx
+	pushl  %eax /* BACKUP(n_args) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx /* BACKUP(SP - n_args) */
+	pushl  %edx /* BACKUP(SP - n_args) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx /* SP - n_args */
+	pushl  %edx /* SP - n_args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax /* n_args */
+	pushl  %eax /* n_args */
 	ADJUST_CFA_OFFSET(4)
-	movl    -4(%edx), %eax
-	cmpl    $(SYM(DeeString_Type)), ob_type(%eax)
-	jne     99f  /* Check if the name-operand is a string. */
-	pushl   %eax     /* name */
+	movl   -4(%edx), %eax
+	cmpl   $(SYM(DeeString_Type)), ob_type(%eax)
+	jne    99f  /* Check if the name-operand is a string. */
+	pushl  %eax     /* name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   -8(%edx) /* self */
+	pushl  -8(%edx) /* self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
+	call   fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x8 /* Check for errors in the callback */
 	popl    %edx /* EDX = SP - n_args */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl   -8(%edx), %eax /* Save the result onto the stack. */
-	decref  %eax /* Decref(self) */
+	decref %eax /* Decref(self) */
 	popl    %ecx /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
 	incl    %ecx /* ECX = n_args+1 */
@@ -5668,35 +5668,35 @@ target_callattr:
 	ADJUST_CFA_OFFSET(16)
 99:	addl    $16, %esp
 	ADJUST_CFA_OFFSET(-16)
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	decref  %eax /* Drop the argument tuple. */
-	call    fSYM(err_expected_string_for_attribute,4)
+	decref %eax /* Drop the argument tuple. */
+	call   fSYM(err_expected_string_for_attribute,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 
 target_callattr_tuple:
-	movl    SECOND, %edx
-	cmpl    $(SYM(DeeString_Type)), ob_type(%edx)
-	jne     99f /* Check if the name operand is a string. */
-	pushl   FIRST        /* args */
+	movl   SECOND, %edx
+	cmpl   $(SYM(DeeString_Type)), ob_type(%edx)
+	jne    99f /* Check if the name operand is a string. */
+	pushl  FIRST        /* args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx         /* name */
+	pushl  %edx         /* name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   THIRD        /* self */
+	pushl  THIRD        /* self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrTuple,12)
+	call   fSYM(DeeObject_CallAttrTuple,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   THIRD, %eax  /* Save the result onto the stack. */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	sp_popref %eax
 	jmp    .disp
-99:	pushl   %edx
+99:	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_expected_string_for_attribute,4)
+	call   fSYM(err_expected_string_for_attribute,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 
@@ -5704,46 +5704,46 @@ target_callattr_tuple:
 
 target16_callattr_c:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_c:
 	lodsb
 1:	/* At this point, the attribute constant id is stored in EAX */
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
 	ASSERT_NONZERO(%edx)
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
-	xorl    %eax, %eax
+	xorl   %eax, %eax      /* In case of `target16_callattr_c', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb
-	pushl   %eax            /* BACKUP(n_args) */
+	pushl  %eax            /* BACKUP(n_args) */
 	ADJUST_CFA_OFFSET(4)
-	subl    $8, %esp        /* BACKUP(SP - n_args), SP - n_args */
+	subl   $8, %esp        /* BACKUP(SP - n_args), SP - n_args */
 	ADJUST_CFA_OFFSET(8)
-	pushl   %eax            /* n_args */
+	pushl  %eax            /* n_args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx            /* name */
+	pushl  %edx            /* name */
 	ADJUST_CFA_OFFSET(4)
-	leal    (,%eax,4), %ecx
-	movl    SP, %edx
-	subl    %ecx, %edx
-	movl    %edx, 8(%esp)   /* SP - n_args */
-	movl    %edx, 12(%esp)  /* BACKUP(SP - n_args) */
-	pushl   -4(%edx)        /* self */
+	leal   (,%eax,4), %ecx
+	movl   SP, %edx
+	subl   %ecx, %edx
+	movl   %edx, 8(%esp)   /* SP - n_args */
+	movl   %edx, 12(%esp)  /* BACKUP(SP - n_args) */
+	pushl  -4(%edx)        /* self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
+	call   fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
 	/* 0(ESP): BACK(SP - n_args) */
 	/* 4(ESP): BACK(n_args) */
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x8
 	popl    %edx /* EDX = SP - n_args */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl   -4(%edx), %eax /* Save the result onto the stack (override `self') */
-	decref  %eax
+	decref %eax
 	popl    %ecx /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
-	testl   %ecx, %ecx
+	testl  %ecx, %ecx
 	jz     .disp
 1:	/* Pop arguments from the stack */
 	sp_popref %eax, 0, 1, 0 /* Preserve ECX */
@@ -5754,26 +5754,26 @@ target_callattr_c:
 
 target16_callattr_c_tuple:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%eax,4), %eax
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
-	pushl   FIRST        /* DeeObject_CallAttrTuple:args */
+	pushl  FIRST        /* DeeObject_CallAttrTuple:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax         /* DeeObject_CallAttrTuple:name */
+	pushl  %eax         /* DeeObject_CallAttrTuple:name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND       /* DeeObject_CallAttrTuple:self */
+	pushl  SECOND       /* DeeObject_CallAttrTuple:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrTuple,12)
+	call   fSYM(DeeObject_CallAttrTuple,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except /* Check for errors. */
 	xchgl   SECOND, %eax /* Store the result onto the stack. */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	jmp    .disp
 
@@ -5781,41 +5781,41 @@ target_callattr_c_tuple:
 
 target16_callattr_this_c:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_this_c:
 	lodsb
 1:	/* At this point, the attribute constant id is stored in EAX */
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
 	ASSERT_NONZERO(%edx)
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
-	xorl    %eax, %eax
+	xorl   %eax, %eax      /* In case of `target16_callattr_this_c', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb
-	pushl   %eax            /* BACKUP(n_args) */
+	pushl  %eax            /* BACKUP(n_args) */
 	ADJUST_CFA_OFFSET(4)
-	subl    $4, %esp        /* SP - n_args */
+	subl   $4, %esp        /* SP - n_args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax            /* n_args */
+	pushl  %eax            /* n_args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx            /* name */
+	pushl  %edx            /* name */
 	ADJUST_CFA_OFFSET(4)
-	leal    (,%eax,4), %ecx
-	movl    SP, %edx
-	subl    %ecx, %edx
-	movl    %edx, 8(%esp)   /* SP - n_args */
-	pushl   FRAME_THIS /* self */
+	leal   (,%eax,4), %ecx
+	movl   SP, %edx
+	subl   %ecx, %edx
+	movl   %edx, 8(%esp)   /* SP - n_args */
+	pushl  FRAME_THIS /* self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttr,16)
+	call   fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
 	/* 0(ESP): BACK(n_args) */
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x4
 	popl    %ecx /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
-	testl   %ecx, %ecx
+	testl  %ecx, %ecx
 	jz      1f
 2:	/* Pop arguments from the stack */
 	sp_popref %edx, 1, 1, 0 /* Preserve EAX and ECX */
@@ -5827,126 +5827,128 @@ target_callattr_this_c:
 
 target16_callattr_this_c_tuple:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_this_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%eax,4), %eax
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
-	pushl   FIRST        /* DeeObject_CallAttrTuple:args */
+	pushl  FIRST        /* DeeObject_CallAttrTuple:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax         /* DeeObject_CallAttrTuple:name */
+	pushl  %eax         /* DeeObject_CallAttrTuple:name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_THIS   /* DeeObject_CallAttrTuple:self */
+	pushl  FRAME_THIS   /* DeeObject_CallAttrTuple:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrTuple,12)
+	call   fSYM(DeeObject_CallAttrTuple,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except /* Check for errors. */
 	xchgl   FIRST, %eax /* Store the result onto the stack. */
-	decref  %eax
+	decref %eax
 	jmp    .disp
 
 
 target16_callattr_c_seq:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_c_seq:
 	lodsb
-1:	subl    $4, %esp      /* DeeObject_CallAttr:argv[0] */
+1:	subl   $4, %esp      /* DeeObject_CallAttr:argv[0] */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %esp          /* DeeObject_CallAttr:argv */
+	pushl  %esp          /* DeeObject_CallAttr:argv */
 	ADJUST_CFA_OFFSET(4)
-	pushl   $1            /* DeeObject_CallAttr:argc */
+	pushl  $1            /* DeeObject_CallAttr:argc */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	pushl   (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	pushl  (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	lodsb                 /* EAX = argc */
-	movl    SP, %edx
-	leal    (,%eax,4), %ecx
-	subl    %ecx, %edx    /* EDX = new_sp = SP - argc */
-	pushl   -4(%edx)      /* DeeObject_CallAttr:self */
+	xorl   %eax, %eax    /* In case of `target16_callattr_c_seq', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
+	lodsb                /* EAX = argc */
+	movl   SP, %edx
+	leal   (,%eax,4), %ecx
+	subl   %ecx, %edx    /* EDX = new_sp = SP - argc */
+	pushl  -4(%edx)      /* DeeObject_CallAttr:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* BACKUP(new_sp) */
+	pushl  %edx          /* BACKUP(new_sp) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* DeeSharedVector_NewShared:vector */
+	pushl  %edx          /* DeeSharedVector_NewShared:vector */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* DeeSharedVector_NewShared:length */
+	pushl  %eax          /* DeeSharedVector_NewShared:length */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSharedVector_NewShared,8)
+	call   fSYM(DeeSharedVector_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x24
 	popl    SP            /* SP = new_sp */
 	ADJUST_CFA_OFFSET(-4)
-	movl    %eax, 16(%esp) /* DeeObject_CallAttr:argv[0] = shared_vector */
-	call    fSYM(DeeObject_CallAttr,16)
+	movl   %eax, 16(%esp) /* DeeObject_CallAttr:argv[0] = shared_vector */
+	call   fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz      99f
 	xchgl   %eax, TOP     /* Save the result */
-	decref  %eax
-	call    fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
+	decref %eax
+	call   fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
-99:	call    fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
+99:	call   fSYM(DeeSharedVector_Decref,4) /* decref() the shared vector. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 
 
 target16_callattr_c_map:
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_c_map:
 	lodsb
-1:	subl    $4, %esp      /* DeeObject_CallAttr:argv[0] */
+1:	subl   $4, %esp      /* DeeObject_CallAttr:argv[0] */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %esp          /* DeeObject_CallAttr:argv */
+	pushl  %esp          /* DeeObject_CallAttr:argv */
 	ADJUST_CFA_OFFSET(4)
-	pushl   $1            /* DeeObject_CallAttr:argc */
+	pushl  $1            /* DeeObject_CallAttr:argc */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	pushl   (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	pushl  (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	lodsb                 /* EAX = argc */
-	movl    SP, %edx
-	leal    (,%eax,8), %ecx
-	subl    %ecx, %edx    /* EDX = new_sp = SP - argc * 2 */
-	pushl   -4(%edx)      /* DeeObject_CallAttr:self */
+	xorl   %eax, %eax    /* In case of `target16_callattr_c_seq', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
+	lodsb                /* EAX = argc */
+	movl   SP, %edx
+	leal   (,%eax,8), %ecx
+	subl   %ecx, %edx    /* EDX = new_sp = SP - argc * 2 */
+	pushl  -4(%edx)      /* DeeObject_CallAttr:self */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* BACKUP(new_sp) */
+	pushl  %edx          /* BACKUP(new_sp) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* DeeSharedMap_NewShared:vector */
+	pushl  %edx          /* DeeSharedMap_NewShared:vector */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax          /* DeeSharedMap_NewShared:length */
+	pushl  %eax          /* DeeSharedMap_NewShared:length */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeSharedMap_NewShared,8)
+	call   fSYM(DeeSharedMap_NewShared,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x24
 	popl    SP            /* SP = new_sp */
 	ADJUST_CFA_OFFSET(-4)
-	movl    %eax, 16(%esp) /* DeeObject_CallAttr:argv[0] = shared_vector */
-	call    fSYM(DeeObject_CallAttr,16)
+	movl   %eax, 16(%esp) /* DeeObject_CallAttr:argv[0] = shared_vector */
+	call   fSYM(DeeObject_CallAttr,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz      99f
 	xchgl   %eax, TOP     /* Save the result */
-	decref  %eax
-	call    fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
+	decref %eax
+	call   fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
-99:	call    fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
+99:	call   fSYM(DeeSharedMap_Decref,4) /* decref() the shared map. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except
 
@@ -5954,6 +5956,7 @@ target_callattr_c_map:
 target16_callattr_c_kw:
 	lodsw
 	movzwl  %ax, %edx
+	xorl   %eax, %eax
 	lodsb
 	movzbl  %al, %ecx
 	lodsw
@@ -5964,38 +5967,38 @@ target_callattr_c_kw:
 	lodsb
 	movzbl  %al, %ecx      /* ECX = ARGC */
 	lodsb
-1:	subl    $24, %esp      /* Reserve argument memory. */
+1:	subl   $24, %esp      /* Reserve argument memory. */
 	ADJUST_CFA_OFFSET(24)
-	movl    %ecx, 4(%esp)  /* DeeObject_CallAttrKw:argc */
-	movl    %ecx, 20(%esp) /* BACKUP(argc) */
+	movl   %ecx, 4(%esp)  /* DeeObject_CallAttrKw:argc */
+	movl   %ecx, 20(%esp) /* BACKUP(argc) */
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%dx,co_staticc(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%edx,4), %edx
-	movl    (%ecx,%eax,4), %eax
-	movl    %edx, 0(%esp)  /* DeeObject_CallAttrKw:attr_name */
-	movl    %eax, 12(%esp) /* DeeObject_CallAttrKw:kw */
-	movl    SP, %eax
-	movl    4(%esp), %ecx  /* argc */
-	leal    (,%ecx,4), %ecx
-	subl    %ecx, %eax     /* EAX = new_sp = SP - argc */
-	movl    %eax, 8(%esp)  /* DeeObject_CallAttrKw:argv */
-	movl    %eax, 16(%esp) /* BACKUP(new_sp) */
-	pushl    -4(%eax)      /* DeeObject_CallAttrKw:self */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%edx,4), %edx
+	movl   (%ecx,%eax,4), %eax
+	movl   %edx, 0(%esp)  /* DeeObject_CallAttrKw:attr_name */
+	movl   %eax, 12(%esp) /* DeeObject_CallAttrKw:kw */
+	movl   SP, %eax
+	movl   4(%esp), %ecx  /* argc */
+	leal   (,%ecx,4), %ecx
+	subl   %ecx, %eax     /* EAX = new_sp = SP - argc */
+	movl   %eax, 8(%esp)  /* DeeObject_CallAttrKw:argv */
+	movl   %eax, 16(%esp) /* BACKUP(new_sp) */
+	pushl  -4(%eax)      /* DeeObject_CallAttrKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrKw,20)
+	call   fSYM(DeeObject_CallAttrKw,20)
 	ADJUST_CFA_OFFSET(-20)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x8
 	popl    %edx           /* EDX = new_sp */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl   %eax, -4(%edx) /* Save the result on the stack. */
-	decref  %eax
+	decref %eax
 	popl    %ecx           /* ECX = argc */
 	ADJUST_CFA_OFFSET(-4)
 	/* Drop references from arguments. */
-	testl   %ecx, %ecx
+	testl  %ecx, %ecx
 	jz     .disp
 1:	sp_popref    %eax, 0, 1, 0
 	loop    1b
@@ -6007,7 +6010,7 @@ target16_callattr_c_tuple_kw:
 	lodsw
 	movzwl  %ax, %edx
 	lodsw
-	jmp     1f
+	jmp    1f
 target_callattr_c_tuple_kw:
 	lodsb
 	movzbl  %al, %edx
@@ -6015,56 +6018,56 @@ target_callattr_c_tuple_kw:
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	ASSERT_BELOW(%dx,co_staticc(CODE_OR_ECX))
-	movl    co_staticv(CODE_OR_ECX), %ecx
-	movl    (%ecx,%edx,4), %edx /* edx = STATICV[attr_name_cid] */
-	pushl   (%ecx,%eax,4)      /* DeeObject_CallAttrTupleKw:kw */
+	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%edx,4), %edx /* edx = STATICV[attr_name_cid] */
+	pushl  (%ecx,%eax,4)      /* DeeObject_CallAttrTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FIRST              /* DeeObject_CallAttrTupleKw:args */
+	pushl  FIRST              /* DeeObject_CallAttrTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx               /* DeeObject_CallAttrTupleKw:attr_name */
+	pushl  %edx               /* DeeObject_CallAttrTupleKw:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND             /* DeeObject_CallAttrTupleKw:self */
+	pushl  SECOND             /* DeeObject_CallAttrTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrTupleKw,16)
+	call   fSYM(DeeObject_CallAttrTupleKw,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   %eax, SECOND
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	jmp    .disp
 
 
 target_callattr_kwds:
 	lodsb
-	movl    SP, %edx
-	leal    4(,%eax,4), %ecx
-	subl    %ecx, %edx         /* EDX = SP - (1 + argc) */
-	pushl   %eax               /* BACKUP(argc) */
+	movl   SP, %edx
+	leal   4(,%eax,4), %ecx
+	subl   %ecx, %edx         /* EDX = SP - (1 + argc) */
+	pushl  %eax               /* BACKUP(argc) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx               /* BACKUP(new_sp) */
+	pushl  %edx               /* BACKUP(new_sp) */
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP                /* DeeObject_CallAttrKw:kw */
+	pushl  TOP                /* DeeObject_CallAttrKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx               /* DeeObject_CallAttrKw:argv */
+	pushl  %edx               /* DeeObject_CallAttrKw:argv */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax               /* DeeObject_CallAttrKw:argc */
+	pushl  %eax               /* DeeObject_CallAttrKw:argc */
 	ADJUST_CFA_OFFSET(4)
-	movl    -4(%edx), %ecx
-	pushl   %ecx               /* DeeObject_CallAttrKw:attr_name */
+	movl   -4(%edx), %ecx
+	pushl  %ecx               /* DeeObject_CallAttrKw:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	cmpl    $(SYM(DeeString_Type)), ob_type(%ecx)
-	jne     99f
-	pushl   -8(%edx)           /* DeeObject_CallAttrKw:self */
+	cmpl   $(SYM(DeeString_Type)), ob_type(%ecx)
+	jne    99f
+	pushl  -8(%edx)           /* DeeObject_CallAttrKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrKw,20)
+	call   fSYM(DeeObject_CallAttrKw,20)
 	ADJUST_CFA_OFFSET(-20)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x8
 	popl    %edx               /* EDX = new_sp */
 	ADJUST_CFA_OFFSET(-4)
 	xchgl   %eax, -8(%edx)     /* Save the result */
-	decref  %eax
+	decref %eax
 	popl    %ecx               /* ECX = argc */
 	ADJUST_CFA_OFFSET(-4)
 	/* Decref function arguments. */
@@ -6073,7 +6076,7 @@ target_callattr_kwds:
 	sp_popref %eax             /* attr_name */
 	jmp    .disp
 	ADJUST_CFA_OFFSET(24)
-99:	call    fSYM(err_expected_string_for_attribute,4)
+99:	call   fSYM(err_expected_string_for_attribute,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except_x20
 	ADJUST_CFA_OFFSET(-20)
@@ -6081,29 +6084,29 @@ target_callattr_kwds:
 
 
 target_callattr_tuple_kwds:
-	pushl   FIRST              /* DeeObject_CallAttrTupleKw:kw */
+	pushl  FIRST              /* DeeObject_CallAttrTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   SECOND             /* DeeObject_CallAttrTupleKw:args */
+	pushl  SECOND             /* DeeObject_CallAttrTupleKw:args */
 	ADJUST_CFA_OFFSET(4)
-	movl    THIRD, %edx
-	pushl   %edx               /* DeeObject_CallAttrTupleKw:attr_name */
+	movl   THIRD, %edx
+	pushl  %edx               /* DeeObject_CallAttrTupleKw:attr_name */
 	ADJUST_CFA_OFFSET(4)
-	cmpl    $(SYM(DeeString_Type)), ob_type(%edx)
-	jne     99f
-	pushl   FOURTH             /* DeeObject_CallAttrTupleKw:self */
+	cmpl   $(SYM(DeeString_Type)), ob_type(%edx)
+	jne    99f
+	pushl  FOURTH             /* DeeObject_CallAttrTupleKw:self */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_CallAttrTupleKw,16)
+	call   fSYM(DeeObject_CallAttrTupleKw,16)
 	ADJUST_CFA_OFFSET(-16)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	xchgl   %eax, FOURTH       /* Save the result */
-	decref  %eax
+	decref %eax
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
 	jmp    .disp
 	ADJUST_CFA_OFFSET(16)
-99:	call    fSYM(err_expected_string_for_attribute,4)
+99:	call   fSYM(err_expected_string_for_attribute,4)
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .except_x12
 	ADJUST_CFA_OFFSET(-12)
@@ -6146,7 +6149,7 @@ target_call_extern:
 #endif
 	pushl  %edx /* BACKUP(FUNCTION). */
 	ADJUST_CFA_OFFSET(4)
-	xorl   %eax, %eax
+	xorl   %eax, %eax    /* In case of `target16_call_extern', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb
 	movl   SP, %edx
 	leal   (,%eax,4), %ecx
@@ -6164,7 +6167,7 @@ target_call_extern:
 	popl   %ecx     /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except_decref_pop
+	jz     .except_decref_pop
 	testl  %ecx, %ecx
 	jz     3f       /* Pop arguments from the stack. */
 2:	sp_popref %edx, 1, 1, 0
@@ -6173,7 +6176,7 @@ target_call_extern:
 	popl   %eax     /* decref() the function that was called. */
 	ADJUST_CFA_OFFSET(-4)
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target16_call_global:
 	lodsw
 	LOAD_CODE(%ecx)
@@ -6194,7 +6197,7 @@ target_call_global:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 
 
 /* Local function calls use their own code because here we don't
@@ -6213,7 +6216,7 @@ target_call_local:
 	movl   (%ecx,%eax,4), %edx
 	testl  %edx, %edx
 	jz     99f /* Check if the function is unbound. */
-	xorl   %eax, %eax
+	xorl   %eax, %eax    /* In case of `target16_call_local', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb  /* EAX = n_args */
 	leal   (,%eax,4), %ecx
 	negl   %ecx
@@ -6231,13 +6234,13 @@ target_call_local:
 	popl   %ecx     /* ECX = n_args */
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	testl  %ecx, %ecx
 	jz     3f       /* Pop arguments from the stack. */
 2:	sp_popref %edx, 1, 1, 0
 	loop   2b
 3:	sp_push %eax    /* Push the callback result onto the stack. */
-	jmp   .disp
+	jmp    .disp
 99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_PC    /* PC */
@@ -6246,7 +6249,7 @@ target_call_local:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_local,12)
 	ADJUST_CFA_OFFSET(-12)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -6261,15 +6264,15 @@ target_getattr:
 	call   fSYM(DeeObject_GetAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 	ADJUST_CFA_OFFSET(4)
 99:	call   fSYM(err_expected_string_for_attribute,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp   .except
+	jmp    .except
 target_boundattr:
 	movl   FIRST, %eax
 	cmpl   $(SYM(DeeString_Type)), ob_type(%eax)
@@ -6290,7 +6293,7 @@ target_boundattr:
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
 	decref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target_delattr:
 	movl   FIRST, %eax
 	cmpl   $(SYM(DeeString_Type)), ob_type(%eax)
@@ -6305,7 +6308,7 @@ target_delattr:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -6326,10 +6329,10 @@ target_setattr:
 	sp_popref %eax
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 99:	pushl  %eax
 	call   fSYM(err_expected_string_for_attribute,4)
-	jmp   .except
+	jmp    .except
 
 
 
@@ -6350,10 +6353,10 @@ target_getattr_c:
 	call   fSYM(DeeObject_GetAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	xchgl  TOP, %eax /* Save the result onto the stack. */
 	decref %eax
-	jmp   .disp
+	jmp    .disp
 target16_delattr_c:
 	lodsw
 	jmp    1f
@@ -6373,7 +6376,7 @@ target_delattr_c:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 target16_setattr_c:
 	lodsw
 	jmp    1f
@@ -6396,7 +6399,7 @@ target_setattr_c:
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -6418,9 +6421,9 @@ target_getattr_this_c:
 	call   fSYM(DeeObject_GetAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except /* Check for errors. */
+	jz     .except /* Check for errors. */
 	sp_push %eax /* Push the result onto the stack. */
-	jmp   .disp
+	jmp    .disp
 target16_delattr_this_c:
 	lodsw
 	jmp    1f
@@ -6439,8 +6442,8 @@ target_delattr_this_c:
 	call   fSYM(DeeObject_DelAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .disp /* Check for errors. */
-	jmp   .except
+	jz     .disp /* Check for errors. */
+	jmp    .except
 target16_setattr_this_c:
 	lodsw
 	jmp    1f
@@ -6463,7 +6466,7 @@ target_setattr_this_c:
 	testl  %eax, %eax
 	jnz   .except /* Check for errors. */
 	sp_popref %eax
-	jmp   .disp
+	jmp    .disp
 
 
 target16_supergetattr_this_rc:
@@ -6502,9 +6505,9 @@ target_supergetattr_this_rc:
 	call   fSYM(DeeObject_TGetAttr,12)
 	ADJUST_CFA_OFFSET(-12)
 	testl  %eax, %eax
-	jz    .except
+	jz     .except
 	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 
 target16_supercallattr_this_rc:
 	lodsw
@@ -6526,6 +6529,7 @@ target_supercallattr_this_rc:
 	movl   co_staticv(CODE_OR_EDX), %edx
 	pushl (%edx,%eax,4)    /* DeeObject_TCallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
+	xorl   %eax, %eax      /* In case of `target16_supercallattr_this_rc', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
 	lodsb                  /* EAX = argc; */
 	movl   %eax, 4(%esp)   /* DeeObject_TCallAttr:argc */
 	movl   %eax, 12(%esp)  /* BACKUP(argc) */
@@ -6551,7 +6555,7 @@ target_supercallattr_this_rc:
 	call   fSYM(DeeObject_TCallAttr,20)
 	ADJUST_CFA_OFFSET(-20)
 	testl  %eax, %eax
-	jz    .except_x4
+	jz     .except_x4
 	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
 	/* Cleanup arguments passed to callattr */
@@ -6560,7 +6564,7 @@ target_supercallattr_this_rc:
 2:	sp_popref %edx, 1, 1, 0
 	loop   2b
 1:	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 
 
 target16_pack_hashset:
@@ -6580,11 +6584,11 @@ target_pack_hashset:
 	call   fSYM(DeeHashSet_NewItemsInherited,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4
+	jz     .except_x4
 	popl   SP /* Load the new SP */
 	ADJUST_CFA_OFFSET(-4)
 	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -6605,11 +6609,11 @@ target_pack_dict:
 	call   fSYM(DeeDict_NewKeyItemsInherited,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
-	jz    .except_x4
+	jz     .except_x4
 	popl   SP /* Load the new SP */
 	ADJUST_CFA_OFFSET(-4)
 	sp_push %eax
-	jmp   .disp
+	jmp    .disp
 
 
 
@@ -6653,7 +6657,7 @@ debug_break_jmptab:
 do_breakpoint_except_exit:
 	unset_result
 	movl   $0, FRAME_RESULT
-	jmp   .end_without_finally
+	jmp    .end_without_finally
 do_breakpoint_except = .except
 do_breakpoint_continue = .disp
 do_breakpoint_contsafe:
@@ -6676,7 +6680,7 @@ do_breakpoint_contsafe:
 #else
 	call   SYM(DeeCode_ExecFrameSafe)
 #endif
-	jmp   .end_nounhook
+	jmp    .end_nounhook
 do_breakpoint_return:
 	LOAD_CODE(%ecx)
 	testl  $(CODE_FYIELDING), co_flags(CODE_OR_ECX)
@@ -6685,13 +6689,13 @@ do_breakpoint_return:
 	jne   .end_without_finally
 	/* Replace a NULL-return value with ITER_DONE in yield-functions. */
 	movl   $(ITER_DONE), FRAME_RESULT
-	jmp   .end_without_finally
+	jmp    .end_without_finally
 1:	cmpl   $0, FRAME_RESULT
 	jne   .end_return
 	/* Replace a NULL-return value with `none' in non-yield-functions. */
 	movl   $(SYM(DeeNone_Singleton)), FRAME_RESULT
 	incref_addr SYM(DeeNone_Singleton)
-	jmp   .end_return
+	jmp    .end_return
 do_breakpoint_exit:
 do_breakpoint_exit_nofin:
 	LOAD_CODE(%ecx)
@@ -6714,7 +6718,7 @@ do_breakpoint_exit_nofin:
 	incref_addr SYM(DeeNone_Singleton)
 2:	cmpl   $(TRIGGER_BREAKPOINT_EXIT_NOFIN), %eax
 	je    .end_without_finally
-	jmp   .end_return
+	jmp    .end_return
 
 /* Storage class prefix opcodes. */
 
@@ -6744,22 +6748,22 @@ target_local:
 
 .macro define_inplace_math_op name, function
 prefix_target_\name:
-	call    get_prefix_object
-	pushl   %edx
+	call   get_prefix_object
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   TOP
+	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	leal    4(%esp), %eax
-	pushl   %eax
+	leal   4(%esp), %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call    \function
+	call   \function
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except_decref_pop
 	sp_popref %eax
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 .endm
 
 define_inplace_math_op add, fSYM(DeeObject_InplaceAdd,8)
@@ -6776,43 +6780,43 @@ define_inplace_math_op pow, fSYM(DeeObject_InplacePow,8)
 
 .macro define_inplace_math_op_s8 symbol, function
 \symbol:
-	call    get_prefix_object
-	pushl   %edx
+	call   get_prefix_object
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	lodsb
 	movsbl  %al, %eax
-	pushl   %eax /* val */
+	pushl  %eax /* val */
 	ADJUST_CFA_OFFSET(4)
-	leal    4(%esp), %eax
-	pushl   %eax /* &prefix_ob */
+	leal   4(%esp), %eax
+	pushl  %eax /* &prefix_ob */
 	ADJUST_CFA_OFFSET(4)
-	call    \function
+	call   \function
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except_decref_pop
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 .endm
 
 .macro define_inplace_math_op_u32 symbol, function
 \symbol:
-	call    get_prefix_object
-	pushl   %edx
+	call   get_prefix_object
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	lodsl
-	pushl   %eax /* val */
+	pushl  %eax /* val */
 	ADJUST_CFA_OFFSET(4)
-	leal    4(%esp), %eax
-	pushl   %eax /* &prefix_ob */
+	leal   4(%esp), %eax
+	pushl  %eax /* &prefix_ob */
 	ADJUST_CFA_OFFSET(4)
-	call    \function
+	call   \function
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jnz    .except_decref_pop
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 .endm
 
 define_inplace_math_op_s8  prefix_target_add_simm8, fSYM(DeeObject_InplaceAddS8,8)
@@ -6835,94 +6839,94 @@ prefix_target_extended1:
 /* Prefixed creation of function objects. */
 prefix_target16_function_c_16:
 	lodsw
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
 	jmp    .prefix_do_function_c
 prefix_target16_function_c:
 	lodsw
-	movl    %eax, %ecx
-	xorl    %eax, %eax
+	movl   %eax, %ecx
+	xorl   %eax, %eax
 	lodsb
 	jmp    .prefix_do_function_c
 prefix_target_function_c_16:
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsw
 	jmp    .prefix_do_function_c
 prefix_target_function_c:
 	lodsb
-	movl    %eax, %ecx
+	movl   %eax, %ecx
 	lodsb
 .prefix_do_function_c:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
-	movl    co_staticv(CODE_OR_EDX), %edx
+	movl   co_staticv(CODE_OR_EDX), %edx
 	incl    %eax /* EAX = refc */
-	subl    $8, %esp
+	subl   $8, %esp
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax            /* DeeFunction_NewInherited:refc */
+	pushl  %eax            /* DeeFunction_NewInherited:refc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */
+	pushl  (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */
 	ADJUST_CFA_OFFSET(4)
-	movl    SP, %edx
-	leal    (,%eax,4), %ecx
-	subl    %ecx, %edx      /* EDX = SP - refc */
-	movl    %edx, 8(%esp)   /* DeeFunction_NewInherited:refv */
-	movl    %edx, 12(%esp)  /* BACKUP(SP - refc) */
+	movl   SP, %edx
+	leal   (,%eax,4), %ecx
+	subl   %ecx, %edx      /* EDX = SP - refc */
+	movl   %edx, 8(%esp)   /* DeeFunction_NewInherited:refv */
+	movl   %edx, 12(%esp)  /* BACKUP(SP - refc) */
 #if 1
 	movl 0(%esp), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$SYM(DeeCode_Type))
 #endif
-	call    fSYM(DeeFunction_NewInherited,12)
+	call   fSYM(DeeFunction_NewInherited,12)
 	ADJUST_CFA_OFFSET(-12)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_x4
 	popl    SP              /* SP = SP - refc */
 	ADJUST_CFA_OFFSET(-4)
-	movl    %eax, %edx
-	jmp     set_prefix_object
+	movl   %eax, %edx
+	jmp    set_prefix_object
 
 
 prefix_target_inc:
-	call    get_prefix_object
-	pushl   %edx
+	call   get_prefix_object
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 .do_prefix_target_inc:
-	pushl   %esp
+	pushl  %esp
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_Inc,4)
+	call   fSYM(DeeObject_Inc,4)
 	ADJUST_CFA_OFFSET(-4)
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz      set_prefix_object
 	jmp    .except_decref_edx
 
 prefix_target_dec:
-	call    get_prefix_object
-	pushl   %edx
+	call   get_prefix_object
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 .do_prefix_target_dec:
-	pushl   %esp
+	pushl  %esp
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_Dec,4)
+	call   fSYM(DeeObject_Dec,4)
 	ADJUST_CFA_OFFSET(-4)
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz      set_prefix_object
 	jmp    .except_decref_edx
 
 prefix_target_incpost:
-	call    get_prefix_object
-	pushl   %edx /* Local storage of prefix object. */
+	call   get_prefix_object
+	pushl  %edx /* Local storage of prefix object. */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	/* First: create a copy of the object being prefixed. */
-	call    fSYM(DeeObject_Copy,4)
+	call   fSYM(DeeObject_Copy,4)
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_decref_pop
 	/* Then push that copy. */
 	sp_push %eax
@@ -6931,15 +6935,15 @@ prefix_target_incpost:
 ADJUST_CFA_OFFSET(-4)
 
 prefix_target_decpost:
-	call    get_prefix_object
-	pushl   %edx /* Local storage of prefix object. */
+	call   get_prefix_object
+	pushl  %edx /* Local storage of prefix object. */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	/* First: create a copy of the object being prefixed. */
-	call    fSYM(DeeObject_Copy,4)
+	call   fSYM(DeeObject_Copy,4)
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except_decref_pop
 	/* Then push that copy. */
 	sp_push %eax
@@ -6950,63 +6954,63 @@ ADJUST_CFA_OFFSET(-4)
 
 	/* mov-extensions. */
 prefix_target16_lrot:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_lrot:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
-1:	pushl   %edx /* prefix_object */
+1:	pushl  %edx /* prefix_object */
 	ADJUST_CFA_OFFSET(4)
-	leal    4(,%eax,4), %eax /* EAX = (EAX + 1) * 4  (shift - 1) */
-	movl    SP, %ecx
-	subl    %eax, %ecx /* ECX = SP - (shift - 1) */
-	pushl   -4(%ecx) /* drop_object */
+	leal   4(,%eax,4), %eax /* EAX = (EAX + 1) * 4  (shift - 1) */
+	movl   SP, %ecx
+	subl   %eax, %ecx /* ECX = SP - (shift - 1) */
+	pushl  -4(%ecx) /* drop_object */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax /* memmove.num_bytes = (shift-1) * 4 */
+	pushl  %eax /* memmove.num_bytes = (shift-1) * 4 */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx /* memmove.src = SP - (shift - 1) */
+	pushl  %ecx /* memmove.src = SP - (shift - 1) */
 	ADJUST_CFA_OFFSET(4)
-	subl    $4, %ecx
-	pushl   %ecx /* memmove.dst = SP - shift */
+	subl   $4, %ecx
+	pushl  %ecx /* memmove.dst = SP - shift */
 	ADJUST_CFA_OFFSET(4)
-	call    SYM(memmove) /* TODO: KOS-specific: memmoveupl */
+	call   SYM(memmove) /* TODO: KOS-specific: memmoveupl */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl    %edx /* drop_object */
 	ADJUST_CFA_OFFSET(-4)
 	popl    TOP /* prefix_object */
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 
 
 prefix_target16_rrot:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_rrot:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
-1:	pushl   %edx /* prefix_object */
+1:	pushl  %edx /* prefix_object */
 	ADJUST_CFA_OFFSET(4)
-	leal    4(,%eax,4), %eax /* EAX = (EAX + 1) * 4  (shift - 1) */
-	movl    -4(SP), %ecx
-	subl    %eax, %ecx /* ECX = SP - shift */
-	pushl   %ecx /* sp - shift */
-	pushl   TOP /* drop_object */
+	leal   4(,%eax,4), %eax /* EAX = (EAX + 1) * 4  (shift - 1) */
+	movl   -4(SP), %ecx
+	subl   %eax, %ecx /* ECX = SP - shift */
+	pushl  %ecx /* sp - shift */
+	pushl  TOP /* drop_object */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax /* memmove.num_bytes = (shift - 1) * 4 */
+	pushl  %eax /* memmove.num_bytes = (shift - 1) * 4 */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx /* memmove.src = SP - shift */
+	pushl  %ecx /* memmove.src = SP - shift */
 	ADJUST_CFA_OFFSET(4)
 	addl    $4, %ecx
-	pushl   %ecx /* memmove.dst = SP - (shift - 1) */
+	pushl  %ecx /* memmove.dst = SP - (shift - 1) */
 	ADJUST_CFA_OFFSET(4)
-	call    SYM(memmove) /* TODO: KOS-specific: memmovedownl */
+	call   SYM(memmove) /* TODO: KOS-specific: memmovedownl */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl    %edx /* drop_object */
@@ -7015,32 +7019,32 @@ prefix_target_rrot:
 	ADJUST_CFA_OFFSET(-4)
 	popl    (%ecx) /* *(sp - shift) = prefix_object */
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 
 prefix_target_swap:
-	movl    TOP, %edx
-	call    xch_prefix_object
-	movl    %edx, TOP
+	movl   TOP, %edx
+	call   xch_prefix_object
+	movl   %edx, TOP
 	jmp    .disp
 
 prefix_target16_pop_static:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_pop_static:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 #ifdef CODE_IS_REGISTER
 	rwlock_write co_static_lock(CODE_OR_ECX), %ecx
 #else /* CODE_IS_REGISTER */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	rwlock_write co_static_lock(CODE_OR_ECX), %edx
 	popl    %edx
@@ -7050,105 +7054,105 @@ prefix_target_pop_static:
 	ADJUST_CFA_OFFSET(-4)
 	LOAD_CODE(%ecx)
 #endif /* !CONFIG_NO_THREADS */
-	movl    co_staticv(CODE_OR_ECX), %ecx
+	movl   co_staticv(CODE_OR_ECX), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
 	rwlock_endwrite co_static_lock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_NONZERO(%edx)
-	decref  %edx
+	decref %edx
 	jmp    .disp
 
 prefix_target16_pop_extern:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsw
-	jmp     2f
+	jmp    2f
 prefix_target_pop_extern:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsb
-	jmp     2f
+	jmp    2f
 
 prefix_target16_pop_global:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_pop_global:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 2:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 #ifndef CONFIG_NO_THREADS
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_write mo_lock(%ecx), %edx
 	popl    %eax
 	ADJUST_CFA_OFFSET(-4)
 	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	pushl   %ecx
+	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
 #endif
-	movl    mo_globalv(%ecx), %ecx
-	xchgl   (%ecx,%eax,4), %edx
+	movl   mo_globalv(%ecx), %ecx
+	xchgl  (%ecx,%eax,4), %edx
 #ifndef CONFIG_NO_THREADS
-	popl    %ecx
+	popl   %ecx
 	ADJUST_CFA_OFFSET(-4)
 	rwlock_endwrite mo_lock(%ecx)
 #endif
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz     .disp
-	decref  %edx /* Drop a reference from the old global variable. */
+	decref %edx /* Drop a reference from the old global variable. */
 	jmp    .disp
 
 
 prefix_target16_pop_local:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_pop_local:
-	call    get_prefix_object
-	xorl    %eax, %eax
+	call   get_prefix_object
+	xorl   %eax, %eax
 	lodsb
-1:	movl    FRAME_FRAME, %ecx
-	xchgl   (%ecx,%eax,4), %edx
-	testl   %edx, %edx
+1:	movl   FRAME_FRAME, %ecx
+	xchgl  (%ecx,%eax,4), %edx
+	testl  %edx, %edx
 	jz     .disp
-	decref  %edx
+	decref %edx
 	jmp    .disp
 
 prefix_target_push_simm8:
 	/* PREFIX = $Simm8 */
 	lodsb
 	movsbl  %al, %eax
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInt_NewS32,4)
+	call   fSYM(DeeInt_NewS32,4)
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
-	movl    %eax, %edx
-	jmp     set_prefix_object
+	movl   %eax, %edx
+	jmp    set_prefix_object
 
 prefix_target_push_imm32:
 	/* PREFIX = $imm32 */
@@ -7156,226 +7160,226 @@ prefix_target_push_imm32:
 prefix_target_push_imm16:
 	/* PREFIX = $imm16 */
 	lodsw
-1:	pushl   %eax
+1:	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeInt_NewU32,4)
+	call   fSYM(DeeInt_NewU32,4)
 	ADJUST_CFA_OFFSET(-4)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
-	movl    %eax, %edx
-	jmp     set_prefix_object
+	movl   %eax, %edx
+	jmp    set_prefix_object
 
 prefix_target_push_none:
-	leal    SYM(DeeNone_Singleton), %edx
-	jmp     set_prefix_object_incref
+	leal   SYM(DeeNone_Singleton), %edx
+	jmp    set_prefix_object_incref
 
 prefix_target_push_except:
-	movl    L_THIS_THREAD, %eax
-	movl    t_except(%eax), %eax
-	testl   %eax, %eax
+	movl   L_THIS_THREAD, %eax
+	movl   t_except(%eax), %eax
+	testl  %eax, %eax
 	jz     .except_no_active_exception /* Check if an exception has been set. */
-	movl    ef_error(%eax), %edx
+	movl   ef_error(%eax), %edx
 	ASSERT_NONZERO(%edx)
-	jmp     set_prefix_object_incref
+	jmp    set_prefix_object_incref
 
 prefix_target16_push_module:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_module:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %edx
-	movl    (%edx,%eax,4), %edx
+	movl   mo_importv(%ecx), %edx
+	movl   (%edx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
-	jmp     set_prefix_object_incref
+	jmp    set_prefix_object_incref
 
 prefix_target_push_this:
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 #endif
-	movl    FRAME_THIS, %edx
-	jmp     set_prefix_object_incref
+	movl   FRAME_THIS, %edx
+	jmp    set_prefix_object_incref
 
 prefix_target_push_this_module:
 	LOAD_CODE(%eax)
-	movl    co_module(CODE_OR_EAX), %edx
-	jmp     set_prefix_object_incref
+	movl   co_module(CODE_OR_EAX), %edx
+	jmp    set_prefix_object_incref
 
 prefix_target_push_this_function:
-	movl    FRAME_FUNC, %edx
-	jmp     set_prefix_object_incref
+	movl   FRAME_FUNC, %edx
+	jmp    set_prefix_object_incref
 
 prefix_target16_push_ref:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_ref:
 	lodsb
-1:	movl    FRAME_FUNC, %ecx
-	movl    fo_refv(%ecx,%eax,4), %edx
-	jmp     set_prefix_object_incref
+1:	movl   FRAME_FUNC, %ecx
+	movl   fo_refv(%ecx,%eax,4), %edx
+	jmp    set_prefix_object_incref
 
 prefix_target16_push_arg:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_arg:
 	lodsb
-1:	cmpl    FRAME_ARGC, %eax
+1:	cmpl   FRAME_ARGC, %eax
 	jnb     1f
 	/* Simple case: Direct argument/default reference. */
-	movl    FRAME_ARGV, %edx
-	movl    (%edx,%eax,4), %edx
-	jmp     set_prefix_object_incref
+	movl   FRAME_ARGV, %edx
+	movl   (%edx,%eax,4), %edx
+	jmp    set_prefix_object_incref
 	/* Check for the argument within the kwds argument overlay */
-1:	movl    FRAME_KW, %edx
-	testl   %edx, %edx
+1:	movl   FRAME_KW, %edx
+	testl  %edx, %edx
 	jz      1f
-	subl    FRAME_ARGC, %eax
-	movl    fk_kargv(%edx,%eax,4), %edx
-	testl   %edx, %edx
-	jnz     set_prefix_object_incref
+	subl   FRAME_ARGC, %eax
+	movl   fk_kargv(%edx,%eax,4), %edx
+	testl  %edx, %edx
+	jnz    set_prefix_object_incref
 	addl    FRAME_ARGC, %eax
 	/* Check for the argument within the code's default argument vector */
 1:	LOAD_CODE(%ecx)
 	subw    co_argc_min(CODE_OR_ECX), %ax
-	movl    co_defaultv(CODE_OR_ECX), %edx
-	movl    (%edx,%eax,4), %edx
-	testl   %edx, %edx
-	jnz     set_prefix_object_incref
+	movl   co_defaultv(CODE_OR_ECX), %edx
+	movl   (%edx,%eax,4), %edx
+	testl  %edx, %edx
+	jnz    set_prefix_object_incref
 1:	addw    co_argc_min(CODE_OR_ECX), %ax
 	/* Unbound argument */
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_PC
+	pushl  FRAME_PC
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC
+	pushl  CODE_OR_LOC
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_unbound_arg,12)
+	call   fSYM(err_unbound_arg,12)
 	ADJUST_CFA_OFFSET(-12)
 	jmp    .except
 
 
 prefix_target_push_varargs:
-	movl    FRAME_VARARGS, %edx
-	testl   %edx, %edx
-	jnz     set_prefix_object_incref
+	movl   FRAME_VARARGS, %edx
+	testl  %edx, %edx
+	jnz    set_prefix_object_incref
 	LOAD_CODE(%ecx)
-	movl    FRAME_ARGC, %eax
+	movl   FRAME_ARGC, %eax
 	/* if (frame->cf_argc <= code->co_argc_max) */
-	cmpl    co_argc_max(CODE_OR_ECX), %eax
+	cmpl   co_argc_max(CODE_OR_ECX), %eax
 	jnbe    1f
 	/* { */
-	leal    SYM(DeeTuple_Empty), %edx
-	movl    %edx, FRAME_VARARGS
+	leal   SYM(DeeTuple_Empty), %edx
+	movl   %edx, FRAME_VARARGS
 	incref_n %edx, 2
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 	/* } */
 1:	/* Must construct the varargs tuple. */
-	movl    co_argc_max(CODE_OR_ECX), %ecx
-	movl    FRAME_ARGV, %eax
-	leal    (%eax,%ecx,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
-	movl    FRAME_ARGC, %eax
-	subl    %ecx, %eax          /* EAX = frame->cf_argc - code->co_argc_max */
-	pushl   %edx
+	movl   co_argc_max(CODE_OR_ECX), %ecx
+	movl   FRAME_ARGV, %eax
+	leal   (%eax,%ecx,4), %edx /* EDX = frame->cf_argv + code->co_argc_max */
+	movl   FRAME_ARGC, %eax
+	subl   %ecx, %eax          /* EAX = frame->cf_argc - code->co_argc_max */
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeTuple_NewVector,8)
+	call   fSYM(DeeTuple_NewVector,8)
 	ADJUST_CFA_OFFSET(-8)
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Store the generated varargs object. */
-	movl    %eax, FRAME_VARARGS
-	movl    %eax, %edx
-	jmp     set_prefix_object_incref
+	movl   %eax, FRAME_VARARGS
+	movl   %eax, %edx
+	jmp    set_prefix_object_incref
 
 
 prefix_target_push_varkwds:
-	movl    FRAME_KW, %eax
-	testl   %eax, %eax
+	movl   FRAME_KW, %eax
+	testl  %eax, %eax
 	jz      70f
-	movl    fk_varkwds(%eax), %edx
-	testl   %edx, %edx
-	jnz     set_prefix_object_incref
+	movl   fk_varkwds(%eax), %edx
+	testl  %edx, %edx
+	jnz    set_prefix_object_incref
 	/* construct_varkwds_mapping() { */
-	movl    fk_kw(%eax), %edx
+	movl   fk_kw(%eax), %edx
 	/* if likely(DeeKwds_Check(kw)) */
-	cmpl    $SYM(DeeKwds_Type), ob_type(%edx)
-	jne     1f
+	cmpl   $SYM(DeeKwds_Type), ob_type(%edx)
+	jne    1f
 	/* { */
-	movl    FRAME_ARGC, %ecx
-	movl    FRAME_ARGV, %eax
-	leal    (%edx,%ecx,4), %ecx
-	pushl   %ecx /* frame->cf_argv + frame->cf_argc */
+	movl   FRAME_ARGC, %ecx
+	movl   FRAME_ARGV, %eax
+	leal   (%edx,%ecx,4), %ecx
+	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx          /* kw */
+	pushl  %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_New,16)
+	call   fSYM(BlackListVarkwds_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp     60f
+	jmp    60f
 	/* } else { */
-1:	pushl   %edx          /* kw */
+1:	pushl  %edx          /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_ARGC    /* positional_argc */
+	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC   /* code */
+	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListMapping_New,12)
+	call   fSYM(BlackListMapping_New,12)
 	ADJUST_CFA_OFFSET(-12)
 	/* } */
-60:	testl   %eax, %eax
+60:	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
-	movl    FRAME_KW, %ecx
+	movl   FRAME_KW, %ecx
 #ifdef CONFIG_NO_THREADS
-	movl    fk_varkwds(%ecx), %edx
-	testl   %edx, %edx
-	jnz     61f
-	movl    %eax, fk_varkwds(%ecx) /* Inherit reference */
-	movl    %eax, %edx
-	jmp     set_prefix_object_incref
-61:	decref  %eax, 0, 0, 1          /* Re-use the old object */
-	jmp     set_prefix_object_incref
+	movl   fk_varkwds(%ecx), %edx
+	testl  %edx, %edx
+	jnz    61f
+	movl   %eax, fk_varkwds(%ecx) /* Inherit reference */
+	movl   %eax, %edx
+	jmp    set_prefix_object_incref
+61:	decref %eax, 0, 0, 1          /* Re-use the old object */
+	jmp    set_prefix_object_incref
 #else /* CONFIG_NO_THREADS */
-	movl    %eax, %edx
-	xorl    %eax, %eax
+	movl   %eax, %edx
+	xorl   %eax, %eax
 	/* EAX = ATOMIC_CMPXCH_VAL(frame->cf_kw->fk_varkwds,NULL,EDX); */
 	cmpxchgl %edx, fk_varkwds(%ecx)
 	jz      set_prefix_object_incref /* if (EAX == NULL) ... */
 	/* Another thread already loaded `EAX'. */
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	movl    ob_type(%edx), %ecx
-	cmpl    $SYM(DeeKwdsMapping_Type), %ecx
-	jne     1f
+	movl   ob_type(%edx), %ecx
+	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
+	jne    1f
 	/* Cleanup: DeeKwdsMapping_CheckExact() */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwdsMapping_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp     2f
-1:	cmpl    $SYM(BlackListVarkwds_Type), %ecx
-	jne     1f
+	jmp    2f
+1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
+	jne    1f
 	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl   %edx
+	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(BlackListVarkwds_Decref,4)
+	call   fSYM(BlackListVarkwds_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp     2f
+	jmp    2f
 	/* Cleanup: Dee_Decref() */
-1:	decref  %edx
+1:	decref %edx
 2:	popl    %edx
 	ADJUST_CFA_OFFSET(-4)
-	jmp     set_prefix_object_incref
+	jmp    set_prefix_object_incref
 #endif /* !CONFIG_NO_THREADS */
-70:	leal    SYM(DeeMapping_EmptyInstance), %edx
-	jmp     set_prefix_object_incref
+70:	leal   SYM(DeeMapping_EmptyInstance), %edx
+	jmp    set_prefix_object_incref
 
 
 #ifdef HAVE_TARGET_PUSH_CONST
@@ -7383,17 +7387,17 @@ prefix_target16_push_const:
 #endif
 prefix_target16_push_static:
 	lodsw
-	jmp     1f
+	jmp    1f
 #ifdef HAVE_TARGET_PUSH_CONST
 prefix_target_push_const:
 #endif
 prefix_target_push_static:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_staticv(CODE_OR_ECX), %edx
+	movl   co_staticv(CODE_OR_ECX), %edx
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_read co_static_lock(CODE_OR_ECX), %edx
 	popl    %eax
@@ -7404,110 +7408,110 @@ prefix_target_push_static:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread co_static_lock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 
 
 
 #ifndef HAVE_TARGET_PUSH_CONST
 prefix_target16_push_const:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_const:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_staticv(CODE_OR_ECX), %edx
+	movl   co_staticv(CODE_OR_ECX), %edx
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
-	jmp     set_prefix_object_incref
+	jmp    set_prefix_object_incref
 #endif
 
 
 prefix_target16_push_extern:
 	lodsw
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsw
-	jmp     2f
+	jmp    2f
 prefix_target_push_extern:
 	lodsb
 	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 	ASSERT_BELOW(%ax,mo_importc(%ecx))
-	movl    mo_importv(%ecx), %ecx
+	movl   mo_importv(%ecx), %ecx
 	movl   (%ecx,%eax,4), %ecx
 	lodsb
-	jmp     2f
+	jmp    2f
 prefix_target16_push_global:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_global:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl    co_module(CODE_OR_ECX), %ecx
+	movl   co_module(CODE_OR_ECX), %ecx
 2:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 #ifndef CONFIG_NO_THREADS
-	pushl   %eax
+	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	rwlock_write mo_lock(%ecx), %edx
 	popl    %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif
-	movl    mo_globalv(%ecx), %edx
+	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      99f /* Check for unbound globals. */
 	incref  %edx
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
 #endif
-	jmp     set_prefix_object
+	jmp    set_prefix_object
 99:
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
 #endif
-	pushl   %eax /* GID */
+	pushl  %eax /* GID */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %ecx /* MODULE */
+	pushl  %ecx /* MODULE */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_unbound_global,8)
+	call   fSYM(err_unbound_global,8)
 	ADJUST_CFA_OFFSET(-8)
 	jmp    .except
 
 
 prefix_target16_push_local:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_push_local:
 	lodsb
-1:	movl    FRAME_FRAME, %ecx
+1:	movl   FRAME_FRAME, %ecx
 #ifndef NDEBUG
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%ax,co_localc(CODE_OR_EDX))
 #endif
 	movl   (%ecx,%eax,4), %edx
-	testl   %edx, %edx
+	testl  %edx, %edx
 	jz      99f /* Check for unbound locals. */
-	jmp     set_prefix_object_incref
-99:	pushl   %eax        /* LID */
+	jmp    set_prefix_object_incref
+99:	pushl  %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
-	pushl   FRAME_PC /* PC */
+	pushl  FRAME_PC /* PC */
 	ADJUST_CFA_OFFSET(4)
-	pushl   CODE_OR_LOC /* CODE */
+	pushl  CODE_OR_LOC /* CODE */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(err_unbound_local,12)
+	call   fSYM(err_unbound_local,12)
 	ADJUST_CFA_OFFSET(-12)
 	jmp    .except
 
 
 prefix_target_dup:
-	movl    TOP, %edx
-	jmp     set_prefix_object_incref
+	movl   TOP, %edx
+	jmp    set_prefix_object_incref
 prefix_target16_dup_n:
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_dup_n:
 	lodsb
 1:	/* dup #n loads an object offset by n+2:
@@ -7521,93 +7525,93 @@ prefix_target_dup_n:
 	 * >> Therefor, we add an offset of +2, preventing
 	 *    redundancy as well as the possibility of an
 	 *    illegal memory access. */
-	leal    8(,%eax,4), %eax /* eax = (eax * 4) + 8 (aka. `eax = (eax + 2) * 4') */
-	movl    SP, %edx
-	subl    %eax, %edx
+	leal   8(,%eax,4), %eax /* eax = (eax * 4) + 8 (aka. `eax = (eax + 2) * 4') */
+	movl   SP, %edx
+	subl   %eax, %edx
 	ASSERT_ABOVE_EQUAL(%edx,FRAME_STACK) /* ERROR: Stack underflow. */
 	ASSERT_BELOW(%edx,L_STACK_END) /* ERROR: Stack overflow. */
 	movl   (%edx), %edx /* Dereference the requested stack object. */
-	jmp     set_prefix_object_incref
+	jmp    set_prefix_object_incref
 
 prefix_target_pop:
-	call    get_prefix_object
+	call   get_prefix_object
 	xchgl   TOP, %edx
-	decref  %edx
+	decref %edx
 	jmp    .disp
 
 prefix_target16_pop_n:
-	call    get_prefix_object
+	call   get_prefix_object
 	xchgl   %eax, %eax
 	lodsw
-	jmp     1f
+	jmp    1f
 prefix_target_pop_n:
-	call    get_prefix_object
+	call   get_prefix_object
 	xchgl   %eax, %eax
 	lodsb
-1:	leal    8(,%eax,4), %eax /* eax = (eax * 4) + 8. (offset = (offset + 2) * 4) */
-	movl    SP, %ecx
-	subl    %eax, %ecx
+1:	leal   8(,%eax,4), %eax /* eax = (eax * 4) + 8. (offset = (offset + 2) * 4) */
+	movl   SP, %ecx
+	subl   %eax, %ecx
 	xchgl  (%ecx), %edx
-	decref  %edx /* Drop the old object that was overwritten. */
+	decref %edx /* Drop the old object that was overwritten. */
 	jmp    .disp
 
 prefix_target_ret:
 	/* Check if we're overwriting a previous return value
 	 * (which can happen when `return' appears in a finally-block) */
-	call    get_prefix_object
+	call   get_prefix_object
 	unset_result %eax, 0, 0, 1
-	movl    %edx, %eax
-	movl    %eax, FRAME_RESULT
+	movl   %edx, %eax
+	movl   %eax, FRAME_RESULT
 	TEST_CODE_FLAG($(CODE_FYIELDING),%ecx)
 	jz     .end_return /* Execute finally handlers before returning. */
 	jmp    .end_without_finally
 
 prefix_target_yieldall:
-	call    get_prefix_object
+	call   get_prefix_object
 	ASSERT_YIELDING
 	unset_result %eax, 0, 0, 1
 	/* Yield the next item from the iterator. */
-	pushl   %edx /* backup */
+	pushl  %edx /* backup */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx /* iterator */
+	pushl  %edx /* iterator */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeObject_IterNext,4)
+	call   fSYM(DeeObject_IterNext,4)
 	ADJUST_CFA_OFFSET(-4)
 	popl    %edx /* restore */
 	ADJUST_CFA_OFFSET(-4)
-	decref  %edx, 1, 0, 0
+	decref %edx, 1, 0, 0
 	/* Check for errors. */
-	testl   %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Check for iterator-exhausted. */
-	cmpl    $(ITER_DONE), %eax
+	cmpl   $(ITER_DONE), %eax
 	je      1f
 	repeat_instruction
-	movl    %eax, FRAME_RESULT
+	movl   %eax, FRAME_RESULT
 	jmp    .end_without_finally
 1:	sp_popref %eax
 	jmp    .disp
 
 prefix_target_throw:
-	call    get_prefix_object
-	pushl   %edx /* backup */
+	call   get_prefix_object
+	pushl  %edx /* backup */
 	ADJUST_CFA_OFFSET(4)
-	pushl   %edx /* error */
+	pushl  %edx /* error */
 	ADJUST_CFA_OFFSET(4)
-	call    fSYM(DeeError_Throw,4)
+	call   fSYM(DeeError_Throw,4)
 	ADJUST_CFA_OFFSET(-4)
 	popl    %edx /* restore */
 	ADJUST_CFA_OFFSET(-4)
-	decref  %edx
+	decref %edx
 	jmp    .except
 
 
 prefix_target_push_true:
-	leal    SYM(Dee_FalseTrue)+8, %edx
-	jmp     set_prefix_object_incref
+	leal   SYM(Dee_FalseTrue)+8, %edx
+	jmp    set_prefix_object_incref
 prefix_target_push_false:
-	leal    SYM(Dee_FalseTrue)+0, %edx
-	jmp     set_prefix_object_incref
+	leal   SYM(Dee_FalseTrue)+0, %edx
+	jmp    set_prefix_object_incref
 
 
 
@@ -7642,7 +7646,7 @@ impl_set_prefix_stack:
 #else /* !NDEBUG */
 	xchgl  (%ecx,%eax,4), %edx
 #endif /* NDEBUG */
-	decref  %edx /* Drop the value that got exchanged. */
+	decref %edx /* Drop the value that got exchanged. */
 	jmp    .disp
 impl_set_prefix16_static:
 	LOAD_CODE(%ecx)
@@ -7687,7 +7691,7 @@ impl_set_prefix_static:
 	rwlock_endwrite co_static_lock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	decref %edx /* Drop the value that got exchanged. */
-	jmp   .disp
+	jmp    .disp
 impl_set_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
@@ -7738,9 +7742,9 @@ impl_set_prefix_global:
 	rwlock_endwrite mo_lock(%ecx)
 #endif
 	testl  %edx, %edx
-	jz    .disp
+	jz     .disp
 	decref %edx /* Drop a reference from the old object. */
-	jmp   .disp
+	jmp    .disp
 impl_set_prefix16_local:
 	movzwl 2(%eax), %eax
 	jmp    1f
@@ -7754,9 +7758,9 @@ impl_set_prefix_local:
 	movl   FRAME_FRAME, %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the prefixed object. */
 	testl  %edx, %edx
-	jz    .disp
+	jz     .disp
 	decref %edx /* Drop a reference from the old object. */
-	jmp   .disp
+	jmp    .disp
 impl_set_prefix_extended:
 	movzbl 1(%eax), %ecx
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf8)
@@ -7810,7 +7814,7 @@ END(impl_set_prefix_table_f0)
  * >>    movl   TOP, %edx
  * >>    call   xch_prefix_object
  * >>    movl   %edx, TOP
- * >>    jmp   .disp
+ * >>    jmp    .disp
  */
 .text
 IF_USE_CFI(.cfi_startproc)
@@ -7948,7 +7952,7 @@ impl_xch_prefix_global:
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	call   fSYM(err_unbound_global,8)
 	IF_USE_CFI(.cfi_adjust_cfa_offset -8)
-	jmp   .except_x4
+	jmp    .except_x4
 
 impl_xch_prefix16_local:
 	movzwl 2(%eax), %eax
@@ -7975,7 +7979,7 @@ impl_xch_prefix_local:
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	call   fSYM(err_unbound_local,12)
 	IF_USE_CFI(.cfi_adjust_cfa_offset -12)
-	jmp   .except_x4
+	jmp    .except_x4
 
 
 impl_xch_prefix_extended:
@@ -8139,7 +8143,7 @@ impl_get_prefix_global:
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	call   fSYM(err_unbound_global,8)
 	IF_USE_CFI(.cfi_adjust_cfa_offset -8)
-	jmp   .except_x4 /* Pop the return address of `get_prefix_object' */
+	jmp    .except_x4 /* Pop the return address of `get_prefix_object' */
 impl_get_prefix16_local:
 	movzwl 2(%eax), %eax
 	jmp    1f
@@ -8164,7 +8168,7 @@ impl_get_prefix_local:
 	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	call   fSYM(err_unbound_local,12)
 	IF_USE_CFI(.cfi_adjust_cfa_offset -12)
-	jmp   .except_x4
+	jmp    .except_x4
 impl_get_prefix_extended:
 	movzbl 1(%eax), %ecx
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf8)
