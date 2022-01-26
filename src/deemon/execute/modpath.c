@@ -113,24 +113,24 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 
 
 #ifdef DEE_SYSTEM_NOCASE_FS
-#define fs_memcmp memcasecmp
-#define fs_hashobj(ob)    DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
-#define fs_hashstr(s)     Dee_HashCaseStr(s)
-#define fs_hashutf8(s, n) Dee_HashCaseUtf8(s, n)
+#define fs_memcmp                        memcasecmp
+#define fs_hashobj(ob)                   DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashstr(s)                    Dee_HashCaseStr(s)
+#define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
 #define fs_hashmodname_equals(mod, hash) 1
 #ifdef CONFIG_HOST_WINDOWS
-#define fs_hashmodpath(mod) ((mod)->mo_pathhash)
+#define fs_hashmodpath(mod)              ((mod)->mo_pathhash)
 #define fs_hashmodpath_equals(mod, hash) ((mod)->mo_pathhash == (hash))
 #else /* CONFIG_HOST_WINDOWS */
-#define fs_hashmodpath(mod) DeeString_HashCase((DeeObject *)(mod)->mo_path)
+#define fs_hashmodpath(mod)              DeeString_HashCase((DeeObject *)(mod)->mo_path)
 #define fs_hashmodpath_equals(mod, hash) 1
 #endif /* !CONFIG_HOST_WINDOWS */
 #else /* DEE_SYSTEM_NOCASE_FS */
-#define fs_memcmp         memcmp
-#define fs_hashobj(ob)    DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
-#define fs_hashstr(s)     Dee_HashStr(s)
-#define fs_hashutf8(s, n) Dee_HashUtf8(s, n)
-#define fs_hashmodpath(mod) DeeString_HASH((DeeObject *)(mod)->mo_path)
+#define fs_memcmp                        memcmp
+#define fs_hashobj(ob)                   DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashstr(s)                    Dee_HashStr(s)
+#define fs_hashutf8(s, n)                Dee_HashUtf8(s, n)
+#define fs_hashmodpath(mod)              DeeString_HASH((DeeObject *)(mod)->mo_path)
 #define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
 #endif /* !DEE_SYSTEM_NOCASE_FS */
@@ -652,6 +652,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 	ASSERT(modules_a != 0);
 	/* Insert the module into the table. */
 	hash = fs_hashmodpath(self);
+	Dee_DPRINTF("[RT] Caching module by-file %r\n", self->mo_path);
 	bucket = &modules_v[hash % modules_a];
 	if ((self->mo_next = bucket->mb_list) != NULL)
 		self->mo_next->mo_pself = &self->mo_next;
@@ -665,13 +666,13 @@ PRIVATE NONNULL((1)) bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
 	struct module_bucket *bucket;
-	Dee_DPRINTF("[RT] Cached global module %r loaded from %r\n",
-	            self->mo_name, self->mo_path ? self->mo_path : (DeeStringObject *)Dee_EmptyString);
 	ASSERT(!self->mo_globpself);
 	ASSERT(self->mo_name);
 #ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_writing(&modules_glob_lock));
 #endif /* !CONFIG_NO_THREADS */
+	Dee_DPRINTF("[RT] Cached global module %r loaded from %r\n",
+	            self->mo_name, self->mo_path ? self->mo_path : (DeeStringObject *)Dee_EmptyString);
 	if (modules_glob_c >= modules_glob_a && !rehash_glob_modules())
 		return false;
 	ASSERT(modules_glob_a != 0);
@@ -749,7 +750,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 
 	/* Quick check if this module had already been opened. */
 	rwlock_read(&modules_lock);
-	hash   = DeeString_HashCase((DeeObject *)module_path_ob);
+	hash   = fs_hashobj(module_path_ob);
 	result = find_file_module(module_path_ob, hash);
 	if (result && Dee_IncrefIfNotZero(result)) {
 		rwlock_endread(&modules_lock);
@@ -798,7 +799,7 @@ got_result_modulepath:
 		name_end = name + size;
 #ifdef CONFIG_HOST_WINDOWS
 		name_start = name_end;
-		while (name_start != name && !ISSEP(name_start[-1]))
+		while (name_start > name && !ISSEP(name_start[-1]))
 			--name_start;
 #else /* CONFIG_HOST_WINDOWS */
 		name_start = (char *)memrchr(name, SEP, size);
@@ -1560,7 +1561,11 @@ err_buf_name_dec_stream:
 				result->mo_path = module_path_ob; /* Inherit reference. */
 #ifdef CONFIG_HOST_WINDOWS
 				result->mo_pathhash = hash;
-#endif /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
+				ASSERT(DeeString_Hash((DeeObject *)module_path_ob) == hash);
+				DeeString_HASH(module_path_ob) = hash;
+#endif /* !CONFIG_HOST_WINDOWS */
+
 				result->mo_flags |= MODULE_FLOADING;
 				COMPILER_WRITE_BARRIER();
 				/* Cache the new module as part of the filesystem
@@ -1670,9 +1675,13 @@ load_module_after_dec_failure:
 	}
 #endif /* !CONFIG_NO_DEC */
 #ifdef CONFIG_NO_DEX
-	module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(dst, len, STRING_ERROR_FSTRICT);
+	module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 	if unlikely(!module_path_ob)
 		goto err_buf;
+#ifndef CONFIG_HOST_WINDOWS
+	ASSERT(fs_hashutf8(buf, len) == hash);
+	DeeString_HASH(module_path_ob) = hash;
+#endif /* !CONFIG_HOST_WINDOWS */
 #else /* CONFIG_NO_DEX */
 	/* Try to load the module from a DEX extension. */
 	ASSERT(dst[module_namesize + 0] == '.');
@@ -1712,11 +1721,15 @@ load_module_after_dec_failure:
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob)
 				goto err_buf;
+#ifndef CONFIG_HOST_WINDOWS
+			ASSERT(fs_hashutf8(buf, len) == hash);
+			DeeString_HASH(module_path_ob) = hash;
+#endif /* !CONFIG_HOST_WINDOWS */
 		} else {
 			int error;
 			DeeModuleObject *existing_module;
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,
-			                                                           len - (SHLEN - 4),
+			                                                           len - 4 + SHLEN,
 			                                                           STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob) {
 				DeeSystem_DlClose(dex_handle);
@@ -1731,7 +1744,10 @@ load_module_after_dec_failure:
 			result->mo_path = module_path_ob; /* Inherit reference. */
 #ifdef CONFIG_HOST_WINDOWS
 			result->mo_pathhash = hash;
-#endif /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
+			/* Load the updated path hash (and also force the hash to be pre-cached) */
+			hash = fs_hashobj(module_path_ob);
+#endif /* !CONFIG_HOST_WINDOWS */
 			result->mo_flags |= MODULE_FLOADING;
 			COMPILER_WRITE_BARRIER();
 
@@ -1842,7 +1858,10 @@ load_module_after_dex_failure:
 		result->mo_path = module_path_ob; /* Inherit reference. */
 #ifdef CONFIG_HOST_WINDOWS
 		result->mo_pathhash = hash;
-#endif /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
+		ASSERT(DeeString_HASHOK(module_path_ob));
+		ASSERT(DeeString_HASH(module_path_ob) == hash);
+#endif /* !CONFIG_HOST_WINDOWS */
 		result->mo_flags |= MODULE_FLOADING;
 		COMPILER_WRITE_BARRIER();
 
