@@ -576,10 +576,10 @@ functest("dup3(1, 2, 0)", "defined(__USE_GNU)");
 functest("isatty(1)", unix);
 functest("_isatty(1)", msvc);
 
-func("getcwd", unix, test: 'char buf[256]; char *p = getcwd(buf, 256); return return != 0;');
-func("_getcwd", msvc, test: 'char buf[256]; char *p = _getcwd(buf, 256); return return != 0;');
-func("wgetcwd", test: 'wchar_t buf[256]; wchar_t *p = wgetcwd(buf, 256); return return != 0;');
-func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; wchar_t *p = _wgetcwd(buf, 256); return return != 0;');
+func("getcwd", unix, test: 'char buf[256]; char *p = getcwd(buf, 256); return p != 0;');
+func("_getcwd", msvc, test: 'char buf[256]; char *p = _getcwd(buf, 256); return p != 0;');
+func("wgetcwd", test: 'wchar_t buf[256]; wchar_t *p = wgetcwd(buf, 256); return p != 0;');
+func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; wchar_t *p = _wgetcwd(buf, 256); return p != 0;');
 
 functest('unlink("foo.txt")', unix);
 functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
