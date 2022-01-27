@@ -2467,9 +2467,9 @@ target16_del_local:
 	jmp    1f
 target_del_local:
 	lodsb
-1:	movl   FRAME_FRAME, %ecx
-	xorl   %edx, %edx
-	xchgl   %ecx, (%ecx,%eax,4) /* Exchange the local variable with `NULL' */
+1:	movl   FRAME_FRAME, %edx
+	xorl   %ecx, %ecx
+	xchgl   %ecx, (%edx,%eax,4) /* Exchange the local variable with `NULL' */
 	/* Drop a reference from the exchanged value when it is non-NULL. */
 	testl  %ecx, %ecx
 	jz     .disp
