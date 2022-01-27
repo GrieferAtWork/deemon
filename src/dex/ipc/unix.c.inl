@@ -1695,10 +1695,8 @@ process_get_cmdline_from_argv_fast(struct unicode_printer *__restrict printer,
 	DREF DeeObject *elem;
 	for (i = 0; i < fastlen; ++i) {
 		char *utf8;
-		if (i != 0) {
-			if (unicode_printer_putascii(printer, ' '))
-				goto err;
-		}
+		if (unicode_printer_putascii(printer, ' '))
+			goto err;
 		elem = DeeFastSeq_GetItem(seq, i);
 		if unlikely(!elem)
 			goto err;
@@ -1722,15 +1720,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_get_cmdline_from_argv_iter(struct unicode_printer *__restrict printer,
                                    DeeObject *__restrict iterator) {
-	bool is_first = true;
 	DREF DeeObject *elem;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		char *utf8;
-		if (!is_first) {
-			if (unicode_printer_putascii(printer, ' '))
-				goto err_elem;
-		}
-		is_first = false;
+		if (unicode_printer_putascii(printer, ' '))
+			goto err_elem;
 		if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
 			goto err;
 		utf8 = DeeString_AsUtf8(elem);
@@ -1750,11 +1744,16 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_get_cmdline_from_argv(DeeObject *__restrict argv) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+process_get_cmdline_from_argv(char const *__restrict utf8_exe,
+                              DeeObject *__restrict argv) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	size_t fastlen = DeeFastSeq_GetSize(argv);
+	size_t fastlen;
 	DREF DeeObject *iterator;
+	if (process_cmdline_encode_argument(&unicode_printer_print, &printer,
+	                                    utf8_exe, WSTR_LENGTH(utf8_exe)) < 0)
+		goto err;
+	fastlen = DeeFastSeq_GetSize(argv);
 	if (fastlen != DEE_FASTSEQ_NOTFAST) {
 		if unlikely(process_get_cmdline_from_argv_fast(&printer, argv, fastlen))
 			goto err;
@@ -1818,14 +1817,24 @@ process_get_cmdline(Process *__restrict UNUSED(self)) {
 			return process_get_my_cmdline_from_argv();
 		}
 	} else {
+		DREF DeeStringObject *exe;
 		DREF DeeObject *filename;
 		pid_t pid;
 		rwlock_read(&self->p_lock);
+		exe     = self->p_exe;
 		content = self->p_argv;
-		if (content) {
+		if (exe && content) {
+			char *utf8_exe;
+			Dee_Incref(exe);
 			Dee_Incref(content);
 			rwlock_endread(&self->p_lock);
-			result = process_get_cmdline_from_argv(content);
+			utf8_exe = DeeString_AsUtf8((DeeObject *)exe);
+			if unlikely(!utf8_exe) {
+				result = NULL;
+			} else {
+				result = process_get_cmdline_from_argv(utf8_exe, content);
+			}
+			Dee_Decref(exe);
 			Dee_Decref(content);
 			return (DeeObject *)result;
 		}
