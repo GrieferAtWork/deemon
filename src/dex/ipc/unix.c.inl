@@ -1030,11 +1030,9 @@ process_dojoin(Process *__restrict self,
 			                self);
 			goto err;
 		}
-		Dee_DPRINTF("[IPC] Before wait_for_process()\n");
 
 		/* Do the actual wait! */
 		result = wait_for_process(self, self->p_pid, timeout_microseconds);
-		Dee_DPRINTF("[IPC] wait_for_process() returned: %d\n", result);
 		if (result != 0)
 			goto done;
 done_join:
