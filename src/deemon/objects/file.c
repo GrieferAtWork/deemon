@@ -751,7 +751,7 @@ err:
 }
 
 
-#define READTEXT_BUFSIZE 1024
+#define READTEXT_INITIAL_BUFSIZE 1024
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadText(DeeObject *__restrict self,
@@ -781,10 +781,11 @@ DeeFile_ReadText(DeeObject *__restrict self,
 	goto err;
 got_read: {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
+	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
 	while (max_length) {
 		uint8_t *buffer;
 		size_t read_size;
-		size_t bufsize = MIN(max_length, (size_t)READTEXT_BUFSIZE);
+		size_t bufsize = MIN(max_length, readtext_bufsize);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)
@@ -798,6 +799,7 @@ got_read: {
 		    (!readall && read_size != bufsize))
 			break; /* EOF */
 		max_length -= read_size;
+		readtext_bufsize *= 2;
 	}
 /*done:*/
 	return bytes_printer_pack(&printer);
@@ -837,10 +839,11 @@ DeeFile_PReadText(DeeObject *__restrict self,
 	goto err;
 got_read: {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
+	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
 	while (max_length) {
 		uint8_t *buffer;
 		size_t read_size;
-		size_t bufsize = MIN(max_length, (size_t)READTEXT_BUFSIZE);
+		size_t bufsize = MIN(max_length, readtext_bufsize);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)
@@ -855,6 +858,7 @@ got_read: {
 			break; /* EOF */
 		max_length -= read_size;
 		pos += read_size;
+		readtext_bufsize *= 2;
 	}
 /*done:*/
 	return bytes_printer_pack(&printer);
