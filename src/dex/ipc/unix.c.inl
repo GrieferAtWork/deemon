@@ -118,9 +118,9 @@ int kill(pid_t pid, int signo);
 #endif /* !STDERR_FILENO */
 
 #ifdef CONFIG_HAVE__Exit
-#define EXIT_AFTER_FORK  _Exit
+#define EXIT_AFTER_FORK _Exit
 #else /* CONFIG_HAVE__Exit */
-#define EXIT_AFTER_FORK  exit
+#define EXIT_AFTER_FORK exit
 #endif /* !CONFIG_HAVE__Exit */
 
 #ifndef PATH_MAX
@@ -550,12 +550,52 @@ process_free_envp(char **envp) {
 	}
 }
 
-PRIVATE ATTR_NOINLINE pid_t DCALL
+PRIVATE ATTR_NOINLINE NONNULL((1)) pid_t DCALL
 process_do_spawn(char const *used_exe, char *const *used_argv,
                  char *const *used_envp, char const *used_pwd,
                  int used_stdin, int used_stdout,
                  int used_stderr, bool search_path) {
 	pid_t cpid;
+#ifndef DEE_NO_DPRINTF
+	if (_Dee_dprint_enabled) {
+		Dee_DPRINTF("[IPC] spawn(exe:%q,argv:", used_exe);
+		if (used_argv) {
+			size_t i;
+			Dee_DPRINT("[");
+			for (i = 0; used_argv[i]; ++i) {
+				if (i != 0)
+					Dee_DPRINT(",");
+				Dee_DPRINTF("%q", used_argv[i]);
+			}
+			Dee_DPRINT("]");
+		} else {
+			Dee_DPRINT("NULL");
+		}
+		Dee_DPRINT(",envp:");
+		if (used_envp) {
+			size_t i;
+			Dee_DPRINT("[");
+			for (i = 0; used_envp[i]; ++i) {
+				if (i != 0)
+					Dee_DPRINT(",");
+				Dee_DPRINTF("%q", used_envp[i]);
+			}
+			Dee_DPRINT("]");
+		} else {
+			Dee_DPRINT("NULL");
+		}
+		Dee_DPRINT(",pwd:");
+		if (used_pwd) {
+			Dee_DPRINTF("%q", used_pwd);
+		} else {
+			Dee_DPRINT("NULL");
+		}
+		Dee_DPRINTF(",stdin:%d,stdout:%d,stderr:%d,search_path:%u)\n",
+		            used_stdin, used_stdout, used_stderr,
+		            search_path ? 1 : 0);
+	}
+#endif /* !DEE_NO_DPRINTF */
+
 	cpid = vfork();
 	if (cpid == 0) {
 		/* Apply child process settings. */
@@ -564,15 +604,15 @@ process_do_spawn(char const *used_exe, char *const *used_argv,
 				goto child_error;
 		}
 		if (used_stdin != STDIN_FILENO) {
-			if (dup2(used_stdin, STDIN_FILENO) != 0)
+			if (dup2(used_stdin, STDIN_FILENO) < 0)
 				goto child_error;
 		}
 		if (used_stdout != STDOUT_FILENO) {
-			if (dup2(used_stdout, STDOUT_FILENO) != 0)
+			if (dup2(used_stdout, STDOUT_FILENO) < 0)
 				goto child_error;
 		}
 		if (used_stderr != STDERR_FILENO) {
-			if (dup2(used_stderr, STDERR_FILENO) != 0)
+			if (dup2(used_stderr, STDERR_FILENO) < 0)
 				goto child_error;
 		}
 
