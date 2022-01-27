@@ -677,7 +677,7 @@ err:
 
 #if defined(fs_mkdir_USE_WMKDIR) || defined(fs_mkdir_USE_MKDIR)
 	int error;
-	int creat_mode = 755;
+	int creat_mode = 0755;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
