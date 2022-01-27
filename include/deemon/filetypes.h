@@ -123,7 +123,7 @@ struct Dee_file_buffer_object {
 	                                       * This chain is weakly linked in that buffer objects remove themself
 	                                       * before destruction, also meaning that any buffer contained in this
 	                                       * chain may have a reference counter to ZERO(0). */
-	Dee_pos_t                   fb_fblk;  /* The starting address of the data block currently stored in `fb_base'. */
+	Dee_pos_t                   fb_fblk;  /* [valid_if(fb_size != 0)] The starting address of the data block currently stored in `fb_base'. */
 	Dee_pos_t                   fb_fpos;  /* The current (assumed) position within `fb_file'. */
 	uint16_t                    fb_flag;  /* [lock(fb_lock)] The current state of the buffer (Set of `FILE_BUFFER_F*'). */
 };

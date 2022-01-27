@@ -494,8 +494,9 @@ read_from_buffer:
 
 	/* If no buffer had been allocated, allocate one now. */
 	if unlikely(!self->fb_size) {
-		/* Start out with the smallest size. */
 		size_t initial_bufsize;
+		ASSERT(self->fb_ptr == self->fb_base);
+		next_data = self->fb_fpos;
 		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
 			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
@@ -519,7 +520,7 @@ read_through:
 			Dee_Decref(file);
 			if unlikely(read_size == (size_t)-1)
 				goto err;
-			self->fb_fpos = next_data + bufsize;
+			self->fb_fpos = next_data + read_size;
 			result += read_size;
 			goto done;
 		}
@@ -764,8 +765,7 @@ buffer_seek_nolock(Buffer *__restrict self,
                    doff_t off, int whence) {
 	dpos_t result;
 	DREF DeeObject *file;
-	if (whence == SEEK_SET ||
-	    whence == SEEK_CUR) {
+	if (whence == SEEK_SET || whence == SEEK_CUR) {
 		dpos_t old_abspos;
 		dpos_t new_abspos;
 		uint8_t *new_pos;
