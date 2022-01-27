@@ -30,3 +30,4 @@
 *.db-wal
 *.log
 *.vcxproj.user
+*.so
