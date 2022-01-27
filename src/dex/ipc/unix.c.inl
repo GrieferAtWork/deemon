@@ -885,8 +885,7 @@ err:
 
 /* @return:  1: Join failed (timeout)
  * @return:  0: Success
- * @return: -1: Error
- * */
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 wait_for_process(Process *__restrict self,
                  pid_t pid,
@@ -955,7 +954,7 @@ again:
 	}
 	if (result == 0) {
 		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
-		return 1; /* Poll failed */
+		return 1; /* Wait failed (timeout) */
 	}
 	if (result > 0)
 		return 0; /* Success */
@@ -990,10 +989,12 @@ process_dojoin(Process *__restrict self,
 		if (timeout_microseconds != 0 &&
 		    DeeThread_CheckInterrupt())
 			goto err;
+
 		/* Wait for the process to terminate. */
 		while (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) &
 		       PROCESS_FDETACHING) {
 			uint64_t now;
+
 			/* Idly wait for another process also in the process of joining this process. */
 			if (timeout_microseconds == 0)
 				return 1; /* Timeout */
@@ -1002,12 +1003,15 @@ process_dojoin(Process *__restrict self,
 			now = DeeThread_GetTimeMicroSeconds();
 			if (now >= timeout_end)
 				return 1; /* Timeout */
+
 			/* Update the remaining timeout. */
 			timeout_microseconds = timeout_end - now;
 		}
+
 		/* Check for case: The process was joined in the mean time. */
 		if (self->p_state & PROCESS_FDIDJOIN)
 			goto done_join;
+
 		/* Check for case: The process has terminated, but was never ~actually~ detached. */
 		if ((self->p_state & (PROCESS_FTERMINATED | PROCESS_FDETACHED)) ==
 		    PROCESS_FTERMINATED)
@@ -1026,10 +1030,11 @@ process_dojoin(Process *__restrict self,
 			                self);
 			goto err;
 		}
+		Dee_DPRINTF("[IPC] Before wait_for_process()\n");
+
 		/* Do the actual wait! */
-		result = wait_for_process(self,
-		                          self->p_pid,
-		                          timeout_microseconds);
+		result = wait_for_process(self, self->p_pid, timeout_microseconds);
+		Dee_DPRINTF("[IPC] wait_for_process() returned: %d\n", result);
 		if (result != 0)
 			goto done;
 done_join:
@@ -1051,7 +1056,9 @@ process_join(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, result;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
-	error = process_dojoin(self, &result, (uint64_t)-1);
+	do {
+		error = process_dojoin(self, &result, (uint64_t)-1);
+	} while (error > 0);
 	if unlikely(error < 0)
 		goto err;
 	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
@@ -1068,7 +1075,7 @@ process_tryjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	error = process_dojoin(self, &result, 0);
 	if unlikely(error < 0)
 		goto err;
-	if (result == 0)
+	if (error > 0)
 		return_none;
 	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
 	return DeeInt_NewUInt((unsigned int)result);
@@ -1085,7 +1092,7 @@ process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	error = process_dojoin(self, &result, timeout);
 	if unlikely(error < 0)
 		goto err;
-	if (result == 0)
+	if (error > 0)
 		return_none;
 	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
 	return DeeInt_NewUInt((unsigned int)result);
