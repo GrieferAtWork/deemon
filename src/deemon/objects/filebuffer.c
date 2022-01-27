@@ -459,6 +459,7 @@ read_from_buffer:
 			goto done;
 		buffer += bufavail;
 	}
+
 	/* The buffer is empty and must be re-filled. */
 	/* First off: Flush any changes that had been made. */
 	COMPILER_BARRIER();
@@ -469,6 +470,7 @@ read_from_buffer:
 	COMPILER_BARRIER();
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
+
 	/* Unlikely: But can happen due to recursive callbacks. */
 	if unlikely(self->fb_cnt)
 		goto read_from_buffer;
@@ -496,11 +498,11 @@ read_from_buffer:
 	if unlikely(!self->fb_size) {
 		size_t initial_bufsize;
 		ASSERT(self->fb_ptr == self->fb_base);
-		next_data = self->fb_fpos;
 		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
 			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
-			file = self->fb_file;
+			self->fb_ptr = self->fb_base;
+			file         = self->fb_file;
 			Dee_Incref(file);
 			if (next_data != self->fb_fpos) {
 				/* Seek in the underlying file to get where we need to go. */
@@ -520,13 +522,17 @@ read_through:
 			Dee_Decref(file);
 			if unlikely(read_size == (size_t)-1)
 				goto err;
-			self->fb_fpos = next_data + read_size;
+			next_data += read_size;
+			self->fb_fpos = next_data;
+			self->fb_fblk = next_data;
 			result += read_size;
 			goto done;
 		}
 		if (bufsize >= FILE_BUFSIZ_MAX)
 			goto read_through;
-		initial_bufsize = bufsize;
+		initial_bufsize = bufsize * 2;
+		if (initial_bufsize > FILE_BUFSIZ_MAX)
+			initial_bufsize = FILE_BUFSIZ_MAX;
 		if (initial_bufsize < FILE_BUFSIZ_MIN)
 			initial_bufsize = FILE_BUFSIZ_MIN;
 		new_buffer = buffer_tryrealloc_nolock(self, initial_bufsize);
@@ -538,19 +544,25 @@ read_through:
 		self->fb_base = new_buffer;
 		self->fb_size = initial_bufsize;
 	} else if (bufsize >= self->fb_size) {
+		size_t new_bufsize;
 		/* The caller wants at least as much as this buffer could even handle.
 		 * Upscale the buffer, or use load data using read-through mode. */
 		if (self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))
 			goto read_through;
 		if (bufsize > FILE_BUFSIZ_MAX)
 			goto read_through;
+		new_bufsize = bufsize * 2;
+		if (new_bufsize > FILE_BUFSIZ_MAX)
+			new_bufsize = FILE_BUFSIZ_MAX;
+
 		/* Upscale the buffer. */
-		new_buffer = buffer_tryrealloc_nolock(self, bufsize);
+		new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
+
 		/* If the allocation failed, also use read-through mode. */
 		if unlikely(!new_buffer)
 			goto read_through;
 		self->fb_base = new_buffer;
-		self->fb_size = bufsize;
+		self->fb_size = new_bufsize;
 	}
 
 	self->fb_ptr  = self->fb_base;
@@ -728,6 +740,8 @@ do_writethrough:
 	new_bufsize = self->fb_size * 2;
 	if (new_bufsize < FILE_BUFSIZ_MIN)
 		new_bufsize = FILE_BUFSIZ_MIN;
+	if (new_bufsize > FILE_BUFSIZ_MAX)
+		new_bufsize = FILE_BUFSIZ_MAX;
 	new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
 	if unlikely(!new_buffer) {
 		/* Buffer relocation failed. - sync() + operate in write-through mode as fallback. */
