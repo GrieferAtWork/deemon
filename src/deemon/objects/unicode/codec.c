@@ -554,7 +554,7 @@ encode_utf32(DeeObject *__restrict self) {
 		/* Return a bytes-view for the UTF-32 variant of the given string. */
 		return DeeBytes_NewView(self,
 		                        data,
-		                        WSTR_LENGTH(data) * 8,
+		                        WSTR_LENGTH(data) * 4,
 		                        Dee_BUFFER_FREADONLY);
 	}
 	err_expected_string_or_bytes(self);
