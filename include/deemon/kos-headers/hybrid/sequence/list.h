@@ -41,164 +41,169 @@
  *       `_KOS_SOURCE' is enabled. Functions not restricted to this  extension
  *       namespace are those  declared by the  union of <sys/queue.h>  headers
  *       found in NetBSD, OpenBSD, OpenSolaris, uClibc, GLibC, and libbsd.
- *       iow: Any macro provided by any of these systems is always defined as
+ *       iow: Any macro provided by any of those systems is always defined as
  *            far as possible!)
  *
- *  +--------------- LIST_*:     Single-head, doubly-linked list (via element self-pointers)
- *  | +------------- SLIST_*:    Single-head, singly-linked list
- *  | | +----------- STAILQ_*:   Double-head, singly-linked tail queue. (same as "Simple queue" (SIMPLEQ_*))
- *  | | | +--------- TAILQ_*:    Double-head, doubly-linked tail queue.
- *  | | | | +------- CIRCLEQ_*:  Circular queue
- *  | | | | | +----- RINGQ_*:    Ring queue (KOS extension)
- *  | | | | | | +--- DLIST_*:    Single-head, doubly-linked list (with direct prev-pointer; completely
- *  | | | | | | |                inferior to LIST_*, so don't use except when needed for binary compat!
- *  | | | | | | |                Also can't be made to support the bound-elem API, either...))
- *  | | | | | | | +- XSIMPLEQ_*: TODO
- *  | | | | | | | |
- * [===============]
- * [1 1 2 2 2   1  ]  -- Pointers per *_HEAD([name], type) aka. *_HEAD_P(T)
- * [2 1 1 2 2 2 2  ]  -- Pointers per *_ENTRY(type)        aka. *_ENTRY_P(T)
- * [===============]
- * [1 1 1 1 1   1  ]  CODE [*]_HEAD_INITIALIZER(self)
- * [---------------]
- * [1 1 1 1 1   1  ]  void [*]_INIT(self)
- * [          1    ]  void [*]_INIT(elem, key)
- * [---------------]
- * [  1 1       1  ]  void [*]_MOVE(dst, src)                                 (C++-style move-constructor)
- * [1     1 1      ]  void [*]_MOVE(dst, src, key)                            (C++-style move-constructor)
- * [---------------]
- * [  1 1       1  ]  void [*]_SWAP(l1, l2, [type])                           (C++-style std::swap())
- * [1     1 1      ]  void [*]_SWAP(l1, l2, [type], key)                      (C++-style std::swap())
- * [---------------]
- * [1 1 1 1 1   1  ]  void [*]_CLEAR(self)
- * [---------------]
- * [    1          ]  void [*]_CONCAT(dst, src)
- * [      1 1      ]  void [*]_CONCAT(dst, src, key)
- * [N N         N  ]  void [*]_CONCAT(dst, src, [type], key)
- * [---------------]
- * [1 1 1 1 1   1  ]  PTR  [*]_END(self)                                      (Pointer to 1 past the last elem; NULL-pointer, since all of these are linked lists)
- * [---------------]
- * [1 1 1 1 1   1  ]  bool [*]_EMPTY(self)
- * [---------------]
- * [1 1 1 1 1   1  ]  T*   [*]_FIRST(self)
- * [1 1 1          ]  T**  [*]_PFIRST(self)                                   (Return pointer to the pointer to the first item; use with *_P_* functions)
- * [---------------]
- * [      1 1      ]  T*   [*]_LAST(self)
- * [    1          ]  T*   [*]_LAST(self, [type], key)
- * [      1        ]  T*   [*]_LAST_FAST(self, [type], key)
- * [---------------]
- * [1 1 1 1 1 1 1  ]  T*   [*]_NEXT(elem, key)                                (Return successor (NULL if no prev-elem exists))
- * [1 1 1          ]  T**  [*]_PNEXT(elem, key)                               (Return pointer to the pointer to the next item; use with *_P_* functions)
- * [        1      ]  T*   [*]_LOOP_NEXT(self, elem, key)                     (NOTE: *_NEXT(elem, key) for RINGQ)
- * [---------------]
- * [        1 1 1  ]  T*   [*]_PREV(elem, key)                                (Return predecessor (NULL if no prev-elem exists))
- * [1              ]  T*   [*]_PREV(elem, self, [type], key)                  (Return predecessor (NULL if no prev-elem exists))
- * [      1        ]  T*   [*]_PREV(elem, [headname], key)                    (Return predecessor (NULL if no prev-elem exists))
- * [      1        ]  T*   [*]_PREV_FAST(elem, self, [type], key)             (Return predecessor (NULL if no prev-elem exists))
- * [1              ]  T*   [*]_PREV_UNSAFE(elem, [type], key)                 (Return predecessor (undef if no prev-elem exists))
- * [        1      ]  T*   [*]_LOOP_PREV(self, elem, key)                     (NOTE: *_PREV(elem, key) for RINGQ)
- * [---------------]
- * [N N N N N   N  ] size_t[*]_COUNT(self, key)                   # Requires: !__NO_XBLOCK + __COMPILER_HAVE_TYPEOF
- * [N N N N N   N  ]  void [*]_COUNT(self, presult, [type], key)
- * [---------------]
- * [1 1 1     1 1  ]  void [*]_INSERT_AFTER(predecessor, elem, key)
- * [      1 1      ]  void [*]_INSERT_AFTER(self, predecessor, elem, key)
- * [1 1 1     1 1  ]  void [*]_INSERT_AFTER_R(predecessor, lo_elem, hi_elem, key)      { ..., predecessor, lo_elem...hi_elem, predecessor.next, ... }
- * [---------------]
- * [1     1   1    ]  void [*]_INSERT_BEFORE(successor, elem, key)
- * [        1   1  ]  void [*]_INSERT_BEFORE(self, successor, elem, key)
- * [1     1   1    ]  void [*]_INSERT_BEFORE_R(successor, lo_elem, hi_elem, key)       { ..., successor.prev, lo_elem...hi_elem, successor, ... }
- * [        1   1  ]  void [*]_INSERT_BEFORE_R(self, successor, lo_elem, hi_elem, key)
- * [---------------]
- * [1 1 1 1 1   1  ]  void [*]_INSERT[_HEAD](self, elem, key)
- * [1 1 1 1 1   1  ]  void [*]_INSERT[_HEAD]_R(self, lo_elem, hi_elem, key)
- * [---------------]
- * [    1 1 1      ]  void [*]_INSERT_TAIL(self, elem, key)
- * [N N         N  ]  void [*]_INSERT_TAIL(self, elem, [type], key)
- * [    1 1 1      ]  void [*]_INSERT_TAIL_R(self, lo_elem, hi_elem, key)
- * [N N         N  ]  void [*]_INSERT_TAIL_R(self, lo_elem, hi_elem, [type], key)
- * [---------------]
- * [1 1 1 1 1   1  ]  void [*]_REMOVE_HEAD(self, key)
- * [1         1    ]  void [*]_REMOVE(elem, key)
- * [      1 1   1  ]  void [*]_REMOVE(self, elem, key)
- * [  N N          ]  void [*]_REMOVE(self, elem, [type], key)
- * [1         1    ]  void [*]_REMOVE_R(lo_elem, hi_elem, key)                (Remove all elements `lo_elem...hi_elem' inclusively; links between removed elements remain valid)
- * [      1 1   1  ]  void [*]_REMOVE_R(self, lo_elem, hi_elem, key)
- * [1 1         1  ]  void [*]_REMOVE_AFTER(elem, key)                        (Remove successor of `elem'; undef if no successor)
- * [    1 1 1      ]  void [*]_REMOVE_AFTER(self, elem, key)
- * [  1            ]  void [*]_REMOVE_PREVPTR(p_elem, elem, key)              (libbsd-specific; for use with `SLIST_FOREACH_PREVPTR()')
- * [---------------]
- * [N N N N N   N  ]  void [*]_REMOVE_IF(self, out_pelem, [type], key, condition)
- * |               |             NOTE: `*out_pelem' is written to before `condition' is
- * |               |                   evaluated to test if `*out_pelem' should be removed
- * |               |             Assumes that `condition' is true for at least 1 element.
- * [  N N          ]  void [*]_TRYREMOVE(self, elem, [type], key, on_failure)
- * [N N N N N   N  ]  void [*]_TRYREMOVE_IF(self, out_pelem, [type], key, condition, on_failure)
- * |               |             Same as *_REMOVE_IF, but allow `condition' to be false for all elements, or
- * |               |             the list itself to be empty. (if this happens, `on_failure' is evaluated)
- * [N N N N N   N  ]  void [*]_REMOVEALL(self, out_pelem, [type], key, condition, on_match)
- * |               |             Remove all elements for which `condition' is true, and evaluate `on_match'
- * |               |             every time such a match is confirmed. The associated element is `*out_pelem'
- * [---------------]
- * [  N N          ]  void [*]_CONTAINS(self, elem, [type], key, on_success)
- * [---------------]
- * [1         1    ]  void [*]_REPLACE(old_elem, new_elem, key)
- * [            1  ]  void [*]_REPLACE(self, old_elem, new_elem, key)
- * [  N N 1 1      ]  void [*]_REPLACE(self, old_elem, new_elem, [type], key)
- * [1         1    ]  void [*]_REPLACE_R(old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
- * [            1  ]  void [*]_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
- * [  N N 1 1      ]  void [*]_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key)
- * [  N N          ]  void [*]_TRYREPLACE(self, old_elem, new_elem, [type], key, on_failure)
- * [  N N          ]  void [*]_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key, on_failure)
- * [---------------]
- * [N N N N N   N  ]  CODE [*]_FOREACH(elem, self, key)
- * [N N N N N   N  ]  CODE [*]_FOREACH_FROM(elem, self, key)                  (If non-NULL, start enumeration with `IN(elem)'; else start w/ `[*]_FIRST(self)')
- * [N N N N N   N  ]  CODE [*]_FOREACH_SAFE(elem, self, key, [tvar])          (Same as [*]_FOREACH, but the loop body may safely remove `elem')
- * [N N N N N   N  ]  CODE [*]_FOREACH_FROM_SAFE(elem, self, key, [tvar])     (Same as [*]_FOREACH_FROM, but the loop body may safely remove `elem')
- * [        N      ]  CODE [*]_FOREACH_REVERSE(elem, self, key)
- * [        N      ]  CODE [*]_FOREACH_REVERSE_FROM(elem, self, key)
- * [      N        ]  CODE [*]_FOREACH_REVERSE(elem, self, [headname], key)
- * [      N        ]  CODE [*]_FOREACH_REVERSE_FROM(elem, self, [headname], key)
- * [      N        ]  CODE [*]_FOREACH_REVERSE_SAFE(elem, self, [headname], key, [tvar])
- * [      N        ]  CODE [*]_FOREACH_REVERSE_FROM_SAFE(elem, self, [headname], key, [tvar])
- * [  N            ]  CODE [*]_FOREACH_PREVPTR(elem, p_elem, self, key)
- * [===============]
- * [===============]  -- Sub-API: Atomic operations
- * [  1            ]  void [*]_ATOMIC_INSERT(self, elem, key)
- * [  1            ]  void [*]_ATOMIC_INSERT_R(self, lo_elem, hi_elem, key)
- * [  1            ]  T*   [*]_ATOMIC_CLEAR(self)
- * [===============]
- * [===============]  -- Sub-API: Pointer-to-element (allows for a number of otherwise impossible O(1) operations)
- * [1 1 1          ]  T*   [*]_P_PREV(p_elem, self, [type], key)              (Return predecessor (NULL if no prev-elem exists))
- * [1 1 1          ]  T*   [*]_P_PREV_UNSAFE(p_elem, [type], key)             (Return predecessor (undef if no prev-elem exists))
- * [---------------]
- * [1 1            ]  void [*]_P_INSERT_BEFORE(p_successor, elem, key)
- * [1 1            ]  void [*]_P_INSERT_BEFORE_R(p_successor, lo_elem, hi_elem, key)   { ..., (*p_successor).prev, lo_elem...hi_elem, (*p_successor), ... }
- * [---------------]
- * [1 1            ]  void [*]_P_REMOVE(p_elem, key)
- * [    1          ]  void [*]_P_REMOVE(self, p_elem, key)
- * [1 1            ]  void [*]_P_REMOVE_R(p_lo_elem, hi_elem, key)
- * [    1          ]  void [*]_P_REMOVE_R(self, p_lo_elem, hi_elem, key)
- * [---------------]
- * [1 1            ]  void [*]_P_REPLACE(p_old_elem, new_elem, key)
- * [    1          ]  void [*]_P_REPLACE(self, p_old_elem, new_elem, key)
- * [1 1            ]  void [*]_P_REPLACE_R(p_old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
- * [    1          ]  void [*]_P_REPLACE_R(self, p_old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
- * [---------------]
- * [N N N          ]  CODE [*]_P_FOREACH(p_elem, self, key)
- * [===============]
- * [===============]  -- Sub-API: Check if an element is contained within a list, but removal requires *_UNBIND instead of *_REMOVE
- * [1     1 1 1    ]  CODE [*]_ENTRY_UNBOUND_INITIALIZER         -- Static initializer for unbound elements
- * [1     1 1 1    ]  void [*]_ENTRY_UNBOUND_INIT(entry)         -- Runtime initializer for unbound elements
- * [1     1 1 1    ]  bool [*]_ISBOUND(elem, key)                -- Returns non-zero if element is bound (to a list)
- * [1         1    ]  void [*]_UNBIND(elem, key)                 -- Remove element and mark as unbound
- * [      1 1      ]  void [*]_UNBIND(self, elem, key)           -- *ditto*
- * [N     N N      ]  void [*]_UNBIND_IF(self, out_pelem, [type], key, condition)
- * [N     N N      ]  void [*]_TRYUNBIND_IF(self, out_pelem, [type], key, condition, on_failure)
- * [N     N N      ]  void [*]_UNBINDALL(self, out_pelem, [type], key, condition, on_match)
- * \---------------/
- *      Runtime
- *     (in O(x))
+ *  ┌─────────────── LIST_*:     Single-head, doubly-linked list (via element self-pointers)
+ *  │ ┌───────────── SLIST_*:    Single-head, singly-linked list
+ *  │ │ ┌─────────── STAILQ_*:   Double-head, singly-linked tail queue. (same as "Simple queue" (SIMPLEQ_*))
+ *  │ │ │ ┌───────── TAILQ_*:    Double-head, doubly-linked tail queue.
+ *  │ │ │ │ ┌─────── CIRCLEQ_*:  Circular queue
+ *  │ │ │ │ │ ┌───── RINGQ_*:    Ring queue (KOS extension)
+ *  │ │ │ │ │ │ ┌─── DLIST_*:    Single-head, doubly-linked list (with direct prev-pointer; completely
+ *  │ │ │ │ │ │ │                inferior to LIST_*, so don't use except when needed for binary compat!
+ *  │ │ │ │ │ │ │                Also can't be made to support the bound-elem API, either...))
+ *  │ │ │ │ │ │ │ ┌─ XSIMPLEQ_*: TODO
+ *  │ │ │ │ │ │ │ │
+ * ╒╧═╧═╧═╧═╧═╧═╧═╧╕
+ * │1 1 2 2 2   1  │  -- Pointers per *_HEAD([name], type) aka. *_HEAD_P(T)
+ * │2 1 1 2 2 2 2  │  -- Pointers per *_ENTRY(type)        aka. *_ENTRY_P(T)
+ * ╞═══════════════╡
+ * │1 1 1 1 1   1  │  CODE [*]_HEAD_INITIALIZER(self)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  void [*]_INIT(self)
+ * │          1    │  void [*]_INIT(elem, key)
+ * ├───────────────┤
+ * │  1 1       1  │  void [*]_MOVE(dst, src)                                 (C++-style move-constructor)
+ * │1     1 1      │  void [*]_MOVE(dst, src, key)                            (C++-style move-constructor)
+ * ├───────────────┤
+ * │  1 1       1  │  void [*]_SWAP(l1, l2, [type])                           (C++-style std::swap())
+ * │1     1 1      │  void [*]_SWAP(l1, l2, [type], key)                      (C++-style std::swap())
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  void [*]_CLEAR(self)
+ * ├───────────────┤
+ * │    1          │  void [*]_CONCAT(dst, src)
+ * │      1 1      │  void [*]_CONCAT(dst, src, key)
+ * │N N         N  │  void [*]_CONCAT(dst, src, [type], key)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  PTR  [*]_END(self)                                      (Pointer to 1 past the last elem; NULL-pointer, since all of these are linked lists)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  bool [*]_EMPTY(self)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  T*   [*]_FIRST(self)
+ * │1 1 1          │  T**  [*]_PFIRST(self)                                   (Return pointer to the pointer to the first item; use with *_P_* functions)
+ * ├───────────────┤
+ * │      1 1      │  T*   [*]_LAST(self)
+ * │    1          │  T*   [*]_LAST(self, [type], key)
+ * │N N         N  │  T*   [*]_LAST(self, key)
+ * │N N         N  │  void [*]_LAST(self, p_result, key)
+ * │      1        │  T*   [*]_LAST_FAST(self, [type], key)
+ * ├───────────────┤
+ * │1 1 1 1 1 1 1  │  T*   [*]_NEXT(elem, key)                                (Return successor (NULL if no prev-elem exists))
+ * │1 1 1          │  T**  [*]_PNEXT(elem, key)                               (Return pointer to the pointer to the next item; use with *_P_* functions)
+ * │        1      │  T*   [*]_LOOP_NEXT(self, elem, key)                     (NOTE: *_NEXT(elem, key) for RINGQ)
+ * ├───────────────┤
+ * │        1 1 1  │  T*   [*]_PREV(elem, key)                                (Return predecessor (NULL if no prev-elem exists))
+ * │1              │  T*   [*]_PREV(elem, self, [type], key)                  (Return predecessor (NULL if no prev-elem exists))
+ * │      1        │  T*   [*]_PREV(elem, [headname], key)                    (Return predecessor (NULL if no prev-elem exists))
+ * │      1        │  T*   [*]_PREV_FAST(elem, self, [type], key)             (Return predecessor (NULL if no prev-elem exists))
+ * │1              │  T*   [*]_PREV_UNSAFE(elem, [type], key)                 (Return predecessor (undef if no prev-elem exists))
+ * │        1      │  T*   [*]_LOOP_PREV(self, elem, key)                     (NOTE: *_PREV(elem, key) for RINGQ)
+ * ├───────────────┤
+ * │N N N N N   N  │ size_t[*]_COUNT(self, key)                   # Requires: !__NO_XBLOCK + __COMPILER_HAVE_TYPEOF
+ * │N N N N N   N  │  void [*]_COUNT(self, presult, [type], key)
+ * ├───────────────┤
+ * │1 1 1     1 1  │  void [*]_INSERT_AFTER(predecessor, elem, key)
+ * │      1 1      │  void [*]_INSERT_AFTER(self, predecessor, elem, key)
+ * │1 1 1     1 1  │  void [*]_INSERT_AFTER_R(predecessor, lo_elem, hi_elem, key)      { ..., predecessor, lo_elem...hi_elem, predecessor.next, ... }
+ * ├───────────────┤
+ * │1     1   1    │  void [*]_INSERT_BEFORE(successor, elem, key)
+ * │        1   1  │  void [*]_INSERT_BEFORE(self, successor, elem, key)
+ * │1     1   1    │  void [*]_INSERT_BEFORE_R(successor, lo_elem, hi_elem, key)       { ..., successor.prev, lo_elem...hi_elem, successor, ... }
+ * │        1   1  │  void [*]_INSERT_BEFORE_R(self, successor, lo_elem, hi_elem, key)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  void [*]_INSERT[_HEAD](self, elem, key)
+ * │1 1 1 1 1   1  │  void [*]_INSERT[_HEAD]_R(self, lo_elem, hi_elem, key)
+ * ├───────────────┤
+ * │    1 1 1      │  void [*]_INSERT_TAIL(self, elem, key)
+ * │N N         N  │  void [*]_INSERT_TAIL(self, elem, [type], key)
+ * │    1 1 1      │  void [*]_INSERT_TAIL_R(self, lo_elem, hi_elem, key)
+ * │N N         N  │  void [*]_INSERT_TAIL_R(self, lo_elem, hi_elem, [type], key)
+ * ├───────────────┤
+ * │1 1 1 1 1   1  │  void [*]_REMOVE_HEAD(self, key)
+ * │N N N 1     N  │  void [*]_REMOVE_TAIL(self, [type], key)
+ * │        1      │  void [*]_REMOVE_TAIL(self, key)
+ * │1         1    │  void [*]_REMOVE(elem, key)
+ * │      1 1   1  │  void [*]_REMOVE(self, elem, key)
+ * │  N N          │  void [*]_REMOVE(self, elem, [type], key)
+ * │1         1    │  void [*]_REMOVE_R(lo_elem, hi_elem, key)                (Remove all elements `lo_elem...hi_elem' inclusively; links between removed elements remain valid)
+ * │      1 1   1  │  void [*]_REMOVE_R(self, lo_elem, hi_elem, key)
+ * │1 1         1  │  void [*]_REMOVE_AFTER(elem, key)                        (Remove successor of `elem'; undef if no successor)
+ * │    1 1 1      │  void [*]_REMOVE_AFTER(self, elem, key)
+ * │  1            │  void [*]_REMOVE_PREVPTR(p_elem, elem, key)              (libbsd-specific; for use with `SLIST_FOREACH_PREVPTR()')
+ * ├───────────────┤
+ * │N N N N N   N  │  void [*]_REMOVE_IF(self, out_pelem, [type], key, condition)
+ * │░░░░░░░░░░░░░░░│             NOTE: `*out_pelem' is written to before `condition' is
+ * │░░░░░░░░░░░░░░░│                   evaluated to test if `*out_pelem' should be removed
+ * │░░░░░░░░░░░░░░░│             Assumes that `condition' is true for at least 1 element.
+ * │  N N          │  void [*]_TRYREMOVE(self, elem, [type], key, on_failure)
+ * │N N N N N   N  │  void [*]_TRYREMOVE_IF(self, out_pelem, [type], key, condition, on_failure)
+ * │░░░░░░░░░░░░░░░│             Same as *_REMOVE_IF, but allow `condition' to be false for all elements, or
+ * │░░░░░░░░░░░░░░░│             the list itself to be empty. (if this happens, `on_failure' is evaluated)
+ * │N N N N N   N  │  void [*]_REMOVEALL(self, out_pelem, [type], key, condition, on_match)
+ * │░░░░░░░░░░░░░░░│             Remove all elements for which `condition' is true, and evaluate `on_match'
+ * │░░░░░░░░░░░░░░░│             every time such a match is confirmed. The associated element is `*out_pelem'
+ * ├───────────────┤
+ * │  N N          │  void [*]_CONTAINS(self, elem, [type], key, on_success)
+ * ├───────────────┤
+ * │1         1    │  void [*]_REPLACE(old_elem, new_elem, key)
+ * │            1  │  void [*]_REPLACE(self, old_elem, new_elem, key)
+ * │  N N 1 1      │  void [*]_REPLACE(self, old_elem, new_elem, [type], key)
+ * │1         1    │  void [*]_REPLACE_R(old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
+ * │            1  │  void [*]_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
+ * │  N N 1 1      │  void [*]_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key)
+ * │  N N          │  void [*]_TRYREPLACE(self, old_elem, new_elem, [type], key, on_failure)
+ * │  N N          │  void [*]_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key, on_failure)
+ * ├───────────────┤
+ * │N N N N N   N  │  CODE [*]_FOREACH(elem, self, key)
+ * │N N N N N   N  │  CODE [*]_FOREACH_FROM(elem, self, key)                  (If non-NULL, start enumeration with `IN(elem)'; else start w/ `[*]_FIRST(self)')
+ * │N N N N N   N  │  CODE [*]_FOREACH_SAFE(elem, self, key, [tvar])          (Same as [*]_FOREACH, but the loop body may safely remove `elem')
+ * │N N N N N   N  │  CODE [*]_FOREACH_FROM_SAFE(elem, self, key, [tvar])     (Same as [*]_FOREACH_FROM, but the loop body may safely remove `elem')
+ * │        N      │  CODE [*]_FOREACH_REVERSE(elem, self, key)
+ * │        N      │  CODE [*]_FOREACH_REVERSE_FROM(elem, self, key)
+ * │      N        │  CODE [*]_FOREACH_REVERSE(elem, self, [headname], key)
+ * │      N        │  CODE [*]_FOREACH_REVERSE_FROM(elem, self, [headname], key)
+ * │      N        │  CODE [*]_FOREACH_REVERSE_SAFE(elem, self, [headname], key, [tvar])
+ * │      N        │  CODE [*]_FOREACH_REVERSE_FROM_SAFE(elem, self, [headname], key, [tvar])
+ * │  N            │  CODE [*]_FOREACH_PREVPTR(elem, p_elem, self, key)
+ * ╘╤═╤═╤═╤═╤═╤═╤═╤╛
+ * ╒╧═╧═╧═╧═╧═╧═╧═╧╕  -- Sub-API: Atomic operations
+ * │  1            │  void [*]_ATOMIC_INSERT(self, elem, key)
+ * │  1            │  void [*]_ATOMIC_INSERT_R(self, lo_elem, hi_elem, key)
+ * │  1            │  T*   [*]_ATOMIC_CLEAR(self)
+ * ╘╤═╤═╤═╤═╤═╤═╤═╤╛
+ * ╒╧═╧═╧═╧═╧═╧═╧═╧╕  -- Sub-API: Pointer-to-element (allows for a number of otherwise impossible O(1) operations)
+ * │1 1 1          │  T*   [*]_P_PREV(p_elem, self, [type], key)              (Return predecessor (NULL if no prev-elem exists))
+ * │1 1 1          │  T*   [*]_P_PREV_UNSAFE(p_elem, [type], key)             (Return predecessor (undef if no prev-elem exists))
+ * ├───────────────┤
+ * │1 1            │  void [*]_P_INSERT_BEFORE(p_successor, elem, key)
+ * │1 1            │  void [*]_P_INSERT_BEFORE_R(p_successor, lo_elem, hi_elem, key)   { ..., (*p_successor).prev, lo_elem...hi_elem, (*p_successor), ... }
+ * ├───────────────┤
+ * │1 1            │  void [*]_P_REMOVE(p_elem, key)
+ * │    1          │  void [*]_P_REMOVE(self, p_elem, key)
+ * │1 1            │  void [*]_P_REMOVE_R(p_lo_elem, hi_elem, key)
+ * │    1          │  void [*]_P_REMOVE_R(self, p_lo_elem, hi_elem, key)
+ * ├───────────────┤
+ * │1 1            │  void [*]_P_REPLACE(p_old_elem, new_elem, key)
+ * │    1          │  void [*]_P_REPLACE(self, p_old_elem, new_elem, key)
+ * │1 1            │  void [*]_P_REPLACE_R(p_old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
+ * │    1          │  void [*]_P_REPLACE_R(self, p_old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)
+ * ├───────────────┤
+ * │N N N          │  CODE [*]_P_FOREACH(p_elem, self, key)
+ * ╘╤═╤═╤═╤═╤═╤═╤═╤╛
+ * ╒╧═╧═╧═╧═╧═╧═╧═╧╕  -- Sub-API: Check if an element is contained within a list, but removal requires *_UNBIND instead of *_REMOVE
+ * │1     1 1 1    │  CODE [*]_ENTRY_UNBOUND_INITIALIZER         -- Static initializer for unbound elements
+ * │1     1 1 1    │  void [*]_ENTRY_UNBOUND_INIT(entry)         -- Runtime initializer for unbound elements
+ * │1     1 1 1    │  bool [*]_ISBOUND(elem, key)                -- Returns non-zero if element is bound (to a list)
+ * │1         1    │  void [*]_UNBIND(elem, key)                 -- Remove element and mark as unbound
+ * │      1 1      │  void [*]_UNBIND(self, elem, key)           -- *ditto*
+ * │N     N N      │  void [*]_UNBIND_IF(self, out_pelem, [type], key, condition)
+ * │N     N N      │  void [*]_TRYUNBIND_IF(self, out_pelem, [type], key, condition, on_failure)
+ * │N     N N      │  void [*]_UNBINDALL(self, out_pelem, [type], key, condition, on_match)
+ * ╘═╤═══════════╤═╛
+ *   │  Runtime  │
+ *   │ (in O(x)) │
+ *   ╘═══════════╛
  *
  * NOTE: [foo]-arguments are optional and may be omitted when `__HYBRID_LIST_RESTRICT_API'
  *       is   disabled,   and  sufficient   compiler/preprocessor-support   is  available. */
@@ -369,6 +374,10 @@
 #define __HYBRID_LIST_FOREACH_FROM_SAFE_P_4(elem, self, getpath, tvar)                     __HYBRID_LIST_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define __HYBRID_LIST_FOREACH_SAFE_P_3(elem, self, getpath)                                __HYBRID_LIST_FOREACH_SAFE3(elem, self, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_LIST_FOREACH_SAFE_P_4(elem, self, getpath, tvar)                          __HYBRID_LIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
+#define __HYBRID_LIST_REMOVE_TAIL_2(self, key)                                             __HYBRID_LIST_REMOVE_TAIL(self, __typeof__(*(self)->lh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_REMOVE_TAIL_3(self, type, key)                                       __HYBRID_LIST_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_REMOVE_TAIL_P_2(self, getpath)                                       __HYBRID_LIST_REMOVE_TAIL(self, __typeof__(*(self)->lh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_LIST_REMOVE_TAIL_P_3(self, T, getpath)                                    __HYBRID_LIST_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_LIST_INSERT_TAIL_3(self, elem, key)                                       __HYBRID_LIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key)
 #define __HYBRID_LIST_INSERT_TAIL_4(self, elem, type, key)                                 __HYBRID_LIST_INSERT_TAIL(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define __HYBRID_LIST_INSERT_TAIL_P_3(self, elem, getpath)                                 __HYBRID_LIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath)
@@ -422,6 +431,8 @@
 #define LIST_CONCAT_P(...)            __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_CONCAT_P_, (__VA_ARGS__))(__VA_ARGS__)            /* LIST_CONCAT_P(dst, src, [type], getpath) */
 #define LIST_FOREACH_FROM_SAFE_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_FOREACH_FROM_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__) /* LIST_FOREACH_FROM_SAFE_P(elem, self, getpath, [tvar]) */
 #define LIST_FOREACH_SAFE_P(...)      __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_FOREACH_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__)      /* LIST_FOREACH_SAFE_P(elem, self, getpath, [tvar]) */
+#define LIST_REMOVE_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_REMOVE_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* LIST_REMOVE_TAIL(self, [type], key) */
+#define LIST_REMOVE_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_REMOVE_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* LIST_REMOVE_TAIL_P(self, [T], getpath) */
 #define LIST_INSERT_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_INSERT_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* LIST_INSERT_TAIL(self, elem, [type], key) */
 #define LIST_INSERT_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_INSERT_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* LIST_INSERT_TAIL_P(self, elem, [T], getpath) */
 #define LIST_INSERT_TAIL_R(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_INSERT_TAIL_R_, (__VA_ARGS__))(__VA_ARGS__)       /* LIST_INSERT_TAIL_R(self, lo_elem, hi_elem, [type], key) */
@@ -448,49 +459,74 @@
 #define LIST_P_PREV_UNSAFE(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_P_PREV_UNSAFE_, (__VA_ARGS__))(__VA_ARGS__)       /* LIST_P_PREV_UNSAFE(p_elem, [type], key) */
 #define LIST_P_PREV_UNSAFE_P(...)     __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_P_PREV_UNSAFE_P_, (__VA_ARGS__))(__VA_ARGS__)     /* LIST_P_PREV_UNSAFE_P(p_elem, [T], getpath) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
-#define LIST_CONCAT_P(dst, src, type, getpath)                                     __HYBRID_LIST_CONCAT(dst, src, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_CONCAT_P(dst, src, T, getpath)                                        __HYBRID_LIST_CONCAT(dst, src, T, __HYBRID_Q_PTH, getpath)
 #define LIST_FOREACH_FROM_SAFE_P(elem, self, getpath, tvar)                        __HYBRID_LIST_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define LIST_FOREACH_SAFE_P(elem, self, getpath, tvar)                             __HYBRID_LIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
+#define LIST_REMOVE_TAIL(self, type, key)                                          __HYBRID_LIST_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define LIST_REMOVE_TAIL_P(self, T, getpath)                                       __HYBRID_LIST_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define LIST_INSERT_TAIL(self, elem, type, key)                                    __HYBRID_LIST_INSERT_TAIL(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define LIST_INSERT_TAIL_P(self, elem, T, getpath)                                 __HYBRID_LIST_INSERT_TAIL(self, elem, T, __HYBRID_Q_KEY, getpath)
 #define LIST_INSERT_TAIL_R(self, lo_elem, hi_elem, type, key)                      __HYBRID_LIST_INSERT_TAIL_R(self, lo_elem, hi_elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define LIST_INSERT_TAIL_R_P(self, lo_elem, hi_elem, T, getpath)                   __HYBRID_LIST_INSERT_TAIL_R(self, lo_elem, hi_elem, T, __HYBRID_Q_KEY, getpath)
 #define LIST_PREV(elem, self, type, key)                                           __HYBRID_LIST_PREV3(elem, self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define LIST_PREV_P(elem, self, type, getpath)                                     __HYBRID_LIST_PREV4(elem, self, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_PREV_P(elem, self, T, getpath)                                        __HYBRID_LIST_PREV4(elem, self, T, __HYBRID_Q_PTH, getpath)
 #define LIST_PREV_UNSAFE(elem, type, key)                                          __HYBRID_LIST_PREV_UNSAFE3(elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define LIST_PREV_UNSAFE_P(elem, type, getpath)                                    __HYBRID_LIST_PREV_UNSAFE4(elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_PREV_UNSAFE_P(elem, T, getpath)                                       __HYBRID_LIST_PREV_UNSAFE4(elem, T, __HYBRID_Q_PTH, getpath)
 #define LIST_REMOVEALL(self, out_pelem, type, key, condition, on_match)            __HYBRID_LIST_REMOVEALL(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition, on_match)
-#define LIST_REMOVEALL_P(self, out_pelem, type, getpath, condition, on_match)      __HYBRID_LIST_REMOVEALL(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition, on_match)
+#define LIST_REMOVEALL_P(self, out_pelem, T, getpath, condition, on_match)         __HYBRID_LIST_REMOVEALL(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition, on_match)
 #define LIST_REMOVE_IF(self, out_pelem, type, key, condition)                      __HYBRID_LIST_REMOVE_IF(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition)
-#define LIST_REMOVE_IF_P(self, out_pelem, type, getpath, condition)                __HYBRID_LIST_REMOVE_IF(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition)
-#define LIST_SWAP_P(l1, l2, type, getpath)                                         __HYBRID_LIST_SWAP(l1, l2, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_REMOVE_IF_P(self, out_pelem, T, getpath, condition)                   __HYBRID_LIST_REMOVE_IF(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition)
+#define LIST_SWAP_P(l1, l2, T, getpath)                                            __HYBRID_LIST_SWAP(l1, l2, T, __HYBRID_Q_PTH, getpath)
 #define LIST_TRYREMOVE_IF(self, out_pelem, type, key, condition, on_failure)       __HYBRID_LIST_TRYREMOVE_IF(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition, on_failure)
-#define LIST_TRYREMOVE_IF_P(self, out_pelem, type, getpath, condition, on_failure) __HYBRID_LIST_TRYREMOVE_IF(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition, on_failure)
+#define LIST_TRYREMOVE_IF_P(self, out_pelem, T, getpath, condition, on_failure)    __HYBRID_LIST_TRYREMOVE_IF(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition, on_failure)
 #define LIST_TRYUNBIND_IF(self, out_pelem, type, key, condition, on_failure)       __HYBRID_LIST_TRYUNBIND_IF(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition, on_failure)
-#define LIST_TRYUNBIND_IF_P(self, out_pelem, type, getpath, condition, on_failure) __HYBRID_LIST_TRYUNBIND_IF(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition, on_failure)
+#define LIST_TRYUNBIND_IF_P(self, out_pelem, T, getpath, condition, on_failure)    __HYBRID_LIST_TRYUNBIND_IF(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition, on_failure)
 #define LIST_UNBINDALL(self, out_pelem, type, key, condition, on_match)            __HYBRID_LIST_UNBINDALL(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition, on_match)
-#define LIST_UNBINDALL_P(self, out_pelem, type, getpath, condition, on_match)      __HYBRID_LIST_UNBINDALL(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition, on_match)
+#define LIST_UNBINDALL_P(self, out_pelem, T, getpath, condition, on_match)         __HYBRID_LIST_UNBINDALL(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition, on_match)
 #define LIST_UNBIND_IF(self, out_pelem, type, key, condition)                      __HYBRID_LIST_UNBIND_IF(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition)
 #define LIST_UNBIND_IF_P(self, out_pelem, type, getpath, condition)                __HYBRID_LIST_UNBIND_IF(self, out_pelem, type, __HYBRID_Q_PTH, getpath, condition)
 #define LIST_P_PREV(p_elem, self, type, key)                                       ((p_elem) == &(self)->lh_first ? __NULLPTR : __COMPILER_CONTAINER_OF(p_elem, __HYBRID_Q_STRUCT type, key.le_next))
 #define LIST_P_PREV_UNSAFE(p_elem, type, key)                                      __COMPILER_CONTAINER_OF(p_elem, __HYBRID_Q_STRUCT type, key.le_next)
 #define LIST_P_PREV_P(p_elem, self, type, getpath)                                 ((p_elem) == &(self)->lh_first ? __NULLPTR : (__HYBRID_Q_STRUCT type *)((__SIZE_TYPE__)(p_elem) - (__SIZE_TYPE__)&getpath((T *)0).le_next))
-#define LIST_P_PREV_UNSAFE_P(p_elem, type, getpath)                                (__HYBRID_Q_STRUCT type *)((__SIZE_TYPE__)(p_elem) - (__SIZE_TYPE__)&getpath((T *)0).le_next)
+#define LIST_P_PREV_UNSAFE_P(p_elem, T, getpath)                                   (T *)((__SIZE_TYPE__)(p_elem) - (__SIZE_TYPE__)&getpath((T *)0).le_next)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
-#define __HYBRID_LIST_COUNT_2(self, key)                      __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_3(self, &__hlc_res, key); __XRETURN __hlc_res; })
-#define __HYBRID_LIST_COUNT_3(self, presult, key)             __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_KEY, key)
-#define __HYBRID_LIST_COUNT_4(self, presult, type, key)       __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define __HYBRID_LIST_COUNT_P_2(self, getpath)                __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_P_3(self, &__hlc_res, getpath); __XRETURN __hlc_res; })
-#define __HYBRID_LIST_COUNT_P_3(self, presult, getpath)       __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_PTH, getpath)
-#define __HYBRID_LIST_COUNT_P_4(self, presult, type, getpath) __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_LIST_COUNT_2(self, key)                   __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_3(self, &__hlc_res, key); __XRETURN __hlc_res; })
+#define __HYBRID_LIST_COUNT_3(self, presult, key)          __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_COUNT_4(self, presult, type, key)    __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_COUNT_P_2(self, getpath)             __XBLOCK({ __SIZE_TYPE__ __hlc_res; __HYBRID_LIST_COUNT_P_3(self, &__hlc_res, getpath); __XRETURN __hlc_res; })
+#define __HYBRID_LIST_COUNT_P_3(self, presult, getpath)    __HYBRID_LIST_COUNT(self, presult, __typeof__(*(self)->lh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_LIST_COUNT_P_4(self, presult, T, getpath) __HYBRID_LIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_LIST_LAST_2(self, key)                    __XBLOCK({ __typeof__(*(self)->lh_first) *__hll_res; __HYBRID_LIST_LAST(self, __hll_res, __HYBRID_Q_KEY, key); __XRETURN __hll_res; })
+#define __HYBRID_LIST_LAST_3(self, p_result, key)          __HYBRID_LIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define __HYBRID_LIST_LAST_P_2(self, getpath)              __XBLOCK({ __typeof__(*(self)->lh_first) *__hll_res; __HYBRID_LIST_LAST(self, __hll_res, __HYBRID_Q_PTH, getpath); __XRETURN __hll_res; })
+#define __HYBRID_LIST_LAST_P_3(self, p_result, getpath)    __HYBRID_LIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #define LIST_COUNT(...)   __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_COUNT_, (__VA_ARGS__))(__VA_ARGS__)   /* LIST_COUNT(self, [presult], [type], key) */
-#define LIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* LIST_COUNT_P(self, [presult], [type], getpath) */
+#define LIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* LIST_COUNT_P(self, [presult], [T], getpath) */
+#define LIST_LAST(...)    __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_LAST_, (__VA_ARGS__))(__VA_ARGS__)    /* LIST_LAST(self, [presult], key) */
+#define LIST_LAST_P(...)  __HYBRID_PP_VA_OVERLOAD(__HYBRID_LIST_LAST_P_, (__VA_ARGS__))(__VA_ARGS__)  /* LIST_LAST(self, [presult], getpath) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
-#define LIST_COUNT(self, presult, type, key)       __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define LIST_COUNT_P(self, presult, type, getpath) __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define LIST_COUNT(self, presult, type, key)    __HYBRID_LIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define LIST_COUNT_P(self, presult, T, getpath) __HYBRID_LIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define LIST_LAST_3(self, p_result, key)        __HYBRID_LIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define LIST_LAST_P_3(self, p_result, getpath)  __HYBRID_LIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_LIST_REMOVE_TAIL(self, T, X, _)     \
+	/* Sorry, this one must be a statement */        \
+	do {                                             \
+		T *__hlrt_last = (self)->lh_first;           \
+		while (X(_, __hlrt_last).le_next)            \
+			__hlrt_last = X(_, __hlrt_last).le_next; \
+		__HYBRID_LIST_REMOVE(__hlrt_last);           \
+	}	__WHILE0
+#define __HYBRID_LIST_LAST(self, result, X, _) \
+	/* Sorry, this one must be a statement */  \
+	do {                                       \
+		result = (self)->lh_first;             \
+		while (X(_, result).le_next)           \
+			result = X(_, result).le_next;     \
+	}	__WHILE0
 #define __HYBRID_LIST_COUNT(self, presult, T, X, _)     \
 	/* Sorry, this one must be a statement */           \
 	do {                                                \
@@ -872,7 +908,7 @@
 #define SLIST_REMOVE_HEAD_P(self, getpath)                                                 __HYBRID_SLIST_REMOVE_HEAD(self, __HYBRID_Q_PTH, getpath)
 #define SLIST_REMOVE_PREVPTR_P(p_elem, elem, getpath)                                      __HYBRID_SLIST_REMOVE_PREVPTR(p_elem, elem, __HYBRID_Q_PTH, getpath)
 #if defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
-#define __HYBRID_SLIST_CONCAT_P_3(dst, src, getpath)                                                                      __HYBRID_SLIST_CONCAT(dst, src, __typeof__(*(src)->lh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SLIST_CONCAT_P_3(dst, src, getpath)                                                                      __HYBRID_SLIST_CONCAT(dst, src, __typeof__(*(src)->slh_first), __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SLIST_CONCAT_P_4(dst, src, type, getpath)                                                                __HYBRID_SLIST_CONCAT(dst, src, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SLIST_CONTAINS_4(self, elem, key, on_success)                                                            __HYBRID_SLIST_CONTAINS(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key, on_success)
 #define __HYBRID_SLIST_CONTAINS_5(self, elem, type, key, on_success)                                                      __HYBRID_SLIST_CONTAINS(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_success)
@@ -882,6 +918,10 @@
 #define __HYBRID_SLIST_FOREACH_FROM_SAFE_P_4(elem, self, getpath, tvar)                                                   __HYBRID_SLIST_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define __HYBRID_SLIST_FOREACH_SAFE_P_3(elem, self, getpath)                                                              __HYBRID_SLIST_FOREACH_SAFE3(elem, self, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SLIST_FOREACH_SAFE_P_4(elem, self, getpath, tvar)                                                        __HYBRID_SLIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
+#define __HYBRID_SLIST_REMOVE_TAIL_2(self, key)                                                                           __HYBRID_SLIST_REMOVE_TAIL(self, __typeof__(*(self)->slh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_SLIST_REMOVE_TAIL_3(self, type, key)                                                                     __HYBRID_SLIST_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_SLIST_REMOVE_TAIL_P_2(self, getpath)                                                                     __HYBRID_SLIST_REMOVE_TAIL(self, __typeof__(*(self)->slh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SLIST_REMOVE_TAIL_P_3(self, T, getpath)                                                                  __HYBRID_SLIST_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SLIST_INSERT_TAIL_3(self, elem, key)                                                                     __HYBRID_SLIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key)
 #define __HYBRID_SLIST_INSERT_TAIL_4(self, elem, type, key)                                                               __HYBRID_SLIST_INSERT_TAIL(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define __HYBRID_SLIST_INSERT_TAIL_P_3(self, elem, getpath)                                                               __HYBRID_SLIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath)
@@ -939,6 +979,8 @@
 #define SLIST_CONTAINS_P(...)          __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_CONTAINS_P_, (__VA_ARGS__))(__VA_ARGS__)          /* SLIST_CONTAINS_P(self, elem, [T], getpath, on_success) */
 #define SLIST_FOREACH_FROM_SAFE_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_FOREACH_FROM_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__) /* SLIST_FOREACH_FROM_SAFE_P(elem, self, getpath, [tvar]) */
 #define SLIST_FOREACH_SAFE_P(...)      __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_FOREACH_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__)      /* SLIST_FOREACH_SAFE_P(elem, self, getpath, [tvar]) */
+#define SLIST_REMOVE_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_REMOVE_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* SLIST_REMOVE_TAIL(self, [type], key) */
+#define SLIST_REMOVE_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_REMOVE_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* SLIST_REMOVE_TAIL_P(self, [T], getpath) */
 #define SLIST_INSERT_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_INSERT_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* SLIST_INSERT_TAIL(self, elem, [type], key) */
 #define SLIST_INSERT_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_INSERT_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* SLIST_INSERT_TAIL_P(self, elem, [T], getpath) */
 #define SLIST_INSERT_TAIL_R(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_INSERT_TAIL_R_, (__VA_ARGS__))(__VA_ARGS__)       /* SLIST_INSERT_TAIL_R(self, lo_elem, hi_elem, [type], key) */
@@ -973,6 +1015,8 @@
 #define SLIST_FOREACH_SAFE_P(elem, self, getpath, tvar)                                                        __HYBRID_SLIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define SLIST_INSERT_TAIL(self, elem, type, key)                                                               __HYBRID_SLIST_INSERT_TAIL(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define SLIST_INSERT_TAIL_P(self, elem, T, getpath)                                                            __HYBRID_SLIST_INSERT_TAIL(self, elem, T, __HYBRID_Q_PTH, getpath)
+#define SLIST_REMOVE_TAIL(self, type, key)                                                                     __HYBRID_SLIST_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define SLIST_REMOVE_TAIL_P(self, T, getpath)                                                                  __HYBRID_SLIST_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define SLIST_INSERT_TAIL_R(self, lo_elem, hi_elem, type, key)                                                 __HYBRID_SLIST_INSERT_TAIL_R(self, lo_elem, hi_elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define SLIST_INSERT_TAIL_R_P(self, lo_elem, hi_elem, T, getpath)                                              __HYBRID_SLIST_INSERT_TAIL_R(self, lo_elem, hi_elem, T, __HYBRID_Q_PTH, getpath)
 #define SLIST_P_PREV(p_elem, self, T, key)                                                                     __HYBRID_SLIST_P_PREV3(p_elem, self, __HYBRID_Q_STRUCT type, key)
@@ -999,19 +1043,46 @@
 #define SLIST_TRYREPLACE_R_P(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, getpath, on_failure) __HYBRID_SLIST_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, __HYBRID_Q_PTH, getpath, on_failure)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
-#define __HYBRID_SLIST_COUNT_2(self, key)                      __XBLOCK({ __SIZE_TYPE__ __hslc_res; __HYBRID_SLIST_COUNT_3(self, &__hslc_res, key); __XRETURN __hslc_res; })
-#define __HYBRID_SLIST_COUNT_3(self, presult, key)             __HYBRID_SLIST_COUNT(self, presult, __typeof__(*(self)->slh_first), __HYBRID_Q_KEY, key)
-#define __HYBRID_SLIST_COUNT_4(self, presult, type, key)       __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define __HYBRID_SLIST_COUNT_P_2(self, getpath)                __XBLOCK({ __SIZE_TYPE__ __hslc_res; __HYBRID_SLIST_COUNT_P_3(self, &__hslc_res, getpath); __XRETURN __hslc_res; })
-#define __HYBRID_SLIST_COUNT_P_3(self, presult, getpath)       __HYBRID_SLIST_COUNT(self, presult, __typeof__(*(self)->slh_first), __HYBRID_Q_PTH, getpath)
-#define __HYBRID_SLIST_COUNT_P_4(self, presult, type, getpath) __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SLIST_COUNT_2(self, key)                   __XBLOCK({ __SIZE_TYPE__ __hslc_res; __HYBRID_SLIST_COUNT_3(self, &__hslc_res, key); __XRETURN __hslc_res; })
+#define __HYBRID_SLIST_COUNT_3(self, presult, key)          __HYBRID_SLIST_COUNT(self, presult, __typeof__(*(self)->slh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_SLIST_COUNT_4(self, presult, type, key)    __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_SLIST_COUNT_P_2(self, getpath)             __XBLOCK({ __SIZE_TYPE__ __hslc_res; __HYBRID_SLIST_COUNT_P_3(self, &__hslc_res, getpath); __XRETURN __hslc_res; })
+#define __HYBRID_SLIST_COUNT_P_3(self, presult, getpath)    __HYBRID_SLIST_COUNT(self, presult, __typeof__(*(self)->slh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SLIST_COUNT_P_4(self, presult, T, getpath) __HYBRID_SLIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SLIST_LAST_2(self, key)                    __XBLOCK({ __typeof__(*(self)->slh_first) *__hsll_res; __HYBRID_SLIST_LAST(self, __hsll_res, __HYBRID_Q_KEY, key); __XRETURN __hsll_res; })
+#define __HYBRID_SLIST_LAST_3(self, p_result, key)          __HYBRID_SLIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define __HYBRID_SLIST_LAST_P_2(self, getpath)              __XBLOCK({ __typeof__(*(self)->slh_first) *__hsll_res; __HYBRID_SLIST_LAST(self, __hsll_res, __HYBRID_Q_PTH, getpath); __XRETURN __hsll_res; })
+#define __HYBRID_SLIST_LAST_P_3(self, p_result, getpath)    __HYBRID_SLIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #define SLIST_COUNT(...)   __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_COUNT_, (__VA_ARGS__))(__VA_ARGS__)   /* SLIST_COUNT(self, [presult], [type], key) */
-#define SLIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* SLIST_COUNT_P(self, [presult], [type], getpath) */
+#define SLIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* SLIST_COUNT_P(self, [presult], [T], getpath) */
+#define SLIST_LAST(...)    __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_LAST_, (__VA_ARGS__))(__VA_ARGS__)    /* SLIST_LAST(self, [presult], key) */
+#define SLIST_LAST_P(...)  __HYBRID_PP_VA_OVERLOAD(__HYBRID_SLIST_LAST_P_, (__VA_ARGS__))(__VA_ARGS__)  /* SLIST_LAST(self, [presult], getpath) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
-#define SLIST_COUNT(self, presult, type, key)       __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define SLIST_COUNT_P(self, presult, type, getpath) __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define SLIST_COUNT(self, presult, type, key)    __HYBRID_SLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define SLIST_COUNT_P(self, presult, T, getpath) __HYBRID_SLIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define SLIST_LAST(self, p_result, key)          __HYBRID_SLIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define SLIST_LAST_P(self, p_result, getpath)    __HYBRID_SLIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_SLIST_REMOVE_TAIL(self, T, X, _)                \
+	/* Sorry, this one must be a statement */                    \
+	do {                                                         \
+		T **__hslrt_pbefore_last = &(self)->slh_first,           \
+		   *__hslrt_last         = *__hslrt_pbefore_last;        \
+		while (X(_, __hslrt_last).sle_next) {                    \
+			__hslrt_pbefore_last = &X(_, __hslrt_last).sle_next; \
+			__hslrt_last         = *__hslrt_pbefore_last;        \
+		}                                                        \
+		*__hslrt_pbefore_last = __NULLPTR;                       \
+		__HYBRID_Q_BADPTR(X(_, __hslrt_last).sle_next);          \
+	}	__WHILE0
+#define __HYBRID_SLIST_LAST(self, result, X, _) \
+	/* Sorry, this one must be a statement */   \
+	do {                                        \
+		result = (self)->slh_first;             \
+		while (X(_, result).sle_next)           \
+			result = X(_, result).sle_next;     \
+	}	__WHILE0
 #define __HYBRID_SLIST_COUNT(self, presult, T, X, _)       \
 	/* Sorry, this one must be a statement */              \
 	do {                                                   \
@@ -1383,6 +1454,10 @@
 	       (src)->stqh_first = __NULLPTR,                       \
 	       (src)->stqh_last  = &(src)->stqh_first)
 #if defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
+#define __HYBRID_STAILQ_REMOVE_TAIL_2(self, key)                                                                           __HYBRID_STAILQ_REMOVE_TAIL(self, __typeof__(*(self)->stqh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_STAILQ_REMOVE_TAIL_3(self, type, key)                                                                     __HYBRID_STAILQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_STAILQ_REMOVE_TAIL_P_2(self, getpath)                                                                     __HYBRID_STAILQ_REMOVE_TAIL(self, __typeof__(*(self)->stqh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_STAILQ_REMOVE_TAIL_P_3(self, T, getpath)                                                                  __HYBRID_STAILQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_STAILQ_CONTAINS_4(self, elem, key, on_success)                                                            __HYBRID_STAILQ_CONTAINS(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key, on_success)
 #define __HYBRID_STAILQ_CONTAINS_5(self, elem, type, key, on_success)                                                      __HYBRID_STAILQ_CONTAINS(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_success)
 #define __HYBRID_STAILQ_CONTAINS_P_4(self, elem, getpath, on_success)                                                      __HYBRID_STAILQ_CONTAINS(self, elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath, on_success)
@@ -1443,6 +1518,8 @@
 #define __HYBRID_STAILQ_TRYREPLACE_R_6(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, type, key, on_failure)    __HYBRID_STAILQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_failure)
 #define __HYBRID_STAILQ_TRYREPLACE_R_P_5(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, getpath, on_failure)    __HYBRID_STAILQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __typeof__(*(old_elem)), __HYBRID_Q_PTH, getpath, on_failure)
 #define __HYBRID_STAILQ_TRYREPLACE_R_P_6(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, getpath, on_failure) __HYBRID_STAILQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, __HYBRID_Q_PTH, getpath, on_failure)
+#define STAILQ_REMOVE_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_REMOVE_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* STAILQ_REMOVE_TAIL(self, [type], key) */
+#define STAILQ_REMOVE_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_REMOVE_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* STAILQ_REMOVE_TAIL_P(self, [T], getpath) */
 #define STAILQ_CONTAINS(...)            __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_CONTAINS_, (__VA_ARGS__))(__VA_ARGS__)            /* STAILQ_CONTAINS(self, elem, [type], key, on_success) */
 #define STAILQ_CONTAINS_P(...)          __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_CONTAINS_P_, (__VA_ARGS__))(__VA_ARGS__)          /* STAILQ_CONTAINS_P(self, elem, [T], getpath, on_success) */
 #define STAILQ_FOREACH_FROM_SAFE_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_FOREACH_FROM_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__) /* STAILQ_FOREACH_FROM_SAFE_P(elem, self, getpath, [tvar]) */
@@ -1475,6 +1552,8 @@
 #define STAILQ_TRYREPLACE_R(...)        __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_TRYREPLACE_R_, (__VA_ARGS__))(__VA_ARGS__)        /* STAILQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key, on_success) */
 #define STAILQ_TRYREPLACE_R_P(...)      __HYBRID_PP_VA_OVERLOAD(__HYBRID_STAILQ_TRYREPLACE_R_P_, (__VA_ARGS__))(__VA_ARGS__)      /* STAILQ_TRYREPLACE_R_P(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [T], getpath, on_success) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
+#define STAILQ_REMOVE_TAIL(self, type, key)                                                                     __HYBRID_STAILQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define STAILQ_REMOVE_TAIL_P(self, T, getpath)                                                                  __HYBRID_STAILQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define STAILQ_CONTAINS(self, elem, type, key, on_success)                                                      __HYBRID_STAILQ_CONTAINS(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath, on_success)
 #define STAILQ_CONTAINS_P(self, elem, T, getpath, on_success)                                                   __HYBRID_STAILQ_CONTAINS(self, elem, T, __HYBRID_Q_PTH, getpath, on_success)
 #define STAILQ_FOREACH_FROM_SAFE_P(elem, self, getpath, tvar)                                                   __HYBRID_STAILQ_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
@@ -1521,6 +1600,20 @@
 #define STAILQ_COUNT_P(self, presult, type, getpath) __HYBRID_STAILQ_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_STAILQ_REMOVE_TAIL(self, T, X, _)                              \
+	/* Sorry, this one must be a statement */                                   \
+	do {                                                                        \
+		T **__hstqrt_pbefore_last = &(self)->stqh_first,                        \
+		   *__hstqrt_last         = *__hstqrt_pbefore_last;                     \
+		while (X(_, __hstqrt_last).stqe_next) {                                 \
+			__hstqrt_pbefore_last = &X(_, __hstqrt_last).stqe_next;             \
+			__hstqrt_last         = *__hstqrt_pbefore_last;                     \
+		}                                                                       \
+		*__hstqrt_pbefore_last = __NULLPTR;                                     \
+		__HYBRID_Q_ASSERT_((self)->stqh_last == &X(_, __hstqrt_last).stqe_next) \
+		__HYBRID_Q_BADPTR(X(_, __hstqrt_last).stqe_next);                       \
+		(self)->stqh_last = __hstqrt_pbefore_last;                              \
+	}	__WHILE0
 #define __HYBRID_STAILQ_COUNT(self, presult, T, X, _)         \
 	/* Sorry, this one must be a statement */                 \
 	do {                                                      \
@@ -1818,7 +1911,7 @@
 #define __HYBRID_SIMPLEQ_LAST_3(self, type, key)         __HYBRID_SIMPLEQ_LAST(self, __HYBRID_Q_STRUCT type, key)
 #define __HYBRID_SIMPLEQ_REMOVE_3(self, elem, key)       __HYBRID_SIMPLEQ_REMOVE(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key)
 #define __HYBRID_SIMPLEQ_REMOVE_4(self, elem, type, key) __HYBRID_SIMPLEQ_REMOVE(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define __HYBRID_SIMPLEQ_SWAP_2(l1, l2)                  __HYBRID_SIMPLEQ_SWAP(l1, l2, __typeof__(*(l1)->stqh_first))
+#define __HYBRID_SIMPLEQ_SWAP_2(l1, l2)                  __HYBRID_SIMPLEQ_SWAP(l1, l2, __typeof__(*(l1)->sqh_first))
 #define __HYBRID_SIMPLEQ_SWAP_3(l1, l2, type)            __HYBRID_SIMPLEQ_SWAP(l1, l2, __HYBRID_Q_STRUCT type)
 #undef SIMPLEQ_FOREACH_SAFE
 #undef SIMPLEQ_LAST
@@ -1874,6 +1967,10 @@
 	       (src)->sqh_first = __NULLPTR,                      \
 	       (src)->sqh_last  = &(src)->sqh_first)
 #if defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
+#define __HYBRID_SIMPLEQ_REMOVE_TAIL_2(self, key)                                                                           __HYBRID_SIMPLEQ_REMOVE_TAIL(self, __typeof__(*(self)->sqh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_SIMPLEQ_REMOVE_TAIL_3(self, type, key)                                                                     __HYBRID_SIMPLEQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_SIMPLEQ_REMOVE_TAIL_P_2(self, getpath)                                                                     __HYBRID_SIMPLEQ_REMOVE_TAIL(self, __typeof__(*(self)->sqh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_SIMPLEQ_REMOVE_TAIL_P_3(self, T, getpath)                                                                  __HYBRID_SIMPLEQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SIMPLEQ_CONTAINS_4(self, elem, key, on_success)                                                            __HYBRID_SIMPLEQ_CONTAINS(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key, on_success)
 #define __HYBRID_SIMPLEQ_CONTAINS_5(self, elem, type, key, on_success)                                                      __HYBRID_SIMPLEQ_CONTAINS(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_success)
 #define __HYBRID_SIMPLEQ_CONTAINS_P_4(self, elem, getpath, on_success)                                                      __HYBRID_SIMPLEQ_CONTAINS(self, elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath, on_success)
@@ -1918,7 +2015,7 @@
 #define __HYBRID_SIMPLEQ_REPLACE_R_5(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, type, key)                   __HYBRID_SIMPLEQ_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define __HYBRID_SIMPLEQ_REPLACE_R_P_4(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, getpath)                   __HYBRID_SIMPLEQ_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __typeof__(*(old_elem)), __HYBRID_Q_PTH, getpath)
 #define __HYBRID_SIMPLEQ_REPLACE_R_P_5(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, getpath)                __HYBRID_SIMPLEQ_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, __HYBRID_Q_PTH, getpath)
-#define __HYBRID_SIMPLEQ_SWAP_P_2(l1, l2)                                                                                   __HYBRID_SIMPLEQ_SWAP(l1, l2, __typeof__(*(l1)->stqh_first))
+#define __HYBRID_SIMPLEQ_SWAP_P_2(l1, l2)                                                                                   __HYBRID_SIMPLEQ_SWAP(l1, l2, __typeof__(*(l1)->sqh_first))
 #define __HYBRID_SIMPLEQ_SWAP_P_3(l1, l2, T)                                                                                __HYBRID_SIMPLEQ_SWAP(l1, l2, T)
 #define __HYBRID_SIMPLEQ_TRYREMOVE_4(self, elem, key, on_failure)                                                           __HYBRID_SIMPLEQ_TRYREMOVE(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key, on_failure)
 #define __HYBRID_SIMPLEQ_TRYREMOVE_5(self, elem, type, key, on_failure)                                                     __HYBRID_SIMPLEQ_TRYREMOVE(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_failure)
@@ -1936,6 +2033,8 @@
 #define __HYBRID_SIMPLEQ_TRYREPLACE_R_6(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, type, key, on_failure)    __HYBRID_SIMPLEQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, on_failure)
 #define __HYBRID_SIMPLEQ_TRYREPLACE_R_P_5(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, getpath, on_failure)    __HYBRID_SIMPLEQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __typeof__(*(old_elem)), __HYBRID_Q_PTH, getpath, on_failure)
 #define __HYBRID_SIMPLEQ_TRYREPLACE_R_P_6(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, getpath, on_failure) __HYBRID_SIMPLEQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, T, __HYBRID_Q_PTH, getpath, on_failure)
+#define SIMPLEQ_REMOVE_TAIL(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_REMOVE_TAIL_, (__VA_ARGS__))(__VA_ARGS__)         /* SIMPLEQ_REMOVE_TAIL(self, [type], key) */
+#define SIMPLEQ_REMOVE_TAIL_P(...)       __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_REMOVE_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)       /* SIMPLEQ_REMOVE_TAIL_P(self, [T], getpath) */
 #define SIMPLEQ_CONTAINS(...)            __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_CONTAINS_, (__VA_ARGS__))(__VA_ARGS__)            /* SIMPLEQ_CONTAINS(self, elem, [type], key, on_success) */
 #define SIMPLEQ_CONTAINS_P(...)          __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_CONTAINS_P_, (__VA_ARGS__))(__VA_ARGS__)          /* SIMPLEQ_CONTAINS_P(self, elem, [T], getpath, on_success) */
 #define SIMPLEQ_FOREACH_FROM_SAFE(...)   __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_FOREACH_FROM_SAFE_, (__VA_ARGS__))(__VA_ARGS__)   /* SIMPLEQ_FOREACH_FROM_SAFE(elem, self, key, [tvar]) */
@@ -1969,6 +2068,8 @@
 #define SIMPLEQ_TRYREPLACE_R(...)        __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_TRYREPLACE_R_, (__VA_ARGS__))(__VA_ARGS__)        /* SIMPLEQ_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key, on_success) */
 #define SIMPLEQ_TRYREPLACE_R_P(...)      __HYBRID_PP_VA_OVERLOAD(__HYBRID_SIMPLEQ_TRYREPLACE_R_P_, (__VA_ARGS__))(__VA_ARGS__)      /* SIMPLEQ_TRYREPLACE_R_P(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [T], getpath, on_success) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
+#define SIMPLEQ_REMOVE_TAIL(self, type, key)                                                                     __HYBRID_SIMPLEQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define SIMPLEQ_REMOVE_TAIL_P(self, T, getpath)                                                                  __HYBRID_SIMPLEQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define SIMPLEQ_CONTAINS(self, elem, type, key, on_success)                                                      __HYBRID_SIMPLEQ_CONTAINS(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath, on_success)
 #define SIMPLEQ_CONTAINS_P(self, elem, T, getpath, on_success)                                                   __HYBRID_SIMPLEQ_CONTAINS(self, elem, T, __HYBRID_Q_PTH, getpath, on_success)
 #define SIMPLEQ_FOREACH_FROM_SAFE(elem, self, key, tvar)                                                         __HYBRID_SIMPLEQ_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_KEY, key, tvar)
@@ -2016,6 +2117,20 @@
 #define SIMPLEQ_COUNT_P(self, presult, type, getpath) __HYBRID_SIMPLEQ_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_SIMPLEQ_REMOVE_TAIL(self, T, X, _)                          \
+	/* Sorry, this one must be a statement */                                \
+	do {                                                                     \
+		T **__hsqrt_pbefore_last = &(self)->sqh_first,                       \
+		   *__hsqrt_last         = *__hsqrt_pbefore_last;                    \
+		while (X(_, __hsqrt_last).sqe_next) {                                \
+			__hsqrt_pbefore_last = &X(_, __hsqrt_last).sqe_next;             \
+			__hsqrt_last         = *__hsqrt_pbefore_last;                    \
+		}                                                                    \
+		*__hsqrt_pbefore_last = __NULLPTR;                                   \
+		__HYBRID_Q_ASSERT_((self)->sqh_last == &X(_, __hsqrt_last).sqe_next) \
+		__HYBRID_Q_BADPTR(X(_, __hsqrt_last).sqe_next);                      \
+		(self)->sqh_last = __hsqrt_pbefore_last;                             \
+	}	__WHILE0
 #define __HYBRID_SIMPLEQ_COUNT(self, presult, T, X, _)     \
 	/* Sorry, this one must be a statement */              \
 	do {                                                   \
@@ -2392,6 +2507,10 @@
 #define TAILQ_UNBIND(self, elem, key)                                                        __HYBRID_TAILQ_UNBIND(self, elem, __HYBRID_Q_KEY, key)
 #define TAILQ_UNBIND_P(self, elem, getpath)                                                  __HYBRID_TAILQ_UNBIND(self, elem, __HYBRID_Q_PTH, getpath)
 #if defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
+#define __HYBRID_TAILQ_REMOVE_TAIL_2(self, key)                                             __HYBRID_TAILQ_REMOVE_TAIL(self, __typeof__(*(self)->stqh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_TAILQ_REMOVE_TAIL_3(self, type, key)                                       __HYBRID_TAILQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_TAILQ_REMOVE_TAIL_P_2(self, getpath)                                       __HYBRID_TAILQ_REMOVE_TAIL(self, __typeof__(*(self)->stqh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_TAILQ_REMOVE_TAIL_P_3(self, T, getpath)                                    __HYBRID_TAILQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_TAILQ_FOREACH_FROM_SAFE_P_3(elem, self, getpath)                           __HYBRID_TAILQ_FOREACH_FROM_SAFE3(elem, self, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_TAILQ_FOREACH_FROM_SAFE_P_4(elem, self, getpath, tvar)                     __HYBRID_TAILQ_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define __HYBRID_TAILQ_FOREACH_REVERSE_FROM_SAFE_P_3(elem, self, getpath)                   __HYBRID_TAILQ_FOREACH_REVERSE_FROM_SAFE3T(elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath)
@@ -2434,6 +2553,8 @@
 #define __HYBRID_TAILQ_UNBIND_IF_5(self, out_pelem, type, key, condition)                   __HYBRID_TAILQ_UNBIND_IF(self, out_pelem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key, condition)
 #define __HYBRID_TAILQ_UNBIND_IF_P_4(self, out_pelem, getpath, condition)                   __HYBRID_TAILQ_UNBIND_IF(self, out_pelem, __typeof__(**(out_pelem)), __HYBRID_Q_PTH, getpath, condition)
 #define __HYBRID_TAILQ_UNBIND_IF_P_5(self, out_pelem, T, getpath, condition)                __HYBRID_TAILQ_UNBIND_IF(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition)
+#define TAILQ_REMOVE_TAIL(...)                 __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_REMOVE_TAIL_, (__VA_ARGS__))(__VA_ARGS__)                 /* TAILQ_REMOVE_TAIL(self, [type], key) */
+#define TAILQ_REMOVE_TAIL_P(...)               __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_REMOVE_TAIL_P_, (__VA_ARGS__))(__VA_ARGS__)               /* TAILQ_REMOVE_TAIL_P(self, [T], getpath) */
 #define TAILQ_FOREACH_FROM_SAFE_P(...)         __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_FOREACH_FROM_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__)         /* TAILQ_FOREACH_FROM_SAFE_P(elem, self, getpath, [tvar]) */
 #define TAILQ_FOREACH_REVERSE_FROM_SAFE_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_FOREACH_REVERSE_FROM_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__) /* TAILQ_FOREACH_REVERSE_FROM_SAFE_P(elem, self, [HEAD_T], getpath, [tvar]) */
 #define TAILQ_FOREACH_REVERSE_SAFE_P(...)      __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_FOREACH_REVERSE_SAFE_P_, (__VA_ARGS__))(__VA_ARGS__)      /* TAILQ_FOREACH_REVERSE_SAFE_P(elem, self, [HEAD_T], getpath, [tvar]) */
@@ -2455,6 +2576,8 @@
 #define TAILQ_UNBIND_IF(...)                   __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_UNBIND_IF_, (__VA_ARGS__))(__VA_ARGS__)                   /* TAILQ_UNBIND_IF(self, out_pelem, [type], key, condition) */
 #define TAILQ_UNBIND_IF_P(...)                 __HYBRID_PP_VA_OVERLOAD(__HYBRID_TAILQ_UNBIND_IF_P_, (__VA_ARGS__))(__VA_ARGS__)                 /* TAILQ_UNBIND_IF_P(self, out_pelem, [T], getpath, condition) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
+#define TAILQ_REMOVE_TAIL(self, type, key)                                          __HYBRID_TAILQ_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define TAILQ_REMOVE_TAIL_P(self, T, getpath)                                       __HYBRID_TAILQ_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define TAILQ_FOREACH_FROM_SAFE_P(elem, self, getpath, tvar)                        __HYBRID_TAILQ_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
 #define TAILQ_FOREACH_REVERSE_FROM_SAFE_P(elem, self, HEAD_T, getpath, tvar)        __HYBRID_TAILQ_FOREACH_REVERSE_FROM_SAFE4(elem, self, HEAD_T, __HYBRID_Q_PTH, getpath, tvar)
 #define TAILQ_FOREACH_REVERSE_SAFE_P(elem, self, HEAD_T, getpath, tvar)             __HYBRID_TAILQ_FOREACH_REVERSE_SAFE4(elem, self, HEAD_T, __HYBRID_Q_PTH, getpath, tvar)
@@ -2490,6 +2613,12 @@
 #define TAILQ_COUNT_P(self, presult, type, getpath) __HYBRID_TAILQ_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_TAILQ_REMOVE_TAIL(self, T, X, _)                                                         \
+	/* Sorry, this one must be a statement */                                                             \
+	do {                                                                                                  \
+		T *__htqrt_last = (T *)((__SIZE_TYPE__)(self)->tqh_last - (__SIZE_TYPE__)&X(_, (T *)0).tqe_next); \
+		__HYBRID_TAILQ_REMOVE(self, __htqrt_last, X, _);                                                  \
+	}	__WHILE0
 #define __HYBRID_TAILQ_COUNT(self, presult, T, X, _)       \
 	/* Sorry, this one must be a statement */              \
 	do {                                                   \
@@ -2499,7 +2628,6 @@
 		     __htqc_iter = X(_, __htqc_iter).tqe_next)     \
 			++*(presult);                                  \
 	}	__WHILE0
-
 #define __HYBRID_TAILQ_INSERT_HEAD(self, elem, X, _) \
 	__HYBRID_TAILQ_INSERT_HEAD_R(self, elem, elem, X, _)
 #define __HYBRID_TAILQ_INSERT_HEAD_R(self, lo_elem, hi_elem, X, _)              \
@@ -3003,6 +3131,8 @@
 #define CIRCLEQ_REPLACE_R_P(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, getpath) __HYBRID_CIRCLEQ_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_PTH, getpath)
 #define CIRCLEQ_UNBIND(self, elem, key)                                                        __HYBRID_CIRCLEQ_UNBIND(self, elem, __HYBRID_Q_KEY, key)
 #define CIRCLEQ_UNBIND_P(self, elem, getpath)                                                  __HYBRID_CIRCLEQ_UNBIND(self, elem, __HYBRID_Q_PTH, getpath)
+#define CIRCLEQ_REMOVE_TAIL(self, key)                                                         __HYBRID_CIRCLEQ_REMOVE_TAIL(self, __HYBRID_Q_KEY, key)
+#define CIRCLEQ_REMOVE_TAIL_P(self, getpath)                                                   __HYBRID_CIRCLEQ_REMOVE_TAIL(self, __HYBRID_Q_PTH, getpath)
 #if defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
 #define __HYBRID_CIRCLEQ_FOREACH_FROM_SAFE_3(elem, self, key)                                 __HYBRID_CIRCLEQ_FOREACH_FROM_SAFE3(elem, self, __HYBRID_Q_KEY, key)
 #define __HYBRID_CIRCLEQ_FOREACH_FROM_SAFE_4(elem, self, key, tvar)                           __HYBRID_CIRCLEQ_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_KEY, key, tvar)
@@ -3108,6 +3238,12 @@
 #define CIRCLEQ_COUNT_P(self, presult, type, getpath) __HYBRID_CIRCLEQ_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
 #endif /* !__HYBRID_LIST_RESTRICT_API */
+#define __HYBRID_CIRCLEQ_REMOVE_TAIL(self, X, _)                                                 \
+	((void *)X(_, (self)->cqh_last).cqe_prev == (void *)(self)                                   \
+	 ? (void)((self)->cqh_first = X(_, (self)->cqh_last).cqe_next)                               \
+	 : (void)(X(_, X(_, (self)->cqh_last).cqe_prev).cqe_next = X(_, (self)->cqh_last).cqe_next), \
+	 __HYBRID_Q_BADPTR(X(_, (self)->cqh_last).cqe_next),                                         \
+	 (self)->cqh_last = X(_, (self)->cqh_last).cqe_prev)
 #define __HYBRID_CIRCLEQ_COUNT(self, presult, T, X, _)            \
 	/* Sorry, this one must be a statement */                     \
 	do {                                                          \
@@ -3599,9 +3735,9 @@
 #define DLIST_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, key)       __HYBRID_DLIST_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_KEY, key)
 #define DLIST_REPLACE_R_P(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, getpath) __HYBRID_DLIST_REPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, __HYBRID_Q_PTH, getpath)
 #if defined(__HYBRID_PP_VA_OVERLOAD) && defined(__COMPILER_HAVE_TYPEOF)
-#define __HYBRID_DLIST_CONCAT_3(dst, src, key)                                              __HYBRID_DLIST_CONCAT(dst, src, __typeof__(*(src)->lh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_CONCAT_3(dst, src, key)                                              __HYBRID_DLIST_CONCAT(dst, src, __typeof__(*(src)->dlh_first), __HYBRID_Q_KEY, key)
 #define __HYBRID_DLIST_CONCAT_4(dst, src, type, key)                                        __HYBRID_DLIST_CONCAT(dst, src, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define __HYBRID_DLIST_CONCAT_P_3(dst, src, getpath)                                        __HYBRID_DLIST_CONCAT(dst, src, __typeof__(*(src)->lh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_DLIST_CONCAT_P_3(dst, src, getpath)                                        __HYBRID_DLIST_CONCAT(dst, src, __typeof__(*(src)->dlh_first), __HYBRID_Q_PTH, getpath)
 #define __HYBRID_DLIST_CONCAT_P_4(dst, src, T, getpath)                                     __HYBRID_DLIST_CONCAT(dst, src, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_DLIST_FOREACH_FROM_SAFE_3(elem, self, key)                                 __HYBRID_DLIST_FOREACH_FROM_SAFE3(elem, self, __HYBRID_Q_KEY, key)
 #define __HYBRID_DLIST_FOREACH_FROM_SAFE_4(elem, self, key, tvar)                           __HYBRID_DLIST_FOREACH_FROM_SAFE4(elem, self, __HYBRID_Q_KEY, key, tvar)
@@ -3611,6 +3747,10 @@
 #define __HYBRID_DLIST_FOREACH_SAFE_4(elem, self, key, tvar)                                __HYBRID_DLIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_KEY, key, tvar)
 #define __HYBRID_DLIST_FOREACH_SAFE_P_3(elem, self, getpath)                                __HYBRID_DLIST_FOREACH_SAFE3(elem, self, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_DLIST_FOREACH_SAFE_P_4(elem, self, getpath, tvar)                          __HYBRID_DLIST_FOREACH_SAFE4(elem, self, __HYBRID_Q_PTH, getpath, tvar)
+#define __HYBRID_DLIST_REMOVE_TAIL_2(self, key)                                             __HYBRID_DLIST_REMOVE_TAIL(self, __typeof__(*(self)->dlh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_REMOVE_TAIL_3(self, type, key)                                       __HYBRID_DLIST_REMOVE_TAIL(self, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_REMOVE_TAIL_P_2(self, getpath)                                       __HYBRID_DLIST_REMOVE_TAIL(self, __typeof__(*(self)->dlh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_DLIST_REMOVE_TAIL_P_3(self, T, getpath)                                    __HYBRID_DLIST_REMOVE_TAIL(self, T, __HYBRID_Q_PTH, getpath)
 #define __HYBRID_DLIST_INSERT_TAIL_3(self, elem, key)                                       __HYBRID_DLIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_KEY, key)
 #define __HYBRID_DLIST_INSERT_TAIL_4(self, elem, type, key)                                 __HYBRID_DLIST_INSERT_TAIL(self, elem, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
 #define __HYBRID_DLIST_INSERT_TAIL_P_3(self, elem, getpath)                                 __HYBRID_DLIST_INSERT_TAIL(self, elem, __typeof__(*(elem)), __HYBRID_Q_PTH, getpath)
@@ -3674,18 +3814,41 @@
 #define DLIST_TRYREMOVE_IF_P(self, out_pelem, T, getpath, condition, on_failure) __HYBRID_DLIST_TRYREMOVE_IF(self, out_pelem, T, __HYBRID_Q_PTH, getpath, condition, on_failure)
 #endif /* !__HYBRID_PP_VA_OVERLOAD || !__COMPILER_HAVE_TYPEOF */
 #if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF) && defined(__HYBRID_PP_VA_OVERLOAD)
-#define __HYBRID_DLIST_COUNT_2(self, key)                      __XBLOCK({ __SIZE_TYPE__ __hdlc_res; __HYBRID_DLIST_COUNT_3(self, &__hdlc_res, key); __XRETURN __hdlc_res; })
-#define __HYBRID_DLIST_COUNT_3(self, presult, key)             __HYBRID_DLIST_COUNT(self, presult, __typeof__(*(self)->dlh_first), __HYBRID_Q_KEY, key)
-#define __HYBRID_DLIST_COUNT_4(self, presult, type, key)       __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define __HYBRID_DLIST_COUNT_P_2(self, getpath)                __XBLOCK({ __SIZE_TYPE__ __hdlc_res; __HYBRID_DLIST_COUNT_P_3(self, &__hdlc_res, getpath); __XRETURN __hdlc_res; })
-#define __HYBRID_DLIST_COUNT_P_3(self, presult, getpath)       __HYBRID_DLIST_COUNT(self, presult, __typeof__(*(self)->dlh_first), __HYBRID_Q_PTH, getpath)
-#define __HYBRID_DLIST_COUNT_P_4(self, presult, type, getpath) __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_DLIST_COUNT_2(self, key)                   __XBLOCK({ __SIZE_TYPE__ __hdlc_res; __HYBRID_DLIST_COUNT_3(self, &__hdlc_res, key); __XRETURN __hdlc_res; })
+#define __HYBRID_DLIST_COUNT_3(self, presult, key)          __HYBRID_DLIST_COUNT(self, presult, __typeof__(*(self)->dlh_first), __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_COUNT_4(self, presult, type, key)    __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_COUNT_P_2(self, getpath)             __XBLOCK({ __SIZE_TYPE__ __hdlc_res; __HYBRID_DLIST_COUNT_P_3(self, &__hdlc_res, getpath); __XRETURN __hdlc_res; })
+#define __HYBRID_DLIST_COUNT_P_3(self, presult, getpath)    __HYBRID_DLIST_COUNT(self, presult, __typeof__(*(self)->dlh_first), __HYBRID_Q_PTH, getpath)
+#define __HYBRID_DLIST_COUNT_P_4(self, presult, T, getpath) __HYBRID_DLIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define __HYBRID_DLIST_LAST_2(self, key)                    __XBLOCK({ __typeof__(*(self)->dlh_first) *__hsll_res; __HYBRID_DLIST_LAST(self, __hsll_res, __HYBRID_Q_KEY, key); __XRETURN __hsll_res; })
+#define __HYBRID_DLIST_LAST_3(self, p_result, key)          __HYBRID_DLIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define __HYBRID_DLIST_LAST_P_2(self, getpath)              __XBLOCK({ __typeof__(*(self)->dlh_first) *__hsll_res; __HYBRID_DLIST_LAST(self, __hsll_res, __HYBRID_Q_PTH, getpath); __XRETURN __hsll_res; })
+#define __HYBRID_DLIST_LAST_P_3(self, p_result, getpath)    __HYBRID_DLIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #define DLIST_COUNT(...)   __HYBRID_PP_VA_OVERLOAD(__HYBRID_DLIST_COUNT_, (__VA_ARGS__))(__VA_ARGS__)   /* DLIST_COUNT(self, [presult], [type], key) */
-#define DLIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_DLIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* DLIST_COUNT_P(self, [presult], [type], getpath) */
+#define DLIST_COUNT_P(...) __HYBRID_PP_VA_OVERLOAD(__HYBRID_DLIST_COUNT_P_, (__VA_ARGS__))(__VA_ARGS__) /* DLIST_COUNT_P(self, [presult], [T], getpath) */
+#define DLIST_LAST(...)    __HYBRID_PP_VA_OVERLOAD(__HYBRID_DLIST_LAST_, (__VA_ARGS__))(__VA_ARGS__)    /* DLIST_LAST(self, [presult], key) */
+#define DLIST_LAST_P(...)  __HYBRID_PP_VA_OVERLOAD(__HYBRID_DLIST_LAST_P_, (__VA_ARGS__))(__VA_ARGS__)  /* DLIST_LAST(self, [presult], getpath) */
 #else /* __COMPILER_HAVE_TYPEOF && __HYBRID_PP_VA_OVERLOAD */
-#define DLIST_COUNT(self, presult, type, key)       __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
-#define DLIST_COUNT_P(self, presult, type, getpath) __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_PTH, getpath)
+#define DLIST_COUNT(self, presult, type, key)        __HYBRID_DLIST_COUNT(self, presult, __HYBRID_Q_STRUCT type, __HYBRID_Q_KEY, key)
+#define DLIST_COUNT_P(self, presult, T, getpath)     __HYBRID_DLIST_COUNT(self, presult, T, __HYBRID_Q_PTH, getpath)
+#define HYBRID_DLIST_LAST(self, p_result, key)       __HYBRID_DLIST_LAST(self, *(p_result), __HYBRID_Q_KEY, key)
+#define HYBRID_DLIST_LAST_P(self, p_result, getpath) __HYBRID_DLIST_LAST(self, *(p_result), __HYBRID_Q_PTH, getpath)
 #endif /* !__COMPILER_HAVE_TYPEOF || !__HYBRID_PP_VA_OVERLOAD */
+#define __HYBRID_DLIST_REMOVE_TAIL(self, T, X, _)       \
+	/* Sorry, this one must be a statement */           \
+	do {                                                \
+		T *__hdrt_last = (self)->dlh_first;             \
+		while (X(_, __hdrt_last).dle_next)              \
+			__hdrt_last = X(_, __hdrt_last).dle_next;   \
+		__HYBRID_DLIST_REMOVE(self, __hdrt_last, X, _); \
+	}	__WHILE0
+#define __HYBRID_DLIST_LAST(self, result, X, _) \
+	/* Sorry, this one must be a statement */   \
+	do {                                        \
+		result = (self)->dlh_first;             \
+		while (X(_, result).dle_next)           \
+			result = X(_, result).dle_next;     \
+	}	__WHILE0
 #define __HYBRID_DLIST_COUNT(self, presult, T, X, _)       \
 	/* Sorry, this one must be a statement */              \
 	do {                                                   \
@@ -3863,39 +4026,7 @@
 	     (elem) = (tvar))
 #endif /* !__HYBRID_LIST_RESTRICT_API */
 
-
-
-
-
-
-
-
-/************************************************************************/
-/* DEPRECATED API (or what remains there-of; to be removed eventually)  */
-/************************************************************************/
-#ifndef __HYBRID_LIST_WITHOUT_DEPRECATED
-/* LLIST */
-#define LLIST_INSERT(l, elem, key)                           \
-	(void)(((elem)->key.le_next = (l)) != __NULLPTR          \
-	       ? (void)((l)->key.le_prev = &(elem)->key.le_next) \
-	       : (void)0,                                        \
-	       *((elem)->key.le_prev = &(l)) = (elem))
-#define LLIST_INSERT_AFTER(predecessor, elem, key)                                                   \
-	(void)(((elem)->key.le_next = *((elem)->key.le_prev = &(predecessor)->key.le_next)) != __NULLPTR \
-	       ? (void)((elem)->key.le_next->key.le_prev = &(elem)->key.le_next)                         \
-	       : (void)0,                                                                                \
-	       (predecessor)->key.le_next = (elem))
-#define LLIST_REMOVE(elem, key)                                       \
-	((*(elem)->key.le_prev = (elem)->key.le_next) != __NULLPTR        \
-	 ? (void)((elem)->key.le_next->key.le_prev = (elem)->key.le_prev) \
-	 : (void)0)
-#endif /* !__HYBRID_LIST_WITHOUT_DEPRECATED */
-
 #endif /* __CC__ */
-
-/* TODO: KOS-specific extension macros */
-//TODO:*_REMOVE_TAIL() ?
-
 
 /* TODO: Missing macros from OpenBSD: */
 //TODO:#define XSIMPLEQ_HEAD(name, type)
