@@ -3181,9 +3181,9 @@ do_increase_buffer:
 		 *       If it turns out to be one, follow it! */
 
 		/* Trim the trailing module filename, but keep 1 trailing slash. */
-		while (dwError && lpBuffer[dwError - 1] != '\\')
+		while (dwError && !DeeSystem_IsSep(lpBuffer[dwError - 1]))
 			--dwError;
-		while (dwError && lpBuffer[dwError - 1] == '\\')
+		while (dwError && DeeSystem_IsSep(lpBuffer[dwError - 1]))
 			--dwError;
 		lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError + 1);
 		result = (DREF DeeStringObject *)DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
