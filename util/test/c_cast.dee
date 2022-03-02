@@ -43,7 +43,7 @@ function foo(...) {
 
 foo(10, 20, 30);
 
-/* Deemon warns amount the ambiguity who's behavior we're validating here.
+/* Deemon warns about the ambiguity who's behavior we're validating here.
  * NOTE: The first option described in the comments is the one always taken. */
 #pragma warning(push)
 #pragma warning(disable: "-Wquality")

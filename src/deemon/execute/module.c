@@ -1396,6 +1396,14 @@ module_class_getpath(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeModule_GetPath());
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_class_gethome(DeeObject *__restrict UNUSED(self)) {
+	DREF DeeObject *result;
+	result = DeeExec_GetHome();
+	Dee_XIncref(result);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 module_class_setpath(DeeObject *UNUSED(self),
                      DeeObject *value) {
@@ -1406,6 +1414,9 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	{ "path", &module_class_getpath, NULL, &module_class_setpath,
 	  DOC("->?DList\n"
 	      "A list of strings describing the search path for system libraries") },
+	{ "home", &module_class_gethome, NULL, NULL,
+	  DOC("->?Dstring\n"
+	      "The deemon home path (usually the path where the deemon executable resides)") },
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	{ "search_path", &module_class_getpath, NULL, &module_class_setpath,
 	  DOC("->?DList\n"
