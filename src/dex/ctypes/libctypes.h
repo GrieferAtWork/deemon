@@ -329,6 +329,7 @@ union pointer {
 	int64_t        *ps64;
 	void           *pvoid;
 	char           *pchar;
+	Dee_wchar_t    *pwchar;
 	signed char    *pschar;
 	unsigned char  *puchar;
 	short          *pshort;

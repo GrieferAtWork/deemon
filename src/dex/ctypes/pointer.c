@@ -37,13 +37,88 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_wcslen
+#define wcslen          dee_wcslen
+DeeSystem_DEFINE_wcslen(dee_wcslen)
+#endif /* !CONFIG_HAVE_wcslen */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-pointer_str(DeePointerTypeObject *UNUSED(tp_self),
+pointer_str(DeePointerTypeObject *tp_self,
             union pointer *self) {
 	union pointer value;
-	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
-	                    return NULL);
+	CTYPES_FAULTPROTECT(value.ptr = self->ptr, return NULL);
+
+	/* Special case: pointer-to-character-type */
+	if (tp_self->pt_orig == &DeeCChar_Type) {
+		size_t length;
+#ifndef CONFIG_HAVE_CTYPES_FAULTPROTECT
+		length = strlen(value.pchar);
+#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT)
+		CTYPES_FAULTPROTECT(length = strlen(value.pchar), return NULL);
+#else /* ... */
+		length = 0;
+		CTYPES_FAULTPROTECT({
+			while (value.pchar[length])
+				++length;
+		}, return NULL);
+#endif /* !... */
+		return DeeString_NewUtf8(value.pchar, length, STRING_ERROR_FREPLAC);
+	} else if (tp_self->pt_orig == &DeeCChar16_Type
+#if __SIZEOF_WCHAR_T__ == 2
+	           || tp_self->pt_orig == &DeeCWChar_Type
+#endif /* __SIZEOF_WCHAR_T__ == 2 */
+	           ) {
+		size_t length;
+#if !defined(CONFIG_HAVE_CTYPES_FAULTPROTECT) && __SIZEOF_WCHAR_T__ == 2
+		length = wcslen(value.pwchar);
+#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT) && __SIZEOF_WCHAR_T__ == 2
+		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
+#else /* ... */
+		length = 0;
+		CTYPES_FAULTPROTECT({
+			while (value.p16[length])
+				++length;
+		}, return NULL);
+#endif /* !... */
+		return DeeString_NewUtf16(value.p16, length, STRING_ERROR_FREPLAC);
+	} else if (tp_self->pt_orig == &DeeCChar32_Type
+#if __SIZEOF_WCHAR_T__ == 4
+	           || tp_self->pt_orig == &DeeCWChar_Type
+#endif /* __SIZEOF_WCHAR_T__ == 4 */
+	           ) {
+		size_t length;
+#if !defined(CONFIG_HAVE_CTYPES_FAULTPROTECT) && __SIZEOF_WCHAR_T__ == 4
+		length = wcslen(value.pwchar);
+#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT) && __SIZEOF_WCHAR_T__ == 4
+		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
+#else /* ... */
+		length = 0;
+		CTYPES_FAULTPROTECT({
+			while (value.p32[length])
+				++length;
+		}, return NULL);
+#endif /* !... */
+		return DeeString_NewUtf32(value.p32, length, STRING_ERROR_FREPLAC);
+	}
+#if __SIZEOF_WCHAR_T__ != 2 && __SIZEOF_WCHAR_T__ != 4
+	else if (tp_self->pt_orig == &DeeCWChar_Type) {
+		size_t length;
+#ifndef CONFIG_HAVE_CTYPES_FAULTPROTECT
+		length = wcslen(value.pwchar);
+#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT)
+		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
+#else /* ... */
+		length = 0;
+		CTYPES_FAULTPROTECT({
+			while (value.pwchar[length])
+				++length;
+		}, return NULL);
+#endif /* !... */
+		return DeeString_NewWide(value.pwchar, length, STRING_ERROR_FREPLAC);
+	}
+#endif /* __SIZEOF_WCHAR_T__ != 2 && __SIZEOF_WCHAR_T__ != 4 */
+
+	/* Fallback: just print the address of the pointer. */
 	return DeeString_Newf("%p", value.ptr);
 }
 
