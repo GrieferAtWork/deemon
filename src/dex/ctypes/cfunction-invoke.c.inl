@@ -102,7 +102,9 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 			*argp_iter     = (void *)iter;
 			switch ((*ffi_argtyv)->type) {
 
-			case FFI_TYPE_VOID: break;
+			case FFI_TYPE_VOID:
+				break;
+
 			case FFI_TYPE_INT:
 				if (DeeObject_AsInt(arg, &iter->i))
 					goto err_wbuf;
@@ -193,16 +195,20 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 			default: iter->u64 = 0; break;
 			}
 #ifdef VARARGS
-			++argv, ++argp_iter;
+			++arg_iter;
+			++argp_iter;
 #endif /* VARARGS */
 			if (++iter == end)
 				break;
 #ifndef VARARGS
-			++argv, ++argp_iter;
+			++arg_iter;
+			++argp_iter;
 #endif /* !VARARGS */
 			++ffi_argtyv;
-			++arg_iter;
 		}
+#ifdef VARARGS
+		argv = arg_iter;
+#endif /* VARARGS */
 #undef argt
 	}
 #ifdef VARARGS
@@ -215,7 +221,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 		dee_va_ffi_types_end = dee_va_ffi_types + n_varargs;
 		ASSERT(dee_va_ffi_types != dee_va_ffi_types_end);
 		for (;;) {
-			dee_va_arg = *argv, dee_va_type = Dee_TYPE(dee_va_arg);
+			dee_va_arg  = *argv;
+			dee_va_type = Dee_TYPE(dee_va_arg);
 			if (dee_va_type == &DeeString_Type) {
 				/* String argument --> Pass the pointer for the UTF-8 encoding. */
 				*dee_va_ffi_types = &ffi_type_pointer;
@@ -275,7 +282,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 					iter->u           = (unsigned int)*(uint32_t *)&temp;
 					*dee_va_ffi_types = &ffi_type_uint;
 				}
-#endif
+#endif /* ... */
 				*argp_iter = (void *)iter;
 			} else {
 				/* Fallback: Any structured object. */
@@ -313,7 +320,9 @@ def_var_data:
 			}
 			if (++dee_va_ffi_types == dee_va_ffi_types_end)
 				break;
-			++argp_iter, ++argv, ++iter;
+			++argp_iter;
+			++argv;
+			++iter;
 		}
 	}
 #endif /* VARARGS */
