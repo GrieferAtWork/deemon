@@ -22,8 +22,6 @@
 #define DEE_SOURCE 1
 
 #ifndef __INTELLISENSE__
-#define N 0
-#include "pointer-math-impl.c.inl"
 #define N 1
 #include "pointer-math-impl.c.inl"
 #define N 2 /* Anything but 0 or 1 */

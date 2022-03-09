@@ -19,7 +19,7 @@
  */
 #define DEE_SOURCE 1
 #ifdef __INTELLISENSE__
-#define N 0
+#define N 1
 #endif /* __INTELLISENSE__ */
 
 #ifndef N
@@ -29,6 +29,7 @@
 #include "libctypes.h"
 /**/
 
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
@@ -37,17 +38,15 @@
 
 DECL_BEGIN
 
-#if N == 0
-#define POINTER_MATH              pointer_math0
-#define F(x)                      x##0
-#define ITEM_SIZE(pointer_type)   0
-#elif N == 1
-#define POINTER_MATH              pointer_math1
-#define F(x)                      x##1
-#define ITEM_SIZE(pointer_type)   1
+#if N == 1
+#define POINTER_MATH            pointer_math1
+#define POINTER_SEQ             pointer_seq1
+#define F(x)                    x##1
+#define ITEM_SIZE(pointer_type) 1
 #else /* N == ... */
-#define POINTER_MATH              pointer_mathn
-#define F(x)                      x##n
+#define POINTER_MATH            pointer_mathn
+#define POINTER_SEQ             pointer_seqn
+#define F(x)                    x##n
 #define ITEM_SIZE(pointer_type) ((pointer_type)->pt_size)
 #endif /* N != ... */
 
@@ -88,30 +87,28 @@ pointer_int(DeePointerTypeObject *__restrict UNUSED(tp_self),
 
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-F(pointer_add)(DeePointerTypeObject *__restrict tp_self,
+F(pointer_add)(DeePointerTypeObject *tp_self,
                union pointer *self,
-               DeeObject *__restrict some_object) {
+               DeeObject *some_object) {
 	ptrdiff_t other;
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
 	                    return NULL);
 	if (DeeObject_AsPtrdiff(some_object, &other))
 		goto err;
-#if N == 0
-	return DeePointer_New(tp_self, value.ptr);
-#elif N == 1
+#if N == 1
 	return DeePointer_New(tp_self, (void *)(value.uint + other));
-#else /* N == ... */
+#else /* N == 1 */
 	return DeePointer_New(tp_self, (void *)(value.uint + other * tp_self->pt_size));
-#endif /* N != ... */
+#endif /* N != 1 */
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-F(pointer_sub)(DeePointerTypeObject *__restrict tp_self,
+F(pointer_sub)(DeePointerTypeObject *tp_self,
                union pointer *self,
-               DeeObject *__restrict some_object) {
+               DeeObject *some_object) {
 	ptrdiff_t other;
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
@@ -123,20 +120,18 @@ F(pointer_sub)(DeePointerTypeObject *__restrict tp_self,
 			goto err;
 		}
 		value.uint -= ((struct pointer_object *)some_object)->p_ptr.uint;
-#if N != 0 && N != 1
+#if N != 1
 		value.uint /= tp_self->pt_size;
-#endif /* N != 0 && N != 1 */
+#endif /* N != 1 */
 		return DeePointer_New(tp_self, value.ptr);
 	}
 	if (DeeObject_AsPtrdiff(some_object, &other))
 		goto err;
-#if N == 0
-	return DeePointer_New(tp_self, value.ptr);
-#elif N == 1
+#if N == 1
 	return DeePointer_New(tp_self, (void *)(value.uint - other));
-#else /* N == ... */
+#else /* N == 1 */
 	return DeePointer_New(tp_self, (void *)(value.uint - other * tp_self->pt_size));
-#endif /* N != ... */
+#endif /* N != 1 */
 err:
 	return NULL;
 }
@@ -148,10 +143,10 @@ F(pointer_inc)(DeePointerTypeObject *__restrict tp_self,
 	(void)self;
 #if N == 1
 	CTYPES_FAULTPROTECT(++self->uint, return -1);
-#elif N != 0
+#else /* N == 1 */
 	CTYPES_FAULTPROTECT(self->uint += ITEM_SIZE(tp_self),
 	                    return -1);
-#endif /* N... */
+#endif /* N != 1 */
 	return 0;
 }
 
@@ -162,54 +157,105 @@ F(pointer_dec)(DeePointerTypeObject *__restrict tp_self,
 	(void)self;
 #if N == 1
 	CTYPES_FAULTPROTECT(--self->uint, return -1);
-#elif N != 0
+#else /* N == 1 */
 	CTYPES_FAULTPROTECT(self->uint -= ITEM_SIZE(tp_self),
 	                    return -1);
-#endif /* N... */
+#endif /* N != 1 */
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-F(pointer_inplace_add)(DeePointerTypeObject *__restrict tp_self,
+F(pointer_inplace_add)(DeePointerTypeObject *tp_self,
                        union pointer *self,
-                       DeeObject *__restrict some_object) {
+                       DeeObject *some_object) {
 	ptrdiff_t other;
 	(void)tp_self;
 	(void)self;
 	if (DeeObject_AsPtrdiff(some_object, &other))
 		goto err;
-#if N != 0 && N != 1
+#if N != 1
 	other *= tp_self->pt_size;
-#endif /* N != 0 && N != 1 */
-#if N != 0
+#endif /* N != 1 */
 	CTYPES_FAULTPROTECT(self->uint += other,
 	                    goto err);
-#endif /* N != 0 */
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-F(pointer_inplace_sub)(DeePointerTypeObject *__restrict tp_self,
+F(pointer_inplace_sub)(DeePointerTypeObject *tp_self,
                        union pointer *self,
-                       DeeObject *__restrict some_object) {
+                       DeeObject *some_object) {
 	ptrdiff_t other;
 	(void)tp_self;
 	(void)self;
 	if (DeeObject_AsPtrdiff(some_object, &other))
 		goto err;
-#if N != 0 && N != 1
+#if N != 1
 	other *= tp_self->pt_size;
-#endif /* N != 0 && N != 1 */
-#if N != 0
+#endif /* N != 1 */
 	CTYPES_FAULTPROTECT(self->uint -= other,
 	                    goto err);
-#endif /* N != 0 */
 	return 0;
 err:
 	return -1;
 }
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF struct lvalue_object *DCALL
+F(pointer_getitem)(DeePointerTypeObject *tp_self, union pointer *self,
+                   DeeObject *index_ob) {
+	ptrdiff_t index;
+	DREF struct lvalue_object *result;
+	DREF DeeLValueTypeObject *type;
+	if (DeeObject_AsPtrdiff(index_ob, &index))
+		goto err;
+#if N != 1
+	index *= tp_self->pt_size;
+#endif /* N != 1 */
+	result = DeeObject_MALLOC(struct lvalue_object);
+	if unlikely(!result)
+		goto done;
+	/* Lookup the l-value version of the base-type. */
+	type = DeeSType_LValue(tp_self->pt_orig);
+	if unlikely(!type)
+		goto err_r;
+	/* Initialize the new l-value object. */
+	DeeObject_InitNoref(result, (DeeTypeObject *)type);
+	CTYPES_FAULTPROTECT(result->l_ptr.ptr = (__BYTE_TYPE__ *)self->ptr + index,
+	                    goto err_r);
+done:
+	return result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
+F(pointer_setitem)(DeePointerTypeObject *tp_self, union pointer *self,
+                   DeeObject *index_ob, DeeObject *value) {
+	void *ptr;
+	ptrdiff_t index;
+	if (DeeObject_AsPtrdiff(index_ob, &index))
+		goto err;
+#if N != 1
+	index *= tp_self->pt_size;
+#endif /* N != 1 */
+	CTYPES_FAULTPROTECT(ptr = (__BYTE_TYPE__ *)self->ptr + index, goto err);
+	return DeeStruct_Assign(tp_self->pt_orig, ptr, value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+F(pointer_delitem)(DeePointerTypeObject *tp_self, union pointer *self,
+                   DeeObject *index_ob) {
+	return F(pointer_setitem)(tp_self, self, index_ob, Dee_None);
+}
+
+
 
 INTERN struct stype_math POINTER_MATH = {
 	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&pointer_int32,
@@ -245,7 +291,20 @@ INTERN struct stype_math POINTER_MATH = {
 	/* .st_inplace_pow = */ NULL
 };
 
+INTERN struct stype_seq POINTER_SEQ = {
+	/* .stp_iter_self = */ NULL,
+	/* .stp_size      = */ NULL,
+	/* .stp_contains  = */ NULL,
+	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_getitem),
+	/* .stp_del       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_delitem),
+	/* .stp_set       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&F(pointer_setitem),
+	/* .stp_range_get = */ NULL,
+	/* .stp_range_del = */ NULL,
+	/* .stp_range_set = */ NULL,
+};
+
 #undef ITEM_SIZE
+#undef POINTER_SEQ
 #undef POINTER_MATH
 #undef F
 #undef N

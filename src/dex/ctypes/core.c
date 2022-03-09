@@ -556,12 +556,12 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 
 	/* Setup use of the proper math operators. */
-	if (result->pt_size == 0)
-		result->pt_base.st_math = &pointer_math0;
-	else if (result->pt_size == 1)
+	if (result->pt_size == 0 || result->pt_size == 1) {
 		result->pt_base.st_math = &pointer_math1;
-	else {
+		result->pt_base.st_seq  = &pointer_seq1;
+	} else {
 		result->pt_base.st_math = &pointer_mathn;
+		result->pt_base.st_seq  = &pointer_seqn;
 	}
 
 	/* Finalize the pointer type. */

@@ -400,9 +400,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Ref(DeeObject *__res
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Deref(DeeObject *__restrict self);
 
 
-INTDEF struct stype_math pointer_math0; /* Math functions for pointer types with a base-size of `0' */
-INTDEF struct stype_math pointer_math1; /* Math functions for pointer types with a base-size of `1' */
+INTDEF struct stype_math pointer_math1; /* Math functions for pointer types with a base-size of `0' or `1' */
 INTDEF struct stype_math pointer_mathn; /* Math functions for pointer types with a base-size of anything else. */
+INTDEF struct stype_seq pointer_seq1;   /* Sequence functions for pointer types with a base-size of `0' or `1' */
+INTDEF struct stype_seq pointer_seqn;   /* Sequence functions for pointer types with a base-size of anything else. */
 
 
 /* Structured operator invocation functions */

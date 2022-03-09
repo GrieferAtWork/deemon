@@ -321,9 +321,9 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *, void *))&pointer_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&pointer_call,
-		/* .st_math     = */ &pointer_math0,
+		/* .st_math     = */ &pointer_math1,
 		/* .st_cmp      = */ &pointer_cmp,
-		/* .st_seq      = */ NULL,
+		/* .st_seq      = */ &pointer_seq1,
 		/* .st_attr     = */ NULL
 	},
 	/* .pt_orig = */ &DeeStructured_Type,
