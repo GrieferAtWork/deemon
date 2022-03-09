@@ -320,7 +320,7 @@ err:
 PRIVATE struct type_method tpconst pointer_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
 	{ "__deref__", &struct_deref_func,
-	  DOC("->pointer\n"
+	  DOC("->?GLValue\n"
 	      "Deprecated alias for ?#ind") },
 	{ NULL }
 };
@@ -378,7 +378,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 		},
 #ifndef CONFIG_NO_THREADS
 		/* .st_cachelock = */ RWLOCK_INIT,
-#endif
+#endif /* !CONFIG_NO_THREADS */
 		/* .st_pointer  = */ &DeePointer_Type,
 		/* .st_lvalue   = */ &DeeLValue_Type,
 		/* .st_array    = */ STYPE_ARRAY_INIT,

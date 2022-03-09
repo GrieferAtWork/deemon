@@ -733,6 +733,8 @@ functest('atoi("42")', stdc);
 functest('strlen("foo")', stdc);
 functest('strchr("foo", 102)', stdc);
 functest('strrchr("foo", 102)', stdc);
+functest('strnchr("foo", 102, 3)', "defined(__USE_KOS)");
+functest('strnrchr("foo", 102, 3)', "defined(__USE_KOS)");
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
@@ -5593,6 +5595,20 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #undef CONFIG_HAVE_strrchr
 #else
 #define CONFIG_HAVE_strrchr 1
+#endif
+
+#ifdef CONFIG_NO_strnchr
+#undef CONFIG_HAVE_strnchr
+#elif !defined(CONFIG_HAVE_strnchr) && \
+      (defined(strnchr) || defined(__strnchr_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strnchr 1
+#endif
+
+#ifdef CONFIG_NO_strnrchr
+#undef CONFIG_HAVE_strnrchr
+#elif !defined(CONFIG_HAVE_strnrchr) && \
+      (defined(strnrchr) || defined(__strnrchr_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strnrchr 1
 #endif
 
 #ifdef CONFIG_NO_strnlen

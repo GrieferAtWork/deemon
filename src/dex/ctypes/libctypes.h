@@ -251,10 +251,10 @@ struct stype_object {
 	WUNUSED NONNULL((1))
 	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *tp_self, void *self,
 	                                 size_t argc, DeeObject *const *argv);
-	struct stype_math      *st_math;      /* [0..1] Math related operators. */
-	struct stype_cmp       *st_cmp;       /* [0..1] Compare operators. */
-	struct stype_seq       *st_seq;       /* [0..1] Sequence operators. */
-	struct stype_attr      *st_attr;      /* [0..1] Attribute access operators. */
+	struct stype_math const *st_math;      /* [0..1] Math related operators. */
+	struct stype_cmp const  *st_cmp;       /* [0..1] Compare operators. */
+	struct stype_seq const  *st_seq;       /* [0..1] Sequence operators. */
+	struct stype_attr const *st_attr;      /* [0..1] Attribute access operators. */
 };
 
 struct pointer_type_object {
@@ -401,10 +401,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Ref(DeeObject *__res
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Deref(DeeObject *__restrict self);
 
 
-INTDEF struct stype_math pointer_math1; /* Math functions for pointer types with a base-size of `0' or `1' */
-INTDEF struct stype_math pointer_mathn; /* Math functions for pointer types with a base-size of anything else. */
-INTDEF struct stype_seq pointer_seq1;   /* Sequence functions for pointer types with a base-size of `0' or `1' */
-INTDEF struct stype_seq pointer_seqn;   /* Sequence functions for pointer types with a base-size of anything else. */
+INTDEF struct stype_math tpconst pointer_math1; /* Math functions for pointer types with a base-size of `0' or `1' */
+INTDEF struct stype_math tpconst pointer_mathn; /* Math functions for pointer types with a base-size of anything else. */
+INTDEF struct stype_seq tpconst pointer_seq1;   /* Sequence functions for pointer types with a base-size of `0' or `1' */
+INTDEF struct stype_seq tpconst pointer_seqn;   /* Sequence functions for pointer types with a base-size of anything else. */
 
 
 /* Structured operator invocation functions */

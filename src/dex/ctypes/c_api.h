@@ -27,7 +27,14 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+#ifdef __INTELLISENSE__
+#define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
+	do {                                                              \
+		action_libcall;                                               \
+		action_inline;                                                \
+		action_error;                                                 \
+	}	__WHILE0
+#elif defined(CONFIG_HAVE_CTYPES_FAULTPROTECT)
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 #define CTYPES_PROTECTED(action_libcall, action_inline, action_error) \
 	CTYPES_FAULTPROTECT(action_libcall, action_error)

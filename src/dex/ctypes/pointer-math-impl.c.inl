@@ -217,10 +217,12 @@ F(pointer_getitem)(DeePointerTypeObject *tp_self, union pointer *self,
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto done;
+
 	/* Lookup the l-value version of the base-type. */
 	type = DeeSType_LValue(tp_self->pt_orig);
 	if unlikely(!type)
 		goto err_r;
+
 	/* Initialize the new l-value object. */
 	DeeObject_InitNoref(result, (DeeTypeObject *)type);
 	CTYPES_FAULTPROTECT(result->l_ptr.ptr = (__BYTE_TYPE__ *)self->ptr + index,
@@ -257,7 +259,7 @@ F(pointer_delitem)(DeePointerTypeObject *tp_self, union pointer *self,
 
 
 
-INTERN struct stype_math POINTER_MATH = {
+INTERN struct stype_math tpconst POINTER_MATH = {
 	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&pointer_int32,
 	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&pointer_int64,
 	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&pointer_double,
@@ -291,7 +293,7 @@ INTERN struct stype_math POINTER_MATH = {
 	/* .st_inplace_pow = */ NULL
 };
 
-INTERN struct stype_seq POINTER_SEQ = {
+INTERN struct stype_seq tpconst POINTER_SEQ = {
 	/* .stp_iter_self = */ NULL,
 	/* .stp_size      = */ NULL,
 	/* .stp_contains  = */ NULL,

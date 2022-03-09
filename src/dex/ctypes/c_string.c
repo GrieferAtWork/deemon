@@ -198,6 +198,62 @@ DeeSystem_DEFINE_memcasermem(dee_memcasermem)
 #define strnend(x, maxlen) ((x) + strnlen(x, maxlen))
 #endif /* !CONFIG_HAVE_strnend */
 
+#ifndef CONFIG_HAVE_strrchr
+#define CONFIG_HAVE_strrchr 1
+#undef strrchr
+#define strrchr dee_strrchr
+LOCAL WUNUSED NONNULL((1)) char *
+dee_strrchr(char const *haystack, int needle) {
+	char *result = NULL;
+	for (;; ++haystack) {
+		char ch = *haystack;
+		if (ch == (char)(unsigned char)needle)
+			result = (char *)haystack;
+		if (!ch)
+			break;
+	}
+	return result;
+}
+#endif /* !CONFIG_HAVE_strrchr */
+
+#ifndef CONFIG_HAVE_strnchr
+#define CONFIG_HAVE_strnchr 1
+#undef strnchr
+#define strnchr dee_strnchr
+LOCAL WUNUSED NONNULL((1)) char *
+dee_strnchr(char const *haystack, int needle, size_t maxlen) {
+	char *result = NULL;
+	for (; maxlen--; ++haystack) {
+		char ch = *haystack;
+		if (ch == (char)(unsigned char)needle) {
+			result = (char *)haystack;
+			break;
+		}
+		if (!ch)
+			break;
+	}
+	return result;
+}
+#endif /* !CONFIG_HAVE_strnchr */
+
+#ifndef CONFIG_HAVE_strnrchr
+#define CONFIG_HAVE_strnrchr 1
+#undef strnrchr
+#define strnrchr dee_strnrchr
+LOCAL WUNUSED NONNULL((1)) char *
+dee_strnrchr(char const *haystack, int needle, size_t maxlen) {
+	char *result = NULL;
+	for (; maxlen--; ++haystack) {
+		char ch = *haystack;
+		if (ch == (char)(unsigned char)needle)
+			result = (char *)haystack;
+		if (!ch)
+			break;
+	}
+	return result;
+}
+#endif /* !CONFIG_HAVE_strnrchr */
+
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject *const *argv) {
@@ -237,33 +293,25 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_memccpy(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	int val;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oodIu:memccpy", &ob_dst, &ob_src, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "oodIu:memccpy", &ob_dst, &ob_src, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(dst.ptr = memccpy(dst.ptr, src.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
+	CTYPES_PROTECTED(
+	dst.ptr = memccpy(dst.ptr, src.ptr, needle, num_bytes), {
 		while (num_bytes--) {
 			uint8_t byte = *src.p8++;
 			*dst.p8++    = byte;
-			if (byte == (uint8_t)val)
+			if (byte == (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
 	--dst.p8;
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	dst.ptr = memccpy(dst.ptr, src.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -279,21 +327,13 @@ capi_memset(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
+	CTYPES_PROTECTED(
+	memset(dst.ptr, byte, num_bytes), {
 		uint8_t *iter = dst.p8;
 		while (num_bytes--)
 			*iter++ = (uint8_t)byte;
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	memset(dst.ptr, byte, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -309,20 +349,12 @@ capi_mempset(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
+	CTYPES_PROTECTED(
+	memset(dst.ptr, byte, num_bytes), {
 		while (num_bytes--)
 			*dst.p8++ = (uint8_t)byte;
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	memset(dst.ptr, byte, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
 err:
 	return NULL;
@@ -340,12 +372,8 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
+	CTYPES_PROTECTED(
+	memmove(dst.ptr, src.ptr, num_bytes), {
 		uint8_t *iter;
 		uint8_t *end;
 		if (dst.p8 < src.p8) {
@@ -360,10 +388,6 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	memmove(dst.ptr, src.ptr, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -380,12 +404,8 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
+	CTYPES_PROTECTED(
+	memmove(dst.ptr, src.ptr, num_bytes), {
 		uint8_t *iter;
 		uint8_t *end;
 		if (dst.p8 < src.p8) {
@@ -400,10 +420,6 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	memmove(dst.ptr, src.ptr, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeePointer_NewVoid(dst.p8 + num_bytes);
 err:
 	return NULL;
@@ -415,171 +431,131 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memchr", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memchr", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memchr(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = NULL;
-		for (; num_bytes--; ++dst.p8) {
-			if (*dst.p8 == (uint8_t)val) {
-				result = haystack;
+	CTYPES_PROTECTED(
+	result.ptr = memchr(haystack.ptr, needle, num_bytes), {
+		result.ptr = NULL;
+		for (; num_bytes--; ++haystack.p8) {
+			if (*haystack.p8 == (uint8_t)needle) {
+				result.ptr = haystack.ptr;
 				break;
 			}
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memchr(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrchr", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrchr", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memrchr(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *iter = dst.p8 + n;
-		result = NULL;
-		while (iter != dst.p8) {
-			if (*--iter == (uint8_t)val) {
-				result = iter;
+	CTYPES_PROTECTED(
+	result.ptr = memrchr(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8 + num_bytes;
+		result.ptr = NULL;
+		while (iter != haystack.p8) {
+			if (*--iter == (uint8_t)needle) {
+				result.ptr = iter;
 				break;
 			}
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memrchr(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memend", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memend", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memend(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		for (; num_bytes--; ++result) {
-			if (*result == (uint8_t)byte)
+	CTYPES_PROTECTED(
+	result.ptr = memend(haystack.ptr, needle, num_bytes), {
+		result.p8 = haystack.p8;
+		for (; num_bytes--; ++result.p8) {
+			if (*result.p8 == (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memend(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrend", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrend", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memrend(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		result += num_bytes;
+	CTYPES_PROTECTED(
+	result.ptr = memrend(haystack.ptr, needle, num_bytes), {
+		result.p8 = haystack.p8;
+		result.p8 += num_bytes;
 		while (num_bytes--) {
-			if (*--result == (uint8_t)val)
+			if (*--result.p8 == (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memrend(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memlen", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memlen", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memlen(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *haystack = dst.p8;
-		for (; num_bytes--; ++haystack) {
-			if (*haystack == (uint8_t)val)
+	CTYPES_PROTECTED(
+	result = memlen(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8;
+		for (; num_bytes--; ++iter) {
+			if (*iter == (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(haystack - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memlen(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -587,34 +563,25 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrlen", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrlen", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memrlen(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *haystack = dst.p8;
-		haystack += num_bytes;
+	CTYPES_PROTECTED(
+	result = memrlen(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8 + num_bytes;
 		while (num_bytes--) {
-			if (*--haystack == (uint8_t)val)
+			if (*--iter == (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(haystack - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memrlen(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -622,96 +589,72 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemchr", &ob_dst, &val))
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemchr", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = rawmemchr(dst.ptr, val),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		for (;; ++result) {
-			if (*result == (uint8_t)byte)
+	CTYPES_PROTECTED(
+	result.ptr = rawmemchr(haystack.ptr, needle), {
+		result.p8 = haystack.p8;
+		for (;; ++result.p8) {
+			if (*result.p8 == (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = rawmemchr(dst.ptr, val);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr", &ob_dst, &val))
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = rawmemrchr(dst.ptr, val),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
+	CTYPES_PROTECTED(
+	result.ptr = rawmemrchr(haystack.ptr, needle), {
+		result.p8 = haystack.p8;
 		for (;;) {
-			if (*--result == (uint8_t)byte)
+			if (*--result.p8 == (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = rawmemrchr(dst.ptr, val);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemlen", &ob_dst, &val))
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemlen", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = rawmemlen(dst.ptr, val),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *iter = dst.p8;
+	CTYPES_PROTECTED(
+	result = rawmemlen(haystack.ptr, needle), {
+		uint8_t *iter = haystack.p8;
 		for (;; ++iter) {
-			if (*iter == (uint8_t)byte)
+			if (*iter == (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(iter - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = rawmemlen(dst.ptr, val);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -719,32 +662,24 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen", &ob_dst, &val))
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = rawmemrlen(dst.ptr, val),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *iter = dst.p8;
+	CTYPES_PROTECTED(
+	result = rawmemrlen(haystack.ptr, needle), {
+		uint8_t *iter = haystack.p8;
 		for (;;) {
-			if (*--iter == (uint8_t)byte)
+			if (*--iter == (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(iter - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = rawmemrlen(dst.ptr, val);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -753,171 +688,130 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxchr", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxchr", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxchr(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = NULL;
-		for (; num_bytes--; ++dst.p8) {
-			if (*dst.p8 != (uint8_t)val) {
-				result = haystack;
+	CTYPES_PROTECTED(
+	result.ptr = memxchr(haystack.ptr, needle, num_bytes), {
+		result.ptr = NULL;
+		for (; num_bytes--; ++haystack.p8) {
+			if (*haystack.p8 != (uint8_t)needle) {
+				result.ptr = haystack.ptr;
 				break;
 			}
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxchr(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrchr", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrchr", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxrchr(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *iter = dst.p8 + n;
-		result = NULL;
-		while (iter != dst.p8) {
-			if (*--iter != (uint8_t)val) {
-				result = iter;
+	CTYPES_PROTECTED(
+	result.ptr = memxrchr(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8 + num_bytes;
+		result.ptr = NULL;
+		while (iter != haystack.p8) {
+			if (*--iter != (uint8_t)needle) {
+				result.ptr = iter;
 				break;
 			}
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxrchr(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxend", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxend", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxend(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		for (; num_bytes--; ++result) {
-			if (*result != (uint8_t)byte)
+	CTYPES_PROTECTED(
+	result.ptr = memxend(haystack.ptr, needle, num_bytes), {
+		result.p8 = haystack.p8;
+		for (; num_bytes--; ++result.p8) {
+			if (*result.p8 != (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxend(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrend(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrend", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrend", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxrend(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		result += num_bytes;
+	CTYPES_PROTECTED(
+	result.ptr = memxrend(haystack.ptr, needle, num_bytes), {
+		result.p8 = haystack.p8 + num_bytes;
 		while (num_bytes--) {
-			if (*--result != (uint8_t)val)
+			if (*--result.p8 != (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxrend(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxlen", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxlen", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxlen(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *haystack = dst.p8;
-		for (; num_bytes--; ++haystack) {
-			if (*haystack != (uint8_t)val)
+	CTYPES_PROTECTED(
+	result = memxlen(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8;
+		for (; num_bytes--; ++iter) {
+			if (*iter != (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(haystack - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxlen(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -925,34 +819,25 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
+	union pointer haystack;
+	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrlen", &ob_dst, &val, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrlen", &ob_haystack, &needle, &num_bytes))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = memxrlen(dst.ptr, val, num_bytes),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		uint8_t *haystack = dst.p8;
-		haystack += num_bytes;
+	CTYPES_PROTECTED(
+	result = memxrlen(haystack.ptr, needle, num_bytes), {
+		uint8_t *iter = haystack.p8 + num_bytes;
 		while (num_bytes--) {
-			if (*--haystack != (uint8_t)val)
+			if (*--iter != (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(haystack - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = memxrlen(dst.ptr, val, num_bytes);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -960,78 +845,70 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr", &ob_dst, &val))
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT(result = rawmemxchr(dst.ptr, val),
-	goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		result = dst.p8;
-		for (;; ++result) {
-			if (*result != (uint8_t)byte)
+	CTYPES_PROTECTED(
+	result.ptr = rawmemxchr(haystack.ptr, needle), {
+		result.p8 = haystack.p8;
+		for (;; ++result.p8) {
+			if (*result.p8 != (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	result = rawmemxchr(dst.ptr, val);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxrchr(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
-	void *result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr", &ob_dst, &val))
+	DREF DeeObject *ob_haystack;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
 	CTYPES_PROTECTED(
-	result = rawmemxrchr(dst.ptr, val), {
-		result = dst.p8;
+	result.ptr = rawmemxrchr(haystack.ptr, needle), {
+		result.p8 = haystack.p8;
 		for (;;) {
-			if (*--result != (uint8_t)byte)
+			if (*--result.p8 != (uint8_t)needle)
 				break;
 		}
 	},
 	goto err);
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen", &ob_dst, &val))
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
 	CTYPES_PROTECTED(
-	result = rawmemxlen(dst.ptr, val), {
-		uint8_t *iter = dst.p8;
+	result = rawmemxlen(haystack.ptr, needle), {
+		uint8_t *iter = haystack.p8;
 		for (;; ++iter) {
-			if (*iter != (uint8_t)byte)
+			if (*iter != (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(iter - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
 	return DeeInt_NewSize(result);
@@ -1041,22 +918,22 @@ err:
 
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxrlen(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *ob_dst;
+	DREF DeeObject *ob_haystack;
 	size_t result;
-	union pointer dst;
-	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen", &ob_dst, &val))
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen", &ob_haystack, &needle))
 		goto err;
-	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
 	CTYPES_PROTECTED(
-	result = rawmemxrlen(dst.ptr, val), {
-		uint8_t *iter = dst.p8;
+	result = rawmemxrlen(haystack.ptr, needle), {
+		uint8_t *iter = haystack.p8;
 		for (;;) {
-			if (*--iter != (uint8_t)byte)
+			if (*--iter != (uint8_t)needle)
 				break;
 		}
-		result = (size_t)(iter - dst.p8);
+		result = (size_t)(iter - haystack.p8);
 	},
 	goto err);
 	return DeeInt_NewSize(result);
@@ -1126,7 +1003,7 @@ err:
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memmem(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
-	void *result;
+	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
 	if (DeeArg_Unpack(argc, argv, "oIuoIu:memmem", &ob_a, &haystack_len, &ob_b, &needle_len))
@@ -1136,12 +1013,12 @@ capi_memmem(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
-	result = memmem(a.ptr, haystack_len, b.ptr, needle_len), {
+	result.ptr = memmem(a.ptr, haystack_len, b.ptr, needle_len), {
 		void const *candidate;
 		uint8_t marker;
-		result = NULL;
+		result.ptr = NULL;
 		if unlikely(!needle_len)
-			result = a.ptr;
+			result.ptr = a.ptr;
 		else if unlikely(!needle_len > haystack_len)
 			;
 		else {
@@ -1169,7 +1046,7 @@ capi_memmem(size_t argc, DeeObject *const *argv) {
 				while (temp-- && ((av = *iter++) == (bv = *iter2++)))
 					;
 				if (av == bv) {
-					result = (void *)candidate;
+					result.ptr = (void *)candidate;
 					break;
 				}
 				haystack_len = ((uintptr_t)a.p8 + haystack_len) - (uintptr_t)candidate;
@@ -1178,7 +1055,7 @@ capi_memmem(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
@@ -1187,7 +1064,7 @@ err:
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasemem(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
-	void *result;
+	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
 	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasemem", &ob_a, &haystack_len, &ob_b, &needle_len))
@@ -1197,13 +1074,13 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
-	result = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), {
+	result.ptr = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), {
 		void const *candidate;
 		uint8_t marker1;
 		uint8_t marker2;
-		result = NULL;
+		result.ptr = NULL;
 		if unlikely(!needle_len)
-			result = a.ptr;
+			result.ptr = a.ptr;
 		else if unlikely(!needle_len > haystack_len)
 			;
 		else {
@@ -1235,7 +1112,7 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 				         av == bv)))
 					;
 				if (av == bv) {
-					result = (void *)candidate;
+					result.ptr = (void *)candidate;
 					break;
 				}
 				haystack_len = ((uintptr_t)a.p8 + haystack_len) - (uintptr_t)candidate;
@@ -1244,7 +1121,7 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
@@ -1254,7 +1131,7 @@ err:
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memrmem(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
-	void *result;
+	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
 	if (DeeArg_Unpack(argc, argv, "oIuoIu:memrmem", &ob_a, &haystack_len, &ob_b, &needle_len))
@@ -1264,12 +1141,12 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
-	result = memrmem(a.ptr, haystack_len, b.ptr, needle_len), {
+	result.ptr = memrmem(a.ptr, haystack_len, b.ptr, needle_len), {
 		void const *candidate;
 		uint8_t marker;
-		result = NULL;
+		result.ptr = NULL;
 		if unlikely(!needle_len)
-			result = a.p8 + haystack_len;
+			result.ptr = a.p8 + haystack_len;
 		else if unlikely(!needle_len > haystack_len)
 			;
 		else {
@@ -1295,7 +1172,7 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 				while (temp-- && ((av = *iter++) == (bv = *iter2++)))
 					;
 				if (av == bv) {
-					result = (void *)candidate;
+					result.ptr = (void *)candidate;
 					break;
 				}
 				if unlikely(candidate == b.ptr)
@@ -1305,7 +1182,7 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
@@ -1315,7 +1192,7 @@ err:
 INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasermem(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_a, *ob_b;
-	void *result;
+	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
 	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasermem", &ob_a, &haystack_len, &ob_b, &needle_len))
@@ -1325,13 +1202,13 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
-	result = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), {
+	result.ptr = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), {
 		void const *candidate;
 		uint8_t marker1;
 		uint8_t marker2;
-		result = NULL;
+		result.ptr = NULL;
 		if unlikely(!needle_len)
-			result = a.p8 + haystack_len;
+			result.ptr = a.p8 + haystack_len;
 		else if unlikely(!needle_len > haystack_len)
 			;
 		else {
@@ -1364,7 +1241,7 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 				         av == bv)))
 					;
 				if (av == bv) {
-					result = (void *)candidate;
+					result.ptr = (void *)candidate;
 					break;
 				}
 				if unlikely(candidate == b.ptr)
@@ -1374,7 +1251,7 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 		}
 	},
 	goto err);
-	return DeePointer_NewVoid(result);
+	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
 }
@@ -1460,7 +1337,7 @@ capi_strnend(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob_str;
 	union pointer str;
 	size_t maxlen;
-	if (DeeArg_Unpack(argc, argv, "o:strnend", &ob_str, &maxlen))
+	if (DeeArg_Unpack(argc, argv, "oIu:strnend", &ob_str, &maxlen))
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
@@ -1479,38 +1356,116 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strchr(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DREF DeeObject *ob_dst;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:strchr", &ob_dst, &needle))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
+		goto err;
+	CTYPES_PROTECTED(
+	result.pchar = strchr(haystack.pchar, needle), {
+		result.pchar = NULL;
+		for (;; ++haystack.pchar) {
+			char ch = *haystack.pchar;
+			if (ch == (char)(unsigned char)needle) {
+				result.pchar = haystack.pchar;
+				break;
+			}
+			if (!ch)
+				break;
+		}
+	},
+	goto err);
+	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
+err:
 	return NULL;
 }
 
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrchr(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DREF DeeObject *ob_dst;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	if (DeeArg_Unpack(argc, argv, "od:strrchr", &ob_dst, &needle))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
+		goto err;
+	CTYPES_PROTECTED(
+	result.pchar = strrchr(haystack.pchar, needle), {
+		result.pchar = NULL;
+		for (;; ++haystack.pchar) {
+			char ch = *haystack.pchar;
+			if (ch == (char)(unsigned char)needle)
+				result.pchar = haystack.pchar;
+			if (!ch)
+				break;
+		}
+	},
+	goto err);
+	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
+err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnchr(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DREF DeeObject *ob_dst;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	size_t maxlen;
+	if (DeeArg_Unpack(argc, argv, "odIu:strnchr", &ob_dst, &needle, &maxlen))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
+		goto err;
+	CTYPES_PROTECTED(
+	result.pchar = strnchr(haystack.pchar, needle, maxlen), {
+		result.pchar = NULL;
+		for (; maxlen--; ++haystack.pchar) {
+			char ch = *haystack.pchar;
+			if (ch == (char)(unsigned char)needle) {
+				result.pchar = haystack.pchar;
+				break;
+			}
+			if (!ch)
+				break;
+		}
+	},
+	goto err);
+	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
+err:
 	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrchr(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DREF DeeObject *ob_dst;
+	union pointer result;
+	union pointer haystack;
+	int needle;
+	size_t maxlen;
+	if (DeeArg_Unpack(argc, argv, "odIu:strnrchr", &ob_dst, &needle, &maxlen))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
+		goto err;
+	CTYPES_PROTECTED(
+	result.pchar = strnrchr(haystack.pchar, needle, maxlen), {
+		result.pchar = NULL;
+		for (; maxlen--; ++haystack.pchar) {
+			char ch = *haystack.pchar;
+			if (ch == (char)(unsigned char)needle)
+				result.pchar = haystack.pchar;
+			if (!ch)
+				break;
+		}
+	},
+	goto err);
+	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
+err:
 	return NULL;
 }
 
