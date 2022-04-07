@@ -139,7 +139,7 @@ INTERN WUNUSED NONNULL((1)) int
 	 * for finally-handlers, because if there are some, then
 	 * any break/continue statements inside must first jump
 	 * to the nearest finally-block, which must then be executed
-	 * before continuing on its path to execute more handler,
+	 * before continuing on its path to execute more handlers,
 	 * until eventually jumping to where the break was meant to go. */
 	end         = (iter = try_ast->a_try.t_catchv) + try_ast->a_try.t_catchc;
 	old_finflag = current_assembler.a_finflag;
@@ -213,7 +213,7 @@ gen_guard:
 			 * try-block. (.text and .cold)
 			 * It then simply defines all the begin-symbols at the
 			 * associated text positions of the affected section,
-			 * later to check if the section's text point changed,
+			 * later to check if the section's text pointer changed,
 			 * in which case an exception handler entry is generated
 			 * to cover the affected area.
 			 * However, these symbols (like all others) also include
@@ -270,9 +270,10 @@ gen_guard:
 			struct asm_sym *finally_exit = NULL;
 			/* Finally handlers are written in-line directly after the protected code.
 			 * Additionally, their stack alignment matches that of the guarded code,
-			 * so that we can easily hide the result value of the protected part in the stack. */
+			 * so that we can easily hide the result value of the protected part on the stack. */
 			if (next_handler) {
-				handler_entry = next_handler, next_handler = NULL;
+				handler_entry = next_handler;
+				next_handler  = NULL;
 			} else if unlikely((handler_entry = asm_newsym()) == NULL) {
 				goto err_hand_frame;
 			}
@@ -331,7 +332,7 @@ gen_guard:
 					 * because we need to check something at runtime:
 					 * We already know that the finally-handler was not executed
 					 * following a return instruction (because in that case
-					 * execution would not have passed `asm_gendfinally'), but
+					 * execution would not have passed `asm_gendfinally_n'), but
 					 * what we don't know is how the finally block was entered.
 					 * Was it:
 					 *   - Entered through normal code flow
@@ -357,7 +358,7 @@ gen_guard:
 					 * >>             //     off from jumping to `Loop_end' because of
 					 * >>             //     the outer finally block, but we can not
 					 * >>             //     blindly jump there all the time, because
-					 * >>             //     then we'd always skip `Leaving_inner_finally'
+					 * >>             //     then we'd _always_ skip `Leaving_inner_finally'
 					 * >>             //   - To fix this, we must compare the address that is
 					 * >>             //     currently located ontop of the stack and contains the
 					 * >>             //     finally-return-address (either `Leaving_inner_finally' or `Loop_end'),
@@ -703,7 +704,7 @@ do_multimask_rethrow:
 				}
 			}
 			if (is_empty_handler) {
-				/* Cheat a bit by re-defining the handle-entry
+				/* Cheat a bit by re-defining the handler-entry
 				 * symbol to point to its coverage exit address.
 				 * This is to optimize empty catch-handlers:
 				 * >> try {
@@ -863,7 +864,7 @@ do_multimask_rethrow:
 	}
 	current_assembler.a_handler = hand_frame.hf_prev;
 	--current_assembler.a_handlerc;
-	/* This is where catch-handles jump to. */
+	/* This is where catch-handlers jump to. */
 	if (after_catch)
 		asm_defsym(after_catch);
 	return 0;

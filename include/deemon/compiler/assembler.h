@@ -79,7 +79,7 @@ struct ascii_printer;
                            * >>         goto my_label;
                            * >>     }
                            * >> }
-                           * NOTE: This relocation is execute prior to peephole optimizations.
+                           * NOTE: This relocation is executed prior to peephole optimizations.
                            */
 #define R_DMN_COUNT    13 /* Number of relocation types. */
 #define R_DMN_FUSER    0x8000 /* FLAG: Set for user-defined relocations. */

@@ -66,10 +66,7 @@ STATIC_ASSERT((ASM_DECPOST & 0xff) == ASM_DEC);
 STATIC_ASSERT((ASM_INCPOST & 0xff00) == (ASM_DECPOST & 0xff00));
 
 /* Quick translation table for most basic operator instruction codes. */
-#ifdef _MSC_VER
-extern
-#endif /*  _MSC_VER */
-INTERN instruction_t const operator_instr_table[] = {
+INTERN_CONST instruction_t const operator_instr_table[] = {
 	/* [OPERATOR_CONSTRUCTOR] = */ 0,
 	/* [OPERATOR_COPY]        = */ ASM_COPY,
 	/* [OPERATOR_DEEPCOPY]    = */ ASM_DEEPCOPY,
@@ -134,10 +131,7 @@ INTERN instruction_t const operator_instr_table[] = {
 	/* [OPERATOR_LEAVE]       = */ ASM_LEAVE
 };
 
-#ifdef _MSC_VER
-extern
-#endif
-INTERN uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
+INTERN_CONST uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
 #define OPCOUNT_OPCOUNTMASK 0x0f
 #define OPCOUNT_RESULTMASK  0xf0
 #define OPCOUNT_INSTRIN     0x00 /* The instruction intrinsically pushes a result. */

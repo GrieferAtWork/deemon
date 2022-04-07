@@ -72,7 +72,9 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
-
+#ifdef _MSC_VER
+typedef uintptr_t pid_t;
+#endif /* _MSC_VER */
 
 #ifdef CONFIG_HAVE_waitpid
 #define joinpid(pid, pexit_status)    waitpid(pid, pexit_status, 0)
@@ -89,10 +91,6 @@ pid_t tryjoinpid(pid_t pid, int *pexit_status);
 #error "No known way of joining child processes detected"
 #endif
 
-
-#ifdef _MSC_VER
-typedef uintptr_t pid_t;
-#endif /* _MSC_VER */
 
 #ifdef __INTELLISENSE__
 #ifdef CONFIG_HOST_WINDOWS

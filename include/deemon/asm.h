@@ -82,7 +82,7 @@
  *     `ASM_PUSH_STATIC' and `ASM_PUSH_STATIC16' in that they always
  *     acquire the static variable lock before accessing the static
  *     variable vector.
- *     Similarly, all other instructions that use constant also acquire
+ *     Similarly, all other instructions that use constants also acquire
  *     this lock (i.e.: `ASM_GETITEM_C', `ASM_GETATTR_C', etc...)
  */
 
@@ -330,7 +330,7 @@
                                     * >> FI */
 #define ASM_YIELD             0x01 /* [1][-1,+0]   `yield pop'                          - Pop one Object and yield it to the caller.
                                     * [1][-0,+0]   `yield PREFIX'                       - `PREFIX: yield'
-                                    *                                                     This instruction may not return, and if it does, it doesn't immediately.
+                                    *                                                     This instruction may not return, but when it does, it doesn't immediately.
                                     *                                                     NOTE: Same opcode as `ASM_RET_POP'. - Behavior is selected by `CODE_FYIELDING' */
 #define ASM_YIELDALL          0x02 /* [1][-1,+0]   `yield foreach, pop'                 - Pop one Object and iterate it, yielding all contained objects, one at a time.
                                     * [1][-0,+0]   `yield foreach, PREFIX'              - `PREFIX: yield foreach'
@@ -534,7 +534,7 @@
                                     * >> pop  #SP - 4 // 10, 20, 20, 30
                                     * >> TARGET = NTH(IMM8 + 2); */
 #define ASM_POP               0x25 /* [1][-1,+0]   `pop', `pop top', `pop #SP - 1'      - Pop and discard the top-most stack entry.
-                                    * [2][-0,+0]   `mov top, PREFIX'                    - `PREFIX: pop'
+                                    * [1][-0,+0]   `mov top, PREFIX'                    - `PREFIX: pop'
                                     * >> POP(); */
 #define ASM_POP_N             0x26 /* [2][-n-1,+n] `pop #SP - <imm8> - 2',              - Pop one stack and overwrite the `#<imm8>+1'th stack entry (before adjustment) with the value.
                                     * [2][-0,+0]   `mov #SP - <imm8> - 2, PREFIX'       - `PREFIX: pop #SP - <imm8> - 2'
@@ -666,7 +666,7 @@
                                     * >> PUSH(POP().class); */
 #define ASM_SUPEROF           0x4b /* [1][-1,+1]   `superof top'                        - Replace the top stack-entry with a wrapper for the associated super-Object.
                                     * >> PUSH(POP().super); */
-#define ASM_INSTANCEOF        0x4c /* [1][-2,+1]   `instanceof top, pop'                - Pop one Object (type), then another (Object) and check if `Object' is an instance of `type', pushing `true' or `false' indicative of this.
+#define ASM_INSTANCEOF        0x4c /* [1][-2,+1]   `instanceof top, pop'                - Pop one Object (Type), then another (Object) and check if `Object' is an instance of `Type', pushing `true' or `false' indicative of this.
                                     * >> Object tp = POP();
                                     * >> IF tp === none THEN
                                     * >>     PUSH(POP() === none);
@@ -1048,7 +1048,8 @@
                                     *          WARNING: If the code object isn't marked as `CODE_FASSEMBLY',
                                     *                   an unsupported instruction causes undefined behavior.
                                     * @throws: Error.RuntimeError.UnboundLocal:
-                                    *          The specified local variable is not assigned. */
+                                    *          The specified local variable is not assigned, and
+                                    *          the following instruction tried to read from it. */
 #define ASM_PREFIXMIN         0xf8
 #define ASM_PREFIXMAX         0xff
 #define ASM_ISPREFIX(x)       ((x) >= ASM_PREFIXMIN)
