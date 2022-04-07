@@ -9587,6 +9587,7 @@ DECL_END
 #undef memmovedownb
 #undef memsetb
 #undef memchrb
+#undef memcmpb
 #undef bzerob
 #define memcpyb(dst, src, n)      (uint8_t *)memcpy(dst, src, n)
 #define memmoveb(dst, src, n)     (uint8_t *)memmove(dst, src, n)
@@ -9594,7 +9595,7 @@ DECL_END
 #define memmovedownb(dst, src, n) (uint8_t *)memmovedown(dst, src, n)
 #define memsetb(p, c, n)          (uint8_t *)memset(p, c, n)
 #define memchrb(p, c, n)          (uint8_t *)memchr(p, c, n)
-#define memcmpb(s1, s2, n)        (int8_t)memcmp(s1, s2, n)
+#define memcmpb(s1, s2, n)        /*(int8_t)*/ memcmp(s1, s2, n)
 #define bzerob(dst, num_bytes)    bzero(dst, num_bytes)
 
 
