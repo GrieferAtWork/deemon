@@ -152,6 +152,18 @@
 #define __COMPILER_HAVE_AUTOTYPE
 #endif /* ... */
 
+/* Check if  the hosting  preprocessor  supports '$'  in  identifiers.
+ * If they aren't accepted, `#define __COMPILER_NO_DOLLAR_IN_SYMBOL $' */
+#define __COMPILER_NO_DOLLAR_IN_SYMBOL$
+#ifndef __COMPILER_NO_DOLLAR_IN_SYMBOL
+#undef __COMPILER_NO_DOLLAR_IN_SYMBOL$
+#endif /* !__COMPILER_NO_DOLLAR_IN_SYMBOL */
+
+#ifdef __TINYC__
+#define __COMPILER_NO_GCC_ASM_MACROS
+#define __COMPILER_NO_GCC_ASM_FLOAT_CONSTRAINTS
+#endif /* __TINYC__ */
+
 #if defined(__DCC_VERSION__) || defined(__TINYC__)
 #define __COMPILER_HAVE_TYPEOF
 #endif /* __DCC_VERSION__ || __TINYC__ */
@@ -190,6 +202,24 @@
 #endif /* !... */
 
 #if defined(__DCC_VERSION__) || defined(__TINYC__)
+#ifdef __TINYC__
+/* TCC ignores `__asm__()' the first time some symbol is declared.
+ * For reference, see its `external_sym' function:
+ * >> static Sym *external_sym(int v, CType *type, int r, AttributeDef *ad) {
+ * >>     Sym *s = sym_find(v);
+ * >>     if (!s) {
+ * >>         s = sym_push(v, type, r | VT_CONST | VT_SYM, 0);
+ * >>         ...
+ * >>     } else {
+ * >>         ...
+ * >>         patch_storage(s, ad, type);  // <<<< This right here applies our `__ASMNAME',
+ * >>                                      //      but this only happens if the symbol already
+ * >>                                      //      existed previously.
+ * >>     }
+ * >>     return s;
+ * >> } */
+#define __COMPILER_ASMNAME_ON_SECOND_DECL
+#endif /* __TINYC__ */
 #define __ASMNAME(x) __asm__(x)
 #else /* __DCC_VERSION__ || __TINYC__ */
 #define __NO_ASMNAME
@@ -214,7 +244,7 @@
 #elif defined(__TINYC__) || 1
 #define __FUNCTION__ __func__
 #define __builtin_FUNCTION() __func__
-#define __builtin_FUNCTION_IS_func__
+#define __builtin_FUNCTION_IS___func__
 #else /* ... */
 #define __NO_builtin_FUNCTION
 #define __builtin_FUNCTION() (char *)0
@@ -242,6 +272,7 @@
 #define __ATTR_NORETURN _Noreturn
 #elif __has_cpp_attribute(noreturn)
 #undef noreturn
+#define __ATTR_NORETURN_IS_LB_LB_NORETURN_RB_RB
 #define __ATTR_NORETURN [[noreturn]]
 #elif defined(noreturn)
 #define __ATTR_NORETURN_IS_NORETURN
@@ -642,12 +673,13 @@
 #define __ATTR_FORMAT_STRFTIME(fmt, args) /* Nothing */
 #endif /* !__ATTR_FORMAT_STRFTIME */
 
-#if __has_attribute(__dllimport__)
-#define __ATTR_DLLIMPORT __attribute__((__dllimport__))
-#define __ATTR_DLLEXPORT __attribute__((__dllexport__))
-#elif defined(__TINYC__)
+#if defined(__TINYC__) && defined(__PE__)
+/* TCC doesn't understand if we write `__attribute__((__dllimport__))' */
 #define __ATTR_DLLIMPORT __attribute__((dllimport))
 #define __ATTR_DLLEXPORT __attribute__((dllexport))
+#elif __has_attribute(__dllimport__)
+#define __ATTR_DLLIMPORT __attribute__((__dllimport__))
+#define __ATTR_DLLEXPORT __attribute__((__dllexport__))
 #elif __has_declspec_attribute(dllimport) || defined(__PE__) || defined(_WIN32)
 #define __ATTR_DLLIMPORT __declspec(dllimport)
 #define __ATTR_DLLEXPORT __declspec(dllexport)
@@ -742,7 +774,7 @@
 #endif
 #endif /* ... */
 
-#if !__has_builtin(__builtin_unreachable) && !defined(__TINYC__)
+#if !__has_builtin(__builtin_unreachable) /*|| defined(__TINYC__)*/
 #define __NO_builtin_unreachable
 #define __builtin_unreachable() do;while(1)
 #endif /* ... */
