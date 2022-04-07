@@ -972,10 +972,10 @@ DeeString_SStrip(String *self, String *other) {
 			goto retself;
 		newstr.cp16 = mystr.cp16, newlen = mylen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp16, otherstr.cp16, otherlen))
+		       MEMEQW(newstr.cp16, otherstr.cp16, otherlen))
 			newstr.cp16 += otherlen, newlen -= otherlen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp16 + (newlen - otherlen),
+		       MEMEQW(newstr.cp16 + (newlen - otherlen),
 		              otherstr.cp16, otherlen))
 			newlen -= otherlen;
 		if (newlen == mylen)
@@ -997,10 +997,10 @@ DeeString_SStrip(String *self, String *other) {
 			goto retself;
 		newstr.cp32 = mystr.cp32, newlen = mylen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp32, otherstr.cp32, otherlen))
+		       MEMEQW(newstr.cp32, otherstr.cp32, otherlen))
 			newstr.cp32 += otherlen, newlen -= otherlen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp32 + (newlen - otherlen),
+		       MEMEQW(newstr.cp32 + (newlen - otherlen),
 		              otherstr.cp32, otherlen))
 			newlen -= otherlen;
 		if (newlen == mylen)
@@ -1052,7 +1052,7 @@ DeeString_LSStrip(String *self, String *other) {
 			goto retself;
 		newstr.cp16 = mystr.cp16, newlen = mylen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp16, otherstr.cp16, otherlen))
+		       MEMEQW(newstr.cp16, otherstr.cp16, otherlen))
 			newstr.cp16 += otherlen, newlen -= otherlen;
 		if (newlen == mylen)
 			goto retself;
@@ -1073,7 +1073,7 @@ DeeString_LSStrip(String *self, String *other) {
 			goto retself;
 		newstr.cp32 = mystr.cp32, newlen = mylen;
 		while (newlen >= otherlen &&
-		       MEMEQB(newstr.cp32, otherstr.cp32, otherlen))
+		       MEMEQL(newstr.cp32, otherstr.cp32, otherlen))
 			newstr.cp32 += otherlen, newlen -= otherlen;
 		if (newlen == mylen)
 			goto retself;
