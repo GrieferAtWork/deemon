@@ -45,14 +45,16 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
-#if defined(__x86_64__) || defined(__VA_LIST_IS_ARRAY)
+#if defined(__VA_LIST_IS_ARRAY)
+#define CONFIG_VA_LIST_IS_ARRAY 1
+#elif defined(__x86_64__) && !defined(__PE__)
 #define CONFIG_VA_LIST_IS_ARRAY 1
 #endif
 
 #ifdef CONFIG_VA_LIST_IS_ARRAY
-#define VALIST_ADDR(x) (&(x))
+//#define VALIST_ADDR(x) (&(x))
 //#define VALIST_ADDR(x)   (x)
-//#define VALIST_ADDR(x) (&(x)[0])
+#define VALIST_ADDR(x) (&(x)[0])
 #else /* CONFIG_VA_LIST_IS_ARRAY */
 #define VALIST_ADDR(x) (&(x))
 #endif /* !CONFIG_VA_LIST_IS_ARRAY */
