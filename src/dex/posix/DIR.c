@@ -457,6 +457,10 @@ again_skipdots:
 				self->di_hnd = INVALID_HANDLE_VALUE;
 				DBG_ALIGNMENT_DISABLE();
 				FindClose(hnd);
+				DBG_ALIGNMENT_ENABLE();
+				/* Directory only contains "." and ".." */
+				self->di_first = false;
+				break;
 			}
 			DBG_ALIGNMENT_ENABLE();
 		}
