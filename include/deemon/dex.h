@@ -63,9 +63,9 @@ struct Dee_dex_notification {
 #elif __SIZEOF_POINTER__ >= 4
 	uint16_t              dn_class;    /* [valid_if(dn_name)] Notification class (One of `NOTIFICATION_CLASS_*') */
 	uint16_t              dn_flag;     /* [valid_if(dn_name)] Notification flags (Set of `DEX_NOTIFICATION_F*') */
-#else
+#else /* __SIZEOF_POINTER__ >= ... */
 #error FIXME
-#endif
+#endif /* __SIZEOF_POINTER__ < ... */
 	struct Dee_string_object
 	                     *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinal). */
 	Dee_notify_t          dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */

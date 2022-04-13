@@ -51,7 +51,7 @@
 #include <string.h>
 #endif /* CONFIG_HAVE_STRING_H */
 
-/* Const modified for static type callback-table declaration */
+/* Const modifier for static type callback-table declaration */
 #ifndef Dee_tpconst
 #if (defined(__PIC__) || defined(__PIE__) || \
      defined(__pic__) || defined(__pie__))
@@ -1579,7 +1579,7 @@ struct Dee_type_cmp {
 	 *       iterators usually implement compare operators to allow
 	 *       them to be ordered with other operators. */
 	struct Dee_type_nii Dee_tpconst *tp_nii;
-}; 
+};
 
 
 struct Dee_type_seq {
@@ -1667,8 +1667,8 @@ struct Dee_type_buffer {
  *          For example: If your function is called from the interpreted, `argv' often points
  *          into the associated frame's stack, meaning that modifications could bring along
  *          deadly consequences!
- *          Even in user-code itself, where it might seem as though you were able to write to
- *          argument variables, in actuality, the compiler will notice and store the argument
+ *          Even in user-code itself, where it might seem as though you are able to write to
+ *          argument variables, in actuality, the compiler will notice and copy the argument
  *          in a local variable at the beginning of the function, meaning you'll actually just
  *          be modifying a local variable.
  * @param: self:  The obj-part of the objmethod.
@@ -2260,7 +2260,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 #define Dee_TP_FTRUNCATE        0x0002 /* Truncate values during integer conversion, rather than throwing an `OverflowError'. */
 #define Dee_TP_FINTERRUPT       0x0004 /* This type is a so-called interrupt signal.
                                         * Instances of this type have special behavior when thrown as errors,
-                                        * or when delivered to threads through use of `thread.interrupt()'
+                                        * or when delivered to threads through use of `Thread.interrupt()'.
                                         * In such situations, the error can only be caught by exception handlers
                                         * specifically marked as `@[interrupt]' (or rather `EXCEPTION_HANDLER_FINTERPT')
                                         * Additionally (but only when `CONFIG_NO_THREADS' is disabled), such errors are
@@ -2290,7 +2290,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 #define Dee_TP_FGC              0x4000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x8000 /* This type was allocated on the heap. */
 #define Dee_TP_FINTERHITABLE   (Dee_TP_FINTERRUPT | Dee_TP_FVARIABLE | Dee_TP_FGC) \
-                                       /* Set of special flags that is inherited by sub-classes. */
+                                       /* Set of special flags that are inherited by sub-classes. */
 
 #define Dee_TF_NONE             0x00000000 /* No special features. */
 #define Dee_TF_HASFILEOPS       0x00000001 /* The type implements file operations (for types typed as DeeFileType_Type). */
@@ -2373,8 +2373,8 @@ struct Dee_type_object {
 	/* Lazily-filled hash-table of instance members.
 	 * >> The member vectors are great for static allocation, but walking
 	 *    all of them each time a member is accessed is way too slow.
-	 *    So instead, we should cache members and sort them by first-visible on a per-type basis.
-	 *    That way, we'll greatly optimize the lookup time for existing members. */
+	 *    So instead, we cache members and sort them by first-visible on a per-type basis.
+	 *    That way, we can greatly optimize the lookup time for already-known members. */
 	struct Dee_membercache  tp_cache;
 	struct Dee_membercache  tp_class_cache;
 	struct Dee_class_desc  *tp_class;    /* [0..1] Class descriptor (Usually points below this type object). */
@@ -2407,12 +2407,12 @@ struct Dee_type_object {
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
 
-/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
+/* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
- * operator has been inherited implicitly through caching mechanisms. */
+ * operator has been inherited implicitly from a base-type of `self'. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
@@ -2420,11 +2420,11 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 /* Inherit different groups of operators from base-classes, returning `true'
  * if operators were inherited from some base class (even if those same operators
  * had already been inherited previously), and `false' if no base-class provides
- * the any of the specified operators (though note that inheriting constructors
+ * any of the specified operators (though note that inheriting constructors
  * requires that all base classes carry the `Dee_TP_FINHERITCTOR' flag; else,
- * a class without this flag cannot inherit constructs from its base, though
- * can still provide its constructs to some derived class that does specify its
- * intend of inheriting constructors) */
+ * a class without this flag cannot inherit constructors from its base, though
+ * can still provide its constructors to some derived class that does specify
+ * its intend of inheriting constructors) */
 INTDEF NONNULL((1)) bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
 INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
 INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */

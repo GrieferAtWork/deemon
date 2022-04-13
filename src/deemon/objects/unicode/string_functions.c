@@ -6636,14 +6636,14 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 					rhs_len = rhs_end - rhs_start;
 				}
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef __USE_KOS /* TODO: CONFIG_HAVE_memcmpw */
+#ifdef CONFIG_HAVE_memcmpw
 				{
 					int result;
 					result = memcmpw(lhs_str, rhs_str, common_len);
 					if (result != 0)
 						return result;
 				}
-#else
+#else /* CONFIG_HAVE_memcmpw */
 				{
 					size_t i;
 					for (i = 0; i < common_len; ++i) {
@@ -6652,7 +6652,7 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 						return lhs_str[i] < rhs_str[i] ? -1 : 1;
 					}
 				}
-#endif
+#endif /* !CONFIG_HAVE_memcmpw */
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -6731,14 +6731,14 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 					rhs_len = rhs_end - rhs_start;
 				}
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef __USE_KOS /* TODO: CONFIG_HAVE_memcmpl */
+#ifdef CONFIG_HAVE_memcmpl
 				{
 					int result;
 					result = memcmpl(lhs_str, rhs_str, common_len);
 					if (result != 0)
 						return result;
 				}
-#else
+#else /* CONFIG_HAVE_memcmpl */
 				{
 					size_t i;
 					for (i = 0; i < common_len; ++i) {
@@ -6747,7 +6747,7 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 						return lhs_str[i] < rhs_str[i] ? -1 : 1;
 					}
 				}
-#endif
+#endif /* !CONFIG_HAVE_memcmpl */
 			}	break;
 
 			default:

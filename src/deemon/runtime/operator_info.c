@@ -1469,7 +1469,7 @@ DeeType_GetOpPointer(DeeTypeObject *__restrict self,
 	return NULL;
 }
 
-/* Check if `name' is being implemented by the given path, or has been inherited by a base-type. */
+/* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 	struct opinfo const *info;
@@ -1482,7 +1482,7 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 	info = Dee_OperatorInfo(self, name);
 	if (info) {
 		do {
-			if (DeeType_GetOpPointer(self, info))
+			if (DeeType_GetOpPointer(self, info) != NULL)
 				return true;
 		} while ((self = DeeType_Base(self)) != NULL);
 	}
@@ -1490,7 +1490,7 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 }
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
- * operator has been inherited implicitly through caching mechanisms. */
+ * operator has been inherited implicitly from a base-type of `self'. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 	void *my_ptr;

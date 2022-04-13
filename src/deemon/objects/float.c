@@ -221,14 +221,14 @@ float_hash(Float *__restrict self) {
 		return ((dhash_t)((uint32_t *)&self->f_value)[0] ^
 		        (dhash_t)((uint32_t *)&self->f_value)[1]);
 #else /* __SIZEOF_POINTER__ == 4 */
-		return (dhash_t) * (uint64_t *)&self->f_value;
+		return (dhash_t)(*(uint64_t *)&self->f_value);
 #endif /* __SIZEOF_POINTER__ != 4 */
 	}
 	if (sizeof(double) >= sizeof(uint32_t))
-		return (dhash_t) * (uint32_t *)&self->f_value;
+		return (dhash_t)(*(uint32_t *)&self->f_value);
 	if (sizeof(double) >= sizeof(uint16_t))
-		return (dhash_t) * (uint16_t *)&self->f_value;
-	return (dhash_t) * (uint8_t *)&self->f_value;
+		return (dhash_t)(*(uint16_t *)&self->f_value);
+	return (dhash_t)(*(uint8_t *)&self->f_value);
 }
 
 #ifdef _MSC_VER

@@ -27,6 +27,15 @@
 
 DECL_BEGIN
 
+#if !defined(ELIMIT) && defined(EMAX)
+#define ELIMIT EMAX
+#endif /* !ELIMIT && EMAX */
+#if !defined(ELIMIT) && defined(ECOUNT)
+#define ELIMIT (ECOUNT - 1)
+#endif /* !ELIMIT && ECOUNT */
+
+
+
 /*[[[deemon
 import * from deemon;
 import * from _dexutils;
@@ -41,6 +50,7 @@ function e(name, doc = none) {
 	gii(name, doc: doc);
 }
 
+e("EOK",             doc: "Success");
 e("EPERM",           doc: "Operation not permitted");
 e("ENOENT",          doc: "No such file or directory");
 e("ESRCH",           doc: "No such process");
@@ -181,6 +191,47 @@ e("ENMFILE",         doc: "No more files");
 e("ENOTSUP",         doc: "Not supported");
 e("ENOSHARE",        doc: "No such host or network path");
 e("ECASECLASH",      doc: "Filename exists with different case");
+e("EOTHER",          doc: "Other");
+e("EAUTH");
+e("EBADRPC");
+e("ELASTERROR");
+e("ELOCKUNMAPPED");
+e("ENEEDAUTH");
+e("ENOATTR");
+e("ENOTACTIVE");
+e("EPROCUNAVAIL");
+e("EPROGMISMATCH");
+e("EPROGUNAVAIL");
+e("ERPCMISMATCH");
+e("STRUNCATE",       doc: "Truncated");
+
+
+print("#ifndef ELIMIT");
+print("#define ELIMIT (-1)");
+for (local x: allDecls) {
+	print("#if defined(", x, ") && ", x, " > ELIMIT");
+	print("#undef ELIMIT");
+	print("#define ELIMIT ", x);
+	print("#endif /" "* ", x, " && ", x, " > ELIMIT *" "/");
+}
+print("#if ELIMIT < 0");
+print("#undef ELIMIT");
+print("#endif /" "* ELIMIT < 0 *" "/");
+print("#endif /" "* !ELIMIT *" "/");
+print("#if !defined(ECOUNT) && defined(ELIMIT)");
+print("#define ECOUNT (ELIMIT + 1)");
+print("#endif /" "* !ECOUNT && ELIMIT *" "/");
+
+e("ELIMIT",          doc: "Max possible errno");
+e("ECOUNT",          doc: "One plus ?GELIMIT");
+
+print("#ifdef ELIMIT");
+print('#define POSIX_EMAX_DEF \\');
+print('	{ "EMAX", (DeeObject *)&posix_ELIMIT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Max possible errno" },');
+print("#else /" "* ELIMIT *" "/");
+print('#define POSIX_EMAX_DEF /' '* nothing *' '/');
+print("#endif /" "* !ELIMIT *" "/");
+allDecls.append("EMAX");
 
 File.stdout = orig_stdout;
 print "#define POSIX_ERRNO_DEFS \\";
@@ -191,6 +242,7 @@ print "/" "**" "/";
 ]]]*/
 #include "p-errno-constants.def"
 #define POSIX_ERRNO_DEFS \
+	POSIX_EOK_DEF \
 	POSIX_EPERM_DEF \
 	POSIX_ENOENT_DEF \
 	POSIX_ESRCH_DEF \
@@ -331,9 +383,30 @@ print "/" "**" "/";
 	POSIX_ENOTSUP_DEF \
 	POSIX_ENOSHARE_DEF \
 	POSIX_ECASECLASH_DEF \
+	POSIX_EOTHER_DEF \
+	POSIX_EAUTH_DEF \
+	POSIX_EBADRPC_DEF \
+	POSIX_ELASTERROR_DEF \
+	POSIX_ELOCKUNMAPPED_DEF \
+	POSIX_ENEEDAUTH_DEF \
+	POSIX_ENOATTR_DEF \
+	POSIX_ENOTACTIVE_DEF \
+	POSIX_EPROCUNAVAIL_DEF \
+	POSIX_EPROGMISMATCH_DEF \
+	POSIX_EPROGUNAVAIL_DEF \
+	POSIX_ERPCMISMATCH_DEF \
+	POSIX_STRUNCATE_DEF \
+	POSIX_ELIMIT_DEF \
+	POSIX_ECOUNT_DEF \
+	POSIX_EMAX_DEF \
 /**/
 //[[[end]]]
 
+#ifdef STRUNCATE
+#define IS_ERRNONAME_FIRSTCHAR(ch) ((ch) == 'E' || (ch) == 'S')
+#else /* STRUNCATE */
+#define IS_ERRNONAME_FIRSTCHAR(ch) ((ch) == 'E')
+#endif /* !STRUNCATE */
 
 
 
@@ -395,17 +468,17 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
 
 
 /* Figure out how to implement `posix_strerror()' */
-#undef posix_strerror_USE_STRERROR_S
+#undef posix_strerror_USE_STRERRORDESC_NP
 #undef posix_strerror_USE_SYS_ERRLIST
 #undef posix_strerror_USE_STRERROR
 #undef posix_strerror_USE_STUB
 #undef posix_strerror_USE_DOCSTRINGS
 #if !defined(CONFIG_HAVE_errno)
 #define posix_strerror_USE_STUB 1
-#elif defined(CONFIG_HAVE_strerror_s)
-#define posix_strerror_USE_STRERROR_S 1
+#elif defined(CONFIG_HAVE_strerrordesc_np)
+#define posix_strerror_USE_STRERRORDESC_NP 1
 #define posix_strerror_USE_DOCSTRINGS 1
-#elif defined(CONFIG_HAVE__sys_errlist) && defined(CONFIG_HAVE__sys_nerr)
+#elif defined(CONFIG_HAVE_sys_errlist) && defined(CONFIG_HAVE_sys_nerr)
 #define posix_strerror_USE_SYS_ERRLIST 1
 #define posix_strerror_USE_DOCSTRINGS 1
 #elif defined(CONFIG_HAVE_strerror)
@@ -440,19 +513,19 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
-#ifdef posix_strerror_USE_STRERROR_S
+#ifdef posix_strerror_USE_STRERRORDESC_NP
 	{
 		char const *text;
-		text = strerror_s(errnum);
+		text = strerrordesc_np(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerror_USE_STRERROR_S */
+#endif /* posix_strerror_USE_STRERRORDESC_NP */
 
 #ifdef posix_strerror_USE_SYS_ERRLIST
-	if (errnum >= 0 && errnum < _sys_nerr) {
+	if (errnum >= 0 && errnum < sys_nerr) {
 		char const *text;
-		text = (char const *)_sys_errlist[errnum];
+		text = (char const *)sys_errlist[errnum];
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
@@ -462,7 +535,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-#define SYMBOL_NAME_IS_ERRNO(x) ((x)[0] == 'E' && (isupper((x)[1]) || isdigit((x)[1])))
+#define SYMBOL_NAME_IS_ERRNO(x) \
+	(IS_ERRNONAME_FIRSTCHAR((x)[0]) && (isupper((x)[1]) || isdigit((x)[1]))/* && !strchr(x, '_')*/)
 		struct dex_symbol *iter;
 		for (iter = DEX.d_symbols; iter->ds_name; ++iter) {
 			if (SYMBOL_NAME_IS_ERRNO(iter->ds_name)) {
@@ -483,8 +557,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 						                         strlen(docstring),
 						                         STRING_ERROR_FIGNORE);
 					}
-				} while ((++iter, iter->ds_name &&
-				                  SYMBOL_NAME_IS_ERRNO(iter->ds_name)));
+					++iter;
+				} while (iter->ds_name &&
+				         SYMBOL_NAME_IS_ERRNO(iter->ds_name));
 				break;
 			}
 		}
@@ -510,12 +585,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 
 /* Figure out how to implement `posix_strerrorname()' */
 #undef posix_strerrorname_USE_STUB
-#undef posix_strerrorname_USE_STRERRORNAME_S
+#undef posix_strerrorname_USE_STRERRORNAME_NP
 #undef posix_strerrorname_USE_SYMBOLNAMES
 #if !defined(CONFIG_HAVE_errno)
 #define posix_strerrorname_USE_STUB 1
-#elif defined(CONFIG_HAVE_strerrorname_s)
-#define posix_strerrorname_USE_STRERRORNAME_S 1
+#elif defined(CONFIG_HAVE_strerrorname_np)
+#define posix_strerrorname_USE_STRERRORNAME_NP 1
 #define posix_strerrorname_USE_SYMBOLNAMES 1
 #else
 #define posix_strerrorname_USE_SYMBOLNAMES 1
@@ -545,20 +620,21 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
-#ifdef posix_strerrorname_USE_STRERRORNAME_S
+#ifdef posix_strerrorname_USE_STRERRORNAME_NP
 	{
 		char const *text;
-		text = strerrorname_s(errnum);
+		text = strerrorname_np(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerrorname_USE_STRERRORNAME_S */
+#endif /* posix_strerrorname_USE_STRERRORNAME_NP */
 
 #ifdef posix_strerrorname_USE_SYMBOLNAMES
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-#define SYMBOL_NAME_IS_ERRNO(x) ((x)[0] == 'E' && (isupper((x)[1]) || isdigit((x)[1])))
+#define SYMBOL_NAME_IS_ERRNO(x) \
+	(IS_ERRNONAME_FIRSTCHAR((x)[0]) && (isupper((x)[1]) || isdigit((x)[1]))/* && !strchr(x, '_')*/)
 		struct dex_symbol *iter;
 		for (iter = DEX.d_symbols; iter->ds_name; ++iter) {
 			if (SYMBOL_NAME_IS_ERRNO(iter->ds_name)) {
@@ -573,8 +649,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
 						/* Found it! Now to simply return the symbol's name */
 						return DeeString_New(iter->ds_name);
 					}
-				} while ((++iter, iter->ds_name &&
-				                  SYMBOL_NAME_IS_ERRNO(iter->ds_name)));
+					++iter;
+				} while (iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name));
 				break;
 			}
 		}
@@ -585,6 +661,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
 	return_none;
 }
 
+#undef IS_ERRNONAME_FIRSTCHAR
 
 DECL_END
 

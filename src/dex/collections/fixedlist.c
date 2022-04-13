@@ -1197,7 +1197,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "\n"
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of @this FixedList, ?f otherwise"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC|TP_FVARIABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(FixedList),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,

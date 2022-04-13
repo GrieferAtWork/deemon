@@ -23,17 +23,17 @@ final local w32 = try import("win32") catch (...) none;
 
 final global hardlink = fs.link;
 final global modulename = W32_IMPORT(GetModuleFileName);
-final global wmodulename = W32_IMPORT(GetModuleFileName);
+final global wmodulename = modulename;
 final global _dlldirectory = W32_IMPORT(GetDllDirectory);
-final global _wdlldirectory = W32_IMPORT(GetDllDirectory);
+final global _wdlldirectory = _dlldirectory;
 final global _systemdirectory = W32_IMPORT(GetSystemDirectory);
-final global _wsystemdirectory = W32_IMPORT(GetSystemDirectory);
+final global _wsystemdirectory = _systemdirectory;
 final global _windowsdirectory = W32_IMPORT(GetWindowsDirectory);
-final global _wwindowsdirectory = W32_IMPORT(GetWindowsDirectory);
+final global _wwindowsdirectory = _windowsdirectory;
 final global _systemwindowsdirectory = W32_IMPORT(GetSystemWindowsDirectory);
-final global _wsystemwindowsdirectory = W32_IMPORT(GetSystemWindowsDirectory);
+final global _wsystemwindowsdirectory = _systemwindowsdirectory;
 final global _syswow64directory = W32_IMPORT(GetSystemWow64Directory);
-final global _wsyswow64directory = W32_IMPORT(GetSystemWow64Directory);
+final global _wsyswow64directory = _syswow64directory;
 final global function drives() -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0");
 final global wdrives = drives;
 

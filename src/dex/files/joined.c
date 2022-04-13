@@ -37,7 +37,7 @@ INTERN DeeFileTypeObject Joined_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Joined",
 		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL|TP_FVARIABLE,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,

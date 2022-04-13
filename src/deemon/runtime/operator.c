@@ -5271,8 +5271,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 err_iter:
 	Dee_Decref(iterator);
 err:
-	while (i--)
-		Dee_Decref(objv[i]);
+	Dee_Decrefv(objv, i);
 	return -1;
 }
 

@@ -343,10 +343,10 @@ local __objects = deemon.List {
 	/* 0x0119 */ math.sin,            /* __builtin_sin */
 	/* 0x011a */ math.cos,            /* __builtin_cos */
 	/* 0x011b */ math.tan,            /* __builtin_tan */
-	/* 0x011C */ math.sincos,         /* __builtin_sincos */
-	/* 0x011D */ math.asin,           /* __builtin_asin */
-	/* 0x011E */ math.acos,           /* __builtin_acos */
-	/* 0x011F */ math.atan,           /* __builtin_atan */
+	/* 0x011c */ math.sincos,         /* __builtin_sincos */
+	/* 0x011d */ math.asin,           /* __builtin_asin */
+	/* 0x011e */ math.acos,           /* __builtin_acos */
+	/* 0x011f */ math.atan,           /* __builtin_atan */
 	/* 0x0120 */ math.atan2,          /* __builtin_atan2 */
 	/* 0x0121 */ math.asincos,        /* __builtin_asincos */
 	/* 0x0122 */ math.sinh,           /* __builtin_sinh */
@@ -357,12 +357,12 @@ local __objects = deemon.List {
 	/* 0x0127 */ math.acosh,          /* __builtin_acosh */
 	/* 0x0128 */ math.atanh,          /* __builtin_atanh */
 	/* 0x0129 */ math.asincosh,       /* __builtin_asincosh */
-	/* 0x012A */ math.exp,            /* __builtin_exp */
-	/* 0x012B */ math.frexp,          /* __builtin_frexp */
-	/* 0x012C */ math.log,            /* __builtin_log */
-	/* 0x012D */ math.log10,          /* __builtin_log10 */
-	/* 0x012E */ math.modf,           /* __builtin_modf */
-	/* 0x012F */ math.exp2,           /* __builtin_exp2 */
+	/* 0x012a */ math.exp,            /* __builtin_exp */
+	/* 0x012b */ math.frexp,          /* __builtin_frexp */
+	/* 0x012c */ math.log,            /* __builtin_log */
+	/* 0x012d */ math.log10,          /* __builtin_log10 */
+	/* 0x012e */ math.modf,           /* __builtin_modf */
+	/* 0x012f */ math.exp2,           /* __builtin_exp2 */
 	/* 0x0130 */ math.expm1,          /* __builtin_expm1 */
 	/* 0x0131 */ math.ilogb,          /* __builtin_ilogb */
 	/* 0x0132 */ math.log1p,          /* __builtin_log1p */
@@ -373,12 +373,12 @@ local __objects = deemon.List {
 	/* 0x0137 */ math.sqrt,           /* __builtin_sqrt */
 	/* 0x0138 */ math.cbrt,           /* __builtin_cbrt */
 	/* 0x0139 */ math.hypot,          /* __builtin_hypot */
-	/* 0x013A */ math.erf,            /* __builtin_erf */
-	/* 0x013B */ math.tgamma,         /* __builtin_tgamma */
-	/* 0x013C */ math.lgamma,         /* __builtin_lgamma */
-	/* 0x013D */ compat_math.ceilf,   /* __builtin_ceilf */
-	/* 0x013E */ compat_math.floorf,  /* __builtin_floorf */
-	/* 0x013F */ compat_math.truncf,  /* __builtin_truncf */
+	/* 0x013a */ math.erf,            /* __builtin_erf */
+	/* 0x013b */ math.tgamma,         /* __builtin_tgamma */
+	/* 0x013c */ math.lgamma,         /* __builtin_lgamma */
+	/* 0x013d */ compat_math.ceilf,   /* __builtin_ceilf */
+	/* 0x013e */ compat_math.floorf,  /* __builtin_floorf */
+	/* 0x013f */ compat_math.truncf,  /* __builtin_truncf */
 	/* 0x0140 */ compat_math.roundf,  /* __builtin_roundf */
 	/* 0x0141 */ util.round,          /* __builtin_i32round */
 	/* 0x0142 */ util.round,          /* __builtin_i64round */
@@ -389,12 +389,12 @@ local __objects = deemon.List {
 	/* 0x0147 */ util.round,          /* __builtin_nearbyint */
 	/* 0x0148 */ math.remainder,      /* __builtin_remainder */
 	/* 0x0149 */ math.remquo,         /* __builtin_remquo */
-	/* 0x014A */ math.copysign,       /* __builtin_copysign */
-	/* 0x014B */ math.nextafter,      /* __builtin_nextafter */
-	/* 0x014C */ math.nextafter,      /* __builtin_nexttoward */
-	/* 0x014D */ math.fdim,           /* __builtin_fdim */
-	/* 0x014E */ math.isfinite,       /* __builtin_isfinite */
-	/* 0x014F */ math.isinf,          /* __builtin_isinf */
+	/* 0x014a */ math.copysign,       /* __builtin_copysign */
+	/* 0x014b */ math.nextafter,      /* __builtin_nextafter */
+	/* 0x014c */ math.nextafter,      /* __builtin_nexttoward */
+	/* 0x014d */ math.fdim,           /* __builtin_fdim */
+	/* 0x014e */ math.isfinite,       /* __builtin_isfinite */
+	/* 0x014f */ math.isinf,          /* __builtin_isinf */
 	/* 0x0150 */ math.isnan,          /* __builtin_isnan */
 	/* 0x0151 */ math.isnormal,       /* __builtin_isnormal */
 	/* 0x0152 */ math.signbit,        /* __builtin_signbit */
@@ -405,12 +405,12 @@ local __objects = deemon.List {
 	/* 0x0157 */ math.islessgreater,  /* __builtin_islessgreater */
 	/* 0x0158 */ math.isunordered,    /* __builtin_isunordered */
 	/* 0x0159 */ deemon.string, /* string.wide */
-	/* 0x015A */ deemon.string, /* string.utf16 */
-	/* 0x015B */ deemon.string, /* string.utf32 */
-	/* 0x015C */ net.sockaddr,
-	/* 0x015D */ rt.YieldFunctionIterator, /* DeeZipIterator_Type */
-	/* 0x015E */ compat_gcc.__builtin_FILE,     /* __builtin_FILE */
-	/* 0x015F */ compat_gcc.__builtin_LINE,     /* __builtin_LINE */
+	/* 0x015a */ deemon.string, /* string.utf16 */
+	/* 0x015b */ deemon.string, /* string.utf32 */
+	/* 0x015c */ net.sockaddr,
+	/* 0x015d */ rt.YieldFunctionIterator, /* DeeZipIterator_Type */
+	/* 0x015e */ compat_gcc.__builtin_FILE,     /* __builtin_FILE */
+	/* 0x015f */ compat_gcc.__builtin_LINE,     /* __builtin_LINE */
 	/* 0x0160 */ compat_gcc.__builtin_FUNCTION, /* __builtin_FUNCTION */
 	/* 0x0161 */ compat_sys.argv,
 	/* 0x0162 */ W32_IMPORT(GetDllDirectory), /* __builtin_fs_win32dlldirectory */
@@ -421,12 +421,12 @@ local __objects = deemon.List {
 	/* 0x0167 */ W32_IMPORT(GetSystemWow64Directory), /* __builtin_fs_win32syswow64directory */
 	/* 0x0168 */ compat_fs.tmpname,
 	/* 0x0169 */ []() -> deemon.Traceback()[1].__code__, /* __builtin_code -- Return the code object of the caller */
-	/* 0x016A */ deemon.Error.RuntimeError.UnboundLocal,
-	/* 0x016B */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
-	/* 0x016C */ deemon.Iterator, /* DeeGenericSequenceIterator_Type */
-	/* 0x016D */ deemon.Error.SystemError.FSError.FileNotFound,
-	/* 0x016E */ fs.stat.ischr,
-	/* 0x016F */ fs.stat.isblk,
+	/* 0x016a */ deemon.Error.RuntimeError.UnboundLocal,
+	/* 0x016b */ deemon.Error.ValueError.ArithmeticError.DivideByZero,
+	/* 0x016c */ deemon.Iterator, /* DeeGenericSequenceIterator_Type */
+	/* 0x016d */ deemon.Error.SystemError.FSError.FileNotFound,
+	/* 0x016e */ fs.stat.ischr,
+	/* 0x016f */ fs.stat.isblk,
 	/* 0x0170 */ fs.stat.isfifo,
 	/* 0x0171 */ fs.stat.issock,
 	/* 0x0172 */ deemon.InstanceMethod,
@@ -437,12 +437,12 @@ local __objects = deemon.List {
 	/* 0x0177 */ ctypes.bswap16,
 	/* 0x0178 */ ctypes.bswap32,
 	/* 0x0179 */ ctypes.bswap64,
-	/* 0x017A */ ctypes.StructType,
-	/* 0x017B */ rt.Compiler.Scope,
-	/* 0x017C */ none, /* TODO: &DeeLexerIterator_Type */
-	/* 0x017D */ deemon.Error.ValueError.IndexError,
-	/* 0x017E */ deemon.HashSet,
-	/* 0x017F */ deemon.HashSet.Iterator,
+	/* 0x017a */ ctypes.StructType,
+	/* 0x017b */ rt.Compiler.Scope,
+	/* 0x017c */ none, /* TODO: &DeeLexerIterator_Type */
+	/* 0x017d */ deemon.Error.ValueError.IndexError,
+	/* 0x017e */ deemon.HashSet,
+	/* 0x017f */ deemon.HashSet.Iterator,
 	/* 0x0180 */ [](path, val) -> fs.chtime(path, val, none, none),
 	/* 0x0181 */ [](path, val) -> fs.chtime(path, none, none, val),
 	/* 0x0182 */ [](path, val) -> fs.chtime(path, none, val, none),
@@ -453,12 +453,12 @@ local __objects = deemon.List {
 	/* 0x0187 */ deemon.Property,
 	/* 0x0188 */ ipc.Process,
 	/* 0x0189 */ deemon.Sequence.contains,
-	/* 0x018A */ net.socket,
-	/* 0x018B */ deemon.hasattr,
-	/* 0x018C */ rt.SeqSubRangeIterator, /* SeqSubRangeIterator_Type */
-	/* 0x018D */ none, /* DeeSocketFile_Type -- Sockets no longer implement the File protocol */
-	/* 0x018E */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the File protocol */
-	/* 0x018F */ rt.StringIterator, /* DeeWideStringIterator_Type */
+	/* 0x018a */ net.socket,
+	/* 0x018b */ deemon.hasattr,
+	/* 0x018c */ rt.SeqSubRangeIterator, /* SeqSubRangeIterator_Type */
+	/* 0x018d */ none, /* DeeSocketFile_Type -- Sockets no longer implement the File protocol */
+	/* 0x018e */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the File protocol */
+	/* 0x018f */ rt.StringIterator, /* DeeWideStringIterator_Type */
 	/* 0x0190 */ "", /* _Dee_EmptyWideString, */
 	/* 0x0191 */ rt.StringIterator, /* DeeUtf16StringIterator_Type */
 	/* 0x0192 */ "", /* _Dee_EmptyUtf16String */
@@ -469,106 +469,112 @@ local __objects = deemon.List {
 	/* 0x0197 */ []() -> fs.User.name, /* DeeBuiltinFunction___builtin_fs_wuser */
 	/* 0x0198 */ fs.gethostname, /* DeeBuiltinFunction___builtin_fs_whost */
 	/* 0x0199 */ fs.getcwd, /* DeeBuiltinFunction___builtin_fs_wgetcwd */
-	/* 0x019A */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
-	/* 0x019B */ [](...) -> fs.User(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
-	/* 0x019C */ []() -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
-	/* 0x019D */ W32_IMPORT(GetModuleFileName), /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
-	/* 0x019E */ W32_IMPORT(GetDllDirectory), /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
-	/* 0x019F */ W32_IMPORT(GetSystemDirectory), /* DeeBuiltinFunction___builtin_fs_win32wsystemdirectory */
-	/* 0x01A0 */ W32_IMPORT(GetWindowsDirectory), /* DeeBuiltinFunction___builtin_fs_win32wwindowsdirectory */
-	/* 0x01A1 */ W32_IMPORT(GetSystemWindowsDirectory), /* DeeBuiltinFunction___builtin_fs_win32wsystemwindowsdirectory */
-	/* 0x01A2 */ W32_IMPORT(GetSystemWow64Directory), /* DeeBuiltinFunction___builtin_fs_win32wsyswow64directory */
-	/* 0x01A3 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_wgettmpname */
-	/* 0x01A4 */ deemon.List.Iterator,
-	/* 0x01A5 */ deemon.Super,
-	/* 0x01A6 */ deemon.Error.ValueError.UnicodeError,
-	/* 0x01A7 */ deemon.Error.ValueError.ReferenceError,
-	/* 0x01A8 */ net.NetError,
-	/* 0x01A9 */ none, /* TODO? DeeBuiltinFunction___builtin_varray_add */
-	/* 0x01AA */ rt.StopIteration_instance, /* _DeeErrorInstance_IterDone (DeeError_StopIteration_instance) */
-	/* 0x01AB */ rt.NoMemory_instance, /* _DeeErrorInstance_OutOfMemory (DeeError_NoMemory_instance) */
-	/* 0x01AC */ deemon.Error.RuntimeError.NotImplemented(), /* _DeeErrorInstance_NotImplemented */
-	/* 0x01AD */ deemon.Error.ValueError.ArithmeticError.DivideByZero(), /* _DeeErrorInstance_DivByZero */
-	/* 0x01AE */ deemon.Error.RuntimeError.StackOverflow(), /* _DeeErrorInstance_StackOverflow */
-	/* 0x01AF */ deemon.Error.RuntimeError.StackOverflow,
-	/* 0x01B0 */ rt.getstacklimit, /* DeeBuiltinFunction___builtin_get_stacklimit */
-	/* 0x01B1 */ rt.setstacklimit, /* DeeBuiltinFunction___builtin_set_stacklimit */
-	/* 0x01B2 */ deemon.Sequence.find,
-	/* 0x01B3 */ deemon.Sequence.rfind,
-	/* 0x01B4 */ deemon.Sequence.index,
-	/* 0x01B5 */ deemon.Sequence.rindex,
-	/* 0x01B6 */ deemon.Sequence.count,
-	/* 0x01B7 */ deemon.Sequence.locate,
-	/* 0x01B8 */ deemon.Sequence.rlocate,
-	/* 0x01B9 */ deemon.Sequence.locateall,
-	/* 0x01BA */ deemon.Sequence.transform,
-	/* 0x01BB */ deemon.Sequence.empty,
-	/* 0x01BC */ deemon.Sequence.nonempty,
-	/* 0x01BD */ deemon.Sequence.front,
-	/* 0x01BE */ deemon.Sequence.back,
-	/* 0x01BF */ deemon.Sequence.get,
-	/* 0x01C0 */ deemon.Sequence.at,
-	/* 0x01C1 */ deemon.Sequence.reversed,
-	/* 0x01C2 */ deemon.Sequence.sorted,
-	/* 0x01C3 */ deemon.Sequence.segments,
-	/* 0x01C4 */ deemon.Cell,
-	/* 0x01C5 */ fs.chmod,
-	/* 0x01C6 */ [](path) -> fs.stat(path).st_mode,
-	/* 0x01C7 */ fs.chown,
-	/* 0x01C8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid, st.st_gid); },
-	/* 0x01C9 */ fs.User, /* DeeBuiltinFunction___builtin_fs_uidof */
-	/* 0x01CA */ fs.Group, /* DeeBuiltinFunction___builtin_fs_gidof */
-	/* 0x01CB */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; },
-	/* 0x01CC */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
-	/* 0x01CD */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; },
-	/* 0x01CE */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
-	/* 0x01CF */ [] -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32drives */
-	/* 0x01D0 */ [] -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32wdrives */
-	/* 0x01D1 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64encode */
-	/* 0x01D2 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64decode */
-	/* 0x01D3 */ deemon.Sequence.Iterator(), /* _Dee_EmptyZipIterator */
-	/* 0x01D4 */ operators.moveassign, /* DeeBuiltinFunction___moveassign__ */
-	/* 0x01D5 */ [](x, ...) -> x(...), /* DeeBuiltinFunction___callv__ */
-	/* 0x01D6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
-	/* 0x01D7 */ deemon.__pooad, /* DeeBuiltinFunction___dual_posoradd__ */
-	/* 0x01D8 */ deemon.__neosb, /* DeeBuiltinFunction___dual_negorsub__ */
-	/* 0x01D9 */ [](a, b?) { if (b !is bound) return a.ind; return a * b; }, /* DeeBuiltinFunction___dual_dereformul__ */
-	/* 0x01DA */ [](a, b?) { if (b !is bound) return a.ref; return a & b; }, /* DeeBuiltinFunction___dual_reforand__ */
-	/* 0x01DB */ [](seq, a, b?) { if (b !is bound) return seq[a]; return seq[a:b]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
-	/* 0x01DC */ [](seq, a, b?) { if (b !is bound) return seq.operator del[](a); return seq.operator del[:](a, b); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
-	/* 0x01DD */ [](seq, a, b, c?) { if (c !is bound) return seq.operator[]=(a, b); return seq.operator [:](a, b, c); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
-	/* 0x01DE */ deemon.import_, /* DeeBuiltinFunction___builtin_dex */
-	/* 0x01DF */ operators.bool, /* DeeBuiltinFunction___bool__ */
-	/* 0x01E0 */ [](f, n, t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
-	/* 0x01E1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
-	/* 0x01E2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
-	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */
-	// Builtin File operators
-	/* 0x01E3 */ operators.read,  /* DeeBuiltinFunction___read__ */
-	/* 0x01E4 */ operators.write, /* DeeBuiltinFunction___write__ */
-	/* 0x01E5 */ operators.read,  /* DeeBuiltinFunction___readp__ */
-	/* 0x01E6 */ operators.write, /* DeeBuiltinFunction___writep__ */
-	/* 0x01E7 */ operators.read,  /* DeeBuiltinFunction___readnp__ */
-	/* 0x01E8 */ operators.write, /* DeeBuiltinFunction___writenp__ */
-	/* 0x01E9 */ operators.seek,  /* DeeBuiltinFunction___seek__ */
-	/* 0x01EA */ operators.sync,  /* DeeBuiltinFunction___flush__ */
-	/* 0x01EB */ operators.trunc, /* DeeBuiltinFunction___trunc__ */
-	/* 0x01EC */ operators.close, /* DeeBuiltinFunction___close__ */
-	/* 0x01ED */ fs.User,         /* DeeFSWin32SID_Type */
-	/* 0x01EF */ deemon.Function,
-	/* 0x01F0 */ deemon.Function.YieldFunction.Iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a User-function) */
-	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
+	/* 0x019a */ fs.gettmp, /* DeeBuiltinFunction___builtin_fs_wgettmp */
+	/* 0x019b */ [](...) -> fs.User(...).home, /* DeeBuiltinFunction___builtin_fs_wgethome */
+	/* 0x019c */ []() -> fs.environ, /* DeeBuiltinFunction___builtin_fs_wlistenv */
+	/* 0x019d */ W32_IMPORT(GetModuleFileName), /* DeeBuiltinFunction___builtin_fs_win32wmodulename */
+	/* 0x019e */ W32_IMPORT(GetDllDirectory), /* DeeBuiltinFunction___builtin_fs_win32wdlldirectory */
+	/* 0x019f */ W32_IMPORT(GetSystemDirectory), /* DeeBuiltinFunction___builtin_fs_win32wsystemdirectory */
+	/* 0x01a0 */ W32_IMPORT(GetWindowsDirectory), /* DeeBuiltinFunction___builtin_fs_win32wwindowsdirectory */
+	/* 0x01a1 */ W32_IMPORT(GetSystemWindowsDirectory), /* DeeBuiltinFunction___builtin_fs_win32wsystemwindowsdirectory */
+	/* 0x01a2 */ W32_IMPORT(GetSystemWow64Directory), /* DeeBuiltinFunction___builtin_fs_win32wsyswow64directory */
+	/* 0x01a3 */ none, /* TODO: DeeBuiltinFunction___builtin_fs_wgettmpname */
+	/* 0x01a4 */ deemon.List.Iterator,
+	/* 0x01a5 */ deemon.Super,
+	/* 0x01a6 */ deemon.Error.ValueError.UnicodeError,
+	/* 0x01a7 */ deemon.Error.ValueError.ReferenceError,
+	/* 0x01a8 */ net.NetError,
+	/* 0x01a9 */ none, /* TODO? DeeBuiltinFunction___builtin_varray_add */
+	/* 0x01aa */ rt.StopIteration_instance, /* _DeeErrorInstance_IterDone (DeeError_StopIteration_instance) */
+	/* 0x01ab */ rt.NoMemory_instance, /* _DeeErrorInstance_OutOfMemory (DeeError_NoMemory_instance) */
+	/* 0x01ac */ deemon.Error.RuntimeError.NotImplemented(), /* _DeeErrorInstance_NotImplemented */
+	/* 0x01ad */ deemon.Error.ValueError.ArithmeticError.DivideByZero(), /* _DeeErrorInstance_DivByZero */
+	/* 0x01ae */ deemon.Error.RuntimeError.StackOverflow(), /* _DeeErrorInstance_StackOverflow */
+	/* 0x01af */ deemon.Error.RuntimeError.StackOverflow,
+	/* 0x01b0 */ rt.getstacklimit, /* DeeBuiltinFunction___builtin_get_stacklimit */
+	/* 0x01b1 */ rt.setstacklimit, /* DeeBuiltinFunction___builtin_set_stacklimit */
+	/* 0x01b2 */ deemon.Sequence.find,
+	/* 0x01b3 */ deemon.Sequence.rfind,
+	/* 0x01b4 */ deemon.Sequence.index,
+	/* 0x01b5 */ deemon.Sequence.rindex,
+	/* 0x01b6 */ deemon.Sequence.count,
+	/* 0x01b7 */ deemon.Sequence.locate,
+	/* 0x01b8 */ deemon.Sequence.rlocate,
+	/* 0x01b9 */ deemon.Sequence.locateall,
+	/* 0x01ba */ deemon.Sequence.transform,
+	/* 0x01bb */ deemon.Sequence.empty,
+	/* 0x01bc */ deemon.Sequence.nonempty,
+	/* 0x01bd */ deemon.Sequence.front,
+	/* 0x01be */ deemon.Sequence.back,
+	/* 0x01bf */ deemon.Sequence.get,
+	/* 0x01c0 */ deemon.Sequence.at,
+	/* 0x01c1 */ deemon.Sequence.reversed,
+	/* 0x01c2 */ deemon.Sequence.sorted,
+	/* 0x01c3 */ deemon.Sequence.segments,
+	/* 0x01c4 */ deemon.Cell,
+	/* 0x01c5 */ fs.chmod,
+	/* 0x01c6 */ [](path) -> fs.stat(path).st_mode,
+	/* 0x01c7 */ fs.chown,
+	/* 0x01c8 */ [](path) { __stack local st = fs.stat(path); return (st.st_uid, st.st_gid); },
+	/* 0x01c9 */ fs.User, /* DeeBuiltinFunction___builtin_fs_uidof */
+	/* 0x01ca */ fs.Group, /* DeeBuiltinFunction___builtin_fs_gidof */
+	/* 0x01cb */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; },
+	/* 0x01cc */ [](uid: fs.User | deemon.Object) { if (uid !is fs.User) uid = fs.User(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wuidname */
+	/* 0x01cd */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; },
+	/* 0x01ce */ [](uid: fs.Group | deemon.Object) { if (uid !is fs.Group) uid = fs.Group(uid); return uid.name; }, /* DeeBuiltinFunction___builtin_fs_wgidname */
+	/* 0x01cf */ [] -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32drives */
+	/* 0x01d0 */ [] -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0"), /* DeeBuiltinFunction___builtin_fs_win32wdrives */
+	/* 0x01d1 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64encode */
+	/* 0x01d2 */ none, /* [UNUSED] Used-to-be: &DeeBuiltinFunction___builtin_crypt_base64decode */
+	/* 0x01d3 */ deemon.Sequence.Iterator(), /* _Dee_EmptyZipIterator */
+	/* 0x01d4 */ operators.moveassign, /* DeeBuiltinFunction___moveassign__ */
+	/* 0x01d5 */ [](x, ...) -> x(...), /* DeeBuiltinFunction___callv__ */
+	/* 0x01d6 */ operators.hash, /* DeeBuiltinFunction___hash__ */
+	/* 0x01d7 */ deemon.__pooad, /* DeeBuiltinFunction___dual_posoradd__ */
+	/* 0x01d8 */ deemon.__neosb, /* DeeBuiltinFunction___dual_negorsub__ */
+	/* 0x01d9 */ [](a, b?) { if (b !is bound) return a.ind; return a * b; }, /* DeeBuiltinFunction___dual_dereformul__ */
+	/* 0x01da */ [](a, b?) { if (b !is bound) return a.ref; return a & b; }, /* DeeBuiltinFunction___dual_reforand__ */
+	/* 0x01db */ [](seq, a, b?) { if (b !is bound) return seq[a]; return seq[a:b]; }, /* DeeBuiltinFunction___dual_getitemorgetrange__ */
+	/* 0x01dc */ [](seq, a, b?) { if (b !is bound) return seq.operator del[](a); return seq.operator del[:](a, b); }, /* DeeBuiltinFunction___dual_delitemordelrange__ */
+	/* 0x01dd */ [](seq, a, b, c?) { if (c !is bound) return seq.operator[]=(a, b); return seq.operator [:](a, b, c); }, /* DeeBuiltinFunction___dual_setitemorsetrange__ */
+	/* 0x01de */ deemon.import_, /* DeeBuiltinFunction___builtin_dex */
+	/* 0x01df */ operators.bool, /* DeeBuiltinFunction___bool__ */
+	/* 0x01e0 */ [](f, n, t = none) { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */
+	/* 0x01e1 */ none, /* TODO: Add closure support to ctypes -- DeeBuiltinFunction___builtin_ff_closure */
+	/* 0x01e2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
+	/* 0x01e3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */
+		/* Builtin File operators (Note: incorrectly documented in d100+; here: ABI-compatible) */
+	/* 0x01e4 [!+1] */ operators.read,  /* DeeBuiltinFunction___read__ */
+	/* 0x01e5 [!+1] */ operators.write, /* DeeBuiltinFunction___write__ */
+	/* 0x01e6 [!+1] */ operators.read,  /* DeeBuiltinFunction___readp__ */
+	/* 0x01e7 [!+1] */ operators.write, /* DeeBuiltinFunction___writep__ */
+	/* 0x01e8 [!+1] */ operators.read,  /* DeeBuiltinFunction___readnp__ */
+	/* 0x01e9 [!+1] */ operators.write, /* DeeBuiltinFunction___writenp__ */
+	/* 0x01ea [!+1] */ operators.seek,  /* DeeBuiltinFunction___seek__ */
+	/* 0x01eb [!+1] */ operators.sync,  /* DeeBuiltinFunction___flush__ */
+	/* 0x01ec [!+1] */ operators.trunc, /* DeeBuiltinFunction___trunc__ */
+	/* 0x01ed [!+1] */ operators.close, /* DeeBuiltinFunction___close__ */
+	/* 0x01ee [!+1] */ fs.User,         /* DeeFSWin32SID_Type */
+	/* 0x01ef */ deemon.Function,
+	/* 0x01ee */ deemon.Function.YieldFunction.Iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a User-function) */
+	/* 0x01f1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */
 };
-//assert #__objects == 0x01F1 + 1;
+//assert #__objects == 0x01f1 + 1;
 
 
-@@Library function implementing the deprecated ${__builtin_object()} builtin function
-@@Prior to deemon 200, and in the absence of module support, stuff you'd now find in the :deemon module was provided for using builtin-functions.
-@@Due to the rediculous number of them, not every builtin had its own keyword, but instead, a single access symbol was defined by the compiler: ${__builtin_object}
-@@Using this symbol, as well as a fixed (and now emulated) symbol index, one was able to access these functions, as could be seen in the include-folder of deemon prior to its rewrite:
+@@Library function implementing the deprecated `__builtin_object()` builtin function
+@@
+@@Prior to deemon 200, and in the absence of module support, stuff you'd now find in
+@@the @deemon module was provided for using builtin-functions. Due to the ridiculous
+@@number of them, not every builtin had its own keyword, but instead, a single access
+@@symbol was defined by the compiler: `__builtin_object`.
+@@
+@@Using this symbol, as well as a fixed (and now emulated) symbol index, one was able
+@@to access these functions, as could be seen in the include-folder of deemon prior
+@@to its rewrite:
 @@>local __builtin_range = __builtin_object(0x0117);
 @@>for (local x: __builtin_range(20))
-@@> print x;
+@@>    print x;
 final global function get_builtin(id: deemon.int) {
 	return __objects[id];
 }

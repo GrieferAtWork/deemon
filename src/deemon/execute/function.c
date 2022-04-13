@@ -773,7 +773,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Function),
 	/* .tp_doc      = */ DOC("(code=!Ert:Code_empty,refs=!T0)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT|TP_FVARIABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,

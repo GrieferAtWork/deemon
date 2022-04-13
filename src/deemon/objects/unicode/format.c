@@ -43,7 +43,7 @@ struct formatter {
 	char           *f_iter;        /* [1..1] Current format string position. */
 	char           *f_end;         /* [1..1] Format string end. */
 	char           *f_flush_start; /* [1..1] Address where string flushing should start. */
-	DREF DeeObject *f_seqiter;     /* [0..1] The iterator used to get sequence-elements from `args' */
+	DREF DeeObject *f_seqiter;     /* [0..1] The iterator used to get sequence-elements from `f_args' */
 	DeeObject      *f_args;        /* [1..1][const] A user-given sequence object used to index format arguments. */
 };
 

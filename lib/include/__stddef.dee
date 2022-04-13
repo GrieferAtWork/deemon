@@ -88,7 +88,7 @@
  *    how little, or how much we're clobbering the root-namespace in here,
  *    considering our sole purpose is to ensure backwards-compatibility
  *    with a limited set of existing code, macros are the easiest, and
- *    simplest sollution, not requiring any modifications of the runtime! */
+ *    simplest solution, not requiring any modifications of the runtime! */
 #define keys()    keys
 #define items() values
 #define values() items
@@ -145,7 +145,7 @@ local function __ctypes_new(tp) {
 
 /* Define some unary-expression keywords that got removed */
 #define weak   WeakRef from deemon pack /* Create weak referece */
-#define move   copy                     /* Move-construct (implement as copy-construct) */
+#define move   copy                     /* Move-construct (emulate as copy-construct) */
 
 /* Stub-implement removed static-if keywords (as far as possible). */
 #define __PRIVATE_if_not_exists{...}
@@ -241,8 +241,8 @@ from ctypes import
 #pragma extension("-fold-style-classes")
 
 /* Enable old-style character literals, causing '\x12' to be compiled
- * as an alias for 0x12, but preventing user-code to use 'foo' as an
- * alias for "foo"! */
+ * as an alias for 0x12, but preventing user-code from using 'foo' as
+ * an alias for "foo"! */
 #pragma extension("-fcharacter-literals")
 
 /* Not necessarily true, but legacy deemon was only ever built on
@@ -266,7 +266,7 @@ from ctypes import
  * >> fp.pack(); // You should use `fp.string' now
  * >> local my_cell = Cell(42);
  * >> my_cell.del(); // You should use `del my_cell.value' now
- * There are more like this, you should get the idea.
+ * There are more like this, but you should get the idea.
  *
  * Deemon 200 on the other hand will now warn about the use
  * of reserved keywords as identifiers and attribute names,
@@ -294,22 +294,22 @@ from ctypes import
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
 /* We're currently inside of an old-style format script.
  * Due to the way that deemon 100+ executed these, and how
- * deemon 200+ does now, there is a discrepency in the value of
+ * deemon 200+ does now, there is a discrepancy in the value of
  * the current working directory in relation to the DDI filename,
  * as well as the __FILE__ macro.
  * In deemon 200+, the PWD will have automatically been set to
  * the folder that the script being formated is located inside
  * of. However in deemon 100+, the current working directory
- * will refer to whatever folder was set by the commandline
+ * will refer to whatever folder was set by the command-line
  * user, with __FILE__ either being an absolute path, or being
  * relative to that directory.
  * However in deemon 200+, __FILE__ may still be a relative path,
  * though not relative to the current working directory.
  * Using the combination of macros above, alongside the fact that
  * this file is the hub for backwards-compatibility with the old
- * deemon, and included whenever user-code uses one of the old-style
- * headers, we can reverse-engineer the value of PWD that an old-style
- * format script would expect.
+ * deemon, and included whenever user-code uses one of the old-
+ * style headers, we can reverse-engineer the value of PWD that
+ * an old-style format script would expect.
  * NOTE: Old-style scripts often used to do something like the
  *       following to change PWD to their script:
  *       >> #include <fs>

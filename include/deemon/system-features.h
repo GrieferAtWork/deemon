@@ -129,6 +129,8 @@ function func(name, default_requirements = "", check_defined = 2, test = none) {
 		if (default_requirements !in ["", "0"])
 			default_requirements = " || " + default_requirements;
 		if (check_defined !is int || check_defined >= 2) {
+			if (default_requirements in ["0"])
+				default_requirements = "";
 			default_requirements = "defined({}) || defined(__{}_defined){}"
 				.format({ name, name, default_requirements });
 		//} else {
@@ -526,7 +528,7 @@ func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defi
 func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
 func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes64("foo", tv);');
 func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
-func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
+func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat64(AT_FDCWD, "foo", tv);');
 
 
 print "#ifdef _MSC_VER";
@@ -704,8 +706,14 @@ func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)
 
 func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: "abort();");
 func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "char *p = strerror(1); return p != NULL;");
-func("strerror_s", "defined(__USE_KOS)", test: "char const *p = strerror_s(1); return p != NULL;");
-func("strerrorname_s", "defined(__USE_KOS)", test: "char const *p = strerrorname_s(1); return p != NULL;");
+func("strerrordesc_np", "defined(__USE_GNU)", test: "char const *p = strerrordesc_np(1); return p != NULL;");
+func("strerrorname_np", "defined(__USE_GNU)", test: "char const *p = strerrorname_np(1); return p != NULL;");
+func("__sys_errlist", "0", test: "char const *s = __sys_errlist[1]; return s != NULL;");
+func("_sys_errlist", "0", test: "char const *s = _sys_errlist[1]; return s != NULL;");
+func("sys_errlist", "0", test: "char const *s = sys_errlist[1]; return s != NULL;");
+func("__sys_nerr", "0", test: "return __sys_nerr;");
+func("_sys_nerr", "0", test: "return _sys_nerr;");
+func("sys_nerr", "0", test: "return sys_nerr;");
 
 func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; dl = dlopen("foo.so", 0); return dl != NULL;');
 func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; return dlclose(dl);');
@@ -5426,18 +5434,60 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #define CONFIG_HAVE_strerror 1
 #endif
 
-#ifdef CONFIG_NO_strerror_s
-#undef CONFIG_HAVE_strerror_s
-#elif !defined(CONFIG_HAVE_strerror_s) && \
-      (defined(strerror_s) || defined(__strerror_s_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strerror_s 1
+#ifdef CONFIG_NO_strerrordesc_np
+#undef CONFIG_HAVE_strerrordesc_np
+#elif !defined(CONFIG_HAVE_strerrordesc_np) && \
+      (defined(strerrordesc_np) || defined(__strerrordesc_np_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_strerrordesc_np 1
 #endif
 
-#ifdef CONFIG_NO_strerrorname_s
-#undef CONFIG_HAVE_strerrorname_s
-#elif !defined(CONFIG_HAVE_strerrorname_s) && \
-      (defined(strerrorname_s) || defined(__strerrorname_s_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strerrorname_s 1
+#ifdef CONFIG_NO_strerrorname_np
+#undef CONFIG_HAVE_strerrorname_np
+#elif !defined(CONFIG_HAVE_strerrorname_np) && \
+      (defined(strerrorname_np) || defined(__strerrorname_np_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_strerrorname_np 1
+#endif
+
+#ifdef CONFIG_NO___sys_errlist
+#undef CONFIG_HAVE___sys_errlist
+#elif !defined(CONFIG_HAVE___sys_errlist) && \
+      (defined(__sys_errlist) || defined(____sys_errlist_defined))
+#define CONFIG_HAVE___sys_errlist 1
+#endif
+
+#ifdef CONFIG_NO__sys_errlist
+#undef CONFIG_HAVE__sys_errlist
+#elif !defined(CONFIG_HAVE__sys_errlist) && \
+      (defined(_sys_errlist) || defined(___sys_errlist_defined))
+#define CONFIG_HAVE__sys_errlist 1
+#endif
+
+#ifdef CONFIG_NO_sys_errlist
+#undef CONFIG_HAVE_sys_errlist
+#elif !defined(CONFIG_HAVE_sys_errlist) && \
+      (defined(sys_errlist) || defined(__sys_errlist_defined))
+#define CONFIG_HAVE_sys_errlist 1
+#endif
+
+#ifdef CONFIG_NO___sys_nerr
+#undef CONFIG_HAVE___sys_nerr
+#elif !defined(CONFIG_HAVE___sys_nerr) && \
+      (defined(__sys_nerr) || defined(____sys_nerr_defined))
+#define CONFIG_HAVE___sys_nerr 1
+#endif
+
+#ifdef CONFIG_NO__sys_nerr
+#undef CONFIG_HAVE__sys_nerr
+#elif !defined(CONFIG_HAVE__sys_nerr) && \
+      (defined(_sys_nerr) || defined(___sys_nerr_defined))
+#define CONFIG_HAVE__sys_nerr 1
+#endif
+
+#ifdef CONFIG_NO_sys_nerr
+#undef CONFIG_HAVE_sys_nerr
+#elif !defined(CONFIG_HAVE_sys_nerr) && \
+      (defined(sys_nerr) || defined(__sys_nerr_defined))
+#define CONFIG_HAVE_sys_nerr 1
 #endif
 
 #ifdef CONFIG_NO_dlopen
@@ -8236,6 +8286,30 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #undef pthread_setname_np
 #define pthread_setname_np pthread_setname
 #endif /* pthread_setname_np = pthread_setname */
+
+#if defined(CONFIG_HAVE__sys_errlist) && !defined(CONFIG_HAVE_sys_errlist)
+#define CONFIG_HAVE_sys_errlist 1
+#undef sys_errlist
+#define sys_errlist _sys_errlist
+#endif /* sys_errlist = _sys_errlist */
+
+#if defined(CONFIG_HAVE___sys_errlist) && !defined(CONFIG_HAVE_sys_errlist)
+#define CONFIG_HAVE_sys_errlist 1
+#undef sys_errlist
+#define sys_errlist __sys_errlist
+#endif /* sys_errlist = __sys_errlist */
+
+#if defined(CONFIG_HAVE__sys_nerr) && !defined(CONFIG_HAVE_sys_nerr)
+#define CONFIG_HAVE_sys_nerr 1
+#undef sys_nerr
+#define sys_nerr _sys_nerr
+#endif /* sys_nerr = _sys_nerr */
+
+#if defined(CONFIG_HAVE___sys_nerr) && !defined(CONFIG_HAVE_sys_nerr)
+#define CONFIG_HAVE_sys_nerr 1
+#undef sys_nerr
+#define sys_nerr __sys_nerr
+#endif /* sys_nerr = __sys_nerr */
 
 #ifndef CONFIG_HAVE_abort
 #define CONFIG_HAVE_abort 1
