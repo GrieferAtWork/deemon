@@ -610,7 +610,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	size_t begin = 0, end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o|IdId:_FileReader", &self->r_owner, &begin, &end))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPdSIZ UNPdSIZ ":_FileReader", &self->r_owner, &begin, &end))
 		goto err;
 	if (DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
 		goto err;

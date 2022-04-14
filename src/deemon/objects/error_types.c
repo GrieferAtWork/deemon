@@ -516,7 +516,7 @@ nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
 	if (error_try_init((DeeErrorObject *)self, argc, argv))
 		goto done;
 	self->nm_allocsize = 1;
-	if (DeeArg_Unpack(argc, argv, "|Iu:NoMemory", &self->nm_allocsize))
+	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":NoMemory", &self->nm_allocsize))
 		goto err;
 done:
 	return 0;

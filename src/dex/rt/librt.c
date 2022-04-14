@@ -101,7 +101,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result, newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
-	if (DeeArg_Unpack(argc, argv, "|I16u:setstacklimit", &newval))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu16 ":setstacklimit", &newval))
 		goto err;
 	result = ATOMIC_XCH(DeeExec_StackLimit, newval);
 	return DeeInt_NewU16(result);

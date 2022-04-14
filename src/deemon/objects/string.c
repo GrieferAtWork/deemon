@@ -1407,7 +1407,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_chr(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
-	if (DeeArg_Unpack(argc, argv, "I32u:chr", &ch))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":chr", &ch))
 		goto err;
 	return DeeString_Chr(ch);
 err:

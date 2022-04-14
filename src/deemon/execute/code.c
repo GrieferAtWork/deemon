@@ -1439,7 +1439,13 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
                             DeeObject *__restrict desc) {
 	DeeObject *flags = Dee_None;
 	self->eh_mask    = NULL;
-	if (Dee_Unpackf(desc, "(I32uI32uI32uI16u|oo)",
+	if (Dee_Unpackf(desc,
+	                "("
+	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
+	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
+	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
+	                UNPu16
+	                "|oo)",
 	                &self->eh_start,
 	                &self->eh_end,
 	                &self->eh_addr,

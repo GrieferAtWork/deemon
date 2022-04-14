@@ -54,7 +54,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_init(SegmentsIterator *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	self->si_len = 1;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegmentsIterator",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_SeqSegmentsIterator",
 	                  &self->si_iter, &self->si_len))
 		goto err;
 	if unlikely(!self->si_len) {
@@ -282,7 +282,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_init(Segments *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	self->s_len = 1;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegments",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_SeqSegments",
 	                  &self->s_seq, &self->s_len))
 		goto err;
 	if unlikely(!self->s_len) {

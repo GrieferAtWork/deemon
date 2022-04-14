@@ -1026,7 +1026,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 		size_t start, end;
 		writable = false;
 		start = 0, end = (size_t)-1;
-		if (DeeArg_Unpack(argc, argv, "|bIuIu:__getbuf__", &writable, &start, &end))
+		if (DeeArg_Unpack(argc, argv, "|b" UNPuSIZ UNPuSIZ ":__getbuf__", &writable, &start, &end))
 			goto err;
 		return DeeObject_Bytes(self,
 		                       writable ? Dee_BUFFER_FWRITABLE
@@ -1149,7 +1149,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					dpos_t result;
 					int whence;
 					whence = SEEK_SET;
-					if (DeeArg_Unpack(argc, argv, "I64d|d:__seek__", &off, &whence))
+					if (DeeArg_Unpack(argc, argv, UNPdN(DEE_SIZEOF_DEE_POS_T) "|d:__seek__", &off, &whence))
 						goto err;
 					result = DeeFile_Seek(self, off, whence);
 					if unlikely(result == (dpos_t)-1)

@@ -2747,7 +2747,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 int_new(size_t argc, DeeObject *const *argv) {
 	DeeObject *val;
 	uint16_t radix = 0;
-	if (DeeArg_Unpack(argc, argv, "o|I16u:int", &val, &radix))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPu16 ":int", &val, &radix))
 		goto err;
 	if (DeeString_Check(val)) {
 		char *utf8 = DeeString_AsUtf8(val);
@@ -3022,11 +3022,11 @@ int_tostr(DeeObject *self, size_t argc,
 	char *flags_str                 = NULL;
 	PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I16us:tostr",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 "s:tostr",
 	                    &((uint16_t *)&flags)[0], &flags_str))
 		goto err;
 #else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I16us:tostr",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 "s:tostr",
 	                    &((uint16_t *)&flags)[1], &flags_str))
 		goto err;
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
@@ -3156,7 +3156,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 	bool is_signed       = false;
 	bool encode_little;
 	DREF DeeObject *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|Iuob:tobytes",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPuSIZ "ob:tobytes",
 	                    &length, &byteorder, &is_signed))
 		goto err;
 	if (length == (size_t)-1) {

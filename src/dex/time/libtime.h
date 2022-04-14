@@ -21,6 +21,7 @@
 #define GUARD_DEX_TIME_LIBTIME_H 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h> /* DEE_UNP* */
 #include <deemon/dex.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -47,7 +48,7 @@ typedef Dee_uint128_t dutime_t;
 typedef int64_t       dtime_half_t;
 typedef uint64_t      dutime_half_t;
 #define DUTIME_HALF_PRINTF "%I64u"
-#define DUTIME_HALF_UNPACK "I64u"
+#define DUTIME_HALF_UNPACK DEE_UNPu64
 
 #else /* __INT128_TYPE__ && __UINT128_TYPE__ */
 
@@ -61,7 +62,7 @@ typedef uint64_t dutime_t;
 typedef int32_t  dtime_half_t;
 typedef uint32_t dutime_half_t;
 #define DUTIME_HALF_PRINTF "%I32u"
-#define DUTIME_HALF_UNPACK "I32u"
+#define DUTIME_HALF_UNPACK DEE_UNPu32
 
 #endif /* !__INT128_TYPE__ || !__UINT128_TYPE__ */
 

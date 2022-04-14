@@ -1995,7 +1995,7 @@ string_replace(String *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *Kw) {
 	String *find, *replace;
 	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, Kw, replace_kwlist, "oo|Iu:replace", &find, &replace, &max_count))
+	if (DeeArg_UnpackKw(argc, argv, Kw, replace_kwlist, "oo|" UNPuSIZ ":replace", &find, &replace, &max_count))
 		goto err;
 	if (DeeObject_AssertTypeExact(find, &DeeString_Type))
 		goto err;
@@ -2121,7 +2121,7 @@ string_casereplace(String *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	String *find, *replace;
 	size_t max_count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:casereplace", &find, &replace, &max_count))
+	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|" UNPuSIZ ":casereplace", &find, &replace, &max_count))
 		goto err;
 	if (DeeObject_AssertTypeExact(find, &DeeString_Type))
 		goto err;
@@ -2249,7 +2249,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_ord(String *self, size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
 	if (argc) {
-		if (DeeArg_Unpack(argc, argv, "Iu:ord", &index))
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ ":ord", &index))
 			goto err;
 		if (index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self,
@@ -2278,7 +2278,7 @@ string_bytes(String *self, size_t argc,
 			goto err;
 		allow_invalid = !!temp;
 	} else {
-		if (DeeArg_Unpack(argc, argv, "|IdIdb:Bytes", &start, &end, &allow_invalid))
+		if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ UNPdSIZ "b:Bytes", &start, &end, &allow_invalid))
 			goto err;
 	}
 	my_bytes = DeeString_AsBytes((DeeObject *)self, allow_invalid);
@@ -2303,39 +2303,42 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 
 
 
-#define DEFINE_STRING_TRAIT(name, function, test_ch)                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                               \
-	string_##name(String *self, size_t argc, DeeObject *const *argv) {  \
-		size_t start = 0, end = (size_t)-1;                             \
-		if (argc == 1) {                                                \
-			uint32_t ch;                                                \
-			if (DeeObject_AsSize(argv[0], &start))                      \
-				goto err;                                               \
-			if unlikely(start >= DeeString_WLEN(self)) {                \
-				err_index_out_of_bounds((DeeObject *)self,              \
-				                        start,                          \
-				                        DeeString_WLEN(self));          \
-				goto err;                                               \
-			}                                                           \
-			ch = DeeString_GetChar(self, start);                        \
-			return_bool(test_ch);                                       \
-		} else {                                                        \
-			if (DeeArg_Unpack(argc, argv, "|IdId" #name, &start, &end)) \
-				goto err;                                               \
-			return_bool(function(self, start, end));                    \
-		}                                                               \
-	err:                                                                \
-		return NULL;                                                    \
+#define DEFINE_STRING_TRAIT(name, function, test_ch)                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                              \
+	string_##name(String *self, size_t argc, DeeObject *const *argv) { \
+		size_t start = 0, end = (size_t)-1;                            \
+		if (argc == 1) {                                               \
+			uint32_t ch;                                               \
+			if (DeeObject_AsSize(argv[0], &start))                     \
+				goto err;                                              \
+			if unlikely(start >= DeeString_WLEN(self)) {               \
+				err_index_out_of_bounds((DeeObject *)self,             \
+				                        start,                         \
+				                        DeeString_WLEN(self));         \
+				goto err;                                              \
+			}                                                          \
+			ch = DeeString_GetChar(self, start);                       \
+			return_bool(test_ch);                                      \
+		} else {                                                       \
+			if (DeeArg_Unpack(argc, argv,                              \
+			                  "|" UNPdSIZ UNPdSIZ ":" #name,           \
+			                  &start, &end))                           \
+				goto err;                                              \
+			return_bool(function(self, start, end));                   \
+		}                                                              \
+	err:                                                               \
+		return NULL;                                                   \
 	}
-#define DEFINE_ANY_STRING_TRAIT(name, function)                                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
-	string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {    \
-		size_t start = 0, end = (size_t)-1;                                              \
-		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId" #name, &start, &end)) \
-			goto err;                                                                    \
-		return_bool(function(self, start, end));                                         \
-	err:                                                                                 \
-		return NULL;                                                                     \
+#define DEFINE_ANY_STRING_TRAIT(name, function)                                       \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
+	string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) { \
+		size_t start = 0, end = (size_t)-1;                                           \
+		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,                            \
+		                    "|" UNPdSIZ UNPdSIZ ":" #name, &start, &end))             \
+			goto err;                                                                 \
+		return_bool(function(self, start, end));                                      \
+	err:                                                                              \
+		return NULL;                                                                  \
 	}
 DEFINE_STRING_TRAIT(isprint, DeeString_IsPrint, DeeUni_Flags(ch) & UNICODE_FPRINT)
 DEFINE_STRING_TRAIT(isalpha, DeeString_IsAlpha, DeeUni_Flags(ch) & UNICODE_FALPHA)
@@ -2382,7 +2385,7 @@ string_asnumber(String *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeString_GetChar(self, 0);
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, "Iu|o:asnumber", &index, &defl))
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asnumber", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
@@ -2419,7 +2422,7 @@ string_asdigit(String *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeString_GetChar(self, 0);
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, "Iu|o:asdigit", &index, &defl))
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
@@ -2456,7 +2459,7 @@ string_asdecimal(String *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeString_GetChar(self, 0);
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, "Iu|o:asdecimal", &index, &defl))
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asdecimal", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeString_WLEN(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
@@ -2495,7 +2498,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lower(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:lower", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":lower",
+	                    &start, &end))
 		goto err;
 	return DeeString_ToLower(self, start, end);
 err:
@@ -2506,7 +2511,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_upper(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:upper", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":upper",
+	                    &start, &end))
 		goto err;
 	return DeeString_ToUpper(self, start, end);
 err:
@@ -2517,7 +2524,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_title(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:title", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":title",
+	                    &start, &end))
 		goto err;
 	return DeeString_ToTitle(self, start, end);
 err:
@@ -2528,7 +2537,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_capitalize(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:capitalize", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":capitalize",
+	                    &start, &end))
 		goto err;
 	return DeeString_Capitalize(self, start, end);
 err:
@@ -2539,7 +2550,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_swapcase(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:swapcase", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":swapcase",
+	                    &start, &end))
 		goto err;
 	return DeeString_Swapcase(self, start, end);
 err:
@@ -2550,7 +2563,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casefold(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:casefold", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":casefold",
+	                    &start, &end))
 		goto err;
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -2689,7 +2704,9 @@ string_find(String *self, size_t argc,
 	size_t result;
 	union dcharptr ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:find", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":find",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -2770,7 +2787,9 @@ string_rfind(String *self, size_t argc,
 	size_t result;
 	union dcharptr ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rfind", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rfind",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -2851,7 +2870,9 @@ string_index(String *self, size_t argc,
 	size_t result;
 	union dcharptr ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:index", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":index",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -2933,7 +2954,9 @@ string_rindex(String *self, size_t argc,
 	size_t result;
 	union dcharptr ptr, lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rindex", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rindex",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3144,7 +3167,9 @@ string_findany(String *self, size_t argc,
 	size_t fastsize, mylen, orig_end;
 	DeeObject *needles;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:findany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":findany",
+	                    &needles, &start, &end))
 		goto err;
 	mylen = DeeString_WLEN(self);
 	if unlikely(start > mylen)
@@ -3204,7 +3229,9 @@ string_indexany(String *self, size_t argc,
 	size_t fastsize, mylen, orig_end;
 	DeeObject *needles;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:indexany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":indexany",
+	                    &needles, &start, &end))
 		goto err;
 	mylen = DeeString_WLEN(self);
 	if unlikely(start > mylen)
@@ -3266,7 +3293,9 @@ string_rfindany(String *self, size_t argc,
 	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rfindany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rfindany",
+	                    &needles, &start, &end))
 		goto err;
 	did_find_any = false;
 	mylen = DeeString_WLEN(self);
@@ -3327,7 +3356,9 @@ string_rindexany(String *self, size_t argc,
 	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rindexany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rindexany",
+	                    &needles, &start, &end))
 		goto err;
 	did_find_any = false;
 	mylen = DeeString_WLEN(self);
@@ -3393,7 +3424,9 @@ string_findall(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:findall", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":findall",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3407,7 +3440,9 @@ string_casefindall(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefindall", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casefindall",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3423,7 +3458,9 @@ string_casefind(String *self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefind", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casefind",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3492,8 +3529,8 @@ string_casefind(String *self, size_t argc,
 		result = ptr.cp32 - lhs.cp32;
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 not_found:
@@ -3509,7 +3546,9 @@ string_caserfind(String *self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserfind", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserfind",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3578,8 +3617,8 @@ string_caserfind(String *self, size_t argc,
 		result = ptr.cp32 - lhs.cp32;
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 not_found:
@@ -3595,7 +3634,9 @@ string_caseindex(String *self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caseindex", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caseindex",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3664,8 +3705,8 @@ string_caseindex(String *self, size_t argc,
 		result = ptr.cp32 - lhs.cp32;
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 not_found:
@@ -3682,7 +3723,9 @@ string_caserindex(String *self, size_t argc,
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
 	union dcharptr ptr, lhs, rhs;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserindex", &other, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserindex",
+	                    &other, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -3751,8 +3794,8 @@ string_caserindex(String *self, size_t argc,
 		result = ptr.cp32 - lhs.cp32;
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 not_found:
@@ -3908,7 +3951,9 @@ string_casefindany(String *self, size_t argc,
 	size_t fastsize, mylen, orig_end, match_length;
 	DeeObject *needles;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefindany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casefindany",
+	                    &needles, &start, &end))
 		goto err;
 	mylen = DeeString_WLEN(self);
 	if unlikely(start > mylen)
@@ -3947,8 +3992,8 @@ string_casefindany(String *self, size_t argc,
 		Dee_Decref(iter);
 	}
 	if (end < orig_end) {
-		return DeeTuple_Newf(DEE_FMT_SIZE_T
-		                     DEE_FMT_SIZE_T,
+		return DeeTuple_Newf(PCKuSIZ
+		                     PCKuSIZ,
 		                     end,
 		                     end + match_length);
 	}
@@ -3973,7 +4018,9 @@ string_caseindexany(String *self, size_t argc,
 	size_t fastsize, mylen, orig_end, match_length;
 	DeeObject *needles;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caseindexany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caseindexany",
+	                    &needles, &start, &end))
 		goto err;
 	mylen = DeeString_WLEN(self);
 	if unlikely(start > mylen)
@@ -4012,8 +4059,8 @@ string_caseindexany(String *self, size_t argc,
 		Dee_Decref(iter);
 	}
 	if (end < orig_end) {
-		return DeeTuple_Newf(DEE_FMT_SIZE_T
-		                     DEE_FMT_SIZE_T,
+		return DeeTuple_Newf(PCKuSIZ
+		                     PCKuSIZ,
 		                     end,
 		                     end + match_length);
 	}
@@ -4040,7 +4087,9 @@ string_caserfindany(String *self, size_t argc,
 	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserfindany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserfindany",
+	                    &needles, &start, &end))
 		goto err;
 	did_find_any = false;
 	mylen = DeeString_WLEN(self);
@@ -4079,8 +4128,8 @@ string_caserfindany(String *self, size_t argc,
 		Dee_Decref(iter);
 	}
 	if (did_find_any) {
-		return DeeTuple_Newf(DEE_FMT_SIZE_T
-		                     DEE_FMT_SIZE_T,
+		return DeeTuple_Newf(PCKuSIZ
+		                     PCKuSIZ,
 		                     start,
 		                     start + match_length);
 	}
@@ -4106,7 +4155,9 @@ string_caserindexany(String *self, size_t argc,
 	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserindexany", &needles, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserindexany",
+	                    &needles, &start, &end))
 		goto err;
 	did_find_any = false;
 	mylen = DeeString_WLEN(self);
@@ -4145,8 +4196,8 @@ string_caserindexany(String *self, size_t argc,
 		Dee_Decref(iter);
 	}
 	if (did_find_any) {
-		return DeeTuple_Newf(DEE_FMT_SIZE_T
-		                     DEE_FMT_SIZE_T,
+		return DeeTuple_Newf(PCKuSIZ
+		                     PCKuSIZ,
 		                     start,
 		                     start + match_length);
 	}
@@ -4221,7 +4272,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_substr(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:substr", &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist,
+	                    "|" UNPdSIZ UNPdSIZ ":substr",
+	                    &start, &end))
 		goto err;
 	return string_getsubstr(self, start, end);
 err:
@@ -4322,7 +4375,9 @@ string_startswith(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:startswith", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":startswith",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -4405,7 +4460,9 @@ string_endswith(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:endswith", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":endswith",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -4495,7 +4552,9 @@ string_casestartswith(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casestartswith", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casestartswith",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -4556,7 +4615,9 @@ string_caseendswith(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caseendswith", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caseendswith",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -4667,7 +4728,7 @@ DeeString_Segments(String *__restrict self, size_t substring_length);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_segments(String *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_length;
-	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":segments", &substring_length))
 		goto err;
 	if unlikely(!substring_length) {
 		err_invalid_segment_size(substring_length);
@@ -4682,7 +4743,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_distribute(String *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_count;
 	size_t substring_length;
-	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":distribute", &substring_count))
 		goto err;
 	if unlikely(!substring_count) {
 		err_invalid_distribution_count(substring_count);
@@ -4710,7 +4771,7 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 	String *filler_ob = NULL;
 	DREF String *result;
 	union dcharptr dst, buf, my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, "Iu|o:center", &result_length, &filler_ob))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:center", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
 	if (result_length <= my_len)
@@ -4839,7 +4900,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 	String *filler_ob = NULL;
 	DREF String *result;
 	union dcharptr dst, buf, my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, "Iu|o:ljust", &result_length, &filler_ob))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:ljust", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
 	if (result_length <= my_len)
@@ -4954,7 +5015,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 	String *filler_ob = NULL;
 	DREF String *result;
 	union dcharptr dst, buf, my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, "Iu|o:rjust", &result_length, &filler_ob))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:rjust", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
 	if (result_length <= my_len)
@@ -5071,7 +5132,9 @@ string_count(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr lhs, rhs, endptr;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:count", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":count",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -5150,7 +5213,9 @@ string_casecount(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1, match_length;
 	union dcharptr lhs, rhs, endptr;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casecount", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casecount",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -5231,7 +5296,9 @@ string_contains_f(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:contains", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":contains",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -5305,7 +5372,9 @@ string_casecontains_f(String *self, size_t argc,
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr lhs, rhs;
 	size_t mylen;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casecontains", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casecontains",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -5378,7 +5447,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 	String *filler_ob = NULL;
 	DREF String *result;
 	union dcharptr dst, buf, my_str, fl_str;
-	if (DeeArg_Unpack(argc, argv, "Iu|o:zfill", &result_length, &filler_ob))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:zfill", &result_length, &filler_ob))
 		goto err;
 	my_len = DeeString_WLEN(self);
 	if (result_length <= my_len)
@@ -5515,7 +5584,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_reversed(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t begin = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:reversed", &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|" UNPdSIZ UNPdSIZ ":reversed", &begin, &end))
 		goto err;
 	return DeeString_Reversed(self, begin, end);
 err:
@@ -5525,7 +5594,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_expandtabs(String *self, size_t argc, DeeObject *const *argv) {
 	size_t tab_width = 8;
-	if (DeeArg_Unpack(argc, argv, "|Iu:expandtabs", &tab_width))
+	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":expandtabs", &tab_width))
 		goto err;
 	return DeeString_ExpandTabs(self, tab_width);
 err:
@@ -5883,7 +5952,9 @@ string_parition(String *self, size_t argc,
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:parition", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":parition",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -5980,7 +6051,9 @@ string_rparition(String *self, size_t argc,
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rparition", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rparition",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -6077,7 +6150,9 @@ string_caseparition(String *self, size_t argc,
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caseparition", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caseparition",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -6180,7 +6255,9 @@ string_caserparition(String *self, size_t argc,
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserparition", &other, &begin, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserparition",
+	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
@@ -8447,7 +8524,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_dedent(String *self, size_t argc, DeeObject *const *argv) {
 	size_t max_chars = 1;
 	String *mask  = NULL;
-	if (DeeArg_Unpack(argc, argv, "|Iuo:dedent", &max_chars, &mask))
+	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ "o:dedent", &max_chars, &mask))
 		goto err;
 	if (!mask)
 		return DeeString_DedentSpc(self, max_chars);
@@ -8513,7 +8590,7 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:findmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":findmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -8606,7 +8683,7 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:findmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":findmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -8701,7 +8778,7 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:casefindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casefindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -8783,8 +8860,8 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 err_not_found:
@@ -8800,7 +8877,7 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caseindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caseindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -8882,8 +8959,8 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 err_not_found:
@@ -8901,7 +8978,7 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rfindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rfindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -8994,7 +9071,7 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9089,7 +9166,7 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserfindmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserfindmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9171,8 +9248,8 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 err_not_found:
@@ -9188,7 +9265,7 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserindexmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserindexmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9270,8 +9347,8 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 err_not_found:
@@ -9290,7 +9367,7 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:partitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":partitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9445,7 +9522,7 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rpartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":rpartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9601,7 +9678,7 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len, match_length;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:casepartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":casepartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;
@@ -9762,7 +9839,7 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserpartitionmatch", &s_open, &s_clos, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":caserpartitionmatch", &s_open, &s_clos, &start, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(s_open, &DeeString_Type))
 		goto err;

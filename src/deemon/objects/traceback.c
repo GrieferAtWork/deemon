@@ -248,7 +248,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:_TracebackIterator",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_TracebackIterator",
 	                  &self->ti_trace, &index))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ti_trace, &DeeTraceback_Type))

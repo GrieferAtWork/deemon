@@ -167,6 +167,8 @@ typedef struct Dee_ddi_object DeeDDIObject;
 #define DEE_INSTRUCTION_T_DEFINED 1
 typedef __BYTE_TYPE__ Dee_instruction_t;
 #endif /* !DEE_INSTRUCTION_T_DEFINED */
+#define DEE_SIZEOF_CODE_ADDR_T 4
+#define DEE_SIZEOF_CODE_SIZE_T 4
 typedef uint32_t Dee_code_addr_t;
 typedef uint32_t Dee_code_size_t;
 typedef int32_t Dee_code_saddr_t;

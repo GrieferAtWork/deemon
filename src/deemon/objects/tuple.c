@@ -979,7 +979,7 @@ tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
 	self->ti_index = 0;
-	if (DeeArg_Unpack(argc, argv, "|oIu:_TupleIterator",
+	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ ":_TupleIterator",
 	                  &self->ti_tuple, &self->ti_index))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ti_tuple, &DeeTuple_Type))
@@ -1512,7 +1512,7 @@ tuple_unpack(DeeObject *UNUSED(self),
 	size_t num_items;
 	DeeObject *init;
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, "Iuo:unpack", &num_items, &init))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &init))
 		goto err;
 	result = DeeTuple_NewUninitialized(num_items);
 	if unlikely(!result)

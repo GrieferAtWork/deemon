@@ -62,7 +62,7 @@ capi_malloc(size_t argc, DeeObject *const *argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "Iu:malloc", &num_bytes))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":malloc", &num_bytes))
 		goto err;
 	ptr = Dee_Malloc(num_bytes);
 	if unlikely(!ptr)
@@ -82,7 +82,7 @@ capi_realloc(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	union pointer ptr;
 	size_t new_size;
-	if (DeeArg_Unpack(argc, argv, "oIu:realloc", &uptr, &new_size))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":realloc", &uptr, &new_size))
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
@@ -111,7 +111,7 @@ capi_calloc(size_t argc, DeeObject *const *argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t count, num_bytes = 1, total;
-	if (DeeArg_Unpack(argc, argv, "Iu|Iu:calloc", &count, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|" UNPuSIZ ":calloc", &count, &num_bytes))
 		goto err;
 	total = count * num_bytes;
 	/* Check for allocation overflow. */
@@ -140,7 +140,7 @@ capi_trymalloc(size_t argc, DeeObject *const *argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "Iu:trymalloc", &num_bytes))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":trymalloc", &num_bytes))
 		goto err;
 	ptr    = Dee_TryMalloc(num_bytes);
 	result = DeePointer_NewVoid(ptr);
@@ -158,7 +158,7 @@ capi_tryrealloc(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	union pointer ptr;
 	size_t new_size;
-	if (DeeArg_Unpack(argc, argv, "oIu:tryrealloc", &uptr, &new_size))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":tryrealloc", &uptr, &new_size))
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
@@ -187,7 +187,7 @@ capi_trycalloc(size_t argc, DeeObject *const *argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t count, num_bytes = 1, total;
-	if (DeeArg_Unpack(argc, argv, "Iu|Iu:trycalloc", &count, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|" UNPuSIZ ":trycalloc", &count, &num_bytes))
 		goto err;
 	total = count * num_bytes;
 	/* Check for allocation overflow. */
@@ -216,7 +216,7 @@ capi_strdup(size_t argc, DeeObject *const *argv) {
 	DeeObject *str_ob;
 	union pointer str;
 	void *resptr;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:strdup", &str_ob, &maxlen))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":strdup", &str_ob, &maxlen))
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;
@@ -244,7 +244,7 @@ capi_trystrdup(size_t argc, DeeObject *const *argv) {
 	DeeObject *str_ob;
 	union pointer str;
 	void *resptr;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:trystrdup", &str_ob, &maxlen))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":trystrdup", &str_ob, &maxlen))
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;

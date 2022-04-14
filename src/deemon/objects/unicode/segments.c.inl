@@ -251,7 +251,7 @@ sseg_ctor(StringSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_init(StringSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_StringSegments", &self->s_str, &self->s_siz))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
 		goto err;

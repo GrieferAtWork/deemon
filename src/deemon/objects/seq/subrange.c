@@ -49,7 +49,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
                       size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SubRangeIterator",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ UNPuSIZ ":_SubRangeIterator",
 	                  &self->sr_iter,
 	                  &self->sr_start,
 	                  &self->sr_size))
@@ -473,7 +473,7 @@ subrange_init(SubRange *__restrict self, size_t argc,
               DeeObject *const *argv) {
 	size_t end     = (size_t)-1;
 	self->sr_start = 0;
-	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SeqSubRange",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ UNPuSIZ ":_SeqSubRange",
 	                  &self->sr_seq, &self->sr_start, &end))
 		goto err;
 	if (end < self->sr_start)
@@ -798,7 +798,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangen_init(SubRangeN *__restrict self, size_t argc,
                DeeObject *const *argv) {
 	self->sr_start = 0;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSubRangeN",
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_SeqSubRangeN",
 	                  &self->sr_seq, &self->sr_start))
 		goto err;
 	Dee_Incref(self->sr_seq);

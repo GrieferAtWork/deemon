@@ -49,7 +49,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	self->sem_count = 0;
-	return DeeArg_Unpack(argc, argv, "|Iu:semaphore", &self->sem_count);
+	return DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":semaphore", &self->sem_count);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -107,7 +107,7 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sema_post(Semaphore *self, size_t argc, DeeObject *const *argv) {
 	size_t count = 1;
-	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count))
+	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":post", &count))
 		goto err;
 	if (sema_leave(self, count))
 		goto err;
@@ -154,7 +154,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sema_timedwait(Semaphore *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwait", &timeout))
 		goto err;
 #ifdef CONFIG_NO_THREADS
 	if (!self->sem_count)
@@ -358,7 +358,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_timedacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":tryacquire", &timeout))
 		goto err;
 #ifndef CONFIG_NO_THREADS
 	{

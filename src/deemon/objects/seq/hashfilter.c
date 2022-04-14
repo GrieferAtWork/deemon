@@ -426,7 +426,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_SeqHashFilter",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqHashFilter",
 	                  &self->f_seq, &self->f_hash))
 		goto err;
 	self->f_seq = Dee_EmptySeq;
@@ -439,7 +439,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_MappingHashFilter",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_MappingHashFilter",
 	                  &self->f_seq, &self->f_hash))
 		goto err;
 	self->f_seq = Dee_EmptySeq;

@@ -759,7 +759,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_revert(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dssize_t count;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "Id:revert", &count))
+	if (DeeArg_Unpack(argc, argv, UNPdSIZ ":revert", &count))
 		goto err;
 	if unlikely(count == 0)
 		goto done;
@@ -780,7 +780,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_advance(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dssize_t count;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "Id:advance", &count))
+	if (DeeArg_Unpack(argc, argv, UNPdSIZ ":advance", &count))
 		goto err;
 	if unlikely(count == 0)
 		goto done;

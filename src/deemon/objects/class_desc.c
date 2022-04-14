@@ -131,12 +131,11 @@ coti_next(ClassOperatorTableIterator *__restrict self) {
 		return ITER_DONE;
 	info = Dee_OperatorInfo(NULL, ent->co_name);
 	if (info) {
-		return DeeTuple_Newf("s" DEE_FMT_UINT16,
+		return DeeTuple_Newf("s" PCKu16,
 		                     info->oi_sname,
 		                     ent->co_addr);
 	}
-	return DeeTuple_Newf(DEE_FMT_UINT16
-	                     DEE_FMT_UINT16,
+	return DeeTuple_Newf(PCKu16 PCKu16,
 	                     ent->co_name,
 	                     ent->co_addr);
 }
@@ -1780,7 +1779,7 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	uint16_t class_isize         = (uint16_t)-1;
 	uint16_t class_csize         = (uint16_t)-1;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(name), K(doc), K(flags), K(operators), K(iattr), K(cattr), K(isize), K(csize), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oooooI16uI16u",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooooo" UNPu16 UNPu16 ":_ClassDescriptor",
 	                    &class_name, &class_doc,
 	                    &class_flags, &class_operators,
 	                    &class_iattr, &class_cattr,

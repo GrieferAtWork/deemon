@@ -125,6 +125,7 @@ typedef __SSIZE_TYPE__         Dee_ssize_t;
 typedef __LONG64_TYPE__        Dee_off_t;
 typedef __ULONG64_TYPE__       Dee_pos_t;
 typedef uintptr_t              Dee_hash_t;
+#define DEE_SIZEOF_DEE_POS_T 8
 
 #ifdef __cplusplus
 typedef void (*Dee_funptr_t)(void);

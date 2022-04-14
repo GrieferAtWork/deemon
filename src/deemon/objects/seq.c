@@ -1639,7 +1639,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_segments(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t segsize;
-	if (DeeArg_Unpack(argc, argv, "Iu:segments", &segsize))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":segments", &segsize))
 		goto err;
 	if unlikely(!segsize)
 		goto err_invalid_segsize;
@@ -1653,7 +1653,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t segsize, mylen;
-	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &segsize))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":distribute", &segsize))
 		goto err;
 	if unlikely(!segsize)
 		goto err_invalid_segsize;
@@ -1674,7 +1674,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t r;
-	if (DeeArg_Unpack(argc, argv, "Iu:combinations", &r))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":combinations", &r))
 		goto err;
 	return DeeSeq_Combinations(self, r);
 err:
@@ -1684,7 +1684,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t r;
-	if (DeeArg_Unpack(argc, argv, "Iu:repeatcombinations", &r))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":repeatcombinations", &r))
 		goto err;
 	return DeeSeq_RepeatCombinations(self, r);
 err:
@@ -1714,7 +1714,7 @@ seq_insert(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Iuo:insert", &index, &item))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, UNPuSIZ "o:insert", &index, &item))
 		goto err;
 	if (DeeSeq_Insert(self, index, item))
 		goto err;
@@ -1729,7 +1729,7 @@ seq_insertall(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, "Iuo:insertall", &index, &items))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, UNPuSIZ "o:insertall", &index, &items))
 		goto err;
 	if (DeeSeq_InsertAll(self, index, items))
 		goto err;
@@ -1743,7 +1743,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_erase(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	size_t index, count = 1, result;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Iu|Iu:erase", &index, &count))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, UNPuSIZ "|" UNPuSIZ ":erase", &index, &count))
 		goto err;
 	result = DeeSeq_Erase(self, index, count);
 	if unlikely(result == (size_t)-1)
@@ -1759,7 +1759,7 @@ seq_xch(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist, "Iuo:xch", &index, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist, UNPuSIZ "o:xch", &index, &value))
 		goto err;
 	return DeeSeq_XchItem(self, index, value);
 err:
@@ -1771,7 +1771,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_pop(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	dssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|Id:pop", &index))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return DeeSeq_PopItem(self, index);
 err:
@@ -1901,7 +1901,7 @@ seq_removeif(DeeObject *self, size_t argc,
 	DeeObject *should;
 	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
-	                    "o|IdId:removeif", &should, &start, &end))
+	                    "o|" UNPdSIZ UNPdSIZ ":removeif", &should, &start, &end))
 		goto err;
 	result = DeeSeq_RemoveIf(self, start, end, should);
 	if unlikely(result == (size_t)-1)
@@ -1929,7 +1929,8 @@ seq_fill(DeeObject *self, size_t argc,
 	DeeObject *filler = Dee_None;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(start), K(end), K(filler), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    "|IdIdo:fill", &start, &end, &filler))
+	                    "|" UNPdSIZ UNPdSIZ "o:fill",
+	                    &start, &end, &filler))
 		goto err;
 	result = DeeSeq_Fill(self, start, end, filler);
 	if unlikely(result == (size_t)-1)
@@ -1947,7 +1948,7 @@ seq_resize(DeeObject *self, size_t argc,
 	size_t newsize, oldsize;
 	DeeObject *filler = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist,
-	                    "Iu|o:resize", &newsize, &filler))
+	                    UNPuSIZ "|o:resize", &newsize, &filler))
 		goto err;
 	if (!newsize) {
 		result = DeeObject_CallAttr(self, (DeeObject *)&str_clear, 0, NULL);
@@ -1956,7 +1957,8 @@ seq_resize(DeeObject *self, size_t argc,
 		if unlikely(oldsize == (size_t)-1)
 			goto err;
 		if (newsize < oldsize) {
-			result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase, "Iuo", newsize, &DeeInt_MinusOne);
+			result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase,
+			                             PCKuSIZ "o", newsize, &DeeInt_MinusOne);
 		} else if (newsize > oldsize) {
 			DREF DeeObject *seq_extension;
 			seq_extension = DeeSeq_RepeatItem(filler, newsize - oldsize);
@@ -3862,7 +3864,7 @@ seq_class_repeat(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *obj;
 	size_t count;
-	if (DeeArg_Unpack(argc, argv, "oIu:repeat", &obj, &count))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":repeat", &obj, &count))
 		goto err;
 	return DeeSeq_RepeatItem(obj, count);
 err:
@@ -3874,7 +3876,7 @@ seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	size_t count;
-	if (DeeArg_Unpack(argc, argv, "oIu:repeatseq", &seq, &count))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":repeatseq", &seq, &count))
 		goto err;
 	return DeeSeq_Repeat(seq, count);
 err:

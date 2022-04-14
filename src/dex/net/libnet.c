@@ -143,7 +143,7 @@ PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":ntoh16", &i))
 		goto err;
 	return DeeInt_NewU16(BETOH16(i));
 err:
@@ -153,7 +153,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":ntoh32", &i))
 		goto err;
 	return DeeInt_NewU32(BETOH32(i));
 err:
@@ -163,7 +163,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":ntoh64", &i))
 		goto err;
 	return DeeInt_NewU64(BETOH64(i));
 err:
@@ -173,7 +173,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":hton16", &i))
 		goto err;
 	return DeeInt_NewU16(HTOBE16(i));
 err:
@@ -183,7 +183,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":hton32", &i))
 		goto err;
 	return DeeInt_NewU32(HTOBE32(i));
 err:
@@ -193,7 +193,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":hton64", &i))
 		goto err;
 	return DeeInt_NewU64(HTOBE64(i));
 err:

@@ -662,7 +662,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
-                 size_t max_length, bool keep_lf) {
+                 size_t maxbytes, bool keep_lf) {
 	DeeTypeObject *tp_self;
 	uint32_t features;
 	int ch;
@@ -700,7 +700,7 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 got_read: {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
 	/* Keep on reading characters until a linefeed is encountered. */
-	while (BYTES_PRINTER_SIZE(&printer) < max_length) {
+	while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
 		ch = (*pgetc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
 		if (ch == '\r') {
 			/* If the next character is '\n', then we must consume it as well. */
@@ -713,7 +713,7 @@ got_read: {
 			if (keep_lf) {
 				if (bytes_printer_putb(&printer, '\r'))
 					goto err_printer;
-				if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < max_length &&
+				if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
 				    bytes_printer_putb(&printer, '\n'))
 					goto err_printer;
 			}
@@ -755,7 +755,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadText(DeeObject *__restrict self,
-                 size_t max_length, bool readall) {
+                 size_t maxbytes, bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
 	size_t (DCALL *pread)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t);
@@ -782,10 +782,10 @@ DeeFile_ReadText(DeeObject *__restrict self,
 got_read: {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
 	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-	while (max_length) {
+	while (maxbytes) {
 		uint8_t *buffer;
 		size_t read_size;
-		size_t bufsize = MIN(max_length, readtext_bufsize);
+		size_t bufsize = MIN(maxbytes, readtext_bufsize);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)
@@ -799,7 +799,7 @@ got_read: {
 		if (!read_size ||
 		    (!readall && read_size < bufsize))
 			break; /* EOF */
-		max_length -= read_size;
+		maxbytes -= read_size;
 		readtext_bufsize *= 2;
 	}
 /*done:*/
@@ -813,7 +813,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadText(DeeObject *__restrict self,
-                  size_t max_length, dpos_t pos,
+                  size_t maxbytes, dpos_t pos,
                   bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
@@ -841,10 +841,10 @@ DeeFile_PReadText(DeeObject *__restrict self,
 got_read: {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
 	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-	while (max_length) {
+	while (maxbytes) {
 		uint8_t *buffer;
 		size_t read_size;
-		size_t bufsize = MIN(max_length, readtext_bufsize);
+		size_t bufsize = MIN(maxbytes, readtext_bufsize);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)
@@ -858,7 +858,7 @@ got_read: {
 		if (!read_size ||
 		    (!readall && read_size < bufsize))
 			break; /* EOF */
-		max_length -= read_size;
+		maxbytes -= read_size;
 		pos += read_size;
 		readtext_bufsize *= 2;
 	}
@@ -1788,12 +1788,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_read(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	size_t max_length = (size_t)-1;
-	bool readall      = false;
+	size_t maxbytes = (size_t)-1;
+	bool readall    = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(maxbytes), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|Idb:read", &max_length, &readall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPdSIZ "b:read", &maxbytes, &readall))
 		goto err;
-	return DeeFile_ReadText(self, max_length, readall);
+	return DeeFile_ReadText(self, maxbytes, readall);
 err:
 	return NULL;
 }
@@ -1848,12 +1848,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pread(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	dpos_t file_pos;
-	size_t max_length = (size_t)-1;
+	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(pos), K(maxbytes), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "I64u|Idb:pread", &file_pos, &max_length, &readall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ "b:pread",
+	                    &file_pos, &maxbytes, &readall))
 		goto err;
-	return DeeFile_PReadText(self, max_length, file_pos, readall);
+	return DeeFile_PReadText(self, maxbytes, file_pos, readall);
 err:
 	return NULL;
 }
@@ -1867,7 +1869,9 @@ file_preadinto(DeeObject *self, size_t argc,
 	dpos_t file_pos;
 	bool readall = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oI64u|b:preadinto", &data, &file_pos, &readall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "o" UNPuN(DEE_SIZEOF_DEE_POS_T) "|b:preadinto",
+	                    &data, &file_pos, &readall))
 		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
@@ -1890,7 +1894,9 @@ file_pwrite(DeeObject *self, size_t argc,
 	bool writeall = true;
 	size_t result;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(writeall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oI64u|b:pwrite", &data, &file_pos, &writeall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "o" UNPuN(DEE_SIZEOF_DEE_POS_T) "|b:pwrite",
+	                    &data, &file_pos, &writeall))
 		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
@@ -1924,7 +1930,9 @@ file_seek(DeeObject *self, size_t argc,
 	dpos_t result;
 	int whence = SEEK_SET;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(off), K(whence), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "I64d|o:seek", &seek_off, &whence_ob))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    UNPdN(DEE_SIZEOF_DEE_POS_T) "|o:seek",
+	                    &seek_off, &whence_ob))
 		goto err;
 	if (whence_ob) {
 		if (DeeString_Check(whence_ob)) {
@@ -1997,7 +2005,7 @@ file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 	} else {
 		/* Truncate at the current position. */
-		if (DeeArg_Unpack(argc, argv, "|I64u:trunc", &trunc_pos))
+		if (DeeArg_Unpack(argc, argv, "|" UNPuN(DEE_SIZEOF_DEE_POS_T) ":trunc", &trunc_pos))
 			goto err;
 		if (DeeFile_Trunc(self, trunc_pos))
 			goto err;
@@ -2064,7 +2072,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	uint8_t byte;
-	if (DeeArg_Unpack(argc, argv, "I8u:putc", &byte))
+	if (DeeArg_Unpack(argc, argv, UNPu8 ":putc", &byte))
 		goto err;
 	result = DeeFile_Putc(self, (int)(unsigned int)byte);
 	if unlikely(result == GETC_ERR)
@@ -2114,15 +2122,15 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	size_t max_length = (size_t)-1;
-	bool keeplf       = true;
+	size_t maxbytes = (size_t)-1;
+	bool keeplf     = true;
 	if (argc == 1 && DeeBool_Check(argv[0])) {
 		keeplf = DeeBool_IsTrue(argv[0]);
 	} else {
-		if (DeeArg_Unpack(argc, argv, "|Idb:readline", &max_length, &keeplf))
+		if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ "b:readline", &maxbytes, &keeplf))
 			goto err;
 	}
-	result = DeeFile_ReadLine(self, max_length, keeplf);
+	result = DeeFile_ReadLine(self, maxbytes, keeplf);
 	if (result == ITER_DONE) {
 		result = Dee_EmptyString;
 		Dee_Incref(Dee_EmptyString);
@@ -2135,10 +2143,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	size_t max_length = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "|Id:readall", &max_length))
+	size_t maxbytes = (size_t)-1;
+	if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ ":readall", &maxbytes))
 		goto err;
-	return DeeFile_ReadText(self, max_length, true);
+	return DeeFile_ReadText(self, maxbytes, true);
 err:
 	return NULL;
 }
@@ -2146,10 +2154,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dpos_t file_pos;
-	size_t max_length = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "I64u|Id:readallat", &file_pos, &max_length))
+	size_t maxbytes = (size_t)-1;
+	if (DeeArg_Unpack(argc, argv,
+	                  UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ ":readallat",
+	                  &file_pos, &maxbytes))
 		goto err;
-	return DeeFile_PReadText(self, max_length, file_pos, true);
+	return DeeFile_PReadText(self, maxbytes, file_pos, true);
 err:
 	return NULL;
 }

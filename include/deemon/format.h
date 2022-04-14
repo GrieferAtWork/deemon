@@ -22,6 +22,7 @@
 
 #include "api.h"
 
+#include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/typecore.h>
 
 #include <stdarg.h>
@@ -205,76 +206,118 @@ Dee_VPPackf(char const **__restrict pformat,
 DFUNDEF NONNULL((1)) void DCALL
 Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 
-/* Helper macros to select the most efficient
- * encoding which still produces the correct results. */
-#define DEE_FMT_INT8    DEE_FMT_S_INT8  "d"
-#define DEE_FMT_INT16   DEE_FMT_S_INT16 "d"
-#define DEE_FMT_INT32   DEE_FMT_S_INT32 "d"
-#define DEE_FMT_INT64   DEE_FMT_S_INT64 "d"
-#define DEE_FMT_UINT8   DEE_FMT_S_INT8  "u"
-#define DEE_FMT_UINT16  DEE_FMT_S_INT16 "u"
-#define DEE_FMT_UINT32  DEE_FMT_S_INT32 "u"
-#define DEE_FMT_UINT64  DEE_FMT_S_INT64 "u"
-#define DEE_FMT_SIZE_T  "Iu"
-#define DEE_FMT_SSIZE_T "Id"
 
-#define DEE_FMT_S_INT8  ""    /* Due to integer promotions, we can assume that any 8-bit integral always
-                               * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
-#define DEE_FMT_S_INT16 "I16"
-#define DEE_FMT_S_INT32 "I32"
-#define DEE_FMT_S_INT64 "I64"
-
-#ifdef __SIZEOF_LONG_LONG__
-#if __SIZEOF_LONG_LONG__ == 8
-#undef DEE_FMT_S_INT64
-#define DEE_FMT_S_INT64 "ll"
-#elif __SIZEOF_LONG_LONG__ == 4
-#undef DEE_FMT_S_INT32
-#define DEE_FMT_S_INT32 "ll"
-#endif
-#endif /* __SIZEOF_LONG_LONG__ */
-#ifdef __SIZEOF_SIZE_T__
-#if __SIZEOF_SIZE_T__ == 8
-#undef DEE_FMT_S_INT64
-#define DEE_FMT_S_INT64 "I"
-#elif __SIZEOF_SIZE_T__ == 4
-#undef DEE_FMT_S_INT32
-#define DEE_FMT_S_INT32 "I"
-#endif
-#if defined(__SIZEOF_INT__) && __SIZEOF_SIZE_T__ <= __SIZEOF_INT__
-#undef DEE_FMT_SIZE_T
-#undef DEE_FMT_SSIZE_T
-#define DEE_FMT_SIZE_T  "u"
-#define DEE_FMT_SSIZE_T "d"
-#endif /* __SIZEOF_INT__ && __SIZEOF_SIZE_T__ <= __SIZEOF_INT__ */
-#endif /* __SIZEOF_SIZE_T__ */
-#ifdef __SIZEOF_LONG__
-#if __SIZEOF_LONG__ == 4
-#undef DEE_FMT_S_INT32
-#define DEE_FMT_S_INT32 "l"
+/* Optimized format sequences for:
+ * - Dee_Packf()
+ * - DeeTuple_Newf()
+ * - DeeObject_CallAttrStringf()
+ * - ... */
+#define DEE_PCKu8 "u" /* Due to integer promotions, we can assume that any 8-bit integral always
+                       * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+#define DEE_PCKd8 "d" /* *ditto* */
+#if __VA_SIZE >= 2
+#define DEE_PCKu16 "u"
+#define DEE_PCKd16 "d"
+#elif __SIZEOF_LONG__ == 2
+#define DEE_PCKu16 "lu"
+#define DEE_PCKd16 "ld"
+#elif __SIZEOF_SHORT__ == 2
+#define DEE_PCKu16 "hu"
+#define DEE_PCKd16 "hd"
+#elif __SIZEOF_POINTER__ == 2
+#define DEE_PCKu16 "Iu"
+#define DEE_PCKd16 "Id"
+#elif __SIZEOF_CHAR__ == 2
+#define DEE_PCKu16 "hhu"
+#define DEE_PCKd16 "hhd"
+#elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 2
+#define DEE_PCKu16 "llu"
+#define DEE_PCKd16 "lld"
+#else /* ... == 2 */
+#define DEE_PCKu16 "I16u"
+#define DEE_PCKd16 "I16d"
+#endif /* ... != 2 */
+#if __VA_SIZE >= 4
+#define DEE_PCKu32 "u"
+#define DEE_PCKd32 "d"
+#elif __SIZEOF_LONG__ == 4
+#define DEE_PCKu32 "lu"
+#define DEE_PCKd32 "ld"
+#elif __SIZEOF_SHORT__ == 4
+#define DEE_PCKu32 "hu"
+#define DEE_PCKd32 "hd"
+#elif __SIZEOF_POINTER__ == 4
+#define DEE_PCKu32 "Iu"
+#define DEE_PCKd32 "Id"
+#elif __SIZEOF_CHAR__ == 4
+#define DEE_PCKu32 "hhu"
+#define DEE_PCKd32 "hhd"
+#elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 4
+#define DEE_PCKu32 "llu"
+#define DEE_PCKd32 "lld"
+#else /* ... == 4 */
+#define DEE_PCKu32 "I32u"
+#define DEE_PCKd32 "I32d"
+#endif /* ... != 4 */
+#if __VA_SIZE >= 8
+#define DEE_PCKu64 "u"
+#define DEE_PCKd64 "d"
 #elif __SIZEOF_LONG__ == 8
-#undef DEE_FMT_S_INT64
-#define DEE_FMT_S_INT64 "l"
-#endif
-#endif /* __SIZEOF_LONG__ */
-#ifdef __SIZEOF_INT__
-#if __SIZEOF_INT__ >= 8
-#undef DEE_FMT_S_INT16
-#undef DEE_FMT_S_INT32
-#undef DEE_FMT_S_INT64
-#define DEE_FMT_S_INT16 ""
-#define DEE_FMT_S_INT32 ""
-#define DEE_FMT_S_INT64 ""
-#elif __SIZEOF_INT__ >= 4
-#undef DEE_FMT_S_INT16
-#undef DEE_FMT_S_INT32
-#define DEE_FMT_S_INT16 ""
-#define DEE_FMT_S_INT32 ""
-#elif __SIZEOF_INT__ >= 2
-#undef DEE_FMT_S_INT16
-#define DEE_FMT_S_INT16 ""
-#endif
-#endif /* __SIZEOF_INT__ */
+#define DEE_PCKu64 "lu"
+#define DEE_PCKd64 "ld"
+#elif __SIZEOF_SHORT__ == 8
+#define DEE_PCKu64 "hu"
+#define DEE_PCKd64 "hd"
+#elif __SIZEOF_POINTER__ == 8
+#define DEE_PCKu64 "Iu"
+#define DEE_PCKd64 "Id"
+#elif __SIZEOF_CHAR__ == 8
+#define DEE_PCKu64 "hhu"
+#define DEE_PCKd64 "hhd"
+#elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 8
+#define DEE_PCKu64 "llu"
+#define DEE_PCKd64 "lld"
+#else /* ... == 8 */
+#define DEE_PCKu64 "I64u"
+#define DEE_PCKd64 "I64d"
+#endif /* ... != 8 */
+
+#define DEE_PRIVATE_PCKu1         DEE_PCKu8
+#define DEE_PRIVATE_PCKd1         DEE_PCKd8
+#define DEE_PRIVATE_PCKu2         DEE_PCKu16
+#define DEE_PRIVATE_PCKd2         DEE_PCKd16
+#define DEE_PRIVATE_PCKu4         DEE_PCKu32
+#define DEE_PRIVATE_PCKd4         DEE_PCKd32
+#define DEE_PRIVATE_PCKu8         DEE_PCKu64
+#define DEE_PRIVATE_PCKd8         DEE_PCKd64
+#define DEE_PRIVATE_PCKuN(sizeof) DEE_PRIVATE_PCKu##sizeof
+#define DEE_PRIVATE_PCKdN(sizeof) DEE_PRIVATE_PCKd##sizeof
+#define DEE_PCKuN(sizeof)         DEE_PRIVATE_PCKuN(sizeof)
+#define DEE_PCKdN(sizeof)         DEE_PRIVATE_PCKdN(sizeof)
+
+/* Helpful aliases */
+#define DEE_PCKuSIZ DEE_PCKuN(__SIZEOF_SIZE_T__)
+#define DEE_PCKdSIZ DEE_PCKdN(__SIZEOF_SIZE_T__)
+#define DEE_PCKuPTR DEE_PCKuN(__SIZEOF_POINTER__)
+#define DEE_PCKdPTR DEE_PCKdN(__SIZEOF_POINTER__)
+
+/* Unescaped names. */
+#ifdef DEE_SOURCE
+#define PCKu8   DEE_PCKu8
+#define PCKd8   DEE_PCKd8
+#define PCKu16  DEE_PCKu16
+#define PCKd16  DEE_PCKd16
+#define PCKu32  DEE_PCKu32
+#define PCKd32  DEE_PCKd32
+#define PCKu64  DEE_PCKu64
+#define PCKd64  DEE_PCKd64
+#define PCKuN   DEE_PCKuN
+#define PCKdN   DEE_PCKdN
+#define PCKuSIZ DEE_PCKuSIZ
+#define PCKdSIZ DEE_PCKdSIZ
+#define PCKuPTR DEE_PCKuPTR
+#define PCKdPTR DEE_PCKdPTR
+#endif /* DEE_SOURCE */
 
 
 

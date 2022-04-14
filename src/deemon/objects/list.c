@@ -2369,7 +2369,8 @@ list_insert(List *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Iuo:insert", &index, &item))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist,
+	                    UNPuSIZ "o:insert", &index, &item))
 		goto err;
 	if (DeeList_Insert((DeeObject *)self, index, item))
 		goto err;
@@ -2383,7 +2384,8 @@ list_insertall(List *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, "Ido:insertall", &index, &items))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist,
+	                    UNPdSIZ "o:insertall", &index, &items))
 		goto err;
 	if (DeeList_InsertSequence((DeeObject *)self, index, items))
 		goto err;
@@ -2397,7 +2399,9 @@ list_removeif(List *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *should;
 	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist, "o|IdId:removeif", &should, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":removeif",
+	                    &should, &start, &end))
 		goto err;
 	result = DeeList_RemoveIf(self, start, end, should);
 	if unlikely(result == (size_t)-1)
@@ -2412,7 +2416,7 @@ list_insertiter_deprecated(List *self,
                            size_t argc, DeeObject *const *argv) {
 	size_t index;
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "Ido:insert_iter", &index, &seq))
+	if (DeeArg_Unpack(argc, argv, UNPdSIZ "o:insert_iter", &index, &seq))
 		goto err;
 	if (DeeList_InsertIterator((DeeObject *)self, index, seq))
 		goto err;
@@ -2425,7 +2429,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_erase(List *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	size_t index, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Iu|Iu:erase", &index, &count))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist,
+	                    UNPuSIZ "|" UNPuSIZ ":erase",
+	                    &index, &count))
 		goto err;
 	count = DeeList_Erase((DeeObject *)self, index, count);
 	if unlikely(count == (size_t)-1)
@@ -2440,7 +2446,8 @@ list_xch(List *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist, "Iuo:xch", &index, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist,
+	                    UNPuSIZ "o:xch", &index, &value))
 		goto err;
 	return list_nsi_xch(self, index, value);
 err:
@@ -2451,7 +2458,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_pop(List *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	dssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|Id:pop", &index))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist,
+	                    "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return DeeList_Pop((DeeObject *)self, index);
 err:
@@ -2714,7 +2722,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_reserve(List *self, size_t argc, DeeObject *const *argv) {
 	size_t size;
-	if (DeeArg_Unpack(argc, argv, "Iu:reserve", &size))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":reserve", &size))
 		goto err;
 	DeeList_LockWrite(self);
 	if (size > self->l_alloc) {
@@ -2910,7 +2918,7 @@ list_resize(List *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	size_t newsize;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist, "Iu|o:resize", &newsize, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist, UNPuSIZ "|o:resize", &newsize, &filler))
 		goto err;
 again:
 	DeeList_LockWrite(self);
@@ -3879,7 +3887,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	self->li_index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|Iu:_ListIterator", &self->li_list, &self->li_index))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_ListIterator", &self->li_list, &self->li_index))
 		goto err;
 	if (DeeObject_AssertType(self->li_list, &DeeList_Type))
 		goto err;

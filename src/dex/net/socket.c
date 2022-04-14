@@ -1960,7 +1960,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout = (uint64_t)-1;
-	if (DeeArg_Unpack(argc, argv, "|I64d:accept", &timeout))
+	if (DeeArg_Unpack(argc, argv, "|" UNPd64 ":accept", &timeout))
 		goto err;
 	return socket_doaccept(self, timeout);
 err:

@@ -565,7 +565,7 @@ proxyitems_byhash(MapProxy *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
 		goto err;
 	/* Invoke byhash() on the underlying mapping. */
-	return DeeObject_CallAttrStringf(self->mp_map, "byhash", "Iu",
+	return DeeObject_CallAttrStringf(self->mp_map, "byhash", PCKuSIZ,
 	                                 DeeObject_Hash(template_));
 err:
 	return NULL;

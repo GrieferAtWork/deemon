@@ -219,7 +219,7 @@ bseg_ctor(BytesSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_init(BytesSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_BytesSegments", &self->b_str, &self->b_siz))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_BytesSegments", &self->b_str, &self->b_siz))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->b_str, &DeeBytes_Type))
 		goto err;

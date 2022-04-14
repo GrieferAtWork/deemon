@@ -129,7 +129,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	LONG init_value = 0;
-	if (DeeArg_Unpack(argc, argv, "|I32u:semaphore", &init_value))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu32 ":semaphore", &init_value))
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	self->sem_handle = CreateSemaphoreW(NULL, init_value, 0x7fffffff, NULL);
@@ -161,7 +161,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_post(Semaphore *self, size_t argc,
           DeeObject *const *argv) {
 	LONG count = 1;
-	if (DeeArg_Unpack(argc, argv, "|I32u:post", &count))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu32 ":post", &count))
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!ReleaseSemaphore(self->sem_handle, count, NULL))
@@ -206,7 +206,7 @@ sema_timedwait(Semaphore *self, size_t argc,
                DeeObject *const *argv) {
 	int error;
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":timedwait", &timeout))
 		goto err;
 	error = nt_WaitForSemaphore(self->sem_handle, timeout);
 	if unlikely(error < 0)
@@ -467,7 +467,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mutex_timedacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":tryacquire", &timeout))
 		goto err;
 	error = mutex_timedenter(self, timeout);
 	if unlikely(error < 0)

@@ -942,7 +942,7 @@ for (local x: names)
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISDIR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISDIR", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISDIR", &arg))
 		goto err;
 	return_bool(STAT_ISDIR(arg));
 err:
@@ -952,7 +952,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISCHR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISCHR", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISCHR", &arg))
 		goto err;
 	return_bool(STAT_ISCHR(arg));
 err:
@@ -962,7 +962,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISBLK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISBLK", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISBLK", &arg))
 		goto err;
 	return_bool(STAT_ISBLK(arg));
 err:
@@ -972,7 +972,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISREG(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISREG", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISREG", &arg))
 		goto err;
 	return_bool(STAT_ISREG(arg));
 err:
@@ -982,7 +982,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISFIFO(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISFIFO", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISFIFO", &arg))
 		goto err;
 	return_bool(STAT_ISFIFO(arg));
 err:
@@ -992,7 +992,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISLNK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISLNK", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISLNK", &arg))
 		goto err;
 	return_bool(STAT_ISLNK(arg));
 err:
@@ -1002,7 +1002,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 f_libfs_S_ISSOCK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
-	if (DeeArg_Unpack(argc, argv, "I16u:S_ISSOCK", &arg))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":S_ISSOCK", &arg))
 		goto err;
 	return_bool(STAT_ISSOCK(arg));
 err:

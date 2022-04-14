@@ -521,14 +521,19 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print(";");
 	}
 	if (kw && arg_data) {
-		print("\tif (DeeArg_UnpackKw(argc, argv, kw, ", kwlist_name, ", \""),;
+		print("\tif (DeeArg_UnpackKw(argc, argv, kw, ", kwlist_name, ", "),;
 	} else {
-		print("\tif (DeeArg_Unpack(argc, argv, \""),;
+		print("\tif (DeeArg_Unpack(argc, argv, "),;
 	}
+	local has_quote = false;
 	local is_optional = false;
 	for (local x, y, z: arg_data) {
 		if (z) {
 			if (!is_optional) {
+				if (!has_quote) {
+					print("\""),;
+					has_quote = true;
+				}
 				print("|"),;
 				is_optional = true;
 			}
@@ -539,11 +544,43 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 					.format({ x }));
 		}
 		if ("?" in y) {
+			if (!has_quote) {
+				print("\""),;
+				has_quote = true;
+			}
 			print("o"),;
 		} else {
-			print(get_converter(y)[0]),;
+			local conv = get_converter(y)[0];
+			local UNPconv = {
+				"Id" : "UNPdSIZ",
+				"Iu" : "UNPuSIZ",
+				"I8d" : "UNPd8",
+				"I8u" : "UNPu8",
+				"I16d" : "UNPd16",
+				"I16u" : "UNPu16",
+				"I32d" : "UNPd32",
+				"I32u" : "UNPu32",
+				"I64d" : "UNPd64",
+				"I64u" : "UNPu64",
+			}.get(conv);
+			if (UNPconv !is none) {
+				if (has_quote) {
+					print("\" "),;
+					has_quote = false;
+				}
+				print(UNPconv),;
+				print(" "),;
+			} else {
+				if (!has_quote) {
+					print("\""),;
+					has_quote = true;
+				}
+				print(conv),;
+			}
 		}
 	}
+	if (!has_quote)
+		print("\""),;
 	print(":", name, "\""),;
 	if (arg_data) {
 		for (local x, y, z: arg_data)

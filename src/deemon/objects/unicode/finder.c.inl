@@ -296,8 +296,8 @@ again:
 		result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
 		break;
 	}
-	return DeeTuple_Newf(DEE_FMT_SIZE_T
-	                     DEE_FMT_SIZE_T,
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
 	                     result,
 	                     result + match_length);
 iter_done:
@@ -520,7 +520,7 @@ sf_init(StringFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	self->sf_start = 0;
 	self->sf_end   = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:_StringFind",
+	if (DeeArg_Unpack(argc, argv, "oo|" UNPdSIZ UNPdSIZ ":_StringFind",
 	                  &self->sf_str, &self->sf_needle,
 	                  &self->sf_start, &self->sf_end))
 		goto err;

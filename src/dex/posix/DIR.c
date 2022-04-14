@@ -214,25 +214,25 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 
 
 #ifdef CONFIG_HAVE_struct_dirent_d_type_size_1
-#define TYPEOF_struct_dirent_d_type   uint8_t
-#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT8
-#define DEFINE_D_TYPE_CONSTANT DEFINE_INT15
-#define DeeInt_New_D_TYPE      DeeInt_NewU8
+#define TYPEOF_struct_dirent_d_type uint8_t
+#define UNP_struct_dirent_d_type    UNPu8
+#define DEFINE_D_TYPE_CONSTANT      DEFINE_INT15
+#define DeeInt_New_D_TYPE           DeeInt_NewU8
 #elif defined(CONFIG_HAVE_struct_dirent_d_type_size_2)
-#define TYPEOF_struct_dirent_d_type   uint16_t
-#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT16
-#define DEFINE_D_TYPE_CONSTANT DEFINE_INT16
-#define DeeInt_New_D_TYPE      DeeInt_NewU16
+#define TYPEOF_struct_dirent_d_type uint16_t
+#define UNP_struct_dirent_d_type    UNPu16
+#define DEFINE_D_TYPE_CONSTANT      DEFINE_INT16
+#define DeeInt_New_D_TYPE           DeeInt_NewU16
 #elif defined(CONFIG_HAVE_struct_dirent_d_type_size_4)
-#define TYPEOF_struct_dirent_d_type   uint32_t
-#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT32
-#define DEFINE_D_TYPE_CONSTANT DEFINE_INT32
-#define DeeInt_New_D_TYPE      DeeInt_NewU32
+#define TYPEOF_struct_dirent_d_type uint32_t
+#define UNP_struct_dirent_d_type    UNPu32
+#define DEFINE_D_TYPE_CONSTANT      DEFINE_INT32
+#define DeeInt_New_D_TYPE           DeeInt_NewU32
 #else /* ... */
-#define TYPEOF_struct_dirent_d_type   uint64_t
-#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT64
-#define DEFINE_D_TYPE_CONSTANT DEFINE_INT64
-#define DeeInt_New_D_TYPE      DeeInt_NewU64
+#define TYPEOF_struct_dirent_d_type uint64_t
+#define UNP_struct_dirent_d_type    UNPu64
+#define DEFINE_D_TYPE_CONSTANT      DEFINE_INT64
+#define DeeInt_New_D_TYPE           DeeInt_NewU64
 #endif /* !... */
 
 /* Define the DT_* constants for export. */
@@ -320,7 +320,7 @@ LOCAL unsigned int dee_DTTOIF(TYPEOF_struct_dirent_d_type dt) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_DTTOIF_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
 	TYPEOF_struct_dirent_d_type dt;
-	if (DeeArg_Unpack(argc, argv, FMTOF_struct_dirent_d_type, &dt))
+	if (DeeArg_Unpack(argc, argv, UNP_struct_dirent_d_type ":DTTOIF", &dt))
 		goto err;
 	return DeeInt_NewUInt(USED_DTTOIF(dt));
 err:
@@ -330,7 +330,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_IFTODT_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
 	unsigned int if_;
-	if (DeeArg_Unpack(argc, argv, "u", &if_))
+	if (DeeArg_Unpack(argc, argv, "u:IFTODT", &if_))
 		goto err;
 	return DeeInt_New_D_TYPE(USED_IFTODT(if_));
 err:

@@ -956,7 +956,7 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_dwErrCode, { K(dwErrCode), KEND });
 #endif /* !LIBWIN32_KWDS_DWERRCODE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DWORD dwErrCode;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwErrCode, "I32u:SetLastError", &dwErrCode))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwErrCode, UNPu32 ":SetLastError", &dwErrCode))
 		goto err;
 	return libwin32_SetLastError_f_impl(dwErrCode);
 err:
@@ -1044,7 +1044,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, De
 	DWORD dwDesiredAccess = 0;
 	bool bInheritHandle = true;
 	DWORD dwOptions = DUPLICATE_SAME_ACCESS;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions, "ooo|I32ubI32u:DuplicateHandle", &hSourceProcessHandle, &hSourceHandle, &hTargetProcessHandle, &dwDesiredAccess, &bInheritHandle, &dwOptions))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions, "ooo|" UNPu32 "b" UNPu32 ":DuplicateHandle", &hSourceProcessHandle, &hSourceHandle, &hTargetProcessHandle, &dwDesiredAccess, &bInheritHandle, &dwOptions))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hSourceProcessHandle, (void **)&hhSourceProcessHandle))
 		goto err;
@@ -1127,7 +1127,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObje
 	DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
 	HANDLE hhTemplateFile = 0;
 	DeeObject *hTemplateFile = (DeeObject *)Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile, "o|I32uI32uoI32uI32uo:CreateFile", &lpFileName, &dwDesiredAccess, &dwShareMode, &lpSecurityAttributes, &dwCreationDisposition, &dwFlagsAndAttributes, &hTemplateFile))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile, "o|" UNPu32 UNPu32 "o" UNPu32 UNPu32 "o:CreateFile", &lpFileName, &dwDesiredAccess, &dwShareMode, &lpSecurityAttributes, &dwCreationDisposition, &dwFlagsAndAttributes, &hTemplateFile))
 		goto err;
 	if (!DeeNone_Check(hTemplateFile)) {
 		if (DeeNTSystem_TryGetHandle(hTemplateFile, (void **)&hhTemplateFile))
@@ -1519,7 +1519,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc,
 	LPCWSTR lpFileName_str;
 	DeeStringObject *lpFileName;
 	DWORD dwFileAttributes;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "oI32u:SetFileAttributesW", &lpFileName, &dwFileAttributes))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "o" UNPu32 ":SetFileAttributesW", &lpFileName, &dwFileAttributes))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
 		goto err;
@@ -1572,7 +1572,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, Dee
 	DeeObject *hFile;
 	int64_t lDistanceToMove;
 	DWORD dwMoveMethod = FILE_BEGIN;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod, "oI64d|I32u:SetFilePointer", &hFile, &lDistanceToMove, &dwMoveMethod))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod, "o" UNPd64 "|" UNPu32 ":SetFilePointer", &hFile, &lDistanceToMove, &dwMoveMethod))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
@@ -1671,9 +1671,7 @@ again:
 		             hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeTuple_Newf(DEE_FMT_UINT64
-	                     DEE_FMT_UINT64
-	                     DEE_FMT_UINT64,
+	return DeeTuple_Newf(PCKu64 PCKu64 PCKu64,
 	                     ftCreationTime.u64,
 	                     ftLastAccessTime.u64,
 	                     ftLastWriteTime.u64);
@@ -1761,7 +1759,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, D
 	HANDLE hhFile;
 	DeeObject *hFile;
 	uint64_t ValidDataLength;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_ValidDataLength, "oI64u:SetFileValidData", &hFile, &ValidDataLength))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_ValidDataLength, "o" UNPu64 ":SetFileValidData", &hFile, &ValidDataLength))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
@@ -2044,10 +2042,7 @@ again:
 		             lpRootPathName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeTuple_Newf(DEE_FMT_UINT32
-	                     DEE_FMT_UINT32
-	                     DEE_FMT_UINT32
-	                     DEE_FMT_UINT32,
+	return DeeTuple_Newf(PCKu32 PCKu32 PCKu32 PCKu32,
 	                     dwSectorsPerCluster,
 	                     dwBytesPerSector,
 	                     dwNumberOfFreeClusters,
@@ -2109,9 +2104,7 @@ again:
 		             lpDirectoryName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return DeeTuple_Newf(DEE_FMT_UINT64
-	                     DEE_FMT_UINT64
-	                     DEE_FMT_UINT64,
+	return DeeTuple_Newf(PCKu64 PCKu64 PCKu64,
 	                     uFreeBytesAvailableToCaller.QuadPart,
 	                     uTotalNumberOfBytes.QuadPart,
 	                     uTotalNumberOfFreeBytes.QuadPart);
@@ -2827,7 +2820,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f(size_t argc, 
 	LPCWSTR lpFileName_str;
 	DeeStringObject *lpFileName;
 	DWORD dwFileAttributes;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "oI32u:SetFileAttributes", &lpFileName, &dwFileAttributes))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "o" UNPu32 ":SetFileAttributes", &lpFileName, &dwFileAttributes))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
 		goto err;
@@ -2983,7 +2976,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f(size_t
 	HANDLE hhFile;
 	DeeObject *hFile;
 	DWORD dwFlags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_dwFlags, "o|I32u:GetFinalPathNameByHandle", &hFile, &dwFlags))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_dwFlags, "o|" UNPu32 ":GetFinalPathNameByHandle", &hFile, &dwFlags))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
@@ -3070,7 +3063,7 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_dwError, { K(dwError), KEND });
 #endif /* !LIBWIN32_KWDS_DWERROR_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DWORD dwError;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwError, "I32u:FormatErrorMessage", &dwError))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwError, UNPu32 ":FormatErrorMessage", &dwError))
 		goto err;
 	return libwin32_FormatErrorMessage_f_impl(dwError);
 err:
@@ -3162,7 +3155,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeO
 	DWORD dwDesiredAccess = FILE_MAP_READ;
 	uint64_t dwFileOffset = 0;
 	size_t dwNumberOfBytesToMap = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, "o|I32uI64uIu:MapViewOfFile", &hFileMappingObject, &dwDesiredAccess, &dwFileOffset, &dwNumberOfBytesToMap))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, "o|" UNPu32 UNPu64 UNPuSIZ ":MapViewOfFile", &hFileMappingObject, &dwDesiredAccess, &dwFileOffset, &dwNumberOfBytesToMap))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFileMappingObject, (void **)&hhFileMappingObject))
 		goto err;
@@ -3287,7 +3280,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f(size_t argc, 
 	uint64_t dwMaximumSize = 0;
 	LPCWSTR lpName_str = NULL;
 	DeeStringObject *lpName = (DeeStringObject *)Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpFileMappingAttributes_flProtect_dwMaximumSize_lpName, "o|oI32uI64uo:CreateFileMapping", &hFile, &lpFileMappingAttributes, &flProtect, &dwMaximumSize, &lpName))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpFileMappingAttributes_flProtect_dwMaximumSize_lpName, "o|o" UNPu32 UNPu64 "o:CreateFileMapping", &hFile, &lpFileMappingAttributes, &flProtect, &dwMaximumSize, &lpName))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
@@ -3459,7 +3452,7 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_nStdHandle, { K(nStdHandle), KEND });
 #endif /* !LIBWIN32_KWDS_NSTDHANDLE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int32_t nStdHandle;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle, "I32d:GetStdHandle", &nStdHandle))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle, UNPd32 ":GetStdHandle", &nStdHandle))
 		goto err;
 	return libwin32_GetStdHandle_f_impl(nStdHandle);
 err:
@@ -3520,7 +3513,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeOb
 	DWORD nStdHandle;
 	HANDLE hhHandle;
 	DeeObject *hHandle;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle_hHandle, "I32uo:SetStdHandle", &nStdHandle, &hHandle))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle_hHandle, UNPu32 "o:SetStdHandle", &nStdHandle, &hHandle))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hHandle, (void **)&hhHandle))
 		goto err;
@@ -3588,7 +3581,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, De
 	DWORD nInBufferSize = 65536;
 	DWORD nDefaultTimeOut = 0;
 	DeeObject *lpSecurityAttributes = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes, "o|I32uI32uI32uI32uI32uI32uo:CreateNamedPipe", &lpName, &dwOpenMode, &dwPipeMode, &nMaxInstances, &nOutBufferSize, &nInBufferSize, &nDefaultTimeOut, &lpSecurityAttributes))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes, "o|" UNPu32 UNPu32 UNPu32 UNPu32 UNPu32 UNPu32 "o:CreateNamedPipe", &lpName, &dwOpenMode, &dwPipeMode, &nMaxInstances, &nOutBufferSize, &nInBufferSize, &nDefaultTimeOut, &lpSecurityAttributes))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
 		goto err;
@@ -3711,7 +3704,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f(size_t argc, DeeO
 	LPCWSTR lpNamedPipeName_str;
 	DeeStringObject *lpNamedPipeName;
 	DWORD nTimeOut = NMPWAIT_WAIT_FOREVER;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpNamedPipeName_nTimeOut, "o|I32u:WaitNamedPipe", &lpNamedPipeName, &nTimeOut))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpNamedPipeName_nTimeOut, "o|" UNPu32 ":WaitNamedPipe", &lpNamedPipeName, &nTimeOut))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpNamedPipeName, &DeeString_Type))
 		goto err;
@@ -3803,7 +3796,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f(size_t argc, DeeObj
 	DWORD dwDesiredAccess;
 	bool bInheritHandle;
 	DWORD dwProcessId;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_dwProcessId, "I32ubI32u:OpenProcess", &dwDesiredAccess, &bInheritHandle, &dwProcessId))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_dwProcessId, UNPu32 "b" UNPu32 ":OpenProcess", &dwDesiredAccess, &bInheritHandle, &dwProcessId))
 		goto err;
 	return libwin32_OpenProcess_f_impl(dwDesiredAccess, bInheritHandle, dwProcessId);
 err:
@@ -4009,7 +4002,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f(size_t argc,
 	HANDLE hhProcess;
 	DeeObject *hProcess;
 	DWORD dwFilterFlag = LIST_MODULES_DEFAULT;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_dwFilterFlag, "o|I32u:EnumProcessModules", &hProcess, &dwFilterFlag))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_dwFilterFlag, "o|" UNPu32 ":EnumProcessModules", &hProcess, &dwFilterFlag))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -4425,7 +4418,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f(size_t argc, D
 	HANDLE hhProcess;
 	DeeObject *hProcess;
 	UINT uExitCode;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_uExitCode, "oI32u:TerminateProcess", &hProcess, &uExitCode))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_uExitCode, "o" UNPu32 ":TerminateProcess", &hProcess, &uExitCode))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -4477,7 +4470,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f(size_t argc, De
 	HANDLE hhThread;
 	DeeObject *hThread;
 	DWORD dwExitCode;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hThread_dwExitCode, "oI32u:TerminateThread", &hThread, &dwExitCode))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hThread_dwExitCode, "o" UNPu32 ":TerminateThread", &hThread, &dwExitCode))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hThread, (void **)&hhThread))
 		goto err;
@@ -4709,7 +4702,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_
 	DeeObject *ProcessHandle;
 	unsigned int ProcessInformationClass;
 	size_t ProcessInformationLength = 64;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|Iu:NtQueryInformationProcess", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|" UNPuSIZ ":NtQueryInformationProcess", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(ProcessHandle, (void **)&hProcessHandle))
 		goto err;
@@ -4801,7 +4794,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_
 	DeeObject *ProcessHandle;
 	unsigned int ProcessInformationClass;
 	size_t ProcessInformationLength = 64;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|Iu:NtWow64QueryInformationProcess64", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|" UNPuSIZ ":NtWow64QueryInformationProcess64", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(ProcessHandle, (void **)&hProcessHandle))
 		goto err;
@@ -4893,7 +4886,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f(size_t argc, 
 	DeeObject *hProcess;
 	uintptr_t lpBaseAddress;
 	SIZE_T nSize;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "oIuIu:ReadProcessMemory", &hProcess, &lpBaseAddress, &nSize))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "o" UNPuSIZ UNPuSIZ ":ReadProcessMemory", &hProcess, &lpBaseAddress, &nSize))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -4961,7 +4954,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f(size
 	DeeObject *hProcess;
 	uint64_t lpBaseAddress;
 	ULONG64 nSize;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "oI64uI64u:NtWow64ReadVirtualMemory64", &hProcess, &lpBaseAddress, &nSize))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "o" UNPu64 UNPu64 ":NtWow64ReadVirtualMemory64", &hProcess, &lpBaseAddress, &nSize))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -5038,7 +5031,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f(size_t argc,
 	DeeObject *hProcess;
 	uintptr_t lpBaseAddress;
 	DeeObject *lpBuffer;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "oIuo:WriteProcessMemory", &hProcess, &lpBaseAddress, &lpBuffer))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "o" UNPuSIZ "o:WriteProcessMemory", &hProcess, &lpBaseAddress, &lpBuffer))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -5102,7 +5095,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f(siz
 	DeeObject *hProcess;
 	uint64_t lpBaseAddress;
 	DeeObject *lpBuffer;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "oI64uo:NtWow64WriteVirtualMemory64", &hProcess, &lpBaseAddress, &lpBuffer))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "o" UNPu64 "o:NtWow64WriteVirtualMemory64", &hProcess, &lpBaseAddress, &lpBuffer))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
@@ -5173,7 +5166,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f(size_t argc
 	HANDLE hhHandle;
 	DeeObject *hHandle;
 	DWORD dwMilliseconds = INFINITE;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hHandle_dwMilliseconds, "o|I32u:WaitForSingleObject", &hHandle, &dwMilliseconds))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hHandle_dwMilliseconds, "o|" UNPu32 ":WaitForSingleObject", &hHandle, &dwMilliseconds))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hHandle, (void **)&hhHandle))
 		goto err;
@@ -5229,7 +5222,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f(size_t a
 	DeeObject *lpHandles;
 	bool bWaitAll;
 	DWORD dwMilliseconds = INFINITE;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpHandles_bWaitAll_dwMilliseconds, "ob|I32u:WaitForMultipleObjects", &lpHandles, &bWaitAll, &dwMilliseconds))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpHandles_bWaitAll_dwMilliseconds, "ob|" UNPu32 ":WaitForMultipleObjects", &lpHandles, &bWaitAll, &dwMilliseconds))
 		goto err;
 	return libwin32_WaitForMultipleObjects_f_impl(lpHandles, bWaitAll, dwMilliseconds);
 err:
@@ -5310,7 +5303,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f(size_t argc
 	HANDLE hhObjectToWaitOn;
 	DeeObject *hObjectToWaitOn;
 	DWORD dwMilliseconds = INFINITE;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hObjectToSignal_hObjectToWaitOn_dwMilliseconds, "oo|I32u:SignalObjectAndWait", &hObjectToSignal, &hObjectToWaitOn, &dwMilliseconds))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hObjectToSignal_hObjectToWaitOn_dwMilliseconds, "oo|" UNPu32 ":SignalObjectAndWait", &hObjectToSignal, &hObjectToWaitOn, &dwMilliseconds))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hObjectToSignal, (void **)&hhObjectToSignal))
 		goto err;
@@ -5366,7 +5359,7 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_dwMilliseconds, { K(dwMilliseconds), KEND })
 #endif /* !LIBWIN32_KWDS_DWMILLISECONDS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DWORD dwMilliseconds;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwMilliseconds, "I32u:Sleep", &dwMilliseconds))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwMilliseconds, UNPu32 ":Sleep", &dwMilliseconds))
 		goto err;
 	return libwin32_Sleep_f_impl(dwMilliseconds);
 err:
@@ -5476,7 +5469,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f(size_t argc, DeeObjec
 	bool bInheritHandle;
 	LPCWSTR lpName_str;
 	DeeStringObject *lpName;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, "I32ubo:OpenEvent", &dwDesiredAccess, &bInheritHandle, &lpName))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bo:OpenEvent", &dwDesiredAccess, &bInheritHandle, &lpName))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
 		goto err;
@@ -5703,7 +5696,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f(size_t argc, DeeObjec
 	bool bInheritHandle;
 	LPCWSTR lpName_str;
 	DeeStringObject *lpName;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, "I32ubo:OpenMutex", &dwDesiredAccess, &bInheritHandle, &lpName))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bo:OpenMutex", &dwDesiredAccess, &bInheritHandle, &lpName))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
 		goto err;
@@ -5883,7 +5876,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f(size_t argc, DeeO
 	bool bInheritHandle;
 	LPCWSTR lpName_str;
 	DeeStringObject *lpName;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, "I32ubo:OpenSemaphore", &dwDesiredAccess, &bInheritHandle, &lpName))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bo:OpenSemaphore", &dwDesiredAccess, &bInheritHandle, &lpName))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
 		goto err;
@@ -6063,7 +6056,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f(size_t argc, 
 	bool bInheritHandle;
 	LPCWSTR lpName_str;
 	DeeStringObject *lpName;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, "I32ubo:OpenWaitableTimer", &dwDesiredAccess, &bInheritHandle, &lpName))
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwDesiredAccess_bInheritHandle_lpName, UNPu32 "bo:OpenWaitableTimer", &dwDesiredAccess, &bInheritHandle, &lpName))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
 		goto err;

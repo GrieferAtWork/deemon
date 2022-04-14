@@ -22,6 +22,7 @@
 
 #include "api.h"
 
+#include "../format.h" /* DEE_PCK* */
 #include "../list.h"
 #include "../seq.h"
 #include "object.h"
@@ -135,12 +136,12 @@ public:
 	size_t erase(size_t index) const {
 		if likely(DeeList_CheckExact(this->ptr()))
 			return DeeList_Erase(*this, index, 1);
-		return Object(inherit(DeeObject_CallAttrStringf(*this, "erase", "Iu", index))).assize();
+		return Object(inherit(DeeObject_CallAttrStringf(*this, "erase", DEE_PCKuSIZ, index))).assize();
 	}
 	size_t erase(size_t index, size_t count) const {
 		if likely(DeeList_CheckExact(this->ptr()))
 			return DeeList_Erase(*this, index, count);
-		return Object(inherit(DeeObject_CallAttrStringf(*this, "erase", "IuIu", index, count))).assize();
+		return Object(inherit(DeeObject_CallAttrStringf(*this, "erase", DEE_PCKuSIZ DEE_PCKuSIZ, index, count))).assize();
 	}
 	using Sequence<T>::pop;
 	WUNUSED T pop() const {
@@ -151,7 +152,7 @@ public:
 	WUNUSED T pop(Dee_ssize_t index) const {
 		return inherit(likely(DeeList_CheckExact(this->ptr()))
 		               ? DeeList_Pop(*this, index)
-		               : DeeObject_CallAttrStringf(*this, "pop", "Id", index));
+		               : DeeObject_CallAttrStringf(*this, "pop", DEE_PCKdSIZ, index));
 	}
 	void clear() const {
 		if likely(DeeList_CheckExact(this->ptr()))

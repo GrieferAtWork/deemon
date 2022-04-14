@@ -67,7 +67,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	dwchar_t const *filename_str;
 	DeeStringObject *filename;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI64d:truncate", &filename, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "o" UNPd64 ":truncate", &filename, &len))
 		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
@@ -97,7 +97,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	dwchar_t const *filename_str;
 	DeeStringObject *filename;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI32d:truncate", &filename, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "o" UNPd32 ":truncate", &filename, &len))
 		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
@@ -128,7 +128,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI64d:truncate", &filename, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "o" UNPd64 ":truncate", &filename, &len))
 		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
@@ -159,7 +159,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject *c
 	/*utf-8*/ char const *filename_str;
 	DeeStringObject *filename;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "oI32d:truncate", &filename, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_filename_len, "o" UNPd32 ":truncate", &filename, &len))
 		goto err;
 	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
 		goto err;
@@ -267,7 +267,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	int fd_fd;
 	DeeObject *fd;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI64d:ftruncate", &fd, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "o" UNPd64 ":ftruncate", &fd, &len))
 		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
@@ -294,7 +294,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	int fd_fd;
 	DeeObject *fd;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI32d:ftruncate", &fd, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "o" UNPd32 ":ftruncate", &fd, &len))
 		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)

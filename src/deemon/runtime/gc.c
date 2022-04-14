@@ -1589,7 +1589,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_collect(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
 	size_t max = (size_t)-1, result;
-	if (DeeArg_Unpack(argc, argv, "|Iu:collect", &max))
+	if (DeeArg_Unpack(argc, argv, "|" UNPuSIZ ":collect", &max))
 		goto err;
 	result = DeeGC_Collect(max);
 	return DeeInt_NewSize(result);

@@ -353,7 +353,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:bswap16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":bswap16", &i))
 		goto err;
 	return int_newu16(BSWAP16(i));
 err:
@@ -363,7 +363,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:bswap32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":bswap32", &i))
 		goto err;
 	return int_newu32(BSWAP32(i));
 err:
@@ -373,7 +373,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:bswap64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":bswap64", &i))
 		goto err;
 	return int_newu64(BSWAP64(i));
 err:
@@ -383,7 +383,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:htole16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":htole16", &i))
 		goto err;
 	return int_newu16(HTOLE16(i));
 err:
@@ -393,7 +393,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:letoh16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":letoh16", &i))
 		goto err;
 	return int_newu16(LETOH16(i));
 err:
@@ -403,7 +403,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:htole32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":htole32", &i))
 		goto err;
 	return int_newu32(HTOLE32(i));
 err:
@@ -413,7 +413,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:letoh32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":letoh32", &i))
 		goto err;
 	return int_newu32(LETOH32(i));
 err:
@@ -423,7 +423,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:htole64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":htole64", &i))
 		goto err;
 	return int_newu64(HTOLE64(i));
 err:
@@ -433,7 +433,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:letoh64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":letoh64", &i))
 		goto err;
 	return int_newu64(LETOH64(i));
 err:
@@ -443,7 +443,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:htobe16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":htobe16", &i))
 		goto err;
 	return int_newu16(HTOBE16(i));
 err:
@@ -453,7 +453,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:betoh16", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":betoh16", &i))
 		goto err;
 	return int_newu16(BETOH16(i));
 err:
@@ -463,7 +463,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:htobe32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":htobe32", &i))
 		goto err;
 	return int_newu32(HTOBE32(i));
 err:
@@ -473,7 +473,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:betoh32", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu32 ":betoh32", &i))
 		goto err;
 	return int_newu32(BETOH32(i));
 err:
@@ -483,7 +483,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:htobe64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":htobe64", &i))
 		goto err;
 	return int_newu64(HTOBE64(i));
 err:
@@ -493,7 +493,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:betoh64", &i))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":betoh64", &i))
 		goto err;
 	return int_newu64(BETOH64(i));
 err:

@@ -1510,7 +1510,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 intrange_init(IntRange *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	self->ir_step = 1;
-	if (DeeArg_Unpack(argc, argv, "IdId|Id:_SeqIntRange",
+	if (DeeArg_Unpack(argc, argv, UNPdSIZ UNPdSIZ "|" UNPdSIZ ":_SeqIntRange",
 	                  &self->ir_start,
 	                  &self->ir_end,
 	                  &self->ir_step))

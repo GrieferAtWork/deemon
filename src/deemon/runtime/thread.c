@@ -2837,7 +2837,7 @@ thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeObject *result;
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64d:timedjoin", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPd64 ":timedjoin", &timeout))
 		goto err;
 	error = DeeThread_Join(self, &result, timeout);
 	if unlikely(error < 0)
@@ -3167,7 +3167,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPu64 ":sleep", &timeout))
 		goto err;
 	if (DeeThread_Sleep(timeout))
 		goto err;

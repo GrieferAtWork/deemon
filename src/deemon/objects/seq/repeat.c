@@ -415,7 +415,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqRepeat", &self->r_seq, &self->r_num))
 		goto err;
 	if unlikely(!self->r_num) {
 		self->r_seq = Dee_EmptySeq;
@@ -956,7 +956,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_SeqItemRepeat", &self->ri_obj, &self->ri_num))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqItemRepeat", &self->ri_obj, &self->ri_num))
 		goto err;
 	if unlikely(!self->ri_num)
 		self->ri_obj = Dee_None;

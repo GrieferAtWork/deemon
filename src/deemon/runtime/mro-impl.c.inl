@@ -2501,9 +2501,11 @@ check_and_invoke_callback:
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
 				goto err;
-			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw, getter_kwlist, "o:get", &thisarg))
+			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
+			                    kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
 			return (*get)(thisarg);
 		}
@@ -2518,9 +2520,11 @@ check_and_invoke_callback:
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
 				goto err;
-			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw, getter_kwlist, "o:get", &thisarg))
+			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
+			                    kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
 			return type_member_get(&member, thisarg);
 		}
@@ -2634,9 +2638,11 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classproperty_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
 				goto err;
-			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw, getter_kwlist, "o:get", &thisarg))
+			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
+			                    kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
 			return (*get)(thisarg);
 		}
@@ -2651,9 +2657,11 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 			if unlikely(DeeTuple_SIZE(args) != 1)
 				goto err_classmember_invalid_args;
 			/* Allow non-instance objects for generic types. */
-			if unlikely(!(type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(DeeTuple_GET(args, 0), type))
+			if unlikely(!(type->tp_flags & TP_FABSTRACT) &&
+			            DeeObject_AssertType(DeeTuple_GET(args, 0), type))
 				goto err;
-			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw, getter_kwlist, "o:get", &thisarg))
+			if (DeeArg_UnpackKw(DeeTuple_SIZE(args), DeeTuple_ELEM(args),
+			                    kw, getter_kwlist, "o:get", &thisarg))
 				goto err;
 			return type_member_get(&member, thisarg);
 		}

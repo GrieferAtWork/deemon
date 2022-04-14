@@ -64,7 +64,7 @@ pipe_class_new(DeeObject *UNUSED(self),
 	uint32_t pipe_size;
 	DREF SystemFile *fReader, *fWriter;
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu32 ":" S_Pipe_function_new_name, &pipe_size))
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (pipe(fds) != 0) {

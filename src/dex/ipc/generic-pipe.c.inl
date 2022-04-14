@@ -49,7 +49,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pipe_class_new(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
 	uint32_t pipe_size;
-	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu32 ":" S_Pipe_function_new_name, &pipe_size))
 		goto err;
 	ipc_unimplemented();
 err:

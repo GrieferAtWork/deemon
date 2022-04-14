@@ -22,8 +22,9 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "format.h" /* DEE_PCKuPTR */
 #include "module.h"
+#include "object.h"
 
 DECL_BEGIN
 
@@ -40,7 +41,7 @@ LOCAL DREF DeeObject *DCALL DeeCTypes_CreateVoidPointer(void *address) {
 	DREF DeeObject *result, *ptr;
 	result = DeeCTypes_GetVoid();
 	if likely(result) {
-		ptr = DeeObject_CallAttrStringf(result, "ptr", "Iu", address);
+		ptr = DeeObject_CallAttrStringf(result, "ptr", DEE_PCKuPTR, address);
 		Dee_Decref(result);
 		result = ptr;
 	}

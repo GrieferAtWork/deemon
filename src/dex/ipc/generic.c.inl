@@ -95,7 +95,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_terminate(Process *self, size_t argc, DeeObject *const *argv) {
 	uint32_t exit_code = 0;
-	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Process_function_terminate_name, &exit_code))
+	if (DeeArg_Unpack(argc, argv, "|" UNPu32 ":" S_Process_function_terminate_name, &exit_code))
 		goto err;
 	if (self == &this_process) {
 		Dee_Exit((int)exit_code, false);
@@ -128,7 +128,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64d:" S_Process_function_timedjoin_name, &timeout))
+	if (DeeArg_Unpack(argc, argv, UNPd64 ":" S_Process_function_timedjoin_name, &timeout))
 		goto err;
 	ipc_unimplemented();
 err:

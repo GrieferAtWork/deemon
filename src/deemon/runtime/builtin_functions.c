@@ -588,7 +588,7 @@ f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
 	size_t argc_cur, argc_min = 0, argc_max;
 	char *function_name = NULL;
-	if (DeeArg_Unpack(argc, argv, "Iu:__badcall", &argc_max))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":__badcall", &argc_max))
 		goto done;
 	ts       = DeeThread_Self();
 	argc_cur = argc_max;
@@ -615,7 +615,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_roloc(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
 	uint16_t lid;
-	if (DeeArg_Unpack(argc, argv, "I16u:__roloc", &lid))
+	if (DeeArg_Unpack(argc, argv, UNPu16 ":__roloc", &lid))
 		goto done;
 	ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
