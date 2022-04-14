@@ -549,7 +549,7 @@ PRIVATE char const *import_table[] = {
 
 #ifdef __INTELLISENSE__
 #define D(...) /* nothing */
-#else          /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
 #define D(...) __VA_ARGS__
 #endif /* !__INTELLISENSE__ */
 

@@ -928,11 +928,11 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 	DBG_ALIGNMENT_ENABLE();
 	result = (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
 	/* Try to get more precision out of this */
-#ifdef CONFIG_HAVE_STAT_ST_NSEC
+#ifdef CONFIG_HAVE_struct_stat_st_timensec
 	result += st.st_mtimensec / 1000;
-#elif defined(CONFIG_HAVE_STAT_ST_TIM)
+#elif defined(CONFIG_HAVE_struct_stat_st_tim)
 	result += st.st_mtim.tv_nsec / 1000;
-#elif defined(CONFIG_HAVE_STAT_ST_TIMESPEC)
+#elif defined(CONFIG_HAVE_struct_stat_st_timespec)
 	result += st.st_mtimespec.tv_nsec / 1000;
 #endif /* ... */
 

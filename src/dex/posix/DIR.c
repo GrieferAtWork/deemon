@@ -33,6 +33,11 @@
 
 #include "../fs/libfs.h" /* For `STAT_*' constants */
 
+#if (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(CONFIG_HAVE_struct_dirent_d_fileno))
+#define CONFIG_HAVE_struct_dirent_d_ino
+#define d_ino d_fileno
+#endif /* d_ino = d_fileno... */
+
 
 #undef posix_opendir_NEED_STAT_EXTENSION
 #ifdef posix_opendir_USE_opendir
@@ -43,15 +48,23 @@
 #define readdir readdir64
 #endif /* CONFIG_HAVE_readdir64 */
 
-#if (!defined(CONFIG_HAVE_DIRENT_D_TYPE) || \
-     (!defined(CONFIG_HAVE_DIRENT_D_INO) && !defined(CONFIG_NO_DIRENT_D_FILENO)))
+/* (try to) substitute missing fields via `struct stat' */
+#if ((!defined(CONFIG_HAVE_struct_dirent_d_type) && defined(CONFIG_HAVE_struct_stat_st_mode)) || \
+     (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(CONFIG_HAVE_struct_stat_st_ino)))
 #define posix_opendir_NEED_STAT_EXTENSION
 #endif /* !... */
 #endif /* posix_opendir_USE_opendir */
 
+#ifdef posix_opendir_USE_FindFirstFileExW
+#define posix_opendir_NEED_STAT_EXTENSION
+#endif /* posix_opendir_USE_FindFirstFileExW */
+
 /* Figure out how we can best implement lstat() */
 #ifdef posix_opendir_NEED_STAT_EXTENSION
-#ifdef CONFIG_HAVE_fstatat64
+#ifdef posix_opendir_USE_FindFirstFileExW
+#define struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+#define struct_stat BY_HANDLE_FILE_INFORMATION
+#elif defined(CONFIG_HAVE_fstatat64)
 #undef lstatat
 #define lstatat(dfd, filename, info) fstatat64(dfd, filename, info, AT_SYMLINK_NOFOLLOW)
 #define struct_stat                  struct stat64
@@ -79,7 +92,7 @@
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 
 #ifdef posix_opendir_USE_opendir
-#ifdef CONFIG_HAVE_DIRENT_D_NAMLEN
+#ifdef CONFIG_HAVE_struct_dirent_d_namlen
 #define dirent_namelen(x) (x)->d_namlen
 #elif defined(_D_EXACT_NAMLEN)
 #define dirent_namelen(x) _D_EXACT_NAMLEN(x)
@@ -114,16 +127,17 @@ struct dir_iterator_object {
 	rwlock_t         di_lock;     /* Lock for te above fields. */
 #endif /* !CONFIG_NO_THREADS */
 #elif defined(posix_opendir_USE_opendir)
-#ifdef posix_opendir_NEED_STAT_EXTENSION
-	bool             di_stvalid;  /* [lock(di_lock)] Set to true if `di_st' has been loaded. */
-	struct_stat      di_st;       /* [lock(di_lock)] Additional stat information (lazily loaded). */
-#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	struct dirent   *di_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
 	DIR             *di_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
 	rwlock_t         di_lock;     /* Lock for te above fields. */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* ... */
+
+#ifdef posix_opendir_NEED_STAT_EXTENSION
+	bool             di_stvalid;  /* [lock(di_lock)] Set to true if `di_st' has been loaded. */
+	struct_stat      di_st;       /* [lock(di_lock)] Additional stat information (lazily loaded). */
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 };
 
 struct dir_object {
@@ -199,24 +213,24 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_DT_WHT */
 
 
-#ifdef CONFIG_HAVE_DIRENT_D_TYPE_SZ_1
-#define TYPEOF_DIRENT_D_TYPE   uint8_t
-#define FMTOF_DIRENT_D_TYPE    DEE_FMT_UINT8
+#ifdef CONFIG_HAVE_struct_dirent_d_type_size_1
+#define TYPEOF_struct_dirent_d_type   uint8_t
+#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT8
 #define DEFINE_D_TYPE_CONSTANT DEFINE_INT15
 #define DeeInt_New_D_TYPE      DeeInt_NewU8
-#elif defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_2)
-#define TYPEOF_DIRENT_D_TYPE   uint16_t
-#define FMTOF_DIRENT_D_TYPE    DEE_FMT_UINT16
+#elif defined(CONFIG_HAVE_struct_dirent_d_type_size_2)
+#define TYPEOF_struct_dirent_d_type   uint16_t
+#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT16
 #define DEFINE_D_TYPE_CONSTANT DEFINE_INT16
 #define DeeInt_New_D_TYPE      DeeInt_NewU16
-#elif defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_4)
-#define TYPEOF_DIRENT_D_TYPE   uint32_t
-#define FMTOF_DIRENT_D_TYPE    DEE_FMT_UINT32
+#elif defined(CONFIG_HAVE_struct_dirent_d_type_size_4)
+#define TYPEOF_struct_dirent_d_type   uint32_t
+#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT32
 #define DEFINE_D_TYPE_CONSTANT DEFINE_INT32
 #define DeeInt_New_D_TYPE      DeeInt_NewU32
 #else /* ... */
-#define TYPEOF_DIRENT_D_TYPE   uint64_t
-#define FMTOF_DIRENT_D_TYPE    DEE_FMT_UINT64
+#define TYPEOF_struct_dirent_d_type   uint64_t
+#define FMTOF_struct_dirent_d_type    DEE_FMT_UINT64
 #define DEFINE_D_TYPE_CONSTANT DEFINE_INT64
 #define DeeInt_New_D_TYPE      DeeInt_NewU64
 #endif /* !... */
@@ -237,7 +251,7 @@ INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_WHT, USED_DT_WHT);
 #define USED_DTTOIF(dirtype) ((dirtype) << 12)
 #ifdef posix_opendir_USE_opendir
 #define NATIVE_DT_TO_USED_DT dee_NATIVE_DT_TO_USED_DT
-LOCAL TYPEOF_DIRENT_D_TYPE dee_NATIVE_DT_TO_USED_DT(unsigned int dt) {
+LOCAL TYPEOF_struct_dirent_d_type dee_NATIVE_DT_TO_USED_DT(unsigned int dt) {
 	switch (dt) {
 #ifdef CONFIG_HAVE_DT_DIR
 	case DT_DIR:  return USED_DT_DIR;
@@ -270,7 +284,7 @@ LOCAL TYPEOF_DIRENT_D_TYPE dee_NATIVE_DT_TO_USED_DT(unsigned int dt) {
 #define USED_IFTODT IFTODT
 #else /* CONFIG_HAVE_IFTODT */
 #define USED_IFTODT dee_IFTODT
-LOCAL TYPEOF_DIRENT_D_TYPE dee_IFTODT(unsigned int if_) {
+LOCAL TYPEOF_struct_dirent_d_type dee_IFTODT(unsigned int if_) {
 	switch (if_ & STAT_IFMT) {
 	case STAT_IFDIR:  return USED_DT_DIR;
 	case STAT_IFCHR:  return USED_DT_CHR;
@@ -287,7 +301,7 @@ LOCAL TYPEOF_DIRENT_D_TYPE dee_IFTODT(unsigned int if_) {
 #define USED_DTTOIF DTTOIF
 #else /* CONFIG_HAVE_DTTOIF */
 #define USED_DTTOIF dee_DTTOIF
-LOCAL unsigned int dee_DTTOIF(TYPEOF_DIRENT_D_TYPE dt) {
+LOCAL unsigned int dee_DTTOIF(TYPEOF_struct_dirent_d_type dt) {
 	switch (dt) {
 	case USED_DT_DIR:  return STAT_IFDIR;
 	case USED_DT_CHR:  return STAT_IFCHR;
@@ -305,8 +319,8 @@ LOCAL unsigned int dee_DTTOIF(TYPEOF_DIRENT_D_TYPE dt) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix_DTTOIF_f(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv) {
-	TYPEOF_DIRENT_D_TYPE dt;
-	if (DeeArg_Unpack(argc, argv, FMTOF_DIRENT_D_TYPE, &dt))
+	TYPEOF_struct_dirent_d_type dt;
+	if (DeeArg_Unpack(argc, argv, FMTOF_struct_dirent_d_type, &dt))
 		goto err;
 	return DeeInt_NewUInt(USED_DTTOIF(dt));
 err:
@@ -535,14 +549,14 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	self->di_dir     = dir;
 	self->di_ent     = NULL;
-#ifdef posix_opendir_NEED_STAT_EXTENSION
-	self->di_stvalid = false;
-#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	rwlock_init(&self->di_lock);
 #endif /* ... */
 	self->di_skipdots = skipdots;
 	self->di_path     = path;
 	self->di_pathstr  = NULL;
+#ifdef posix_opendir_NEED_STAT_EXTENSION
+	self->di_stvalid = false;
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	Dee_Incref(path);
 	return 0;
 #ifdef NEED_err
@@ -597,6 +611,9 @@ again:
 		      self->di_data.cFileName[2] == 0)))
 			goto again; /* Skip this one... */
 	}
+#ifdef posix_opendir_NEED_STAT_EXTENSION
+	self->di_stvalid = false;
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	rwlock_endwrite(&self->di_lock);
 	Dee_Incref(self);
 	return self;
@@ -796,42 +813,75 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_NEED_STAT_EXTENSION
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_loadstat(DeeDirIteratorObject *__restrict self) {
-	int error;
-	if (self->di_stvalid)
-		return 0;
+	if (!self->di_stvalid) {
+#ifdef struct_stat_IS_BY_HANDLE_FILE_INFORMATION
+		DREF DeeStringObject *fullname;
+		HANDLE hFile;
+		fullname = diriter_get_d_fullname(self);
+		if unlikely(!fullname)
+			goto err;
+		hFile = DeeNTSystem_CreateFile((DeeObject *)fullname, GENERIC_READ,
+		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+		                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                               NULL);
+		if unlikely(hFile == NULL)
+			goto err_fullname;
+		if unlikely(hFile == INVALID_HANDLE_VALUE) {
+			DeeNTSystem_ThrowLastErrorf(NULL, "Failed to stat-open %r in %k", fullname, self);
+			goto err_fullname;
+		}
+		/* Actually retrieve stat information. */
+		if (GetFileInformationByHandle(hFile, &self->di_st)) {
+			self->di_stvalid = true;
+			CloseHandle(hFile);
+			Dee_Decref(fullname);
+			return 0;
+		}
+		DeeNTSystem_ThrowLastErrorf(NULL, "Failed to stat %r in %k", fullname, self);
+		CloseHandle(hFile);
+err_fullname:
+		Dee_Decref(fullname);
+err:
+		return -1;
+#else /* struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+		int error;
 again:
 #if defined(lstatat) && defined(CONFIG_HAVE_dirfd)
-	if (lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
-		self->di_stvalid = true;
-		return 0;
-	}
-	error = DeeSystem_GetErrno();
+		if (lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
+			self->di_stvalid = true;
+			return 0;
+		}
+		error = DeeSystem_GetErrno();
 #else /* lstatat && CONFIG_HAVE_dirfd */
-	DREF DeeStringObject *fullname;
-	char const *utf8;
-	fullname = diriter_get_d_fullname(self);
-	if unlikely(!fullname)
-		goto err;
-	utf8 = DeeString_AsUtf8(fullname);
-	if unlikely(!utf8) {
+		DREF DeeStringObject *fullname;
+		char const *utf8;
+		fullname = diriter_get_d_fullname(self);
+		if unlikely(!fullname)
+			goto err;
+		utf8 = DeeString_AsUtf8((DeeObject *)fullname);
+		if unlikely(!utf8) {
+			Dee_Decref(fullname);
+			goto err;
+		}
+		if (lstat(utf8, &self->di_st) == 0) {
+			self->di_stvalid = true;
+			Dee_Decref(fullname);
+			return 0;
+		}
+		error = DeeSystem_GetErrno();
 		Dee_Decref(fullname);
-		goto err;
-	}
-	if (lstat(utf8, &self->di_st) == 0) {
-		self->di_stvalid = true;
-		Dee_Decref(fullname);
-		return 0;
-	}
-	error = DeeSystem_GetErrno();
-	Dee_Decref(fullname);
 #endif /* !lstatat || !CONFIG_HAVE_dirfd */
-	HANDLE_EINTR(error, again, err)
-	DeeUnixSystem_ThrowErrorf(NULL, error,
-	                          "Failed to stat %q in %k",
-	                          self->di_ent->d_name, self);
-	goto err;
+		HANDLE_EINTR(error, again, err)
+		DeeUnixSystem_ThrowErrorf(NULL, error,
+		                          "Failed to stat %R in %k",
+		                          diriter_get_d_fullname(self),
+		                          self);
+		goto err;
 err:
-	return -1;
+		return -1;
+#endif /* !struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
+	}
+	return 0;
 }
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
 
@@ -857,14 +907,14 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 	}
 #elif defined(posix_opendir_USE_opendir)
 	if (self->di_ent != NULL) {
-#ifdef CONFIG_HAVE_DIRENT_D_TYPE
+#ifdef CONFIG_HAVE_struct_dirent_d_type
 		return DeeInt_New_D_TYPE(NATIVE_DT_TO_USED_DT(self->di_ent->d_type));
 #elif defined(posix_opendir_NEED_STAT_EXTENSION)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
 		return DeeInt_New_D_TYPE(USED_IFTODT(self->di_st.st_mode));
-#endif /* !CONFIG_HAVE_DIRENT_D_TYPE */
+#endif /* !CONFIG_HAVE_struct_dirent_d_type */
 	}
 #endif /* ... */
 	diriter_unbound_attr("d_type");
@@ -874,6 +924,101 @@ err:
 #endif /* NEED_err */
 	return NULL;
 }
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_ino(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		if unlikely(diriter_loadstat(self))
+			return NULL;
+		return DeeInt_NewU64(((uint64_t)self->di_st.nFileIndexLow) |
+		                     ((uint64_t)self->di_st.nFileIndexHigh << 32));
+	}
+#elif (defined(posix_opendir_USE_opendir) &&        \
+       (defined(CONFIG_HAVE_struct_dirent_d_ino) || \
+        (defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino))))
+	if (self->di_ent != NULL) {
+#ifdef CONFIG_HAVE_struct_dirent_d_ino
+		return DeeInt_Newu(self->di_ent->d_ino);
+#elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino)
+		if unlikely(diriter_loadstat(self))
+			goto err;
+#define NEED_err
+		return DeeInt_Newu(self->di_st.st_ino);
+#endif /* !CONFIG_HAVE_struct_dirent_d_type */
+	}
+#endif /* ... */
+	diriter_unbound_attr("d_ino");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_namlen(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE)
+		return DeeInt_NewSize(wcslen(self->di_data.cFileName));
+#elif defined(posix_opendir_USE_opendir)
+	if (self->di_ent != NULL) {
+#ifdef CONFIG_HAVE_struct_dirent_d_namlen
+		return DeeInt_Newu(self->di_ent->d_namlen);
+#elif defined(_D_EXACT_NAMLEN)
+		return DeeInt_Newu(_D_EXACT_NAMLEN(self->di_ent));
+#else /* ... */
+		return DeeInt_NewSize(strlen(self->di_ent->d_name));
+#endif /* !... */
+	}
+#endif /* ... */
+	diriter_unbound_attr("d_namlen");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_reclen(DeeDirIteratorObject *__restrict self) {
+#ifdef posix_opendir_USE_FindFirstFileExW
+	if (self->di_hnd != INVALID_HANDLE_VALUE) {
+		return DeeInt_NewSize((sizeof(self->di_data) - sizeof(self->di_data.cFileName)) +
+		                      (wcslen(self->di_data.cFileName) * sizeof(self->di_data.cFileName[0])));
+	}
+#elif defined(posix_opendir_USE_opendir)
+	if (self->di_ent != NULL) {
+#ifdef CONFIG_HAVE_struct_dirent_d_reclen
+		return DeeInt_Newu(self->di_ent->d_reclen);
+#else /* CONFIG_HAVE_struct_dirent_d_reclen */
+		return DeeInt_NewSize((offsetof(struct dirent, d_name)) +
+		                      (strlen(self->di_ent->d_name) + 1) * sizeof(char));
+#endif /* !CONFIG_HAVE_struct_dirent_d_reclen */
+	}
+#endif /* ... */
+	diriter_unbound_attr("d_reclen");
+#ifdef NEED_err
+#undef NEED_err
+err:
+#endif /* NEED_err */
+	return NULL;
+}
+
+
+#if defined(posix_opendir_USE_opendir) && defined(CONFIG_HAVE_struct_dirent_d_off)
+#define HAVE_diriter_get_d_off
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+diriter_get_d_off(DeeDirIteratorObject *__restrict self) {
+	if (self->di_ent != NULL)
+		return DeeInt_Newu(self->di_ent->d_off);
+	diriter_unbound_attr("d_off");
+	return NULL;
+}
+#endif /* ... */
 
 
 
@@ -933,13 +1078,35 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	{ "d_type", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_type, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "The type of the current file (one of ${DT_*})") },
-	/* TODO: d_ino */
+	{ "d_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_ino, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "The inode number of the current file") },
+	{ "d_namlen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_namlen, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Length of ?#d_name (in characters)") },
+	{ "d_reclen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_reclen, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Size of the directory record (in bytes)") },
+#ifdef HAVE_diriter_get_d_off
+	{ "d_off", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_off, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Offset of the next directory entry (non-portable!)") },
+#endif /* HAVE_diriter_get_d_off */
 
 	/* TODO: Additional (stat-like) fields (to take advantage of info that windows gives us):
+	 *  - d_dev: int     (stat::st_dev)
+	 *  - d_mode: int    (stat::st_mode)
+	 *  - d_nlink: int   (stat::st_nlink)
+	 *  - d_uid: int     (stat::st_uid)
+	 *  - d_gid: int     (stat::st_gid)
+	 *  - d_rdev: int    (stat::st_rdev)
+	 *  - d_size: int    (stat::st_size)
+	 *  - d_blksize: int (stat::st_blksize)
+	 *  - d_blocks: int  (stat::st_blocks)
 	 *  - d_atime: Time
 	 *  - d_mtime: Time
 	 *  - d_ctime: Time
-	 *  - d_size: int    (file size)
+	 *  - d_birthtime: Time
 	 */
 	{ NULL }
 };

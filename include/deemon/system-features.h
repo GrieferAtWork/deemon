@@ -488,12 +488,6 @@ func("_wlstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; retur
 func("wlstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wlstat(c, &st);");
 func("_wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wlstat64(c, &st);");
 func("wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wlstat64(c, &st);");
-// syscall_ulong_t st_[acm]timensec
-feature("STAT_ST_NSEC", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
-// struct timespec st_[acm]tim
-feature("STAT_ST_TIM", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
-// struct timespec st_[acm]timespec
-feature("STAT_ST_TIMESPEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = st.st_ctimespec.tv_sec = st.st_mtimespec.tv_sec = 0; st.st_atimespec.tv_nsec = st.st_ctimespec.tv_nsec = st.st_mtimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_ctimespec.tv_sec + st.st_mtimespec.tv_sec + st.st_atimespec.tv_nsec + st.st_ctimespec.tv_nsec + st.st_mtimespec.tv_nsec;");
 
 functest('mkdir("foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('_mkdir("foo")', msvc);
@@ -959,15 +953,38 @@ func("closedir", "", test: 'extern DIR *d; return closedir(d);');
 func("readdir", "", test: 'extern DIR *d; struct dirent *e = readdir(d); return e != 0;');
 func("readdir64", "", test: 'extern DIR *d; struct dirent64 *e = readdir64(d); return e != 0;');
 func("dirfd", "", test: 'extern DIR *d; return dirfd(d);');
-feature("DIRENT_D_INO", "defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || defined(_DIRENT_HAVE_D_INO))", test: "extern struct dirent *e; return e->d_ino != 0;");
-feature("DIRENT_D_FILENO", "defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO))", test: "extern struct dirent *e; return e->d_fileno != 0;");
-feature("DIRENT_D_OFF", "defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF))", test: "extern struct dirent *e; return e->d_off != 0;");
-feature("DIRENT_D_NAMLEN", "defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN))", test: "extern struct dirent *e; return e->d_namlen != 0;");
-feature("DIRENT_D_RECLEN", "defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN))", test: "extern struct dirent *e; return e->d_reclen != 0;");
-feature("DIRENT_D_TYPE", "defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE))", test: "extern struct dirent *e; return e->d_type != 0;");
-feature("DIRENT_D_TYPE_SZ_1", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 1 ? 1 : -1]; return x[0];");
-feature("DIRENT_D_TYPE_SZ_2", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 2 ? 1 : -1]; return x[0];");
-feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 4 ? 1 : -1]; return x[0];");
+feature("struct_dirent_d_ino", "defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || defined(_DIRENT_HAVE_D_INO))", test: "extern struct dirent *e; return e->d_ino != 0;");
+feature("struct_dirent_d_fileno", "defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO))", test: "extern struct dirent *e; return e->d_fileno != 0;");
+feature("struct_dirent_d_off", "defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF))", test: "extern struct dirent *e; return e->d_off != 0;");
+feature("struct_dirent_d_namlen", "defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN))", test: "extern struct dirent *e; return e->d_namlen != 0;");
+feature("struct_dirent_d_reclen", "defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN))", test: "extern struct dirent *e; return e->d_reclen != 0;");
+feature("struct_dirent_d_type", "defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE))", test: "extern struct dirent *e; return e->d_type != 0;");
+feature("struct_dirent_d_type_size_1", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 1 ? 1 : -1]; return x[0];");
+feature("struct_dirent_d_type_size_2", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 2 ? 1 : -1]; return x[0];");
+feature("struct_dirent_d_type_size_4", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 4 ? 1 : -1]; return x[0];");
+
+// sys/stat.h
+feature("struct_stat_st_dev", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_dev = 0; return st.st_dev;");
+feature("struct_stat_st_ino", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_ino = 0; return st.st_ino;");
+feature("struct_stat_st_mode", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_mode = 0; return st.st_mode;");
+feature("struct_stat_st_nlink", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_nlink = 0; return st.st_nlink;");
+feature("struct_stat_st_uid", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_uid = 0; return st.st_uid;");
+feature("struct_stat_st_gid", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_gid = 0; return st.st_gid;");
+feature("struct_stat_st_rdev", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_rdev = 0; return st.st_rdev;");
+feature("struct_stat_st_size", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_size = 0; return st.st_size;");
+feature("struct_stat_st_blksize", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blksize = 0; return st.st_blksize;");
+feature("struct_stat_st_blocks", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blocks = 0; return st.st_blocks;");
+feature("struct_stat_st_tim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
+feature("struct_stat_st_timespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = st.st_ctimespec.tv_sec = st.st_mtimespec.tv_sec = 0; st.st_atimespec.tv_nsec = st.st_ctimespec.tv_nsec = st.st_mtimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_ctimespec.tv_sec + st.st_mtimespec.tv_sec + st.st_atimespec.tv_nsec + st.st_ctimespec.tv_nsec + st.st_mtimespec.tv_nsec;");
+feature("struct_stat_st_timensec", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
+feature("struct_stat_st_btime", "defined(_STATBUF_ST_BTIME)", test: "struct stat st; st.st_btime = 0; return st.st_btime;");
+feature("struct_stat_st_btim", "defined(_STATBUF_ST_BTIM)", test: "struct stat st; st.st_btim.tv_sec = 0; st.st_btim.tv_nsec = 0; return st.st_btim.tv_sec + st.st_btim.tv_nsec;");
+feature("struct_stat_st_btimespec", "defined(_STATBUF_ST_BTIMESPEC)", test: "struct stat st; st.st_btimespec.tv_sec = 0; st.st_btimespec.tv_nsec = 0; return st.st_btimespec.tv_sec + st.st_btimespec.tv_nsec;");
+feature("struct_stat_st_btimensec", "defined(_STATBUF_ST_BTIMENSEC)", test: "struct stat st; st.st_btimensec = 0; return st.st_btimensec;");
+feature("struct_stat_st_birthtime", "defined(_STATBUF_ST_BIRTHTIME)", test: "struct stat st; st.st_birthtime = 0; return st.st_birthtime;");
+feature("struct_stat_st_birthtim", "defined(_STATBUF_ST_BIRTHTIM)", test: "struct stat st; st.st_birthtim.tv_sec = 0; st.st_birthtim.tv_nsec = 0; return st.st_birthtim.tv_sec + st.st_birthtim.tv_nsec;");
+feature("struct_stat_st_birthtimespec", "defined(_STATBUF_ST_BIRTHTIMESPEC)", test: "struct stat st; st.st_birthtimespec.tv_sec = 0; st.st_birthtimespec.tv_nsec = 0; return st.st_birthtimespec.tv_sec + st.st_birthtimespec.tv_nsec;");
+feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", test: "struct stat st; st.st_birthtimensec = 0; return st.st_birthtimensec;");
 
 
 
@@ -4067,28 +4084,6 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #define CONFIG_HAVE_wlstat64 1
 #endif
 
-#ifdef CONFIG_NO_STAT_ST_NSEC
-#undef CONFIG_HAVE_STAT_ST_NSEC
-#elif !defined(CONFIG_HAVE_STAT_ST_NSEC) && \
-      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_STAT_ST_NSEC 1
-#endif
-
-#ifdef CONFIG_NO_STAT_ST_TIM
-#undef CONFIG_HAVE_STAT_ST_TIM
-#elif !defined(CONFIG_HAVE_STAT_ST_TIM) && \
-      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
-       defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_STAT_ST_TIM 1
-#endif
-
-#ifdef CONFIG_NO_STAT_ST_TIMESPEC
-#undef CONFIG_HAVE_STAT_ST_TIMESPEC
-#elif !defined(CONFIG_HAVE_STAT_ST_TIMESPEC) && \
-      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_STAT_ST_TIMESPEC 1
-#endif
-
 #ifdef CONFIG_NO_mkdir
 #undef CONFIG_HAVE_mkdir
 #elif !defined(CONFIG_HAVE_mkdir) && \
@@ -6938,73 +6933,221 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #define CONFIG_HAVE_dirfd 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_INO
-#undef CONFIG_HAVE_DIRENT_D_INO
-#elif !defined(CONFIG_HAVE_DIRENT_D_INO) && \
+#ifdef CONFIG_NO_struct_dirent_d_ino
+#undef CONFIG_HAVE_struct_dirent_d_ino
+#elif !defined(CONFIG_HAVE_struct_dirent_d_ino) && \
       (defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || \
        defined(_DIRENT_HAVE_D_INO)))
-#define CONFIG_HAVE_DIRENT_D_INO 1
+#define CONFIG_HAVE_struct_dirent_d_ino 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_FILENO
-#undef CONFIG_HAVE_DIRENT_D_FILENO
-#elif !defined(CONFIG_HAVE_DIRENT_D_FILENO) && \
+#ifdef CONFIG_NO_struct_dirent_d_fileno
+#undef CONFIG_HAVE_struct_dirent_d_fileno
+#elif !defined(CONFIG_HAVE_struct_dirent_d_fileno) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO)))
-#define CONFIG_HAVE_DIRENT_D_FILENO 1
+#define CONFIG_HAVE_struct_dirent_d_fileno 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_OFF
-#undef CONFIG_HAVE_DIRENT_D_OFF
-#elif !defined(CONFIG_HAVE_DIRENT_D_OFF) && \
+#ifdef CONFIG_NO_struct_dirent_d_off
+#undef CONFIG_HAVE_struct_dirent_d_off
+#elif !defined(CONFIG_HAVE_struct_dirent_d_off) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF)))
-#define CONFIG_HAVE_DIRENT_D_OFF 1
+#define CONFIG_HAVE_struct_dirent_d_off 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_NAMLEN
-#undef CONFIG_HAVE_DIRENT_D_NAMLEN
-#elif !defined(CONFIG_HAVE_DIRENT_D_NAMLEN) && \
+#ifdef CONFIG_NO_struct_dirent_d_namlen
+#undef CONFIG_HAVE_struct_dirent_d_namlen
+#elif !defined(CONFIG_HAVE_struct_dirent_d_namlen) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN)))
-#define CONFIG_HAVE_DIRENT_D_NAMLEN 1
+#define CONFIG_HAVE_struct_dirent_d_namlen 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_RECLEN
-#undef CONFIG_HAVE_DIRENT_D_RECLEN
-#elif !defined(CONFIG_HAVE_DIRENT_D_RECLEN) && \
+#ifdef CONFIG_NO_struct_dirent_d_reclen
+#undef CONFIG_HAVE_struct_dirent_d_reclen
+#elif !defined(CONFIG_HAVE_struct_dirent_d_reclen) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN)))
-#define CONFIG_HAVE_DIRENT_D_RECLEN 1
+#define CONFIG_HAVE_struct_dirent_d_reclen 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_TYPE
-#undef CONFIG_HAVE_DIRENT_D_TYPE
-#elif !defined(CONFIG_HAVE_DIRENT_D_TYPE) && \
+#ifdef CONFIG_NO_struct_dirent_d_type
+#undef CONFIG_HAVE_struct_dirent_d_type
+#elif !defined(CONFIG_HAVE_struct_dirent_d_type) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE)))
-#define CONFIG_HAVE_DIRENT_D_TYPE 1
+#define CONFIG_HAVE_struct_dirent_d_type 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_1
-#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_1
+#ifdef CONFIG_NO_struct_dirent_d_type_size_1
+#undef CONFIG_HAVE_struct_dirent_d_type_size_1
 #elif 0
-#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_1 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_1 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_2
-#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_2
+#ifdef CONFIG_NO_struct_dirent_d_type_size_2
+#undef CONFIG_HAVE_struct_dirent_d_type_size_2
 #elif 0
-#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_2 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_2 1
 #endif
 
-#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_4
-#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_4
+#ifdef CONFIG_NO_struct_dirent_d_type_size_4
+#undef CONFIG_HAVE_struct_dirent_d_type_size_4
 #elif 0
-#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_4 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_4 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_dev
+#undef CONFIG_HAVE_struct_stat_st_dev
+#elif !defined(CONFIG_HAVE_struct_stat_st_dev) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_dev 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_ino
+#undef CONFIG_HAVE_struct_stat_st_ino
+#elif !defined(CONFIG_HAVE_struct_stat_st_ino) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_ino 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_mode
+#undef CONFIG_HAVE_struct_stat_st_mode
+#elif !defined(CONFIG_HAVE_struct_stat_st_mode) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_mode 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_nlink
+#undef CONFIG_HAVE_struct_stat_st_nlink
+#elif !defined(CONFIG_HAVE_struct_stat_st_nlink) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_nlink 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_uid
+#undef CONFIG_HAVE_struct_stat_st_uid
+#elif !defined(CONFIG_HAVE_struct_stat_st_uid) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_uid 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_gid
+#undef CONFIG_HAVE_struct_stat_st_gid
+#elif !defined(CONFIG_HAVE_struct_stat_st_gid) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_gid 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_rdev
+#undef CONFIG_HAVE_struct_stat_st_rdev
+#elif !defined(CONFIG_HAVE_struct_stat_st_rdev) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_rdev 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_size
+#undef CONFIG_HAVE_struct_stat_st_size
+#elif !defined(CONFIG_HAVE_struct_stat_st_size) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_size 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_blksize
+#undef CONFIG_HAVE_struct_stat_st_blksize
+#elif !defined(CONFIG_HAVE_struct_stat_st_blksize) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_blksize 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_blocks
+#undef CONFIG_HAVE_struct_stat_st_blocks
+#elif !defined(CONFIG_HAVE_struct_stat_st_blocks) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_blocks 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_tim
+#undef CONFIG_HAVE_struct_stat_st_tim
+#elif !defined(CONFIG_HAVE_struct_stat_st_tim) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat_st_tim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_timespec
+#undef CONFIG_HAVE_struct_stat_st_timespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_timespec) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat_st_timespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_timensec
+#undef CONFIG_HAVE_struct_stat_st_timensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_timensec) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat_st_timensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_btime
+#undef CONFIG_HAVE_struct_stat_st_btime
+#elif !defined(CONFIG_HAVE_struct_stat_st_btime) && \
+      (defined(_STATBUF_ST_BTIME))
+#define CONFIG_HAVE_struct_stat_st_btime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_btim
+#undef CONFIG_HAVE_struct_stat_st_btim
+#elif !defined(CONFIG_HAVE_struct_stat_st_btim) && \
+      (defined(_STATBUF_ST_BTIM))
+#define CONFIG_HAVE_struct_stat_st_btim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_btimespec
+#undef CONFIG_HAVE_struct_stat_st_btimespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_btimespec) && \
+      (defined(_STATBUF_ST_BTIMESPEC))
+#define CONFIG_HAVE_struct_stat_st_btimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_btimensec
+#undef CONFIG_HAVE_struct_stat_st_btimensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_btimensec) && \
+      (defined(_STATBUF_ST_BTIMENSEC))
+#define CONFIG_HAVE_struct_stat_st_btimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_birthtime
+#undef CONFIG_HAVE_struct_stat_st_birthtime
+#elif !defined(CONFIG_HAVE_struct_stat_st_birthtime) && \
+      (defined(_STATBUF_ST_BIRTHTIME))
+#define CONFIG_HAVE_struct_stat_st_birthtime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_birthtim
+#undef CONFIG_HAVE_struct_stat_st_birthtim
+#elif !defined(CONFIG_HAVE_struct_stat_st_birthtim) && \
+      (defined(_STATBUF_ST_BIRTHTIM))
+#define CONFIG_HAVE_struct_stat_st_birthtim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_birthtimespec
+#undef CONFIG_HAVE_struct_stat_st_birthtimespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_birthtimespec) && \
+      (defined(_STATBUF_ST_BIRTHTIMESPEC))
+#define CONFIG_HAVE_struct_stat_st_birthtimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_birthtimensec
+#undef CONFIG_HAVE_struct_stat_st_birthtimensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_birthtimensec) && \
+      (defined(_STATBUF_ST_BIRTHTIMENSEC))
+#define CONFIG_HAVE_struct_stat_st_birthtimensec 1
 #endif
 //[[[end]]]
 
-#if (!defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_1) && \
-     !defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_2) && \
-     !defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_4))
-#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_1
-#endif /* !CONFIG_HAVE_DIRENT_D_TYPE_SZ_... */
+#if (!defined(CONFIG_HAVE_struct_dirent_d_type_size_1) && \
+     !defined(CONFIG_HAVE_struct_dirent_d_type_size_2) && \
+     !defined(CONFIG_HAVE_struct_dirent_d_type_size_4))
+#define CONFIG_HAVE_struct_dirent_d_type_size_1
+#endif /* !CONFIG_HAVE_struct_dirent_d_type_size_... */
 
 
 /* Figure out of the host has a /proc filesystem.
