@@ -1961,7 +1961,8 @@ PUBLIC void
 		{
 			/* Restore the default CTRL+C behavior, so that the user can easily
 			 * kill deemon without having to go through the Task Manager. */
-			SetConsoleCtrlHandler(NULL, FALSE);
+			DeeError_UninstallKeyboardInterrupt();
+
 			/* Wait to allow a debugger to be attached. */
 			for (;;)
 				SCHED_YIELD();

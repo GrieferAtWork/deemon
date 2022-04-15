@@ -325,6 +325,9 @@ PUBLIC WUNUSED NONNULL((1)) bool DCALL DeeError_CurrentIs(DeeTypeObject *__restr
 INTERN void DCALL DeeError_InstallKeyboardInterrupt(void) {
 	/* XXX: Without interrupts, how can we do this? */
 }
+INTERN void DCALL DeeError_UninstallKeyboardInterrupt(void) {
+	/* XXX: Without interrupts, how can we do this? */
+}
 #else /* CONFIG_NO_THREADS */
 INTDEF uint8_t keyboard_interrupt_counter;
 
@@ -360,6 +363,11 @@ DeeError_InstallKeyboardInterrupt(void) {
 	SetConsoleCtrlHandler(&nt_ConsoleControlHandler, TRUE);
 }
 
+INTERN void DCALL
+DeeError_UninstallKeyboardInterrupt(void) {
+	SetConsoleCtrlHandler(&nt_ConsoleControlHandler, FALSE);
+}
+
 #elif defined(CONFIG_HOST_UNIX)
 
 PRIVATE void sigint_handler(int UNUSED(signo)) {
@@ -369,15 +377,25 @@ PRIVATE void sigint_handler(int UNUSED(signo)) {
 #endif
 }
 
+PRIVATE void (*saved_sigint_handler)(int signo) = NULL;
+
 INTERN void DCALL
 DeeError_InstallKeyboardInterrupt(void) {
-	signal(SIGINT, &sigint_handler);
+	saved_sigint_handler = signal(SIGINT, &sigint_handler);
+}
+
+INTERN void DCALL
+DeeError_UninstallKeyboardInterrupt(void) {
+	signal(SIGINT, saved_sigint_handler);
 }
 
 #else /* ... */
 
 INTERN void DCALL
 DeeError_InstallKeyboardInterrupt(void) {
+}
+INTERN void DCALL
+DeeError_UninstallKeyboardInterrupt(void) {
 }
 
 #endif /* !... */

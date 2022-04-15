@@ -282,6 +282,7 @@ DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 /* Install the keyboard interrupt handler. */
 INTDEF void DCALL DeeError_InstallKeyboardInterrupt(void);
+INTDEF void DCALL DeeError_UninstallKeyboardInterrupt(void);
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 #endif /* CONFIG_BUILDING_DEEMON */
 

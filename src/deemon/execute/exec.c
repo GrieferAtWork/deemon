@@ -955,6 +955,11 @@ do_kill_user:
 			break;
 	}
 
+	/* Uninstall the keyboard interrupt handler. */
+#ifndef CONFIG_NO_KEYBOARD_INTERRUPT
+	DeeError_UninstallKeyboardInterrupt();
+#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
+
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
 	Dee_CHECKMEMORY();
