@@ -151,7 +151,7 @@ FORCELOCAL void (DCALL xdecref_nokill_traced)(DREF DeeObject *obj, char const *f
 #define xdecref_nokill(obj)  xdecrefnokill_traced(obj, __FILE__, __LINE__)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
-/* Throws the latest deemon exception as a C++ error. */
+/* Throws the latest deemon error as a C++ exception. */
 inline ATTR_NORETURN ATTR_COLD void (DCALL throw_last_deemon_exception)(void);
 inline ATTR_RETNONNULL void *(DCALL throw_if_null)(void *ptr) {
 	if unlikely(!ptr)
@@ -286,7 +286,7 @@ inline WUNUSED obj_maybenull_inherited DCALL maybenull(obj_maybenull_inherited p
 }
 
 /* Indicate that an object reference should be inherited. */
-inline WUNUSED NONNULL((1)) obj_inherited DCALL inherit(DeeObject *__restrict ptr) {
+inline WUNUSED obj_inherited DCALL inherit(DeeObject *ptr) {
 	return obj_inherited(ptr);
 }
 inline WUNUSED obj_inherited DCALL inherit(obj_inherited ptr) {
@@ -523,14 +523,14 @@ public:
 		return *this;
 	}
 	cxx_iterator &operator=(cxx_iterator const &right) {
+		Dee_XIncref(right.it_iter);
+		if (ITER_ISOK(right.it_next))
+			Dee_Incref(right.it_next);
 		Dee_XDecref(it_iter);
 		if (ITER_ISOK(it_next))
 			Dee_Decref(it_next);
 		it_iter = right.it_iter;
 		it_next = right.it_next;
-		Dee_XIncref(it_iter);
-		if (ITER_ISOK(it_next))
-			Dee_Incref(it_next);
 		return *this;
 	}
 	cxx_iterator copy() const {
@@ -860,14 +860,10 @@ public:
 		Dee_weakref_fini(&w_ref);
 	}
 	WeakRef &operator=(DeeObject *ob) {
-		if (ob) {
-			if (!ob) {
-				Dee_weakref_clear(&w_ref);
-			} else if (!Dee_weakref_set(&w_ref, ob)) {
-				detail::err_cannot_weak_reference(ob);
-			}
-		} else {
+		if (!ob) {
 			Dee_weakref_clear(&w_ref);
+		} else if (!Dee_weakref_set(&w_ref, ob)) {
+			detail::err_cannot_weak_reference(ob);
 		}
 		return *this;
 	}
@@ -877,14 +873,10 @@ public:
 		return *this;
 	}
 	WeakRef &operator=(obj_maybenull ob) {
-		if (ob) {
-			if (!ob) {
-				Dee_weakref_clear(&w_ref);
-			} else if (!Dee_weakref_set(&w_ref, ob)) {
-				detail::err_cannot_weak_reference(ob);
-			}
-		} else {
+		if (!ob) {
 			Dee_weakref_clear(&w_ref);
+		} else if (!Dee_weakref_set(&w_ref, ob)) {
+			detail::err_cannot_weak_reference(ob);
 		}
 		return *this;
 	}
@@ -932,11 +924,10 @@ public:
 		return Dee_weakref_cmpxch(&w_ref, old_ob, new_ob);
 	}
 	void set(DeeObject *ob) {
-		if (ob) {
-			if (!Dee_weakref_set(&w_ref, ob))
-				detail::err_cannot_weak_reference(ob);
-		} else {
+		if (!ob) {
 			Dee_weakref_clear(&w_ref);
+		} else if (!Dee_weakref_set(&w_ref, ob)) {
+			detail::err_cannot_weak_reference(ob);
 		}
 	}
 	void set(obj_nonnull ob) {
@@ -944,11 +935,10 @@ public:
 			detail::err_cannot_weak_reference(ob);
 	}
 	void set(obj_maybenull ob) {
-		if (ob) {
-			if (!Dee_weakref_init(&w_ref, ob, NULL))
-				detail::err_cannot_weak_reference(ob);
-		} else {
+		if (!ob) {
 			Dee_weakref_clear(&w_ref);
+		} else if (!Dee_weakref_init(&w_ref, ob, NULL)) {
+			detail::err_cannot_weak_reference(ob);
 		}
 	}
 };
@@ -2072,7 +2062,7 @@ public:
 	void(unpack)(size_t objc, DREF DeeObject **__restrict objv) const {
 		throw_if_nonzero(DeeObject_Unpack(*this, objc, objv));
 	}
-	//  void unpack(size_t objc, object **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this, objc, (DeeObject **)objv)); }
+	//  void unpack(size_t objc, Object **__restrict objv) const { throw_if_nonzero(DeeObject_Unpack(*this, objc, (DeeObject **)objv)); }
 	typedef detail::cxx_iterator<Object> iterator;
 	WUNUSED iterator(begin)() const {
 		return inherit(DeeObject_IterSelf(*this));
@@ -2914,6 +2904,7 @@ public:
 #endif /* !__OPTIMIZE_SIZE__ */
 };
 
+/* Throws the latest deemon error as a C++ exception. */
 inline ATTR_NORETURN ATTR_COLD void (DCALL throw_last_deemon_exception)(void) {
 	/* XXX: Exception sub-classes? */
 	throw deemon::exception();

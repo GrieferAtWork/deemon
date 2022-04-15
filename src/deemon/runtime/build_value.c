@@ -34,6 +34,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/__va_size.h>
+
 #include <stddef.h>
 
 #include "runtime_error.h"
@@ -205,8 +207,12 @@ again:
 	case '<': /* Recursion (Can be ignored here) */
 	case ',': /* Separator. */
 	case 'n': /* `none' */
-	case '-': goto again;
-	case 'o': va_arg(args, DeeObject *); goto again;
+	case '-':
+		goto again;
+
+	case 'o':
+		va_arg(args, DeeObject *);
+		goto again;
 
 	case 'L':
 		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
@@ -240,11 +246,12 @@ again:
 		if (*format == 'l') {
 #ifdef __SIZEOF_LONG_LONG__
 			length = __SIZEOF_LONG_LONG__;
-#else
+#else /* __SIZEOF_LONG_LONG__ */
 			length = 8;
-#endif
+#endif /* !__SIZEOF_LONG_LONG__ */
 			++format;
 		}
+		++format; /* Consume integer-format-char */
 		goto do_int;
 	case 'h':
 		length = sizeof(short);
@@ -252,7 +259,7 @@ again:
 			length = sizeof(char);
 			++format;
 		}
-		++format;
+		++format; /* Consume integer-format-char */
 		goto do_int;
 	case 'I':
 		length = sizeof(size_t);
@@ -272,7 +279,7 @@ again:
 			length = 8;
 			format += 2;
 		}
-		++format;
+		++format; /* Consume integer-format-char */
 		goto do_int;
 	case 'd':
 	case 'u':
@@ -285,18 +292,23 @@ do_int:
 			    format[-1] == 'i' || *format == 'x' ||
 			    format[-1] == 'b',
 			    "Invalid format: `%s'", format);
-		if (length <= sizeof(int))
-			va_arg(args, int);
-#if __SIZEOF_INT__ < 2
-		else if (length == 2)
-			va_arg(args, int16_t);
-#endif /* __SIZEOF_INT__ < 2 */
-#if __SIZEOF_INT__ < 4
-		else if (length == 4)
-			va_arg(args, int32_t);
-#endif /* __SIZEOF_INT__ < 4 */
-		else {
-			va_arg(args, int64_t);
+#if __VA_SIZE < 2
+		if (length <= 1) {
+			va_arg(args, uint8_t);
+		} else
+#endif /* __VA_SIZE < 2 */
+#if __VA_SIZE < 4
+		if (length <= 2) {
+			va_arg(args, uint16_t);
+		} else
+#endif /* __VA_SIZE < 4 */
+#if __VA_SIZE < 8
+		if (length <= 4) {
+			va_arg(args, uint32_t);
+		} else
+#endif /* __VA_SIZE < 8 */
+		{
+			va_arg(args, uint64_t);
 		}
 	}	goto again;
 
@@ -354,25 +366,27 @@ again:
 		} data;
 	case 'h':
 		length = sizeof(short);
-		if (*format++ == 'h') {
+		if (*format == 'h') {
 			++format;
 			length = sizeof(char);
 		}
+		++format; /* Consume integer-format-char */
 		goto has_length;
 
 	case 'l':
 		length = sizeof(long);
 #ifdef __SIZEOF_LONG_LONG__
-		if (*format++ == 'l') {
+		if (*format == 'l') {
 			++format;
 			length = __SIZEOF_LONG_LONG__;
 		}
 #else /* __SIZEOF_LONG_LONG__ */
-		if (*format++ == 'l') {
+		if (*format == 'l') {
 			++format;
 			length = 8;
 		}
 #endif /* !__SIZEOF_LONG_LONG__ */
+		++format; /* Consume integer-format-char */
 		goto has_length;
 
 	case 'I':
@@ -393,7 +407,7 @@ again:
 			format += 2;
 			length = 8;
 		}
-		++format;
+		++format; /* Consume integer-format-char */
 		goto has_length;
 	case 'd':
 	case 'i':
@@ -406,21 +420,21 @@ has_length:
 			    format[-1] == 'i' || format[-1] == 'x' ||
 			    format[-1] == 'b',
 			    "Invalid format: `%s'", format);
-#if __SIZEOF_INT__ < 2
-		if (length == 1)
+#if __VA_SIZE < 2
+		if (length <= 1) {
 			data.u32 = (uint32_t)va_arg(pargs->vl_ap, uint8_t);
-		else
-#endif /* __SIZEOF_INT__ < 2 */
-#if __SIZEOF_INT__ < 4
-		if (length == 2)
+		} else
+#endif /* __VA_SIZE < 2 */
+#if __VA_SIZE < 4
+		if (length <= 2) {
 			data.u32 = (uint32_t)va_arg(pargs->vl_ap, uint16_t);
-		else
-#endif /* __SIZEOF_INT__ < 4 */
-#if __SIZEOF_INT__ < 8
-		if (length == 4)
+		} else
+#endif /* __VA_SIZE < 4 */
+#if __VA_SIZE < 8
+		if (length <= 4) {
 			data.u32 = va_arg(pargs->vl_ap, uint32_t);
-		else
-#endif /* __SIZEOF_INT__ < 8 */
+		} else
+#endif /* __VA_SIZE < 8 */
 		{
 			data.u64 = va_arg(pargs->vl_ap, uint64_t);
 		}
@@ -430,16 +444,16 @@ has_length:
 			Dee_Incref(result);
 		} else if (format[-1] == 'd' || format[-1] == 'i') {
 			/* Signed integer. */
-			if (length > 4)
+			if (length > 4) {
 				result = DeeInt_NewS64(data.i64);
-			else {
+			} else {
 				result = DeeInt_NewS32(data.i32);
 			}
 		} else {
 			/* Unsigned integer. */
-			if (length > 4)
+			if (length > 4) {
 				result = DeeInt_NewU64(data.u64);
-			else {
+			} else {
 				result = DeeInt_NewU32(data.u32);
 			}
 		}
@@ -671,11 +685,11 @@ invalid_argc2:
 	case 'D':
 		if (DeeObject_AsDouble(self, &value))
 			goto err;
-		if (format[-1] == 'f')
+		if (format[-1] == 'f') {
 			*va_arg(pargs->vl_ap, float *) = (float)value;
-		else if (format[-2] != 'L')
+		} else if (format[-2] != 'L') {
 			*va_arg(pargs->vl_ap, double *) = value;
-		else {
+		} else {
 			*va_arg(pargs->vl_ap, long double *) = (long double)value;
 		}
 	}	break;
@@ -754,26 +768,42 @@ do_integer_format:
 				++format;
 #ifdef __SIZEOF_LONG_LONG__
 				length = LEN_INT(__SIZEOF_LONG_LONG__);
-#else
+#else /* __SIZEOF_LONG_LONG__ */
 				length = LEN_INT(8);
-#endif
+#endif /* !__SIZEOF_LONG_LONG__ */
 			}
 			++format;
 		}
 		if (format[-1] == 'd' || format[-1] == 'i') {
 			switch (length) { /* signed int */
-			case LEN_INT_IB1: temp = DeeObject_AsInt8(self, va_arg(pargs->vl_ap, int8_t *)); break;
-			case LEN_INT_IB2: temp = DeeObject_AsInt16(self, va_arg(pargs->vl_ap, int16_t *)); break;
-			case LEN_INT_IB4: temp = DeeObject_AsInt32(self, va_arg(pargs->vl_ap, int32_t *)); break;
-			default: temp = DeeObject_AsInt64(self, va_arg(pargs->vl_ap, int64_t *)); break;
+			case LEN_INT_IB1:
+				temp = DeeObject_AsInt8(self, va_arg(pargs->vl_ap, int8_t *));
+				break;
+			case LEN_INT_IB2:
+				temp = DeeObject_AsInt16(self, va_arg(pargs->vl_ap, int16_t *));
+				break;
+			case LEN_INT_IB4:
+				temp = DeeObject_AsInt32(self, va_arg(pargs->vl_ap, int32_t *));
+				break;
+			default:
+				temp = DeeObject_AsInt64(self, va_arg(pargs->vl_ap, int64_t *));
+				break;
 			}
 		} else if (format[-1] == 'u' || format[-1] == 'x') {
 parse_unsigned_int:
 			switch (length) { /* unsigned int */
-			case LEN_INT_IB1: temp = DeeObject_AsUInt8(self, va_arg(pargs->vl_ap, uint8_t *)); break;
-			case LEN_INT_IB2: temp = DeeObject_AsUInt16(self, va_arg(pargs->vl_ap, uint16_t *)); break;
-			case LEN_INT_IB4: temp = DeeObject_AsUInt32(self, va_arg(pargs->vl_ap, uint32_t *)); break;
-			default: temp = DeeObject_AsUInt64(self, va_arg(pargs->vl_ap, uint64_t *)); break;
+			case LEN_INT_IB1:
+				temp = DeeObject_AsUInt8(self, va_arg(pargs->vl_ap, uint8_t *));
+				break;
+			case LEN_INT_IB2:
+				temp = DeeObject_AsUInt16(self, va_arg(pargs->vl_ap, uint16_t *));
+				break;
+			case LEN_INT_IB4:
+				temp = DeeObject_AsUInt32(self, va_arg(pargs->vl_ap, uint32_t *));
+				break;
+			default:
+				temp = DeeObject_AsUInt64(self, va_arg(pargs->vl_ap, uint64_t *));
+				break;
 			}
 		} else {
 			ASSERTF(format[-1] == 'c', "Invalid format: `%s' (`%s')", format, *pformat);
@@ -1017,9 +1047,9 @@ invalid_argc:
 			++format;
 			argc_max += count_unpack_args((char const **)&format);
 		}
-		if (*format == ':')
+		if (*format == ':') {
 			++format;
-		else {
+		} else {
 			format = NULL;
 		}
 		err_invalid_argc(format, argc, argc_min, argc_max);
@@ -1138,9 +1168,9 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 						++format;
 						argc_max += count_unpack_args((char const **)&format);
 					}
-					if (*format == ':')
+					if (*format == ':') {
 						++format;
-					else {
+					} else {
 						format = NULL;
 					}
 					return err_invalid_argc_missing_kw(kwlist->k_name,
@@ -1227,9 +1257,9 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 					++format;
 					argc_max += count_unpack_args((char const **)&format);
 				}
-				if (*format == ':')
+				if (*format == ':') {
 					++format;
-				else {
+				} else {
 					format = NULL;
 				}
 				return err_invalid_argc_missing_kw(kwlist->k_name,
@@ -1259,18 +1289,18 @@ PUBLIC WUNUSED NONNULL((4, 5)) int
 			goto err_invalid_argc;
 	}
 	return 0;
-err_invalid_argc:
 	{
 		size_t argc_min, argc_max;
+err_invalid_argc:
 		format   = fmt_start;
 		argc_min = argc_max = count_unpack_args((char const **)&format);
 		if (*format == '|') {
 			++format;
 			argc_max += count_unpack_args((char const **)&format);
 		}
-		if (*format == ':')
+		if (*format == ':') {
 			++format;
-		else {
+		} else {
 			format = NULL;
 		}
 		err_invalid_argc(format, argc, argc_min, argc_max);
