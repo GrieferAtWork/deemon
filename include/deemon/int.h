@@ -512,8 +512,8 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU128(Dee_uint128_t val);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 #else /* DIGIT_BITS < 16 */
-#define DeeInt_NewU8  DeeInt_NewU16
-#define DeeInt_NewS8  DeeInt_NewS16
+#define DeeInt_NewU8 DeeInt_NewU16
+#define DeeInt_NewS8 DeeInt_NewS16
 #endif /* DIGIT_BITS >= 16 */
 
 #define DeeInt_NewAutoFit(v)                       \
@@ -524,11 +524,11 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 	              : (v) >= INT32_MIN               \
 	                ? DeeInt_NewS32((int32_t)(v))  \
 	                : DeeInt_NewS64((int64_t)(v))) \
-	         : ((v) <= INT8_MIN                    \
+	         : ((v) <= UINT8_MAX                   \
 	            ? DeeInt_NewU8((uint8_t)(v))       \
-	            : (v) <= INT16_MIN                 \
+	            : (v) <= UINT16_MAX                \
 	              ? DeeInt_NewU16((uint16_t)(v))   \
-	              : (v) <= INT32_MIN               \
+	              : (v) <= UINT32_MAX              \
 	                ? DeeInt_NewU32((uint32_t)(v)) \
 	                : DeeInt_NewU64((uint64_t)(v))))
 
@@ -792,6 +792,33 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 #define DEE_PRIVATE_NEWUINT_16    DeeInt_NewU128
 #define DEE_PRIVATE_NEWINT(size)  DEE_PRIVATE_NEWINT_##size
 #define DEE_PRIVATE_NEWUINT(size) DEE_PRIVATE_NEWUINT_##size
+
+/* Create a new integer object by looking at sizeof(v). */
+#ifdef __NO_builtin_choose_expr
+#define DeeInt_NEWS(value)                                  \
+	(sizeof(value) <= 1 ? DeeInt_NewS8((int8_t)(value)) :   \
+	 sizeof(value) <= 2 ? DeeInt_NewS16((int16_t)(value)) : \
+	 sizeof(value) <= 4 ? DeeInt_NewS32((int32_t)(value)) : \
+	                      DeeInt_NewS64((int64_t)(value)))
+#define DeeInt_NEWU(value)                                   \
+	(sizeof(value) <= 1 ? DeeInt_NewU8((uint8_t)(value)) :   \
+	 sizeof(value) <= 2 ? DeeInt_NewU16((uint16_t)(value)) : \
+	 sizeof(value) <= 4 ? DeeInt_NewU32((uint32_t)(value)) : \
+	                      DeeInt_NewU64((uint64_t)(value)))
+#else /* __NO_builtin_choose_expr */
+#define DeeInt_NEWS(value)                                                      \
+	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewS8((int8_t)(value)),    \
+	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewS16((int16_t)(value)),  \
+	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewS32((int32_t)(value)),  \
+	                                          DeeInt_NewS64((int64_t)(value)))))
+#define DeeInt_NEWU(value)                                                       \
+	__builtin_choose_expr(sizeof(value) <= 1, DeeInt_NewU8((uint8_t)(value)),    \
+	__builtin_choose_expr(sizeof(value) <= 2, DeeInt_NewU16((uint16_t)(value)),  \
+	__builtin_choose_expr(sizeof(value) <= 4, DeeInt_NewU32((uint32_t)(value)),  \
+	                                          DeeInt_NewU64((uint64_t)(value)))))
+#endif /* !__NO_builtin_choose_expr */
+
+
 
 /* Create a new integer object with an input integral value `val' of `size' bytes. */
 #define DeeInt_New(size, val)  DEE_PRIVATE_NEWINT(size)(val)

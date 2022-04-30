@@ -160,10 +160,10 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #define os_gettid() (dthreadid_t)syscall(SYS_gettid)
 #elif defined(__NR_gettid)
 #define os_gettid() (dthreadid_t)syscall(__NR_gettid)
-#else
+#else /* ... */
 #warning "Threadid is not available. Try building with `-DCONFIG_NO_THREADID' to reduce overhead"
 #define CONFIG_NO_THREADID_INTERNAL 1
-#endif
+#endif /* !... */
 #else /* !CONFIG_NO_THREADID */
 #define CONFIG_NO_THREADID_INTERNAL 1
 #endif /* CONFIG_NO_THREADID */

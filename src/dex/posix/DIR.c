@@ -940,12 +940,12 @@ diriter_get_d_ino(DeeDirIteratorObject *__restrict self) {
         (defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino))))
 	if (self->di_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_ino
-		return DeeInt_Newu(self->di_ent->d_ino);
+		return DeeInt_NEWU(self->di_ent->d_ino);
 #elif defined(posix_opendir_NEED_STAT_EXTENSION) && defined(CONFIG_HAVE_struct_stat_st_ino)
 		if unlikely(diriter_loadstat(self))
 			goto err;
 #define NEED_err
-		return DeeInt_Newu(self->di_st.st_ino);
+		return DeeInt_NEWU(self->di_st.st_ino);
 #endif /* !CONFIG_HAVE_struct_dirent_d_type */
 	}
 #endif /* ... */
@@ -966,9 +966,9 @@ diriter_get_d_namlen(DeeDirIteratorObject *__restrict self) {
 #elif defined(posix_opendir_USE_opendir)
 	if (self->di_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_namlen
-		return DeeInt_Newu(self->di_ent->d_namlen);
+		return DeeInt_NEWU(self->di_ent->d_namlen);
 #elif defined(_D_EXACT_NAMLEN)
-		return DeeInt_Newu(_D_EXACT_NAMLEN(self->di_ent));
+		return DeeInt_NEWU(_D_EXACT_NAMLEN(self->di_ent));
 #else /* ... */
 		return DeeInt_NewSize(strlen(self->di_ent->d_name));
 #endif /* !... */
@@ -993,7 +993,7 @@ diriter_get_d_reclen(DeeDirIteratorObject *__restrict self) {
 #elif defined(posix_opendir_USE_opendir)
 	if (self->di_ent != NULL) {
 #ifdef CONFIG_HAVE_struct_dirent_d_reclen
-		return DeeInt_Newu(self->di_ent->d_reclen);
+		return DeeInt_NEWU(self->di_ent->d_reclen);
 #else /* CONFIG_HAVE_struct_dirent_d_reclen */
 		return DeeInt_NewSize((offsetof(struct dirent, d_name)) +
 		                      (strlen(self->di_ent->d_name) + 1) * sizeof(char));
@@ -1014,7 +1014,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_get_d_off(DeeDirIteratorObject *__restrict self) {
 	if (self->di_ent != NULL)
-		return DeeInt_Newu(self->di_ent->d_off);
+		return DeeInt_NEWU(self->di_ent->d_off);
 	diriter_unbound_attr("d_off");
 	return NULL;
 }
