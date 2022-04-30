@@ -261,13 +261,14 @@
 #define __ATTR_NOINLINE /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__noreturn__) || defined(__TINYC__)
+#if (__has_attribute(__noreturn__) || defined(__TINYC__) || \
+     (defined(__SUNPRO_C) && __SUNPRO_C >= 0x5110))
 #define __ATTR_NORETURN __attribute__((__noreturn__))
+#elif defined(__SUNPRO_C) && __SUNPRO_C >= 0x590
+#define __ATTR_NORETURN __attribute__((noreturn))
 #elif __has_declspec_attribute(noreturn)
 #define __ATTR_NORETURN __declspec(noreturn)
-#elif (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
-#define __ATTR_NORETURN __attribute__((noreturn))
-#elif defined(_Noreturn) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112)
+#elif defined(_Noreturn) || (!defined(__cplusplus) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112)
 #define __ATTR_NORETURN_IS__NORETURN
 #define __ATTR_NORETURN _Noreturn
 #elif __has_cpp_attribute(noreturn)
@@ -300,17 +301,19 @@
 
 #if defined(__cplusplus) && __has_cpp_attribute(fallthrough)
 #define __ATTR_FALLTHROUGH [[fallthrough]];
-#elif __has_attribute(fallthrough)
+#elif __has_attribute(__fallthrough__)
 #define __ATTR_FALLTHROUGH __attribute__((__fallthrough__));
+#elif __has_attribute(fallthrough)
+#define __ATTR_FALLTHROUGH __attribute__((fallthrough));
 #else /* ... */
 #define __NO_ATTR_FALLTHROUGH
-#define __ATTR_FALLTHROUGH /* Nothing */
+#define __ATTR_FALLTHROUGH /* Fallthru */
 #endif /* !... */
 
 #define __NO_ATTR_W64
 #define __ATTR_W64 /* Nothing */
 
-#if __has_attribute(__fastcall__) || defined(__TINYC__)
+#if __has_attribute(__fastcall__) || (defined(__TINYC__) && defined(__i386__))
 #define __ATTR_FASTCALL __attribute__((__fastcall__))
 #elif defined(__fastcall)
 #define __ATTR_FASTCALL_IS___FASTCALL
@@ -708,6 +711,8 @@
 
 #if __has_attribute(__warn_unused_result__)
 #define __ATTR_WUNUSED __attribute__((__warn_unused_result__))
+#elif __has_attribute(warn_unused_result)
+#define __ATTR_WUNUSED __attribute__((warn_unused_result))
 #else /* ... */
 #define __NO_ATTR_WUNUSED
 #define __ATTR_WUNUSED /* Nothing */
