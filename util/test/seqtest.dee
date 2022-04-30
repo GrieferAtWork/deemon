@@ -28,8 +28,8 @@ final global LIKE_MAP = "mapping";
 
 function testSequenceType(typ: Type, cls: string) {
 	assert !typ();
-	assert typ().empty();
-	assert !typ().nonempty();
+	assert typ().empty;
+	assert !typ().nonempty;
 	if (cls in [LIKE_SEQ, LIKE_SET]) {
 		for (local rawTestInput: {
 			none,
@@ -116,8 +116,9 @@ function testSequenceType(typ: Type, cls: string) {
 				}
 				if (testInput is none) {
 					assert !obj;
+					assert !obj.nonempty;
+					assert obj.empty;
 					assert #obj == 0;
-					assert obj.empty();
 				} else {
 					assert (!!obj) == (#testInput != 0);
 				}
@@ -128,11 +129,11 @@ function testSequenceType(typ: Type, cls: string) {
 				assert (!!(obj as Sequence)) == (#obj != 0);
 				assert (!!obj) == (#(obj as Sequence) != 0);
 				assert (!!(obj as Sequence)) == (#(obj as Sequence) != 0);
-				assert (obj.nonempty()) == (#obj != 0);
-				assert (obj.nonempty()) == (#(obj as Sequence) != 0);
-				assert (!obj.empty()) == (#obj != 0);
-				assert (!obj.empty()) == (#(obj as Sequence) != 0);
-				assert obj.empty() != obj.nonempty();
+				assert (obj.nonempty) == (#obj != 0);
+				assert (obj.nonempty) == (#(obj as Sequence) != 0);
+				assert (!obj.empty) == (#obj != 0);
+				assert (!obj.empty) == (#(obj as Sequence) != 0);
+				assert obj.empty != obj.nonempty;
 				assert obj.length == #obj;
 				assert obj.length == #(obj as Sequence);
 				assert (obj as Sequence).length == #obj;

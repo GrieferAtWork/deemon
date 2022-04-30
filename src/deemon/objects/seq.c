@@ -1124,6 +1124,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 
 
 /* === General-purpose Sequence methods. === */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_at(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *index;
@@ -1135,35 +1136,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_empty(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":empty"))
-		goto err;
-	result = DeeSeq_NonEmpty(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_nonempty(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":nonempty"))
-		goto err;
-	result = DeeSeq_NonEmpty(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_nonempty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	/* Simply forward the call to the new name.
-	 * We don't simply alias this function to `seq_nonempty' to allow
+	 * We don't simply alias this function to `seq_get_nonempty' to allow
 	 * sub-classes to provide their own `nonempty' function, which we
 	 * want to call here instead of our generic one. */
 	return DeeObject_CallAttr(self, (DeeObject *)&str_nonempty, argc, argv);
@@ -1186,6 +1161,7 @@ seq_back(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reduce(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -2028,44 +2004,23 @@ DOC_DEF(seq_byhash_doc,
         "Find all objects apart of @this sequence who's hash matches that of @template\n"
         "Note that when hashing ?Dint objects, integers who's value lies within the range "
         "of valid hash values get hashed to their original value, meaning that the following "
-        "two uses of this function are identical:\n"
+        "two uses of this function are identical (because ${x.operator hash() == x} when $x "
+        "is an integer that contains a valid hash value):\n"
         "${"
         "local a = seq.byhash(\"foo\");\n"
         "local b = seq.byhash(\"foo\".operator hash());\n"
         "}\n"
-        "Because ${x.operator hash() == x} when $x is an integer that contains a valid "
-        "hash value\n"
         "The intended use-case is to query contained elements of mappings/sets by-hash, "
         "rather than by-key, thus allowing user-code more control in regards to is-contained/"
         "lookup-element, specifically in scenarios where objects are used as keys that are "
         "expensive to construct, such that "
-        "${return Dict[ConstructNewCopyOfKey(values...)]} "
+        "${return myDict[ConstructNewCopyOfKey(values...)]} "
         "can be written more efficiently as "
-        "${for (local e: Dict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
+        "${for (local e: myDict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
 
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN struct type_method tpconst seq_methods[] = {
-	{ "empty",
-	  &seq_empty,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Sequence is empty\n"
-	      "Implemented as (s.a. ?#{op:bool}):\n"
-	      "${"
-	      "function empty() {\n"
-	      "	import Sequence from deemon;\n"
-	      "	return !(this as Sequence).operator bool();\n"
-	      "}}") },
-	{ DeeString_STR(&str_nonempty),
-	  &seq_nonempty,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Sequence is non-empty\n"
-	      "Implemented as (s.a. ?#{op:bool}):\n"
-	      "${"
-	      "function nonempty() {\n"
-	      "	import Sequence from deemon;\n"
-	      "	return (this as Sequence).operator bool();\n"
-	      "}}") },
 	{ "reduce",
 	  &seq_reduce,
 	  DOC("(merger:?DCallable)->\n"
@@ -2077,7 +2032,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "When given, @init is used as the initial lhs-operand, "
 	      "rather than the first element of the Sequence\n"
 	      "${"
-	      "function reduce(merger, init?) {\n"
+	      "function reduce(merger: Callable, init?: Object): Object | none {\n"
 	      "	for (local x: this) {\n"
 	      "		if (init !is bound)\n"
 	      "			init = x;\n"
@@ -2096,7 +2051,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t\n"
 	      "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
 	      "${"
-	      "function filter(keep) {\n"
+	      "function filter(keep): Sequence {\n"
 	      "	for (local x: this)\n"
 	      "		if (keep(x))\n"
 	      "			yield x;\n"
@@ -2125,7 +2080,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If @this Sequence is empty, ?f is returned\n"
 	      "This function has the same effect as ${this || ...}\n"
 	      "${"
-	      "function any() {\n"
+	      "function any(): bool {\n"
 	      "	for (local x: this)\n"
 	      "		if (x)\n"
 	      "			return true;\n"
@@ -2138,7 +2093,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If @this Sequence is empty, ?t is returned\n"
 	      "This function has the same effect as ${this && ...}\n"
 	      "${"
-	      "function all() {\n"
+	      "function all(): bool {\n"
 	      "	for (local x: this)\n"
 	      "		if (!x)\n"
 	      "			return false;\n"
@@ -2151,7 +2106,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If @this Sequence is empty, ?f is returned\n"
 	      "Parity here refers to ${##this.filter([](x) -\\> !!x) % 2}\n"
 	      "${"
-	      "function parity() {\n"
+	      "function parity(): bool {\n"
 	      "	local result = false;\n"
 	      "	for (local x: this)\n"
 	      "		if (x)\n"
@@ -2166,7 +2121,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If @this Sequence is empty, ?N is returned\n"
 	      "When no @key is given, this function has the same effect as ${this < ...}\n"
 	      "${"
-	      "function min(key = none) {\n"
+	      "function min(key: Callable = none): Object {\n"
 	      "	local result;\n"
 	      "	local key_result;\n"
 	      "	for (local x: this) {\n"
@@ -2197,7 +2152,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "If @this Sequence is empty, ?N is returned\n"
 	      "This function has the same effect as ${this > ...}\n"
 	      "${"
-	      "function max(key) {\n"
+	      "function max(key: Callable = none): Object {\n"
 	      "	local result;\n"
 	      "	for (local x: this) {\n"
 	      "		if (result !is bound)\n"
@@ -2226,8 +2181,8 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns the number of instances of a given object @elem in @this Sequence\n"
 	      "${"
-	      "function count(elem, key: Callable) {\n"
-	      "	local result = 0;\n"
+	      "function count(elem: Object, key: Callable = none): int {\n"
+	      "	local result: int = 0;\n"
 	      "	if (key !is none)\n"
 	      "		elem = key(elem);\n"
 	      "	for (local x: this) {\n"
@@ -2249,7 +2204,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "@throw ValueError The Sequence does not contain an element matching @elem\n"
 	      "Returns the first item equal to @elem\n"
 	      "${"
-	      "function locate(elem, key = none) {\n"
+	      "function locate(elem: Object, key: Callable = none): Object {\n"
 	      "	import Error from deemon;\n"
 	      "	if (key !is none)\n"
 	      "		elem = key(elem);\n"
@@ -2298,7 +2253,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns a Sequence of items equal to @elem\n"
 	      "${"
-	      "function locateall(elem, key: Callable) {\n"
+	      "function locateall(elem: Object, key: Callable): Sequence {\n"
 	      "	import Error from deemon;\n"
 	      "	if (key !is none)\n"
 	      "		elem = key(elem);\n"
@@ -2319,7 +2274,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "Returns a Sequence that is a transformation of @this, with each element passed "
 	      "to @transformation for processing before being returned\n"
 	      "${"
-	      "function transform(transformation) {\n"
+	      "function transform(transformation: Callable): Sequence {\n"
 	      "	for (local x: this)\n"
 	      "		yield transformation(x);\n"
 	      "}}\n"
@@ -2331,7 +2286,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns ?t if @this Sequence contains an element matching @elem\n"
 	      "${"
-	      "function contains(elem, key: Callable) {\n"
+	      "function contains(elem: Object, key: Callable): bool {\n"
 	      "	if (key is none)\n"
 	      "		return elem in this;\n"
 	      "	elem = key(elem);\n"
@@ -2374,7 +2329,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "one of the following implementations is chosen\n"
 	      "For ${operator []} and ${operator ##}:\n"
 	      "${"
-	      "function find(elem: int, start: int, end: int, key: Callable) {\n"
+	      "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
 	      "	import int, Error from deemon;\n"
 	      "	start = (int)start;\n"
 	      "	end = (int)end;\n"
@@ -2406,7 +2361,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "}}\n"
 	      "For ${operator iter}:\n"
 	      "${"
-	      "function find(elem: int, start: int, end: int, key: Callable) {\n"
+	      "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
 	      "	import Signal, int from deemon;\n"
 	      "	start = (int)start;\n"
 	      "	end = (int)end;\n"
@@ -2459,7 +2414,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "one of the following implementations is chosen\n"
 	      "For ${operator []} and ${operator ##}:\n"
 	      "${"
-	      "function rfind(elem: int, start: int, end: int, key: Callable) {\n"
+	      "function rfind(elem: int, start: int, end: int, key: Callable = none): int {\n"
 	      "	import int from deemon;\n"
 	      "	start = (int)start;\n"
 	      "	end = (int)end;\n"
@@ -2498,7 +2453,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "}}\n"
 	      "For ${operator iter}:\n"
 	      "${"
-	      "function find(elem: int, start: int, end: int, key: Callable) {\n"
+	      "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
 	      "	import Signal, int from deemon;\n"
 	      "	start = (int)start;\n"
 	      "	end = (int)end;\n"
@@ -2549,7 +2504,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "Search for the first element matching @elem and return its index\n"
 	      "This function is implemented as:\n"
 	      "${"
-	      "function index(elem: Object, start: int, end: int, key: Callable) {\n"
+	      "function index(elem: Object, start: int, end: int, key: Callable = none): int {\n"
 	      "	import Sequence, Error from deemon;\n"
 	      "	local result = (this as Sequence).find(elem, start, end, key);\n"
 	      "	if (result == -1)\n"
@@ -2569,7 +2524,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "Search for the last element matching @elem and return its index\n"
 	      "This function is implemented as:\n"
 	      "${"
-	      "function index(elem: Object, start: int, end: int, key: Callable) {\n"
+	      "function index(elem: Object, start: int, end: int, key: Callable = none): int {\n"
 	      "	import Sequence, Error from deemon;\n"
 	      "	local result = (this as Sequence).rfind(elem, start, end, key);\n"
 	      "	if (result == -1)\n"
@@ -3557,6 +3512,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 
 
 	/* Old function names/deprecated functions. */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "front",
 	  &seq_front,
 	  DOC("->\n"
@@ -3581,6 +3537,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "would modulate the given @index by the length of the Sequence. Starting "
 	      "with deemon 200, this behavior no longer exists, and neither is it still "
 	      "supported") },
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ NULL }
 };
 
@@ -3661,6 +3618,27 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isfrozen(DeeObject *__restrict self) {
 	return_bool(Dee_TYPE(self) == &DeeSeq_Type);
 }
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_get_empty(DeeObject *__restrict self) {
+	int result = DeeSeq_NonEmpty(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(!result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_get_nonempty(DeeObject *__restrict self) {
+	int result = DeeSeq_NonEmpty(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
 
 
 
@@ -3814,6 +3792,28 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	  DOC("->?S?DType\n"
 	      "Returns a special proxy object for accessing the classes of Sequence elements\n"
 	      "This is equivalent to ${this.transform([](x) -\\> x.class)}") },
+	{ "empty", &seq_get_empty, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Returns ?t if @this Sequence is empty\n"
+	      "Implemented as (s.a. ?#{op:bool}):\n"
+	      "${"
+	      "property empty: bool = {\n"
+	      "	get(): bool {\n"
+	      "		import Sequence from deemon;\n"
+	      "		return !(this as Sequence).operator bool();\n"
+	      "	}\n"
+	      "}}") },
+	{ DeeString_STR(&str_nonempty), &seq_get_nonempty, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Returns ?t if @this Sequence is non-empty\n"
+	      "Implemented as (s.a. ?#{op:bool}):\n"
+	      "${"
+	      "property nonempty: bool = {\n"
+	      "	get(): bool {\n"
+	      "		import Sequence from deemon;\n"
+	      "		return (this as Sequence).operator bool();\n"
+	      "	}\n"
+	      "}}") },
 
 	/* TODO: Override this attribute as pass-though in Sequence-proxy types. */
 	{ "isfrozen", &seq_get_isfrozen, NULL, NULL,
@@ -3983,7 +3983,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns ?t/?f indicative of @this Sequence being non-empty\n"
-	                         "Same as the ?#nonempty member function\n"
+	                         "Same as the ?#nonempty attribute\n"
 	                         "Depending on the nearest implemented group of operators, "
 	                         "one of the following implementations is chosen\n"
 	                         "For ${operator ##}:\n"
@@ -4592,6 +4592,13 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+/* An empty instance of a generic sequence object.
+ * NOTE: This is _NOT_ a singleton. - Usercode may create more by
+ *       calling the constructor of `DeeSeq_Type' with no arguments.
+ *       Though this statically allocated instance is used by most
+ *       internal sequence functions.
+ * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty,
+ *       but obviously something like an empty tuple is also an empty sequence. */
 PUBLIC DeeObject DeeSeq_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeSeq_Type)
 };

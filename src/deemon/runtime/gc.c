@@ -1742,8 +1742,8 @@ PRIVATE DeeTypeObject GCEnum_Type = {
  * that user-space an invoke to trigger various GC-related
  * functionality:
  *   - collect(int max = -1) -> int;
- * Also: remember that this derives from `sequence', so you
- *       can use all its functions, like `empty()', etc.
+ * Also: remember that this derives from `Sequence', so you
+ *       can use all its attributes, like `empty', etc.
  * NOTE: This object is exported as `gc from deemon' */
 PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 	OBJECT_HEAD_INIT(&GCEnum_Type)

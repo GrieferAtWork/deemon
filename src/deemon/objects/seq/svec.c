@@ -1031,6 +1031,11 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_class_members = */ rvec_class_members
 };
 
+/* Construct a new reference-vector object that can be iterated
+ * and used to potentially modify the elements of a given `vector'.
+ * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
+ *       whereas when write-access is not possible, then the disposition of
+ *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
 PUBLIC WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *owner, size_t length,
                  DeeObject **vector,

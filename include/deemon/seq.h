@@ -48,10 +48,10 @@ DECL_BEGIN
 
 
 
-/* NOTE: These are no `DeeSeq_Check()' macros because they wouldn't make sense.
+/* NOTE: There are no `DeeSeq_Check()' macros because they wouldn't make sense.
  *       Being derived from `DeeSeq_Type' is _NOT_ mandatory when writing a
  *       sequence class. The only thing that it does do is allow usercode
- *       to safely query whether or not an object implement all of the standard
+ *       to safely query whether or not an object implements all of the standard
  *       sequence functions.
  * Instead, a sequence object `ob' should be
  * detected using `DeeType_IsSequence(Dee_TYPE(ob))'.
@@ -77,40 +77,48 @@ DECL_BEGIN
  *        - tp_repr (Surrounded by `{ ... }', print a comma-separated list of all elements)
  *        - tp_bool (Indicates if the sequence is non-empty)
  *     - Abstraction that automatically defines the following getsets:
- *        - `length'  (Read-only; same as `tp_size')
+ *        - `empty: bool'         (Read-only; same as `tp_bool', but negated)
+ *        - `nonempty: bool'      (Read-only; same as `tp_bool')
+ *        - `length: int'         (Read-only; same as `tp_size')
+ *        - `first: Object'       (Read-write; same as `tp_get(0)' / `tp_set(0)')
+ *        - `last: Object'        (Read-write; same as `tp_get(length - 1)' / `tp_set(length - 1)')
+ *        - `ismutable: bool'     (Read-only; s.a. `DeeSeq_IsMutable()')
+ *        - `isresizable: bool'   (Read-only; s.a. `DeeSeq_IsResizable()')
+ *        - `each: Sequence'      (Read-only; Proxy sequence for construction expressions to-be applied to each element)
+ *        - `ids: {int...}'       (Read-only; Proxy sequence for object IDs for elements)
+ *        - `types: {Type...}'    (Read-only; Proxy sequence for element types)
+ *        - `classes: {Type...}'  (Read-only; Proxy sequence for element classes)
+ *        - `isfrozen: bool'      (Read-only; returns true if the sequence is frozen)
+ *        - `frozen: Sequence'    (Read-only; returns a frozen copy of the sequence)
  *     - Abstraction that automatically defines the following class getsets:
- *        - `Iterator'
- *           Evaluates to the internally used iterator type when `DeeObject_IterSelf()' would return it.
- *           Otherwise accessing this field raises an `Error.AttributeError'.
- *           The intention here is that a sub-class defining its own iterator
- *           should override this field in order to return its own type.
+ *        - `Iterator: Type'
+ *          Evaluates to the internally used iterator type when `DeeObject_IterSelf()' would
+ *          return it. Otherwise, accessing this field raises an `Error.AttributeError'.
+ *          The intention here is that a sub-class defining its own iterator should override
+ *          this field in order to return its own type.
  *     - Abstraction that automatically defines the following methods:
- *        - `empty(): bool'
- *        - `non_empty(): bool'
  *        - `front(): Object'
  *        - `back(): Object'
- *        - `filter(func: Callable): Sequence'
- *           - Same as `(for (local x: this) if (func(x)) x)'
- *        - `reduce(callable combine): Object'
+ *        - `reduce(combine: Callable, init?): Object'
  *           - Call `combine()' on two consecutive objects, reusing the result as
  *             the first argument in the next call; return the final sum-style value.
  *             NOTE: When the sequence is empty, return `none'
+ *        - `filter(keep: Callable): Sequence'
+ *           - Same as `(for (local x: this) if (keep(x)) x)'
  *        - `sum(): Object'
- *           - Same as `reduce([](a, b) -> a+b);'
+ *           - Same as `reduce([](a, b) -> a + b);' or `this + ...'
  *           - Preferred way to concat sequences containing strings:
  *              - `print ["foo", "bar", "foobar"].sum(); // "foobarfoobar"'
  *        - `any(): bool'
- *           - Same as `reduce([](a, b) -> a || b);', but stop on the first `true' and return `false' when empty.
+ *           - Same as `reduce([](a, b) -> a || b, false);', but stop on the first `true'.
+ *           - Same as `this || ...'
  *        - `all(): bool'
- *           - Same as `reduce([](a, b) -> a && b);', but stop on the first `false' and return `true' when empty.
- *        - `non(): bool'
- *           - Returns true if all elements of the sequence equate to `false' and return `true' when empty.
- *        - `parity(): Object'
- *           - Same as `reduce([](a, b) -> !!a ^ !!b);'
+ *           - Same as `reduce([](a, b) -> a && b, true);', but stop on the first `false'.
+ *           - Same as `this && ...'
+ *        - `parity(): bool'
+ *           - Same as `((#this.filter([](x) -> !!a)) % 2) != 0'
  *        - `min(key: Callable = none): Object'
- *           - Same as `reduce([](a, b) -> key(a, b) ? a : b);'
  *        - `max(key: Callable = none): Object'
- *           - Same as `reduce([](a, b) -> key(a, b) ? b : a);'
  *        - `count(ob: Object, key: Callable = none): int'
  *        - `locate(ob: Object, key: Callable = none): Object'
  *        - `rlocate(ob: Object, key: Callable = none): Object'
@@ -150,6 +158,7 @@ DECL_BEGIN
  *        - `lstripseq(items: Sequence, key: Callable = none): Sequence'
  *        - `rstripseq(items: Sequence, key: Callable = none): Sequence'
  *        - `splitseq(sep_seq: Sequence, key: Callable = none): Sequence'
+ *        - ... // More exist; please consult http://localhost:8080/modules/deemon/Sequence
  * Some operations (Such as `tp_add') will create instances of special objects
  * that will only start invoking underlying operators when worked with:
  * >> function foo() {
@@ -205,7 +214,7 @@ DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
  * iterators, any iterator sub-class should implement a copy-constructor
  * in addition to the `tp_iter_next()' operator, although it should be
  * noted that implementation of the copy-constructor is _NOT_ mandatory,
- * as in some cases it even is impossible to pull off (such as for yield-
+ * as in some cases it is even impossible to pull off (such as for yield-
  * functions not marked as copyable or using non-copyable local variables).
  */
 DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
@@ -215,8 +224,8 @@ DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
  *       calling the constructor of `DeeSeq_Type' with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty.
- */
+ * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty,
+ *       but obviously something like an empty tuple is also an empty sequence. */
 DDATDEF DeeObject      DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
 #define Dee_return_empty_seq  Dee_return_reference_(Dee_EmptySeq)
@@ -750,7 +759,7 @@ DeeIterator_Peek(DeeObject *__restrict self);
 
 
 /* Construct a new reference-vector object that can be iterated
- * and be used to potentially modify the elements of a given `vector'.
+ * and used to potentially modify the elements of a given `vector'.
  * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
  *       whereas when write-access is not possible, then the disposition of
  *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
