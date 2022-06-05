@@ -282,13 +282,13 @@ function escapeSpecialHtmlCharactersNoLf(text: string): string {
 
 function escapeSpecialHtmlCharacters(text: string): string {
 	return escapeSpecialHtmlCharactersNoLf(text)
-		.replace("\n", "<br />\r\n");
+		.replace("\n", "<br/>\r\n");
 }
 
 function escapeSpecialHtmlCharactersWithSpace(text: string): string {
 	return escapeSpecialHtmlCharactersNoLf(text)
 		.replace(" ", "&nbsp;")
-		.replace("\n", "<br />\r\n");
+		.replace("\n", "<br/>\r\n");
 }
 
 global docObjectCache: {string: Doc} = Dict();
@@ -742,7 +742,7 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 			fp << "</b>";
 		}
 	}
-	fp << "</h2><hr>\r\n<div>";
+	fp << "</h2><hr/>\r\n<div>";
 	local prettyName = d.name;
 	local isFirst = true;
 	for (local sect: d.docsections) {
@@ -759,7 +759,7 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 			}
 		}
 	}
-	fp << "</div><hr>\r\n<div><table>";
+	fp << "</div><hr/>\r\n<div><table>";
 	local children = List(d);
 	children.sort();
 	for (local child: children) {
@@ -858,7 +858,7 @@ function getHomePage(fp: File) {
 		"<li><a href=\"/modules\">modules</a></li>"
 		"</ul></nav><main>\r\n"
 		"<h1>Deemon Documentation</h1>\r\n"
-		"<a href=\"/modules\">List of all modules</a><br />\r\n"
+		"<a href=\"/modules\">List of all modules</a><br/>\r\n"
 		"</main>";
 	writePageFooter(fp);
 }
@@ -929,15 +929,15 @@ function ClientThreadMain(con: socket) {
 				writePageHeader(errorFp, e);
 				errorFp <<
 					"<main>\r\n"
-					"<h2>DOC Server crashed</h2><br />"
-					"<hr>";
+					"<h2>DOC Server crashed</h2><br/>"
+					"<hr/>";
 				if (e !is string)
 					errorFp << "<b>" << str(type e) << "</b>: ";
 				errorFp
-					<< (e is string ? e : repr e).replace("\n", "<br />\r\n")
-					<< "<hr>"
-					<< repr(Traceback.current).replace("\n", "<br />\r\n")
-					<< "<hr></main>\r\n";
+					<< escapeSpecialHtmlCharacters(e is string ? e : repr e)
+					<< "<hr/>"
+					<< escapeSpecialHtmlCharacters(repr(Traceback.current))
+					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
 				errorFp = errorFp.string.encode("utf-8");
 				outputFp <<

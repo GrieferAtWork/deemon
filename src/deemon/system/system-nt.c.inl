@@ -1683,9 +1683,9 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 #endif /* DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS */
 #ifdef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
 	/*errno_t*/ int result, old_errno;
+	IF_CONFIG_HAVE__doserrno(DeeNT_DWORD old_doserrno);
 	if (dwError == 0)
 		return 0; /* Special case: No error */
-	IF_CONFIG_HAVE__doserrno(DeeNT_DWORD old_doserrno);
 	old_errno = DeeSystem_GetErrno();
 	IF_CONFIG_HAVE__doserrno(old_doserrno = _doserrno);
 	_dosmaperr(dwError);
@@ -1803,33 +1803,34 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 	int result;
 	/* Automatically select the proper error class. */
 	if (!tp) {
-		if (DeeNTSystem_IsFileNotFoundError(dwError))
+		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 			tp = &DeeError_FileNotFound;
-		else if (DeeNTSystem_IsExists(dwError))
+		} else if (DeeNTSystem_IsExists(dwError)) {
 			tp = &DeeError_FileExists;
-		else if (DeeNTSystem_IsBadF(dwError))
+		} else if (DeeNTSystem_IsBadF(dwError)) {
 			tp = &DeeError_FileClosed;
-		else if (DeeNTSystem_IsAccessDeniedError(dwError))
+		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 			tp = &DeeError_FileAccessError;
-		else if (DeeNTSystem_IsBadAllocError(dwError))
+		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
 			tp = &DeeError_NoMemory;
-		else if (DeeNTSystem_IsUnsupportedError(dwError))
+		} else if (DeeNTSystem_IsUnsupportedError(dwError)) {
 			tp = &DeeError_UnsupportedAPI;
-		else if (DeeNTSystem_IsInvalidArgument(dwError))
+		} else if (DeeNTSystem_IsInvalidArgument(dwError)) {
 			tp = &DeeError_ValueError;
-		else {
+		} else {
 			char const *fs_error_name = NULL;
 			/* Special handling for error types that are implemented by the `fs' module. */
-			if (DeeNTSystem_IsBusy(dwError))
+			if (DeeNTSystem_IsBusy(dwError)) {
 				fs_error_name = "BusyFile";
-			else if (DeeNTSystem_IsNotDir(dwError))
+			} else if (DeeNTSystem_IsNotDir(dwError)) {
 				fs_error_name = "NoDirectory";
-			else if (DeeNTSystem_IsNotEmpty(dwError))
+			} else if (DeeNTSystem_IsNotEmpty(dwError)) {
 				fs_error_name = "NotEmpty";
-			else if (DeeNTSystem_IsXDev(dwError))
+			} else if (DeeNTSystem_IsXDev(dwError)) {
 				fs_error_name = "CrossDevice";
-			else if (DeeNTSystem_IsNoLink(dwError))
+			} else if (DeeNTSystem_IsNoLink(dwError)) {
 				fs_error_name = "NoLink";
+			}
 			if (fs_error_name) {
 				DREF DeeTypeObject *fs_error_type;
 				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
@@ -1934,7 +1935,7 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 	LPWSTR lpwName;
 	ASSERT_OBJECT_TYPE_EXACT(lpFileName, &DeeString_Type);
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-#define eqnocase(a, b) ((a) == (b) || (a) == ((b) + ('A' - 'a')))
+#define eqnocase(a, b_lower) ((a) == (b_lower) || (a) == ((b_lower) + ('A' - 'a')))
 	if (DeeString_SIZE(lpFileName) >= 6 &&
 	    eqnocase(DeeString_STR(lpFileName)[0], 's') &&
 	    eqnocase(DeeString_STR(lpFileName)[1], 't') &&
@@ -1946,8 +1947,8 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 			hResult = GetStdHandle(STD_INPUT_HANDLE);
 do_copy_and_return_hResult:
 			if (!DuplicateHandle(GetCurrentProcess(), hResult,
-			                     GetCurrentProcess(), &hResult, dwDesiredAccess,
-			                     FALSE, 0))
+			                     GetCurrentProcess(), &hResult,
+			                     dwDesiredAccess, FALSE, 0))
 				return INVALID_HANDLE_VALUE;
 			if unlikely(hResult == NULL)
 				hResult = INVALID_HANDLE_VALUE;

@@ -2342,6 +2342,11 @@ cygwin_symlink_utf8:
 						                           symlink_size,
 						                           STRING_ERROR_FIGNORE);
 					}
+					if (owns_linkfd) {
+						DBG_ALIGNMENT_DISABLE();
+						CloseHandle(hLink);
+						DBG_ALIGNMENT_ENABLE();
+					}
 					goto free_buffer_and_return_result;
 				}
 			}
@@ -2415,11 +2420,6 @@ bad_link_type:
 	/* Free our buffer. */
 free_buffer_and_return_result:
 	Dee_Free(buffer);
-	if (owns_linkfd) {
-		DBG_ALIGNMENT_DISABLE();
-		CloseHandle(hLink);
-		DBG_ALIGNMENT_ENABLE();
-	}
 	return result;
 err_nt_createfile:
 	DBG_ALIGNMENT_DISABLE();
