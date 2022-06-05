@@ -31,7 +31,7 @@
 #ifndef __NO_has_feature
 #define __NO_has_extension
 #endif /* !__NO_has_feature */
-#define __has_extension  __has_feature
+#define __has_extension __has_feature
 #endif /* !__has_extension */
 
 #ifndef __has_attribute
@@ -110,16 +110,16 @@
 #define __COMPILER_HAVE_TYPEOF
 #if (__has_feature(cxx_static_assert) || __has_extension(cxx_static_assert) || \
      (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0))
-#define __STATIC_ASSERT_IS_STATIC_ASSERT 1
+#define __STATIC_ASSERT_IS_static_assert
 #if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
 #define __STATIC_ASSERT(expr) static_assert(expr, #expr)
 #endif /* __cpp_static_assert < 201411 */
-#define __STATIC_ASSERT_MSG   static_assert
+#define __STATIC_ASSERT_MSG static_assert
 #elif (defined(_Static_assert) || __has_feature(c_static_assert) || __has_extension(c_static_assert) || \
        (!defined(__cplusplus) && ((defined(__STDC_VERSION__) && __STDC_VERSION__ + 0 >= 201112L))))
-#define __STATIC_ASSERT_IS__STATIC_ASSERT 1
+#define __STATIC_ASSERT_IS__Static_assert
 #define __STATIC_ASSERT(expr) _Static_assert(expr, #expr)
 #define __STATIC_ASSERT_MSG   _Static_assert
 #elif defined(__COUNTER__)
@@ -610,6 +610,43 @@
 #define __ATTR_WUNUSED /* Nothing */
 #endif /* !... */
 
+#if __has_attribute(__access__)
+#define __ATTR_ACCESS_NONE(ptr_index)        __attribute__((__access__(__none__, ptr_index)))
+#define __ATTR_INS(ptr_index, size_index)    __attribute__((__access__(__read_only__, ptr_index, size_index)))
+#define __ATTR_OUTS(ptr_index, size_index)   __attribute__((__access__(__write_only__, ptr_index, size_index)))
+#define __ATTR_INOUTS(ptr_index, size_index) __attribute__((__access__(__read_write__, ptr_index, size_index)))
+#define __ATTR_IN_OPT(ptr_index)             __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT_OPT(ptr_index)            __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT_OPT(ptr_index)          __attribute__((__access__(__read_write__, ptr_index)))
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index), __nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index)))
+#endif /* !__has_attribute(__nonnull__) */
+#else /* ... */
+#define __NO_ATTR_ACCESS
+#define __ATTR_ACCESS_NONE(ptr_index)        /* Nothing */
+#define __ATTR_INS(ptr_index, size_index)    /* Nothing */
+#define __ATTR_OUTS(ptr_index, size_index)   /* Nothing */
+#define __ATTR_INOUTS(ptr_index, size_index) /* Nothing */
+#define __ATTR_IN_OPT(ptr_index)             /* Nothing */
+#define __ATTR_OUT_OPT(ptr_index)            /* Nothing */
+#define __ATTR_INOUT_OPT(ptr_index)          /* Nothing */
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    /* Nothing */
+#define __ATTR_OUT(ptr_index)   /* Nothing */
+#define __ATTR_INOUT(ptr_index) /* Nothing */
+#endif /* !__has_attribute(__nonnull__) */
+#endif /* !... */
+
 #if __has_attribute(__transparent_union__) && 0 /* This one doesn't seem to actually work??? */
 #define __ATTR_TRANSPARENT_UNION __attribute__((__transparent_union__))
 #else /* ... */
@@ -703,10 +740,6 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __ATTR_FORMAT_ARG(x) /* nothing */
 #endif /* !__has_attribute(__format_arg__) */
 
-#define __ATTR_LEAF_P  __ATTR_LEAF
-#define __ATTR_PURE_P  __ATTR_PURE
-#define __ATTR_CONST_P __ATTR_CONST
-
 #define __LOCAL      static __ATTR_INLINE
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
@@ -733,7 +766,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __ULONGLONG unsigned long long
 
 #if !__has_builtin(__builtin_prefetch)
-#define __NO_builtin_prefetch   1
+#define __NO_builtin_prefetch
 #define __builtin_prefetch(...) (void)0
 #endif /* !__builtin_prefetch */
 
@@ -750,6 +783,15 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #if __STDC_VERSION__ < 199901
 #define _Complex __complex__
 #endif /* __STDC_VERSION__ < 199901 */
+
+#if 1 /* ??? */
+#define __COMPILER_HAVE_REGISTER_VARS
+#ifdef __INTELLISENSE__
+#define __register_var(T, name, regname) T name
+#else /* __INTELLISENSE__ */
+#define __register_var(T, name, regname) register T name __asm__(regname)
+#endif /* !__INTELLISENSE__ */
+#endif
 
 
 #ifdef __clang_tidy__
@@ -769,30 +811,15 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 /* clang-tidy causes problems with extern-inline, so just disable it for now... */
 #undef __NO_EXTERN_INLINE
 #define __NO_EXTERN_INLINE
-namespace __intern {
+/*namespace __intern {
 template<class __T> struct ____clang_tidy_remlval { typedef __T __type; };
 template<class __T> struct ____clang_tidy_remlval<__T &> { typedef __T __type; };
-struct ____clang_tidy_void_helper { };
-template<class __T> __T operator , (__T &&,____clang_tidy_void_helper);
-template<class __T> __T const operator , (__T const &&,____clang_tidy_void_helper);
-template<class __T, unsigned long __N> __T (&operator , (__T(&&)[__N],____clang_tidy_void_helper))[__N];
-template<class __T, unsigned long __N> __T const (&operator , (__T const (&&)[__N],____clang_tidy_void_helper))[__N];
-void ____clang_tidy_typeof_helper(____clang_tidy_void_helper &&);
-template<class __T> typename ____clang_tidy_remlval<__T>::__type ____clang_tidy_typeof_helper(__T &&);
-template<class __T> typename ____clang_tidy_remlval<__T>::__type const ____clang_tidy_typeof_helper(__T const &&);
-template<class __T, unsigned long __N> typename ____clang_tidy_remlval<__T[__N]>::__type &____clang_tidy_typeof_helper(__T(&)[__N]);
-template<class __T, unsigned long __N> typename ____clang_tidy_remlval<__T[__N]>::__type const &____clang_tidy_typeof_helper(__T const (&)[__N]);
-template<class __T, class ...Args> __T(__attribute__((__cdecl__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__cdecl__)) &)(Args...)))(Args...);
-template<class __T, class ...Args> __T(__attribute__((__cdecl__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__cdecl__)) &)(Args..., ...)))(Args..., ...);
-template<class __T, class ...Args> __T(__attribute__((__fastcall__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__fastcall__)) &)(Args...)))(Args...);
-template<class __T, class ...Args> __T(__attribute__((__fastcall__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__fastcall__)) &)(Args..., ...)))(Args..., ...);
-template<class __T, class ...Args> __T(__attribute__((__stdcall__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__stdcall__)) &)(Args...)))(Args...);
-template<class __T, class... Args> __T(__attribute__((__stdcall__)) && ____clang_tidy_typeof_helper(__T(__attribute__((__stdcall__)) &)(Args..., ...)))(Args..., ...);
-#define typeof(...)     decltype(::__intern::____clang_tidy_typeof_helper(((__VA_ARGS__), ::__intern::____clang_tidy_void_helper())))
-#define __typeof(...)   decltype(::__intern::____clang_tidy_typeof_helper(((__VA_ARGS__), ::__intern::____clang_tidy_void_helper())))
-#define __typeof__(...) decltype(::__intern::____clang_tidy_typeof_helper(((__VA_ARGS__), ::__intern::____clang_tidy_void_helper())))
-#define __auto_type     auto
-}
+template<class __T> using ____clang_tidy_remlval_t = typename ____clang_tidy_remlval<__T>::__type;
+#define __typeof__(...) ::__intern::____clang_tidy_remlval_t<decltype(__VA_ARGS__)>
+}*/
+#define typeof __typeof__
+#define __typeof __typeof__
+#define __auto_type auto
 #endif /* __clang_tidy__ */
 
 #define __STATIC_IF(x)   if(x)
@@ -801,8 +828,7 @@ template<class __T, class... Args> __T(__attribute__((__stdcall__)) && ____clang
 #define __IF1     if(1)
 #define __WHILE0  while(0)
 #define __WHILE1  while(1)
-#define __COMPILER_BARRIERS_ALL_IDENTICAL 1
-#define __COMPILER_BARRIERS_ALL_IDENTICAL 1
+#define __COMPILER_BARRIERS_ALL_IDENTICAL
 #define __COMPILER_BARRIER()       __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
 #define __COMPILER_READ_BARRIER()  __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
 #define __COMPILER_WRITE_BARRIER() __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
@@ -861,6 +887,21 @@ template<class __T, class... Args> __T(__attribute__((__stdcall__)) && ____clang
 #endif
 
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var
+
+/* Delete assumptions the compiler may have made about `var'.
+ * This includes:
+ *  - __builtin_constant_p(var)
+ *  - __builtin_object_size(var)
+ *  - Object origin
+ * Usage:
+ * >> struct obj {
+ * >>     int field;
+ * >> };
+ * >> struct obj *o = get_object();
+ * >> int *p = &o->field;
+ * >> __COMPILER_DELETE_ASSUMPTIONS(p);  // Prevents out-of-bounds warnings
+ * >> memcpy(p, p + 5, 2 * sizeof(o->field)); */
+#define __COMPILER_DELETE_ASSUMPTIONS(var) __asm__("" : "+g" (var))
 
 #if !__has_builtin(__builtin_types_compatible_p)
 /* Emulate: __builtin_types_compatible_p() */

@@ -25,7 +25,7 @@
 /* Same as `BSEARCH()', but given an ascendingly sorted vector of
  * non-overlapping, inclusive ranges `vector[index] field_lo' ...
  * `vector[index] field_hi', find the one that contains `key' */
-#define BSEARCHR(index, vector, count, field_lo, field_hi, key)        \
+#define BSEARCH_RANGE(index, vector, count, field_lo, field_hi, key)   \
 	for (__SIZE_TYPE__ _bs_lo = 0, _bs_hi = (count); _bs_lo < _bs_hi;) \
 		if (((index) = (_bs_lo + _bs_hi) / 2,                          \
 		     (key) < (vector)[index] field_lo))                        \
@@ -36,9 +36,9 @@
 			; /* Found it! (element is in `vector[index]') */          \
 		else
 
-/* >> BSEARCH(size_t &index, T vector[], size_t count,
- * >>         UNARY_SUFFIX_EXPR field,
- * >>         typeof(vector[index] field) key) {
+/* >> BSEARCH (size_t &index, T vector[], size_t count,
+ * >>          UNARY_SUFFIX_EXPR field,
+ * >>          typeof(vector[index] field) key) {
  * >>     <SUCC>
  * >> }
  * >> <FAIL>
@@ -47,7 +47,7 @@
  * >> struct number { int value; };
  * >> ssize_t find_number(struct number num[], size_t count, int v) {
  * >>     size_t i;
- * >>     BSEARCH(i, num, count, .value, v) {
+ * >>     BSEARCH (i, num, count, .value, v) {
  * >>         return i; // Found it!
  * >>     }
  * >>     return -1; // Not found
@@ -68,23 +68,23 @@
  * @param: field:       An optional expression to narrow down a specific field of `vector'
  * @param: key:    [in] The key that's supposed to be found. */
 #define BSEARCH(index, vector, count, field, key) \
-	BSEARCHR(index, vector, count, field, field, key)
+	BSEARCH_RANGE(index, vector, count, field, field, key)
 
 
-/* Same as  `BSEARCHR()',  but  on  failure, the  index  where  the  element
+/* Same  as `BSEARCH_RANGE()', but  on failure, the  index where the element
  * should have been placed into is stored in `lo' and `hi' (with `lo == hi') */
-#define BSEARCHR_EX(index, lo, hi, vector, count, field_lo, field_hi, key) \
-	for ((lo) = 0, (hi) = (count); (lo) < (hi);)                           \
-		if (((index) = ((lo) + (hi)) / 2,                                  \
-		     (key) < (vector)[index] field_lo))                            \
-			(hi) = (index);                                                \
-		else if ((key) > (vector)[index] field_hi)                         \
-			(lo) = (index) + 1;                                            \
-		else if (((lo) = (hi), 0))                                         \
-			; /* Found it! (element is in `vector[index]') */              \
+#define BSEARCH_RANGE_EX(index, lo, hi, vector, count, field_lo, field_hi, key) \
+	for ((lo) = 0, (hi) = (count); (lo) < (hi);)                                \
+		if (((index) = ((lo) + (hi)) / 2,                                       \
+		     (key) < (vector)[index] field_lo))                                 \
+			(hi) = (index);                                                     \
+		else if ((key) > (vector)[index] field_hi)                              \
+			(lo) = (index) + 1;                                                 \
+		else if (((lo) = (hi), 0))                                              \
+			; /* Found it! (element is in `vector[index]') */                   \
 		else
 #define BSEARCH_EX(index, lo, hi, vector, count, field, key) \
-	BSEARCHR_EX(index, lo, hi, vector, count, field, field, key)
+	BSEARCH_RANGE_EX (index, lo, hi, vector, count, field, field, key)
 
 
 #endif /* !__GUARD_HYBRID_SEQUENCE_BSEARCH_H */

@@ -229,7 +229,6 @@
 #define __LONGDOUBLE long double
 #endif /* !__LONGDOUBLE */
 #define __COMPILER_HAVE_GCC_ASM
-#define __COMPILER_HAVE_REGISTER_VARS
 #define __COMPILER_HAVE_PRAGMA_PACK
 #define __COMPILER_HAVE_ADDRESSIBLE_LABELS /* void *p = &&foo; goto *p; foo: */
 #define __COMPILER_HAVE_TYPEOF
@@ -253,6 +252,13 @@
 #define __COMPILER_ASM_BUFFER(T, s, p) (*(struct { __extension__ T __d[s]; } *)(p))
 #endif /* !__cplusplus */
 
+#define __COMPILER_HAVE_REGISTER_VARS
+#ifdef __INTELLISENSE__
+#define __register_var(T, name, regname) T name
+#else /* __INTELLISENSE__ */
+#define __register_var(T, name, regname) register T name __asm__(regname)
+#endif /* !__INTELLISENSE__ */
+
 #ifndef __cplusplus
 /* XXX: When was this added in C? */
 #define __COMPILER_HAVE_AUTOTYPE
@@ -264,17 +270,17 @@
 #if (__has_feature(cxx_static_assert) ||                               \
      (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0) || \
      (__GCC_VERSION_NUM >= 40300 && (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)))
-#define __STATIC_ASSERT_IS_STATIC_ASSERT
+#define __STATIC_ASSERT_IS_static_assert
 #if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
 #define __STATIC_ASSERT(expr) static_assert(expr, #expr)
 #endif /* __cpp_static_assert < 201411 */
-#define __STATIC_ASSERT_MSG   static_assert
+#define __STATIC_ASSERT_MSG static_assert
 #elif (defined(_Static_assert) || __has_feature(c_static_assert) ||                                   \
        (!defined(__cplusplus) && ((defined(__STDC_VERSION__) && (__STDC_VERSION__ + 0) >= 201112L) || \
                                   (__GCC_VERSION_NUM >= 40600 && !defined(__STRICT_ANSI__)))))
-#define __STATIC_ASSERT_IS__STATIC_ASSERT
+#define __STATIC_ASSERT_IS__Static_assert
 #define __STATIC_ASSERT(expr) _Static_assert(expr, #expr)
 #define __STATIC_ASSERT_MSG   _Static_assert
 #elif defined(__TPP_COUNTER)
@@ -597,6 +603,57 @@
 #define __ATTR_SELECTANY /* Nothing */
 #endif /* !... */
 
+#if __has_attribute(__access__)
+#define __ATTR_ACCESS_NONE(ptr_index)        __attribute__((__access__(__none__, ptr_index)))
+#define __ATTR_INS(ptr_index, size_index)    __attribute__((__access__(__read_only__, ptr_index, size_index)))
+#define __ATTR_OUTS(ptr_index, size_index)   __attribute__((__access__(__write_only__, ptr_index, size_index)))
+#define __ATTR_INOUTS(ptr_index, size_index) __attribute__((__access__(__read_write__, ptr_index, size_index)))
+#define __ATTR_IN_OPT(ptr_index)             __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT_OPT(ptr_index)            __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT_OPT(ptr_index)          __attribute__((__access__(__read_write__, ptr_index)))
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index), __nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index)))
+#endif /* !__has_attribute(__nonnull__) */
+#elif defined(__INTELLISENSE__)
+/* Intellisense doesn't understand __access__, but to get error high-lighting  (since
+ * the `ptr_index' argument must reference a pointer-argument), we can use some other
+ * attributes that it does know! */
+#define __ATTR_ACCESS_NONE(ptr_index)        __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INS(ptr_index, size_index)    __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUTS(ptr_index, size_index)   __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUTS(ptr_index, size_index) __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_IN_OPT(ptr_index)             __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUT_OPT(ptr_index)            __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUT_OPT(ptr_index)          __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_IN(ptr_index)                 __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)                __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index)              __attribute__((__nonnull__(ptr_index)))
+#else /* ... */
+#define __NO_ATTR_ACCESS
+#define __ATTR_ACCESS_NONE(ptr_index)        /* Nothing */
+#define __ATTR_INS(ptr_index, size_index)    /* Nothing */
+#define __ATTR_OUTS(ptr_index, size_index)   /* Nothing */
+#define __ATTR_INOUTS(ptr_index, size_index) /* Nothing */
+#define __ATTR_IN_OPT(ptr_index)             /* Nothing */
+#define __ATTR_OUT_OPT(ptr_index)            /* Nothing */
+#define __ATTR_INOUT_OPT(ptr_index)          /* Nothing */
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    /* Nothing */
+#define __ATTR_OUT(ptr_index)   /* Nothing */
+#define __ATTR_INOUT(ptr_index) /* Nothing */
+#endif /* !__has_attribute(__nonnull__) */
+#endif /* !... */
+
 #define __ATTR_WARNING(text)      __attribute__((__warning__(text)))
 #define __ATTR_ERROR(text)        __attribute__((__error__(text)))
 #define __ATTR_SECTION(name)      __attribute__((__section__(name)))
@@ -608,13 +665,6 @@
 #define __ATTR_RETURNS_TWICE      __attribute__((__returns_twice__))
 #define __ATTR_EXTERNALLY_VISIBLE __attribute__((__externally_visible__))
 #define __ATTR_VISIBILITY(vis)    __attribute__((__visibility__(vis)))
-
-/* Same as the *_P-less variants, however these should be used for function
- * typedefs,  since some compilers don't allow these kinds of attributes on
- * those. */
-#define __ATTR_LEAF_P   __ATTR_LEAF
-#define __ATTR_PURE_P   __ATTR_PURE
-#define __ATTR_CONST_P  __ATTR_CONST
 
 /* Suppress warnings about `-Wsuggest-attribute=const' or `-Wsuggest-attribute=pure' */
 #define __COMPILER_IMPURE() __asm__("")
@@ -854,6 +904,21 @@ __extension__ typedef unsigned long long __ulonglong_t;
 
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var = var
 
+/* Delete assumptions the compiler may have made about `var'.
+ * This includes:
+ *  - __builtin_constant_p(var)
+ *  - __builtin_object_size(var)
+ *  - Object origin
+ * Usage:
+ * >> struct obj {
+ * >>     int field;
+ * >> };
+ * >> struct obj *o = get_object();
+ * >> int *p = &o->field;
+ * >> __COMPILER_DELETE_ASSUMPTIONS(p);  // Prevents out-of-bounds warnings
+ * >> memcpy(p, p + 5, 2 * sizeof(o->field)); */
+#define __COMPILER_DELETE_ASSUMPTIONS(var) __asm__("" : "+g" (var))
+
 #ifdef __cplusplus
 #ifdef __INTELLISENSE__
 #define __NULLPTR nullptr
@@ -879,7 +944,6 @@ __extension__ typedef unsigned long long __ulonglong_t;
 #define _Complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
 #endif
-
 
 
 #ifdef __cplusplus
@@ -919,3 +983,18 @@ template<class __T1, class __T2> struct __gcc_types_compatible:
 #undef __builtin_types_compatible_p
 #define __builtin_types_compatible_p(...) (::__intern::__gcc_types_compatible< __VA_ARGS__ >::__val)
 #endif /* __cplusplus */
+
+
+/************************************************************************/
+/* Workarounds for compiler bugs.                                       */
+/************************************************************************/
+
+/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105689 */
+#if defined(__OPTIMIZE__) && __has_attribute(__access__)/* && (__GCC_VERSION_NUM <= FIXED_IN_VERSION)*/
+#define __COMPILER_HAVE_BUG_GCC_105689
+#define __COMPILER_WORKAROUND_GCC_105689(ptr)  __asm__("" : : "X" (ptr))
+#define __COMPILER_WORKAROUND_GCC_105689_MAC(self, ...) \
+	({ __auto_type __cw_105689_self = (self); __COMPILER_WORKAROUND_GCC_105689(__cw_105689_self); __VA_ARGS__; })
+#endif /* ... */
+
+/************************************************************************/

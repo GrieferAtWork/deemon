@@ -39,8 +39,8 @@
      (!defined(__LINKER__) && !defined(__ASSEMBLY__) &&   \
       !defined(__ASSEMBLER__) && !defined(__assembler) && \
       !defined(__DEEMON__)))
-#define __CC__  1 /* C Compiler. */
-#define __CCAST   /* Nothing */
+#define __CC__ 1 /* C Compiler. */
+#define __CCAST  /* Nothing */
 #else /* ... */
 #undef __cplusplus
 #define __CCAST(T) /* Nothing */
@@ -76,7 +76,6 @@
 #include "compiler/pp-generic.h"
 
 #ifndef __CC__
-#include "compiler/c.h"
 #include "compiler/other.h"
 #else /* !__CC__ */
 #define __COMPILER_LENOF(arr)  (sizeof(arr) / sizeof(*(arr)))
@@ -131,6 +130,7 @@
 #else /* ... */
 #define __NOTHROW __ATTR_NOTHROW
 #endif /* !... */
+
 
 /* A  special  variant  of  NOTHROW  that  is  only  applied   when
  * `-fnon-call-exceptions' is disabled  (NCX --  NonCallExceptions)
@@ -198,11 +198,6 @@
 #endif /* __cplusplus */
 #endif /* __NON_CALL_EXCEPTIONS || !__NO_RPC_EXCEPTIONS */
 
-#define __untraced    /* Annotation for `if __untraced(...)' or `while __untraced(...)' \
-                       * Using this macro prevents the injection of meta-data profilers \
-                       * which would otherwise allow branches to be traced. */
-
-
 /* Pure RPC exception declaration (functions unrelated to the current NCX mode) */
 #if defined(__NO_RPC_EXCEPTIONS)
 #define __NOTHROW_RPC_PURE      __NOTHROW
@@ -215,6 +210,104 @@
 #define __CXX_NOEXCEPT_RPC_PURE /* Nothing */
 #endif /* __cplusplus */
 #endif /* !__NO_RPC_EXCEPTIONS */
+
+
+/* Same as `__NOTHROW', but must be used in `typedef's or variable declarations:
+ * >> typedef void NOTHROW_T(KCALL *PFUN)(void);
+ * >> typedef void NOTHROW_T(KCALL TFUN)(void);
+ * >> void NOTHROW_T(KCALL *funptr)(void);
+ * >> void NOTHROW(KCALL fun)(void); */
+#if (defined(__cplusplus) && \
+     ((defined(__GNUC__) && __GNUC__ >= 12))) /* TODO: Other compilers? */
+#define __NOTHROW_T           __NOTHROW
+#define __NOTHROW_NCX_T       __NOTHROW_NCX
+#define __NOTHROW_RPC_T       __NOTHROW_RPC
+#define __NOTHROW_RPC_KOS_T   __NOTHROW_RPC_KOS
+#define __NOTHROW_RPC_NOKOS_T __NOTHROW_RPC_NOKOS
+#define __NOTHROW_RPC_PURE_T  __NOTHROW_RPC_PURE
+#else /* __cplusplus */
+#define __NOTHROW_T           /* nothing */
+#define __NOTHROW_NCX_T       /* nothing */
+#define __NOTHROW_RPC_T       /* nothing */
+#define __NOTHROW_RPC_KOS_T   /* nothing */
+#define __NOTHROW_RPC_NOKOS_T /* nothing */
+#define __NOTHROW_RPC_PURE_T  /* nothing */
+#endif /* !__cplusplus */
+#if 0
+#define __ATTR_PURE_T __ATTR_PURE
+#else
+#define __ATTR_PURE_T /* nothing */
+#endif
+#if 1
+#define __ATTR_LEAF_T           __ATTR_LEAF
+#define __ATTR_CONST_T          __ATTR_CONST
+#define __ATTR_WUNUSED_T        __ATTR_WUNUSED
+#define __ATTR_RETNONNULL_T     __ATTR_RETNONNULL
+#define __ATTR_NONNULL_T        __ATTR_NONNULL
+#define __ATTR_NORETURN_T       __ATTR_NORETURN
+#define __ATTR_MALLOC_T         __ATTR_MALLOC
+#define __ATTR_HOT_T            __ATTR_HOT
+#define __ATTR_COLD_T           __ATTR_COLD
+#define __ATTR_ALLOC_SIZE_T     __ATTR_ALLOC_SIZE
+#define __ATTR_ASSUME_ALIGNED_T __ATTR_ASSUME_ALIGNED
+#define __ATTR_ALLOC_ALIGN_T    __ATTR_ALLOC_ALIGN
+#define __ATTR_NOTHROW_T        __ATTR_NOTHROW
+#define __ATTR_SENTINEL_T       __ATTR_SENTINEL
+#define __ATTR_SENTINEL_O_T     __ATTR_SENTINEL_O
+#define __ATTR_DEPRECATED_T     __ATTR_DEPRECATED
+#define __ATTR_DEPRECATED_T_    __ATTR_DEPRECATED_
+#define __ATTR_WARNING_T        __ATTR_WARNING
+#define __ATTR_ERROR_T          __ATTR_ERROR
+#define __ATTR_RETURNS_TWICE_T  __ATTR_RETURNS_TWICE
+#define __ATTR_ACCESS_NONE_T    __ATTR_ACCESS_NONE
+#define __ATTR_INS_T            __ATTR_INS
+#define __ATTR_OUTS_T           __ATTR_OUTS
+#define __ATTR_INOUTS_T         __ATTR_INOUTS
+#define __ATTR_IN_OPT_T         __ATTR_IN_OPT
+#define __ATTR_OUT_OPT_T        __ATTR_OUT_OPT
+#define __ATTR_INOUT_OPT_T      __ATTR_INOUT_OPT
+#define __ATTR_IN_T             __ATTR_IN
+#define __ATTR_OUT_T            __ATTR_OUT
+#define __ATTR_INOUT_T          __ATTR_INOUT
+#else
+#define __ATTR_LEAF_T           /* nothing */
+#define __ATTR_CONST_T          /* nothing */
+#define __ATTR_WUNUSED_T        /* nothing */
+#define __ATTR_RETNONNULL_T     /* nothing */
+#define __ATTR_NONNULL_T        /* nothing */
+#define __ATTR_NORETURN_T       /* nothing */
+#define __ATTR_MALLOC_T         /* nothing */
+#define __ATTR_HOT_T            /* nothing */
+#define __ATTR_COLD_T           /* nothing */
+#define __ATTR_ALLOC_SIZE_T     /* nothing */
+#define __ATTR_ASSUME_ALIGNED_T /* nothing */
+#define __ATTR_ALLOC_ALIGN_T    /* nothing */
+#define __ATTR_NOTHROW_T        /* nothing */
+#define __ATTR_SENTINEL_T       /* nothing */
+#define __ATTR_SENTINEL_O_T     /* nothing */
+#define __ATTR_DEPRECATED_T     /* nothing */
+#define __ATTR_DEPRECATED_T_    /* nothing */
+#define __ATTR_WARNING_T        /* nothing */
+#define __ATTR_ERROR_T          /* nothing */
+#define __ATTR_RETURNS_TWICE_T  /* nothing */
+#define __ATTR_ACCESS_NONE_T    /* nothing */
+#define __ATTR_INS_T            /* nothing */
+#define __ATTR_OUTS_T           /* nothing */
+#define __ATTR_INOUTS_T         /* nothing */
+#define __ATTR_IN_OPT_T         /* nothing */
+#define __ATTR_OUT_OPT_T        /* nothing */
+#define __ATTR_INOUT_OPT_T      /* nothing */
+#define __ATTR_IN_T             /* nothing */
+#define __ATTR_OUT_T            /* nothing */
+#define __ATTR_INOUT_T          /* nothing */
+#endif
+
+
+/* Annotation for `if __untraced(...)' or `while __untraced(...)'
+ * Using this macro prevents the injection of meta-data profilers
+ * which would otherwise allow branches to be traced. */
+#define __untraced /* nothing */
+
 
 #if defined(__COMPILER_HAVE_AUTOTYPE) && !defined(__NO_XBLOCK)
 #define __COMPILER_UNUSED(expr) __XBLOCK({ __auto_type __cu_expr = (expr); __cu_expr; })
@@ -830,6 +923,14 @@
 #define __COMPILER_CONTAINER_OF(ptr, type, member) ((type *)((__UINTPTR_TYPE__)(ptr) - __builtin_offsetof(type, member)))
 #endif /* !__INTELLISENSE__ */
 #endif /* __CC__ */
+
+/************************************************************************/
+/* Workarounds for compiler bugs.                                       */
+/************************************************************************/
+#ifndef __COMPILER_WORKAROUND_GCC_105689
+#define __COMPILER_WORKAROUND_GCC_105689(ptr) /* nothing */
+#endif /* !__COMPILER_WORKAROUND_GCC_105689 */
+
 
 #ifdef __KOS_SYSTEM_HEADERS__
 #if __has_include(<asm/__stdinc.h>)

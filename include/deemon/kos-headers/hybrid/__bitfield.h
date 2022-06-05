@@ -17,10 +17,24 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef __GUARD_HYBRID_SYNC_ATOMIC_ONCE_H
-#define __GUARD_HYBRID_SYNC_ATOMIC_ONCE_H 1
+#ifndef __GUARD_HYBRID___BITFIELD_H
+#define __GUARD_HYBRID___BITFIELD_H 1
 
-/* !DEPRECATED HEADER! */
-#include "../sched/atomic-once.h"
+#include "../__stdinc.h"
 
-#endif /* !__GUARD_HYBRID_SYNC_ATOMIC_ONCE_H */
+
+/* Helpers for portably declarations of bitfields */
+#ifdef __clang__
+#include "typecore.h"
+#define __HYBRID_BITFIELD8_T  __UINT8_TYPE__
+#define __HYBRID_BITFIELD16_T __UINT16_TYPE__
+#define __HYBRID_BITFIELD32_T __UINT32_TYPE__
+#define __HYBRID_BITFIELD64_T __UINT64_TYPE__
+#else /* __clang__ */
+#define __HYBRID_BITFIELD8_T  unsigned int
+#define __HYBRID_BITFIELD16_T unsigned int
+#define __HYBRID_BITFIELD32_T unsigned int
+#define __HYBRID_BITFIELD64_T unsigned int
+#endif /* !__clang__ */
+
+#endif /* !__GUARD_HYBRID___BITFIELD_H */

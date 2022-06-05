@@ -93,7 +93,7 @@
 #if (__has_feature(cxx_static_assert) ||                               \
      (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0) || \
      _MSC_VER >= 1600)
-#define __STATIC_ASSERT_IS_STATIC_ASSERT
+#define __STATIC_ASSERT_IS_static_assert
 #if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
@@ -103,7 +103,7 @@
 #elif (__has_feature(c_static_assert) || \
        (defined(__STDC_VERSION__) && __STDC_VERSION__ + 0 >= 201112L))
 /* XXX: Knowing Visual C/C++, checking for C11 may not actually allow us to assume this one... */
-#define __STATIC_ASSERT_IS__STATIC_ASSERT
+#define __STATIC_ASSERT_IS__Static_assert
 #define __STATIC_ASSERT(expr) _Static_assert(expr, #expr)
 #define __STATIC_ASSERT_MSG   _Static_assert
 #elif defined(__TPP_COUNTER)
@@ -160,17 +160,13 @@
 #endif /* !X64 */
 #define __NO_ATTR_SYSVABI
 #define __ATTR_SYSVABI /* Nothing */
-#define __ATTR_PURE    __declspec(noalias)
-#define __ATTR_PURE_P  __declspec(noalias) /* XXX: Is this ok? */
-#define __ATTR_CONST   __declspec(noalias)
-#define __ATTR_CONST_P __declspec(noalias) /* XXX: Is this ok? */
+#define __ATTR_PURE  __declspec(noalias)
+#define __ATTR_CONST __declspec(noalias)
 #define __NO_ATTR_LEAF
 #define __ATTR_LEAF /* Nothing */
-#define __NO_ATTR_LEAF_P
-#define __ATTR_LEAF_P /* Nothing */
 #define __NO_ATTR_FLATTEN
 #define __ATTR_FLATTEN /* Nothing */
-#define __ATTR_MALLOC  __declspec(restrict)
+#define __ATTR_MALLOC __declspec(restrict)
 #define __NO_ATTR_HOT
 #define __ATTR_HOT /* Nothing */
 #define __NO_ATTR_COLD
@@ -263,6 +259,17 @@
 #define __ATTR_ARTIFICIAL /* nothing */
 #define __NO_ATTR_FORMAT_ARG
 #define __ATTR_FORMAT_ARG(x) /* nothing */
+#define __NO_ATTR_ACCESS
+#define __ATTR_ACCESS_NONE(ptr_index)        /* Nothing */
+#define __ATTR_INS(ptr_index, size_index)    /* Nothing */
+#define __ATTR_OUTS(ptr_index, size_index)   /* Nothing */
+#define __ATTR_INOUTS(ptr_index, size_index) /* Nothing */
+#define __ATTR_IN_OPT(ptr_index)             /* Nothing */
+#define __ATTR_OUT_OPT(ptr_index)            /* Nothing */
+#define __ATTR_INOUT_OPT(ptr_index)          /* Nothing */
+#define __ATTR_IN(ptr_index)                 /* Nothing */
+#define __ATTR_OUT(ptr_index)                /* Nothing */
+#define __ATTR_INOUT(ptr_index)              /* Nothing */
 
 #define __IF0    __pragma(warning(suppress: 4127)) if(0)
 #define __IF1    __pragma(warning(suppress: 4127)) if(1)
@@ -328,6 +335,7 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __attribute__(x)         /* Nothing */
 #define __NO_COMPILER_IGNORE_UNINITIALIZED
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var
+#define __COMPILER_DELETE_ASSUMPTIONS(var) (void)0
 
 #define __INT8_TYPE__   signed __int8
 #define __UINT8_TYPE__  unsigned __int8
@@ -460,7 +468,6 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 #define __wchar_t_defined
 #endif /* _WCHAR_T_DEFINED */
 
-
 /* Define varargs macros expected by system headers. */
 #ifdef _M_CEE_PURE
 typedef System::ArgIterator __builtin_va_list;
@@ -514,7 +521,7 @@ extern __declspec(dllimport) void (__cdecl _vacopy)(__builtin_va_list *, __built
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 /* Help  detect invalid argument count that can easily be caused by copying the `va_start'
- * source  line and  replacing `start' with  `end' without removing  the section argument.
+ * source line and  replacing `start'  with `end'  without removing  the second  argument.
  * (The following hack causes the second argument in such use cases to be underlined red). */
 #undef __builtin_va_end
 void __builtin_va_end(__builtin_va_list &__ap);

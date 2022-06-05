@@ -169,16 +169,10 @@
 #define __ATTR_SYSVABI /* Nothing */
 #define __NO_ATTR_PURE
 #define __ATTR_PURE /* Nothing */
-#define __NO_ATTR_PURE_P
-#define __ATTR_PURE_P /* Nothing */
 #define __NO_ATTR_CONST
 #define __ATTR_CONST /* Nothing */
-#define __NO_ATTR_CONST_P
-#define __ATTR_CONST_P /* Nothing */
 #define __NO_ATTR_LEAF
 #define __ATTR_LEAF /* Nothing */
-#define __NO_ATTR_LEAF_P
-#define __ATTR_LEAF_P /* Nothing */
 #define __NO_ATTR_FLATTEN
 #define __ATTR_FLATTEN /* Nothing */
 #define __NO_ATTR_MALLOC
@@ -264,6 +258,17 @@
 #define __ATTR_ARTIFICIAL /* nothing */
 #define __NO_ATTR_FORMAT_ARG
 #define __ATTR_FORMAT_ARG(x) /* nothing */
+#define __NO_ATTR_ACCESS
+#define __ATTR_ACCESS_NONE(ptr_index)        /* Nothing */
+#define __ATTR_INS(ptr_index, size_index)    /* Nothing */
+#define __ATTR_OUTS(ptr_index, size_index)   /* Nothing */
+#define __ATTR_INOUTS(ptr_index, size_index) /* Nothing */
+#define __ATTR_IN_OPT(ptr_index)             /* Nothing */
+#define __ATTR_OUT_OPT(ptr_index)            /* Nothing */
+#define __ATTR_INOUT_OPT(ptr_index)          /* Nothing */
+#define __ATTR_IN(ptr_index)                 /* Nothing */
+#define __ATTR_OUT(ptr_index)                /* Nothing */
+#define __ATTR_INOUT(ptr_index)              /* Nothing */
 
 #define __NO_XBLOCK
 #define __builtin_choose_expr(c, tt, ff) ((c) ? (tt) : (ff))
@@ -289,6 +294,29 @@
 #define __builtin_FUNCTION() ""
 #define __FUNCTION__ ""
 
+#define __DECL_BEGIN                        /* nothing */
+#define __DECL_END                          /* nothing */
+#define __CXX11_CONSTEXPR                   /* nothing */
+#define __CXX11_CONSTEXPR_OR_CONST          /* nothing */
+#define __CXX14_CONSTEXPR                   /* nothing */
+#define __CXX14_CONSTEXPR_OR_CONST          /* nothing */
+#define __CXX_NOEXCEPT                      /* nothing */
+#define __NAMESPACE_STD_BEGIN               /* nothing */
+#define __NAMESPACE_STD_END                 /* nothing */
+#define __NAMESPACE_STD_SYM                 /* nothing */
+#define __NAMESPACE_STD_USING(x)            /* nothing */
+#define __NAMESPACE_GLB_SYM                 /* nothing */
+#define __NAMESPACE_GLB_USING(x)            /* nothing */
+#define __NAMESPACE_GLB_USING_TYPE(x)       /* nothing */
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) /* nothing */
+#define __NAMESPACE_INT_BEGIN               /* nothing */
+#define __NAMESPACE_INT_END                 /* nothing */
+#define __NAMESPACE_INT_SYM                 /* nothing */
+#define __NAMESPACE_INT_LSYM                /* nothing */
+#define __DFL(expr)                         /* nothing */
+#define __register                          /* nothing */
+#define __BOOL                              /* nothing */
+#define __COMPILER_REQTYPE(T, v)            (v)
 
 
 #ifdef __LINKER__

@@ -114,12 +114,14 @@
 #define __P(x) ()
 #endif /* !__STDC__ */
 
-#if (!defined(__NO_LONG_LONG) && !defined(__DARWIN_NO_LONG_LONG) &&               \
-     ((defined(__BORLANDC__) && __BORLANDC__ >= 0x561) || defined(__SUNPRO_CC) || \
-      defined(__TINYC__) || defined(__DCC_VERSION__) ||                           \
-      defined(__CODEGEARC__) || defined(__DMC__) ||                               \
-      (defined(__HP_aCC) && __HP_aCC + 0 >= 33900) ||                             \
-      (defined(__PGIC__) && __PGIC__ + 0 >= 10)))
+#ifdef __LCLINT__
+#define __COMPILER_HAVE_LONGLONG
+#elif (!defined(__NO_LONG_LONG) && !defined(__DARWIN_NO_LONG_LONG) &&               \
+       ((defined(__BORLANDC__) && __BORLANDC__ >= 0x561) || defined(__SUNPRO_CC) || \
+        defined(__TINYC__) || defined(__DCC_VERSION__) ||                           \
+        defined(__CODEGEARC__) || defined(__DMC__) ||                               \
+        (defined(__HP_aCC) && __HP_aCC + 0 >= 33900) ||                             \
+        (defined(__PGIC__) && __PGIC__ + 0 >= 10)))
 #define __COMPILER_HAVE_LONGLONG
 #endif /* long long... */
 #define __COMPILER_HAVE_LONGDOUBLE
@@ -178,7 +180,7 @@
      (defined(__cplusplus) &&                                                                      \
       ((defined(__BORLANDC__) && defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__ + 0 >= 0x610) || \
        (defined(__CODEGEARC__) && __CODEGEARC__ + 0 > 0x620))))
-#define __STATIC_ASSERT_IS_STATIC_ASSERT
+#define __STATIC_ASSERT_IS_static_assert
 #if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
@@ -187,7 +189,7 @@
 #define __STATIC_ASSERT_MSG static_assert
 #elif (defined(_Static_assert) || __has_feature(c_static_assert) || \
        (!defined(__cplusplus) && ((defined(__STDC_VERSION__) && __STDC_VERSION__ + 0 >= 201112L))))
-#define __STATIC_ASSERT_IS__STATIC_ASSERT
+#define __STATIC_ASSERT_IS__Static_assert
 #define __STATIC_ASSERT(expr) _Static_assert(expr, #expr)
 #define __STATIC_ASSERT_MSG   _Static_assert
 #elif defined(__TPP_COUNTER)
@@ -718,6 +720,43 @@
 #define __ATTR_WUNUSED /* Nothing */
 #endif /* !... */
 
+#if __has_attribute(__access__)
+#define __ATTR_ACCESS_NONE(ptr_index)        __attribute__((__access__(__none__, ptr_index)))
+#define __ATTR_INS(ptr_index, size_index)    __attribute__((__access__(__read_only__, ptr_index, size_index)))
+#define __ATTR_OUTS(ptr_index, size_index)   __attribute__((__access__(__write_only__, ptr_index, size_index)))
+#define __ATTR_INOUTS(ptr_index, size_index) __attribute__((__access__(__read_write__, ptr_index, size_index)))
+#define __ATTR_IN_OPT(ptr_index)             __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT_OPT(ptr_index)            __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT_OPT(ptr_index)          __attribute__((__access__(__read_write__, ptr_index)))
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index), __nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index), __nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    __attribute__((__access__(__read_only__, ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__access__(__write_only__, ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__access__(__read_write__, ptr_index)))
+#endif /* !__has_attribute(__nonnull__) */
+#else /* ... */
+#define __NO_ATTR_ACCESS
+#define __ATTR_ACCESS_NONE(ptr_index)        /* Nothing */
+#define __ATTR_INS(ptr_index, size_index)    /* Nothing */
+#define __ATTR_OUTS(ptr_index, size_index)   /* Nothing */
+#define __ATTR_INOUTS(ptr_index, size_index) /* Nothing */
+#define __ATTR_IN_OPT(ptr_index)             /* Nothing */
+#define __ATTR_OUT_OPT(ptr_index)            /* Nothing */
+#define __ATTR_INOUT_OPT(ptr_index)          /* Nothing */
+#if __has_attribute(__nonnull__)
+#define __ATTR_IN(ptr_index)    __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_OUT(ptr_index)   __attribute__((__nonnull__(ptr_index)))
+#define __ATTR_INOUT(ptr_index) __attribute__((__nonnull__(ptr_index)))
+#else /* __has_attribute(__nonnull__) */
+#define __ATTR_IN(ptr_index)    /* Nothing */
+#define __ATTR_OUT(ptr_index)   /* Nothing */
+#define __ATTR_INOUT(ptr_index) /* Nothing */
+#endif /* !__has_attribute(__nonnull__) */
+#endif /* !... */
+
 #if __has_attribute(__transparent_union__)
 #define __ATTR_TRANSPARENT_UNION __attribute__((__transparent_union__))
 #else /* ... */
@@ -855,10 +894,6 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __ATTR_FORMAT_ARG(x) /* nothing */
 #endif /* !__has_attribute(__format_arg__) */
 
-#define __ATTR_LEAF_P  __ATTR_LEAF
-#define __ATTR_PURE_P  __ATTR_PURE
-#define __ATTR_CONST_P __ATTR_CONST
-
 #define __LOCAL      static __ATTR_INLINE
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
@@ -891,7 +926,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #endif /* !__COMPILER_HAVE_LONGLONG */
 
 #if !__has_builtin(__builtin_prefetch)
-#define __NO_builtin_prefetch   1
+#define __NO_builtin_prefetch
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #define __builtin_prefetch(...) (void)0
 #elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
@@ -920,7 +955,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #endif /* __STDC_VERSION__ < 199901L */
 
 #if 0 /* TODO: Depend on __STDC_VERSION__ for this! */
-#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS 1
+#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
 #endif
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[1024]
 
@@ -944,7 +979,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __WHILE0  while(0)
 #define __WHILE1  while(1)
 #endif /* !__cplusplus */
-#define __COMPILER_BARRIERS_ALL_IDENTICAL 1
+#define __COMPILER_BARRIERS_ALL_IDENTICAL
 #define __COMPILER_BARRIER()       (void)0 /* ??? */
 #define __COMPILER_READ_BARRIER()  (void)0 /* ??? */
 #define __COMPILER_WRITE_BARRIER() (void)0 /* ??? */
@@ -976,10 +1011,39 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #endif /* (c_plusplus+0) == 0 */
 #endif /* c_plusplus && !__cplusplus */
 
+#if 1 /* ??? */
+#define __COMPILER_HAVE_REGISTER_VARS
+#ifdef __INTELLISENSE__
+#define __register_var(T, name, regname) T name
+#else /* __INTELLISENSE__ */
+#define __register_var(T, name, regname) register T name __asm__(regname)
+#endif /* !__INTELLISENSE__ */
+#endif
 
 #ifndef __COMPILER_IGNORE_UNINITIALIZED
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var
 #endif /* !__COMPILER_IGNORE_UNINITIALIZED */
+
+/* Delete assumptions the compiler may have made about `var'.
+ * This includes:
+ *  - __builtin_constant_p(var)
+ *  - __builtin_object_size(var)
+ *  - Object origin
+ * Usage:
+ * >> struct obj {
+ * >>     int field;
+ * >> };
+ * >> struct obj *o = get_object();
+ * >> int *p = &o->field;
+ * >> __COMPILER_DELETE_ASSUMPTIONS(p);  // Prevents out-of-bounds warnings
+ * >> memcpy(p, p + 5, 2 * sizeof(o->field)); */
+#ifndef __COMPILER_DELETE_ASSUMPTIONS
+#ifdef __COMPILER_HAVE_GCC_ASM
+#define __COMPILER_DELETE_ASSUMPTIONS(var) __asm__("" : "+g" (var))
+#else /* __COMPILER_HAVE_GCC_ASM */
+#define __COMPILER_DELETE_ASSUMPTIONS(var) (void)0
+#endif /* !__COMPILER_HAVE_GCC_ASM */
+#endif /* !__COMPILER_DELETE_ASSUMPTIONS */
 
 /* Define varargs macros expected by system headers. */
 #if __has_builtin(__builtin_va_list) || __has_builtin(__builtin_va_start)
