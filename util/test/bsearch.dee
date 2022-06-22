@@ -35,6 +35,17 @@ assert seq.bfind(31) == 8;
 assert seq.bfind(32) == 9;
 assert seq.bfind(33) == 10;
 
+assert seq.bcontains(11);
+assert seq.bcontains(12);
+assert seq.bcontains(13);
+assert seq.bcontains(21);
+assert seq.bcontains(22);
+assert seq.bcontains(23);
+assert !seq.bcontains(24);
+assert seq.bcontains(31);
+assert seq.bcontains(32);
+assert seq.bcontains(33);
+
 assert seq.bindex(11) == 0;
 assert seq.bindex(12) == 1;
 assert seq.bindex(13) == 2;

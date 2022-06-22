@@ -1514,7 +1514,7 @@ seq_find(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeSeq_Find(self, start, end, elem, key);
 		Dee_Decref(elem);
 	}
-	if unlikely((dssize_t)result < 0) {
+	if ((dssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
@@ -1540,7 +1540,7 @@ seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeSeq_RFind(self, start, end, elem, key);
 		Dee_Decref(elem);
 	}
-	if unlikely((dssize_t)result < 0) {
+	if ((dssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
@@ -2050,13 +2050,39 @@ seq_bfind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		result = DeeSeq_BFind(self, start, end, elem, key);
 		Dee_Decref(elem);
 	}
-	if unlikely((dssize_t)result < 0) {
+	if ((dssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
 			return_none;
 	}
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result, start, end;
+	if (get_sequence_find_args("bcontains", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		result = DeeSeq_BFind(self, start, end, elem, key);
+		Dee_Decref(elem);
+	}
+	if ((dssize_t)result < 0) {
+		if unlikely(result == (size_t)-2)
+			goto err;
+		if unlikely(result == (size_t)-1)
+			return_false;
+	}
+	return_true;
 err:
 	return NULL;
 }
@@ -3709,6 +3735,15 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "In case multiple elements match @elem, the returned index will be "
 	      "that for one of them, though it is undefined which one specifically.\n"
 	      "When no elements of @this match, ?N is returned.") },
+	{ "bcontains", &seq_bcontains,
+	  DOC("(elem,key:?DCallable=!N)->?Dbool\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}") },
 	{ "bindex", &seq_bindex,
 	  DOC("(elem,key:?DCallable=!N)->?Dint\n"
 	      "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
