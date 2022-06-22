@@ -53,10 +53,10 @@ public:
 	bool isresizable() const {
 		return Object(inherit(DeeObject_GetAttrString(*this, "isresizable"))).bool_();
 	}
-	bool empty() const {
+	bool isempty() const {
 		return !bool_();
 	}
-	bool nonempty() const {
+	bool isnonempty() const {
 		return bool_();
 	}
 	bool(any)() const {

@@ -1126,7 +1126,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 /* === General-purpose Sequence methods. === */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_at(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_at_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *index;
 	if (DeeArg_Unpack(argc, argv, "o:at", &index))
 		goto err;
@@ -1136,16 +1136,33 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_nonempty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	/* Simply forward the call to the new name.
-	 * We don't simply alias this function to `seq_get_nonempty' to allow
-	 * sub-classes to provide their own `nonempty' function, which we
-	 * want to call here instead of our generic one. */
-	return DeeObject_CallAttr(self, (DeeObject *)&str_nonempty, argc, argv);
+seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	if (DeeArg_Unpack(argc, argv, ":empty"))
+		goto err;
+	result = DeeObject_Bool(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result == 0);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_front(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_nonempty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	if (DeeArg_Unpack(argc, argv, ":empty"))
+		goto err;
+	result = DeeObject_Bool(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result != 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":front"))
 		goto err;
 	return DeeObject_GetAttr(self, (DeeObject *)&str_first);
@@ -1154,7 +1171,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_back(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":back"))
 		goto err;
 	return DeeObject_GetAttr(self, (DeeObject *)&str_last);
@@ -3514,23 +3531,27 @@ INTERN struct type_method tpconst seq_methods[] = {
 	/* Old function names/deprecated functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "front",
-	  &seq_front,
+	  &seq_front_deprecated,
 	  DOC("->\n"
 	      "Deprecated alias for ?#first") },
 	{ "back",
-	  &seq_back,
+	  &seq_back_deprecated,
 	  DOC("->\n"
 	      "Deprecated alias for ?#last") },
+	{ "empty",
+	  &seq_empty_deprecated,
+	  DOC("->?Dbool\n"
+	      "Deprecated alias for ?#isempty") },
 	{ "non_empty",
 	  &seq_nonempty_deprecated,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#nonempty") },
+	      "Deprecated alias for ?#isnonempty") },
 	{ "at",
-	  &seq_at,
+	  &seq_at_deprecated,
 	  DOC("(index:?Dint)->\n"
 	      "Deprecated alias for ${this[index]}") },
 	{ DeeString_STR(&str_get),
-	  &seq_at,
+	  &seq_at_deprecated,
 	  DOC("(index:?Dint)->\n"
 	      "Deprecated alias for ${this[index]}\n"
 	      "In older versions of deemon, this function (as well as ${operator []}) "
@@ -3620,7 +3641,7 @@ seq_get_isfrozen(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_get_empty(DeeObject *__restrict self) {
+seq_get_isempty(DeeObject *__restrict self) {
 	int result = DeeSeq_NonEmpty(self);
 	if unlikely(result < 0)
 		goto err;
@@ -3630,7 +3651,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_get_nonempty(DeeObject *__restrict self) {
+seq_get_isnonempty(DeeObject *__restrict self) {
 	int result = DeeSeq_NonEmpty(self);
 	if unlikely(result < 0)
 		goto err;
@@ -3792,26 +3813,24 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	  DOC("->?S?DType\n"
 	      "Returns a special proxy object for accessing the classes of Sequence elements\n"
 	      "This is equivalent to ${this.transform([](x) -\\> x.class)}") },
-	{ "empty", &seq_get_empty, NULL, NULL,
+	{ "isempty", &seq_get_isempty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Sequence is empty\n"
 	      "Implemented as (s.a. ?#{op:bool}):\n"
 	      "${"
-	      "property empty: bool = {\n"
+	      "property isempty: bool = {\n"
 	      "	get(): bool {\n"
-	      "		import Sequence from deemon;\n"
-	      "		return !(this as Sequence).operator bool();\n"
+	      "		return !this.operator bool();\n"
 	      "	}\n"
 	      "}}") },
-	{ DeeString_STR(&str_nonempty), &seq_get_nonempty, NULL, NULL,
+	{ "isnonempty", &seq_get_isnonempty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Sequence is non-empty\n"
 	      "Implemented as (s.a. ?#{op:bool}):\n"
 	      "${"
-	      "property nonempty: bool = {\n"
+	      "property isnonempty: bool = {\n"
 	      "	get(): bool {\n"
-	      "		import Sequence from deemon;\n"
-	      "		return (this as Sequence).operator bool();\n"
+	      "		return this.operator bool();\n"
 	      "	}\n"
 	      "}}") },
 
@@ -3983,7 +4002,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns ?t/?f indicative of @this Sequence being non-empty\n"
-	                         "Same as the ?#nonempty attribute\n"
+	                         "Same as the ?#isnonempty attribute\n"
 	                         "Depending on the nearest implemented group of operators, "
 	                         "one of the following implementations is chosen\n"
 	                         "For ${operator ##}:\n"

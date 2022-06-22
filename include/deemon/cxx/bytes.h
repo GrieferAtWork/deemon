@@ -149,10 +149,10 @@ public: /* API functions */
 	WUNUSED bool ismutable() const DEE_CXX_NOTHROW {
 		return DeeBytes_WRITABLE(this->ptr());
 	}
-	bool empty() const DEE_CXX_NOTHROW {
+	WUNUSED bool isempty() const DEE_CXX_NOTHROW {
 		return DeeBytes_IsEmpty(this->ptr());
 	}
-	bool nonempty() const DEE_CXX_NOTHROW {
+	WUNUSED bool isnonempty() const DEE_CXX_NOTHROW {
 		return !DeeBytes_IsEmpty(this->ptr());
 	}
 	WUNUSED Bytes &bytes() {

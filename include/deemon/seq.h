@@ -77,8 +77,8 @@ DECL_BEGIN
  *        - tp_repr (Surrounded by `{ ... }', print a comma-separated list of all elements)
  *        - tp_bool (Indicates if the sequence is non-empty)
  *     - Abstraction that automatically defines the following getsets:
- *        - `empty: bool'         (Read-only; same as `tp_bool', but negated)
- *        - `nonempty: bool'      (Read-only; same as `tp_bool')
+ *        - `isempty: bool'       (Read-only; same as `tp_bool', but negated)
+ *        - `isnonempty: bool'    (Read-only; same as `tp_bool')
  *        - `length: int'         (Read-only; same as `tp_size')
  *        - `first: Object'       (Read-write; same as `tp_get(0)' / `tp_set(0)')
  *        - `last: Object'        (Read-write; same as `tp_get(length - 1)' / `tp_set(length - 1)')
