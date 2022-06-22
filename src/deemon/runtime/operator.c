@@ -5324,6 +5324,28 @@ err:
 	return -1;
 }
 
+/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+ * @return: == -2: An error occurred.
+ * @return: == -1: `lhs < key(rhs)'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `lhs > key(rhs)' */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
+                             DeeObject *rhs, /*nullable*/ DeeObject *key) {
+	int result;
+	if (!key)
+		return DeeObject_Compare(lhs_keyed, rhs);
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err;
+	result = DeeObject_Compare(lhs_keyed, rhs);
+	Dee_Decref(rhs);
+	return result;
+err:
+	return -2;
+}
+
+
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
                                DeeObject *elem, /*nullable*/ DeeObject *key) {

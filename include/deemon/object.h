@@ -2837,7 +2837,17 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
  * @return: == -1: `lhs < rhs'
  * @return: == 0:  Objects compare as equal
  * @return: == 1:  `lhs > rhs' */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
+
+/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+ * @return: == -2: An error occurred.
+ * @return: == -1: `lhs < key(rhs)'
+ * @return: == 0:  Objects compare as equal
+ * @return: == 1:  `lhs > key(rhs)' */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
+                             DeeObject *rhs, /*nullable*/ DeeObject *key);
 
 /* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
  * @return:  > 0: The objects are equal.

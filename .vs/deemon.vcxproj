@@ -285,6 +285,7 @@
     <ClCompile Include="..\src\deemon\objects\rodict.c" />
     <ClCompile Include="..\src\deemon\objects\roset.c" />
     <ClCompile Include="..\src\deemon\objects\seq.c" />
+    <ClCompile Include="..\src\deemon\objects\seq\bsearch.c" />
     <ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
     <ClCompile Include="..\src\deemon\objects\seq\concat.c" />
     <ClCompile Include="..\src\deemon\objects\seq\each.c" />
@@ -416,6 +417,8 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" 
     <None Include="..\src\deemon\execute\code-invoke.c.inl" />
     <None Include="..\src\deemon\linker-scripts\link-deemon.dee" />
     <None Include="..\src\deemon\objects\float-print.c.inl" />
+    <None Include="..\src\deemon\objects\seq\bsearch-impl.c.inl" />
+    <None Include="..\src\deemon\objects\seq\bsearch.c.inl" />
     <None Include="..\src\deemon\objects\seq\each-fastpass.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_functions.c.inl" />

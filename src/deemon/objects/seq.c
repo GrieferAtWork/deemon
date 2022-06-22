@@ -1432,32 +1432,32 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 4, 5, 6, 7)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4, 5, 6, 7)) int DCALL
 get_sequence_find_args(char const *__restrict name,
                        size_t argc, DeeObject *const *argv,
                        DeeObject **__restrict pelem,
-                       DeeObject **__restrict ppred_eq,
+                       DeeObject **__restrict pkey,
                        size_t *__restrict pstart,
                        size_t *__restrict pend) {
 	switch (argc) {
 
 	case 1:
-		*pelem    = argv[0];
-		*ppred_eq = NULL;
-		*pstart   = 0;
-		*pend     = (size_t)-1;
+		*pelem  = argv[0];
+		*pkey   = NULL;
+		*pstart = 0;
+		*pend   = (size_t)-1;
 		break;
 
 	case 2:
 		if (DeeInt_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)pstart))
 				goto err;
-			*ppred_eq = NULL;
+			*pkey = NULL;
 		} else {
-			*ppred_eq = argv[1];
-			*pstart   = 0;
-			if (DeeNone_Check(*ppred_eq))
-				*ppred_eq = NULL;
+			*pkey   = argv[1];
+			*pstart = 0;
+			if (DeeNone_Check(*pkey))
+				*pkey = NULL;
 		}
 		*pelem = argv[0];
 		*pend  = (size_t)-1;
@@ -1469,12 +1469,12 @@ get_sequence_find_args(char const *__restrict name,
 		if (DeeInt_Check(argv[2])) {
 			if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
 				goto err;
-			*ppred_eq = NULL;
+			*pkey = NULL;
 		} else {
-			*ppred_eq = argv[2];
-			*pend     = (size_t)-1;
-			if (DeeNone_Check(*ppred_eq))
-				*ppred_eq = NULL;
+			*pkey = argv[2];
+			*pend = (size_t)-1;
+			if (DeeNone_Check(*pkey))
+				*pkey = NULL;
 		}
 		*pelem = argv[0];
 		break;
@@ -1484,10 +1484,10 @@ get_sequence_find_args(char const *__restrict name,
 			goto err;
 		if (DeeObject_AsSSize(argv[2], (dssize_t *)pend))
 			goto err;
-		*pelem    = argv[0];
-		*ppred_eq = argv[3];
-		if (DeeNone_Check(*ppred_eq))
-			*ppred_eq = NULL;
+		*pelem = argv[0];
+		*pkey  = argv[3];
+		if (DeeNone_Check(*pkey))
+			*pkey = NULL;
 		break;
 
 	default:
@@ -2014,7 +2014,6 @@ err:
 	return NULL;
 }
 
-
 DOC_DEF(seq_byhash_doc,
         "(template:?O)->?DSequence\n"
         "@param template The object who's hash should be used to search for collisions\n"
@@ -2034,6 +2033,176 @@ DOC_DEF(seq_byhash_doc,
         "${return myDict[ConstructNewCopyOfKey(values...)]} "
         "can be written more efficiently as "
         "${for (local e: myDict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_bfind(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result, start, end;
+	if (get_sequence_find_args("bfind", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		result = DeeSeq_BFind(self, start, end, elem, key);
+		Dee_Decref(elem);
+	}
+	if unlikely((dssize_t)result < 0) {
+		if unlikely(result == (size_t)-2)
+			goto err;
+		if unlikely(result == (size_t)-1)
+			return_none;
+	}
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result, start, end;
+	if (get_sequence_find_args("bindex", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		result = DeeSeq_BFind(self, start, end, elem, key);
+		Dee_Decref(elem);
+	}
+	if unlikely((dssize_t)result < 0) {
+		if unlikely(result == (size_t)-2)
+			goto err;
+		if unlikely(result == (size_t)-1)
+			goto err_not_found;
+	}
+	return DeeInt_NewSize(result);
+err_not_found:
+	err_item_not_found(self, elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_bposition(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result, start, end;
+	if (get_sequence_find_args("bposition", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		result = DeeSeq_BFindPosition(self, start, end, elem, NULL);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		result = DeeSeq_BFindPosition(self, start, end, elem, key);
+		Dee_Decref(elem);
+	}
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_brange(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result_start, result_end;
+	size_t start, end;
+	int error;
+	if (get_sequence_find_args("brange", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		error = DeeSeq_BFindRange(self, start, end, elem, NULL, &result_start, &result_end);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		error = DeeSeq_BFindRange(self, start, end, elem, key, &result_start, &result_end);
+		Dee_Decref(elem);
+	}
+	if unlikely(error)
+		goto err;
+	return DeeTuple_Newf(PCKuSIZ
+	                     PCKuSIZ,
+	                     result_start,
+	                     result_end);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_blocate(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key = Dee_None;
+	DREF DeeObject *result;
+	if (DeeArg_Unpack(argc, argv, "o|o:blocate", &elem, &key))
+		goto err;
+	if (DeeNone_Check(key)) {
+		result = DeeSeq_BLocate(self, 0, (size_t)-1, elem, NULL, NULL);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		result = DeeSeq_BLocate(self, 0, (size_t)-1, elem, key, NULL);
+		Dee_Decref(elem);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *elem, *key;
+	size_t result_start, result_end;
+	size_t start, end;
+	int error;
+	if (get_sequence_find_args("blocateall", argc, argv, &elem, &key, &start, &end))
+		goto err;
+	if (!key) {
+		error = DeeSeq_BFindRange(self, start, end, elem, NULL, &result_start, &result_end);
+	} else {
+		elem = DeeObject_Call(key, 1, &elem);
+		if unlikely(!elem)
+			goto err;
+		error = DeeSeq_BFindRange(self, start, end, elem, key, &result_start, &result_end);
+		Dee_Decref(elem);
+	}
+	if unlikely(error)
+		goto err;
+	return DeeSeq_GetRange(self, result_start, result_end);
+err:
+	return NULL;
+}
+
+INTERN DEFINE_KWLIST(seq_binsert_kwlist, { K(elem), K(key), KEND });
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_binsert(DeeObject *self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *index, *result;
+	DeeObject *args[2]; /* elem, key */
+	args[1] = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_binsert_kwlist, "o|o:binsert", &args[0], &args[1]))
+		goto err;
+	index = DeeObject_CallAttrString(self, "bposition", 2, args);
+	if unlikely(!index)
+		goto err;
+	args[1] = args[0]; /* elem */
+	args[0] = index;   /* index */
+	result = DeeObject_CallAttr(self, (DeeObject *)&str_insert, 2, args);
+	Dee_Decref(args[0]);
+	return result;
+err:
+	return NULL;
+}
+
 
 
 INTDEF struct type_method tpconst seq_methods[];
@@ -3525,6 +3694,94 @@ INTERN struct type_method tpconst seq_methods[] = {
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_byhash,
 	  DOC_GET(seq_byhash_doc),
+	  TYPE_METHOD_FKWDS },
+
+	/* Binary search API */
+	{ "bfind", &seq_bfind,
+	  DOC("(elem,key:?DCallable=!N)->?X2?Dint?N\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?X2?Dint?N\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?X2?Dint?N\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "Do a binary search (requiring @this to be sorted) for @elem\n"
+	      "In case multiple elements match @elem, the returned index will be "
+	      "that for one of them, though it is undefined which one specifically.\n"
+	      "When no elements of @this match, ?N is returned.") },
+	{ "bindex", &seq_bindex,
+	  DOC("(elem,key:?DCallable=!N)->?Dint\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	      "Same as ?#bfind, but throw an :ValueError instead of returning ?N.") },
+	{ "bposition", &seq_bposition,
+	  DOC("(elem,key:?DCallable=!N)->?Dint\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "Same as ?#bfind, but return (an) index where @elem should be inserted, rather "
+	      "than ?N when @this doesn't contain any matching object") },
+	{ "brange", &seq_brange,
+	  DOC("(elem,key:?DCallable=!N)->?X2?Dint?Dint\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?X2?Dint?Dint\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?X2?Dint?Dint\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
+	      "the lower and upper bound of indices for elements from @this matching @elem.") },
+	{ "blocate", &seq_blocate,
+	  DOC("(elem,key:?DCallable=!N)->\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@throw ValueError The Sequence does not contain an element matching @elem\n"
+	      "Same as ?#bfind, but return the matching element, rather than its index") },
+	{ "blocateall", &seq_blocateall,
+	  DOC("(elem,key:?DCallable=!N)->?S?O\n"
+	      "(elem,start:?Dint,key:?DCallable=!N)->?S?O\n"
+	      "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n"
+	      "@param elem The element to search for\n"
+	      "@param key A key function for transforming Sequence elements\n"
+	      "@param start The start index for a sub-range to search (clamped by ${##this})\n"
+	      "@param end The end index for a sub-range to search (clamped by ${##this})\n"
+	      "Return the sub-range from @this of elements matching @elem, as returned by ?#brange\n"
+	      "${"
+	      "function blocateall(args..., **kwds) {\n"
+	      "	import Sequence from deemon;\n"
+	      "	local begin, end = this.brange(args..., **kwds);\n"
+	      "	return (this as Sequence)[begin:end];\n"
+	      "}}\n"
+	      "Here is a really neat usage-example for this function: find all strings within "
+	      "a sorted sequence of strings that start with a given prefix-string:\n"
+	      "${"
+	      "local lines: {string...} = ...; /* Must be sorted! */\n"
+	      "local prefix: string     = ...;\n"
+	      "/* The process of looking up relevant lines here is O(log(##lines))! */\n"
+	      "for (local l: lines.blocateall(prefix, [](s) -#> s.substr(0, ##prefix)))\n"
+	      "	print l;\n"
+	      "}") },
+	{ "binsert",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_binsert,
+	  DOC("(elem,key:?DCallable=!N)\n"
+	      "Helper wrapper for ?#insert and ?#bposition that automatically determines "
+	      "the index where a given @elem should be inserted to ensure that @this sequence "
+	      "remains sorted according to @key. Note that this function makes virtual calls as "
+	      "seen in the following template, meaning it usually doesn't need to be overwritten "
+	      "by sub-classes.\n"
+	      "${"
+	      "function binsert(elem: Object, key: Callable = none) {\n"
+	      "	local index = this.bposition(elem, key);\n"
+	      "	return this.insert(index, elem);\n"
+	      "}}"),
 	  TYPE_METHOD_FKWDS },
 
 

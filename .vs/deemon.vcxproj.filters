@@ -878,6 +878,9 @@
     <ClCompile Include="..\src\deemon\compiler\traits.c">
       <Filter>src\deemon\compiler</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\bsearch.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">
@@ -1207,6 +1210,12 @@
     </None>
     <None Include="..\src\deemon\compiler\asm\genasm-yield.c.inl">
       <Filter>src\deemon\compiler\asm</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\seq\bsearch.c.inl">
+      <Filter>src\deemon\objects\seq</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\seq\bsearch-impl.c.inl">
+      <Filter>src\deemon\objects\seq</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

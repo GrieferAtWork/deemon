@@ -1,0 +1,91 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+local seq = { 11, 12, 13, 21, 22, 22, 22, 23, 31, 32, 33 };
+assert #seq == 11;
+
+assert seq.bfind(11) == 0;
+assert seq.bfind(12) == 1;
+assert seq.bfind(13) == 2;
+assert seq.bfind(21) == 3;
+assert seq.bfind(22) in [4:7];
+assert seq.bfind(23) == 7;
+assert seq.bfind(24) is none;
+assert seq.bfind(31) == 8;
+assert seq.bfind(32) == 9;
+assert seq.bfind(33) == 10;
+
+assert seq.bindex(11) == 0;
+assert seq.bindex(12) == 1;
+assert seq.bindex(13) == 2;
+assert seq.bindex(21) == 3;
+assert seq.bindex(22) in [4:7];
+assert seq.bindex(23) == 7;
+assert (try seq.bindex(24) catch (e...) e) is Error.ValueError;
+assert seq.bindex(31) == 8;
+assert seq.bindex(32) == 9;
+assert seq.bindex(33) == 10;
+
+assert seq.bposition(11) == 0;
+assert seq.bposition(12) == 1;
+assert seq.bposition(13) == 2;
+assert seq.bposition(21) == 3;
+assert seq.bposition(22) in [4:7];
+assert seq.bposition(23) == 7;
+assert seq.bposition(24) == 8;
+assert seq.bposition(31) == 8;
+assert seq.bposition(32) == 9;
+assert seq.bposition(33) == 10;
+
+assert seq.brange(11) == (0, 1);
+assert seq.brange(12) == (1, 2);
+assert seq.brange(13) == (2, 3);
+assert seq.brange(21) == (3, 4);
+assert seq.brange(22) == (4, 7);
+assert seq.brange(23) == (7, 8);
+assert seq.brange(24) == (8, 8);
+assert seq.brange(31) == (8, 9);
+assert seq.brange(32) == (9, 10);
+assert seq.brange(33) == (10, 11);
+
+assert seq.blocate(11) == 11;
+assert seq.blocate(12) == 12;
+assert seq.blocate(13) == 13;
+assert seq.blocate(21) == 21;
+assert seq.blocate(22) == 22;
+assert seq.blocate(23) == 23;
+assert (try seq.blocate(24) catch (e...) e) is Error.ValueError;
+assert seq.blocate(31) == 31;
+assert seq.blocate(32) == 32;
+assert seq.blocate(33) == 33;
+
+assert seq.blocateall(11) == [11];
+assert seq.blocateall(12) == [12];
+assert seq.blocateall(13) == [13];
+assert seq.blocateall(21) == [21];
+assert seq.blocateall(22) == [22, 22, 22];
+assert seq.blocateall(23) == [23];
+assert seq.blocateall(24) == [];
+assert seq.blocateall(31) == [31];
+assert seq.blocateall(32) == [32];
+assert seq.blocateall(33) == [33];

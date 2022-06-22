@@ -200,7 +200,7 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD int DCALL
+INTERN ATTR_COLD int DCALL
 err_no_generic_sequence(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Neither `%k.__getitem__' and `%k.__size__', nor `%k.__iter__' are implemented",

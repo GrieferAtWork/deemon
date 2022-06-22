@@ -633,6 +633,43 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_RepeatCombinations(DeeO
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations2(DeeObject *__restrict self, size_t r);
 
+/* Binary search for `keyed_search_item'
+ * In case multiple elements match `keyed_search_item', the returned index
+ * will be that for one of them, though it is undefined which one specifically.
+ * @return: (size_t)-1: Not found.
+ * @return: (size_t)-2: Error. */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_BFind(DeeObject *self, size_t start, size_t end,
+             DeeObject *keyed_search_item, DeeObject *key);
+
+/* Find the index-range of all items, such that:
+ * >> for (elem: self[*p_startindex:*p_endindex])
+ * >>     assert keyed_search_item == key(elem);
+ * @return: 0: Success
+ * @return: -1: Error. */
+INTDEF WUNUSED NONNULL((1, 4, 6, 7)) int DCALL
+DeeSeq_BFindRange(DeeObject *self, size_t start, size_t end,
+                  DeeObject *keyed_search_item, DeeObject *key,
+                  size_t *__restrict p_startindex,
+                  size_t *__restrict p_endindex);
+
+/* Same as `DeeSeq_BFind()', but return index where `keyed_search_item'
+ * should go in case no matching item already exists in `self'
+ * @return: (size_t)-1: Error. */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_BFindPosition(DeeObject *self, size_t start, size_t end,
+                     DeeObject *keyed_search_item, DeeObject *key);
+
+/* Returns `self[DeeSeq_BFind(self, keyed_search_item, key)]'
+ * In case multiple elements match `keyed_search_item', the
+ * returned item will be one of them, though which one is
+ * undefined.
+ * @return: NULL: Error, or not found (and `defl' is NULL). */
+INTDEF WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+DeeSeq_BLocate(DeeObject *self, size_t start, size_t end,
+               DeeObject *keyed_search_item, DeeObject *key,
+               DeeObject *defl);
+
 /* Sequence functions. */
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_CountSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_ContainsSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
