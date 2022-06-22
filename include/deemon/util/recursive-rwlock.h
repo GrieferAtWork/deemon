@@ -41,7 +41,7 @@ typedef int Dee_recursive_rwlock_t;
 #define Dee_recursive_rwlock_endread(self)    (void)0
 #define Dee_recursive_rwlock_end(self)        (void)0
 #else /* CONFIG_NO_THREADS */
-#include <hybrid/sync/atomic-owner-rwlock.h>
+#include <hybrid/sched/atomic-owner-rwlock.h>
 
 typedef struct atomic_owner_rwlock Dee_recursive_rwlock_t;
 #define Dee_RECURSIVE_RWLOCK_INIT             ATOMIC_OWNER_RWLOCK_INIT

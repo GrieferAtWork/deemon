@@ -212,7 +212,7 @@
 #endif /* !__NO_RPC_EXCEPTIONS */
 
 
-/* Same as `__NOTHROW', but must be used in `typedef's or variable declarations:
+/* Same as `__NOTHROW', but must be used in `typedef's and variable declarations:
  * >> typedef void NOTHROW_T(KCALL *PFUN)(void);
  * >> typedef void NOTHROW_T(KCALL TFUN)(void);
  * >> void NOTHROW_T(KCALL *funptr)(void);
@@ -233,32 +233,37 @@
 #define __NOTHROW_RPC_NOKOS_T /* nothing */
 #define __NOTHROW_RPC_PURE_T  /* nothing */
 #endif /* !__cplusplus */
-#if 0
-#define __ATTR_PURE_T __ATTR_PURE
+#if 0 /* These (currently) result in -Wattribute warnings */
+#define __ATTR_PURE_T          __ATTR_PURE
+#define __ATTR_LEAF_T          __ATTR_LEAF
+#define __ATTR_HOT_T           __ATTR_HOT
+#define __ATTR_COLD_T          __ATTR_COLD
+#define __ATTR_NOTHROW_T       __ATTR_NOTHROW
+#define __ATTR_RETURNS_TWICE_T __ATTR_RETURNS_TWICE
 #else
-#define __ATTR_PURE_T /* nothing */
+#define __ATTR_PURE_T          /* nothing */
+#define __ATTR_LEAF_T          /* nothing */
+#define __ATTR_HOT_T           /* nothing */
+#define __ATTR_COLD_T          /* nothing */
+#define __ATTR_NOTHROW_T       /* nothing */
+#define __ATTR_RETURNS_TWICE_T /* nothing */
 #endif
 #if 1
-#define __ATTR_LEAF_T           __ATTR_LEAF
 #define __ATTR_CONST_T          __ATTR_CONST
 #define __ATTR_WUNUSED_T        __ATTR_WUNUSED
 #define __ATTR_RETNONNULL_T     __ATTR_RETNONNULL
 #define __ATTR_NONNULL_T        __ATTR_NONNULL
 #define __ATTR_NORETURN_T       __ATTR_NORETURN
 #define __ATTR_MALLOC_T         __ATTR_MALLOC
-#define __ATTR_HOT_T            __ATTR_HOT
-#define __ATTR_COLD_T           __ATTR_COLD
 #define __ATTR_ALLOC_SIZE_T     __ATTR_ALLOC_SIZE
 #define __ATTR_ASSUME_ALIGNED_T __ATTR_ASSUME_ALIGNED
 #define __ATTR_ALLOC_ALIGN_T    __ATTR_ALLOC_ALIGN
-#define __ATTR_NOTHROW_T        __ATTR_NOTHROW
 #define __ATTR_SENTINEL_T       __ATTR_SENTINEL
 #define __ATTR_SENTINEL_O_T     __ATTR_SENTINEL_O
 #define __ATTR_DEPRECATED_T     __ATTR_DEPRECATED
 #define __ATTR_DEPRECATED_T_    __ATTR_DEPRECATED_
 #define __ATTR_WARNING_T        __ATTR_WARNING
 #define __ATTR_ERROR_T          __ATTR_ERROR
-#define __ATTR_RETURNS_TWICE_T  __ATTR_RETURNS_TWICE
 #define __ATTR_ACCESS_NONE_T    __ATTR_ACCESS_NONE
 #define __ATTR_INS_T            __ATTR_INS
 #define __ATTR_OUTS_T           __ATTR_OUTS
@@ -318,7 +323,22 @@
 #endif /* !... */
 
 #ifndef __DEFINE_PUBLIC_ALIAS
-#ifdef __COMPILER_HAVE_GCC_ASM
+#ifdef __INTELLISENSE_GCC__
+#define __DEFINE_PRIVATE_ALIAS(new, old)      static __typeof__(old) new __attribute__((__alias__(#old)))
+#define __DEFINE_PUBLIC_ALIAS(new, old)       __typeof__(old) new __attribute__((__alias__(#old)))
+#define __DEFINE_INTERN_ALIAS(new, old)       __typeof__(old) new __attribute__((__alias__(#old)))
+#define __DEFINE_PRIVATE_WEAK_ALIAS(new, old) static __typeof__(old) new __attribute__((__alias__(#old)))
+#define __DEFINE_PUBLIC_WEAK_ALIAS(new, old)  __typeof__(old) new __attribute__((__alias__(#old)))
+#define __DEFINE_INTERN_WEAK_ALIAS(new, old)  __typeof__(old) new __attribute__((__alias__(#old)))
+#elif defined(__INTELLISENSE__)
+#define __NO_DEFINE_ALIAS
+#define __DEFINE_PRIVATE_ALIAS(new, old)      /* nothing */
+#define __DEFINE_PUBLIC_ALIAS(new, old)       /* nothing */
+#define __DEFINE_INTERN_ALIAS(new, old)       /* nothing */
+#define __DEFINE_PRIVATE_WEAK_ALIAS(new, old) /* nothing */
+#define __DEFINE_PUBLIC_WEAK_ALIAS(new, old)  /* nothing */
+#define __DEFINE_INTERN_WEAK_ALIAS(new, old)  /* nothing */
+#elif defined(__COMPILER_HAVE_GCC_ASM)
 #ifdef __PE__
 #if 1 /* PE doesn't have .pushsection, .popsection,  or even .previous, however we'd  need
        * to change sections in order  to write to the `.drectve'  section that we want  to

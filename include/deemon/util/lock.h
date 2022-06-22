@@ -23,8 +23,8 @@
 #include "../api.h"
 
 /**/
-#include <hybrid/sync/atomic-lock.h>
-#include <hybrid/sync/atomic-rwlock.h>
+#include <hybrid/sched/atomic-lock.h>
+#include <hybrid/sched/atomic-rwlock.h>
 
 /*
  * Dee_atomic_lock_t: Atomic lock (sched_yield() until available; no interrupt checks)
