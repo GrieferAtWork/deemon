@@ -100,3 +100,20 @@ assert seq.blocateall(24) == [];
 assert seq.blocateall(31) == [31];
 assert seq.blocateall(32) == [32];
 assert seq.blocateall(33) == [33];
+
+
+function div10(x: int): int -> x / 10;
+
+/* Assert the use of `key' to alter object grouping. */
+assert seq.blocateall(10, div10) == [11, 12, 13];
+assert seq.blocateall(20, div10) == [21, 22, 22, 22, 23];
+assert seq.blocateall(30, div10) == [31, 32, 33];
+
+/* Just so we've done so at least once, assert use of keyword arguments. */
+assert seq.blocateall(10, key: div10) == [11, 12, 13];
+assert seq.blocateall(20, key: div10) == [21, 22, 22, 22, 23];
+assert seq.blocateall(30, key: div10) == [31, 32, 33];
+assert seq.blocateall(elem: 10, key: div10) == [11, 12, 13];
+assert seq.blocateall(elem: 20, key: div10) == [21, 22, 22, 22, 23];
+assert seq.blocateall(elem: 30, key: div10) == [31, 32, 33];
+

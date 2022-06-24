@@ -41,6 +41,13 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_NO_THREADS
+#define Dee_ATOMIC_READ(x) x
+#else /* CONFIG_NO_THREADS */
+#define Dee_ATOMIC_READ ATOMIC_READ
+#endif /* !CONFIG_NO_THREADS */
+
+
 typedef DeeKwdsObject Kwds;
 typedef DeeKwdsMappingObject KwdsMapping;
 
@@ -52,11 +59,7 @@ typedef struct {
 	DREF Kwds               *ki_map;  /* [1..1][const] The associated keywords table. */
 } KwdsIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define READ_ITER(x)            ((x)->ki_iter)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITER(x) ATOMIC_READ((x)->ki_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITER(x) Dee_ATOMIC_READ((x)->ki_iter)
 
 INTDEF DeeTypeObject DeeKwdsIterator_Type;
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void);
@@ -128,7 +131,7 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	DREF DeeObject *value, *result;
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -166,7 +169,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -197,7 +200,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -225,12 +228,12 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, op)                            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(KwdsIterator *self, KwdsIterator *other) {                        \
+#define DEFINE_FILTERITERATOR_COMPARE(name, op)               \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
+	name(KwdsIterator *self, KwdsIterator *other) {           \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                                   \
-		return_bool(READ_ITER(self) op READ_ITER(other));                  \
+			return NULL;                                      \
+		return_bool(READ_ITER(self) op READ_ITER(other));     \
 	}
 DEFINE_FILTERITERATOR_COMPARE(kwdsiter_eq, ==)
 DEFINE_FILTERITERATOR_COMPARE(kwdsiter_ne, !=)
@@ -658,11 +661,7 @@ typedef struct {
 	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
 } KmapIterator;
 
-#ifdef CONFIG_NO_THREADS
-#define READ_ITER(x)            ((x)->ki_iter)
-#else /* CONFIG_NO_THREADS */
-#define READ_ITER(x) ATOMIC_READ((x)->ki_iter)
-#endif /* !CONFIG_NO_THREADS */
+#define READ_ITER(x) Dee_ATOMIC_READ((x)->ki_iter)
 
 STATIC_ASSERT(offsetof(KwdsIterator, ki_iter) == offsetof(KmapIterator, ki_iter));
 STATIC_ASSERT(offsetof(KwdsIterator, ki_end) == offsetof(KmapIterator, ki_end));
@@ -714,11 +713,7 @@ kmapiter_bool(KmapIterator *__restrict self) {
 			break;
 		++entry;
 	}
-#ifndef CONFIG_NO_THREADS
-	return ATOMIC_READ(self->ki_map->kmo_argv) != NULL;
-#else /* !CONFIG_NO_THREADS */
-	return self->ki_map->kmo_argv != NULL;
-#endif /* CONFIG_NO_THREADS */
+	return Dee_ATOMIC_READ(self->ki_map->kmo_argv) != NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -726,7 +721,7 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	DREF DeeObject *value, *result;
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -767,7 +762,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextkey(KmapIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -791,7 +786,7 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 			break;
 	}
 #endif /* !CONFIG_NO_THREADS */
-	if unlikely(!ATOMIC_READ(self->ki_map->kmo_argv))
+	if unlikely(!Dee_ATOMIC_READ(self->ki_map->kmo_argv))
 		return ITER_DONE;
 	return_reference_((DeeObject *)entry->ke_name);
 }
@@ -801,7 +796,7 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	DREF DeeObject *value;
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
-	entry = ATOMIC_READ(self->ki_iter);
+	entry = self->ki_iter;
 	for (;;) {
 		if (entry >= self->ki_end)
 			return ITER_DONE;
@@ -1015,13 +1010,8 @@ kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_bool(KwdsMapping *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	if (!ATOMIC_READ(self->kmo_argv))
+	if (!Dee_ATOMIC_READ(self->kmo_argv))
 		return 0;
-#else /* !CONFIG_NO_THREADS */
-	if (!self->kmo_argv)
-		return 0;
-#endif /* CONFIG_NO_THREADS */
 	return self->kmo_kwds->kw_size != 0;
 }
 
@@ -1042,37 +1032,22 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_size(KwdsMapping *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	if (!ATOMIC_READ(self->kmo_argv))
+	if (!Dee_ATOMIC_READ(self->kmo_argv))
 		return_reference_(&DeeInt_Zero);
-#else /* !CONFIG_NO_THREADS */
-	if (!self->kmo_argv)
-		return_reference_(&DeeInt_Zero);
-#endif /* CONFIG_NO_THREADS */
 	return DeeInt_NewSize(self->kmo_kwds->kw_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kmap_nsi_getsize(KwdsMapping *__restrict self) {
-#ifndef CONFIG_NO_THREADS
-	if (!ATOMIC_READ(self->kmo_argv))
+	if (!Dee_ATOMIC_READ(self->kmo_argv))
 		return 0;
-#else /* !CONFIG_NO_THREADS */
-	if (!self->kmo_argv)
-		return 0;
-#endif /* CONFIG_NO_THREADS */
 	return self->kmo_kwds->kw_size;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 kmap_contains(KwdsMapping *self, DeeObject *key) {
-#ifndef CONFIG_NO_THREADS
-	if (!ATOMIC_READ(self->kmo_argv))
+	if (!Dee_ATOMIC_READ(self->kmo_argv))
 		goto nope;
-#else /* !CONFIG_NO_THREADS */
-	if (!self->kmo_argv)
-		goto nope;
-#endif /* CONFIG_NO_THREADS */
 	if (!DeeString_Check(key))
 		goto nope;
 	return_bool(kwds_findstr(self->kmo_kwds,
@@ -1288,13 +1263,8 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 	index = kwds_findstr(me->kmo_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		return false;
-#ifdef CONFIG_NO_THREADS
-	if unlikely(!me->kmo_argv)
+	if unlikely(!Dee_ATOMIC_READ(me->kmo_argv))
 		return false;
-#else
-	if unlikely(!ATOMIC_READ(me->kmo_argv))
-		return false;
-#endif
 	return true;
 }
 
@@ -1310,13 +1280,8 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
 	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		return false;
-#ifdef CONFIG_NO_THREADS
-	if unlikely(!me->kmo_argv)
+	if unlikely(!Dee_ATOMIC_READ(me->kmo_argv))
 		return false;
-#else
-	if unlikely(!ATOMIC_READ(me->kmo_argv))
-		return false;
-#endif
 	return true;
 }
 
@@ -1471,6 +1436,184 @@ DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 		Dee_Decref(kw);
 	}
 }
+
+
+/* Initialize `self' to load keyword arguments.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeKwArgs_Init)(DeeKwArgs *__restrict self, size_t *__restrict pargc,
+                       DeeObject *const *argv, DeeObject *kw) {
+	self->kwa_kwused = 0;
+	if (!kw) {
+		self->kwa_kwargv = NULL;
+		self->kwa_kw     = NULL;
+		return 0;
+	}
+	if (DeeKwds_Check(kw)) {
+		size_t num_keywords = DeeKwds_SIZE(kw);
+		if unlikely(num_keywords > *pargc) {
+			/* Argument list is too short of the given keywords */
+			return err_keywords_bad_for_argc(*pargc, num_keywords);
+		}
+		*pargc -= num_keywords;
+		self->kwa_kwargv = argv + *pargc;
+	} else {
+		self->kwa_kwargv = NULL;
+	}
+	self->kwa_kw = kw;
+	return 0;
+}
+
+/* Indicate that you're doing loading arguments from `self'.
+ * This function asserts that `kwa_kwused == #kwa_kw' so-as
+ * to ensure that `kwa_kw' doesn't contain any unused keyword
+ * arguments.
+ * @return: 0 : Success
+ * @param: positional_argc: The value of `*pargc' after `DeeKwArgs_Init()' returned.
+ * @return: -1: An error was thrown */
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeKwArgs_Done)(DeeKwArgs *__restrict self,
+                       size_t positional_argc,
+                       char const *function_name) {
+	size_t avail_argc;
+	if (!self->kwa_kw)
+		return 0;
+	if (DeeKwds_Check(self->kwa_kw)) {
+		avail_argc = DeeKwds_SIZE(self->kwa_kw);
+		Dee_ASSERT(avail_argc >= self->kwa_kwused);
+	} else {
+		avail_argc = DeeObject_Size(self->kwa_kw);
+		if unlikely(avail_argc == (size_t)-1)
+			goto err;
+	}
+	if (avail_argc > self->kwa_kwused) {
+		/* TODO: Include the names of the unused arguments here! */
+		err_invalid_argc(function_name,
+		                 positional_argc + avail_argc,
+		                 positional_argc + self->kwa_kwused,
+		                 positional_argc + self->kwa_kwused);
+		goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Lookup a named keyword argument from `self'
+ * @return: * :   Reference to named keyword argument.
+ * @return: NULL: An error was thrown.*/
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwArgs_GetString(DeeKwArgs *__restrict self,
+                    char const *__restrict name) {
+	DREF DeeObject *result;
+	dhash_t hash;
+	if (!self->kwa_kw) {
+		err_unknown_key_str(Dee_EmptyMapping, name);
+		return NULL;
+	}
+	hash = Dee_HashStr(name);
+	if (DeeKwds_Check(self->kwa_kw)) {
+		size_t kw_index;
+		kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
+		if unlikely(kw_index == (size_t)-1) {
+			err_keywords_not_found(name);
+			return NULL;
+		}
+		++self->kwa_kwused;
+		return_reference(self->kwa_kwargv[kw_index]);
+	}
+	result = DeeObject_GetItemString(self->kwa_kw, name, hash);
+	if likely(result)
+		++self->kwa_kwused;
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self, char const *__restrict name,
+                       size_t namelen, Dee_hash_t hash) {
+	DREF DeeObject *result;
+	if (!self->kwa_kw) {
+		err_unknown_key_str(Dee_EmptyMapping, name);
+		return NULL;
+	}
+	++self->kwa_kwused;
+	if (DeeKwds_Check(self->kwa_kw)) {
+		size_t kw_index;
+		kw_index = kwds_findstr_len((Kwds *)self->kwa_kw, name, namelen, hash);
+		if unlikely(kw_index == (size_t)-1) {
+			err_keywords_not_found(name);
+			return NULL;
+		}
+		++self->kwa_kwused;
+		return_reference(self->kwa_kwargv[kw_index]);
+	}
+	result = DeeObject_GetItemStringLen(self->kwa_kw, name, namelen, hash);
+	if likely(result)
+		++self->kwa_kwused;
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
+                       char const *__restrict name, DeeObject *def) {
+	if (self->kwa_kw) {
+		dhash_t hash;
+		hash = Dee_HashStr(name);
+		if (DeeKwds_Check(self->kwa_kw)) {
+			size_t kw_index;
+			kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
+			if unlikely(kw_index != (size_t)-1) {
+				def = self->kwa_kwargv[kw_index];
+				++self->kwa_kwused;
+			}
+		} else {
+			DREF DeeObject *result;
+			result = DeeObject_GetItemStringDef(self->kwa_kw, name, hash, ITER_DONE);
+			if likely(result != ITER_DONE) {
+				++self->kwa_kwused;
+			} else {
+				result = def;
+				if (result != ITER_DONE)
+					Dee_Incref(result);
+			}
+			return result;
+		}
+	}
+	if (def != ITER_DONE)
+		Dee_Incref(def);
+	return def;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict name,
+                          size_t namelen, Dee_hash_t hash, DeeObject *def) {
+	if (self->kwa_kw) {
+		if (DeeKwds_Check(self->kwa_kw)) {
+			size_t kw_index;
+			kw_index = kwds_findstr_len((Kwds *)self->kwa_kw, name, namelen, hash);
+			if unlikely(kw_index != (size_t)-1) {
+				def = self->kwa_kwargv[kw_index];
+				++self->kwa_kwused;
+			}
+		} else {
+			DREF DeeObject *result;
+			result = DeeObject_GetItemStringLenDef(self->kwa_kw, name, namelen, hash, ITER_DONE);
+			if likely(result != ITER_DONE) {
+				++self->kwa_kwused;
+			} else {
+				result = def;
+				if (result != ITER_DONE)
+					Dee_Incref(result);
+			}
+			return result;
+		}
+	}
+	if (def != ITER_DONE)
+		Dee_Incref(def);
+	return def;
+}
+
 
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL

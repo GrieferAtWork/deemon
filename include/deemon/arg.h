@@ -33,6 +33,7 @@ DECL_BEGIN
 #define Dee_string_object       string_object
 #define dee_kwds_object         kwds_object
 #define dee_kwds_mapping_object kwds_mapping_object
+#define dee_kwargs              kwds_args
 #define dee_keyword             keyword
 #define DEFINE_KWDS             Dee_DEFINE_KWDS
 #define K                       Dee_KEYWORD
@@ -268,6 +269,49 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStrin
 INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *def);
 #endif /* CONFIG_BUILDING_DEEMON */
 
+typedef struct dee_kwargs DeeKwArgs;
+struct dee_kwargs {
+	size_t            kwa_kwused; /* # of used keyword arguments (assuming that any argument is loaded 1 time at most) */
+	DeeObject *const *kwa_kwargv; /* [0..1] Positional arguments to supplement `kwa_kw' (or NULL if unused). */
+	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping. */
+};
+
+/* Initialize `self' to load keyword arguments.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeKwArgs_Init(DeeKwArgs *__restrict self, size_t *__restrict pargc,
+               DeeObject *const *argv, DeeObject *kw);
+
+/* Indicate that you're doing loading arguments from `self'.
+ * This function asserts that `kwa_kwused == #kwa_kw' so-as
+ * to ensure that `kwa_kw' doesn't contain any unused keyword
+ * arguments.
+ * @param: positional_argc: The value of `*pargc' after `DeeKwArgs_Init()' returned.
+ * @return: 0 : Success
+ * @return: -1: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeKwArgs_Done(DeeKwArgs *__restrict self,
+               size_t positional_argc,
+               char const *function_name);
+
+/* Lookup a named keyword argument from `self'
+ * @return: * :   Reference to named keyword argument.
+ * @return: NULL: An error was thrown.*/
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwArgs_GetString(DeeKwArgs *__restrict self,
+                    char const *__restrict name);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self, char const *__restrict name,
+                       size_t namelen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
+                       char const *__restrict name, DeeObject *def);
+DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict name,
+                          size_t namelen, Dee_hash_t hash, DeeObject *def);
+
+
 
 /* Construct/access keyword arguments passed to a function as a
  * high-level {(string, Object)...}-like mapping that is bound to
@@ -333,6 +377,8 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
+#define DeeKwArgs_Init(self, pargc, argv, kw)                  __builtin_expect(DeeKwArgs_Init(self, pargc, argv, kw), 0)
+#define DeeKwArgs_Done(self, positional_argc, function_name)   __builtin_expect(DeeKwArgs_Done(self, positional_argc, function_name), 0)
 #define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)           __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
 #define DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args) __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args), 0)
 #endif /* !__NO_builtin_expect */

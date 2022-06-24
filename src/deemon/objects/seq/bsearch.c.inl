@@ -111,11 +111,7 @@ DECL_BEGIN
 
 
 
-/* Binary search for `keyed_search_item'
- * In case multiple elements match `keyed_search_item', the returned index
- * will be that for one of them, though it is undefined which one specifically.
- * @return: (size_t)-1: Not found.
- * @return: (size_t)-2: Error. */
+/* Binary search for `keyed_search_item' in `self' */
 INTERN WUNUSED LOCAL_return_t DCALL
 LOCAL_DeeSeq_BFind(DeeObject *self, size_t start, size_t end,
                    DeeObject *keyed_search_item, DeeObject *key
