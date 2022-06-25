@@ -38,7 +38,7 @@ import * from deemon;
 @@>// Invokes `foo.operator + (bar)'
 @@>print repr operator + (foo, bar);
 function bind(tp: Type, operator_function: Callable): Callable {
-	return [](x, args...) {
+	return (x, args...) -> {
 		import Error from deemon;
 		if (x !is tp && !tp.isgeneric) {
 			throw Error.TypeError(
@@ -157,8 +157,8 @@ function __pooad(a, b...) {
 		push   call global @add, #2
 		ret    pop
 	}	:
-		: "x" (a)
-		, "x" (b)
+		: "X" (a)
+		, "X" (b)
 		: "noreturn"
 	);
 }
@@ -177,8 +177,8 @@ function __neosb(a, b...) {
 		push   call global @sub, #2
 		ret    pop
 	}	:
-		: "x" (a)
-		, "x" (b)
+		: "X" (a)
+		, "X" (b)
 		: "noreturn"
 	);
 }
@@ -198,9 +198,9 @@ function __giosi(seq, index, opt...) {
 		push   call global @setitem, #3
 		ret    pop
 	}	:
-		: "x" (seq)
-		, "x" (index)
-		, "x" (opt)
+		: "X" (seq)
+		, "X" (index)
+		, "X" (opt)
 		: "noreturn"
 	);
 }
@@ -221,10 +221,10 @@ function __grosr(seq, start, end, opt...) {
 		push   call global @setrange, #4
 		ret    pop
 	}	:
-		: "x" (seq)
-		, "x" (start)
-		, "x" (end)
-		, "x" (opt)
+		: "X" (seq)
+		, "X" (start)
+		, "X" (end)
+		, "X" (opt)
 		: "noreturn"
 	);
 }
@@ -244,9 +244,9 @@ function __gaosa(obj, attr, opt...) {
 		push   call global @setattr, #3
 		ret    pop
 	}	:
-		: "x" (obj)
-		, "x" (attr)
-		, "x" (opt)
+		: "X" (obj)
+		, "X" (attr)
+		, "X" (opt)
 		: "noreturn"
 	);
 }

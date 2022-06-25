@@ -31,7 +31,7 @@ import * from threading;
 @@Also note that the thread @t can still be interrupted
 @@>import thread from deemon;
 @@>import milliseconds, seconds from time;
-@@>local my_thread = thread([]{
+@@>local my_thread = thread(() -> {
 @@>    for (;;) {
 @@>        print "In thread";
 @@>        thread.sleep(milliseconds(20));
@@ -52,7 +52,7 @@ function suspend_thread(t: Thread) {
 	local sync = Semaphore(0);
 
 	/* Send an interrupt to the thread. */
-	t.interrupt([]{
+	t.interrupt(() -> {
 		/* Signal to indicate that the thread is now suspended. */
 		sync.post();
 		/* Wait until we're allowed to resume again. */

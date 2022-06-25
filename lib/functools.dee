@@ -42,8 +42,9 @@ function predcmp2key(cmp: Callable): Callable {
 @@>import string from deemon;
 @@>import predlo2key from functools;
 @@>local x = ["FOO", "bar", "FOoBaR"];
-@@>x.sort(predlo2key([](x, y) -> x.lower() < y.lower()));
-@@>x.sort(string.lower); /* Same as this */
+@@>x.sort(key: predlo2key((x, y) -> x.lower() < y.lower()));
+@@>x.sort(key: x -> x.lower()); /* Same as this */
+@@>x.sort(key: string.lower);   /* Same as this */
 function predlo2key(pred_lo: Callable): Callable {
 	class KeyClass {
 		private member m_self;
@@ -59,8 +60,9 @@ function predlo2key(pred_lo: Callable): Callable {
 @@>import string from deemon;
 @@>import predeq2key from functools;
 @@>local x = ["FOO", "foo", "FOoBaR"];
-@@>print x.find("foo", predeq2key([](x, y) -> x.lower() == y.lower()));
-@@>print x.find("foo", string.lower); /* Same as this */
+@@>print x.find("foo", key: predeq2key((x, y) -> x.lower() == y.lower()));
+@@>print x.find("foo", key: x -> x.lower()); /* Same as this */
+@@>print x.find("foo", key: string.lower);   /* Same as this */
 function predeq2key(pred_eq: Callable): Callable {
 	class KeyClass {
 		private member m_self;
@@ -88,7 +90,7 @@ function keycombine(keys...: Callable): Callable {
 	if (#keys == 1)
 		return keys[0];
 	local keyfuncs = keys.reversed();
-	return [](x) {
+	return x -> {
 		for (local f: keyfuncs)
 			x = f(x);
 		return x;

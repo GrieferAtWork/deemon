@@ -804,10 +804,11 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		/* Mandatory, positional argument. */
 		arg->s_type  = SYMBOL_TYPE_ARG;
 		arg->s_flag  = SYMBOL_FALLOC | SYMBOL_FNORMAL;
-		arg->s_symid = current_basescope->bs_argc;
+		arg->s_symid = 0;
 		current_basescope->bs_argv[0] = arg;
 		current_basescope->bs_argc_min = 1;
 		current_basescope->bs_argc_max = 1;
+		current_basescope->bs_argc     = 1;
 	} else
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok != TOK_ARROW && tok != ':')

@@ -950,7 +950,7 @@ ast_parse_unaryhead ::= (
 	/* Function-expressions.
 	 * NOTE: This is a deprecated feature!
 	 *       New code should always use the lambda syntax
-	 *       within expressions: `[](a, b, c) { ... }' */
+	 *       within expressions: `(a, b, c) -> { ... }' */
 	(DDI('function') [_keyword] ast_parse_function(false)) |
 #endif
 
@@ -2404,7 +2404,7 @@ ast_parse_operator_name(allow_class_operators) ::= (
  * translated to lambda-function calls:
  * >> local x = (for (local item: get_items()) if (item != "foo") "ITEM(" + item + ")");
  * Same as:
- * >> local x = []{
+ * >> local x = () -> {
  * >>     for (local item: get_items())
  * >>         if (item != "foo")
  * >>             yield "ITEM(" + item + ")";
@@ -2760,7 +2760,7 @@ parse_tags ::= (
 	 *   >> 	...
 	 *   >> }
 	 *   Compiled as:
-	 *   >> foo = MyTag([]() {
+	 *   >> foo = MyTag(() -> {
 	 *   >> 	...
 	 *   >> });
 	 *
@@ -2851,14 +2851,14 @@ parse_tags ::= (
 	 *   >> 	public member foo = MyTag(42);
 	 *   >>
 	 *   >> 	public property bar = {
-	 *   >> 		get = MyTag([]() {
+	 *   >> 		get = MyTag(() -> {
 	 *   >> 			// NOTE: This function still behaves as a normal
 	 *   >> 			//       class method (access to this, super, etc.)
 	 *   >> 			...
 	 *   >> 		});
 	 *   >> 	}
 	 *   >>
-	 *   >> 	public function foobar = MyTag([]() {
+	 *   >> 	public function foobar = MyTag(() -> {
 	 *   >> 		// NOTE: This function still behaves as a normal
 	 *   >> 		//       class method (access to this, super, etc.)
 	 *   >> 		...
