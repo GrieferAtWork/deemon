@@ -983,6 +983,15 @@ ast_parse_unaryhead ::= (
 		('pack' ast_parse_expr)
 	) |
 
+	/* Paren-lambda (java-style lambda functions)
+	 * WARNING: Implemented via token look-ahead (meaning pp-directives may not work in here)
+	 *          If this poses a problem, you'll simply have to preprocess your file, or make
+	 *          use of the c++-style syntax for lambdas (iow: `[](a, b, c) { return a + b + c; }'),
+	 *          or use the syntax for anonymouse function (iow: `function(a, b) { return a + b; }') */
+	(DDI(_keyword)              '->' ast_parse_function_paren_lambda) | /* Same as `function(<_keyword>) { ... }' */
+	(DDI('(') parse_arglist ')' '->' ast_parse_function_paren_lambda) | /* Same as `function(<arglist>)  { ... }' */
+	(DDI('(')               ')' '->' ast_parse_function_paren_lambda) | /* Same as `function()           { ... }' */
+
 	/* Parenthesis / [empty] tuple expression / statement-in-expression. */
 	(DDI('(') [(
 		('{' ast_parse_statement_or_braces '}') |
@@ -2184,6 +2193,17 @@ parse_property ::= (
 		ast_parse_function(true)
 
 	)...]
+);
+
+
+/* The bodies of paren-lambdas behave as follows:
+ * >> local fun = () -> { return 42; };   // Should be self-explainatory
+ * >> local fun = () -> 42;               // Same as `{ return 42; }'
+ * >> local fun = () -> { 42 };           // Same as `{ return {42}; }' // iow: returns a sequence
+ */
+ast_parse_function_paren_lambda ::= (
+	('{' ast_parse_statement_or_braces '}') |
+	ast_parse_expr
 );
 
 

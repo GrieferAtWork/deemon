@@ -334,6 +334,19 @@ ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi,
 INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope_noargs(bool *pneed_semi);
 
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+/* Parse a java-style lambda. */
+INTDEF WUNUSED DREF struct ast *DCALL
+ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
+                               struct ast_loc *first_argument_loc);
+
+/* Check if the parser is located after the '(' of a java-style lambda.
+ * @return:  1: Yes
+ * @return:  0: No
+ * @return: -1: Error */
+INTDEF WUNUSED int DCALL ast_is_after_lapren_of_java_lambda(void);
+#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
+
 /* Parse everything following a `del' keyword in a statement, or expression:
  * >> foo = 7;
  * >> print foo;

@@ -170,7 +170,7 @@ INTERN WUNUSED int DCALL parse_arglist(void) {
 	current_scope     = (DREF DeeScopeObject *)current_basescope;
 	Dee_Incref(current_scope);
 	defaulta = arga = 0;
-	if (tok > 0 && tok != ')')
+	if (tok > 0 && tok != ')') {
 		for (;;) {
 			uint16_t symbol_flags;
 
@@ -435,7 +435,10 @@ next_argument:
 				break;
 			if unlikely(yield() < 0)
 				goto err;
+			if (tok == ')')
+				break;
 		}
+	}
 /*done:*/
 	ASSERT(current_basescope->bs_argc_min <=
 	       current_basescope->bs_argc_max);
@@ -757,6 +760,266 @@ err_xcode:
 err:
 	return NULL;
 }
+
+
+
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+/* Parse a `() -> 42' or `a -> a+42'-style lambda.
+ * In either case, upon entry the current token must be the '->' */
+INTERN WUNUSED DREF struct ast *DCALL
+ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
+                               struct ast_loc *first_argument_loc) {
+	struct ast_loc arrow_loc;
+	DREF struct ast *result, *code;
+	if unlikely(basescope_push())
+		goto err;
+	if (first_argument_name) {
+		struct symbol *arg;
+		if (first_argument_name->k_id == KWD_none) {
+			/* Create a new symbol for the argument. */
+			arg = new_unnamed_symbol();
+			if unlikely(!arg)
+				goto err_scope;
+			arg->s_decl = *first_argument_loc;
+			if (arg->s_decl.l_file)
+				TPPFile_Incref(arg->s_decl.l_file);
+		} else {
+			/* Check if the argument name is a reserved identifier. */
+			if (is_reserved_symbol_name(first_argument_name)) {
+				if (WARN(W_RESERVED_ARGUMENT_NAME, first_argument_name))
+					goto err_scope;
+			}
+			/* Create a new symbol for the argument. */
+			arg = new_local_symbol(first_argument_name, first_argument_loc);
+		}
+		if unlikely(!arg)
+			goto err_scope;
+		ASSERT(current_basescope->bs_argc_min == 0);
+		ASSERT(current_basescope->bs_argc_max == 0);
+		ASSERT(current_basescope->bs_argv == NULL);
+		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+		if unlikely(!current_basescope->bs_argv)
+			goto err_scope;
+
+		/* Mandatory, positional argument. */
+		arg->s_type  = SYMBOL_TYPE_ARG;
+		arg->s_flag  = SYMBOL_FALLOC | SYMBOL_FNORMAL;
+		arg->s_symid = current_basescope->bs_argc;
+		current_basescope->bs_argv[0] = arg;
+		current_basescope->bs_argc_min = 1;
+		current_basescope->bs_argc_max = 1;
+	} else
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+	if (tok != TOK_ARROW && tok != ':')
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+	if (tok != TOK_ARROW)
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+	{
+		uint32_t old_flags;
+		int error;
+		old_flags = TPPLexer_Current->l_flags;
+		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		error = parse_arglist();
+		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		if unlikely(error)
+			goto err_scope;
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+			goto err_scope;
+	} else {
+		/* No arguments */
+		ASSERT(current_basescope->bs_argc_min == 0);
+		ASSERT(current_basescope->bs_argc_max == 0);
+		ASSERT(current_basescope->bs_argv == NULL);
+	}
+
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+	if (tok == ':') {
+		struct decl_ast temp;
+		if unlikely(yield() < 0)
+			goto err_scope;
+		if unlikely(decl_ast_parse(&temp))
+			goto err_scope;
+		decl_ast_fini(&temp);
+	}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
+	ASSERT(tok == TOK_ARROW);
+	loc_here(&arrow_loc);
+	if (yield() < 0)
+		goto err;
+
+	/* At this point, we're at the start of the lambda expression,
+	 * or the '{' in case it uses statements (or returns a sequence) */
+	if (tok == '{') {
+		unsigned int was_expression;
+		code = ast_parse_statement_or_braces(&was_expression);
+		if (was_expression != AST_PARSE_WASEXPR_NO)
+			goto wrap_code_with_return;
+	} else {
+		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
+wrap_code_with_return:
+		if unlikely(!code)
+			goto err_scope;
+		result = code->a_type == AST_EXPAND
+		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
+		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
+		ast_decref(code);
+		code = ast_setddi(result, &arrow_loc);
+	}
+
+	if unlikely(!code)
+		goto err;
+	result = ast_function(code, current_basescope);
+	ast_decref(code);
+	if unlikely(!result)
+		goto err;
+
+	/* Hack: The function AST itself must be located in the caller's scope. */
+	Dee_Decref(result->a_scope);
+	ASSERT(current_basescope->bs_scope.s_prev);
+	result->a_scope = current_basescope->bs_scope.s_prev;
+	Dee_Incref(result->a_scope);
+	basescope_pop();
+	return result;
+err_scope:
+	basescope_pop();
+err:
+	return NULL;
+}
+
+
+/* Check if the parser is located after the '(' of a java-style lambda.
+ * @return:  1: Yes
+ * @return:  0: No
+ * @return: -1: Error */
+INTERN WUNUSED int DCALL ast_is_after_lapren_of_java_lambda(void) {
+	struct TPPLexerPosition pos;
+	if (!TPP_ISKEYWORD(tok)) {
+		if (tok == TOK_POW) {
+			/* `**' can only appear in argument- and parameter lists.
+			 * Since out parent is parsing an argument-list, with a
+			 * comma-list as fallback, we know that this is varkwds! */
+			goto yes;
+		}
+		if (tok == TOK_DOTS) {
+			/* Special case: there are 4 cases where this can still be an argument list:
+			 * >> (...) -> [...][0];           // anonymous varargs
+			 * >> (...,) -> [...][0];          // *ditto*
+			 * >> (..., **kwds) -> [...][0];   // anonymous varargs, followed by varkwds
+			 * >> (..., **kwds,) -> [...][0];  // *ditto* */
+			if unlikely(!TPPLexer_SavePosition(&pos))
+				goto err;
+			if unlikely(yield() < 0)
+				goto err_restore;
+			if (tok == ',' && unlikely(yield() < 0))
+				goto err_restore;
+			if (tok == TOK_POW) {
+				if unlikely(yield() < 0)
+					goto err_restore;
+				if (!TPP_ISKEYWORD(tok))
+					goto nope_restore;
+				if unlikely(yield() < 0)
+					goto err_restore;
+				if (tok == ',' && unlikely(yield() < 0))
+					goto err_restore;
+			}
+			goto check_and_consume_rparen;
+		}
+		goto nope;
+	}
+	if unlikely(!TPPLexer_SavePosition(&pos))
+		goto err;
+
+	/* Now try to skip the argument list. */
+	for (;;) {
+		/* Special case: unnamed varargs. */
+		if (tok == TOK_DOTS) {
+			if unlikely(yield() < 0)
+				goto err_restore;
+		} else {
+			/* Parse variable modifier flags. */
+			while (tok == KWD_local || tok == KWD_final || tok == KWD_varying) {
+				if unlikely(yield() < 0)
+					goto err_restore;
+			}
+			if (tok == TOK_POW && unlikely(yield() < 0))
+				goto err_restore;
+			if (!TPP_ISKEYWORD(tok))
+				goto nope_restore;
+			if unlikely(yield() < 0) /* Argument name. */
+				goto err_restore;
+			if (tok == TOK_DOTS && unlikely(yield() < 0))
+				goto err_restore;
+		}
+		if (tok == '?') {
+			if unlikely(yield() < 0)
+				goto err_restore;
+			if (tok == ',' || tok == ')')
+				goto yes_restore; /* Something like `(foo?)' is guarantied to be a paren-lambda. */
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+			if (tok == ':') {
+				/* Parse argument declaration information. */
+				if unlikely(yield() < 0)
+					goto err_restore;
+				if unlikely(decl_ast_skip())
+					goto err_restore;
+			}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+		} else {
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+			if (tok == ':') /* Something like `(foo: int)' is guarantied to be a paren-lambda. */
+				goto yes_restore;
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+		}
+		if unlikely(tok == '=') {
+			struct ast *temp;
+			if unlikely(yield() < 0)
+				goto err_restore;
+			/* Parse & discard the default expression. */
+			temp = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if unlikely(!temp)
+				goto err_restore;
+			ast_decref(temp);
+		}
+		if (tok != ',')
+			break;
+		if unlikely(yield() < 0)
+			goto err_restore;
+		if (tok == ')')
+			break;
+	}
+check_and_consume_rparen:
+	if (tok != ')')
+		goto nope_restore;
+	if unlikely(yield() < 0)
+		goto err_restore;
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+	if (tok == ':') {
+		/* Parse argument declaration information. */
+		if unlikely(yield() < 0)
+			goto err_restore;
+		if unlikely(decl_ast_skip())
+			goto err_restore;
+	}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+	if (tok != TOK_ARROW)
+		goto nope_restore;
+yes_restore:
+	TPPLexer_LoadPosition(&pos);
+yes:
+	return 1;
+nope_restore:
+	TPPLexer_LoadPosition(&pos);
+nope:
+	return 0;
+err_restore:
+	TPPLexer_LoadPosition(&pos);
+err:
+	return -1;
+}
+
+#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
+
 
 
 DECL_END

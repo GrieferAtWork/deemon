@@ -440,7 +440,6 @@ err:
 }
 
 
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *FCALL
 make_bound_expression(struct ast *__restrict base_expr,
                       struct ast_loc *__restrict loc) {
@@ -1048,24 +1047,24 @@ do_create_class:
 		if (tok == '{') {
 			unsigned int was_expression;
 			/* Statements in expressions. */
-			result     = ast_parse_statement_or_braces(&was_expression);
+			result = ast_parse_statement_or_braces(&was_expression);
+			if unlikely(!result)
+				goto err_flags;
 			allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
 			if (tok == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
 				DREF struct ast **tuple_branchv;
-				if unlikely(!result)
-					goto err;
 				if unlikely(yield() < 0)
-					goto err_r;
+					goto err_r_flags;
 				if (tok == ')') {
 					/* single-element tuple expression, where the single element is a sequence. */
 					tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 					if unlikely(!tuple_branchv)
-						goto err_r;
+						goto err_r_flags;
 					tuple_branchv[0] = result; /* Inherit reference. */
 					merge            = ast_multiple(AST_FMULTIPLE_TUPLE, 1, tuple_branchv);
 					if unlikely(!merge) {
 						Dee_Free(tuple_branchv);
-						goto err_r;
+						goto err_r_flags;
 					}
 					result = merge;
 				} else {
@@ -1074,14 +1073,14 @@ do_create_class:
 					                        AST_FMULTIPLE_TUPLE,
 					                        NULL);
 					if unlikely(!merge)
-						goto err_r;
+						goto err_r_flags;
 					ASSERT(merge->a_type == AST_MULTIPLE ||
 					       (merge->a_type == AST_CONSTEXPR &&
 					        merge->a_constexpr == Dee_EmptyTuple));
 					if (merge->a_constexpr == Dee_EmptyTuple) {
 						tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 						if unlikely(!tuple_branchv)
-							goto err_merge_r;
+							goto err_flags_merge_r;
 						Dee_DecrefNokill(merge->a_constexpr);
 						merge->a_type            = AST_MULTIPLE;
 						merge->a_flag            = AST_FMULTIPLE_TUPLE;
@@ -1091,7 +1090,7 @@ do_create_class:
 						                                           (merge->a_multiple.m_astc + 1) *
 						                                           sizeof(DREF struct ast *));
 						if unlikely(!tuple_branchv)
-							goto err_merge_r;
+							goto err_flags_merge_r;
 						memmoveupc(tuple_branchv + 1,
 						           tuple_branchv,
 						           merge->a_multiple.m_astc,
@@ -1106,19 +1105,74 @@ do_create_class:
 			if (tok != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
 				result = ast_parse_postexpr(result);
 				if unlikely(!result)
-					goto err_r;
+					goto err_flags;
 				/*was_expression = AST_PARSE_WASEXPR_YES;*/
 			}
+			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+				goto err_r;
 		} else if (tok == ')') {
+			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+				goto err;
+
+			/* Support for java-style lambda with empty argument list. */
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+			if (tok == TOK_ARROW) {
+				result = ast_parse_function_java_lambda(NULL, NULL);
+				result = ast_setddi(result, &loc);
+				break;
+			}
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+			if (tok == ':') {
+				bool isarrow;
+				struct TPPLexerPosition pos;
+				if unlikely(!TPPLexer_SavePosition(&pos))
+					goto err;
+				if unlikely(yield() < 0) {
+err_restore_pos:
+					TPPLexer_LoadPosition(&pos);
+					goto err;
+				}
+				if unlikely(decl_ast_skip())
+					goto err_restore_pos;
+				isarrow = tok == TOK_ARROW;
+				TPPLexer_LoadPosition(&pos);
+				if (isarrow) {
+					result = ast_parse_function_java_lambda(NULL, NULL);
+					result = ast_setddi(result, &loc);
+					break;
+				}
+			}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
+
 			/* Empty tuple. */
-			result     = ast_constexpr(Dee_EmptyTuple);
+			result = ast_constexpr(Dee_EmptyTuple);
+			if unlikely(!result)
+				goto err;
 			allow_cast = false; /* Don't allow empty tuples for cast expressions. */
 		} else {
+			/* Lambda function. */
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+			int error = ast_is_after_lapren_of_java_lambda();
+			if (error != 0) {
+				if unlikely(error < 0)
+					goto err;
+				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				result = ast_parse_function_java_lambda(NULL, NULL);
+				result = ast_setddi(result, &loc);
+				break;
+			}
+#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
+
 			/* Parenthesis / tuple expression. */
 			result = ast_parse_comma(AST_COMMA_NORMAL,
 			                         AST_FMULTIPLE_TUPLE,
 			                         NULL);
-			if likely(result && result->a_type == AST_EXPAND) {
+			if unlikely(!result)
+				goto err_flags;
+			if (result->a_type == AST_EXPAND) {
 				/* Wrap into a single-item tuple multiple-branch:
 				 * >> print (get_items()...); // Convert to tuple. */
 				DREF struct ast **exprv;
@@ -1134,15 +1188,13 @@ do_create_class:
 				}
 				result = merge; /* Inherit */
 			}
-			if (result && result->a_type == AST_MULTIPLE)
+			if (result->a_type == AST_MULTIPLE)
 				allow_cast = false; /* Don't allow comma-lists for cast expressions. */
+			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+				goto err_r;
 		}
-		ast_putddi(result, &loc);
-		if unlikely(!result)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
-			goto err;
+		result = ast_putddi(result, &loc);
 		if (allow_cast &&
 		    result->a_type != AST_MULTIPLE) {
 			/* C-style cast expression (only for single-parenthesis expressions) */
@@ -1485,6 +1537,11 @@ default_case:
 				if unlikely(yield() < 0)
 					goto err;
 				result = ast_parse_import_single(name);
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+			} else if (tok == TOK_ARROW) {
+				/* Support for java-style lambda with singular argument. */
+				result = ast_parse_function_java_lambda(name, &loc);
+#endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 			} else {
 				sym = lookup_symbol(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS, name, &loc);
 				if unlikely(!sym)
@@ -1496,7 +1553,7 @@ default_case:
 				goto err;
 			result = ast_constexpr(Dee_None);
 		}
-		ast_setddi(result, &loc);
+		result = ast_setddi(result, &loc);
 		break;
 	}
 	return result;
@@ -1509,7 +1566,9 @@ err_r:
 	ast_decref(result);
 err:
 	return NULL;
-err_merge_r:
+err_flags_merge_r:
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+/*err_merge_r:*/
 	Dee_Decref(merge);
 	goto err_r;
 }

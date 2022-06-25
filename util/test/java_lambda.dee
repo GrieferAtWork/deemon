@@ -1,0 +1,233 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+#define ASSERT_LAMBDA(expr, args, result)        \
+	/* Wrap in another lambda so global assembly \
+	 * stays manageable (else: -S would result   \
+	 * in a 200MiB text file...) */              \
+	() -> {                                      \
+		local lambda;                            \
+		lambda = expr;                           \
+		assert lambda args == result;            \
+		lambda = (expr);                         \
+		assert lambda args == result;            \
+		lambda = ({ expr; });                    \
+		assert lambda args == result;            \
+		lambda = ({ expr });                     \
+		assert lambda[0] args == result;         \
+		assert (expr) args == result;            \
+		assert ((expr)) args == result;          \
+	}();
+
+#define ASSERT_LAMBDA_EX(lambda_args, body, args, result)          \
+	ASSERT_LAMBDA(lambda_args -> body,             args, result)   \
+	ASSERT_LAMBDA(lambda_args -> { body },         args, {result}) \
+	ASSERT_LAMBDA(lambda_args -> { return body; }, args, result)
+
+
+/* Compact Lambda expressions */
+ASSERT_LAMBDA_EX(x, x / 10,     (20), 2)
+
+/* Parenthesized lambda expressions (0 arguments) */
+ASSERT_LAMBDA_EX((), 42,        (), 42)
+ASSERT_LAMBDA_EX((): int, 42,   (), 42)
+
+/* Parenthesized lambda expressions (1 argument) */
+ASSERT_LAMBDA_EX((x),                                     x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x,),                                    x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?),                                    x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?,),                                   x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x = 20),                                x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x = 20,),                               x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x = 20),                                x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x = 20,),                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x),                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x,),                              x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x?),                              x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x?,),                             x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x = 20),                          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x = 20,),                         x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final x = 20),                          x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final x = 20,),                         x / 10,   (), 2)
+ASSERT_LAMBDA_EX((local x),                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x,),                              x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x?),                              x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x?,),                             x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x = 20),                          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x = 20,),                         x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((local x = 20),                          x / 10,   (), 2)
+ASSERT_LAMBDA_EX((local x = 20,),                         x / 10,   (), 2)
+ASSERT_LAMBDA_EX((varying x),                             x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x,),                            x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x?),                            x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x?,),                           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x = 20),                        x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x = 20,),                       x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((varying x = 20),                        x / 10,   (), 2)
+ASSERT_LAMBDA_EX((varying x = 20,),                       x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x),                 x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x,),                x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?),                x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?,),               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x = 20),            x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x = 20,),           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x = 20),            x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x = 20,),           x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x): int,                                x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x,): int,                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x): int,            x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x,): int,           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int),                                x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int,),                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?: int),                               x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?: int,),                              x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20),                           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20,),                          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20),                           x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x: int = 20,),                          x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x: int): int,                           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int,): int,                          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?: int): int,                          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x?: int,): int,                         x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20): int,                      x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20,): int,                     x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((x: int = 20): int,                      x / 10,   (), 2)
+ASSERT_LAMBDA_EX((x: int = 20,): int,                     x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x: int),            x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int,),           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?: int),           x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?: int,),          x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20),       x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20,),      x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20),       x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20,),      x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x: int): int,       x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int,): int,      x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?: int): int,      x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x?: int,): int,     x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20): int,  x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20,): int, x / 10,   (20), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20): int,  x / 10,   (), 2)
+ASSERT_LAMBDA_EX((final local varying x: int = 20,): int, x / 10,   (), 2)
+
+/* Parenthesized lambda expressions (multiple arguments) */
+ASSERT_LAMBDA_EX((x, y),                             x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y,),                            x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y),                             x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int),                        x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y),                        x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int),                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y): int,                        x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int): int,                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y): int,                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int): int,              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y?),                            x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10),                        x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10),                        x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x, y?),                            x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10),                        x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10),                        x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x, y?: int),                       x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int = 10),                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int = 10),                   x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x: int, y?),                       x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y = 10),                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y = 10),                   x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x: int, y?: int),                  x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int = 10),              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int = 10),              x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x, y?): int,                       x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10): int,                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y = 10): int,                   x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x, y?: int): int,                  x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int = 10): int,              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x, y: int = 10): int,              x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x: int, y?): int,                  x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y = 10): int,              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y = 10): int,              x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x: int, y?: int): int,             x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int = 10): int,         x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int, y: int = 10): int,         x / y,    (20), 2)
+ASSERT_LAMBDA_EX((x?, y?),                           x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y = 10),                   x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y = 10),                   x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?, y?: int),                      x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y: int = 10),              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y: int = 10),              x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?: int, y?),                      x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y = 10),              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y = 10),              x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?: int, y?: int),                 x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y: int = 10),         x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y: int = 10),         x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?, y?): int,                      x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y = 10): int,              x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y = 10): int,              x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?, y?: int): int,                 x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y: int = 10): int,         x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x = 20, y: int = 10): int,         x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?: int, y?): int,                 x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y = 10): int,         x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y = 10): int,         x / y,    (), 2)
+ASSERT_LAMBDA_EX((x?: int, y?: int): int,            x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y: int = 10): int,    x / y,    (20, 10), 2)
+ASSERT_LAMBDA_EX((x: int = 20, y: int = 10): int,    x / y,    (), 2)
+
+
+
+/* Varargs / varkwds functions */
+ASSERT_LAMBDA_EX((...),                      [...][0] / [...][1],    (20, 10), 2)
+ASSERT_LAMBDA_EX((...,),                     [...][0] / [...][1],    (20, 10), 2)
+ASSERT_LAMBDA_EX((args...),                  args[0] / args[1],      (20, 10), 2)
+ASSERT_LAMBDA_EX((args...,),                 args[0] / args[1],      (20, 10), 2)
+ASSERT_LAMBDA_EX((args...),                  #args,                  (20, 10, 7), 3)
+ASSERT_LAMBDA_EX((args..., **kwds),          #args,                  (20, 10, 7), 3)
+ASSERT_LAMBDA_EX((args..., **kwds,),         #args,                  (20, 10, 7), 3)
+ASSERT_LAMBDA_EX((**kwds),                   kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((**kwds,),                  kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((..., **kwds),              kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((..., **kwds,),             kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((args..., **kwds),          kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((args..., **kwds,),         kwds["x"] / kwds["y"],  (x: 20, y: 10), 2)
+ASSERT_LAMBDA_EX((args..., **kwds),          #args,                  (x: 20, y: 10), 0)
+
+
+/* Test ambiguity with ?-operator */
+
+/* Parsed like `true ? []{ return 8; } : none'
+ * (as opposed to `true ? Tuple({}) : [](int) { return 8; }') (where `int' would be the argument name)
+ * NOTE: When deemon was built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
+ *       this would get parsed differently! */
+local v = true ? () : int -> 8;
+assert v is Callable;
+assert v() == 8;
+
+local x = 42;
+/* Parsed like `true ? [](x){ return 8; } : none'
+ * (as opposed to `true ? x : [](int) { return 8; }') (where `int' would be the argument name)
+ * NOTE: When deemon was built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
+ *       this would get parsed differently! */
+local v = true ? (x) : int -> 8;
+assert v is Callable;
+assert v(none) == 8;
+

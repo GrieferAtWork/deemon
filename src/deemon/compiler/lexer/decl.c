@@ -80,9 +80,8 @@ decl_ast_copy(struct decl_ast *__restrict self,
 		self->da_alt.a_altv = new_vec;
 	}	break;
 
-	{
+	case DAST_ATTR: {
 		struct decl_ast *inner;
-	case DAST_ATTR:
 		Dee_Incref(self->da_attr.a_name);
 		goto copy_inner;
 	case DAST_FUNC:
@@ -971,7 +970,6 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 	uint32_t old_flags;
 	switch (tok) {
 
-
 	case KWD___asm:
 	case KWD___asm__:
 		if unlikely(yield() < 0)
@@ -1491,6 +1489,16 @@ err_r:
 	decl_ast_fini(self);
 err:
 	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+decl_ast_skip(void) {
+	int result;
+	struct decl_ast temp;
+	result = decl_ast_parse(&temp);
+	if (result == 0)
+		decl_ast_fini(&temp);
+	return result;
 }
 
 

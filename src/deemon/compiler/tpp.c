@@ -339,7 +339,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	ASSERT(tok_begin <= tok_file->f_end);
 	while (SKIP_WRAPLF(iter, tok_file->f_end))
 		;
-	if (iter == tok_file->f_end)
+	if (iter >= tok_file->f_end)
 		return NULL; /* EOF */
 	/* Set the ANSI flag if we're supporting those characters. */
 	if (HAVE_EXTENSION_EXTENDED_IDENTS)
@@ -357,7 +357,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 				;
 			if (!(chrattr[(uint8_t)*iter] & chflags))
 				break;
-			++iter, ++name_size;
+			++iter;
+			++name_size;
 		}
 	} else {
 		for (;;) {
@@ -365,7 +366,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 				;
 			if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 				break;
-			++iter, ++name_size;
+			++iter;
+			++name_size;
 		}
 	}
 	/* Lookup/generate the token id of this keyword. */

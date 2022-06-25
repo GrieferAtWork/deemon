@@ -1992,8 +1992,13 @@ push_a_if_used:
 				}
 				if (DeeBaseScope_IsVarkwds(current_basescope, sym) &&
 				    (gflags & ASM_G_FLAZYBOOL)) {
+					if (!PUSH_RESULT)
+						goto done;
+					if (asm_putddi(self))
+						goto err;
 					if (asm_gbool_varkwds())
 						goto err;
+					goto done;
 				}
 			}
 			break;

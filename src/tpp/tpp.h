@@ -742,8 +742,9 @@ struct TPPFile {
 };
 
 TPPFUN struct TPPFile TPPFile_Empty;
-#define TPPFile_Incref(self) (void)(++(self)->f_refcnt)
-#define TPPFile_Decref(self) (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
+#define TPPFile_Incref(self)       (void)(++(self)->f_refcnt)
+#define TPPFile_Decref(self)       (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
+#define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
 TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
 
 /* Create a new explicit text file by inherited the given `inherited_text'.
@@ -862,13 +863,13 @@ TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine(void);
  * #endif
  */
 TPPFUN int TPPCALL TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags);
-#define TPPFILE_NEXTCHUNK_FLAG_NONE   0x0000 /* No special behavior modification. */
-#define TPPFILE_NEXTCHUNK_FLAG_EXTEND 0x0001 /* Extend the current file chunk. */
-#define TPPFILE_NEXTCHUNK_FLAG_BINARY 0x0002 /* Read data in binary mode (don't convert to UTF-8 without BOM).
-                                              * NOTE: This flag is implied if the lexer has the `TPPLEXER_FLAG_NO_ENCODING' flag set. */
+#define TPPFILE_NEXTCHUNK_FLAG_NONE   0x00000000 /* No special behavior modification. */
+#define TPPFILE_NEXTCHUNK_FLAG_EXTEND 0x00020000 /* Extend the current file chunk. */
+#define TPPFILE_NEXTCHUNK_FLAG_BINARY 0x00000002 /* Read data in binary mode (don't convert to UTF-8 without BOM).
+                                                  * NOTE: This flag is implied if the lexer has the `TPPLEXER_FLAG_NO_ENCODING' flag set. */
 #ifdef TPP_CONFIG_NONBLOCKING_IO
-#define TPPFILE_NEXTCHUNK_FLAG_NOBLCK 0x0040 /* If the stream has been marked as `TPP_TEXTFILE_FLAG_NONBLOCK',
-                                              * do not block when reading more file memory. */
+#define TPPFILE_NEXTCHUNK_FLAG_NOBLCK 0x00000040 /* If the stream has been marked as `TPP_TEXTFILE_FLAG_NONBLOCK',
+                                                  * do not block when reading more file memory. */
 #endif /* TPP_CONFIG_NONBLOCKING_IO */
 
 
@@ -1493,6 +1494,37 @@ TPP_LOCAL TPP(line_t) TPPCALL TPPLexer_LINE(void) { struct TPPFile *f = TPPLexer
 TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexer_Textfile(); return TPPFile_ColumnAt(f, f->f_pos); }
 
 
+/* Saved lexer position (can be restore to rewind the lexer)
+ * When wanting to rewind the lexer, flags must be set as follows (+: set; -: clear)
+ *  [+] TPPLEXER_FLAG_NO_DIRECTIVES     (Disallow directives since rewinding them isn't possible)
+ *  [+] TPPLEXER_FLAG_EXTENDFILE        (Don't discard already-read data)
+ *  [-] TPPLEXER_FLAG_WERROR            (You probably don't want errors)
+ *  [+] TPPLEXER_FLAG_NO_WARNINGS       (You probably don't want warnings enabled...)
+ *  [+] TPPLEXER_FLAG_WILLRESTORE       (Prevent some internal events from firing)
+ */
+struct TPPLexerFilePosition {
+	/*ref*/struct TPPFile *tlfp_file; /* [1..1] The file to restore. */
+	char                  *tlfp_pos;  /* [1..1] File position to restore. */
+};
+struct TPPLexerPosition {
+	TPP(tok_t)                   tlp_tok_id;    /* The symbol/keyword ID of this token. */
+	unsigned long                tlp_tok_num;   /* The token number (incremented every time a new token is yielded). */
+	char                        *tlp_tok_begin; /* [1..1][<= t_end] Token text start pointer. */
+	char                        *tlp_tok_end;   /* [1..1][>= t_begin] Token text end pointer. */
+	struct TPPKeyword           *tlp_tok_kwd;   /* [0..1] Set when `t_id' is a keyword (WARNING: Not always updated during yield; check `TPP_ISKEYWORD(t_id)' before using). */
+	size_t                       tlp_filec;     /* # of files to restore from the #include-stack. */
+	struct TPPLexerFilePosition *tlp_filev;     /* [0..tlp_filec] Vector of files to restore. */
+	uint32_t                     tlp_flags;     /* Old lexer flags. */
+};
+
+/* Save/restore the lexer position (during save: lexer flags are altered as documented above)
+ * @return: 1 : Success
+ * @return: 0 : Error */
+TPPFUN int TPPCALL TPPLexer_SavePosition(struct TPPLexerPosition *__restrict self);
+TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict self);
+
+
+
 /* Lexer state flags. */
 #define TPPLEXER_FLAG_NONE                   0x00000000
 #define TPPLEXER_FLAG_WANTCOMMENTS           0x00000001 /* Emit COMMENT tokens. */
@@ -1523,7 +1555,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_MESSAGE_LOCATION       0x00004000 /* Print the file+line location in messages from `#pragma message'. */
 #define TPPLEXER_FLAG_MESSAGE_NOLINEFEED     0x00008000 /* Don't print a linefeed following the user-provided message in `#pragma message'. */
 #define TPPLEXER_FLAG_INCLUDESTRING          0x00010000 /* Parse strings as #include strings (without \-escape sequences). (WARNING: system-style (<...>) strings must be handled manually by the caller) */
-/*      TPPLEXER_FLAG_                       0x00020000  * */
+#define TPPLEXER_FLAG_EXTENDFILE             0x00020000 /* Set the `TPPFILE_NEXTCHUNK_FLAG_EXTEND' flag when loading more file data. */
 #define TPPLEXER_FLAG_NO_LEGACY_GUARDS       0x00040000 /* Don't recognize legacy #include-guards
                                                          * WARNING: Not setting this option may lead to whitespace and comments at the
                                                          *          start and end of a guarded file to not be emit on a second pass.
@@ -1538,7 +1570,7 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 #define TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA  0x02000000 /* Re-emit unknown pragmas. */
 #define TPPLEXER_FLAG_CHAR_UNSIGNED          0x04000000 /* When set, character-constants are unsigned. */
 #define TPPLEXER_FLAG_EOF_ON_PAREN           0x08000000 /* When set, recursively track `(`...`)' pairs and yield EOF when `l_eof_paren' reaches ZERO(0). */
-/*                                           0x10000000 /* ... */
+#define TPPLEXER_FLAG_WILLRESTORE            0x10000000 /* A preceding lexer position will be restored (don't fire internal events that could pose problems with this) */
 /*                                           0x20000000 /* ... */
 #define TPPLEXER_FLAG_RANDOM_INITIALIZED     0x40000000 /* Set when rand() has been initialized. */
 #define TPPLEXER_FLAG_ERROR                  0x80000000 /* When set, the lexer is in an error-state in which calls to yield() will return TOK_ERR. */

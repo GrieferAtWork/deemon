@@ -7558,6 +7558,128 @@ done:
 
 
 
+/* Save/restore the lexer position (during save: lexer flags are altered as documented above)
+ * @return: 1 : Success
+ * @return: 0 : Error */
+PUBLIC int TPPCALL
+TPPLexer_SavePosition(struct TPPLexerPosition *__restrict self) {
+	struct TPPFile *file;
+	size_t num_files;
+	for (file = CURRENT.l_token.t_file, num_files = 0;
+	     file; file = file->f_prev, ++num_files)
+		;
+	assert(num_files != 0);
+	self->tlp_filec = num_files;
+	self->tlp_filev = (struct TPPLexerFilePosition *)malloc(num_files * sizeof(struct TPPLexerFilePosition));
+	if unlikely(!self->tlp_filev)
+		return 0;
+	for (file = CURRENT.l_token.t_file;
+	     file; file = file->f_prev) {
+		struct TPPLexerFilePosition *ent;
+		--num_files;
+		ent = &self->tlp_filev[num_files];
+		ent->tlfp_file = file;
+		ent->tlfp_pos  = file->f_pos;
+		TPPFile_Incref(file);
+	}
+	assert(num_files == 0);
+
+	/* Saver token & lexer configuration. */
+	self->tlp_flags     = CURRENT.l_flags;
+	self->tlp_tok_id    = CURRENT.l_token.t_id;
+	self->tlp_tok_num   = CURRENT.l_token.t_num;
+	self->tlp_tok_begin = CURRENT.l_token.t_begin;
+	self->tlp_tok_end   = CURRENT.l_token.t_end;
+	self->tlp_tok_kwd   = CURRENT.l_token.t_kwd;
+
+	/* Alter lexer flags so that a later restore becomes possible. */
+	CURRENT.l_flags &= ~TPPLEXER_FLAG_WERROR;
+	CURRENT.l_flags |= TPPLEXER_FLAG_NO_DIRECTIVES |
+	                   TPPLEXER_FLAG_EXTENDFILE |
+	                   TPPLEXER_FLAG_NO_WARNINGS |
+	                   TPPLEXER_FLAG_WILLRESTORE;
+	return 1;
+}
+
+PRIVATE size_t TPPCALL
+TPPLexerPosition_FindFile(struct TPPLexerPosition *__restrict self,
+                          struct TPPFile *__restrict file) {
+	size_t i = self->tlp_filec;
+	while (i) {
+		--i;
+		if (self->tlp_filev[i].tlfp_file == file)
+			return i;
+	}
+	return (size_t)-1;
+}
+
+PUBLIC void TPPCALL
+TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict self) {
+	size_t i, num_common_files;
+	/* Pop lexer files until we find one that's apart of the saved position. */
+	assert(self->tlp_filec != 0);
+	for (;;) {
+		num_common_files = TPPLexerPosition_FindFile(self, CURRENT.l_token.t_file);
+		if (num_common_files != (size_t)-1) {
+			++num_common_files;
+			break;
+		}
+		TPPLexer_PopFile();
+		if (CURRENT.l_token.t_file == &TPPFile_Empty) {
+			num_common_files = 0;
+			TPPFile_DecrefNoKill(&TPPFile_Empty);
+			CURRENT.l_token.t_file = NULL;
+			break;
+		}
+	}
+	if (num_common_files) {
+		/* Restore position of last common file (since
+		 * that one may have been read from at one point) */
+		struct TPPLexerFilePosition *ent;
+		ent = &self->tlp_filev[num_common_files - 1];
+		ent->tlfp_file->f_pos = ent->tlfp_pos;
+	}
+
+	/* Decref common files */
+	for (i = 0; i < num_common_files; ++i) {
+		assertf(self->tlp_filev[i].tlfp_file->f_pos == self->tlp_filev[i].tlfp_pos,
+		        ("self->tlp_filev[i].tlfp_file->f_pos = %p\n"
+		         "self->tlp_filev[i].tlfp_pos         = %p\n",
+		         self->tlp_filev[i].tlfp_file->f_pos,
+		         self->tlp_filev[i].tlfp_pos));
+		TPPFile_DecrefNoKill(self->tlp_filev[i].tlfp_file);
+	}
+
+	/* Push all non-common files onto the include stack. */
+	for (; num_common_files < self->tlp_filec; ++num_common_files) {
+		struct TPPLexerFilePosition *ent;
+		ent = &self->tlp_filev[num_common_files];
+		assertf(ent->tlfp_pos >= ent->tlfp_file->f_begin &&
+		        ent->tlfp_pos <= ent->tlfp_file->f_end,
+		        ("ent->tlfp_pos           = %p\n"
+		         "ent->tlfp_file->f_begin = %p\n"
+		         "ent->tlfp_file->f_end   = %p\n",
+		         ent->tlfp_pos,
+		         ent->tlfp_file->f_begin,
+		         ent->tlfp_file->f_end));
+		ent->tlfp_file->f_pos = ent->tlfp_pos;
+		TPPLexer_PushFileInherited(ent->tlfp_file);
+	}
+
+	/* Restore lexer configuration. */
+	CURRENT.l_flags         = self->tlp_flags;
+	CURRENT.l_token.t_id    = self->tlp_tok_id;
+	CURRENT.l_token.t_num   = self->tlp_tok_num;
+	CURRENT.l_token.t_begin = self->tlp_tok_begin;
+	CURRENT.l_token.t_end   = self->tlp_tok_end;
+	CURRENT.l_token.t_kwd   = self->tlp_tok_kwd;
+	CURRENT.l_token.t_file  = self->tlp_filev[self->tlp_filec - 1].tlfp_file;
+	free(self->tlp_filev);
+}
+
+
+
+
 /* Disable warnings about `forward' being used uninitialized.
  * If you look at the function, you'll notice that `forward'
  * is only initialized when `tpp_ismultichar(ch)'.
@@ -7633,19 +7755,27 @@ eof:
 		}
 		/* Check for more data chunks within the current file. */
 		file->f_pos = iter;
+
 		/* Start over if something was read, or an error occurred (re-check the ERROR-flag) */
-#ifndef TPP_CONFIG_NONBLOCKING_IO
-		if (TPPFile_NextChunk(file, TPPFILE_NEXTCHUNK_FLAG_NONE))
-			goto again;
-#elif TPPLEXER_FLAG_NONBLOCKING == TPPFILE_NEXTCHUNK_FLAG_NOBLCK
-		if (TPPFile_NextChunk(file, CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING))
-			goto again;
-#else /* ... */
-		if (TPPFile_NextChunk(file, CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING
-		                            ? TPPFILE_NEXTCHUNK_FLAG_NOBLCK
-		                            : TPPFILE_NEXTCHUNK_FLAG_NONE))
-			goto again;
-#endif /* !... */
+		{
+			unsigned int chunk_flags = TPPFILE_NEXTCHUNK_FLAG_NONE;
+#ifdef TPP_CONFIG_NONBLOCKING_IO
+#if TPPLEXER_FLAG_NONBLOCKING == TPPFILE_NEXTCHUNK_FLAG_NOBLCK
+			chunk_flags |= CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING;
+#else /* TPPLEXER_FLAG_NONBLOCKING == TPPFILE_NEXTCHUNK_FLAG_NOBLCK */
+			if (CURRENT.l_flags & TPPLEXER_FLAG_NONBLOCKING)
+				chunk_flags |= TPPFILE_NEXTCHUNK_FLAG_NOBLCK;
+#endif /* TPPLEXER_FLAG_NONBLOCKING != TPPFILE_NEXTCHUNK_FLAG_NOBLCK */
+#endif /* !TPP_CONFIG_NONBLOCKING_IO */
+#if TPPLEXER_FLAG_EXTENDFILE == TPPFILE_NEXTCHUNK_FLAG_EXTEND
+			chunk_flags |= CURRENT.l_flags & TPPLEXER_FLAG_EXTENDFILE;
+#else /* TPPLEXER_FLAG_EXTENDFILE == TPPFILE_NEXTCHUNK_FLAG_EXTEND */
+			if (CURRENT.l_flags & TPPLEXER_FLAG_EXTENDFILE)
+				chunk_flags |= TPPFILE_NEXTCHUNK_FLAG_EXTEND;
+#endif /* TPPLEXER_FLAG_EXTENDFILE != TPPFILE_NEXTCHUNK_FLAG_EXTEND */
+			if (TPPFile_NextChunk(file, chunk_flags))
+				goto again;
+		}
 		iter = file->f_pos;
 		if ((CURRENT.l_flags & TPPLEXER_FLAG_NO_POP_ON_EOF) ||
 		    (CURRENT.l_eof_file == file))
@@ -8355,7 +8485,8 @@ PUBLIC int TPPCALL TPPLexer_AtStartOfLine(void) {
 
 PRIVATE void TPPCALL on_popfile(struct TPPFile *file) {
 	struct TPPIfdefStackSlot *slot;
-	if (file->f_kind == TPPFILE_KIND_TEXT &&                       /* Is this a textfile? */
+	if (!(CURRENT.l_flags & TPPLEXER_FLAG_WILLRESTORE) &&          /* Don't set guard macros in restore-mode! */
+	    file->f_kind == TPPFILE_KIND_TEXT &&                       /* Is this a textfile? */
 	    !file->f_textfile.f_cacheentry &&                          /* Make sure isn't not a cache-reference. */
 	    file->f_textfile.f_newguard &&                             /* Make sure there is a possibility for a guard. */
 	    !file->f_textfile.f_guard &&                               /* Make sure the file doesn't already have a guard. */
@@ -8380,11 +8511,13 @@ PRIVATE void TPPCALL on_popfile(struct TPPFile *file) {
 		assert(origin->f_macro.m_function.f_expansions);
 		--origin->f_macro.m_function.f_expansions;
 	}
-	while (CURRENT.l_ifdef.is_slotc &&
-	       (slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1],
-	        slot->iss_file == file)) {
-		(void)WARN(W_IF_WITHOUT_ENDIF, slot);
-		--CURRENT.l_ifdef.is_slotc;
+	if (!(CURRENT.l_flags & TPPLEXER_FLAG_WILLRESTORE)) {
+		while (CURRENT.l_ifdef.is_slotc &&
+		       (slot = &CURRENT.l_ifdef.is_slotv[CURRENT.l_ifdef.is_slotc - 1],
+		        slot->iss_file == file)) {
+			(void)WARN(W_IF_WITHOUT_ENDIF, slot);
+			--CURRENT.l_ifdef.is_slotc;
+		}
 	}
 }
 
