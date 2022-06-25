@@ -1270,7 +1270,7 @@ struct assembler_state {
 #define ASM_OP_SEQ_SEQ       OPNAME2('Q', 's')      /* `[#...]'                     A sequence-operand, as accepted by the `call' instruction. */
 #define ASM_OP_SEQ_MAP       OPNAME2('Q', 'm')      /* `{#...}'                     A Dict-compatible sequence-operand, as accepted by the `call' instruction. */
 #define ASM_OP_PREFIX        OPNAME1('p')           /* Input operand: Same as `ceglCsS' (Any prefix operand, including const-as-static)
-                                                     * Output operand: Same as `eglCsS' (Any prefix operand, including const-as-static) */
+                                                     * Output operand: Same as `eglCsS' (Any prefix operand, excluding const-as-static) */
 #define ASM_OP_INTEGER       OPNAME1('i')           /* Same as `I32N32' (Any integer operand). */
 #define ASM_OP_SYMBOL        OPNAME1('v')           /* Same as `raAvAkcCseglRS' (Any symbol, potentially immutable). */
 #define ASM_OP_VARIABLE      OPNAME1('V')           /* Same as `eglS' (Any symbol, must be mutable). */
@@ -1278,7 +1278,8 @@ struct assembler_state {
 #define ASM_OP_PUSH          OPNAME1('P')           /* Input operand:  Same as `nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
                                                      * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
                                                      * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
-#define ASM_OP_ANYTHING      OPNAME1('x')           /* Any kind of operand (only really meaningful for artificial dependencies). */
+#define ASM_OP_ANYTHING      OPNAME1('X')           /* Any kind of operand (only really meaningful for artificial dependencies). */
+#define ASM_OP_ANYTHING_OLD  OPNAME1('x')           /* Old (deprecated) alias. I always meant to be follow what gcc does, but I missed that gcc uses 'X' for anything, and not 'x'... */
 
 #define OPTION_MODE_UNDEF    0
 #define OPTION_MODE_INPUT    1
@@ -1996,6 +1997,10 @@ write_regular_local:
 			break;
 		goto next_option;
 
+	case ASM_OP_ANYTHING_OLD:
+		if (WARNAST(self, W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X))
+			goto err;
+		ATTR_FALLTHROUGH
 	case ASM_OP_ANYTHING:
 		result = get_assembly_formatter_oprepr(self, "nEMTiTmTfraAvAkcCseglTTFFI64N64CaQsQm",
 		                                       mode | OPTION_MODE_TRY,
@@ -2580,12 +2585,12 @@ compile_operator(struct asm_operand *__restrict op, bool is_output) {
 	ASSERT(op->ao_type);
 	format = op->ao_type->s_text;
 	if (is_output) {
-		/* Since there is no portable way of providing a values, `=x', while
+		/* Since there is no portable way of providing a values, `=X', while
 		 * having an explicitly defined meaning, can't actually be used, since
 		 * there would be nothing to store into it.
-		 * However, `+x' is portable, and has the meaning of `op = op', which
+		 * However, `+X' is portable, and has the meaning of `op = op', which
 		 * may actually have side-effects for non-symbol operands. */
-		if (strcmp(format, "+x") != 0) {
+		if (strcmp(format, "+X") != 0 && strcmp(format, "+x") != 0) {
 			if (*format != '+' && *format != '=')
 				goto err_undefined_mode;
 			goto err_illegal_mode;
@@ -2600,7 +2605,7 @@ compile_operator(struct asm_operand *__restrict op, bool is_output) {
 		if (asm_gpop_expr(expr))
 			goto err;
 	} else {
-		if (strcmp(format, "x") != 0)
+		if (strcmp(format, "X") != 0 && strcmp(format, "x") != 0)
 			goto err_illegal_mode;
 		if (ast_genasm(expr, ASM_G_FNORMAL))
 			goto err;

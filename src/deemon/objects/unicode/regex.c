@@ -568,7 +568,7 @@ get_regex_trait(/*utf-32*/ uint32_t name) {
 	case 'u': result = UNICODE_FUPPER; break;   /* Upper-case. */
 	case 't': result = UNICODE_FTITLE; break;   /* Title-case. */
 	case 'c': result = UNICODE_FCNTRL; break;   /* Control character. */
-	case 'D': result = UNICODE_FDIGIT; break;   /* The character is a digit. e.g.: `�' (sqare; `ut_digit' is `2') */
+	case 'D': result = UNICODE_FDIGIT; break;   /* The character is a digit. e.g.: `²' (sqare; `ut_digit' is `2') */
 	case 'd': result = UNICODE_FDECIMAL; break; /* The character is a decimal. e.g: `5' (ascii; `ut_digit' is `5') */
 	case '0': result = UNICODE_FSYMSTRT; break; /* The character can be used as the start of an identifier. */
 	case '1': result = UNICODE_FSYMCONT; break; /* The character can be used to continue an identifier. */

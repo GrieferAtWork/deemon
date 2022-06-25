@@ -53,7 +53,7 @@ struct dhashalgo {
 	uint16_t           ha_width; /* Crc bit-width (<= ha_size * 8). */
 	uint8_t            ha_size;  /* Size of a hash value in bytes (1|2|4|8|n). */
 #define HASHALGO_FNORMAL 0x0000  /* Normal flags. */
-	uint8_t            ha_flags; /* Additional flags (set of �HASHALGO_F*') */
+	uint8_t            ha_flags; /* Additional flags (set of `HASHALGO_F*') */
 	union {
 		/* Internal hash algorithms (these don't perform input/output modulation) */
 		dhashfuncn_t   ha_hashn;  /* [1..1] */

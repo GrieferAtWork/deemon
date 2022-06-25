@@ -1679,7 +1679,7 @@ PRIVATE DEFINE_CMETHOD(librt_argv_set, librt_argv_set_f);
 /* NOTE: At first glance, the combination of `MODSYM_FPROPERTY|MODSYM_FCONSTEXPR' may
  *       not look like it would make sense, but by using this combination, we prevent
  *       the symbols to be considered properties during enumeration (`ATTR_PROPERTY'
- *       doesn't get set), thus allowing the doc server to browse them unrestrictedly. */
+ *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
 PRIVATE struct dex_symbol symbols[] = {
 	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL,
 	  DOC("->?Dint\n"

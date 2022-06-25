@@ -315,18 +315,18 @@ INSTR("call", (
 /* CONSTRAINTS: `op <ps>, ..., ...' */
 /* CONSTRAINTS: `op <ps>, ..., <s>' */
 INSTR("op", (
-	O3(ASM_OPERATOR,         FSTKABS,                   (TOP)(IMM8)(SPIMM8))              /* `operator top, <imm8>, #<imm8>' */
-	O3(ASM_OPERATOR_TUPLE,   FNORMAL,                   (TOP)(IMM8)(POP | FDOTSFLAG))     /* `operator top, <imm8>, pop...' */
-	O3(ASM16_OPERATOR,       FSTKABS,                   (TOP)(IMM16)(SPIMM8))             /* `operator top, <imm16>, #<imm8>' */
-	O3(ASM16_OPERATOR_TUPLE, FNORMAL,                   (TOP)(IMM16)(POP | FDOTSFLAG))    /* `operator top, <imm16>, pop...' */
-	O3(ASM_OPERATOR,         FPUSH | FSTKABS,           (PREFIX)(IMM8)(SPIMM8))           /* `push operator PREFIX, <imm8>, #<imm8>' */
-	O3(ASM_OPERATOR_TUPLE,   FPUSH,                     (PREFIX)(IMM8)(POP | FDOTSFLAG))  /* `push operator PREFIX, <imm8>, pop...' */
-	O3(ASM16_OPERATOR,       FPUSH | FSTKABS,           (PREFIX)(IMM16)(SPIMM8))          /* `push operator PREFIX, <imm16>, #<imm8>' */
-	O3(ASM16_OPERATOR_TUPLE, FPUSH,                     (PREFIX)(IMM16)(POP | FDOTSFLAG)) /* `push operator PREFIX, <imm16>, pop...' */
-	O2(ASM_OPERATOR,         FPREFIX | FPUSH | FSTKABS, (IMM8)(SPIMM8))                   /* `PREFIX: push operator <imm8>, #<imm8>' */
-	O2(ASM_OPERATOR_TUPLE,   FPREFIX | FPUSH,           (IMM8)(POP | FDOTSFLAG))          /* `PREFIX: push operator <imm8>, pop...' */
-	O2(ASM16_OPERATOR,       FPREFIX | FPUSH | FSTKABS, (IMM16)(SPIMM8))                  /* `PREFIX: push operator <imm16>, #<imm8>' */
-	O2(ASM16_OPERATOR_TUPLE, FPREFIX | FPUSH,           (IMM16)(POP | FDOTSFLAG))         /* `PREFIX: push operator <imm16>, pop...' */
+	O3(ASM_OPERATOR,         FSTKABS,                   (TOP)(IMM8)(SPIMM8))              /* `op top, <imm8>, #<imm8>' */
+	O3(ASM_OPERATOR_TUPLE,   FNORMAL,                   (TOP)(IMM8)(POP | FDOTSFLAG))     /* `op top, <imm8>, pop...' */
+	O3(ASM16_OPERATOR,       FSTKABS,                   (TOP)(IMM16)(SPIMM8))             /* `op top, <imm16>, #<imm8>' */
+	O3(ASM16_OPERATOR_TUPLE, FNORMAL,                   (TOP)(IMM16)(POP | FDOTSFLAG))    /* `op top, <imm16>, pop...' */
+	O3(ASM_OPERATOR,         FPUSH | FSTKABS,           (PREFIX)(IMM8)(SPIMM8))           /* `push op PREFIX, <imm8>, #<imm8>' */
+	O3(ASM_OPERATOR_TUPLE,   FPUSH,                     (PREFIX)(IMM8)(POP | FDOTSFLAG))  /* `push op PREFIX, <imm8>, pop...' */
+	O3(ASM16_OPERATOR,       FPUSH | FSTKABS,           (PREFIX)(IMM16)(SPIMM8))          /* `push op PREFIX, <imm16>, #<imm8>' */
+	O3(ASM16_OPERATOR_TUPLE, FPUSH,                     (PREFIX)(IMM16)(POP | FDOTSFLAG)) /* `push op PREFIX, <imm16>, pop...' */
+	O2(ASM_OPERATOR,         FPREFIX | FPUSH | FSTKABS, (IMM8)(SPIMM8))                   /* `PREFIX: push op <imm8>, #<imm8>' */
+	O2(ASM_OPERATOR_TUPLE,   FPREFIX | FPUSH,           (IMM8)(POP | FDOTSFLAG))          /* `PREFIX: push op <imm8>, pop...' */
+	O2(ASM16_OPERATOR,       FPREFIX | FPUSH | FSTKABS, (IMM16)(SPIMM8))                  /* `PREFIX: push op <imm16>, #<imm8>' */
+	O2(ASM16_OPERATOR_TUPLE, FPREFIX | FPUSH,           (IMM16)(POP | FDOTSFLAG))         /* `PREFIX: push op <imm16>, pop...' */
 ))
 
 /* CONSTRAINTS: `op <gl>' */

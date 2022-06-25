@@ -517,6 +517,7 @@ DEF_WARNING(W_UASM_RELOC_NEED_DOT, (WG_VALUE), WSTATE_ERROR, WARNF("The `.reloc'
 DEF_WARNING(W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL, (WG_VALUE), WSTATE_ERROR, WARNF("The `.reloc' pseudo op requires an absolute symbol operand without offset"))
 DEF_WARNING(W_UASM_RELOC_NAME_NEEDS_SYMBOL, (WG_VALUE), WSTATE_ERROR, WARNF("The selected relocation name requires a symbol operand"))
 DEF_WARNING(W_UASM_RELOC_VALUE_NOT_A_SYMBOL, (WG_VALUE), WSTATE_ERROR, WARNF("The value-operand of the `.reloc' pseudo op must not be symbol-relative"))
+DEF_WARNING(W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X, (WG_DEPRECATED), WSTATE_WARN, WARNF("Use of 'x' to signify any operand is deprecated. Use 'X' instead"))
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 

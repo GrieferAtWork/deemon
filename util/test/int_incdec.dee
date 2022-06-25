@@ -19,7 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#define B(x) __asm__("" : "+x" (x))
+#define B(x) __asm__("" : "+X" (x))
 
 local x;
 import * from deemon;

@@ -18,7 +18,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#define PREVENT_OPTIMIZATIONS(x) __asm__("" : "+x" (x))
+#define PREVENT_OPTIMIZATIONS(x) __asm__("" : "+X" (x))
 
 /* With the introduction of the new symbol system, symbol references are
  * handled implicitly internally. Because of this, the assembler must be

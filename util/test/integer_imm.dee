@@ -33,7 +33,7 @@ local n127        = 127;
 local n1          = 1;
 local n0          = 0;
 
-#define NOOPT(v) __asm__("" : "+x" (v)) /* Prevent optimizations */
+#define NOOPT(v) __asm__("" : "+X" (v)) /* Prevent optimizations */
 NOOPT(n123456789);
 NOOPT(n0xffffffff);
 NOOPT(n0xfffffff);

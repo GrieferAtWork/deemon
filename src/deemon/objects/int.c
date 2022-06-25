@@ -1013,7 +1013,7 @@ parse_ch:
 				uni    = utf8_readchar((char const **)&begin, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
-				 * want to support any kind of digit, have `int("�")' evaluate to 2,
+				 * want to support any kind of digit, have `int("²")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
 				 * decimals by using `string.isdecimal()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */
@@ -1378,7 +1378,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				uni    = utf8_readchar_rev((char const **)&iter, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
-				 * want to support any kind of digit, have `int("�")' evaluate to 2,
+				 * want to support any kind of digit, have `int("²")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
 				 * decimals by using `string.isdecimal()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */

@@ -66,7 +66,7 @@
 #include <unicode.h>
 /* TODO: Following a change to KOS's <unicode.h> header, this check right here no longer
  *       works, meaning we no longer take advantage of KOS's libc-embedded unicode database.
- * -> Rework the deemon unicode system is it once again becomes ABI-compatible with KOS, or
+ * -> Rework the deemon unicode system so it once again becomes ABI-compatible with KOS, or
  *    becomes generic enough such that it doesn't need to make use of KOS libc internals. */
 #if !defined(__utf8_seqlen_defined) || !defined(__UNICODE_FPRINT) || !defined(__UNICODE_FALPHA) || \
     !defined(__UNICODE_FSPACE) || !defined(__UNICODE_FLF) || !defined(__UNICODE_FLOWER) || \
@@ -1981,7 +1981,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr32)(uint32_t ch);
 #define Dee_UNICODE_FUPPER   0x0020 /* Upper-case. */
 #define Dee_UNICODE_FTITLE   0x0040 /* Title-case. */
 #define Dee_UNICODE_FCNTRL   0x0080 /* Control character. */
-#define Dee_UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `�' (sqare; `ut_digit' is `2') */
+#define Dee_UNICODE_FDIGIT   0x0100 /* The character is a digit. e.g.: `²' (sqare; `ut_digit' is `2') */
 #define Dee_UNICODE_FDECIMAL 0x0200 /* The character is a decimal. e.g: `5' (ascii; `ut_digit' is `5') */
 #define Dee_UNICODE_FSYMSTRT 0x0400 /* The character can be used as the start of an identifier. */
 #define Dee_UNICODE_FSYMCONT 0x0800 /* The character can be used to continue an identifier. */

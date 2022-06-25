@@ -225,8 +225,8 @@ DECL_BEGIN
  *          hang-times when used with larger code bases (especially
  *          ones with a lot of code-reuse and cross-dependencies)
  *       -> This is only meant for testing small example applications
- *          that have proven to cause reference leaks, in order to
- *          analyze what exactly is causing them. */
+ *          that have been proven to cause reference leaks, in order
+ *          to analyze what exactly is causing them. */
 #if (!defined(CONFIG_TRACE_REFCHANGES) && \
      !defined(CONFIG_NO_TRACE_REFCHANGES))
 #if !defined(NDEBUG) && 0

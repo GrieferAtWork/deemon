@@ -49,8 +49,7 @@ DECL_BEGIN
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeError_Catch(DeeTypeObject *__restrict type) {
 	DeeObject *current;
-	ASSERT_OBJECT(type);
-	ASSERT(DeeType_Check(type));
+	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	current = DeeError_Current();
 	if (current && DeeObject_InstanceOf(current, type))
 		return DeeError_Handled(ERROR_HANDLED_INTERRUPT);
@@ -144,7 +143,6 @@ DeeError_Display(char const *reason,
 	return;
 handle_error:
 	DeeError_Handled(ERROR_HANDLED_RESTORE);
-	return;
 }
 
 /* Throw a given object `ob' as an error.

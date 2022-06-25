@@ -23,8 +23,8 @@ import * from deemon;
 
 local s = "foo";
 local b = "bar".bytes();
-__asm__("" : "+x" (s));
-__asm__("" : "+x" (b));
+__asm__("" : "+X" (s));
+__asm__("" : "+X" (b));
 
 assert s is string;
 assert b is Bytes;

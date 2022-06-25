@@ -61,7 +61,7 @@ struct catch_expr {
 	                                *    - when `:t_guard' threw an exception, regardless of
 	                                *      whether or not that exception had already been handled
 	                                *      by other catch expressions.
-	                                * When the flag is not set, the expression is evaluated:   
+	                                * When the flag is not set, the expression is evaluated:
 	                                *    - When `:t_guard' threw an exception that had not
 	                                *      been handled by another catch expression, and
 	                                *      `ce_mask' is either `NULL', or contains an expression

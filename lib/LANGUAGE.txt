@@ -1597,22 +1597,21 @@ asm_parse_operands(kind) ::= (
 		 *      continued getting parsed until an encoding is found
 		 *      that is suitable, or until the string ends, which
 		 *      is an error.
-		 *    - Whitespace characters, or a `,' character marks an
-		 *      explicit split between different operand encoding
-		 *      options, thus preventing ambiguity between possible
-		 *      encodings.
-		 *    - The operand encoding options `x' is allowed for any
+		 *    - Whitespace- and `,'-characters mark an explicit split
+		 *      between different operand encoding options, thus
+		 *      preventing ambiguity between possible encodings.
+		 *    - The operand encoding options `X' is allowed for any
 		 *      kind of expression, and may be used to create artificial
 		 *      dependencies:
-		 *   >> __asm__("" : "+x" (foo));
+		 *   >> __asm__("" : "+X" (foo));
 		 *      As far as the compiler is concerned, this piece of code
-		 *      read from & writes to an expression `foo', meaning that
+		 *      reads from & writes to an expression `foo', meaning that
 		 *      `foo' cannot be optimized away as a constant, or be
 		 *      deleted when not used otherwise.
-		 *   >> __asm__("<code>" : "+x" (foo[6]));
+		 *   >> __asm__("<code>" : "+X" (foo[6]));
 		 *      LOAD(UNDEFINED_01 = foo.operator getitem(6))
 		 *      <code>
-		 *      STORE(foo.operator setitem(6,UNDEFINED_01))
+		 *      STORE(foo.operator setitem(6, UNDEFINED_01))
 		 */
 		(<TOK_STRING>...)
 		/* The actual operand expression. */

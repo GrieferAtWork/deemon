@@ -222,7 +222,7 @@ INTERN WUNUSED int DCALL maybe_expression_begin(void) {
 	case '~':
 	case '(':
 	case '#':
-	case '<': /* For cells. */
+	case '<': /* For cells. (deprecated syntax) */
 	case '[': /* For lists. */
 	case '{': /* Brace initializers. */
 	case TOK_INC:
@@ -324,7 +324,7 @@ INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 
 	case '+':
 	case '-':
-	case '<': /* For cells. */
+	case '<': /* For cells. (deprecated syntax) */
 		tok_begin = advance_wraplf(tok_begin);
 		if unlikely(!tok_begin)
 			goto err;
@@ -806,7 +806,7 @@ do_unary_operator:
 			goto err;
 		goto do_empty_cell;
 
-	case '<': /* Cell */
+	case '<': /* Cell (deprecated syntax) */
 		loc_here(&loc);
 		if (WARN(W_DEPRECATED_CELL_SYNTAX))
 			goto err;

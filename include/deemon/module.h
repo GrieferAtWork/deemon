@@ -526,7 +526,7 @@ struct Dee_compiler_options {
 	                                                     * This flag also suppresses the need of non-module dependencies to
 	                                                     * even exist (such as the module's original source file), though
 	                                                     * executing a DEC file without the original source at hand is not
-	                                                     * intended behavior per-s�. */
+	                                                     * intended behavior per-sé. */
 #define Dee_DEC_FUNTRUSTED        0x0004                /* The origin of the DEC source is not trusted.
 	                                                     * When this flag is set, all generated code objects have the `CODE_FASSEMBLY'
 	                                                     * flag set, as well as have their text followed by `INSTRLEN_MAX'
