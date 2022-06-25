@@ -727,7 +727,7 @@ done_push_none:
 		 * containing expand expressions by wrapping them in yield-functions:
 		 * >> { 10, foo..., 20, bar..., 30 }
 		 * Could be compiled as:
-		 * >> []{ yield 10; yield foo...; yield 20; yield bar...; yield 30; }()
+		 * >> () -> { yield 10; yield foo...; yield 20; yield bar...; yield 30; }()
 		 * With the construction of the resulting sequence then being O(1) as well.
 		 * However, this method would introduce a lot of unavoidable overhead that
 		 * would likely be far greater than the overhead of iterating foo and bar

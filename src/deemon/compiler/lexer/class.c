@@ -1750,7 +1750,7 @@ define_operator:
 				 * >> class my_class {
 				 * >>     
 				 * >>     operator __iter__() {
-				 * >>         return [](){
+				 * >>         return () -> {
 				 * >>             yield 10;
 				 * >>             yield 20;
 				 * >>             yield 30;

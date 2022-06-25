@@ -22,7 +22,7 @@
 
 #define destructor_callback{code...}\
 ({\
-	__stack local __r = ([] {\
+	__stack local __r = (() -> {\
 		try {\
 			yield none;\
 		} finally {\

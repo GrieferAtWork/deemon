@@ -66,12 +66,10 @@ function t(x, w) {
 	assert x.casefindall(w("")) == { };
 }
 
-t("abcd", [](x) -> x);
+t("abcd", x -> x);
 /* string function cannot be used with Bytes arguments, since
  * raw Bytes cannot be implicitly converted into strings (since
  * their encoding is unknown) */
-//t("abcd", [](x) -> x.bytes());
-t("abcd".bytes(), [](x) -> x);
-t("abcd".bytes(), [](x) -> x.bytes());
-
-
+//t("abcd", x -> x.bytes());
+t("abcd".bytes(), x -> x);
+t("abcd".bytes(), x -> x.bytes());

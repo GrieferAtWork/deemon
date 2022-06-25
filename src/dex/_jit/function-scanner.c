@@ -72,7 +72,7 @@ do_alias_thisattr:
 				 * >> class Foo {
 				 * >>     public member fooMember = 42;
 				 * >>     public function getLambda() {
-				 * >>         return []{
+				 * >>         return () -> {
 				 * >>             return fooMember; // << We're here right now!
 				 * >>         };
 				 * >>     }

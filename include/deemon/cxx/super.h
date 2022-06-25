@@ -62,13 +62,13 @@ inline deemon::Type<Object> Super::supertype() const {
 #endif /* GUARD_DEEMON_CXX_TYPE_H */
 
 inline deemon::Super Object::super() const {
-	return inherit(DeeSuper_Of(*this));
+	return inherit(DeeSuper_Of(this->ptr()));
 }
 inline deemon::Super Object::super(DeeTypeObject *__restrict super_type) const {
-	return inherit(DeeSuper_New(super_type, *this));
+	return inherit(DeeSuper_New(super_type, this->ptr()));
 }
 template<class T> inline deemon::Super Object::super() const {
-	return inherit(DeeSuper_New(T::classtype(), *this));
+	return inherit(DeeSuper_New(T::classtype(), this->ptr()));
 }
 
 

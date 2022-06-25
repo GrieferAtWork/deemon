@@ -106,17 +106,17 @@ DECL_BEGIN
  *        - `filter(keep: Callable): Sequence'
  *           - Same as `(for (local x: this) if (keep(x)) x)'
  *        - `sum(): Object'
- *           - Same as `reduce([](a, b) -> a + b);' or `this + ...'
+ *           - Same as `reduce((a, b) -> a + b);' or `this + ...'
  *           - Preferred way to concat sequences containing strings:
  *              - `print ["foo", "bar", "foobar"].sum(); // "foobarfoobar"'
  *        - `any(): bool'
- *           - Same as `reduce([](a, b) -> a || b, false);', but stop on the first `true'.
+ *           - Same as `reduce((a, b) -> a || b, false);', but stop on the first `true'.
  *           - Same as `this || ...'
  *        - `all(): bool'
- *           - Same as `reduce([](a, b) -> a && b, true);', but stop on the first `false'.
+ *           - Same as `reduce((a, b) -> a && b, true);', but stop on the first `false'.
  *           - Same as `this && ...'
  *        - `parity(): bool'
- *           - Same as `((#this.filter([](x) -> !!a)) % 2) != 0'
+ *           - Same as `((#this.filter(x -> !!x)) % 2) != 0'
  *        - `min(key: Callable = none): Object'
  *        - `max(key: Callable = none): Object'
  *        - `count(ob: Object, key: Callable = none): int'

@@ -118,7 +118,7 @@ print repr values;
 
 /* Though really fancy, generator expressions aren't anything
  * special, as they could also be expressed using lambdas: */
-mygen = [] {
+mygen = () -> {
 	for (local x: [:10])
 		yield 2 ** x;
 }(); /* NOTE: The yield function of a generator must be

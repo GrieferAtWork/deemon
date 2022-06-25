@@ -3351,7 +3351,7 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 make_removeif_all_wrapper(DeeObject *elem, DeeObject *key) {
-	/* >> return [](x) -> keyed_search_item == (key is none ? x : key(x));
+	/* >> return x -> keyed_search_item == (key is none ? x : key(x));
 	 * So simple, yet sooo complex to implement in C... */
 	DREF RemoveIfAllWrapper *result;
 	result = DeeObject_MALLOC(RemoveIfAllWrapper);
@@ -3556,7 +3556,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 				}
 			}
 		}
-		/* >> `self.removeif([](x) -> keyed_search_item == (key is none ? x : key(x)), start, end)' */
+		/* >> `self.removeif(x -> keyed_search_item == (key is none ? x : key(x)), start, end)' */
 		erase_func = get_generic_attribute(tp_self, self, (DeeObject *)&str_removeif);
 		if (erase_func != ITER_DONE) {
 			if (end > start) {

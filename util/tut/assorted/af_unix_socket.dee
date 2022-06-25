@@ -39,9 +39,9 @@ if (stat.exists(sockfile)) {
 	sock = socket("AF_UNIX");
 	sock.bind(sa);
 	sock.listen();
-	ac_thread = thread([]{
+	ac_thread = Thread(() -> {
 		for (;;) {
-			thread([](client){
+			Thread((client) -> {
 				print "New connection:", client;
 				for (local l: client.recv())
 					print repr l;

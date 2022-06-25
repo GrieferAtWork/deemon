@@ -301,7 +301,7 @@ err_var_symbol:
 			 * >> List myList;
 			 * >> int myInt = 42;
 			 * >> MyClass myInstance(10, 20, 30);
-			 * >> Thread myThread = []{
+			 * >> Thread myThread = () -> {
 			 * >>     print "Thread execution...";
 			 * >> };
 			 * >> myThread.start();
@@ -309,7 +309,7 @@ err_var_symbol:
 			 * >> local myList = List();
 			 * >> local myInt = int(42);
 			 * >> local myInstance = MyClass(10, 20, 30);
-			 * >> local myThread = Thread([]{
+			 * >> local myThread = Thread(() -> {
 			 * >>     print "Thread execution...";
 			 * >> });
 			 * >> myThread.start();

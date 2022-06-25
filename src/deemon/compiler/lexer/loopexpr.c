@@ -33,7 +33,7 @@
  * >> print (for (local x: text.splitlines(false)) x.strip())...;
  * Actually parsed as:
  * >> local text = get_text();
- * >> print []{
+ * >> print () -> {
  * >>     for (local x: text.splitlines(false))
  * >>         yield x.strip();
  * >> }()...;

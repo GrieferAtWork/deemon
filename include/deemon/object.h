@@ -2553,13 +2553,14 @@ DeeObject_Class(DeeObject *__restrict self);
  * NOTE: When `inherited_type' is not a type, this function simply returns `false'
  * >> return inherited_type is Type && inherited_type.baseof(test_type); */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsInherited(DeeTypeObject *test_type,
-                    DeeTypeObject *inherited_type);
+DeeType_IsInherited(DeeTypeObject const *test_type,
+                    DeeTypeObject const *inherited_type);
 
 /* Return the module used to define a given type `self',
  * or `NULL' if that module could not be determined.
  * NOTE: When `NULL' is returned, _NO_ error is thrown! */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeType_GetModule(DeeTypeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeType_GetModule(DeeTypeObject *__restrict self);
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);

@@ -58,29 +58,29 @@ public:
 	    : Sequence<T>(inherit(DeeTuple_NewVector(objc, (DeeObject **)objv))) {}
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Tuple, Sequence<T>)
 	operator obj_tuple() const DEE_CXX_NOTHROW {
-		return obj_tuple(*this);
+		return obj_tuple(this->ptr());
 	}
-	Tuple(types)() const {
-		return inherit(DeeTuple_Types(*this));
+	Tuple types() const {
+		return inherit(DeeTuple_Types(this->ptr()));
 	}
 	void(append)(T const &ob) {
-		if likely(DeeTuple_Check(this->ptr()))
-			this->m_ptr = throw_if_null(DeeTuple_Append(*this, ob));
-		else {
+		if likely(DeeTuple_Check(this->ptr())) {
+			this->m_ptr = throw_if_null(DeeTuple_Append(this->ptr(), ob));
+		} else {
 			Sequence<T>::append(ob);
 		}
 	}
 	void(append)(DeeObject *__restrict ob) {
-		if likely(DeeTuple_Check(this->ptr()))
-			this->m_ptr = throw_if_null(DeeTuple_Append(*this, ob));
-		else {
+		if likely(DeeTuple_Check(this->ptr())) {
+			this->m_ptr = throw_if_null(DeeTuple_Append(this->ptr(), ob));
+		} else {
 			Sequence<T>::append(ob);
 		}
 	}
 	void(appenditer)(DeeObject *__restrict iter) {
-		if likely(DeeTuple_Check(this->ptr()))
-			this->m_ptr = throw_if_null(DeeTuple_AppendIterator(*this, iter));
-		else {
+		if likely(DeeTuple_Check(this->ptr())) {
+			this->m_ptr = throw_if_null(DeeTuple_AppendIterator(this->ptr(), iter));
+		} else {
 			Sequence<T>::appenditer(iter);
 		}
 	}

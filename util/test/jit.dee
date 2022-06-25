@@ -245,14 +245,24 @@ assert identical(exec(r'function(x) { return x * 2; }')(7), 14);
 assert identical(exec(r'function(x) { return x * 2; };'), none);
 assert identical(exec(r'function(x) { return x * 2; };')(7), none);
 assert identical(exec(r'[](x) -> x * 2')(7), 14);
+//TODO:assert identical(exec(r'(x) -> x * 2')(7), 14);
+//TODO:assert identical(exec(r'x -> x * 2')(7), 14);
 assert identical(exec(r'[](x) -> x * 2;')(7), 14);
+//TODO:assert identical(exec(r'(x) -> x * 2;')(7), 14);
+//TODO:assert identical(exec(r'x -> x * 2;')(7), 14);
 assert identical(exec(r'[](x) { return x * 2; }')(7), 14);
+//TODO:assert identical(exec(r'(x) -> { return x * 2; }')(7), 14);
+//TODO:assert identical(exec(r'x -> { return x * 2; }')(7), 14);
+//TODO:assert exec(r'(x) -> { x * 2 }')(7) == {14};
+//TODO:assert exec(r'x -> { x * 2 }')(7) == {14};
 /* Syntactic difference: `[]() { }' is an expression, so `[]() { };' still
  * evaluates to that same expression. `function() { }' is a pseudo-statement
  * that doesn't expect a trailing `;'-character, so `function() { };' are
  * actually 2 statements `function() { }' and `;', with the later (`;')
  * evaluating to `none'! */
 assert identical(exec(r'[](x) { return x * 2; };')(7), 14);
+//TODO:assert identical(exec(r'(x) -> { return x * 2; };')(7), 14);
+//TODO:assert identical(exec(r'x -> { return x * 2; };')(7), 14);
 
 
 /* Test simple lambda expressions */
@@ -498,12 +508,12 @@ assert exec(r'(10) !!!in [11]');
  *             ff: Sequence({ Variable("baz") }))
  *       })
  *   Or in other words:
- *       { foo ? []{ for (local x: bar) yield {}; }() : { baz } }
+ *       { foo ? () -> { for (local x: bar) yield {}; }() : { baz } }
  *
  *   Line #2 should be parsed as:
  *       { if (foo) { for (local x: bar); } else { baz; }; }
  *   But is actually parsed as:
- *       { if (foo) { []{ for (local x: bar) yield {}; }(); } else { baz; }; }
+ *       { if (foo) { () -> { for (local x: bar) yield {}; }(); } else { baz; }; }
  *
  *   The problem here is that the compiler can't easily go back and re-parse
  *   some piece of code in the context of a statement, after already having parsed

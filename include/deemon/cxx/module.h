@@ -29,7 +29,7 @@
 
 DEE_CXX_BEGIN
 
-class module: public Object {
+class Module: public Object {
 public:
 	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
 		return &DeeModule_Type;
@@ -42,12 +42,12 @@ public:
 	}
 
 public:
-	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(module, Object)
-	module(obj_string name)
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Module, Object)
+	Module(obj_string name)
 	    : Object(inherit(DeeModule_New(name))) { }
-	module(char const *__restrict name)
+	Module(char const *__restrict name)
 	    : Object(inherit(DeeModule_NewString(name, strlen(name)))) { }
-	module(char const *__restrict name, size_t namelen)
+	Module(char const *__restrict name, size_t namelen)
 	    : Object(inherit(DeeModule_NewString(name, namelen))) { }
 	struct Dee_module_symbol *symbol(char const *__restrict attr_name) const DEE_CXX_NOTHROW {
 		return DeeModule_GetSymbolString((DeeModuleObject *)this->ptr(), attr_name, Dee_HashStr(attr_name));
@@ -74,230 +74,230 @@ public:
 		throw_if_nonzero(DeeModule_SetAttrSymbol((DeeModuleObject *)this->ptr(), sym, value));
 	}
 	char const *globalname(uint16_t gid) const DEE_CXX_NOTHROW {
-		return DeeModule_GlobalName(*this, gid);
+		return DeeModule_GlobalName(this->ptr(), gid);
 	}
 	bool runinit() const DEE_CXX_NOTHROW {
-		return throw_if_negative(DeeModule_RunInit(*this)) == 0;
+		return throw_if_negative(DeeModule_RunInit(this->ptr())) == 0;
 	}
 	void initimports() const DEE_CXX_NOTHROW {
-		throw_if_nonzero(DeeModule_InitImports(*this));
+		throw_if_nonzero(DeeModule_InitImports(this->ptr()));
 	}
 	Object root(bool set_initialized = true) const DEE_CXX_NOTHROW {
-		return inherit(DeeModule_GetRoot(*this, set_initialized));
+		return inherit(DeeModule_GetRoot(this->ptr(), set_initialized));
 	}
 	void *nativesymbol(char const *__restrict name) const DEE_CXX_NOTHROW {
-		return DeeModule_GetNativeSymbol(*this, name);
+		return DeeModule_GetNativeSymbol(this->ptr(), name);
 	}
 
 public:
-	static module deemon() DEE_CXX_NOTHROW {
+	static Module deemon() DEE_CXX_NOTHROW {
 		return nonnull((DeeObject *)DeeModule_GetDeemon());
 	}
-	static module opensourcefile(obj_string source_pathname, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(obj_string source_pathname, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFile(source_pathname, NULL, options, true));
 	}
-	static module opensourcefile(obj_string source_pathname, /*opt*/ obj_string module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(obj_string source_pathname, /*opt*/ obj_string module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFile(source_pathname, module_global_name, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, strlen(source_pathname), NULL, 0, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, char const *module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, char const *module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, strlen(source_pathname), module_global_name, module_global_name ? strlen(module_global_name) : 0, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, char const *module_global_name, size_t module_global_namesize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, char const *module_global_name, size_t module_global_namesize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, strlen(source_pathname), module_global_name, module_global_namesize, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, source_pathsize, NULL, 0, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, char const *module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, char const *module_global_name, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, source_pathsize, module_global_name, module_global_name ? strlen(module_global_name) : 0, options, true));
 	}
-	static module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, char const *module_global_name, size_t module_global_namesize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcefile(char const *__restrict source_pathname, size_t source_pathsize, char const *module_global_name, size_t module_global_namesize, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceFileString(source_pathname, source_pathsize, module_global_name, module_global_namesize, options, true));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, 0, 0, options, NULL, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, 0, 0, options, source_pathname, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, 0, 0, options, source_pathname, module_name));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, 0, 0, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, start_line, start_col, options, NULL, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, start_line, start_col, options, source_pathname, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, data_size, start_line, start_col, options, source_pathname, module_name));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, size_t data_size, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, data_size, start_line, start_col, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), 0, 0, options, NULL, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), 0, 0, options, source_pathname, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), 0, 0, options, source_pathname, module_name));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), 0, 0, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), start_line, start_col, options, NULL, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), start_line, start_col, options, source_pathname, NULL));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemory(data, strlen(data), start_line, start_col, options, source_pathname, module_name));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcememory(char const *__restrict data, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceMemoryString(data, strlen(data), start_line, start_col, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, 0, 0, options, NULL, NULL));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, 0, 0, options, source_pathname, NULL));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, 0, 0, options, source_pathname, module_name));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, 0, 0, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, start_line, start_col, options, NULL, NULL));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, start_line, start_col, options, source_pathname, NULL));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*opt*/ obj_string source_pathname, /*opt*/ obj_string module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStream(source_stream, start_line, start_col, options, source_pathname, module_name));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, NULL, 0));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathname ? strlen(source_pathname) : 0, module_name, module_namesize));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathsize, NULL, 0));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathsize, module_name, module_name ? strlen(module_name) : 0));
 	}
-	static module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
+	static Module opensourcestream(obj_file source_stream, int start_line, int start_col, struct Dee_compiler_options *options, /*utf-8*/ char const *source_pathname, size_t source_pathsize, /*utf-8*/ char const *module_name, size_t module_namesize) DEE_CXX_NOTHROW {
 		return inherit(DeeModule_OpenSourceStreamString(source_stream, start_line, start_col, options, source_pathname, source_pathsize, module_name, module_namesize));
 	}
 	bool isglobal() const DEE_CXX_NOTHROW {
-		return DeeModule_IsGlobal((DeeObject *)*this);
+		return DeeModule_IsGlobal(this->ptr());
 	}
 	unsigned int loadsourcestream(obj_file input_file, struct Dee_compiler_options *options) {
-		return throw_if_negative(DeeModule_LoadSourceStream(*this, input_file, 0, 0, options));
+		return throw_if_negative(DeeModule_LoadSourceStream(this->ptr(), input_file, 0, 0, options));
 	}
 	unsigned int loadsourcestream(obj_file input_file, int start_line = 0, int start_col = 0, struct Dee_compiler_options *options = NULL) {
-		return throw_if_negative(DeeModule_LoadSourceStream(*this, input_file, start_line, start_col, options));
+		return throw_if_negative(DeeModule_LoadSourceStream(this->ptr(), input_file, start_line, start_col, options));
 	}
 };
 
 
-inline module import(obj_string module_name, struct Dee_compiler_options *options = NULL) {
+inline Module import(obj_string module_name, struct Dee_compiler_options *options = NULL) {
 	return inherit(DeeModule_OpenGlobal(module_name, options, true));
 }
-inline module import(/*utf-8*/ char const *__restrict module_name, struct Dee_compiler_options *options = NULL) {
+inline Module import(/*utf-8*/ char const *__restrict module_name, struct Dee_compiler_options *options = NULL) {
 	return inherit(DeeModule_OpenGlobalString(module_name, strlen(module_name), options, true));
 }
-inline module import(/*utf-8*/ char const *__restrict module_name, size_t module_namesize, struct Dee_compiler_options *options = NULL) {
+inline Module import(/*utf-8*/ char const *__restrict module_name, size_t module_namesize, struct Dee_compiler_options *options = NULL) {
 	return inherit(DeeModule_OpenGlobalString(module_name, module_namesize, options, true));
 }
 

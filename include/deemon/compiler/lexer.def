@@ -232,7 +232,7 @@ DEF_WARNING(W_DEPRECATED_PREFIX_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN
 DEF_WARNING(W_DEPRECATED_NO_PARAMETER_LIST, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("A missing parameter list in a function declaration is deprecated since deemon 200 for non-lambda-functions. Add an empty one by inserting `()'"))
 DEF_WARNING(W_DEPRECATED_CHARACTER_INT, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Writing integers as characters is deprecated since deemon 200. Consider writing `\"%$s\".ord()' instead", (size_t)(token.t_end-token.t_begin)-2, token.t_begin+1))
 DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `->' to assign an exception symbol is deprecated since deemon 200. Consider using `as' instead"))
-DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `function' to define lambdas in expressions is deprecated. Consider using `[]' instead"))
+DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `function' to define lambdas in expressions is deprecated. Consider using `() ->' instead"))
 DEF_WARNING(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Lookup mode modifier after C-like declaration type is deprecated since deemon 200. Consider moving the modifier before the type expression, or removing the modifier to have the variable always be declared as `local'"))
 
 DEF_WARNING(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `.', a keyword or a string in a module- or symbol-import list, but got " TOK_S, TOK_A))

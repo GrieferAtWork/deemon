@@ -102,8 +102,8 @@ DeeObject_Class(DeeObject *__restrict self) {
  * NOTE: When `inherited_type' is not a type, this function simply returns `false'
  * >> return inherited_type.baseof(test_type); */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsInherited(DeeTypeObject *test_type,
-                    DeeTypeObject *inherited_type) {
+DeeType_IsInherited(DeeTypeObject const *test_type,
+                    DeeTypeObject const *inherited_type) {
 	do {
 		if (test_type == inherited_type)
 			return true;

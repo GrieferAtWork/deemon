@@ -2565,7 +2565,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	  DOC("->?Dbool\n"
 	      "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
 	      "If @this Sequence is empty, ?f is returned\n"
-	      "Parity here refers to ${##this.filter([](x) -\\> !!x) % 2}\n"
+	      "Parity here refers to ${##this.filter(x -\\> !!x) % 2}\n"
 	      "${"
 	      "function parity(): bool {\n"
 	      "	local result = false;\n"
@@ -3658,9 +3658,9 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "	end = (int)end;\n"
 	      "	if (start >= end) return 0;\n"
 	      "	if (key is none)\n"
-	      "		return (int)this.removeif([](x) -\\> elem == x, start, end);\n"
+	      "		return (int)this.removeif(x -\\> elem == x, start, end);\n"
 	      "	elem = key(elem);\n"
-	      "	return (int)this.removeif([](x) -\\> elem == key(x), start, end);\n"
+	      "	return (int)this.removeif(x -\\> elem == key(x), start, end);\n"
 	      "}}\n"
 	      "For ${rremove(elem, start, end, key)}:\n"
 	      "${"
@@ -4089,7 +4089,7 @@ INTERN struct type_method tpconst seq_methods[] = {
 	      "local lines: {string...} = ...; /* Must be sorted! */\n"
 	      "local prefix: string     = ...;\n"
 	      "/* The process of looking up relevant lines here is O(log(##lines))! */\n"
-	      "for (local l: lines.blocateall(prefix, [](s) -#> s.substr(0, ##prefix)))\n"
+	      "for (local l: lines.blocateall(prefix, s -#> s.substr(0, ##prefix)))\n"
 	      "	print l;\n"
 	      "}"),
 	  TYPE_METHOD_FKWDS },
@@ -4385,15 +4385,15 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	{ "ids", &SeqIds_New, NULL, NULL,
 	  DOC("->?S?Dint\n"
 	      "Returns a special proxy object for accessing the ids of Sequence elements\n"
-	      "This is equivalent to ${this.transform([](x) -\\> Object.id(x))}") },
+	      "This is equivalent to ${this.transform(x -\\> Object.id(x))}") },
 	{ "types", &SeqTypes_New, NULL, NULL,
 	  DOC("->?S?DType\n"
 	      "Returns a special proxy object for accessing the types of Sequence elements\n"
-	      "This is equivalent to ${this.transform([](x) -\\> type(x))}") },
+	      "This is equivalent to ${this.transform(x -\\> type(x))}") },
 	{ "classes", &SeqClasses_New, NULL, NULL,
 	  DOC("->?S?DType\n"
 	      "Returns a special proxy object for accessing the classes of Sequence elements\n"
-	      "This is equivalent to ${this.transform([](x) -\\> x.class)}") },
+	      "This is equivalent to ${this.transform(x -\\> x.class)}") },
 	{ "isempty", &seq_get_isempty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Sequence is empty\n"

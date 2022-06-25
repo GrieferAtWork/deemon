@@ -52,100 +52,100 @@ public:
 		return obj_file(this->ptr());
 	}
 	size_t(read)(void *__restrict buffer, size_t bufsize) const {
-		return throw_if_minusone(DeeFile_Read(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_Read(this->ptr(), buffer, bufsize));
 	}
 	size_t(read)(void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags) const {
-		return throw_if_minusone(DeeFile_Readf(*this, buffer, bufsize, flags));
+		return throw_if_minusone(DeeFile_Readf(this->ptr(), buffer, bufsize, flags));
 	}
 	size_t(write)(void const *__restrict buffer, size_t bufsize) const {
-		return throw_if_minusone(DeeFile_Write(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_Write(this->ptr(), buffer, bufsize));
 	}
 	size_t(write)(void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags) const {
-		return throw_if_minusone(DeeFile_Writef(*this, buffer, bufsize, flags));
+		return throw_if_minusone(DeeFile_Writef(this->ptr(), buffer, bufsize, flags));
 	}
 	size_t(pread)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_minusone(DeeFile_PRead(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PRead(this->ptr(), buffer, bufsize, pos));
 	}
 	size_t(pread)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) const {
-		return throw_if_minusone(DeeFile_PReadf(*this, buffer, bufsize, pos, flags));
+		return throw_if_minusone(DeeFile_PReadf(this->ptr(), buffer, bufsize, pos, flags));
 	}
 	size_t(pwrite)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_minusone(DeeFile_PWrite(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PWrite(this->ptr(), buffer, bufsize, pos));
 	}
 	size_t(pwrite)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) const {
-		return throw_if_minusone(DeeFile_PWritef(*this, buffer, bufsize, pos, flags));
+		return throw_if_minusone(DeeFile_PWritef(this->ptr(), buffer, bufsize, pos, flags));
 	}
 	size_t(readall)(void *__restrict buffer, size_t bufsize) const {
-		return throw_if_minusone(DeeFile_ReadAll(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_ReadAll(this->ptr(), buffer, bufsize));
 	}
 	size_t(writeall)(void const *__restrict buffer, size_t bufsize) const {
-		return throw_if_minusone(DeeFile_WriteAll(*this, buffer, bufsize));
+		return throw_if_minusone(DeeFile_WriteAll(this->ptr(), buffer, bufsize));
 	}
 	size_t(preadall)(void *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_minusone(DeeFile_PReadAll(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PReadAll(this->ptr(), buffer, bufsize, pos));
 	}
 	size_t(pwriteall)(void const *__restrict buffer, size_t bufsize, Dee_pos_t pos) const {
-		return throw_if_minusone(DeeFile_PWriteAll(*this, buffer, bufsize, pos));
+		return throw_if_minusone(DeeFile_PWriteAll(this->ptr(), buffer, bufsize, pos));
 	}
 	Dee_pos_t(seek)(Dee_off_t off, int whence = SEEK_SET) const {
-		return throw_if_minusone(DeeFile_Seek(*this, off, whence));
+		return throw_if_minusone(DeeFile_Seek(this->ptr(), off, whence));
 	}
 	Dee_pos_t(tell)() const {
-		return throw_if_minusone(DeeFile_Tell(*this));
+		return throw_if_minusone(DeeFile_Tell(this->ptr()));
 	}
 	void(rewind)() const {
-		throw_if_minusone(DeeFile_Rewind(*this));
+		throw_if_minusone(DeeFile_Rewind(this->ptr()));
 	}
 	void(sync)() const {
-		throw_if_nonzero(DeeFile_Sync(*this));
+		throw_if_nonzero(DeeFile_Sync(this->ptr()));
 	}
 	void(trunc)(Dee_pos_t size) const {
-		throw_if_nonzero(DeeFile_Trunc(*this, size));
+		throw_if_nonzero(DeeFile_Trunc(this->ptr(), size));
 	}
 	void(trunc)(Dee_pos_t *psize = NULL) const {
-		throw_if_nonzero(DeeFile_TruncHere(*this, psize));
+		throw_if_nonzero(DeeFile_TruncHere(this->ptr(), psize));
 	}
 	void(close)() const {
-		throw_if_nonzero(DeeFile_Close(*this));
+		throw_if_nonzero(DeeFile_Close(this->ptr()));
 	}
 	int(getc)() const {
-		int result = DeeFile_Getc(*this);
+		int result = DeeFile_Getc(this->ptr());
 		if unlikely(result == GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int(getc)(Dee_ioflag_t flags) const {
-		int result = DeeFile_Getcf(*this, flags);
+		int result = DeeFile_Getcf(this->ptr(), flags);
 		if unlikely(result == GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int(ungetc)(int ch) const {
-		int result = DeeFile_Ungetc(*this, ch);
+		int result = DeeFile_Ungetc(this->ptr(), ch);
 		if unlikely(result == GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int(putc)(int ch) const {
-		int result = DeeFile_Putc(*this, ch);
+		int result = DeeFile_Putc(this->ptr(), ch);
 		if unlikely(result == GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int(putc)(int ch, Dee_ioflag_t flags) const {
-		int result = DeeFile_Putcf(*this, ch, flags);
+		int result = DeeFile_Putcf(this->ptr(), ch, flags);
 		if unlikely(result == GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	Dee_pos_t(size)() const {
-		return throw_if_minusone(DeeFile_GetSize(*this));
+		return throw_if_minusone(DeeFile_GetSize(this->ptr()));
 	}
 	bool(isatty)() const {
-		return throw_if_negative(DeeFile_IsAtty(*this)) != 0;
+		return throw_if_negative(DeeFile_IsAtty(this->ptr())) != 0;
 	}
 	DeeSysFD(getsysfd)() const {
-		DeeSysFD result = DeeFile_GetSysFD(*this);
+		DeeSysFD result = DeeFile_GetSysFD(this->ptr());
 		if unlikely(result == DeeSysFD_INVALID)
 			throw_last_deemon_exception();
 		return result;
@@ -158,33 +158,33 @@ public:
 		Dee_ssize_t result;
 		va_list args;
 		va_start(args, format);
-		result = DeeFile_VPrintf(*this, format, args);
+		result = DeeFile_VPrintf(this->ptr(), format, args);
 		va_end(args);
 		return throw_if_negative(result);
 	}
 	size_t(vprintf)(char const *__restrict format, va_list args) const {
-		return throw_if_negative(DeeFile_VPrintf(*this, format, args));
+		return throw_if_negative(DeeFile_VPrintf(this->ptr(), format, args));
 	}
 	void(printnl)() const {
-		throw_if_nonzero(DeeFile_PrintNl(*this));
+		throw_if_nonzero(DeeFile_PrintNl(this->ptr()));
 	}
 	void(printobj)(DeeObject *__restrict obj) const {
-		throw_if_nonzero(DeeFile_PrintObject(*this, obj));
+		throw_if_nonzero(DeeFile_PrintObject(this->ptr(), obj));
 	}
 	void(printobjsp)(DeeObject *__restrict obj) const {
-		throw_if_nonzero(DeeFile_PrintObjectSp(*this, obj));
+		throw_if_nonzero(DeeFile_PrintObjectSp(this->ptr(), obj));
 	}
 	void(printobjnl)(DeeObject *__restrict obj) const {
-		throw_if_nonzero(DeeFile_PrintObjectNl(*this, obj));
+		throw_if_nonzero(DeeFile_PrintObjectNl(this->ptr(), obj));
 	}
 	void(printall)(DeeObject *__restrict seq) const {
-		throw_if_nonzero(DeeFile_PrintAll(*this, seq));
+		throw_if_nonzero(DeeFile_PrintAll(this->ptr(), seq));
 	}
 	void(printallsp)(DeeObject *__restrict seq) const {
-		throw_if_nonzero(DeeFile_PrintAllSp(*this, seq));
+		throw_if_nonzero(DeeFile_PrintAllSp(this->ptr(), seq));
 	}
 	void(printallnl)(DeeObject *__restrict seq) const {
-		throw_if_nonzero(DeeFile_PrintAllNl(*this, seq));
+		throw_if_nonzero(DeeFile_PrintAllNl(this->ptr(), seq));
 	}
 	File const &operator<<(DeeObject *__restrict right) const {
 		printobj(right);
@@ -281,7 +281,7 @@ public:
 	Buffer(DeeObject *__restrict file, uint16_t mode, size_t size)
 	    : deemon::File(inherit(DeeFileBuffer_New(file, mode, size))) {}
 	void (setmode)(uint16_t mode, size_t size) {
-		throw_if_nonzero(DeeFileBuffer_SetMode(*this, mode, size));
+		throw_if_nonzero(DeeFileBuffer_SetMode(this->ptr(), mode, size));
 	}
 	static void (sync_ttys)() {
 		throw_if_nonzero(DeeFileBuffer_SyncTTYs());
@@ -380,24 +380,24 @@ public:
 
 #ifdef GUARD_DEEMON_CXX_STRING_H
 inline string(File::filename)() const {
-	return inherit(DeeFile_Filename(*this));
+	return inherit(DeeFile_Filename(this->ptr()));
 }
 inline deemon::string(File::Writer::string)() const {
 	return inherit(DeeObject_InstanceOfExact(this->ptr(), (DeeTypeObject *)&DeeFileWriter_Type)
-	               ? DeeFileWriter_GetString(*this)
-	               : DeeObject_GetAttrString(*this, "string"));
+	               ? DeeFileWriter_GetString(this->ptr())
+	               : DeeObject_GetAttrString(this->ptr(), "string"));
 }
 #endif /* GUARD_DEEMON_CXX_STRING_H */
 
 #ifdef GUARD_DEEMON_CXX_BYTES_H
 inline Bytes(File::readline)(size_t max_length, bool keep_lf) const {
-	return inherit(DeeFile_ReadLine(*this, max_length, keep_lf));
+	return inherit(DeeFile_ReadLine(this->ptr(), max_length, keep_lf));
 }
 inline Bytes(File::read)(size_t max_length, bool readall) const {
-	return inherit(DeeFile_ReadText(*this, max_length, readall));
+	return inherit(DeeFile_ReadText(this->ptr(), max_length, readall));
 }
 inline Bytes(File::pread)(Dee_pos_t pos, size_t max_length, bool readall) const {
-	return inherit(DeeFile_PReadText(*this, max_length, pos, readall));
+	return inherit(DeeFile_PReadText(this->ptr(), max_length, pos, readall));
 }
 #endif /* GUARD_DEEMON_CXX_BYTES_H */
 

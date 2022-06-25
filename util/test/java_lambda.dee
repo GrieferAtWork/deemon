@@ -216,7 +216,7 @@ ASSERT_LAMBDA_EX((args..., **kwds),          #args,                  (x: 20, y: 
 
 /* Parsed like `true ? []{ return 8; } : none'
  * (as opposed to `true ? Tuple({}) : [](int) { return 8; }') (where `int' would be the argument name)
- * NOTE: When deemon was built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
+ * NOTE: When deemon is built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
  *       this would get parsed differently! */
 local v = true ? () : int -> 8;
 assert v is Callable;
@@ -225,7 +225,7 @@ assert v() == 8;
 local x = 42;
 /* Parsed like `true ? [](x){ return 8; } : none'
  * (as opposed to `true ? x : [](int) { return 8; }') (where `int' would be the argument name)
- * NOTE: When deemon was built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
+ * NOTE: When deemon is built without `CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS',
  *       this would get parsed differently! */
 local v = true ? (x) : int -> 8;
 assert v is Callable;

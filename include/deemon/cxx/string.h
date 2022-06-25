@@ -158,24 +158,24 @@ public: /* string from deemon */
 	}
 #ifdef CONFIG_BUILDING_DEEMON
 	WUNUSED Dee_hash_t hash() const DEE_CXX_NOTHROW {
-		return DeeString_Hash(*this);
+		return DeeString_Hash(this->ptr());
 	}
 #endif /* CONFIG_BUILDING_DEEMON */
 	WUNUSED Dee_hash_t hashcase() const DEE_CXX_NOTHROW {
-		return DeeString_HashCase(*this);
+		return DeeString_HashCase(this->ptr());
 	}
 	WUNUSED ATTR_RETNONNULL uint8_t *cbytes(bool allow_invalid = false) const {
-		return (uint8_t *)throw_if_null(DeeString_AsBytes(*this, allow_invalid));
+		return (uint8_t *)throw_if_null(DeeString_AsBytes(this->ptr(), allow_invalid));
 	}
 	inline WUNUSED Bytes bytes() const;
 	inline WUNUSED Bytes bytes(bool allow_invalid) const;
 	inline WUNUSED Bytes bytes(size_t start, size_t end) const;
 	inline WUNUSED Bytes bytes(size_t start, size_t end, bool allow_invalid) const;
 	WUNUSED ATTR_RETNONNULL char *asutf8() const {
-		return (char *)throw_if_null((void *)DeeString_AsUtf8(*this));
+		return (char *)throw_if_null((void *)DeeString_AsUtf8(this->ptr()));
 	}
 	WUNUSED ATTR_RETNONNULL uint16_t *asutf16(unsigned int error_mode = STRING_ERROR_FSTRICT) const {
-		return (uint16_t *)throw_if_null((void *)DeeString_AsUtf16(*this, error_mode));
+		return (uint16_t *)throw_if_null((void *)DeeString_AsUtf16(this->ptr(), error_mode));
 	}
 	WUNUSED ATTR_RETNONNULL uint32_t *asutf32() const {
 		return (uint32_t *)throw_if_null((void *)DeeString_AsUtf32(this->ptr()));
@@ -218,22 +218,22 @@ public: /* string from deemon */
 	}
 #endif /* __native_wchar_t_defined */
 	WUNUSED Object decode(/*utf-8*/ char const *__restrict codec_name) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "s", codec_name));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "s", codec_name));
 	}
 	WUNUSED Object decode(obj_string codec_name) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "o", (DeeObject *)codec_name));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "o", (DeeObject *)codec_name));
 	}
 	WUNUSED Object decode(/*utf-8*/ char const *__restrict codec_name, /*utf-8*/ char const *__restrict errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "ss", codec_name, errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "ss", codec_name, errors));
 	}
 	WUNUSED Object decode(/*utf-8*/ char const *__restrict codec_name, obj_string errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "so", codec_name, (DeeObject *)errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "so", codec_name, (DeeObject *)errors));
 	}
 	WUNUSED Object decode(obj_string codec_name, /*utf-8*/ char const *__restrict errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "os", (DeeObject *)codec_name, errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "os", (DeeObject *)codec_name, errors));
 	}
 	WUNUSED Object decode(obj_string codec_name, obj_string errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "decode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
 	}
 	inline WUNUSED Bytes encode(/*utf-8*/ char const *__restrict codec_name) const;
 	inline WUNUSED Bytes encode(obj_string codec_name) const;
@@ -242,46 +242,46 @@ public: /* string from deemon */
 	inline WUNUSED Bytes encode(obj_string codec_name, /*utf-8*/ char const *__restrict errors) const;
 	inline WUNUSED Bytes encode(obj_string codec_name, obj_string errors) const;
 	WUNUSED Object encodeob(/*utf-8*/ char const *__restrict codec_name) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "s", codec_name));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "s", codec_name));
 	}
 	WUNUSED Object encodeob(obj_string codec_name) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "o", (DeeObject *)codec_name));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "o", (DeeObject *)codec_name));
 	}
 	WUNUSED Object encodeob(/*utf-8*/ char const *__restrict codec_name, /*utf-8*/ char const *__restrict errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "ss", codec_name, errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "ss", codec_name, errors));
 	}
 	WUNUSED Object encodeob(/*utf-8*/ char const *__restrict codec_name, obj_string errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "so", codec_name, (DeeObject *)errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "so", codec_name, (DeeObject *)errors));
 	}
 	WUNUSED Object encodeob(obj_string codec_name, /*utf-8*/ char const *__restrict errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "os", (DeeObject *)codec_name, errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "os", (DeeObject *)codec_name, errors));
 	}
 	WUNUSED Object encodeob(obj_string codec_name, obj_string errors) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "encode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
 	}
 
 	WUNUSED string format(obj_sequence args) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "format", "o", (DeeObject *)args));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "format", "o", (DeeObject *)args));
 	}
 	WUNUSED string format(std::initializer_list<DeeObject *> const &args) const {
 		Tuple<Object> ob_args(args);
-		return inherit(DeeObject_CallAttrStringf(*this, "format", "o", (DeeObject *)ob_args));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "format", "o", (DeeObject *)ob_args));
 	}
 	WUNUSED Sequence scanf(/*utf-8*/ char const *__restrict format) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "scanf", "s", format));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "scanf", "s", format));
 	}
 	WUNUSED Sequence scanf(obj_string format) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "scanf", "o", (DeeObject *)format));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "scanf", "o", (DeeObject *)format));
 	}
-#define DEFINE_CHARACTER_TRAIT(name)                                                                                  \
-	WUNUSED bool(name)() const {                                                                                      \
-		return Object(inherit(DeeObject_CallAttrString(*this, #name, 0, NULL))).bool_();                              \
-	}                                                                                                                 \
-	WUNUSED bool(name)(size_t index) const {                                                                          \
-		return Object(inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ, index))).bool_();                  \
-	}                                                                                                                 \
-	WUNUSED bool(name)(size_t start, size_t end) const {                                                              \
-		return Object(inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end))).bool_(); \
+#define DEFINE_CHARACTER_TRAIT(name)                                                                                        \
+	WUNUSED bool(name)() const {                                                                                            \
+		return Object(inherit(DeeObject_CallAttrString(this->ptr(), #name, 0, NULL))).bool_();                              \
+	}                                                                                                                       \
+	WUNUSED bool(name)(size_t index) const {                                                                                \
+		return Object(inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ, index))).bool_();                  \
+	}                                                                                                                       \
+	WUNUSED bool(name)(size_t start, size_t end) const {                                                                    \
+		return Object(inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end))).bool_(); \
 	}
 	DEFINE_CHARACTER_TRAIT(isprint)
 	DEFINE_CHARACTER_TRAIT(isalpha)
@@ -300,15 +300,15 @@ public: /* string from deemon */
 	DEFINE_CHARACTER_TRAIT(issymbol)
 	DEFINE_CHARACTER_TRAIT(isascii)
 #undef DEFINE_CHARACTER_TRAIT
-#define DEFINE_CHARACTER_TRAIT(name)                                                                                  \
-	WUNUSED bool(name)() const {                                                                                      \
-		return Object(inherit(DeeObject_CallAttrString(*this, #name, 0, NULL))).bool_();                              \
-	}                                                                                                                 \
-	WUNUSED bool(name)(size_t start) const {                                                                          \
-		return Object(inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ, start))).bool_();                  \
-	}                                                                                                                 \
-	WUNUSED bool(name)(size_t start, size_t end) const {                                                              \
-		return Object(inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end))).bool_(); \
+#define DEFINE_CHARACTER_TRAIT(name)                                                                                        \
+	WUNUSED bool(name)() const {                                                                                            \
+		return Object(inherit(DeeObject_CallAttrString(this->ptr(), #name, 0, NULL))).bool_();                              \
+	}                                                                                                                       \
+	WUNUSED bool(name)(size_t start) const {                                                                                \
+		return Object(inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ, start))).bool_();                  \
+	}                                                                                                                       \
+	WUNUSED bool(name)(size_t start, size_t end) const {                                                                    \
+		return Object(inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end))).bool_(); \
 	}
 	DEFINE_CHARACTER_TRAIT(isanyprint)
 	DEFINE_CHARACTER_TRAIT(isanyalpha)
@@ -326,15 +326,15 @@ public: /* string from deemon */
 	DEFINE_CHARACTER_TRAIT(isanytitle)
 	DEFINE_CHARACTER_TRAIT(isanyascii)
 #undef DEFINE_CHARACTER_TRAIT
-#define DEFINE_STRING_TRANSFORMATION(name)                                                            \
-	WUNUSED string(name)() const {                                                                    \
-		return inherit(DeeObject_CallAttrString(*this, #name, 0, NULL));                              \
-	}                                                                                                 \
-	WUNUSED string(name)(size_t start) const {                                                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ, start));                  \
-	}                                                                                                 \
-	WUNUSED string(name)(size_t start, size_t end) const {                                            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end)); \
+#define DEFINE_STRING_TRANSFORMATION(name)                                                                  \
+	WUNUSED string(name)() const {                                                                          \
+		return inherit(DeeObject_CallAttrString(this->ptr(), #name, 0, NULL));                              \
+	}                                                                                                       \
+	WUNUSED string(name)(size_t start) const {                                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ, start));                  \
+	}                                                                                                       \
+	WUNUSED string(name)(size_t start, size_t end) const {                                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ, start, end)); \
 	}
 	DEFINE_STRING_TRANSFORMATION(lower)
 	DEFINE_STRING_TRANSFORMATION(upper)
@@ -360,47 +360,47 @@ public: /* string from deemon */
 	inline WUNUSED deemon::int_ asdecimal(DeeObject *index) const;
 	inline WUNUSED deemon::int_ asdecimal(DeeObject *index, int defl) const;
 	WUNUSED Object asnumber(size_t index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asnumber", DEE_PCKuSIZ "o", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ "o", index, defl));
 	}
 	WUNUSED Object asnumber(DeeObject *index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asnumber", "oo", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "oo", index, defl));
 	}
 	WUNUSED Object asdigit(size_t index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asdigit", DEE_PCKuSIZ "o", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", DEE_PCKuSIZ "o", index, defl));
 	}
 	WUNUSED Object asdigit(DeeObject *index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asdigit", "oo", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "oo", index, defl));
 	}
 	WUNUSED Object asdecimal(size_t index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", DEE_PCKuSIZ "o", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ "o", index, defl));
 	}
 	WUNUSED Object asdecimal(DeeObject *index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", "oo", index, defl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "oo", index, defl));
 	}
 #define DEFINE_REPLACE_FUNCTION(name)                                                                                           \
 	WUNUSED string(name)(DeeObject * find, DeeObject * repl) const {                                                            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", find, repl));                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo", find, repl));                                        \
 	}                                                                                                                           \
 	WUNUSED string(name)(DeeObject * find, DeeObject * repl, size_t maxcount) const {                                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ, find, repl, maxcount));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ, find, repl, maxcount));                  \
 	}                                                                                                                           \
 	WUNUSED string(name)(DeeObject * find, /*utf-8*/ char const *__restrict repl) const {                                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", find, repl));                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os", find, repl));                                        \
 	}                                                                                                                           \
 	WUNUSED string(name)(DeeObject * find, /*utf-8*/ char const *__restrict repl, size_t maxcount) const {                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ, find, repl, maxcount));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ, find, repl, maxcount));                  \
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, DeeObject *repl) const {                                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so", find, repl));                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so", find, repl));                                        \
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, DeeObject *repl, size_t maxcount) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ, find, repl, maxcount));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ, find, repl, maxcount));                  \
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, /*utf-8*/ char const *__restrict repl) const {                  \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss", find, repl));                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss", find, repl));                                        \
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, /*utf-8*/ char const *__restrict repl, size_t maxcount) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ, find, repl, maxcount));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ, find, repl, maxcount));                  \
 	}
 	DEFINE_REPLACE_FUNCTION(replace)
 	DEFINE_REPLACE_FUNCTION(casereplace)
@@ -425,24 +425,24 @@ public: /* string from deemon */
 	DEFINE_FIND_FUNCTION(deemon::int_, caserindex, needle)
 	DEFINE_FIND_FUNCTION(deemon::int_, casecount, needle)
 #undef DEFINE_FIND_FUNCTION
-#define DEFINE_FIND_FUNCTION(Treturn, name, needle)                                                               \
-	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle) const {                                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", needle));                                     \
-	}                                                                                                             \
-	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start) const {                          \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ, needle, start));                  \
-	}                                                                                                             \
-	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const {              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
-	}                                                                                                             \
-	WUNUSED Treturn(name)(DeeObject *needle) const {                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", needle));                                     \
-	}                                                                                                             \
-	WUNUSED Treturn(name)(DeeObject *needle, size_t start) const {                                                \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, needle, start));                  \
-	}                                                                                                             \
-	WUNUSED Treturn(name)(DeeObject *needle, size_t start, size_t end) const {                                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
+#define DEFINE_FIND_FUNCTION(Treturn, name, needle)                                                                     \
+	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle) const {                                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", needle));                                     \
+	}                                                                                                                   \
+	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start) const {                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ, needle, start));                  \
+	}                                                                                                                   \
+	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const {                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
+	}                                                                                                                   \
+	WUNUSED Treturn(name)(DeeObject *needle) const {                                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", needle));                                     \
+	}                                                                                                                   \
+	WUNUSED Treturn(name)(DeeObject *needle, size_t start) const {                                                      \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, needle, start));                  \
+	}                                                                                                                   \
+	WUNUSED Treturn(name)(DeeObject *needle, size_t start, size_t end) const {                                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
 	}
 	DEFINE_FIND_FUNCTION(deemon::bool_, contains, needle)
 	DEFINE_FIND_FUNCTION(deemon::bool_, startswith, needle)
@@ -456,23 +456,23 @@ public: /* string from deemon */
 	DEFINE_FIND_FUNCTION(Tuple<string>, caserpartition, needle)
 #undef DEFINE_FIND_FUNCTION
 	WUNUSED string substr(size_t start) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "substr", DEE_PCKuSIZ, start));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "substr", DEE_PCKuSIZ, start));
 	}
 	WUNUSED string substr(size_t start, size_t end) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "substr", DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "substr", DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
-#define DEFINE_STRIP_FUNCTION(name)                                                       \
-	WUNUSED string(name)() const {                                                        \
-		return inherit(DeeObject_CallAttrString(*this, #name, 0, NULL));                  \
-	}                                                                                     \
-	WUNUSED string(name)(/*utf-8*/ char const *__restrict mask) const {                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", mask));               \
-	}                                                                                     \
-	WUNUSED string(name)(/*utf-8*/ char const *__restrict mask, size_t mask_size) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", mask_size, mask));   \
-	}                                                                                     \
-	WUNUSED string(name)(DeeObject *mask) const {                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", mask));               \
+#define DEFINE_STRIP_FUNCTION(name)                                                           \
+	WUNUSED string(name)() const {                                                            \
+		return inherit(DeeObject_CallAttrString(this->ptr(), #name, 0, NULL));                \
+	}                                                                                         \
+	WUNUSED string(name)(/*utf-8*/ char const *__restrict mask) const {                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", mask));             \
+	}                                                                                         \
+	WUNUSED string(name)(/*utf-8*/ char const *__restrict mask, size_t mask_size) const {     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "$s", mask_size, mask)); \
+	}                                                                                         \
+	WUNUSED string(name)(DeeObject *mask) const {                                             \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", mask));             \
 	}
 	DEFINE_STRIP_FUNCTION(strip)
 	DEFINE_STRIP_FUNCTION(lstrip)
@@ -516,67 +516,67 @@ public: /* string from deemon */
 	DEFINE_COMPARE_FUNCTION(deemon::int_, casecommon)
 	DEFINE_COMPARE_FUNCTION(deemon::int_, casercommon)
 #undef DEFINE_COMPARE_FUNCTION
-#define DEFINE_COMPARE_FUNCTION(Treturn, name)                                                                                                                         \
-	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict other) const {                                                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", other));                                                                                           \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict other, size_t other_size) const {                                                                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", other_size, other));                                                                              \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, /*utf-8*/ char const *__restrict other) const {                                                                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "s", my_start, other));                                                                     \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                                          \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "$s", my_start, other_size, other));                                                        \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other) const {                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "s", my_start, my_end, other));                                                 \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "$s", my_start, my_end, other_size, other));                                    \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(DeeObject *other) const {                                                                                                                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", other));                                                                                           \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(DeeObject *other, size_t other_start) const {                                                                                                \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, other, other_start));                                                                  \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(DeeObject *other, size_t other_start, size_t other_end) const {                                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, other, other_start, other_end));                                           \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject *other) const {                                                                                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o", my_start, other));                                                                     \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject *other, size_t other_start) const {                                                                               \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, other, other_start));                                            \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject *other, size_t other_start, size_t other_end) const {                                                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, other, other_start, other_end));                     \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other) const {                                                                                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o", my_start, my_end, other));                                                 \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other, size_t other_start) const {                                                                \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, my_end, other, other_start));                        \
-	}                                                                                                                                                                  \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other, size_t other_start, size_t other_end) const {                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, my_end, other, other_start, other_end)); \
+#define DEFINE_COMPARE_FUNCTION(Treturn, name)                                                                                                                               \
+	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict other) const {                                                                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", other));                                                                                           \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict other, size_t other_size) const {                                                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "$s", other_size, other));                                                                              \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, /*utf-8*/ char const *__restrict other) const {                                                                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "s", my_start, other));                                                                     \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "$s", my_start, other_size, other));                                                        \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other) const {                                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "s", my_start, my_end, other));                                                 \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "$s", my_start, my_end, other_size, other));                                    \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(DeeObject *other) const {                                                                                                                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", other));                                                                                           \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(DeeObject *other, size_t other_start) const {                                                                                                      \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, other, other_start));                                                                  \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(DeeObject *other, size_t other_start, size_t other_end) const {                                                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, other, other_start, other_end));                                           \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *other) const {                                                                                                         \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o", my_start, other));                                                                     \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *other, size_t other_start) const {                                                                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, other, other_start));                                            \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *other, size_t other_start, size_t other_end) const {                                                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, other, other_start, other_end));                     \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other) const {                                                                                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o", my_start, my_end, other));                                                 \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other, size_t other_start) const {                                                                      \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, my_end, other, other_start));                        \
+	}                                                                                                                                                                        \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *other, size_t other_start, size_t other_end) const {                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, my_end, other, other_start, other_end)); \
 	}
 	DEFINE_COMPARE_FUNCTION(deemon::bool_, wmatch)
 	DEFINE_COMPARE_FUNCTION(deemon::bool_, casewmatch)
 #undef DEFINE_COMPARE_FUNCTION
-#define DEFINE_CENTER_FUNCTION(name)                                                                           \
-	WUNUSED string(name)(size_t width) const {                                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ, width));                           \
-	}                                                                                                          \
-	WUNUSED string(name)(size_t width, DeeObject *filler) const {                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o", width, filler));               \
-	}                                                                                                          \
-	WUNUSED string(name)(size_t width, /*utf-8*/ char const *__restrict filler) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "s", width, filler));               \
-	}                                                                                                          \
-	WUNUSED string(name)(size_t width, /*utf-8*/ char const *__restrict filler, size_t filler_size) const {    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "$s", width, filler_size, filler)); \
+#define DEFINE_CENTER_FUNCTION(name)                                                                                 \
+	WUNUSED string(name)(size_t width) const {                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ, width));                           \
+	}                                                                                                                \
+	WUNUSED string(name)(size_t width, DeeObject *filler) const {                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o", width, filler));               \
+	}                                                                                                                \
+	WUNUSED string(name)(size_t width, /*utf-8*/ char const *__restrict filler) const {                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "s", width, filler));               \
+	}                                                                                                                \
+	WUNUSED string(name)(size_t width, /*utf-8*/ char const *__restrict filler, size_t filler_size) const {          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "$s", width, filler_size, filler)); \
 	}
 	DEFINE_CENTER_FUNCTION(center)
 	DEFINE_CENTER_FUNCTION(ljust)
@@ -584,67 +584,67 @@ public: /* string from deemon */
 	DEFINE_CENTER_FUNCTION(zfill)
 #undef DEFINE_CENTER_FUNCTION
 	WUNUSED string expandtabs() const {
-		return inherit(DeeObject_CallAttrString(*this, "expandtabs", 0, NULL));
+		return inherit(DeeObject_CallAttrString(this->ptr(), "expandtabs", 0, NULL));
 	}
 	WUNUSED string expandtabs(size_t tab_width) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "expandtabs", DEE_PCKuSIZ, tab_width));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "expandtabs", DEE_PCKuSIZ, tab_width));
 	}
-#define DEFINE_UNIFYLINES(name, replacement)                                                            \
-	WUNUSED string(name)() const {                                                                      \
-		return inherit(DeeObject_CallAttrString(*this, #name, 0, NULL));                                \
-	}                                                                                                   \
-	WUNUSED string(name)(DeeObject *replacement) const {                                                \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", replacement));                      \
-	}                                                                                                   \
-	WUNUSED string(name)(/*utf-8*/ char const *__restrict replacement) const {                          \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", replacement));                      \
-	}                                                                                                   \
-	WUNUSED string(name)(/*utf-8*/ char const *__restrict replacement, size_t replacement_size) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", replacement_size, replacement));   \
+#define DEFINE_UNIFYLINES(name, replacement)                                                                \
+	WUNUSED string(name)() const {                                                                          \
+		return inherit(DeeObject_CallAttrString(this->ptr(), #name, 0, NULL));                              \
+	}                                                                                                       \
+	WUNUSED string(name)(DeeObject *replacement) const {                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", replacement));                    \
+	}                                                                                                       \
+	WUNUSED string(name)(/*utf-8*/ char const *__restrict replacement) const {                              \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", replacement));                    \
+	}                                                                                                       \
+	WUNUSED string(name)(/*utf-8*/ char const *__restrict replacement, size_t replacement_size) const {     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "$s", replacement_size, replacement)); \
 	}
 	DEFINE_UNIFYLINES(unifylines, replacement)
 	DEFINE_UNIFYLINES(indent, filler)
 #undef DEFINE_UNIFYLINES
 	WUNUSED string join(DeeObject *seq) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "join", "o", seq));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "join", "o", seq));
 	}
 	WUNUSED string join(std::initializer_list<DeeObject *> const &seq) const {
 		Tuple<Object> seq_obj(seq);
-		return inherit(DeeObject_CallAttrStringf(*this, "join", "o", seq_obj.ptr()));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "join", "o", seq_obj.ptr()));
 	}
 #define DEFINE_SPLIT_FUNCTION(name)                                                               \
 	WUNUSED Sequence<string>(name)(DeeObject *sep) const {                                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", sep));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", sep));                  \
 	}                                                                                             \
 	WUNUSED Sequence<string>(name)(/*utf-8*/ char const *__restrict sep) const {                  \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", sep));                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", sep));                  \
 	}                                                                                             \
 	WUNUSED Sequence<string>(name)(/*utf-8*/ char const *__restrict sep, size_t sep_size) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", sep_size, sep));             \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "$s", sep_size, sep));       \
 	}
 	DEFINE_SPLIT_FUNCTION(split)
 	DEFINE_SPLIT_FUNCTION(casesplit)
 #undef DEFINE_SPLIT_FUNCTION
 	WUNUSED Sequence<string> splitlines() const {
-		return inherit(DeeObject_CallAttrString(*this, "splitlines", 0, NULL));
+		return inherit(DeeObject_CallAttrString(this->ptr(), "splitlines", 0, NULL));
 	}
 	WUNUSED Sequence<string> splitlines(bool keepends) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "join", "b", keepends));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "join", "b", keepends));
 	}
 	WUNUSED string dedent() const {
-		return inherit(DeeObject_CallAttrString(*this, "dedent", 0, NULL));
+		return inherit(DeeObject_CallAttrString(this->ptr(), "dedent", 0, NULL));
 	}
 	WUNUSED string dedent(size_t max_chars) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "dedent", DEE_PCKuSIZ, max_chars));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "dedent", DEE_PCKuSIZ, max_chars));
 	}
 	WUNUSED string dedent(size_t max_chars, DeeObject *mask) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "dedent", DEE_PCKuSIZ "o", max_chars, mask));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "dedent", DEE_PCKuSIZ "o", max_chars, mask));
 	}
 	WUNUSED string dedent(size_t max_chars, /*utf-8*/ char const *__restrict mask) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "dedent", DEE_PCKuSIZ "s", max_chars, mask));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "dedent", DEE_PCKuSIZ "s", max_chars, mask));
 	}
 	WUNUSED string dedent(size_t max_chars, /*utf-8*/ char const *__restrict mask, size_t mask_size) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "dedent", DEE_PCKuSIZ "$s", max_chars, mask_size, mask));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "dedent", DEE_PCKuSIZ "$s", max_chars, mask_size, mask));
 	}
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                     \
 	inline WUNUSED Treturn(name)(DeeObject *open, DeeObject *close) const;                                                           \
@@ -670,40 +670,40 @@ public: /* string from deemon */
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                           \
 	WUNUSED Treturn(name)(DeeObject *open, DeeObject *close) const {                                                                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", open, close));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo", open, close));                                                  \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(DeeObject *open, DeeObject *close, size_t start) const {                                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ, open, close, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ, open, close, start));                               \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(DeeObject *open, DeeObject *close, size_t start, size_t end) const {                                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));              \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(DeeObject *open, /*utf-8*/ char const *__restrict close) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", open, close));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os", open, close));                                                  \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(DeeObject *open, /*utf-8*/ char const *__restrict close, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ, open, close, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ, open, close, start));                               \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(DeeObject *open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));              \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *close) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so", open, close));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so", open, close));                                                  \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *close, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ, open, close, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ, open, close, start));                               \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *close, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));              \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss", open, close));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss", open, close));                                                  \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ, open, close, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ, open, close, start));                               \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));              \
 	}
 	DEFINE_FINDMATCH_FUNCTION(Sequence<string>, partitionmatch)
 	DEFINE_FINDMATCH_FUNCTION(Sequence<string>, rpartitionmatch)
@@ -711,16 +711,16 @@ public: /* string from deemon */
 	DEFINE_FINDMATCH_FUNCTION(Sequence<string>, caserpartitionmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 	WUNUSED Sequence<string> segments(size_t substring_length) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "segments", DEE_PCKuSIZ, substring_length));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "segments", DEE_PCKuSIZ, substring_length));
 	}
 	WUNUSED Sequence<string> segments(DeeObject *substring_length) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "segments", "o", substring_length));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "segments", "o", substring_length));
 	}
 	WUNUSED Sequence<string> distribute(size_t substring_count) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "distribute", DEE_PCKuSIZ, substring_count));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "distribute", DEE_PCKuSIZ, substring_count));
 	}
 	WUNUSED Sequence<string> distribute(DeeObject *substring_count) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "distribute", "o", substring_count));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "distribute", "o", substring_count));
 	}
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                           \
 	inline WUNUSED Treturn(name)(DeeObject *pattern) const;                                                                                         \
@@ -759,82 +759,82 @@ public: /* string from deemon */
 #undef DEFINE_RE_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                     \
 	WUNUSED Treturn(name)(DeeObject *pattern) const {                                                                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", pattern));                                                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", pattern));                                                          \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, DeeObject *rules) const {                                                                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", pattern, rules));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo", pattern, rules));                                                  \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, /*utf-8*/ char const *__restrict rules) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", pattern, rules));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os", pattern, rules));                                                  \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start) const {                                                                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, pattern, start));                                             \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, pattern, start));                                       \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, DeeObject *rules, size_t start) const {                                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ, pattern, rules, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ, pattern, rules, start));                               \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ, pattern, rules, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ, pattern, rules, start));                               \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start, size_t end) const {                                                               \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                      \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, DeeObject *rules, size_t start, size_t end) const {                                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));              \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));              \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start, DeeObject *rules) const {                                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ "o", pattern, start, rules));                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ "o", pattern, start, rules));                            \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start, size_t end, DeeObject *rules) const {                                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));           \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ "s", pattern, start, rules));                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ "s", pattern, start, rules));                            \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(DeeObject *pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));           \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern) const {                                                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", pattern));                                                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", pattern));                                                          \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, DeeObject *rules) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so", pattern, rules));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so", pattern, rules));                                                  \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss", pattern, rules));                                                        \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss", pattern, rules));                                                  \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start) const {                                                     \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ, pattern, start));                                             \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ, pattern, start));                                       \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, DeeObject *rules, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ, pattern, rules, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ, pattern, rules, start));                               \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ, pattern, rules, start));                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ, pattern, rules, start));                               \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end) const {                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                      \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, DeeObject *rules, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));              \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));              \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start, DeeObject *rules) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ "o", pattern, start, rules));                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ "o", pattern, start, rules));                            \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end, DeeObject *rules) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));           \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ "s", pattern, start, rules));                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ "s", pattern, start, rules));                            \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));           \
 	}
 	DEFINE_RE_FUNCTION(string, relocate)
 	DEFINE_RE_FUNCTION(string, rerlocate)
@@ -850,108 +850,108 @@ public: /* string from deemon */
 	DEFINE_RE_FUNCTION(deemon::bool_, recontains)
 #undef DEFINE_RE_FUNCTION
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oo", pattern, repl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oo", pattern, repl));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oo" DEE_PCKuSIZ, pattern, repl, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oo" DEE_PCKuSIZ, pattern, repl, maxcount));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "os", pattern, repl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "os", pattern, repl));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "os" DEE_PCKuSIZ, pattern, repl, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "os" DEE_PCKuSIZ, pattern, repl, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "so", pattern, repl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "so", pattern, repl));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "so" DEE_PCKuSIZ, pattern, repl, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "so" DEE_PCKuSIZ, pattern, repl, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ss", pattern, repl));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ss", pattern, repl));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ss" DEE_PCKuSIZ, pattern, repl, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ss" DEE_PCKuSIZ, pattern, repl, maxcount));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ooo", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ooo", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, size_t maxcount, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oo" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oo" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, DeeObject *rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ooo" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ooo" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oso", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oso", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "os" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "os" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, DeeObject *rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oso" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oso" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "soo", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "soo", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, size_t maxcount, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "so" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "so" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, DeeObject *rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "soo" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "soo" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sso", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sso", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount, DeeObject *rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ss" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ss" DEE_PCKuSIZ "o", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, DeeObject *rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sso" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sso" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oos", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oos", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, size_t maxcount, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oo" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oo" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, DeeObject *repl, /*utf-8*/ char const *__restrict rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oos" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oos" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oss", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oss", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "os" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "os" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(DeeObject *pattern, /*utf-8*/ char const *__restrict repl, /*utf-8*/ char const *__restrict rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "oss" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "oss" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sos", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sos", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, size_t maxcount, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "so" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "so" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, DeeObject *repl, /*utf-8*/ char const *__restrict rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sos" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sos" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sss", pattern, repl, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sss", pattern, repl, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, size_t maxcount, /*utf-8*/ char const *__restrict rules) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "ss" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "ss" DEE_PCKuSIZ "s", pattern, repl, maxcount, rules));
 	}
 	WUNUSED string rereplace(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict repl, /*utf-8*/ char const *__restrict rules, size_t maxcount) const {
-		return inherit(DeeObject_CallAttrStringf(*this, "rereplace", "sss" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "rereplace", "sss" DEE_PCKuSIZ, pattern, repl, rules, maxcount));
 	}
 
 public:
 	WUNUSED string add(DeeObject *right) const {
-		return inherit(DeeObject_Add(*this, right));
+		return inherit(DeeObject_Add(this->ptr(), right));
 	}
 	WUNUSED string operator+(DeeObject *right) const {
-		return inherit(DeeObject_Add(*this, right));
+		return inherit(DeeObject_Add(this->ptr(), right));
 	}
 	WUNUSED string &inplace_add(DeeObject *right) {
 		Sequence<string>::inplace_add(right);
@@ -962,19 +962,19 @@ public:
 		return *this;
 	}
 	WUNUSED string mul(DeeObject *n) const {
-		return inherit(DeeObject_Mul(*this, n));
+		return inherit(DeeObject_Mul(this->ptr(), n));
 	}
 	WUNUSED string mul(int8_t n) const {
-		return inherit(DeeObject_MulInt(*this, n));
+		return inherit(DeeObject_MulInt(this->ptr(), n));
 	}
 	WUNUSED string mul(size_t n) const {
 		return inherit(_mulref(n));
 	}
 	WUNUSED string operator*(DeeObject *n) const {
-		return inherit(DeeObject_Mul(*this, n));
+		return inherit(DeeObject_Mul(this->ptr(), n));
 	}
 	WUNUSED string operator*(int8_t n) const {
-		return inherit(DeeObject_MulInt(*this, n));
+		return inherit(DeeObject_MulInt(this->ptr(), n));
 	}
 	WUNUSED string operator*(size_t n) const {
 		return inherit(_mulref(n));
@@ -1008,68 +1008,68 @@ public:
 
 #ifdef GUARD_DEEMON_CXX_INT_H
 inline WUNUSED deemon::int_ string::asnumber() const {
-	return inherit(DeeObject_CallAttrString(*this, "asnumber", 0, NULL));
+	return inherit(DeeObject_CallAttrString(this->ptr(), "asnumber", 0, NULL));
 }
 inline WUNUSED deemon::int_ string::asnumber(size_t index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asnumber", DEE_PCKuSIZ, index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ, index));
 }
 inline WUNUSED deemon::int_ string::asnumber(size_t index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asnumber", DEE_PCKuSIZ "d", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ "d", index, defl));
 }
 inline WUNUSED deemon::int_ string::asnumber(DeeObject *__restrict index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asnumber", "o", index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "o", index));
 }
 inline WUNUSED deemon::int_ string::asnumber(DeeObject *__restrict index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asnumber", "od", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "od", index, defl));
 }
 inline WUNUSED deemon::int_ string::asdigit() const {
-	return inherit(DeeObject_CallAttrString(*this, "asdigit", 0, NULL));
+	return inherit(DeeObject_CallAttrString(this->ptr(), "asdigit", 0, NULL));
 }
 inline WUNUSED deemon::int_ string::asdigit(size_t index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdigit", DEE_PCKuSIZ, index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", DEE_PCKuSIZ, index));
 }
 inline WUNUSED deemon::int_ string::asdigit(size_t index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdigit", DEE_PCKuSIZ "d", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", DEE_PCKuSIZ "d", index, defl));
 }
 inline WUNUSED deemon::int_ string::asdigit(DeeObject *__restrict index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdigit", "o", index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "o", index));
 }
 inline WUNUSED deemon::int_ string::asdigit(DeeObject *__restrict index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdigit", "od", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "od", index, defl));
 }
 inline WUNUSED deemon::int_ string::asdecimal() const {
-	return inherit(DeeObject_CallAttrString(*this, "asdecimal", 0, NULL));
+	return inherit(DeeObject_CallAttrString(this->ptr(), "asdecimal", 0, NULL));
 }
 inline WUNUSED deemon::int_ string::asdecimal(size_t index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", DEE_PCKuSIZ, index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ, index));
 }
 inline WUNUSED deemon::int_ string::asdecimal(size_t index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", DEE_PCKuSIZ "d", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ "d", index, defl));
 }
 inline WUNUSED deemon::int_ string::asdecimal(DeeObject *__restrict index) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", "o", index));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "o", index));
 }
 inline WUNUSED deemon::int_ string::asdecimal(DeeObject *__restrict index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", "od", index, defl));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "od", index, defl));
 }
-#define DEFINE_FIND_FUNCTION(Treturn, name, needle)                                                                 \
-	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", needle));                                       \
-	}                                                                                                               \
-	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle, size_t start) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ, needle, start));                              \
-	}                                                                                                               \
-	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end));                       \
-	}                                                                                                               \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", needle));                                       \
-	}                                                                                                               \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, needle, start));                              \
-	}                                                                                                               \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start, size_t end) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end));                       \
+#define DEFINE_FIND_FUNCTION(Treturn, name, needle)                                                                     \
+	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle) const {                               \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", needle));                                     \
+	}                                                                                                                   \
+	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle, size_t start) const {                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ, needle, start));                  \
+	}                                                                                                                   \
+	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const {     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
+	}                                                                                                                   \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle) const {                                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", needle));                                     \
+	}                                                                                                                   \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start) const {                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, needle, start));                  \
+	}                                                                                                                   \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start, size_t end) const {                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, needle, start, end)); \
 	}
 DEFINE_FIND_FUNCTION(deemon::int_, find, needle)
 DEFINE_FIND_FUNCTION(deemon::int_, rfind, needle)
@@ -1084,51 +1084,51 @@ DEFINE_FIND_FUNCTION(deemon::int_, caseindex, needle)
 DEFINE_FIND_FUNCTION(deemon::int_, caserindex, needle)
 DEFINE_FIND_FUNCTION(deemon::int_, casecount, needle)
 #undef DEFINE_FIND_FUNCTION
-#define DEFINE_COMPARE_FUNCTION(Treturn, name)                                                                                                                         \
-	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict other) const {                                                                               \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", other));                                                                                           \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict other, size_t other_size) const {                                                            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", other_size, other));                                                                              \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, /*utf-8*/ char const *__restrict other) const {                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "s", my_start, other));                                                                     \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "$s", my_start, other_size, other));                                                        \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other) const {                                               \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "s", my_start, my_end, other));                                                 \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {                            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "$s", my_start, my_end, other_size, other));                                    \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other) const {                                                                                          \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", other));                                                                                           \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start) const {                                                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, other, other_start));                                                                  \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, other, other_start, other_end));                                           \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other) const {                                                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o", my_start, other));                                                                     \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start) const {                                                     \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, other, other_start));                                            \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, other, other_start, other_end));                     \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other) const {                                                          \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o", my_start, my_end, other));                                                 \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, my_end, other, other_start));                        \
-	}                                                                                                                                                                  \
-	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, my_end, other, other_start, other_end)); \
+#define DEFINE_COMPARE_FUNCTION(Treturn, name)                                                                                                                               \
+	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict other) const {                                                                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", other));                                                                                           \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict other, size_t other_size) const {                                                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "$s", other_size, other));                                                                              \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, /*utf-8*/ char const *__restrict other) const {                                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "s", my_start, other));                                                                     \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "$s", my_start, other_size, other));                                                        \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other) const {                                                     \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "s", my_start, my_end, other));                                                 \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {                                  \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "$s", my_start, my_end, other_size, other));                                    \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other) const {                                                                                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", other));                                                                                           \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start) const {                                                                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, other, other_start));                                                                  \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, other, other_start, other_end));                                           \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other) const {                                                                               \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o", my_start, other));                                                                     \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start) const {                                                           \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, other, other_start));                                            \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                         \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, other, other_start, other_end));                     \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other) const {                                                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o", my_start, my_end, other));                                                 \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start) const {                                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ, my_start, my_end, other, other_start));                        \
+	}                                                                                                                                                                        \
+	inline WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                          \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, DEE_PCKuSIZ DEE_PCKuSIZ "o" DEE_PCKuSIZ DEE_PCKuSIZ, my_start, my_end, other, other_start, other_end)); \
 	}
 DEFINE_COMPARE_FUNCTION(deemon::int_, compare)
 DEFINE_COMPARE_FUNCTION(deemon::int_, vercompare)
@@ -1145,40 +1145,40 @@ DEFINE_COMPARE_FUNCTION(deemon::int_, casercommon)
 #undef DEFINE_COMPARE_FUNCTION
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                                          \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", open, close));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo", open, close));                                                                 \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ, open, close, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ, open, close, start));                                              \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                             \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", open, close));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os", open, close));                                                                 \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ, open, close, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ, open, close, start));                                              \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                             \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so", open, close));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so", open, close));                                                                 \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close, size_t start) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ, open, close, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ, open, close, start));                                              \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                             \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss", open, close));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss", open, close));                                                                 \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ, open, close, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ, open, close, start));                                              \
 	}                                                                                                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, open, close, start, end));                             \
 	}
 DEFINE_FINDMATCH_FUNCTION(deemon::int_, findmatch)
 DEFINE_FINDMATCH_FUNCTION(deemon::int_, indexmatch)
@@ -1191,82 +1191,82 @@ DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>, caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                                    \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern) const {                                                                              \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", pattern));                                                                               \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o", pattern));                                                                         \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules) const {                                                 \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", pattern, rules));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo", pattern, rules));                                                                 \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", pattern, rules));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os", pattern, rules));                                                                 \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start) const {                                                                \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ, pattern, start));                                                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ, pattern, start));                                                      \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ, pattern, rules, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ, pattern, rules, start));                                              \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ, pattern, rules, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ, pattern, rules, start));                                              \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end) const {                                                    \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                                           \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                                     \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start, size_t end) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "oo" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                             \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "os" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                             \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, DeeObject *__restrict rules) const {                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ "o", pattern, start, rules));                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ "o", pattern, start, rules));                                           \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end, DeeObject *__restrict rules) const {                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                          \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ "s", pattern, start, rules));                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ "s", pattern, start, rules));                                           \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "o" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                          \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern) const {                                                                   \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s", pattern));                                                                               \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s", pattern));                                                                         \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, DeeObject *__restrict rules) const {                                      \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so", pattern, rules));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so", pattern, rules));                                                                 \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss", pattern, rules));                                                                       \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss", pattern, rules));                                                                 \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start) const {                                                     \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ, pattern, start));                                                            \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ, pattern, start));                                                      \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, DeeObject *__restrict rules, size_t start) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ, pattern, rules, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ, pattern, rules, start));                                              \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ, pattern, rules, start));                                                    \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ, pattern, rules, start));                                              \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end) const {                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                                           \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, start, end));                                     \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, DeeObject *__restrict rules, size_t start, size_t end) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "so" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                             \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                                   \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "ss" DEE_PCKuSIZ DEE_PCKuSIZ, pattern, rules, start, end));                             \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start, DeeObject *__restrict rules) const {                        \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ "o", pattern, start, rules));                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ "o", pattern, start, rules));                                           \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end, DeeObject *__restrict rules) const {            \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "o", pattern, start, end, rules));                          \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ "s", pattern, start, rules));                                                 \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ "s", pattern, start, rules));                                           \
 	}                                                                                                                                                        \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                                \
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), #name, "s" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));                          \
 	}
 DEFINE_RE_FUNCTION(deemon::int_, rematch)
 DEFINE_RE_FUNCTION(Sequence<deemon::int_>, refind)
@@ -1280,73 +1280,73 @@ DEFINE_RE_FUNCTION(deemon::int_, recount)
 
 #ifdef GUARD_DEEMON_CXX_FILE_H
 inline string(File::filename)() const {
-	return inherit(DeeFile_Filename(*this));
+	return inherit(DeeFile_Filename(this->ptr()));
 }
 inline deemon::string(File::Writer::string)() const {
 	return inherit(DeeObject_InstanceOfExact(this->ptr(),
 	                                         (DeeTypeObject *)&DeeFileWriter_Type)
-	               ? DeeFileWriter_GetString(*this)
-	               : DeeObject_GetAttrString(*this, "string"));
+	               ? DeeFileWriter_GetString(this->ptr())
+	               : DeeObject_GetAttrString(this->ptr(), "string"));
 }
 #endif /* GUARD_DEEMON_CXX_FILE_H */
 
 #ifdef GUARD_DEEMON_CXX_BYTES_H
 inline WUNUSED Bytes(string::bytes)() const {
-	return inherit(DeeObject_CallAttrString(*this, "bytes", 0, NULL));
+	return inherit(DeeObject_CallAttrString(this->ptr(), "bytes", 0, NULL));
 }
 inline WUNUSED Bytes(string::bytes)(bool allow_invalid) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "bytes", "b", allow_invalid));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "bytes", "b", allow_invalid));
 }
 inline WUNUSED Bytes(string::bytes)(size_t start, size_t end) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "bytes", DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "bytes", DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 }
 inline WUNUSED Bytes(string::bytes)(size_t start, size_t end, bool allow_invalid) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "bytes", DEE_PCKuSIZ DEE_PCKuSIZ "b", start, end, allow_invalid));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "bytes", DEE_PCKuSIZ DEE_PCKuSIZ "b", start, end, allow_invalid));
 }
 inline WUNUSED Bytes(string::encode)(/*utf-8*/ char const *__restrict codec_name) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "s", codec_name));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "s", codec_name));
 }
 inline WUNUSED Bytes(string::encode)(obj_string codec_name) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "o", (DeeObject *)codec_name));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "o", (DeeObject *)codec_name));
 }
 inline WUNUSED Bytes(string::encode)(/*utf-8*/ char const *__restrict codec_name, /*utf-8*/ char const *__restrict errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "ss", codec_name, errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "ss", codec_name, errors));
 }
 inline WUNUSED Bytes(string::encode)(/*utf-8*/ char const *__restrict codec_name, obj_string errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "so", codec_name, (DeeObject *)errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "so", codec_name, (DeeObject *)errors));
 }
 inline WUNUSED Bytes(string::encode)(obj_string codec_name, /*utf-8*/ char const *__restrict errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "os", (DeeObject *)codec_name, errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "os", (DeeObject *)codec_name, errors));
 }
 inline WUNUSED Bytes(string::encode)(obj_string codec_name, obj_string errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "encode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "encode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
 }
 inline WUNUSED string(Bytes::decode)(/*utf-8*/ char const *__restrict codec_name) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "s", codec_name));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "s", codec_name));
 }
 inline WUNUSED string(Bytes::decode)(obj_string codec_name) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "o", (DeeObject *)codec_name));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "o", (DeeObject *)codec_name));
 }
 inline WUNUSED string(Bytes::decode)(/*utf-8*/ char const *__restrict codec_name, /*utf-8*/ char const *__restrict errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "ss", codec_name, errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "ss", codec_name, errors));
 }
 inline WUNUSED string(Bytes::decode)(/*utf-8*/ char const *__restrict codec_name, obj_string errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "so", codec_name, (DeeObject *)errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "so", codec_name, (DeeObject *)errors));
 }
 inline WUNUSED string(Bytes::decode)(obj_string codec_name, /*utf-8*/ char const *__restrict errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "os", (DeeObject *)codec_name, errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "os", (DeeObject *)codec_name, errors));
 }
 inline WUNUSED string(Bytes::decode)(obj_string codec_name, obj_string errors) const {
-	return inherit(DeeObject_CallAttrStringf(*this, "decode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "decode", "oo", (DeeObject *)codec_name, (DeeObject *)errors));
 }
 #endif /* GUARD_DEEMON_CXX_BYTES_H */
 
 
 inline string Object::str() const {
-	return inherit(DeeObject_Str(*this));
+	return inherit(DeeObject_Str(this->ptr()));
 }
 inline string Object::repr() const {
-	return inherit(DeeObject_Repr(*this));
+	return inherit(DeeObject_Repr(this->ptr()));
 }
 inline string str(DeeObject *__restrict ob) {
 	return inherit(DeeObject_Str(ob));
