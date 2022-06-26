@@ -309,7 +309,6 @@ INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 	tok_begin = peek_next_token(&tok_file);
 	if unlikely(!tok_begin)
 		goto err;
-	/* TODO: This false detects `+' as valid, but doesn't consider something like `+=' */
 	peek = *tok_begin;
 	switch (peek) {
 
@@ -1317,9 +1316,26 @@ err_restore_pos:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if unlikely(yield() < 0)
 				goto err;
-			/* TODO: If the current token is ':', try to skip over the return type
-			 *       annotation and check if the next token thereafter is '->' or '{'. */
-			if (tok == '(' || tok == '{' || tok == TOK_ARROW || tok == '@') {
+			if (tok == ':') {
+				/* If the current token is ':', try to skip over the return type
+				 * annotation and check if the next token thereafter is '->' or '{'. */
+				tok_t token_after;
+				struct TPPLexerPosition saved;
+				if unlikely(!TPPLexer_SavePosition(&saved))
+					goto err;
+				if unlikely(yield() < 0) {
+err_restore_pos_in_old_lambda:
+					TPPLexer_LoadPosition(&saved);
+					goto err;
+				}
+				if unlikely(decl_ast_skip())
+					goto err_restore_pos_in_old_lambda;
+				token_after = tok;
+				TPPLexer_LoadPosition(&saved);
+				if (token_after == '{' || token_after == TOK_ARROW)
+					goto do_lambda; /* Yup: it's a lambda! */
+			}
+			if (tok == '(' || tok == '{' || tok == TOK_ARROW) {
 do_lambda:
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;

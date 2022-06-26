@@ -1014,7 +1014,16 @@ done_y1:
 			saved_jl_tok      = self->jl_tok;
 			saved_jl_tokstart = self->jl_tokstart;
 			saved_jl_tokend   = self->jl_tokend;
+
 #ifdef JIT_EVAL
+			/* FIXME: We can't just blindly skip over what (we think) is an argument list:
+			 * >> true ? ([]) : int -> 42
+			 * This example has to be parsed as `true ? List({}) : [](int) { return 42; }'
+			 * But because we're skipping over everything inside of arguments, we end up
+			 * trying to parse it as: `true ? []([]): int { return 42; } : none', which
+			 * later causes an error:            ^
+			 *                         Expected a keyword as argument name, but got `['
+			 */
 			param_end = self->jl_tokstart;
 			recursion = 1;
 			for (;;) {
@@ -1147,8 +1156,9 @@ not_a_java_lambda:
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
 #ifdef JIT_EVAL
-				param_end = param_start = self->jl_tokstart;
-				recursion               = 1;
+				param_start = self->jl_tokstart;
+				param_end   = param_start;
+				recursion   = 1;
 				while (self->jl_tok) {
 					if (self->jl_tok == '(') {
 						++recursion;
@@ -1246,8 +1256,28 @@ not_a_java_lambda:
 					goto err;
 				}
 			}
-			/* TODO: If the current token is ':', try to skip over the return type
-			 *       annotation and check if the next token thereafter is '->' or '{'. */
+
+			if (self->jl_tok == ':') {
+				/* If the current token is ':', try to skip over the return type
+				 * annotation and check if the next token thereafter is '->' or '{'. */
+				/*utf-8*/ unsigned char *saved_jl_tokstart;
+				/*utf-8*/ unsigned char *saved_jl_tokend;
+				saved_jl_tokstart = self->jl_tokstart;
+				saved_jl_tokend   = self->jl_tokend;
+				JITLexer_Yield(self);
+				if (JITLexer_SkipTypeAnnotation(self, false) == 0 &&
+				    (self->jl_tok == TOK_ARROW || self->jl_tok == '{')) {
+					/* Jup: this must be a lambda! */
+
+					/* fallthru to the proper handler below. */
+				} else {
+					/* Rewind... */
+					self->jl_tok      = ':';
+					self->jl_tokstart = saved_jl_tokstart;
+					self->jl_tokend   = saved_jl_tokend;
+				}
+			}
+
 			if (self->jl_tok == TOK_ARROW) {
 #ifdef JIT_EVAL
 				/* Lambda function. */

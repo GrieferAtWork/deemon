@@ -138,10 +138,12 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
 		 * >> }
 		 * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
 		 * Semantically comparable to:
-		 * >> return rt.RoDict(for (local key, id: kw)
-		 * >> 	if (key !in __code__.__kwds__)
-		 * >> 		(key, __argv__[#__argv__ + id])
-		 * >> 	); */
+		 * >> return rt.RoDict(
+		 * >> 	for (local key, id: kw)
+		 * >> 		if (key !in __code__.__kwds__)
+		 * >> 			(key, __argv__[(#__argv__ - #__code__.__kwds__) + id])
+		 * >> );
+		 */
 		result = BlackListVarkwds_New(code,
 		                              frame->cf_argc,
 		                              (DeeKwdsObject *)kw,
@@ -151,10 +153,11 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
 		 *               of all keys that are equal to one of the strings found
 		 *               within our keyword list.
 		 * Semantically comparable to:
-		 * >> return rt.RoDict(for (local key, item: kw)
-		 * >> 	if (key !in __code__.__kwds__)
-		 * >> 		(key, item)
-		 * >> 	);
+		 * >> return rt.RoDict(
+		 * >> 	for (local key, item: kw)
+		 * >> 		if (key !in __code__.__kwds__)
+		 * >> 			(key, item)
+		 * >> );
 		 */
 		result = BlackListMapping_New(code, frame->cf_argc, kw);
 	}

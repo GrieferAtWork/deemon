@@ -3014,14 +3014,18 @@ class Doc: WeakRefAble {
 	public final property path: string | none = {
 		get(): string {
 			if (m_path !is bound) {
-				local par = parent;
-				if (par is none) {
-					m_path = ismodule ? "/" + name : none;
+				if (name is none) {
+					m_path = none;
 				} else {
-					par = parent.path;
-					m_path = par is none
-						? none
-						: "{}/{}".format({ par, name });
+					local par = parent;
+					if (par is none) {
+						m_path = ismodule ? "/" + name : none;
+					} else {
+						par = parent.path;
+						m_path = par is none
+							? none
+							: "{}/{}".format({ par, name });
+					}
 				}
 			}
 			return m_path;
@@ -3036,20 +3040,24 @@ class Doc: WeakRefAble {
 	public final property qualpath: string = {
 		get(): string {
 			if (m_qualified_path !is bound) {
-				local par = parent;
-				if (par is none) {
-					m_qualified_path = "?U" + encodeName(name);
-				} else if (par.ismodule) {
-					m_qualified_path = "?E{}:{}".format({
-						/* TODO: This only works for global modules! */
-						encodeName(par.name),
-						encodeName(name),
-					});
+				if (name is none) {
+					m_qualified_path = "?Uunknown";
 				} else {
-					m_qualified_path = "?A{}{}".format({
-						encodeName(name),
-						par.qualpath,
-					});
+					local par = parent;
+					if (par is none) {
+						m_qualified_path = "?U" + encodeName(name);
+					} else if (par.ismodule) {
+						m_qualified_path = "?E{}:{}".format({
+							/* TODO: This only works for global modules! */
+							encodeName(par.name),
+							encodeName(name),
+						});
+					} else {
+						m_qualified_path = "?A{}{}".format({
+							encodeName(name),
+							par.qualpath,
+						});
+					}
 				}
 			}
 			return m_qualified_path;
@@ -3060,10 +3068,12 @@ class Doc: WeakRefAble {
 	@@The name of this documentation object (last component of @path, stripped of its namespace prefix)
 	@@Note the namespace prefix will have already been stripped from this string, though
 	@@its typing can be recreated with the attributes @isclassattr and @isoperator
-	public final member name: string;
+	@@
+	@@May be set to @none when the name is unknown or not available (e.g. if @object is an anonymous function)
+	public final member name: string | none;
 
 	@@Returns the name of type, or @name if @istype is @false, or if the type is anonymous
-	public final property typename: string = {
+	public final property typename: string | none = {
 		get(): string {
 			local result = none;
 			if (istype && object is bound)
@@ -3074,7 +3084,7 @@ class Doc: WeakRefAble {
 
 	@@Similar to @name, but if @this Doc node is an operator, return
 	@@that operator's name in the form of @"==", rather than @"eq"
-	public final property prettyname: string = {
+	public final property prettyname: string | none = {
 		get(): string {
 			if (isoperator) {
 				local res = PRETTY_OPERATOR_NAMES.get(name);
@@ -3087,7 +3097,7 @@ class Doc: WeakRefAble {
 
 	@@Similar to @prettyname, but include an @"operator"
 	@@prefix when @this Doc node describes an operator.
-	public final property prettypathname: string = {
+	public final property prettypathname: string | none = {
 		get(): string {
 			if (isoperator) {
 				local res = PRETTY_OPERATOR_NAMES.get(name);
@@ -3112,7 +3122,7 @@ class Doc: WeakRefAble {
 	@@Similar to @path, but return in a form akin to @"deemon.string.operator =="
 	@@Additionally, this name representation still provides good-looking results
 	@@when @path would evaluate to @none
-	public final property prettypath: string = {
+	public final property prettypath: string | none = {
 		get(): string {
 			local result = path;
 			if (result is none) {
@@ -3151,7 +3161,7 @@ class Doc: WeakRefAble {
 	public final property attr: Attribute | none = {
 		get(): Attribute | none {
 			if (m_attr !is bound) {
-				if (isoperator || parent is none)
+				if (isoperator || parent is none || name is none)
 					m_attr = none;
 				else {
 					m_attr = Attribute(parent.object, name);
@@ -3261,7 +3271,7 @@ load_type_input:
 					doc_parent_or_path = tp;
 					goto load_type_input;
 				}
-				name = doc_parent_or_path.__name__;
+				name = doc_parent_or_path.__name__; /* NOTE: This may return `none'! */
 				local ds = doc_parent_or_path.__doc__;
 				if (ds is none)
 					ds = "";

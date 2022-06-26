@@ -175,10 +175,7 @@ typedef struct {
 	                                                          *       field doesn't actually carry a reference. */
 	size_t                                         bm_ckwc;  /* [const][!0] Number of black-listed keywords */
 	struct string_object *const                   *bm_ckwv;  /* [1..1][const][1..vk_ckwc][const] Vector of black-listed keywords. */
-	DREF DeeObject                                *bm_kw;    /* [1..1][const] The underlying mapping which is being affected.
-	                                                          * NOTE: If revived during unsharing, the object in this field
-	                                                          *       gets incref'd, meaning that before that point, this
-	                                                          *       field doesn't actually carry a reference. */
+	DREF DeeObject                                *bm_kw;    /* [1..1][const] The underlying mapping which is being affected. */
 	size_t                                         bm_load;  /* [lock(vk_lock, INCREMENT_ONLY)][<= bm_ckwc]
 	                                                          * Index of the next keyword which has yet to be loaded into
 	                                                          * the `vk_blck' hash-set for blacklisted identifiers. */
