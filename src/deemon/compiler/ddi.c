@@ -539,8 +539,7 @@ do_realloc_bind:
 						result      = new_result;
 						result_size = new_alloc - (size_t)(code_iter - result->d_ddi);
 					}
-					memcpy(code_iter, bind_buffer, bind_size);
-					code_iter += bind_size;
+					code_iter = (uint8_t *)mempcpy(code_iter, bind_buffer, bind_size);
 					result_size -= bind_size;
 				}
 			}
@@ -605,8 +604,7 @@ do_realloc:
 				result      = new_result;
 				result_size = new_alloc - (size_t)(code_iter - result->d_ddi);
 			}
-			memcpy(code_iter, buffer, text_size);
-			code_iter += text_size;
+			code_iter = (uint8_t *)mempcpy(code_iter, buffer, text_size);
 			result_size -= text_size;
 		}
 		if (!did_last) {

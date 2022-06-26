@@ -1180,9 +1180,10 @@ bytes_resized(Bytes *self,
 		if (new_size <= DeeBytes_SIZE(self)) {
 			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
 		} else {
+			void *endptr;
 			size_t old_size = DeeBytes_SIZE(self);
-			memcpy(result->b_data, DeeBytes_DATA(self), old_size);
-			memset(result->b_data + old_size, init, new_size - old_size);
+			endptr = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
+			memset(endptr, init, new_size - old_size);
 		}
 	}
 	return result;

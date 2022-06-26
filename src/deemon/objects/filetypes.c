@@ -315,10 +315,11 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 		DeeFile_LockWrite(me);
 		if likely(data_copy || !size) {
 			/* Copy the stream's data */
-			memcpy(data_copy, me->mf_begin, (size_t)(me->mf_end - me->mf_begin));
-			me->mf_end   = (char *)data_copy + (me->mf_end - me->mf_begin);
-			me->mf_ptr   = (char *)data_copy + (me->mf_ptr - me->mf_begin);
-			me->mf_begin = (char *)data_copy;
+			void *data_copy_end;
+			data_copy_end = mempcpy(data_copy, me->mf_begin, (size_t)(me->mf_end - me->mf_begin));
+			me->mf_end    = (char *)data_copy_end;
+			me->mf_ptr    = (char *)data_copy_end;
+			me->mf_begin  = (char *)data_copy;
 		} else {
 			/* Failed to copy data. - Fallback by deleting the
 			 * stream's data so it becomes weak undefined behavior... */
@@ -358,7 +359,7 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 			result = bufsize;
 		/* Copy data into the given buffer. */
 		memcpy(buffer, self->r_ptr, result);
-		*(uintptr_t *)&self->r_ptr += result;
+		self->r_ptr = (char *)((uint8_t *)self->r_ptr + result);
 	}
 	DeeFile_LockEndWrite(self);
 	return result;
@@ -1507,7 +1508,7 @@ again:
 		/* Complete a UTF-8 sequence. */
 		uint8_t seqlen = utf8_sequence_len[self->w_printer.up_pend[0]];
 		uint8_t gotlen = (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-		uint8_t missing, full_sequence[UTF8_MAX_MBLEN];
+		uint8_t missing, full_sequence[UTF8_MAX_MBLEN], *tempptr;
 		ASSERT(gotlen < seqlen);
 		missing = seqlen - gotlen;
 		if (missing > bufsize) {
@@ -1517,8 +1518,8 @@ again:
 			goto done_unlock;
 		}
 		/* Complete the sequence, and append the character. */
-		memcpy(full_sequence, self->w_printer.up_pend, gotlen);
-		memcpy(full_sequence + gotlen, buffer, missing);
+		tempptr = (uint8_t *)mempcpy(full_sequence, self->w_printer.up_pend, gotlen);
+		memcpy(tempptr, buffer, missing);
 		if (!writer_tryappendch(self, utf8_getchar(full_sequence, seqlen))) {
 			DeeFile_LockEndWrite(self);
 			if (Dee_CollectMemory(4))

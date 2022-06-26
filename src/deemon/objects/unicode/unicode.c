@@ -5053,8 +5053,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 		self->up_buffer = string = base_string->s_str;
 		if (!num_pending)
 			return (char *)string;
-		memcpy(string, self->up_pend, num_pending);
-		return (char *)string + num_pending;
+		return (char *)mempcpy(string, self->up_pend, num_pending);
 	}
 	if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		/* The unicode printer uses a single-byte character width, so we
@@ -5090,8 +5089,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 		self->up_length += length;
 		if (!num_pending)
 			return result;
-		memcpy(result, self->up_pend, num_pending);
-		return result + num_pending;
+		return (char *)mempcpy(result, self->up_pend, num_pending);
 	}
 	/* The unicode printer already uses a character width of more
 	 * than 1 byte, meaning we can't allocate the buffer in-line.

@@ -442,7 +442,7 @@ again:
 read_from_buffer:
 		if (bufavail > bufsize)
 			bufavail = bufsize;
-		memcpy(buffer, self->fb_ptr, bufavail);
+		buffer = (uint8_t *)mempcpy(buffer, self->fb_ptr, bufavail);
 		/* Update buffer pointers. */
 		self->fb_cnt -= bufavail;
 		self->fb_ptr += bufavail;
@@ -457,7 +457,6 @@ read_from_buffer:
 		 * we _did_ manage to extract! */
 		if (did_read_data)
 			goto done;
-		buffer += bufavail;
 	}
 
 	/* The buffer is empty and must be re-filled. */

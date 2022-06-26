@@ -1120,8 +1120,9 @@ bytes_add(Bytes *self, DeeObject *other) {
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self) +
 	                                                       buffer.bb_size);
 	if likely(result) {
-		memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		memcpy(result->b_data + DeeBytes_SIZE(self), buffer.bb_base, buffer.bb_size);
+		void *ptr;
+		ptr = mempcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+		memcpy(ptr, buffer.bb_base, buffer.bb_size);
 	}
 	DeeObject_PutBuf(other, &buffer, Dee_BUFFER_FREADONLY);
 	return result;
@@ -1148,10 +1149,8 @@ bytes_mul(Bytes *self, DeeObject *other) {
 		goto err;
 	src = DeeBytes_DATA(self);
 	dst = DeeBytes_DATA(result);
-	while (repeat--) {
-		memcpy(dst, src, my_length);
-		dst += my_length;
-	}
+	while (repeat--)
+		dst = (uint8_t *)mempcpy(dst, src, my_length);
 	return result;
 err_overflow:
 	err_integer_overflow_i(sizeof(size_t) * 8, true);

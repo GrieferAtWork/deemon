@@ -2156,6 +2156,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 		if unlikely(xsiz == (uint16_t)-1)
 			xsiz = UNALIGNED_GETLE32((uint32_t *)xdat), xdat += 4;
 		if likely(xsiz != 0) {
+			void *bssptr;
 			struct Dee_ddi_exdat *xres;
 			if (xdat < self->df_base ||
 			    xdat + xsiz < xdat ||
@@ -2167,8 +2168,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 				goto err_r_maps;
 			xres->dx_size = xsiz;
 			/* Initialize X-data information. */
-			memcpy(xres->dx_data, xdat, xsiz);
-			bzero(xres->dx_data + xsiz, DDI_EXDAT_MAXSIZE);
+			bssptr = mempcpy(xres->dx_data, xdat, xsiz);
+			bzero(bssptr, DDI_EXDAT_MAXSIZE);
 			result->d_exdat = xres;
 		}
 	}

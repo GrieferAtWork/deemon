@@ -768,8 +768,9 @@ func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(
 func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
 func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
-func("mempcpy", "0", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
-func("mempset", "0", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
+func("mempmove", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
+func("mempcpy", "defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
+func("mempset", "defined(__USE_KOS)", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
 
 func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
 func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyw(a, b, 16); return 0;");
@@ -780,11 +781,13 @@ func("memmovew", "defined(__USE_KOS)", test: "extern void *a, *b; memmovew(a, b,
 func("memmovel", "defined(__USE_KOS)", test: "extern void *a, *b; memmovel(a, b, 16); return 0;");
 func("memmoveq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveq(a, b, 16); return 0;");
 func("memmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveup(a, b, 16); return 0;");
+func("mempmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; mempmoveup(a, b, 16); return 0;");
 func("memmoveupc", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupc(a, b, 16, sizeof(char)); return 0;");
 func("memmoveupw", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupw(a, b, 16); return 0;");
 func("memmoveupl", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupl(a, b, 16); return 0;");
 func("memmoveupq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupq(a, b, 16); return 0;");
 func("memmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedown(a, b, 16); return 0;");
+func("mempmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; mempmovedown(a, b, 16); return 0;");
 func("memmovedownc", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownc(a, b, 16, sizeof(char)); return 0;");
 func("memmovedownw", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownw(a, b, 16); return 0;");
 func("memmovedownl", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownl(a, b, 16); return 0;");
@@ -5761,17 +5764,24 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #define CONFIG_HAVE_memcmp 1
 #endif
 
+#ifdef CONFIG_NO_mempmove
+#undef CONFIG_HAVE_mempmove
+#elif !defined(CONFIG_HAVE_mempmove) && \
+      (defined(mempmove) || defined(__mempmove_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmove 1
+#endif
+
 #ifdef CONFIG_NO_mempcpy
 #undef CONFIG_HAVE_mempcpy
 #elif !defined(CONFIG_HAVE_mempcpy) && \
-      (defined(mempcpy) || defined(__mempcpy_defined))
+      (defined(mempcpy) || defined(__mempcpy_defined) || defined(__USE_GNU))
 #define CONFIG_HAVE_mempcpy 1
 #endif
 
 #ifdef CONFIG_NO_mempset
 #undef CONFIG_HAVE_mempset
 #elif !defined(CONFIG_HAVE_mempset) && \
-      (defined(mempset) || defined(__mempset_defined))
+      (defined(mempset) || defined(__mempset_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_mempset 1
 #endif
 
@@ -5838,6 +5848,13 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #define CONFIG_HAVE_memmoveup 1
 #endif
 
+#ifdef CONFIG_NO_mempmoveup
+#undef CONFIG_HAVE_mempmoveup
+#elif !defined(CONFIG_HAVE_mempmoveup) && \
+      (defined(mempmoveup) || defined(__mempmoveup_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmoveup 1
+#endif
+
 #ifdef CONFIG_NO_memmoveupc
 #undef CONFIG_HAVE_memmoveupc
 #elif !defined(CONFIG_HAVE_memmoveupc) && \
@@ -5871,6 +5888,13 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #elif !defined(CONFIG_HAVE_memmovedown) && \
       (defined(memmovedown) || defined(__memmovedown_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memmovedown 1
+#endif
+
+#ifdef CONFIG_NO_mempmovedown
+#undef CONFIG_HAVE_mempmovedown
+#elif !defined(CONFIG_HAVE_mempmovedown) && \
+      (defined(mempmovedown) || defined(__mempmovedown_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmovedown 1
 #endif
 
 #ifdef CONFIG_NO_memmovedownc
@@ -8723,18 +8747,6 @@ dee_memmove(void *dst, void const *src, size_t num_bytes) {
 DECL_END
 #endif /* !CONFIG_HAVE_memmove */
 
-#ifndef CONFIG_HAVE_mempcpy
-#define CONFIG_HAVE_mempcpy 1
-#define mempcpy(dst, src, num_bytes) \
-	(void *)((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
-#endif /* !CONFIG_HAVE_mempcpy */
-
-#ifndef CONFIG_HAVE_mempset
-#define CONFIG_HAVE_mempset 1
-#define mempset(dst, byte, num_bytes) \
-	(void *)((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
-#endif /* !CONFIG_HAVE_mempset */
-
 
 #define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \
 	LOCAL WUNUSED NONNULL((1)) rT *                       \
@@ -9821,6 +9833,39 @@ DECL_END
 #elif !defined(__DEEMON__)
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
+
+
+/* memp* functions --> same as their mem* equivalents, but
+ * return pointer to `dst + num_*' (iow: end of written area) */
+#ifndef CONFIG_HAVE_mempcpy
+#define CONFIG_HAVE_mempcpy 1
+#define mempcpy(dst, src, num_bytes) \
+	(void *)((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempcpy */
+
+#ifndef CONFIG_HAVE_mempset
+#define CONFIG_HAVE_mempset 1
+#define mempset(dst, byte, num_bytes) \
+	(void *)((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempset */
+
+#ifndef CONFIG_HAVE_mempmove
+#define CONFIG_HAVE_mempmove 1
+#define mempmove(dst, src, num_bytes) \
+	(void *)((uint8_t *)memmove(dst, src, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempmove */
+
+#ifndef CONFIG_HAVE_mempmoveup
+#define CONFIG_HAVE_mempmoveup 1
+#define mempmoveup(dst, src, num_bytes) \
+	(void *)((uint8_t *)memmoveup(dst, src, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempmoveup */
+
+#ifndef CONFIG_HAVE_mempmovedown
+#define CONFIG_HAVE_mempmovedown 1
+#define mempmovedown(dst, src, num_bytes) \
+	(void *)((uint8_t *)memmovedown(dst, src, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempmovedown */
 
 
 
