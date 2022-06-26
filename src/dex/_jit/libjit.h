@@ -347,6 +347,8 @@ INTDEF void FCALL JITSymbol_Fini(JITSymbol *__restrict self);
 #define JIT_LVALUE_RANGE     0x0103               /* Range expression. */
 #define JIT_LVALUE_RVALUE    0x0200               /* R-value expression (just a regular, read-only expression, but stored inside of an L-Value descriptor). */
 #define JIT_LVALUE_THIS      0x0201               /* Reference to the `this'-symbol (behaves the same as `JIT_LVALUE_RVALUE') */
+#define JIT_LVALUE_ISSYM(kind)   ((kind) < 0x0100)
+#define JITLValue_IsSymbol(self) JIT_LVALUE_ISSYM((self)->lv_kind)
 struct jit_lvalue {
 	uint16_t lv_kind;  /* L-value kind (One of JIT_LVALUE_*) */
 	uint16_t lv_pad[(sizeof(void *)-2)/2];
@@ -422,7 +424,7 @@ struct jit_lvalue {
 	;
 };
 
-#define JITLValue_Init(self) ((self)->lv_kind = JIT_LVALUE_NONE)
+#define JITLValue_Init(self)     ((self)->lv_kind = JIT_LVALUE_NONE)
 
 /* Finalize a given L-Value object. */
 INTDEF void FCALL JITLValue_Fini(JITLValue *__restrict self);

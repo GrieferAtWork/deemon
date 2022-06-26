@@ -1317,6 +1317,8 @@ err_restore_pos:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if unlikely(yield() < 0)
 				goto err;
+			/* TODO: If the current token is ':', try to skip over the return type
+			 *       annotation and check if the next token thereafter is '->' or '{'. */
 			if (tok == '(' || tok == '{' || tok == TOK_ARROW || tok == '@') {
 do_lambda:
 				old_flags = TPPLexer_Current->l_flags;

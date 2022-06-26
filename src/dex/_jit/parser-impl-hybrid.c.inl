@@ -654,8 +654,8 @@ default_case:
 			    /* Hack: Allow a missing trailing ';'-token when at the end
 			     *       of the input code, and inside of the global scope. */
 			    (self->jl_tok != 0 || !JITContext_IsGlobalScope(self->jl_context))) {
+				DECREF_MAYBE_LVALUE(result);
 				syn_expr_expected_semi_after_expr(self);
-				Dee_Decref(result);
 				goto err;
 			}
 			if (pwas_expression)

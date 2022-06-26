@@ -38,8 +38,6 @@
 
 DECL_BEGIN
 
-/* TODO: Must also call `JITLexer_SkipTypeAnnotation' for normal variable declarations! */
-
 #define THROW_ERROR(expr) \
 	(throw_errors ? (expr) : -1)
 

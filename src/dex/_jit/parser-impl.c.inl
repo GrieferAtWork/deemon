@@ -1246,6 +1246,8 @@ not_a_java_lambda:
 					goto err;
 				}
 			}
+			/* TODO: If the current token is ':', try to skip over the return type
+			 *       annotation and check if the next token thereafter is '->' or '{'. */
 			if (self->jl_tok == TOK_ARROW) {
 #ifdef JIT_EVAL
 				/* Lambda function. */

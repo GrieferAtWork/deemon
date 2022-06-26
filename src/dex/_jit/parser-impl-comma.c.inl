@@ -390,6 +390,15 @@ err_currrent_var_symbol:
 				goto err_currrent_var_symbol;
 			JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
+		} else {
+			/* Skip over type annotations. */
+			if ((self->jl_tok == ':') && (lookup_mode & LOOKUP_SYM_ALLOWDECL)
+			    IF_EVAL(&& current == JIT_LVALUE
+			            && JITLValue_IsSymbol(&self->jl_lvalue))) {
+				JITLexer_Yield(self);
+				if (JITLexer_SkipTypeAnnotation(self, true) != 0)
+					goto err_current;
+			}
 		}
 	}
 
