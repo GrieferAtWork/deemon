@@ -674,3 +674,23 @@ assert exec("{10, 20, 30} + ...") == 60;
 assert exec("({10, 20, 30}) + ...") == 60;
 assert exec("({10, 20, 30}) + ...") == 60;
 assert exec("(({10, 20, 30}) + ...)") == 60;
+
+
+assert identical(42, exec(r'local outer = 42; x -> outer;')(none));
+assert identical(42, exec(r'local outer = 42; x -> x -> outer;')(none)(none));
+assert identical(42, exec(r'local outer = 42; x -> { return outer; };')(none));
+assert identical(42, exec(r'local outer = 42; x -> { return x -> outer; };')(none)(none));
+assert identical(42, exec(r'local outer = 42; x -> { return x -> { return outer; }; };')(none)(none));
+assert identical(42, exec(r'local outer = 42; (x) -> outer;')(none));
+assert identical(42, exec(r'local outer = 42; (x) -> (x) -> outer;')(none)(none));
+assert identical(42, exec(r'local outer = 42; (x) -> { return outer; };')(none));
+assert identical(42, exec(r'local outer = 42; (x) -> { return (x) -> outer; };')(none)(none));
+assert identical(42, exec(r'local outer = 42; (x) -> { return (x) -> { return outer; }; };')(none)(none));
+assert identical(42, exec(r'local outer = 42; () -> outer;')());
+assert identical(42, exec(r'local outer = 42; () -> () -> outer;')()());
+assert identical(42, exec(r'local outer = 42; () -> { return outer; };')());
+assert identical(42, exec(r'local outer = 42; () -> { return () -> outer; };')()());
+assert identical(42, exec(r'local outer = 42; () -> { return () -> { return outer; }; };')()());
+
+
+

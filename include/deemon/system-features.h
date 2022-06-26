@@ -768,6 +768,8 @@ func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(
 func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
 func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
+func("mempcpy", "0", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
+func("mempset", "0", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
 
 func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
 func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyw(a, b, 16); return 0;");
@@ -5759,6 +5761,20 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #define CONFIG_HAVE_memcmp 1
 #endif
 
+#ifdef CONFIG_NO_mempcpy
+#undef CONFIG_HAVE_mempcpy
+#elif !defined(CONFIG_HAVE_mempcpy) && \
+      (defined(mempcpy) || defined(__mempcpy_defined))
+#define CONFIG_HAVE_mempcpy 1
+#endif
+
+#ifdef CONFIG_NO_mempset
+#undef CONFIG_HAVE_mempset
+#elif !defined(CONFIG_HAVE_mempset) && \
+      (defined(mempset) || defined(__mempset_defined))
+#define CONFIG_HAVE_mempset 1
+#endif
+
 #ifdef CONFIG_NO_memcpyc
 #undef CONFIG_HAVE_memcpyc
 #elif !defined(CONFIG_HAVE_memcpyc) && \
@@ -8706,6 +8722,18 @@ dee_memmove(void *dst, void const *src, size_t num_bytes) {
 }
 DECL_END
 #endif /* !CONFIG_HAVE_memmove */
+
+#ifndef CONFIG_HAVE_mempcpy
+#define CONFIG_HAVE_mempcpy 1
+#define mempcpy(dst, src, num_bytes) \
+	(void *)((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempcpy */
+
+#ifndef CONFIG_HAVE_mempset
+#define CONFIG_HAVE_mempset 1
+#define mempset(dst, byte, num_bytes) \
+	(void *)((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempset */
 
 
 #define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \

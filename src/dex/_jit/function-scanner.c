@@ -398,7 +398,8 @@ do_yield_suffix:
 
 		/* Check for java-style lambdas */
 		{
-			unsigned char *saved = self->jl_tokend;
+			unsigned char *saved;
+			saved = self->jl_tokend;
 			JITLexer_SkipParamList(self);
 			if (self->jl_tok == TOK_ARROW) {
 				unsigned int old_flags;
@@ -710,12 +711,13 @@ do_reference_this_and_class:
 			sname = JITLexer_TokPtr(self);
 			ssize = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
-			if (ssize == 4 &&
-			    UNALIGNED_GET32((uint32_t *)sname) ==
-			    ENCODE_INT32('f', 'r', 'o', 'm')) {
+			if (JITLexer_ISKWD(self, "from")) {
 				/* `foo from bar' */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipModuleName(self);
+			} else if (self->jl_tok == TOK_ARROW) {
+				/* `x -> x.lower()' */
+				goto do_handle_java_lambda;
 			} else {
 				JITLexer_ReferenceKeyword(self, sname, ssize);
 			}

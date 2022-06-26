@@ -28,13 +28,14 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpy() */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/system-features.h> /* memcpy() */
 
 DECL_BEGIN
 
@@ -604,7 +605,7 @@ jf_repr(JITFunction *__restrict self) {
 			goto err;
 		if (i >= self->jf_argc_min) {
 			if (!ent->oe_value) {
-				if (unicode_printer_putascii(&printer, '?'))
+				if (unicode_printer_putascii(&printer, '?')) /* Optional argument */
 					goto err;
 			} else {
 				if unlikely(unicode_printer_printf(&printer, " = %r", ent->oe_value) < 0)
@@ -1082,7 +1083,7 @@ jf_getdoc(JITFunction *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_getkwds(JITFunction *__restrict self) {
-	/* XXX: Add a generic sequence proxy type for this! */
+	/* TODO: Add a generic sequence proxy type for this! */
 	DREF DeeObject *result;
 	uint16_t i;
 	result = DeeTuple_NewUninitialized(self->jf_argc_max);
@@ -1115,6 +1116,84 @@ jf_gettext(JITFunction *__restrict self) {
 	                         STRING_ERROR_FIGNORE);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+jf_getrefs(JITFunction *__restrict self) {
+	/* TODO: Add a generic sequence proxy type for this! */
+	size_t i, dst;
+	DREF DeeTupleObject *result;
+	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(self->jf_refs.ot_used);
+	if unlikely(!result)
+		goto done;
+	for (i = dst = 0; i <= self->jf_refs.ot_mask; ++i) {
+		struct jit_object_entry *ref;
+		ref = &self->jf_refs.ot_list[i];
+		if (!ITER_ISOK(ref->oe_namestr))
+			continue;
+		ASSERT(dst < self->jf_refs.ot_used);
+		DeeTuple_SET(result, dst, ref->oe_value);
+		Dee_Incref(ref->oe_value);
+		++dst;
+	}
+	ASSERT(dst == self->jf_refs.ot_used);
+done:
+	return (DREF DeeObject *)result;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+jf_getrefsbyname(JITFunction *__restrict self) {
+	/* TODO: Add a generic sequence proxy type for this! */
+	size_t i;
+	DREF DeeDictObject *result;
+	result = (DREF DeeDictObject *)DeeDict_New();
+	if unlikely(!result)
+		goto done;
+	for (i = 0; i <= self->jf_refs.ot_mask; ++i) {
+		int error;
+		struct jit_object_entry *ref;
+		ref = &self->jf_refs.ot_list[i];
+		if (!ITER_ISOK(ref->oe_namestr))
+			continue;
+		if (ref->oe_type == JIT_OBJECT_ENTRY_TYPE_LOCAL) {
+			error = DeeDict_SetItemStringLen((DeeObject *)result,
+			                                 ref->oe_namestr,
+			                                 ref->oe_namelen,
+			                                 ref->oe_namehsh,
+			                                 ref->oe_value);
+		} else {
+			/* Special case: Reference to class attribute. Encode as:
+			 * >> "{}[.{}]".format({ ref->oe_namestr, ref->oe_attr.a_attr->ca_name }) */
+			char const *refname = ref->oe_namestr;
+			size_t /**/ refsize = ref->oe_namelen;
+			char const *attname = DeeString_STR(ref->oe_attr.a_attr->ca_name);
+			size_t /**/ attsize = DeeString_SIZE(ref->oe_attr.a_attr->ca_name);
+			size_t namelen = refsize + 2 + attsize + 1;
+			char *namestr  = (char *)Dee_Malloc(namelen * sizeof(char));
+			char *iter;
+			if unlikely(!namestr)
+				goto err_r;
+			iter = namestr;
+			iter = (char *)mempcpy(iter, refname, refsize * sizeof(char));
+			iter = (char *)mempcpy(iter, "[.", 2 * sizeof(char));
+			iter = (char *)mempcpy(iter, attname, attsize * sizeof(char));
+			*iter = ']';
+
+			/* Insert into the dict. */
+			error = DeeDict_SetItemStringLen((DeeObject *)result,
+			                                 namestr, namelen,
+			                                 Dee_HashUtf8(namestr, namelen),
+			                                 ref->oe_value);
+			Dee_Free(namestr);
+		}
+		if unlikely(error)
+			goto err_r;
+	}
+done:
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_Decref_likely(result);
+	return NULL;
+}
+
 PRIVATE struct type_getset tpconst jf_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getname, NULL, NULL,
@@ -1130,7 +1209,14 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	  DOC("->?Dstring\n"
 	      "Returns the source text executed by @this function") },
 	/* TODO: __default__ */
-	/* TODO: __refs__ */
+	{ "__refs__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getrefs, NULL, NULL,
+	  DOC("->?S?O\n"
+	      "Returns a sequence of all of the references used by @this function") },
+	{ "__refsbyname__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getrefsbyname, NULL, NULL,
+	  DOC("->?S?T2?Dstring?O\n"
+	      "Similar to ?#__refs__, but return a mapping from symbol name to object") },
 	/* TODO: __type__ */
 	/* TODO: __operator__ */
 	/* TODO: __operatorname__ */
@@ -1155,10 +1241,6 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	                         "Evaluates to ?t if @this function was defined like ${[] -> 42}, meaning "
 	                         "that ?#__text__ is merely the expression that should be returned by the function\n"
 	                         "When ?f, the function was defined like ${[] { return 42; }}"),
-	TYPE_MEMBER_BITFIELD_DOC("isjavalambda", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
-	                         "Evaluates to ?t if @this function was defined like ${() -> { return 42; }}, meaning "
-	                         "that ?#__text__ is either a brace-style sequence expression, or a brace-surrounded "
-	                         "sequence of statements"),
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),
