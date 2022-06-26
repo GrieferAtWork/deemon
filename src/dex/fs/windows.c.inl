@@ -632,7 +632,7 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	size_t i;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	for (i = 0; i < COMPILER_STRLEN(tmpdir_vars); ++i)
+	for (i = 0; i < COMPILER_LENOF(tmpdir_vars); ++i)
 		if ((result = fs_getenv(tmpdir_vars[i], true)) != NULL)
 			goto done;
 	/* Fallback: Lookup using windows. */

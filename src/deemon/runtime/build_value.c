@@ -47,19 +47,11 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
-#if defined(__VA_LIST_IS_ARRAY)
-#define CONFIG_VA_LIST_IS_ARRAY 1
-#elif defined(__x86_64__) && !defined(__PE__)
-#define CONFIG_VA_LIST_IS_ARRAY 1
-#endif
-
-#ifdef CONFIG_VA_LIST_IS_ARRAY
-//#define VALIST_ADDR(x) (&(x))
-//#define VALIST_ADDR(x)   (x)
+#ifdef __VA_LIST_IS_ARRAY
 #define VALIST_ADDR(x) (&(x)[0])
-#else /* CONFIG_VA_LIST_IS_ARRAY */
+#else /* __VA_LIST_IS_ARRAY */
 #define VALIST_ADDR(x) (&(x))
-#endif /* !CONFIG_VA_LIST_IS_ARRAY */
+#endif /* !__VA_LIST_IS_ARRAY */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 count_pack_args(char const *__restrict format) {
@@ -325,7 +317,6 @@ do_int:
 		break;
 	}
 }
-
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_VPPackf(char const **__restrict pformat,

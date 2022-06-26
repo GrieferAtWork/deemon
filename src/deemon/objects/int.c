@@ -42,6 +42,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
+#include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/bit.h>
@@ -3176,11 +3177,11 @@ int_tobytes(DeeIntObject *self, size_t argc,
 	} else {
 		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
 			goto err;
-		if (DeeString_EQUALS_ASCII(byteorder, "little"))
+		if (DeeString_EQUALS_ASCII(byteorder, "little")) {
 			encode_little = true;
-		else if (DeeString_EQUALS_ASCII(byteorder, "big"))
+		} else if (DeeString_EQUALS_ASCII(byteorder, "big")) {
 			encode_little = false;
-		else {
+		} else {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid byteorder %r",
 			                byteorder);
@@ -3270,7 +3271,7 @@ err:
 PRIVATE struct type_method tpconst int_class_methods[] = {
 	{ "frombytes",
 	  (dobjmethod_t)&int_frombytes,
-	  DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
+	  DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
 	      "or ?N (for host-endian)\n"
@@ -3313,6 +3314,34 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeTupleObject *result;
+	DREF DeeIntObject *div, *rem;
+	DREF DeeIntObject *y;
+	int error;
+	if (DeeArg_Unpack(argc, argv, "o:divmod", &y))
+		goto err;
+	y = (DeeIntObject *)DeeObject_Int((DeeObject *)y);
+	if unlikely(!y)
+		goto err;
+	error = int_divmod(self, y, &div, &rem);
+	Dee_Decref(y);
+	if unlikely(error)
+		goto err;
+	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(2);
+	if unlikely(!result)
+		goto err_divrem;
+	DeeTuple_SET(result, 0, (DREF DeeObject *)div); /* Inherit reference */
+	DeeTuple_SET(result, 1, (DREF DeeObject *)rem); /* Inherit reference */
+	return result;
+err_divrem:
+	Dee_Decref_likely(div);
+	Dee_Decref_likely(rem);
+err:
+	return NULL;
+}
+
 
 PRIVATE struct type_method tpconst int_methods[] = {
 	{ "tostr",
@@ -3342,7 +3371,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	      "Short-hand alias for ${this.tostr(8, \"n\")} (s.a. ?#tostr)") },
 	{ "tobytes",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
-	  DOC("(length?:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
+	  DOC("(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
 	      "or ?N (for host-endian)\n"
@@ -3356,94 +3385,30 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "bitcount",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bitcount,
-	  DOC("(signed=!f)->?Dint\n"
+	  DOC("(signed=!f)->?.\n"
 	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	      "Return the number of bits needed to represent @this integer in base-2"),
 	  TYPE_METHOD_FKWDS },
 	{ "__forcecopy__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_forcecopy,
-	  DOC("->?Dint\n"
+	  DOC("->?.\n"
 	      "Internal function to force the creation of a copy of @this "
 	      "integer without performing aliasing for known constants.\n"
 	      "This function is implementation-specific and used by tests "
 	      "in order to ensure that inplace-optimization of certain "
 	      "operators functions correctly") },
+	{ "divmod",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_divmod_f,
+	  DOC("(y:?.)->?T2?.?.\n"
+	      "Devide+modulo. Returns a tuple ${(this / y, this % y)}") },
 	{ NULL }
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-int_get_bitcount_impl(DeeIntObject *__restrict self) {
-	size_t asize;
-	digit dig, mask;
-	unsigned int addend;
-	if (!self->ob_size)
-		return 1;
-	asize = (size_t)self->ob_size;
-	if ((dssize_t)asize < 0) {
-		err_integer_overflow((DeeObject *)self, 0, false);
-		goto err;
-	}
-	for (;;) {
-		if unlikely(!asize)
-			return 1;
-		--asize;
-		dig = self->ob_digit[asize];
-		if (dig)
-			break;
-	}
-	mask   = 1;
-	addend = 1;
-	for (; mask < dig; mask = (mask << 1) | 1, ++addend)
-		;
-	return asize * DIGIT_BITS + addend;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_get_bitcount(DeeIntObject *__restrict self) {
-	size_t result = int_get_bitcount_impl(self);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_get_bytecount(DeeIntObject *__restrict self) {
-	size_t bits = int_get_bitcount_impl(self);
-	size_t result;
-	if unlikely(bits == (size_t)-1)
-		goto err;
-	result = bits / 8;
-	if (bits & 7)
-		++result;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	{ "bitcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_bitcount,
-	  NULL,
-	  NULL,
-	  DOC("->?Dint\n"
-	      "Returns the minimum number of bits that are required "
-	      "in order to encode @this integer in unsigned two's complement") },
-	{ "bytecount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_bytecount,
-	  NULL,
-	  NULL,
-	  DOC("->?Dint\n"
-	      "Returns the minimum number of bytes that are required "
-	      "in order to encode @this integer in unsigned two's complement") },
 	{ STR___sizeof__,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
+	  DOC("->?.") },
 	{ NULL }
 };
 
@@ -3557,12 +3522,12 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "Divide @this by @other and return the remainder\n"
 
 	                         "\n"
-	                         "<<(count:?Dint)->\n"
+	                         "<<(count:?.)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this left a total of @count times\n"
 
 	                         "\n"
-	                         ">>(count:?Dint)->\n"
+	                         ">>(count:?.)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this right a total of @count times. "
 	                         "All bits that fall off of the end are discarded\n"

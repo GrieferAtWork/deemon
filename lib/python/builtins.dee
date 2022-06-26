@@ -46,6 +46,8 @@ final global function cmp(a, b): int {
 }
 
 final global function divmod(a, b): (Object, Object) {
+	if (a is int)
+		return a.divmod(b);
 	return (a / b, a % b);
 }
 

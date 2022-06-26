@@ -343,7 +343,7 @@ get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
 		switch (id) {
-		case TOK_EOF: return Dee_HashPtr(name, 0);
+		case TOK_EOF: return Dee_HashPtr(NULL, 0);
 		case TOK_FLOAT: return Dee_HashPtr(".0", 2);
 		case TOK_COMMENT: return Dee_HashPtr("//", 2);
 		default: break;

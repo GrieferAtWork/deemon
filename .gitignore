@@ -31,3 +31,4 @@
 *.log
 *.vcxproj.user
 *.so
+*.gch

@@ -467,7 +467,7 @@ decl_ast_equal(struct decl_ast const *__restrict a,
 /* Parse a declaration expression. */
 INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse(struct decl_ast *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse_for_symbol(struct symbol *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_skip(void);
+INTDEF WUNUSED int DCALL decl_ast_skip(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */

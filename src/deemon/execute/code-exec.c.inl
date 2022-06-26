@@ -1070,9 +1070,9 @@ inc_execsz_start:
 #define RETURN(val)          do{ frame->cf_result = (val); RETURN_RESULT(); }__WHILE0
 #ifndef __OPTIMIZE_SIZE__
 #define PREDICT(opcode)      do{ if (*ip.ptr == (opcode)) { ++ip.ptr; goto target_##opcode; } }__WHILE0
-#else /* __OPTIMIZE_SIZE__ */
+#else /* !__OPTIMIZE_SIZE__ */
 #define PREDICT(opcode)      do{}__WHILE0
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* __OPTIMIZE_SIZE__ */
 
 
 next_instr:

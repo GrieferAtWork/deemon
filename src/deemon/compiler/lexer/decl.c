@@ -1496,7 +1496,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED int DCALL
 decl_ast_skip(void) {
 	int result;
 	struct decl_ast temp;

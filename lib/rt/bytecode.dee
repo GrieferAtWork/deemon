@@ -416,7 +416,7 @@ import * from deemon;
 function code(data: {int...}): Bytes {
 	File.Writer w;
 	for (local d: data) {
-		local b = d.tobytes(d.bytecount, "little", false);
+		local b = d.tobytes(byteorder: "little", signed: false);
 		b.reverse();
 		/* Really ugly hack
 		 * TODO: Add 2 new file types `File.BytesReader' and

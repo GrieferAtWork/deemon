@@ -303,6 +303,12 @@ EXPORTS
 	DeeInt_TryAsU32@8=_DeeInt_TryAsU32@8
 	DeeInt_TryAsU64@8=_DeeInt_TryAsU64@8
 	DeeInt_TryAsU8@8=_DeeInt_TryAsU8@8
+	DeeKwArgs_Done@12=_DeeKwArgs_Done@12
+	DeeKwArgs_GetString@8=_DeeKwArgs_GetString@8
+	DeeKwArgs_GetStringDef@12=_DeeKwArgs_GetStringDef@12
+	DeeKwArgs_GetStringLen@16=_DeeKwArgs_GetStringLen@16
+	DeeKwArgs_GetStringLenDef@20=_DeeKwArgs_GetStringLenDef@20
+	DeeKwArgs_Init@16=_DeeKwArgs_Init@16
 	DeeKwClsMethod_New@8=_DeeKwClsMethod_New@8
 	DeeKwObjMethod_New@8=_DeeKwObjMethod_New@8
 	DeeKwdsMapping_Decref@4=_DeeKwdsMapping_Decref@4
@@ -460,6 +466,7 @@ EXPORTS
 	DeeObject_CompareGeObject@8=_DeeObject_CompareGeObject@8
 	DeeObject_CompareGr@8=_DeeObject_CompareGr@8
 	DeeObject_CompareGrObject@8=_DeeObject_CompareGrObject@8
+	DeeObject_CompareKey@12=_DeeObject_CompareKey@12
 	DeeObject_CompareKeyEq@12=_DeeObject_CompareKeyEq@12
 	DeeObject_CompareLe@8=_DeeObject_CompareLe@8
 	DeeObject_CompareLeObject@8=_DeeObject_CompareLeObject@8
