@@ -110,7 +110,7 @@ enum {
 	TOK_POW,           /* "**". */
 /*	TOK_TILDE_TILDE,   /* "~~". */
 	TOK_ARROW,         /* "->". */
-	TOK_COLON_EQUAL,  /* ":=". */
+	TOK_COLON_EQUAL,   /* ":=". */
 /*	TOK_NAMESPACE,     /* "::". */
 /*	TOK_ARROW_STAR,    /* "->*". */
 /*	TOK_DOT_STAR,      /* ".*". */
@@ -951,7 +951,8 @@ JITLexer_ParseLookupMode(JITLexer *__restrict self,
 
 /* Skip evaluation functions. (same as the regular functions,
  * but expressions are skipped, rather than being evaluated)
- * However, syntax error are still thrown. */
+ * However, syntax error are still thrown.
+ * @param: flags: Set of `JITLEXER_EVAL_F*' */
 INTDEF int FCALL JITLexer_SkipUnaryHead(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipUnary(JITLexer *__restrict self, unsigned int flags);
 INTDEF int FCALL JITLexer_SkipProd(JITLexer *__restrict self, unsigned int flags);
@@ -1006,6 +1007,19 @@ INTDEF int FCALL JITLexer_SkipStatement(JITLexer *__restrict self);
 
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatementBlock(JITLexer *__restrict self);
 INTDEF int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
+
+
+/************************************************************************/
+/* Handling of type annotations.                                        */
+/************************************************************************/
+/* Skip type annotations:
+ * >> local x: int from deemon | string from deemon = 42;
+ *             ^                                    ^
+ * @return: 0 : Success
+ * @return: -1: Compiler error (only thrown when `throw_errors != false') */
+INTDEF int FCALL JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors);
+/************************************************************************/
+
 
 
 /* Parse the mask portion of a catch statement:
@@ -1105,6 +1119,9 @@ INTDEF int FCALL JITLexer_SkipClass(JITLexer *__restrict self);
 /* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
 INTDEF int FCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *pwas_expression);
+
+/* Same as `JITLexer_SkipHybrid()', but the current token is `{', and a trailing `;' should _NOT_ be consumed */
+INTDEF int FCALL JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *pwas_expression);
 
 #define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
 #define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
@@ -1468,6 +1485,13 @@ INTDEF ATTR_COLD int FCALL syn_class_expected_rparen_after_lparen_base(JITLexer 
 INTDEF ATTR_COLD int FCALL syn_class_expected_lbrace_after_class(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_class_expected_rbrace_after_class(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_class_not_thiscall(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_nth_expected_lparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_nth_expected_rparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_type_annotation_unexpected_token(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rparen(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self);
 
 #define ATTR_ACCESS_GET     0
 #define ATTR_ACCESS_DEL     1

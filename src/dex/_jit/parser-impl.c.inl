@@ -1004,23 +1004,115 @@ done_y1:
 			}
 		} else
 #endif
-		if (self->jl_tok == ')') {
-			/* Empty tuple. */
+		{
+			/* Check for java-style lambda. */
+			unsigned int             saved_jl_tok;
+			/*utf-8*/ unsigned char *saved_jl_tokstart;
+			/*utf-8*/ unsigned char *saved_jl_tokend;
+			IF_EVAL(unsigned char *param_end);
+			IF_EVAL(unsigned int recursion);
+			saved_jl_tok      = self->jl_tok;
+			saved_jl_tokstart = self->jl_tokstart;
+			saved_jl_tokend   = self->jl_tokend;
 #ifdef JIT_EVAL
-			result = Dee_EmptyTuple;
-			Dee_Incref(Dee_EmptyTuple);
+			param_end = self->jl_tokstart;
+			recursion = 1;
+			for (;;) {
+				if (!self->jl_tok)
+					goto not_a_java_lambda;
+				if (self->jl_tok == '(') {
+					++recursion;
+				} else if (self->jl_tok == ')') {
+					--recursion;
+					if (!recursion) {
+						JITLexer_Yield(self);
+						break;
+					}
+				}
+				param_end = self->jl_tokend;
+				JITLexer_Yield(self);
+			}
 #else /* JIT_EVAL */
-			result = 0;
-#endif /* !JIT_EVAL */
-			allow_cast = false; /* Don't allow empty tuples for cast expressions. */
-		} else {
-			/* Parenthesis / tuple expression. */
-			out_mode = 0;
-			result   = FUNC(Comma)(self, AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) & out_mode);
-			if (ISERR(result))
+			if (JITLexer_SkipPair(self, '(', ')'))
 				goto err;
-			if (out_mode & AST_COMMA_OUT_FMULTIPLE)
-				allow_cast = false; /* Don't allow comma-lists for cast expressions. */
+#endif /* !JIT_EVAL */
+			if (self->jl_tok == ':') {
+				JITLexer_Yield(self);
+				if (JITLexer_SkipTypeAnnotation(self, false) != 0)
+					goto not_a_java_lambda;
+			}
+			if (self->jl_tok == TOK_ARROW) {
+				IF_EVAL(unsigned char *source_start);
+				IF_EVAL(unsigned char *source_end);
+				IF_EVAL(unsigned int is_expression);
+
+				/* Yup! it's a java-lambda alright! */
+				JITLexer_Yield(self);
+				IF_EVAL(source_start = self->jl_tokstart);
+				if (self->jl_tok == '{') {
+					if (JITLexer_SkipHybridAtBrace(self, IFELSE(&is_expression, NULL)))
+						goto err;
+				} else {
+					IF_EVAL(is_expression = AST_PARSE_WASEXPR_YES);
+					if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
+						goto err;
+				}
+
+#ifdef JIT_EVAL
+				source_end = self->jl_tokstart;
+				/* Trim trailing whitespace. */
+				while (source_end > source_start) {
+					uint32_t ch;
+					char const *next = (char const *)source_end;
+					ch               = utf8_readchar_rev(&next, (char const *)source_start);
+					if (!DeeUni_IsSpace(ch))
+						break;
+					source_end = (unsigned char *)next;
+				}
+				result = JITFunction_New(NULL,
+				                         NULL,
+				                         (char const *)saved_jl_tokstart,
+				                         (char const *)param_end,
+				                         (char const *)source_start,
+				                         (char const *)source_end,
+				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_text,
+				                         self->jl_context->jc_impbase,
+				                         self->jl_context->jc_globals,
+				                         is_expression == AST_PARSE_WASEXPR_NO
+				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
+				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);
+				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
+#else /* JIT_EVAL */
+				result = 0;
+#endif /* !JIT_EVAL */
+				goto done;
+			}
+not_a_java_lambda:
+			/* Restore lexer state */
+			self->jl_tok      = saved_jl_tok;
+			self->jl_tokstart = saved_jl_tokstart;
+			self->jl_tokend   = saved_jl_tokend;
+
+			if (self->jl_tok == ')') {
+				/* Empty tuple. */
+#ifdef JIT_EVAL
+				result = Dee_EmptyTuple;
+				Dee_Incref(Dee_EmptyTuple);
+#else /* JIT_EVAL */
+				result = 0;
+#endif /* !JIT_EVAL */
+				allow_cast = false; /* Don't allow empty tuples for cast expressions. */
+			} else {
+				/* Parenthesis / tuple expression. */
+				out_mode = 0;
+				result   = FUNC(Comma)(self, AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) &out_mode);
+				if (ISERR(result))
+					goto err;
+				if (out_mode & AST_COMMA_OUT_FMULTIPLE)
+					allow_cast = false; /* Don't allow comma-lists for cast expressions. */
+			}
 		}
 		if likely(self->jl_tok == ')') {
 			JITLexer_Yield(self);
@@ -1379,6 +1471,23 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 		break;
 
+	case TOK_DOTS:
+		/* Anonymous varargs with automatic expansion.
+		 * -> We handle this kind-of cheaty by simply returning the varargs symbol,
+		 *    but not consuming the "..."-token. Thus, our caller will see that same
+		 *    token and finally do the actual dots-expansion! */
+#ifdef JIT_EVAL
+		if (JITContext_Lookup(self->jl_context,
+		                      (JITSymbol *)&self->jl_lvalue,
+		                      "...",
+		                      3,
+		                      flags & ~LOOKUP_SYM_ALLOWDECL))
+			goto err;
+#endif /* JIT_EVAL */
+		/* !!!NO YIELD HERE!!! -- That is intentional (see comment above!) */
+		result = IFELSE(JIT_LVALUE, 0);
+		break;
+
 	case JIT_KEYWORD: {
 		char const *tok_begin;
 		size_t tok_length;
@@ -1703,6 +1812,10 @@ err_oo_class_reinit_lvalue:
 				JITLexer_Yield(self);
 				goto done;
 			}
+			if (name == ENCODE_INT32('_', '_', 'n', 't') &&
+			    *(uint8_t *)(tok_begin + 4) == 'h') {
+				/* TODO */
+			}
 			break;
 
 		case 6:
@@ -1777,11 +1890,57 @@ err_oo_class_reinit_lvalue:
 		}
 		/* Fallback: identifier lookup / <x from y> expression. */
 		{
-#ifdef JIT_EVAL
-			char *symbol_name  = JITLexer_TokPtr(self);
-			size_t symbol_size = JITLexer_TokLen(self);
+			IF_EVAL(char *symbol_name  = JITLexer_TokPtr(self));
+			IF_EVAL(size_t symbol_size = JITLexer_TokLen(self));
 			JITLexer_Yield(self);
-			if (JITLexer_ISKWD(self, "from")) {
+			if (self->jl_tok == TOK_ARROW) {
+				/* Single-argument java-style lambda. */
+				IF_EVAL(unsigned char *source_start);
+				IF_EVAL(unsigned char *source_end);
+				IF_EVAL(unsigned int is_expression);
+				JITLexer_Yield(self);
+				IF_EVAL(source_start = self->jl_tokstart);
+				if (self->jl_tok == '{') {
+					if (JITLexer_SkipHybridAtBrace(self, IFELSE(&is_expression, NULL)))
+						goto err;
+				} else {
+					IF_EVAL(is_expression = AST_PARSE_WASEXPR_YES);
+					if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
+						goto err;
+				}
+
+#ifdef JIT_EVAL
+				source_end = self->jl_tokstart;
+				/* Trim trailing whitespace. */
+				while (source_end > source_start) {
+					uint32_t ch;
+					char const *next = (char const *)source_end;
+					ch               = utf8_readchar_rev(&next, (char const *)source_start);
+					if (!DeeUni_IsSpace(ch))
+						break;
+					source_end = (unsigned char *)next;
+				}
+				result = JITFunction_New(NULL,
+				                         NULL,
+				                         (char const *)symbol_name,
+				                         (char const *)symbol_name + symbol_size,
+				                         (char const *)source_start,
+				                         (char const *)source_end,
+				                         self->jl_context->jc_locals.otp_tab,
+				                         self->jl_text,
+				                         self->jl_context->jc_impbase,
+				                         self->jl_context->jc_globals,
+				                         is_expression == AST_PARSE_WASEXPR_NO
+				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
+				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);
+				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
+					self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
+#else /* JIT_EVAL */
+				result = 0;
+#endif /* !JIT_EVAL */
+				goto done;
+			} else if (JITLexer_ISKWD(self, "from")) {
+#ifdef JIT_EVAL
 				DREF DeeModuleObject *mod;
 				struct module_symbol *symbol;
 				JITLexer_Yield(self);
@@ -1802,24 +1961,22 @@ err_oo_class_reinit_lvalue:
 				self->jl_lvalue.lv_kind          = JIT_LVALUE_EXTERN;
 				self->jl_lvalue.lv_extern.lx_mod = mod; /* Inherit reference. */
 				self->jl_lvalue.lv_extern.lx_sym = symbol;
+#else /* JIT_EVAL */
+				JITLexer_Yield(self);
+				if unlikely(JITLexer_SkipModule(self))
+					goto err;
+#endif /* !JIT_EVAL */
 			} else {
+#ifdef JIT_EVAL
 				if (JITContext_Lookup(self->jl_context,
 				                      (JITSymbol *)&self->jl_lvalue,
 				                      symbol_name,
 				                      symbol_size,
 				                      flags))
 					goto err;
+#endif /* JIT_EVAL */
 			}
-			result = JIT_LVALUE;
-#else /* JIT_EVAL */
-			result = 0;
-			JITLexer_Yield(self);
-			if (JITLexer_ISKWD(self, "from")) {
-				JITLexer_Yield(self);
-				if unlikely(JITLexer_SkipModule(self))
-					goto err;
-			}
-#endif /* !JIT_EVAL */
+			result = IFELSE(JIT_LVALUE, 0);
 		}
 	}	break;
 

@@ -245,24 +245,24 @@ assert identical(exec(r'function(x) { return x * 2; }')(7), 14);
 assert identical(exec(r'function(x) { return x * 2; };'), none);
 assert identical(exec(r'function(x) { return x * 2; };')(7), none);
 assert identical(exec(r'[](x) -> x * 2')(7), 14);
-//TODO:assert identical(exec(r'(x) -> x * 2')(7), 14);
-//TODO:assert identical(exec(r'x -> x * 2')(7), 14);
+assert identical(exec(r'(x) -> x * 2')(7), 14);
+assert identical(exec(r'x -> x * 2')(7), 14);
 assert identical(exec(r'[](x) -> x * 2;')(7), 14);
-//TODO:assert identical(exec(r'(x) -> x * 2;')(7), 14);
-//TODO:assert identical(exec(r'x -> x * 2;')(7), 14);
+assert identical(exec(r'(x) -> x * 2;')(7), 14);
+assert identical(exec(r'x -> x * 2;')(7), 14);
 assert identical(exec(r'[](x) { return x * 2; }')(7), 14);
-//TODO:assert identical(exec(r'(x) -> { return x * 2; }')(7), 14);
-//TODO:assert identical(exec(r'x -> { return x * 2; }')(7), 14);
-//TODO:assert exec(r'(x) -> { x * 2 }')(7) == {14};
-//TODO:assert exec(r'x -> { x * 2 }')(7) == {14};
+assert identical(exec(r'(x) -> { return x * 2; }')(7), 14);
+assert identical(exec(r'x -> { return x * 2; }')(7), 14);
+assert exec(r'(x) -> { x * 2 }')(7) == {14};
+assert exec(r'x -> { x * 2 }')(7) == {14};
 /* Syntactic difference: `[]() { }' is an expression, so `[]() { };' still
  * evaluates to that same expression. `function() { }' is a pseudo-statement
  * that doesn't expect a trailing `;'-character, so `function() { };' are
  * actually 2 statements `function() { }' and `;', with the later (`;')
  * evaluating to `none'! */
 assert identical(exec(r'[](x) { return x * 2; };')(7), 14);
-//TODO:assert identical(exec(r'(x) -> { return x * 2; };')(7), 14);
-//TODO:assert identical(exec(r'x -> { return x * 2; };')(7), 14);
+assert identical(exec(r'(x) -> { return x * 2; };')(7), 14);
+assert identical(exec(r'x -> { return x * 2; };')(7), 14);
 
 
 /* Test simple lambda expressions */
@@ -666,15 +666,11 @@ assert exec("60 == [10, 20, 30] + ...");
 assert exec("10 == [10, 20, 30] < ...");
 assert exec("30 == [10, 20, 30] > ...");
 
-/* TODO: The following breaks both the real, and the _jit compiler!
- * Probably related to hybrid statement parsing... */
-//assert ({10, 20, 30} + ...) == 60;
-//assert exec("({10, 20, 30} + ...) == 60");
+assert ({10, 20, 30}) + ... == 60;
+assert ({10, 20, 30} + ...) == 60;
+assert exec("({10, 20, 30}) + ... == 60");
+assert exec("({10, 20, 30} + ...) == 60");
 assert exec("{10, 20, 30} + ...") == 60;
-
-
-
-
-
-
-
+assert exec("({10, 20, 30}) + ...") == 60;
+assert exec("({10, 20, 30}) + ...") == 60;
+assert exec("(({10, 20, 30}) + ...)") == 60;

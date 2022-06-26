@@ -976,7 +976,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM)) /* TODO: support for "pack" */
 			goto err_flags;
 		/* Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
@@ -1047,6 +1047,11 @@ err_type_expr:
 		ast_decref(type_expr);
 	}	break;
 #endif
+
+	 /* TODO: support for "pack"
+	  * >> local x: pack int, int, string;
+	  * >> local y: (int, int, string);    // Same as this
+	  */
 
 	case '(': {
 		int error;
@@ -1172,7 +1177,7 @@ err_elemv_0:
 			decl_seq->da_tuple.t_itemc = 2;
 			decl_seq->da_tuple.t_itemv = elemv; /* Inherit */
 		} else {
-			if (skip(TOK_DOTS, W_EXPECTED_DOTS_AFTER_SEQUENCE))
+			if (skip(TOK_DOTS, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
 				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1191,7 +1196,7 @@ err_elemv_0:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH)) /* TODO: support for "pack" */
 			goto err_flags;
 		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)

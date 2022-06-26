@@ -422,6 +422,42 @@ err:
 	return ERROR;
 }
 
+#if defined(JIT_SKIP)/* || 1*/
+/* Same as `JITLexer_SkipHybrid()', but the current token
+ * is `{', and a trailing `;' should _NOT_ be consumed */
+INTERN RETURN_TYPE FCALL
+FUNC(HybridAtBrace)(JITLexer *__restrict self,
+                    unsigned int *pwas_expression) {
+	unsigned int was_expression;
+	RETURN_TYPE result;
+	result = FUNC(StatementOrBraces)(self, &was_expression);
+	if (ISERR(result))
+		goto err;
+	if (was_expression != AST_PARSE_WASEXPR_NO) {
+		/* Try to parse a suffix expression.
+		 * If there was one, then we know that it actually was an expression. */
+		unsigned char *token_start;
+		token_start = self->jl_tokstart;
+		result      = CALL_SECONDARY(Operand, result);
+		if (token_start != self->jl_tokstart)
+			was_expression = AST_PARSE_WASEXPR_YES;
+	}
+	if (ISERR(result))
+		goto err;
+	/* _DONT_ consume a trailing ';' !!! */
+	/*if (self->jl_tok == ';' && was_expression != AST_PARSE_WASEXPR_NO) {
+		JITLexer_Yield(self);
+		was_expression = AST_PARSE_WASEXPR_NO;
+	}*/
+	if (pwas_expression)
+		*pwas_expression = was_expression;
+	return result;
+err:
+	return ERROR;
+}
+#endif /* JIT_SKIP */
+
+
 INTERN RETURN_TYPE FCALL
 FUNC(Hybrid)(JITLexer *__restrict self,
              unsigned int *pwas_expression) {

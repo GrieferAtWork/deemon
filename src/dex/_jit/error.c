@@ -683,6 +683,70 @@ syn_class_not_thiscall(JITLexer *__restrict self) {
 	                       "`this' or `super' are only allowed in thiscall functions");
 }
 
+INTERN ATTR_COLD int FCALL
+syn_nth_expected_lparen(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `(' after `__nth', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+INTERN ATTR_COLD int FCALL
+syn_nth_expected_rparen(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `)' after `__nth(...', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+
+INTERN ATTR_COLD int FCALL
+syn_type_annotation_unexpected_token(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Unexpected token `%$s' in type annotation",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+INTERN ATTR_COLD int FCALL
+syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `...' or `:' after `{type' in type annotation, but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+INTERN ATTR_COLD int FCALL
+syn_type_annotation_expected_rbrace(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `}' after sequence or mapping declaration, but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+INTERN ATTR_COLD int FCALL
+syn_type_annotation_expected_rparen(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected `)' after Tuple declaration or parenthesis, but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
+INTERN ATTR_COLD int FCALL
+syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected a string after `__asm__', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
+
 
 
 

@@ -330,6 +330,27 @@ done_y1:
 	}
 }
 
+/* Starting _AFTER_ the leading '(', skip ahead until _AFTER_ the closing ')' */
+PRIVATE void FCALL
+JITLexer_SkipParamList(JITLexer *__restrict self) {
+	unsigned int recursion;
+	recursion = 1;
+	for (;;) {
+		if (!self->jl_tok)
+			break;
+		if (self->jl_tok == '(') {
+			++recursion;
+		} else if (self->jl_tok == ')') {
+			--recursion;
+			if (!recursion) {
+				JITLexer_Yield(self);
+				break;
+			}
+		}
+		JITLexer_Yield(self);
+	}
+}
+
 
 INTERN void FCALL
 JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts) {
@@ -365,14 +386,49 @@ do_yield_suffix:
 		allow_cast = self->jl_tok != '(' && allow_casts;
 		if (self->jl_tok == '{') {
 			JITLexer_ScanStatement(self);
-			if (self->jl_tok == ',')
+			if (self->jl_tok == ',') {
+				/* FIXME: This fails to handle the trailing ')'
+				 * -> write a test that triggers this, and then fix this! */
 				goto do_yield_again_docast;
+			}
 			if (self->jl_tok == ')')
 				JITLexer_Yield(self);
 			break;
 		}
+
+		/* Check for java-style lambdas */
+		{
+			unsigned char *saved = self->jl_tokend;
+			JITLexer_SkipParamList(self);
+			if (self->jl_tok == TOK_ARROW) {
+				unsigned int old_flags;
+do_handle_java_lambda:
+				JITLexer_Yield(self); /* Skip over `->' */
+				old_flags = self->jl_scandata.jl_flags;
+				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
+				if (self->jl_tok == '{') {
+					JITLexer_ScanStatement(self); /* Always handling a statement here is good enough! */
+				} else {
+					JITLexer_ScanExpression(self, true);
+				}
+				self->jl_scandata.jl_flags &= ~JIT_SCANDATA_FINCHILD;
+				self->jl_scandata.jl_flags |= old_flags & JIT_SCANDATA_FINCHILD;
+				break;
+			}
+			if (self->jl_tok == ':') {
+				JITLexer_Yield(self);
+				if (JITLexer_SkipTypeAnnotation(self, false) == 0 &&
+				    self->jl_tok == TOK_ARROW)
+					goto do_handle_java_lambda;
+				JITLexer_YieldAt(self, saved);
+			}
+		}
+
+		/* Check for special case: empty tuple */
 		if (self->jl_tok == ')')
 			goto do_yield_suffix;
+
+		/* Normal paren-expression. */
 		for (;;) {
 			unsigned char *start = self->jl_tokstart;
 			JITLexer_ScanExpression(self, true);
@@ -392,29 +448,14 @@ do_yield_suffix:
 	case '[':
 		JITLexer_Yield(self);
 		if (self->jl_tok == ']') {
-			unsigned int old_flags;
 			/* Lambda function. */
 			JITLexer_Yield(self);
 			if (self->jl_tok == '(') {
+				unsigned int old_flags;
 				/* Skip the parameter list. */
-				unsigned int recursion;
 do_parse_function_arglist:
 				JITLexer_Yield(self);
-				recursion = 1;
-				for (;;) {
-					if (!self->jl_tok)
-						break;
-					if (self->jl_tok == '(') {
-						++recursion;
-					} else if (self->jl_tok == ')') {
-						--recursion;
-						if (!recursion) {
-							JITLexer_Yield(self);
-							break;
-						}
-					}
-					JITLexer_Yield(self);
-				}
+				JITLexer_SkipParamList(self);
 do_parse_function:
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
@@ -429,6 +470,7 @@ do_parse_function:
 				break;
 			}
 			if (self->jl_tok == TOK_ARROW || self->jl_tok == '{') {
+				unsigned int old_flags;
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
 				if (self->jl_tok == TOK_ARROW) {
@@ -1040,14 +1082,13 @@ continue_skip_asm_operand:
 
 		default: break;
 		}
-	}
-		ATTR_FALLTHROUGH
+	}	ATTR_FALLTHROUGH
 
 	default:
 		JITLexer_ScanExpression(self, true);
 done_skip_semi:
 		if (self->jl_tok == ';') {
-		case ';':
+	case ';':
 			JITLexer_Yield(self);
 		}
 /*done:*/

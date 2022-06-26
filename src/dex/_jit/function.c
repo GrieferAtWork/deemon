@@ -316,6 +316,11 @@ err_varargs_already_defined:
 					goto err_r;
 				result->jf_varargs = (size_t)(argent - result->jf_args.ot_list);
 				JITLexer_Yield(&lex);
+				if (lex.jl_tok == ':') {
+					JITLexer_Yield(&lex);
+					if (JITLexer_SkipTypeAnnotation(&lex, true))
+						goto err_r;
+				}
 			} else {
 				while (lex.jl_tok == JIT_KEYWORD &&
 				       (JITLexer_ISTOK(&lex, "local") ||
@@ -370,25 +375,37 @@ err_no_keyword_for_argument:
 						if (lex.jl_tok == '?') {
 							/* Optional argument */
 							JITLexer_Yield(&lex);
-						} else if (lex.jl_tok == '=') {
-							DREF DeeObject *default_value;
-							JITLexer_Yield(&lex);
-							lex.jl_text = source;
-							/* Parse the default value. */
-							default_value = JITLexer_ParseDefaultValue(&lex, impbase, globals);
-							if unlikely(!default_value)
-								goto err_r;
-							if unlikely(argent->oe_value)
-								Dee_Clear(argent->oe_value);
-							argent->oe_value = default_value; /* Inherit reference. */
-						} else {
-							if (result->jf_argc_min != result->jf_argc_max) {
-								DeeError_Throwf(&DeeError_SyntaxError,
-								                "Mandatory positional argument `%$s' encountered after optional or default argument",
-								                argent->oe_namelen, argent->oe_namestr);
-								goto err_r;
+							if (lex.jl_tok == ':') {
+								JITLexer_Yield(&lex);
+								if (JITLexer_SkipTypeAnnotation(&lex, true))
+									goto err_r;
 							}
-							++result->jf_argc_min;
+						} else {
+							if (lex.jl_tok == ':') {
+								JITLexer_Yield(&lex);
+								if (JITLexer_SkipTypeAnnotation(&lex, true))
+									goto err_r;
+							}
+							if (lex.jl_tok == '=') {
+								DREF DeeObject *default_value;
+								JITLexer_Yield(&lex);
+								lex.jl_text = source;
+								/* Parse the default value. */
+								default_value = JITLexer_ParseDefaultValue(&lex, impbase, globals);
+								if unlikely(!default_value)
+									goto err_r;
+								if unlikely(argent->oe_value)
+									Dee_Clear(argent->oe_value);
+								argent->oe_value = default_value; /* Inherit reference. */
+							} else {
+								if (result->jf_argc_min != result->jf_argc_max) {
+									DeeError_Throwf(&DeeError_SyntaxError,
+									                "Mandatory positional argument `%$s' encountered after optional or default argument",
+									                argent->oe_namelen, argent->oe_namestr);
+									goto err_r;
+								}
+								++result->jf_argc_min;
+							}
 						}
 						/* Resize `jf_argv' if necessary. */
 						ASSERT(result->jf_argc_max <= arga);
@@ -622,11 +639,21 @@ jf_repr(JITFunction *__restrict self) {
 		goto err;
 do_print_code:
 	if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
+#if 1 /* Always use a uniform representation for function bodies. */
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\treturn ") < 0)
+			goto err;
+		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
+		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+			goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, ";\n}") < 0)
+			goto err;
+#else
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
 			goto err;
 		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
 		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 			goto err;
+#endif
 	} else {
 		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
 			goto err;
@@ -712,11 +739,42 @@ jf_call_kw(JITFunction *self, size_t argc,
 		/* Load arguments! */
 		if (argc < self->jf_argc_min)
 			goto err_argc;
-		if (argc > self->jf_argc_max && self->jf_varargs == (size_t)-1)
-			goto err_argc;
-		/* Load positional arguments. */
-		for (i = 0; i < argc; ++i)
-			base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
+		if (self->jf_varargs == (size_t)-1) {
+			if (argc > self->jf_argc_max)
+				goto err_argc;
+			/* Load positional arguments. */
+			for (i = 0; i < argc; ++i)
+				base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
+		} else {
+			size_t num_positional = argc;
+			if (num_positional > self->jf_argc_max) {
+				/* Handle varargs */
+				DREF DeeObject *varargs;
+				size_t num_varargs;
+				num_varargs    = num_positional - self->jf_argc_max;
+				num_positional = self->jf_argc_max;
+				varargs = DeeTuple_NewVector(num_varargs, argv + num_positional);
+				if unlikely(!varargs)
+					goto err_base_locals;
+				base_locals.ot_list[self->jf_varargs].oe_value = varargs;
+				for (i = 0; i < num_positional; ++i)
+					base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
+				for (i = 0; i <= base_locals.ot_mask; ++i) {
+					if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
+						continue;
+					Dee_XIncref(base_locals.ot_list[i].oe_value);
+				}
+				goto done_args;
+			}
+
+			/* Empty varargs. */
+			base_locals.ot_list[self->jf_varargs].oe_value = Dee_EmptyTuple;
+
+			/* Load positional arguments. */
+			for (i = 0; i < num_positional; ++i)
+				base_locals.ot_list[self->jf_argv[i]].oe_value = argv[i];
+		}
+
 		/* Assign references to all objects from base-locals */
 		for (i = 0; i <= base_locals.ot_mask; ++i) {
 			if (!ITER_ISOK(base_locals.ot_list[i].oe_namestr))
@@ -724,6 +782,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 			Dee_XIncref(base_locals.ot_list[i].oe_value);
 		}
 	}
+done_args:
 
 	/* Initialize the lexer and context control structures. */
 	lexer.jl_text    = self->jf_source;
@@ -757,24 +816,26 @@ jf_call_kw(JITFunction *self, size_t argc,
 				Dee_Clear(result);
 				goto handle_error;
 			}
-		} else load_return_value: if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
-			if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
-				result = context.jc_retval;
-			} else {
-				/* Exited code via unconventional means, such as `break' or `continue' */
-				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Attempted to use `break' or `continue' outside of a loop");
-				lexer.jl_errpos = lexer.jl_tokstart;
-				goto handle_error;
-			}
 		} else {
-			if (!lexer.jl_errpos)
-				lexer.jl_errpos = lexer.jl_tokstart;
+load_return_value:
+			if (context.jc_retval != JITCONTEXT_RETVAL_UNSET) {
+				if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
+					result = context.jc_retval;
+				} else {
+					/* Exited code via unconventional means, such as `break' or `continue' */
+					DeeError_Throwf(&DeeError_SyntaxError,
+					                "Attempted to use `break' or `continue' outside of a loop");
+					lexer.jl_errpos = lexer.jl_tokstart;
+					goto handle_error;
+				}
+			} else {
+				if (!lexer.jl_errpos)
+					lexer.jl_errpos = lexer.jl_tokstart;
 handle_error:
-			JITLValue_Fini(&lexer.jl_lvalue);
-			result = NULL;
-			/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
-			;
+				JITLValue_Fini(&lexer.jl_lvalue);
+				result = NULL;
+				/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
+			}
 		}
 	} else if unlikely(lexer.jl_tok == TOK_EOF) {
 		goto do_return_none;
@@ -1094,6 +1155,10 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	                         "Evaluates to ?t if @this function was defined like ${[] -> 42}, meaning "
 	                         "that ?#__text__ is merely the expression that should be returned by the function\n"
 	                         "When ?f, the function was defined like ${[] { return 42; }}"),
+	TYPE_MEMBER_BITFIELD_DOC("isjavalambda", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
+	                         "Evaluates to ?t if @this function was defined like ${() -> { return 42; }}, meaning "
+	                         "that ?#__text__ is either a brace-style sequence expression, or a brace-surrounded "
+	                         "sequence of statements"),
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),
