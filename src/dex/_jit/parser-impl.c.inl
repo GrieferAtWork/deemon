@@ -3354,7 +3354,7 @@ DEFINE_SECONDARY(AssignOperand) {
 	ASSERT(TOKEN_IS_ASSIGN(self));
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
-		if (self->jl_tok == TOK_COLLON_EQUAL) {
+		if (self->jl_tok == TOK_COLON_EQUAL) {
 			LOAD_LVALUE(lhs, err);
 			JITLexer_Yield(self);
 			rhs = CALL_PRIMARYF(Cond, flags | JITLEXER_EVAL_FALLOWINPLACE);
@@ -3675,7 +3675,7 @@ again:
 			goto err_r;
 		LOAD_LVALUE(lhs, err_r);
 		if (self->jl_tok != ':') {
-			syn_brace_expected_collon_after_key(self);
+			syn_brace_expected_colon_after_key(self);
 			goto err_lhs;
 		}
 	}

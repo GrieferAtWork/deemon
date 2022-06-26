@@ -72,7 +72,7 @@ LOCAL WUNUSED bool FCALL
 JITLexer_IsColumn(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 	case ':': break;
-	case TOK_COLLON_EQUAL:
+	case TOK_COLON_EQUAL:
 		self->jl_tok = ':';
 		--self->jl_tokend;
 		break;
@@ -533,7 +533,7 @@ do_parse_asm_leading_lparen:
 #ifndef JIT_EVAL
 					if (JITLexer_SkipPair(self, '(', ')'))
 						goto err;
-					goto check_trailing_asm_semicollon;
+					goto check_trailing_asm_semicolon;
 #endif /* !JIT_EVAL */
 				} else if (JITLexer_ISKWD(self, "pack")) {
 					need_trailing_rparen = false;
@@ -650,7 +650,7 @@ err_unsupported_assembly:
 					}
 				}
 #ifndef JIT_EVAL
-check_trailing_asm_semicollon:
+check_trailing_asm_semicolon:
 #endif /* !JIT_EVAL */
 				if (self->jl_tok == ';') {
 					JITLexer_Yield(self);

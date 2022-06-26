@@ -359,12 +359,12 @@ HAS_EXTENSION_IF(tpp_directive_warning,            HAVE_EXTENSION_WARNING)
 #if !defined(TPP_CONFIG_EXTENSION_LXOR) || TPP_CONFIG_EXTENSION_LXOR
 HAS_EXTENSION_IF(tpp_lxor,                         HAVE_EXTENSION_LXOR)
 #endif /* TPP_CONFIG_EXTENSION_LXOR */
-HAS_EXTENSION_IF(tpp_token_tilde_tilde,            TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_TILDETILDE)
-HAS_EXTENSION_IF(tpp_token_pow,                    TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_STARSTAR)
-HAS_EXTENSION_IF(tpp_token_lxor,                   TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_ROOFROOF)
-HAS_EXTENSION_IF(tpp_token_arrow,                  TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_ARROW)
-HAS_EXTENSION_IF(tpp_token_collon_assign,          TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_COLLONASSIGN)
-HAS_EXTENSION_IF(tpp_token_collon_collon,          TPPLexer_Current->l_extokens&TPPLEXER_TOKEN_COLLONCOLLON)
+HAS_EXTENSION_IF(tpp_token_tilde_tilde,            TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_TILDETILDE)
+HAS_EXTENSION_IF(tpp_token_pow,                    TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_STARSTAR)
+HAS_EXTENSION_IF(tpp_token_lxor,                   TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_ROOFROOF)
+HAS_EXTENSION_IF(tpp_token_arrow,                  TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_ARROW)
+HAS_EXTENSION_IF(tpp_token_colon_assign,           TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_COLONASSIGN)
+HAS_EXTENSION_IF(tpp_token_colon_colon,            TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_COLONCOLON)
 #if !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC
 HAS_EXTENSION_IF(tpp_macro_calling_conventions,    HAVE_EXTENSION_ALTMAC)
 #endif /* TPP_CONFIG_EXTENSION_ALTMAC */
@@ -372,7 +372,7 @@ HAS_EXTENSION_IF(tpp_strict_whitespace,            HAVE_EXTENSION_ARGSPACE)
 HAS_EXTENSION_IF(tpp_strict_integer_overflow,      TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_OVERFLOW)) ||
                                                    TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_CLAMPED)))
 HAS_EXTENSION_IF(tpp_support_ansi_characters,      0) /* TODO: (Re-)add support for this. */
-HAS_EXTENSION_IF(tpp_emit_lf_after_directive,      (TPPLexer_Current->l_flags&TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF))
+HAS_EXTENSION_IF(tpp_emit_lf_after_directive,      TPPLexer_Current->l_flags & TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF)
 #if !defined(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR) || TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
 HAS_EXTENSION_IF(tpp_if_cond_expression,           HAVE_EXTENSION_IFELSE_IN_EXPR)
 #endif /* TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
@@ -819,7 +819,10 @@ WGROUP(WG_DEPENDENCY,           "dependency",           WSTATE_WARN)
 /*37*/ DEF_WARNING(W_CANT_UNDEF_BUILTIN_MACRO, (WG_MACROS), WSTATE_WARN, WARNF("Cannot #undef builtin macro " Q("%s"), KWDNAME()))                         /* [struct TPPKeyword *] OLD(TPPWarn_CantUndefBuiltinMacro). */
 /*38*/ WARNING(W_UNUSED_38, (WG_VALUE), WSTATE_DISABLED)                                                                                                   /* OLD(TPPWarn_ExpectedLParenAfterHasInclude). */
 /*39*/ WARNING(W_UNUSED_39, (WG_VALUE), WSTATE_DISABLED)                                                                                                   /* OLD(TPPWarn_ExpectedRParenAfterHasInclude). */
-/*40*/ DEF_WARNING(W_EXPECTED_COLLON_AFTER_QUESTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after " Q("?")))                                /* OLD(TPPWarn_ExpectedCollonAfterQuestion). */
+/*40*/ DEF_WARNING(W_EXPECTED_COLON_AFTER_QUESTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after " Q("?")))                                /* OLD(TPPWarn_ExpectedColonAfterQuestion). */
+#ifndef W_EXPECTED_COLLON_AFTER_QUESTION /* Deprecated typo */
+#define W_EXPECTED_COLLON_AFTER_QUESTION W_EXPECTED_COLON_AFTER_QUESTION
+#endif /* !W_EXPECTED_COLLON_AFTER_QUESTION */
 #if 1
 /*41*/ DEF_WARNING(W_INVALID_INTEGER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Invalid integer " TOK_S, TOK_A)) /* OLD(TPPWarn_ExpectedInteger). */
 #else
@@ -949,7 +952,10 @@ DEF_WARNING(W_ENCOUNTERED_TRIGRAPH, (WG_TRIGRAPHS), WSTATE_WARN, WARNF("Encounte
 WARNING(W_UNUSED_112, (WG_VALUE), WSTATE_ERROR)
 #endif /* !TPP_CONFIG_FEATURE_TRIGRAPHS */
 DEF_WARNING(W_EXPECTED_RBRACKET_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("]") " in expression, but got " TOK_S, TOK_A))                          /* . */
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_WARNING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after #pragma warning, but got " TOK_S, TOK_A))                    /* . */
+DEF_WARNING(W_EXPECTED_COLON_AFTER_WARNING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after #pragma warning, but got " TOK_S, TOK_A))                    /* . */
+#ifndef W_EXPECTED_COLLON_AFTER_WARNING /* Deprecated typo */
+#define W_EXPECTED_COLLON_AFTER_WARNING W_EXPECTED_COLON_AFTER_WARNING
+#endif /* !W_EXPECTED_COLLON_AFTER_WARNING */
 DEF_WARNING(W_EXPECTED_COMMA, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(",") ", but got " TOK_S, TOK_A))                                                         /* . */
 DEF_WARNING(W_EXPECTED_STRING_IN_EXPRESSION, (WG_VALUE), WSTATE_ERROR, WARNF("Expected string in expression, but got " Q("%s"), CONST_STR()))                         /* [struct TPPConst *]. */
 DEF_WARNING(W_EXPECTED_STRING_AFTER_MESSAGE, (WG_VALUE), WSTATE_ERROR, WARNF("Expected string after message, but got " Q("%s"), CONST_STR()))                         /* [struct TPPConst *]. */

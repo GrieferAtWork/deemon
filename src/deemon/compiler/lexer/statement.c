@@ -31,9 +31,9 @@
 
 DECL_BEGIN
 
-#define is_semicollon() (tok == ';' || tok == '\n')
+#define is_semicolon() (tok == ';' || tok == '\n')
 
-PRIVATE tok_t DCALL yield_semicollonnbif(bool allow_nonblock) {
+PRIVATE tok_t DCALL yield_semicolonnbif(bool allow_nonblock) {
 	tok_t result = yieldnbif(allow_nonblock);
 	if (result == '\n') {
 		uint32_t old_flags;
@@ -102,14 +102,14 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
 			goto done;
 		}
 	}
-	if (skip(';', W_EXPECTED_SEMICOLLON1_AFTER_FOR))
+	if (skip(';', W_EXPECTED_SEMICOLON1_AFTER_FOR))
 		goto err;
 	if (tok != ';') {
 		elem_or_cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!elem_or_cond)
 			goto err;
 	}
-	if (skip(';', W_EXPECTED_SEMICOLLON2_AFTER_FOR))
+	if (skip(';', W_EXPECTED_SEMICOLON2_AFTER_FOR))
 		goto err;
 	if (tok == ')') {
 		iter_or_next = NULL;
@@ -331,7 +331,7 @@ do_else_branch:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (is_semicollon()) {
+		if (is_semicolon()) {
 			/* Special case: A return without an operator is allowed
 			 *               in both return and yield functions. */
 			result = ast_return(NULL);
@@ -352,9 +352,9 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_RETURN))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_RETURN))
 			goto err_r;
 		break;
 
@@ -383,9 +383,9 @@ do_else_branch:
 		if (current_basescope->bs_cflags & BASESCOPE_FRETURN &&
 		    WARN(W_YIELD_AFTER_RETURN))
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_YIELD))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_YIELD))
 			goto err_r;
 		break;
 
@@ -394,9 +394,9 @@ do_else_branch:
 		result = ast_parse_import();
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_IMPORT))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_IMPORT))
 			goto err_r;
 		break;
 
@@ -404,7 +404,7 @@ do_else_branch:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (is_semicollon()) {
+		if (is_semicolon()) {
 			result = ast_throw(NULL);
 		} else {
 			result = ast_parse_comma(AST_COMMA_NORMAL,
@@ -419,9 +419,9 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_THROW))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_THROW))
 			goto err_r;
 		break;
 
@@ -436,7 +436,7 @@ do_else_branch:
 			result = ast_constexpr(Dee_None);
 			if unlikely(!result)
 				goto err;
-		} else if (is_semicollon()) {
+		} else if (is_semicolon()) {
 			/* `print;' --> `print pack()...;' */
 			result = ast_constexpr(Dee_EmptyTuple);
 			if unlikely(!result)
@@ -468,7 +468,7 @@ do_else_branch:
 					ast_decref(result);
 					result = merge;
 				}
-				if (is_semicollon()) {
+				if (is_semicolon()) {
 					text = ast_sethere(ast_constexpr(Dee_EmptyTuple));
 				} else {
 					text = ast_parse_comma(AST_COMMA_FORCEMULTIPLE |
@@ -504,9 +504,9 @@ do_else_branch:
 			}
 		}
 		ast_setddi(result, &loc);
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_PRINT))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_PRINT))
 			goto err_r;
 		break;
 
@@ -611,7 +611,7 @@ err_loop:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
-		if (skip(':', W_EXPECTED_COLLON_AFTER_FOREACH))
+		if (skip(':', W_EXPECTED_COLON_AFTER_FOREACH))
 			goto err_foreach_elem;
 		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
@@ -643,9 +643,9 @@ err_foreach_elem:
 		result = ast_parse_assert(false);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_ASSERT))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASSERT))
 			goto err_r;
 		break;
 
@@ -682,9 +682,9 @@ err_foreach_elem:
 		if unlikely(!merge)
 			goto err;
 		result = merge;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_DOWHILE))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
 			goto err_r;
 	}	break;
 
@@ -732,9 +732,9 @@ err_foreach_elem:
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_BREAK))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_BREAK))
 			goto err_r;
 		break;
 
@@ -783,18 +783,18 @@ err_foreach_elem:
 				goto err;
 		}
 		ast_putddi(result, &loc);
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_DEL))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DEL))
 			goto err_r;
 		break;
 
 	case KWD___asm:
 	case KWD___asm__:
 		result = ast_parse_asm();
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_ASM))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASM))
 			goto err_r;
 		break;
 
@@ -820,9 +820,9 @@ err_foreach_elem:
 		result = ast_goto(goto_label, current_basescope);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollonnbif(allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_GOTO))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_GOTO))
 			goto err_r;
 	}	break;
 
@@ -1007,7 +1007,7 @@ err_label_ast:
 				result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!result)
 					goto err;
-				if (skip(':', W_EXPECTED_COLLON_AFTER_CASE))
+				if (skip(':', W_EXPECTED_COLON_AFTER_CASE))
 					goto err_r;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					ast_decref(result);
@@ -1032,7 +1032,7 @@ err_label_ast:
 				loc_here(&loc);
 				if unlikely(yield() < 0)
 					goto err;
-				if (skip(':', W_EXPECTED_COLLON_AFTER_DEFAULT))
+				if (skip(':', W_EXPECTED_COLON_AFTER_DEFAULT))
 					goto err;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
 					goto again;

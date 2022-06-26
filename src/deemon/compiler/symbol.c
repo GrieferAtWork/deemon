@@ -1282,8 +1282,8 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	case KWD_tpp_token_pow:
 	case KWD_tpp_token_lxor:
 	case KWD_tpp_token_arrow:
-	case KWD_tpp_token_collon_assign:
-	case KWD_tpp_token_collon_collon:
+	case KWD_tpp_token_colon_assign:
+	case KWD_tpp_token_colon_colon:
 #if !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC
 	case KWD_tpp_macro_calling_conventions:
 #endif /* !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC */

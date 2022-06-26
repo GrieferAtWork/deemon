@@ -764,7 +764,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 			} else {
 				Dee_Decref(init);
 			}
-			syn_foreach_expected_collon_after_foreach(self);
+			syn_foreach_expected_colon_after_foreach(self);
 			goto err_scope;
 		}
 		/* TODO: Multiple targets (`foreach (local x, y, z: triples)') */

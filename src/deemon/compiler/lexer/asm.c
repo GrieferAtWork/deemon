@@ -168,10 +168,14 @@ asm_parse_operands(struct operand_list *__restrict list,
 				operand_type = TPPString_NewEmpty();
 			}
 			if (tok == KWD_pack) {
+				struct ast_loc packloc;
+				loc_here(&packloc);
 				if unlikely(yield() < 0)
 					goto err_type;
 				if (tok == '(')
 					goto with_paren;
+				if unlikely(parser_warn_pack_used(&packloc))
+					goto err_type;
 				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!operand_value)
 					goto err_type;
@@ -269,11 +273,11 @@ err:
 	return -1;
 }
 
-LOCAL bool DCALL is_collon(void) {
+LOCAL bool DCALL is_colon(void) {
 	if (tok == ':')
 		return true;
-	if (tok == TOK_COLLON_COLLON ||
-	    tok == TOK_COLLON_EQUAL) {
+	if (tok == TOK_COLON_COLON ||
+	    tok == TOK_COLON_EQUAL) {
 		/* Convert to a `:'-token and setup the lexer to re-parse
 		 * the remainder of the current token as part of the next. */
 		token.t_id          = ':';
@@ -557,10 +561,14 @@ yield_prefix:
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	if (tok == KWD_pack) {
+		struct ast_loc packloc;
+		loc_here(&packloc);
 		if unlikely(yield() < 0)
 			goto err_flags;
 		if (tok == '(')
 			goto with_paren;
+		if unlikely(parser_warn_pack_used(&packloc))
+			goto err_flags;
 		has_paren = false;
 	} else {
 with_paren:
@@ -629,7 +637,7 @@ with_paren:
 		goto err_ops;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 
-	if (is_collon()) {
+	if (is_colon()) {
 		if unlikely(yield() < 0)
 			goto err_ops;
 		/* Enable assembly formatting. */
@@ -637,12 +645,12 @@ with_paren:
 		/* Parse operands. */
 		if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_OUTPUT))
 			goto err_ops;
-		if (is_collon()) {
+		if (is_colon()) {
 			if unlikely(yield() < 0)
 				goto err_ops;
 			if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_INPUT))
 				goto err_ops;
-			if (is_collon()) {
+			if (is_colon()) {
 				int32_t clobber;
 				if unlikely(yield() < 0)
 					goto err_ops;
@@ -650,7 +658,7 @@ with_paren:
 				if unlikely(clobber < 0)
 					goto err_ops;
 				ast_flags |= (uint16_t)clobber;
-				if (is_asm_goto && is_collon()) {
+				if (is_asm_goto && is_colon()) {
 					if unlikely(yield() < 0)
 						goto err_ops;
 					if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_LABEL))

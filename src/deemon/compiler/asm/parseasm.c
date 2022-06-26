@@ -830,7 +830,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 	}
 	*pmid = (uint16_t)temp;
 	/* Now parse the symbol that is imported from this module. */
-	if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_EXTERN_PREFIX))
+	if (skip(':', W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX))
 		goto err;
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
 	if (tok == '@' && module) {
@@ -1786,7 +1786,7 @@ uasm_parse_instruction(void) {
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-		if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_INTEGER))
+		if (skip(':', W_UASM_EXPECTED_COLON_AFTER_INTEGER))
 			goto err;
 		fbsym = uasm_fbsymbol_def(name);
 		if unlikely(!fbsym)
@@ -1835,7 +1835,7 @@ do_static_prefix:
 		invoc.ai_prefix_id1 = (uint16_t)val;
 continue_after_prefix:
 		invoc.ai_flags |= INVOKE_FPREFIX;
-		if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_PREFIX))
+		if (skip(':', W_UASM_EXPECTED_COLON_AFTER_PREFIX))
 			goto err;
 		goto read_mnemonic_name;
 	}	break;

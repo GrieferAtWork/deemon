@@ -177,7 +177,7 @@ continue_modifier:
 			goto err;
 		goto next_modifier;
 
-	case TOK_COLLON_COLLON:
+	case TOK_COLON_COLON:
 		/* Backwards compatibility with deemon 100+ */
 		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
@@ -600,47 +600,68 @@ err_function_anno:
 					Dee_Free(exprv);
 					goto err_current;
 				}
-			} else if (tok == '(' || tok == KWD_pack) {
+			} else if (tok == KWD_pack) {
 				/* Comma-separated argument list. */
+				int temp;
 				uint32_t old_flags;
-				bool has_paren = tok == '(';
+				struct ast_loc packloc;
+				loc_here(&packloc);
 				old_flags      = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if unlikely(yield() < 0) {
-err_current_flags:
+err_current_flags_in_pack:
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
-				/* TODO: Add support for applying annotations here! */
-				if (tok == ')') {
-					/* Empty argument list (Same as none at all). */
-do_empty_argument_list:
+				if (tok == '(') {
+					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+					goto do_parse_paren_arg_list;
+				}
+				if unlikely(parser_warn_pack_used(&packloc))
+					goto err_current_flags_in_pack;
+
+				/* Empty argument list (Same as none at all). */
+				temp = maybe_expression_begin();
+				if (temp <= 0) {
+					if unlikely(temp < 0)
+						goto err_current_flags_in_pack;
 					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
-				} else if (!has_paren) {
-					/* Empty argument list (Same as none at all). */
-					int temp;
-					temp = maybe_expression_begin();
-					if (temp <= 0) {
-						if unlikely(temp < 0)
-							goto err_current_flags;
-						goto do_empty_argument_list;
-					}
-					goto do_parse_argument_list;
 				} else {
-do_parse_argument_list:
 					args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
 					                       AST_FMULTIPLE_TUPLE,
 					                       NULL);
 				}
+				/* TODO: Add support for applying annotations here! */
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				if unlikely(!args)
 					goto err_current;
-				if (has_paren) {
-					if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL)) {
+			} else if (tok == '(') {
+				/* Comma-separated argument list. */
+				uint32_t old_flags;
+do_parse_paren_arg_list:
+				old_flags = TPPLexer_Current->l_flags;
+				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+				if unlikely(yield() < 0) {
+					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+					goto err_current;
+				}
+
+				if (tok == ')') {
+					/* Empty argument list (Same as none at all). */
+					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
+				} else {
+					args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+					                       AST_FMULTIPLE_TUPLE,
+					                       NULL);
+				}
+				/* TODO: Add support for applying annotations here! */
+				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				if unlikely(!args)
+					goto err_current;
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
-						ast_decref(args);
-						goto err_current;
-					}
+					ast_decref(args);
+					goto err_current;
 				}
 			} else {
 				/* No argument list. */
@@ -907,7 +928,7 @@ done_expression_nomerge:
 					goto err_clear_current_only;
 			} while (tok == '\n');
 		} else {
-			if unlikely(WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION)) {
+			if unlikely(WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
 err_clear_current_only:
 				ast_decref(current);
 				current = NULL;

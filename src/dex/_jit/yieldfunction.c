@@ -1434,7 +1434,7 @@ err_obj_scope:
 					} else {
 						Dee_Decref(result);
 					}
-					syn_foreach_expected_collon_after_foreach(&self->ji_lex);
+					syn_foreach_expected_colon_after_foreach(&self->ji_lex);
 					goto err_scope;
 				}
 				/* TODO: Multiple targets (`for (local x, y, z: triples)') */

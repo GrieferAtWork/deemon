@@ -96,7 +96,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_assign_operand(/*in
 #define TOKEN_IS_LAND(tok)   ((tok) == TOK_LAND)
 #define TOKEN_IS_LOR(tok)    ((tok) == TOK_LOR)
 #define TOKEN_IS_COND(tok)   ((tok) == '?')
-#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
+#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
 
 #define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TOK_POW
 #define CASE_TOKEN_IS_SUM    case '+': case '-'
@@ -110,7 +110,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *FCALL ast_parse_assign_operand(/*in
 #define CASE_TOKEN_IS_LAND   case TOK_LAND
 #define CASE_TOKEN_IS_LOR    case TOK_LOR
 #define CASE_TOKEN_IS_COND   case '?'
-#define CASE_TOKEN_IS_ASSIGN case TOK_COLLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
+#define CASE_TOKEN_IS_ASSIGN case TOK_COLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
                              case TOK_SHL_EQUAL: case TOK_SHR_EQUAL: case TOK_AND_EQUAL: case TOK_OR_EQUAL: case TOK_XOR_EQUAL: case TOK_POW_EQUAL
 
 

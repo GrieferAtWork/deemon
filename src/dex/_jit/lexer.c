@@ -342,7 +342,7 @@ raw_again:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_COLLON_EQUAL;
+				self->jl_tok = TOK_COLON_EQUAL;
 				break;
 			}
 		}

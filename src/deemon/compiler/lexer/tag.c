@@ -288,7 +288,7 @@ err:
 LOCAL WUNUSED NONNULL((2)) int DCALL
 convert_dot_tag_namespace(size_t tag_name_len,
                           char const *__restrict tag_name_str) {
-	if unlikely(tok == ':' || tok == TOK_COLLON_COLLON) {
+	if unlikely(tok == ':' || tok == TOK_COLON_COLON) {
 		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
 		         tag_name_len, tag_name_str))
 			goto err;

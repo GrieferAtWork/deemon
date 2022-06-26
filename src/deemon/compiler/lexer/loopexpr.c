@@ -251,7 +251,7 @@ err_for_loop:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
-		if (skip(':', W_EXPECTED_COLLON_AFTER_FOREACH))
+		if (skip(':', W_EXPECTED_COLON_AFTER_FOREACH))
 			goto err_foreach_elem_flags;
 		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)

@@ -224,7 +224,7 @@ strip_trailing_whitespace(struct unicode_printer *__restrict printer,
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-contains_only_decimals_dot_collon_or_backslash(/*utf-8*/ char const *text,
+contains_only_decimals_dot_colon_or_backslash(/*utf-8*/ char const *text,
                                                /*utf-8*/ char const *end) {
 	uint32_t ch;
 	for (;;) {
@@ -1988,7 +1988,7 @@ check_ordered_list_digit:
 					goto escape_inputonly;
 				/* Also allow the backslash to appear somewhere where
 				 * it is only preceded by digits or . or : characters */
-				if (contains_only_decimals_dot_collon_or_backslash(current_line_start_after_whitespace,
+				if (contains_only_decimals_dot_colon_or_backslash(current_line_start_after_whitespace,
 				                                                   ch_start))
 					goto escape_inputonly;
 				break;

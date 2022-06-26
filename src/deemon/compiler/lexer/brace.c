@@ -94,7 +94,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_dict_elemv;
-			if (skip(':', W_EXPECTED_COLLON_AFTER_DICT_KEY))
+			if (skip(':', W_EXPECTED_COLON_AFTER_DICT_KEY))
 				goto err_dict_elemv_r;
 		}
 		/* Now parse the associated item. */

@@ -57,7 +57,7 @@ enum {
 	TOK_ASSIGN    = '=',
 	TOK_AT        = '@',
 	TOK_BACKSLASH = '\\',
-	TOK_COLLON    = ':',
+	TOK_COLON    = ':',
 	TOK_COMMA     = ',',
 	TOK_DIV       = '/',
 	TOK_DOT       = '.',
@@ -110,7 +110,7 @@ enum {
 	TOK_POW,           /* "**". */
 /*	TOK_TILDE_TILDE,   /* "~~". */
 	TOK_ARROW,         /* "->". */
-	TOK_COLLON_EQUAL,  /* ":=". */
+	TOK_COLON_EQUAL,  /* ":=". */
 /*	TOK_NAMESPACE,     /* "::". */
 /*	TOK_ARROW_STAR,    /* "->*". */
 /*	TOK_DOT_STAR,      /* ".*". */
@@ -131,7 +131,7 @@ enum {
 	TOK_NEG           = TOK_SUB,
 	TOK_LOWER         = TOK_LANGLE,
 	TOK_GREATER       = TOK_RANGLE,
-/*	TOK_COLLON_COLLON = TOK_NAMESPACE, */
+/*	TOK_COLON_COLON = TOK_NAMESPACE, */
 /*	TOK_LOWER_GREATER = TOK_LOGT, */
 /*	TOK_LANGLE_RANGLE = TOK_LOGT, */
 	TOK_LANGLE1       = TOK_LANGLE,
@@ -201,7 +201,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 #define TOKEN_IS_COND(self) \
 	((self)->jl_tok == '?')
 #define TOKEN_IS_ASSIGN(self)              \
-	((self)->jl_tok == TOK_COLLON_EQUAL || \
+	((self)->jl_tok == TOK_COLON_EQUAL || \
 	 ((self)->jl_tok >= TOK_ADD_EQUAL && (self)->jl_tok <= TOK_POW_EQUAL))
 
 #define CASE_TOKEN_IS_UNARY \
@@ -246,7 +246,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 #define CASE_TOKEN_IS_COND \
 	case '?'
 #define CASE_TOKEN_IS_ASSIGN \
-	case TOK_COLLON_EQUAL:   \
+	case TOK_COLON_EQUAL:   \
 	case TOK_ADD_EQUAL:      \
 	case TOK_SUB_EQUAL:      \
 	case TOK_MUL_EQUAL:      \
@@ -1420,7 +1420,7 @@ INTDEF ATTR_COLD int FCALL syn_break_expected_semi_after_break(JITLexer *__restr
 INTDEF ATTR_COLD int FCALL syn_continue_expected_semi_after_continue(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_return_expected_semi_after_return(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_foreach_expected_collon_after_foreach(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_while_expected_lparen_after_while(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_while_expected_rparen_after_while(JITLexer *__restrict self);
@@ -1445,7 +1445,7 @@ INTDEF ATTR_COLD int FCALL syn_try_expected_keyword_after_as_in_catch(JITLexer *
 INTDEF ATTR_COLD int FCALL syn_brace_expected_rbrace(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_brace_expected_keyword_after_dot(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_brace_expected_equals_after_dot(JITLexer *__restrict self);
-INTDEF ATTR_COLD int FCALL syn_brace_expected_collon_after_key(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_brace_expected_colon_after_key(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_expr_expected_semi_after_expr(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_expr_unexpected_token(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_function_expected_lparen_after_function(JITLexer *__restrict self);

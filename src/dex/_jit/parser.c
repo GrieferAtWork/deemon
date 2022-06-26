@@ -395,7 +395,7 @@ do_operator_gr:
 		goto done_y1;
 
 	case '=':
-	case TOK_COLLON_EQUAL:
+	case TOK_COLON_EQUAL:
 		result = OPERATOR_ASSIGN;
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move")) {
@@ -549,7 +549,7 @@ err_rbrck_after_lbrck:
 					JITLexer_Yield(self);
 					result = OPERATOR_MOVEASSIGN;
 					if unlikely(self->jl_tok != '=' &&
-					            self->jl_tok != TOK_COLLON_EQUAL) {
+					            self->jl_tok != TOK_COLON_EQUAL) {
 						DeeError_Throwf(&DeeError_SyntaxError,
 						                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
 						                JITLexer_TokLen(self),

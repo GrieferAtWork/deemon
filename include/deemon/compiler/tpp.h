@@ -88,6 +88,9 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 #define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
+/* Warn about use of `pack' (but only if we're not currently inside of a macro) */
+INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
+
 struct TPPFile;
 struct TPPKeyword;
 
@@ -287,7 +290,6 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define parser_warnastf(loc_ast, ...) __builtin_expect(parser_warnastf(loc_ast, __VA_ARGS__), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
-
 
 
 #define SKIP_WRAPLF(iter, end)                                 \

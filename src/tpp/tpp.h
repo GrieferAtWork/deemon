@@ -518,7 +518,7 @@ struct TPPString {
 };
 #define TPPString_TEXT(x)   ((x)->s_text)
 #define TPPString_SIZE(x)   ((x)->s_size)
-#define TPPString_Shared(x) ((x)->s_refcnt != 1)
+#define TPPString_Shared(x) ((x)->s_refcnt > 1)
 
 #define TPPSTRING_DEF(name, value)                      \
 	struct {                                            \
@@ -625,9 +625,10 @@ struct TPPTextFile {
 #if (!defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT)
 #define TPP_FUNOP_VA_OPT   0x09 /* [3] Delete ARG(0) characters, Delete (if varargs are empty) or Insert (otherwise) ARG(1) characters, Delete ARG(2) characters */
 #endif /* TPP_CONFIG_EXTENSION_VA_OPT */
-typedef uint8_t       TPP(funop_t);
-typedef int_least64_t TPP(tint_t);
-typedef long double   TPP(tfloat_t);
+typedef uint8_t        TPP(funop_t);
+typedef int_least64_t  TPP(tint_t);
+typedef uint_least64_t TPP(tuint_t);
+typedef long double    TPP(tfloat_t);
 
 struct TPP(arginfo_t) {
 	TPP(tok_t) ai_id;       /* Token ID associated with this argument name. */
@@ -655,7 +656,7 @@ struct TPPLCInfo {
 struct TPPMacroFile {
 	/* [owned(f_name) = m_flags&TPP_MACROFILE_FLAG_OWNSNAME] */
 #define TPP_MACROFILE_KIND                   0x000000ff
-#define TPP_MACROFILE_KIND_HASCOMMON(k)   (((k)&TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_EXPANDED)
+#define TPP_MACROFILE_KIND_HASCOMMON(k)      (((k) & TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_EXPANDED)
 #define TPP_MACROFILE_KIND_KEYWORD           0x00000000 /* Keyword-style macro (without string/concat operations). */
 #define TPP_MACROFILE_KIND_FUNCTION          0x00000001 /* Function-style macro. */
 #define TPP_MACROFILE_FLAG_FUNC_VARIADIC     0x00000100 /* The last argument of the function is variadic. */
@@ -949,7 +950,7 @@ enum {
 	TPP(TOK_ASSIGN)    = '=',
 	TPP(TOK_AT)        = '@',
 	TPP(TOK_BACKSLASH) = '\\',
-	TPP(TOK_COLLON)    = ':',
+	TPP(TOK_COLON)     = ':',
 	TPP(TOK_COMMA)     = ',',
 	TPP(TOK_DIV)       = '/',
 	TPP(TOK_DOT)       = '.',
@@ -1002,7 +1003,7 @@ enum {
 	TPP(TOK_POW),           /* "**". */
 	TPP(TOK_TILDE_TILDE),   /* "~~". */
 	TPP(TOK_ARROW),         /* "->". */
-	TPP(TOK_COLLON_EQUAL),  /* ":=". */
+	TPP(TOK_COLON_EQUAL),   /* ":=". */
 	TPP(TOK_NAMESPACE),     /* "::". */
 	TPP(TOK_ARROW_STAR),    /* "->*". */
 	TPP(TOK_DOT_STAR),      /* ".*". */
@@ -1023,7 +1024,7 @@ enum {
 	TPP(TOK_NEG)           = TPP(TOK_SUB),
 	TPP(TOK_LOWER)         = TPP(TOK_LANGLE),
 	TPP(TOK_GREATER)       = TPP(TOK_RANGLE),
-	TPP(TOK_COLLON_COLLON) = TPP(TOK_NAMESPACE),
+	TPP(TOK_COLON_COLON)   = TPP(TOK_NAMESPACE),
 	TPP(TOK_LOWER_GREATER) = TPP(TOK_LOGT),
 	TPP(TOK_LANGLE_RANGLE) = TPP(TOK_LOGT),
 	TPP(TOK_LANGLE1)       = TPP(TOK_LANGLE),
@@ -1036,6 +1037,11 @@ enum {
 	TPP(TOK_RANGLE_EQUAL)  = TPP(TOK_GREATER_EQUAL),
 	TPP(TOK_RANGLE1_EQUAL) = TPP(TOK_GREATER_EQUAL),
 	TPP(TOK_RANGLE2_EQUAL) = TPP(TOK_SHR_EQUAL),
+
+/* Deprecated typos */
+	TPP(TOK_COLLON)        = TPP(TOK_COLON),
+	TPP(TOK_COLLON_EQUAL)  = TPP(TOK_COLON_EQUAL),
+	TPP(TOK_COLLON_COLLON) = TPP(TOK_COLON_COLON),
 };
 
 /* Check if token ID is OK (neither an error, nor EOF) */
@@ -1374,12 +1380,12 @@ struct TPPRareKeyword {
 	/*ref*/struct TPPFile    *kr_file;     /* [0..1] Set if this keyword is actually the name of a file, when that file was already included.
 	                                        *        Used to track recursive file-inclusion, as well as quickly dismiss guarded files and
 	                                        *        speed up determining the correct filename for `include_next'.
-	                                        *  NOTE: Sadly, this cannot simply be made into a union with `k_macro',
-	                                        *        as a filename could potentially be equal to a keyword (e.g.: `#include "header"' vs. `#define header 42') */
+	                                        *  NOTE: Sadly, this cannot simply be made into a union with `k_macro', as a filename could
+	                                        *        potentially be equal to a keyword (e.g.: `#include "header"' vs. `#define header 42') */
 	/*ref*/struct TPPFile    *kr_oldmacro; /* [0..1][linked_list(->f_hashnext...)] Linked list of old (aka. pushed) version of this macro. */
-	/*ref*/struct TPPFile    *kr_defmacro; /* [0..1] Default macro definition (backup of the original, builtin macro when re-defined by the user).
-	                                        *        This macro file is restored as the active macro when lexer macros are reset and the
-	                                        *       `TPP_KEYWORDFLAG_BUILTINMACRO' keyword flag is set below. */
+	/*ref*/struct TPPFile    *kr_defmacro; /* [0..1] Default macro definition (backup of the original, builtin macro when re-defined by the
+	                                        *        user). This macro file is restored as the active macro when lexer macros are reset and
+	                                        *        the `TPP_KEYWORDFLAG_BUILTINMACRO' keyword flag is set below. */
 #define TPP_KEYWORDFLAG_NONE                   0x00000000 /* No special flags (default) */
 #define TPP_KEYWORDFLAG_BUILTINMACRO           0x20000000 /* An explicitly defined builtin macro-definition, that can't be #undef'ed */
 #define TPP_KEYWORDFLAG_NO_UNDERSCORES         0x40000000 /* When looking up keyword flags, don't allow this keyword to alias another with additional underscores at the front and back:
@@ -1403,7 +1409,7 @@ struct TPPRareKeyword {
 #define TPP_KEYWORDFLAG_HAS_TPP_BUILTIN        0x00000100 /* The keyword is a __builtin-function available for use in preprocessor expressions. */
 #define TPP_KEYWORDFLAG_USERMASK               0x0000007f /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
 	uint32_t                  kr_flags;    /* A set of `TPP_KEYWORDFLAG_*'. */
-	TPP(tint_t)                kr_counter;  /* Counter value used by `__TPP_COUNTER()' */
+	TPP(tint_t)               kr_counter;  /* Counter value used by `__TPP_COUNTER()' */
 #ifndef TPP_CONFIG_NO_ASSERTIONS
 	struct TPPAssertions      kr_asserts;  /* Assertions (aka. #assert/#unassert associated with this keyword) */
 #endif /* !TPP_CONFIG_NO_ASSERTIONS */
@@ -1496,11 +1502,16 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
 
 /* Saved lexer position (can be restore to rewind the lexer)
  * When wanting to rewind the lexer, flags must be set as follows (+: set; -: clear)
- *  [+] TPPLEXER_FLAG_NO_DIRECTIVES     (Disallow directives since rewinding them isn't possible)
+ *  [+] TPPLEXER_FLAG_NO_DIRECTIVES     (Disallow directives since rewinding them isn't possible
+ *                                      If a macro were to be deleted or defined, we'd not be
+ *                                      able to undo that)
  *  [+] TPPLEXER_FLAG_EXTENDFILE        (Don't discard already-read data)
  *  [-] TPPLEXER_FLAG_WERROR            (You probably don't want errors)
  *  [+] TPPLEXER_FLAG_NO_WARNINGS       (You probably don't want warnings enabled...)
  *  [+] TPPLEXER_FLAG_WILLRESTORE       (Prevent some internal events from firing)
+ * WARNING:
+ *  - __TPP_RANDOM will yield different results after rewinding!
+ *  - __TPP_COUNTER and __COUNTER__ will not be reset during rewinding!
  */
 struct TPPLexerFilePosition {
 	/*ref*/struct TPPFile *tlfp_file; /* [1..1] The file to restore. */
@@ -1574,7 +1585,7 @@ TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict se
 /*                                           0x20000000 /* ... */
 #define TPPLEXER_FLAG_RANDOM_INITIALIZED     0x40000000 /* Set when rand() has been initialized. */
 #define TPPLEXER_FLAG_ERROR                  0x80000000 /* When set, the lexer is in an error-state in which calls to yield() will return TOK_ERR. */
-#define TPPLEXER_FLAG_MERGEMASK              0xf0000000 /* A mask of flags that are merged (or'd together) during popf(). */
+#define TPPLEXER_FLAG_MERGEMASK              0xe0000000 /* A mask of flags that are merged (or'd together) during popf(). */
 #define TPPLEXER_FLAG_DEFAULT                0x00000000 /* Default set of flags (suitable for use with most token-based compilers). */
 /* A mask of flags that are preserved when modified by #pragma directives.
  * WARNING: `TPPLEXER_FLAG_MERGEMASK' must not be part of this mask.
@@ -1584,12 +1595,12 @@ TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict se
 #define TPPLEXER_FLAG_PRAGMA_KEEPMASK                                          \
 	(TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE | TPPLEXER_FLAG_TERMINATE_STRING_LF | \
 	 TPPLEXER_FLAG_ASM_COMMENTS | TPPLEXER_FLAG_MESSAGE_LOCATION |             \
-	 TPPLEXER_FLAG_MESSAGE_NOLINEFEED |                                        \
+	 TPPLEXER_FLAG_MESSAGE_NOLINEFEED | TPPLEXER_FLAG_EXTENDFILE |             \
 	 TPPLEXER_FLAG_NO_LEGACY_GUARDS | TPPLEXER_FLAG_WERROR |                   \
 	 TPPLEXER_FLAG_WSYSTEMHEADERS | TPPLEXER_FLAG_NO_DEPRECATED |              \
 	 TPPLEXER_FLAG_MSVC_MESSAGEFORMAT | TPPLEXER_FLAG_NO_WARNINGS |            \
 	 TPPLEXER_FLAG_NO_ENCODING | TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA |         \
-	 TPPLEXER_FLAG_CHAR_UNSIGNED)
+	 TPPLEXER_FLAG_CHAR_UNSIGNED | TPPLEXER_FLAG_WILLRESTORE)
 
 
 
@@ -1597,8 +1608,8 @@ TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict se
 #define TPPLEXER_TOKEN_NONE                  0x00000000
 #define TPPLEXER_TOKEN_TILDETILDE            0x00000001 /* Enable recognition of `~~' tokens. */
 #define TPPLEXER_TOKEN_ROOFROOF              0x00000002 /* Enable recognition of `^^' tokens. */
-#define TPPLEXER_TOKEN_COLLONCOLLON          0x00000004 /* Enable recognition of `::' tokens. */
-#define TPPLEXER_TOKEN_COLLONASSIGN          0x00000008 /* Enable recognition of `:=' tokens. */
+#define TPPLEXER_TOKEN_COLONCOLON            0x00000004 /* Enable recognition of `::' tokens. */
+#define TPPLEXER_TOKEN_COLONASSIGN           0x00000008 /* Enable recognition of `:=' tokens. */
 #define TPPLEXER_TOKEN_STARSTAR              0x00000010 /* Enable recognition of `**' and `**=' tokens. */
 #define TPPLEXER_TOKEN_ARROW                 0x00000020 /* Enable recognition of `->' tokens. */
 #define TPPLEXER_TOKEN_ARROWSTAR             0x00000040 /* Enable recognition of `->*' tokens. */
@@ -1616,6 +1627,11 @@ TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict se
 #define TPPLEXER_TOKEN_DOLLAR                0x80000000 /* Recognize `$' as its own token (Supersedes `EXT_DOLLAR_IS_ALPHA'). */
 #define TPPLEXER_TOKEN_DEFAULT               0x0fffffff /* Default set of extension tokens (enable all). */
 
+/* Deprecated typos */
+#define TPPLEXER_TOKEN_COLLONCOLLON TPPLEXER_TOKEN_COLONCOLON
+#define TPPLEXER_TOKEN_COLLONASSIGN TPPLEXER_TOKEN_COLONASSIGN
+
+
 /* Predefined set of extension tokens for some languages.
  * WARNING: Most of these languages will also need additional tweaks to other flags. */
 #define TPPLEXER_TOKEN_LANG_C                          \
@@ -1624,16 +1640,16 @@ TPPFUN void TPPCALL TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict se
 #define TPPLEXER_TOKEN_LANG_ASM                    \
 	(TPPLEXER_TOKEN_DOLLAR | TPPLEXER_TOKEN_LOGT | \
 	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
-#define TPPLEXER_TOKEN_LANG_CPP                           \
-	(TPPLEXER_TOKEN_COLLONCOLLON | TPPLEXER_TOKEN_ARROW | \
-	 TPPLEXER_TOKEN_ARROWSTAR | TPPLEXER_TOKEN_DOTSTAR |  \
+#define TPPLEXER_TOKEN_LANG_CPP                          \
+	(TPPLEXER_TOKEN_COLONCOLON | TPPLEXER_TOKEN_ARROW |  \
+	 TPPLEXER_TOKEN_ARROWSTAR | TPPLEXER_TOKEN_DOTSTAR | \
 	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
 #define TPPLEXER_TOKEN_LANG_JAVA \
 	(TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
-#define TPPLEXER_TOKEN_LANG_DEEMON                               \
-	(TPPLEXER_TOKEN_COLLONCOLLON | TPPLEXER_TOKEN_COLLONASSIGN | \
-	 TPPLEXER_TOKEN_STARSTAR | TPPLEXER_TOKEN_ARROW |            \
-	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT |     \
+#define TPPLEXER_TOKEN_LANG_DEEMON                            \
+	(TPPLEXER_TOKEN_COLONCOLON | TPPLEXER_TOKEN_COLONASSIGN | \
+	 TPPLEXER_TOKEN_STARSTAR | TPPLEXER_TOKEN_ARROW |         \
+	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT |  \
 	 TPPLEXER_TOKEN_EQUAL3)
 
 
@@ -1752,7 +1768,7 @@ TPPFUN int TPPCALL TPPLexer_PopExtensions(void);
  * The name of an extension can be found above.
  * @return: 0: Unknown extension.
  * @return: 1: Successfully configured the given extension. */
-TPPFUN int TPPCALL TPPLexer_SetExtension(char const *__restrict name, int enabled);
+TPPFUN int TPPCALL TPPLexer_SetExtension(char const *__restrict name, int enable);
 
 /* Returns the state of a given extension.
  * @return: -1: Unknown extension.

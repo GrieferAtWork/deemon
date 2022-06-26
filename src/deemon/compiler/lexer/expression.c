@@ -232,7 +232,7 @@ INTERN WUNUSED int DCALL maybe_expression_begin(void) {
 	case TOK_FLOAT:
 	case TOK_STRING:
 	case TOK_DOTS:
-	case TOK_COLLON_COLLON: /* Deprecated global-accessor syntax. */
+	case TOK_COLON_COLON: /* Deprecated global-accessor syntax. */
 		goto yes;
 
 		/* Keywords that can only appear inside of expressions */
@@ -955,6 +955,9 @@ do_create_class:
 			if unlikely(yield() < 0)
 				goto err_flags;
 			has_paren = tok == '(' ? 2 : 1;
+		} else {
+			if unlikely(parser_warn_pack_used(&loc))
+				goto err;
 		}
 		if (tok == '{') {
 			/* Statements in expressions. */
@@ -1111,88 +1114,92 @@ do_create_class:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err_r;
-		} else if (tok == ')') {
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
-				goto err;
+		} else {
+			if (tok == ')') {
+				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+					goto err;
 
-			/* Support for java-style lambda with empty argument list. */
+				/* Support for java-style lambda with empty argument list. */
 #ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
-			if (tok == TOK_ARROW) {
-				result = ast_parse_function_java_lambda(NULL, NULL);
-				result = ast_setddi(result, &loc);
-				break;
-			}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
-			if (tok == ':') {
-				bool isarrow;
-				struct TPPLexerPosition pos;
-				if unlikely(!TPPLexer_SavePosition(&pos))
-					goto err;
-				if unlikely(yield() < 0) {
-err_restore_pos:
-					TPPLexer_LoadPosition(&pos);
-					goto err;
-				}
-				if unlikely(decl_ast_skip())
-					goto err_restore_pos;
-				isarrow = tok == TOK_ARROW;
-				TPPLexer_LoadPosition(&pos);
-				if (isarrow) {
+				if (tok == TOK_ARROW) {
 					result = ast_parse_function_java_lambda(NULL, NULL);
 					result = ast_setddi(result, &loc);
 					break;
 				}
-			}
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+				if (tok == ':') {
+					bool isarrow;
+					struct TPPLexerPosition pos;
+					if unlikely(!TPPLexer_SavePosition(&pos))
+						goto err;
+					if unlikely(yield() < 0) {
+err_restore_pos:
+						TPPLexer_LoadPosition(&pos);
+						goto err;
+					}
+					if unlikely(decl_ast_skip())
+						goto err_restore_pos;
+					isarrow = tok == TOK_ARROW;
+					TPPLexer_LoadPosition(&pos);
+					if (isarrow) {
+						result = ast_parse_function_java_lambda(NULL, NULL);
+						result = ast_setddi(result, &loc);
+						break;
+					}
+				}
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 #endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 
-			/* Empty tuple. */
-			result = ast_constexpr(Dee_EmptyTuple);
-			if unlikely(!result)
-				goto err;
-			allow_cast = false; /* Don't allow empty tuples for cast expressions. */
-		} else {
-			/* Lambda function. */
-#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
-			int error = ast_is_after_lapren_of_java_lambda();
-			if (error != 0) {
-				if unlikely(error < 0)
+				/* Empty tuple. */
+				result = ast_constexpr(Dee_EmptyTuple);
+				if unlikely(!result)
 					goto err;
-				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				result = ast_parse_function_java_lambda(NULL, NULL);
-				result = ast_setddi(result, &loc);
-				break;
-			}
+				allow_cast = false; /* Don't allow empty tuples for cast expressions. */
+			} else {
+				/* Lambda function. */
+#ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
+				int error = ast_is_after_lapren_of_java_lambda();
+				if (error != 0) {
+					if unlikely(error < 0)
+						goto err;
+					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+					result = ast_parse_function_java_lambda(NULL, NULL);
+					result = ast_setddi(result, &loc);
+					break;
+				}
 #endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 
-			/* Parenthesis / tuple expression. */
-			result = ast_parse_comma(AST_COMMA_NORMAL,
-			                         AST_FMULTIPLE_TUPLE,
-			                         NULL);
-			if unlikely(!result)
-				goto err_flags;
-			if (result->a_type == AST_EXPAND) {
-				/* Wrap into a single-item tuple multiple-branch:
-				 * >> print (get_items()...); // Convert to tuple. */
-				DREF struct ast **exprv;
-				ast_setddi(result, &loc);
-				exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-				if unlikely(!exprv)
-					goto err_r_flags;
-				exprv[0] = result; /* Inherit */
-				merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-				if unlikely(!merge) {
-					Dee_Free(exprv);
-					goto err_r_flags;
+				/* Parenthesis / tuple expression. */
+				result = ast_parse_comma(AST_COMMA_NORMAL,
+				                         AST_FMULTIPLE_TUPLE,
+				                         NULL);
+				if unlikely(!result)
+					goto err_flags;
+				if (result->a_type == AST_EXPAND) {
+					/* Wrap into a single-item tuple multiple-branch:
+					 * >> print (get_items()...); // Convert to tuple. */
+					DREF struct ast **exprv;
+					ast_setddi(result, &loc);
+					exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+					if unlikely(!exprv)
+						goto err_r_flags;
+					exprv[0] = result; /* Inherit */
+					merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
+					if unlikely(!merge) {
+						Dee_Free(exprv);
+						goto err_r_flags;
+					}
+					result = merge; /* Inherit */
 				}
-				result = merge; /* Inherit */
+				if (result->a_type == AST_MULTIPLE)
+					allow_cast = false; /* Don't allow comma-lists for cast expressions. */
+				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+					goto err_r;
 			}
-			if (result->a_type == AST_MULTIPLE)
-				allow_cast = false; /* Don't allow comma-lists for cast expressions. */
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
-				goto err_r;
+			if (tok == '{' && WARN(W_PROBABLY_MISSING_ARROW))
+				goto err;
 		}
 		result = ast_putddi(result, &loc);
 		if (allow_cast &&
@@ -1205,7 +1212,7 @@ err_restore_pos:
 	}	break;
 
 	case '{':
-		/* Brace initializer. */
+		/* Brace-style sequence or mapping expression. */
 		loc_here(&loc);
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -1479,7 +1486,7 @@ err_begin_expr:
 		}
 		break;
 
-	case TOK_COLLON_COLLON:
+	case TOK_COLON_COLON:
 		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
 		ATTR_FALLTHROUGH
@@ -1526,7 +1533,7 @@ do_warn_deprecated_modifier:
 	default:
 default_case:
 		if (TPP_ISKEYWORD(tok)) {
-			DREF struct symbol *sym; /* Perform a regular symbol lookup. */
+			/* Perform a regular symbol lookup. */
 			struct TPPKeyword *name = token.t_kwd;
 			loc_here(&loc);
 			if unlikely(yield() < 0)
@@ -1537,12 +1544,32 @@ default_case:
 				if unlikely(yield() < 0)
 					goto err;
 				result = ast_parse_import_single(name);
+				if (result && (tok != ';' && tok != ',' && tok != ')' &&
+				               tok != '}' && tok != ']' && tok > 0)) {
+					/* Warn about bad readability in code like:
+					 * >> int from deemon(42)
+					 * Which should really be written as:
+					 * >> (int from deemon)(42)
+					 */
+					char const *symname = "<symbol>";
+					char const *modname = "<module>";
+					if (result->a_type == AST_SYM) {
+						struct symbol *sym = result->a_sym;
+						if (sym->s_type == SYMBOL_TYPE_EXTERN) {
+							symname = sym->s_extern.e_symbol->ss_name;
+							modname = DeeString_STR(sym->s_extern.e_module->mo_name);
+						}
+					}
+					if (WARNAT(&loc, W_UNCLEAR_SYMBOL_FROM_MODULE, symname, modname))
+						goto err;
+				}
 #ifdef CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS
 			} else if (tok == TOK_ARROW) {
 				/* Support for java-style lambda with singular argument. */
 				result = ast_parse_function_java_lambda(name, &loc);
 #endif /* CONFIG_LANGUAGE_HAVE_JAVA_LAMBDAS */
 			} else {
+				DREF struct symbol *sym;
 				sym = lookup_symbol(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS, name, &loc);
 				if unlikely(!sym)
 					goto err;
@@ -1582,7 +1609,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 	do {
 		switch (tok) {
 
-		case TOK_COLLON_COLLON:
+		case TOK_COLON_COLON:
 			/* Backwards compatibility with deemon 100+ */
 			if (WARN(W_DEPRECATED_ATTRIBUTE_SYNTAX))
 				goto err_r;
@@ -1673,7 +1700,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 got_attr:
 				if unlikely(yield() < 0)
 					goto err_r;
-			got_attr2:;
+got_attr2:;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
 					goto err_r;
@@ -1752,40 +1779,26 @@ err_other:
 			break;
 
 		case KWD_pack: {
+			int temp;
 			DREF struct ast *kw_labels;
 			/* Call expression without parenthesis. */
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err_r;
-			if (tok == '(') {
-				old_flags = TPPLexer_Current->l_flags;
-				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if unlikely(yield() < 0)
-					goto err_r_flags;
-				if (tok == ')') {
-					other     = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-					kw_labels = NULL;
-				} else {
-					other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &kw_labels);
-				}
-				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if unlikely(!other)
-					goto err;
-				if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL))
+			if (tok == '(')
+				goto do_normal_call_with_loc;
+			if unlikely(parser_warn_pack_used(&loc))
+				goto err;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
 					goto err_r;
+				other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+				kw_labels = NULL;
 			} else {
-				int temp;
-				temp = maybe_expression_begin();
-				if (temp <= 0) {
-					if unlikely(temp < 0)
-						goto err_r;
-					other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-					kw_labels = NULL;
-				} else {
-					other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE |
-					                                AST_COMMA_STRICTCOMMA,
-					                                &kw_labels);
-				}
+				other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE |
+				                                AST_COMMA_STRICTCOMMA,
+				                                &kw_labels);
 			}
 			if unlikely(!other)
 				goto err_r;
@@ -1810,6 +1823,7 @@ err_other:
 			DREF struct ast *kw_labels;
 			/* Call expression. */
 			loc_here(&loc);
+do_normal_call_with_loc:
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if unlikely(yield() < 0)
@@ -2436,7 +2450,7 @@ ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 		rhs = ast_parse_cond(LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
 			goto err_r;
-		if (cmd == TOK_COLLON_EQUAL) {
+		if (cmd == TOK_COLON_EQUAL) {
 			/* Special case: move-assign. */
 			merge = ast_operator2(AST_SHOULD_MOVEASSIGN(rhs)
 			                      ? OPERATOR_MOVEASSIGN

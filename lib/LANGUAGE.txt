@@ -1506,6 +1506,15 @@ ast_parse_comma(strict_comma, allow_vardecl) ::= (
 		             * >> print y; // 10 (assuming a previous compiler error was ignored)
 		             */
 
+		/* Variable access modifiers */
+		'final' |   /* Variable can only be assigned once (read-only) */
+		'varying' | /* For use with `final': assigned symbolic value can change (can't be constant-propagated)
+		             * e.g.:
+		             * >> final local a         = 42; // OK
+		             * >> final local b         = []; // BAD! -- Someone can still do `b.append(42)'
+		             * >> final local varying c = []; // OK   -- `c' cannot be re-assigned, but the assigned object's state is allowed to change
+		             */
+
 		/* Variable storage-modifiers (only one is allowed) */
 		'static' |
 		'__stack'   /* Create a variable that is kept on the stack.

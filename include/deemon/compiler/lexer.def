@@ -234,6 +234,8 @@ DEF_WARNING(W_DEPRECATED_CHARACTER_INT, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF
 DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `->' to assign an exception symbol is deprecated since deemon 200. Consider using `as' instead"))
 DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `function' to define lambdas in expressions is deprecated. Consider using `() ->' instead"))
 DEF_WARNING(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Lookup mode modifier after C-like declaration type is deprecated since deemon 200. Consider moving the modifier before the type expression, or removing the modifier to have the variable always be declared as `local'"))
+DEF_WARNING(W_DEPRECATED_CLASS_BASE_EXTENDS, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `MyClass extends Super' to specify class base is deprecated. Use `MyClass: Super' instead"))
+DEF_WARNING(W_DEPRECATED_CLASS_BASE_PARENS, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `MyClass(Super)' to specify class base is deprecated. Use `MyClass: Super' instead"))
 
 DEF_WARNING(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `.', a keyword or a string in a module- or symbol-import list, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a keyword or a string in a symbol-import list, but got " TOK_S, TOK_A))
@@ -259,18 +261,18 @@ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CALL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expe
 DEF_WARNING(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `is' or `in' after `!', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_DOT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a keyword after `.', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_VARIABLE_AFTER_VISIBILITY, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected variable name after `global' or `local', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after expression, but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_RETURN, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `return', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_YIELD, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `yield', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_IMPORT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `import', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after expression, but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_RETURN, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `return', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_YIELD, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `yield', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_IMPORT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `import', but got " TOK_S, TOK_A))
 DEF_WARNING(W_YIELD_AFTER_RETURN, (WG_SYNTAX), WSTATE_ERROR, WARNF("`yield' statements are illegal after a non-empty `return' statement"))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_THROW, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `throw', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_PRINT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `print', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_ASSERT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `assert', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_DOWHILE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `do ... while', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_BREAK, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `break' or `continue', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_DEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `del', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_ASM, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `__asm__', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_THROW, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `throw', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_PRINT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `print', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_ASSERT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `assert', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_DOWHILE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `do ... while', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_BREAK, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `break' or `continue', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_DEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `del', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_ASM, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `__asm__', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_DEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `del', but got " TOK_S, TOK_A))
 DEF_WARNING(W_UNEXPECTED_EXPRESSION_FOR_DEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("`del' expects a symbol, attribute, item, or range expression"))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_DEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `del', but got " TOK_S, TOK_A))
@@ -299,10 +301,10 @@ DEF_WARNING(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, (WG_SYNTAX), WSTATE_E
 DEF_WARNING(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, (WG_SYNTAX), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Default value specified for optional argument `%s'", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `for', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON1_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `for', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON2_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a second `;' after `for', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON1_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `for', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON2_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a second `;' after `for', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_FOR, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `for', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_FOREACH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `foreach', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_COLON_AFTER_FOREACH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `foreach', but got " TOK_S, TOK_A))
 DEF_WARNING(W_VARIABLE_MODIFIER_DUPLICATED, (WG_SYNTAX), WSTATE_ERROR, WARNF("The variable modifier " TOK_S " has already been used", TOK_A))
 DEF_WARNING(W_VARIABLE_MODIFIER_INCOMPATIBLE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Variable modifier " TOK_S " is incompatible with `%s'", TOK_A, ARG(char *)))
 DEF_WARNING(W_VARYING_WITHOUT_FINAL, (WG_SYNTAX), WSTATE_ERROR, WARNF("`varying' used without `final'"))
@@ -314,37 +316,58 @@ DEF_WARNING(W_RETURN_IN_YIELD_FUNCTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Return
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `(' in tag, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `assert' in expression, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_EQUAL_AFTER_BRACE_DOT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `=' after `.' in mapping-like brace initializer, but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_DICT_KEY, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after key in mapping-like brace initializer, but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_COLON_AFTER_DICT_KEY, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after key in mapping-like brace initializer, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_COMMA_IN_LIST_INITIALIZER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `,' within list initializer, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:=' after `move' in operator name, but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME, (WG_D200), WSTATE_WARN, WARNF("Expected `:=' in operator name instead of `='"))
+DEF_WARNING(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME, (WG_D200), WSTATE_WARN, WARNF("Expected `:=' in operator name instead of `='"))
 DEF_WARNING(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected an empty string for `operator str'"))
 DEF_WARNING(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `[' or `.' after `del' in operator name, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_BRACE_DOT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after `.' in brace initializer, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UNKNOWN_OPERATOR_NAME, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown operator name " TOK_S, TOK_A))
 DEF_WARNING(W_CANNOT_TEST_EXPRESSION_BINDING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Cannot test binding of expression. Expected a symbol, or attribute expression"))
-DEF_WARNING(W_UNCLEAR_CAST_INTENT, (WG_QUALITY), WSTATE_DISABLED, WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
-                                                                     "To suppress this warning, add a second pair of parenthesis to the previous expression"))
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after keyword label in argument list, but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_COLON_AFTER_KEYWORD_LABEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after keyword label in argument list, but got " TOK_S, TOK_A))
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 DEF_WARNING(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected token " TOK_S " encountered within declaration expression", TOK_A))
 DEF_WARNING(W_EXPECTED_DOTS_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `...' after sequence declaration, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}' after sequence declaration, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_TUPLE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after Tuple declaration, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, (WG_CONST, WG_VALUE), WSTATE_ERROR, WARNF("Expected a constant expression as argument for `type' inside of a declaration expression"))
-#endif
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+WARNING(_W_UNUSED_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR)
+WARNING(_W_UNUSED_EXPECTED_DOTS_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR)
+WARNING(_W_UNUSED_EXPECTED_RBRACE_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR)
+WARNING(_W_UNUSED_EXPECTED_RPAREN_AFTER_TUPLE, (WG_SYNTAX), WSTATE_ERROR)
+WARNING(_W_UNUSED_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, (WG_CONST, WG_VALUE), WSTATE_ERROR)
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
+WARNING_NAMESPACE(WN_QUALITY, 2250)
+DEF_WARNING(W_UNCLEAR_CAST_INTENT, (WG_QUALITY), WSTATE_DISABLED, /* Leave this warning disabled; too many false positives. */
+            WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
+                  "To suppress this warning, add a second pair of parenthesis to the previous expression"))
+DEF_WARNING(W_PROBABLY_MISSING_ARROW, (WG_QUALITY), WSTATE_WARN,
+            WARNF("Encountered `{' after parenthesis (`(*) {'). This will compile as `Tuple({*})({ ...', "
+                  "which probably isn't what you want. Insert `->' if this is meant to be a lambda, or "
+                  "write `(...)({ ... })' if you really want to call a tuple"))
+DEF_WARNING(W_UNCLEAR_SYMBOL_FROM_MODULE, (WG_QUALITY), WSTATE_WARN, {
+	char const *sym = ARG(char const *);
+	char const *mod = ARG(char const *);
+	WARNF("Consider writing `(%s from %s)' to prevent confusion on where the module name ends", sym, mod);
+})
+DEF_WARNING(W_PACKED_USED_OUTSIDE_OF_MACRO, (WG_QUALITY), WSTATE_WARN,
+            WARNF("Using `pack' outside of macros makes code harder to read. Consider using parenthesis instead"))
+
 
 
 WARNING_NAMESPACE(WN_GOTO_LABEL, 2380)
 DEF_WARNING(W_MISSING_STATEMENT_AFTER_LABEL, (WG_SYNTAX), WSTATE_WARN, WARNF("Expected a statement after a label, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_GOTO, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a keyword after `goto', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_SEMICOLLON_AFTER_GOTO, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `goto', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_SEMICOLON_AFTER_GOTO, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `;' after `goto', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_SWITCH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `switch', but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RPAREN_AFTER_SWITCH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `switch', but got " TOK_S, TOK_A))
 DEF_WARNING(W_NOT_INSIDE_A_SWITCH_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("`case' and `default' labels are only allowed while inside of a switch-statement"))
 DEF_WARNING(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Another `default' label had already been defined"))
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_DEFAULT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `default', but got " TOK_S, TOK_A))
-DEF_WARNING(W_EXPECTED_COLLON_AFTER_CASE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `case', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_COLON_AFTER_DEFAULT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `default', but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_COLON_AFTER_CASE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `case', but got " TOK_S, TOK_A))
 
 WARNING_NAMESPACE(WN_ASM_PARSER, 2400)
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_ASM, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `__asm__', but got " TOK_S, TOK_A))
@@ -477,11 +500,11 @@ WARNING_NAMESPACE(WN_ASM_INTERPRETER, 4100)
 WARNING(W_UNUSED_4100, (WG_VALUE), WSTATE_DISABLED) /* `W_UASM_NOT_SUPPORTED' */
 DEF_WARNING(W_UASM_PARSING_FAILED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Failed to parse an assembly directive or instruction from " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_IGNORING_TRAILING_TOKENS, (WG_SYNTAX), WSTATE_ERROR, WARNF("Ignoring trailing token " TOK_S " after assembly directive or instruction", TOK_A))
-DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_INTEGER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after integer for symbol definition, but got " TOK_S, TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_INTEGER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after integer for symbol definition, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_UNKNOWN_MNEMONIC, (WG_ASM_UNKNOWN_MNEMONIC, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown mnemonic `%s'", KWDNAME()))
 DEF_WARNING(W_UASM_UNKNOWN_DIRECTIVE, (WG_ASM_UNKNOWN_DIRECTIVE, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown directive `%s'", KWDNAME()))
-DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after storage class prefix, but got " TOK_S, TOK_A))
-DEF_WARNING(W_UASM_EXPECTED_COLLON_AFTER_EXTERN_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `extern' prefix, but got " TOK_S, TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after storage class prefix, but got " TOK_S, TOK_A))
+DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after `extern' prefix, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}' after `{' in mnemonic operand, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `]' after `[' in mnemonic operand, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `PC' or `SP' after `.' following an assembly expression, but got " TOK_S, TOK_A))

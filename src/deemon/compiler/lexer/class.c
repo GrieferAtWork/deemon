@@ -42,8 +42,8 @@
 DECL_BEGIN
 
 INTDEF int DCALL skip_lf(void);
-#define is_semicollon() (tok == ';' || tok == '\n')
-PRIVATE tok_t DCALL yield_semicollon(void) {
+#define is_semicolon() (tok == ';' || tok == '\n')
+PRIVATE tok_t DCALL yield_semicolon(void) {
 	tok_t result = yield();
 	if (result == '\n') {
 		uint32_t old_flags;
@@ -1012,7 +1012,11 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (tok == KWD_pack) {
+				struct ast_loc packloc;
+				loc_here(&packloc);
 				if unlikely(yield() < 0)
+					goto err_flags;
+				if unlikely(tok != '(' && parser_warn_pack_used(&packloc))
 					goto err_flags;
 				has_paren = false;
 				temp = maybe_expression_begin();
@@ -1342,9 +1346,9 @@ got_callback_id:
 	callbacks[callback_id] = callback; /* Inherit */
 	/* Parse a semicolon if one is required. */
 	if (need_semi) {
-		if unlikely(likely(is_semicollon())
-		            ? (yield_semicollon() < 0)
-		            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+		if unlikely(likely(is_semicolon())
+		            ? (yield_semicolon() < 0)
+		            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 			goto err;
 	}
 	goto next_callback;
@@ -1391,6 +1395,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 do_parse_class_base:
 		if unlikely(yield() < 0)
 			goto err;
+do_parse_class_base_after_yield:
 		/* Parse the class's base expression.
 		 * NOTE: We parse it as a unary-base expression, so-as to not
 		 *       parse the `{' token that follows as a brace-initializer. */
@@ -1401,6 +1406,8 @@ do_parse_class_base:
 		/* Just another syntax for class bases that the old
 		 * deemon supported and we're supporting as well.
 		 * Though I should note that the intended syntax is `class foo: bar { ... }' */
+		if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
+			goto err;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err;
@@ -1415,9 +1422,24 @@ do_parse_class_base:
 		 * I decided that it wouldn't merit its own keyword because
 		 * this may there is much less overhead. */
 		if (TPP_ISKEYWORD(tok) &&
-		    (tok == KWD_pack || !strcmp(token.t_kwd->k_name, "extends")))
+		    (tok == KWD_pack || !strcmp(token.t_kwd->k_name, "extends"))) {
+			if (tok == KWD_pack) {
+				struct ast_loc packloc;
+				if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
+					goto err;
+				loc_here(&packloc);
+				if unlikely(yield() < 0)
+					goto err;
+				if unlikely(tok != '(' && parser_warn_pack_used(&packloc))
+					goto err;
+				goto do_parse_class_base_after_yield;
+			}
+			if (WARN(W_DEPRECATED_CLASS_BASE_EXTENDS))
+				goto err;
 			goto do_parse_class_base;
-		/* Automatically use `object' as base class unless `@nobase' was specified. */
+		}
+
+		/* Automatically use `Object' as base class unless `@nobase' was specified. */
 		if (HAS(EXT_OLD_STYLE_CLASSES)) {
 			DREF DeeModuleObject *d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
@@ -1937,9 +1959,9 @@ set_operator_ast:
 			/* Parse a trailing ';' if required to. */
 			if (need_semi) {
 yield_semi_after_operator:
-				if unlikely(likely(is_semicollon())
-				            ? (yield_semicollon() < 0)
-				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+				if unlikely(likely(is_semicolon())
+				            ? (yield_semicolon() < 0)
+				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 			}
 			break;
@@ -2047,7 +2069,7 @@ define_constructor:
 						}
 						if unlikely(yield() < 0)
 							goto err;
-						goto do_yield_semicollon;
+						goto do_yield_semicolon;
 					}
 					if (tok == KWD_super) {
 						/* Inherit constructors.
@@ -2069,7 +2091,7 @@ define_constructor:
 						maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FSUPER;
 						if unlikely(yield() < 0)
 							goto err;
-						goto do_yield_semicollon;
+						goto do_yield_semicolon;
 					}
 					if (tok == KWD_default) {
 						/* Default constructors. */
@@ -2086,7 +2108,7 @@ define_constructor:
 						}
 						if unlikely(yield() < 0)
 							goto err;
-						goto do_yield_semicollon;
+						goto do_yield_semicolon;
 					}
 					if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
 						if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
@@ -2152,7 +2174,7 @@ err_ctor_expr:
 							goto err;
 						maker.cm_initv[maker.cm_initc++] = call_branch; /* Inherit reference. */
 					}
-					goto do_yield_semicollon;
+					goto do_yield_semicolon;
 				}
 				if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
 					if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
@@ -2178,12 +2200,25 @@ err_ctor_expr:
 					if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 						goto err_anno;
 				} else if (tok == KWD_pack) {
+					struct ast_loc packloc;
 					/* Argument list. */
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+					loc_here(&packloc);
 					if unlikely(yield() < 0)
 						goto err_anno;
-					if unlikely(parse_arglist())
-						goto err_anno;
+					if (tok == '(') {
+						if unlikely(yield() < 0)
+							goto err_anno;
+						if unlikely(parse_arglist())
+							goto err_anno;
+						if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+							goto err_anno;
+					} else {
+						if unlikely(parser_warn_pack_used(&packloc))
+							goto err;
+						if unlikely(parse_arglist())
+							goto err_anno;
+					}
 					if (parser_flags & PARSE_FLFSTMT)
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 				} else {
@@ -2238,7 +2273,7 @@ err_ctor_expr:
 					goto err;
 			}
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-			if (is_semicollon()) {
+			if (is_semicolon()) {
 				if (member_class == MEMBER_CLASS_AUTO) {
 					if (WARNAT(&loc, W_IMPLICIT_MEMBER_DECLARATION, member_name))
 						goto err_decl;
@@ -2263,7 +2298,7 @@ err_ctor_expr:
 				decl_ast_fini(&decl);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				++*pusage_counter;
-				if unlikely(yield_semicollon() < 0)
+				if unlikely(yield_semicolon() < 0)
 					goto err;
 				break;
 			}
@@ -2380,9 +2415,9 @@ err_property:
 					goto err;
 				/* Increment the usage-counter to consume the member slot. */
 				++*pusage_counter;
-				if unlikely(likely(is_semicollon())
-				            ? (yield_semicollon() < 0)
-				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+				if unlikely(likely(is_semicolon())
+				            ? (yield_semicolon() < 0)
+				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 				break;
 			}
@@ -2496,10 +2531,10 @@ err_property:
 			++*pusage_counter;
 check_need_semi:
 			if (need_semi) {
-do_yield_semicollon:
-				if unlikely(likely(is_semicollon())
-				            ? (yield_semicollon() < 0)
-				            : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+do_yield_semicolon:
+				if unlikely(likely(is_semicolon())
+				            ? (yield_semicolon() < 0)
+				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 			}
 		}	break;

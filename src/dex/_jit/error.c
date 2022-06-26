@@ -238,7 +238,7 @@ syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self) {
 }
 
 INTERN ATTR_COLD int FCALL
-syn_foreach_expected_collon_after_foreach(JITLexer *__restrict self) {
+syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "Expected `:' after `foreach (...', but got `%$s'",
@@ -465,7 +465,7 @@ syn_brace_expected_equals_after_dot(JITLexer *__restrict self) {
 }
 
 INTERN ATTR_COLD int FCALL
-syn_brace_expected_collon_after_key(JITLexer *__restrict self) {
+syn_brace_expected_colon_after_key(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
 	                       "Expected `:' after key in mapping-like brace initializer, but got `%$s'",

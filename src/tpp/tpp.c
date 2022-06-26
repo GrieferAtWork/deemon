@@ -277,7 +277,7 @@ extern "C" {
 LOCAL void *
 tpp_memrchr(void const *p, int c, size_t n) {
 	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
+	while (iter > (uint8_t *)p) {
 		if (*--iter == c)
 			return iter;
 	}
@@ -298,7 +298,8 @@ tpp_memrchr(void const *p, int c, size_t n) {
 LOCAL int tpp_strcasecmp(char const *s1, char const *s2) {
 	char c1, c2;
 	do {
-		if ((c1 = *s1++) != (c2 = *s2++) && ((c1 = tolower(c1)) != (c2 = tolower(c2))))
+		if (((c1 = *s1++) != (c2 = *s2++)) &&
+		    ((c1 = tolower(c1)) != (c2 = tolower(c2))))
 			return (int)((unsigned char)c1 - (unsigned char)c2);
 	} while (c1);
 	return 0;
@@ -314,9 +315,11 @@ LOCAL int tpp_strcasecmp(char const *s1, char const *s2) {
 LOCAL int tpp_strncasecmp(char const *s1, char const *s2, size_t maxlen) {
 	char c1, c2;
 	do {
-		if (!maxlen--)
+		if (!maxlen)
 			break;
-		if ((c1 = *s1++) != (c2 = *s2++) && ((c1 = tolower(c1)) != (c2 = tolower(c2))))
+		--maxlen;
+		if (((c1 = *s1++) != (c2 = *s2++)) &&
+		    ((c1 = tolower(c1)) != (c2 = tolower(c2))))
 			return (int)((unsigned char)c1 - (unsigned char)c2);
 	} while (c1);
 	return 0;
@@ -324,9 +327,17 @@ LOCAL int tpp_strncasecmp(char const *s1, char const *s2, size_t maxlen) {
 #endif /* !_MSC_VER */
 #endif /* !__USE_GNU && !strncasecmp */
 
-#if !defined(__USE_KOS) && !defined(strend)
+#ifndef __USE_KOS
+#ifndef strend
 #define strend(s) ((s) + strlen(s))
-#endif /* !__USE_KOS && !strend */
+#endif /* !strend */
+#ifndef memmoveup
+#define memmoveup memmove
+#endif /* !memmoveup */
+#ifndef memmovedown
+#define memmovedown memmove
+#endif /* !memmovedown */
+#endif /* !__USE_KOS */
 
 #ifndef TPP_BREAKPOINT
 #ifdef _MSC_VER
@@ -726,7 +737,7 @@ LOCAL char *tpp_rskip_wraplf(char const *iter, char const *begin) {
 }
 
 #define LSTRIP_SPACE(begin, end)             \
-	while ((begin) != (end)) {               \
+	while ((begin) < (end)) {                \
 		begin = tpp_skip_wraplf(begin, end); \
 		if (!tpp_isspace(*(begin)))          \
 			break;                           \
@@ -1699,7 +1710,8 @@ _funop_getarg(funop_t **piter) {
 LOCAL funop_t *TPPCALL
 funop_putarg(funop_t *piter, size_t arg) {
 	size_t temp, shift;
-	temp = arg, shift = 0;
+	temp  = arg;
+	shift = 0;
 	do {
 		temp >>= 7;
 		shift += 7;
@@ -1742,7 +1754,7 @@ TPP_Hashof(void const *data, size_t size) {
 	hash_t result = 1;
 	unsigned char const *iter, *end;
 	end = (iter = (unsigned char const *)data) + size;
-	for (; iter != end; ++iter)
+	for (; iter < end; ++iter)
 		result = result * 263 + *iter;
 	return result;
 }
@@ -1750,25 +1762,25 @@ TPP_Hashof(void const *data, size_t size) {
 PRIVATE char *TPPCALL
 skip_whitespace_and_comments(char *iter, char *end) {
 	assert(iter <= end);
-	while (iter != end) {
-		while (iter != end) {
+	while (iter < end) {
+		while (iter < end) {
 			iter = tpp_skip_wraplf(iter, end);
 			if (!tpp_isspace(*iter))
 				break;
 			++iter;
 		}
-		if (iter == end)
+		if (iter >= end)
 			break;
-		if (*iter == '/' && iter + 1 != end) {
+		if (*iter == '/' && iter + 1 < end) {
 			char *forward = iter + 1;
 			forward = tpp_skip_wraplf(forward, end);
 			if (*forward == '*' &&
 			    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 				++forward;
-				while (forward != end) {
-					while (forward != end && *forward != '*')
+				while (forward < end) {
+					while (forward < end && *forward != '*')
 						++forward;
-					if (forward == end || ++forward == end)
+					if (forward >= end || ++forward >= end)
 						return forward;
 					forward = tpp_skip_wraplf(forward, end);
 					if (*forward == '/') {
@@ -1782,9 +1794,9 @@ skip_whitespace_and_comments(char *iter, char *end) {
 			if (*forward == '/' &&
 			    (CURRENT.l_extokens & TPPLEXER_TOKEN_CPP_COMMENT)) {
 				iter = forward;
-				while (iter != end) {
-					if (*iter == '\\' && iter + 1 != end && tpp_islf(iter[1])) {
-						if (*++iter == '\r' && *iter == '\n' && iter + 1 != end)
+				while (iter < end) {
+					if (*iter == '\\' && iter + 1 < end && tpp_islf(iter[1])) {
+						if (*++iter == '\r' && *iter == '\n' && iter + 1 < end)
 							++iter;
 						++iter;
 					} else if (tpp_islf(*iter)) {
@@ -1841,9 +1853,9 @@ next:
 			if (CURRENT.l_extokens & TPPLEXER_TOKEN_CPP_COMMENT) {
 				/* Check for a C++-style comment. */
 				forward = iter - 1;
-				if (*forward == '\n' && forward != begin && forward[-1] == '\r')
+				if (*forward == '\n' && forward > begin && forward[-1] == '\r')
 					--forward;
-				while (forward != begin && !tpp_islf(forward[-1])) {
+				while (forward > begin && !tpp_islf(forward[-1])) {
 					if (forward[-1] == '/' && *forward == '/') {
 						/* Found a C++-style comment.
 						 * >> Now we must continue skipping whitespace before `forward-1' */
@@ -1878,7 +1890,7 @@ skip_whitespacenolf_and_comments_rev(char *iter, char *begin) {
 		}
 		if (iter == begin)
 			break;
-		if (iter[-1] == '/' && iter - 1 != begin &&
+		if (iter[-1] == '/' && iter - 1 > begin &&
 		    (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			char *forward = iter - 1;
 			forward = tpp_rskip_wraplf(forward, begin);
@@ -1949,9 +1961,9 @@ copy_result2:
 		result = (struct TPPString *)API_REALLOC(rhs, alloc_size);
 		if unlikely(!result)
 			goto err;
-		memmove(result->s_text + lhs_size,
-		        result->s_text,
-		        (total_size - lhs_size) * sizeof(char));
+		memmoveup(result->s_text + lhs_size,
+		          result->s_text,
+		          (total_size - lhs_size) * sizeof(char));
 		memcpy(result->s_text, lhs->s_text, lhs_size * sizeof(char));
 		--lhs->s_refcnt;
 		assert(lhs->s_refcnt);
@@ -2171,13 +2183,13 @@ again:
 	             temp > last_linefeed ||     /* Mac-style line-feed past unix-style. */
 	             temp == last_linefeed - 1)) /* Windows-style CRLF linefeed extension. */
 		last_linefeed = temp;
-	if (last_linefeed && (last_linefeed != begin && last_linefeed[-1] == '\\')) {
+	if (last_linefeed && (last_linefeed > begin && last_linefeed[-1] == '\\')) {
 		/* This linefeed is escaped (Must try again in a more narrow search area) */
 		length = (size_t)(last_linefeed - begin) - 1;
 		goto again;
 	}
 	if (last_linefeed) {
-		if (++last_linefeed != begin + length && *last_linefeed == '\n')
+		if (++last_linefeed < begin + length && *last_linefeed == '\n')
 			++last_linefeed;
 	}
 	return last_linefeed;
@@ -2191,7 +2203,7 @@ again:
 	temp     = (char *)memchr(begin, '\r', length * sizeof(char));
 	if (temp && (!linefeed || temp < linefeed))
 		linefeed = temp;
-	if (linefeed && (linefeed != begin && linefeed[-1] == '\\')) {
+	if (linefeed && (linefeed > begin && linefeed[-1] == '\\')) {
 		/* This linefeed is escaped (Must try again in a more narrow search area) */
 		if (*linefeed == '\r')
 			++linefeed;
@@ -2204,9 +2216,9 @@ again:
 LOCAL char *TPPCALL
 string_find_eol_after_comments(char *iter, char *end) {
 	assert(iter <= end);
-	while (iter != end) {
+	while (iter < end) {
 		if (*iter == '\\') {
-			if (++iter == end)
+			if (++iter >= end)
 				break;
 			if (*iter == '\r' && iter + 1 < end && iter[1] == '\n')
 				++iter;
@@ -2214,17 +2226,16 @@ string_find_eol_after_comments(char *iter, char *end) {
 			break;
 		} else if (*iter == '/' &&
 		         (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
-			if (++iter != end) {
+			if (++iter < end)
 				iter = tpp_skip_wraplf(iter, end);
-			}
 			if (*iter == '/') {
 				++iter;
 				return string_find_eol(iter, (size_t)(end - iter));
 			}
 			if (*iter == '*') {
 				++iter;
-				while (iter != end) {
-					while (iter != end && *iter != '*')
+				while (iter < end) {
+					while (iter < end && *iter != '*')
 						++iter;
 					if (iter == end)
 						break;
@@ -2243,11 +2254,10 @@ LOCAL size_t TPPCALL
 string_count_lf(char *__restrict iter, size_t length) {
 	char *end     = iter + length;
 	size_t result = 0;
-	while (iter != end) {
+	while (iter < end) {
 		assert(iter < end);
 		if (*iter == '\r') {
-			if (iter != end - 1 &&
-			    iter[1] == '\n')
+			if (iter < end - 1 && iter[1] == '\n')
 				++iter;
 			++result;
 		} else if (*iter == '\n') {
@@ -2305,10 +2315,10 @@ lcinfo_handle(struct TPPLCInfo *__restrict self,
 	char ch, *end = text + size;
 	assert(self);
 	assert(text <= end);
-	for (; text != end; ++text) {
+	for (; text < end; ++text) {
 		ch = *text;
 		if (ch == '\r') {
-			if (text != end - 1 && text[1] == '\n')
+			if (text < end - 1 && text[1] == '\n')
 				++text;
 lf:
 			self->lc_col = 0;
@@ -2513,8 +2523,9 @@ fallback_cl:
 		/* NOTE: Must accept \0 as linefeed here to correctly
 		 *       determine column numbers after a #define directive. */
 		column_num = 0;
-		begin = TPPString_TEXT(self->f_text), iter = text_pointer;
-		for (; iter != begin && !tpp_islforzero(iter[-1]); --iter)
+		begin = TPPString_TEXT(self->f_text);
+		iter = text_pointer;
+		for (; iter > begin && !tpp_islforzero(iter[-1]); --iter)
 			column_num += iter[-1] == '\t' ? (col_t)CURRENT.l_tabsize : 1;
 		info->lc_col = column_num;
 	}	break;
@@ -2727,43 +2738,44 @@ determine_encoding(char **pdata, size_t data_size) {
 	static unsigned char const seq_utf16_le[] = { 0xff, 0xfe };
 	static unsigned char const seq_utf8[]     = { 0xef, 0xbb, 0xbf };
 	encoding_t result                         = TPP_ENCODING_UTF8;
-#define CHECK_SEQ(seq)                  \
-	(sizeof(seq) <= data_size &&        \
-	 !memcmp(data, seq, sizeof(seq)) && \
+#define CHECK_SEQ(seq)                        \
+	((sizeof(seq) <= data_size) &&            \
+	 (memcmp(data, seq, sizeof(seq)) == 0) && \
 	 (data += sizeof(seq), 1))
 	char *data;
 	assert(pdata);
 	assert(*pdata);
 	assert(data_size);
 	data = *pdata;
-	if (CHECK_SEQ(seq_utf8)) /*result = TPP_ENCODING_UTF8*/
-		;
-	else if (CHECK_SEQ(seq_utf32_be))
+	if (CHECK_SEQ(seq_utf8)) {
+		/*result = TPP_ENCODING_UTF8*/
+	} else if (CHECK_SEQ(seq_utf32_be)) {
 		result = TPP_ENCODING_UTF32_BE;
-	else if (CHECK_SEQ(seq_utf32_le))
+	} else if (CHECK_SEQ(seq_utf32_le)) {
 		result = TPP_ENCODING_UTF32_LE;
-	else if (CHECK_SEQ(seq_utf16_be))
+	} else if (CHECK_SEQ(seq_utf16_be)) {
 		result = TPP_ENCODING_UTF16_BE;
-	else if (CHECK_SEQ(seq_utf16_le))
+	} else if (CHECK_SEQ(seq_utf16_le)) {
 		result = TPP_ENCODING_UTF16_LE;
+	}
 	/* Detect from recurring patterns. */
 	else if (data_size >= 8 &&
 	         data[0] && !data[1] && !data[2] && !data[3] &&
-	         data[4] && !data[5] && !data[6] && !data[7])
+	         data[4] && !data[5] && !data[6] && !data[7]) {
 		result = TPP_ENCODING_UTF32_LE;
-	else if (data_size >= 8 &&
-	         !data[0] && !data[1] && !data[2] && data[3] &&
-	         !data[4] && !data[5] && !data[6] && data[7])
+	} else if (data_size >= 8 &&
+	           !data[0] && !data[1] && !data[2] && data[3] &&
+	           !data[4] && !data[5] && !data[6] && data[7]) {
 		result = TPP_ENCODING_UTF32_BE;
-	else if (data_size >= 4 &&
-	         data[0] && !data[1] &&
-	         data[2] && !data[3])
+	} else if (data_size >= 4 &&
+	           data[0] && !data[1] &&
+	           data[2] && !data[3]) {
 		result = TPP_ENCODING_UTF16_LE;
-	else if (data_size >= 4 &&
-	         !data[0] && data[1] &&
-	         !data[2] && data[3])
+	} else if (data_size >= 4 &&
+	           !data[0] && data[1] &&
+	           !data[2] && data[3]) {
 		result = TPP_ENCODING_UTF16_BE;
-	else {
+	} else {
 		/* Default: Continue assuming no special encoding. */
 	}
 	*pdata = data;
@@ -2778,19 +2790,19 @@ TPP_SizeofDecodeUtf32(uint32_t *iter, size_t datalength) {
 	uint32_t ch;
 	size_t result = 0;
 	uint32_t *end = iter + datalength;
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter++;
-		if (ch >= 0xd800 && ch <= 0xdfff)
+		if (ch >= 0xd800 && ch <= 0xdfff) {
 			result += 1;
-		else if (ch < 0x80)
+		} else if (ch < 0x80) {
 			result += 1;
-		else if (ch < 0x800)
+		} else if (ch < 0x800) {
 			result += 2;
-		else if (ch < 0x10000)
+		} else if (ch < 0x10000) {
 			result += 3;
-		else if (ch <= 0x0010ffff)
+		} else if (ch <= 0x0010ffff) {
 			result += 4;
-		else {
+		} else {
 			result += 1;
 		}
 	}
@@ -2802,19 +2814,19 @@ TPP_DecodeUtf32(char *buf, uint32_t *iter, size_t datalength) {
 	uint32_t ch;
 	size_t dst_size;
 	uint32_t *end = iter + datalength;
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter++;
-		if (ch >= 0xd800 && ch <= 0xdfff)
+		if (ch >= 0xd800 && ch <= 0xdfff) {
 			dst_size = 1;
-		else if (ch < 0x80)
+		} else if (ch < 0x80) {
 			dst_size = 1;
-		else if (ch < 0x800)
+		} else if (ch < 0x800) {
 			dst_size = 2;
-		else if (ch < 0x10000)
+		} else if (ch < 0x10000) {
 			dst_size = 3;
-		else if (ch <= 0x0010ffff)
+		} else if (ch <= 0x0010ffff) {
 			dst_size = 4;
-		else {
+		} else {
 			dst_size = 1;
 		}
 		switch (dst_size) {
@@ -2846,27 +2858,27 @@ TPP_SizeofDecodeUtf16(uint16_t *iter, size_t datalength) {
 	uint16_t const *end = iter + datalength;
 	uint32_t ch, ch2;
 	size_t result = 0;
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter++; /* Convert surrogate pair to Utf32 */
 		if (ch >= 0xd800 && ch <= 0xdbff) {
-			if (iter == end)
+			if (iter >= end) {
 				ch = (unsigned char)ch;
-			else if ((ch2 = *iter, ch2 >= 0xdc00 && ch2 <= 0xdfff)) {
+			} else if ((ch2 = *iter, ch2 >= 0xdc00 && ch2 <= 0xdfff)) {
 				ch = ((ch - 0xd800) << 10) + (ch2 - 0xdc00) + 0x0010000;
 				++iter;
 			}
 		} else if (ch >= 0xdc00 && ch <= 0xdfff) {
 			ch = (unsigned char)ch;
 		}
-		if (ch < 0x80)
+		if (ch < 0x80) {
 			result += 1;
-		else if (ch < 0x800)
+		} else if (ch < 0x800) {
 			result += 2;
-		else if (ch < 0x10000)
+		} else if (ch < 0x10000) {
 			result += 3;
-		else if (ch < 0x110000)
+		} else if (ch < 0x110000) {
 			result += 4;
-		else {
+		} else {
 			result += 1;
 		}
 	}
@@ -2878,27 +2890,27 @@ TPP_DecodeUtf16(char *buf, uint16_t *iter, size_t datalength) {
 	uint16_t const *end = iter + datalength;
 	uint32_t ch, ch2;
 	size_t dst_size;
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter++; /* Convert surrogate pair to Utf32 */
 		if (ch >= 0xd800 && ch <= 0xdbff) {
-			if (iter == end)
+			if (iter >= end) {
 				ch = (unsigned char)ch;
-			else if ((ch2 = *iter, ch2 >= 0xdc00 && ch2 <= 0xdfff)) {
+			} else if ((ch2 = *iter, ch2 >= 0xdc00 && ch2 <= 0xdfff)) {
 				ch = ((ch - 0xd800) << 10) + (ch2 - 0xdc00) + 0x0010000;
 				++iter;
 			}
 		} else if (ch >= 0xdc00 && ch <= 0xdfff) {
 			ch = (unsigned char)ch;
 		}
-		if (ch < 0x80)
+		if (ch < 0x80) {
 			dst_size = 1;
-		else if (ch < 0x800)
+		} else if (ch < 0x800) {
 			dst_size = 2;
-		else if (ch < 0x10000)
+		} else if (ch < 0x10000) {
 			dst_size = 3;
-		else if (ch < 0x110000)
+		} else if (ch < 0x110000) {
 			dst_size = 4;
-		else {
+		} else {
 			dst_size = 1;
 		}
 		switch (dst_size) {
@@ -2968,9 +2980,9 @@ convert_encoding(/*ref*/ struct TPPString *data,
 		swap16((uint16_t *)data_start, data_size / 2);
 		ATTR_FALLTHROUGH
 	case TPP_ENCODING_UTF16_BE:
-#else
-#error FIXME
-#endif
+#else /* TPP_BYTEORDER == ... */
+#error "ERROR: Unsupported `TPP_BYTEORDER'"
+#endif /* TPP_BYTEORDER != ... */
 		req_size = TPP_SizeofDecodeUtf16((uint16_t *)data_start, data_size / 2);
 		new_data = TPPString_NewSized(size_used + req_size);
 		if unlikely(!new_data)
@@ -3112,10 +3124,11 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 			self->f_textfile.f_lfpos = NULL;
 #endif /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
 			if (newchunk->s_refcnt == 1) {
-				memmove(newchunk->s_text, self->f_end, prefix_size * sizeof(char));
-				newchunk = (struct TPPString *)API_REALLOC(newchunk, TPP_OFFSETOF(struct TPPString, s_text) +
-				                                                     (STREAM_BUFSIZE + 1 + prefix_size) * sizeof(char));
-				/* It ~should?~ be OK if we don't clean up the `memmove' above. */
+				memmovedown(newchunk->s_text, self->f_end, prefix_size * sizeof(char));
+				newchunk = (struct TPPString *)API_REALLOC(newchunk,
+				                                           TPP_OFFSETOF(struct TPPString, s_text) +
+				                                           (STREAM_BUFSIZE + 1 + prefix_size) * sizeof(char));
+				/* It ~should?~ be OK if we don't clean up the `memmovedown' above. */
 #ifdef TPP_CONFIG_SET_API_ERROR
 				if unlikely(!newchunk)
 					return -1;
@@ -3207,7 +3220,7 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 		assert(read_bufsize <= STREAM_BUFSIZE);
 		/* Clamp the chunk size to what was actually read. */
 		assert(newchunk == self->f_text);
-		if (read_bufsize != STREAM_BUFSIZE) {
+		if (read_bufsize < STREAM_BUFSIZE) {
 			/* Free unused buffer memory. */
 			newchunk->s_size -= STREAM_BUFSIZE;
 			newchunk->s_size += read_bufsize;
@@ -3242,12 +3255,12 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 				char *new_text_start = text_start;
 				/* Determine encoding based on the initial chunk. */
 				self->f_textfile.f_encoding = determine_encoding(&new_text_start, read_bufsize);
-				if (text_start != new_text_start) {
+				assert(new_text_start >= text_start);
+				if (new_text_start > text_start) {
 					size_t size_diff = (size_t)(new_text_start - text_start);
-					assert(new_text_start > text_start);
 					assert(size_diff <= (size_t)read_bufsize);
 					read_bufsize -= size_diff;
-					memmove(text_start, new_text_start, read_bufsize * sizeof(char));
+					memmovedown(text_start, new_text_start, read_bufsize * sizeof(char));
 					newchunk->s_size -= size_diff;
 					if (self->f_begin >= new_text_start)
 						self->f_begin -= size_diff;
@@ -3338,16 +3351,18 @@ search_suitable_end_again:
 			/* >> We managed to find a text chunk suitable to our needs (ends with a non-escaped linefeed)
 			 *    Yet there are still some more restrictions: It must not end inside an unfinished comment,
 			 *    and it must not contain an unterminated string/character (if the necessary flag is set). */
-			last_zero_mode = iter = self->f_begin, end = self->f_end;
+			iter            = self->f_begin;
+			last_zero_mode  = iter;
+			end             = self->f_end;
 			termstring_onlf = (CURRENT.l_flags & TPPLEXER_FLAG_TERMINATE_STRING_LF);
-			while (iter != end) {
-				assert(iter < end);
+			assert(iter <= end);
+			while (iter < end) {
 				if (!mode)
 					last_zero_mode = iter;
 				ch = *iter++;
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
-				if (ch == '\\' && iter != end) {
-					if (!(mode & MODE_RAW) && (*iter++ == '\r' && iter != end && *iter == '\n'))
+				if (ch == '\\' && iter < end) {
+					if (!(mode & MODE_RAW) && (*iter++ == '\r' && iter < end && *iter == '\n'))
 						++iter;
 				} else if (ch == '\'' && !(mode & ~(MODE_INCHAR))) {
 					mode ^= MODE_INCHAR;
@@ -3359,8 +3374,8 @@ search_suitable_end_again:
 						mode |= MODE_RAW;
 				}
 #else /* TPP_CONFIG_RAW_STRING_LITERALS */
-				if (ch == '\\' && iter != end) {
-					if (*iter++ == '\r' && iter != end && *iter == '\n')
+				if (ch == '\\' && iter < end) {
+					if (*iter++ == '\r' && iter < end && *iter == '\n')
 						++iter;
 				} else if (ch == '\'' && !(mode & ~(MODE_INCHAR)))
 					mode ^= MODE_INCHAR;
@@ -3372,7 +3387,7 @@ search_suitable_end_again:
 					 * >> #error This error contains an unmatched ", but that's OK (< and so was that)
 					 * NOTE: Though remember that escaped linefeeds are always more powerful! */
 				else if (tpp_islf(ch)) {
-					if (ch == '\r' && iter != end && *iter == '\n')
+					if (ch == '\r' && iter < end && *iter == '\n')
 						++iter;
 					mode &= ~(MODE_INPP);
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
@@ -3385,11 +3400,11 @@ search_suitable_end_again:
 #if 1
 					if (!mode)
 						last_zero_mode = iter;
-					if (iter != end && *iter == '#' &&
+					if (iter < end && *iter == '#' &&
 					    !(mode & (MODE_INCHAR | MODE_INSTRING)))
 						mode |= MODE_INPP;
 #endif
-				} else if (iter != end) {
+				} else if (iter < end) {
 					if (mode & MODE_INCOMMENT) {
 						/* End multi-line comment. */
 						if (ch == '*') {
@@ -3411,11 +3426,11 @@ search_suitable_end_again:
 #ifdef CONFIG_BUILDING_DEEMON
 skip_line_comment:
 #endif /* CONFIG_BUILDING_DEEMON */
-								while (iter != end && !tpp_islf(*iter))
+								while (iter < end && !tpp_islf(*iter))
 									++iter;
-								if (iter != end && *iter == '\r')
+								if (iter < end && *iter == '\r')
 									++iter;
-								if (iter != end && *iter == '\n')
+								if (iter < end && *iter == '\n')
 									++iter;
 							}
 						}
@@ -3440,7 +3455,7 @@ skip_line_comment:
 			 *          a potentially slow writer, when there's
 			 *          actually enough data already available for
 			 *          us to start preprocessing ~something~. */
-			if (last_zero_mode != self->f_begin) {
+			if (last_zero_mode > self->f_begin) {
 				effective_end = last_zero_mode;
 				goto search_suitable_end_again;
 			}
@@ -3492,7 +3507,7 @@ extend_more:
 		self->f_end =
 		self->f_pos = TPPString_TEXT(empty_string);
 	}
-	return self->f_pos != self->f_end;
+	return self->f_pos < self->f_end;
 }
 
 
@@ -3504,9 +3519,9 @@ typedef uint32_t escape_uchar_t;
 typedef uint16_t escape_uchar_t;
 #elif TPP_UNESCAPE_MAXCHAR == 1
 typedef uint8_t  escape_uchar_t;
-#else
+#else /* TPP_UNESCAPE_MAXCHAR == ... */
 #error "Invalid value for `TPP_UNESCAPE_MAXCHAR'"
-#endif
+#endif /* TPP_UNESCAPE_MAXCHAR != ... */
 
 
 #ifndef NO_FEATURE_TRIGRAPHS
@@ -3562,8 +3577,8 @@ PUBLIC char *TPPCALL TPP_Unescape(char *__restrict buf,
 #define FILL_PADDING_LE() /* nothing */
 #define FILL_PADDING_BE() FILL_PADDING()
 #endif /* TPP_UNESCAPE_ENDIAN != 1234 */
-	while (iter != end) {
-		if ((ch = *iter++) == '\\' && iter != end) {
+	while (iter < end) {
+		if ((ch = *iter++) == '\\' && iter < end) {
 			ch = *iter++;
 			switch (ch) {
 
@@ -3606,22 +3621,23 @@ PUBLIC char *TPPCALL TPP_Unescape(char *__restrict buf,
 			case 'U': {
 				unsigned int ith;
 				char *start_iter;
-				start_iter = iter, val = 0;
-				for (ith = 0; ith != charsize * 2; ++ith) {
+				start_iter = iter;
+				val        = 0;
+				for (ith = 0; ith < charsize * 2; ++ith) {
 					escape_uchar_t partval;
 continue_hex:
-					if (iter == end)
+					if (iter >= end)
 						goto abort_hex;
 					ch = *iter;
-					if (ch >= '0' && ch <= '9')
+					if (ch >= '0' && ch <= '9') {
 						partval = (escape_uchar_t)(ch - '0');
-					else if (ch >= 'a' && ch <= 'f')
+					} else if (ch >= 'a' && ch <= 'f') {
 						partval = (escape_uchar_t)(10 + (ch - 'a'));
-					else if (ch >= 'A' && ch <= 'F')
+					} else if (ch >= 'A' && ch <= 'F') {
 						partval = (escape_uchar_t)(10 + (ch - 'A'));
-					else if (ch == '\\' && iter != end - 1 && tpp_islf(iter[1])) {
+					} else if (ch == '\\' && iter < end - 1 && tpp_islf(iter[1])) {
 						++iter;
-						if (*iter == '\r' && iter != end - 1 && iter[1] == '\n')
+						if (*iter == '\r' && iter < end - 1 && iter[1] == '\n')
 							++iter;
 						++iter;
 						goto continue_hex;
@@ -3652,13 +3668,13 @@ abort_hex:
 					val = (escape_uchar_t)(ch - '0');
 					if ((maxend = iter + ceildiv(charsize * 8, 3) - 1) > end)
 						maxend = end;
-					while (iter != maxend) {
+					while (iter < maxend) {
 						ch = *iter;
-						if (ch >= '0' && ch <= '7')
+						if (ch >= '0' && ch <= '7') {
 							val = (escape_uchar_t)((val << 3) | (ch - '0'));
-						else if (ch == '\\' && iter != maxend - 1 && tpp_islf(iter[1])) {
+						} else if (ch == '\\' && iter < maxend - 1 && tpp_islf(iter[1])) {
 							++iter;
-							if (*iter == '\r' && iter != maxend - 1 && iter[1] == '\n')
+							if (*iter == '\r' && iter < maxend - 1 && iter[1] == '\n')
 								++iter;
 						} else {
 							break;
@@ -3746,16 +3762,19 @@ PUBLIC size_t TPPCALL TPP_SizeofUnescape(char const *__restrict data,
 	assert(charsize_m1);
 	--charsize_m1;
 #endif /* TPP_UNESCAPE_MAXCHAR != 1 */
-	end = (iter = (char *)data) + size;
+	iter = (char *)data;
+	end  = iter + size;
 next:
-	while (iter != end) {
-		if ((ch = *iter++) == '\\' && iter != end) {
+	while (iter < end) {
+		if ((ch = *iter++) == '\\' && iter < end) {
 			ch = *iter++;
 			switch (ch) {
 
 			case '\r':
-				if (*iter == '\n')
-					++iter, --result;
+				if (*iter == '\n') {
+					++iter;
+					--result;
+				}
 				ATTR_FALLTHROUGH
 			case '\n':
 				/* Escaped linefeed. */
@@ -3783,20 +3802,20 @@ next:
 				unsigned int ith;
 				char *start_iter;
 				start_iter = iter;
-				for (ith = 0; ith != (charsize_m1 + 1) * 2; ++ith) {
-					if (iter == end)
+				for (ith = 0; ith < (charsize_m1 + 1) * 2; ++ith) {
+					if (iter >= end)
 						goto abort_hex;
 					ch = *iter;
-					if (ch >= '0' && ch <= '9')
-						;
-					else if (ch >= 'a' && ch <= 'f')
-						;
-					else if (ch >= 'A' && ch <= 'F')
-						;
-					else if (ch == '\\' && iter != end - 1 && tpp_islf(iter[1])) {
-						++iter, --result;
-						if (*iter == '\r' && iter != end - 1 && iter[1] == '\n')
-							++iter, --result;
+					if (ch >= '0' && ch <= '9') {
+					} else if (ch >= 'a' && ch <= 'f') {
+					} else if (ch >= 'A' && ch <= 'F') {
+					} else if (ch == '\\' && iter < end - 1 && tpp_islf(iter[1])) {
+						++iter;
+						--result;
+						if (*iter == '\r' && iter < end - 1 && iter[1] == '\n') {
+							++iter;
+							--result;
+						}
 					} else {
 abort_hex:
 						if (!ith) {
@@ -3819,18 +3838,21 @@ abort_hex:
 					--result;
 					if (maxend > end)
 						maxend = end;
-					while (iter != maxend) {
+					while (iter < maxend) {
 						ch = *iter;
-						if (ch >= '0' && ch <= '7')
-							;
-						else if (ch == '\\' && iter != maxend - 1 && tpp_islf(iter[1])) {
-							++iter, --result;
-							if (*iter == '\r' && iter != maxend - 1 && iter[1] == '\n')
-								++iter, --result;
+						if (ch >= '0' && ch <= '7') {
+						} else if (ch == '\\' && iter < maxend - 1 && tpp_islf(iter[1])) {
+							++iter;
+							--result;
+							if (*iter == '\r' && iter < maxend - 1 && iter[1] == '\n') {
+								++iter;
+								--result;
+							}
 						} else {
 							break;
 						}
-						++iter, --result;
+						++iter;
+						--result;
 					}
 				}
 				break;
@@ -3929,8 +3951,9 @@ TPP_Escape(char *__restrict buf,
            char const *__restrict data,
            size_t size) {
 	unsigned char *iter, *end, temp, ch;
-	end = (iter = (unsigned char *)data) + size;
-	for (; iter != end; ++iter) {
+	iter = (unsigned char *)data;
+	end  = iter + size;
+	for (; iter < end; ++iter) {
 		ch = *iter;
 		switch (ch) {
 
@@ -4014,7 +4037,7 @@ TPP_SizeofEscape(char const *__restrict data, size_t size) {
 	unsigned char *iter, *end, ch;
 	size_t result = size;
 	end           = (iter = (unsigned char *)data) + size;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		ch = *iter;
 		switch (ch) {
 
@@ -4057,25 +4080,31 @@ TPP_SizeofEscape(char const *__restrict data, size_t size) {
 PUBLIC char *TPPCALL
 TPP_Itos(char *__restrict buf, tint_t i) {
 	char *result;
+	int isneg;
 	assert(buf);
-	if (i < 0)
-		*buf++ = '-', i = -i;
-	result = (buf += TPP_SizeofItos(i));
+	buf += TPP_SizeofItos(i);
+	result = buf;
+	isneg  = i < 0;
+	if (isneg)
+		i = -i;
 	do {
-		*--buf = (char)('0' + (i % 10));
-	} while ((i /= 10) != 0);
+		*--buf = (char)('0' + ((tuint_t)i % 10));
+	} while ((tuint_t)(i = (tint_t)((tuint_t)i / 10)) > 0);
+	if (isneg)
+		*--buf = '-';
 	return result;
 }
 
 PUBLIC size_t TPPCALL
 TPP_SizeofItos(tint_t i) {
 	size_t result = 0;
-	assertf(i != 0 || i == 0, ("i = %ld", (long)i));
-	if (i < 0)
-		++result, i = -i;
+	if (i < 0) {
+		++result;
+		i = -i;
+	}
 	do {
 		++result;
-	} while ((i /= 10) != 0);
+	} while ((tuint_t)(i = (tint_t)((tuint_t)i / 10)) > 0);
 	return result;
 }
 
@@ -4096,21 +4125,22 @@ LOCAL size_t TPPCALL
 wraplf_memlen(char const *__restrict iter, size_t n) {
 	char const *end = iter + n;
 	size_t result   = 0;
-	while (iter != end) {
+	while (iter < end) {
 		iter = tpp_skip_wraplf(iter, end);
-		if (iter == end)
+		if (iter >= end)
 			break;
-		++iter, ++result;
+		++iter;
+		++result;
 	}
 	return result;
 }
 
 LOCAL void TPPCALL
 wraplf_memcpy(char *__restrict dst, char const *__restrict src, size_t n) {
-	char const *end = src + n;
-	while (src != end) {
-		src = tpp_skip_wraplf(src, end);
-		if (src == end)
+	char const *srcend = src + n;
+	while (src < srcend) {
+		src = tpp_skip_wraplf(src, srcend);
+		if (src >= srcend)
 			break;
 		*dst++ = *src++;
 	}
@@ -4239,8 +4269,10 @@ macro_function_scan_block_traditional(struct TPPFile *__restrict self) {
 #ifdef TPP_FUNOP_VA_NARGS
 	func.f_n_vanargs = 0;
 #endif /* TPP_FUNOP_VA_NARGS */
-	argv_end = (argv_begin = func.f_arginfo) + func.f_argc;
-	iter = self->f_begin, end = self->f_end;
+	argv_begin        = func.f_arginfo;
+	argv_end          = argv_begin + func.f_argc;
+	iter              = self->f_begin;
+	end               = self->f_end;
 	last_text_pointer = iter;
 	/* Do custom old-style macro parsing: */
 	// #define CAT(a,b) a/**/b
@@ -4251,26 +4283,26 @@ macro_function_scan_block_traditional(struct TPPFile *__restrict self) {
 	 *    and always expanding them while ignoring where
 	 *    strings start or stop. */
 next:
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter;
 		if (ch == '/' && (CURRENT.l_extokens & TPPLEXER_TOKEN_C_COMMENT)) {
 			char *comment_start = iter++;
 			iter = tpp_skip_wraplf(iter, end);
 			if (*iter == '*') {
-				if likely(iter != end)
+				if likely(iter < end)
 					++iter;
 				/* Remove comments. */
 skipcom:
-				while (iter != end && *iter++ != '*')
+				while (iter < end && *iter++ != '*')
 					;
 				iter = tpp_skip_wraplf(iter, end);
-				if (iter != end && *iter != '/')
+				if (iter < end && *iter != '/')
 					goto skipcom;
-				if likely(iter != end)
+				if likely(iter < end)
 					++iter;
 				/* Delete a comment string from 'comment_start..iter' */
 				assert(last_text_pointer <= comment_start);
-				if (last_text_pointer != comment_start) {
+				if (last_text_pointer < comment_start) {
 					if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 					                             (size_t)(comment_start - last_text_pointer)))
 						goto seterr;
@@ -4300,14 +4332,16 @@ skipcom:
 					iter = tpp_skip_wraplf(iter, end);
 					if (!(chrattr[(uint8_t)*iter] & chflags))
 						break;
-					++iter, ++name_size;
+					++iter;
+					++name_size;
 				}
 			} else {
 				for (;;) {
 					iter = tpp_skip_wraplf(iter, end);
 					if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 						break;
-					++iter, ++name_size;
+					++iter;
+					++name_size;
 				}
 			}
 			name_escapesize = (size_t)(iter - keyword_begin);
@@ -4323,10 +4357,11 @@ skipcom:
 			if (arg_name) {
 				tok_t arg_id = arg_name->k_id;
 				/* Start of identifier. - Check if this is a keyword. */
-				for (argv_iter = argv_begin; argv_iter != argv_end; ++argv_iter) {
+				for (argv_iter = argv_begin; argv_iter < argv_end; ++argv_iter) {
 					if (argv_iter->ai_id == arg_id) {
 						/* It does! */
-						if (keyword_begin != last_text_pointer) {
+						assert(keyword_begin >= last_text_pointer);
+						if (keyword_begin > last_text_pointer) {
 							/* Advance the text pointer to cover the gap. */
 							if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 							                             (size_t)(keyword_begin - last_text_pointer)))
@@ -4351,7 +4386,8 @@ skipcom:
 						if unlikely(!WARN(W_VA_KEYWORD_IN_REGULAR_MACRO, arg_name))
 							goto err;
 					} else {
-						if (keyword_begin != last_text_pointer) {
+						assert(keyword_begin >= last_text_pointer);
+						if (keyword_begin > last_text_pointer) {
 							if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 							                             (size_t)(keyword_begin - last_text_pointer)))
 								goto seterr;
@@ -4389,9 +4425,8 @@ skipcom:
 			goto next;
 		}
 		/* Skip escaped linefeeds. */
-		if (ch == '\\') {
+		if (ch == '\\')
 			iter = tpp_skip_wraplf(iter, end);
-		}
 		if (tpp_islforzero(ch))
 			break;
 		++iter;
@@ -4479,10 +4514,11 @@ strop_normal:
 			assert(strop_begin >= last_text_pointer);
 			if (TPP_ISKEYWORD(tok)) {
 				/* Check if this token matches any of our arguments. */
-				for (iter = begin; iter != end; ++iter) {
+				for (iter = begin; iter < end; ++iter) {
 					if (iter->ai_id == tok) {
 						/* It does! */
-						if (strop_begin != last_text_pointer) {
+						assert(strop_begin >= last_text_pointer);
+						if (strop_begin > last_text_pointer) {
 							/* Advance the text pointer to cover the gap. */
 							if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 							                             (size_t)(strop_begin - last_text_pointer)))
@@ -4495,9 +4531,9 @@ strop_normal:
 							goto seterr;
 						func.f_deltotal += (size_t)(token.t_end - strop_begin);
 						last_text_pointer = token.t_end;
-						if (strop != TPP_FUNOP_INS)
+						if (strop != TPP_FUNOP_INS) {
 							++iter->ai_ins_str;
-						else {
+						} else {
 							++iter->ai_ins;
 						}
 						TPPLexer_YieldRaw();
@@ -4507,12 +4543,13 @@ strop_normal:
 			}
 		} else if (TPP_ISKEYWORD(tok)) {
 			/* Check for an argument reference. */
-			for (iter = begin; iter != end; ++iter) {
+			for (iter = begin; iter < end; ++iter) {
 				if (iter->ai_id == tok) {
 					size_t argi = (size_t)(iter - begin);
 					size_t namesize;
 					/* Got a regular argument reference. */
-					if (token.t_begin != last_text_pointer) {
+					assert(token.t_begin >= last_text_pointer);
+					if (token.t_begin > last_text_pointer) {
 						/* Advance the text pointer to cover the gap. */
 						if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 						                             (size_t)(token.t_begin - last_text_pointer)))
@@ -4562,7 +4599,8 @@ strop_normal:
 				}
 #if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
 				IF_CONFIG_EXTENSION_VA_COMMA(else if (tok != KWD___VA_ARGS__ || !HAVE_EXTENSION_VA_ARGS), else) {
-					if (token.t_begin != last_text_pointer) {
+					assert(token.t_begin >= last_text_pointer);
+					if (token.t_begin > last_text_pointer) {
 						if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 						                             (size_t)(token.t_begin - last_text_pointer)))
 							goto seterr;
@@ -4719,9 +4757,9 @@ begin_glue:
 #ifndef NO_EXTENSION_GCC_VA_COMMA
 			if (preglue_tok == ',' &&
 			    HAVE_EXTENSION_GCC_VA_COMMA) {
-				assert(preglue_begin >= last_text_pointer);
 				/* Create a GCC-style __VA_COMMA__: `,##__VA_ARGS__' */
-				if (preglue_begin != last_text_pointer) {
+				assert(preglue_begin >= last_text_pointer);
+				if (preglue_begin > last_text_pointer) {
 					if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 					                             (size_t)(preglue_begin - last_text_pointer)))
 						goto seterr;
@@ -4736,7 +4774,8 @@ begin_glue:
 			} else
 #endif /* !NO_EXTENSION_GCC_VA_COMMA */
 			{
-				if (preglue_end != last_text_pointer) {
+				assert(preglue_end >= last_text_pointer);
+				if (preglue_end > last_text_pointer) {
 					/* Delete characters between `preglue_end' and `token.t_begin' */
 					if unlikely(!codewriter_put1(&writer, TPP_FUNOP_ADV,
 					                             (size_t)(preglue_end - last_text_pointer)))
@@ -4896,7 +4935,7 @@ add_macro_argument:
 #endif /* !NO_EXTENSION_VA_ARGS */
 					/* Check if an argument named `argument_name' already exists. */
 					new_arginfo_v = arginfo_v + result->f_macro.m_function.f_argc;
-					while (new_arginfo_v-- != arginfo_v)
+					while (new_arginfo_v-- > arginfo_v)
 						if (new_arginfo_v->ai_id == argument_name) {
 							if unlikely(!WARN(W_ARGUMENT_NAMED_ALREADY_TAKEN, argument_name))
 								goto err_arginfo;
@@ -4942,7 +4981,7 @@ skip_argument_name:
 						TPPLexer_YieldRaw();
 					}
 #endif /* !NO_EXTENSION_GCC_VA_ARGS */
-					if (result->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC && tok != argend_token) {
+					if ((result->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC) && tok != argend_token) {
 						/* Expected `)' after varargs argument name. */
 						if (!WARN(W_EXPECTED_ARGEND_AFTER_VARARGS))
 							goto err_arginfo;
@@ -4967,9 +5006,11 @@ skip_argument_name:
 				}
 			}
 		}
-		if (result->f_macro.m_function.f_argc != arginfo_a) {
-			new_arginfo_v = (struct arginfo_t *)API_REALLOC(arginfo_v, result->f_macro.m_function.f_argc *
-			                                                           sizeof(struct arginfo_t));
+		assert(result->f_macro.m_function.f_argc <= arginfo_a);
+		if (result->f_macro.m_function.f_argc < arginfo_a) {
+			new_arginfo_v = (struct arginfo_t *)API_REALLOC(arginfo_v,
+			                                                result->f_macro.m_function.f_argc *
+			                                                sizeof(struct arginfo_t));
 			if (new_arginfo_v)
 				arginfo_v = new_arginfo_v;
 		}
@@ -5021,7 +5062,7 @@ skip_argument_name:
 		result->f_begin = curfile->f_pos;
 		/* Skip whitespace at the front. */
 		if (!(CURRENT.l_flags & TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE)) {
-			while (result->f_begin != curfile->f_end) {
+			while (result->f_begin < curfile->f_end) {
 				result->f_begin = tpp_skip_wraplf_z(result->f_begin/*, curfile->f_end*/);
 				if (result->f_begin == curfile->f_end ||
 				    tpp_isnospace_orlf(*result->f_begin))
@@ -5221,9 +5262,9 @@ rare_rehash_asserts(struct TPPRareKeyword *__restrict self, size_t newsize) {
 	newvec = (struct TPPAssertion **)calloc(newsize, sizeof(struct TPPAssertion *));
 	if unlikely(!newvec)
 		return; /* Ignore errors here. */
-	bucket_end = (bucket_iter = self->kr_asserts.as_assv) +
-	             self->kr_asserts.as_assa;
-	for (; bucket_iter != bucket_end; ++bucket_iter) {
+	bucket_iter = self->kr_asserts.as_assv;
+	bucket_end  = bucket_iter + self->kr_asserts.as_assa;
+	for (; bucket_iter < bucket_end; ++bucket_iter) {
 		iter = *bucket_iter;
 		while (iter) {
 			/* Transfer all assertion entries into the new bucket vector. */
@@ -5261,7 +5302,8 @@ keyword_addassert(struct TPPKeyword *__restrict self,
 	}
 	if (rare->kr_asserts.as_assc >= rare->kr_asserts.as_assa * 2) {
 		size_t newsize = rare->kr_asserts.as_assa;
-		if ((newsize *= 2) == 0)
+		newsize *= 2;
+		if (newsize == 0)
 			newsize = 2;
 		rare_rehash_asserts(rare, newsize);
 		assert((rare->kr_asserts.as_assa != 0) ==
@@ -5294,14 +5336,13 @@ keyword_delassert(struct TPPKeyword *__restrict self,
 	            !rare->kr_asserts.as_assc)
 		return 0;
 	pelem = &rare->kr_asserts.as_assv[assertion->k_hash % rare->kr_asserts.as_assa];
-	while ((elem = *pelem) != NULL) {
+	for (; (elem = *pelem) != NULL; pelem = &elem->as_next) {
 		if (elem->as_kwd == assertion) {
 			--rare->kr_asserts.as_assc;
 			*pelem = elem->as_next;
 			free(elem);
 			return 1;
 		}
-		pelem = &elem->as_next;
 	}
 	return 0;
 }
@@ -5319,10 +5360,9 @@ keyword_hasassert(struct TPPKeyword *__restrict self,
 		return 0;
 	elem = rare->kr_asserts.as_assv[assertion->k_hash %
 	                                rare->kr_asserts.as_assa];
-	while (elem) {
+	for (; elem; elem = elem->as_next) {
 		if (elem->as_kwd == assertion)
 			return 1;
-		elem = elem->as_next;
 	}
 	return 0;
 }
@@ -5330,7 +5370,7 @@ keyword_hasassert(struct TPPKeyword *__restrict self,
 PRIVATE int TPPCALL
 keyword_clrassert(struct TPPKeyword *__restrict self) {
 	struct TPPRareKeyword *rare;
-	struct TPPAssertion **bucket_iter, **bucket_end, *iter, *next;
+	struct TPPAssertion **bucket_iter, **bucket_end;
 	assert(self);
 	if unlikely((rare = self->k_rare) == NULL)
 		return 0;
@@ -5340,9 +5380,11 @@ keyword_clrassert(struct TPPKeyword *__restrict self) {
 		return 0;
 	bucket_end = (bucket_iter = rare->kr_asserts.as_assv) +
 	             rare->kr_asserts.as_assa;
-	for (; bucket_iter != bucket_end; ++bucket_iter) {
+	for (; bucket_iter < bucket_end; ++bucket_iter) {
+		struct TPPAssertion *iter;
 		iter = *bucket_iter;
 		while (iter) {
+			struct TPPAssertion *next;
 			next = iter->as_next;
 			assert(iter->as_kwd);
 			free(iter);
@@ -5479,14 +5521,16 @@ cleanup_keyword(struct TPPKeyword *__restrict self) {
 		}
 #ifndef TPP_CONFIG_NO_ASSERTIONS
 		{
-			struct TPPAssertion **ass_iter, **ass_end, *aiter, *anext;
+			struct TPPAssertion **ass_iter, **ass_end;
 			assert((rare->kr_asserts.as_assv != NULL) ==
 			       (rare->kr_asserts.as_assa != 0));
 			ass_end = (ass_iter = rare->kr_asserts.as_assv) +
 			          rare->kr_asserts.as_assa;
-			for (; ass_iter != ass_end; ++ass_iter) {
+			for (; ass_iter < ass_end; ++ass_iter) {
+				struct TPPAssertion *aiter;
 				aiter = *ass_iter;
 				while (aiter) {
+					struct TPPAssertion *anext;
 					anext = aiter->as_next;
 					assert(aiter->as_kwd);
 					free(aiter);
@@ -5502,11 +5546,13 @@ cleanup_keyword(struct TPPKeyword *__restrict self) {
 
 PRIVATE void TPPCALL
 destroy_keyword_map(struct TPPKeywordMap *__restrict self) {
-	struct TPPKeyword **bucket_iter, **bucket_end, *iter, *next;
+	struct TPPKeyword **bucket_iter, **bucket_end;
 	bucket_end = (bucket_iter = self->km_bucketv) + self->km_bucketc;
-	for (; bucket_iter != bucket_end; ++bucket_iter) {
+	for (; bucket_iter < bucket_end; ++bucket_iter) {
+		struct TPPKeyword *iter;
 		iter = *bucket_iter;
 		while (iter) {
+			struct TPPKeyword *next;
 			next = iter->k_next;
 			cleanup_keyword(iter);
 #if TPP_CONFIG_ONELEXER == 1
@@ -5594,13 +5640,15 @@ load_builtin_keywords(struct TPPKeywordMap *__restrict self) {
 	{
 #if TPP_CONFIG_ONELEXER == 1
 		struct TPPKeyword *const *iter, *const *end;
-		end = (iter = builtin_keywords) + _KWD_COUNT;
-		for (; iter != end; ++iter)
+		iter = builtin_keywords;
+		end  = iter + _KWD_COUNT;
+		for (; iter < end; ++iter)
 			def_builtin_keyword(*iter);
 #else /* TPP_CONFIG_ONELEXER == 1 */
 		struct kwd_def const *const *iter, *const *end;
-		end = (iter = builtin_keywords) + _KWD_COUNT;
-		for (; iter != end; ++iter) {
+		iter = builtin_keywords;
+		end  = iter + _KWD_COUNT;
+		for (; iter < end; ++iter) {
 			if (!def_builtin_keyword(self, *iter))
 				goto err;
 		}
@@ -5751,19 +5799,20 @@ PRIVATE int TPPCALL set_wstate(int wid, wstate_t state) {
 	/* Convert the default state. */
 	if (state == WSTATE_DEFAULT)
 		state = DEFAULT_WARNING_STATE(wid);
-	end = (iter = curstate->ws_extendedv) + curstate->ws_extendeda;
-	while (iter != end && iter->wse_wid < wid)
+	iter = curstate->ws_extendedv;
+	end  = iter + curstate->ws_extendeda;
+	while (iter < end && iter->wse_wid < wid)
 		++iter;
 	assert(iter == end || iter->wse_wid >= wid);
 	bitset_byte = &curstate->ws_state[wid / (8 / TPP_WARNING_BITS)];
 	byte_shift  = (uint8_t)((wid % (8 / TPP_WARNING_BITS)) * TPP_WARNING_BITS);
 	assert(byte_shift == 0 || byte_shift == 2 ||
 	       byte_shift == 4 || byte_shift == 6);
-	if ((state == WSTATE_ERROR && iter != end) || state == WSTATE_SUPPRESS) {
+	if ((state == WSTATE_ERROR && iter < end) || state == WSTATE_SUPPRESS) {
 		if (iter == end || iter->wse_wid != wid) {
 			/* Must insert/allocate a new slot. */
 			newslot = iter;
-			while (newslot != end && newslot->wse_suppress)
+			while (newslot < end && newslot->wse_suppress)
 				++newslot;
 			if (newslot == end) {
 				/* No free slots. */
@@ -5786,7 +5835,7 @@ PRIVATE int TPPCALL set_wstate(int wid, wstate_t state) {
 			assert(iter == newslot || iter->wse_wid > wid);
 			assert(iter == curstate->ws_extendedv || iter[-1].wse_wid < wid);
 			/* Move data between iter and newslot. */
-			memmove(iter + 1, iter, (size_t)(newslot - iter) * sizeof(struct TPPWarningStateEx));
+			memmoveup(iter + 1, iter, (size_t)(newslot - iter) * sizeof(struct TPPWarningStateEx));
 			iter->wse_wid      = wid;
 			iter->wse_suppress = 0;
 			iter->wse_oldstate = (wstate_t)((*bitset_byte >> byte_shift) & 3);
@@ -5803,9 +5852,9 @@ PRIVATE int TPPCALL set_wstate(int wid, wstate_t state) {
 	    (*bitset_byte & (3 << byte_shift)) == WSTATE_SUPPRESS) {
 		/* The old state was error or suppress, but the new one isn't. */
 #if 1
-		if (iter != end && iter->wse_wid == wid)
+		if (iter < end && iter->wse_wid == wid)
 #else
-		assert((iter != end && iter->wse_wid == wid) &&
+		assert((iter < end && iter->wse_wid == wid) &&
 		       "Warning is set to suppress, but is lacking an extended entry");
 #endif
 		{
@@ -5817,9 +5866,11 @@ PRIVATE int TPPCALL set_wstate(int wid, wstate_t state) {
 			}
 		}
 	}
+
 	/* Suppress- and error-mode share the same internal id. */
 	if (state == WSTATE_SUPPRESS)
 		state = WSTATE_ERROR;
+
 	/* Set the new warning state in the bitset. */
 	*bitset_byte &= (uint8_t) ~(3 << byte_shift);
 	*bitset_byte |= (uint8_t)(state << byte_shift);
@@ -5861,10 +5912,10 @@ PRIVATE wstate_t TPPCALL get_wstate(unsigned int wid) {
 		struct TPPWarningStateEx *iter, *end;
 		/* Check if the warning is actually set to be suppressed. */
 		end = (iter = curstate->ws_extendedv) + curstate->ws_extendeda;
-		while (iter != end && (unsigned int)iter->wse_wid < wid)
+		while (iter < end && (unsigned int)iter->wse_wid < wid)
 			++iter;
 		assert(iter == end || (unsigned int)iter->wse_wid >= wid);
-		if (iter != end && (unsigned int)iter->wse_wid == wid &&
+		if (iter < end && (unsigned int)iter->wse_wid == wid &&
 		    iter->wse_suppress != 0 &&
 		    iter->wse_suppress != (unsigned int)-1)
 			result = WSTATE_SUPPRESS;
@@ -5964,9 +6015,9 @@ PRIVATE wstate_t TPPCALL do_invoke_wid(int wid) {
 	state = (wstate_t)((*bitset_byte >> byte_shift) & 3);
 	if (state == WSTATE_ERROR) {
 		end = (iter = curstate->ws_extendedv) + curstate->ws_extendeda;
-		while (iter != end && iter->wse_wid < wid)
+		while (iter < end && iter->wse_wid < wid)
 			++iter;
-		if (iter != end && iter->wse_wid == wid &&
+		if (iter < end && iter->wse_wid == wid &&
 		    iter->wse_suppress != (unsigned int)-1) {
 			/* The warning is being suppressed. */
 			state = WSTATE_SUPPRESS;
@@ -6156,9 +6207,9 @@ PUBLIC int TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self) {
 		assert(ordered.word == 0x008844aa);
 #elif TPP_BYTEORDER == 3412
 		assert(ordered.word == 0x88aa0044);
-#else
-#error FIXME
-#endif
+#else /* TPP_BYTEORDER == ... */
+#error "ERROR: Unsupported `TPP_BYTEORDER'"
+#endif /* TPP_BYTEORDER != ... */
 	}
 	assert(TPPFile_Empty.f_namehash ==
 	       hashof(TPPFile_Empty.f_name,
@@ -6181,10 +6232,11 @@ TPPLexer_ClearIfdefStack(void) {
 }
 
 PUBLIC void TPPCALL TPPLexer_Quit(struct TPPLexer *__restrict self) {
-	struct TPPFile *fileiter, *filenext;
 	assert(self);
 	free(self->l_ifdef.is_slotv);
-	{ /* Free all non-popped and extended warnings information. */
+
+	/* Free all non-popped and extended warnings information. */
+	{
 		struct TPPWarningState *wstate, *wnext;
 		wstate = self->l_warnings.w_curstate;
 		assert(!self->l_warnings.w_basestate.ws_prev);
@@ -6205,24 +6257,30 @@ PUBLIC void TPPCALL TPPLexer_Quit(struct TPPLexer *__restrict self) {
 			wstate = wnext;
 		}
 	}
+
 	/* Free keywords and remaining macros. */
 	destroy_keyword_map(&self->l_keywords);
+
 	/* Clear the remainder of the #include-stack. */
-	fileiter = self->l_token.t_file;
-	do {
-		assert(fileiter);
-		filenext = fileiter->f_prev;
-		TPPFile_Decref(fileiter);
-	} while ((fileiter = filenext) != NULL);
 	{
-		/* Clear system #include paths. */
+		struct TPPFile *fileiter, *filenext;
+		fileiter = self->l_token.t_file;
+		do {
+			assert(fileiter);
+			filenext = fileiter->f_prev;
+			TPPFile_Decref(fileiter);
+		} while ((fileiter = filenext) != NULL);
+	}
+	
+	/* Clear system #include paths. */
+	{
 		struct TPPIncludeList *include_curr, *include_prev;
 		struct TPPString **iter, **end;
 		include_curr = &self->l_syspaths;
 		for (;;) {
-			end = (iter = include_curr->il_pathv) +
-			      include_curr->il_pathc;
-			for (; iter != end; ++iter)
+			iter = include_curr->il_pathv;
+			end  = iter + include_curr->il_pathc;
+			for (; iter < end; ++iter)
 				TPPString_Decref(*iter);
 			free(include_curr->il_pathv);
 			include_prev = include_curr->il_prev;
@@ -6339,9 +6397,9 @@ TPPLexer_Reset(struct TPPLexer *__restrict self, uint32_t flags) {
 	if (flags & TPPLEXER_RESET_KEYWORDS) {
 		struct TPPKeyword **bucket_iter, **bucket_end, **piter, *kwd;
 		/* Clear all user-defined keywords. */
-		bucket_end = (bucket_iter = self->l_keywords.km_bucketv) +
-		             self->l_keywords.km_bucketc;
-		for (; bucket_iter != bucket_end; ++bucket_iter) {
+		bucket_iter = self->l_keywords.km_bucketv;
+		bucket_end  = bucket_iter + self->l_keywords.km_bucketc;
+		for (; bucket_iter < bucket_end; ++bucket_iter) {
 			piter = bucket_iter;
 			while ((kwd = *piter) != NULL) {
 				if (!TPP_ISUSERKEYWORD(kwd->k_id))
@@ -6362,9 +6420,9 @@ TPPLexer_Reset(struct TPPLexer *__restrict self, uint32_t flags) {
 			self->l_counter = 0;
 
 		/* When any of the per-keyword flags are set, iterate the keyword map. */
-		bucket_end = (bucket_iter = self->l_keywords.km_bucketv) +
-		             self->l_keywords.km_bucketc;
-		for (; bucket_iter != bucket_end; ++bucket_iter) {
+		bucket_iter = self->l_keywords.km_bucketv;
+		bucket_end  = bucket_iter + self->l_keywords.km_bucketc;
+		for (; bucket_iter < bucket_end; ++bucket_iter) {
 			for (iter = *bucket_iter; iter; iter = iter->k_next) {
 				struct TPPRareKeyword *rare;
 				if (iter->k_macro && (flags & TPPLEXER_RESET_MACRO))
@@ -6405,9 +6463,9 @@ TPPLexer_Reset(struct TPPLexer *__restrict self, uint32_t flags) {
 					       (rare->kr_asserts.as_assa != 0));
 					if (flags & TPPLEXER_RESET_ASSERT) {
 						struct TPPAssertion **ass_iter, **ass_end, *aiter, *anext;
-						ass_end = (ass_iter = rare->kr_asserts.as_assv) +
-						          rare->kr_asserts.as_assa;
-						for (; ass_iter != ass_end; ++ass_iter) {
+						ass_iter = rare->kr_asserts.as_assv;
+						ass_end  = ass_iter + rare->kr_asserts.as_assa;
+						for (; ass_iter < ass_end; ++ass_iter) {
 							aiter = *ass_iter;
 							while (aiter) {
 								anext = aiter->as_next;
@@ -6574,8 +6632,9 @@ PRIVATE char const *TPPCALL
 find_most_likely_warning(char const *__restrict name) {
 	char const *const *iter, *result = NULL;
 	size_t result_weight = (size_t)-1;
-	size_t name_len      = strlen(name), new_weight;
+	size_t name_len      = strlen(name);
 	for (iter = wgroup_names; *iter; ++iter) {
+		size_t new_weight;
 		new_weight = fuzzy_match(*iter, strlen(*iter), name, name_len);
 		/* Select this new extension if it has a lower fuzzy matching value. */
 		if (new_weight < result_weight) {
@@ -6590,8 +6649,9 @@ PRIVATE char const *TPPCALL
 find_most_likely_extension(char const *__restrict name) {
 	struct tpp_extension const *iter, *result = NULL;
 	size_t result_weight = (size_t)-1;
-	size_t name_len      = strlen(name), new_weight;
+	size_t name_len      = strlen(name);
 	for (iter = tpp_extensions; iter->e_name; ++iter) {
+		size_t new_weight;
 		new_weight = fuzzy_match(iter->e_name, iter->e_size,
 		                         name, name_len);
 		/* Select this new extension if it has a lower fuzzy matching value. */
@@ -6610,21 +6670,21 @@ find_most_likely_extension(char const *__restrict name) {
  * @return: 1: Successfully configured the given extension. */
 PUBLIC int TPPCALL
 TPPLexer_SetExtension(char const *__restrict name,
-                      int enabled) {
+                      int enable) {
 	struct tpp_extension const *iter;
-	size_t name_size, id;
+	size_t name_size;
 	assert(TPPLexer_Current);
 	assert(name);
 	name_size = strlen(name);
 	iter      = tpp_extensions;
 	while (iter->e_name) {
 		if (iter->e_size == name_size &&
-		    !memcmp(iter->e_name, name, name_size * sizeof(char))) {
-			id = (size_t)(iter - tpp_extensions);
+		    memcmp(iter->e_name, name, name_size * sizeof(char)) == 0) {
+			size_t id = (size_t)(iter - tpp_extensions);
 			/* Found it! */
-			if (enabled)
+			if (enable) {
 				TPPLexer_EnableExtension(id);
-			else {
+			} else {
 				TPPLexer_DisableExtension(id);
 			}
 			return 1;
@@ -6641,15 +6701,15 @@ TPPLexer_SetExtension(char const *__restrict name,
 PUBLIC int TPPCALL
 TPPLexer_GetExtension(char const *__restrict name) {
 	struct tpp_extension const *iter;
-	size_t name_size, id;
+	size_t name_size;
 	assert(TPPLexer_Current);
 	assert(name);
 	name_size = strlen(name);
 	iter      = tpp_extensions;
 	while (iter->e_name) {
 		if (iter->e_size == name_size &&
-		    !memcmp(iter->e_name, name, name_size * sizeof(char))) {
-			id = (size_t)(iter - tpp_extensions);
+		    memcmp(iter->e_name, name, name_size * sizeof(char)) == 0) {
+			size_t id = (size_t)(iter - tpp_extensions);
 			/* Found it! */
 			return !!HAS(id);
 		}
@@ -6662,7 +6722,7 @@ TPPLexer_GetExtension(char const *__restrict name) {
 
 PRIVATE void TPPCALL
 rehash_keywords(size_t newsize) {
-	struct TPPKeyword **newvec, *iter, *next, **bucket;
+	struct TPPKeyword **newvec;
 	struct TPPKeyword **bucket_iter, **bucket_end;
 	assert(newsize);
 	assert(CURRENT.l_keywords.km_bucketc);
@@ -6675,11 +6735,13 @@ rehash_keywords(size_t newsize) {
 	newvec = (struct TPPKeyword **)calloc(newsize, sizeof(struct TPPKeyword *));
 	if unlikely(!newvec)
 		return; /* Ignore errors here. */
-	bucket_end = (bucket_iter = CURRENT.l_keywords.km_bucketv) +
-	             CURRENT.l_keywords.km_bucketc;
-	for (; bucket_iter != bucket_end; ++bucket_iter) {
+	bucket_iter = CURRENT.l_keywords.km_bucketv;
+	bucket_end  = bucket_iter + CURRENT.l_keywords.km_bucketc;
+	for (; bucket_iter < bucket_end; ++bucket_iter) {
+		struct TPPKeyword *iter;
 		iter = *bucket_iter;
 		while (iter) {
+			struct TPPKeyword *next, **bucket;
 			/* Transfer all keywords entries into the new bucket vector. */
 			next         = iter->k_next;
 			bucket       = &newvec[iter->k_hash % newsize];
@@ -6715,13 +6777,12 @@ TPPLexer_LookupKeyword(char const *__restrict name, size_t namelen,
 	}
 	assert(CURRENT.l_keywords.km_bucketc);
 	assert(CURRENT.l_keywords.km_bucketv);
-	bucket    = &CURRENT.l_keywords.km_bucketv[namehash %
-                                            CURRENT.l_keywords.km_bucketc];
+	bucket = &CURRENT.l_keywords.km_bucketv[namehash % CURRENT.l_keywords.km_bucketc];
 	kwd_entry = *bucket;
 	while (kwd_entry) {
 		if (kwd_entry->k_hash == namehash &&
 		    kwd_entry->k_size == namelen &&
-		    !memcmp(kwd_entry->k_name, name, namelen * sizeof(char)))
+		    memcmp(kwd_entry->k_name, name, namelen * sizeof(char)) == 0)
 			return kwd_entry; /* Found it! */
 		kwd_entry = kwd_entry->k_next;
 	}
@@ -6746,7 +6807,7 @@ TPPLexer_LookupKeyword(char const *__restrict name, size_t namelen,
 
 PUBLIC struct TPPKeyword *TPPCALL
 TPPLexer_LookupKeywordID(tok_t id) {
-	struct TPPKeyword **bucket_iter, **bucket_end, *iter;
+	struct TPPKeyword **bucket_iter, **bucket_end;
 	assert(TPPLexer_Current);
 	if (!TPP_ISKEYWORD(id))
 		return NULL;
@@ -6756,9 +6817,10 @@ TPPLexer_LookupKeywordID(tok_t id) {
 		return builtin_keywords[id - TOK_KEYWORD_BEGIN];
 #endif /* TPP_CONFIG_ONELEXER == 1 */
 	/* The slow way: Check _every_ keyword in the worst case. */
-	bucket_end = (bucket_iter = CURRENT.l_keywords.km_bucketv) +
-	             CURRENT.l_keywords.km_bucketc;
-	for (; bucket_iter != bucket_end; ++bucket_iter) {
+	bucket_iter = CURRENT.l_keywords.km_bucketv;
+	bucket_end  = bucket_iter + CURRENT.l_keywords.km_bucketc;
+	for (; bucket_iter < bucket_end; ++bucket_iter) {
+		struct TPPKeyword *iter;
 		iter = *bucket_iter;
 		while (iter) {
 			if (iter->k_id == id)
@@ -6776,42 +6838,49 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 	size_t filename_size;
 	filename_size = *pfilename_size;
 	/* General filename sanitizations. */
-	while (tpp_isspace(*filename) && filename_size)
-		++filename, --filename_size;
+	while (tpp_isspace(*filename) && filename_size) {
+		++filename;
+		--filename_size;
+	}
 	while (filename_size && tpp_isspace(filename[filename_size - 1]))
 		--filename_size;
 	filename[filename_size] = '\0'; /* Create a zero-terminated string. */
 	text_end = filename + filename_size;
 #ifdef ALTSEP
-	for (text_iter = filename; text_iter != text_end; ++text_iter) {
+	for (text_iter = filename; text_iter < text_end; ++text_iter) {
 		if (*text_iter == ALTSEP)
 			*text_iter = SEP;
 	}
 #endif /* ALTSEP */
 	/* Remove whitespace before & after slashes. */
-	for (text_iter = filename; text_iter != text_end;) {
+	for (text_iter = filename; text_iter < text_end;) {
 		assertf(text_iter < text_end, ("text_iter = %p\ntext_end = %p", text_iter, text_end));
 		if (*text_iter == SEP) {
-			while (text_iter != filename && tpp_isspace(text_iter[-1])) {
-				memmove(text_iter - 1, text_iter, /* NOTE: This also moves the `\0'-terminator. */
-				        (size_t)((text_end - text_iter) + 1) * sizeof(char));
-				--text_iter, --text_end;
-			}
-			while (text_end != text_iter && tpp_isspace(text_iter[1])) {
-				memmove(text_iter + 1, text_iter + 2, /* NOTE: This also moves the `\0'-terminator. */
-				        (size_t)((text_end - text_iter) - 1) * sizeof(char));
+			while (text_iter > filename && tpp_isspace(text_iter[-1])) {
+				--text_iter;
+				/* NOTE: This also moves the `\0'-terminator. */
+				text_iter = (char *)memmovedown(text_iter, text_iter + 1,
+				                                (size_t)(text_end - text_iter) * sizeof(char));
 				--text_end;
 			}
-			if (text_end == text_iter)
+			while (text_end > text_iter && tpp_isspace(text_iter[1])) {
+				--text_end;
+				/* NOTE: This also moves the `\0'-terminator. */
+				memmovedown(text_iter + 1, text_iter + 2,
+				            (size_t)(text_end - text_iter) * sizeof(char));
+			}
+			assert(text_end >= text_iter);
+			if (text_end <= text_iter)
 				break;
 		}
 		++text_iter;
 	}
 	/* Remove double-slashes. */
-	for (text_iter = filename; text_iter != text_end;) {
+	for (text_iter = filename; text_iter < text_end;) {
 		if (*text_iter == SEP && text_iter[1] == SEP) {
-			memmove(text_iter, text_iter + 1, /* NOTE: This also moves the `\0'-terminator. */
-			        (text_end - text_iter) * sizeof(char));
+			/* NOTE: This also moves the `\0'-terminator. */
+			memmovedown(text_iter, text_iter + 1,
+			            (text_end - text_iter) * sizeof(char));
 			--text_end;
 		} else {
 			++text_iter;
@@ -6838,10 +6907,13 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 						break;
 					}
 					/* Move everything from `slash' to `prev_folder_start'. */
-					if (text_end == slash)
+					if (text_end == slash) {
 						*prev_folder_start = '\0';
-					else
-						memmove(prev_folder_start, slash, (size_t)((text_end - slash) + 1) * sizeof(char));
+					} else {
+						assert(prev_folder_start <= slash);
+						memmovedown(prev_folder_start, slash,
+						            (size_t)((text_end - slash) + 1) * sizeof(char));
+					}
 					text_end -= (size_t)(slash - prev_folder_start);
 					slash = prev_folder_start;
 				}
@@ -6851,7 +6923,7 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 				/* Remove a `.' path reference. */
 				if (text_iter == filename) {
 					filename = slash; /* Trim at start-of-file. */
-					if (slash != text_end)
+					if (slash < text_end)
 						++filename;
 					/* For the purpose of removing "foo/.." sequences,
 					 * also move up the base-address used by that logic. */
@@ -6859,8 +6931,10 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 				} else if (slash == text_end) {
 					text_iter[-1] = '\0';
 				} else {
-					memmove(text_iter, slash + 1, /* NOTE: This also moves the `\0'-terminator. */
-					        (size_t)(text_end - slash) * sizeof(char));
+					/* NOTE: This also moves the `\0'-terminator. */
+					assert(text_iter <= slash + 1);
+					memmovedown(text_iter, slash + 1,
+					            (size_t)(text_end - slash) * sizeof(char));
 				}
 			}	break;
 
@@ -6880,9 +6954,9 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 PRIVATE char *TPPCALL
 fix_filename(char *filename, size_t *pfilename_size) {
 	char *result = do_fix_filename(filename, pfilename_size);
-	if (result != filename) {
+	if (result > filename) {
 		/* Move the filename text back to where it came from. */
-		memmove(filename, result, (*pfilename_size + 1) * sizeof(char));
+		memmovedown(filename, result, (*pfilename_size + 1) * sizeof(char));
 		result = filename;
 	}
 	return result;
@@ -6904,8 +6978,9 @@ PUBLIC int TPPCALL TPPLexer_PushInclude(void) {
 	memcpy(CURRENT.l_syspaths.il_pathv, oldstate->il_pathv,
 	       oldstate->il_pathc * sizeof(struct TPPString *));
 	/* Generate references to the #include-paths for our vector copy. */
-	end = (iter = oldstate->il_pathv) + oldstate->il_pathc;
-	for (; iter != end; ++iter)
+	iter = oldstate->il_pathv;
+	end  = iter + oldstate->il_pathc;
+	for (; iter < end; ++iter)
 		TPPString_Incref(*iter);
 	CURRENT.l_syspaths.il_prev = oldstate; /* Inherit pointer. */
 	return 1;
@@ -6925,7 +7000,7 @@ PUBLIC int TPPCALL TPPLexer_PopInclude(void) {
 	end = (iter = CURRENT.l_syspaths.il_pathv) +
 	      CURRENT.l_syspaths.il_pathc;
 	/* Cleanup include paths we're about to drop. */
-	for (; iter != end; ++iter)
+	for (; iter < end; ++iter)
 		TPPString_Decref(*iter);
 	free(CURRENT.l_syspaths.il_pathv);
 	/* Restore the data from the old state. */
@@ -6951,9 +7026,10 @@ TPPLexer_AddIncludePath(char *__restrict path, size_t pathsize) {
 	/* Make sure that the path doesn't already exists. */
 	end = (iter = CURRENT.l_syspaths.il_pathv) +
 	      CURRENT.l_syspaths.il_pathc;
-	for (; iter != end; ++iter) {
-		if ((elem = *iter)->s_size == pathsize &&
-		    !memcmp(elem->s_text, path, pathsize * sizeof(char)))
+	for (; iter < end; ++iter) {
+		elem = *iter;
+		if (elem->s_size == pathsize &&
+		    memcmp(elem->s_text, path, pathsize * sizeof(char)) == 0)
 			return 2; /* Path already exists. */
 	}
 	elem = TPPString_New(path, pathsize);
@@ -6986,11 +7062,12 @@ TPPLexer_DelIncludePath(char *__restrict path, size_t pathsize) {
 	/* Make sure that the path doesn't already exists. */
 	end = (iter = CURRENT.l_syspaths.il_pathv) +
 	      CURRENT.l_syspaths.il_pathc;
-	for (; iter != end; ++iter) {
-		if ((elem = *iter)->s_size == pathsize &&
-		    !memcmp(elem->s_text, path, pathsize * sizeof(char))) {
+	for (; iter < end; ++iter) {
+		elem = *iter;
+		if (elem->s_size == pathsize &&
+		    memcmp(elem->s_text, path, pathsize * sizeof(char)) == 0) {
 			/* Found it! */
-			memmove(iter, iter + 1, ((end - iter) - 1) * sizeof(struct TPPString *));
+			memmovedown(iter, iter + 1, ((end - iter) - 1) * sizeof(struct TPPString *));
 			--CURRENT.l_syspaths.il_pathc;
 			TPPString_Decref(elem);
 			return 1;
@@ -7300,9 +7377,8 @@ err_r:
 #ifdef ALTSEP
 			/* Must search for both possible SEPs. */
 			path_end = path + iter->f_namesize;
-			while (path_end != path &&
-			       (path_end[-1] != SEP &&
-			        path_end[-1] != ALTSEP))
+			while (path_end > path && (path_end[-1] != SEP &&
+			                           path_end[-1] != ALTSEP))
 				--path_end;
 			if (path_end == path)
 #else /* ALTSEP */
@@ -7331,10 +7407,10 @@ err_r:
 				if (newbuffersize > buffersize) {
 					/* Increase the buffer's size. */
 					newbuffer = (char *)API_REALLOC(buffer, (newbuffersize + 1) * sizeof(char));
-					if
-						unlikely(!newbuffer)
-					goto err_buffer;
-					buffer = newbuffer, buffersize = newbuffersize;
+					if unlikely(!newbuffer)
+						goto err_buffer;
+					buffer     = newbuffer;
+					buffersize = newbuffersize;
 				}
 				buffer[newbuffersize] = '\0';
 				memcpy(buffer, path, pathsize * sizeof(char));
@@ -7375,10 +7451,10 @@ nextfile:
 	/* Search system folders for this file. */
 	{
 		struct TPPString **iter, **begin, *elem;
-		iter = (begin = CURRENT.l_syspaths.il_pathv) +
-		       CURRENT.l_syspaths.il_pathc;
+		begin = CURRENT.l_syspaths.il_pathv;
+		iter  = begin + CURRENT.l_syspaths.il_pathc;
 next_syspath:
-		while (iter-- != begin) {
+		while (iter-- > begin) {
 			elem = *iter;
 			if (elem->s_size == 1 && elem->s_text[0] == '.') {
 				/* Special case: CWD path. */
@@ -7393,7 +7469,8 @@ next_syspath:
 					newbuffer = (char *)API_REALLOC(buffer, (newbuffersize + 1) * sizeof(char));
 					if unlikely(!newbuffer)
 						goto err_buffer;
-					buffer = newbuffer, buffersize = newbuffersize;
+					buffer     = newbuffer;
+					buffersize = newbuffersize;
 				}
 				memcpy(buffer, elem->s_text, elem->s_size * sizeof(char));
 				buffer[elem->s_size] = '/';
@@ -7536,11 +7613,11 @@ again:
 		char const *begin, *end, *real_end;
 		/* Check for an alias with less underscores. */
 		real_end = end = (begin = self->k_name) + self->k_size;
-		while (begin != end && *begin == '_')
+		while (begin < end && *begin == '_')
 			++begin;
-		while (end != begin && end[-1] == '_')
+		while (end > begin && end[-1] == '_')
 			--end;
-		if (begin != self->k_name || end != real_end) {
+		if (begin > self->k_name || end < real_end) {
 			/* Was able to remove some leading/terminating underscores.
 			 * >> Check for an alternative keyword with them removed. */
 			self = TPPLexer_LookupKeyword(begin, (size_t)(end - begin), 0);
@@ -7715,8 +7792,10 @@ again:
 		/* Refuse to return anything other than EOF when eof-on-paren is
 		 * turned on and the parenthesis recursion has dropped to ZERO(0). */
 		if (!CURRENT.l_eof_paren) {
-			if (file)
-				token.t_begin = token.t_end = file->f_pos;
+			if (file) {
+				token.t_begin = file->f_pos;
+				token.t_end   = file->f_pos;
+			}
 			return tok = TOK_EOF;
 		}
 	}
@@ -7832,9 +7911,10 @@ eof:
 		}
 		/* Warn amount if multi-char constants if they are not enabled. */
 		if (ch == '\'' && !HAVE_EXTENSION_MULTICHAR_CONST) {
-			char *char_begin = token.t_begin + 1, *char_end = iter;
+			char *char_begin = token.t_begin + 1;
+			char *char_end   = iter;
 			assert(char_end >= char_begin);
-			if (char_end != char_begin && char_end[-1] == '\'')
+			if (char_end > char_begin && char_end[-1] == '\'')
 				--char_end;
 			if (TPP_SizeofUnescape(char_begin, (size_t)(char_end - char_begin),
 			                       sizeof(char)) != sizeof(char)) {
@@ -8245,13 +8325,13 @@ glue_tok:
 
 	case ':':
 		if (*forward == ':' &&
-		    (CURRENT.l_extokens & TPPLEXER_TOKEN_COLLONCOLLON)) {
-			ch = TOK_COLLON_COLLON;
+		    (CURRENT.l_extokens & TPPLEXER_TOKEN_COLONCOLON)) {
+			ch = TOK_COLON_COLON;
 			goto settok_forward1;
 		}
 		if (*forward == '=' &&
-		    (CURRENT.l_extokens & TPPLEXER_TOKEN_COLLONASSIGN)) {
-			ch = TOK_COLLON_EQUAL;
+		    (CURRENT.l_extokens & TPPLEXER_TOKEN_COLONASSIGN)) {
+			ch = TOK_COLON_EQUAL;
 			goto settok_forward1;
 		}
 		if (HAVE_FEATURE_DIGRAPHS &&
@@ -8307,9 +8387,10 @@ glue_tok:
 		}
 		/* Warn amount if multi-char constants if they are not enabled. */
 		if (ch == '\'' && !HAVE_EXTENSION_MULTICHAR_CONST) {
-			char *char_begin = token.t_begin + 1, *char_end = iter;
+			char *char_begin = token.t_begin + 1;
+			char *char_end   = iter;
 			assert(char_end >= char_begin);
-			if (char_end != char_begin && char_end[-1] == '\'')
+			if (char_end > char_begin && char_end[-1] == '\'')
 				--char_end;
 			if (TPP_SizeofUnescapeRaw(char_begin, (size_t)(char_end - char_begin)) != 1) {
 				if unlikely(!WARN(W_MULTICHAR_NOT_ALLOWED, char_begin,
@@ -8345,14 +8426,16 @@ do_keyword:
 					iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 					if (!(chrattr[(uint8_t)*iter] & chflags))
 						break;
-					++iter, ++name_size;
+					++iter;
+					++name_size;
 				}
 			} else {
 				for (;;) {
 					iter = tpp_skip_wraplf_z(iter/*, file->f_end*/);
 					if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 						break;
-					++iter, ++name_size;
+					++iter;
+					++name_size;
 				}
 			}
 			/* Lookup/generate the token id of this keyword. */
@@ -8477,8 +8560,7 @@ PUBLIC int TPPCALL TPPLexer_AtStartOfLine(void) {
 	 */
 	/* STDC allows comments here (So we must ignore slash-star comments)! */
 	line_begin = skip_whitespacenolf_and_comments_rev(line_begin, file_begin);
-	if (line_begin != file_begin &&
-	    !tpp_islforzero(line_begin[-1]))
+	if (line_begin > file_begin && !tpp_islforzero(line_begin[-1]))
 		return 0; /* Not at the start of a line. */
 	return 1;
 }
@@ -8638,9 +8720,9 @@ PRIVATE int TPPCALL parse_include_string(char **begin, char **end) {
 		*begin = token.t_begin;
 		*end = (char *)memchr(token.t_end, '>',
 		                      (size_t)(token.t_file->f_end - token.t_end));
-		if (!*end)
+		if (!*end) {
 			*end = token.t_end;
-		else {
+		} else {
 			/* Continue parsing _AFTER_ the `>' character! */
 			token.t_file->f_pos = (*end) + 1;
 		}
@@ -8690,8 +8772,10 @@ again:
 		result = TPPLexer_YieldRaw();
 parse_result_directive:
 		switch (result) {
-		case '\n': { /* NULL-directive. */
-		}	break;
+
+		case '\n':
+			/* NULL-directive. */
+			break;
 
 		case '!': {
 			/* Ignore shebang-style script markers (e.g.: `#!/bin/bash') */
@@ -9318,8 +9402,10 @@ asm_comment:
 					if (*++comment_end == '\n')
 						++comment_end;
 				}
-				token.t_file->f_pos = token.t_end = comment_end;
-				token.t_id = result = TOK_COMMENT;
+				token.t_file->f_pos = comment_end;
+				token.t_end         = comment_end;
+				token.t_id          = TOK_COMMENT;
+				result              = TOK_COMMENT;
 			} else {
 				breakf();
 				if unlikely(!WARN(W_UNKNOWN_PREPROCESSOR_DIRECTIVE))
@@ -9373,7 +9459,8 @@ escape_entire_file(struct TPPFile *infile) {
 		return empty_string;
 	}
 	insize    = (size_t)(infile->f_end - infile->f_begin);
-	allocsize = reqsize = TPP_SizeofEscape(infile->f_begin, insize) + 2;
+	reqsize   = TPP_SizeofEscape(infile->f_begin, insize) + 2;
+	allocsize = reqsize;
 	assert(reqsize);
 	result = TPPString_NewSized(reqsize);
 	if unlikely(!result)
@@ -9405,7 +9492,8 @@ escape_entire_file(struct TPPFile *infile) {
 	if (CURRENT.l_flags & TPPLEXER_FLAG_ERROR)
 		goto err_r;
 #endif /* TPP_CONFIG_SET_API_ERROR */
-	if (result->s_size != allocsize) {
+	assert(result->s_size <= allocsize);
+	if (result->s_size < allocsize) {
 		newresult = (struct TPPString *)realloc(result,
 		                                        TPP_OFFSETOF(struct TPPString, s_text) +
 		                                        (result->s_size + 1) * sizeof(char));
@@ -9471,8 +9559,8 @@ PUBLIC tok_t TPPCALL TPPLexer_Yield(void) {
 again:
 	result = TPPLexer_YieldPP();
 	if (TPP_ISKEYWORD(result)) {
-		if ((assert(token.t_kwd),
-		     (macro = token.t_kwd->k_macro) != NULL) &&
+		assert(token.t_kwd);
+		if (((macro = token.t_kwd->k_macro) != NULL) &&
 		    !(CURRENT.l_flags & TPPLEXER_FLAG_NO_MACROS)) {
 			/* User-defined macro expansion. */
 			assert(macro->f_kind == TPPFILE_KIND_MACRO);
@@ -10967,7 +11055,8 @@ argcache_genexpand(struct argcache_t *__restrict self,
 
 	/* NOTE: Not ZERO-terminated! */
 	self->ac_expand_size = (size_t)(buf_pos - buf_begin);
-	if (buf_pos != buf_end) {
+	assert(buf_pos <= buf_end);
+	if (buf_pos < buf_end) {
 		newsize = self->ac_expand_size;
 		assert(newsize);
 		/* Free up some unused buffer memory. */
@@ -11027,17 +11116,20 @@ expand_function_macro_impl(struct TPPFile *__restrict macro,
 		result->f_begin = macro->f_begin;
 		result->f_end   = macro->f_end;
 		/* Sub-values to not cleanup anything below. */
-		begin = end = NULL, argv = NULL;
+		begin = NULL;
+		end   = NULL;
+		argv  = NULL;
 		goto result_common;
 	}
 
 	/* Figure out what we need to know and precalculate that. */
-	end = (iter = begin = macro->f_macro.m_function.f_arginfo) +
-	      macro->f_macro.m_function.f_argc;
+	begin              = macro->f_macro.m_function.f_arginfo;
+	end                = begin + macro->f_macro.m_function.f_argc;
+	iter               = begin;
 	arg_iter           = argv;
 	expanded_text_size = (size_t)(macro->f_end - macro->f_begin);
 	expanded_text_size -= macro->f_macro.m_function.f_deltotal;
-	for (; iter != end; ++iter, ++arg_iter) {
+	for (; iter < end; ++iter, ++arg_iter) {
 		/* NOTE: Must handle `ai_ins_exp' first, because `argcache_genexpand()'
 		 *       might alter the source text in certain cases (such as when it
 		 *       references `__has_include()', in which case the source file
@@ -11309,8 +11401,9 @@ result_common:
 #undef ARGINFO
 #undef ARGC
 	/* Free the expansion buffers. */
-	iter = begin, arg_iter = argv;
-	for (; iter != end; ++iter, ++arg_iter) {
+	iter     = begin;
+	arg_iter = argv;
+	for (; iter < end; ++iter, ++arg_iter) {
 		if (iter->ai_ins_exp)
 			free(arg_iter->ac_expand_begin);
 	}
@@ -11322,9 +11415,11 @@ err_argcache_full:
 	arg_iter = argv + macro->f_macro.m_function.f_argc;
 	iter     = begin + macro->f_macro.m_function.f_argc;
 err_argcache:
-	while (arg_iter-- != argv) {
+	while (arg_iter > argv) {
+		--arg_iter;
+		--iter;
 		/* Free the expansion buffer. */
-		if ((--iter)->ai_ins_exp)
+		if (iter->ai_ins_exp)
 			free(arg_iter->ac_expand_begin);
 	}
 	return NULL;
@@ -11473,9 +11568,12 @@ PRIVATE void TPPCALL
 incback_quit(struct incback_t *__restrict self) {
 	/* Destroy all include-backups. */
 	struct incback_slot_t *iter, *begin;
-	iter = (begin = self->ib_morev) + self->ib_morec;
-	while (iter-- != begin)
+	begin = self->ib_morev;
+	iter  = begin + self->ib_morec;
+	while (iter > begin) {
+		--iter;
 		incback_slot_quit(iter);
+	}
 	free(begin);
 }
 
@@ -11484,9 +11582,12 @@ incback_restore(struct incback_t *__restrict self,
                 struct TPPFile *__restrict arguments_file) {
 	/* Restore all include-backups. */
 	struct incback_slot_t *iter, *begin;
-	iter = (begin = self->ib_morev) + self->ib_morec;
-	while (iter-- != begin)
+	begin = self->ib_morev;
+	iter  = begin + self->ib_morec;
+	while (iter > begin) {
+		--iter;
 		incback_slot_restore(iter);
+	}
 	free(begin);
 	self->ib_morec = self->ib_morea = 0;
 	self->ib_morev                  = NULL;
@@ -11511,7 +11612,7 @@ compare_text(char const *__restrict old_text,
              char const *__restrict new_text,
              size_t text_size) {
 	char const *oend = old_text + text_size;
-	for (; old_text != oend; ++old_text, ++new_text) {
+	for (; old_text < oend; ++old_text, ++new_text) {
 		/* NOTE: Must ignore \0-characters in the old text! */
 		if (*old_text && *old_text != *new_text)
 			return 0;
@@ -11550,7 +11651,7 @@ TPPLexer_ExpandFunctionMacro(struct TPPFile *__restrict macro) {
 	for (;;) {
 		iter = arguments_file->f_pos;
 		end  = arguments_file->f_end;
-		while (iter != end) {
+		while (iter < end) {
 			iter = tpp_skip_wraplf(iter, end);
 			if (!tpp_isspace(*iter))
 				goto at_next_non_whitespace;
@@ -11558,9 +11659,8 @@ TPPLexer_ExpandFunctionMacro(struct TPPFile *__restrict macro) {
 		}
 		arguments_file = arguments_file->f_prev;
 		/* Special case: The entire lexer ends before another non-whitespace token is encountered. */
-		if
-			unlikely(!arguments_file)
-		return 2;
+		if unlikely(!arguments_file)
+			return 2;
 	}
 at_next_non_whitespace:
 	/* Check the next non-whitespace character following the
@@ -11894,8 +11994,9 @@ add_arg:
 					arg_iter->ac_offset_end = (size_t)(token.t_begin - token.t_file->f_text->s_text);
 					if (!paren_recursion[calling_conv])
 						goto done_args;
-					if (arg_iter != arg_last) {
-						(++arg_iter)->ac_offset_begin = (size_t)(token.t_end - token.t_file->f_text->s_text);
+					if (arg_iter < arg_last) {
+						++arg_iter;
+						arg_iter->ac_offset_begin = (size_t)(token.t_end - token.t_file->f_text->s_text);
 					} else if (!(macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC)) {
 						if unlikely(!WARN(W_TOO_MANY_MACRO_ARGUMENTS, macro)) {
 err_argv:
@@ -11914,16 +12015,16 @@ err_argv:
 			TPPLexer_YieldRaw();
 		}
 done_args:
-		if (va_size < effective_argc)
+		if (va_size < effective_argc) {
 			va_size = 1;
-		else {
+		} else {
 			va_size -= (effective_argc - 1);
 		}
 
 		assert(token.t_file == arguments_file);
-		if (arg_iter != arg_last) {
-			if (macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC &&
-			    arg_iter == arg_last - 1) {
+		if (arg_iter < arg_last) {
+			if ((macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_VARIADIC) &&
+			    (arg_iter == arg_last - 1)) {
 				/* Special case: Fill in the last (optional) argument of a varargs function with an empty string.
 				 *               This way the following two version do exactly the same:
 				 *            >> #define foo(a,...) a(__VA_ARGS__)
@@ -11955,11 +12056,11 @@ done_args:
 		 *    relative offsets to absolute pointers. */
 		text_offset = (uintptr_t)arguments_file->f_text->s_text;
 		arg_end     = (arg_iter = argv) + effective_argc;
-		for (; arg_iter != arg_end; ++arg_iter) {
+		for (; arg_iter < arg_end; ++arg_iter) {
 			arg_iter->ac_offset_begin *= sizeof(char);
-			arg_iter->ac_offset_end *= sizeof(char);
+			arg_iter->ac_offset_end   *= sizeof(char);
 			arg_iter->ac_offset_begin += text_offset;
-			arg_iter->ac_offset_end += text_offset;
+			arg_iter->ac_offset_end   += text_offset;
 			if (!(macro->f_macro.m_flags & TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC)) {
 				arg_iter->ac_begin = skip_whitespace_and_comments(arg_iter->ac_begin, arg_iter->ac_end);
 				arg_iter->ac_end   = skip_whitespace_and_comments_rev(arg_iter->ac_end, arg_iter->ac_begin);
@@ -11970,7 +12071,7 @@ done_args:
 		if (!macro->f_macro.m_function.f_argc) {
 			/* The one argument that we parsed must only contain whitespace.
 			 * >> If it does not, emit a warning. */
-			if unlikely((argv[0].ac_begin != argv[0].ac_end) &&
+			if unlikely((argv[0].ac_begin < argv[0].ac_end) &&
 			            !WARN(W_TOO_MANY_MACRO_ARGUMENTS, macro))
 				goto err_argv;
 		}
@@ -11989,7 +12090,7 @@ done_args:
 			LOG(LOG_CALLMACRO | LOG_RAW,
 			    ("[DEBUG] Calling: %.*s(\n",
 			     (int)macro->f_namesize, macro->f_name));
-			for (; arg_iter != arg_end; ++arg_iter) {
+			for (; arg_iter < arg_end; ++arg_iter) {
 				LOG(LOG_CALLMACRO | LOG_RAW,
 				    ("\t[%.*s],\n",
 				     (int)(arg_iter->ac_end -
@@ -11999,9 +12100,11 @@ done_args:
 			LOG(LOG_CALLMACRO | LOG_RAW, (")\n"));
 		}
 #endif /* HAVELOG(LOG_CALLMACRO) */
+
 		/* Everything has been checked!
 		 * >> So now we can finally begin creating the expanded macro. */
 		expand_file = expand_function_macro(macro, argv, arguments_file, va_size);
+
 		/* Cleanup the argv cache. */
 		if (!macro->f_macro.m_function.f_argbuf) {
 			/* The cache slot is empty (it may not be for recursively expanding macros) */
@@ -12076,7 +12179,7 @@ TPPConst_ToString(struct TPPConst const *__restrict self) {
 		assert(self->c_data.c_string);
 		result_size = 2 + TPP_SizeofEscape(self->c_data.c_string->s_text,
 		                                   self->c_data.c_string->s_size);
-		result      = TPPString_NewSized(result_size);
+		result = TPPString_NewSized(result_size);
 		if unlikely(!result)
 			return NULL;
 		result->s_text[0]               = '\"';
@@ -12106,19 +12209,15 @@ TPPConst_ToString(struct TPPConst const *__restrict self) {
 
 
 /* Most of the time, the eval functions will only call the next lower level.
- * >> Looking at the fastcall calling convention on i386, the first argument
- *    is passed through EAX (which isn't clobbered because all functions return void).
- *    With this calling convention, the result-argument doesn't need to be
- *    re-push onto the stack every time the next lower level is called.
- */
+ * -> Try to use a calling convention that best fits this use-case! */
 #if (defined(__GNUC__) && \
      (defined(__i386__) || defined(__i386) || defined(i386)))
 #define EVAL_CALL __attribute__((__fastcall__))
 #elif defined(_MSC_VER)
 #define EVAL_CALL __fastcall
-#else
+#else /* ... */
 #define EVAL_CALL /* nothing */
-#endif
+#endif /* !... */
 
 
 #if TPP_UNESCAPE_MAXCHAR == 1
@@ -12138,11 +12237,11 @@ TPPLexer_ParseStringEx(size_t sizeof_char)
 	string_begin = token.t_begin;
 	string_end   = token.t_end;
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
-	if (string_begin != string_end && *string_begin == 'r') {
+	if (string_begin < string_end && *string_begin == 'r') {
 		++string_begin;
-		if (string_begin != string_end && *string_begin == '\"')
+		if (string_begin < string_end && *string_begin == '\"')
 			++string_begin;
-		if (string_begin != string_end && string_end[-1] == '\"')
+		if (string_begin < string_end && string_end[-1] == '\"')
 			--string_end;
 		reqsize = TPP_SizeofUnescapeRaw(string_begin,
 		                                (size_t)(string_end - string_begin));
@@ -12156,9 +12255,9 @@ TPPLexer_ParseStringEx(size_t sizeof_char)
 	} else
 #endif /* TPP_CONFIG_RAW_STRING_LITERALS */
 	{
-		if (string_begin != string_end && *string_begin == '\"')
+		if (string_begin < string_end && *string_begin == '\"')
 			++string_begin;
-		if (string_begin != string_end && string_end[-1] == '\"')
+		if (string_begin < string_end && string_end[-1] == '\"')
 			--string_end;
 		reqsize = TPP_SizeofUnescape(string_begin,
 		                             (size_t)(string_end - string_begin), sizeof_char);
@@ -12178,11 +12277,11 @@ TPPLexer_ParseStringEx(size_t sizeof_char)
 		string_begin = token.t_begin;
 		string_end   = token.t_end;
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
-		if (string_begin != string_end && *string_begin == 'r') {
+		if (string_begin < string_end && *string_begin == 'r') {
 			++string_begin;
-			if (string_begin != string_end && *string_begin == '\"')
+			if (string_begin < string_end && *string_begin == '\"')
 				++string_begin;
-			if (string_begin != string_end && string_end[-1] == '\"')
+			if (string_begin < string_end && string_end[-1] == '\"')
 				--string_end;
 			reqsize = result->s_size + TPP_SizeofUnescapeRaw(string_begin,
 			                                                 (size_t)(string_end - string_begin));
@@ -12202,9 +12301,9 @@ TPPLexer_ParseStringEx(size_t sizeof_char)
 		} else
 #endif /* TPP_CONFIG_RAW_STRING_LITERALS */
 		{
-			if (string_begin != string_end && *string_begin == '\"')
+			if (string_begin < string_end && *string_begin == '\"')
 				++string_begin;
-			if (string_begin != string_end && string_end[-1] == '\"')
+			if (string_begin < string_end && string_end[-1] == '\"')
 				--string_end;
 			reqsize = result->s_size + TPP_SizeofUnescape(string_begin,
 			                                              (size_t)(string_end - string_begin),
@@ -12237,22 +12336,23 @@ err:
 }
 
 PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
-	char ch, *begin, *end;
+	char *begin, *end;
 	tint_t intval, new_intval, more;
 	int numsys, result = TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
 	assert(pint);
 	assert(TPPLexer_Current);
 	assert(tok == TOK_INT || tok == TOK_CHAR);
-	begin = token.t_begin, end = token.t_end;
+	begin = token.t_begin;
+	end   = token.t_end;
 	assert(begin <= end);
 	if (tok == TOK_CHAR) {
 		size_t esc_size, size;
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
 		if (*begin == 'r') {
 			++begin;
-			if likely(begin != end && *begin == '\'')
+			if likely(begin < end && *begin == '\'')
 				++begin;
-			if likely(begin != end && end[-1] == '\'')
+			if likely(begin < end && end[-1] == '\'')
 				--end;
 			size     = (size_t)(end - begin);
 			esc_size = TPP_SizeofUnescapeRaw(begin, size);
@@ -12270,9 +12370,9 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 		} else
 #endif /* TPP_CONFIG_RAW_STRING_LITERALS */
 		{
-			if likely(begin != end && *begin == '\'')
+			if likely(begin < end && *begin == '\'')
 				++begin;
-			if likely(begin != end && end[-1] == '\'')
+			if likely(begin < end && end[-1] == '\'')
 				--end;
 			size     = (size_t)(end - begin);
 			esc_size = TPP_SizeofUnescape(begin, size, sizeof(char));
@@ -12302,9 +12402,10 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 	intval = 0;
 	if (begin == end)
 		goto done;
-	if (*begin != '0')
+	if (*begin != '0') {
 		numsys = 10;
-	else {
+	} else {
+		char ch;
 		++begin;
 		if (begin < end)
 			begin = tpp_skip_wraplf(begin, end);
@@ -12323,15 +12424,16 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 		}
 	}
 	while (begin < end) {
+		char ch;
 		begin = tpp_skip_wraplf(begin, end);
 		ch    = *begin;
-		if (ch >= '0' && ch <= '9')
+		if (ch >= '0' && ch <= '9') {
 			more = (tint_t)(ch - '0');
-		else if (ch >= 'A' && ch <= 'F')
+		} else if (ch >= 'A' && ch <= 'F') {
 			more = (tint_t)(10 + (ch - 'A'));
-		else if (ch >= 'a' && ch <= 'f')
+		} else if (ch >= 'a' && ch <= 'f') {
 			more = (tint_t)(10 + (ch - 'a'));
-		else {
+		} else {
 			break;
 		}
 		if unlikely(more >= numsys)
@@ -12347,6 +12449,7 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 	}
 	/* Parse a suffix. */
 	while (begin < end) {
+		char ch;
 		begin = tpp_skip_wraplf(begin, end);
 		ch    = *begin;
 		ch    = tolower(ch);
@@ -12364,16 +12467,16 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 		}
 		++begin;
 	}
-	if (begin != end) {
+	if (begin < end) {
 		if (HAVE_EXTENSION_MSVC_FIXED_INT &&
 		    (result & TPP_ATOI_TYPE_MASK) == TPP_ATOI_TYPE_INT) {
 			/* MSVC-style fixed-length integer suffix. */
-			ch = *begin, ch = tolower(ch);
-			if (ch == 'i') {
+			char ch = *begin;
+			if (ch == 'i' || ch == 'I') {
 				char *forward = begin + 1;
-				if (forward != end)
+				if (forward < end)
 					forward = tpp_skip_wraplf(forward, end);
-				if (forward == end)
+				if (forward >= end)
 					goto wrong_suffix;
 				ch = *forward++;
 				if (ch == '8') {
@@ -12381,9 +12484,9 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 					result |= TPP_ATOI_TYPE_INT8;
 				} else if (ch == '1' || ch == '3' || ch == '6') {
 					char ch2;
-					if (forward != end)
+					if (forward < end)
 						forward = tpp_skip_wraplf(forward, end);
-					if (forward == end)
+					if (forward >= end)
 						goto wrong_suffix;
 					ch2 = *forward++;
 					if (ch == '1' && ch2 == '6') {
@@ -12400,7 +12503,7 @@ PUBLIC int TPPCALL TPP_Atoi(tint_t *__restrict pint) {
 			}
 		}
 wrong_suffix:
-		if (begin != end) {
+		if (begin < end) {
 #if 1
 			/* Warning: Invalid integer. */
 			if unlikely(!WARN(W_INVALID_INTEGER))
@@ -12493,16 +12596,19 @@ PUBLIC int TPPCALL TPP_Atof(TPP(tfloat_t) * __restrict pfloat) {
 	iter = token.t_begin;
 	end  = token.t_end;
 	if (*iter == '0') {
-		if (++iter == end)
+		++iter;
+		if (iter >= end)
 			goto done_zero;
 		iter = tpp_skip_wraplf(iter, end);
 		if (*iter == 'x' || *iter == 'X') {
-			if (++iter == end)
+			++iter;
+			if (iter >= end)
 				goto done_zero;
 			iter = tpp_skip_wraplf(iter, end);
 			numsys = 16;
 		} else if (*iter == 'b' || *iter == 'B') {
-			if (++iter == end)
+			++iter;
+			if (iter >= end)
 				goto done_zero;
 			iter = tpp_skip_wraplf(iter, end);
 			numsys = 2;
@@ -12593,7 +12699,7 @@ PUBLIC int TPPCALL TPP_Atof(TPP(tfloat_t) * __restrict pfloat) {
 		}
 next:
 		;
-	} while (iter != end);
+	} while (iter < end);
 	goto dbl;
 flt_ext:
 	/* Read the Float extension: E[+/-][int] */
@@ -12602,26 +12708,26 @@ flt_ext:
 	float_extension_pos = 1;
 	float_extension_off = 0;
 	iter = tpp_skip_wraplf(iter, end);
-	if (iter == end) {
+	if (iter >= end) {
 		--iter;
 		goto sfx;
 	}
-	ch = *iter++;
+	ch   = *iter++;
 	iter = tpp_skip_wraplf(iter, end);
 	if (ch == '-' || ch == '+') {
 		float_extension_pos = (ch == '+');
-		if (iter == end) {
+		if (iter >= end) {
 			--iter;
 			goto sfx;
 		}
-		ch = *iter++;
+		ch   = *iter++;
 		iter = tpp_skip_wraplf(iter, end);
 	}
 	while (ch >= '0' && ch <= '9') {
 		float_extension_off = float_extension_off * 10 + (ch - '0');
 		if (iter == end)
 			break;
-		ch = *iter++;
+		ch   = *iter++;
 		iter = tpp_skip_wraplf(iter, end);
 	}
 	float_extension_mult = 1;
@@ -12638,7 +12744,7 @@ flt_ext:
 #undef float_extension_off
 sfx:
 	/* Floating pointer type suffix */
-	if (iter != end)
+	if (iter < end) {
 		switch (ch) {
 
 		case '\0':
@@ -12662,7 +12768,8 @@ dbl:
 				goto sfx;
 			}
 			if (*iter == '\r') {
-				if (*++iter == '\n')
+				++iter;
+				if (*iter == '\n')
 					++iter;
 				ch = *iter++;
 				goto sfx;
@@ -12671,12 +12778,12 @@ dbl:
 		default:
 			goto err_invalid_suffix; /* Invalid suffix */
 		}
+	}
 	*pfloat = fltval;
 	return result;
 err_invalid_suffix:
 	--iter;
-	if (!WARN(W_INVALID_FLOAT_SUFFIX,
-	          iter, (size_t)(end - iter)))
+	if (!WARN(W_INVALID_FLOAT_SUFFIX, iter, (size_t)(end - iter)))
 		goto err;
 	*pfloat = 0;
 	return TPP_ATOF_OK;
@@ -12726,14 +12833,16 @@ PUBLIC ptrdiff_t TPPCALL TPP_PrintToken(printer_t printer, void *closure) {
 	default:
 		break;
 	}
-	iter = flush_start = token.t_begin, end = token.t_end;
-	while (iter != end) {
-		assert(iter < end);
+	iter        = token.t_begin;
+	end         = token.t_end;
+	flush_start = iter;
+	while ((assert(iter <= end), iter < end)) {
 		/* Handle escaped linefeeds. */
 		if (*iter == '\\' && tpp_islf(iter[1])) {
-			if (iter != flush_start)
+			if (iter > flush_start)
 				print(flush_start, (size_t)(iter - flush_start));
-			if (*++iter == '\r' && iter[1] == '\n')
+			++iter;
+			if (*iter == '\r' && iter[1] == '\n')
 				++iter;
 			flush_start = ++iter;
 			continue;
@@ -12754,7 +12863,7 @@ PUBLIC ptrdiff_t TPPCALL TPP_PrintToken(printer_t printer, void *closure) {
 next:
 		++iter;
 	}
-	if (iter != flush_start)
+	if (iter > flush_start)
 		print(flush_start, (size_t)(iter - flush_start));
 done:
 	return result;
@@ -12929,8 +13038,10 @@ err_argv:
 	iter = argv + argc;
 err_iter:
 	UNUSED_LABEL;
-	while (iter-- != argv)
+	while (iter > argv) {
+		--iter;
 		TPPConst_Quit(iter);
+	}
 ret:
 	UNUSED_LABEL;
 #ifndef alloca
@@ -13431,9 +13542,9 @@ defch:
 				unsigned int recursion = 1;
 				while (tok > 0) {
 					yield();
-					if (tok == '(')
+					if (tok == '(') {
 						++recursion;
-					else if (tok == ')' && !--recursion) {
+					} else if (tok == ')' && !--recursion) {
 						yield();
 						break;
 					}
@@ -13559,7 +13670,7 @@ PRIVATE void EVAL_CALL eval_prod(struct TPPConst *result) {
 	eval_unary(result);
 	for (;;) {
 		struct TPPConst result2;
-		register tok_t t;
+		/*register*/ tok_t t;
 		switch (t = tok) {
 
 		case '*':
@@ -13592,7 +13703,7 @@ PRIVATE void EVAL_CALL eval_sum(struct TPPConst *result) {
 	eval_prod(result);
 	for (;;) {
 		struct TPPConst result2;
-		register tok_t t;
+		/*register*/ tok_t t;
 		switch (t = tok) {
 
 		case '+':
@@ -13639,8 +13750,8 @@ PRIVATE void EVAL_CALL eval_shift(struct TPPConst *result) {
 	eval_sum(result);
 	for (;;) {
 		struct TPPConst result2;
-		register tok_t t;
-		switch (t = tok) {
+		/*register*/ tok_t t = tok;
+		switch (t) {
 
 		case TOK_SHL:
 		case TOK_SHR:
@@ -13667,9 +13778,9 @@ PRIVATE void EVAL_CALL eval_cmp(struct TPPConst *result) {
 	eval_shift(result);
 	for (;;) {
 		struct TPPConst result2;
-		register tok_t t;
-		register tint_t diff;
-		switch (t = tok) {
+		/*register*/ tok_t t = tok;
+		/*register*/ tint_t diff;
+		switch (t) {
 
 		case TOK_LOWER:
 		case TOK_LOWER_EQUAL:
@@ -13726,9 +13837,9 @@ PRIVATE void EVAL_CALL eval_cmp_eq(struct TPPConst *result) {
 	eval_cmp(result);
 	for (;;) {
 		struct TPPConst result2;
-		register tok_t t;
-		register int resval;
-		switch (t = tok) {
+		/*register*/ tok_t t = tok;
+		/*register*/ int resval;
+		switch (t) {
 
 		case TOK_EQUAL:
 		case TOK_NOT_EQUAL:
@@ -13746,10 +13857,10 @@ PRIVATE void EVAL_CALL eval_cmp_eq(struct TPPConst *result) {
 				} else {
 					resval = (result->c_data.c_string->s_size ==
 					          result2.c_data.c_string->s_size) &&
-					         !memcmp(result->c_data.c_string->s_text,
+					         (memcmp(result->c_data.c_string->s_text,
 					                 result2.c_data.c_string->s_text,
 					                 result2.c_data.c_string->s_size *
-					                 sizeof(char));
+					                 sizeof(char)) == 0);
 					TPPConst_Quit(result);
 					TPPConst_Quit(&result2);
 					result->c_kind = TPP_CONST_INTEGRAL;
@@ -13914,7 +14025,7 @@ PRIVATE void EVAL_CALL eval_question(struct TPPConst *result) {
 					yield();
 					eval_question(was_true ? NULL : result);
 				} else {
-					if (!WARN(W_EXPECTED_COLLON_AFTER_QUESTION))
+					if (!WARN(W_EXPECTED_COLON_AFTER_QUESTION))
 						TPPLexer_SetErr();
 					if (!was_true)
 						TPPConst_ZERO(result);
@@ -13961,11 +14072,12 @@ PRIVATE void TPPCALL
 TPPLexer_ClearInclude(void) {
 	struct TPPString **iter, **end;
 	assert(TPPLexer_Current);
-	end = (iter = CURRENT.l_syspaths.il_pathv) +
-	      CURRENT.l_syspaths.il_pathc;
-	for (; iter != end; ++iter)
-		assert(*iter),
+	iter = CURRENT.l_syspaths.il_pathv;
+	end  = iter + CURRENT.l_syspaths.il_pathc;
+	for (; iter < end; ++iter) {
+		assert(*iter);
 		TPPString_Decref(*iter);
+	}
 	free(CURRENT.l_syspaths.il_pathv);
 	CURRENT.l_syspaths.il_pathc = 0;
 	CURRENT.l_syspaths.il_pathv = NULL;
@@ -13981,9 +14093,8 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
 	DBG_ALIGNMENT_DISABLE();
 #ifndef TPP_CONFIG_USERSTREAMS
 	if (fp->f_textfile.f_stream != TPP_STREAM_INVALID &&
-	    GetFileTime(fp->f_textfile.f_stream, NULL, NULL, &ftLastModified))
-		;
-	else
+	    GetFileTime(fp->f_textfile.f_stream, NULL, NULL, &ftLastModified)) {
+	} else
 #endif /* !TPP_CONFIG_USERSTREAMS */
 	{
 		hFile = CreateFileA(fp->f_name, GENERIC_READ,
@@ -14010,12 +14121,11 @@ get_last_modified_time(struct TPPFile *__restrict fp) {
 	DBG_ALIGNMENT_DISABLE();
 #if !defined(TPP_CONFIG_USERSTREAMS) && !defined(NO_FSTAT)
 	if (fp->f_textfile.f_stream != TPP_STREAM_INVALID &&
-	    fstat(fp->f_textfile.f_stream, &st))
-		;
-	else
+	    fstat(fp->f_textfile.f_stream, &st) == 0) {
+	} else
 #endif /* !TPP_CONFIG_USERSTREAMS */
 	{
-		if (stat(fp->f_name, &st)) {
+		if (stat(fp->f_name, &st) != 0) {
 			DBG_ALIGNMENT_ENABLE();
 			return 0;
 		}
@@ -14220,7 +14330,7 @@ PRIVATE int TPPCALL parse_pragma_message(void) {
 			                                (int)(lc_info.lc_col + 1)));
 		}
 		if (!(CURRENT.l_flags & TPPLEXER_FLAG_MESSAGE_NOLINEFEED)) {
-			register char oldch, *poldch;
+			/*register*/ char oldch, *poldch;
 			oldch = *(poldch = message.c_data.c_string->s_text +
 			                   message.c_data.c_string->s_size);
 			*poldch = '\n';
@@ -14481,7 +14591,7 @@ set_warning_newstate_pop:
 set_warning_newstate:
 				if (tok != ':') {
 					/* NOTE: The old TPP didn't have a warning here. */
-					if unlikely(WARN(W_EXPECTED_COLLON_AFTER_WARNING))
+					if unlikely(WARN(W_EXPECTED_COLON_AFTER_WARNING))
 						goto err;
 				} else {
 					yield();
@@ -14564,16 +14674,16 @@ set_warning_newstate:
 				++warning_text;
 			if (*warning_text == 'W')
 				++warning_text;
-			if (!memcmp(warning_text, "no-", 3 * sizeof(char))) {
+			if (memcmp(warning_text, "no-", 3 * sizeof(char)) == 0) {
 				warning_text += 3;
 				newstate = WSTATE_DISABLED;
-			} else if (!memcmp(warning_text, "def-", 4 * sizeof(char))) {
+			} else if (memcmp(warning_text, "def-", 4 * sizeof(char)) == 0) {
 				warning_text += 4;
 				newstate = WSTATE_DEFAULT;
-			} else if (!memcmp(warning_text, "sup-", 4 * sizeof(char))) {
+			} else if (memcmp(warning_text, "sup-", 4 * sizeof(char)) == 0) {
 				warning_text += 4;
 				newstate = WSTATE_SUPPRESS;
-			} else if (!memcmp(warning_text, "suppress-", 9 * sizeof(char))) {
+			} else if (memcmp(warning_text, "suppress-", 9 * sizeof(char)) == 0) {
 				warning_text += 9;
 				newstate = WSTATE_SUPPRESS;
 			}
@@ -14636,13 +14746,16 @@ yield_after_extension:
 				goto err;
 		} else {
 			int ext_error, mode = 1;
-			char const *name = extname.c_data.c_string->s_text;
+			char const *name;
+			name = extname.c_data.c_string->s_text;
 			if (*name == '-')
 				++name;
 			if (*name == 'f')
 				++name;
-			if (!memcmp(name, "no-", 3 * sizeof(char)))
-				name += 3, mode = 0;
+			if (memcmp(name, "no-", 3 * sizeof(char)) == 0) {
+				name += 3;
+				mode = 0;
+			}
 			ext_error = TPPLexer_SetExtension(name, mode);
 			if unlikely(!ext_error)
 				ext_error = WARN(W_UNKNOWN_EXTENSION, name);

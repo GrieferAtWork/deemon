@@ -139,7 +139,7 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 				*pwas_expression = AST_PARSE_WASEXPR_NO;
 		} else if (old_varc != current_scope->s_mapc) {
 			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI) &&
-			    WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+			    WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err;
 			if (pwas_expression)
 				*pwas_expression = AST_PARSE_WASEXPR_NO;
@@ -501,7 +501,7 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
-			if (skip(';', W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+			if (skip(';', W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err_r;
 		}
 		if (result->a_multiple.m_astc == 1) {

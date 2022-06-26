@@ -126,7 +126,7 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	case ':':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_COLLON_EQUAL;
+				return TOK_COLON_EQUAL;
 		} else if (name[1] == ':') {
 			if (!name[2])
 				return TOK_NAMESPACE;
@@ -293,7 +293,7 @@ PRIVATE char const largetok_names[][4] = {
 	/* [TOK_POW           - TOK_TWOCHAR_BEGIN] = */ { '*', '*' },
 	/* [TOK_TILDE_TILDE   - TOK_TWOCHAR_BEGIN] = */ { '~', '~' },
 	/* [TOK_ARROW         - TOK_TWOCHAR_BEGIN] = */ { '-', '>' },
-	/* [TOK_COLLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */ { ':', '=' },
+	/* [TOK_COLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */ { ':', '=' },
 	/* [TOK_NAMESPACE     - TOK_TWOCHAR_BEGIN] = */ { ':', ':' },
 	/* [TOK_ARROW_STAR    - TOK_TWOCHAR_BEGIN] = */ { '-', '>', '*' },
 	/* [TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */ { '.', '*' },

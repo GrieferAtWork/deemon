@@ -976,7 +976,7 @@ done:
 		return PyAstMultiple(branches: asts).merge();
 	}
 
-	final function parseStatementBlockAfterCollon(): PyAst {
+	final function parseStatementBlockAfterColon(): PyAst {
 		if (kind == TOK_LF) {
 			next();
 			return parseStatementBlock();
@@ -1071,7 +1071,7 @@ again:
 			result.iter = parseExpression();
 			skip(":");
 			local loop;
-			loop = parseStatementBlockAfterCollon();
+			loop = parseStatementBlockAfterColon();
 			if (loop is PyAstMultiple && !loop.branches)
 				loop = none;
 			if (loop !is none)
@@ -1084,7 +1084,7 @@ again:
 			local result = PyAstWhile(cond: parseExpression());
 			skip(":");
 			local loop;
-			loop = parseStatementBlockAfterCollon();
+			loop = parseStatementBlockAfterColon();
 			if (loop is PyAstMultiple && !loop.branches)
 				loop = none;
 			if (loop !is none)
@@ -1097,7 +1097,7 @@ again:
 			local result = PyAstWhile(cond: parseExpression());
 			skip(":");
 			local loop;
-			loop = parseStatementBlockAfterCollon();
+			loop = parseStatementBlockAfterColon();
 			if (loop is PyAstMultiple && !loop.branches)
 				loop = none;
 			if (loop !is none)
@@ -1109,14 +1109,14 @@ again:
 			next();
 			local result = PyAstIf(cond: parseExpression());
 			skip(":");
-			local tt = parseStatementBlockAfterCollon();
+			local tt = parseStatementBlockAfterColon();
 			if (tt is PyAstMultiple && !tt.branches)
 				tt = none;
 			local ff = none;
 			if (tok == "else") {
 				next();
 				skip(":");
-				ff = parseStatementBlockAfterCollon();
+				ff = parseStatementBlockAfterColon();
 			} else if (tok == "elif") {
 				tok = "if";
 				ff = parseStatement();

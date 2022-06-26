@@ -91,7 +91,7 @@ ast_parse_argument_list(uint16_t mode,
 					goto err_r_kwdlist;
 				if unlikely(yield() < 0)
 					goto err_r_kwdlist;
-				if (skip(':', W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL))
+				if (skip(':', W_EXPECTED_COLON_AFTER_KEYWORD_LABEL))
 					goto err_r_kwdlist;
 				/* Make sure that we have allocated sufficient memory for the keyword list. */
 				ASSERT(result->a_multiple.m_astc <= multiple_a);

@@ -295,7 +295,7 @@ done_y1:
 		break;
 
 	case '=':
-	case TOK_COLLON_EQUAL:
+	case TOK_COLON_EQUAL:
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move"))
 			goto done_y1;
@@ -783,7 +783,7 @@ do_scan_call_args:
 	case TOK_LAND:
 	case TOK_LOR:
 	case TOK_POW:
-	case TOK_COLLON_EQUAL:
+	case TOK_COLON_EQUAL:
 	case TOK_EQUAL3:
 	case TOK_NOT_EQUAL3:
 do_yield_again_docast:
@@ -995,8 +995,8 @@ do_asm:
 						JITLexer_Yield(self);
 					}
 				}
-				while (self->jl_tok == ':' || self->jl_tok == TOK_COLLON_EQUAL) {
-					if (self->jl_tok == TOK_COLLON_EQUAL) {
+				while (self->jl_tok == ':' || self->jl_tok == TOK_COLON_EQUAL) {
+					if (self->jl_tok == TOK_COLON_EQUAL) {
 						++self->jl_tokstart;
 						self->jl_tok = '=';
 					} else {

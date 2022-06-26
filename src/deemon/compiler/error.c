@@ -786,6 +786,18 @@ INTERN ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, 
 }
 
 
+/* Warn about use of `pack' (but only if we're not currently inside of a macro) */
+INTERN WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc) {
+	struct TPPFile *file = token.t_file;
+	if (loc && loc->l_file)
+		file = loc->l_file;
+	if (file->f_kind != TPPFILE_KIND_TEXT)
+		return 0; /* Only warn inside of regular files */
+	return WARNAT(loc, W_PACKED_USED_OUTSIDE_OF_MACRO);
+
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_COMPILER_ERROR_C */

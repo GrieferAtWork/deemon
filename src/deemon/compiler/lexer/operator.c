@@ -534,10 +534,10 @@ do_operator_gr:
 		goto done_y1;
 
 	case '=':
-		if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
+		if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 			goto err;
 		ATTR_FALLTHROUGH
-	case TOK_COLLON_EQUAL:
+	case TOK_COLON_EQUAL:
 		result = OPERATOR_ASSIGN;
 		if unlikely(yield() < 0)
 			goto err;
@@ -684,9 +684,9 @@ parse_string:
 					goto err;
 				result = OPERATOR_MOVEASSIGN;
 				if unlikely(tok == '=') {
-					if (WARN(W_EXPECTED_COLLON_EQUALS_AS_OPERATOR_NAME))
+					if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
-				} else if unlikely(tok != TOK_COLLON_EQUAL) {
+				} else if unlikely(tok != TOK_COLON_EQUAL) {
 					if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
 						goto err;
 					goto done;
