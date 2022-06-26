@@ -1096,6 +1096,47 @@ done_skip_semi:
 	}
 }
 
+
+/* Assume that the given source text start/ends with `{' and `}'.
+ * This function trims those characters, before also trimming any
+ * additional whitespace next to them. */
+INTERN NONNULL((1, 2)) void FCALL
+JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_start,
+                                  /*utf-8*/ char const **__restrict p_source_end) {
+	/*utf-8*/ char const *source_start = *p_source_start;
+	/*utf-8*/ char const *source_end   = *p_source_end;
+
+	/* Skip outer-most braces. */
+	++source_start;
+	--source_end;
+
+	/* Skip additional whitespace */
+	for (;;) {
+		uint32_t ch;
+		char const *next;
+		next = (char const *)source_start;
+		ch   = utf8_readchar(&next, source_end);
+		if (!DeeUni_IsSpace(ch))
+			break;
+		source_start = next;
+	}
+	for (;;) {
+		uint32_t ch;
+		char const *next;
+		next = (char const *)source_end;
+		ch   = utf8_readchar_rev(&next, source_start);
+		if (!DeeUni_IsSpace(ch))
+			break;
+		source_end = next;
+	}
+
+	/* Write-back trimmed pointers. */
+	*p_source_start = source_start;
+	*p_source_end   = source_end;
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEX_JIT_FUNCTION_SCANNER_C */

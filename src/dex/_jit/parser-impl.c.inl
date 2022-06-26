@@ -1069,6 +1069,15 @@ done_y1:
 						break;
 					source_end = (unsigned char *)next;
 				}
+				if (is_expression == AST_PARSE_WASEXPR_NO) {
+					/* Get rid of the surrounding '{' and '}'
+					 * Execution would work the same even with them there, however
+					 * their presence looks weird in `repr', and might make debugging
+					 * harder (because one might not immediately understand where
+					 * they're from) */
+					JITFunction_TrimSurroundingBraces((char const **)&source_start,
+					                                  (char const **)&source_end);
+				}
 				result = JITFunction_New(NULL,
 				                         NULL,
 				                         (char const *)saved_jl_tokstart,
@@ -1919,6 +1928,15 @@ err_oo_class_reinit_lvalue:
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char *)next;
+				}
+				if (is_expression == AST_PARSE_WASEXPR_NO) {
+					/* Get rid of the surrounding '{' and '}'
+					 * Execution would work the same even with them there, however
+					 * their presence looks weird in `repr', and might make debugging
+					 * harder (because one might not immediately understand where
+					 * they're from) */
+					JITFunction_TrimSurroundingBraces((char const **)&source_start,
+					                                  (char const **)&source_end);
 				}
 				result = JITFunction_New(NULL,
 				                         NULL,

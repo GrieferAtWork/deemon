@@ -1255,13 +1255,13 @@ INTDEF DeeTypeObject JITFunction_Type;
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region.
  * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((5, 6)) DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
                 /*utf-8*/ char const *params_start,
                 /*utf-8*/ char const *params_end,
-                /*utf-8*/ char const *__restrict source_start,
-                /*utf-8*/ char const *__restrict source_end,
+                /*utf-8*/ char const *source_start,
+                /*utf-8*/ char const *source_end,
                 JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,
@@ -1270,7 +1270,6 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 
 #define JIT_FUNCTION_FTHISCALL 0x8000 /* Special flag for `JITFunction_New()': Inject a hidden argument
                                        * at the start of the parameter-list with the name "this". */
-
 
 /* Add a new symbol entry for an argument to `self->jf_args'
  * This is similar to using `JITObjectTable_Create()', however
@@ -1286,7 +1285,17 @@ JITFunction_CreateArgument(JITFunctionObject *__restrict self,
  * to symbols from surrounding scopes, or the use of `yield'. */
 INTDEF void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
 INTDEF void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size);
+INTDEF NONNULL((1, 2)) void DCALL
+JITLexer_ReferenceKeyword(JITLexer *__restrict self,
+                          char const *__restrict name,
+                          size_t size);
+
+/* Assume that the given source text start/ends with `{' and `}'.
+ * This function trims those characters, before also trimming any
+ * additional whitespace next to them. */
+INTDEF NONNULL((1, 2)) void FCALL
+JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_start,
+                                  /*utf-8*/ char const **__restrict p_source_end);
 
 
 

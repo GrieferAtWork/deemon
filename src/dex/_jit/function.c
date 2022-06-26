@@ -236,13 +236,13 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region.
  * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((5, 6)) DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
                 /*utf-8*/ char const *params_start,
                 /*utf-8*/ char const *params_end,
-                /*utf-8*/ char const *__restrict source_start,
-                /*utf-8*/ char const *__restrict source_end,
+                /*utf-8*/ char const *source_start,
+                /*utf-8*/ char const *source_end,
                 JITObjectTable *parent_object_table,
                 DeeObject *__restrict source,
                 DeeModuleObject *impbase,
