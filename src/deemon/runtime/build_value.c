@@ -47,11 +47,11 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
-#ifdef __VA_LIST_IS_ARRAY
-#define VALIST_ADDR(x) (&(x)[0])
-#else /* __VA_LIST_IS_ARRAY */
+#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 #define VALIST_ADDR(x) (&(x))
-#endif /* !__VA_LIST_IS_ARRAY */
+#else /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
+#define VALIST_ADDR(x) (&(x)[0])
+#endif /* !CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 count_pack_args(char const *__restrict format) {
@@ -1438,6 +1438,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	struct va_list_struct args;
 	va_start(args.vl_ap, format);
+#ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
+	/* Compile-time assert that our config is correct.
+	 * -> If it isn't then this breaks, since you can't
+	 *    assign arrays to each other in C. */
+	args.vl_ap = args.vl_ap;
+#endif /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY */
 	result = Dee_VPUnpackf(self, (char const **)&format, &args);
 	va_end(args.vl_ap);
 	return result;

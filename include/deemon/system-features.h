@@ -179,6 +179,7 @@ header("unistd.h", unix);
 header("sys/unistd.h", cygwin);
 header("errno.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/errno.h");
+header("stdarg.h", stdc);
 header("stdio.h", stdc);
 header("stdlib.h", stdc);
 header("features.h", unix);
@@ -991,6 +992,8 @@ feature("struct_stat_st_birthtim", "defined(_STATBUF_ST_BIRTHTIM)", test: "struc
 feature("struct_stat_st_birthtimespec", "defined(_STATBUF_ST_BIRTHTIMESPEC)", test: "struct stat st; st.st_birthtimespec.tv_sec = 0; st.st_birthtimespec.tv_nsec = 0; return st.st_birthtimespec.tv_sec + st.st_birthtimespec.tv_nsec;");
 feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", test: "struct stat st; st.st_birthtimensec = 0; return st.st_birthtimensec;");
 
+// If va_list _is_ an array, the assignment done by this test breaks
+feature("VA_LIST_IS_NOT_ARRAY", "!defined(__VA_LIST_IS_ARRAY)", test: "extern va_list a, b; a = b; return 0;");
 
 
 //END:FEATURES
@@ -1126,6 +1129,13 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #elif !defined(CONFIG_HAVE_SYS_ERRNO_H) && \
       (__has_include(<sys/errno.h>))
 #define CONFIG_HAVE_SYS_ERRNO_H 1
+#endif
+
+#ifdef CONFIG_NO_STDARG_H
+#undef CONFIG_HAVE_STDARG_H
+#elif !defined(CONFIG_HAVE_STDARG_H) && \
+      (defined(__NO_has_include) || __has_include(<stdarg.h>))
+#define CONFIG_HAVE_STDARG_H 1
 #endif
 
 #ifdef CONFIG_NO_STDIO_H
@@ -1501,6 +1511,10 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #ifdef CONFIG_HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
 #endif /* CONFIG_HAVE_SYS_ERRNO_H */
+
+#ifdef CONFIG_HAVE_STDARG_H
+#include <stdarg.h>
+#endif /* CONFIG_HAVE_STDARG_H */
 
 #ifdef CONFIG_HAVE_STDIO_H
 #include <stdio.h>
@@ -7180,6 +7194,13 @@ feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", te
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtimensec) && \
       (defined(_STATBUF_ST_BIRTHTIMENSEC))
 #define CONFIG_HAVE_struct_stat_st_birthtimensec 1
+#endif
+
+#ifdef CONFIG_NO_VA_LIST_IS_NOT_ARRAY
+#undef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
+#elif !defined(CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY) && \
+      (!defined(__VA_LIST_IS_ARRAY))
+#define CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY 1
 #endif
 //[[[end]]]
 
