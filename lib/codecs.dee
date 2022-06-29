@@ -23,7 +23,7 @@ import * from errors;
 import * from util;
 
 local function throwUnknownCodecError(name: string) {
-	throw ValueError("Unknown codec {!r}".format({ name }));
+	throw ValueError(f"Unknown codec {repr name}");
 }
 
 @@Make sure it's not detected as a module name
@@ -83,7 +83,7 @@ local class CpCodec {
 			if (mappedCh is none) {
 				switch (errors) {
 				default:
-					throw UnicodeEncodeError("Cannot encode character {}".format({ ch }));
+					throw UnicodeEncodeError(f"Cannot encode character {ch}");
 				case "replace":
 					writer << "?";
 					continue;
@@ -111,7 +111,7 @@ local class CpCodec {
 			if (ch >= cpLen) {
 				switch (errors) {
 				default:
-					throw UnicodeDecodeError("Cannot decode character {}".format({ ch }));
+					throw UnicodeDecodeError(f"Cannot decode character {ch}");
 				case "replace":
 					writer << "?";
 					continue;
@@ -210,7 +210,7 @@ function __decode(data: Object, name: string, errors: string = "strict"): Object
 @@the codec will cause a @(ValueError from errors) to be thrown
 function register(name: string, codec: Object) {
 	if (!userCodecs.setnew(name, codec))
-		throw KeyError("Codec {!r} has already been defined".format({ name }));
+		throw KeyError(f"Codec {repr name} has already been defined");
 }
 
 

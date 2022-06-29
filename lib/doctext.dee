@@ -278,16 +278,18 @@ class Code {
 					for (local l: usedBody.splitlines(true))
 						">> " + l));
 			} else {
-				p.appendNormal("```{}\n{}\n{}```".format({
-					language,
-					usedBody.indent(usedIndent),
+				p.appendNormal(f"```{
+					language
+				}\n{
+					usedBody.indent(usedIndent)
+				}\n{
 					usedIndent
-				}));
+				}```");
 			}
 		} else if (usedBody && (usedBody[0] in "\'\"" || usedBody.isdecimal(0))) {
 			p.append(usedBody);
 		} else {
-			p.append("`{}'".format({ usedBody }));
+			p.append(f"`{usedBody}'");
 		}
 	}
 
@@ -383,7 +385,7 @@ class Emphasis {
 		local ekind = { "B" : "_", "I" : "*", "S" : "~" }[kind];
 		if (usedBody.isanyspace())
 			ekind = ekind + ekind;
-		return "{}{}{}".format({ ekind, usedBody, ekind });
+		return f"{ekind}{usedBody}{ekind}";
 	}
 
 	function printConsoleString(p: ConsolePrinter) {
@@ -756,7 +758,7 @@ function resolveColonReferenceShortcut(name: string): string | none {
 		} catch (...) {
 			return none;
 		}
-		return "/{}/{}".format({ mod, attrs.replace(".", "/") });
+		return f"/{mod}/{attrs.replace('.', '/')}";
 	}
 	import errors, deemon;
 	local candidates = {
@@ -768,10 +770,7 @@ function resolveColonReferenceShortcut(name: string): string | none {
 	candidates = Tuple(candidates);
 	if (#candidates == 1) {
 use_first_candy:
-		return "{}/{}".format({
-			candidates[0][0],
-			name.replace(".", "/")
-		});
+		return f"{candidates[0][0]}/{name.replace('.', '/')}";
 	}
 	if (candidates) {
 		/* If there are multiple candidates, check if the described
@@ -1486,7 +1485,7 @@ again_parse_character_after_question:
 					if (docstring[i] != "?")
 						goto continue_after_questionStart;
 					++i;
-					addend = "{}/{}".format({ ref, addend.strip("/") });
+					addend = f"{ref}/{addend.strip('/')}";
 					goto again_parse_character_after_question;
 
 				case "E": {
@@ -1520,23 +1519,17 @@ again_parse_character_after_question:
 						docstring[nameStart:nameEnd]);
 					if ("/" in globalName)
 						goto continue_after_questionStart; /* Not allowed */
-					ref = "/{}/{}".format({ ref, globalName });
+					ref = f"/{ref}/{globalName}";
 				}	break;
 
 				case "#":
 					/* Element in current component */
-					ref = "{}/{}".format({
-						getCurrentTypePath(mypath),
-						ref
-					});
+					ref = f"{getCurrentTypePath(mypath)}/{ref}";
 					break;
 
 				case "G":
 					/* Element of current module */
-					ref = "{}/{}".format({
-						getCurrentModulePath(mypath),
-						ref
-					});
+					ref = f"{getCurrentModulePath(mypath)}/{ref}";
 					break;
 
 				case "D":
@@ -1654,23 +1647,17 @@ again_parse_character_after_question:
 							docstring[nameStart:nameEnd]);
 						if ("/" in globalName)
 							goto continue_after_questionStart; /* Not allowed */
-						ref = "/{}/{}".format({ ref, globalName });
+						ref = f"/{ref}/{globalName}";
 					}	break;
 
 					case "#":
 						/* Element in current component */
-						ref = "{}/{}".format({
-							getCurrentTypePath(mypath),
-							ref
-						});
+						ref = f"{getCurrentTypePath(mypath)}/{ref}";
 						break;
 
 					case "G":
 						/* Element of current module */
-						ref = "{}/{}".format({
-							getCurrentModulePath(mypath),
-							ref
-						});
+						ref = f"{getCurrentModulePath(mypath)}/{ref}";
 						break;
 
 					case "D":
@@ -1714,12 +1701,8 @@ continue_after_questionStart:
 				goto continue_at_i;
 			}
 			ref = ExternalReference(path: ref);
-			if (addend) {
-				ref.path = "{}/{}".format({
-					ref.path.rstrip("/"),
-					addend.strip("/")
-				});
-			}
+			if (addend)
+				ref.path = f"{ref.path.rstrip('/')}/{addend.strip('/')}";
 do_flush_and_yield_after_questionStart:
 			FLUSHTO(questionStart);
 			yield ref;

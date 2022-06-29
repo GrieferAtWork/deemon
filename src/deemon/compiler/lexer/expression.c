@@ -470,7 +470,7 @@ make_bound_expression(struct ast *__restrict base_expr,
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
                           /*utf-8*/ char const *__restrict start,
                           size_t length) {
@@ -636,6 +636,19 @@ decode_string:
 		result = ast_setddi(ast_constexpr(resval), &loc);
 		Dee_Decref(resval);
 	}	break;
+
+	case KWD_f:
+	case KWD_F:
+		/* Check if this might be a template string. */
+		if ((*token.t_end == '\"') ||
+		    (*token.t_end == '\'' && HAS(EXT_CHARACTER_LITERALS))) {
+			if unlikely(yield() < 0)
+				goto err;
+			ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
+			result = ast_parse_template_string();
+			break;
+		}
+		goto do_keyword;
 
 	case TOK_FLOAT: {
 		tfloat_t value;
@@ -1552,7 +1565,9 @@ do_warn_deprecated_modifier:
 default_case:
 		if (TPP_ISKEYWORD(tok)) {
 			/* Perform a regular symbol lookup. */
-			struct TPPKeyword *name = token.t_kwd;
+			struct TPPKeyword *name;
+do_keyword:
+			name = token.t_kwd;
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err;

@@ -44,6 +44,9 @@ INTDEF struct compiler_options *inner_compiler_options;
 /* Parse a string. */
 INTDEF WUNUSED DREF DeeObject *FCALL ast_parse_string(void);
 
+/* Parse a template string. */
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_template_string(void);
+
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 ast_decode_unicode_string(struct unicode_printer *__restrict printer);

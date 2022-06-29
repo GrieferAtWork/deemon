@@ -4529,7 +4529,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  TYPE_METHOD_FKWDS },
 
 	/* Bytes formatting / scanning. */
-	{ "format",
+	{ DeeString_STR(&str_format),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_format,
 	  DOC("(args:?S?O)->?.") },
 	{ "scanf",

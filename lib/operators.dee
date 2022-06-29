@@ -40,11 +40,8 @@ import * from deemon;
 function bind(tp: Type, operator_function: Callable): Callable {
 	return (x, args...) -> {
 		import Error from deemon;
-		if (x !is tp && !tp.isgeneric) {
-			throw Error.TypeError(
-				"Instance of {} is not derived from {}".
-				format({ type x, tp }));
-		}
+		if (x !is tp && !tp.isgeneric)
+			throw Error.TypeError(f"Instance of {type x} is not derived from {tp}");
 		return operator_function((x as tp), args...);
 	};
 }

@@ -96,6 +96,14 @@ DEF_K(public)
 DEF_K(property)
 DEF_K(member)
 
+/* These are needed to quickly identify template strings:
+ * >> local x = "bar";
+ * >> local y = f"foo = {x}";
+ * >> local z = F"foo = {x}"; */
+DEF_K(f)
+DEF_K(F)
+
+
 /* Variable scope modifiers.
  * The rules on where these may appear have been greatly restricted since
  * v200, now only being allowed in variable declarations/store expressions:
@@ -339,6 +347,12 @@ WARNING(_W_UNUSED_EXPECTED_RBRACE_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR)
 WARNING(_W_UNUSED_EXPECTED_RPAREN_AFTER_TUPLE, (WG_SYNTAX), WSTATE_ERROR)
 WARNING(_W_UNUSED_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, (WG_CONST, WG_VALUE), WSTATE_ERROR)
 #endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+DEF_WARNING(W_TEMPLATE_STRING_UNMATCHED_LBRACE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unmatched `{' in template string"))
+DEF_WARNING(W_TEMPLATE_STRING_UNMATCHED_RBRACE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unmatched `}' in template string"))
+DEF_WARNING(W_TEMPLATE_STRING_UNDEFINED_ESCAPE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown escape character `%c' in template string", ARG(int)))
+DEF_WARNING(W_TEMPLATE_STRING_UNEXPECTED_TOKEN, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected token " TOK_S " at end of template string expression", TOK_A))
+DEF_WARNING(W_TEMPLATE_STRING_NO_DIGIT_OR_HEX_AFTER_BACKSLASH_X_u_U, (WG_SYNTAX), WSTATE_ERROR, WARNF("No digits, or hex-chars found after `\\x', `\\u' or `\\U'"))
+
 
 WARNING_NAMESPACE(WN_QUALITY, 2250)
 DEF_WARNING(W_UNCLEAR_CAST_INTENT, (WG_QUALITY), WSTATE_DISABLED, /* Leave this warning disabled; too many false positives. */

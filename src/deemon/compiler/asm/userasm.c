@@ -2254,7 +2254,8 @@ ast_genasm_userasm(struct ast *__restrict self) {
 	struct assembler_state old_state;
 	int result;
 	/*ref*/ struct TPPString *assembly_text;
-	/*ref*/ struct TPPFile *assembly_file, *old_eob;
+	/*ref*/ struct TPPFile *assembly_file;
+	/*ref*/ struct TPPFile *old_eob;
 	struct asm_operand *iter;
 	size_t i, count;
 	struct cleanup_mode *cleanup_actions = NULL, *cleanup_dst;

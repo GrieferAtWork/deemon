@@ -122,6 +122,7 @@ STRING(rewind)
 STRING(peek)
 
 
+STRING(format)
 STRING(__format__)
 STRING(__name__)
 STRING(__doc__)

@@ -57,7 +57,9 @@ local function encodeName(name: string): string {
 			result = result.replace(x, r"\" + x);
 		result = result.replace(r"->", r"-\>");
 		result = result.replace("\n", "\\\n");
-		result = "{{{}}}".format({ result });
+		result = f"\{{
+			result
+		}\}";
 	}
 	return result;
 }
@@ -96,11 +98,12 @@ local function encodeType(tp: Type): string {
 		name = Type.__name__(tp);
 	if (mod === deemon)
 		return "?D" + encodeName(name);
-	return "?E{}:{}".format({
+	return f"?E{
 		/* TODO: This only works for global modules! */
-		encodeName(Module.__name__(mod)),
+		encodeName(Module.__name__(mod))
+	}:{
 		encodeName(name)
-	});
+	}";
 }
 
 @@Given a Doc-path in the form of @"<MODULE>/<ITEM>/<ATTR>/...", convert
@@ -110,15 +113,17 @@ local function encodeTypeFromPath(path: string): string {
 	if (!b)
 		return "?M" + encodeName(a);
 	if ("/" !in a) {
-		return "?E{}:{}".format({
-			encodeName(a),
-			encodeName(b),
-		});
+		return f"?E{
+			encodeName(a)
+		}:{
+			encodeName(b)
+		}";
 	}
-	return "?A{}{}".format({
-		encodeName(b),
+	return f"?A{
+		encodeName(b)
+	}{
 		encodeTypeFromPath(a)
-	});
+	}";
 }
 
 
@@ -438,16 +443,12 @@ local final function getDefaultOperatorWithType(typ: Type, name: string): string
 	if (result !is none && "?*" in result) {
 		if (name == "constructor") {
 			if (Iterator.baseof(typ)) {
-				return "(seq:{})->?N".format({
-					getIteratorSequenceTypeDoc(typ)
-				});
+				return f"(seq:{getIteratorSequenceTypeDoc(typ)})->?N";
 			}
 			if (Sequence.baseof(typ)) {
 				typ = try typ.Iterator catch (...) none;
 				if (Iterator.baseof(typ)) {
-					return "(seq:?S{})->?N".format({
-						getIteratorElementTypeDoc(typ)
-					});
+					return f"(seq:?S{getIteratorElementTypeDoc(typ)})->?N";
 				}
 			}
 			return "(args!)->?N";
@@ -591,18 +592,20 @@ local function getQualifiedTypePath(
 			local mod = docnode.value.module;
 			if (mod is none)
 				return none;
-			return "/{}/{}".format({
-				Module.__name__(mod),
-				decodeName(qual.substr(2)),
-			});
+			return f"/{
+				Module.__name__(mod)
+			}/{
+				decodeName(qual.substr(2))
+			}";
 		}	break;
 
 		case "E": {
 			local modend = findNonEscaped(qual, ":", 2);
-			return "/{}/{}".format({
-				decodeName(qual.substr(2, modend)),
-				decodeName(qual.substr(modend + 1)),
-			});
+			return f"/{
+				decodeName(qual.substr(2, modend))
+			}/{
+				decodeName(qual.substr(modend + 1))
+			}";
 		}	break;
 
 		case "A": {
@@ -610,10 +613,7 @@ local function getQualifiedTypePath(
 			local base = getQualifiedTypePath(docnode, qual.substr(nameend));
 			if (base is none)
 				return none;
-			return "{}/c:{}".format({
-				base,
-				decodeName(qual.substr(2, nameend)),
-			});
+			return f"{base}/c:{decodeName(qual.substr(2, nameend))}";
 		}	break;
 
 		default:
@@ -632,7 +632,7 @@ local function findErrorByName(t: Type, qual: string, s: string): string | none 
 		if (!attr.isclass) continue;
 		local result = findErrorByName(
 			t.operator . (attr.name),
-			"?A{}{}".format({ attr.name, qual }),
+			f"?A{attr.name}{qual}",
 			s);
 		if (result !is none)
 			return result;
@@ -646,7 +646,7 @@ local function qualifyLegacyTyperef(docnode: WeakRef with Doc, s: string): strin
 		node = node.parent;
 	do {
 		if (node.haschild(s))
-			return "?A{}{}".format({ encodeName(s), node.qualpath });
+			return f"?A{encodeName(s)}{node.qualpath}";
 		node = node.parent;
 	} while (node !is none);
 	/* Search for known sub-classes of `Error' */
@@ -677,18 +677,16 @@ local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): strin
 			local len = decodeNameEnd(s, 2);
 			if (node.ismodule) {
 				local mod = node.module;
-				return "?E{}:{}".format({
+				return f"?E{
 					/* TODO: This only works for global modules! */
-					encodeName(Module.__name__(mod)),
+					encodeName(Module.__name__(mod))
+				}:{
 					s.substr(2, len)
-				});
+				}";
 			}
 			if (!node.istype && node.parent !is none)
 				node = node.parent;
-			return "?A{}{}".format({
-				s.substr(2, len),
-				node.qualpath,
-			});
+			return f"?A{s.substr(2, len)}{node.qualpath}";
 		}	break;
 
 		case "N":
@@ -805,7 +803,11 @@ class TypeRef: WeakRefAble {
 
 	@@Returns a string representation of how @this TypeRef can be created
 	operator repr(): string {
-		return "TypeRef({!r}, {!r})".format({ docnode.lock(none), docstring });
+		return f"TypeRef({
+			repr docnode.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 
 	@@The actual type object represented by @this TypeRef,
@@ -905,7 +907,7 @@ class TypeRef: WeakRefAble {
 					if (modname == "deemon" && modexp !in Module.__exports__(mymod))
 						return modexp;
 				}
-				return "{}.{}".format({ modname, modexp });
+				return f"{modname}.{modexp}";
 			}	break;
 
 			case "U":
@@ -913,10 +915,11 @@ class TypeRef: WeakRefAble {
 
 			case "A": {
 				local namelen = decodeNameEnd(qual, 2);
-				return "{}.{}".format({
-					getprettyname(qual.substr(namelen)),
-					decodeName(qual.substr(2, namelen)),
-				});
+				return f"{
+					getprettyname(qual.substr(namelen))
+				}.{
+					decodeName(qual.substr(2, namelen))
+				}";
 			}
 
 			default:
@@ -1210,7 +1213,11 @@ class TypeExpr: WeakRefAble {
 
 	@@Returns a string representation of how @this TypeExpr can be created
 	operator repr(): string {
-		return "TypeExpr({!r}, {!r})".format({ docdecl.lock(none), docstring });
+		return f"TypeExpr({
+			repr docdecl.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 
 	@@Returns true if @this Type expression referrs to @none
@@ -1511,21 +1518,21 @@ check_elem:
 			return str Etyperef;
 
 		case "C":
-			return "{} with {}".format({ Ccelltype, Citemtype });
+			return f"{Ccelltype} with {Citemtype}";
 
 		case "T":
 			return #Ttypes == 1
-				? "({},)".format({ Ttypes[0] })
-				: "({})".format({ ", ".join(Ttypes) });
+				? f"({Ttypes[0]},)"
+				: f"({', '.join(Ttypes)})";
 
 		case "X":
 			return " | ".join(Xtypes);
 
 		case "S":
-			return "{{{}...}}".format({ Stype });
+			return f"\{{Stype}...\}";
 
 		case "Q":
-			return "type({})".format({ Qexpr });
+			return f"type({Qexpr})";
 
 		default: break;
 		}
@@ -1571,7 +1578,11 @@ class Expression: WeakRefAble {
 
 	@@Returns a string representation of how @this Expression can be created
 	operator repr(): string {
-		return "Expression({!r}, {!r})".format({ docdecl.lock(none), docstring });
+		return f"Expression({
+			repr docdecl.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 
 	@@Enumerate a sequence of all the possible types that @this expression can take
@@ -1633,10 +1644,7 @@ class Expression: WeakRefAble {
 					} else if (":" in m_docstring) {
 						/* Assume external symbol. */
 						local mod, none, path = m_docstring.partition(":")...;
-						m_docstring = "!E{}:{}".format({
-							encodeName(mod),
-							encodeName(path),
-						});
+						m_docstring = f"!E{encodeName(mod)}:{encodeName(path)}";
 						m_kind = "E";
 					} else {
 						local defl = {
@@ -1771,7 +1779,7 @@ done:
 			local att = Emoduleattr;
 			if (att is none)
 				return "/" + modnam;
-			return "/{}/{}".format({ modnam, att });
+			return f"/{modnam}/{att}";
 		}
 	}
 
@@ -1968,7 +1976,7 @@ done:
 				return str att;
 			if (att is none)
 				return mod;
-			return "{}.{}".format({ mod, att });
+			return f"{mod}.{att}";
 		}
 
 		case "U":
@@ -1978,14 +1986,14 @@ done:
 			switch (m_docstring[1]) {
 
 			case "L":
-				return "[{}]".format({ ",".join(Sitems) });
+				return f"[{','.join(Sitems)}]";
 
 			case "T": {
 				local t = Tuple(Sitems);
 				if (!t) return "()";
 				if (#t == 1)
-					return "({},)".format({ t[0] });
-				return "({})".format({ ",".join(t) });
+					return f"({t[0]},)";
+				return f"({','.join(t)})";
 			}
 
 			case "D": {
@@ -2003,7 +2011,7 @@ done:
 			}
 
 			case "S":
-				return "{{ {} }}".format({ ", ".join(Sitems) });
+				return f"\{ {', '.join(Sitems)} \}";
 
 			default:
 				break;
@@ -2216,10 +2224,9 @@ class Parameter: WeakRefAble {
 							m_typstring = m_typ.docstring;
 						}
 					} else {
-						m_typstring = "?X{}{}".format({
-							(#types),
+						m_typstring = f"?X{#types}{
 							(for (local x: types) x.docstring) + ...
-						});
+						}";
 					}
 				}
 			}
@@ -2370,11 +2377,13 @@ done:
 
 	@@Returns a string representation of how @this Parameter can be created
 	operator repr(): string {
-		return "Parameter({!r}, {!r}, {!r})".format({
-			docdecl.lock(none),
-			docargi,
-			docstring
-		});
+		return f"Parameter({
+			repr docdecl.lock(none)
+		}, {
+			repr docargi
+		}, {
+			repr docstring
+		})";
 	}
 }
 
@@ -2677,33 +2686,27 @@ class Declaration: WeakRefAble {
 	operator str(): string {
 		local name = this.name;
 		if (isdeleted)
-			return "{} = del".format({ name });
+			return f"{name} = del";
 		if (isinherited)
-			return "{} = super".format({ name });
+			return f"{name} = super";
 		local par = this.parameters;
 		if (par !is none) {
 			if (returnsnone) {
-				return "{}({})".format({
-					name,
-					", ".join(par),
-				});
+				return f"{name}({', '.join(par)})";
 			} else {
-				return "{}({}): {}".format({
-					name,
-					", ".join(par),
-					ret
-				});
+				return f"{name}({', '.join(par)}): {ret}";
 			}
 		}
-		return "{}: {}".format({
-			name,
-			ret
-		});
+		return f"{name}: {ret}";
 	}
 
 	@@Returns a string representation of how @this Declaration can be created
 	operator repr(): string {
-		return "Declaration({!r}, {!r})".format({ docsect.lock(none), docstring });
+		return f"Declaration({
+			repr docsect.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 }
 
@@ -2747,7 +2750,11 @@ class TextSegment: WeakRefAble {
 
 	@@Returns a string representation of how @this TextSegment can be created
 	operator repr(): string {
-		return "TextSegment({!r}, {!r})".format({ docsect.lock(none), docstring });
+		return f"TextSegment({
+			repr docsect.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 
 }
@@ -2878,7 +2885,11 @@ class DocSection: WeakRefAble {
 
 	@@Returns a string representation of how @this DocSection can be created
 	operator repr(): string {
-		return "DocSection({!r}, {!r})".format({ docnode.lock(none), docstring });
+		return f"DocSection({
+			repr docnode.lock(none)
+		}, {
+			repr docstring
+		})";
 	}
 
 	@@Evalues to @true if @this DocSection contains declaration segments
@@ -3024,7 +3035,7 @@ class Doc: WeakRefAble {
 						par = parent.path;
 						m_path = par is none
 							? none
-							: "{}/{}".format({ par, name });
+							: f"{par}/{name}";
 					}
 				}
 			}
@@ -3047,16 +3058,14 @@ class Doc: WeakRefAble {
 					if (par is none) {
 						m_qualified_path = "?U" + encodeName(name);
 					} else if (par.ismodule) {
-						m_qualified_path = "?E{}:{}".format({
+						m_qualified_path = f"?E{
 							/* TODO: This only works for global modules! */
-							encodeName(par.name),
-							encodeName(name),
-						});
+							encodeName(par.name)
+						}:{
+							encodeName(name)
+						}";
 					} else {
-						m_qualified_path = "?A{}{}".format({
-							encodeName(name),
-							par.qualpath,
-						});
+						m_qualified_path = f"?A{encodeName(name)}{par.qualpath}";
 					}
 				}
 			}
@@ -3112,10 +3121,7 @@ class Doc: WeakRefAble {
 	@@resulting in the form of @"operator ==" or @"function foo"
 	public final property prettydesc: string = {
 		get(): string {
-			return "{} {}".format({
-				kind,
-				prettyname
-			});
+			return f"{kind} {prettyname}";
 		}
 	}
 
@@ -3135,22 +3141,20 @@ class Doc: WeakRefAble {
 				}
 				result = par.prettypath;
 				if (isoperator) {
-					result = "{}.operator {}".format({
-						result,
+					result = f"{result}.operator {
 						PRETTY_OPERATOR_NAMES.get(name, name)
-					});
+					}";
 				} else {
-					result = "{}.{}".format({ result, name });
+					result = f"{result}.{name}";
 				}
 				return result;
 			}
 			result = result.lstrip("/").replace("i:", "").replace("c:", "");
 			if (isoperator) {
 				result = result.rpartition("/")[0];
-				result = "{}.operator {}".format({
-					result,
+				result = f"{result}.operator {
 					PRETTY_OPERATOR_NAMES.get(name, name)
-				});
+				}";
 			}
 			return result.replace("/", ".");
 		}
@@ -3237,7 +3241,7 @@ load_type_input:
 						m_parent = none;
 						m_path = none;
 					} else {
-						m_path = "/{}/{}".format({ Module.__name__(type_module), name });
+						m_path = f"/{Module.__name__(type_module)}/{name}";
 					}
 				}
 				return;
@@ -3298,8 +3302,8 @@ do_load_wrapper_module:
 					if (mod is none) {
 do_throw_unknown_object_origin:
 						throw Error.AttributeError(
-							"Failed to determine the declaring type or module of {!r}".
-							format({ doc_parent_or_path }));
+							f"Failed to determine the declaring type "
+							f"or module of {repr doc_parent_or_path}");
 					}
 					m_parent = mod;
 				}
@@ -3310,8 +3314,7 @@ do_throw_unknown_object_origin:
 				/* Module documentation */
 				if (head.startswith(".")) {
 					throw Error.ValueError(
-						"Module name {!r} is not absolute"
-						.format({ head }));
+						f"Module name {repr head} is not absolute");
 				}
 				object    = import(head);
 				m_parent  = none;
@@ -3332,41 +3335,29 @@ do_throw_unknown_object_origin:
 				attribute_name = attribute_name[3:];
 err_unknown_operator:
 				throw Error.AttributeError(
-					"Unknown operator {!r} in {!r}".format({
-						attribute_name,
-						doc_parent_or_path.path
-					})
-				);
+					f"Unknown operator {repr attribute_name} in {repr doc_parent_or_path.path}");
 			}
 			fixed_attribute_name = attribute_name.lsstrip("i:").lsstrip("c:");
 err_unknown_attribute:
 			throw Error.AttributeError(
-				"Unknown attribute {!r} in {!r}".format({
-					fixed_attribute_name,
-					doc_parent_or_path.path
-				})
-			);
+				f"Unknown attribute {repr fixed_attribute_name} in {repr doc_parent_or_path.path}");
 		}
 		m_parent = doc_parent_or_path;
 		local my_attr;
 		if (attribute_name is Attribute) {
 			my_attr = attribute_name;
 			fixed_attribute_name = attribute_name.name;
-			attribute_name = "{}{}".format({
-				attribute_name.isinstance ? "i:" :
-				attribute_name.isclass ? "c:" : "",
-				fixed_attribute_name
-			});
+			attribute_name = f"{
+				attribute_name.isinstance ? 'i:' :
+				attribute_name.isclass ? 'c:' : ''
+			}{fixed_attribute_name}";
 		} else if (attribute_name.startswith("op:")) {
 			/* Operator node. */
 			local parpath = doc_parent_or_path.path;
 			if (parpath is none) {
 				m_path = none;
 			} else {
-				m_path = "{}/{}".format({
-					parpath,
-					attribute_name
-				});
+				m_path = f"{parpath}/{attribute_name}";
 			}
 			attribute_name = name = attribute_name[3:];
 			isoperator = true;
@@ -3456,16 +3447,13 @@ set_is_type:
 		if (parpath is none) {
 			m_path = none;
 		} else {
-			m_path = "{}/{}".format({
-				parpath,
-				attribute_name
-			});
+			m_path = f"{parpath}/{attribute_name}";
 		}
 	}
 
 	@@Returns a string representation of how @this Doc node can be constructed
 	operator repr(): string {
-		return "Doc({!r})".format({ path });
+		return f"Doc({ repr path })";
 	}
 
 	@@Returns @true if @this doc node has allowed to referr to child nodes
@@ -4027,8 +4015,8 @@ set_is_type:
 	@@in a basic, but neat (and human-readable) format
 	operator str(): string {
 		File.Writer fp;
-		print fp: "-" * 80;
-		print fp: "| Documentation for `{}'".format({ prettypath });
+		print fp: ("-" * 80);
+		print fp: ("| Documentation for `", prettypath, "'");
 		for (local sec: docsections) {
 			print fp: "-" * 80;
 			for (local seg: sec.segments) {

@@ -612,8 +612,7 @@ class Tokenizer {
 		if (tok == t) {
 			next();
 		} else {
-			err("Expected {!r}, but got {!r}"
-				.format({ t, tok }));
+			err(f"Expected {repr t}, but got {repr tok}");
 		}
 	}
 
@@ -786,7 +785,7 @@ again_primary:
 			    thisSymbolName == kwd) {
 				kwd = "this";
 			} else if (kwd in exceptions_list) {
-				kwd = "({} from python.exceptions)".format({ kwd });
+				kwd = f"({kwd} from python.exceptions)";
 			} else {
 				kwd = builtins_map.get(kwd, kwd);
 			}
@@ -804,8 +803,7 @@ again_primary:
 		}	break;
 
 		default:
-			err("Unexpected token {!r} in expression"
-				.format({ tok }));
+			err(f"Unexpected token {repr tok} in expression");
 			break;
 		}
 do_suffix:
@@ -861,10 +859,8 @@ do_suffix:
 				/* Getattr */
 				parts.append(".");
 				next();
-				if (kind != TOK_KEYWORD) {
-					err("Expected keyword after `.', but got {!r}"
-						.format({ tok }));
-				}
+				if (kind != TOK_KEYWORD)
+					err(f"Expected keyword after `.', but got {repr tok}");
 				parts.append(tok);
 				next();
 				goto do_suffix;
@@ -1131,10 +1127,8 @@ again:
 		case "def": {
 			local loc = location;
 			next();
-			if (kind != TOK_KEYWORD) {
-				err("Expected function name after `def', but got {!r}"
-					.format({ tok }));
-			}
+			if (kind != TOK_KEYWORD)
+				err(f"Expected function name after `def', but got {repr tok}");
 			local name = tok;
 			next();
 			skip("(");
@@ -1144,18 +1138,14 @@ again:
 			while (tok != ")") {
 				if (tok == "*") {
 					next();
-					if (kind != TOK_KEYWORD) {
-						err("Expected keyword after `*' in def, but got {!r}"
-							.format({ tok }));
-					}
+					if (kind != TOK_KEYWORD)
+						err(f"Expected keyword after `*' in def, but got {repr tok}");
 					varargs_name = tok;
 					next();
 				} else if (tok == "**") {
 					next();
-					if (kind != TOK_KEYWORD) {
-						err("Expected keyword after `**' in def, but got {!r}"
-							.format({ tok }));
-					}
+					if (kind != TOK_KEYWORD)
+						err(f"Expected keyword after `**' in def, but got {repr tok}");
 					varkwds_name = tok;
 					next();
 				} else break;
@@ -1172,7 +1162,7 @@ again:
 			} else {
 				body = parseStatement();
 				if (body is none)
-					err("Missing budy for {!r}".format({ name }));
+					err(f"Missing budy for {repr name}");
 			}
 			local result = PyAstDef(name: name, arguments: args, body: body);
 			if (varargs_name !is none)
@@ -1379,9 +1369,7 @@ again_scan_newline:
 			tokend = line_end + 1;
 			if (tokend == 0)
 				tokend = len;
-			tok = "//{}\n".format({
-				text[tokstart + 1:line_end].replace("\\\n", "")
-			});
+			tok = f"//{text[tokstart + 1:line_end].replace('\\\n', '')}\n";
 			kind = TOK_COMMENT;
 			goto done;
 		}	break;

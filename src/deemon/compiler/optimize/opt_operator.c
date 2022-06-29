@@ -184,6 +184,34 @@ emulate_getattr(DeeObject *base, DeeObject *name) {
 }
 
 
+/* TODO: Add AST optimizers for:
+ *
+ * - from: >> "foo = {}".format({ repr bar }); // aka. f"foo = {repr bar}"
+ *   to:   >> "foo = {!r}".format({ bar });
+ *
+ * - from: >> print("foo = {}".format({ repr bar })); // aka. print(f"foo = {repr bar}")
+ *   to:   >> print("foo = ", repr bar);
+ *
+ * - from: >> local foo = "{}".format({ bar });
+ *   to:   >> local foo = str bar;
+ *
+ * - from: >> local foo = "value = {}".format({ str bar });
+ *   to:   >> local foo = "value = {}".format({ bar });
+ *
+ * - from: >> local foo = "value = {}".format({ bar });
+ *   to:   >> local foo = "value = " + bar;
+ *
+ * - from: >> local foo = "value = {}, {}".format({ "42", bar });
+ *   to:   >> local foo = "value = 42, {}".format({ bar });
+ *
+ * - from: >> print("value = " + foo + bar);
+ *   to:   >> print("value = ", foo, bar);
+ *
+ * - from: >> "a = {}, ".format({ a }) + "b = {}".format({ b })
+ *   to:   >> "a = {}, b = {}".format({ a, b })
+ */
+
+
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
                               struct ast *__restrict self, bool result_used) {

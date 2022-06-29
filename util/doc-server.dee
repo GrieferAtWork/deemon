@@ -262,10 +262,9 @@ function writePageHeader(fp: File, title: string) {
 		"<head>\r\n"
 			"\t<meta charset=\"UTF-8\">\r\n"
 			"\t<link rel=\"stylesheet\" href=\"/style.css\">\r\n"
-			"\t<title>{}</title>\r\n"
+			"\t<title>" << title << "</title>\r\n"
 		"</head>\r\n"
-		"<body>\r\n"
-		.format({ title });
+		"<body>\r\n";
 }
 
 function writePageFooter(fp) {
@@ -711,17 +710,13 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 		"<li><a href=\"/modules\">modules</a></li>";
 	local linkPath = "/modules";
 	for (local x: path[:-1]) {
-		linkPath = "{}/{}".format({ linkPath, x });
+		linkPath = f"{linkPath}/{x}";
 		local name_start = x.find(":");
-		fp << "<li><a href=\"{}\">&gt;{}</a></li>".format({
-			linkPath,
+		fp << f"<li><a href=\"{linkPath}\">&gt;{
 			name_start >= 0 ? x[name_start + 1:] : x
-		});
+		}</a></li>";
 	}
-	fp << "<li><a href=\"/modules{}\">&gt;{}</a></li>".format({
-		d.path,
-		d.prettypathname
-	});
+	fp << "<li><a href=\"/modules" << d.path << "\">&gt;" << d.prettypathname << "</a></li>";
 	fp << "</ul></nav>\r\n<main>\r\n";
 	fp << "<h2><b>" << d.kind << "</b>: " << d.typename;
 	if (d.istype && d.object is bound) {
@@ -808,7 +803,7 @@ function listModulesInPath(
 				/* Skip files found in /include-folders. */
 				if (f == "include" && !showAll)
 					continue;
-				local new_prefix = "{}{}.".format({ prefix, f });
+				local new_prefix = f"{prefix}{f}.";
 				for (local x: listModulesInPath(path, prefix))
 					yield new_prefix + x;
 				continue;
@@ -876,7 +871,7 @@ function getPage(fp: File, path: string) {
 		}
 		return getModulesPage(fp);
 	}
-	throw Error("Missing page: {!r}".format({ path }));
+	throw Error(f"Missing page: {repr path}");
 }
 
 
@@ -910,9 +905,9 @@ function ClientThreadMain(con: socket) {
 							content = content.string.encode("utf-8");
 						}
 						fp << protocol << " 200 OK\r\n"
-							"Content-Length: {}\r\n"
-							"Content-Type: {}; charset=UTF-8\r\n"
-							"\r\n".format({ #content, content_type });
+							"Content-Length: " << #content << "\r\n"
+							"Content-Type: " << content_type << "; charset=UTF-8\r\n"
+							"\r\n";
 						fp.write(content);
 					}
 					con.send(fp.string.encode("UTF-8"));
@@ -942,9 +937,9 @@ function ClientThreadMain(con: socket) {
 				errorFp = errorFp.string.encode("utf-8");
 				outputFp <<
 					"HTTP/1.1 200 OK\r\n"
-					"Content-Length: {}\r\n"
+					"Content-Length: " << #errorFp << "\r\n"
 					"Content-Type: text/html; charset=UTF-8\r\n"
-					"\r\n".format({ #errorFp });
+					"\r\n";
 				outputFp.write(errorFp);
 				con.send(outputFp.string);
 				throw;
@@ -983,7 +978,7 @@ print;
 try {
 	for (;;) {
 		local con = s.accept();
-		local th = Thread(ClientThreadMain, pack con);
+		local th = Thread(ClientThreadMain, pack(con));
 		th.start();
 		th.detach();
 	}

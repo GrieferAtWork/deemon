@@ -57,9 +57,7 @@ class Overload: Callable {
 	}
 
 	private function invalid_overload(args...) {
-		throw Error.TypeError(
-			"function {} does not accept {} args"
-			.format({ primary, #args }));
+		throw Error.TypeError(f"function {primary} does not accept {#args} args");
 	}
 
 	operator () (args...) {
@@ -117,8 +115,8 @@ class Deprecated: Callable {
 	}
 	operator repr(): string {
 		if (m_message is bound)
-			return "Deprecated({!r}, {!r})".format({ m_func, m_message });
-		return "Deprecated({!r})".format({ m_func });
+			return f"Deprecated({repr m_func}, {repr m_message})";
+		return f"Deprecated({repr m_func})";
 	}
 
 	operator () (args...) {
@@ -188,7 +186,7 @@ class Synchronized: Callable {
 		return str m_func;
 	}
 	operator repr(): string {
-		return "Synchronized({!r}, {!r})".format({ m_func, m_lock });
+		return f"Synchronized({repr m_func}, {repr m_lock})";
 	}
 
 	operator enter(): none {
@@ -240,7 +238,7 @@ class Timed: Callable {
 	}
 
 	operator repr(): string {
-		return "Timed({!r})".format({ m_func });
+		return f"Timed({repr m_func})";
 	}
 
 	operator () (args...) {
@@ -292,9 +290,7 @@ do_del_total:
 			try {
 				return m_total_spend / m_num_invocations;
 			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
-				throw Error.ValueError(
-					"No profiling data available for {}"
-					.format({ m_func }));
+				throw Error.ValueError(f"No profiling data available for {m_func}");
 			}
 		}
 	}

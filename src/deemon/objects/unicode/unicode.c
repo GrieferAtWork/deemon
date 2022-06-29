@@ -5882,14 +5882,16 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 			flush_start = iter - 1;
 			continue;
 
-		case '\n':
 		case '\r':
+			if (iter < end && *iter == '\n')
+				++iter;
+			ATTR_FALLTHROUGH
+		case '\n':
 			break; /* Escaped line-feed */
 
-		{
+		case 'U': {
 			unsigned int count;
 			unsigned int max_digits;
-		case 'U':
 			max_digits = 8;
 			goto parse_hex_integer;
 		case 'u':
@@ -5897,7 +5899,7 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 			goto parse_hex_integer;
 		case 'x':
 		case 'X':
-			max_digits = (unsigned int)-1; /* Unlimited. */
+			max_digits = (unsigned int)-1; /* Unlimited. (TODO: This is incorrect -- \x should encode actual bytes!) */
 parse_hex_integer:
 			count       = 0;
 			digit_value = 0;

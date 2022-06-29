@@ -881,6 +881,9 @@
     <ClCompile Include="..\src\deemon\objects\seq\bsearch.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\template-string.c">
+      <Filter>src\deemon\compiler\lexer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\deemon\execute\code-exec.c.inl">

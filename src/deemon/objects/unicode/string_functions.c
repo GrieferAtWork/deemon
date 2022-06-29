@@ -11075,7 +11075,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "Returns the ordinal integral value of the @index'th character of @this string") },
 
 	/* String formatting / scanning. */
-	{ "format",
+	{ DeeString_STR(&str_format),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_format,
 	  DOC("(args:?S?O)->?.\n"
 	      "Format @this string using @args:\n"

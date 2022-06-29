@@ -259,7 +259,7 @@ struct ast {
 			;
 			union {
 				DREF struct ast  *l_iter; /* [1..1][valid_if(AST_FLOOP_FOREACH)] The iterator expression (`y' in the example above).
-				                           *                               NOTE: This expression is only evaluated once! */
+				                           * NOTE: This expression is only evaluated once! */
 				DREF struct ast  *l_next; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop advance expression (Executed after `a_loop', unless `break' was used) */
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

@@ -1212,6 +1212,8 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	/* White-list of non-reserved builtin keywords. */
 	switch (name->k_id) {
 
+	case KWD_f:
+	case KWD_F:
 	case KWD_ifdef:
 	case KWD_ifndef:
 	case KWD_endif:

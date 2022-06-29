@@ -223,6 +223,7 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\operator.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\statement.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\tag.c" />
+    <ClCompile Include="..\src\deemon\compiler\lexer\template-string.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\try.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\with.c" />
     <ClCompile Include="..\src\deemon\compiler\optimize\assign.c" />

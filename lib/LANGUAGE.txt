@@ -150,6 +150,15 @@
  *             syntax highlighting in IDEs, or in the documentation browser
  *             may not be able to display it properly, or get confused.
  *
+ *  - Added support for template string literals:
+ *    >> local foo = 10;
+ *    >> local bar = 20;
+ *    >> local x = f"foo = {foo}, bar = {bar}";
+ *    Compiled as:
+ *    >> local foo = 10;
+ *    >> local bar = 20;
+ *    >> local x = "foo = {}, bar = {}".format({ foo, bar });
+ *
  *  - Introduction of ASP (Abstract Sequence Proxy)-like objects/types
  *    An ASP is a light-weight sequence type usually derived from
  *    `Sequence from deemon'. However instead of pre-calculating

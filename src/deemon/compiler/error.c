@@ -737,6 +737,25 @@ INTERN ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...) {
 	return result;
 }
 
+INTERN ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...) {
+	va_list args;
+	int result;
+	va_start(args, wnum);
+	if (ptr) {
+		struct ast_loc loc;
+		loc.l_file = token.t_file;
+		ASSERT(ptr >= loc.l_file->f_begin &&
+		       ptr <= loc.l_file->f_end);
+		TPPFile_LCAt(loc.l_file, &loc.l_lc, ptr);
+		result = handle_compiler_warning(&loc, false, false, wnum, args);
+	} else {
+		result = handle_compiler_warning(NULL, false, false, wnum, args);
+	}
+	va_end(args);
+	return result;
+}
+
+
 INTERN ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...) {
 	va_list args;
 	int result;

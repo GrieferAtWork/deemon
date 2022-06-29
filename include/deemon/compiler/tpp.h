@@ -69,6 +69,7 @@ INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...);
 
 /* Similar to `parser_warnf()', but force the warning
  * to be fatal, regardless of its user-defined state.

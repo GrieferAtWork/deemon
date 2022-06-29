@@ -197,7 +197,7 @@ function gi(
 	function define_with_bits(sign, n_bits) {
 		print(visi, " DEFINE_", sign ? "" : "U", "INT", n_bits, "(", libname, name, ", ", value, ");");
 	}
-	local macro_name = "{}{}_DEF".format({ libname.upper(), name.upper() });
+	local macro_name = f"{libname.upper()}{name.upper()}_DEF";
 	print File.stderr: macro_name;
 	print("#define ", macro_name, " \\\n\t",
 		"{ ", repr name, ", (DeeObject *)&", libname, name, ", ",
@@ -337,7 +337,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		libname = libname + "_";
 	local return_type;
 	args, none, return_type = args.rpartition("->")...;
-	local user_impl_name = "{}{}_f_impl".format({ libname, name });
+	local user_impl_name = f"{libname}{name}_f_impl";
 	local user_args = args.split(",");
 	local arg_data = List(#user_args, none);
 	for (local i, arg: util.enumerate(user_args)) {
@@ -468,11 +468,11 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	local kwlist_name;
 	if (kw && arg_data) {
 		print(visi, " DEFINE_KWCMETHOD(", libname, name, ", ", libname, name, "_f);");
-		//kwlist_name = "{}{}_kwds".format({ libname, name });
-		kwlist_name = "{}kwds_{}".format({ libname,
-			"_".join(for (local x, y, z: arg_data) x)
-		});
-		local kwlist_def_name = "{}_DEFINED".format({ kwlist_name.upper() });
+		//kwlist_name = f"{libname}{name}_kwds";
+		kwlist_name = f"{libname}kwds_{
+			'_'.join(for (local x, none, none: arg_data) x)
+		}";
+		local kwlist_def_name = f"{kwlist_name.upper()}_DEFINED";
 		print("#ifndef ", kwlist_def_name);
 		print("#define ", kwlist_def_name);
 		print(visi, " DEFINE_KWLIST(", kwlist_name, ", { "),;
@@ -538,10 +538,11 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 				is_optional = true;
 			}
 		} else {
-			if (is_optional)
-				throw Error("Argument {!r}, following another default "
-				            "argument is missing an initializer"
-					.format({ x }));
+			if (is_optional) {
+				throw Error(f"Argument {
+					repr x
+				}, following another default argument is missing an initializer");
+			}
 		}
 		if ("?" in y) {
 			if (!has_quote) {
