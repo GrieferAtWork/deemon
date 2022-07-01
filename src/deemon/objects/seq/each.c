@@ -1226,7 +1226,7 @@ PRIVATE struct type_seq seo_seq = {
 };
 
 
-#define seo_members   se_members /* TODO: Access to operator name & arguments */
+#define seo_members se_members /* TODO: Access to operator name & arguments */
 
 PRIVATE struct type_member tpconst seo_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &SeqEachOperatorIterator_Type),
@@ -1259,7 +1259,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ NULL, /* TODO */
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,

@@ -1177,7 +1177,7 @@ typedef WUNUSED NONNULL((1, 2)) Dee_ssize_t
 #define Dee_ATTR_CMEMBER   0x0020 /* [NAME("c")] This attribute is a class attribute (c -- class). */
 #define Dee_ATTR_PRIVATE   0x0040 /* [NAME("h")] This attribute is considered private (h -- hidden). */
 #define Dee_ATTR_PROPERTY  0x0080 /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
-#define Dee_ATTR_WRAPPER   0x0100 /* [NAME("w")] In the current content, the attribute will be accessed as a wrapper. */
+#define Dee_ATTR_WRAPPER   0x0100 /* [NAME("w")] In the current context, the attribute will be accessed as a wrapper. */
 #define Dee_ATTR_NAMEOBJ   0x4000 /* HINT: `attr_name' is actually the `s_str' field of a `DeeStringObject'. */
 #define Dee_ATTR_DOCOBJ    0x8000 /* HINT: `attr_doc' (when non-NULL) is actually the `s_str' field of a `DeeStringObject'. */
 

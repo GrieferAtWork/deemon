@@ -531,6 +531,11 @@ librt_get_MappingHashFilter_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MappingByAttr_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString(Dee_EmptyMapping, "byattr"));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingProxy_impl_f();
 }
@@ -578,6 +583,11 @@ librt_get_MappingHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingHashFilter_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MappingByAttr_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MappingByAttr_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1593,6 +1603,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_MappingItems, librt_get_MappingItems_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItemsIterator, librt_get_MappingItemsIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilter, librt_get_MappingHashFilter_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilterIterator, librt_get_MappingHashFilterIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_MappingByAttr, librt_get_MappingByAttr_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVector, librt_get_SharedVector_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVectorIterator, librt_get_SharedVectorIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedMap, librt_get_SharedMap_f);
@@ -1814,6 +1825,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeMappingProxyIterator_Type */
 	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
+	{ "MappingByAttr", (DeeObject *)&librt_get_MappingByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */
 
 	/* Internal types used for safe & fast passing of temporary sequences */
 	{ "SharedVector", (DeeObject *)&librt_get_SharedVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SharedVector_Type */

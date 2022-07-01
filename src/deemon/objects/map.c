@@ -40,6 +40,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/byattr.h"
 #include "seq/each.h"
 #include "seq/hashfilter.h"
 
@@ -1323,21 +1324,15 @@ err:
 
 PRIVATE struct type_getset tpconst map_getsets[] = {
 	{ "keys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_keys,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_keys, NULL, NULL,
 	  DOC("->?#Keys\n"
 	      "Returns a :Sequence that can be enumerated to view only the keys of @this Mapping") },
 	{ "values",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_values,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_values, NULL, NULL,
 	  DOC("->?#Values\n"
 	      "Returns a :Sequence that can be enumerated to view only the values of @this Mapping") },
 	{ "items",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_items,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_items, NULL, NULL,
 	  DOC("->?#Items\n"
 	      "Returns a :Sequence that can be enumerated to view the key-item "
 	      "pairs as 2-element sequences, the same way they could be viewed "
@@ -1347,35 +1342,32 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	      "way one would expect of any regular object implementing the sequence "
 	      "protocol") },
 	{ "iterkeys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterkeys,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterkeys, NULL, NULL,
 	  DOC("->?AIterator?#Keys\n"
 	      "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}") },
 	{ "itervalues",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_itervalues,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_itervalues, NULL, NULL,
 	  DOC("->?AIterator?#Values\n"
 	      "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}") },
 	{ "iteritems",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iteritems,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iteritems, NULL, NULL,
 	  DOC("->?AIterator?#Items\n"
 	      "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}") },
 	{ DeeString_STR(&str_first),
-	  &DeeMap_GetFirst,
-	  &DeeMap_DelFirst,
-	  NULL },
+	  &DeeMap_GetFirst, &DeeMap_DelFirst, NULL },
 	{ DeeString_STR(&str_last),
-	  &DeeMap_GetLast,
-	  &DeeMap_DelLast,
-	  NULL },
+	  &DeeMap_GetLast, &DeeMap_DelLast, NULL },
+	{ "byattr",
+	  &MapByAttr_New, NULL, NULL,
+	  DOC("->?Ert:MappingByAttr\n"
+	      "Construct a wrapper for @this mapping that behaves like a generic class object, "
+	      "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
+	      "(during all of $get, $del and $set).\n"
+	      "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
+	      "interfaces, but instead simply behaves like a completely generic object.\n"
+	      "This attribute only makes sense if @this mapping behaves like ${{string: Object}}.") },
 	{ "frozen",
-	  &DeeRoDict_FromSequence,
-	  NULL,
-	  NULL,
+	  &DeeRoDict_FromSequence, NULL, NULL,
 	  DOC("->?DMapping\n"
 	      "Returns a read-only (frozen) copy of @this Mapping") },
 	{ NULL }

@@ -372,6 +372,9 @@
     <ClInclude Include="..\include\deemon\util\lock.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\byattr.h">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -883,6 +886,9 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\compiler\lexer\template-string.c">
       <Filter>src\deemon\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\byattr.c">
+      <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
