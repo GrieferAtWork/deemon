@@ -22,25 +22,28 @@
 
 /* The entire include-system should no longer be used by new code.
  * Instead, the `import'-statement should be used.
- * These headers will however remain to support existing code
- * to run with as little modifications as possible.
- * For that reason, they only contain stuff that should be considered
- * legacy, as well as the fact that no new features will be added and
- * that existing features are often implement as clutches, following
- * the removal of any compiler-helpers that used to do a lot of things
- * at compile-time that must now be done at run-time (especially in
- * the field of C-compatibility now implemented through `ctypes'). */
+ *
+ * These headers will however remain to support existing code to
+ * run with as few modifications as possible.
+ *
+ * For that reason, deemon system headers only contain stuff that
+ * should be considered legacy, as well as the fact that no new
+ * features will be added and that existing features are often
+ * implement as clutches, following the removal of any compiler-
+ * helpers that used to do a lot of things at compile-time that
+ * must now be done at run-time (especially in the field of C-
+ * compatibility, which is now implemented through `ctypes'). */
 
 #ifndef __DEEMON__
 #	error "This header is meant for deemon"
 #endif
 
-// Current (maximum) API version
+/* Current (maximum) API version (will never change again; s.a.: the blurb above) */
 #define __API_VERSION_MAX__ 200
 
 #ifndef __API_VERSION__
-// Overwrite this macro before including any headers for
-// backwards compatibility in deemon's standard headers
+/* Overwrite this macro before including any headers for
+ * backwards compatibility in deemon's standard headers */
 #	define __API_VERSION__ __API_VERSION_MAX__
 #elif __API_VERSION__ > __API_VERSION_MAX__
 #	error "Unsupported deemon API version (reason: future)"
@@ -60,7 +63,8 @@
 #	define __pragma(x) _Pragma(__STR2(x))
 #endif
 
-/* Attribute and declspec has been replaced by tags. */
+/* Attribute and declspec has been replaced by tags.
+ * No backwards-compatibility is provided for `[[tag]]'-style tags */
 #define __PRIVATE_ATTRIBUTE(...) @__VA_ARGS__
 #define __declspec(...) @__VA_ARGS__
 #define __attribute(x) __PRIVATE_ATTRIBUTE x
@@ -89,8 +93,8 @@
  *    considering our sole purpose is to ensure backwards-compatibility
  *    with a limited set of existing code, macros are the easiest, and
  *    simplest solution, not requiring any modifications of the runtime! */
-#define keys()    keys
-#define items() values
+#define keys()   keys
+#define items()  values
 #define values() items
 
 /* After the big typename=CamelCase refactoring, allow for backwards-compatibility
@@ -106,7 +110,7 @@ local function __ctypes_new(tp) {
 	import malloc, sizeof from ctypes;
 	return (tp.ptr)malloc(sizeof(tp));
 }
-#define new     __ctypes_new pack
+#define new    __ctypes_new pack
 #define delete (free from ctypes)pack
 #endif
 

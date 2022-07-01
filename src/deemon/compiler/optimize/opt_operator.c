@@ -209,6 +209,9 @@ emulate_getattr(DeeObject *base, DeeObject *name) {
  *
  * - from: >> "a = {}, ".format({ a }) + "b = {}".format({ b })
  *   to:   >> "a = {}, b = {}".format({ a, b })
+ *
+ * - from: >> "a = {}, a = {}, ".format({ a, a })
+ *   to:   >> "a = {0}, a = {0}".format({ a })     -- Only if "a" doesn't have any side-effects
  */
 
 

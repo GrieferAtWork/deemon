@@ -1578,12 +1578,13 @@ do_keyword:
 					goto err;
 				result = ast_parse_import_single(name);
 				if (result && (tok != ';' && tok != ',' && tok != ')' &&
-				               tok != '}' && tok != ']' && tok > 0)) {
+				               tok != '}' && tok != ']' && tok > 0 &&
+				               /* Don't emit this warning from macros! */
+				               token.t_file->f_kind == TPPFILE_KIND_TEXT)) {
 					/* Warn about bad readability in code like:
 					 * >> int from deemon(42)
 					 * Which should really be written as:
-					 * >> (int from deemon)(42)
-					 */
+					 * >> (int from deemon)(42) */
 					char const *symname = "<symbol>";
 					char const *modname = "<module>";
 					if (result->a_type == AST_SYM) {

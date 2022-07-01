@@ -868,11 +868,11 @@ ast_parse_statement_or_braces ::= (
 ast_parse_unaryhead ::= (
 	/* Constant expressions. */
 	DDI(<TOK_INT>) |       /* int */
-	DDI(<TOK_CHAR>) |      /* string (including raw-strings)
+	DDI(<TOK_CHAR>) |      /* string (including raw-strings and template-strings)
 	                        * GATW: When #pragma extension("-fcharacter-literals")
 	                        *       is enabled (disabled by default), this is compiled
 	                        *       as an ordinal (iow: `int') */
-	DDI(<TOK_STRING>...) | /* string (including raw-strings) */
+	DDI(<TOK_STRING>...) | /* string (including raw-strings and template-strings) */
 	DDI(<TOK_FLOAT>) |     /* float */
 
 	/* builtin constants */
@@ -933,13 +933,18 @@ ast_parse_unaryhead ::= (
 	/* Bound-expressions.
 	 * NOTE: Only certain types of expressions are accepted as
 	 *       argument to this expression, those types being:
-	 *        - Symbol expressions (including symbols that are always bound,
-	 *          which simply result in a compile-time, constant `true')
-	 *        - getattr expression (both `foo.bar' and `foo.operator . ("bar")')
-	 *          This type of use is semantically equivalent to the
-	 *          builtin function `(boundattr from deemon)(foo, "bar")'
-	 *          An implementation is also allowed to replace this
-	 *          kind of use with a call to said function.
+	 *  - Symbol expressions (including symbols that are always bound,
+	 *    which simply result in a compile-time, constant `true')
+	 *  - getattr expression (both `foo.bar' and `foo.operator . ("bar")')
+	 *    This type of use is semantically equivalent to the
+	 *    builtin function `(boundattr from deemon)(foo, "bar")'
+	 *    An implementation is also allowed to replace this
+	 *    kind of use with a call to said function.
+	 *  - getitem expression (both `foo[bar]' and `foo.operator [] (bar)')
+	 *    This type of use is semantically equivalent to the
+	 *    builtin function `(bounditem from deemon)(foo, bar)'
+	 *    An implementation is also allowed to replace this
+	 *    kind of use with a call to said function.
 	 */
 	(DDI('bound') (('(' ast_parse_expr ')') | ast_parse_unary)) |
 

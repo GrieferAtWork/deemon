@@ -871,7 +871,7 @@ function getPage(fp: File, path: string) {
 		}
 		return getModulesPage(fp);
 	}
-	throw Error(f"Missing page: {repr path}");
+	throw Error(f"Missing page: {repr '/'.join(path)}");
 }
 
 

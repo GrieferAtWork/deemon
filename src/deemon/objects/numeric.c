@@ -349,7 +349,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "Return @this number as an integer, truncating all digits after a dot/comma") },
 	{ DeeString_STR(&str_float),
 	  &numeric_asflt, NULL, NULL,
-	  DOC("->float\n"
+	  DOC("->?Dfloat\n"
 	      "@throw NotImplemented @this number does not implement ${operator float}\n"
 	      "Return @this number as a floating point value") },
 	{ "s8",
