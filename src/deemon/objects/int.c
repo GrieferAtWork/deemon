@@ -35,6 +35,7 @@
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/error.h>
+#include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
@@ -3287,7 +3288,7 @@ int_sizeof(DeeIntObject *self) {
 	size_t int_size;
 	int_size = (size_t)self->ob_size;
 	if ((dssize_t)int_size < 0)
-		int_size = (size_t) - (dssize_t)int_size;
+		int_size = (size_t)(-(dssize_t)int_size);
 	return DeeInt_NewSize(offsetof(DeeIntObject, ob_digit) +
 	                      (int_size * sizeof(digit)));
 }
@@ -3300,7 +3301,7 @@ int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	int_size = (size_t)self->ob_size;
 	if ((dssize_t)int_size < 0)
-		int_size = (size_t) - (dssize_t)int_size;
+		int_size = (size_t)(-(dssize_t)int_size);
 	result = (DREF DeeIntObject *)DeeInt_Alloc(int_size);
 	if unlikely(!result)
 		goto err;
@@ -3338,6 +3339,100 @@ int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 err_divrem:
 	Dee_Decref_likely(div);
 	Dee_Decref_likely(rem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_nextafter(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeIntObject *y;
+	dssize_t diff;
+	if (DeeArg_Unpack(argc, argv, "o:nextafter", &y))
+		goto err;
+	y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);
+	if unlikely(!y)
+		goto err;
+	diff = int_compareint(self, y);
+	Dee_Decref(y);
+	Dee_Incref(self);
+	if (diff < 0) {
+		if unlikely(int_inc(&self))
+			goto err_self;
+	} else if (diff > 0) {
+		if unlikely(int_dec(&self))
+			goto err_self;
+	}
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+#define DEFINE_INT_COMPARE_FUNCTION(name, cmp)                            \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                    \
+	int_##name(DeeIntObject *self, size_t argc, DeeObject *const *argv) { \
+		DREF DeeIntObject *y;                                             \
+		dssize_t diff;                                                    \
+		if (DeeArg_Unpack(argc, argv, "o:" #name, &y))                    \
+			goto err;                                                     \
+		y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);           \
+		if unlikely(!y)                                                   \
+			goto err;                                                     \
+		diff = int_compareint(self, y);                                   \
+		Dee_Decref(y);                                                    \
+		return_bool_(diff cmp 0);                                         \
+err:                                                                      \
+		return NULL;                                                      \
+	}
+DEFINE_INT_COMPARE_FUNCTION(isgreater, >)
+DEFINE_INT_COMPARE_FUNCTION(isgreaterequal, >=)
+DEFINE_INT_COMPARE_FUNCTION(isless, <)
+DEFINE_INT_COMPARE_FUNCTION(islessequal, <=)
+DEFINE_INT_COMPARE_FUNCTION(islessgreater, !=)
+#undef DEFINE_INT_COMPARE_FUNCTION
+
+#ifdef CONFIG_HAVE_IEEE754
+struct Dee_float_ieee754_object {
+	Dee_OBJECT_HEAD
+	uint32_t f_words[2];
+};
+#ifdef CONFIG_HAVE_IEEE754_LE
+#define FLOAT_IEEE754_INIT(a, b) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { a, b } }
+#define float_ieee754_word0(x) ((x)->f_words[0])
+#define float_ieee754_word1(x) ((x)->f_words[1])
+#else /* CONFIG_HAVE_IEEE754_LE */
+#define FLOAT_IEEE754_INIT(a, b) { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), { b, a } }
+#define float_ieee754_word0(x) ((x)->f_words[1])
+#define float_ieee754_word1(x) ((x)->f_words[0])
+#endif /* !CONFIG_HAVE_IEEE754_LE */
+
+#define HAVE_float_isnan
+PRIVATE WUNUSED bool DCALL float_isnan(DeeFloatObject *self) {
+	uint32_t msw, lsw;
+	lsw = float_ieee754_word0((struct Dee_float_ieee754_object *)self);
+	msw = float_ieee754_word1((struct Dee_float_ieee754_object *)self);
+	lsw |= msw & __UINT32_C(0xfffff);
+	msw &= __UINT32_C(0x7ff00000);
+	return msw == __UINT32_C(0x7ff00000) && lsw != 0;
+}
+#elif defined(CONFIG_HAVE_isnan)
+#define HAVE_float_isnan
+#define float_isnan(self) isnan((self)->f_value)
+#endif /* ... */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_isunordered(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *y;
+	(void)self;
+	if (DeeArg_Unpack(argc, argv, "o:isunordered", &y))
+		goto err;
+#ifdef HAVE_float_isnan
+	if (DeeFloat_Check(y) && float_isnan((DeeFloatObject *)y))
+		return_true;
+#endif /* HAVE_float_isnan */
+	return_false;
 err:
 	return NULL;
 }
@@ -3401,14 +3496,75 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_divmod_f,
 	  DOC("(y:?.)->?T2?.?.\n"
 	      "Devide+modulo. Returns a tuple ${(this / y, this % y)}") },
+	{ "nextafter",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_nextafter,
+	  DOC("(y:?.)->?.\n"
+	      "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}") },
+	{ "isgreater",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isgreater,
+	  DOC("(y:?.)->?Dbool\n"
+	      "Same as ${this > y}") },
+	{ "isgreaterequal",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isgreaterequal,
+	  DOC("(y:?.)->?Dbool\n"
+	      "Same as ${this >= y}") },
+	{ "isless",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isless,
+	  DOC("(y:?.)->?Dbool\n"
+	      "Same as ${this < y}") },
+	{ "islessequal",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_islessequal,
+	  DOC("(y:?.)->?Dbool\n"
+	      "Same as ${this <= y}") },
+	{ "islessgreater",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_islessgreater,
+	  DOC("(y:?.)->?Dbool\n"
+	      "Same as ${this != y}") },
+	{ "isunordered",
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isunordered,
+	  DOC("(y:?X2?.?Dfloat)->?Dbool\n"
+	      "Same as ${y is float && y.isnan}") },
 	{ NULL }
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_abs(DeeIntObject *__restrict self) {
+	if (self->ob_size < 0)
+		return (DREF DeeIntObject *)int_neg(self);
+	return_reference_(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_return_true(DeeObject *__restrict self) {
+	(void)self;
+	return_true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_return_false(DeeObject *__restrict self) {
+	(void)self;
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_return_nonzero(DeeObject *__restrict self) {
+	return_bool(((DeeIntObject *)self)->ob_size != 0);
+}
+
+
+
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL,
-	  DOC("->?.") },
+	{ STR___sizeof__, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL, DOC("->?.") },
+	{ "abs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_abs, NULL, NULL, DOC("->?.") },
+	{ "trunc", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ "floor", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ "ceil", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ "round", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
+	{ "isnan", &int_return_false, NULL, NULL, DOC("->?Dbool\nAlways returns !f") },
+	{ "isinf", &int_return_false, NULL, NULL, DOC("->?Dbool\nAlways returns !f") },
+	{ "isfinite", &int_return_true, NULL, NULL, DOC("->?Dbool\nAlways returns !t") },
+	{ "isnormal", &int_return_nonzero, NULL, NULL, DOC("->?Dbool\nSame as {this != 0}") },
 	{ NULL }
 };
 

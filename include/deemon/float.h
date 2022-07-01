@@ -21,7 +21,47 @@
 #define GUARD_DEEMON_FLOAT_H 1
 
 #include "api.h"
+
 #include "object.h"
+/**/
+
+#include <hybrid/typecore.h>
+
+#ifdef CONFIG_NO_FPU
+#undef CONFIG_HAVE_FPU
+#undef CONFIG_HAVE_IEEE754
+#undef CONFIG_HAVE_IEEE754_LE
+#undef CONFIG_HAVE_IEEE754_BE
+#else /* CONFIG_NO_FPU */
+#ifndef CONFIG_HAVE_FPU
+#define CONFIG_HAVE_FPU 1
+#endif /* !CONFIG_HAVE_FPU */
+#ifdef CONFIG_NO_IEEE754
+#undef CONFIG_HAVE_IEEE754
+#undef CONFIG_HAVE_IEEE754_LE
+#undef CONFIG_HAVE_IEEE754_BE
+#elif defined(__SIZEOF_DOUBLE__) && __SIZEOF_DOUBLE__ != 8
+#undef CONFIG_HAVE_IEEE754
+#undef CONFIG_HAVE_IEEE754_LE
+#undef CONFIG_HAVE_IEEE754_BE
+#else /* CONFIG_NO_IEEE754 */
+#ifndef CONFIG_HAVE_IEEE754
+#define CONFIG_HAVE_IEEE754 1
+#endif /* !CONFIG_HAVE_IEEE754 */
+#if !defined(CONFIG_HAVE_IEEE754_LE) && !defined(CONFIG_HAVE_IEEE754_BE)
+#ifndef __FLOAT_WORD_ORDER__
+#define CONFIG_HAVE_IEEE754_LE 1 /* Fallback... */
+#elif __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define CONFIG_HAVE_IEEE754_LE 1
+#elif __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+#define CONFIG_HAVE_IEEE754_BE 1
+#else /* __FLOAT_WORD_ORDER__ == ... */
+#undef CONFIG_HAVE_IEEE754
+#define CONFIG_NO_IEEE754 1
+#endif /* __FLOAT_WORD_ORDER__ != ... */
+#endif /* !CONFIG_HAVE_IEEE754_LE && !CONFIG_HAVE_IEEE754_BE */
+#endif /* !CONFIG_NO_IEEE754 */
+#endif /* !CONFIG_NO_FPU */
 
 DECL_BEGIN
 
@@ -34,25 +74,32 @@ typedef struct Dee_float_object DeeFloatObject;
 
 struct Dee_float_object {
 	Dee_OBJECT_HEAD
+#ifdef CONFIG_HAVE_FPU
 	double      f_value; /* [const] The value of this float as a C-double. */
+#endif /* CONFIG_HAVE_FPU */
 };
 #define Dee_DEFINE_FLOAT(name, value) \
 	DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
 
 
+#ifdef CONFIG_HAVE_FPU
 #define DeeFloat_VALUE(x) ((DeeFloatObject *)Dee_REQUIRES_OBJECT(x))->f_value
+#endif /* CONFIG_HAVE_FPU */
 
 #define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x, &DeeFloat_Type) /* `float' is final */
 #define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeFloat_Type)
 DDATDEF DeeTypeObject DeeFloat_Type;
 
 /* Create and return a new floating point object. */
+#ifdef CONFIG_HAVE_FPU
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFloat_New(double value);
+#endif /* CONFIG_HAVE_FPU */
 
 
 
 /* Print a string representation of the given floating point value.
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
+#ifdef CONFIG_HAVE_FPU
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
                size_t width, size_t precision, unsigned int flags);
@@ -61,6 +108,7 @@ DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
                 size_t width, size_t precision, unsigned int flags);
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
+#endif /* CONFIG_HAVE_FPU */
 #define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
 #define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
 #define DEEFLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */
@@ -68,8 +116,6 @@ DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
 #define DEEFLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width'. */
 #define DEEFLOAT_PRINT_FWIDTH     0x0020 /* The given `width' must be respected. */
 #define DEEFLOAT_PRINT_FPRECISION 0x0040 /* The given `precision' must be respected. */
-
-
 
 DECL_END
 
