@@ -65,7 +65,7 @@ function outer() {
 	}
 	PREVENT_OPTIMIZATIONS(inner2);
 	inner2();
-	/* Make sure that the compiler didn't mess up referece indices. */
+	/* Make sure that the compiler didn't mess up reference indices. */
 	assert a == "a";
 	assert b == "b";
 	assert c == "c";

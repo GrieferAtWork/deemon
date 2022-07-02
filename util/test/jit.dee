@@ -711,4 +711,10 @@ assert_identical(v(), 42);
 assert_identical(w, []);
 
 
+/* Assert that the JIT compiler correctly handles
+ * expression vs. statement in comma lists. */
+assert exec(r'({ 10, 20, 30 })') == {10,20,30};
+assert_identical(exec(r'({ 10, 20, 30; })'), 30);
+
+
 

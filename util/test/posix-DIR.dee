@@ -31,7 +31,7 @@ function testdir(fd: int) {
 	for (local e: d) {
 		if (e.d_name.endswith(".dee")) {
 			assert e.d_type == DT_REG;
-			if (e.d_name == "posix_DIR.dee")
+			if (e.d_name == "posix-DIR.dee")
 				did_find_posix_DIR = true;
 		} else if (e.d_name == ".") {
 			did_find_dot = true;
