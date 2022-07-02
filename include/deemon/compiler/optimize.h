@@ -350,9 +350,18 @@ INTDEF WUNUSED NONNULL((1)) int
 (DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
-INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-ast_predict_type(struct ast *__restrict self);
+ * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
+ * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *FCALL
+ast_predict_type_ex(struct ast *__restrict self, unsigned int flags);
+#define AST_PREDICT_TYPE_F_NORMAL 0x0000 /* Default: */
+#define AST_PREDICT_TYPE_F_NOANNO 0x0001 /* Don't take type annotations into account */
+
+/* Predict the type of a given AST at runtime (if predictable) */
+#define ast_predict_type(self) ast_predict_type_ex(self, AST_PREDICT_TYPE_F_NORMAL)
+
+/* Same as `ast_predict_type()', but don't take type annotations into account */
+#define ast_predict_type_noanno(self) ast_predict_type_ex(self, AST_PREDICT_TYPE_F_NOANNO)
 
 
 

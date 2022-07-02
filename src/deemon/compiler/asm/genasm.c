@@ -1039,8 +1039,7 @@ done_fake_none:
 				 * must first convert the conditional into a boolean if it's not already one. */
 				if (asm_putddi(self))
 					goto err;
-				if (PUSH_RESULT &&
-				    (self->a_flag & AST_FCOND_BOOL) &&
+				if (PUSH_RESULT && (self->a_flag & AST_FCOND_BOOL) &&
 				    ast_predict_type(condition) != &DeeBool_Type) {
 					/* Force the condition to become a boolean. */
 					if (asm_gbool(invert_condition))

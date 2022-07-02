@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/bool.h>
+#include <deemon/callable.h>
 #include <deemon/cell.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
@@ -63,8 +64,112 @@ is_generic_sequence_type(DeeTypeObject *self) {
 }
 
 
-INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-ast_predict_type(struct ast *__restrict self) {
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *type_module;
+	if (!DeeType_Check(self) || DeeType_IsCustom(self)) {
+		Dee_Decref(self);
+		return NULL;
+	}
+	type_module = DeeType_GetModule((DeeTypeObject *)self);
+	if unlikely(!type_module) {
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		Dee_Decref(self);
+		return NULL;
+	}
+	Dee_Decref(type_module);
+	/* Only propagate types from the builtin deemon module. */
+	if (type_module != (DeeObject *)&deemon_module) {
+		Dee_Decref(self);
+		return NULL;
+	}
+	/* Because it's builtin+non-custom, it mustn't be heap-allocated
+	 * (but be allocated statically), so decref-ing it mustn't kill it */
+	Dee_DecrefNokill(self);
+	return (DeeTypeObject *)self;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+eval_decl_ast_type(struct decl_ast *__restrict self) {
+again:
+	switch (self->da_type) {
+
+	case DAST_CONST:
+		if (DeeType_Check(self->da_const))
+			return (DeeTypeObject *)self->da_const;
+		break;
+
+	case DAST_SYMBOL: {
+		struct symbol *typesym = self->da_symbol;
+		SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
+		switch (typesym->s_type) {
+
+		case SYMBOL_TYPE_EXTERN:
+			if ((typesym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FPROPERTY)) ==
+			    /*                                   */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR)) {
+				DREF DeeObject *typval;
+				typval = DeeModule_GetAttrSymbol(typesym->s_extern.e_module,
+				                                 typesym->s_extern.e_symbol);
+				if (!typval) {
+					DeeError_Handled(ERROR_HANDLED_RESTORE);
+					return NULL;
+				}
+				return filter_builtin_deemon_types(typval);
+			}
+			break;
+
+		case SYMBOL_TYPE_CONST:
+			if (DeeType_Check(typesym->s_const))
+				return (DeeTypeObject *)typesym->s_const;
+			break;
+
+		default:
+			break;
+		}
+	}	break;
+
+	case DAST_TUPLE:
+		return &DeeTuple_Type;
+
+	case DAST_SEQ:
+		return &DeeSeq_Type;
+
+	case DAST_FUNC:
+		return &DeeCallable_Type;
+
+	case DAST_WITH:
+		self = &self->da_with.w_cell[0];
+		goto again;
+
+	case DAST_ATTR: {
+		DeeTypeObject *base;
+		DREF DeeObject *attr;
+		base = eval_decl_ast_type(self->da_attr.a_base);
+		if (!base)
+			break;
+		attr = DeeObject_GetAttr((DeeObject *)base,
+		                         (DeeObject *)self->da_attr.a_name);
+		if (!attr) {
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
+			return NULL;
+		}
+		return filter_builtin_deemon_types(attr);
+	}	break;
+
+	default:
+		break;
+	}
+	return NULL;
+}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
+
+/* Predict the typing of a given AST, or return NULL when unpredictable.
+ * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
+ * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
+INTERN WUNUSED NONNULL((1)) DeeTypeObject *FCALL
+ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 	ASSERT_AST(self);
 	/* When AST type prediction is disabled, always indicate unpredictable ASTs. */
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
@@ -78,7 +183,8 @@ ast_predict_type(struct ast *__restrict self) {
 		if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
 			if (!self->a_multiple.m_astc)
 				return &DeeNone_Type;
-			return ast_predict_type(self->a_multiple.m_astv[self->a_multiple.m_astc - 1]);
+			return ast_predict_type_ex(self->a_multiple.m_astv[self->a_multiple.m_astc - 1],
+			                           flags);
 		}
 		if (self->a_flag == AST_FMULTIPLE_TUPLE)
 			return &DeeTuple_Type;
@@ -105,7 +211,7 @@ ast_predict_type(struct ast *__restrict self) {
 	case AST_TRY:
 		/* TODO: Predictable, but only when the guard and all
 		 *       catch-handles share the same return type. */
-		return ast_predict_type(self->a_try.t_guard);
+		return ast_predict_type_ex(self->a_try.t_guard, flags);
 #endif
 
 	case AST_CONDITIONAL: {
@@ -113,8 +219,8 @@ ast_predict_type(struct ast *__restrict self) {
 		DeeTypeObject *ff_type;
 		if (self->a_flag & AST_FCOND_BOOL)
 			return &DeeBool_Type;
-		tt_type = self->a_conditional.c_tt ? ast_predict_type(self->a_conditional.c_tt) : &DeeNone_Type;
-		ff_type = self->a_conditional.c_ff ? ast_predict_type(self->a_conditional.c_ff) : &DeeNone_Type;
+		tt_type = self->a_conditional.c_tt ? ast_predict_type_ex(self->a_conditional.c_tt, flags) : &DeeNone_Type;
+		ff_type = self->a_conditional.c_ff ? ast_predict_type_ex(self->a_conditional.c_ff, flags) : &DeeNone_Type;
 		if (tt_type == ff_type)
 			return tt_type;
 	}	break;
@@ -157,6 +263,11 @@ ast_predict_type(struct ast *__restrict self) {
 
 		default: break;
 		}
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+		if (!(flags & AST_PREDICT_TYPE_F_NOANNO))
+			return eval_decl_ast_type(&sym->s_decltype);
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
 	}	break;
 
 	case AST_BOOL:
@@ -168,7 +279,7 @@ ast_predict_type(struct ast *__restrict self) {
 	case AST_OPERATOR:
 		/* If the self-operator gets re-returned, it's type is the result type. */
 		if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP)
-			return ast_predict_type(self->a_operator.o_op0);
+			return ast_predict_type_ex(self->a_operator.o_op0, flags);
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			break; /* XXX: Special handling? */
 		switch (self->a_flag) {
@@ -179,7 +290,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 		case OPERATOR_COPY:
 		case OPERATOR_DEEPCOPY:
-			return ast_predict_type(self->a_operator.o_op0);
+			return ast_predict_type_ex(self->a_operator.o_op0, flags);
 
 		case OPERATOR_DELITEM:
 		case OPERATOR_DELATTR:
@@ -188,7 +299,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 		case OPERATOR_SIZE: {
 			DeeTypeObject *predict;
-			predict = ast_predict_type(self->a_operator.o_op0);
+			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
 			if (is_generic_sequence_type(predict))
 				return &DeeInt_Type;
 			if (predict == &DeeNone_Type)
@@ -208,10 +319,10 @@ ast_predict_type(struct ast *__restrict self) {
 		case OPERATOR_AND:
 		case OPERATOR_OR:
 		case OPERATOR_XOR:
-			//case OPERATOR_POW:
+		//case OPERATOR_POW:
 			{
 				DeeTypeObject *predict;
-				predict = ast_predict_type(self->a_operator.o_op0);
+				predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
 				if (predict == &DeeInt_Type)
 					return &DeeInt_Type;
 				if (predict == &DeeNone_Type)
@@ -221,7 +332,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 		case OPERATOR_ASSIGN:
 		case OPERATOR_MOVEASSIGN:
-			return ast_predict_type(self->a_operator.o_op1);
+			return ast_predict_type_ex(self->a_operator.o_op1, flags);
 
 			/* AST_FOP_GETATTR? */
 			/* AST_FOP_CALL? */
@@ -233,7 +344,7 @@ ast_predict_type(struct ast *__restrict self) {
 		case OPERATOR_GR:
 		case OPERATOR_GE: {
 			DeeTypeObject *predict;
-			predict = ast_predict_type(self->a_operator.o_op0);
+			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
 			if (predict == &DeeString_Type ||
 			    predict == &DeeTuple_Type ||
 			    predict == &DeeInt_Type ||
@@ -255,22 +366,22 @@ ast_predict_type(struct ast *__restrict self) {
 
 		case OPERATOR_CONTAINS: {
 			DeeTypeObject *sequence_type;
-			sequence_type = ast_predict_type(self->a_operator.o_op0);
+			sequence_type = ast_predict_type_ex(self->a_operator.o_op0, flags);
 			if (is_generic_sequence_type(sequence_type))
 				return &DeeBool_Type;
 		}	break;
 
 		case OPERATOR_SETITEM:
 		case OPERATOR_SETATTR:
-			return ast_predict_type(self->a_operator.o_op2);
+			return ast_predict_type_ex(self->a_operator.o_op2, flags);
 
 		case OPERATOR_SETRANGE:
-			return ast_predict_type(self->a_operator.o_op3);
+			return ast_predict_type_ex(self->a_operator.o_op3, flags);
 
 		case OPERATOR_GETITEM:
 		case OPERATOR_GETRANGE: {
 			DeeTypeObject *sequence_type;
-			sequence_type = ast_predict_type(self->a_operator.o_op0);
+			sequence_type = ast_predict_type_ex(self->a_operator.o_op0, flags);
 			if (sequence_type == &DeeString_Type)
 				return &DeeString_Type;
 		}	break;
@@ -284,11 +395,11 @@ ast_predict_type(struct ast *__restrict self) {
 #define ACTION(x) case x &AST_FACTION_KINDMASK:
 
 		ACTION(AST_FACTION_STORE)
-			return ast_predict_type(self->a_action.a_act1);
+			return ast_predict_type_ex(self->a_action.a_act1, flags);
 
 		ACTION(AST_FACTION_IN) {
 			DeeTypeObject *sequence_type;
-			sequence_type = ast_predict_type(self->a_action.a_act1);
+			sequence_type = ast_predict_type_ex(self->a_action.a_act1, flags);
 			if (is_generic_sequence_type(sequence_type))
 				return &DeeBool_Type;
 		}	break;
@@ -306,7 +417,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 		ACTION(AST_FACTION_FPRINT)
 		ACTION(AST_FACTION_FPRINTLN)
-			return ast_predict_type(self->a_action.a_act0);
+			return ast_predict_type_ex(self->a_action.a_act0, flags);
 
 		ACTION(AST_FACTION_CELL0)
 		ACTION(AST_FACTION_CELL1)
@@ -327,7 +438,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 		ACTION(AST_FACTION_ASSERT)
 		ACTION(AST_FACTION_ASSERT_M)
-			return ast_predict_type(self->a_action.a_act0);
+			return ast_predict_type_ex(self->a_action.a_act0, flags);
 
 		default: break;
 #undef ACTION

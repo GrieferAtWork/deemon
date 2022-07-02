@@ -439,6 +439,24 @@ dont_do_inline_constant_arg_optimization:
 				goto err;
 			++optimizer_count;
 		}
+	} else if (argc == 2) {
+		if (DeeString_EQUALS_ASCII(template_str, "{}{}") &&
+		    ast_predict_type(argv[0]) == &DeeString_Type) {
+			/* from: >> local foo = "{}{}".format({ a, b });
+			 * to:   >> local foo = a + b; // Only when type(a) == string */
+			int error;
+			DREF struct ast *add_ast;
+			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}{}\".format({ a, b })' (where `type a === string') to `a + b'\n");
+			add_ast = ast_operator2(OPERATOR_ADD, AST_OPERATOR_FNORMAL, argv[0], argv[1]);
+			if unlikely(!add_ast)
+				goto err;
+			add_ast = ast_setddi(add_ast, &ast_template_for_ddi->a_ddi);
+			error   = ast_assign(ast_callattr_format, add_ast);
+			ast_decref(add_ast);
+			if unlikely(error)
+				goto err;
+			++optimizer_count;
+		}
 	}
 
 	return 0;

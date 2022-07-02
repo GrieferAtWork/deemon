@@ -270,7 +270,11 @@ asm_gcall_func(struct ast *__restrict func,
 generic_call:
 	if (ast_genasm_one(args, ASM_G_FPUSHRES))
 		goto err_refargv;
-	if (ast_predict_type(args) != &DeeTuple_Type) {
+	/* DONT use ast_predict_type here: that one can only be used when
+	 * the assumption not being met results in weak undefined behavior. However,
+	 * if the args-operand in a call really isn't a tuple, the results is hard
+	 * undefined behavior (and probably an interpreter crash) */
+	if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 		if (asm_putddi(args))
 			goto err_refargv;
 		if (asm_gcast_tuple())
@@ -881,7 +885,11 @@ invoke_cattr_funsym_tuple:
 							goto err; /* func, class_sym */
 						if (ast_genasm_one(args, ASM_G_FPUSHRES))
 							goto err; /* func, class_sym, args */
-						if (ast_predict_type(args) != &DeeTuple_Type) {
+						/* DONT use ast_predict_type here: that one can only be used when
+						 * the assumption not being met results in weak undefined behavior. However,
+						 * if the args-operand in a call really isn't a tuple, the results is hard
+						 * undefined behavior (and probably an interpreter crash) */
+						if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 							if (asm_putddi(args))
 								goto err;
 							if (asm_gcast_tuple())
@@ -895,7 +903,11 @@ invoke_cattr_funsym_tuple:
 					}
 					if (ast_genasm_one(args, ASM_G_FPUSHRES))
 						goto err; /* func, args */
-					if (ast_predict_type(args) != &DeeTuple_Type) {
+					/* DONT use ast_predict_type here: that one can only be used when
+					 * the assumption not being met results in weak undefined behavior. However,
+					 * if the args-operand in a call really isn't a tuple, the results is hard
+					 * undefined behavior (and probably an interpreter crash) */
+					if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 						if (asm_putddi(args))
 							goto err;
 						if (asm_gcast_tuple())
@@ -1032,7 +1044,11 @@ invoke_cattr_funsym_tuple:
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -1094,7 +1110,11 @@ check_getattr_base_symbol_class_tuple:
 							break;
 						if (ast_genasm(args, ASM_G_FPUSHRES))
 							goto err;
-						if (ast_predict_type(args) != &DeeTuple_Type) {
+						/* DONT use ast_predict_type here: that one can only be used when
+						 * the assumption not being met results in weak undefined behavior. However,
+						 * if the args-operand in a call really isn't a tuple, the results is hard
+						 * undefined behavior (and probably an interpreter crash) */
+						if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 							if (asm_putddi(args))
 								goto err;
 							if (asm_gcast_tuple())
@@ -1113,7 +1133,11 @@ check_getattr_base_symbol_class_tuple:
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -1131,7 +1155,11 @@ check_getattr_base_symbol_class_tuple:
 				goto err;
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type) {
+			/* DONT use ast_predict_type here: that one can only be used when
+			 * the assumption not being met results in weak undefined behavior. However,
+			 * if the args-operand in a call really isn't a tuple, the results is hard
+			 * undefined behavior (and probably an interpreter crash) */
+			if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 				if (asm_putddi(args))
 					goto err;
 				if (asm_gcast_tuple())
@@ -1820,7 +1848,11 @@ generic_call:
 		goto err;
 	if (ast_genasm_one(args, ASM_G_FPUSHRES))
 		goto err;
-	if (ast_predict_type(args) != &DeeTuple_Type) {
+	/* DONT use ast_predict_type here: that one can only be used when
+	 * the assumption not being met results in weak undefined behavior. However,
+	 * if the args-operand in a call really isn't a tuple, the results is hard
+	 * undefined behavior (and probably an interpreter crash) */
+	if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 		if (asm_putddi(args))
 			goto err;
 		if (asm_gcast_tuple())
@@ -1871,7 +1903,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					if unlikely(asm_gargv(args->a_multiple.m_astc,
 					                      args->a_multiple.m_astv))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type) {
+					/* DONT use ast_predict_type here: that one can only be used when
+					 * the assumption not being met results in weak undefined behavior. However,
+					 * if the args-operand in a call really isn't a tuple, the results is hard
+					 * undefined behavior (and probably an interpreter crash) */
+					if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 						if (asm_putddi(args))
 							goto err;
 						if (asm_gcast_tuple())
@@ -1891,7 +1927,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 						goto err;
 					if (ast_genasm_one(args, ASM_G_FPUSHRES))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type) {
+					/* DONT use ast_predict_type here: that one can only be used when
+					 * the assumption not being met results in weak undefined behavior. However,
+					 * if the args-operand in a call really isn't a tuple, the results is hard
+					 * undefined behavior (and probably an interpreter crash) */
+					if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 						if (asm_putddi(args))
 							goto err;
 						if (asm_gcast_tuple())
@@ -1907,7 +1947,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -1930,7 +1974,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					if unlikely(asm_gargv(args->a_multiple.m_astc,
 					                      args->a_multiple.m_astv))
 						goto err;
-					if (ast_predict_type(args) != &DeeTuple_Type) {
+					/* DONT use ast_predict_type here: that one can only be used when
+					 * the assumption not being met results in weak undefined behavior. However,
+					 * if the args-operand in a call really isn't a tuple, the results is hard
+					 * undefined behavior (and probably an interpreter crash) */
+					if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 						if (asm_putddi(args))
 							goto err;
 						if (asm_gcast_tuple())
@@ -1964,7 +2012,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -2005,7 +2057,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				if unlikely(asm_gargv(args->a_multiple.m_astc,
 				                      args->a_multiple.m_astv))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -2025,7 +2081,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(args, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -2041,7 +2101,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				goto err;
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type) {
+			/* DONT use ast_predict_type here: that one can only be used when
+			 * the assumption not being met results in weak undefined behavior. However,
+			 * if the args-operand in a call really isn't a tuple, the results is hard
+			 * undefined behavior (and probably an interpreter crash) */
+			if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 				if (asm_putddi(args))
 					goto err;
 				if (asm_gcast_tuple())
@@ -2064,7 +2128,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				if unlikely(asm_gargv(args->a_multiple.m_astc,
 				                      args->a_multiple.m_astv))
 					goto err;
-				if (ast_predict_type(args) != &DeeTuple_Type) {
+				/* DONT use ast_predict_type here: that one can only be used when
+				 * the assumption not being met results in weak undefined behavior. However,
+				 * if the args-operand in a call really isn't a tuple, the results is hard
+				 * undefined behavior (and probably an interpreter crash) */
+				if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 					if (asm_putddi(args))
 						goto err;
 					if (asm_gcast_tuple())
@@ -2098,7 +2166,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				goto err;
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type) {
+			/* DONT use ast_predict_type here: that one can only be used when
+			 * the assumption not being met results in weak undefined behavior. However,
+			 * if the args-operand in a call really isn't a tuple, the results is hard
+			 * undefined behavior (and probably an interpreter crash) */
+			if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 				if (asm_putddi(args))
 					goto err;
 				if (asm_gcast_tuple())
@@ -2142,7 +2214,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		} else {
 			if (ast_genasm_one(args, ASM_G_FPUSHRES))
 				goto err;
-			if (ast_predict_type(args) != &DeeTuple_Type) {
+			/* DONT use ast_predict_type here: that one can only be used when
+			 * the assumption not being met results in weak undefined behavior. However,
+			 * if the args-operand in a call really isn't a tuple, the results is hard
+			 * undefined behavior (and probably an interpreter crash) */
+			if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 				if (asm_putddi(args))
 					goto err;
 				if (asm_gcast_tuple())
@@ -2157,7 +2233,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		/* Fallback: use the stack to pass all the arguments. */
 		if (ast_genasm_one(args, ASM_G_FPUSHRES))
 			goto err;
-		if (ast_predict_type(args) != &DeeTuple_Type) {
+		/* DONT use ast_predict_type here: that one can only be used when
+		 * the assumption not being met results in weak undefined behavior. However,
+		 * if the args-operand in a call really isn't a tuple, the results is hard
+		 * undefined behavior (and probably an interpreter crash) */
+		if (ast_predict_type_noanno(args) != &DeeTuple_Type) {
 			if (asm_putddi(args))
 				goto err;
 			if (asm_gcast_tuple())
