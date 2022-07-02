@@ -1,0 +1,47 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+
+local x = 42;
+assert f"before{x + 2}after" == "before44after";
+assert f'before{x + 2}after' == "before44after";
+assert f"before{'abc' + x}after" == "beforeabc42after";
+assert f'before{"abc" + x}after' == "beforeabc42after";
+
+/* Special case: we also accept it when you nest already-active quotes in template arguments! */
+assert f"before{"abc" + x}after" == "beforeabc42after";
+assert f'before{'abc' + x}after' == "beforeabc42after";
+
+/* This also has to work: an unaware parser would see this as unbalanced quotes. */
+assert f"before{'"' + x}after" == "before\"42after";
+assert f'before{"'" + x}after' == "before\'42after";
+
+/* In deemon's template strings, braces can be escaped with bashlashes */
+assert f'\{' == '{';
+assert f'\}' == '}';
+
+/* Just like in python, braces can also be escaped by writing them twice.
+ * WARNING: The notepad++ language template fails to render this correctly,
+ *          but our compiler understands it like it should! */
+assert f'{{' == '{';
+assert f'}}' == '}';
+
+

@@ -641,7 +641,7 @@ decode_string:
 	case KWD_F:
 		/* Check if this might be a template string. */
 		if ((*token.t_end == '\"') ||
-		    (*token.t_end == '\'' && HAS(EXT_CHARACTER_LITERALS))) {
+		    (*token.t_end == '\'' && !HAS(EXT_CHARACTER_LITERALS))) {
 			if unlikely(yield() < 0)
 				goto err;
 			ASSERT(tok == TOK_STRING || tok == TOK_CHAR);

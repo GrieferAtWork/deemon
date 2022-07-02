@@ -73,23 +73,43 @@ err:
 	return NULL;
 }
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char *FCALL
+find_unescape_quote(char *text, char *end, char quote) {
+	while (text < end) {
+		char ch = *text++;
+		if (ch == '\\') {
+			/* Quotes can always be backslash-escaped! */
+			if (text >= end)
+				break;
+			++text;
+			continue;
+		}
+		if (ch == quote)
+			return text - 1;
+	}
+	return NULL;
+}
+
 
 /* Parse a template string. */
 INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_template_string(void) {
+	STATIC_ASSERT(TOK_STRING == '"');
+	STATIC_ASSERT(TOK_CHAR == '\'');
 	size_t format_argc            = 0;
 	size_t format_arga            = 0;
 	DREF struct ast **format_argv = NULL;
 	struct ast_loc loc;
 	struct ast *result;
 	struct unicode_printer format_printer = UNICODE_PRINTER_INIT;
-	char *flush_start, *text_iter, *text_end;
+	char *flush_start, *text_iter, *text_end, quote;
 	loc_here(&loc);
 parse_current_token_as_template_string:
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	ASSERT(token.t_begin < token.t_end);
 	ASSERT(token.t_begin[0] == '\"' || token.t_begin[0] == '\'');
 	ASSERT(token.t_begin[0] == token.t_end[-1]);
+	quote       = token.t_begin[0];
 	text_iter   = token.t_begin + 1;
 	text_end    = token.t_end - 1;
 	flush_start = text_iter;
@@ -100,14 +120,8 @@ parse_current_token_as_template_string:
 		switch (ch) {
 
 		case '{': {
-			uint32_t old_lexer_flags;
-			struct TPPFile *old_eob;
-			struct TPPToken old_token;
-			char *old_file_pos;
-			char *old_file_end, old_file_end_ch;
-			char *expr_start, *expr_end;
-			unsigned int recursion;
 			DREF struct ast *expr_ast;
+			uint32_t old_flags;
 
 			/* Flush */
 			if unlikely(unicode_printer_print(&format_printer, flush_start,
@@ -115,134 +129,162 @@ parse_current_token_as_template_string:
 				goto err;
 			if (*text_iter == '{') {
 				/* Escaped '}' */
-handle_escaped_lbrace:
-				flush_start = text_iter; /* Next flush starts on-top of the second '{' */
+				flush_start = text_iter - 1; /* Next flush starts on-top of the first '{' */
 				++text_iter;
 				break;
 			}
 
-			/* Scan ahead until matching '}' and push contained text as a TPP-file.
-			 * Then, setup the lexer to indicate EOF once that file has reached its
-			 * end, before finally parsing the contents of the file as an expression
-			 *
-			 * The resulting expression must then be added to `format_argv'.
-			 * NOTE: No special escaping happens inside of the '{...}' area, but we still
-			 *       have to take care to set-up the lexer's line/column offsets such that
-			 *       they point to the correct locations in the containing file! */
-			expr_start = text_iter;
-			expr_end   = expr_start;
-			recursion  = 1;
-			for (;;) {
-				if (expr_end >= text_end) {
-					/* Error: Unmatched '{' */
-					if (parser_warnatptrf(expr_start - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
-						goto err;
-					--text_iter;
-					goto handle_escaped_lbrace;
-				}
-				if (*expr_end == '{') {
-					++recursion;
-				} else if (*expr_end == '}') {
-					--recursion;
-					if (!recursion)
-						break;
-				}
-				++expr_end;
-			}
+			/* Parse an expression at this position. */
+			token.t_file->f_pos = text_iter;
 
-			/* Re-configure the lexer to stop parsing at the end of the string. */
-			old_token                    = token;
-			old_eob                      = TPPLexer_Current->l_eob_file;
-			TPPLexer_Current->l_eob_file = old_token.t_file;
-			old_file_pos                 = old_token.t_file->f_pos;
-			old_file_end                 = old_token.t_file->f_end;
-			old_token.t_file->f_pos      = (char *)expr_start;
-			old_token.t_file->f_end      = (char *)expr_end;
-			old_file_end_ch              = *expr_end;
-			*expr_end                    = '\0';
-
-			/* Configure the lexer for template string expression mode. */
-			old_lexer_flags  = TPPLexer_Current->l_flags;
-			TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_WANTSPACE |
-			                               TPPLEXER_FLAG_WANTLF |
-			                               TPPLEXER_FLAG_WANTCOMMENTS);
-			TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_SEEK_ON_EOB |
-			                              TPPLEXER_FLAG_NO_POP_ON_EOF);
-
-			/* Parse the actual expression. */
+			/* Parse the expression. */
+			old_flags = TPPLexer_Current->l_flags;
+			text_iter = (char *)0 + (text_iter - token.t_file->f_begin); /* To deal with a buffer realloc() */
+			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_EXTENDFILE;       /* So we don't loose our file position */
 			if unlikely(yield() < 0) {
-err_inner_expr:
-				expr_ast = NULL;
-			} else {
-				/* Parse the expression. */
-				expr_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
-				if unlikely(!expr_ast)
-					goto done_inner_expr;
-				if (tok == '!') {
-					/* The remainder of the expression is the format-argument */
-					if unlikely(unicode_printer_put8(&format_printer, '{'))
-						goto err_inner_expr_expr_ast;
-					if unlikely(unicode_printer_print(&format_printer, token.t_begin,
-					                                  (size_t)(expr_end - token.t_begin)) < 0)
-						goto err_inner_expr_expr_ast;
-					if unlikely(unicode_printer_put8(&format_printer, '}'))
-						goto err_inner_expr_expr_ast;
-				} else {
-					if unlikely(unicode_printer_print(&format_printer, "{}", 2) < 0)
-						goto err_inner_expr_expr_ast;
-					if unlikely(tok && WARN(W_TEMPLATE_STRING_UNEXPECTED_TOKEN))
-						goto err_inner_expr_expr_ast;
+err_old_flags:
+				TPPLexer_Current->l_flags = old_flags;
+				goto err;
+			}
+			expr_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			if unlikely(!expr_ast)
+				goto err_old_flags;
+			TPPLexer_Current->l_flags = old_flags;
+			text_iter = token.t_file->f_begin + (text_iter - (char *)0); /* To deal with a buffer realloc() */
+
+			/* Ensure that TPP has loaded the file until the next unescaped quote
+			 * This is required because tpp normally sees something like:
+			 * >> f"foo: {a + '"' + b} -- more"
+			 * as this:
+			 * >> [f]["foo: {a + '"][' + b} -- more"...]
+			 *                       ^-- ERROR: Unescaped quote
+			 * 
+			 * As such, it won't natively load the entire template-string token
+			 * into its file buffer, meaning we have to trick it by forcing it
+			 * to load file data until the next unescaped quotation mark matching
+			 * the original quote:            v-- This one right here
+			 * >> f"foo: {a + '"' + b} -- more"
+			 *
+			 * Note however that we might actually get a false positive here:
+			 * >> f"foo: {a + '"' + b} -- {'"'} more"
+			 *                              ^-- This counts as a hit, but isn't escaped
+			 * But that's OK because it's part of another template argument expression,
+			 * which will be parsed by `ast_parse_expr()', which in turn makes use of
+			 * TPP's automatic file-chunk-extension function. The only thing we need to
+			 * ensure at that point, is that TPP doesn't discard older parts of its file
+			 * so our pointers don't get all out of wack, which we do by setting the
+			 * lexer's `TPPLEXER_FLAG_EXTENDFILE' flag above, and converting our pointers
+			 * into relative offsets above/after the parsing step (which is needed in
+			 * case a file extension causes the file buffer's base address to change)
+			 */
+
+			for (;;) {
+				int error;
+				text_end = find_unescape_quote(token.t_file->f_pos,
+				                               token.t_file->f_end,
+				                               quote);
+				if (text_end)
+					break;
+				text_iter     = (char *)0 + (text_iter - token.t_file->f_begin);
+				token.t_begin = (char *)0 + (token.t_begin - token.t_file->f_begin);
+				token.t_end   = (char *)0 + (token.t_end - token.t_file->f_begin);
+				error         = TPPFile_NextChunk(token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
+				text_iter     = token.t_file->f_begin + (text_iter - (char *)0);
+				token.t_begin = token.t_file->f_begin + (token.t_begin - (char *)0);
+				token.t_end   = token.t_file->f_begin + (token.t_end - (char *)0);
+				if unlikely(error < 0)
+					goto err_expr_ast;
+				if unlikely(error == 0) {
+					if (parser_warnatptrf(text_iter, W_STRING_TERMINATED_BY_EOF))
+						goto err_expr_ast;
+					text_end = token.t_file->f_end;
+					break;
 				}
-				/* Append `expr_ast' to `format_argv' */
-				ASSERT(format_argc <= format_arga);
-				if (format_argc >= format_arga) {
-					size_t new_format_arga = (format_arga << 1) | 1;
-					DREF struct ast **new_format_argv;
-					new_format_argv = (DREF struct ast **)Dee_TryRealloc(format_argv,
-					                                                     new_format_arga *
-					                                                     sizeof(DREF struct ast *));
-					if (!new_format_argv) {
-						new_format_arga = format_arga + 1;
-						new_format_argv = (DREF struct ast **)Dee_Realloc(format_argv,
-						                                                  new_format_arga *
-						                                                  sizeof(DREF struct ast *));
-						if unlikely(!new_format_argv) {
-err_inner_expr_expr_ast:
-							ast_decref_likely(expr_ast);
-							goto err_inner_expr;
-						}
-					}
-					format_arga = new_format_arga;
-					format_argv = new_format_argv;
-				}
-				format_argv[format_argc] = expr_ast;
-				++format_argc;
 			}
 
-			/* Restore the old lexer configuration. */
-done_inner_expr:
-			*expr_end                    = old_file_end_ch;
-			TPPLexer_Current->l_flags    = old_lexer_flags;
-			TPPLexer_Current->l_eob_file = old_eob;
-			old_token.t_file->f_pos      = old_file_pos;
-			old_token.t_file->f_end      = old_file_end;
-			token                        = old_token;
-			if unlikely(!expr_ast)
-				goto err;
+			if (tok == '!') {
+				char *rbrace;
+				rbrace = (char *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
+				if unlikely(!rbrace) {
+					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
+						goto err_expr_ast;
+					rbrace = text_end;
+				}
 
-			/* Resume parsing after the '}' */
-			text_iter   = expr_end + 1; /* Skip trailing '}' */
-			flush_start = text_iter;
+				/* The remainder of the expression is the format-argument */
+				if unlikely(unicode_printer_put8(&format_printer, '{'))
+					goto err_expr_ast;
+				if unlikely(unicode_printer_print(&format_printer, token.t_begin,
+				                                  (size_t)(rbrace - token.t_begin)) < 0)
+					goto err_expr_ast;
+				if unlikely(unicode_printer_put8(&format_printer, '}'))
+					goto err_expr_ast;
+				if (*rbrace == '}')
+					++rbrace;
+				token.t_begin = rbrace;
+			} else if (tok == '}') {
+				if unlikely(unicode_printer_print(&format_printer, "{}", 2) < 0)
+					goto err_expr_ast;
+				++token.t_begin;
+			} else {
+				char *rbrace;
+				if unlikely(WARN(W_TEMPLATE_STRING_UNEXPECTED_TOKEN))
+					goto err_expr_ast;
+				rbrace = (char *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
+				if (!rbrace) {
+					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
+						goto err_expr_ast;
+					rbrace = text_end;
+				} else {
+					++rbrace;
+				}
+				token.t_begin = rbrace;
+			}
+
+			/* Trick the current token into becoming a string until the next unescaped quote. */
+			token.t_id  = (tok_t)quote; /* TOK_STRING or TOK_CHAR */
+			token.t_end = text_end;
+			if (*text_end == quote)
+				++token.t_end; /* Skip over unescaped quote */
+			token.t_file->f_pos = token.t_end;
+
+			/* Continue parsing the template-string after the closing '}' */
+			text_iter   = token.t_begin;
+			flush_start = token.t_begin;
+
+			/* Append `expr_ast' to `format_argv' */
+			ASSERT(format_argc <= format_arga);
+			if (format_argc >= format_arga) {
+				size_t new_format_arga = (format_arga << 1) | 1;
+				DREF struct ast **new_format_argv;
+				new_format_argv = (DREF struct ast **)Dee_TryRealloc(format_argv,
+				                                                     new_format_arga *
+				                                                     sizeof(DREF struct ast *));
+				if (!new_format_argv) {
+					new_format_arga = format_arga + 1;
+					new_format_argv = (DREF struct ast **)Dee_Realloc(format_argv,
+					                                                  new_format_arga *
+					                                                  sizeof(DREF struct ast *));
+					if unlikely(!new_format_argv) {
+err_expr_ast:
+						ast_decref_likely(expr_ast);
+						goto err;
+					}
+				}
+				format_arga = new_format_arga;
+				format_argv = new_format_argv;
+			}
+			format_argv[format_argc] = expr_ast;
+			++format_argc;
+
 		}	break;
 
 		case '}':
 			if (*text_iter == '}') {
-				/* Escaped '}' (NOTE: This `unicode_printer_print()' includes the '}' itself!) */
-				if unlikely(unicode_printer_print(&format_printer, flush_start,
-				                                  (size_t)(text_iter - flush_start)) < 0)
-					goto err;
+				/* Escaped '}'
+				 * No need to flush since '}' also needs to be escaped
+				 * as '}}' in the template for `string.format'! */
 				++text_iter;
-				flush_start = text_iter; /* Start flushing after the '{' */
 			} else {
 				/* Error: unmatched '}' */
 				if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_RBRACE))
@@ -412,7 +454,7 @@ after_escaped_putc:
 
 	/* Check if the next token is another template string. - If so, join the two! */
 	if ((tok == KWD_f || tok == KWD_F) &&
-	    (*token.t_end == '\"' || (*token.t_end == '\'' && HAS(EXT_CHARACTER_LITERALS)))) {
+	    (*token.t_end == '\"' || (*token.t_end == '\'' && !HAS(EXT_CHARACTER_LITERALS)))) {
 		/* Join adjacent template strings */
 		if unlikely(yield() < 0)
 			goto err; /* Consume the template string token. */
