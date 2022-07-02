@@ -4233,7 +4233,7 @@ string_getsubstr_ib(String *__restrict self,
 	} else {
 		int width = DeeString_WIDTH(self);
 		result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
-		                                               (start * STRING_SIZEOF_WIDTH(width)),
+		                                               STRING_MUL_SIZEOF_WIDTH(start, width),
 		                                               end - (size_t)start,
 		                                               width);
 	}
@@ -4260,7 +4260,7 @@ string_getsubstr(String *__restrict self,
 		} else {
 			int width = DeeString_WIDTH(self);
 			result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
-			                                               (start * STRING_SIZEOF_WIDTH(width)),
+			                                               STRING_MUL_SIZEOF_WIDTH(start, width),
 			                                               end - (size_t)start,
 			                                               width);
 		}

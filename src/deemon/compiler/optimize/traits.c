@@ -63,6 +63,19 @@ is_generic_sequence_type(DeeTypeObject *self) {
 	return false;
 }
 
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+is_defined_by_deemon_core(DeeTypeObject *__restrict self) {
+	bool result;
+	DREF DeeObject *type_module;
+	type_module = DeeType_GetModule((DeeTypeObject *)self);
+	if unlikely(!type_module) {
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		return false;
+	}
+	result = type_module == (DeeObject *)&deemon_module;
+	Dee_Decref(type_module);
+	return result;
+}
 
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
@@ -194,7 +207,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return &DeeHashSet_Type;
 		if (self->a_flag == AST_FMULTIPLE_DICT)
 			return &DeeDict_Type;
-		if (AST_FMULTIPLE_ISDICT(self->a_flag))
+		if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS)
 			return &DeeMapping_Type;
 		return &DeeSeq_Type; /* That's all we can guaranty. */
 
@@ -282,6 +295,8 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return ast_predict_type_ex(self->a_operator.o_op0, flags);
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			break; /* XXX: Special handling? */
+		/* TODO: When !AST_PREDICT_TYPE_F_NOANNO, predict the type of op0 and look
+		 *       if its `tp_doc' makes any mention of operator return types. */
 		switch (self->a_flag) {
 
 		case OPERATOR_STR:
@@ -319,23 +334,21 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		case OPERATOR_AND:
 		case OPERATOR_OR:
 		case OPERATOR_XOR:
-		//case OPERATOR_POW:
-			{
-				DeeTypeObject *predict;
-				predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
-				if (predict == &DeeInt_Type)
-					return &DeeInt_Type;
-				if (predict == &DeeNone_Type)
-					return &DeeNone_Type;
-			}
-			break;
+		case OPERATOR_POW: {
+			DeeTypeObject *predict;
+			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
+			if (predict == &DeeInt_Type)
+				return &DeeInt_Type;
+			if (predict == &DeeNone_Type)
+				return &DeeNone_Type;
+		}	break;
 
 		case OPERATOR_ASSIGN:
 		case OPERATOR_MOVEASSIGN:
 			return ast_predict_type_ex(self->a_operator.o_op1, flags);
 
-			/* AST_FOP_GETATTR? */
-			/* AST_FOP_CALL? */
+		/* TODO: OPERATOR_GETATTR (by searching for and interpreting doc strings) */
+		/* TODO: OPERATOR_CALL    (by searching for and interpreting doc strings) */
 
 		case OPERATOR_EQ:
 		case OPERATOR_NE:
@@ -345,23 +358,28 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		case OPERATOR_GE: {
 			DeeTypeObject *predict;
 			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
-			if (predict == &DeeString_Type ||
-			    predict == &DeeTuple_Type ||
-			    predict == &DeeInt_Type ||
-			    predict == &DeeBool_Type ||
-			    predict == &DeeList_Type ||
-			    predict == &DeeRoSet_Type ||
-			    predict == &DeeHashSet_Type ||
-			    predict == &DeeCell_Type ||
-			    predict == &DeeRoDict_Type ||
-			    predict == &DeeDict_Type)
-				return &DeeBool_Type;
+			if (!predict)
+				break;
 			if (predict == &DeeNone_Type) {
 				if (self->a_flag == OPERATOR_EQ ||
 				    self->a_flag == OPERATOR_NE)
 					return &DeeBool_Type;
 				return &DeeNone_Type;
 			}
+
+			/* Assume that all types (other than none) that are defined by
+			 * the deemon core return `bool' for their compare operators. */
+			if (is_defined_by_deemon_core(predict)) {
+				INTDEF DeeTypeObject SeqEachOperator_Type;
+				INTDEF DeeTypeObject SeqEach_Type;
+				if (predict == &SeqEachOperator_Type ||
+				    predict == &SeqEach_Type)
+					return NULL; /* Undefined! */
+
+				return &DeeBool_Type;
+			}
+
+			/* TODO: When !AST_PREDICT_TYPE_F_NOANNO, look into `predict->tp_doc' */
 		}	break;
 
 		case OPERATOR_CONTAINS: {
