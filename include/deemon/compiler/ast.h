@@ -594,6 +594,23 @@ struct ast {
 	;
 };
 
+/* Helper macros to identify asts */
+#define ast_isconstexpr(self) ((self)->a_type == AST_CONSTEXPR)
+#define ast_isoperator1(self, op)                                                            \
+	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op0 && \
+	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
+#define ast_isoperator2(self, op)                                                            \
+	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op1 && \
+	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
+#define ast_isoperator3(self, op)                                                            \
+	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op2 && \
+	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
+#define ast_isoperator4(self, op)                                                            \
+	((self)->a_type == AST_OPERATOR && (self)->a_flag == (op) && (self)->a_operator.o_op3 && \
+	 !((self)->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP)))
+
+
+
 
 /* Automatically generate moveassign operations when the
  * right-hand-size has been modulated using a copy/deepcopy operator. */

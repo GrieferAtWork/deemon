@@ -4240,7 +4240,7 @@ string_getsubstr_ib(String *__restrict self,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_getsubstr(String *__restrict self,
                  size_t start, size_t end) {
 	DREF String *result;
@@ -8541,7 +8541,7 @@ DeeString_Format(dformatprinter printer, void *arg,
                  /*utf-8*/ char const *__restrict format,
                  size_t format_len, DeeObject *__restrict args);
 
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_format(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
 	char *utf8_repr;

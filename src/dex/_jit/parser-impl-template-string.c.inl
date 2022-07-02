@@ -349,11 +349,8 @@ done_string:
 	    (*self->jl_tokend == '\"' || *self->jl_tokend == '\''))
 		goto parse_current_token_as_template_string; /* Join adjacent template strings */
 
-#ifdef JIT_EVAL
-	return unicode_printer_pack(&printer);
-#else /* JIT_EVAL */
-	return 0;
-#endif /* !JIT_EVAL */
+	/* Pack everything together on success. */
+	return IFELSE(unicode_printer_pack(&printer), 0);
 err:
 	IF_EVAL(unicode_printer_fini(&printer));
 	return ERROR;

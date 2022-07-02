@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser.c"
-//#define JIT_SKIP  1
-#define JIT_EVAL  1
+//#define JIT_SKIP 1
+#define JIT_EVAL 1
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/bool.h>
@@ -4061,4 +4061,4 @@ DECL_END
 #undef IFELSE
 #undef JIT_EVAL
 #undef JIT_SKIP
-#endif
+#endif /* !__INTELLISENSE__ */

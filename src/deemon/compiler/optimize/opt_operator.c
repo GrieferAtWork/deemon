@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -148,71 +149,302 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 emulate_member_call(DeeObject *base, DeeObject *name,
                     size_t argc, DeeObject *const *argv) {
-#define NAME_EQ(x)                                 \
-	(DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
-	 memcmp(DeeString_STR(name), x, sizeof(x) - sizeof(char)) == 0)
 	if (DeeString_Check(base) || DeeBytes_Check(base)) {
 		/* Same as the other call emulator: special
 		 * handling for (string|bytes).(encode|decode) */
-		if (NAME_EQ("encode"))
+		if (DeeString_EQUALS_ASCII(name, "encode"))
 			return emulate_object_encode(base, argc, argv);
-		if (NAME_EQ("decode"))
+		if (DeeString_EQUALS_ASCII(name, "decode"))
 			return emulate_object_decode(base, argc, argv);
 	}
 	/* `Object.id()' should not be evaluated at compile-time! */
-	if (NAME_EQ("id"))
+	if (DeeString_EQUALS_ASCII(name, "id"))
 		return ITER_DONE;
 	if (IS_BLACKLISTED_BASE(base))
 		return ITER_DONE;
 	return DeeObject_CallAttr(base, name, argc, argv);
-#undef NAME_EQ
 }
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 emulate_getattr(DeeObject *base, DeeObject *name) {
-#define NAME_EQ(x)                                 \
-	(DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
-	 memcmp(DeeString_STR(name), x, sizeof(x) - sizeof(char)) == 0)
 	if (DeeString_Check(base)) {
 		/* `string.__hasutf__' and `string.__hashed__' are runtime-volatile. */
-		if (NAME_EQ("__hasutf__") || NAME_EQ("__hashed__"))
+		if (DeeString_EQUALS_ASCII(name, "__hasutf__") ||
+		    DeeString_EQUALS_ASCII(name, "__hashed__"))
 			return ITER_DONE;
 	}
 	return DeeObject_GetAttr(base, name);
-#undef NAME_EQ
 }
 
 
 /* TODO: Add AST optimizers for:
  *
- * - from: >> "foo = {}".format({ repr bar }); // aka. f"foo = {repr bar}"
- *   to:   >> "foo = {!r}".format({ bar });
- *
  * - from: >> print("foo = {}".format({ repr bar })); // aka. print(f"foo = {repr bar}")
  *   to:   >> print("foo = ", repr bar);
  *
- * - from: >> local foo = "{}".format({ bar });
- *   to:   >> local foo = str bar;
- *
- * - from: >> local foo = "value = {}".format({ str bar });
- *   to:   >> local foo = "value = {}".format({ bar });
- *
- * - from: >> local foo = "value = {}".format({ bar });
- *   to:   >> local foo = "value = " + bar;
- *
- * - from: >> local foo = "value = {}, {}".format({ "42", bar });
- *   to:   >> local foo = "value = 42, {}".format({ bar });
- *
  * - from: >> print("value = " + foo + bar);
  *   to:   >> print("value = ", foo, bar);
- *
- * - from: >> "a = {}, ".format({ a }) + "b = {}".format({ b })
- *   to:   >> "a = {}, b = {}".format({ a, b })
- *
- * - from: >> "a = {}, a = {}, ".format({ a, a })
- *   to:   >> "a = {0}, a = {0}".format({ a })     -- Only if "a" doesn't have any side-effects
  */
+
+
+
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *
+(DCALL string_getsubstr)(DeeStringObject *__restrict self, size_t start, size_t end);
+#define string_getsubstr(self, start, end) (DeeObject *)string_getsubstr((DeeStringObject *)(self), start, end)
+
+PRIVATE NONNULL((1, 3, 4)) bool DCALL
+find_string_template_insert_area(/*utf-8*/ char const *__restrict template_str,
+                                 size_t argument_number,
+                                 char const **p_insert_start,
+                                 char const **p_insert_end) {
+	for (;;) {
+		char ch = *template_str++;
+		if (ch == '\0')
+			break;
+		if (ch != '{')
+			continue;
+		if (*template_str == '{') {
+			/* Escaped '{' */
+			++template_str;
+			continue;
+		}
+		if (argument_number) {
+			--argument_number;
+			continue;
+		}
+		*p_insert_start = template_str - 1;
+		while (*template_str && *template_str != '}')
+			++template_str;
+		*p_insert_end = template_str + 1;
+		return true;
+	}
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+unicode_printer_print_brace_escaped(struct unicode_printer *__restrict self,
+                                    /*utf-8*/ char const *__restrict text,
+                                    size_t textlen) {
+	char const *flush_start = text;
+	char const *text_end    = text + textlen;
+	while (text < text_end) {
+		char ch = *text++;
+		if (ch == '{' || ch == '}') {
+			if unlikely(unicode_printer_print(self, text,
+			                                  (size_t)(text_end - flush_start)) < 0)
+				goto err;
+			flush_start = text - 1; /* Repeat the character to escape it. */
+		}
+	}
+	if unlikely(unicode_printer_print(self, flush_start,
+	                                  (size_t)(text_end - flush_start)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+unicode_printer_print_brace_escaped_strob(struct unicode_printer *__restrict self,
+                                          DeeObject *__restrict strob) {
+	char const *utf8 = DeeString_AsUtf8(strob);
+	if unlikely(!utf8)
+		return -1;
+	return unicode_printer_print_brace_escaped(self, utf8, WSTR_LENGTH(utf8));
+}
+
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+string_format(DeeStringObject *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1, 2)) int
+(DCALL ast_optimize_string_format)(struct ast *__restrict ast_callattr_format,
+                                   struct ast *__restrict ast_template_for_ddi,
+                                   DREF DeeObject **__restrict p_template_str,
+                                   struct ast *__restrict ast_args) {
+	DeeObject *template_str = *p_template_str;
+	struct ast **argv       = ast_args->a_multiple.m_astv;
+	size_t i, argc = ast_args->a_multiple.m_astc;
+	ASSERT(ast_callattr_format->a_type == AST_OPERATOR);
+	ASSERT(ast_callattr_format->a_flag == OPERATOR_CALL);
+	ASSERT_OBJECT_TYPE_EXACT(template_str, &DeeString_Type);
+	ASSERT(ast_args->a_type == AST_MULTIPLE);
+	ASSERT(AST_FMULTIPLE_ISSEQUENCE(ast_args->a_flag));
+
+	i = 0;
+again_optimize_arg_at_index_i:
+	for (; i < argc; ++i) {
+		struct ast *arg = argv[i];
+		while (ast_isoperator1(arg, OPERATOR_STR)) {
+			/* from: >> local foo = "value = {}".format({ str bar });
+			 * to:   >> local foo = "value = {}".format({ bar }); */
+			OPTIMIZE_VERBOSEAT(ast_callattr_format, "Optimize `\"{}\".format({ str x })' to `\"{}\".format({ x })'\n");
+			if (ast_assign(arg, arg->a_operator.o_op0))
+				goto err;
+			++optimizer_count;
+		}
+		if (ast_isoperator1(arg, OPERATOR_REPR)) {
+			/* from: >> "foo = {}".format({ repr bar }); // aka. f"foo = {repr bar}"
+			 * to:   >> "foo = {!r}".format({ bar }); */
+			char const *format_utf8;
+			char const *insert_start, *insert_end;
+			format_utf8 = DeeString_AsUtf8(template_str);
+			if unlikely(!format_utf8)
+				goto err;
+			if (find_string_template_insert_area(format_utf8, i,
+			                                     &insert_start,
+			                                     &insert_end) &&
+			    insert_start + 2 == insert_end) {
+				OPTIMIZE_VERBOSEAT(arg, "Optimize `\"{}\".format({ repr x })' to `\"{!r}\".format({ x })'\n");
+				DREF DeeObject *new_template_str;
+				size_t len_before = (size_t)(insert_start - format_utf8);
+				size_t len_after  = (size_t)((format_utf8 + WSTR_LENGTH(format_utf8)) - insert_end);
+				new_template_str = DeeString_Newf("%$s{!r}%$s",
+				                                  len_before, format_utf8,
+				                                  len_after, insert_end);
+				if unlikely(!new_template_str)
+					goto err;
+				Dee_Decref(*p_template_str);
+				*p_template_str = new_template_str; /* Inherit reference */
+				template_str    = new_template_str;
+				if (ast_assign(arg, arg->a_operator.o_op0))
+					goto err;
+				++optimizer_count;
+			}
+		}
+		if (ast_isconstexpr(arg)) {
+			/* from: >> local foo = "value = {}, {}".format({ 42, bar });
+			 * to:   >> local foo = "value = 42, {}".format({ bar }); */
+			char const *format_utf8;
+			char const *insert_start, *insert_end;
+			format_utf8 = DeeString_AsUtf8(template_str);
+			if unlikely(!format_utf8)
+				goto err;
+			if (find_string_template_insert_area(format_utf8, i,
+			                                     &insert_start,
+			                                     &insert_end)) {
+				struct unicode_printer printer;
+				DREF DeeObject *new_template_str;
+				DREF DeeObject *insert_obj_str;
+				size_t len_before;
+				size_t len_after;
+				bool do_repr;
+				if (insert_start + 2 == insert_end) {
+					do_repr = false;
+				} else if (insert_start + 4 == insert_end &&
+				           insert_start[1] == '!' && insert_start[2] == 'r') {
+					do_repr = true;
+				} else {
+					goto dont_do_inline_constant_arg_optimization;
+				}
+				OPTIMIZE_VERBOSEAT(arg, "Optimize `\"{}{}\".format({ \"foo\", x })' to `\"foo{}\".format({ x })'\n");
+				len_before = (size_t)(insert_start - format_utf8);
+				len_after  = (size_t)((format_utf8 + WSTR_LENGTH(format_utf8)) - insert_end);
+				insert_obj_str = do_repr ? DeeObject_Repr(arg->a_constexpr)
+				                         : DeeObject_Str(arg->a_constexpr);
+				if unlikely(!insert_obj_str)
+					goto err;
+				unicode_printer_init(&printer);
+				if unlikely(unicode_printer_print(&printer, format_utf8, len_before) < 0) {
+err_inline_constexpr_printer_insert_obj_str:
+					Dee_Decref(insert_obj_str);
+err_inline_constexpr_printer:
+					unicode_printer_fini(&printer);
+					goto err;
+				}
+				if unlikely(unicode_printer_print_brace_escaped_strob(&printer, insert_obj_str))
+					goto err_inline_constexpr_printer_insert_obj_str;
+				Dee_Decref(insert_obj_str);
+				if unlikely(unicode_printer_print(&printer, insert_end, len_after) < 0)
+					goto err_inline_constexpr_printer;
+				new_template_str = unicode_printer_pack(&printer);
+				if unlikely(!new_template_str)
+					goto err;
+				Dee_Decref(*p_template_str);
+				*p_template_str = new_template_str; /* Inherit reference */
+				template_str    = new_template_str;
+
+				/* Remove the argument at index `i' */
+				ast_decref(arg);
+				--argc;
+				memmovedownp(&argv[i], &argv[i + 1], argc - i);
+				ast_args->a_multiple.m_astc = argc;
+
+				++optimizer_count;
+				goto again_optimize_arg_at_index_i;
+			}
+dont_do_inline_constant_arg_optimization:
+			;
+		}
+	}
+
+	if (argc == 1) {
+		if (DeeString_ENDSWITH_ASCII(template_str, "{}")) {
+			if (DeeString_SIZE(template_str) == 2) {
+				/* from: >> local foo = "{}".format({ bar });
+				 * to:   >> local foo = str bar; */
+				int error;
+				DREF struct ast *str_arg;
+				OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}\".format({ x })' to `str x'\n");
+				str_arg = ast_operator1(OPERATOR_STR, AST_OPERATOR_FNORMAL, argv[0]);
+				if unlikely(!str_arg)
+					goto err;
+				str_arg = ast_setddi(str_arg, &ast_template_for_ddi->a_ddi);
+				error   = ast_assign(ast_callattr_format, str_arg);
+				ast_decref(str_arg);
+				if unlikely(error)
+					goto err;
+				++optimizer_count;
+			} else {
+				/* from: >> local foo = "value = {}".format({ bar });
+				 * to:   >> local foo = "value = " + bar; */
+				struct ast *ast_format_function_name;
+				DREF struct ast *ast_template;
+				DREF struct ast *add_ast;
+				int error;
+				OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"foo{}\".format({ x })' to `\"foo\" + x'\n");
+				template_str = string_getsubstr(template_str, 0, DeeString_SIZE(template_str) - 2);
+				if unlikely(!template_str)
+					goto err;
+				ast_template = ast_setddi(ast_constexpr(template_str), &ast_template_for_ddi->a_ddi);
+				Dee_Decref(template_str);
+				if unlikely(!ast_template)
+					goto err;
+				add_ast = ast_operator2(OPERATOR_ADD, AST_OPERATOR_FNORMAL, ast_template, argv[0]);
+				ast_decref(ast_template);
+				if unlikely(!add_ast)
+					goto err;
+				ast_format_function_name = ast_callattr_format->a_operator.o_op0->a_operator.o_op1;
+				add_ast                  = ast_setddi(add_ast, &ast_format_function_name->a_ddi);
+				error = ast_assign(ast_callattr_format, add_ast);
+				ast_decref(add_ast);
+				if unlikely(error)
+					goto err;
+				++optimizer_count;
+			}
+		} else if (DeeString_EQUALS_ASCII(template_str, "{!r}")) {
+			/* from: >> local foo = "{!r}".format({ bar });
+			 * to:   >> local foo = repr bar; */
+			int error;
+			DREF struct ast *str_arg;
+			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{!r}\".format({ x })' to `repr x'\n");
+			str_arg = ast_operator1(OPERATOR_REPR, AST_OPERATOR_FNORMAL, argv[0]);
+			if unlikely(!str_arg)
+				goto err;
+			str_arg = ast_setddi(str_arg, &ast_template_for_ddi->a_ddi);
+			error   = ast_assign(ast_callattr_format, str_arg);
+			ast_decref(str_arg);
+			if unlikely(error)
+				goto err;
+			++optimizer_count;
+		}
+	}
+
+	return 0;
+err:
+	return -1;
+}
 
 
 INTERN WUNUSED NONNULL((1, 2)) int
@@ -282,12 +514,8 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	 * such as `"foo".upper()' --> `"FOO"', as a special case we try
 	 * to bridge across the GETATTR operator invocation and try to
 	 * directly invoke the function when possible. */
-	if (self->a_flag == OPERATOR_CALL &&
-	    self->a_operator.o_op1 &&
-	    self->a_operator.o_op0->a_type == AST_OPERATOR &&
-	    self->a_operator.o_op0->a_flag == OPERATOR_GETATTR &&
-	    self->a_operator.o_op0->a_operator.o_op1 &&
-	    !(self->a_operator.o_op0->a_operator.o_exflag & (AST_OPERATOR_FVARARGS | AST_OPERATOR_FPOSTOP))) {
+	if (self->a_flag == OPERATOR_CALL && self->a_operator.o_op1 &&
+	    ast_isoperator2(self->a_operator.o_op0, OPERATOR_GETATTR)) {
 		struct ast *base = self->a_operator.o_op0->a_operator.o_op0;
 		struct ast *name = self->a_operator.o_op0->a_operator.o_op1;
 		struct ast *args = self->a_operator.o_op1;
@@ -352,12 +580,96 @@ do_generic:
 			}
 		}
 	}
+
 	/* Optimize stuff like `str(a, "foo", "bar", b)' into `str(a, "foobar", b)' */
 	if (self->a_flag == OPERATOR_STR) {
 		ASSERT(opcount == 1);
 		if (ast_flatten_tostr(self->a_operator.o_op0))
 			goto err;
+		if (ast_predict_type(self->a_operator.o_op0) == &DeeString_Type) {
+			OPTIMIZE_VERBOSE("Optimize `str x' (where `type x === string') into `x'\n");
+			if (ast_assign(self, self->a_operator.o_op0))
+				goto err;
+			++optimizer_count;
+		}
 	}
+
+	if (self->a_flag == OPERATOR_ADD) {
+		ASSERT(opcount == 2);
+		if (ast_isoperator1(self->a_operator.o_op1, OPERATOR_STR) &&
+		    ast_predict_type(self->a_operator.o_op0) == &DeeString_Type) {
+			OPTIMIZE_VERBOSE("Optimize `\"foo\" + str x' into `\"foo\" + x'\n");
+			if (ast_assign(self->a_operator.o_op1,
+			               self->a_operator.o_op1->a_operator.o_op0))
+				goto err;
+			++optimizer_count;
+		}
+
+		/* TODO: from: >> "a = {}, ".format({ a }) + "b = {}".format({ b })
+		 *       to:   >> "a = {}, b = {}".format({ a, b }) */
+
+		/* TODO: from: >> "a = {}, ".format({ a }) + "b = 42"
+		 *       to:   >> "a = {}, b = 42".format({ a }) */
+
+		/* TODO: from: >> "a = 42, " + "b = {}".format({ b })
+		 *       to:   >> "a = 42, b = {}".format({ b }) */
+	}
+	
+	if (self->a_flag == OPERATOR_CALL && self->a_operator.o_op1) {
+		if (ast_isoperator2(self->a_operator.o_op0, OPERATOR_GETATTR)) {
+			struct ast *base = self->a_operator.o_op0->a_operator.o_op0;
+			struct ast *name = self->a_operator.o_op0->a_operator.o_op1;
+			struct ast *args = self->a_operator.o_op1;
+			if (ast_isconstexpr(name) && DeeString_Check(name->a_constexpr)) {
+				if (ast_isconstexpr(base) && DeeString_Check(base->a_constexpr) &&
+				    args->a_type == AST_MULTIPLE && args->a_flag == AST_FMULTIPLE_TUPLE &&
+				    args->a_multiple.m_astc == 1 &&
+				    args->a_multiple.m_astv[0]->a_type == AST_MULTIPLE &&
+				    AST_FMULTIPLE_ISSEQUENCE(args->a_multiple.m_astv[0]->a_flag) &&
+				    DeeString_EQUALS_ASCII(name->a_constexpr, "format")) {
+					unsigned int old_optimizer_count = optimizer_count;
+	
+					/* Special optimizations for `string.format' (since
+					 * that one's used to implement template-strings) */
+					if (ast_optimize_string_format(self, base, &base->a_constexpr, args->a_multiple.m_astv[0]))
+						goto err;
+					if (old_optimizer_count != optimizer_count)
+						goto done;
+				}
+			}
+		} else if (ast_isconstexpr(self->a_operator.o_op0) &&
+		           (DeeObjMethod_Check(self->a_operator.o_op0->a_constexpr) ||
+		            DeeKwObjMethod_Check(self->a_operator.o_op0->a_constexpr))) {
+			struct ast *args = self->a_operator.o_op1;
+			DeeObjMethodObject *objmethod = (DeeObjMethodObject *)self->a_operator.o_op0->a_constexpr;
+			if (DeeString_Check(objmethod->om_this) &&
+			    args->a_type == AST_MULTIPLE && args->a_flag == AST_FMULTIPLE_TUPLE &&
+			    args->a_multiple.m_astc == 1 &&
+			    args->a_multiple.m_astv[0]->a_type == AST_MULTIPLE &&
+			    AST_FMULTIPLE_ISSEQUENCE(args->a_multiple.m_astv[0]->a_flag) &&
+			    objmethod->om_func == (Dee_objmethod_t)&string_format) {
+				unsigned int old_optimizer_count = optimizer_count;
+				if (DeeObject_IsShared(objmethod)) {
+					objmethod = (DeeObjMethodObject *)DeeObject_Copy((DeeObject *)objmethod);
+					if unlikely(!objmethod)
+						goto err;
+					Dee_Decref(self->a_operator.o_op0->a_constexpr);
+					self->a_operator.o_op0->a_constexpr = (DREF DeeObject *)objmethod; /* Inherit reference */
+				}
+	
+				/* Special optimizations for `string.format' (since
+				 * that one's used to implement template-strings) */
+				if (ast_optimize_string_format(self, self, &objmethod->om_this,
+				                               args->a_multiple.m_astv[0]))
+					goto err;
+	
+				if (old_optimizer_count != optimizer_count)
+					goto done;
+			}
+		}
+	}
+
+
 	/* Invoke the specified operator. */
 	/* XXX: `AST_FOPERATOR_POSTOP'? */
 	{

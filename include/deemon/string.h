@@ -514,6 +514,13 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_EQUALS_ASCII(x, ascii_str)            \
 	(DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
 	 memcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+#define DeeString_STARTSWITH_ASCII(x, ascii_str)        \
+	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) && \
+	 memcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+#define DeeString_ENDSWITH_ASCII(x, ascii_str)                                 \
+	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                        \
+	 memcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
+	        ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
 
 /* Return the unicode character-width of characters found in the given string `x' */
 #define DeeString_WIDTH(x)                                          \
