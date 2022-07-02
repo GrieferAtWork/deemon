@@ -83,7 +83,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 #ifdef CONFIG_HOST_WINDOWS
-typedef void(WINAPI *LPGETSYSTEMTIMEPRECISEASFILETIME)(LPFILETIME lpSystemTimeAsFileTime);
+typedef void (WINAPI *LPGETSYSTEMTIMEPRECISEASFILETIME)(LPFILETIME lpSystemTimeAsFileTime);
 static LPGETSYSTEMTIMEPRECISEASFILETIME pdyn_GetSystemTimePreciseAsFileTime = NULL;
 #define GetSystemTimePreciseAsFileTime (*pdyn_GetSystemTimePreciseAsFileTime)
 

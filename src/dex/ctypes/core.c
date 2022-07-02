@@ -1649,7 +1649,7 @@ DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
 	return err_unimplemented_operator(orig_type, OPERATOR_SETRANGE);
 }
 
-INTERN WUNUSED NONNULL((1, 3)) WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {

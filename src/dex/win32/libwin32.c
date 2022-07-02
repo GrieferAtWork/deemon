@@ -1867,7 +1867,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
 {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
-	typedef DWORD(WINAPI * LPGETDLLDIRECTORYW)(DWORD nBufferLength, LPWSTR lpBuffer);
+	typedef DWORD (WINAPI *LPGETDLLDIRECTORYW)(DWORD nBufferLength, LPWSTR lpBuffer);
 	PRIVATE LPGETDLLDIRECTORYW pGetDllDirectoryW = NULL;
 	if (pGetDllDirectoryW == NULL) {
 		LPGETDLLDIRECTORYW new_pGetDllDirectoryW;
@@ -1950,7 +1950,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR
 //[[[end]]]
 {
 	BOOL bResult;
-	typedef BOOL(WINAPI * LPSETDLLDIRECTORYW)(LPCWSTR lpPathName);
+	typedef BOOL (WINAPI *LPSETDLLDIRECTORYW)(LPCWSTR lpPathName);
 	PRIVATE LPSETDLLDIRECTORYW pSetDllDirectoryW = NULL;
 	if (pSetDllDirectoryW == NULL) {
 		LPSETDLLDIRECTORYW new_pSetDllDirectoryW;
@@ -3976,7 +3976,7 @@ done:
 }
 
 #define LOAD_PSAPI_FUNCTION(err_label, returnType, cc, name, args) \
-	typedef returnType(cc *LP_psapi_##name) args;                  \
+	typedef returnType (cc *LP_psapi_##name) args;                 \
 	PRIVATE LP_psapi_##name name = NULL;                           \
 	if (!name) {                                                   \
 		name = (LP_psapi_##name)libwin32_GetPsAPIProc(#name);      \
@@ -4657,7 +4657,7 @@ done:
 }
 
 #define LOAD_NTDLL_FUNCTION(err_label, returnType, cc, name, args) \
-	typedef returnType(cc *LP_psapi_##name) args;                  \
+	typedef returnType (cc *LP_psapi_##name) args;                 \
 	PRIVATE LP_psapi_##name name = NULL;                           \
 	if (!name) {                                                   \
 		name = (LP_psapi_##name)libwin32_GetNtDllProc(#name);      \

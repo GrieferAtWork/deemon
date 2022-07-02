@@ -3434,7 +3434,7 @@ again:
 		if (tp_lhs->tp_cmp) {
 			int opval;
 			DREF DeeObject *opres;
-			WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
+			DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
 			tp_lo = tp_lhs->tp_cmp->tp_lo;
 
 			/* Check for special operators for which we provide optimizations. */

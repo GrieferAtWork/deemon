@@ -217,25 +217,25 @@ typedef void *DeeSysFD; /* FILE * */
 struct Dee_filetype_object {
 	DeeTypeObject       ft_base; /* Underlying type. */
 	/* File operators. (Ignored unless the `TF_HASFILEOPS' feature bit is set) */
-	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
-	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1, 2)) size_t    (DCALL *ft_read)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1, 2)) size_t    (DCALL *ft_write)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
 	/* @param: whence: One of `SEEK_*' from `<stdio.h>' */
-	WUNUSED NONNULL((1))    Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	WUNUSED NONNULL((1))    int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
-	WUNUSED NONNULL((1))    int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-	WUNUSED NONNULL((1))    int       (DCALL *ft_close)(DeeFileObject *__restrict self);
-	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-	WUNUSED NONNULL((1, 2)) size_t    (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1))    Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_close)(DeeFileObject *__restrict self);
+	WUNUSED_T NONNULL_T((1, 2)) size_t    (DCALL *ft_pread)(DeeFileObject *__restrict self, void *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1, 2)) size_t    (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 #define GETC_EOF (-1)
 #define GETC_ERR (-2)
 	/* Read and return one byte, or `GETC_EOF' for EOF and `GETC_ERR' if an error occurred. */
-	WUNUSED NONNULL((1))    int         (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	/* Return a previous read byte. (Required for implementing scanf())
 	 * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
-	WUNUSED NONNULL((1))    int         (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	/* Write a single byte to the file.
 	 * NOTE: The return value of this function is `GETC_EOF' for EOF, `GETC_ERR' for errors, and `0' for success. */
-	WUNUSED NONNULL((1))    int         (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1))    int       (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 };
 
 /* The type object for file types.

@@ -71,7 +71,6 @@ DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen 1
-DECL_BEGIN
 #undef strlen
 #define strlen dee_strlen
 LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
@@ -80,7 +79,6 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 		;
 	return result;
 }
-DECL_END
 #endif /* !CONFIG_HAVE_strlen */
 
 #ifdef __INTELLISENSE__
@@ -143,11 +141,11 @@ typedef Dee_funptr_t dfunptr_t;
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCasePtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashStr)(char const *__restrict str);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCasePtr)(void const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashStr)(char const *__restrict str);
 #ifdef __INTELLISENSE__
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restrict str);
+DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restrict str);
 #else /* __INTELLISENSE__ */
 #define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
 #endif /* !__INTELLISENSE__ */
@@ -157,24 +155,24 @@ DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restr
  * thus allowing this hashing function to return the same value for a string
  * encoded in utf-8, as `Dee_Hash2Byte()' would for a 2-byte, and Dee_Hash4Byte() for
  * a 4-byte string. */
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
 
 /* Same as the regular hashing function, but with the guaranty that
  * for integer arrays where all items contain values `<= 0xff', the
  * return value is identical to a call to `Dee_HashPtr()' with the array
  * contents down-casted to the fitting data type. */
 #ifdef __INTELLISENSE__
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
 #else /* __INTELLISENSE__ */
 #define Dee_Hash1Byte(ptr, n_bytes)     Dee_HashPtr(ptr, n_bytes)
 #define Dee_HashCase1Byte(ptr, n_bytes) Dee_HashCasePtr(ptr, n_bytes)
 #endif /* !__INTELLISENSE__ */
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_Hash4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF ATTR_PURE WUNUSED Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash2Byte)(uint16_t const *__restrict ptr, size_t n_words);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase2Byte)(uint16_t const *__restrict ptr, size_t n_words);
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
 
 /* Generic object hashing: Use the address of the object.
  * HINT: We ignore the lower 6 bits because they're
@@ -363,7 +361,7 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 
 /* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
-typedef NONNULL((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
+typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
 
 
 /* Object weak reference tracing. */
@@ -587,7 +585,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 
 /* Type visit helpers.
  * WARNING: These helper macros are allowed to evaluate their arguments multiple times! */
-typedef void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 #define Dee_Visit(ob)  (*proc)((DeeObject *)Dee_REQUIRES_OBJECT(ob), arg)
 #define Dee_XVisit(ob) (!(ob) || (Dee_Visit(ob), 0))
 #ifdef DEE_SOURCE
@@ -1165,7 +1163,7 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
  * @return: >= 0:     Add this value to the sum of all other positive values, which `DeeObject_EnumAttr()' will then return.
  * @return: -1:       An error occurred and was thrown (This may also be returned by `DeeObject_EnumAttr()' when enumeration fails for some other reason)
  * WARNING: The callback must _NEVER_ be invoked while _ANY_ kind of lock is held! */
-typedef WUNUSED NONNULL((1, 2)) Dee_ssize_t
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
 (DCALL *Dee_enum_t)(DeeObject *__restrict declarator,
                     char const *__restrict attr_name, char const *attr_doc,
                     uint16_t perm, DeeTypeObject *attr_type, void *arg);
@@ -1281,17 +1279,17 @@ struct Dee_type_constructor {
 		} _tp_init_;
 
 		struct {
-			WUNUSED NONNULL((1))    int (DCALL *tp_ctor)(DeeObject *__restrict self);
-			WUNUSED NONNULL((1, 2)) int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-			WUNUSED NONNULL((1, 2)) int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-			WUNUSED NONNULL((1))    int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+			WUNUSED_T NONNULL_T((1))    int (DCALL *tp_ctor)(DeeObject *__restrict self);
+			WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1))    int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 			/* WARNING: A situation can arise in which the `tp_free'
 			 *          operator of a base-class is used instead of
 			 *          the one accompanying `tp_alloc()'.
 			 *       >> Because of this, `tp_alloc' and `tp_free' should only
 			 *          be used for accessing a cache of pre-allocated objects, that
 			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
-			NONNULL((1)) void (DCALL *tp_free)(void *__restrict ob);
+			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
 			union {
 				size_t tp_instance_size;       /* [valid_if(tp_free == NULL)] */
 				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
@@ -1303,7 +1301,7 @@ struct Dee_type_constructor {
 			;
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *           even when `tp_ctor' has been defined as non-NULL! */
-			WUNUSED NONNULL((1))
+			WUNUSED_T NONNULL_T((1))
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
@@ -1321,14 +1319,14 @@ struct Dee_type_constructor {
 			 *       returns a regular structured object containing a copy of the data
 			 *       that was pointed-to by the l-value.
 			 */
-			WUNUSED DREF DeeObject *(DCALL *tp_ctor)(void);
-			WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
-			WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
-			WUNUSED              DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
-			        NONNULL((1)) void            (DCALL *tp_free)(void *__restrict ob);
+			WUNUSED_T                DREF DeeObject *(DCALL *tp_ctor)(void);
+			WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
+			WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
+			WUNUSED_T                DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
+			          NONNULL_T((1)) void            (DCALL *tp_free)(void *__restrict ob);
 			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
-			 *           even when `tp_ctor' has been defined as non-NULL! */
+			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
 			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
@@ -1340,14 +1338,14 @@ struct Dee_type_constructor {
 	;
 
 	/* [0..1] Optional destructor callback. */
-	NONNULL((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self);
+	NONNULL_T((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self);
 
 	/* NOTE: `tp_move_assign' is favored in code such as this:
 	 * >> local my_list = [];
 	 * >> my_list := copy     get_other_list(); // Will try to move-assign the copy.
 	 * >> my_list := deepcopy get_other_list(); // Will try to move-assign the deep copy. */
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
 
 	/* Following a previously successful construction using the `tp_deep_ctor' operator,
 	 * go through all member objects of the type and replace them with deep copies.
@@ -1395,20 +1393,20 @@ struct Dee_type_constructor {
 	 * >>     deepcopy_end();
 	 * >>     return NULL;
 	 */
-	WUNUSED NONNULL((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
 };
 
 struct Dee_type_cast {
 	/* Instance casting operators. */
-	WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_str)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_repr)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1)) int (DCALL *tp_bool)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_str)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_repr)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_bool)(DeeObject *__restrict self);
 };
 
 struct Dee_type_gc {
 	/* Clear all possible references with `NULL' or some
 	 * statically allocated stub-object (e.g.: `Dee_None') */
-	NONNULL((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
+	NONNULL_T((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
 
 	/* Same as `tp_clear', but only clear reachable objects with a `tp_gcprio'
 	 * priority that is `>= prio'. (non-gc types have a priority of `Dee_GC_PRIORITY_LATE')
@@ -1420,7 +1418,7 @@ struct Dee_type_gc {
 	 * should drop references to other objects individually, rather than as
 	 * a bulk, as well as do so with regards of GC priority, when comparing
 	 * `gc_priority' against the return value of `DeeObject_GCPriority()' */
-	NONNULL((1)) void (DCALL *tp_pclear)(DeeObject *__restrict self, unsigned int gc_priority);
+	NONNULL_T((1)) void (DCALL *tp_pclear)(DeeObject *__restrict self, unsigned int gc_priority);
 
 	/* The GC destruction priority of this object (greater
 	 * values are (attempted to be) destroyed before lower ones).
@@ -1526,53 +1524,53 @@ struct Dee_type_math {
 	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed. 
 	 * @return: Dee_INT_UNSIGNED: The value stored in `*result' is unsigned.
 	 * @return: -1:               An error occurred. */
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_int64)(DeeObject *__restrict self, int64_t *__restrict result);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_double)(DeeObject *__restrict self, double *__restrict result);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_int64)(DeeObject *__restrict self, int64_t *__restrict result);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_double)(DeeObject *__restrict self, double *__restrict result);
 
 	/* Cast to `int' (Must return an `DeeInt_Type' object) */
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self);
 
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_inv)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_pos)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *tp_neg)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_add)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_sub)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_mul)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_div)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_mod)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_shl)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_shr)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_and)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_or)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_xor)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_inv)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_pos)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_neg)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_add)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_sub)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_mul)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_div)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_mod)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_shl)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_shr)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_and)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_or)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_xor)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
 
 	/* Inplace operators (Optional; Implemented using functions above when not available) */
-	WUNUSED NONNULL((1)) int (DCALL *tp_inc)(DeeObject **__restrict pself);
-	WUNUSED NONNULL((1)) int (DCALL *tp_dec)(DeeObject **__restrict pself);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_add)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_sub)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_mul)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_div)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_mod)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_shl)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_shr)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_and)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_or)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_xor)(DeeObject **__restrict pself, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DeeObject **__restrict pself);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DeeObject **__restrict pself);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_add)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_sub)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mul)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_div)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_mod)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shl)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_shr)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_and)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_or)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DeeObject **__restrict pself, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DeeObject **__restrict pself, DeeObject *some_object);
 };
 
 struct Dee_type_cmp {
 	/* Compare operators. */
-	WUNUSED NONNULL((1))    Dee_hash_t      (DCALL *tp_hash)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_eq)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_ne)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1))    Dee_hash_t      (DCALL *tp_hash)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_eq)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ne)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
 
 	/* Optional iterator-extensions for providing optimized (but
 	 * less generic) variants for various iterator operations.
@@ -1585,15 +1583,15 @@ struct Dee_type_cmp {
 
 struct Dee_type_seq {
 	/* Sequence operators. */
-	WUNUSED NONNULL((1))          DREF DeeObject *(DCALL *tp_iter_self)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1))          DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1, 2))       DREF DeeObject *(DCALL *tp_contains)(DeeObject *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 2))       DREF DeeObject *(DCALL *tp_get)(DeeObject *self, DeeObject *index);
-	WUNUSED NONNULL((1, 2))       int             (DCALL *tp_del)(DeeObject *self, DeeObject *index);
-	WUNUSED NONNULL((1, 2, 3))    int             (DCALL *tp_set)(DeeObject *self, DeeObject *index, DeeObject *value);
-	WUNUSED NONNULL((1, 2, 3))    DREF DeeObject *(DCALL *tp_range_get)(DeeObject *self, DeeObject *begin, DeeObject *end);
-	WUNUSED NONNULL((1, 2, 3))    int             (DCALL *tp_range_del)(DeeObject *self, DeeObject *begin, DeeObject *end);
-	WUNUSED NONNULL((1, 2, 3, 4)) int             (DCALL *tp_range_set)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter_self)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1, 2))       DREF DeeObject *(DCALL *tp_contains)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2))       DREF DeeObject *(DCALL *tp_get)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 2))       int             (DCALL *tp_del)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_set)(DeeObject *self, DeeObject *index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2, 3))    DREF DeeObject *(DCALL *tp_range_get)(DeeObject *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_range_del)(DeeObject *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int             (DCALL *tp_range_set)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
@@ -1602,16 +1600,16 @@ struct Dee_type_seq {
 
 struct Dee_type_attr {
 	/* Attribute operators. */
-	WUNUSED NONNULL((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *name);
-	WUNUSED NONNULL((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *name);
-	WUNUSED NONNULL((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
-	WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t     (DCALL *tp_enumattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *name);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *name);
+	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t     (DCALL *tp_enumattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
 };
 
 struct Dee_type_with {
 	/* With-statement operators. */
-	WUNUSED NONNULL((1)) int (DCALL *tp_enter)(DeeObject *__restrict self);
-	WUNUSED NONNULL((1)) int (DCALL *tp_leave)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_enter)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_leave)(DeeObject *__restrict self);
 };
 
 typedef struct dee_bytesbuffer DeeBuffer;
@@ -1621,7 +1619,7 @@ struct dee_bytesbuffer {
 	size_t          bb_size;  /* [const] Size of the buffer (in bytes) */
 #ifndef __INTELLISENSE__
 	/* [0..1][INTERNAL] used to speed up `DeeObject_PutBuf()' */
-	NONNULL((1, 2))
+	NONNULL_T((1, 2))
 	void    (DCALL *bb_put)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
 #endif /* !__INTELLISENSE__ */
 };
@@ -1637,7 +1635,7 @@ struct Dee_type_buffer {
 
 	/* When implemented, `tp_getbuf' must fill in at least `bb_base' and `bb_size'
 	 * @param: flags: Set of `DEE_BUFFER_F*' */
-	WUNUSED NONNULL((1, 2))
+	WUNUSED_T NONNULL_T((1, 2))
 	int  (DCALL *tp_getbuf)(DeeObject *__restrict self,
 	                        DeeBuffer *__restrict info,
 	                        unsigned int flags);
@@ -1646,7 +1644,7 @@ struct Dee_type_buffer {
 #define Dee_BUFFER_FMASK     0x0001 /* Mask of known buffer flags. */
 	/* Release a previously acquired buffer.
 	 * @param: flags: Set of `DEE_BUFFER_F*' (same as were passed to `tp_getbuf') */
-	NONNULL((1, 2))
+	NONNULL_T((1, 2))
 	void (DCALL *tp_putbuf)(DeeObject *__restrict self,
 	                        DeeBuffer *__restrict info,
 	                        unsigned int flags);
@@ -1678,11 +1676,11 @@ struct Dee_type_buffer {
  *                to be written as `DeeObject *const *__restrict'
  * @return: * :   The function return value.
  * @return: NULL: An error occurred. */
-typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
-typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/ DeeObject *kw);
-typedef WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
-typedef WUNUSED NONNULL((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
-typedef WUNUSED NONNULL((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_kwobjmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv, /*nullable*/ DeeObject *kw);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
 
 #ifdef DEE_SOURCE
 typedef Dee_objmethod_t   dobjmethod_t;
@@ -2213,7 +2211,7 @@ Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id);
 DFUNDEF WUNUSED NONNULL((2)) uint16_t DCALL
 Dee_OperatorFromName(DeeTypeObject *typetype,
                      char const *__restrict name);
-DFUNDEF WUNUSED NONNULL((2)) uint16_t DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 3) uint16_t DCALL
 Dee_OperatorFromNameLen(DeeTypeObject *typetype,
                         char const *__restrict name,
                         size_t namelen);
@@ -2347,15 +2345,15 @@ struct Dee_type_object {
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
-	NONNULL((1, 2)) void        (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
+	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `type_inherit_*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
 	struct Dee_type_math               *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
 	struct Dee_type_cmp                *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
 	struct Dee_type_seq                *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_iter_next)(DeeObject *__restrict self);
 	struct Dee_type_attr Dee_tpconst   *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
 	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
@@ -2368,7 +2366,7 @@ struct Dee_type_object {
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
 	/* [0..1] Same as `tp_call', but using keywords. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
 	                                    DeeObject *const *argv, DeeObject *kw);
 	/* Lazily-filled hash-table of instance members.
@@ -2379,7 +2377,7 @@ struct Dee_type_object {
 	struct Dee_membercache  tp_cache;
 	struct Dee_membercache  tp_class_cache;
 	struct Dee_class_desc  *tp_class;    /* [0..1] Class descriptor (Usually points below this type object). */
-	Dee_WEAKREF_SUPPORT     /* Weak reference support. */
+	Dee_WEAKREF_SUPPORT                  /* Weak reference support. */
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
 	/* ... `struct class_desc' of class types goes here */
 };
@@ -2912,7 +2910,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc, /*inherit(on_success)*/ DREF DeeObject *const *argv);
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */
-typedef WUNUSED NONNULL((2)) Dee_ssize_t
+typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
 (DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
 #ifdef DEE_SOURCE
 typedef Dee_formatprinter_t dformatprinter;
@@ -2964,14 +2962,18 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
 DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *__restrict elem);
+#ifdef DEE_SOURCE
+typedef Dee_foreach_t dforeach_t;
+#endif /* DEE_SOURCE */
+
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.
  * Otherwise, return the sum of all calls to it.
  * NOTE: This function does some special optimizations for known sequence types.
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-typedef WUNUSED NONNULL((2)) Dee_ssize_t (DCALL *dforeach_t)(void *arg, DeeObject *__restrict elem);
 DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeObject_Foreach)(DeeObject *__restrict self, dforeach_t proc, void *arg);
+(DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int

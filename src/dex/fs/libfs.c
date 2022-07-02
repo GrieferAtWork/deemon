@@ -149,12 +149,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL default_DeeTime_New(uint64_t microseconds)
 	                           microseconds);
 }
 
-typedef DREF DeeObject *(DCALL *PDeeTime_New)(uint64_t microseconds);
-PRIVATE PDeeTime_New p_DeeTime_New = NULL;
+typedef DREF DeeObject *(DCALL *PDEETIME_NEW)(uint64_t microseconds);
+PRIVATE PDEETIME_NEW p_DeeTime_New = NULL;
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeTime_New(uint64_t microseconds) {
-	PDeeTime_New funp = p_DeeTime_New;
+	PDEETIME_NEW funp = p_DeeTime_New;
 	if (!funp) {
 		/* Try to lookup the object as a native function pointer. */
 		*(void **)&funp = DeeModule_GetNativeSymbol(TIME_MODULE, "DeeTime_New");

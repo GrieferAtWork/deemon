@@ -106,7 +106,7 @@ DECL_BEGIN
 #define r2 13
 #define m  5
 #define n  0xe6546b64
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	uint8_t const *tail;
 	uint32_t k1;
@@ -150,7 +150,7 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	uint16_t const *tail;
 	uint32_t k1;
@@ -201,7 +201,7 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	uint32_t const *tail;
 	uint32_t k1;
@@ -256,7 +256,7 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	uint8_t const *tail;
 	uint32_t k1;
@@ -309,7 +309,7 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	uint16_t const *tail;
 	uint32_t k1;
@@ -360,7 +360,7 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	uint32_t const *tail;
 	uint32_t k1;
@@ -414,7 +414,7 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 	char const *end = ptr + n_bytes;
 	uint32_t k1     = 0;
@@ -470,7 +470,7 @@ done:
 	return hash;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 	char const *end = ptr + n_bytes;
 	uint32_t k1     = 0;
@@ -543,7 +543,7 @@ done:
 #define m    0xc6a4a7935bd1e995ull
 #define r    47
 //#define seed 0xe17a1465
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
 	dhash_t h = seed ^ (n_bytes * m);
@@ -591,7 +591,7 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
 	dhash_t h = seed ^ (n_words * m);
@@ -647,7 +647,7 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
 	dhash_t h = seed ^ (n_dwords * m);
@@ -703,7 +703,7 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
 	dhash_t h = seed ^ (n_bytes * m);
@@ -762,7 +762,7 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
 	dhash_t h = seed ^ (n_words * m);
@@ -834,7 +834,7 @@ Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
 	dhash_t h   = seed ^ (n_dwords * m);
@@ -906,7 +906,7 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
 	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
@@ -978,7 +978,7 @@ done:
 	return h;
 }
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(1, 2) dhash_t DCALL
 Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
 	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
@@ -1080,7 +1080,7 @@ done:
 #define BEGIN_TRYALLOC() DBG_ALIGNMENT_DISABLE()
 #define END_TRYALLOC()   DBG_ALIGNMENT_ENABLE()
 
-PUBLIC ATTR_PURE dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_IN(1) dhash_t DCALL
 Dee_HashStr(char const *__restrict str) {
 	return Dee_HashPtr(str, strlen(str));
 }

@@ -137,7 +137,7 @@ INTERN_CONST struct opinfo const file_opinfo[FILE_OPERATOR_COUNT] = {
 	/* [FILE_OPERATOR_PUTC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,            OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_putc),   "putc",   "putc",   "ft_putc",   }
 };
 
-PUBLIC WUNUSED NONNULL((2)) uint16_t DCALL
+PUBLIC WUNUSED ATTR_INS(2, 3) uint16_t DCALL
 Dee_OperatorFromNameLen(DeeTypeObject *typetype,
                         char const *__restrict name,
                         size_t namelen) {

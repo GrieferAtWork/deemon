@@ -2293,7 +2293,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	{ "id", &object_id_get, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "Returns a unique id identifying this specific object instance") },
+	      "Returns a unique id identifying @this specific object instance") },
 
 	/* Utility function: Return the size of a given object (in bytes) */
 	{ STR___sizeof__, &object_sizeof, NULL, NULL,
@@ -2304,9 +2304,9 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 
 PRIVATE struct type_member tpconst object_members[] = {
 	TYPE_MEMBER_FIELD_DOC("type", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
-	                      "->?DType\nThe Type of @this object (same as ${type this})"),
+	                      "->?DType\nThe type of @this object (same as ${type this})"),
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
-	                      "->?Dint\nThe number of references currently existing for this object"),
+	                      "->?Dint\nThe number of references currently existing for @this object"),
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
 	                      "->?DType\nAlias for ?#type"),
 	TYPE_MEMBER_END

@@ -67,7 +67,7 @@ struct cmd_option {
 	                                      *  However, when `CMD_FLONG1DASH' is set, a single leading dash is accepted as well. */
 	union {
 		void       *co_hook;
-		WUNUSED
+		WUNUSED_T
 		int (DCALL *co_func)(char *arg); /* [0..1][valid_if(!CMD_FGROUP)] Function called when the argument is encountered.
 		                                  *  When NULL, the command acts as a terminating sentinel.
 		                                  *  @param: arg: The NUL-terminated argument passed to the command,

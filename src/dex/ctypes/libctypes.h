@@ -135,74 +135,74 @@ typedef struct cfunction_type_object DeeCFunctionTypeObject;
 
 struct stype_cast {
 	/* Structured casting operators. */
-	WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *st_str)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *st_repr)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1)) int             (DCALL *st_bool)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *st_str)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *st_repr)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1)) int             (DCALL *st_bool)(DeeSTypeObject *tp_self, void *self);
 };
 struct stype_math {
 	/* Structured math operators. */
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_int32)(DeeSTypeObject *tp_self, void *self, int32_t *result);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_int64)(DeeSTypeObject *tp_self, void *self, int64_t *result);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_double)(DeeSTypeObject *tp_self, void *self, double *result);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *st_int)(DeeSTypeObject *tp_self, void *self); /* Cast to `int' */
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *st_inv)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *st_pos)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *st_neg)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_add)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_sub)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_mul)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_div)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_mod)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_shl)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_shr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_and)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_or)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_xor)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_pow)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1))    int             (DCALL *st_inc)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1))    int             (DCALL *st_dec)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_add)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_sub)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_mul)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_div)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_mod)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_shl)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_shr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_and)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_or)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_xor)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) int             (DCALL *st_inplace_pow)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_int32)(DeeSTypeObject *tp_self, void *self, int32_t *result);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_int64)(DeeSTypeObject *tp_self, void *self, int64_t *result);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_double)(DeeSTypeObject *tp_self, void *self, double *result);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *st_int)(DeeSTypeObject *tp_self, void *self); /* Cast to `int' */
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *st_inv)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *st_pos)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *st_neg)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_add)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_sub)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_mul)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_div)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_mod)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_shl)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_shr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_and)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_or)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_xor)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_pow)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *st_inc)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *st_dec)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_add)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_sub)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_mul)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_div)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_mod)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_shl)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_shr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_and)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_or)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_xor)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *st_inplace_pow)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 };
 
 struct stype_cmp {
 	/* Structured compare operators. */
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_eq)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_ne)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_lo)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_le)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_gr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *st_ge)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_eq)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_ne)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_lo)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_le)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_gr)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *st_ge)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 };
 
 struct stype_seq {
 	/* Structured sequence operators. */
-	WUNUSED NONNULL((1))          DREF DeeObject *(DCALL *stp_iter_self)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1))          DREF DeeObject *(DCALL *stp_size)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED NONNULL((1, 3))       DREF DeeObject *(DCALL *stp_contains)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED NONNULL((1, 3))       DREF DeeObject *(DCALL *stp_get)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
-	WUNUSED NONNULL((1, 3))       int             (DCALL *stp_del)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
-	WUNUSED NONNULL((1, 3, 4))    int             (DCALL *stp_set)(DeeSTypeObject *tp_self, void *self, DeeObject *index, DeeObject *value);
-	WUNUSED NONNULL((1, 3, 4))    DREF DeeObject *(DCALL *stp_range_get)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
-	WUNUSED NONNULL((1, 3, 4))    int             (DCALL *stp_range_del)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
-	WUNUSED NONNULL((1, 3, 4, 5)) int             (DCALL *stp_range_set)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *stp_iter_self)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *stp_size)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *stp_contains)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *stp_get)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 3))       int             (DCALL *stp_del)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *stp_set)(DeeSTypeObject *tp_self, void *self, DeeObject *index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 3, 4))    DREF DeeObject *(DCALL *stp_range_get)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *stp_range_del)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 3, 4, 5)) int             (DCALL *stp_range_set)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 };
 
 struct stype_attr {
 	/* Structured attribute operators. */
-	WUNUSED NONNULL((1, 3))    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
-	WUNUSED NONNULL((1, 3))    int             (DCALL *st_delattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
-	WUNUSED NONNULL((1, 3, 4)) int             (DCALL *st_setattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name, DeeObject *value);
-	WUNUSED NONNULL((1, 2))    dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 3))    DREF DeeObject *(DCALL *st_getattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
+	WUNUSED_T NONNULL_T((1, 3))    int             (DCALL *st_delattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name);
+	WUNUSED_T NONNULL_T((1, 3, 4)) int             (DCALL *st_setattr)(DeeSTypeObject *tp_self, void *self, /*String*/ DeeObject *name, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2))    dssize_t        (DCALL *st_enumattr)(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
 };
 
 
@@ -242,13 +242,13 @@ struct stype_object {
 #endif /* !CONFIG_NO_CFUNCTION */
 	size_t                  st_sizeof;    /* [const] # of bytes required by instances of this type. */
 	size_t                  st_align;     /* [const] Alignment required by this type. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	int             (DCALL *st_init)(DeeSTypeObject *tp_self, void *self,
 	                                 size_t argc, DeeObject *const *argv);
-	WUNUSED NONNULL((1, 3))
+	WUNUSED_T NONNULL_T((1, 3))
 	int             (DCALL *st_assign)(DeeSTypeObject *tp_self, void *self, DeeObject *value);
 	struct stype_cast       st_cast;      /* Type casting operators. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *tp_self, void *self,
 	                                 size_t argc, DeeObject *const *argv);
 	struct stype_math const *st_math;      /* [0..1] Math related operators. */
@@ -457,7 +457,7 @@ INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Contains(DeeSType
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_DelItem(DeeSTypeObject *tp_self, void *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeStruct_SetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 3, 4)) WUNUSED DREF DeeObject *DCALL DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 3, 4, 5)) int DCALL DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name);

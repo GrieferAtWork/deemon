@@ -86,12 +86,12 @@ struct Dee_dex {
 	 *       Any other return value can be used to indicate an error having
 	 *       been thrown, which in turn will cause the caller to propagate
 	 *       said error. */
-	WUNUSED NONNULL((1))
+	WUNUSED_T NONNULL_T((1))
 	int        (DCALL *d_init)(DeeDexObject *__restrict self);
 	/* WARNING: `d_fini()' must not attempt to add more references to `self'.
 	 *           When an extension module is supposed to get unloaded, it _has_
 	 *           to be unloaded and there is no way around that! */
-	NONNULL((1))
+	NONNULL_T((1))
 	void       (DCALL *d_fini)(DeeDexObject *__restrict self);
 	union {
 	    char const *const *d_import_names; /* [1..1|SENTINEL([0..0])][0..1]
@@ -109,7 +109,7 @@ struct Dee_dex {
 	 * This function should be implemented to clear global caches or object hooks.
 	 * @return: true:  Something was cleared.
 	 * @return: false: Nothing was cleared. (Same as not implementing this callback) */
-	NONNULL((1))
+	NONNULL_T((1))
 	bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
 #ifndef CONFIG_NO_NOTIFICATIONS
 	struct Dee_dex_notification *d_notify;     /* [0..1] Dex notification hooks. */
