@@ -71,7 +71,8 @@ public:
 
 public: /* string from deemon */
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(string, Sequence<string>)
-	string() DEE_CXX_NOTHROW: Sequence<string>(nonnull(Dee_EmptyString)) {}
+	string() DEE_CXX_NOTHROW
+	    : Sequence<string>(nonnull(Dee_EmptyString)) {}
 	string(/*utf-8*/ char const *__restrict utf8_str)
 	    : Sequence<string>(inherit(DeeString_NewUtf8(utf8_str, strlen(utf8_str), STRING_ERROR_FSTRICT))) {}
 	string(/*utf-8*/ char const *__restrict utf8_str, size_t utf8_len, unsigned int error_mode = STRING_ERROR_FSTRICT)

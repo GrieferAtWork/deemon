@@ -585,7 +585,8 @@ class Sequence: public detail::sequence_base {
 		    : m_ptr(ptr)
 		    , m_bgn(bgn)
 		    , m_end(end) {}
-		range_proxy_io(range_proxy_io const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
+		range_proxy_io(range_proxy_io const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr)
 		    , m_bgn(right.m_bgn)
 		    , m_end(right.m_end) {}
 		DREF DeeObject *(getref)() const {
@@ -613,7 +614,8 @@ class Sequence: public detail::sequence_base {
 		    : m_ptr(ptr)
 		    , m_bgn(bgn)
 		    , m_end(end) {}
-		range_proxy_oi(range_proxy_oi const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
+		range_proxy_oi(range_proxy_oi const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr)
 		    , m_bgn(right.m_bgn)
 		    , m_end(right.m_end) {}
 		DREF DeeObject *(getref)() const {
@@ -670,8 +672,10 @@ class Sequence: public detail::sequence_base {
 		DeeObject *m_ptr;
 
 	public:
-		first_proxy(DeeObject *ptr) DEE_CXX_NOTHROW: m_ptr(ptr) {}
-		first_proxy(first_proxy const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr) {}
+		first_proxy(DeeObject *ptr) DEE_CXX_NOTHROW
+		    : m_ptr(ptr) { }
+		first_proxy(first_proxy const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr) { }
 		bool(bound)() const {
 			int result = DeeObject_BoundAttrString(m_ptr, "first");
 			if (result == -1)
@@ -694,8 +698,10 @@ class Sequence: public detail::sequence_base {
 		DeeObject *m_ptr;
 
 	public:
-		last_proxy(DeeObject *ptr) DEE_CXX_NOTHROW: m_ptr(ptr) {}
-		last_proxy(last_proxy const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr) {}
+		last_proxy(DeeObject *ptr) DEE_CXX_NOTHROW
+		    : m_ptr(ptr) { }
+		last_proxy(last_proxy const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr) { }
 		bool(bound)() const {
 			int result = DeeObject_BoundAttrString(m_ptr, "last");
 			if (result == -1)

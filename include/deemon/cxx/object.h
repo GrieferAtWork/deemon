@@ -344,19 +344,26 @@ public:
 		throw_if_nonzero(DeeObject_InplaceDeepCopy(&this->m_ptr));                 \
 		return *this;                                                              \
 	}
-	object_base() DEE_CXX_NOTHROW: m_ptr(NULL) {}
-	object_base(object_base &&right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr) {
+	object_base() DEE_CXX_NOTHROW
+	    : m_ptr(NULL) {}
+	object_base(object_base &&right) DEE_CXX_NOTHROW
+	    : m_ptr(right.m_ptr) {
 		right.m_ptr = NULL;
 	}
-	object_base(object_base const &right) DEE_CXX_NOTHROW: m_ptr(incref(right.m_ptr)) {}
+	object_base(object_base const &right) DEE_CXX_NOTHROW
+	    : m_ptr(incref(right.m_ptr)) {}
 	object_base(DeeObject *obj)
 	    : m_ptr(incref(throw_if_null(obj))) {}
-	object_base(obj_nonnull obj) DEE_CXX_NOTHROW: m_ptr(incref(obj)) {}
-	object_base(obj_maybenull obj) DEE_CXX_NOTHROW: m_ptr(xincref(obj)) {}
+	object_base(obj_nonnull obj) DEE_CXX_NOTHROW
+	    : m_ptr(incref(obj)) {}
+	object_base(obj_maybenull obj) DEE_CXX_NOTHROW
+	    : m_ptr(xincref(obj)) {}
 	object_base(obj_inherited obj)
 	    : m_ptr(throw_if_null(obj)) {}
-	object_base(obj_nonnull_inherited obj) DEE_CXX_NOTHROW: m_ptr(obj) {}
-	object_base(obj_maybenull_inherited obj) DEE_CXX_NOTHROW: m_ptr(obj) {}
+	object_base(obj_nonnull_inherited obj) DEE_CXX_NOTHROW
+	    : m_ptr(obj) {}
+	object_base(obj_maybenull_inherited obj) DEE_CXX_NOTHROW
+	    : m_ptr(obj) {}
 	~object_base() DEE_CXX_NOTHROW {
 		Dee_XDecref(this->m_ptr);
 	}

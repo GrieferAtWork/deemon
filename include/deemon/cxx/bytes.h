@@ -65,7 +65,8 @@ public: /* Raw data access */
 
 public: /* Constructors */
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Bytes, Sequence)
-	Bytes() DEE_CXX_NOTHROW: Sequence(nonnull(Dee_EmptyBytes)) {}
+	Bytes() DEE_CXX_NOTHROW
+	    : Sequence(nonnull(Dee_EmptyBytes)) {}
 	Bytes(std::initializer_list<uint8_t> const &data)
 	    : Sequence(inherit(DeeBytes_NewBufferData(data.begin(), data.size()))) {}
 	Bytes(DeeObject *owner, void *base, size_t num_bytes, unsigned int flags)
@@ -119,16 +120,16 @@ public: /* Helper functions */
 		return inherit(DeeBytes_NewSubViewRo(this->ptr(), base, num_bytes));
 	}
 	void resize(size_t num_bytes) {
-		if likely(DeeBytes_Check(this->ptr()))
+		if likely(DeeBytes_Check(this->ptr())) {
 			m_ptr = throw_if_null(DeeBytes_ResizeBuffer(this->ptr(), num_bytes));
-		else {
+		} else {
 			Sequence::resize(num_bytes);
 		}
 	}
 	void truncate(size_t num_bytes) {
-		if likely(DeeBytes_Check(this->ptr()))
+		if likely(DeeBytes_Check(this->ptr())) {
 			m_ptr = DeeBytes_TruncateBuffer(this->ptr(), num_bytes);
-		else {
+		} else {
 			Sequence::resize(num_bytes);
 		}
 	}

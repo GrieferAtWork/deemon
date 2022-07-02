@@ -46,6 +46,14 @@ assert float.inf.isinf;
 assert !float.inf.isnormal;
 assert !float.inf.isfinite;
 
+assert (-float.inf) != float.inf;
+assert float.inf.abs == float.inf;
+assert (-float.inf).abs == float.inf;
+assert !(-float.inf).isnan;
+assert (-float.inf).isinf;
+assert !(-float.inf).isnormal;
+assert !(-float.inf).isfinite;
+
 assert float.nan.isnan;
 assert !float.nan.isinf;
 assert !float.nan.isnormal;

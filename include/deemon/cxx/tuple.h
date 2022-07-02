@@ -43,7 +43,8 @@ public:
 	}
 
 public:
-	Tuple() DEE_CXX_NOTHROW: Sequence<T>(nonnull(Dee_EmptyTuple)) {}
+	Tuple() DEE_CXX_NOTHROW
+	    : Sequence<T>(nonnull(Dee_EmptyTuple)) {}
 	Tuple(std::initializer_list<T> const &items)
 	    : Sequence<T>(inherit(DeeTuple_NewVector(items.size(), (DeeObject **)items.begin()))) {}
 	Tuple(std::initializer_list<DeeObject *> const &items)

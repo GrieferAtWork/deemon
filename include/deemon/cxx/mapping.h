@@ -88,9 +88,11 @@ class Mapping: public detail::mapping_base {
 		DeeObject *m_key;
 
 	public:
-		item_proxy_obj(DeeObject *ptr, DeeObject *str) DEE_CXX_NOTHROW: m_ptr(ptr)
+		item_proxy_obj(DeeObject *ptr, DeeObject *str) DEE_CXX_NOTHROW
+		    : m_ptr(ptr)
 		    , m_key(str) {}
-		item_proxy_obj(item_proxy_obj const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
+		item_proxy_obj(item_proxy_obj const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr)
 		    , m_key(right.m_key) {}
 		bool has() const {
 			return throw_if_negative(DeeObject_HasItem(m_ptr, m_key)) != 0;
@@ -126,13 +128,16 @@ class Mapping: public detail::mapping_base {
 		Dee_hash_t m_hsh;
 
 	public:
-		item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW: m_ptr(ptr)
+		item_proxy_sth(DeeObject *ptr, char const *str) DEE_CXX_NOTHROW
+		    : m_ptr(ptr)
 		    , m_str(str)
 		    , m_hsh(Dee_HashStr(str)) {}
-		item_proxy_sth(DeeObject *ptr, char const *str, Dee_hash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr)
+		item_proxy_sth(DeeObject *ptr, char const *str, Dee_hash_t hsh) DEE_CXX_NOTHROW
+		    : m_ptr(ptr)
 		    , m_str(str)
 		    , m_hsh(hsh) {}
-		item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
+		item_proxy_sth(item_proxy_sth const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr)
 		    , m_str(right.m_str)
 		    , m_hsh(right.m_hsh) {}
 		bool has() const {
@@ -170,11 +175,13 @@ class Mapping: public detail::mapping_base {
 		Dee_hash_t m_hsh;
 
 	public:
-		item_proxy_shn(DeeObject *ptr, char const *str, size_t len, Dee_hash_t hsh) DEE_CXX_NOTHROW: m_ptr(ptr)
+		item_proxy_shn(DeeObject *ptr, char const *str, size_t len, Dee_hash_t hsh) DEE_CXX_NOTHROW
+		    : m_ptr(ptr)
 		    , m_str(str)
 		    , m_len(len)
 		    , m_hsh(hsh) {}
-		item_proxy_shn(item_proxy_shn const &right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr)
+		item_proxy_shn(item_proxy_shn const &right) DEE_CXX_NOTHROW
+		    : m_ptr(right.m_ptr)
 		    , m_str(right.m_str)
 		    , m_len(right.m_len)
 		    , m_hsh(right.m_hsh) {}
