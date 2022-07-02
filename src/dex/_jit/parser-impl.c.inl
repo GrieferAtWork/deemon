@@ -1537,6 +1537,15 @@ skip_rbrck_and_done:
 		tok_length = (size_t)((char *)self->jl_tokend - tok_begin);
 		switch (tok_length) {
 
+		case 1:
+			/* Support for template strings! */
+			if ((tok_begin[0] == 'f' || tok_begin[0] == 'F') &&
+			    (tok_begin[1] == '\"' || tok_begin[1] == '\'')) {
+				result = FUNC(TemplateString)(self);
+				goto done;
+			}
+			break;
+
 		case 2:
 			if (tok_begin[0] == 'i' &&
 			    tok_begin[1] == 'f') {
@@ -4013,6 +4022,9 @@ done:
 DECL_END
 
 #ifndef __INTELLISENSE__
+
+#include "parser-impl-template-string.c.inl"
+/**/
 
 #include "parser-impl-class.c.inl"
 /**/

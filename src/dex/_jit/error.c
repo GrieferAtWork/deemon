@@ -747,6 +747,36 @@ syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self) {
 	                       JITLexer_TokPtr(self));
 }
 
+INTERN ATTR_COLD int FCALL
+syn_template_string_unterminated(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError, "Unterminated template string");
+}
+
+INTERN ATTR_COLD int FCALL
+syn_template_string_unmatched_lbrace(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError, "Unmatched '{' in template string");
+}
+
+INTERN ATTR_COLD int FCALL
+syn_template_string_unmatched_rbrace(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError, "Unmatched '}' in template string");
+}
+
+INTERN ATTR_COLD int FCALL
+syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError, "No digits, or hex-chars found after `\\x', `\\u' or `\\U'");
+}
+
+INTERN ATTR_COLD int FCALL
+syn_template_string_undefined_escape(JITLexer *__restrict self, int ch) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError, "Unknown escape character `%c' in template string", ch);
+}
+
 
 
 

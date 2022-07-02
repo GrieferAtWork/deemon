@@ -27,6 +27,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #include "../../runtime/strings.h"
 
@@ -122,17 +123,16 @@ parse_current_token_as_template_string:
 		case '{': {
 			DREF struct ast *expr_ast;
 			uint32_t old_flags;
-
-			/* Flush */
-			if unlikely(unicode_printer_print(&format_printer, flush_start,
-			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
-				goto err;
 			if (*text_iter == '{') {
-				/* Escaped '}' */
-				flush_start = text_iter - 1; /* Next flush starts on-top of the first '{' */
+				/* Escaped '{' */
 				++text_iter;
 				break;
 			}
+
+			/* Flush template text until '{' */
+			if unlikely(unicode_printer_print(&format_printer, flush_start,
+			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+				goto err;
 
 			/* Parse an expression at this position. */
 			token.t_file->f_pos = text_iter;
@@ -202,8 +202,10 @@ err_old_flags:
 				}
 			}
 
-			if (tok == '!') {
+			if (tok == '!' || tok == ':') {
 				char *rbrace;
+				/* TODO: This needs to support recursive '{' + '}' pairs! */
+				/* TODO: This needs to support \-escape sequences! */
 				rbrace = (char *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
 				if unlikely(!rbrace) {
 					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
@@ -349,7 +351,6 @@ parse_hex_integer:
 				count       = 0;
 				digit_value = 0;
 				while (count < max_digits) {
-					struct unitraits *desc;
 					uint32_t ch32;
 					uint8_t val;
 					char *old_iter;
@@ -360,6 +361,7 @@ parse_hex_integer:
 					} else if (ch32 >= 'A' && ch32 <= 'F') {
 						val = 10 + ((uint8_t)ch32 - 'A');
 					} else {
+						struct unitraits const *desc;
 						desc = DeeUni_Descriptor(ch32);
 						if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
 						    desc->ut_digit >= 10) {
@@ -393,7 +395,7 @@ parse_oct_integer:
 					/* Octal-encoded integer. */
 					count = 1;
 					while (count < 3) {
-						struct unitraits *desc;
+						struct unitraits const *desc;
 						uint32_t ch32;
 						char *old_iter;
 						old_iter = text_iter;
@@ -414,7 +416,7 @@ parse_oct_integer:
 				}
 				if ((unsigned char)ch >= 0xc0) {
 					uint32_t ch32;
-					struct unitraits *desc;
+					struct unitraits const *desc;
 					--text_iter;
 					ch32 = utf8_readchar((char const **)&text_iter, text_end);
 					desc = DeeUni_Descriptor(ch32);

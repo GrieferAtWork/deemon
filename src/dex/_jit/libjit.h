@@ -949,6 +949,9 @@ JITLexer_ParseLookupMode(JITLexer *__restrict self,
                          unsigned int *__restrict pmode);
 
 
+/* Parse or skip a template string. */
+INTERN WUNUSED DREF DeeObject *FCALL JITLexer_EvalTemplateString(JITLexer *__restrict self);
+INTERN int FCALL JITLexer_SkipTemplateString(JITLexer *__restrict self);
 
 
 /* Skip evaluation functions. (same as the regular functions,
@@ -1503,6 +1506,11 @@ INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_dots_or_colon(JITLexer *
 INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rbrace(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_rparen(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_template_string_unterminated(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_template_string_unmatched_lbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_template_string_unmatched_rbrace(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_template_string_no_digit_or_hex_after_backslash_x_u_U(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_template_string_undefined_escape(JITLexer *__restrict self, int ch);
 
 #define ATTR_ACCESS_GET     0
 #define ATTR_ACCESS_DEL     1

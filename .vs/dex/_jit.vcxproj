@@ -88,6 +88,7 @@
     <None Include="..\..\src\dex\_jit\parser-impl-hybrid-parts.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl-hybrid.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl-statement.c.inl" />
+    <None Include="..\..\src\dex\_jit\parser-impl-template-string.c.inl" />
     <None Include="..\..\src\dex\_jit\parser-impl.c.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

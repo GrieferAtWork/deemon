@@ -747,9 +747,9 @@ format_impl(struct formatter *__restrict self,
 			char mode = *++format_start;
 			if (mode == 'a' || mode == 's')
 				goto print_normal;
-			if (mode == 'r')
+			if (mode == 'r') {
 				print_error = DeeObject_PrintRepr(in_arg, printer, arg);
-			else {
+			} else {
 				/* TODO: This error message doesn't handle unicode! */
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid character %.1q following `!' in string.format",

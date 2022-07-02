@@ -19,6 +19,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
+
 
 local x = 42;
 assert f"before{x + 2}after" == "before44after";
@@ -39,9 +41,11 @@ assert f'\{' == '{';
 assert f'\}' == '}';
 
 /* Just like in python, braces can also be escaped by writing them twice.
- * WARNING: The notepad++ language template fails to render this correctly,
- *          but our compiler understands it like it should! */
+ * WARNING: The notepad++ stylesheet fails to render this correctly, but
+ *          our compiler understands it like it should! */
 assert f'{{' == '{';
 assert f'}}' == '}';
 
+/* Another thing that the notepad++ stylesheet fails to render correct (ugh...) */
+assert F"before{x + 2}after" == "before44after";
 
