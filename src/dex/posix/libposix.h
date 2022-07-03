@@ -123,6 +123,11 @@ DECL_BEGIN
 		DeeError_Throwf(&DeeError_FileClosed, __VA_ARGS__); \
 		goto err_label;                                     \
 	});
+#define HANDLE_EBADF_ENOENT(error, err_label, ...)          \
+	DeeSystem_IF_E2(error, EBADF, ENOENT, {                 \
+		DeeError_Throwf(&DeeError_FileClosed, __VA_ARGS__); \
+		goto err_label;                                     \
+	});
 #define HANDLE_EFBIG_EINVAL(error, err_label, ...)               \
 	DeeSystem_IF_E2(error, EFBIG, EINVAL, {                      \
 		DeeError_Throwf(&DeeError_IntegerOverflow, __VA_ARGS__); \

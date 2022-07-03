@@ -21,6 +21,7 @@
 
 import fs;
 import * from deemon;
+import * from errors;
 import * from posix;
 
 function testdir(fd: int) {
@@ -45,7 +46,7 @@ function testdir(fd: int) {
 }
 local fd = open(fs.headof(__FILE__), O_RDONLY);
 testdir(fd);
-assert (try ({ close(fd); false; }) catch (...) none) is none,
+assert (try close(fd) catch (e...) e) is FileClosed,
 	"The file should have been closed after being inherited by `fdopendir'";
 
 

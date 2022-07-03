@@ -407,6 +407,8 @@ print "/" "**" "/";
 #else /* STRUNCATE */
 #define IS_ERRNONAME_FIRSTCHAR(ch) ((ch) == 'E')
 #endif /* !STRUNCATE */
+#define SYMBOL_NAME_IS_ERRNO(x) \
+	(IS_ERRNONAME_FIRSTCHAR((x)[0]) && (isupper((x)[1]) || isdigit((x)[1]))/* && !strchr(x, '_')*/)
 
 
 
@@ -494,7 +496,6 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
 /************************************************************************/
 /* strerror()                                                           */
 /************************************************************************/
-
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerror_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
@@ -535,36 +536,26 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-#define SYMBOL_NAME_IS_ERRNO(x) \
-	(IS_ERRNONAME_FIRSTCHAR((x)[0]) && (isupper((x)[1]) || isdigit((x)[1]))/* && !strchr(x, '_')*/)
 		struct dex_symbol *iter;
-		for (iter = DEX.d_symbols; iter->ds_name; ++iter) {
-			if (SYMBOL_NAME_IS_ERRNO(iter->ds_name)) {
-				/* First errno code found. */
-				do {
-					int eval;
-					if (!DeeInt_Check(iter->ds_obj))
-						break;
-					if (!DeeInt_TryAsInt(iter->ds_obj, &eval))
-						break;
-					if (eval == errnum) {
-						char const *docstring;
-						/* Found it! Now to simply return the doc string */
-						docstring = iter->ds_doc;
-						if (!docstring)
-							break;
-						return DeeString_NewUtf8(docstring,
-						                         strlen(docstring),
-						                         STRING_ERROR_FIGNORE);
-					}
-					++iter;
-				} while (iter->ds_name &&
-				         SYMBOL_NAME_IS_ERRNO(iter->ds_name));
+		for (iter = DEX.d_symbols;
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
+			int eval;
+			if (!DeeInt_Check(iter->ds_obj))
 				break;
+			if (!DeeInt_TryAsInt(iter->ds_obj, &eval))
+				break;
+			if (eval == errnum) {
+				char const *docstring;
+				/* Found it! Now to simply return the doc string */
+				docstring = iter->ds_doc;
+				if (!docstring)
+					break;
+				return DeeString_NewUtf8(docstring,
+				                         strlen(docstring),
+				                         STRING_ERROR_FIGNORE);
 			}
 		}
 	}
-#undef SYMBOL_NAME_IS_ERRNO
 #endif /* !posix_strerror_USE_DOCSTRINGS */
 
 #ifdef posix_strerror_USE_STRERROR
@@ -633,29 +624,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
-#define SYMBOL_NAME_IS_ERRNO(x) \
-	(IS_ERRNONAME_FIRSTCHAR((x)[0]) && (isupper((x)[1]) || isdigit((x)[1]))/* && !strchr(x, '_')*/)
 		struct dex_symbol *iter;
-		for (iter = DEX.d_symbols; iter->ds_name; ++iter) {
-			if (SYMBOL_NAME_IS_ERRNO(iter->ds_name)) {
-				/* First errno code found. */
-				do {
-					int eval;
-					if (!DeeInt_Check(iter->ds_obj))
-						break;
-					if (!DeeInt_TryAsInt(iter->ds_obj, &eval))
-						break;
-					if (eval == errnum) {
-						/* Found it! Now to simply return the symbol's name */
-						return DeeString_New(iter->ds_name);
-					}
-					++iter;
-				} while (iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name));
+		for (iter = DEX.d_symbols;
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
+			int eval;
+			if (!DeeInt_Check(iter->ds_obj))
 				break;
+			if (!DeeInt_TryAsInt(iter->ds_obj, &eval))
+				break;
+			if (eval == errnum) {
+				/* Found it! Now to simply return the symbol's name */
+				return DeeString_New(iter->ds_name);
 			}
 		}
 	}
-#undef SYMBOL_NAME_IS_ERRNO
 #endif /* !posix_strerrorname_USE_SYMBOLNAMES */
 
 	return_none;

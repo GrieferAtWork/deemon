@@ -569,6 +569,10 @@ INTDEF DeeObject posix_IFTODT;
 INTDEF DeeObject posix_fdopendir;
 
 PRIVATE struct dex_symbol symbols[] = {
+	/* E* errno codes */
+	D(POSIX_ERRNO_DEFS)
+	/* IMPORTANT: Declarations surrounding errno codes must come after the start! */
+
 
 	{ "stubs", &PosixStubsList_Singleton, MODSYM_FNORMAL,
 	  DOC("->?S?Dstring\n"
@@ -901,14 +905,6 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* *_OK codes for `access()' and friends */
 	D(POSIX_ACCESS_DEFS)
-
-	/* IMPORTANT: Declarations surrounding errno codes must NOT look
-	 *            like errno codes themselves. -- Don't place this
-	 *            next to `EXIT_*' codes; else, those may be thought
-	 *            to be errno names! */
-
-	/* E* errno codes */
-	D(POSIX_ERRNO_DEFS)
 
 	D({ "errno", (DeeObject *)&posix_errno_get, MODSYM_FPROPERTY,
 	    DOC("->?Dint\n"
