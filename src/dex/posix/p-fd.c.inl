@@ -607,7 +607,13 @@ EINTR_LABEL(again)
 		error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "close")
-		HANDLE_EBADF_ENOENT(error, err, "Bad fd %d", fd) /* For some reason, msvc somethings returns ENOENT... */
+		/* For some reason, msvc somethings returns
+		 * ENOENT... (usually when attached to a debugger) */
+#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
+		HANDLE_EBADF_ENOENT(error, err, "Bad fd %d", fd)
+#else /* CONFIG_HOST_WINDOWS && !__CYGWIN__ */
+		HANDLE_EBADF(error, err, "Bad fd %d", fd)
+#endif /* !CONFIG_HOST_WINDOWS || __CYGWIN__ */
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to close fd %d", fd);
 		goto err;

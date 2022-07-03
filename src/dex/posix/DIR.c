@@ -353,7 +353,8 @@ INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f);
 
 
 
-
+PRIVATE NONNULL((1)) void DCALL
+diriter_fini(DeeDirIteratorObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 directory_open(DeeDirIteratorObject *__restrict self,
@@ -367,16 +368,38 @@ directory_open(DeeDirIteratorObject *__restrict self,
 		int result;
 		HANDLE hPath;
 		DREF DeeObject *sPath;
+#ifdef CONFIG_HAVE_close
+		int fd;
+		hPath = DeeNTSystem_GetHandleEx(path, &fd);
+#else /* CONFIG_HAVE_close */
 		hPath = DeeNTSystem_GetHandle(path);
+#endif /* !CONFIG_HAVE_close */
 		if (hPath == INVALID_HANDLE_VALUE)
 			goto err;
 		sPath = DeeNTSystem_GetFilenameOfHandle(hPath);
 		if unlikely(!sPath)
 			goto err;
-		result = directory_open(self, sPath, skipdots, inheritfd);
+		result = directory_open(self, sPath, skipdots, false);
 		Dee_Decref(sPath);
-		if (likely(result == 0) && inheritfd)
-			CloseHandle(hPath); /* Inherited! */
+		if (likely(result == 0) && inheritfd) {
+			if (DeeFile_Check(path)) {
+				/* Inherit the handle by closing the associated file. */
+				if unlikely(DeeFile_Close(path)) {
+					diriter_fini(self);
+					goto err;
+#define NEED_err
+				}
+#ifdef CONFIG_HAVE_close
+			} else if (fd != -1) {
+				/* NOTE: If `DeeNTSystem_GetHandle' used get_osfhandle(), we must
+				 *       close(fd) here instead (where `fd' is the fd that was
+				 *       used by `DeeNTSystem_GetHandle')! */
+				close(fd); /* Inherited! */
+#endif /* CONFIG_HAVE_close */
+			} else {
+				CloseHandle(hPath); /* Inherited! */
+			}
+		}
 		return result;
 	}
 	wname = (LPWSTR)DeeString_AsWide(path);
@@ -487,7 +510,7 @@ EINTR_LABEL(again)
 	if (!DeeString_Check(path)) {
 		int fd;
 		fd = DeeUnixSystem_GetFD(path);
-		if (fd == -1)
+		if unlikely(fd == -1)
 			goto err;
 #if defined(CONFIG_HAVE_dup) && defined(CONFIG_HAVE_fdopendir)
 		if (inheritfd) {
@@ -495,9 +518,9 @@ EINTR_LABEL(again)
 		} else {
 			DBG_ALIGNMENT_DISABLE();
 			fd = dup(fd);
-			if (fd == -1)
+			if unlikely(fd == -1) {
 				dir = NULL;
-			else {
+			} else {
 				dir = fdopendir(fd);
 #ifdef CONFIG_HAVE_close
 				if unlikely(!dir) {

@@ -381,6 +381,7 @@ EXPORTS
 	DeeNTSystem_FormatMessage@20=_DeeNTSystem_FormatMessage@20
 	DeeNTSystem_GetFilenameOfHandle@4=_DeeNTSystem_GetFilenameOfHandle@4
 	DeeNTSystem_GetHandle@4=_DeeNTSystem_GetHandle@4
+	DeeNTSystem_GetHandleEx@8=_DeeNTSystem_GetHandleEx@8
 	DeeNTSystem_IsAccessDeniedError@4=_DeeNTSystem_IsAccessDeniedError@4
 	DeeNTSystem_IsBadAllocError@4=_DeeNTSystem_IsBadAllocError@4
 	DeeNTSystem_IsBadF@4=_DeeNTSystem_IsBadF@4

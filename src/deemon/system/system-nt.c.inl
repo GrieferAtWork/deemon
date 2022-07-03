@@ -110,11 +110,21 @@ DECL_BEGIN
  *                                `DeeError_FileClosed' error is thrown. */
 PUBLIC WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
+	return DeeNTSystem_GetHandleEx(ob, NULL);
+}
+
+/* Same as `DeeNTSystem_GetHandleEx()', but also writes to `p_fd' (when non-NULL):
+ * - `-1': If `get_osfhandle()' wasn't used
+ * - `*':  The file descriptor number passed to `get_osfhandle()' */
+DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
+DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd) {
 	DREF DeeObject *attr;
 #if (defined(DeeSysFS_IS_HANDLE) || \
      (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
 	if (DeeFile_Check(ob)) {
 		DeeSysFD sysfd;
+		if (p_fd)
+			*p_fd = -1;
 		sysfd = DeeFile_GetSysFD(ob);
 		if (sysfd == DeeSysFD_INVALID)
 			return INVALID_HANDLE_VALUE;
@@ -141,8 +151,13 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 	if (DeeInt_Check(ob)) {
 		HANDLE hResult;
 		int fd;
-		if (DeeInt_AsInt(ob, &fd))
+		if (DeeInt_AsInt(ob, &fd)) {
+			if (p_fd)
+				*p_fd = -1;
 			return INVALID_HANDLE_VALUE;
+		}
+		if (p_fd)
+			*p_fd = fd;
 		hResult = (HANDLE)get_osfhandle(fd);
 		if unlikely(hResult == INVALID_HANDLE_VALUE) {
 			DeeError_Throwf(&DeeError_FileClosed,
@@ -153,8 +168,11 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 	}
 #endif /* CONFIG_HAVE_get_osfhandle */
 
-	if (DeeNone_Check(ob))
+	if (DeeNone_Check(ob)) {
+		if (p_fd)
+			*p_fd = -1;
 		return (void *)(HANDLE)NULL;
+	}
 
 	attr = GETATTR_osfhandle(ob);
 	if (attr) {
@@ -169,6 +187,8 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 			                "Handle pointed-to by %r was closed",
 			                ob);
 		}
+		if (p_fd)
+			*p_fd = -1;
 		return hResult;
 	}
 
@@ -190,6 +210,8 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 		}
 		if unlikely(error)
 			goto err;
+		if (p_fd)
+			*p_fd = fd;
 		hResult = (HANDLE)get_osfhandle(fd);
 		if unlikely(hResult == INVALID_HANDLE_VALUE) {
 			DeeError_Throwf(&DeeError_FileClosed,
@@ -201,6 +223,8 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 #endif /* CONFIG_HAVE_get_osfhandle */
 
 err:
+	if (p_fd)
+		*p_fd = -1;
 	return INVALID_HANDLE_VALUE;
 }
 

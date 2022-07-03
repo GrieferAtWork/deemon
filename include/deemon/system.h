@@ -125,6 +125,11 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
  *                                `DeeError_FileClosed' error is thrown. */
 DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob);
+/* Same as `DeeNTSystem_GetHandleEx()', but also writes to `p_fd' (when non-NULL):
+ * - `-1': If `get_osfhandle()' wasn't used
+ * - `*':  The file descriptor number passed to `get_osfhandle()' */
+DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
+DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd);
 
 /* Similar to `DeeNTSystem_GetHandle()', but allow `ob' to refer to INVALID_HANDLE_VALUE,
  * instead of unconditionally throwing an `DeeError_FileClosed' error when such a handle
