@@ -1169,6 +1169,9 @@ check_sym_class:
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_GLOBAL:
+		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
+			return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
+		ATTR_FALLTHROUGH
 	case SYMBOL_TYPE_LOCAL:
 	case SYMBOL_TYPE_STATIC:
 		return true;
@@ -1199,9 +1202,6 @@ check_sym_class:
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_GLOBAL:
-		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
-		ATTR_FALLTHROUGH
 	case SYMBOL_TYPE_LOCAL:
 	case SYMBOL_TYPE_STATIC:
 		return true;
@@ -1244,6 +1244,8 @@ check_sym_class:
 		return asm_pextern((uint16_t)symid, SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 
 	case SYMBOL_TYPE_GLOBAL:
+		ASSERTF(!(sym->s_flag & SYMBOL_FFINAL) || (sym->s_nwrite <= 1),
+		        "This should have caused `asm_can_prefix_symbol()' to return false");
 		symid = asm_gsymid(sym);
 		if unlikely(symid < 0)
 			goto err;
@@ -2277,7 +2279,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	/* >>     push   bound local \lid
 	 * >>     jt     1f
 	 * >> .pushsection .cold
-	 * >>     push   $\lid
+	 * >> 1:  push   $\lid
 	 * >>     push   call extern @deemon:@__roloc, #1
 	 * >>     pop
 	 * >>     jmp    2f

@@ -34,7 +34,7 @@
 
 DECL_BEGIN
 
-#define PUSH_RESULT  (gflags & ASM_G_FPUSHRES)
+#define PUSH_RESULT (gflags & ASM_G_FPUSHRES)
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_gpush2_duplast(struct ast *__restrict a,
