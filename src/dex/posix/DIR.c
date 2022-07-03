@@ -1053,13 +1053,16 @@ diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
+PRIVATE struct keyword opendir_kwlist[] = { K(path), K(skipdots), K(inheritfd), KEND };
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-diriter_init(DeeDirIteratorObject *__restrict self,
-             size_t argc, DeeObject *const *argv) {
+diriter_init_kw(DeeDirIteratorObject *__restrict self,
+                size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	bool skipdots  = true;
 	bool inheritfd = false;
-	if (DeeArg_Unpack(argc, argv, "o|bb:_DirIterator", &path, &skipdots, &inheritfd))
+	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist,
+	                    "o|bb:_DirIterator", &path, &skipdots, &inheritfd))
 		goto err;
 	if (Dee_TYPE(path) == &DeeDir_Type) {
 		DeeDirObject *dir;
@@ -1144,7 +1147,7 @@ PRIVATE struct type_member tpconst diriter_members[] = {
 INTERN DeeTypeObject DeeDirIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DirIterator",
-	/* .tp_doc      = */ DOC("(dir:?X4?GDIR?Dstring?DFile?Dint)"),
+	/* .tp_doc      = */ DOC("(path:?X4?GDIR?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1155,8 +1158,9 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&diriter_init,
-				TYPE_FIXED_ALLOCATOR(DeeDirIteratorObject)
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeDirIteratorObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&diriter_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diriter_fini,
@@ -1208,8 +1212,6 @@ STATIC_ASSERT(offsetof(DeeDirIteratorObject, di_path) ==
               offsetof(DeeDirObject, d_path));
 #define dir_visit   diriter_visit
 #define dir_members diriter_members
-
-PRIVATE struct keyword opendir_kwlist[] = { K(path), K(skipdots), K(inheritfd), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_init_kw(DeeDirObject *__restrict self, size_t argc,
