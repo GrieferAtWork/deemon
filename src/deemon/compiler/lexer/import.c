@@ -644,7 +644,9 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 									if (sym->s_extern.e_module != &deemon_module) {
 										if (mod == &deemon_module) {
 do_reassign_new_alias:
-											sym->s_extern.e_module = mod;
+											Dee_Incref(mod);
+											Dee_Decref(sym->s_extern.e_module);
+											sym->s_extern.e_module = mod; /* Inherit reference */
 											sym->s_extern.e_symbol = iter;
 										} else {
 											uint16_t i;
