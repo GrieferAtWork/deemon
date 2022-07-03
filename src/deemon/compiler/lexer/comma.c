@@ -222,7 +222,13 @@ continue_modifier:
 
 	default: break;
 	}
-	if ((*pmode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING) {
+	if ((*pmode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING &&
+	    /* We do explicitly accept code like:
+	     * >> varying function foo() { ... }
+	     * to indicate that the symbol `foo' may be re-assigned at a later point
+	     * in time! As such, don't emit a compiler warning if the next keyword is
+	     * either `function' or `class'! */
+	    (tok != KWD_function && tok != KWD_class)) {
 		if (WARN(W_VARYING_WITHOUT_FINAL))
 			goto err;
 	}
@@ -336,6 +342,12 @@ next_expr:
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}
+			/* Class symbols are implicitly `final' (though only regarding their decl
+			 * variable; not the actual class itself), unless `varying' was used. This
+			 * is required for the optimizer to take type annotations into account when
+			 * trying to predict the types of expressions. */
+			if (!(symbol_mode & LOOKUP_SYM_VARYING))
+				symbol_mode |= LOOKUP_SYM_FINAL;
 		}
 		current = ast_setddi(ast_parse_class(class_flags, class_name,
 		                                     class_name != NULL,
@@ -363,12 +375,19 @@ next_expr:
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
-				if (current_scope == &current_rootscope->rs_scope.bs_scope)
+				if (current_scope == &current_rootscope->rs_scope.bs_scope) {
 					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else {
+				} else {
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}
+
+			/* Functions symbols are implicitly `final', unless `varying' was used.
+			 * This is required for the optimizer to take type annotations into account
+			 * when trying to predict the types of expressions. */
+			if (!(symbol_mode & LOOKUP_SYM_VARYING))
+				symbol_mode |= LOOKUP_SYM_FINAL;
+
 			/* Create the symbol that will be used by the function. */
 			function_symbol = lookup_symbol(symbol_mode, function_name, &loc);
 			if unlikely(!function_symbol)

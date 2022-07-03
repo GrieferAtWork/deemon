@@ -519,7 +519,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
                            ,
                            struct decl_ast *decl
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-) {
+                           ) {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
