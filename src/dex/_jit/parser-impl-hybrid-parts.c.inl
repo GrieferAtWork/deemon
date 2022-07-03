@@ -112,49 +112,57 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 		if (JITLexer_ISTOK(self, "finally")) {
 			DREF DeeObject *finally_value;
 			DREF DeeObject *old_return_expr;
+			JITLValue old_lvalue;
 			unsigned char *start;
 			JITLexer_Yield(self);
+
+
 			/* Temporarily reset the return override to handle things
 			 * like double-return/break/continue (in which case the
 			 * later return/break/continue always takes precedence) */
 			old_return_expr             = self->jl_context->jc_retval;
+			old_lvalue                  = self->jl_lvalue;
 			self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
+			JITLValue_Init(&self->jl_lvalue);
+
 			/* Parse the finally-block */
 			start         = self->jl_tokstart;
 			finally_value = EVAL_SECONDARY(self, &was_expression);
-			/* Resolve l-value branch results. */
+
+			/* Finally expression values are never used. */
 			if (finally_value == JIT_LVALUE)
-				finally_value = JITLexer_PackLValue(self);
+				JITLValue_Fini(&self->jl_lvalue);
+			self->jl_lvalue = old_lvalue;
 			if (ISOK(finally_value)) {
-				if (ISOK(result)) {
-					/* Use the finally-branch value as the new return value. */
-					Dee_Decref(result);
-					result = finally_value;
-				} else {
-					/* Discard the finally-branch expression value. */
-					if (finally_value == JIT_LVALUE) {
-						JITLValue_Fini(&self->jl_lvalue);
-						JITLValue_Init(&self->jl_lvalue);
-					} else {
-						Dee_Decref(finally_value);
-					}
-				}
+				/* Preserve the old return value */
+				Dee_Decref(finally_value);
 			} else {
 				/* We get here for a number of reasons:
 				 *  - Syntax error in finally-block
 				 *     -> Immediatly propagate the error
 				 *  - finally-block contains a break/continue/return statement
 				 *    finally-block throws an exception
-				 *     -> Keep the new return override and continue scanning
+				 *     -> Keep the old return override and continue scanning
 				 *        for more catch/finally blocks, handling them as
 				 *        though the new return override had been set by
 				 *        the original try-block.
 				 */
-				/* Discard the old return override. */
-				if (old_return_expr && JITCONTEXT_RETVAL_ISSET(old_return_expr))
-					Dee_Decref(old_return_expr);
 				/* Make sure to clear the return value. */
 				Dee_XClear(result);
+
+				/* If it was set, restore the old return override. */
+				if (self->jl_context->jc_retval &&
+				    JITCONTEXT_RETVAL_ISSET(self->jl_context->jc_retval)) {
+					if (old_return_expr && JITCONTEXT_RETVAL_ISSET(old_return_expr)) {
+						Dee_Decref(self->jl_context->jc_retval);
+						self->jl_context->jc_retval = old_return_expr;
+					} else {
+						/* Keep the new return override! */
+					}
+				} else {
+					self->jl_context->jc_retval = old_return_expr;
+				}
+
 				/* Check if this is a syntax error. */
 				if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
 					goto err;

@@ -1,0 +1,163 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+function assert_identical(a, b) {
+	/* Make sure that the comparison works in every way */
+	assert type a === type b;
+	assert a == b;
+	assert b == a;
+	assert !(a != b);
+	assert !(b != a);
+}
+
+function foo() {
+	try {
+		return "a";
+	} finally {
+		return "b";
+	}
+}
+assert_identical(foo(), "a");
+assert_identical(exec(r'
+	try {
+		return "a";
+	} finally {
+		return "b";
+	}
+'), "a");
+
+
+function geta() -> "geta";
+function getb() -> "getb";
+function getc() { throw "getc"; }
+local didRunFinally = false;
+
+local x = ({
+	try {
+		geta();
+	} finally {
+		didRunFinally = true;
+		getb();
+	}
+});
+
+assert_identical(didRunFinally, true);
+assert_identical(x, "geta");
+
+local didRunFinally = false;
+local x = ({
+	try {
+		getc();
+	} catch (e...) {
+		e;
+	} finally {
+		didRunFinally = true;
+		getb();
+	}
+});
+
+/* FIXME: Finally doesn't run if an exception was thrown that was already caught. */
+//TODO:BROKEN:assert didRunFinally;
+assert_identical(x, "getc");
+
+/* FIXME: When finally re-throws, a follow-up catch fails to catch the exception */
+//TODO:BROKEN:local didRunFinally = false;
+//TODO:BROKEN:local x = ({
+//TODO:BROKEN:	try {
+//TODO:BROKEN:		getc();
+//TODO:BROKEN:	} finally {
+//TODO:BROKEN:		getb();
+//TODO:BROKEN:		didRunFinally = true;
+//TODO:BROKEN:	} catch (e...) {
+//TODO:BROKEN:		e;
+//TODO:BROKEN:	}
+//TODO:BROKEN:});
+//TODO:BROKEN:assert didRunFinally;
+//TODO:BROKEN:assert x == 30;
+
+
+
+
+
+/* Assert exception handler return values in JIT */
+local globals = Dict({
+	.geta = geta,
+	.getb = getb,
+	.getc = getc,
+});
+
+globals["didRunFinally"] = false;
+local x = exec(r"
+	try {
+		geta();
+	} finally {
+		didRunFinally = true;
+		getb();
+	}
+", globals: globals);
+assert_identical(globals["didRunFinally"], true);
+assert_identical(x, "geta");
+
+
+globals["didRunFinally"] = false;
+local x = exec(r"
+	try {
+		getc();
+	} catch (e...) {
+		e;
+	} finally {
+		didRunFinally = true;
+		getb();
+	}
+", globals: globals);
+assert_identical(globals["didRunFinally"], true);
+assert_identical(x, "getc");
+
+
+globals["didRunFinally"] = false;
+local x = exec(r"
+	try {
+		getc();
+	} finally {
+		didRunFinally = true;
+		getb();
+	} catch (e...) {
+		e;
+	}
+", globals: globals);
+assert_identical(globals["didRunFinally"], true);
+assert_identical(x, "getc");
+
+
+
+
+
+
+
+
+
+
+
+
+
+

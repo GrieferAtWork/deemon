@@ -209,7 +209,7 @@ gen_guard:
 			 * >> }
 			 * When the Outer exception handler gets assembled, it will
 			 * create a total of 4 symbols for the begin/end of its
-			 * protection are in all text sections covered by the
+			 * protection area in all text sections covered by the
 			 * try-block. (.text and .cold)
 			 * It then simply defines all the begin-symbols at the
 			 * associated text positions of the affected section,
@@ -250,12 +250,13 @@ gen_guard:
 
 	/* Now that we know exactly what is being protected,
 	 * let's generate the actual exception handlers. */
-	end                         = (iter = try_ast->a_try.t_catchv) + try_ast->a_try.t_catchc;
+	iter                        = try_ast->a_try.t_catchv;
+	end                         = iter + try_ast->a_try.t_catchc;
 	next_handler                = NULL;
 	hand_frame.hf_prev          = current_assembler.a_handler;
 	current_assembler.a_handler = &hand_frame;
 	++current_assembler.a_handlerc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 #define IS_LAST_HANDLER() (iter == end - 1)
 		struct asm_sym *handler_entry;
 		struct asm_exc *descriptor;
@@ -426,13 +427,16 @@ gen_guard:
 			code_addr_t cleanup_end[SECTION_TEXTCOUNT];
 			bool needs_cleanup, is_empty_handler;
 			struct {
-				struct asm_sym *b, *e;
+				struct asm_sym *b;
+				struct asm_sym *e;
 			} cleanup[SECTION_TEXTCOUNT];
+
 			/* Don't generate catch-blocks if they're not guarding anything.
 			 * This can happen when the guarded code is a no-op that might
 			 * have been optimized away during the AST optimization pass. */
 			if (!is_guarding)
 				continue;
+
 			/* Switch the current section to the cold one.
 			 * >> Exception handlers are assumed to be executed only
 			 *    rarely, so instead of generating jumps around them
@@ -455,10 +459,12 @@ gen_guard:
 			}
 
 			/* This is where the handler's entry point is located at! */
-			if (next_handler)
-				handler_entry = next_handler, next_handler = NULL;
-			else if unlikely((handler_entry = asm_newsym()) == NULL)
-			goto err_hand_frame;
+			if (next_handler) {
+				handler_entry = next_handler;
+				next_handler  = NULL;
+			} else if unlikely((handler_entry = asm_newsym()) == NULL) {
+				goto err_hand_frame;
+			}
 			asm_defsym(handler_entry);
 
 			/* Must include the catch-mask expression in the cleanup guard! */
@@ -737,10 +743,6 @@ do_multimask_rethrow:
 					if (asm_gjmp(ASM_JMP, after_catch))
 						goto err_hand_frame;
 				}
-				/* If there are more handlers and this one just pushed its result,
-				 * then we must re-adjust the stack to discard the value. */
-				if ((gflags & ASM_G_FPUSHRES) && !IS_LAST_HANDLER())
-					asm_decsp();
 				if (needs_cleanup) {
 					/* So do _do_ need to generate cleanup code! */
 					struct asm_sym *cleanup_entry;

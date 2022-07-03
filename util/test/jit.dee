@@ -405,12 +405,19 @@ assert_identical(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); 
 assert_identical(exec(r'try { ; } catch (...) { return "OK"; }'), none);
 assert_identical(exec(r'try { throw "Error"; } catch (...) { return "OK"; }'), "OK");
 
+/* Assert exception nesting behavior in the core compiler. */
+assert_identical(({ try { "1"; } finally { "2"; } }), "1");
+assert_identical((() -> ({ try { "1"; } finally { "2"; } }))(), "1");
+assert_identical((() -> ({ try { "1"; } finally { return "2"; } }))(), "2");
+assert_identical((() -> ({ try { return "1"; } finally { "2"; } }))(), "1");
+assert_identical((() -> ({ try { return "1"; } finally { return "2"; } }))(), "1");
+
 /* Assert that catch/finally work correctly with return and inplicit ast results. */
 assert_identical(exec(r'try { return "1"; } catch (...) { return "2"; }'), "1");
 assert_identical(exec(r'try { return "1"; } finally { "2"; }'), "1");
-assert_identical(exec(r'try { return "1"; } finally { return "2"; }'), "2");
+assert_identical(exec(r'try { return "1"; } finally { return "2"; }'), "1");
 assert_identical(try ({ exec(r'try { return "1"; } finally { throw "ERROR"; }'); none; }) catch (e...) e, "ERROR");
-assert_identical(exec(r'try { "1"; } finally { "2"; }'), "2");
+assert_identical(exec(r'try { "1"; } finally { "2"; }'), "1");
 assert_identical(exec(r'try { "1"; } finally { return "2"; }'), "2");
 
 assert_identical(exec(r'; if (true) { } else { 42; }'), none);
