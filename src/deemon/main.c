@@ -778,7 +778,7 @@ PRIVATE int DCALL exit_ok(void) {
 
 PRIVATE WUNUSED int DCALL cmd_version(char *UNUSED(arg)) {
 	DREF DeeObject *fp;
-	fp = DeeFile_GetStd(DEE_STDERR);
+	fp = DeeFile_GetStd(DEE_STDOUT);
 	if unlikely(!fp)
 		goto err_nofp;
 	if (DeeFile_WriteAll(fp, str_version, COMPILER_STRLEN(str_version)) == (size_t)-1)
@@ -1012,7 +1012,7 @@ err:
 
 PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 	DREF DeeObject *fp;
-	fp = DeeFile_GetStd(DEE_STDERR);
+	fp = DeeFile_GetStd(DEE_STDOUT);
 	if unlikely(!fp)
 		goto err;
 	if (!arg) {
