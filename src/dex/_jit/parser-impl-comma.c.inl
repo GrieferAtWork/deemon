@@ -392,7 +392,7 @@ err_currrent_var_symbol:
 #endif /* JIT_EVAL */
 		} else {
 			/* Skip over type annotations. */
-			if ((self->jl_tok == ':') && (lookup_mode & LOOKUP_SYM_ALLOWDECL)
+			if ((self->jl_tok == ':') && (mode & AST_COMMA_ALLOWTYPEDECL)
 			    IF_EVAL(&& current == JIT_LVALUE
 			            && JITLValue_IsSymbol(&self->jl_lvalue))) {
 				JITLexer_Yield(self);

@@ -639,8 +639,10 @@ default_case:
 		                     AST_COMMA_PARSESINGLE |
 		                     AST_COMMA_NOSUFFIXKWD |
 		                     AST_COMMA_ALLOWVARDECLS |
+		                     AST_COMMA_ALLOWTYPEDECL |
 		                     AST_COMMA_PARSESEMI,
-		                     IF_EVAL(NULL, ) & comma_mode);
+		                     IF_EVAL(NULL,)
+		                     &comma_mode);
 		if (ISERR(result))
 			goto err;
 		if (self->jl_tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
