@@ -121,6 +121,7 @@
     <ClInclude Include="..\include\deemon\int.h" />
     <ClInclude Include="..\include\deemon\list.h" />
     <ClInclude Include="..\include\deemon\map.h" />
+    <ClInclude Include="..\include\deemon\mapfile.h" />
     <ClInclude Include="..\include\deemon\module.h" />
     <ClInclude Include="..\include\deemon\mro.h" />
     <ClInclude Include="..\include\deemon\none.h" />

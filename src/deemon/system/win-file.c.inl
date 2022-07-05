@@ -501,7 +501,7 @@ nt_sysfile_trygettype(SystemFile *__restrict self) {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
@@ -914,7 +914,7 @@ typedef union {
 	OVERLAPPED    ms;
 } my_OVERLAPPED;
 
-PRIVATE size_t DCALL
+INTERN size_t DCALL
 sysfile_pread(SystemFile *__restrict self,
               void *__restrict buffer,
               size_t bufsize, dpos_t pos,
@@ -1111,11 +1111,11 @@ err:
 	return NULL;
 }
 
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_HANDLE)
 #define STR_osfhandle DeeString_STR(&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFS_IS_HANDLE */
+#else /* DeeSysFD_GETSET && DeeSysFD_IS_HANDLE */
 #define STR_osfhandle DeeSysFD_HANDLE_GETSET
-#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
+#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_HANDLE */
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 	{ STR_osfhandle, (DREF DeeObject * (DCALL *)(DeeObject *))&sysfile_osfhandle, NULL, NULL, DOC("->?Dint") },

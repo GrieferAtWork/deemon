@@ -1068,7 +1068,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					if (DeeArg_Unpack(argc, argv, "|ooo:__read__", &data, &begin, &end))
 						goto err;
 					if (!data)
-						return DeeFile_ReadText(self, (size_t)-1, false);
+						return DeeFile_ReadBytes(self, (size_t)-1, false);
 					if (end) {
 						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
 							goto err;
@@ -1083,7 +1083,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 							size_t max_bytes;
 							if (DeeInt_AsSize(data, &max_bytes))
 								goto err;
-							return DeeFile_ReadText(self, max_bytes, false);
+							return DeeFile_ReadBytes(self, max_bytes, false);
 						}
 						buf_begin = 0;
 						buf_end   = (size_t)-1;
@@ -1232,14 +1232,14 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 						if (DeeInt_Check(a)) {
 							if (DeeObject_AsSSize(a, (dssize_t *)&end))
 								goto err;
-							return DeeFile_PReadText(self, end, pos, false);
+							return DeeFile_PReadBytes(self, end, pos, false);
 						}
 						start = 0;
 						end   = (size_t)-1;
 					} else {
 						if (DeeObject_AsUInt64(a, &pos))
 							goto err;
-						return DeeFile_PReadText(self, (size_t)-1, pos, false);
+						return DeeFile_PReadBytes(self, (size_t)-1, pos, false);
 					}
 					if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FWRITABLE))
 						goto err;

@@ -1204,8 +1204,7 @@ int main(int argc, char *argv[]) {
 			arg = DeeString_NewUtf8(argstr, strlen(argstr),
 			                        STRING_ERROR_FIGNORE);
 			if unlikely(!arg) {
-				while (i--)
-					Dee_Decref(DeeTuple_GET(sys_argv, i));
+				Dee_Decrefv(DeeTuple_ELEM(sys_argv), i);
 				DeeTuple_FreeUninitialized((DeeObject *)sys_argv);
 				goto err;
 			}

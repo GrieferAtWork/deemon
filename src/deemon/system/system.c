@@ -25,17 +25,25 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/mapfile.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-error.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/host.h>
+#include <hybrid/overflow.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
+
+#ifdef CONFIG_HAVE_SYS_PARAM_H
+#include <sys/param.h> /* EXEC_PAGESIZE */
+#endif /* CONFIG_HAVE_SYS_PARAM_H */
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -50,6 +58,12 @@
 #endif /* !PATH_MAX */
 
 DECL_BEGIN
+
+#ifdef DeeSysFD_IS_INT
+#define Dee_PRIpSYSFD "d"
+#else /* DeeSysFD_IS_INT */
+#define Dee_PRIpSYSFD "p"
+#endif /* !DeeSysFD_IS_INT */
 
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr 1
@@ -1300,17 +1314,17 @@ again_deletefile:
 
 
 #ifndef GETATTR_fileno
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_FILE)
 #define GETATTR_fileno(ob) DeeObject_GetAttr(ob, &str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#else /* DeeSysFD_GETSET && DeeSysFD_IS_FILE */
 #define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
-#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
+#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
 #endif /* !GETATTR_fileno */
 
 
 /* Retrieve the unix FD associated with a given object.
  * The translation is done by performing the following:
- * >> #ifdef DeeSysFS_IS_INT
+ * >> #ifdef DeeSysFD_IS_INT
  * >> if (DeeFile_Check(ob))
  * >>     return DeeFile_GetSysFD(ob);
  * >> #endif
@@ -1326,11 +1340,11 @@ PUBLIC WUNUSED int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob) {
 	int error, result;
 	DREF DeeObject *attr;
-#ifdef DeeSysFS_IS_INT
+#ifdef DeeSysFD_IS_INT
 	STATIC_ASSERT(DeeSysFD_INVALID == -1);
 	if (DeeFile_Check(ob))
 		return (int)DeeFile_GetSysFD(ob);
-#endif /* DeeSysFS_IS_INT */
+#endif /* DeeSysFD_IS_INT */
 	if (DeeInt_Check(ob)) {
 		error = DeeInt_AsInt(ob, &result);
 		if unlikely(error)
@@ -1367,6 +1381,920 @@ err:
 
 
 
+/************************************************************************/
+/* MMAP API                                                             */
+/************************************************************************/
+
+#ifndef CONFIG_HAVE_getpagesize
+#ifdef __ARCH_PAGESIZE
+#define getpagesize() __ARCH_PAGESIZE
+#elif defined(PAGESIZE)
+#define getpagesize() PAGESIZE
+#elif defined(PAGE_SIZE)
+#define getpagesize() PAGE_SIZE
+#elif defined(EXEC_PAGESIZE)
+#define getpagesize() EXEC_PAGESIZE
+#elif defined(NBPG) && defined(CLSIZE)
+#define getpagesize() (NBPG * CLSIZE)
+#elif defined(NBPG)
+#define getpagesize() NBPG
+#elif defined(_SC_PAGESIZE)
+#define getpagesize() sysconf(_SC_PAGESIZE)
+#elif defined(_SC_PAGE_SIZE)
+#define getpagesize() sysconf(_SC_PAGE_SIZE)
+#elif defined(CONFIG_HOST_WINDOWS)
+#define getpagesize() dee_nt_getpagesize()
+PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
+	static size_t ps = 0;
+	if (ps == 0) {
+		SYSTEM_INFO system_info;
+		GetSystemInfo(&system_info);
+		ps = system_info.dwPageSize;
+		if unlikely(ps == 0)
+			ps = 1;
+	}
+	return ps;
+}
+#else /* ... */
+#define getpagesize() 4096 /* Just guess... */
+#endif /* !... */
+#endif /* !CONFIG_HAVE_getpagesize */
+
+
+#ifdef CONFIG_HOST_WINDOWS
+#define STRUCT_STAT_GETSIZE(x)  ((x).QuadPart)
+#define STRUCT_STAT_FOR_SIZE    LARGE_INTEGER
+#define FSTAT_FOR_SIZE(fd, pst) (GetFileSizeEx(fd, pst) ? 0 : -1)
+#elif defined(CONFIG_HAVE_fstat64)
+#define STRUCT_STAT_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE   struct stat64
+#define FSTAT_FOR_SIZE         fstat64
+#elif defined(CONFIG_HAVE_fstat)
+#define STRUCT_STAT_GETSIZE(x) ((x).st_size)
+#define STRUCT_STAT_FOR_SIZE   struct stat
+#define FSTAT_FOR_SIZE         fstat
+#endif /* ... */
+
+#undef LSEEK
+#ifdef CONFIG_HAVE_lseek64
+#define LSEEK lseek64
+#elif defined(CONFIG_HAVE_lseek)
+#define LSEEK lseek
+#endif /* ... */
+
+#undef MMAP
+#ifdef CONFIG_HAVE_mmap64
+#define MMAP mmap64
+#elif defined(CONFIG_HAVE_mmap)
+#define MMAP mmap
+#endif /* ... */
+
+#undef PREAD
+#ifdef CONFIG_HAVE_pread64
+#define PREAD pread64
+#elif defined(CONFIG_HAVE_pread)
+#define PREAD pread
+#endif /* ... */
+
+#ifndef MAP_FAILED
+#define MAP_FAILED ((void *)-1l)
+#endif /* !MAP_FAILED */
+
+
+/* Configure `self' as using a heap buffer */
+#ifdef DeeMapFile_IS_osmapfile
+#define DeeMapFile_SETHEAP(self) __mapfile_setheap(&(self)->dmf_map)
+#elif defined(DeeMapFile_IS_CreateFileMapping)
+#define DeeMapFile_SETHEAP(self) ((self)->_dmf_hmap = NULL)
+#elif defined(DeeMapFile_IS_mmap)
+#define DeeMapFile_SETHEAP(self) ((self)->_dmf_mapsize = 0)
+#else /* ... */
+#define DeeMapFile_SETHEAP(self) (void)0
+#endif /* !... */
+
+#ifdef DeeMapFile_IS_osmapfile
+#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_map.mf_addr = (unsigned char *)(p))
+#define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_map.mf_size = (s))
+#else /* DeeMapFile_IS_osmapfile */
+#define DeeMapFile_SETADDR(self, p) (void)((self)->dmf_addr = (void const *)(p))
+#define DeeMapFile_SETSIZE(self, s) (void)((self)->dmf_size = (s))
+#endif /* !DeeMapFile_IS_osmapfile */
+
+
+
+/* Finalize a given file map */
+PUBLIC NONNULL((1)) void DCALL
+DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
+#ifdef DeeMapFile_IS_osmapfile
+	(void)unmapfile(&self->dmf_map);
+#elif defined(DeeMapFile_IS_CreateFileMapping)
+	if (self->_dmf_hmap != NULL) {
+		size_t psm = getpagesize() - 1;
+		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
+		if (self->_dmf_vfre) {
+			void *vbas = (void *)(((uintptr_t)baseptr + self->dmf_size + psm) & ~psm);
+			if (!VirtualFree(vbas, self->_dmf_vfre, MEM_DECOMMIT | MEM_RELEASE))
+				Dee_DPRINTF("VirtualFree() failed: %lu", GetLastError()); /* TODO: Remove me */
+		}
+		(void)UnmapViewOfFile(baseptr);
+		(void)CloseHandle(self->_dmf_hmap);
+	} else {
+		Dee_Free((void *)self->dmf_addr);
+	}
+#elif defined(DeeMapFile_IS_mmap)
+	if (DeeMapFile_UsesMmap(self)) {
+		size_t psm    = getpagesize() - 1;
+		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
+		(void)munmap(baseptr, self->_dmf_mapsize);
+	} else {
+		Dee_Free((void *)self->dmf_addr);
+	}
+#else /* ... */
+	Dee_Free((void *)self->dmf_addr);
+#endif /* !... */
+}
+
+/* Initialize a file mapping from a given system FD.
+ * @param: fd:        The file that should be loaded into memory.
+ * @param: self:      Filled with mapping information. This structure contains at least 2 fields:
+ *                     - DeeMapFile_GetBase: Filled with the base address of a mapping of the file's contents
+ *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes')
+ *                                           This will always be `>= min_bytes && <= max_bytes'.
+ *                     - Other fields are implementation-specific
+ *                    Note that the memory located at `DeeMapFile_GetBase' is writable, though changes to
+ *                    it are guarantied not to be written back to `fd'. iow: it behaves like MAP_PRIVATE
+ *                    mapped as PROT_READ|PROT_WRITE.
+ * @param: offset:    File offset / number of leading bytes that should not be mapped
+ *                    When set to `(Dee_pos_t)-1', use the fd's current file position.
+ * @param: min_bytes: The  min number of bytes (excluding num_trailing_nulbytes) that should be mapped
+ *                    starting  at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
+ *                    Note that this doesn't include `num_trailing_nulbytes', meaning that (e.g.) when
+ *                    an entirely empty file is mapped you get a buffer like:
+ *                    >> mf_addr = calloc(min_size + num_trailing_nulbytes);
+ *                    >> mf_size = min_size;
+ *                    This argument essentially acts as if `fd' was at least `min_bytes' bytes large
+ *                    by filling the non-present address range with all zeroes.
+ * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped
+ *                    starting at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    this number of bytes has been reached, simply stop there. - The actual number of
+ *                    mapped bytes (excluding `num_trailing_nulbytes') is `DeeMapFile_GetSize'.
+ * @param: num_trailing_nulbytes: When non-zero, append this many trailing NUL-bytes at the end of
+ *                    the mapping. More bytes than this may be appended if necessary, but at least
+ *                    this many are guarantied to be. - Useful if you want to load a file as a
+ *                    string, in which case you can specify `1' to always have a trailing '\0' be
+ *                    appended:
+ *                    >> bzero(DeeMapFile_GetBase + DeeMapFile_GetSize, num_trailing_nulbytes);
+ * @param: flags:     Set of `DEE_MAPFILE_F_*'
+ * @return:  1: Both `DEE_MAPFILE_F_MUSTMMAP' and `DEE_MAPFILE_F_TRYMMAP' were set, but mmap failed.
+ * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
+ * @return: -1: Error (an exception was thrown) */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, DeeSysFD fd,
+                     Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
+                     size_t num_trailing_nulbytes, unsigned int flags) {
+#ifdef DeeMapFile_IS_osmapfile
+	/* Special case: use `fmapfile(3)' */
+	int result;
+again:
+	result = fmapfile(&self->dmf_map, fd,
+	                  offset, min_bytes, max_bytes,
+	                  num_trailing_nulbytes, flags);
+	if (result != 0) {
+		int error = DeeSystem_GetErrno();
+		if (error == ENOMEM && Dee_CollectMemory(1)) {
+			goto again;
+		} else if (error == EINTR) {
+			if (DeeThread_CheckInterrupt())
+				goto done;
+			goto again;
+		} else if (error == EBADF) {
+			result = DeeError_Throwf(&DeeError_FileClosed,
+			                         "File descriptor %d was closed",
+			                         fd);
+		} else if (error == ENOTSUP) {
+			if (flags & DEE_MAPFILE_F_TRYMMAP)
+				return 1;
+			return DeeError_Throwf(&DeeError_UnsupportedAPI,
+			                       "File descriptor %" Dee_PRIpSYSFD " cannot be mmap'd",
+			                       fd);
+		} else {
+			result = DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                                   "Failed to map file %d",
+			                                   fd);
+		}
+	}
+done:
+	return result;
+#elif defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HAVE_read)
+
+	/* General implementation (stolen from KOS's `fmapfile(3)') */
+#if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
+	STRUCT_STAT_FOR_SIZE st;
+#endif /* DeeMapFile_IS_CreateFileMapping || DeeMapFile_IS_mmap */
+	Dee_pos_t orig_offset = offset;
+	unsigned char *buf;
+	size_t bufsize;
+	size_t bufused;
+	size_t buffree;
+
+	/* Try to use mmap(2) */
+again:
+#if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
+	if (FSTAT_FOR_SIZE(fd, &st) == 0) {
+		Dee_pos_t map_offset = offset;
+		size_t map_bytes     = max_bytes;
+		if (map_offset == (Dee_pos_t)-1) {
+			if unlikely(flags & DEE_MAPFILE_F_ATSTART) {
+				map_offset = 0;
+			} else {
+				/* Use the file descriptors current offset. */
+#ifdef DeeMapFile_IS_CreateFileMapping
+				DWORD lo;
+				LONG hi = 0;
+				lo = SetFilePointer(fd, 0, &hi, FILE_CURRENT);
+				if (lo == INVALID_SET_FILE_POINTER && GetLastError() != 0)
+					goto after_mmap_attempt;
+				map_offset = (Dee_pos_t)(((uint64_t)lo) |
+				                         ((uint64_t)hi << 32));
+#else /* DeeMapFile_IS_CreateFileMapping */
+				map_offset = (Dee_pos_t)LSEEK(fd, 0, SEEK_CUR);
+				if (map_offset == (Dee_pos_t)-1)
+					goto after_mmap_attempt;
+#endif /* !DeeMapFile_IS_CreateFileMapping */
+			}
+		}
+		if (OVERFLOW_USUB(STRUCT_STAT_GETSIZE(st), map_offset, &map_bytes))
+			map_bytes = 0;
+		if (map_bytes > max_bytes)
+			map_bytes = max_bytes;
+		if (map_bytes) {
+			/* Map file into memory. */
+			size_t used_nulbytes;
+			size_t psm = getpagesize() - 1;
+			size_t addend, mapsize;
+#ifdef DeeMapFile_IS_CreateFileMapping
+			HANDLE hMap;
+#endif /* DeeMapFile_IS_CreateFileMapping */
+			addend = (size_t)(map_offset & psm);
+			map_offset -= addend;
+			mapsize = map_bytes + addend;
+			used_nulbytes = num_trailing_nulbytes;
+			if (min_bytes > map_bytes)
+				used_nulbytes += min_bytes - map_bytes;
+#ifdef DeeMapFile_IS_CreateFileMapping
+			/* TODO: This right here doesn't work in all cases, mainly due to
+			 *       the fact that the `VirtualAlloc()' below fails if passed
+			 *       a base address that isn't a multiple of 0x10000 (and we
+			 *       need it to work if it's a multiple of 0x1000). Also, there
+			 *       can be the case where `VirtualAlloc()' fails because the
+			 *       relevant address is already mapped.
+			 *
+			 * Instead, do what cygwin does and use:
+			 * - NtCreateSection()
+			 * - NtMapViewOfSection()
+			 *
+			 * However, use the below as a fallback when we can't GetProcAddress
+			 * those functions!
+			 */
+			hMap = CreateFileMappingA(fd, NULL,
+			                          (flags & DEE_MAPFILE_F_MAPSHARED)
+			                          ? PAGE_READWRITE
+			                          : PAGE_WRITECOPY,
+			                          0, 0, NULL);
+			if (hMap == NULL || hMap == INVALID_HANDLE_VALUE)
+				goto after_mmap_attempt;
+			buf = (unsigned char *)MapViewOfFile(hMap,
+			                                     (flags & DEE_MAPFILE_F_MAPSHARED)
+			                                     ? (FILE_MAP_READ | FILE_MAP_WRITE)
+			                                     : (FILE_MAP_COPY),
+			                                     (DWORD)(map_offset >> 32),
+			                                     (DWORD)(map_offset),
+			                                     mapsize);
+			if unlikely(buf == NULL) {
+				(void)CloseHandle(hMap);
+			} else
+#else /* DeeMapFile_IS_CreateFileMapping */
+			mapsize += used_nulbytes;
+			mapsize = (mapsize + psm) & ~psm;
+#ifdef CONFIG_HAVE_MAP_SHARED
+			buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
+			                            flags & DEE_MAPFILE_F_MAPSHARED
+			                            ? MAP_SHARED
+			                            : MAP_PRIVATE,
+			                            fd, map_offset);
+#else /* CONFIG_HAVE_MAP_SHARED */
+			if unlikely(flags & DEE_MAPFILE_F_MAPSHARED) {
+				return DeeError_Throwf(&DeeError_UnsupportedAPI,
+				                       "MAP_SHARED isn't supported");
+			}
+			buf = (unsigned char *)MMAP(NULL, mapsize, PROT_READ | PROT_WRITE,
+			                            MAP_PRIVATE, fd, map_offset);
+#endif /* !CONFIG_HAVE_MAP_SHARED */
+			if (buf != (unsigned char *)MAP_FAILED)
+#endif /* !DeeMapFile_IS_CreateFileMapping */
+			{
+				/* Clear out the caller-required trailing NUL bytes.
+				 * We do this in a kind-of special way that tries not
+				 * to write-fault memory if it already contains NULs. */
+				unsigned char *nul;
+				buf += addend;
+				nul = buf + map_bytes;
+#ifdef DeeMapFile_IS_CreateFileMapping
+				self->_dmf_vfre = 0;
+#endif /* DeeMapFile_IS_CreateFileMapping */
+				if (used_nulbytes) {
+#ifdef DeeMapFile_IS_CreateFileMapping
+					size_t bytes_in_page;
+					bytes_in_page = (psm + 1) - ((uintptr_t)nul & psm);
+					if (used_nulbytes > bytes_in_page) {
+						void *tail_base;
+						size_t tail_size;
+						tail_base = (void *)(nul + bytes_in_page);
+						tail_size = used_nulbytes - bytes_in_page;
+						tail_size = (tail_size + psm) & ~psm;
+						/* Must map bss memory at `tail_base...+=tail_size'
+						 * If mapping memory here isn't possible, try to map
+						 * the file once again, but at a different location.
+						 *
+						 * Do this a couple of times, and if we get overlap errors
+						 * every single time, just give up eventually and jump to
+						 * the mmap-not-supported handler. */
+						if (!VirtualAlloc(tail_base, tail_size,
+						                  MEM_COMMIT | MEM_RESERVE,
+						                  PAGE_READWRITE)) {
+							(void)UnmapViewOfFile(buf);
+							(void)CloseHandle(hMap);
+							goto after_mmap_attempt;
+						}
+						self->_dmf_vfre = tail_size;
+					}
+#endif /* DeeMapFile_IS_CreateFileMapping */
+					do {
+						if (*nul) {
+							bzero(nul, used_nulbytes);
+							break;
+						}
+						--used_nulbytes;
+						++nul;
+					} while (used_nulbytes);
+				}
+				DeeMapFile_SETADDR(self, buf);
+				DeeMapFile_SETSIZE(self, map_bytes);
+#ifdef DeeMapFile_IS_CreateFileMapping
+				self->_dmf_hmap = (void *)hMap;
+#else /* DeeMapFile_IS_CreateFileMapping */
+				self->_dmf_mapsize = mapsize;
+#endif /* !DeeMapFile_IS_CreateFileMapping */
+				return 0;
+			}
+		} else {
+			/* Special files from procfs indicate their size as `0', even
+			 * though they aren't actually empty. - As such, we can't just
+			 * use the normal approach of read(2)-ing the file.
+			 *
+			 * Only if at that point it still indicates being empty, are we
+			 * actually allowed to believe that claim! */
+		}
+	}
+after_mmap_attempt:
+#endif /* DeeMapFile_IS_CreateFileMapping || DeeMapFile_IS_mmap */
+	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
+		if (flags & DEE_MAPFILE_F_TRYMMAP)
+			return 1;
+		return DeeError_Throwf(&DeeError_UnsupportedAPI,
+		                       "File descriptor %" Dee_PRIpSYSFD " cannot be mmap'd",
+		                       fd);
+	}
+
+	/* Allocate a heap buffer. */
+	bufsize = max_bytes;
+	if (bufsize > 0x10000)
+		bufsize = 0x10000;
+	if (bufsize < min_bytes)
+		bufsize = min_bytes;
+	buf = (unsigned char *)Dee_TryMalloc(bufsize + num_trailing_nulbytes);
+	if unlikely(!buf) {
+		bufsize = 1;
+		if (bufsize < min_bytes)
+			bufsize = min_bytes;
+		buf = (unsigned char *)Dee_Malloc(bufsize + num_trailing_nulbytes);
+		if unlikely(!buf)
+			return -1;
+	}
+	bufused = 0;
+	buffree = bufsize;
+
+	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DEE_MAPFILE_F_ATSTART))) {
+		/* Try to use pread(2) */
+#if defined(CONFIG_HOST_WINDOWS) || defined(PREAD)
+		for (;;) {
+#ifdef CONFIG_HOST_WINDOWS
+			DWORD error;
+			OVERLAPPED ol;
+			size_t readsize = buffree;
+#if __SIZEOF_SIZE_T__ > 4
+			if (readsize > (size_t)(DWORD)-1)
+				readsize = (size_t)(DWORD)-1;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+			bzero(&ol, sizeof(ol));
+			ol.Offset     = (DWORD)(offset);
+			ol.OffsetHigh = (DWORD)(offset >> 32);
+			if (!ReadFile(fd, buf + bufused, (DWORD)readsize, &error, &ol)) {
+				if (bufused == 0)
+					break; /* File probably doesn't support `pread(2)'... */
+				/* Read error */
+				goto system_err_buf;
+			}
+			if (error == 0 || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize)) {
+				/* End-of-file! */
+				unsigned char *newbuf;
+				size_t used_nulbytes;
+				bufused += (size_t)error;
+				used_nulbytes = num_trailing_nulbytes;
+				if (min_bytes > bufused)
+					used_nulbytes += min_bytes - bufused;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+				if likely(newbuf)
+					buf = newbuf;
+				bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+				DeeMapFile_SETADDR(self, buf);
+				DeeMapFile_SETSIZE(self, bufused);
+				DeeMapFile_SETHEAP(self);
+				return 0;
+			}
+#else /* CONFIG_HOST_WINDOWS */
+			Dee_ssize_t error;
+			error = PREAD(fd, buf + bufused, buffree, offset);
+			if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < buffree)) {
+				if ((size_t)error < buffree) {
+					/* End-of-file! */
+					unsigned char *newbuf;
+					size_t used_nulbytes;
+					bufused += (size_t)error;
+					used_nulbytes = num_trailing_nulbytes;
+					if (min_bytes > bufused)
+						used_nulbytes += min_bytes - bufused;
+					newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+					if likely(newbuf)
+						buf = newbuf;
+					bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+					DeeMapFile_SETADDR(self, buf);
+					DeeMapFile_SETSIZE(self, bufused);
+					DeeMapFile_SETHEAP(self);
+					return 0;
+				}
+				if (bufused == 0)
+					break; /* File probably doesn't support `pread(2)'... */
+				/* Read error */
+				goto system_err_buf;
+			}
+#endif /* !CONFIG_HOST_WINDOWS */
+			offset  += (size_t)error;
+			bufused += (size_t)error;
+			buffree -= (size_t)error;
+			if (buffree < 1024) {
+				unsigned char *newbuf;
+				size_t newsize = bufsize * 2;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if (!newbuf) {
+					newsize = bufsize + 1024;
+					newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+					if (!newbuf) {
+						if (!buffree) {
+							newsize = bufsize + 1;
+							newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+							if unlikely(!newbuf)
+								goto err_buf;
+						} else {
+							newsize = bufsize;
+							newbuf  = buf;
+						}
+					}
+				}
+				buffree += newsize - bufsize;
+				bufsize = newsize;
+				buf     = newbuf;
+			}
+		}
+#endif /* CONFIG_HOST_WINDOWS || PREAD */
+
+		/* For a custom offset, try to use lseek() (or read()) */
+		{
+#if defined(CONFIG_HOST_WINDOWS) || (defined(LSEEK) && defined(SEEK_SET))
+#ifdef CONFIG_HOST_WINDOWS
+			LONG offset_hi = (LONG)(DWORD)(offset >> 32);
+			if (SetFilePointer(fd, (LONG)(DWORD)offset, &offset_hi,
+			                   FILE_BEGIN) != INVALID_SET_FILE_POINTER ||
+			    GetLastError() == 0)
+#else /* CONFIG_HOST_WINDOWS */
+			if (LSEEK(fd, offset, SEEK_SET) != -1)
+#endif /* !CONFIG_HOST_WINDOWS */
+			{
+				/* Was able to lseek(2) */
+			} else
+#endif /* CONFIG_HOST_WINDOWS || (LSEEK && SEEK_SET) */
+			{
+				/* Try to use read(2) to skip leading data. */
+				while (offset) {
+					size_t skip = bufsize + num_trailing_nulbytes;
+					if ((Dee_pos_t)skip > offset)
+						skip = (size_t)offset;
+					{
+#ifdef CONFIG_HOST_WINDOWS
+						DWORD error;
+						size_t readsize = buffree;
+#if __SIZEOF_SIZE_T__ > 4
+						if (readsize > (size_t)(DWORD)-1)
+							readsize = (size_t)(DWORD)-1;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+						if (!ReadFile(fd, buf, (DWORD)readsize, &error, NULL))
+							goto system_err_buf;
+						if (!error || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize))
+							goto empty_file; /* EOF reached before `offset' */
+#else /* CONFIG_HOST_WINDOWS */
+						Dee_ssize_t error;
+						error = read(fd, buf, skip);
+						if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < skip)) {
+							if (error < 0)
+								goto system_err_buf;
+							goto empty_file; /* EOF reached before `offset' */
+						}
+#endif /* !CONFIG_HOST_WINDOWS */
+						offset -= (size_t)error;
+					}
+				}
+			}
+		}
+	}
+
+	/* Use read(2) as fallback */
+	for (;;) {
+#ifdef CONFIG_HOST_WINDOWS
+		DWORD error;
+		size_t readsize = buffree;
+#if __SIZEOF_SIZE_T__ > 4
+		if (readsize > (size_t)(DWORD)-1)
+			readsize = (size_t)(DWORD)-1;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+		if (!ReadFile(fd, buf, (DWORD)readsize, &error, NULL))
+			goto system_err_buf;
+		if (!error || (!(flags & DEE_MAPFILE_F_READALL) && error < (DWORD)readsize)) {
+			/* End-of-file! */
+			unsigned char *newbuf;
+			size_t used_nulbytes;
+			bufused += (size_t)error;
+			used_nulbytes = num_trailing_nulbytes;
+			if (min_bytes > bufused)
+				used_nulbytes += min_bytes - bufused;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+			if likely(newbuf)
+				buf = newbuf;
+			bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+			DeeMapFile_SETADDR(self, buf);
+			DeeMapFile_SETSIZE(self, bufused);
+			DeeMapFile_SETHEAP(self);
+			return 0;
+		}
+#else /* CONFIG_HOST_WINDOWS */
+		Dee_ssize_t error;
+		error = read(fd, buf + bufused, buffree);
+		if (error <= 0 || (!(flags & DEE_MAPFILE_F_READALL) && (size_t)error < buffree)) {
+			if (error >= 0) {
+				/* End-of-file! */
+				unsigned char *newbuf;
+				size_t used_nulbytes;
+				bufused += (size_t)error;
+				used_nulbytes = num_trailing_nulbytes;
+				if (min_bytes > bufused)
+					used_nulbytes += min_bytes - bufused;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+				if likely(newbuf)
+					buf = newbuf;
+				bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+				DeeMapFile_SETADDR(self, buf);
+				DeeMapFile_SETSIZE(self, bufused);
+				DeeMapFile_SETHEAP(self);
+				return 0;
+			}
+			/* Read error */
+			goto system_err_buf;
+		}
+#endif /* !CONFIG_HOST_WINDOWS */
+		bufused += (size_t)error;
+		buffree -= (size_t)error;
+		if (buffree < 1024) {
+			unsigned char *newbuf;
+			size_t newsize = bufsize * 2;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+			if (!newbuf) {
+				newsize = bufsize + 1024;
+				newbuf  = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if (!newbuf) {
+					if (!buffree) {
+						newsize = bufsize + 1;
+						newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+						if unlikely(!newbuf)
+							goto err_buf;
+					} else {
+						newsize = bufsize;
+						newbuf  = buf;
+					}
+				}
+			}
+			buffree += newsize - bufsize;
+			bufsize = newsize;
+			buf     = newbuf;
+		}
+	}
+
+	/*--------------------------------------------------------------------*/
+	{
+		unsigned char *newbuf;
+		size_t used_nulbytes;
+		/* Because of how large our original buffer was, and because at this
+		 * point all we want to do is return a `num_trailing_nulbytes'-
+		 * large buffer of all NUL-bytes, it's probably more efficient to
+		 * allocate a new (small) buffer, than trying to realloc the old
+		 * buffer. If we try to do realloc(), the heap might see that all
+		 * we're trying to do is truncate the buffer, and so might choose
+		 * not to alter its base address, which (if done repeatedly) might
+		 * lead to memory becoming very badly fragmented. */
+empty_file:
+		used_nulbytes = min_bytes + num_trailing_nulbytes;
+		newbuf = (unsigned char *)Dee_TryCalloc(used_nulbytes);
+		if likely(newbuf) {
+			Dee_Free(buf);
+		} else {
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, used_nulbytes);
+			if (!newbuf)
+				newbuf = buf;
+			bzero(newbuf, used_nulbytes);
+		}
+		DeeMapFile_SETADDR(self, newbuf);
+		DeeMapFile_SETSIZE(self, 0);
+		DeeMapFile_SETHEAP(self);
+	}
+	return 0;
+	{
+system_err_buf:
+		/* Throw/handle system errors */
+#ifdef CONFIG_HOST_WINDOWS
+		DWORD error = GetLastError();
+		if (DeeNTSystem_IsBadAllocError(error) && Dee_CollectMemory(1)) {
+			offset = orig_offset;
+			goto again;
+		} else if (DeeNTSystem_IsIntr(error)) {
+			if (DeeThread_CheckInterrupt() == 0) {
+				offset = orig_offset;
+				goto again;
+			}
+		} else if (DeeNTSystem_IsBadF(error)) {
+			DeeError_Throwf(&DeeError_FileClosed,
+			                "File descriptor %d was closed",
+			                fd);
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                        "Failed to map file %d", fd);
+		}
+#else /* CONFIG_HOST_WINDOWS */
+		int error = DeeSystem_GetErrno();
+		if (error == ENOMEM && Dee_CollectMemory(1)) {
+			offset = orig_offset;
+			goto again;
+		} else if (error == EINTR) {
+			if (DeeThread_CheckInterrupt() == 0) {
+				offset = orig_offset;
+				goto again;
+			}
+		} else if (error == EBADF) {
+			DeeError_Throwf(&DeeError_FileClosed,
+			                "File descriptor %d was closed",
+			                fd);
+		} else {
+			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                          "Failed to map file %d", fd);
+		}
+#endif /* !CONFIG_HOST_WINDOWS */
+	}
+err_buf:
+	Dee_Free(buf);
+	return -1;
+#else /* ... */
+	return DeeError_Throwf(&DeeError_UnsupportedAPI, "File mappings aren't supported");
+#endif /* !... */
+}
+
+/* Same as `DeeMapFile_InitSysFd()', but initialize from a deemon File object. */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict file,
+                    Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
+                    size_t num_trailing_nulbytes, unsigned int flags) {
+	unsigned char *buf;
+	size_t bufsize;
+	size_t bufused;
+	size_t buffree;
+
+	if (DeeObject_InstanceOf(file, (DeeTypeObject *)&DeeSystemFile_Type)) {
+		DeeSysFD sfd = DeeSystemFile_Fileno(file);
+		if (sfd == DeeSysFD_INVALID)
+			return -1;
+		return DeeMapFile_InitSysFd(self, sfd,
+		                            offset, min_bytes, max_bytes,
+		                            num_trailing_nulbytes, flags);
+	}
+	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
+		if (flags & DEE_MAPFILE_F_TRYMMAP)
+			return 1;
+		return DeeError_Throwf(&DeeError_UnsupportedAPI,
+		                       "Cannot mmap objects of type %r",
+		                       Dee_TYPE(file));
+	}
+	/* Same as the after-mmap code in `DeeMapFile_InitSysFd()',
+	 * but using deemon's file API, rather than the system's! */
+
+	/* Allocate a heap buffer. */
+	bufsize = max_bytes;
+	if (bufsize > 0x10000)
+		bufsize = 0x10000;
+	if (bufsize < min_bytes)
+		bufsize = min_bytes;
+	buf = (unsigned char *)Dee_TryMalloc(bufsize + num_trailing_nulbytes);
+	if unlikely(!buf) {
+		bufsize = 1;
+		buf = (unsigned char *)Dee_Malloc(bufsize + num_trailing_nulbytes);
+		if unlikely(!buf)
+			return -1;
+	}
+	bufused = 0;
+	buffree = bufsize;
+
+	if (offset != (Dee_pos_t)-1 && (offset != 0 || !(flags & DEE_MAPFILE_F_ATSTART))) {
+		/* Try to use pread(2) */
+		for (;;) {
+			size_t error;
+			error = (flags & DEE_MAPFILE_F_READALL)
+			        ? DeeFile_PReadAll(file, buf + bufused, buffree, offset)
+			        : DeeFile_PRead(file, buf + bufused, buffree, offset);
+			if unlikely(error == (size_t)-1) {
+				if (DeeError_Catch(&DeeError_NotImplemented))
+					break; /* Try to use seek+read instead */
+				goto err_buf;
+			}
+			if (error < buffree) {
+				/* End-of-file! */
+				unsigned char *newbuf;
+				size_t used_nulbytes;
+				bufused += error;
+				used_nulbytes = num_trailing_nulbytes;
+				if (min_bytes > bufused)
+					used_nulbytes += min_bytes - bufused;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+				if likely(newbuf)
+					buf = newbuf;
+				bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+				DeeMapFile_SETADDR(self, buf);
+				DeeMapFile_SETSIZE(self, bufused);
+				DeeMapFile_SETHEAP(self);
+				return 0;
+			}
+			offset  += error;
+			bufused += error;
+			buffree -= error;
+			if (buffree < 1024) {
+				unsigned char *newbuf;
+				size_t newsize = bufsize * 2;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if (!newbuf) {
+					newsize = bufsize + 1024;
+					newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+					if (!newbuf) {
+						if (!buffree) {
+							newsize = bufsize + 1;
+							newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+							if unlikely(!newbuf)
+								goto err_buf;
+						} else {
+							newsize = bufsize;
+							newbuf  = buf;
+						}
+					}
+				}
+				buffree += newsize - bufsize;
+				bufsize = newsize;
+				buf     = newbuf;
+			}
+		}
+
+		/* For a custom offset, try to use lseek() (or read()) */
+		if (DeeFile_Seek(file, offset, SEEK_SET) != (Dee_pos_t)-1) {
+			/* Was able to lseek(2) */
+		} else {
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+				goto err_buf;
+			/* Try to use read(2) to skip leading data. */
+			while (offset) {
+				size_t error;
+				size_t skip = bufsize + num_trailing_nulbytes;
+				if ((Dee_pos_t)skip > offset)
+					skip = (size_t)offset;
+				error = (flags & DEE_MAPFILE_F_READALL)
+				        ? DeeFile_ReadAll(file, buf, skip)
+				        : DeeFile_Read(file, buf, skip);
+				if unlikely(error == (size_t)-1)
+					goto err_buf;
+				if (error < skip)
+					goto empty_file; /* EOF reached before `offset' */
+				offset -= error;
+			}
+		}
+	}
+
+	/* Use read(2) as fallback */
+	for (;;) {
+		size_t error;
+		error = (flags & DEE_MAPFILE_F_READALL)
+		        ? DeeFile_ReadAll(file, buf + bufused, buffree)
+		        : DeeFile_Read(file, buf + bufused, buffree);
+		if unlikely(error == (size_t)-1)
+			goto err_buf;
+		if (error < buffree) {
+			/* End-of-file! */
+			unsigned char *newbuf;
+			size_t used_nulbytes;
+			bufused += error;
+			used_nulbytes = num_trailing_nulbytes;
+			if (min_bytes > bufused)
+				used_nulbytes += min_bytes - bufused;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, bufused + used_nulbytes);
+			if likely(newbuf)
+				buf = newbuf;
+			bzero(buf + bufused, used_nulbytes); /* Trailing NUL-bytes */
+			DeeMapFile_SETADDR(self, buf);
+			DeeMapFile_SETSIZE(self, bufused);
+			DeeMapFile_SETHEAP(self);
+			return 0;
+		}
+		bufused += error;
+		buffree -= error;
+		if (buffree < 1024) {
+			unsigned char *newbuf;
+			size_t newsize = bufsize * 2;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+			if (!newbuf) {
+				newsize = bufsize + 1024;
+				newbuf  = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if (!newbuf) {
+					if (!buffree) {
+						newsize = bufsize + 1;
+						newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+						if unlikely(!newbuf)
+							goto err_buf;
+					} else {
+						newsize = bufsize;
+						newbuf  = buf;
+					}
+				}
+			}
+			buffree += newsize - bufsize;
+			bufsize = newsize;
+			buf     = newbuf;
+		}
+	}
+
+	/*--------------------------------------------------------------------*/
+	{
+		unsigned char *newbuf;
+		size_t used_nulbytes;
+		/* Because of how large our original buffer was, and because at this
+		 * point all we want to do is return a `num_trailing_nulbytes'-
+		 * large buffer of all NUL-bytes, it's probably more efficient to
+		 * allocate a new (small) buffer, than trying to realloc the old
+		 * buffer. If we try to do realloc(), the heap might see that all
+		 * we're trying to do is truncate the buffer, and so might choose
+		 * not to alter its base address, which (if done repeatedly) might
+		 * lead to memory becoming very badly fragmented. */
+empty_file:
+		used_nulbytes = min_bytes + num_trailing_nulbytes;
+		newbuf = (unsigned char *)Dee_TryCalloc(used_nulbytes);
+		if likely(newbuf) {
+			Dee_Free(buf);
+		} else {
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, used_nulbytes);
+			if (!newbuf)
+				newbuf = buf;
+			bzero(newbuf, used_nulbytes);
+		}
+		DeeMapFile_SETADDR(self, newbuf);
+		DeeMapFile_SETSIZE(self, 0);
+		DeeMapFile_SETHEAP(self);
+	}
+	return 0;
+err_buf:
+	Dee_Free(buf);
+	return -1;
+}
+
 DECL_END
 
 #ifndef __INTELLISENSE__
@@ -1376,7 +2304,5 @@ DECL_END
 
 #include "system-unix.c.inl"
 #endif /* !__INTELLISENSE__ */
-
-
 
 #endif /* !GUARD_DEEMON_SYSTEM_SYSTEM_C */

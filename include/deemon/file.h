@@ -135,35 +135,35 @@ struct Dee_file_object {
  *     int
  */
 
-#undef DeeSysFS_IS_HANDLE /* Window's `HANDLE' */
-#undef DeeSysFS_IS_INT    /* Unix's `int' */
-#undef DeeSysFS_IS_FILE   /* Stdio's `FILE *' */
+#undef DeeSysFD_IS_HANDLE /* Window's `HANDLE' */
+#undef DeeSysFD_IS_INT    /* Unix's `int' */
+#undef DeeSysFD_IS_FILE   /* Stdio's `FILE *' */
 #if defined(DEESYSTEM_FILE_USE_WINDOWS)
-#define DeeSysFS_IS_HANDLE 1
+#define DeeSysFD_IS_HANDLE 1
 #elif defined(DEESYSTEM_FILE_USE_UNIX)
-#define DeeSysFS_IS_INT 1
+#define DeeSysFD_IS_INT 1
 #elif defined(DEESYSTEM_FILE_USE_STDIO)
-#define DeeSysFS_IS_FILE 1
+#define DeeSysFD_IS_FILE 1
 #else /* ... */
 /* Fallback: Just assume FD-based file I/O (even though at this point
  *           it's most likely that no I/O at all is supported, which
  *           will cause the deemon sources to stub out most APIs...) */
-#define DeeSysFS_IS_INT 1
+#define DeeSysFD_IS_INT 1
 #endif /* !... */
 
 #define DeeSysFD_HANDLE_GETSET  "osfhandle_np"
 #define DeeSysFD_INT_GETSET     "fileno_np"
 
-#ifdef DeeSysFS_IS_HANDLE
+#ifdef DeeSysFD_IS_HANDLE
 #define DeeSysFD_Close(x) CloseHandle(x)
 #undef  DeeSysFD_SIGNED
 #define DeeSysFD_SIZE    __SIZEOF_POINTER__
 #define DeeSysFD_INVALID ((DeeSysFD)-1l)
 #define DeeSysFD_GETSET  DeeSysFD_HANDLE_GETSET
 typedef void *DeeSysFD;
-#endif /* DeeSysFS_IS_HANDLE */
+#endif /* DeeSysFD_IS_HANDLE */
 
-#ifdef DeeSysFS_IS_INT
+#ifdef DeeSysFD_IS_INT
 #if !defined(GUARD_DEEMON_SYSTEM_FEATURES_H) || defined(CONFIG_HAVE_close)
 #define DeeSysFD_Close(x) close(x)
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H || CONFIG_HAVE_close */
@@ -172,9 +172,9 @@ typedef void *DeeSysFD;
 #define DeeSysFD_INVALID (-1)
 #define DeeSysFD_GETSET  DeeSysFD_INT_GETSET
 typedef int DeeSysFD;
-#endif /* DeeSysFS_IS_INT */
+#endif /* DeeSysFD_IS_INT */
 
-#ifdef DeeSysFS_IS_FILE
+#ifdef DeeSysFD_IS_FILE
 #if !defined(GUARD_DEEMON_SYSTEM_FEATURES_H) || defined(CONFIG_HAVE_fclose)
 #define DeeSysFD_Close(x) fclose(x)
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H || CONFIG_HAVE_fclose */
@@ -182,7 +182,7 @@ typedef int DeeSysFD;
 #define DeeSysFD_SIZE    __SIZEOF_POINTER__
 #define DeeSysFD_INVALID NULL
 typedef void *DeeSysFD; /* FILE * */
-#endif /* DeeSysFS_IS_FILE */
+#endif /* DeeSysFD_IS_FILE */
 
 
 #ifndef DeeSysFD_Close
@@ -373,9 +373,9 @@ DeeFile_Filename(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self, size_t max_length, bool keep_lf);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_ReadText(DeeObject *__restrict self, size_t max_length, bool readall);
+DeeFile_ReadBytes(DeeObject *__restrict self, size_t max_length, bool readall);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_PReadText(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
+DeeFile_PReadBytes(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
 
 /* HINT: `DeeFile_Printf' is literally implemented as `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'

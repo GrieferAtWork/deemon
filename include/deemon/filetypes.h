@@ -78,16 +78,19 @@ struct Dee_system_file_object {
 	uint32_t         sf_filetype;   /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not loaded. */
 	unsigned char    sf_pendingc;   /* Number of write-pending characters (for UTF-8 console output). */
 	unsigned char    sf_pending[7]; /* Write-pending characters (for UTF-8 console output). */
+#define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 #ifdef DEESYSTEM_FILE_USE_UNIX
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
 	int              sf_handle;     /* [0..1] Underlying system file. */
 	int              sf_ownhandle;  /* [0..1] The owned underlying system file. */
+#define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
 	DREF DeeObject  *sf_filename;   /* [0..1][const] The filename, or NULL if not known. */
 	/*FILE*/ void   *sf_handle;     /* [0..1] Underlying system file. */
 	/*FILE*/ void   *sf_ownhandle;  /* [0..1] The owned underlying system file. */
+#define DeeSystemFile_GetHandle(self) ((DeeSystemFileObject *)Dee_REQUIRES_OBJECT(self))->sf_handle
 #endif /* DEESYSTEM_FILE_USE_STDIO */
 };
 

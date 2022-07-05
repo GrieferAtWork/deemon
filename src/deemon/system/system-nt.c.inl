@@ -66,28 +66,28 @@ DECL_BEGIN
 #endif /* _WIN32_WCE */
 
 
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_HANDLE)
 #define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFS_IS_HANDLE */
+#else /* DeeSysFD_GETSET && DeeSysFD_IS_HANDLE */
 #define GETATTR_osfhandle(ob) DeeObject_GetAttrString(ob, DeeSysFD_HANDLE_GETSET)
-#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
+#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_HANDLE */
 
 #ifndef GETATTR_fileno
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_FILE)
 #define GETATTR_fileno(ob) DeeObject_GetAttr(ob, (DeeObject *)&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#else /* DeeSysFD_GETSET && DeeSysFD_IS_FILE */
 #define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
-#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
+#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
 #endif /* !GETATTR_fileno */
 
 
 /* Retrieve the Windows handle associated with a given object.
  * The translation is done by performing the following:
- * >> #ifdef DeeSysFS_IS_HANDLE
+ * >> #ifdef DeeSysFD_IS_HANDLE
  * >> if (DeeFile_Check(ob))
  * >>     return DeeFile_GetSysFD(ob);
  * >> #endif
- * >> #ifdef DeeSysFS_IS_INT
+ * >> #ifdef DeeSysFD_IS_INT
  * >> if (DeeFile_Check(ob))
  * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
  * >> #endif
@@ -119,8 +119,8 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd) {
 	DREF DeeObject *attr;
-#if (defined(DeeSysFS_IS_HANDLE) || \
-     (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
+#if (defined(DeeSysFD_IS_HANDLE) || \
+     (defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
 	if (DeeFile_Check(ob)) {
 		DeeSysFD sysfd;
 		if (p_fd)
@@ -128,11 +128,11 @@ DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd) {
 		sysfd = DeeFile_GetSysFD(ob);
 		if (sysfd == DeeSysFD_INVALID)
 			return INVALID_HANDLE_VALUE;
-#ifdef DeeSysFS_IS_HANDLE
+#ifdef DeeSysFD_IS_HANDLE
 		return (void *)(HANDLE)sysfd;
-#endif /* DeeSysFS_IS_HANDLE */
+#endif /* DeeSysFD_IS_HANDLE */
 
-#if defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
+#if defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
 		{
 			HANDLE hResult;
 			hResult = (HANDLE)get_osfhandle(sysfd);
@@ -143,9 +143,9 @@ DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd) {
 			}
 			return (void *)hResult;
 		}
-#endif /* DeeSysFS_IS_INT && CONFIG_HAVE_get_osfhandle */
+#endif /* DeeSysFD_IS_INT && CONFIG_HAVE_get_osfhandle */
 	}
-#endif /* DeeSysFS_IS_HANDLE || DeeSysFS_IS_INT */
+#endif /* DeeSysFD_IS_HANDLE || DeeSysFD_IS_INT */
 
 #ifdef CONFIG_HAVE_get_osfhandle
 	if (DeeInt_Check(ob)) {
@@ -238,8 +238,8 @@ PUBLIC WUNUSED int
 (DCALL DeeNTSystem_TryGetHandle)(DeeObject *__restrict ob,
                                  /*PHANDLE*/ void **pHandle) {
 	DREF DeeObject *attr;
-#if (defined(DeeSysFS_IS_HANDLE) || \
-     (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
+#if (defined(DeeSysFD_IS_HANDLE) || \
+     (defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)))
 	if (DeeFile_Check(ob)) {
 		DeeSysFD sysfd;
 		sysfd = DeeFile_GetSysFD(ob);
@@ -249,17 +249,17 @@ PUBLIC WUNUSED int
 			*pHandle = INVALID_HANDLE_VALUE;
 			return 0;
 		}
-#ifdef DeeSysFS_IS_HANDLE
+#ifdef DeeSysFD_IS_HANDLE
 		*pHandle = (void *)(HANDLE)sysfd;
 		return 0;
-#endif /* DeeSysFS_IS_HANDLE */
+#endif /* DeeSysFD_IS_HANDLE */
 
-#if defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
+#if defined(DeeSysFD_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
 		*pHandle = (void *)(HANDLE)get_osfhandle(sysfd);
 		return 0;
-#endif /* DeeSysFS_IS_INT && CONFIG_HAVE_get_osfhandle */
+#endif /* DeeSysFD_IS_INT && CONFIG_HAVE_get_osfhandle */
 	}
-#endif /* DeeSysFS_IS_HANDLE || DeeSysFS_IS_INT */
+#endif /* DeeSysFD_IS_HANDLE || DeeSysFD_IS_INT */
 
 #ifdef CONFIG_HAVE_get_osfhandle
 	if (DeeInt_Check(ob)) {

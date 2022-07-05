@@ -258,11 +258,11 @@ unicode_printer_print_brace_escaped_strob(struct unicode_printer *__restrict sel
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 string_format(DeeStringObject *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1, 2)) int
-(DCALL ast_optimize_string_format)(struct ast *__restrict ast_callattr_format,
-                                   struct ast *__restrict ast_template_for_ddi,
-                                   DREF DeeObject **__restrict p_template_str,
-                                   struct ast *__restrict ast_args) {
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int
+(DCALL ast_optimize_string_format)(struct ast *ast_callattr_format,
+                                   struct ast *ast_template_for_ddi,
+                                   DREF DeeObject **p_template_str,
+                                   struct ast *ast_args) {
 	DeeObject *template_str = *p_template_str;
 	struct ast **argv       = ast_args->a_multiple.m_astv;
 	size_t i, argc = ast_args->a_multiple.m_astc;

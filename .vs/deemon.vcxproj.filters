@@ -375,6 +375,9 @@
     <ClInclude Include="..\src\deemon\objects\seq\byattr.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\mapfile.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

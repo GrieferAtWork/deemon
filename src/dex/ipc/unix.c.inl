@@ -1459,7 +1459,7 @@ process_get_environ(Process *__restrict self) {
 		goto err;
 	}
 	Dee_Decref(filename);
-	content = DeeFile_ReadText(fp, (size_t)-1, true);
+	content = DeeFile_ReadBytes(fp, (size_t)-1, true);
 	Dee_Decref(fp);
 	if unlikely(!content)
 		goto err;
@@ -1900,7 +1900,7 @@ process_get_cmdline(Process *__restrict UNUSED(self)) {
 		}
 		Dee_Decref(filename);
 	}
-	content = DeeFile_ReadText(fp, (size_t)-1, true);
+	content = DeeFile_ReadBytes(fp, (size_t)-1, true);
 	Dee_Decref(fp);
 	if unlikely(!content)
 		goto err;
@@ -2055,7 +2055,7 @@ process_get_argv(Process *__restrict self) {
 		}
 		Dee_Decref(filename);
 	}
-	content = DeeFile_ReadText(fp, (size_t)-1, true);
+	content = DeeFile_ReadBytes(fp, (size_t)-1, true);
 	Dee_Decref(fp);
 	if unlikely(!content)
 		goto err;

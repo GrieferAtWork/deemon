@@ -30,6 +30,7 @@
 #include <deemon/filetypes.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/mapfile.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -40,6 +41,7 @@
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/host.h>
 #include <hybrid/minmax.h>
 
 #include "../runtime/runtime_error.h"
@@ -616,13 +618,20 @@ DeeFile_GetSysFD(DeeObject *__restrict self) {
 #ifdef DeeSysFD_GETSET
 	DREF DeeObject *result_ob;
 	DeeSysFD result;
+
 	/* Special case: If the file is a system-file,  */
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Fileno(self);
-	/* Callback: Call a `fileno()' member function. */
+
+	/* General case: look for a `DeeSysFD_GETSET' attribute */
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_getsysfd);
-	if unlikely(!result_ob)
+	if unlikely(!result_ob) {
+#if defined(DeeSysFD_IS_HANDLE) && defined(CONFIG_HAVE_get_osfhandle)
+		/* TODO: Also check for an attribute `DeeSysFD_INT_GETSET' */
+#endif /* DeeSysFD_IS_HANDLE && CONFIG_HAVE_get_osfhandle */
 		goto err;
+	}
+
 	/* Cast the member function's return value to an integer. */
 	if (DeeObject_AsFd(result_ob, &result))
 		goto err_result_ob;
@@ -697,68 +706,141 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 	}
 	err_unimplemented_operator(Dee_TYPE(self), FILE_OPERATOR_GETC);
 	goto err;
-got_read: {
-	struct bytes_printer printer = BYTES_PRINTER_INIT;
-	/* Keep on reading characters until a linefeed is encountered. */
-	while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
-		ch = (*pgetc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-		if (ch == '\r') {
-			/* If the next character is '\n', then we must consume it as well. */
+got_read:
+	{
+		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		/* Keep on reading characters until a linefeed is encountered. */
+		while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
 			ch = (*pgetc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-			if (ch >= 0 && ch != '\n')
-				ch = (*pungetc)((DeeFileObject *)self, ch);
+			if (ch == '\r') {
+				/* If the next character is '\n', then we must consume it as well. */
+				ch = (*pgetc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+				if (ch >= 0 && ch != '\n')
+					ch = (*pungetc)((DeeFileObject *)self, ch);
+				if (ch == GETC_ERR)
+					goto err_printer;
+				/* Found a \r\n or \r-linefeed. */
+				if (keep_lf) {
+					if (bytes_printer_putb(&printer, '\r'))
+						goto err_printer;
+					if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
+					    bytes_printer_putb(&printer, '\n'))
+						goto err_printer;
+				}
+				goto done;
+			}
 			if (ch == GETC_ERR)
 				goto err_printer;
-			/* Found a \r\n or \r-linefeed. */
-			if (keep_lf) {
-				if (bytes_printer_putb(&printer, '\r'))
-					goto err_printer;
-				if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
+			if (ch == '\n') {
+				/* Found a \n-linefeed */
+				if (keep_lf &&
 				    bytes_printer_putb(&printer, '\n'))
 					goto err_printer;
+				goto done;
 			}
-			goto done;
-		}
-		if (ch == GETC_ERR)
-			goto err_printer;
-		if (ch == '\n') {
-			/* Found a \n-linefeed */
-			if (keep_lf &&
-			    bytes_printer_putb(&printer, '\n'))
+			if (ch == GETC_EOF) {
+				/* Stop on EOF */
+				if (!BYTES_PRINTER_SIZE(&printer)) {
+					/* Nothing was read -> return ITER_DONE */
+					bytes_printer_fini(&printer);
+					return ITER_DONE;
+				}
+				goto done;
+			}
+			/* Print the character. */
+			if (bytes_printer_putb(&printer, (uint8_t)ch))
 				goto err_printer;
-			goto done;
 		}
-		if (ch == GETC_EOF) {
-			/* Stop on EOF */
-			if (!BYTES_PRINTER_SIZE(&printer)) {
-				/* Nothing was read -> return ITER_DONE */
-				bytes_printer_fini(&printer);
-				return ITER_DONE;
-			}
-			goto done;
-		}
-		/* Print the character. */
-		if (bytes_printer_putb(&printer, (uint8_t)ch))
-			goto err_printer;
-	}
 done:
-	return bytes_printer_pack(&printer);
+		return bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
-}
+		bytes_printer_fini(&printer);
+	}
 err:
 	return NULL;
 }
 
 
+#ifdef DeeSystemFile_GetHandle
+#undef HAVE_file_read_trymap
+
+#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#define HAVE_file_read_trymap
+#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+
+#ifdef DEESYSTEM_FILE_USE_UNIX
+#define HAVE_file_read_trymap
+#endif /* DEESYSTEM_FILE_USE_UNIX */
+
+#ifdef HAVE_file_read_trymap
+#ifndef FILE_READ_MMAP_THRESHOLD
+#ifdef __ARCH_PAGESIZE
+#define FILE_READ_MMAP_THRESHOLD (__ARCH_PAGESIZE * 2)
+#elif defined(PAGESIZE)
+#define FILE_READ_MMAP_THRESHOLD (PAGESIZE * 2)
+#elif defined(PAGE_SIZE)
+#define FILE_READ_MMAP_THRESHOLD (PAGE_SIZE * 2)
+#else /* ... */
+#define FILE_READ_MMAP_THRESHOLD (4096 * 2)
+#endif /* !... */
+#endif /* !FILE_READ_MMAP_THRESHOLD */
+
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+sysfile_read(DeeSystemFileObject *__restrict self,
+             void *__restrict buffer, size_t bufsize,
+             dioflag_t flags);
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+sysfile_pread(DeeSystemFileObject *__restrict self,
+              void *__restrict buffer, size_t bufsize,
+              dpos_t pos, dioflag_t flags);
+
+PRIVATE WUNUSED DREF /*Bytes*/ DeeObject *DCALL
+file_read_trymap(DeeSysFD fd, size_t maxbytes,
+                 dpos_t pos, bool readall) {
+	int error;
+	struct DeeMapFile map;
+	DREF DeeObject *result;
+	DREF DeeMapFileObject *mapob;
+
+	error = DeeMapFile_InitSysFd(&map, fd, pos, 0, maxbytes, 0,
+	                             readall ? (DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_TRYMMAP | DEE_MAPFILE_F_READALL)
+	                                     : (DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_TRYMMAP));
+	if (error != 0) {
+		if unlikely(error < 0)
+			return NULL;
+		return ITER_DONE; /* Unsupported (instruct caller to use fallback read/pread) */
+	}
+
+	/* Success! -> Wrap the mapfile as `DeeMapFileObject -> DeeBytesObject' */
+	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
+	if unlikely(!mapob)
+		goto err_map;
+	DeeObject_Init(mapob, &DeeMapFile_Type);
+	DeeMapFile_Move(&mapob->mf_map, &map);
+	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map);
+
+	/* Now create the bytes view of the map. */
+	result = DeeBytes_NewView((DeeObject *)mapob,
+	                          (void *)DeeMapFile_GetBase(&mapob->mf_map),
+	                          mapob->mf_rsize, Dee_BUFFER_FREADONLY);
+	Dee_Decref_unlikely(mapob);
+	return result;
+err_map:
+	DeeMapFile_Fini(&map);
+	return NULL;
+}
+#endif /* HAVE_file_read_trymap */
+#endif /* DeeSystemFile_GetHandle */
+
+
 #define READTEXT_INITIAL_BUFSIZE 1024
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_ReadText(DeeObject *__restrict self,
-                 size_t maxbytes, bool readall) {
+DeeFile_ReadBytes(DeeObject *__restrict self,
+                  size_t maxbytes, bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
-	size_t (DCALL *pread)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t);
+	size_t (DCALL *ft_read)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t);
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -769,8 +851,8 @@ DeeFile_ReadText(DeeObject *__restrict self,
 	while (DeeFileType_CheckExact(tp_self)) {
 		features = tp_self->tp_features;
 		if (features & TF_HASFILEOPS) {
-			pread = ((DeeFileTypeObject *)tp_self)->ft_read;
-			if likely(pread)
+			ft_read = ((DeeFileTypeObject *)tp_self)->ft_read;
+			if likely(ft_read)
 				goto got_read;
 			break;
 		}
@@ -779,45 +861,66 @@ DeeFile_ReadText(DeeObject *__restrict self,
 	}
 	err_unimplemented_operator(Dee_TYPE(self), FILE_OPERATOR_READ);
 	goto err;
-got_read: {
-	struct bytes_printer printer = BYTES_PRINTER_INIT;
-	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-	while (maxbytes) {
-		uint8_t *buffer;
-		size_t read_size;
-		size_t bufsize = MIN(maxbytes, readtext_bufsize);
-		/* Allocate more buffer memory. */
-		buffer = bytes_printer_alloc(&printer, bufsize);
-		if unlikely(!buffer)
-			goto err_printer;
-		/* Read more data. */
-		read_size = (*pread)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		if unlikely(read_size == (size_t)-1)
-			goto err_printer;
-		ASSERT(read_size <= bufsize);
-		bytes_printer_release(&printer, bufsize - read_size);
-		if (!read_size ||
-		    (!readall && read_size < bufsize))
-			break; /* EOF */
-		maxbytes -= read_size;
-		readtext_bufsize *= 2;
+
+got_read:
+#ifdef HAVE_file_read_trymap
+	/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
+	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes' object.
+	 * -> That way, we can provide the user with O(1) reads from large files! */
+	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
+	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read)) {
+		DREF /*Bytes*/ DeeObject *result;
+		result = file_read_trymap(DeeSystemFile_GetHandle(self),
+		                          maxbytes, (dpos_t)-1, readall);
+		if (result != ITER_DONE)
+			return result;
 	}
+	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap!
+	 *       In this case we can also use the FileBuffer's position to (possibly) skip
+	 *       the initial seek done during file mapping! */
+#endif /* HAVE_file_read_trymap */
+
+	{
+		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		while (maxbytes) {
+			uint8_t *buffer;
+			size_t read_size;
+			size_t bufsize = MIN(maxbytes, readtext_bufsize);
+			/* Allocate more buffer memory. */
+			buffer = bytes_printer_alloc(&printer, bufsize);
+			if unlikely(!buffer)
+				goto err_printer;
+			/* Read more data. */
+			read_size = (*ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
+			if unlikely(read_size == (size_t)-1)
+				goto err_printer;
+			ASSERT(read_size <= bufsize);
+			bytes_printer_release(&printer, bufsize - read_size);
+			if (!read_size ||
+			    (!readall && read_size < bufsize))
+				break; /* EOF */
+			maxbytes -= read_size;
+			readtext_bufsize *= 2;
+		}
 /*done:*/
-	return bytes_printer_pack(&printer);
+		return bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
-}
+		bytes_printer_fini(&printer);
+	}
 err:
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_PReadText(DeeObject *__restrict self,
-                  size_t maxbytes, dpos_t pos,
-                  bool readall) {
+DeeFile_PReadBytes(DeeObject *__restrict self,
+                   size_t maxbytes, dpos_t pos,
+                   bool readall) {
 	uint32_t features;
 	DeeTypeObject *tp_self;
-	size_t (DCALL *ppread)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t);
+	size_t (DCALL *ft_pread)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t);
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -828,8 +931,8 @@ DeeFile_PReadText(DeeObject *__restrict self,
 	while (DeeFileType_CheckExact(tp_self)) {
 		features = tp_self->tp_features;
 		if (features & TF_HASFILEOPS) {
-			ppread = ((DeeFileTypeObject *)tp_self)->ft_pread;
-			if likely(ppread)
+			ft_pread = ((DeeFileTypeObject *)tp_self)->ft_pread;
+			if likely(ft_pread)
 				goto got_read;
 			break;
 		}
@@ -838,35 +941,53 @@ DeeFile_PReadText(DeeObject *__restrict self,
 	}
 	err_unimplemented_operator(Dee_TYPE(self), FILE_OPERATOR_PREAD);
 	goto err;
-got_read: {
-	struct bytes_printer printer = BYTES_PRINTER_INIT;
-	size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-	while (maxbytes) {
-		uint8_t *buffer;
-		size_t read_size;
-		size_t bufsize = MIN(maxbytes, readtext_bufsize);
-		/* Allocate more buffer memory. */
-		buffer = bytes_printer_alloc(&printer, bufsize);
-		if unlikely(!buffer)
-			goto err_printer;
-		/* Read more data. */
-		read_size = (*ppread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		if unlikely(read_size == (size_t)-1)
-			goto err_printer;
-		ASSERT(read_size <= bufsize);
-		bytes_printer_release(&printer, bufsize - read_size);
-		if (!read_size ||
-		    (!readall && read_size < bufsize))
-			break; /* EOF */
-		maxbytes -= read_size;
-		pos += read_size;
-		readtext_bufsize *= 2;
+
+got_read:
+#ifdef HAVE_file_read_trymap
+	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
+	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes' object.
+	 * -> That way, we can provide the user with O(1) reads from large files! */
+	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
+	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pread)) {
+		DREF /*Bytes*/ DeeObject *result;
+		result = file_read_trymap(DeeSystemFile_GetHandle(self),
+		                          maxbytes, pos, readall);
+		if (result != ITER_DONE)
+			return result;
 	}
+	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap! */
+#endif /* HAVE_file_read_trymap */
+
+	{
+		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		while (maxbytes) {
+			uint8_t *buffer;
+			size_t read_size;
+			size_t bufsize = MIN(maxbytes, readtext_bufsize);
+			/* Allocate more buffer memory. */
+			buffer = bytes_printer_alloc(&printer, bufsize);
+			if unlikely(!buffer)
+				goto err_printer;
+			/* Read more data. */
+			read_size = (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
+			if unlikely(read_size == (size_t)-1)
+				goto err_printer;
+			ASSERT(read_size <= bufsize);
+			bytes_printer_release(&printer, bufsize - read_size);
+			if (!read_size || (!readall && read_size < bufsize))
+				break; /* EOF */
+			maxbytes -= read_size;
+			pos += read_size;
+			readtext_bufsize *= 2;
+		}
 /*done:*/
-	return bytes_printer_pack(&printer);
+		return bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
-}
+		bytes_printer_fini(&printer);
+	}
 err:
 	return NULL;
 }
@@ -1793,7 +1914,7 @@ file_read(DeeObject *self, size_t argc,
 	PRIVATE DEFINE_KWLIST(kwlist, { K(maxbytes), K(readall), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPdSIZ "b:read", &maxbytes, &readall))
 		goto err;
-	return DeeFile_ReadText(self, maxbytes, readall);
+	return DeeFile_ReadBytes(self, maxbytes, readall);
 err:
 	return NULL;
 }
@@ -1855,7 +1976,7 @@ file_pread(DeeObject *self, size_t argc,
 	                    UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ "b:pread",
 	                    &file_pos, &maxbytes, &readall))
 		goto err;
-	return DeeFile_PReadText(self, maxbytes, file_pos, readall);
+	return DeeFile_PReadBytes(self, maxbytes, file_pos, readall);
 err:
 	return NULL;
 }
@@ -2146,10 +2267,11 @@ file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t maxbytes = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|" UNPdSIZ ":readall", &maxbytes))
 		goto err;
-	return DeeFile_ReadText(self, maxbytes, true);
+	return DeeFile_ReadBytes(self, maxbytes, true);
 err:
 	return NULL;
 }
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -2159,10 +2281,61 @@ file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	                  UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ ":readallat",
 	                  &file_pos, &maxbytes))
 		goto err;
-	return DeeFile_PReadText(self, maxbytes, file_pos, true);
+	return DeeFile_PReadBytes(self, maxbytes, file_pos, true);
 err:
 	return NULL;
 }
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_mmap(DeeObject *self, size_t argc,
+          DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DREF DeeMapFileObject *mapob;
+	size_t minbytes = (size_t)0;
+	size_t maxbytes = (size_t)-1;
+	dpos_t offset   = (dpos_t)-1;
+	size_t nulbytes = 0;
+	bool readall    = false;
+	bool mustmmap   = false;
+	bool mapshared  = false;
+	unsigned int mapflags;
+	PRIVATE DEFINE_KWLIST(kwlist, { K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "|" UNPdSIZ UNPdSIZ UNPuN(DEE_SIZEOF_DEE_POS_T) UNPdSIZ "bbb:mapfile",
+	                    &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
+		goto err;
+	mapflags = 0;
+
+	/* Package flags */
+	if (readall)
+		mapflags |= DEE_MAPFILE_F_READALL;
+	if (mustmmap)
+		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
+	if (mapshared)
+		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
+	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
+	if unlikely(!mapob)
+		goto err;
+
+	/* Create the actual file mapping */
+	if unlikely(DeeMapFile_InitFile(&mapob->mf_map, self, offset,
+	                                minbytes, maxbytes, nulbytes,
+	                                mapflags))
+		goto err_r;
+	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map) + nulbytes;
+	DeeObject_Init(mapob, &DeeMapFile_Type);
+	result = DeeBytes_NewView((DeeObject *)mapob,
+	                          (void *)DeeMapFile_GetBase(&mapob->mf_map),
+	                          mapob->mf_rsize, Dee_BUFFER_FWRITABLE);
+	Dee_Decref_unlikely(mapob);
+	return result;
+err_r:
+	DeeObject_FREE(mapob);
+err:
+	return NULL;
+}
+
 
 
 PRIVATE struct type_method tpconst file_methods[] = {
@@ -2272,7 +2445,6 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	  DOC("(keeplf:?Dbool)->?DBytes\n"
 	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
 	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
-
 	      "When @keeplf is ?f, strip the trailing linefeed from the returned Bytes object") },
 
 	/* Deprecated functions. */
@@ -2304,6 +2476,29 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes)->?Dint\n"
 	      "Deprecated alias for ?#write"),
+	  TYPE_METHOD_FKWDS },
+
+	/* mmap support */
+	{ "mmap",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_mmap,
+	  DOC("(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytse\n"
+	      "@param minbytes The  min number of bytes (excluding @nulbytes) that should be mapped "
+	      /*           */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
+	      /*           */ "this number of bytes has been reached, nul bytes are mapped for its remainder.\n"
+	      "@param maxbytes The max number of bytes (excluding @nulbytes) that should be mapped starting "
+	      /*           */ "at @offset. If the file is smaller than this, or indicates EOF before this "
+	      /*           */ "number of bytes has been reached, simply stop there.\n"
+	      "@param offset Starting offset of mapping (absolute), or ${-1} to map the entire file\n"
+	      "@param nulbytes When non-zero, append this many trailing ${0x00}-bytes at the end of the map\n"
+	      "@param readall When !t, use ?#readall, rather than ?#read\n"
+	      "@param mustmmap When !t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
+	      "@param mapshared When !t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
+	      "Map the contents of the file into memory. If $mmap isn't supported by the this file, "
+	      "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
+	      "The returned ?DBytes object is always writable, though changes "
+	      "are only reflected within files when @mapshared is !t.\n"
+	      "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
+	      "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
 	  TYPE_METHOD_FKWDS },
 
 	{ NULL }

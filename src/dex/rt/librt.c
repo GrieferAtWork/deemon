@@ -25,8 +25,6 @@
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/hashset.h>
-#include <deemon/instancemethod.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
@@ -45,9 +43,12 @@
 #include <deemon/filetypes.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
+#include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/mapfile.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
@@ -2077,6 +2078,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FileBuffer", (DeeObject *)&DeeFileBuffer_Type, MODSYM_FREADONLY }, /* `File.Buffer' */
 	{ "SystemFile", (DeeObject *)&DeeSystemFile_Type, MODSYM_FREADONLY }, /* Base class for file types that are managed by the system. */
 	{ "FSFile", (DeeObject *)&DeeFSFile_Type, MODSYM_FREADONLY },         /* Derived from `SystemFile': A system file that has been opened via the file system. */
+	{ "MapFile", (DeeObject *)&DeeMapFile_Type, MODSYM_FREADONLY },       /* Owner type for mmap buffers used during large file reads. */
 	{ "NoneType", (DeeObject *)&DeeNone_Type, MODSYM_FREADONLY },         /* `type(none)' */
 	{ "None", Dee_None, MODSYM_FREADONLY },                               /* `none' */
 	{ "MemoryFile", (DeeObject *)&DeeMemoryFile_Type, MODSYM_FREADONLY,   /* An internal file type for streaming from read-only raw memory. */

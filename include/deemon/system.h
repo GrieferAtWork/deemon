@@ -98,11 +98,11 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
 
 /* Retrieve the Windows handle associated with a given object.
  * The translation is done by performing the following:
- * >> #ifdef DeeSysFS_IS_HANDLE
+ * >> #ifdef DeeSysFD_IS_HANDLE
  * >> if (DeeFile_Check(ob))
  * >>     return DeeFile_GetSysFD(ob);
  * >> #endif
- * >> #ifdef DeeSysFS_IS_INT
+ * >> #ifdef DeeSysFD_IS_INT
  * >> if (DeeFile_Check(ob))
  * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
  * >> #endif
@@ -331,7 +331,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadlinkString(/*utf-8*/ cha
 
 /* Retrieve the unix FD associated with a given object.
  * The translation is done by performing the following:
- * >> #ifdef DeeSysFS_IS_INT
+ * >> #ifdef DeeSysFD_IS_INT
  * >> if (DeeFile_Check(ob))
  * >>     return DeeFile_GetSysFD(ob);
  * >> #endif

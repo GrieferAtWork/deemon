@@ -494,7 +494,7 @@ DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)&sysf_std[id];
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
@@ -514,9 +514,8 @@ sysfile_read(SystemFile *__restrict self,
 	(void)buffer;
 	(void)bufsize;
 	(void)flags;
-	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                           FILE_OPERATOR_READ);
-	return (size_t)-1;
+	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                          FILE_OPERATOR_READ);
 #endif /* !CONFIG_HAVE_read */
 }
 
@@ -540,11 +539,68 @@ sysfile_write(SystemFile *__restrict self,
 	(void)buffer;
 	(void)bufsize;
 	(void)flags;
-	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                           FILE_OPERATOR_WRITE);
-	return (size_t)-1;
+	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                          FILE_OPERATOR_WRITE);
 #endif /* !CONFIG_HAVE_write */
 }
+
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+sysfile_pread(SystemFile *__restrict self,
+              void *__restrict buffer, size_t bufsize,
+              dpos_t pos, dioflag_t flags) {
+#if defined(CONFIG_HAVE_pread64) || defined(CONFIG_HAVE_pread)
+	size_t result;
+	(void)flags;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_pread64
+	result = (size_t)pread64((int)self->sf_handle, buffer, bufsize, pos);
+#else /* CONFIG_HAVE_pread64 */
+	result = (size_t)pread((int)self->sf_handle, buffer, bufsize, pos);
+#endif /* !CONFIG_HAVE_pread64 */
+	DBG_ALIGNMENT_ENABLE();
+	if unlikely(result == (size_t)-1)
+		error_file_io(self);
+	return result;
+#else /* CONFIG_HAVE_pread[64] */
+	(void)self;
+	(void)buffer;
+	(void)bufsize;
+	(void)pos;
+	(void)flags;
+	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                          FILE_OPERATOR_PREAD);
+#endif /* !CONFIG_HAVE_pread[64] */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+sysfile_pwrite(SystemFile *__restrict self,
+               void const *__restrict buffer, size_t bufsize,
+               dpos_t pos, dioflag_t flags) {
+#if defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_pwrite)
+	size_t result;
+	(void)flags;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_pwrite64
+	result = (size_t)pwrite64((int)self->sf_handle, buffer, bufsize, pos);
+#else /* CONFIG_HAVE_pwrite64 */
+	result = (size_t)pwrite((int)self->sf_handle, buffer, bufsize, pos);
+#endif /* !CONFIG_HAVE_pwrite64 */
+	DBG_ALIGNMENT_ENABLE();
+	if unlikely(result == (size_t)-1)
+		error_file_io(self);
+	return result;
+#else /* CONFIG_HAVE_pwrite[64] */
+	(void)self;
+	(void)buffer;
+	(void)bufsize;
+	(void)pos;
+	(void)flags;
+	return (size_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                          FILE_OPERATOR_PWRITE);
+#endif /* !CONFIG_HAVE_pwrite[64] */
+}
+
 
 PRIVATE dpos_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
@@ -561,12 +617,13 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 		error_file_io(self);
 	return result;
 #else /* CONFIG_HAVE_lseek || CONFIG_HAVE_lseek64 */
-	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                                  FILE_OPERATOR_SEEK);
+	return (dpos_t)err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                          FILE_OPERATOR_SEEK);
 #endif /* !CONFIG_HAVE_lseek && !CONFIG_HAVE_lseek64 */
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sysfile_sync(SystemFile *__restrict self) {
 #if defined(CONFIG_HAVE_fdatasync)
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(fdatasync((int)self->sf_handle) < 0) {
@@ -581,9 +638,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self)
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-#else
+#else /* ... */
 	(void)self;
-#endif
+#endif /* !... */
 	return 0;
 }
 
@@ -624,10 +681,10 @@ err:
 	Dee_Decref(filename);
 	if (result)
 		error_file_io(self);
-#else
+#else /* ... */
 	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                    FILE_OPERATOR_TRUNC);
-#endif
+#endif /* !... */
 	return result;
 }
 
@@ -715,11 +772,11 @@ is_an_std_file:
 #endif /* sysfile_isatty_USE_RETURN_FALSE */
 }
 
-#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFD_IS_FILE)
 #define STR_fileno DeeString_STR(&str_getsysfd)
-#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#else /* DeeSysFD_GETSET && DeeSysFD_IS_FILE */
 #define STR_fileno DeeSysFD_INT_GETSET
-#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
+#endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 	{ STR_fileno, (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_fileno, NULL, NULL, DOC("->?Dint") },
@@ -895,8 +952,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-	/* .ft_pread  = */ NULL, /* TODO: pread(2)! */
-	/* .ft_pwrite = */ NULL, /* TODO: pwrite(2)! */
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pread,
+	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dpos_t, dioflag_t))&sysfile_pwrite,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL

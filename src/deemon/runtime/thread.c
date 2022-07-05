@@ -1046,12 +1046,12 @@ destroy_thread_self(DREF DeeThreadObject *__restrict self) {
 }
 
 #ifndef __NO_ATTR_THREAD
-#define THREAD_SELF_TLS_USE_ATTR_THREAD  1
+#define THREAD_SELF_TLS_USE_ATTR_THREAD 1
 #elif defined(CONFIG_THREADS_WINDOWS)
-#define THREAD_SELF_TLS_USE_TLS_ALLOC    1
-#else
-#define THREAD_SELF_TLS_USE_PTHREAD_KEY  1
-#endif
+#define THREAD_SELF_TLS_USE_TLS_ALLOC 1
+#else /* ... */
+#define THREAD_SELF_TLS_USE_PTHREAD_KEY 1
+#endif /* !... */
 
 PRIVATE void DCALL DeeThread_InitMain(void) {
 	/* Collect information on the main thread. */
@@ -1139,7 +1139,7 @@ FORCELOCAL void(thread_tls_set)(void *value) {
 	        : "r" (thread_self_tls)
 	        , "r" (value));
 }
-#endif
+#endif /* ... */
 #endif /* __i386__ */
 
 #ifndef thread_tls_get
@@ -1148,7 +1148,9 @@ FORCELOCAL void(thread_tls_set)(void *value) {
 #endif /* !thread_tls_get */
 
 PUBLIC void DCALL DeeThread_Init(void) {
+#ifndef NDEBUG
 	ASSERT(thread_self_tls == TLS_OUT_OF_INDEXES);
+#endif /* !NDEBUG */
 	DBG_ALIGNMENT_DISABLE();
 	thread_self_tls = TlsAlloc();
 	if unlikely(thread_self_tls == TLS_OUT_OF_INDEXES) {
@@ -1182,20 +1184,6 @@ PUBLIC void DCALL DeeThread_Fini(void) {
 		DeeThread_Main.t_deepassoc.da_list = empty_deep_assoc;
 		DeeThread_Main.t_deepassoc.da_mask = 0;
 	}
-}
-
-PUBLIC void DCALL DeeThread_Shutdown(void) {
-	DREF DeeThreadObject *self;
-	DBG_ALIGNMENT_DISABLE();
-	self = (DeeThreadObject *)thread_tls_get();
-	DBG_ALIGNMENT_ENABLE();
-	if (!self)
-		return;
-	ASSERT(self != &DeeThread_Main);
-	destroy_thread_self(self);
-	DBG_ALIGNMENT_DISABLE();
-	thread_tls_set(NULL);
-	DBG_ALIGNMENT_ENABLE();
 }
 #else /* THREAD_SELF_TLS_USE_TLS_ALLOC */
 

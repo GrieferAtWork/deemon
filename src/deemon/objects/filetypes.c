@@ -24,10 +24,12 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/int.h>
+#include <deemon/mapfile.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -1657,6 +1659,164 @@ PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
 done:
 	return (DREF DeeObject *)result;
 }
+
+
+
+/************************************************************************/
+/* MMAP API                                                             */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *fd;
+	size_t minbytes = (size_t)0;
+	size_t maxbytes = (size_t)-1;
+	dpos_t offset   = (dpos_t)-1;
+	size_t nulbytes = 0;
+	bool readall    = false;
+	bool mustmmap   = false;
+	bool mapshared  = false;
+	unsigned int mapflags;
+	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ UNPuN(DEE_SIZEOF_DEE_POS_T) UNPdSIZ "bbb" ":mapfile",
+	                    &fd, &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
+		goto err;
+	mapflags = 0;
+	/* Package flags */
+	if (readall)
+		mapflags |= DEE_MAPFILE_F_READALL;
+	if (mustmmap)
+		mapflags |= DEE_MAPFILE_F_MUSTMMAP;
+	if (mapshared) {
+		mapflags |= DEE_MAPFILE_F_MUSTMMAP | DEE_MAPFILE_F_MAPSHARED;
+		if (nulbytes != 0) {
+			return DeeError_Throwf(&DeeError_ValueError,
+			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %Iu'",
+			                       nulbytes);
+		}
+	}
+
+	/* Construct the mapfile. */
+	/* TODO: Use DeeNTSystem_GetHandle() + DeeMapFile_InitSysFd(); */
+	/* TODO: Use DeeUnixSystem_GetFD() + DeeMapFile_InitSysFd(); */
+	if unlikely(DeeMapFile_InitFile(&self->mf_map, fd,
+	                                offset, minbytes, maxbytes,
+	                                nulbytes, mapflags))
+		goto err;
+	self->mf_rsize = DeeMapFile_GetSize(&self->mf_map) + nulbytes;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+mapfile_fini(DeeMapFileObject *__restrict self) {
+	DeeMapFile_Fini(&self->mf_map);
+}
+
+PRIVATE int DCALL
+mapfile_getbuf(DeeMapFileObject *__restrict self,
+               DeeBuffer *__restrict info,
+               unsigned int UNUSED(flags)) {
+	info->bb_base = (void *)DeeMapFile_GetBase(&self->mf_map);
+	info->bb_size = self->mf_rsize;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapfile_bytes(DeeMapFileObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":bytes"))
+		goto err;
+	return DeeBytes_NewView((DeeObject *)self,
+	                        (void *)DeeMapFile_GetBase(&self->mf_map),
+	                        self->mf_rsize, Dee_BUFFER_FWRITABLE);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapfile_get_ismmap(DeeMapFileObject *__restrict self) {
+#ifdef DeeMapFile_UsesMmap_IS_ALWAYS_ZERO
+	(void)self;
+	return_false;
+#else /* DeeMapFile_UsesMmap_IS_ALWAYS_ZERO */
+	return_bool(DeeMapFile_UsesMmap(&self->mf_map));
+#endif /* !DeeMapFile_UsesMmap_IS_ALWAYS_ZERO */
+}
+
+
+PRIVATE struct type_buffer mapfile_buffer = {
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&mapfile_getbuf,
+	/* .tp_putbuf       = */ NULL,
+	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
+};
+
+PRIVATE struct type_method tpconst mapfile_methods[] = {
+	{ "bytes",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mapfile_bytes,
+	  DOC("->?DBytes\n"
+	      "Same as ${Bytes(this)}") },
+	{ NULL }
+};
+
+PRIVATE struct type_getset tpconst mapfile_getsets[] = {
+	{ "ismmap",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapfile_get_ismmap, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Returns !t if @this file map uses mmap to implement its buffer") },
+	{ NULL }
+};
+
+
+PUBLIC DeeTypeObject DeeMapFile_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_MapFile",
+	/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeMapFileObject),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&mapfile_init_kw
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapfile_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ &mapfile_buffer,
+	/* .tp_methods       = */ mapfile_methods,
+	/* .tp_getsets       = */ mapfile_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
 
 
 DECL_END

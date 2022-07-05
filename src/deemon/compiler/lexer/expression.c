@@ -2115,19 +2115,18 @@ yield_again:
 				if unlikely(yield() < 0)
 					goto err_r;
 			} else {
+				/* TODO: Must rewind to start of '!'-sequence in this case and
+				 *       not try to parse any additional in/is expressions:
+				 * >> local foo = "value";
+				 * >> local bar = f"foo = {foo!r}"; // << we mustn't parse the '!' here!
+				 * 
+				 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM' warning needs to go away
+				 */
 				if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
 					goto err_r;
 				cmd = KWD_is;
 			}
 		}
-#if 0 /* XXX: Ambiguity with unary not operator? */
-		/* Allow the operator to be inverted afterwards, too. */
-		while (tok == '!') {
-			invert ^= 1;
-			if unlikely(yield() < 0)
-				goto err;
-		}
-#endif
 		if (tok == KWD_bound && cmd == KWD_is) {
 			/* Special cast: `foo is bound' --> `bound(foo)' */
 			if unlikely(yield() < 0)

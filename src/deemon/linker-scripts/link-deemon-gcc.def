@@ -156,7 +156,7 @@ EXPORTS
 	_DeeFile_OpenWriter@0=DeeFile_OpenWriter@0
 	_DeeFile_PRead@20=DeeFile_PRead@20
 	_DeeFile_PReadAll@20=DeeFile_PReadAll@20
-	_DeeFile_PReadText@20=DeeFile_PReadText@20
+	_DeeFile_PReadBytes@20=DeeFile_PReadBytes@20
 	_DeeFile_PReadf@24=DeeFile_PReadf@24
 	_DeeFile_PWrite@20=DeeFile_PWrite@20
 	_DeeFile_PWriteAll@20=DeeFile_PWriteAll@20
@@ -172,8 +172,8 @@ EXPORTS
 	_DeeFile_Putcf@12=DeeFile_Putcf@12
 	_DeeFile_Read@12=DeeFile_Read@12
 	_DeeFile_ReadAll@12=DeeFile_ReadAll@12
+	_DeeFile_ReadBytes@12=DeeFile_ReadBytes@12
 	_DeeFile_ReadLine@12=DeeFile_ReadLine@12
-	_DeeFile_ReadText@12=DeeFile_ReadText@12
 	_DeeFile_Readf@16=DeeFile_Readf@16
 	_DeeFile_ReleaseMemory@4=DeeFile_ReleaseMemory@4
 	_DeeFile_ResetStd@0=DeeFile_ResetStd@0
@@ -334,6 +334,9 @@ EXPORTS
 	_DeeList_Pop@8=DeeList_Pop@8
 	_DeeList_Reverse@4=DeeList_Reverse@4
 	_DeeList_Sort@8=DeeList_Sort@8
+	_DeeMapFile_Fini@4=DeeMapFile_Fini@4
+	_DeeMapFile_InitFile@32=DeeMapFile_InitFile@32
+	_DeeMapFile_InitSysFd@32=DeeMapFile_InitSysFd@32
 	_DeeMem_ClearCaches@4=DeeMem_ClearCaches@4
 	_DeeModule_BoundAttrSymbol@8=DeeModule_BoundAttrSymbol@8
 	_DeeModule_DelAttrSymbol@8=DeeModule_DelAttrSymbol@8

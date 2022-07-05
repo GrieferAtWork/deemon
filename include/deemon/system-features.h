@@ -258,6 +258,7 @@ header_nostdinc("sys/socket.h", unix);
 header_nostdinc("sys/select.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("netdb.h", unix);
 header_nostdinc("math.h", addparen(stdc) + " && !defined(CONFIG_NO_FPU)");
+header_nostdinc("sys/param.h");
 
 include_known_headers();
 
@@ -652,9 +653,13 @@ functest("nice(0)", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabl
 func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")", test: "return mmap(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))", test: "return mmap64(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("munmap", "CONFIG_HAVE_mmap", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
+func("fmapfile", "0", test: 'extern struct mapfile m; return fmapfile(&m, 1, 2, 3, 4, 5, FMAPFILE_READALL);');
+func("unmapfile", "0", test: 'extern struct mapfile m; return unmapfile(&m);');
+func("getpagesize", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_MISC) || !defined(__USE_XOPEN2K))", test: 'return getpagesize() != 0;');
 constant("MAP_ANONYMOUS");
 constant("MAP_ANON");
 constant("MAP_PRIVATE");
+constant("MAP_SHARED");
 constant("MAP_GROWSUP");
 constant("MAP_GROWSDOWN");
 constant("MAP_FILE");
@@ -1519,6 +1524,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_MATH_H) && \
       (__has_include(<math.h>) || (defined(__NO_has_include) && !defined(CONFIG_NO_FPU)))
 #define CONFIG_HAVE_MATH_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_PARAM_H
+#undef CONFIG_HAVE_SYS_PARAM_H
+#elif !defined(CONFIG_HAVE_SYS_PARAM_H) && \
+      (__has_include(<sys/param.h>))
+#define CONFIG_HAVE_SYS_PARAM_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -4939,6 +4951,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_munmap 1
 #endif
 
+#ifdef CONFIG_NO_fmapfile
+#undef CONFIG_HAVE_fmapfile
+#elif !defined(CONFIG_HAVE_fmapfile) && \
+      (defined(fmapfile) || defined(__fmapfile_defined))
+#define CONFIG_HAVE_fmapfile 1
+#endif
+
+#ifdef CONFIG_NO_unmapfile
+#undef CONFIG_HAVE_unmapfile
+#elif !defined(CONFIG_HAVE_unmapfile) && \
+      (defined(unmapfile) || defined(__unmapfile_defined))
+#define CONFIG_HAVE_unmapfile 1
+#endif
+
+#ifdef CONFIG_NO_getpagesize
+#undef CONFIG_HAVE_getpagesize
+#elif !defined(CONFIG_HAVE_getpagesize) && \
+      (defined(getpagesize) || defined(__getpagesize_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__USE_MISC) || !defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_getpagesize 1
+#endif
+
 #ifdef CONFIG_NO_MAP_ANONYMOUS
 #undef CONFIG_HAVE_MAP_ANONYMOUS
 #elif !defined(CONFIG_HAVE_MAP_ANONYMOUS) && \
@@ -4958,6 +4992,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_MAP_PRIVATE) && \
       (defined(MAP_PRIVATE) || defined(__MAP_PRIVATE_defined))
 #define CONFIG_HAVE_MAP_PRIVATE 1
+#endif
+
+#ifdef CONFIG_NO_MAP_SHARED
+#undef CONFIG_HAVE_MAP_SHARED
+#elif !defined(CONFIG_HAVE_MAP_SHARED) && \
+      (defined(MAP_SHARED) || defined(__MAP_SHARED_defined))
+#define CONFIG_HAVE_MAP_SHARED 1
 #endif
 
 #ifdef CONFIG_NO_MAP_GROWSUP
@@ -10468,8 +10509,8 @@ for (local x: [1:n+1]) {
 
 
 #ifdef GUARD_DEEMON_FILE_H
-#if (defined(DeeSysFS_IS_INT) && !defined(CONFIG_HAVE_close)) || \
-    (defined(DeeSysFS_IS_FILE) && !defined(CONFIG_HAVE_fclose))
+#if (defined(DeeSysFD_IS_INT) && !defined(CONFIG_HAVE_close)) || \
+    (defined(DeeSysFD_IS_FILE) && !defined(CONFIG_HAVE_fclose))
 #undef DeeSysFD_Close
 #define DeeSysFD_Close(x) (void)0
 #endif /* !CONFIG_HAVE_close */

@@ -855,10 +855,10 @@ inline Bytes(File::readline)(size_t max_length, bool keep_lf) const {
 	return inherit(DeeFile_ReadLine(this->ptr(), max_length, keep_lf));
 }
 inline Bytes(File::read)(size_t max_length, bool readall) const {
-	return inherit(DeeFile_ReadText(this->ptr(), max_length, readall));
+	return inherit(DeeFile_ReadBytes(this->ptr(), max_length, readall));
 }
 inline Bytes(File::pread)(Dee_pos_t pos, size_t max_length, bool readall) const {
-	return inherit(DeeFile_PReadText(this->ptr(), max_length, pos, readall));
+	return inherit(DeeFile_PReadBytes(this->ptr(), max_length, pos, readall));
 }
 #endif /* GUARD_DEEMON_CXX_FILE_H */
 

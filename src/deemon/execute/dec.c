@@ -43,6 +43,7 @@
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/mapfile.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
@@ -652,6 +653,127 @@ Dec_GetBuiltin(uint8_t set, uint8_t id) {
 }
 
 
+/************************************************************************/
+/* INTERNAL DEC API                                                     */
+/************************************************************************/
+
+#define DECFILE_PADDING 32
+
+struct module_object;
+struct compiler_options;
+struct string_object;
+struct code_object;
+struct ddi_object;
+
+typedef struct {
+	union {
+		uint8_t               *df_data;    /* [0..df_size+DECFILE_PADDING]
+		                                    *  A full mapping of all data from the input DEC file, followed
+		                                    *  by a couple of bytes of padding data that is ZERO-initialized. */
+		uint8_t               *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
+		Dec_Ehdr              *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define df_data _dee_aunion.df_data
+#define df_base _dee_aunion.df_base
+#define df_ehdr _dee_aunion.df_ehdr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	size_t                     df_size;    /* Total number of usable bytes of memory
+	                                        * that can be found within the source file. */
+	DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
+	DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
+	struct compiler_options   *df_options; /* [0..1] Compilation options. */
+	DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
+	                                        *        This string is used by DDI descriptors in
+	                                        *        order to allow for sharing of string tables. */
+} DecFile;
+
+
+/* Initialize a DEC file, given an input stream, as well as its pathname.
+ * @return:  1: The given `input_stream' doesn't describe a valid DEC file.
+ * @return:  0: Successfully initialized the DEC file.
+ * @return: -1: An error occurred while attempting to read the DEC's data,
+ *              or failed to allocate a sufficient buffer for the DEC. */
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DecFile_Init(DecFile *__restrict self,
+             struct DeeMapFile *__restrict input,
+             struct module_object *__restrict module,
+             struct string_object *__restrict dec_pathname,
+             struct compiler_options *options);
+PRIVATE NONNULL((1)) void DCALL DecFile_Fini(DecFile *__restrict self);
+
+/* Return a string for the entire strtab of a given DEC-file.
+ * Upon error, NULL is returned.
+ * NOTE: The return value is _NOT_ a reference! */
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL DecFile_Strtab(DecFile *__restrict self);
+
+/* Check if a given DEC file is up to date, or if it must not be loaded.
+ * because it a dependency has changed since it was created.
+ * @return:  0: The file is up-to-date.
+ * @return:  1: The file is not up-to-date.
+ * @return: -1: An error occurred. */
+PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_IsUpToDate(DecFile *__restrict self);
+
+/* Load a given DEC file and fill in the given `module'.
+ * @return:  0: Successfully loaded the given DEC file.
+ * @return:  1: The DEC file has been corrupted or is out of date.
+ * @return: -1: An error occurred. */
+PRIVATE WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
+
+/* Return the last-modified time (in microseconds since 01.01.1970).
+ * For this purpose, an internal cache is kept that is consulted
+ * before and populated after making an attempt at contacting the
+ * host operating system for the required information.
+ * @return: * :           Last-modified time (in microseconds since 01.01.1970).
+ * @return: 0 :           The given file could not be found.
+ * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
+
+/* DEC loader implementation. */
+
+/* @return: * :        A reference to the object that got loaded.
+ * @return: NULL:      An error occurred. (NOTE: `DTYPE_NULL' is not allowed and indicates a corrupt file)
+ * @return: ITER_DONE: The DEC file has been corrupted. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DecFile_LoadObject(DecFile *__restrict self,
+                   uint8_t **__restrict preader);
+
+/* @param: allow_dtype_null: When true, individual vector elements are allowed
+ *                           to be `NULL' as the result of `DTYPE_NULL'
+ * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
+ * @return: NULL:            An error occurred.
+ * @return: ITER_DONE:       The DEC file has been corrupted. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
+DecFile_LoadObjectVector(DecFile *__restrict self,
+                         uint16_t *__restrict pcount,
+                         uint8_t **__restrict preader,
+                         bool allow_dtype_null);
+
+/* @return: * :        New reference to a code object.
+ * @return: NULL:      An error occurred.
+ * @return: ITER_DONE: The DEC file has been corrupted. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
+DecFile_LoadCode(DecFile *__restrict self,
+                 uint8_t **__restrict preader);
+
+/* @return: * :        New reference to a ddi object.
+ * @return: NULL:      An error occurred.
+ * @return: ITER_DONE: The DEC file has been corrupted. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ddi_object *DCALL
+DecFile_LoadDDI(DecFile *__restrict self,
+                uint8_t *__restrict reader,
+                bool is_8bit_ddi);
+
+/************************************************************************/
+
+
+
+
+/************************************************************************/
+/* DEC FILE CORRUPTION TRACING                                          */
+/************************************************************************/
 #if !defined(NDEBUG) && 1
 PRIVATE void DCALL
 corrupt_here(DecFile *__restrict self,
@@ -702,97 +824,79 @@ corrupt_heref(DecFile *__restrict self,
 
 
 
+
+
+
+
 /* Initialize a DEC file, given an input stream, as well as its pathname.
- * @return:  1: The given `input_stream' doesn't describe a valid DEC file.
+ * NOTE: The given `input' must have been loaded with `DECFILE_PADDING'
+ *       trailing NUL-bytes (or possibly even more)
+ * @return:  1: The given `input' doesn't describe a valid DEC file.
  * @return:  0: Successfully initialized the DEC file.
  * @return: -1: An error occurred while attempting to read the DEC's data,
  *              or failed to allocate a sufficient buffer for the DEC. */
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
-             DeeObject *__restrict input_stream,
+             struct DeeMapFile *__restrict input,
              DeeModuleObject *__restrict module,
              DeeStringObject *__restrict dec_pathname,
              struct compiler_options *options) {
-	dpos_t total_size;
 	Dec_Ehdr *hdr;
-	ASSERT_OBJECT(input_stream);
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
 	ASSERT_OBJECT_TYPE_EXACT(dec_pathname, &DeeString_Type);
 
-	/* Read the entirety of the given input_stream. */
-	total_size = DeeFile_GetSize(input_stream);
-	if unlikely(total_size == (dpos_t)-1)
-		goto err;
-
 	/* Quick check: If the file is larger than the allowed limit,
 	 *              don't even consider attempting to load it. */
-	if unlikely(total_size > DFILE_LIMIT)
+	if unlikely(DeeMapFile_GetSize(input) > DFILE_LIMIT)
 		goto end_not_a_dec;
 
 	/* Another quick check: If the file isn't even large enough for the
 	 *                      basic header, it's not a DEC file either. */
-	if unlikely(total_size < sizeof(Dec_Ehdr))
+	if unlikely(DeeMapFile_GetSize(input) < sizeof(Dec_Ehdr))
 		goto end_not_a_dec;
 
-	/* Allocate a buffer to reading everything from the file. */
-	hdr = (Dec_Ehdr *)Dee_Malloc((size_t)total_size + DECFILE_PADDING);
-	if unlikely(!hdr)
-		goto err;
+	/* Load file map size. */
+	hdr = (Dec_Ehdr *)DeeMapFile_GetBase(input);
 	self->df_ehdr = hdr;
-	self->df_size = (size_t)total_size;
-
-	/* Read the entire file.
-	 * TODO: Use `mmap()' or equivalent when possible and supported by the OS
-	 *       mmap() is __much__ more efficient that malloc()+read(), especially
-	 *       in cases where the entire file has to get mapped. */
-	if (DeeFile_ReadAll(input_stream, hdr, (size_t)total_size) == (size_t)-1)
-		goto err_data;
-
-#if DECFILE_PADDING != 0
-	/* Clear out the last few trailing bytes.
-	 * NOTE: The padding is used to reduce the number of out-of-bound checks,
-	 *       as well as allow code to assume that the file ends with a whole
-	 *       bunch of ZERO-bytes. */
-	bzero((uint8_t *)hdr + (size_t)total_size, DECFILE_PADDING);
-#endif /* DECFILE_PADDING != 0 */
+	self->df_size = DeeMapFile_GetSize(input);
 
 	/* All right! we've read the file.
 	 * Now to do a quick validation of the header. */
 	if unlikely(hdr->e_ident[DI_MAG0] != DECMAG0)
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_ident[DI_MAG1] != DECMAG1)
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_ident[DI_MAG2] != DECMAG2)
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_ident[DI_MAG3] != DECMAG3)
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_version != HTOLE16_C(DVERSION_CUR))
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_size < sizeof(Dec_Ehdr))
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	if unlikely(hdr->e_builtinset > DBUILTINS_MAX)
-		goto end_not_a_dec_data;
+		goto end_not_a_dec;
 	/* Validate pointers from the header. */
-	if unlikely(LETOH32(hdr->e_impoff) >= (size_t)total_size)
-		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_depoff) >= (size_t)total_size)
-		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_globoff) >= (size_t)total_size)
-		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_rootoff) >= (size_t)total_size)
-		goto end_not_a_dec_data;
+	if unlikely(LETOH32(hdr->e_impoff) >= (size_t)self->df_size)
+		goto end_not_a_dec;
+	if unlikely(LETOH32(hdr->e_depoff) >= (size_t)self->df_size)
+		goto end_not_a_dec;
+	if unlikely(LETOH32(hdr->e_globoff) >= (size_t)self->df_size)
+		goto end_not_a_dec;
+	if unlikely(LETOH32(hdr->e_rootoff) >= (size_t)self->df_size)
+		goto end_not_a_dec;
 	if unlikely(LETOH32(hdr->e_stroff) < hdr->e_size)
-		goto end_not_a_dec_data; /* Missing string table. */
+		goto end_not_a_dec; /* Missing string table. */
 	if unlikely(LETOH32(hdr->e_rootoff) < hdr->e_size)
-		goto end_not_a_dec_data; /* Validate the root-code pointer. */
+		goto end_not_a_dec; /* Validate the root-code pointer. */
 	if unlikely(LETOH32(hdr->e_stroff) +
 	            LETOH32(hdr->e_strsiz) <
 	            LETOH32(hdr->e_stroff))
-		goto end_not_a_dec_data; /* Check for overflow */
+		goto end_not_a_dec; /* Check for overflow */
 	if unlikely(LETOH32(hdr->e_stroff) +
 	            LETOH32(hdr->e_strsiz) >
-	            (size_t)total_size)
-		goto end_not_a_dec_data;
+	            (size_t)self->df_size)
+		goto end_not_a_dec;
 
 	/* Save the given options in the DEC file descriptor. */
 	self->df_options = options;
@@ -808,28 +912,21 @@ DecFile_Init(DecFile *__restrict self,
 	Dee_Incref(module);
 	Dee_Incref(dec_pathname);
 	return 0;
-err_data:
-	Dee_Free(self->df_data);
-err:
-	return -1;
-end_not_a_dec_data:
-	Dee_Free(self->df_data);
 end_not_a_dec:
 	return 1;
 }
 
-INTERN NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 DecFile_Fini(DecFile *__restrict self) {
 	Dee_XDecref(self->df_strtab);
 	Dee_Decref(self->df_module);
 	Dee_Decref(self->df_name);
-	Dee_Free(self->df_data);
 }
 
 /* Return a string for the entire strtab of a given DEC-file.
  * Upon error, NULL is returned.
  * NOTE: The return value is _NOT_ a reference! */
-INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 DecFile_Strtab(DecFile *__restrict self) {
 	DeeStringObject *result;
 	if ((result = self->df_strtab) == NULL) {
@@ -849,7 +946,7 @@ DecFile_Strtab(DecFile *__restrict self) {
  * @return:  0: The file is up-to-date.
  * @return:  1: The file is not up-to-date.
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
 	Dec_Ehdr *hdr = self->df_ehdr;
 	uint64_t timestamp, other;
@@ -1180,7 +1277,7 @@ INTDEF struct class_attribute empty_class_attributes[];
 /* @return: * :        A reference to the object that got loaded.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader) {
 	DREF DeeObject *result = ITER_DONE;
@@ -1960,7 +2057,7 @@ corrupt:
  * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The DEC file has been corrupted. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
                          uint8_t **__restrict preader,
@@ -2085,7 +2182,7 @@ err:
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeDDIObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeDDIObject *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t *__restrict reader,
                 bool is_8bit_ddi) {
@@ -2215,7 +2312,7 @@ handle_map_error:
 /* @return: * :        New reference to a code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader) {
 	DREF DeeCodeObject *result;
@@ -2603,7 +2700,7 @@ INTDEF struct module_symbol empty_module_buckets[];
  * @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file has been corrupted or is out of date.
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
 	DeeModuleObject *module;
 	int result;
@@ -2683,12 +2780,18 @@ DeeModule_OpenDec(DeeModuleObject *__restrict mod,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *options) {
 	DecFile file;
+	struct DeeMapFile filemap;
 	int result;
 	ASSERT(mod->mo_path);
+
 	/* Initialize the file */
-	result = DecFile_Init(&file, input_stream, mod, mod->mo_path, options);
+	if unlikely(DeeMapFile_InitFile(&filemap, input_stream,
+	                                0, 0, DFILE_LIMIT + 1, DECFILE_PADDING,
+	                                DEE_MAPFILE_F_READALL | DEE_MAPFILE_F_ATSTART))
+		return -1;
+	result = DecFile_Init(&file, &filemap, mod, mod->mo_path, options);
 	if unlikely(result != 0)
-		goto done;
+		goto done_map;
 	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
 
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
@@ -2696,7 +2799,7 @@ DeeModule_OpenDec(DeeModuleObject *__restrict mod,
 		result = DecFile_IsUpToDate(&file);
 		if (result != 0) {
 			Dee_DPRINTF("[LD] Dec file for %r is out-of-date\n", file.df_name);
-			goto done_file;
+			goto done_map_file;
 		}
 	}
 
@@ -2706,9 +2809,10 @@ DeeModule_OpenDec(DeeModuleObject *__restrict mod,
 	if unlikely(result > 0)
 		Dee_DPRINTF("[LD] Dec file for %r is corrupted\n", file.df_name);
 #endif /* !DEE_NO_DPRINTF */
-done_file:
+done_map_file:
 	DecFile_Fini(&file);
-done:
+done_map:
+	DeeMapFile_Fini(&filemap);
 	return result;
 }
 
@@ -2949,7 +3053,7 @@ done:
  * @return: * :           Last-modified time (in microseconds since 01.01.1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-INTERN WUNUSED NONNULL((1)) uint64_t DCALL
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename) {
 	uint64_t result;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);

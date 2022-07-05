@@ -69,7 +69,7 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		usersize = DeeBytes_SIZE(lexer.jl_text);
 		Dee_Incref(lexer.jl_text);
 	} else {
-		lexer.jl_text = DeeFile_ReadText(lexer.jl_text, (size_t)-1, true);
+		lexer.jl_text = DeeFile_ReadBytes(lexer.jl_text, (size_t)-1, true);
 		if unlikely(!lexer.jl_text)
 			goto err;
 		if (DeeString_Check(lexer.jl_text)) {

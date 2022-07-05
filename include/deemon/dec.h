@@ -574,70 +574,8 @@ INTDEF WUNUSED NONNULL((1)) uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict o
 #define DEC_BUILTINID_SETOF(x)           (((x) & 0xff00) >> 8)
 #define DEC_BUILTINID_IDOF(x)            ((x) & 0xff)
 
-
-#define DECFILE_PADDING 32
-
 struct module_object;
-struct string_object;
 struct compiler_options;
-struct code_object;
-struct ddi_object;
-
-typedef struct {
-	union {
-		uint8_t               *df_data;    /* [0..df_size+DECFILE_PADDING][owned]
-		                                    *  A full mapping of all data from the input DEC file, followed
-		                                    *  by a couple of bytes of padding data that is ZERO-initialized. */
-		uint8_t               *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
-		Dec_Ehdr              *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
-	}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_dee_aunion
-#define df_data _dee_aunion.df_data
-#define df_base _dee_aunion.df_base
-#define df_ehdr _dee_aunion.df_ehdr
-#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
-	;
-	size_t                     df_size;    /* Total number of usable bytes of memory
-	                                        * that can be found within the source file. */
-	DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
-	DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
-	struct compiler_options   *df_options; /* [0..1] Compilation options. */
-	DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
-	                                        *        This string is used by DDI descriptors in
-	                                        *        order to allow for sharing of string tables. */
-} DecFile;
-
-/* Initialize a DEC file, given an input stream, as well as its pathname.
- * @return:  1: The given `input_stream' doesn't describe a valid DEC file.
- * @return:  0: Successfully initialized the DEC file.
- * @return: -1: An error occurred while attempting to read the DEC's data,
- *              or failed to allocate a sufficient buffer for the DEC. */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DecFile_Init(DecFile *__restrict self,
-             DeeObject *__restrict input_stream,
-             struct module_object *__restrict module,
-             struct string_object *__restrict dec_pathname,
-             struct compiler_options *options);
-INTDEF NONNULL((1)) void DCALL DecFile_Fini(DecFile *__restrict self);
-
-/* Return a string for the entire strtab of a given DEC-file.
- * Upon error, NULL is returned.
- * NOTE: The return value is _NOT_ a reference! */
-INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL DecFile_Strtab(DecFile *__restrict self);
-
-/* Check if a given DEC file is up to date, or if it must not be loaded.
- * because it a dependency has changed since it was created.
- * @return:  0: The file is up-to-date.
- * @return:  1: The file is not up-to-date.
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_IsUpToDate(DecFile *__restrict self);
-
-/* Load a given DEC file and fill in the given `module'.
- * @return:  0: Successfully loaded the given DEC file.
- * @return:  1: The DEC file has been corrupted or is out of date.
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
 
 /* @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file was out of date or had been corrupted.
@@ -646,52 +584,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_OpenDec(struct module_object *__restrict mod,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *options);
-
-/* DEC loader implementation. */
-
-/* @return: * :        A reference to the object that got loaded.
- * @return: NULL:      An error occurred. (NOTE: `DTYPE_NULL' is not allowed and indicates a corrupt file)
- * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DecFile_LoadObject(DecFile *__restrict self,
-                   uint8_t **__restrict preader);
-
-/* @param: allow_dtype_null: When true, individual vector elements are allowed
- *                           to be `NULL' as the result of `DTYPE_NULL'
- * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
- * @return: NULL:            An error occurred.
- * @return: ITER_DONE:       The DEC file has been corrupted. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
-DecFile_LoadObjectVector(DecFile *__restrict self,
-                         uint16_t *__restrict pcount,
-                         uint8_t **__restrict preader,
-                         bool allow_dtype_null);
-
-/* @return: * :        New reference to a code object.
- * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
-DecFile_LoadCode(DecFile *__restrict self,
-                 uint8_t **__restrict preader);
-
-/* @return: * :        New reference to a ddi object.
- * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ddi_object *DCALL
-DecFile_LoadDDI(DecFile *__restrict self,
-                uint8_t *__restrict reader,
-                bool is_8bit_ddi);
-
-
-/* Return the last-modified time (in microseconds since 01.01.1970).
- * For this purpose, an internal cache is kept that is consulted
- * before and populated after making an attempt at contacting the
- * host operating system for the required information.
- * @return: * :           Last-modified time (in microseconds since 01.01.1970).
- * @return: 0 :           The given file could not be found.
- * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-INTDEF WUNUSED NONNULL((1)) uint64_t DCALL
-DecTime_Lookup(DeeObject *__restrict filename);
 
 /* Try to free up memory from the dec time-cache. */
 INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);

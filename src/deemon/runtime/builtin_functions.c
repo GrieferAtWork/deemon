@@ -204,7 +204,7 @@ builtin_exec_fallback(size_t argc,
 		usersize = DeeBytes_SIZE(expr);
 		Dee_Incref(expr);
 	} else {
-		expr = DeeFile_ReadText(expr, (size_t)-1, true);
+		expr = DeeFile_ReadBytes(expr, (size_t)-1, true);
 		if unlikely(!expr)
 			goto err;
 		if (DeeString_Check(expr)) {
