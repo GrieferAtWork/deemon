@@ -7656,7 +7656,7 @@ TPPLexer_SavePosition(struct TPPLexerPosition *__restrict self) {
 		--num_files;
 		ent = &self->tlp_filev[num_files];
 		ent->tlfp_file = file;
-		ent->tlfp_pos  = file->f_pos;
+		ent->tlfp_pos  = file->f_pos - file->f_begin;
 		TPPFile_Incref(file);
 	}
 	assert(num_files == 0);
@@ -7665,8 +7665,8 @@ TPPLexer_SavePosition(struct TPPLexerPosition *__restrict self) {
 	self->tlp_flags     = CURRENT.l_flags;
 	self->tlp_tok_id    = CURRENT.l_token.t_id;
 	self->tlp_tok_num   = CURRENT.l_token.t_num;
-	self->tlp_tok_begin = CURRENT.l_token.t_begin;
-	self->tlp_tok_end   = CURRENT.l_token.t_end;
+	self->tlp_tok_begin = CURRENT.l_token.t_begin - CURRENT.l_token.t_file->f_begin;
+	self->tlp_tok_end   = CURRENT.l_token.t_end - CURRENT.l_token.t_file->f_begin;
 	self->tlp_tok_kwd   = CURRENT.l_token.t_kwd;
 
 	/* Alter lexer flags so that a later restore becomes possible. */
@@ -7714,16 +7714,17 @@ TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict self) {
 		 * that one may have been read from at one point) */
 		struct TPPLexerFilePosition *ent;
 		ent = &self->tlp_filev[num_common_files - 1];
-		ent->tlfp_file->f_pos = ent->tlfp_pos;
+		ent->tlfp_file->f_pos = ent->tlfp_file->f_begin + ent->tlfp_pos;
 	}
 
 	/* Decref common files */
 	for (i = 0; i < num_common_files; ++i) {
-		assertf(self->tlp_filev[i].tlfp_file->f_pos == self->tlp_filev[i].tlfp_pos,
+		assertf(self->tlp_filev[i].tlfp_file->f_pos ==
+		        (self->tlp_filev[i].tlfp_file->f_begin + self->tlp_filev[i].tlfp_pos),
 		        ("self->tlp_filev[i].tlfp_file->f_pos = %p\n"
 		         "self->tlp_filev[i].tlfp_pos         = %p\n",
 		         self->tlp_filev[i].tlfp_file->f_pos,
-		         self->tlp_filev[i].tlfp_pos));
+		         self->tlp_filev[i].tlfp_file->f_begin + self->tlp_filev[i].tlfp_pos));
 		TPPFile_DecrefNoKill(self->tlp_filev[i].tlfp_file);
 	}
 
@@ -7731,26 +7732,27 @@ TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict self) {
 	for (; num_common_files < self->tlp_filec; ++num_common_files) {
 		struct TPPLexerFilePosition *ent;
 		ent = &self->tlp_filev[num_common_files];
-		assertf(ent->tlfp_pos >= ent->tlfp_file->f_begin &&
-		        ent->tlfp_pos <= ent->tlfp_file->f_end,
+		assertf(ent->tlfp_file->f_begin + ent->tlfp_pos <= ent->tlfp_file->f_end,
 		        ("ent->tlfp_pos           = %p\n"
 		         "ent->tlfp_file->f_begin = %p\n"
 		         "ent->tlfp_file->f_end   = %p\n",
-		         ent->tlfp_pos,
+		         ent->tlfp_file->f_begin + ent->tlfp_pos,
 		         ent->tlfp_file->f_begin,
 		         ent->tlfp_file->f_end));
-		ent->tlfp_file->f_pos = ent->tlfp_pos;
+		ent->tlfp_file->f_pos = ent->tlfp_file->f_begin + ent->tlfp_pos;
 		TPPLexer_PushFileInherited(ent->tlfp_file);
 	}
 
 	/* Restore lexer configuration. */
 	CURRENT.l_flags         = self->tlp_flags;
+	CURRENT.l_token.t_file  = self->tlp_filev[self->tlp_filec - 1].tlfp_file;
 	CURRENT.l_token.t_id    = self->tlp_tok_id;
 	CURRENT.l_token.t_num   = self->tlp_tok_num;
-	CURRENT.l_token.t_begin = self->tlp_tok_begin;
-	CURRENT.l_token.t_end   = self->tlp_tok_end;
+	CURRENT.l_token.t_begin = CURRENT.l_token.t_file->f_begin + self->tlp_tok_begin;
+	CURRENT.l_token.t_end   = CURRENT.l_token.t_file->f_begin + self->tlp_tok_end;
 	CURRENT.l_token.t_kwd   = self->tlp_tok_kwd;
-	CURRENT.l_token.t_file  = self->tlp_filev[self->tlp_filec - 1].tlfp_file;
+	assert(CURRENT.l_token.t_end >= CURRENT.l_token.t_file->f_begin);
+	assert(CURRENT.l_token.t_end <= CURRENT.l_token.t_file->f_end);
 	free(self->tlp_filev);
 }
 

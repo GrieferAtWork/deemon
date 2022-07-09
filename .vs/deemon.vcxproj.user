@@ -3,7 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerCommandArguments>-O3 input.dee</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"E:\c\kls\kos\kos\misc\magicgenerator\generate_syscalls.dee"</LocalDebuggerCommandArguments>
     <LocalDebuggerCommand>$(ProjectDir)..\deemon.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">

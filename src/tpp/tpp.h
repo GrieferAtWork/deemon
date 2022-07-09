@@ -1515,13 +1515,13 @@ TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN(void) { struct TPPFile *f = TPPLexe
  */
 struct TPPLexerFilePosition {
 	/*ref*/struct TPPFile *tlfp_file; /* [1..1] The file to restore. */
-	char                  *tlfp_pos;  /* [1..1] File position to restore. */
+	ptrdiff_t              tlfp_pos;  /* File position to restore (relative to `tlfp_file->f_begin'). */
 };
 struct TPPLexerPosition {
 	TPP(tok_t)                   tlp_tok_id;    /* The symbol/keyword ID of this token. */
 	unsigned long                tlp_tok_num;   /* The token number (incremented every time a new token is yielded). */
-	char                        *tlp_tok_begin; /* [1..1][<= t_end] Token text start pointer. */
-	char                        *tlp_tok_end;   /* [1..1][>= t_begin] Token text end pointer. */
+	ptrdiff_t                    tlp_tok_begin; /* [<= tlp_tok_end] Token text start pointer (relative to `tlp_filev[tlp_filec-1].tlfp_file->f_begin'). */
+	ptrdiff_t                    tlp_tok_end;   /* [>= tlp_tok_begin] Token text end pointer. */
 	struct TPPKeyword           *tlp_tok_kwd;   /* [0..1] Set when `t_id' is a keyword (WARNING: Not always updated during yield; check `TPP_ISKEYWORD(t_id)' before using). */
 	size_t                       tlp_filec;     /* # of files to restore from the #include-stack. */
 	struct TPPLexerFilePosition *tlp_filev;     /* [0..tlp_filec] Vector of files to restore. */

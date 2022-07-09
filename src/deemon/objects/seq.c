@@ -4532,7 +4532,7 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	      "This is the same as ${(seq as Sequence from deemon) * count}") },
 	{ "concat", &seq_class_concat,
 	  DOC("(seqs!:?DSequence)->?DSequence\n"
-	      "Returns a proxy-Sequence describing the concantation of all of the given sequences\n"
+	      "Returns a proxy-Sequence describing the concatenation of all of the given sequences\n"
 	      "When only 1 Sequence is given, that Sequence is forwarded directly.\n"
 	      "When no sequences are given, an empty Sequence is returned\n"
 	      "Hint: The python equivalent of this function is "
