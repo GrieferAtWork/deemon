@@ -623,6 +623,10 @@ do_generic:
 			++optimizer_count;
 		}
 
+		/* TODO: from: >> ((a) + b) + c        // where `type a === string' at comile-time
+		 *       to:   >> "{}{}{}".format({ a, b, c })
+		 * NOTE: Only do this when there are 3 or more operands */
+
 		/* TODO: from: >> "a = {}, ".format({ a }) + "b = {}".format({ b })
 		 *       to:   >> "a = {}, b = {}".format({ a, b }) */
 
@@ -632,7 +636,7 @@ do_generic:
 		/* TODO: from: >> "a = 42, " + "b = {}".format({ b })
 		 *       to:   >> "a = 42, b = {}".format({ b }) */
 	}
-	
+
 	if (self->a_flag == OPERATOR_CALL && self->a_operator.o_op1) {
 		if (ast_isoperator2(self->a_operator.o_op0, OPERATOR_GETATTR)) {
 			struct ast *base = self->a_operator.o_op0->a_operator.o_op0;

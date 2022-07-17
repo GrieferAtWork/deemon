@@ -472,7 +472,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
-	DREF Dict *result, *new_result;
+	DREF Dict *result;
 	DREF DeeObject *elem;
 	size_t elem_count = 0;
 	/* Construct a read-only Dict from an iterator. */
@@ -488,6 +488,7 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 			goto err_r;
 		/* Check if we must re-hash the resulting Dict. */
 		if (elem_count * 2 > mask) {
+			DREF Dict *new_result;
 			size_t new_mask = (mask << 1) | 1;
 			new_result      = rehash(result, mask, new_mask);
 			if unlikely(!new_result) {
@@ -496,6 +497,7 @@ DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 				goto err_r;
 			}
 			mask = new_mask;
+			result = new_result;
 		}
 		/* Insert the key-value pair into the resulting Dict. */
 		if unlikely(insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]))
