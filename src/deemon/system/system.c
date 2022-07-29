@@ -2037,10 +2037,11 @@ empty_file:
 	}
 	return 0;
 	{
-system_err_buf:
 		/* Throw/handle system errors */
 #ifdef CONFIG_HOST_WINDOWS
-		DWORD error = GetLastError();
+		DWORD error;
+system_err_buf:
+		error = GetLastError();
 		if (DeeNTSystem_IsBadAllocError(error) && Dee_CollectMemory(1)) {
 			offset = orig_offset;
 			goto again;
@@ -2058,7 +2059,9 @@ system_err_buf:
 			                        "Failed to map file %d", fd);
 		}
 #else /* CONFIG_HOST_WINDOWS */
-		int error = DeeSystem_GetErrno();
+		int error;
+system_err_buf:
+		error = DeeSystem_GetErrno();
 		if (error == ENOMEM && Dee_CollectMemory(1)) {
 			offset = orig_offset;
 			goto again;
