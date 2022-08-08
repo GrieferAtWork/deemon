@@ -352,7 +352,7 @@ rehash(DREF Dict *__restrict self, size_t old_mask, size_t new_mask) {
 	result = RODICT_ALLOC(new_mask);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i < old_mask; ++i) {
+	for (i = 0; i <= old_mask; ++i) {
 		size_t j, perturb;
 		struct rodict_item *item;
 		if (!self->rd_elem[i].di_key)
