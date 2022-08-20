@@ -341,6 +341,85 @@ err:
 	return NULL;
 }
 
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_popcount(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ffs(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_partity(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ctz(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_msb(DeeIntObject *__restrict self);
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_popcount(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_popcount(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_ffs(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_ffs(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_partity(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_partity(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_ctz(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_ctz(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_msb(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_msb(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+
+
 PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	{ DeeString_STR(&str_int),
 	  &DeeObject_Int, NULL, NULL,
@@ -673,6 +752,35 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When the host already is big-endian, this is identical to ?#signed128") },
 #undef LE_SEL
 #undef BE_SEL
+
+	/* Binary property helper functions */
+	{ "popcount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_popcount, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "Return the number of 1-bits in this integer") },
+	{ "ffs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_ffs, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}") },
+	{ "partity", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_partity, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}") },
+	{ "ctz", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_ctz, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this <= 0}\n"
+	      "CountTrailingZeros: return the number of trailing zero-bits:\n"
+	      "${"
+	      "local n = this.ctz;\n"
+	      "assert this == (this >> n) << n;"
+	      "}") },
+	{ "msb", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_msb, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "MostSignificantBit: return the index of the most significant 1-bit:\n"
+	      "${"
+	      "assert (this >> this.msb) == 1;"
+	      "}") },
 
 	{ NULL }
 };

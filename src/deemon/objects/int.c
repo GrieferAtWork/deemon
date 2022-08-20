@@ -3553,6 +3553,104 @@ int_return_nonzero(DeeObject *__restrict self) {
 }
 
 
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_popcount(DeeIntObject *__restrict self) {
+	size_t result, i;
+	if unlikely(self->ob_size < 0)
+		goto err_neg;
+	result = 0;
+	for (i = 0; i < (size_t)self->ob_size; ++i) {
+		digit dig = self->ob_digit[i];
+		result += POPCOUNT(dig);
+	}
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_neg:
+	err_int_negative((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_ffs(DeeIntObject *__restrict self) {
+	size_t result, i;
+	if unlikely(self->ob_size < 0)
+		goto err_neg;
+	if unlikely(self->ob_size == 0)
+		return_reference_(&DeeInt_Zero);
+	result = 1;
+	for (i = 0;; ++i) {
+		digit dig;
+		ASSERT(i < (size_t)self->ob_size);
+		dig = self->ob_digit[i];
+		if (dig) {
+			result += CTZ(dig);
+			break;
+		}
+		result += DIGIT_BITS;
+	}
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_neg:
+	err_int_negative((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_partity(DeeIntObject *__restrict self) {
+	__SHIFT_TYPE__ result;
+	size_t i;
+	digit sum;
+	if unlikely(DeeInt_IsNeg(self))
+		goto err_neg;
+	sum = 0;
+	for (i = 0; i < (size_t)self->ob_size; ++i)
+		sum ^= self->ob_digit[i];
+	result = PARITY(sum);
+	return (DREF DeeIntObject *)DeeInt_NEWU(result);
+err_neg:
+	err_int_negative((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_ctz(DeeIntObject *__restrict self) {
+	size_t result, i;
+	if unlikely(self->ob_size < 0)
+		goto err_neg;
+	if unlikely(self->ob_size == 0)
+		return_reference_(&DeeInt_Zero);
+	result = 0;
+	for (i = 0;; ++i) {
+		digit dig;
+		ASSERT(i < (size_t)self->ob_size);
+		dig = self->ob_digit[i];
+		if (dig) {
+			result += CTZ(dig);
+			break;
+		}
+		result += DIGIT_BITS;
+	}
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_neg:
+	err_int_negative((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_msb(DeeIntObject *__restrict self) {
+	size_t result;
+	digit msb_digit;
+	if unlikely(self->ob_size <= 0)
+		goto err_neg_or_zero;
+	result    = ((size_t)self->ob_size - 1) * DIGIT_BITS;
+	msb_digit = self->ob_digit[(size_t)self->ob_size - 1];
+	result += sizeof(digit) * CHAR_BIT;
+	result -= CLZ(msb_digit);
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_neg_or_zero:
+	err_int_negative_or_zero((DeeObject *)self);
+	return NULL;
+}
+
+
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
 	{ STR___sizeof__, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL, DOC("->?.") },
@@ -3565,6 +3663,39 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	{ "isinf", &int_return_false, NULL, NULL, DOC("->?Dbool\nAlways returns !f") },
 	{ "isfinite", &int_return_true, NULL, NULL, DOC("->?Dbool\nAlways returns !t") },
 	{ "isnormal", &int_return_nonzero, NULL, NULL, DOC("->?Dbool\nSame as {this != 0}") },
+
+	/* Binary property helper functions */
+	{ "popcount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_popcount, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "Return the number of 1-bits in this integer") },
+	{ "ffs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_ffs, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}") },
+	{ "partity", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_partity, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}") },
+	{ "ctz", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_ctz, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this < 0}\n"
+	      "CountTrailingZeros: return the number of trailing zero-bits:\n"
+	      "${"
+	      "local n = this.ctz;\n"
+	      "assert this == (this >> n) << n;"
+	      "}") },
+	{ "msb", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_msb, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw IntegerOverflow When ${this <= 0}\n"
+	      "MostSignificantBit: return the index of the most significant 1-bit:\n"
+	      "${"
+	      "assert (this >> this.msb) == 1;"
+	      "}") },
+
+	{ DeeString_STR(&str_int), &DeeObject_NewRef, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Always re-return @this") },
 	{ NULL }
 };
 
