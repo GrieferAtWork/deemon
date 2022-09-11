@@ -39,7 +39,7 @@
 #define __BYTE_ORDER__ __BYTE_ORDER
 #elif defined(__BYTEORDER)
 #define __BYTE_ORDER__ __BYTEORDER
-#elif defined(__ENDIAN__)
+#elif defined(__ENDIAN__) && ((__ENDIAN__ + 0) >= 1234 && (__ENDIAN__ + 0) <= 4321)
 #define __BYTE_ORDER__ __ENDIAN__
 #elif defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
 #define __BYTE_ORDER__ 1234
@@ -103,7 +103,25 @@
 #endif /* !__BYTE_ORDER__ */
 #endif /* !... */
 #endif /* !__BYTE_ORDER__ */
-#endif /* !__NO_has_include && !__KOS_SYSTEM_HEADERS__ */
+#elif !defined(__KOS_SYSTEM_HEADERS__)
+#if defined(__SVR4) && defined(__sun)
+#include <sys/byteorder.h>
+#elif (defined(__FreeBSD__) || defined(__NetBSD__) || \
+       defined(__DragonFly__) || defined(__minix))
+#include <sys/endian.h>
+#elif defined(__OpenBSD__)
+#include <machine/endian.h>
+#endif /* ... */
+#ifndef __BYTE_ORDER__
+#ifdef __BYTE_ORDER
+#define __BYTE_ORDER__ __BYTE_ORDER
+#elif defined(_BYTE_ORDER)
+#define __BYTE_ORDER__ _BYTE_ORDER
+#elif defined(BYTE_ORDER)
+#define __BYTE_ORDER__ BYTE_ORDER
+#endif /* ... */
+#endif /* !__BYTE_ORDER__ */
+#endif /* ... */
 
 /* Fallback: Figure out based on host defines */
 #ifndef __BYTE_ORDER__
