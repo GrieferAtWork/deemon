@@ -7731,16 +7731,29 @@ TPPLexer_LoadPosition(struct TPPLexerPosition *__restrict self) {
 	/* Push all non-common files onto the include stack. */
 	for (; num_common_files < self->tlp_filec; ++num_common_files) {
 		struct TPPLexerFilePosition *ent;
-		ent = &self->tlp_filev[num_common_files];
-		assertf(ent->tlfp_file->f_begin + ent->tlfp_pos <= ent->tlfp_file->f_end,
+		struct TPPFile *file;
+		ent  = &self->tlp_filev[num_common_files];
+		file = ent->tlfp_file;
+		assertf(file->f_begin + ent->tlfp_pos <= file->f_end,
 		        ("ent->tlfp_pos           = %p\n"
-		         "ent->tlfp_file->f_begin = %p\n"
-		         "ent->tlfp_file->f_end   = %p\n",
-		         ent->tlfp_file->f_begin + ent->tlfp_pos,
-		         ent->tlfp_file->f_begin,
-		         ent->tlfp_file->f_end));
-		ent->tlfp_file->f_pos = ent->tlfp_file->f_begin + ent->tlfp_pos;
-		TPPLexer_PushFileInherited(ent->tlfp_file);
+		         "file->f_begin = %p\n"
+		         "file->f_end   = %p\n",
+		         file->f_begin + ent->tlfp_pos,
+		         file->f_begin,
+		         file->f_end));
+		file->f_pos = file->f_begin + ent->tlfp_pos;
+		TPPLexer_PushFileInherited(file);
+		/* In case of expanded macro files, we must re-increment their expansion counter. */
+		if (file->f_kind == TPPFILE_KIND_MACRO &&
+		    (file->f_macro.m_flags & TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_EXPANDED) {
+			/* Increment the on-stack counter for expanded macro-files. */
+			struct TPPFile *origin;
+			origin = file->f_macro.m_expand.e_expand_origin;
+			assert(origin);
+			assert(origin->f_kind == TPPFILE_KIND_MACRO);
+			assert((origin->f_macro.m_flags & TPP_MACROFILE_KIND) == TPP_MACROFILE_KIND_FUNCTION);
+			++origin->f_macro.m_function.f_expansions;
+		}
 	}
 
 	/* Restore lexer configuration. */
