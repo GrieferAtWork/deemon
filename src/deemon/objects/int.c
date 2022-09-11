@@ -50,6 +50,7 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -63,6 +64,13 @@
 #include <deemon/util/rwlock.h>
 #endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
+#ifdef CONFIG_HAVE_LIMITS_H
+#include <limits.h> /* CHAR_BIT */
+#endif /* CONFIG_HAVE_LIMITS_H */
+
+#ifndef CHAR_BIT
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
 
 #ifndef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
 #if defined(__OPTIMIZE_SIZE__) && defined(CONFIG_HAVE_MATH_H)
