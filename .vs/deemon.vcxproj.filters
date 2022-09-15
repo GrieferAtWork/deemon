@@ -1229,6 +1229,9 @@
     <None Include="..\src\deemon\objects\seq\bsearch-impl.c.inl">
       <Filter>src\deemon\objects\seq</Filter>
     </None>
+    <None Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

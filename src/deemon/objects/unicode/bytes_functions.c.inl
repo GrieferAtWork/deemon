@@ -2533,367 +2533,47 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (begin < end && memchr(needle.n_data, *begin, needle.n_size))
-			++begin;
-		while (end > begin && memchr(needle.n_data, end[-1], needle.n_size))
-			--end;
-	} else {
-		while (begin < end && DeeUni_IsSpace(*begin))
-			++begin;
-		while (end > begin && DeeUni_IsSpace(end[-1]))
-			--end;
-	}
-	if (begin == DeeBytes_DATA(self) &&
-	    end == begin + DeeBytes_SIZE(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
+#ifdef __INTELLISENSE__
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casestrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+#else /* __INTELLISENSE__ */
+#define DEFINE_bytes_strip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_lstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_rstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_sstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_lsstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_rsstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casestrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caselstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caserstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casesstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caselsstrip
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casersstrip
+#include "bytes_functions-strip.c.inl"
+#endif /* !__INTELLISENSE__ */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_casestrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (begin < end && dee_memasciicasechr(needle.n_data, *begin, needle.n_size))
-			++begin;
-		while (end > begin && dee_memasciicasechr(needle.n_data, end[-1], needle.n_size))
-			--end;
-	} else {
-		while (begin < end && DeeUni_IsSpace(*begin))
-			++begin;
-		while (end > begin && DeeUni_IsSpace(end[-1]))
-			--end;
-	}
-	if (begin == DeeBytes_DATA(self) &&
-	    end == begin + DeeBytes_SIZE(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (begin < end && memchr(needle.n_data, *begin, needle.n_size))
-			++begin;
-	} else {
-		while (begin < end && DeeUni_IsSpace(*begin))
-			++begin;
-	}
-	if (begin == DeeBytes_DATA(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (begin < end && dee_memasciicasechr(needle.n_data, *begin, needle.n_size))
-			++begin;
-	} else {
-		while (begin < end && DeeUni_IsSpace(*begin))
-			++begin;
-	}
-	if (begin == DeeBytes_DATA(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (end > begin && memchr(needle.n_data, end[-1], needle.n_size))
-			--end;
-	} else {
-		while (end > begin && DeeUni_IsSpace(end[-1]))
-			--end;
-	}
-	if (end == begin + DeeBytes_SIZE(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin, *end;
-	DeeObject *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
-		goto err;
-	begin = DeeBytes_DATA(self);
-	end   = begin + DeeBytes_SIZE(self);
-	if (mask) {
-		Needle needle;
-		if (get_needle(&needle, mask))
-			goto err;
-		while (end > begin && dee_memasciicasechr(needle.n_data, end[-1], needle.n_size))
-			--end;
-	} else {
-		while (end > begin && DeeUni_IsSpace(end[-1]))
-			--end;
-	}
-	if (end == begin + DeeBytes_SIZE(self))
-		return_reference_((DeeObject *)self);
-	return DeeBytes_NewSubView(self,
-	                           begin,
-	                           (size_t)(end - begin));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:sstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!MEMEQB(begin, needle.n_data, needle.n_size))
-			break;
-		begin += needle.n_size;
-		size -= needle.n_size;
-	}
-	while (size >= needle.n_size) {
-		if (!MEMEQB(begin + size - needle.n_size, needle.n_data, needle.n_size))
-			break;
-		size -= needle.n_size;
-	}
-	if (begin == DeeBytes_DATA(self) &&
-	    size == DeeBytes_SIZE(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:casesstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!dee_memasciicaseeq(begin, needle.n_data, needle.n_size))
-			break;
-		begin += needle.n_size;
-		size -= needle.n_size;
-	}
-	while (size >= needle.n_size) {
-		if (!dee_memasciicaseeq(begin + size - needle.n_size, needle.n_data, needle.n_size))
-			break;
-		size -= needle.n_size;
-	}
-	if (begin == DeeBytes_DATA(self) &&
-	    size == DeeBytes_SIZE(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:lsstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!MEMEQB(begin, needle.n_data, needle.n_size))
-			break;
-		begin += needle.n_size;
-		size -= needle.n_size;
-	}
-	if (begin == DeeBytes_DATA(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:caselsstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!dee_memasciicaseeq(begin, needle.n_data, needle.n_size))
-			break;
-		begin += needle.n_size;
-		size -= needle.n_size;
-	}
-	if (begin == DeeBytes_DATA(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:rsstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!MEMEQB(begin + size - needle.n_size, needle.n_data, needle.n_size))
-			break;
-		size -= needle.n_size;
-	}
-	if (size == DeeBytes_SIZE(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t *begin;
-	DeeObject *mask;
-	Needle needle;
-	size_t size;
-	if (DeeArg_Unpack(argc, argv, "o:casersstrip", &mask))
-		goto err;
-	if (get_needle(&needle, mask))
-		goto err;
-	if unlikely(!needle.n_size)
-		goto retself;
-	begin = DeeBytes_DATA(self);
-	size  = DeeBytes_SIZE(self);
-	while (size >= needle.n_size) {
-		if (!dee_memasciicaseeq(begin + size - needle.n_size, needle.n_data, needle.n_size))
-			break;
-		size -= needle.n_size;
-	}
-	if (size == DeeBytes_SIZE(self))
-		goto retself;
-	return DeeBytes_NewSubView(self,
-	                           begin, size);
-retself:
-	return_reference_((DeeObject *)self);
-err:
-	return NULL;
-}
 
 struct bcompare_args {
 	DeeObject *other;   /* [1..1] String or Bytes object. */
