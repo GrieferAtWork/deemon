@@ -323,7 +323,9 @@ LOCAL_DeeString_Strip(String *__restrict self)
 #endif /* !LOCAL_matchlen */
 
 
-		/* 8-bit */
+		/************************************************************************/
+		/* 8-bit                                                                */
+		/************************************************************************/
 	CASE_WIDTH_1BYTE:
 #ifdef LOCAL_IS_MASKED
 		mystr.cp8  = DeeString_As1Byte((DeeObject *)self);
@@ -415,7 +417,9 @@ LOCAL_DeeString_Strip(String *__restrict self)
 		return (DREF String *)DeeString_New1Byte(newstr.cp8, newlen);
 
 
-		/* 16-bit */
+		/************************************************************************/
+		/* 16-bit                                                               */
+		/************************************************************************/
 	CASE_WIDTH_2BYTE:
 #ifdef LOCAL_IS_MASKED
 		mystr.cp16 = DeeString_As2Byte((DeeObject *)self);
@@ -444,7 +448,6 @@ LOCAL_DeeString_Strip(String *__restrict self)
 			newlen -= LOCAL_matchlen;
 		}
 #endif /* LOCAL_IS_RSTRIP */
-
 
 		/* Strip around line-feeds. */
 #ifdef LOCAL_IS_LINES
@@ -516,7 +519,9 @@ LOCAL_DeeString_Strip(String *__restrict self)
 		return (DREF String *)DeeString_New2Byte(newstr.cp16, newlen);
 
 
-		/* 32-bit */
+		/************************************************************************/
+		/* 32-bit                                                               */
+		/************************************************************************/
 	CASE_WIDTH_4BYTE:
 #ifdef LOCAL_IS_MASKED
 		mystr.cp32 = DeeString_As4Byte((DeeObject *)self);

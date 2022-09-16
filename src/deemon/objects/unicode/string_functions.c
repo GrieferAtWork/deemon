@@ -593,6 +593,17 @@ err:
 #define DeeString_IsAnyNumeric(self, start, end) DeeString_TestAnyTrait(self, start, end, UNICODE_FDIGIT | UNICODE_FDECIMAL)
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeString_IsSpaceXLf(String *__restrict self,
+                     size_t start_index,
+                     size_t end_index) {
+	DeeString_Foreach(self, start_index, end_index, iter, end, {
+		if (!DeeUni_IsSpaceNoLf(*iter))
+			return false;
+	});
+	return true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeString_TestTrait(String *__restrict self,
                     size_t start_index,
                     size_t end_index,
@@ -602,6 +613,17 @@ DeeString_TestTrait(String *__restrict self,
 			return false;
 	});
 	return true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeString_IsAnySpaceXLf(String *__restrict self,
+                        size_t start_index,
+                        size_t end_index) {
+	DeeString_Foreach(self, start_index, end_index, iter, end, {
+		if (DeeUni_IsSpaceNoLf(*iter))
+			return true;
+	});
+	return false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
@@ -1529,6 +1551,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 DEFINE_STRING_TRAIT(isprint, DeeString_IsPrint, DeeUni_Flags(ch) & UNICODE_FPRINT)
 DEFINE_STRING_TRAIT(isalpha, DeeString_IsAlpha, DeeUni_Flags(ch) & UNICODE_FALPHA)
 DEFINE_STRING_TRAIT(isspace, DeeString_IsSpace, DeeUni_Flags(ch) & UNICODE_FSPACE)
+DEFINE_STRING_TRAIT(isspacexlf, DeeString_IsSpaceXLf, (DeeUni_Flags(ch) & (UNICODE_FSPACE | UNICODE_FLF)) == UNICODE_FSPACE)
 DEFINE_STRING_TRAIT(islf, DeeString_IsLF, DeeUni_Flags(ch) & UNICODE_FLF)
 DEFINE_STRING_TRAIT(islower, DeeString_IsLower, DeeUni_Flags(ch) & UNICODE_FLOWER)
 DEFINE_STRING_TRAIT(isupper, DeeString_IsUpper, DeeUni_Flags(ch) & UNICODE_FUPPER)
@@ -1545,6 +1568,7 @@ DEFINE_STRING_TRAIT(isascii, DeeString_IsAscii, ch <= 0x7f)
 DEFINE_ANY_STRING_TRAIT(isanyprint, DeeString_IsAnyPrint)
 DEFINE_ANY_STRING_TRAIT(isanyalpha, DeeString_IsAnyAlpha)
 DEFINE_ANY_STRING_TRAIT(isanyspace, DeeString_IsAnySpace)
+DEFINE_ANY_STRING_TRAIT(isanyspacexlf, DeeString_IsAnySpaceXLf)
 DEFINE_ANY_STRING_TRAIT(isanylf, DeeString_IsAnyLF)
 DEFINE_ANY_STRING_TRAIT(isanylower, DeeString_IsAnyLower)
 DEFINE_ANY_STRING_TRAIT(isanyupper, DeeString_IsAnyUpper)
@@ -10591,6 +10615,16 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are line-feeds") },
+	{ "isspacexlf",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isspacexlf,
+	  DOC("->?Dbool\n"
+	      "(index:?Dint)->?Dbool\n"
+	      "(start:?Dint,end:?Dint)->?Dbool\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
+	      "@throw IntegerOverflow The given @index is negative or too large\n"
+	      "Returns ?t if $this, ${this[index]}, or all characters "
+	      /**/ "in ${this.substr(start, end)} are space-characters, "
+	      /**/ "where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed)") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islower,
 	  DOC("->?Dbool\n"
@@ -10758,85 +10792,92 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is printable"),
+	      /**/ "${this.substr(start, end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is alphabetical"),
+	      /**/ "${this.substr(start, end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is a space character"),
+	      /**/ "${this.substr(start, end)} is a space character"),
+	  TYPE_METHOD_FKWDS },
+	{ "isanyspacexlf",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyspacexlf,
+	  DOC("(start=!0,end=!-1)->?Dbool\n"
+	      "Returns ?t if any character in "
+	      /**/ "${this.substr(start, end)} is a space character, "
+	      /**/ "where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed)"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is a line-feeds"),
+	      /**/ "${this.substr(start, end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is lower-case"),
+	      /**/ "${this.substr(start, end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is upper-case"),
+	      /**/ "${this.substr(start, end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is a control character"),
+	      /**/ "${this.substr(start, end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is a digit"),
+	      /**/ "${this.substr(start, end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is a dicimal character"),
+	      /**/ "${this.substr(start, end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} can be used to start a symbol name"),
+	      /**/ "${this.substr(start, end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} can be used to continue a symbol name"),
+	      /**/ "${this.substr(start, end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} is alpha-numerical"),
+	      /**/ "${this.substr(start, end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} qualifies as digit or decimal characters"),
+	      /**/ "${this.substr(start, end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns ?t if any character in "
-	      "${this.substr(start, end)} has title-casing"),
+	      /**/ "${this.substr(start, end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyascii,
