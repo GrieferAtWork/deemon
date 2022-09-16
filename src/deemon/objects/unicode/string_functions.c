@@ -56,6 +56,21 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RSStrip(String *sel
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseSStrip(String *self, String *mask);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLSStrip(String *self, String *mask);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRSStrip(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_StripLinesSpc(String *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_LStripLinesSpc(String *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL DeeString_RStripLinesSpc(String *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_StripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LStripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RStripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseStripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLStripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRStripLinesMask(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_SStripLines(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_LSStripLines(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_RSStripLines(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseSStripLines(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseLSStripLines(String *self, String *mask);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL DeeString_CaseRSStripLines(String *self, String *mask);
 #else /* __INTELLISENSE__ */
 DECL_END
 #define DEFINE_DeeString_StripSpc
@@ -87,6 +102,36 @@ DECL_END
 #define DEFINE_DeeString_CaseLSStrip
 #include "string_functions-strip.c.inl"
 #define DEFINE_DeeString_CaseRSStrip
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_StripLinesSpc
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_LStripLinesSpc
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_RStripLinesSpc
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_StripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_LStripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_RStripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseStripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseLStripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseRStripLinesMask
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_SStripLines
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_LSStripLines
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_RSStripLines
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseSStripLines
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseLSStripLines
+#include "string_functions-strip.c.inl"
+#define DEFINE_DeeString_CaseRSStripLines
 #include "string_functions-strip.c.inl"
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
@@ -3422,90 +3467,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_strip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_StripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_StripMask(self, mask);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_lstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_LStripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_LStripMask(self, mask);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_rstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_RStripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_RStripMask(self, mask);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_StripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_CaseStripMask(self, mask);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_caselstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_LStripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_CaseLStripMask(self, mask);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_caserstrip(String *self, size_t argc, DeeObject *const *argv) {
-	String *mask = NULL;
-	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
-		goto err;
-	if (!mask)
-		return DeeString_RStripSpc(self);
-	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
-		goto err;
-	return DeeString_CaseRStripMask(self, mask);
-err:
-	return NULL;
-}
-
 #undef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
 #define CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS 1
 
@@ -5496,6 +5457,90 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_strip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_StripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_StripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_lstrip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_LStripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_LStripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_rstrip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_RStripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_RStripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_StripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseStripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_caselstrip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_LStripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseLStripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_caserstrip(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_RStripSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseRStripMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
 	String *other;
 	if (DeeArg_Unpack(argc, argv, "o:sstrip", &other))
@@ -5563,6 +5608,162 @@ string_casersstrip(String *self, size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
 	return DeeString_CaseRSStrip(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_striplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:striplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_StripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_StripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_lstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:lstriplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_LStripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_LStripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_rstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:rstriplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_RStripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_RStripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_casestriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:casestriplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_StripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseStripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_caselstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:caselstriplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_LStripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseLStripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_caserstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *mask = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:caserstriplines", &mask))
+		goto err;
+	if (!mask)
+		return DeeString_RStripLinesSpc(self);
+	if (DeeObject_AssertTypeExact(mask, &DeeString_Type))
+		goto err;
+	return DeeString_CaseRStripLinesMask(self, mask);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_sstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:sstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_SStripLines(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_lsstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:lsstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_LSStripLines(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_rsstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:rsstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_RSStripLines(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_casesstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:casesstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_CaseSStripLines(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_caselsstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:caselsstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_CaseLSStripLines(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_casersstriplines(String *self, size_t argc, DeeObject *const *argv) {
+	String *other;
+	if (DeeArg_Unpack(argc, argv, "o:casersstriplines", &other))
+		goto err;
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
+		goto err;
+	return DeeString_CaseRSStripLines(self, other);
 err:
 	return NULL;
 }
@@ -10847,6 +11048,42 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "		result = result[:#result - #needle];}\n"
 	      "	return result;\n"
 	      "}}") },
+	{ "striplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_striplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all leading and trailing whitespace\n"
+	      "Similar to ${\"\".join(this.splitlines(true).each.strip())}") },
+	{ "lstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lstriplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Strip all whitspace, or @mask characters at the start, and after linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all leading whitespace\n"
+	      "Similar to ${\"\".join(this.splitlines(true).each.lstrip())}") },
+	{ "rstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rstriplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Strip all whitspace, or @mask characters at the end, and before linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all trailing whitespace\n"
+	      "Similar to ${\"\".join(this.splitlines(true).each.rstrip())}") },
+	{ "sstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
+	{ "lsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lsstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
+	{ "rsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rsstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_startswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
@@ -11026,6 +11263,30 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casersstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Same as ?#rsstrip, however perform a case-folded search (s.a. ?#casefold)") },
+	{ "casestriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestriplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Same as ?#striplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
+	{ "caselstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselstriplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Same as ?#lstriplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
+	{ "caserstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserstriplines,
+	  DOC("(mask?:?.)->?.\n"
+	      "Same as ?#rstriplines, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
+	{ "casesstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#sstriplines, however perform a case-folded search (s.a. ?#casefold)") },
+	{ "caselsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselsstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#lsstriplines, however perform a case-folded search (s.a. ?#casefold)") },
+	{ "casersstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casersstriplines,
+	  DOC("(needle:?.)->?.\n"
+	      "Same as ?#rsstriplines, however perform a case-folded search (s.a. ?#casefold)") },
 	{ "casestartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestartswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"

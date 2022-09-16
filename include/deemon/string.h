@@ -2161,20 +2161,26 @@ LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 
 /* ctype-style character traits testing. */
 #ifdef CONFIG_HAVE_UNICODE_H
-#define DeeUni_IsAlpha   unicode_isalpha
-#define DeeUni_IsLower   unicode_islower
-#define DeeUni_IsUpper   unicode_isupper
-#define DeeUni_IsAlnum   unicode_isalnum
-#define DeeUni_IsSpace   unicode_isspace
-#define DeeUni_IsTab     unicode_istab
-#define DeeUni_IsLF      unicode_islf
-#define DeeUni_IsPrint   unicode_isprint
-#define DeeUni_IsDigit   unicode_isdigit
-#define DeeUni_IsDecimal unicode_isdecimal
-#define DeeUni_IsNumeric unicode_isnumeric
-#define DeeUni_IsTitle   unicode_istitle
-#define DeeUni_IsSymStrt unicode_issymstrt
-#define DeeUni_IsSymCont unicode_issymcont
+#define DeeUni_IsAlpha     unicode_isalpha
+#define DeeUni_IsLower     unicode_islower
+#define DeeUni_IsUpper     unicode_isupper
+#define DeeUni_IsAlnum     unicode_isalnum
+#define DeeUni_IsSpace     unicode_isspace
+#define DeeUni_IsTab       unicode_istab
+#define DeeUni_IsLF        unicode_islf
+#define DeeUni_IsPrint     unicode_isprint
+#define DeeUni_IsDigit     unicode_isdigit
+#define DeeUni_IsDecimal   unicode_isdecimal
+#define DeeUni_IsNumeric   unicode_isnumeric
+#define DeeUni_IsTitle     unicode_istitle
+#define DeeUni_IsSymStrt   unicode_issymstrt
+#define DeeUni_IsSymCont   unicode_issymcont
+#ifdef unicode_isspace_nolf
+#define DeeUni_IsSpaceNoLf unicode_isspace_nolf
+#else /* unicode_isspace_nolf */
+#define DeeUni_IsSpaceNoLf(ch) \
+	((__unicode_flags(ch) & (__UNICODE_ISSPACE | __UNICODE_ISLF)) == __UNICODE_ISSPACE)
+#endif /* !unicode_isspace_nolf */
 #endif /* CONFIG_HAVE_UNICODE_H */
 #ifndef DeeUni_IsAlpha
 #define DeeUni_IsAlpha(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FALPHA)
@@ -2191,6 +2197,10 @@ LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #ifndef DeeUni_IsSpace
 #define DeeUni_IsSpace(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FSPACE)
 #endif /* !DeeUni_IsSpace */
+#ifndef DeeUni_IsSpaceNoLf
+#define DeeUni_IsSpaceNoLf(ch) \
+	((DeeUni_Flags(ch) & (Dee_UNICODE_FSPACE | Dee_UNICODE_FLF)) == Dee_UNICODE_FSPACE)
+#endif /* !DeeUni_IsSpaceNoLf */
 #ifndef DeeUni_IsTab
 #define DeeUni_IsTab(ch) ((ch) == 9)
 #endif /* !DeeUni_IsTab */

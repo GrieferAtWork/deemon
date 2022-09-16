@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "bytes_functions.c.inl"
-#define DEFINE_bytes_strip
+//#define DEFINE_bytes_strip
 //#define DEFINE_bytes_lstrip
 //#define DEFINE_bytes_rstrip
 //#define DEFINE_bytes_sstrip
@@ -31,22 +31,46 @@
 //#define DEFINE_bytes_casesstrip
 //#define DEFINE_bytes_caselsstrip
 //#define DEFINE_bytes_casersstrip
+//#define DEFINE_bytes_striplines
+//#define DEFINE_bytes_lstriplines
+#define DEFINE_bytes_rstriplines
+//#define DEFINE_bytes_sstriplines
+//#define DEFINE_bytes_lsstriplines
+//#define DEFINE_bytes_rsstriplines
+//#define DEFINE_bytes_casestriplines
+//#define DEFINE_bytes_caselstriplines
+//#define DEFINE_bytes_caserstriplines
+//#define DEFINE_bytes_casesstriplines
+//#define DEFINE_bytes_caselsstriplines
+//#define DEFINE_bytes_casersstriplines
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
 
-#if (defined(DEFINE_bytes_strip) +       \
-     defined(DEFINE_bytes_lstrip) +      \
-     defined(DEFINE_bytes_rstrip) +      \
-     defined(DEFINE_bytes_sstrip) +      \
-     defined(DEFINE_bytes_lsstrip) +     \
-     defined(DEFINE_bytes_rsstrip) +     \
-     defined(DEFINE_bytes_casestrip) +   \
-     defined(DEFINE_bytes_caselstrip) +  \
-     defined(DEFINE_bytes_caserstrip) +  \
-     defined(DEFINE_bytes_casesstrip) +  \
-     defined(DEFINE_bytes_caselsstrip) + \
-     defined(DEFINE_bytes_casersstrip)) != 1
+#if (defined(DEFINE_bytes_strip) +            \
+     defined(DEFINE_bytes_lstrip) +           \
+     defined(DEFINE_bytes_rstrip) +           \
+     defined(DEFINE_bytes_sstrip) +           \
+     defined(DEFINE_bytes_lsstrip) +          \
+     defined(DEFINE_bytes_rsstrip) +          \
+     defined(DEFINE_bytes_casestrip) +        \
+     defined(DEFINE_bytes_caselstrip) +       \
+     defined(DEFINE_bytes_caserstrip) +       \
+     defined(DEFINE_bytes_casesstrip) +       \
+     defined(DEFINE_bytes_caselsstrip) +      \
+     defined(DEFINE_bytes_casersstrip) +      \
+     defined(DEFINE_bytes_striplines) +       \
+     defined(DEFINE_bytes_lstriplines) +      \
+     defined(DEFINE_bytes_rstriplines) +      \
+     defined(DEFINE_bytes_sstriplines) +      \
+     defined(DEFINE_bytes_lsstriplines) +     \
+     defined(DEFINE_bytes_rsstriplines) +     \
+     defined(DEFINE_bytes_casestriplines) +   \
+     defined(DEFINE_bytes_caselstriplines) +  \
+     defined(DEFINE_bytes_caserstriplines) +  \
+     defined(DEFINE_bytes_casesstriplines) +  \
+     defined(DEFINE_bytes_caselsstriplines) + \
+     defined(DEFINE_bytes_casersstriplines)) != 1
 #error "Must #define exactly one of these macros!"
 #endif /* ... */
 
@@ -114,6 +138,82 @@ DECL_BEGIN
 #define LOCAL_IS_RSTRIP
 #define LOCAL_IS_SSTRIP
 #define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_striplines)
+#define LOCAL_bytes_strip      bytes_striplines
+#define LOCAL_bytes_strip_NAME "striplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_RSTRIP
+#elif defined(DEFINE_bytes_lstriplines)
+#define LOCAL_bytes_strip      bytes_lstriplines
+#define LOCAL_bytes_strip_NAME "lstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#elif defined(DEFINE_bytes_rstriplines)
+#define LOCAL_bytes_strip      bytes_rstriplines
+#define LOCAL_bytes_strip_NAME "rstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_RSTRIP
+#elif defined(DEFINE_bytes_sstriplines)
+#define LOCAL_bytes_strip      bytes_sstriplines
+#define LOCAL_bytes_strip_NAME "sstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_SSTRIP
+#elif defined(DEFINE_bytes_lsstriplines)
+#define LOCAL_bytes_strip      bytes_lsstriplines
+#define LOCAL_bytes_strip_NAME "lsstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_SSTRIP
+#elif defined(DEFINE_bytes_rsstriplines)
+#define LOCAL_bytes_strip      bytes_rsstriplines
+#define LOCAL_bytes_strip_NAME "rsstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_SSTRIP
+#elif defined(DEFINE_bytes_casestriplines)
+#define LOCAL_bytes_strip      bytes_casestriplines
+#define LOCAL_bytes_strip_NAME "casestriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_caselstriplines)
+#define LOCAL_bytes_strip      bytes_caselstriplines
+#define LOCAL_bytes_strip_NAME "caselstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_caserstriplines)
+#define LOCAL_bytes_strip      bytes_caserstriplines
+#define LOCAL_bytes_strip_NAME "caserstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_casesstriplines)
+#define LOCAL_bytes_strip      bytes_casesstriplines
+#define LOCAL_bytes_strip_NAME "casesstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_SSTRIP
+#define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_caselsstriplines)
+#define LOCAL_bytes_strip      bytes_caselsstriplines
+#define LOCAL_bytes_strip_NAME "caselsstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_LSTRIP
+#define LOCAL_IS_SSTRIP
+#define LOCAL_IS_NOCASE
+#elif defined(DEFINE_bytes_casersstriplines)
+#define LOCAL_bytes_strip      bytes_casersstriplines
+#define LOCAL_bytes_strip_NAME "casersstriplines"
+#define LOCAL_IS_LINES
+#define LOCAL_IS_RSTRIP
+#define LOCAL_IS_SSTRIP
+#define LOCAL_IS_NOCASE
 #endif /* ... */
 
 #ifdef LOCAL_IS_NOCASE
@@ -124,17 +224,51 @@ DECL_BEGIN
 #define LOCAL_MEMEQB MEMEQB
 #endif /* !LOCAL_IS_NOCASE */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+
+/* When stripping lines, linefeeds themselves mustn't count as whitespace */
+#ifdef LOCAL_IS_LINES
+#define LOCAL_isspace DeeUni_IsSpaceNoLf
+#else /* LOCAL_IS_LINES */
+#define LOCAL_isspace DeeUni_IsSpace
+#endif /* !LOCAL_IS_LINES */
+
+
+/* Suppress warning because compilers don't like the way we use `needle':
+ * >> if (mask) {
+ * >>     get_needle(&needle, mask);
+ * >> }
+ * >> ...
+ * >> if (mask) {
+ * >>     use_needle(&needle); // <<< Here
+ * >> }
+ */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4701)
+#endif /* ... */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 	uint8_t *begin;
-#ifdef LOCAL_IS_SSTRIP
 	Needle needle;
+#ifdef LOCAL_IS_SSTRIP
 	size_t size;
 #else /* LOCAL_IS_SSTRIP */
 	uint8_t *end;
 #endif /* !LOCAL_IS_SSTRIP */
+#ifdef LOCAL_IS_LINES
+#ifdef LOCAL_IS_SSTRIP
+	uint8_t *end;
+#endif /* LOCAL_IS_SSTRIP */
+	struct bytes_printer printer;
+	uint8_t *flush_start;
+#endif /* LOCAL_IS_LINES */
 
-	/* In sstrip-mode, the `mask' paramter becomes mandatory. */
+	/* In sstrip-mode, the `mask' parameter becomes mandatory. */
 #ifdef LOCAL_IS_SSTRIP
 	DeeObject *mask;
 	if (DeeArg_Unpack(argc, argv, "o:" LOCAL_bytes_strip_NAME, &mask))
@@ -145,14 +279,13 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 #endif /* !LOCAL_IS_SSTRIP */
 
-
-	/* Do the actual split */
+	/* Do the actual strip at the front/back */
 #ifdef LOCAL_IS_SSTRIP
 	if (get_needle(&needle, mask))
 		goto err;
 	if unlikely(!needle.n_size)
-		goto retself;
-#define NEED_retself
+		goto retself_noprinter;
+#define NEED_retself_noprinter
 	begin = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
 #ifdef LOCAL_IS_LSTRIP
@@ -175,9 +308,10 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 	end = begin + DeeBytes_SIZE(self);
 	if (mask) {
 		/* Deal with a custom strip-character/sequence mask. */
-		Needle needle;
+#ifndef LOCAL_IS_SSTRIP
 		if (get_needle(&needle, mask))
 			goto err;
+#endif /* !LOCAL_IS_SSTRIP */
 #ifdef LOCAL_IS_LSTRIP
 		while (begin < end && LOCAL_memchr(needle.n_data, *begin, needle.n_size))
 			++begin;
@@ -188,45 +322,181 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv) {
 #endif /* LOCAL_IS_RSTRIP */
 	} else {
 #ifdef LOCAL_IS_LSTRIP
-		while (begin < end && DeeUni_IsSpace(*begin))
+		while (begin < end && LOCAL_isspace(*begin))
 			++begin;
 #endif /* LOCAL_IS_LSTRIP */
 #ifdef LOCAL_IS_RSTRIP
-		while (end > begin && DeeUni_IsSpace(end[-1]))
+		while (end > begin && LOCAL_isspace(end[-1]))
 			--end;
 #endif /* LOCAL_IS_RSTRIP */
 	}
+#endif /* ... */
+
+	/* Strip around line-feeds and print to a secondary bytes buffer. */
+#ifdef LOCAL_IS_LINES
+#ifdef LOCAL_IS_SSTRIP
+	end = begin + size;
+#endif /* LOCAL_IS_SSTRIP */
+	flush_start = begin;
+	bytes_printer_init(&printer);
+	if (mask) {
+		/* Deal with a custom strip-character/sequence mask. */
+		while (begin < end) {
+			uint8_t ch = *begin;
+			if (ch != ASCII_CR && ch != ASCII_LF) {
+				++begin;
+				continue; /* Not a line-feed character */
+			}
+
+#ifdef LOCAL_IS_RSTRIP
+			/* rstrip (at the end of lines) */
+			{
+				uint8_t *flush_end = begin;
+#ifdef LOCAL_IS_SSTRIP
+				while (flush_end >= (flush_start + needle.n_size) &&
+				       LOCAL_MEMEQB(flush_end - needle.n_size, needle.n_data, needle.n_size))
+					flush_end -= needle.n_size;
+#else /* LOCAL_IS_SSTRIP */
+				while (flush_end > flush_start && LOCAL_memchr(needle.n_data, flush_end[-1], needle.n_size))
+					--flush_end;
 #endif /* !LOCAL_IS_SSTRIP */
+				if (flush_end < begin) {
+					if unlikely(bytes_printer_append(&printer, flush_start,
+					                                 (size_t)(flush_end - flush_start)) < 0)
+						goto err_printer;
+					flush_start = begin; /* Skip over whitespace */
+				}
+			}
+#endif /* LOCAL_IS_RSTRIP */
+
+			/* Skip over the linefeed (preserving it) */
+			++begin;
+			if (ch == ASCII_CR && begin < end && *begin == ASCII_LF)
+				++begin; /* Deal with CRLF-style linefeeds */
+
+#ifdef LOCAL_IS_LSTRIP
+			/* lstrip (at the start of lines) */
+			{
+				uint8_t *new_flush_start = begin;
+#ifdef LOCAL_IS_SSTRIP
+				while ((new_flush_start + needle.n_size) <= end &&
+				       LOCAL_MEMEQB(new_flush_start, needle.n_data, needle.n_size))
+					new_flush_start += needle.n_size;
+#else /* LOCAL_IS_SSTRIP */
+				while (new_flush_start < end && LOCAL_isspace(*new_flush_start))
+					++new_flush_start;
+#endif /* !LOCAL_IS_SSTRIP */
+				if (new_flush_start > begin) {
+					if unlikely(bytes_printer_append(&printer, flush_start,
+					                                 (size_t)(begin - flush_start)) < 0)
+						goto err_printer;
+					flush_start = new_flush_start; /* Skip over whitespace */
+					begin       = new_flush_start;
+				}
+			}
+#endif /* LOCAL_IS_LSTRIP */
+		}
+	} else {
+		while (begin < end) {
+			uint8_t ch = *begin;
+			if (ch != ASCII_CR && ch != ASCII_LF) {
+				++begin;
+				continue; /* Not a line-feed character */
+			}
+
+#ifdef LOCAL_IS_RSTRIP
+			/* rstrip (at the end of lines) */
+			{
+				uint8_t *flush_end = begin;
+				while (flush_end > flush_start && LOCAL_isspace(flush_end[-1]))
+					--flush_end;
+				if (flush_end < begin) {
+					if unlikely(bytes_printer_append(&printer, flush_start,
+					                                 (size_t)(flush_end - flush_start)) < 0)
+						goto err_printer;
+					flush_start = begin; /* Skip over whitespace */
+				}
+			}
+#endif /* LOCAL_IS_RSTRIP */
+
+			/* Skip over the linefeed (preserving it) */
+			++begin;
+			if (ch == ASCII_CR && begin < end && *begin == ASCII_LF)
+				++begin; /* Deal with CRLF-style linefeeds */
+
+#ifdef LOCAL_IS_LSTRIP
+			/* lstrip (at the start of lines) */
+			{
+				uint8_t *new_flush_start = begin;
+				while (new_flush_start < end && LOCAL_isspace(*new_flush_start))
+					++new_flush_start;
+				if (new_flush_start > begin) {
+					if unlikely(bytes_printer_append(&printer, flush_start,
+					                                 (size_t)(begin - flush_start)) < 0)
+						goto err_printer;
+					flush_start = new_flush_start; /* Skip over whitespace */
+					begin       = new_flush_start;
+				}
+			}
+#endif /* LOCAL_IS_LSTRIP */
+		}
+	}
+#endif /* LOCAL_IS_LINES */
 
 	/* Check if the begin/end bounds remain unchanged. */
-#if defined(LOCAL_IS_LSTRIP) && defined(LOCAL_IS_RSTRIP) && defined(LOCAL_IS_SSTRIP)
-	if (begin == DeeBytes_DATA(self) && size == DeeBytes_SIZE(self))
-#elif defined(LOCAL_IS_LSTRIP) && defined(LOCAL_IS_RSTRIP)
-	if (begin == DeeBytes_DATA(self) && end == begin + DeeBytes_SIZE(self))
-#elif defined(LOCAL_IS_LSTRIP)
-	if (begin == DeeBytes_DATA(self))
-#elif defined(LOCAL_IS_RSTRIP) && defined(LOCAL_IS_SSTRIP)
-	if (size == DeeBytes_SIZE(self))
-#elif defined(LOCAL_IS_RSTRIP)
-	if (end == begin + DeeBytes_SIZE(self))
-#endif /* ... */
+#ifdef LOCAL_IS_LINES
+	if (!BYTES_PRINTER_SIZE(&printer))
+#endif /* LOCAL_IS_LINES */
 	{
-#ifdef NEED_retself
-#undef NEED_retself
-retself:
-#endif /* NEED_retself */
-		return_reference_((DeeObject *)self);
+#if defined(LOCAL_IS_LSTRIP) && defined(LOCAL_IS_RSTRIP) && defined(LOCAL_IS_SSTRIP)
+		if (size == DeeBytes_SIZE(self))
+#elif defined(LOCAL_IS_LSTRIP) && defined(LOCAL_IS_RSTRIP)
+		if (begin == DeeBytes_DATA(self) && end == begin + DeeBytes_SIZE(self))
+#elif defined(LOCAL_IS_LSTRIP)
+		if (begin == DeeBytes_DATA(self))
+#elif defined(LOCAL_IS_RSTRIP) && defined(LOCAL_IS_SSTRIP)
+		if (size == DeeBytes_SIZE(self))
+#elif defined(LOCAL_IS_RSTRIP)
+		if (end == begin + DeeBytes_SIZE(self))
+#endif /* ... */
+		{
+#ifdef LOCAL_IS_LINES
+			bytes_printer_fini(&printer);
+#endif /* LOCAL_IS_LINES */
+#ifdef NEED_retself_noprinter
+#undef NEED_retself_noprinter
+retself_noprinter:
+#endif /* NEED_retself_noprinter */
+			return_reference_(self);
+		}
+		/* Create a sub-view of `self' for the still-selected bytes range. */
+#ifdef LOCAL_IS_SSTRIP
+		return (DREF Bytes *)DeeBytes_NewSubView(self, begin, size);
+#else /* LOCAL_IS_SSTRIP */
+		return (DREF Bytes *)DeeBytes_NewSubView(self, begin, (size_t)(end - begin));
+#endif /* !LOCAL_IS_SSTRIP */
 	}
 
-	/* Create a sub-view of `self' for the still-selected bytes range. */
-#ifdef LOCAL_IS_SSTRIP
-	return DeeBytes_NewSubView(self, begin, size);
-#else /* LOCAL_IS_SSTRIP */
-	return DeeBytes_NewSubView(self, begin, (size_t)(end - begin));
-#endif /* !LOCAL_IS_SSTRIP */
+#ifdef LOCAL_IS_LINES
+	ASSERT(begin == end);
+	if unlikely(bytes_printer_append(&printer, flush_start,
+	                                 (size_t)(begin - flush_start)) < 0)
+		goto err_printer;
+	return (DREF Bytes *)bytes_printer_pack(&printer);
+err_printer:
+	bytes_printer_fini(&printer);
+#endif /* LOCAL_IS_LINES */
 err:
 	return NULL;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif /* ... */
+
+#undef LOCAL_isspace
 
 #undef LOCAL_memchr
 #undef LOCAL_MEMEQB
@@ -234,6 +504,7 @@ err:
 #undef LOCAL_bytes_strip
 #undef LOCAL_bytes_strip_NAME
 
+#undef LOCAL_IS_LINES
 #undef LOCAL_IS_LSTRIP
 #undef LOCAL_IS_RSTRIP
 #undef LOCAL_IS_SSTRIP
@@ -241,6 +512,18 @@ err:
 
 DECL_END
 
+#undef DEFINE_bytes_casersstriplines
+#undef DEFINE_bytes_caselsstriplines
+#undef DEFINE_bytes_casesstriplines
+#undef DEFINE_bytes_caserstriplines
+#undef DEFINE_bytes_caselstriplines
+#undef DEFINE_bytes_casestriplines
+#undef DEFINE_bytes_rsstriplines
+#undef DEFINE_bytes_lsstriplines
+#undef DEFINE_bytes_sstriplines
+#undef DEFINE_bytes_rstriplines
+#undef DEFINE_bytes_lstriplines
+#undef DEFINE_bytes_striplines
 #undef DEFINE_bytes_casersstrip
 #undef DEFINE_bytes_caselsstrip
 #undef DEFINE_bytes_casesstrip

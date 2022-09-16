@@ -2389,9 +2389,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-bytes_pack_partition(Bytes *__restrict self, uint8_t *find_ptr,
-                     uint8_t *__restrict start_ptr, size_t search_size,
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+bytes_pack_partition(Bytes *self, uint8_t *find_ptr,
+                     uint8_t *start_ptr, size_t search_size,
                      size_t needle_len) {
 	DREF DeeObject *result, *temp;
 	if (!find_ptr)
@@ -2534,19 +2534,32 @@ err:
 }
 
 #ifdef __INTELLISENSE__
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casestrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casestrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caserstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_striplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_sstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_lsstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_rsstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casestriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caserstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casesstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_caselsstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL bytes_casersstriplines(Bytes *self, size_t argc, DeeObject *const *argv);
 #else /* __INTELLISENSE__ */
+DECL_END
 #define DEFINE_bytes_strip
 #include "bytes_functions-strip.c.inl"
 #define DEFINE_bytes_lstrip
@@ -2571,6 +2584,31 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL bytes_casersstrip(Bytes *self
 #include "bytes_functions-strip.c.inl"
 #define DEFINE_bytes_casersstrip
 #include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_striplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_lstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_rstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_sstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_lsstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_rsstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casestriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caselstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caserstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casesstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_caselsstriplines
+#include "bytes_functions-strip.c.inl"
+#define DEFINE_bytes_casersstriplines
+#include "bytes_functions-strip.c.inl"
+DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 
@@ -4713,6 +4751,42 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "while (result.endswith(other))\n"
 	      "	result = result[:##result - ##other];"
 	      "}") },
+	{ "striplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_striplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all leading and trailing whitespace\n"
+	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.strip())}") },
+	{ "lstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lstriplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Strip all whitspace, or @mask characters at the start, and after linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all leading whitespace\n"
+	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.lstrip())}") },
+	{ "rstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rstriplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Strip all whitspace, or @mask characters at the end, and before linefeeds\n"
+	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	      "aka: strip all trailing whitespace\n"
+	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.rstrip())}") },
+	{ "sstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
+	{ "lsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lsstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
+	{ "rsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rsstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
+	      "than bytes apart of its $mask character.") },
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_startswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
@@ -4899,16 +4973,40 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "Same as ?#rstrip, however ascii-casing is ignored during character comparisons") },
 	{ "casesstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#sstrip, however ascii-casing is ignored during character comparisons") },
 	{ "caselsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselsstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons") },
 	{ "casersstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casersstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons") },
+	{ "casestriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestriplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#striplines, however ascii-casing is ignored during character comparisons") },
+	{ "caselstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselstriplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#lstriplines, however ascii-casing is ignored during character comparisons") },
+	{ "caserstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserstriplines,
+	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#rstriplines, however ascii-casing is ignored during character comparisons") },
+	{ "casesstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#sstriplines, however ascii-casing is ignored during character comparisons") },
+	{ "caselsstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselsstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#lsstriplines, however ascii-casing is ignored during character comparisons") },
+	{ "casersstriplines",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casersstriplines,
+	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
+	      "Same as ?#rsstriplines, however ascii-casing is ignored during character comparisons") },
 	{ "casestartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestartswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
