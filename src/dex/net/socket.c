@@ -540,7 +540,7 @@ err:
 #ifdef CONFIG_HOST_WINDOWS
 /* On windows, accept() isn't interruptible (and neither is `select()')
  * But to still ensure that this blocking call can be interrupted by
- * `thread.interrupt()', we need to use this system call right here: */
+ * `Thread.interrupt()', we need to use this system call right here: */
 PRIVATE DWORD DCALL
 select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 	DWORD dwResult;

@@ -32,6 +32,9 @@
 
 #include "misc.c"
 
+#ifndef CONFIG_NO_OBJECT_SLABS
+
+#undef NO_OBJECT_SLABS
 #undef Dee_Malloc
 #undef Dee_Calloc
 #undef Dee_Realloc
@@ -54,28 +57,28 @@
 #endif /* CONFIG_OBJECT_SLAB_STATS... */
 
 
-#ifndef CONFIG_NO_OBJECT_SLABS
+#ifndef NO_OBJECT_SLABS
 #if ((!defined(__i386__) && !defined(__x86_64__)) || \
      (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
-#define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
+#define NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
 #endif /* ... */
-#ifndef CONFIG_NO_OBJECT_SLABS
+#ifndef NO_OBJECT_SLABS
 #ifdef CONFIG_HOST_WINDOWS
 #define USE_WINDOWS_VIRTUALALLOC 1
 #include <Windows.h>
 #else /* CONFIG_HOST_WINDOWS */
 #include <deemon/system-features.h>
 #if !defined(CONFIG_HAVE_SYS_MMAN_H) || !defined(CONFIG_HAVE_mmap)
-#define CONFIG_NO_OBJECT_SLABS 1
+#define NO_OBJECT_SLABS 1
 #elif !defined(MAP_ANONYMOUS) && !defined(MAP_ANON) && !defined(CONFIG_HAVE_open)
-#define CONFIG_NO_OBJECT_SLABS 1
+#define NO_OBJECT_SLABS 1
 #endif
-#ifndef CONFIG_NO_OBJECT_SLABS
+#ifndef NO_OBJECT_SLABS
 #define USE_UNIX_MMAP 1
-#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
 #endif /* !CONFIG_HOST_WINDOWS */
 
-#ifndef CONFIG_NO_OBJECT_SLABS
+#ifndef NO_OBJECT_SLABS
 
 /* Figure out the alignment in which to allocate slab pages. */
 #ifndef CONFIG_SLAB_PAGESIZE
@@ -132,9 +135,10 @@ PRIVATE SlabConfig slab_config = {
 
 
 DECL_END
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
+
 
 #ifndef __INTELLISENSE__
 /*[[[deemon
@@ -244,16 +248,15 @@ print "#undef NEXT_LARGER";
 #endif /* DeeSlab_HasSize(2) */
 #undef NEXT_LARGER
 //[[[end]]]
-#endif
+#endif /* __INTELLISENSE__ */
 
-#ifndef CONFIG_NO_OBJECT_SLABS
-#include <stdlib.h>
+#ifndef NO_OBJECT_SLABS
 #include <hybrid/overflow.h>
-#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
 
 DECL_BEGIN
 
-#ifdef CONFIG_NO_OBJECT_SLABS
+#ifdef NO_OBJECT_SLABS
 INTERN void DCALL DeeSlab_Finalize(void) {
 	/* nothing */
 }
@@ -261,7 +264,7 @@ INTERN void DCALL DeeSlab_Finalize(void) {
 INTERN void DCALL DeeSlab_Initialize(void) {
 	/* nothing */
 }
-#else /* CONFIG_NO_OBJECT_SLABS */
+#else /* NO_OBJECT_SLABS */
 
 #ifdef __INTELLISENSE__
 struct {
@@ -462,9 +465,9 @@ disable_slabs:
 #undef SET_SLAB_STARTING_PAGE
 }
 
-#endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !NO_OBJECT_SLABS */
 
 DECL_END
-
+#endif /* !CONFIG_NO_OBJECT_SLABS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_C_INL */

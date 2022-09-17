@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-#if !defined(CONFIG_NO_OBJECT_SLABS) && 1
+#if !defined(NO_OBJECT_SLABS) && 1
 
 #define SLAB_RAW_PAGECOUNT            (CONFIG_SLAB_PAGESIZE / ITEMSIZE)
 #define SLAB_RAW_INUSE_BITSET_LENGTH  ((SLAB_RAW_PAGECOUNT + (__SIZEOF_POINTER__ * 8 - 1)) / (__SIZEOF_POINTER__ * 8))
@@ -600,7 +600,7 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr,
 #undef SLAB_INUSE_BITSET_LENGTH
 #undef SLAB_LASTINUSEALWAYSUSED
 
-#else /* !CONFIG_NO_OBJECT_SLABS */
+#else /* !NO_OBJECT_SLABS */
 
 #define MY_SLAB_IS_DISABLED 1
 PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
@@ -649,7 +649,7 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr, char const *file, int line)
 	(DeeDbg_Free)(ptr, file, line);
 }
 #endif /* __NO_DEFINE_ALIAS */
-#endif /* CONFIG_NO_OBJECT_SLABS */
+#endif /* NO_OBJECT_SLABS */
 
 
 #if SIZE == Dee_SLAB_MINSIZE

@@ -876,7 +876,7 @@ function getPage(fp: File, path: string) {
 
 
 @@The thread main function for
-function ClientThreadMain(con: socket) {
+function clientThreadMain(con: socket) {
 	print "New connection:", con;
 	try {
 		try {
@@ -978,7 +978,7 @@ print;
 try {
 	for (;;) {
 		local con = s.accept();
-		local th = Thread(ClientThreadMain, pack(con));
+		local th = Thread(clientThreadMain, pack(con));
 		th.start();
 		th.detach();
 	}
