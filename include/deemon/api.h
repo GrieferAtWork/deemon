@@ -317,6 +317,11 @@ DECL_BEGIN
 
 
 
+#ifdef CONFIG_FORCE_HOST_WINDOWS
+#define CONFIG_HOST_WINDOWS 1
+#elif defined(CONFIG_FORCE_HOST_UNIX)
+#define CONFIG_HOST_UNIX 1
+#else /* CONFIG_FORCE_HOST_... */
 #if (defined(__WINDOWS__) || defined(_WIN16) || defined(WIN16) ||    \
      defined(_WIN32) || defined(WIN32) || defined(_WIN64) ||         \
      defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
@@ -330,6 +335,7 @@ DECL_BEGIN
      defined(__solaris__) || defined(__DragonFly__))
 #define CONFIG_HOST_UNIX 1
 #endif /* Unix... */
+#endif /* !CONFIG_FORCE_HOST_... */
 
 
 #if ((!defined(__i386__) && !defined(__x86_64__)) || \

@@ -311,6 +311,8 @@ print_help() {
 	echo "    --config-pthread=*         Additional C flags to pass when multi-threading support is enabled"
 	echo "    --conf=NAME=VALUE          Add a configuration override '#define NAME VALUE' to <deemon/config.h>"
 	echo "    --conf=NAME                Same as --conf=NAME=1"
+	echo "    --with-host=unix           For multi-host systems (cygwin): build against unix APIs"
+	echo "    --with-host=windows        For multi-host systems (cygwin): build against windows APIs"
 	echo "    --with-FEATURE             Enable the specified FEATURE (s.a. --help=features)"
 	echo "    --without-FEATURE          Disable the specified FEATURE (s.a. --help=features)"
 	echo "    --help                     Display this help"
@@ -352,6 +354,14 @@ while [[ $# -gt 0 ]]; do
 	--config-core-libs=*)     CONFIG_CORE_LIBS="$CONFIG_CORE_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
 	--config-pthread=*)       CONFIG_PTHREAD="$CONFIG_PTHREAD $(echo "$1" | cut -d '=' -f 2)" ;;
 	--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
+	--with-host=unix)
+		del_feature "CONFIG_FORCE_HOST_WINDOWS"
+		add_feature "CONFIG_FORCE_HOST_UNIX"
+		;;
+	--with-host=windows)
+		del_feature "CONFIG_FORCE_HOST_UNIX"
+		add_feature "CONFIG_FORCE_HOST_WINDOWS"
+		;;
 	--with-*)    set_with_feature "${1:7}" "1" ;;
 	--without-*) set_with_feature "${1:10}" "0" ;;
 	--help)          print_help; exit 1 ;;
