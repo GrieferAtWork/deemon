@@ -172,11 +172,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
+#if defined(__CYGWIN__) || defined(__CYGWIN32__)
+	/* BUG BUG BUG: Cygwin doesn't set errno when isatty()
+	 *              returns `0' because file isn't a tty */
+	DeeSystem_SetErrno(ENOTTY);
+#endif /* __CYGWIN__ || __CYGWIN32__ */
 	result = isatty(fd);
 	if (!result) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		DeeSystem_IF_E2(error, EINVAL, ENOTTY, return_false);
+		DeeSystem_IF_E2(error, ENOTTY, EINVAL, return_false);
 		HANDLE_EINTR(error, again, err);
 		HANDLE_ENOSYS(error, err, "isatty");
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd);

@@ -317,13 +317,14 @@ DECL_BEGIN
 
 
 
-#if (defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) ||            \
-     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) ||          \
-     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
+#if (defined(__WINDOWS__) || defined(_WIN16) || defined(WIN16) ||    \
+     defined(_WIN32) || defined(WIN32) || defined(_WIN64) ||         \
+     defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
      defined(_WIN32_WCE) || defined(WIN32_WCE))
 #define CONFIG_HOST_WINDOWS 1
 #endif /* Windows... */
-#if (defined(__unix__) || defined(__unix) || defined(unix) ||           \
+#if (defined(__CYGWIN__) || defined(__CYGWIN32__) ||                    \
+     defined(__unix__) || defined(__unix) || defined(unix) ||           \
      defined(__linux__) || defined(__linux) || defined(linux) ||        \
      defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
      defined(__solaris__) || defined(__DragonFly__))

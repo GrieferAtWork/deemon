@@ -1085,7 +1085,7 @@ retry_addrinfo:
 			                host, port);
 			error = -1;
 		} else if (protocol != 0 &&
-		         protocol != info->ai_protocol) {
+		           protocol != info->ai_protocol) {
 			/* If an explicit protocol was specified, ensure that it is being used. */
 			int real_proto = info->ai_protocol;
 			DBG_ALIGNMENT_DISABLE();
@@ -1097,7 +1097,7 @@ retry_addrinfo:
 			                host, port,
 			                sock_getprotonameorid(real_proto),
 			                sock_getprotonameorid(protocol));
-		} else if unlikely(info->ai_addrlen > sizeof(SockAddr)) {
+		} else if unlikely((size_t)info->ai_addrlen > sizeof(SockAddr)) {
 			sa_family_t info_family = info->ai_addr->sa_family;
 			socklen_t info_len      = (socklen_t)info->ai_addrlen;
 			COMPILER_READ_BARRIER();
@@ -1113,7 +1113,7 @@ retry_addrinfo:
 			error = -1;
 		} else {
 			bzero(self, sizeof(SockAddr));
-			memcpy(self, info->ai_addr, info->ai_addrlen);
+			memcpy(self, info->ai_addr, (size_t)info->ai_addrlen);
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();

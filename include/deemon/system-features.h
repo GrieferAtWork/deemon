@@ -10187,6 +10187,7 @@ DECL_END
 
 
 /* errno classification helper macros */
+#define DeePrivateSystem_IF_HAVE_EOK(tt, ff) tt
 
 /*[[[deemon
 import * from deemon;

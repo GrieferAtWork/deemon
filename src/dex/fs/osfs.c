@@ -2477,7 +2477,7 @@ err_fd:
 		if (DeeInt_Check(path)) {
 			int fd; /* Support for descriptor-based readlink() */
 			if (DeeObject_AsInt(path, &fd))
-				goto err_printer;
+				goto err;
 			path = DeeSystem_GetFilenameOfFD(fd);
 		} else {
 			path = DeeFile_Filename(path);

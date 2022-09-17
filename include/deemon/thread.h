@@ -151,10 +151,12 @@ typedef uint32_t Dee_threadid_t; /* DWORD */
 #else /* __SIZEOF_PID_T__ */
 #define SIZEOF_DTHREADID_T  4
 #endif /* !__SIZEOF_PID_T__ */
+#define SIGNED_DTHREADID_T
 typedef pid_t Dee_threadid_t;
 #endif /* !CONFIG_THREADS_WINDOWS */
 #else /* !CONFIG_NO_THREADID */
 #define SIZEOF_DTHREADID_T  __SIZEOF_INT__
+#define SIGNED_DTHREADID_T
 typedef int Dee_threadid_t;
 #endif /* CONFIG_NO_THREADID */
 #endif /* !CONFIG_NO_THREADS */

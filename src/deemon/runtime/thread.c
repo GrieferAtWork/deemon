@@ -161,7 +161,7 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #elif defined(__NR_gettid)
 #define os_gettid() (dthreadid_t)syscall(__NR_gettid)
 #else /* ... */
-#warning "Threadid is not available. Try building with `-DCONFIG_NO_THREADID' to reduce overhead"
+/*#warning "Threadid is not available. Try building with `-DCONFIG_NO_THREADID' to reduce overhead"*/
 #define CONFIG_NO_THREADID_INTERNAL 1
 #endif /* !... */
 #else /* !CONFIG_NO_THREADID */
@@ -2309,14 +2309,22 @@ err:
 }
 
 
+#if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
+PRIVATE ATTR_COLD int DCALL err_no_thread_id(/*Thread*/ DeeObject *__restrict self) {
+	return DeeError_Throwf(&DeeError_SystemError,
+	                       "Cannot determine id of thread %k",
+	                       self);
+}
+#endif /* CONFIG_NO_THREADID_INTERNAL || CONFIG_NO_THREADID */
+
+
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
                  dthreadid_t *__restrict pthreadid) {
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 #if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
-	return DeeError_Throwf(&DeeError_SystemError,
-	                       "Cannot determine id of thread %k",
-	                       self);
+	(void)pthreadid;
+	return err_no_thread_id(self);
 #else /* CONFIG_NO_THREADID_INTERNAL || CONFIG_NO_THREADID */
 	if unlikely(!(((DeeThreadObject *)self)->t_state & THREAD_STATE_STARTED)) {
 		return DeeError_Throwf(&DeeError_ValueError,
@@ -3101,29 +3109,34 @@ thread_current_get(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeThread_Self());
 }
 
+#ifdef SIGNED_DTHREADID_T
+#define DeeInt_FromThreadId(value) DeeInt_New(SIZEOF_DTHREADID_T, value)
+#else /* SIGNED_DTHREADID_T */
+#define DeeInt_FromThreadId(value) DeeInt_Newu(SIZEOF_DTHREADID_T, value)
+#endif /* !SIGNED_DTHREADID_T */
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_selfid(DeeObject *UNUSED(self),
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
 		goto err;
-#ifdef CONFIG_NO_THREADID_INTERNAL
-	dthreadid_t result;
-	if (DeeThread_GetTid(DeeThread_Self(), &result))
-		goto err;
-	return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
-#else /* CONFIG_NO_THREADID_INTERNAL */
+#if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
+	err_no_thread_id((DeeObject *)DeeThread_Self());
+	/* fallthru to `err' */
+#else /* CONFIG_NO_THREADID_INTERNAL || CONFIG_NO_THREADID */
 #ifdef NO_DBG_ALIGNMENT
-	return DeeInt_Newu(SIZEOF_DTHREADID_T, os_gettid());
+	return DeeInt_FromThreadId(os_gettid());
 #else /* NO_DBG_ALIGNMENT */
 	{
 		dthreadid_t result;
 		DBG_ALIGNMENT_DISABLE();
 		result = os_gettid();
 		DBG_ALIGNMENT_ENABLE();
-		return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
+		return DeeInt_FromThreadId(result);
 	}
 #endif /* !NO_DBG_ALIGNMENT */
-#endif /* !CONFIG_NO_THREADID_INTERNAL */
+#endif /* !CONFIG_NO_THREADID_INTERNAL && !CONFIG_NO_THREADID */
 err:
 	return NULL;
 }
@@ -3400,12 +3413,17 @@ restart:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_id(DeeObject *__restrict self) {
+#if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
+	err_no_thread_id(self);
+	return NULL;
+#else /* CONFIG_NO_THREADID_INTERNAL || CONFIG_NO_THREADID */
 	dthreadid_t result;
 	if (DeeThread_GetTid(self, &result))
 		goto err;
-	return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
+	return DeeInt_FromThreadId(result);
 err:
 	return NULL;
+#endif /* !CONFIG_NO_THREADID_INTERNAL && !CONFIG_NO_THREADID */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

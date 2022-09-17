@@ -95,11 +95,13 @@ parse_current_token_as_template_string:
 				goto err;
 			LOAD_LVALUE(expr, err);
 			if (self->jl_tok == '!' || self->jl_tok == ':') {
-				unsigned char *spec = self->jl_tokstart;
+				unsigned char *spec;
+				spec = self->jl_tokstart;
 #ifdef JIT_EVAL
 				/* Mirror what is done in `/src/deemon/objects/unicode/format.c:format_impl' */
 				if (*spec == '!') {
-					unsigned char mode = *++spec;
+					unsigned char mode;
+					mode = *++spec;
 					if (mode == 'a' || mode == 's') {
 						if unlikely(unicode_printer_printobject(&printer, expr) < 0)
 							goto err_expr;

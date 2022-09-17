@@ -20,6 +20,8 @@
  */
 
 import * from fs;
+import rt;
+print repr rt.argv;
 
 @@Run all tests found in the `/util/test' directory
 function runall() {

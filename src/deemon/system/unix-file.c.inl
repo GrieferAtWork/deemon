@@ -656,7 +656,7 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	result = ftruncate((int)self->sf_handle, (off_t)size);
 #endif /* !CONFIG_HAVE_ftruncate64 */
 	DBG_ALIGNMENT_ENABLE();
-	if (result)
+	if unlikely(result != 0)
 		error_file_io(self);
 #elif defined(CONFIG_HAVE_truncate) || defined(CONFIG_HAVE_truncate64)
 	/* Use truncate() */
@@ -679,7 +679,7 @@ err:
 #endif /* !CONFIG_HAVE_truncate64 */
 	DBG_ALIGNMENT_ENABLE();
 	Dee_Decref(filename);
-	if (result)
+	if unlikely(result != 0)
 		error_file_io(self);
 #else /* ... */
 	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
@@ -692,7 +692,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_close
-	if unlikely(close((int)self->sf_ownhandle)) {
+	if unlikely(close((int)self->sf_ownhandle) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
@@ -730,6 +730,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_isatty(SystemFile *__restrict self) {
 #ifdef sysfile_isatty_USE_ISATTY
 	int result;
+#if defined(__CYGWIN__) || defined(__CYGWIN32__)
+	/* BUG BUG BUG: Cygwin doesn't set errno when isatty()
+	 *              returns `0' because file isn't a tty */
+	DeeSystem_SetErrno(ENOTTY);
+#endif /* __CYGWIN__ || __CYGWIN32__ */
 	DBG_ALIGNMENT_DISABLE();
 	result = isatty((int)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
@@ -737,10 +742,7 @@ sysfile_isatty(SystemFile *__restrict self) {
 		return_true;
 #if defined(EINVAL) || defined(ENOTTY)
 	/* Check our whitelist of errors that indicate not-a-tty. */
-	DeeSystem_IF_E2(DeeSystem_GetErrno(),
-	                EINVAL,
-	                ENOTTY,
-	                return_false);
+	DeeSystem_IF_E2(DeeSystem_GetErrno(), ENOTTY, EINVAL, return_false);
 	error_file_io(self);
 	return NULL;
 #else /* EINVAL || ENOTTY */

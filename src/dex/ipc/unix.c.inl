@@ -1607,7 +1607,7 @@ PRIVATE DREF DeeObject *DCALL process_get_self_exe(void) {
 #endif /* HAVE_UNIX_READLINK */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_get_exe(Process *__restrict UNUSED(self)) {
+process_get_exe(Process *__restrict self) {
 	DREF DeeStringObject *result;
 #ifdef HAVE_UNIX_READLINK
 	pid_t pid;
@@ -1850,7 +1850,7 @@ err_printer:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_get_cmdline(Process *__restrict UNUSED(self)) {
+process_get_cmdline(Process *__restrict self) {
 	DREF DeeObject *result, *fp, *content;
 	if (self == &this_process) {
 		fp = DeeFile_OpenString("/proc/self/cmdline", OPEN_FRDONLY, 0);
@@ -2163,8 +2163,7 @@ PRIVATE struct type_member tpconst process_members[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_class_self(DeeObject *UNUSED(self),
-                   size_t argc, DeeObject *const *argv) {
+process_class_self(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
 		goto err;
 	return_reference_((DeeObject *)&this_process);

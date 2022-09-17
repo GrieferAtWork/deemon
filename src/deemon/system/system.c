@@ -430,8 +430,8 @@ err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_WINDOWS */
 
-#if defined(DeeSystem_PrintPwd_USE_WGETCWD) || \
-    defined(DeeSystem_PrintPwd_USE_GETCWD)
+#if (defined(DeeSystem_PrintPwd_USE_WGETCWD) || \
+     defined(DeeSystem_PrintPwd_USE_GETCWD))
 #ifdef DeeSystem_PrintPwd_USE_WGETCWD
 #define IFELSE_WCHAR(wc, c) wc
 #else /* DeeSystem_PrintPwd_USE_WGETCWD */

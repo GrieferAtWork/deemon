@@ -331,7 +331,7 @@ PRIVATE DEFINE_STRING(tmpdir_0, "TMPDIR");
 PRIVATE DEFINE_STRING(tmpdir_1, "TMP");
 PRIVATE DEFINE_STRING(tmpdir_2, "TEMP");
 PRIVATE DEFINE_STRING(tmpdir_3, "TEMPDIR");
-PRIVATE DeeObject *tmpdir_vars[] = {
+PRIVATE DeeObject *tpconst tmpdir_vars[] = {
 	(DeeObject *)&tmpdir_0,
 	(DeeObject *)&tmpdir_1,
 	(DeeObject *)&tmpdir_2,
@@ -339,7 +339,7 @@ PRIVATE DeeObject *tmpdir_vars[] = {
 };
 
 #ifndef P_tmpdir
-#define P_tmpdir  "/tmp"
+#define P_tmpdir "/tmp"
 #endif /* !P_tmpdir */
 PRIVATE DEFINE_STRING(tmpdir_default, P_tmpdir);
 
@@ -348,7 +348,7 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	size_t i;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	for (i = 0; i < COMPILER_STRLEN(tmpdir_vars); ++i)
+	for (i = 0; i < COMPILER_LENOF(tmpdir_vars); ++i)
 		if ((result = fs_getenv(tmpdir_vars[i], true)) != NULL)
 			goto done;
 	/* Fallback: Lookup using windows. */
