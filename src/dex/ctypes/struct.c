@@ -796,7 +796,8 @@ err:
 }
 
 
-INTERN DeeStructTypeObject DeeStruct_Type = {
+#undef DeeStruct_Type
+INTERN struct empty_struct_type_object DeeStruct_Type = {
 	/* .st_base = */ {
 		/* .st_base = */ {
 			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeStructType_Type),
@@ -867,6 +868,8 @@ INTERN DeeStructTypeObject DeeStruct_Type = {
 		/* .st_seq      = */ NULL,
 		/* .st_attr     = */ &struct_attr
 	},
+	/* .st_fmsk = */ 0,
+	/* .st_fvec = */ { { NULL, 0, 0, NULL } }
 };
 
 

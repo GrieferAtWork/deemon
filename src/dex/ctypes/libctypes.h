@@ -878,13 +878,21 @@ struct struct_type_object {
 	COMPILER_FLEXIBLE_ARRAY(struct struct_field, st_fvec); /* [1..st_fmsk+1][const] Hash-vector of field names. */
 };
 
+struct empty_struct_type_object {
+	DeeSTypeObject      st_base;    /* The underlying type object. */
+	size_t              st_fmsk;    /* [== 0][const] Field-vector mask. */
+	struct struct_field st_fvec[1]; /* [1..st_fmsk+1][const] Hash-vector of field names. */
+};
+
 #define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)
 #define STRUCT_TYPE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define STRUCT_TYPE_HASHIT(self, i)     (((DeeStructTypeObject *)(self))->st_fvec + ((i) & ((DeeStructTypeObject *)(self))->st_fmsk))
 
 
+#undef DeeStruct_Type
 INTDEF DeeTypeObject DeeStructType_Type;
-INTDEF DeeStructTypeObject DeeStruct_Type;
+INTDEF struct empty_struct_type_object DeeStruct_Type;
+#define DeeStruct_Type (*(DeeStructTypeObject *)&DeeStruct_Type)
 #define DeeStructType_Check(ob) \
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeStructType_Type) /* `struct_type' is final */
 
