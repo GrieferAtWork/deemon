@@ -11024,8 +11024,8 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "s = \"foo bar foobar\";\n"
 	      "print repr s.substr(0, 1);    /* \"f\" */\n"
 	      "print repr s[0:1];            /* \"f\" */\n"
-	      "print repr s.substr(0, ?#s);   /* \"foo bar foobar\" */\n"
-	      "print repr s[0:?#s];           /* \"foo bar foobar\" */\n"
+	      "print repr s.substr(0, ##s);   /* \"foo bar foobar\" */\n"
+	      "print repr s[0:##s];           /* \"foo bar foobar\" */\n"
 	      "print repr s.substr(0, 1234); /* \"foo bar foobar\" */\n"
 	      "print repr s[0:1234];         /* \"foo bar foobar\" */\n"
 	      "print repr s.substr(0, -1);   /* \"foo bar foobar\" -- Negative indices intentionally underflow into positive infinity */\n"
@@ -11060,9 +11060,9 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "function sstrip(needle: string): string {\n"
 	      "	local result = this;\n"
 	      "	while (result.startswith(needle))\n"
-	      "		result = result[#needle:];\n"
+	      "		result = result[##needle:];\n"
 	      "	while (result.endswith(needle))\n"
-	      "		result = result[:#result - #needle];\n"
+	      "		result = result[:##result - ##needle];\n"
 	      "	return result;\n"
 	      "}}") },
 	{ "lsstrip",
@@ -11074,7 +11074,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "function lsstrip(needle: string): string {\n"
 	      "	local result = this;\n"
 	      "	while (result.startswith(needle))\n"
-	      "		result = result[#needle:];\n"
+	      "		result = result[##needle:];\n"
 	      "	return result;\n"
 	      "}}") },
 	{ "rsstrip",
@@ -11086,7 +11086,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "function lsstrip(needle: string): string {\n"
 	      "	local result = this;\n"
 	      "	while (result.endswith(needle))\n"
-	      "		result = result[:#result - #needle];}\n"
+	      "		result = result[:##result - ##needle];}\n"
 	      "	return result;\n"
 	      "}}") },
 	{ "striplines",
@@ -11139,14 +11139,14 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_parition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
-	      /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + #needle:])}.\n"
+	      /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	      "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
-	      /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + #needle:])}.\n"
+	      /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	      "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
@@ -11500,16 +11500,16 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "print repr s[lcol:mtch+1]; /* \"(bar(), baz(42), 7)\" */"
 	      "}\n"
 
-	      "If no @close without a match @open exists, $-1 is returned\n"
+	      "If no @close without a matching @open exists, $-1 is returned\n"
 	      "Note that @open and @close are not restricted to single-character "
 	      /**/ "strings, are allowed to be of any length") },
 	{ "indexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_indexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open "
+	      "@throw IndexError No instance of @close without a matching @open "
 	      /*             */ "exists within ${this.substr(start, end)}\n"
 	      "Same as ?#findmatch, but throw an :IndexError instead of "
-	      /**/ "returning ${-1} if no @close without a match @open exists") },
+	      /**/ "returning ${-1} if no @close without a matching @open exists") },
 	{ "casefindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
@@ -11519,7 +11519,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open "
+	      "@throw IndexError No instance of @close without a matching @open "
 	      /*             */ "exists within ${this.substr(start, end)}\n"
 	      "Same as ?#indexmatch, however perform a case-folded search and "
 	      /**/ "return the start and end indices of the match") },
@@ -11538,14 +11538,14 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "print repr s[mtch:lcol + 1]; /* \"(bar(), baz(42), 7)\" */"
 	      "}\n"
 
-	      "If no @open without a match @close exists, ${-1} is returned") },
+	      "If no @open without a matching @close exists, ${-1} is returned") },
 	{ "rindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close "
+	      "@throw IndexError No instance of @open without a matching @close "
 	      /*             */ "exists within ${this.substr(start, end)}\n"
 	      "Same as ?#rfindmatch, but throw an :IndexError instead of "
-	      /**/ "returning ${-1} if no @open without a match @close exists") },
+	      /**/ "returning ${-1} if no @open without a matching @close exists") },
 	{ "caserfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
@@ -11555,7 +11555,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists "
+	      "@throw IndexError No instance of @open without a matching @close exists "
 	      /**/ "within ${this.substr(start, end)}\n"
 	      "Same as ?#rindexmatch, however perform a case-folded search and return "
 	      /**/ "the start and end indices of the match") },
@@ -12081,9 +12081,10 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 		return (DREF String *)DeeObject_Str(other);
 	if (DeeString_Check(other)) {
 		/* In the likely case of `other' also being a string, we can
-		 * try to perform some optimizations by looking that the common,
-		 * required character width, and creating the resulting string in
-		 * accordance to what _it_ requires (bypassing the need of for printer). */
+		 * try to perform some optimizations by looking at the common,
+		 * required character width, and creating the resulting string
+		 * in accordance to what _it_ requires (bypassing the need of
+		 * a printer). */
 		struct string_utf *lhs_utf;
 		struct string_utf *rhs_utf;
 		/* Simple case: `other' is an empty string, so just re-use `self'. */
@@ -12237,6 +12238,7 @@ err_r_2_4:
 			return NULL;
 		}
 	}
+
 	/* Fallback: use a string printer to append `other' to a copy of `self'. */
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;

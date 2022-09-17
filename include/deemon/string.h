@@ -35,7 +35,6 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
@@ -234,10 +233,10 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
  * index `index', return the unicode character found at that location */
 #define Dee_STRING_WIDTH_GETCHAR(width, base, index) \
 	(likely((width) == Dee_STRING_WIDTH_1BYTE)       \
-	 ? (uint32_t)((uint8_t *)(base))[index]          \
+	 ? (uint32_t)((uint8_t const *)(base))[index]    \
 	 : ((width) == Dee_STRING_WIDTH_2BYTE)           \
-	   ? (uint32_t)((uint16_t *)(base))[index]       \
-	   : ((uint32_t *)(base))[index])
+	   ? (uint32_t)((uint16_t const *)(base))[index] \
+	   : ((uint32_t const *)(base))[index])
 
 /* Given the character-width `width', the base address `base', and the
  * index `index', set the unicode character found at that location to `value' */
@@ -261,13 +260,13 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #endif /* __NO_builtin_expect */
 
 #ifndef __NO_builtin_unreachable
-#define Dee_CASE_WIDTH_1BYTE   default: __builtin_unreachable(); \
-                               case Dee_STRING_WIDTH_1BYTE
+#define Dee_CASE_WIDTH_1BYTE default: __builtin_unreachable(); \
+                             case Dee_STRING_WIDTH_1BYTE
 #else /* !__NO_builtin_unreachable */
-#define Dee_CASE_WIDTH_1BYTE   default
+#define Dee_CASE_WIDTH_1BYTE default
 #endif /* __NO_builtin_unreachable */
-#define Dee_CASE_WIDTH_2BYTE   case Dee_STRING_WIDTH_2BYTE
-#define Dee_CASE_WIDTH_4BYTE   case Dee_STRING_WIDTH_4BYTE
+#define Dee_CASE_WIDTH_2BYTE case Dee_STRING_WIDTH_2BYTE
+#define Dee_CASE_WIDTH_4BYTE case Dee_STRING_WIDTH_4BYTE
 
 
 /* String flags */
@@ -316,10 +315,10 @@ struct Dee_string_utf {
 #endif /* __SIZEOF_POINTER__ <= 4 */
 	size_t    *u_data[Dee_STRING_WIDTH_COUNT]; /* [0..1][owned][lock(WRITE_ONCE)][*]
 	                                            * Multi-byte string variant.
-	                                            * Variant at indices `>= u_width' can always be accessed without
+	                                            * Variants at indices `>= u_width' can always be accessed without
 	                                            * any problems, with the version at `u_width' even being guarantied
 	                                            * to be 1..1 (that version is returned by `DeeString_WSTR()').
-	                                            * Accessing lower-order variants required the string to be cast into
+	                                            * Accessing lower-order variants requires the string to be cast into
 	                                            * that width-class, with the result being that characters which don't fit
 	                                            * into that class are replaced by `?', potentially causing a DecodeError.
 	                                            * >> Dee_ASSERT(u_data[u_width] != NULL);
@@ -488,7 +487,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *    >>     return result;
  *    >> }
  *       This method works with any kind of string, but has an O(n) slowdown in
- *      `DeeString_SetUtf8()' when the input string contains ASCII characters
+ *       `DeeString_SetUtf8()' when the input string contains ASCII characters
  *       outside of the ASCII range (or in some cases: LATIN-1 range).
  */
 #define DeeString_STR_ISUTF8(x)                                               \
@@ -503,12 +502,12 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	 ((DeeStringObject *)self)->s_data->u_width == Dee_STRING_WIDTH_1BYTE)
 
 
-/* Check if the given string object `x' has its hash calculated. */
-#define DeeString_HASHOK(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_hash != (Dee_hash_t)-1)
-#define DeeString_HASH(x)     ((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_hash
+/* Check if the given string object `x' has had its hash calculated. */
+#define DeeString_HASHOK(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_hash != (Dee_hash_t)-1)
+#define DeeString_HASH(x)   ((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_hash
 
 /* Check if the given string object `x' is an (the) empty string. */
-#define DeeString_IsEmpty(x)  (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len == 0)
+#define DeeString_IsEmpty(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len == 0)
 
 
 #define DeeString_EQUALS_ASCII(x, ascii_str)            \
@@ -537,16 +536,17 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  * amount of which can be determined by `Dee_WSTR_LENGTH(DeeString_WSTR(x))',
  * or `DeeString_WLEN(x)', with their individual size in bytes determinable
  * as `Dee_STRING_SIZEOF_WIDTH(DeeString_WSTR(x))'.
- * HINT: The string length returned by `operator size' is `DeeString_WLEN()' */
-#define DeeString_WSTR(x)   _DeeString_WStr((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
-#define DeeString_WLEN(x)   _DeeString_WLen((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
-#define DeeString_WEND(x)   _DeeString_WEnd((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
-#define DeeString_WSIZ(x)   _DeeString_WSiz((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
+ * HINT: The string length returned by `string.operator #' is `DeeString_WLEN()' */
+#define DeeString_WSTR(x) _DeeString_WStr((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
+#define DeeString_WLEN(x) _DeeString_WLen((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
+#define DeeString_WEND(x) _DeeString_WEnd((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
+#define DeeString_WSIZ(x) _DeeString_WSiz((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
 
 LOCAL ATTR_PURE size_t *DCALL
 _DeeString_WStr(DeeStringObject *__restrict self) {
-	if (self->s_data)
-		return self->s_data->u_data[self->s_data->u_width];
+	struct Dee_string_utf *utf;
+	if ((utf = self->s_data) != NULL)
+		return utf->u_data[utf->u_width];
 	return (size_t *)self->s_str;
 }
 
@@ -576,36 +576,40 @@ _DeeString_WEnd(DeeStringObject *__restrict self) {
 }
 
 LOCAL ATTR_PURE size_t DCALL
-_DeeString_WLen(DeeStringObject *__restrict self) {
-	if (self->s_data)
-		return self->s_data->u_data[self->s_data->u_width][-1];
+_DeeString_WLen(DeeStringObject const *__restrict self) {
+	struct Dee_string_utf const *utf;
+	if ((utf = self->s_data) != NULL)
+		return utf->u_data[utf->u_width][-1];
 	return self->s_len;
 }
 
 LOCAL ATTR_PURE size_t DCALL
-_DeeString_WSiz(DeeStringObject *__restrict self) {
-	if (self->s_data) {
-		return Dee_STRING_MUL_SIZEOF_WIDTH(self->s_data->u_data[self->s_data->u_width][-1],
-		                                   self->s_data->u_width);
+_DeeString_WSiz(DeeStringObject const *__restrict self) {
+	struct Dee_string_utf const *utf;
+	if ((utf = self->s_data) != NULL) {
+		return Dee_STRING_MUL_SIZEOF_WIDTH(utf->u_data[utf->u_width][-1],
+		                                   utf->u_width);
 	}
 	return self->s_len;
 }
 
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Return the hash of `self', or calculate it if it wasn't already. */
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeString_Hash(DeeObject *__restrict self);
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+DeeString_Hash(DeeObject *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
-#define DeeString_Hash(self)   DeeObject_Hash(self)
+#define DeeString_Hash(self) DeeObject_Hash(self)
 #endif /* !CONFIG_BUILDING_DEEMON */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeString_HashCase(DeeObject *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+DeeString_HashCase(DeeObject *__restrict self);
 
 /* Delete cached buffer encodings from a given 1-byte string. */
 PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
 
-/* Return the given string's character as a byte-array.
- * Characters above 0xFF either cause `NULL' to be returned, alongside a
- * ValueError being thrown, or cause them to be replaced with '?'.
+/* Return the given string's characters as a byte-array.
+ * Characters above 0xFF either cause `NULL' to be returned, alongside
+ * a ValueError being thrown, or cause them to be replaced with '?'.
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
@@ -640,20 +644,20 @@ ATTR_RETNONNULL uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
 #define DeeString_As1Byte(self)                                                      \
 	(ASSERTF(!((DeeStringObject *)(self))->s_data ||                                 \
 	         ((DeeStringObject *)(self))->s_data->u_width == Dee_STRING_WIDTH_1BYTE, \
-	         "The string is too large to be view its 1-byte variant"),               \
+	         "The string is too wide to view its 1-byte variant"),                   \
 	 (uint8_t *)DeeString_STR(self))
 #define DeeString_As2Byte(self)                                                        \
 	(((DeeStringObject *)(self))->s_data &&                                            \
 	 (ASSERTF(((DeeStringObject *)(self))->s_data->u_width <= Dee_STRING_WIDTH_2BYTE,  \
-	          "The string is too large to be view its 2-byte variant"),                \
+	          "The string is too wide to view its 2-byte variant"),                    \
 	  ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])             \
 	 ? (uint16_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE] \
-	 : DeeString_As2Byte(self))
+	 : (DeeString_As2Byte)(self))
 #define DeeString_As4Byte(self)                                                        \
 	(((DeeStringObject *)(self))->s_data &&                                            \
 	 ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE]               \
 	 ? (uint32_t *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE] \
-	 : DeeString_As4Byte(self))
+	 : (DeeString_As4Byte)(self))
 #endif /* !__INTELLISENSE__ */
 
 
@@ -664,6 +668,7 @@ ATTR_RETNONNULL uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
  * @return: * :   A pointer to the UTF-8 variant-string of `self'
  * @return: NULL: An error occurred. */
 DFUNDEF char *DCALL DeeString_AsUtf8(DeeObject *__restrict self);
+/* Same as `DeeString_AsUtf8()', but returns NULL without throwing an error. */
 DFUNDEF char *DCALL DeeString_TryAsUtf8(DeeObject *__restrict self);
 
 /* Returns the UTF-16 variant of the given string (as a width-string). */
@@ -815,7 +820,7 @@ DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t ha
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
-		Dee_hash_t str_hash = ((DeeStringObject *)result)->s_hash;
+		Dee_hash_t str_hash = ((DeeStringObject const *)result)->s_hash;
 		if (str_hash != hash) {
 			if (str_hash != DEE_STRING_HASH_UNSET)
 				goto return_new_string;

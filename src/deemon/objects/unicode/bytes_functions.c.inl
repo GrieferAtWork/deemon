@@ -5245,9 +5245,9 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "indexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
 	      "Same as ?#findmatch, but throw an :IndexError instead of "
-	      "returning ${-1} if no @close without a match @open exists") },
+	      "returning ${-1} if no @close without a matching @open exists") },
 	{ "casefindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
@@ -5257,7 +5257,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
 	      "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}") },
 	{ "rfindmatch",
@@ -5272,12 +5272,12 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
 	      "print repr s[mtch:lcol+1]; /* \"(bar(), baz(42), 7)\" */"
 	      "}\n"
-	      "If no @open without a match @close exists, ${-1} is returned") },
+	      "If no @open without a matching @close exists, ${-1} is returned") },
 	{ "rindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
-	      "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a match @close exists") },
+	      "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
+	      "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a matching @close exists") },
 	{ "caserfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
@@ -5287,7 +5287,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
+	      "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
 	      "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}") },
 
