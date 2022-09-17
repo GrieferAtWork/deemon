@@ -195,7 +195,7 @@ handle_error:
 		bufsize = new_size;
 	}
 	/* Release unused data. */
-	if (unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
+	if unlikely(unicode_printer_commit_utf8(&printer, buffer, (size_t)req_size) < 0)
 		goto err_buf;
 	bufsize = UNICODE_PRINTER_LENGTH(&printer);
 	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')

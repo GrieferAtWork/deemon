@@ -2467,25 +2467,25 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_unicode_printer_resize_utf8     unicode_printer_resize_utf8
 #define Dee_unicode_printer_tryresize_utf8  unicode_printer_tryresize_utf8
 #define Dee_unicode_printer_free_utf8       unicode_printer_free_utf8
-#define Dee_unicode_printer_confirm_utf8    unicode_printer_confirm_utf8
+#define Dee_unicode_printer_commit_utf8     unicode_printer_commit_utf8
 #define Dee_unicode_printer_alloc_utf16     unicode_printer_alloc_utf16
 #define Dee_unicode_printer_tryalloc_utf16  unicode_printer_tryalloc_utf16
 #define Dee_unicode_printer_resize_utf16    unicode_printer_resize_utf16
 #define Dee_unicode_printer_tryresize_utf16 unicode_printer_tryresize_utf16
 #define Dee_unicode_printer_free_utf16      unicode_printer_free_utf16
-#define Dee_unicode_printer_confirm_utf16   unicode_printer_confirm_utf16
+#define Dee_unicode_printer_commit_utf16    unicode_printer_commit_utf16
 #define Dee_unicode_printer_alloc_utf32     unicode_printer_alloc_utf32
 #define Dee_unicode_printer_tryalloc_utf32  unicode_printer_tryalloc_utf32
 #define Dee_unicode_printer_resize_utf32    unicode_printer_resize_utf32
 #define Dee_unicode_printer_tryresize_utf32 unicode_printer_tryresize_utf32
 #define Dee_unicode_printer_free_utf32      unicode_printer_free_utf32
-#define Dee_unicode_printer_confirm_utf32   unicode_printer_confirm_utf32
+#define Dee_unicode_printer_commit_utf32    unicode_printer_commit_utf32
 #define Dee_unicode_printer_alloc_wchar     unicode_printer_alloc_wchar
 #define Dee_unicode_printer_tryalloc_wchar  unicode_printer_tryalloc_wchar
 #define Dee_unicode_printer_resize_wchar    unicode_printer_resize_wchar
 #define Dee_unicode_printer_tryresize_wchar unicode_printer_tryresize_wchar
 #define Dee_unicode_printer_free_wchar      unicode_printer_free_wchar
-#define Dee_unicode_printer_confirm_wchar   unicode_printer_confirm_wchar
+#define Dee_unicode_printer_commit_wchar    unicode_printer_commit_wchar
 #if 0
 #define Dee_unicode_printer_alloc8          unicode_printer_alloc8
 #define Dee_unicode_printer_tryalloc8       unicode_printer_tryalloc8
@@ -2733,19 +2733,21 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 
 /* Allocate buffers for UTF-8 with the intent of appending them to the end of the unicode printer.
  * Under specific circumstances, these functions allow the printer to allocate the utf-8 string as
- * in-line to the string being generated, with `Dee_unicode_printer_confirm_utf8()' then checking if the
- * buffer contains non-ascii characters, in which case the string would be up-cast.
+ * in-line to the string being generated, with `Dee_unicode_printer_commit_utf8()' then checking
+ * if the buffer contains non-ascii characters, in which case the string would be up-cast.
+ *
  * However, if the buffer cannot be allocated in-line, it is allocated on the heap, and a later call
- * to `Dee_unicode_printer_confirm_utf8()' will append it the same way `Dee_unicode_printer_print()' would.
- * Note however that when a UTF-8 buffer has been allocated, no text may be printed to the printer
- * before that buffer is either confirmed, or freed. However, this shouldn't be a problem,
+ * to `Dee_unicode_printer_commit_utf8()' will append it the same way `Dee_unicode_printer_print()'
+ * would. Note however that when a UTF-8 buffer has been allocated, no text may be printed to the
+ * printer before that buffer is either confirmed, or freed. However, this shouldn't be a problem,
  * considering the intended usage case in something like this:
+ *
  * >> Dee_ssize_t print_pwd(struct Dee_unicode_printer *__restrict printer) {
  * >>     size_t bufsize = 256;
  * >>     char *buffer, *new_buffer;
  * >>     buffer = Dee_unicode_printer_alloc_utf8(printer, bufsize);
  * >>     if unlikely(!buffer) goto err;
- * >>     while unlikely(!getcwd(buffer, bufsize)) {
+ * >>     while unlikely(getcwd(buffer, bufsize) == NULL) {
  * >>         if (errno != ERANGE) {
  * >>             ...
  * >>             goto err_buffer;
@@ -2755,7 +2757,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  * >>         if unlikely(!new_buffer) goto err_buffer;
  * >>         buffer = new_buffer;
  * >>     }
- * >>     return Dee_unicode_printer_confirm_utf8(printer, buffer, strlen(buffer));
+ * >>     return Dee_unicode_printer_commit_utf8(printer, buffer, strlen(buffer));
  * >> err_buffer:
  * >>     Dee_unicode_printer_free_utf8(printer, buffer);
  * >> err:
@@ -2765,7 +2767,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  *       you to write 1 past the end (usually meant for some trailing \0-character that
  *       you don't really care about)
  * NOTE: All functions operate identical to those one would expect to find in a
- *       heap-API, with `Dee_unicode_printer_confirm_utf8()' acting as a semantically
+ *       heap-API, with `Dee_unicode_printer_commit_utf8()' acting as a semantically
  *       similar behavior to `Dee_unicode_printer_free_utf8()', which will ensure that
  *       the contents of the buffer are decoded and appended at the end of the string
  *       that is being printed.
@@ -2773,7 +2775,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  *       `Dee_unicode_printer_tryresize_utf8()' will allocate a new buffer, the same
  *       way `Dee_unicode_printer_alloc_utf8()' and `Dee_unicode_printer_tryalloc_utf8()' would have)
  * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_free_utf8()' is a no-op
- * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_confirm_utf8()' is a no-op and causes `0' to be returned.
+ * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_commit_utf8()' is a no-op and causes `0' to be returned.
  * @return[Dee_unicode_printer_alloc_utf8]:     * :   The pointer to the base of a utf-8 buffer consisting of `length' bytes.
  * @return[Dee_unicode_printer_alloc_utf8]:     NULL: An error occurred.
  * @return[Dee_unicode_printer_tryalloc_utf8]:  * :   Failed to allocate the buffer.
@@ -2782,14 +2784,14 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  * @return[Dee_unicode_printer_resize_utf8]:    NULL: An error occurred.
  * @return[Dee_unicode_printer_tryresize_utf8]: * :   The reallocated base pointer.
  * @return[Dee_unicode_printer_tryresize_utf8]: NULL: Failed to allocate / resize the buffer.
- * @return[Dee_unicode_printer_confirm_utf8]:   * :   The number of printed characters.
- * @return[Dee_unicode_printer_confirm_utf8]:   < 0 : An error occurred. */
+ * @return[Dee_unicode_printer_commit_utf8]:    * :   The number of printed characters.
+ * @return[Dee_unicode_printer_commit_utf8]:    < 0 : An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_unicode_printer_alloc_utf8)(struct Dee_unicode_printer *__restrict self, size_t length);                     /* Dee_Malloc()-like */
 DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_unicode_printer_tryalloc_utf8)(struct Dee_unicode_printer *__restrict self, size_t length);                  /* Dee_Malloc()-like */
 DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_unicode_printer_resize_utf8)(struct Dee_unicode_printer *__restrict self, char *buf, size_t new_length);     /* Dee_Realloc()-like */
 DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_unicode_printer_tryresize_utf8)(struct Dee_unicode_printer *__restrict self, char *buf, size_t new_length);  /* Dee_TryRealloc()-like */
 DFUNDEF         NONNULL((1)) void (DCALL Dee_unicode_printer_free_utf8)(struct Dee_unicode_printer *__restrict self, char *buf);                           /* Dee_Free()-like */
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_confirm_utf8)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ char *buf, size_t final_length);
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_commit_utf8)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ char *buf, size_t final_length);
 
 /* Same as the functions above, however used to allocate utf-16 string buffers. */
 DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL Dee_unicode_printer_alloc_utf16)(struct Dee_unicode_printer *__restrict self, size_t length);                        /* Dee_Malloc()-like */
@@ -2797,7 +2799,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL Dee_unicode_printer_tryalloc_utf16
 DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL Dee_unicode_printer_resize_utf16)(struct Dee_unicode_printer *__restrict self, uint16_t *buf, size_t new_length);    /* Dee_Realloc()-like */
 DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL Dee_unicode_printer_tryresize_utf16)(struct Dee_unicode_printer *__restrict self, uint16_t *buf, size_t new_length); /* Dee_TryRealloc()-like */
 DFUNDEF         NONNULL((1)) void (DCALL Dee_unicode_printer_free_utf16)(struct Dee_unicode_printer *__restrict self, uint16_t *buf);                              /* Dee_Free()-like */
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_confirm_utf16)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ uint16_t *buf, size_t final_length);
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_commit_utf16)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ uint16_t *buf, size_t final_length);
 
 /* Same as the functions above, however used to allocate utf-32 string buffers. */
 DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL Dee_unicode_printer_alloc_utf32)(struct Dee_unicode_printer *__restrict self, size_t length);                        /* Dee_Malloc()-like */
@@ -2805,7 +2807,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL Dee_unicode_printer_tryalloc_utf32
 DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL Dee_unicode_printer_resize_utf32)(struct Dee_unicode_printer *__restrict self, uint32_t *buf, size_t new_length);    /* Dee_Realloc()-like */
 DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL Dee_unicode_printer_tryresize_utf32)(struct Dee_unicode_printer *__restrict self, uint32_t *buf, size_t new_length); /* Dee_TryRealloc()-like */
 DFUNDEF         NONNULL((1)) void (DCALL Dee_unicode_printer_free_utf32)(struct Dee_unicode_printer *__restrict self, uint32_t *buf);                              /* Dee_Free()-like */
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_confirm_utf32)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ uint32_t *buf, size_t final_length);
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t (DCALL Dee_unicode_printer_commit_utf32)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ uint32_t *buf, size_t final_length);
 
 
 /* Same as the functions above, however used to allocate wide-string buffers. */
@@ -2814,22 +2816,22 @@ WUNUSED NONNULL((1)) Dee_wchar_t *(Dee_unicode_printer_alloc_wchar)(struct Dee_u
 WUNUSED NONNULL((1)) Dee_wchar_t *(Dee_unicode_printer_tryalloc_wchar)(struct Dee_unicode_printer *__restrict self, size_t length);                     /* Dee_Malloc()-like */
 WUNUSED NONNULL((1)) Dee_wchar_t *(Dee_unicode_printer_resize_wchar)(struct Dee_unicode_printer *__restrict self, Dee_wchar_t *buf, size_t new_length);    /* Dee_Realloc()-like */
 WUNUSED NONNULL((1)) Dee_wchar_t *(Dee_unicode_printer_tryresize_wchar)(struct Dee_unicode_printer *__restrict self, Dee_wchar_t *buf, size_t new_length); /* Dee_TryRealloc()-like */
-        NONNULL((1)) void (Dee_unicode_printer_free_wchar)(struct Dee_unicode_printer *__restrict self, Dee_wchar_t *buf);                              /* Dee_Free()-like */
-WUNUSED NONNULL((1)) Dee_ssize_t (Dee_unicode_printer_confirm_wchar)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ Dee_wchar_t *buf, size_t final_length);
+/*   */ NONNULL((1)) void (Dee_unicode_printer_free_wchar)(struct Dee_unicode_printer *__restrict self, Dee_wchar_t *buf);                              /* Dee_Free()-like */
+WUNUSED NONNULL((1)) Dee_ssize_t (Dee_unicode_printer_commit_wchar)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ Dee_wchar_t *buf, size_t final_length);
 #elif __SIZEOF_WCHAR_T__ == 2
 #define Dee_unicode_printer_alloc_wchar(self, length)              ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf16(self, length))
 #define Dee_unicode_printer_tryalloc_wchar(self, length)           ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf16(self, length))
 #define Dee_unicode_printer_resize_wchar(self, buf, new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf16(self, (uint16_t *)(buf), new_length))
 #define Dee_unicode_printer_tryresize_wchar(self, buf, new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf16(self, (uint16_t *)(buf), new_length))
 #define Dee_unicode_printer_free_wchar(self, buf)                  Dee_unicode_printer_free_utf16(self, (uint16_t *)(buf))
-#define Dee_unicode_printer_confirm_wchar(self, buf, final_length) Dee_unicode_printer_confirm_utf16(self, (uint16_t *)(buf), final_length)
+#define Dee_unicode_printer_commit_wchar(self, buf, final_length)  Dee_unicode_printer_commit_utf16(self, (uint16_t *)(buf), final_length)
 #else /* __SIZEOF_WCHAR_T__ == 2 */
 #define Dee_unicode_printer_alloc_wchar(self, length)              ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf32(self, length))
 #define Dee_unicode_printer_tryalloc_wchar(self, length)           ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf32(self, length))
 #define Dee_unicode_printer_resize_wchar(self, buf, new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf32(self, (uint32_t *)(buf), new_length))
 #define Dee_unicode_printer_tryresize_wchar(self, buf, new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf32(self, (uint32_t *)(buf), new_length))
 #define Dee_unicode_printer_free_wchar(self, buf)                  Dee_unicode_printer_free_utf32(self, (uint32_t *)(buf))
-#define Dee_unicode_printer_confirm_wchar(self, buf, final_length) Dee_unicode_printer_confirm_utf32(self, (uint32_t *)(buf), final_length)
+#define Dee_unicode_printer_commit_wchar(self, buf, final_length)  Dee_unicode_printer_commit_utf32(self, (uint32_t *)(buf), final_length)
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 
 #if 0
@@ -2943,25 +2945,25 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 #define unicode_printer_resize_utf8     Dee_unicode_printer_resize_utf8
 #define unicode_printer_tryresize_utf8  Dee_unicode_printer_tryresize_utf8
 #define unicode_printer_free_utf8       Dee_unicode_printer_free_utf8
-#define unicode_printer_confirm_utf8    Dee_unicode_printer_confirm_utf8
+#define unicode_printer_commit_utf8     Dee_unicode_printer_commit_utf8
 #define unicode_printer_alloc_utf16     Dee_unicode_printer_alloc_utf16
 #define unicode_printer_tryalloc_utf16  Dee_unicode_printer_tryalloc_utf16
 #define unicode_printer_resize_utf16    Dee_unicode_printer_resize_utf16
 #define unicode_printer_tryresize_utf16 Dee_unicode_printer_tryresize_utf16
 #define unicode_printer_free_utf16      Dee_unicode_printer_free_utf16
-#define unicode_printer_confirm_utf16   Dee_unicode_printer_confirm_utf16
+#define unicode_printer_commit_utf16    Dee_unicode_printer_commit_utf16
 #define unicode_printer_alloc_utf32     Dee_unicode_printer_alloc_utf32
 #define unicode_printer_tryalloc_utf32  Dee_unicode_printer_tryalloc_utf32
 #define unicode_printer_resize_utf32    Dee_unicode_printer_resize_utf32
 #define unicode_printer_tryresize_utf32 Dee_unicode_printer_tryresize_utf32
 #define unicode_printer_free_utf32      Dee_unicode_printer_free_utf32
-#define unicode_printer_confirm_utf32   Dee_unicode_printer_confirm_utf32
+#define unicode_printer_commit_utf32    Dee_unicode_printer_commit_utf32
 #define unicode_printer_alloc_wchar     Dee_unicode_printer_alloc_wchar
 #define unicode_printer_tryalloc_wchar  Dee_unicode_printer_tryalloc_wchar
 #define unicode_printer_resize_wchar    Dee_unicode_printer_resize_wchar
 #define unicode_printer_tryresize_wchar Dee_unicode_printer_tryresize_wchar
 #define unicode_printer_free_wchar      Dee_unicode_printer_free_wchar
-#define unicode_printer_confirm_wchar   Dee_unicode_printer_confirm_wchar
+#define unicode_printer_commit_wchar    Dee_unicode_printer_commit_wchar
 #if 0
 #define unicode_printer_alloc8          Dee_unicode_printer_alloc8
 #define unicode_printer_tryalloc8       Dee_unicode_printer_tryalloc8

@@ -5194,8 +5194,8 @@ Dee_unicode_printer_free_utf8(struct unicode_printer *__restrict self, char *buf
 }
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
-Dee_unicode_printer_confirm_utf8(struct unicode_printer *__restrict self,
-                                 char *buf, size_t final_length) {
+Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
+                                char *buf, size_t final_length) {
 	if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		size_t count;
 		uint8_t *iter;
@@ -5549,8 +5549,8 @@ Dee_unicode_printer_free_utf16(struct unicode_printer *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
-Dee_unicode_printer_confirm_utf16(struct unicode_printer *__restrict self,
-                                  uint16_t *buf, size_t final_length) {
+Dee_unicode_printer_commit_utf16(struct unicode_printer *__restrict self,
+                                 uint16_t *buf, size_t final_length) {
 	if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
 		size_t count;
 		uint16_t *iter;
@@ -5807,9 +5807,9 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t
-(DCALL Dee_unicode_printer_confirm_utf32)(struct unicode_printer *__restrict self,
-                                          /*inherit(always)*/ uint32_t *buf,
-                                          size_t final_length) {
+(DCALL Dee_unicode_printer_commit_utf32)(struct unicode_printer *__restrict self,
+                                         /*inherit(always)*/ uint32_t *buf,
+                                         size_t final_length) {
 	if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
 		if (!buf)
 			return 0;

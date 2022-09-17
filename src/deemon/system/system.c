@@ -412,7 +412,7 @@ DWORD dwError;
 		++new_bufsize;
 		include_trailing_sep = false;
 	}
-	if unlikely(unicode_printer_confirm_wchar(printer, buffer, new_bufsize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, buffer, new_bufsize) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
@@ -493,8 +493,8 @@ err:
 		++buflen;
 		include_trailing_sep = false;
 	}
-	if unlikely(IFELSE_WCHAR(unicode_printer_confirm_wchar(printer, buffer, buflen),
-	                         unicode_printer_confirm_utf8(printer, buffer, buflen)) < 0)
+	if unlikely(IFELSE_WCHAR(unicode_printer_commit_wchar(printer, buffer, buflen),
+	                         unicode_printer_commit_utf8(printer, buffer, buflen)) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {

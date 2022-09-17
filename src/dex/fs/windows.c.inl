@@ -463,7 +463,7 @@ again:
 		bufsize = new_bufsize;
 		goto again;
 	}
-	if (unicode_printer_confirm_wchar(printer, buffer, new_bufsize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, buffer, new_bufsize) < 0)
 		goto err;
 	return 0;
 err_release:
@@ -513,7 +513,7 @@ again:
 		bufsize = new_bufsize;
 		goto again;
 	}
-	if (unicode_printer_confirm_wchar(printer, buffer, new_bufsize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, buffer, new_bufsize) < 0)
 		goto err;
 	Dee_Decref(wide_name);
 	return 0;
@@ -757,7 +757,7 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (unicode_printer_confirm_wchar(printer, wBuffer, dwBufsize - 1) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, wBuffer, dwBufsize - 1) < 0)
 		goto err;
 	return 0;
 err_release:
@@ -817,7 +817,7 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (unicode_printer_confirm_wchar(printer, wBuffer, dwBufsize - 1) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, wBuffer, dwBufsize - 1) < 0)
 		goto err;
 	return 0;
 err_release:
@@ -878,7 +878,7 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (unicode_printer_confirm_wchar(printer, wBuffer, dwBufsize - 1) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, wBuffer, dwBufsize - 1) < 0)
 		goto err;
 	return 0;
 err_release:
@@ -938,7 +938,7 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (unicode_printer_confirm_wchar(printer, wBuffer, dwBufsize - 1) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, wBuffer, dwBufsize - 1) < 0)
 		goto err;
 	return 0;
 err_release:
@@ -1060,7 +1060,7 @@ fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 			goto err_release;
 		}
 	}
-	if (unicode_printer_confirm_wchar(printer, wBuffer, dwBufsize - 1) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, wBuffer, dwBufsize - 1) < 0)
 		goto err;
 	return 0;
 err_release:

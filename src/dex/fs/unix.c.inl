@@ -317,7 +317,7 @@ err_generic:
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if (unicode_printer_confirm_utf8(&printer, buf, strnlen(buf, buflen)) < 0)
+	if unlikely(unicode_printer_commit_utf8(&printer, buf, strnlen(buf, buflen)) < 0)
 		goto err_printer;
 	return unicode_printer_pack(&printer);
 err:

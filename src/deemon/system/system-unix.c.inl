@@ -257,7 +257,7 @@ handle_error:
 		bufsize = new_size;
 	}
 	/* Commit buffer data at the end of the printer. */
-	if (unicode_printer_confirm_utf8(printer, buffer, req_size) < 0)
+	if unlikely(unicode_printer_commit_utf8(printer, buffer, req_size) < 0)
 		goto err_buf;
 	return 0;
 err_buf:
@@ -401,7 +401,7 @@ increase_buffer_size:
 			buflen = new_buflen;
 			goto again;
 		}
-		if unlikely(unicode_printer_confirm_utf8(printer, buf, final_len) < 0)
+		if unlikely(unicode_printer_commit_utf8(printer, buf, final_len) < 0)
 			goto err;
 		return 0;
 	} else {

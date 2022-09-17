@@ -2169,7 +2169,7 @@ err_lpBuffer:
 		}
 		dwBufSize = dwNewBufSize;
 	}
-	if (unicode_printer_confirm_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
 		goto err;
 	return 0;
 err:
@@ -2326,7 +2326,7 @@ err_lpBuffer:
 		}
 		dwBufSize = dwNewBufSize;
 	}
-	if (unicode_printer_confirm_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
 		goto err;
 	return 0;
 err:
@@ -2424,7 +2424,7 @@ again:
 			break;
 		--dwNewBufsize;
 	}
-	if unlikely(unicode_printer_confirm_wchar(printer, buffer, dwNewBufsize) < 0)
+	if unlikely(unicode_printer_commit_wchar(printer, buffer, dwNewBufsize) < 0)
 		goto err;
 	return 0;
 err_release:

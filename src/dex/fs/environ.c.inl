@@ -414,7 +414,7 @@ again:
 	/* Copy the environment variable string. */
 	memcpyc(buf, envval, envlen, sizeof(char));
 	rwlock_endread(&env_lock);
-	error = unicode_printer_confirm_utf8(printer, buf, envlen);
+	error = unicode_printer_commit_utf8(printer, buf, envlen);
 	if unlikely(error < 0)
 		goto err;
 	return 0;

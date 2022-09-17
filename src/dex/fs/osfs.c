@@ -2629,10 +2629,10 @@ no_link:
 		}
 		/* Release unused data. */
 #ifdef fs_readlink_USE_WREADLINK
-		if (Dee_unicode_printer_confirm_wchar(&printer, (Dee_wchar_t *)buffer, (size_t)req_size) < 0)
+		if unlikely(Dee_unicode_printer_commit_wchar(&printer, (Dee_wchar_t *)buffer, (size_t)req_size) < 0)
 			goto err_printer;
 #else /* fs_readlink_USE_WREADLINK */
-		if (Dee_unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
+		if unlikely(Dee_unicode_printer_commit_utf8(&printer, buffer, (size_t)req_size) < 0)
 			goto err_printer;
 #endif /* !fs_readlink_USE_WREADLINK */
 		return Dee_unicode_printer_pack(&printer);
