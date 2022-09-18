@@ -87,7 +87,8 @@ parse_asm_flags(char *__restrict str,
 				for (i = 0; i < COMPILER_LENOF(disasm_flags); ++i) {
 					if (disasm_flags[i].name[optlen])
 						continue;
-					if (memcmp(disasm_flags[i].name, flag_start, optlen * sizeof(char)) != 0)
+					if (bcmpc(disasm_flags[i].name, flag_start,
+					          optlen, sizeof(char)) != 0)
 						continue;
 					/* Found it! (update the resulting set of flags) */
 					if (remove_flag ^ disasm_flags[i].invert)

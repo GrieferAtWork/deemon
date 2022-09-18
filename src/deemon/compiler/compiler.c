@@ -39,6 +39,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 #ifndef CONFIG_NO_THREADS
 PUBLIC recursive_rwlock_t DeeCompiler_Lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -109,13 +115,11 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 	compiler->cp_scope         = current_scope;
 	compiler->cp_inner_options = inner_compiler_options;
 	memcpy(&compiler->cp_tags, &current_tags, sizeof(struct ast_tags));
-#ifndef NDEBUG
-	memset(&current_scope, 0xcc, sizeof(current_scope));
-	memset(&current_basescope, 0xcc, sizeof(current_scope));
-	memset(&current_rootscope, 0xcc, sizeof(current_scope));
-	memset(&inner_compiler_options, 0xcc, sizeof(inner_compiler_options));
-	memset(&current_tags, 0xcc, sizeof(current_tags));
-#endif /* !NDEBUG */
+	DBG_memset(&current_scope, 0xcc, sizeof(current_scope));
+	DBG_memset(&current_basescope, 0xcc, sizeof(current_scope));
+	DBG_memset(&current_rootscope, 0xcc, sizeof(current_scope));
+	DBG_memset(&inner_compiler_options, 0xcc, sizeof(inner_compiler_options));
+	DBG_memset(&current_tags, 0xcc, sizeof(current_tags));
 	compiler->cp_parser_flags    = parser_flags;
 	compiler->cp_optimizer_flags = optimizer_flags;
 	compiler->cp_unwind_limit    = optimizer_unwind_limit;

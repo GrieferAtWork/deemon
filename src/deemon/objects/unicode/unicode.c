@@ -46,6 +46,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 STATIC_ASSERT_MSG(sizeof(char) == sizeof(uint8_t), "Probably won't work...");
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_1BYTE) == 1);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_2BYTE) == 2);
@@ -3585,17 +3591,12 @@ Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict 
 		if likely(new_buffer)
 			result_buffer = new_buffer;
 	}
-#ifdef NDEBUG
-	return DeeString_PackWidthBuffer(result_buffer,
-	                                 self->up_flags & UNICODE_PRINTER_FWIDTH);
-#else /* NDEBUG */
 	{
 		unsigned char flags = self->up_flags;
-		memset(self, 0xcc, sizeof(*self));
+		DBG_memset(self, 0xcc, sizeof(*self));
 		return DeeString_PackWidthBuffer(result_buffer,
 		                                 flags & UNICODE_PRINTER_FWIDTH);
 	}
-#endif /* !NDEBUG */
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3621,7 +3622,7 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 		result = DeeString_TryPackWidthBuffer(result_buffer,
 		                                      self->up_flags & UNICODE_PRINTER_FWIDTH);
 		if likely(result)
-			memset(self, 0xcc, sizeof(*self));
+			DBG_memset(self, 0xcc, sizeof(*self));
 		return result;
 	}
 #endif /* !NDEBUG */
@@ -4295,9 +4296,10 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 				goto err;
 		}
 		base_string->s_len = initial_alloc;
-		self->up_buffer = string = base_string->s_str;
-		self->up_length          = num_chars;
-		memset(string, (uint8_t)ch, num_chars);
+		string             = base_string->s_str;
+		self->up_buffer    = string;
+		self->up_length    = num_chars;
+		memsetb(string, (uint8_t)ch, num_chars);
 		goto done;
 	}
 	/* Append new string data. */
@@ -4326,7 +4328,8 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			new_string->s_len = new_alloc;
 			self->up_buffer = string = new_string->s_str;
 		}
-		memset((uint8_t *)string + self->up_length, (uint8_t)ch, num_chars);
+		memsetb((uint8_t *)string + self->up_length,
+		        (uint8_t)ch, num_chars);
 		self->up_length += num_chars;
 		break;
 

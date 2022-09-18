@@ -53,6 +53,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 
 /* Required in case new GC objects are scheduled
  * whilst tp_gc() is invoked on some GC object
@@ -240,9 +246,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 		head->gc_next->gc_pself = head->gc_pself;
 	did_untrack = true;
 	GCLOCK_RELEASE_S();
-#ifndef NDEBUG
-	memset(head, 0xcc, DEE_GC_HEAD_SIZE);
-#endif /* !NDEBUG */
+	DBG_memset(head, 0xcc, DEE_GC_HEAD_SIZE);
 	return ob;
 }
 
@@ -1273,9 +1277,7 @@ collect_restart_with_pending_hint:
 /* GC object alloc/free. */
 LOCAL void *gc_initob(void *ptr) {
 	if likely(ptr) {
-#ifndef NDEBUG
-		memset(ptr, 0xcc, DEE_GC_HEAD_SIZE);
-#endif /* !NDEBUG */
+		DBG_memset(ptr, 0xcc, DEE_GC_HEAD_SIZE);
 		ptr = DeeGC_Object((struct gc_head *)ptr);
 	}
 	return ptr;

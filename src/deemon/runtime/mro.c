@@ -32,6 +32,7 @@
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
@@ -40,6 +41,12 @@
 #include "strings.h"
 
 DECL_BEGIN
+
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE rwlock_t membercache_list_lock = RWLOCK_INIT;
@@ -56,7 +63,8 @@ streq_len(char const *zero_zterminated,
 	/* TODO: return strcmpz(zero_zterminated, compare_to, compare_to_length) == 0; */
 	if (strlen(zero_zterminated) != compare_to_length)
 		return false;
-	return memcmp(zero_zterminated, compare_to, compare_to_length) == 0;
+	return bcmpc(zero_zterminated, compare_to,
+	             compare_to_length, sizeof(char)) == 0;
 }
 
 
@@ -109,9 +117,7 @@ membercache_clear(size_t max_clear) {
 			entry->mc_size  = 0;
 		}
 		entry->mc_pself = NULL;
-#ifndef NDEBUG
-		memset(&entry->mc_next, 0xcc, sizeof(void *));
-#endif /* !NDEBUG */
+		DBG_memset(&entry->mc_next, 0xcc, sizeof(void *));
 		MEMBERCACHE_ENDWRITE(entry);
 		if (result >= max_clear)
 			break;

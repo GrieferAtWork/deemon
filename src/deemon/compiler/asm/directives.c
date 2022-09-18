@@ -86,7 +86,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {
 
 #define IS_KWD(str)                                 \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 memcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
+	 bcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
 #define IS_KWD_NOCASE(str)                          \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
 	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
@@ -179,13 +179,13 @@ PRIVATE uint16_t FCALL
 get_reloc_by_name(char const *__restrict name) {
 	uint16_t result;
 	size_t namelen;
-	if (memcmp(name, "R_DMN_", 6 * sizeof(char)) == 0)
+	if (bcmpc(name, "R_DMN_", 6, sizeof(char)) == 0)
 		name += 6;
 	namelen = strlen(name);
 	if unlikely(namelen >= COMPILER_LENOF(reloc_db[0].rt_name))
 		return R_DMN_COUNT;
 	for (result = 0; result < R_DMN_COUNT; ++result) {
-		if (memcmp(reloc_db[result].rt_name, name, namelen * sizeof(char)) == 0)
+		if (bcmpc(reloc_db[result].rt_name, name, namelen, sizeof(char)) == 0)
 			break;
 	}
 	return result;

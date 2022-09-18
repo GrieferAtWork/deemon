@@ -93,7 +93,7 @@ ss_hash(SlabStatObject *__restrict self) {
 	return Dee_HashPtr(&self->st_stat, SLABSTAT_DATASIZE(self));
 }
 
-#define DEFINE_SS_COMPARE(name, op, return_diff_size)                                       \
+#define DEFINE_SS_COMPARE(name, memcmp, op, return_diff_size)                               \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
 	name(SlabStatObject *self, SlabStatObject *other) {                                     \
 		if (DeeObject_AssertTypeExact(other, &SlabStat_Type))                               \
@@ -102,12 +102,12 @@ ss_hash(SlabStatObject *__restrict self) {
 			return_diff_size;                                                               \
 		return_bool(memcmp(&self->st_stat, &other->st_stat, SLABSTAT_DATASIZE(self)) op 0); \
 	}
-DEFINE_SS_COMPARE(ss_eq, ==, return_false)
-DEFINE_SS_COMPARE(ss_ne, !=, return_true)
-DEFINE_SS_COMPARE(ss_lo, <, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_le, <=, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_gr, >, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_ge, >=, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
+DEFINE_SS_COMPARE(ss_eq, bcmp, ==, return_false)
+DEFINE_SS_COMPARE(ss_ne, bcmp, !=, return_true)
+DEFINE_SS_COMPARE(ss_lo, memcmp, <, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
+DEFINE_SS_COMPARE(ss_le, memcmp, <=, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
+DEFINE_SS_COMPARE(ss_gr, memcmp, >, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
+DEFINE_SS_COMPARE(ss_ge, memcmp, >=, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
 #undef DEFINE_SS_COMPARE
 
 PRIVATE struct type_cmp ss_cmp = {
@@ -493,19 +493,19 @@ PRIVATE struct type_getset tpconst si_getsets[] = {
 	{ NULL }
 };
 
-#define DEFINE_SI_COMPARE(name, op)                                                   \
+#define DEFINE_SI_COMPARE(name, memcmp, op)                                           \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
 	name(SlabInfoObject *self, SlabInfoObject *other) {                               \
 		if (DeeObject_AssertTypeExact(other, &SlabInfo_Type))                         \
 			return NULL;                                                              \
 		return_bool(memcmp(self->si_info, other->si_info, sizeof(DeeSlabInfo)) op 0); \
 	}
-DEFINE_SI_COMPARE(si_eq, ==)
-DEFINE_SI_COMPARE(si_ne, !=)
-DEFINE_SI_COMPARE(si_lo, <)
-DEFINE_SI_COMPARE(si_le, <=)
-DEFINE_SI_COMPARE(si_gr, >)
-DEFINE_SI_COMPARE(si_ge, >=)
+DEFINE_SI_COMPARE(si_eq, bcmp, ==)
+DEFINE_SI_COMPARE(si_ne, bcmp, !=)
+DEFINE_SI_COMPARE(si_lo, memcmp, <)
+DEFINE_SI_COMPARE(si_le, memcmp, <=)
+DEFINE_SI_COMPARE(si_gr, memcmp, >)
+DEFINE_SI_COMPARE(si_ge, memcmp, >=)
 #undef DEFINE_SI_COMPARE
 
 PRIVATE struct type_cmp si_cmp = {

@@ -1709,7 +1709,7 @@ DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
 	char buffer[128];
 	dssize_t temp, result;
-	if (count <= sizeof(buffer)) {
+	if (sizeof(buffer) >= count) {
 		memset(buffer, ch, count);
 		return (*printer)(arg, buffer, count);
 	}

@@ -2345,7 +2345,7 @@ not_a_link:
 							if (before_syntax_name >= after_syntax_name) {
 								PRINTASCII("#C", 2); /* No special syntax name */
 							} else if (before_syntax_name + 6 == after_syntax_name &&
-							           memcmp(before_syntax_name, "deemon", 6 * sizeof(char)) == 0) {
+							           bcmpc(before_syntax_name, "deemon", 6, sizeof(char)) == 0) {
 								PUTASCII('$'); /* Deemon syntax */
 							} else {
 								PRINTASCII("#C[", 3); /* Custom syntax */

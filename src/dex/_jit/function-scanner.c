@@ -55,7 +55,7 @@ JITLexer_ReferenceKeyword(JITLexer *__restrict self,
 			if (iter == self->jl_scandata.jl_parobtab) {
 				/* Make sure that we're referencing our caller's this-argument! */
 				if likely(size != COMPILER_STRLEN(JIT_RTSYM_THIS) ||
-				          memcmp(name, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS) * sizeof(char)) != 0)
+				          bcmpc(name, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS), sizeof(char)) != 0)
 					JITLexer_ReferenceKeyword(self, JIT_RTSYM_THIS, COMPILER_STRLEN(JIT_RTSYM_THIS));
 				if unlikely(self->jl_scandata.jl_flags & JIT_SCANDATA_FERROR)
 					return;

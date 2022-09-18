@@ -836,8 +836,8 @@ again:
 			continue; /* Non-matching hash */
 		if (DeeString_SIZE(item->si_key) != search_item_length)
 			continue; /* Non-matching length */
-		if (memcmp(DeeString_STR(item->si_key), search_item,
-		           search_item_length * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->si_key), search_item,
+		          search_item_length, sizeof(char)) != 0)
 			continue; /* Differing strings. */
 		existing_key = item->si_key;
 		Dee_Incref(existing_key);
@@ -932,8 +932,8 @@ again:
 			continue; /* Non-matching hash */
 		if (DeeString_SIZE(item->si_key) != search_item_length)
 			continue; /* Non-matching length */
-		if (memcmp(DeeString_STR(item->si_key), search_item,
-		           search_item_length * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->si_key), search_item,
+		          search_item_length, sizeof(char)) != 0)
 			continue; /* Differing strings. */
 		DeeHashSet_LockEndRead(me);
 		Dee_XDecref(new_item);
@@ -1018,8 +1018,8 @@ again_lock:
 			continue; /* Not-a-string. */
 		if (DeeString_SIZE(old_item) != search_item_length)
 			continue; /* Differing lengths. */
-		if (memcmp(DeeString_STR(old_item), search_item,
-		           search_item_length * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(old_item), search_item,
+		          search_item_length, sizeof(char)) != 0)
 			continue; /* Different strings. */
 		/* Found it! */
 #ifndef CONFIG_NO_THREADS
@@ -1120,8 +1120,8 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 			continue; /* Not-a-string. */
 		if (DeeString_SIZE(item->si_key) != search_item_length)
 			continue; /* Not-a-string. */
-		if (memcmp(DeeString_STR(item->si_key), search_item,
-		           search_item_length * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->si_key), search_item,
+		          search_item_length, sizeof(char)) != 0)
 			continue; /* Different strings. */
 		DeeHashSet_LockEndRead(me);
 		return true;

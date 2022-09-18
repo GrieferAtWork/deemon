@@ -3143,10 +3143,10 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		fill_front = (width - DeeBytes_SIZE(self));
 		fill_back  = fill_front / 2;
 		fill_front -= fill_back;
-		memfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
+		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(DeeBytes_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		memfilb(DeeBytes_DATA(result) + fill_front + DeeBytes_SIZE(self),
+		mempfilb(DeeBytes_DATA(result) + fill_front + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
@@ -3181,7 +3181,7 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		fill_back = (width - DeeBytes_SIZE(self));
 		memcpyb(DeeBytes_DATA(result) + 0,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		memfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
+		mempfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
@@ -3214,7 +3214,7 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!result)
 			goto err;
 		fill_front = (width - DeeBytes_SIZE(self));
-		memfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
+		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(DeeBytes_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	}
@@ -3256,7 +3256,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 			*dst++ = *src++;
 			--src_len;
 		}
-		memfilb(dst + 0, fill_front, filler.n_data, filler.n_size);
+		mempfilb(dst + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(dst + fill_front, src, src_len);
 	}
 	return result;

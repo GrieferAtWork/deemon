@@ -28,7 +28,7 @@
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
@@ -282,7 +282,7 @@ again:
 		    (DeeString_SIZE(entry->nh_name) == DeeString_SIZE(name) &&
 		     (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 		     ? MEMCASEEQ(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name) * sizeof(char))
-		     : 0 == memcmp(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name) * sizeof(char)))) {
+		     : 0 == bcmpc(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name), sizeof(char)))) {
 			/* Already exists. */
 			rwlock_endwrite(&notify_lock);
 			return 1;
@@ -343,7 +343,7 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
 		    (DeeString_SIZE(entry->nh_name) == DeeString_SIZE(name) &&
 		     (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 		     ? MEMCASEEQ(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name) * sizeof(char))
-		     : 0 == memcmp(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name) * sizeof(char)))) {
+		     : 0 == bcmpc(entry->nh_name, DeeString_STR(name), DeeString_SIZE(name), sizeof(char)))) {
 			/* Found it! (Replace with a dummy notification) */
 			entry->nh_func = &dummy_notify;
 			entry->nh_arg  = NULL;
@@ -395,7 +395,7 @@ again:
 		    (DeeString_SIZE(entry->nh_name) == name_size &&
 		     (cls & Dee_NOTIFICATION_CLASS_FNOCASE)
 		     ? MEMCASEEQ(entry->nh_name, name, name_size * sizeof(char))
-		     : 0 == memcmp(entry->nh_name, name, name_size * sizeof(char)))) {
+		     : 0 == bcmpc(entry->nh_name, name, name_size, sizeof(char)))) {
 			DREF DeeObject *arg;
 			Dee_notify_t func;
 			func = entry->nh_func;

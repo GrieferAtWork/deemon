@@ -203,7 +203,7 @@ again:
 			continue;
 		if (entry->oe_namelen != namelen)
 			continue;
-		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
 			continue;
 		/* Existing entry! */
 		if (override_existing) {
@@ -250,7 +250,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 			continue;
 		if (entry->oe_namelen != namelen)
 			continue;
-		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
 			continue;
 		/* Found it! */
 		value = entry->oe_value;
@@ -289,7 +289,7 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
 			continue;
 		if (entry->oe_namelen != namelen)
 			continue;
-		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
 			continue;
 		return entry;
 	}
@@ -350,7 +350,7 @@ again:
 			continue;
 		if (entry->oe_namelen != namelen)
 			continue;
-		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
 			continue;
 		/* Existing entry! */
 		return entry;

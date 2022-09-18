@@ -223,7 +223,7 @@ DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) != 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) != 0)
 			continue;
 		return item;
 	}
@@ -349,7 +349,7 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) == 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_GetAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -398,7 +398,7 @@ module_boundattr_len_impl(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) == 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_BoundAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -440,7 +440,7 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) == 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return true;
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -532,7 +532,7 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) == 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_DelAttrSymbol(self, item);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */
@@ -643,7 +643,7 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
 			continue; /* Non-matching length */
-		if (memcmp(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen * sizeof(char)) == 0)
+		if (bcmpc(MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
 			return DeeModule_SetAttrSymbol(self, item, value);
 	}
 	/* Fallback: Do a generic attribute lookup on the module. */

@@ -40,7 +40,7 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/system-features.h> /* memcpy() */
+#include <deemon/system-features.h> /* memcpy(), ... */
 
 #include <hybrid/atomic.h>
 
@@ -643,8 +643,8 @@ cat_getitemdef(ClassAttributeTable *__restrict self,
 			continue;
 		if (DeeString_SIZE(at->ca_name) != DeeString_SIZE(key))
 			continue;
-		if (memcmp(DeeString_STR(at->ca_name), DeeString_STR(key),
-		           DeeString_SIZE(key) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(at->ca_name), DeeString_STR(key),
+		          DeeString_SIZE(key), sizeof(char)) != 0)
 			continue;
 		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
 	}
@@ -1119,17 +1119,19 @@ class_attribute_eq(struct class_attribute *__restrict lhs,
 	if (DeeString_SIZE(lhs->ca_name) !=
 	    DeeString_SIZE(rhs->ca_name))
 		goto nope;
-	if (memcmp(DeeString_STR(lhs->ca_name),
-	           DeeString_STR(rhs->ca_name),
-	           DeeString_SIZE(lhs->ca_name) * sizeof(char)) != 0)
+	if (bcmpc(DeeString_STR(lhs->ca_name),
+	          DeeString_STR(rhs->ca_name),
+	          DeeString_SIZE(lhs->ca_name),
+	          sizeof(char)) != 0)
 		goto nope;
 	if (lhs->ca_doc) {
 		if (DeeString_SIZE(lhs->ca_doc) !=
 		    DeeString_SIZE(rhs->ca_doc))
 			goto nope;
-		if (memcmp(DeeString_STR(lhs->ca_doc),
-		           DeeString_STR(rhs->ca_doc),
-		           DeeString_SIZE(lhs->ca_doc) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(lhs->ca_doc),
+		          DeeString_STR(rhs->ca_doc),
+		          DeeString_SIZE(lhs->ca_doc),
+		          sizeof(char)) != 0)
 			goto nope;
 	}
 	return true;
@@ -1160,9 +1162,10 @@ cd_eq(ClassDescriptor *self,
 			goto nope;
 		if (DeeString_SIZE(self->cd_name) != DeeString_SIZE(other->cd_name))
 			goto nope;
-		if (memcmp(DeeString_STR(self->cd_name),
-		           DeeString_STR(other->cd_name),
-		           DeeString_SIZE(other->cd_name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(self->cd_name),
+		          DeeString_STR(other->cd_name),
+		          DeeString_SIZE(other->cd_name),
+		          sizeof(char)) != 0)
 			goto nope;
 	} else {
 		if (other->cd_name)
@@ -1173,18 +1176,19 @@ cd_eq(ClassDescriptor *self,
 			goto nope;
 		if (DeeString_SIZE(self->cd_doc) != DeeString_SIZE(other->cd_doc))
 			goto nope;
-		if (memcmp(DeeString_STR(self->cd_doc),
-		           DeeString_STR(other->cd_doc),
-		           DeeString_SIZE(other->cd_doc) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(self->cd_doc),
+		          DeeString_STR(other->cd_doc),
+		          DeeString_SIZE(other->cd_doc),
+		          sizeof(char)) != 0)
 			goto nope;
 	} else {
 		if (other->cd_doc)
 			goto nope;
 	}
-	if (memcmp(self->cd_clsop_list,
-	           other->cd_clsop_list,
-	           (self->cd_clsop_mask + 1) *
-	           sizeof(struct class_operator)) != 0)
+	if (bcmpc(self->cd_clsop_list,
+	          other->cd_clsop_list,
+	          self->cd_clsop_mask + 1,
+	          sizeof(struct class_operator)) != 0)
 		goto nope;
 	for (i = 0; i <= self->cd_cattr_mask; ++i) {
 		if (!class_attribute_eq(&self->cd_cattr_list[i],
@@ -1486,7 +1490,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 				for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
 					if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
 						continue;
-					if (memcmp(class_attribute_flags_db[i].fe_name, pos, flag_len * sizeof(char)) != 0)
+					if (bcmpc(class_attribute_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
 						continue;
 					self->ca_flag |= class_attribute_flags_db[i].fe_flag;
 					goto got_flag;
@@ -1635,9 +1639,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 				continue;
 			if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0]))
 				continue;
-			if (memcmp(DeeString_STR(ent->ca_name),
-			           DeeString_STR(data[0]),
-			           DeeString_SIZE(ent->ca_name)) != 0)
+			if (bcmpc(DeeString_STR(ent->ca_name), DeeString_STR(data[0]),
+			          DeeString_SIZE(ent->ca_name), sizeof(char)) != 0)
 				continue;
 			/* Duplicate attribute. */
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1722,9 +1725,7 @@ cd_add_operator(ClassDescriptor *__restrict self,
 		                                          sizeof(struct class_operator));
 		if unlikely(!map)
 			goto err;
-		memset(map, 0xff,
-		       (mask + 1) *
-		       sizeof(struct class_operator));
+		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		}
 		if (self->cd_clsop_list != empty_class_operators)
@@ -1809,7 +1810,7 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 					for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
 						if (class_flags_db[i].fe_name[flag_len] != '\0')
 							continue;
-						if (memcmp(class_flags_db[i].fe_name, pos, flag_len * sizeof(char)) != 0)
+						if (bcmpc(class_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
 							continue;
 						result->cd_flags |= class_flags_db[i].fe_flag;
 						goto got_flag;
@@ -1869,7 +1870,8 @@ got_flag:
 					continue;
 				if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0]))
 					continue;
-				if (memcmp(DeeString_STR(ent->ca_name), DeeString_STR(data[0]), DeeString_SIZE(data[0])) != 0)
+				if (bcmpc(DeeString_STR(ent->ca_name), DeeString_STR(data[0]),
+				          DeeString_SIZE(data[0]), sizeof(char)) != 0)
 					continue;
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Duplicate class attribute %r",
@@ -4222,8 +4224,8 @@ DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
 			continue;
 		if (DeeString_SIZE(result->ca_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name), DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return result;
 	}
@@ -4265,7 +4267,8 @@ DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject
 			continue;
 		if (DeeString_SIZE(result->ca_name) != attrlen)
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name), name, attrlen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name), name,
+		          attrlen, sizeof(char)) != 0)
 			continue;
 		return result;
 	}
@@ -4287,8 +4290,8 @@ DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self
 			continue;
 		if (DeeString_SIZE(result->ca_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name), DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return result;
 	}
@@ -4329,7 +4332,8 @@ DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObj
 			continue;
 		if (DeeString_SIZE(result->ca_name) != attrlen)
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name), name, attrlen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name), name,
+		          attrlen, sizeof(char)) != 0)
 			continue;
 		return result;
 	}

@@ -85,7 +85,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_strcaseeq(char *a, char *b) {
 
 #define IS_KWD(str)                                 \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 memcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
+	 bcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
 #define IS_KWD_NOCASE(str)                          \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
 	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
@@ -159,7 +159,7 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
 	/* Check if the size is sufficient. */
 	if (size < COMPILER_STRLEN(USERLABEL_PREFIX) + 1)
 		goto not_a_label;
-	if (memcmp(text, USERLABEL_PREFIX, sizeof(USERLABEL_PREFIX) - sizeof(char)) != 0)
+	if (bcmp(text, USERLABEL_PREFIX, sizeof(USERLABEL_PREFIX) - sizeof(char)) != 0)
 		goto not_a_label;
 	text += COMPILER_STRLEN(USERLABEL_PREFIX);
 	size -= COMPILER_STRLEN(USERLABEL_PREFIX);

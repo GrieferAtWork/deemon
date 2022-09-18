@@ -48,6 +48,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 typedef DeeFunctionObject              Function;
 typedef DeeYieldFunctionIteratorObject YFIterator;
 typedef DeeYieldFunctionObject         YFunction;
@@ -966,9 +972,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfi_init(YFIterator *__restrict self,
          YFunction *__restrict yield_function) {
 	DeeCodeObject *code;
-#ifndef NDEBUG
-	memset(&self->yi_frame, 0xcc, sizeof(struct code_frame));
-#endif /* !NDEBUG */
+	DBG_memset(&self->yi_frame, 0xcc, sizeof(struct code_frame));
 	/* Setup the frame for the iterator. */
 	self->yi_func          = yield_function;
 	self->yi_frame.cf_func = yield_function->yf_func;

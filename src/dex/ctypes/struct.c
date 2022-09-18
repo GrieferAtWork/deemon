@@ -340,10 +340,8 @@ struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *a
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return DeeInt_NewSize(field->sf_offset);
 	}
@@ -373,10 +371,8 @@ struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return DeeInt_NewSize(field->sf_offset +
 		                      DeeSType_Sizeof(field->sf_type->lt_orig));
@@ -407,10 +403,8 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return_reference((DeeObject *)field->sf_type->lt_orig);
 	}
@@ -521,9 +515,8 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		/* Found it! (return an l-value to the field in question) */
 		result = DeeObject_MALLOC(struct lvalue_object);
@@ -555,9 +548,8 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		/* Found it! (clear out the memory of this object) */
 		dst  = (uint8_t *)((uintptr_t)self + field->sf_offset);
@@ -596,9 +588,8 @@ struct_setattr(DeeStructTypeObject *__restrict tp_self,
 			continue;
 		if (DeeString_SIZE(field->sf_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(field->sf_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(field->sf_name), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		/* Found it! (Assign the value to this field) */
 		return DeeStruct_Assign(field->sf_type->lt_orig,

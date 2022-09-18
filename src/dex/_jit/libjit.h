@@ -25,7 +25,7 @@
 #include <deemon/class.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* bzero() */
+#include <deemon/system-features.h> /* bzero(), bcmpc(), ... */
 
 #include <hybrid/typecore.h>
 
@@ -551,10 +551,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *
 #define JITLexer_ISKWD(self, x)                                         \
 	((self)->jl_tok == JIT_KEYWORD &&                                   \
 	 COMPILER_STRLEN(x) == ((self)->jl_tokend - (self)->jl_tokstart) && \
-	 memcmp((self)->jl_tokstart, x, COMPILER_STRLEN(x) * sizeof(char)) == 0)
+	 bcmpc((self)->jl_tokstart, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 #define JITLexer_ISTOK(self, x)                                         \
 	(COMPILER_STRLEN(x) == ((self)->jl_tokend - (self)->jl_tokstart) && \
-	 memcmp((self)->jl_tokstart, x, COMPILER_STRLEN(x) * sizeof(char)) == 0)
+	 bcmpc((self)->jl_tokstart, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 
 /* Initialize a given JIT lexer for a given data block, and load the first token. */
 #define JITLexer_Start(self, start, end) \

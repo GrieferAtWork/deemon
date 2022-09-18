@@ -74,9 +74,13 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 typedef DeeTupleObject Tuple;
-
-
 
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
 struct cached_object {
@@ -166,10 +170,7 @@ DeeTuple_NewUninitialized(size_t n) {
 got_result:
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	DeeObject_Init(result, &DeeTuple_Type);
-#ifndef NDEBUG
-	memset(result->t_elem, 0xcc,
-	       n * sizeof(DREF DeeObject *));
-#endif /* !NDEBUG */
+	DBG_memset(result->t_elem, 0xcc, n * sizeof(DREF DeeObject *));
 done:
 	return (DREF DeeObject *)result;
 }
@@ -213,10 +214,7 @@ DeeTuple_TryNewUninitialized(size_t n) {
 got_result:
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
 	DeeObject_Init(result, &DeeTuple_Type);
-#ifndef NDEBUG
-	memset(result->t_elem, 0xcc,
-	       n * sizeof(DREF DeeObject *));
-#endif /* !NDEBUG */
+	DBG_memset(result->t_elem, 0xcc, n * sizeof(DREF DeeObject *));
 done:
 	return (DREF DeeObject *)result;
 }
@@ -226,12 +224,8 @@ INTERN NONNULL((1)) void DCALL
 tuple_tp_free(void *__restrict ob) {
 	ASSERT(!DeeTuple_IsEmpty((DeeObject *)ob));
 	ASSERT(DeeTuple_SIZE((DeeObject *)ob) != 0);
-#ifndef NDEBUG
-	memset(DeeTuple_ELEM((DeeObject *)ob),
-	       0xcc,
-	       DeeTuple_SIZE((DeeObject *)ob) *
-	       sizeof(DREF DeeObject *));
-#endif /* !NDEBUG */
+	DBG_memset(DeeTuple_ELEM((DeeObject *)ob), 0xcc,
+	           DeeTuple_SIZE((DeeObject *)ob) * sizeof(DREF DeeObject *));
 	if (DeeTuple_SIZE((DeeObject *)ob) < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[DeeTuple_SIZE((DeeObject *)ob) - 1];
 		if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE) {
@@ -313,10 +307,8 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict 
 				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 				if (new_size > DeeTuple_SIZE(self)) {
-					memset(&new_tuple->t_elem[DeeTuple_SIZE(self)],
-					       0xcc,
-					       (new_size - DeeTuple_SIZE(self)) *
-					       sizeof(DREF DeeObject *));
+					DBG_memset(&new_tuple->t_elem[DeeTuple_SIZE(self)], 0xcc,
+					           (new_size - DeeTuple_SIZE(self)) * sizeof(DREF DeeObject *));
 				}
 #endif /* !NDEBUG */
 				tuple_tp_free(self);
@@ -335,10 +327,8 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict 
 		goto err;
 #ifndef NDEBUG
 	if (new_size > new_tuple->t_size) {
-		memset(&new_tuple->t_elem[new_tuple->t_size],
-		       0xcc,
-		       (new_size - new_tuple->t_size) *
-		       sizeof(DREF DeeObject *));
+		DBG_memset(&new_tuple->t_elem[new_tuple->t_size], 0xcc,
+		           (new_size - new_tuple->t_size) * sizeof(DREF DeeObject *));
 	}
 #endif /* !NDEBUG */
 	new_tuple->t_size = new_size;
@@ -388,10 +378,8 @@ DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restric
 				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 				if (new_size > DeeTuple_SIZE(self)) {
-					memset(&new_tuple->t_elem[DeeTuple_SIZE(self)],
-					       0xcc,
-					       (new_size - DeeTuple_SIZE(self)) *
-					       sizeof(DREF DeeObject *));
+					DBG_memset(&new_tuple->t_elem[DeeTuple_SIZE(self)], 0xcc,
+					           (new_size - DeeTuple_SIZE(self)) * sizeof(DREF DeeObject *));
 				}
 #endif /* !NDEBUG */
 				tuple_tp_free(self);

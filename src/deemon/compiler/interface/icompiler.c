@@ -687,7 +687,7 @@ parse_handler_flags(char const *__restrict flags,
 		}
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
+#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 			if (IS_FLAG("finally"))
 				result->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
 			else if (IS_FLAG("interrupt"))
@@ -914,7 +914,7 @@ parse_loop_flags(char const *__restrict flags,
 		}
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
+#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 			if (IS_FLAG("foreach"))
 				*presult |= AST_FLOOP_FOREACH;
 			else if (IS_FLAG("postcond"))
@@ -1090,8 +1090,8 @@ parse_conditional_flags(char const *__restrict flags,
 		}
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, sizeof(x) - sizeof(char)) == 0)
-#define IS_FLAG_S(len, s) (flag_length == (len) && memcmp(flags, s, (len) * sizeof(char)) == 0)
+#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmp(flags, x, sizeof(x) - sizeof(char)) == 0)
+#define IS_FLAG_S(len, s) (flag_length == (len) && bcmpc(flags, s, len, sizeof(char)) == 0)
 			if (IS_FLAG_S(4, DeeString_STR(&str_bool)))
 				*presult |= AST_FCOND_BOOL;
 			else if (IS_FLAG("likely"))
@@ -1468,16 +1468,16 @@ parse_operator_flags(char const *__restrict flags,
 		}
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && memcmp(flags, x, COMPILER_STRLEN(x)) == 0)
-			if (IS_FLAG("post"))
+#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
+			if (IS_FLAG("post")) {
 				*presult |= AST_OPERATOR_FPOSTOP;
-			else if (IS_FLAG("varargs"))
+			} else if (IS_FLAG("varargs")) {
 				*presult |= AST_OPERATOR_FVARARGS;
-			else if (IS_FLAG("maybeprefix"))
+			} else if (IS_FLAG("maybeprefix")) {
 				*presult |= AST_OPERATOR_FMAYBEPFX;
-			else if (IS_FLAG("dontoptimize"))
+			} else if (IS_FLAG("dontoptimize")) {
 				*presult |= AST_OPERATOR_FDONTOPT;
-			else {
+			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown operator flag %$q",
 				                       flag_length,
@@ -1621,7 +1621,7 @@ done:
 
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 get_action_by_name(char const *__restrict name) {
-#define EQAT(ptr, str) (memcmp(ptr, str, sizeof(str)) == 0)
+#define EQAT(ptr, str) (bcmp(ptr, str, sizeof(str)) == 0)
 #define RETURN(id)     \
 	do {               \
 		result = (id); \

@@ -52,6 +52,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 typedef DeeStringObject String;
 
 #ifndef CONFIG_HAVE_memmem
@@ -240,9 +246,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	DeeObject_Init(result, &DeeString_Type);
 	result->s_hash = (dhash_t)-1;
 	result->s_data = NULL;
-#ifndef NDEBUG
-	memset(self, 0xcc, sizeof(*self));
-#endif /* !NDEBUG */
+	DBG_memset(self, 0xcc, sizeof(*self));
 	return (DREF DeeObject *)result;
 }
 

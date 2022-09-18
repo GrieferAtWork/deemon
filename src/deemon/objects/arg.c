@@ -425,7 +425,7 @@ kwds_findstr_len(Kwds *__restrict self,
 			continue;
 		if (DeeString_SIZE(entry->ke_name) != namesize)
 			continue;
-		if (memcmp(DeeString_STR(entry->ke_name), name, namesize * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(entry->ke_name), name, namesize, sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}

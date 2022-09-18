@@ -52,17 +52,9 @@ DECL_BEGIN
 #define UNICODE_CR     13 /* '\r' */
 #define UNICODE_LF     10 /* '\n' */
 
-#define MEMEQB(a, b, s) (memcmpb(a, b, s) == 0)
-#ifdef CONFIG_HAVE_memcmpw
-#define MEMEQW(a, b, s) (memcmpw(a, b, s) == 0)
-#else /* CONFIG_HAVE_memcmpw */
-#define MEMEQW(a, b, s) (memcmp(a, b, (s)*2) == 0)
-#endif /* !CONFIG_HAVE_memcmpw */
-#ifdef CONFIG_HAVE_memcmpl
-#define MEMEQL(a, b, s) (memcmpl(a, b, s) == 0)
-#else /* CONFIG_HAVE_memcmpl */
-#define MEMEQL(a, b, s) (memcmp(a, b, (s)*4) == 0)
-#endif /* !CONFIG_HAVE_memcmpl */
+#define MEMEQB(a, b, s) (bcmpb(a, b, s) == 0)
+#define MEMEQW(a, b, s) (bcmpw(a, b, s) == 0)
+#define MEMEQL(a, b, s) (bcmpl(a, b, s) == 0)
 
 /* Basic aliases */
 #undef memrchrb
@@ -110,6 +102,34 @@ DeeSystem_DEFINE_memsetw(dee_memsetw)
 DeeSystem_DEFINE_memsetl(dee_memsetl)
 #endif /* !CONFIG_HAVE_memsetl */
 
+#ifndef CONFIG_HAVE_mempsetw
+#define CONFIG_HAVE_mempsetw 1
+#undef mempsetw
+#define mempsetw dee_mempsetw
+DeeSystem_DEFINE_mempsetw(dee_mempsetw)
+#endif /* !CONFIG_HAVE_mempsetw */
+
+#ifndef CONFIG_HAVE_mempsetl
+#define CONFIG_HAVE_mempsetl 1
+#undef mempsetl
+#define mempsetl dee_mempsetl
+DeeSystem_DEFINE_mempsetl(dee_mempsetl)
+#endif /* !CONFIG_HAVE_mempsetl */
+
+#ifndef CONFIG_HAVE_memcmpw
+#define CONFIG_HAVE_memcmpw 1
+#undef memcmpw
+#define memcmpw dee_memcmpw
+DeeSystem_DEFINE_memcmpw(dee_memcmpw)
+#endif /* !CONFIG_HAVE_memcmpw */
+
+#ifndef CONFIG_HAVE_memcmpl
+#define CONFIG_HAVE_memcmpl 1
+#undef memcmpl
+#define memcmpl dee_memcmpl
+DeeSystem_DEFINE_memcmpl(dee_memcmpl)
+#endif /* !CONFIG_HAVE_memcmpl */
+
 #ifndef CONFIG_HAVE_memchrw
 #define CONFIG_HAVE_memchrw 1
 #undef memchrw
@@ -117,19 +137,19 @@ DeeSystem_DEFINE_memsetl(dee_memsetl)
 DeeSystem_DEFINE_memchrw(dee_memchrw)
 #endif /* !CONFIG_HAVE_memchrw */
 
-#ifndef CONFIG_HAVE_memrchrw
-#define CONFIG_HAVE_memrchrw 1
-#undef memrchrw
-#define memrchrw dee_memrchrw
-DeeSystem_DEFINE_memrchrw(dee_memrchrw)
-#endif /* !CONFIG_HAVE_memrchrw */
-
 #ifndef CONFIG_HAVE_memchrl
 #define CONFIG_HAVE_memchrl 1
 #undef memchrl
 #define memchrl dee_memchrl
 DeeSystem_DEFINE_memchrl(dee_memchrl)
 #endif /* !CONFIG_HAVE_memchrl */
+
+#ifndef CONFIG_HAVE_memrchrw
+#define CONFIG_HAVE_memrchrw 1
+#undef memrchrw
+#define memrchrw dee_memrchrw
+DeeSystem_DEFINE_memrchrw(dee_memrchrw)
+#endif /* !CONFIG_HAVE_memrchrw */
 
 #ifndef CONFIG_HAVE_memrchrl
 #define CONFIG_HAVE_memrchrl 1
@@ -1188,59 +1208,58 @@ DEFINE_CASERFIND_MATCH_FUNCTION(dee_rfind_casematchl, uint32_t, memcasermeml, ME
 
 typedef DeeStringObject String;
 
-
-#undef memfilb
-#define memfilb dee_memfilb
-PRIVATE void DCALL
-dee_memfilb(uint8_t *__restrict dst, size_t num_bytes,
-            uint8_t const *__restrict src, size_t src_bytes) {
+#undef mempfilb
+#define mempfilb dee_mempfilb
+PRIVATE uint8_t *DCALL
+dee_mempfilb(uint8_t *__restrict dst, size_t num_bytes,
+             uint8_t const *__restrict src, size_t src_bytes) {
 	ASSERT(src_bytes != 0);
 	if (src_bytes == 1) {
-		memsetb(dst, src[0], num_bytes);
+		dst = mempsetb(dst, src[0], num_bytes);
 	} else {
 		while (num_bytes > src_bytes) {
-			memcpyb(dst, src, src_bytes);
+			dst = mempcpyb(dst, src, src_bytes);
 			num_bytes -= src_bytes;
-			dst += src_bytes;
 		}
-		memcpyb(dst, src, num_bytes);
+		dst = mempcpyb(dst, src, num_bytes);
 	}
+	return dst;
 }
 
-#undef memfilw
-#define memfilw dee_memfilw
-PRIVATE void DCALL
-dee_memfilw(uint16_t *__restrict dst, size_t num_words,
-            uint16_t const *__restrict src, size_t src_words) {
+#undef mempfilw
+#define mempfilw dee_mempfilw
+PRIVATE uint16_t *DCALL
+dee_mempfilw(uint16_t *__restrict dst, size_t num_words,
+             uint16_t const *__restrict src, size_t src_words) {
 	ASSERT(src_words != 0);
 	if (src_words == 1) {
-		memsetw(dst, src[0], num_words);
+		dst = mempsetw(dst, src[0], num_words);
 	} else {
 		while (num_words > src_words) {
-			memcpyw(dst, src, src_words);
+			dst = mempcpyw(dst, src, src_words);
 			num_words -= src_words;
-			dst += src_words;
 		}
-		memcpyw(dst, src, num_words);
+		dst = mempcpyw(dst, src, num_words);
 	}
+	return dst;
 }
 
-#undef memfill
-#define memfill dee_memfill
-PRIVATE void DCALL
-dee_memfill(uint32_t *__restrict dst, size_t num_dwords,
-            uint32_t const *__restrict src, size_t src_dwords) {
+#undef mempfill
+#define mempfill dee_mempfill
+PRIVATE uint32_t *DCALL
+dee_mempfill(uint32_t *__restrict dst, size_t num_dwords,
+             uint32_t const *__restrict src, size_t src_dwords) {
 	ASSERT(src_dwords != 0);
 	if (src_dwords == 1) {
-		memsetl(dst, src[0], num_dwords);
+		dst = mempsetl(dst, src[0], num_dwords);
 	} else {
 		while (num_dwords > src_dwords) {
-			memcpyl(dst, src, src_dwords);
+			dst = mempcpyl(dst, src, src_dwords);
 			num_dwords -= src_dwords;
-			dst += src_dwords;
 		}
-		memcpyl(dst, src, num_dwords);
+		dst = mempcpyl(dst, src, num_dwords);
 	}
+	return dst;
 }
 
 

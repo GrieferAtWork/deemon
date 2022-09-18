@@ -54,6 +54,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 cmdline_add_arg(struct ascii_printer *__restrict printer,
                 DeeStringObject *__restrict arg);
@@ -2199,10 +2205,8 @@ process_init(Process *__restrict self,
 
 	/* Initialize all the other fields. */
 	rwlock_init(&self->p_lock);
-#ifndef NDEBUG
-	memset(&self->p_id, 0xcc, sizeof(DWORD));
-	memset(&self->p_handle, 0xcc, sizeof(HANDLE));
-#endif /* !NDEBUG */
+	DBG_memset(&self->p_id, 0xcc, sizeof(DWORD));
+	DBG_memset(&self->p_handle, 0xcc, sizeof(HANDLE));
 	self->p_state   = PROCESS_FNORMAL;
 	self->p_std[0]  = NULL;
 	self->p_std[1]  = NULL;

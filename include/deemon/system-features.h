@@ -783,6 +783,14 @@ functest('strnrchr("foo", 102, 3)', "defined(__USE_KOS)");
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
+func("bzerow", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzerow(a, 42); return 0;");
+func("bzerol", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzerol(a, 42); return 0;");
+func("bzeroq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzeroq(a, 42); return 0;");
+
+func("bcmp", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void const *a, *b; return bcmp(a, b, 16) == 0;");
+func("bcmpw", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void const *a, *b; return bcmpw(a, b, 16) == 0;");
+func("bcmpl", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void const *a, *b; return bcmpl(a, b, 16) == 0;");
+func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void const *a, *b; return bcmpq(a, b, 16) == 0;");
 
 // NOTE: The GNU-variant of memmem() returns the start of the haystack
 //       when `needle_length == 0', however for this case, deemon requires
@@ -835,29 +843,32 @@ func("mempmovedownq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; exter
 func("mempmovedownc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovedownc(a, b, 16, 2) == (char *)a + 32;");
 
 
-func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
-func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyw(a, b, 16); return 0;");
-func("memcpyl", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyl(a, b, 16); return 0;");
-func("memcpyq", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyq(a, b, 16); return 0;");
-func("memmovec", "defined(__USE_KOS)", test: "extern char *a, *b; memmovec(a, b, 16, sizeof(char)); return 0;");
-func("memmovew", "defined(__USE_KOS)", test: "extern void *a, *b; memmovew(a, b, 16); return 0;");
-func("memmovel", "defined(__USE_KOS)", test: "extern void *a, *b; memmovel(a, b, 16); return 0;");
-func("memmoveq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveq(a, b, 16); return 0;");
-func("memmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveup(a, b, 16); return 0;");
-func("mempmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; mempmoveup(a, b, 16); return 0;");
-func("memmoveupc", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupc(a, b, 16, sizeof(char)); return 0;");
-func("memmoveupw", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupw(a, b, 16); return 0;");
-func("memmoveupl", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupl(a, b, 16); return 0;");
-func("memmoveupq", "defined(__USE_KOS)", test: "extern void *a, *b; memmoveupq(a, b, 16); return 0;");
-func("memmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedown(a, b, 16); return 0;");
-func("mempmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; mempmovedown(a, b, 16); return 0;");
-func("memmovedownc", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownc(a, b, 16, sizeof(char)); return 0;");
-func("memmovedownw", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownw(a, b, 16); return 0;");
-func("memmovedownl", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownl(a, b, 16); return 0;");
-func("memmovedownq", "defined(__USE_KOS)", test: "extern void *a, *b; memmovedownq(a, b, 16); return 0;");
-func("memsetw", "defined(__USE_KOS)", test: "extern void *a; memsetw(a, 0xcc, 16); return 0;");
-func("memsetl", "defined(__USE_KOS)", test: "extern void *a; memsetl(a, 0xcc, 16); return 0;");
-func("memsetq", "defined(__USE_KOS)", test: "extern void *a; memsetq(a, 0xcc, 16); return 0;");
+func("memcpyc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyc(a, b, 16, sizeof(char)); return 0;");
+func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyw(a, b, 16); return 0;");
+func("memcpyl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyl(a, b, 16); return 0;");
+func("memcpyq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memcpyq(a, b, 16); return 0;");
+func("memmovec", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovec(a, b, 16, sizeof(char)); return 0;");
+func("memmovew", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovew(a, b, 16); return 0;");
+func("memmovel", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovel(a, b, 16); return 0;");
+func("memmoveq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveq(a, b, 16); return 0;");
+func("memmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveup(a, b, 16); return 0;");
+func("mempmoveup", "defined(__USE_KOS)", test: "extern void *a, *b; a = mempmoveup(a, b, 16); return 0;");
+func("memmoveupc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupc(a, b, 16, sizeof(char)); return 0;");
+func("memmoveupw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupw(a, b, 16); return 0;");
+func("memmoveupl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupl(a, b, 16); return 0;");
+func("memmoveupq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmoveupq(a, b, 16); return 0;");
+func("memmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedown(a, b, 16); return 0;");
+func("mempmovedown", "defined(__USE_KOS)", test: "extern void *a, *b; a = mempmovedown(a, b, 16); return 0;");
+func("memmovedownc", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownc(a, b, 16, sizeof(char)); return 0;");
+func("memmovedownw", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownw(a, b, 16); return 0;");
+func("memmovedownl", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownl(a, b, 16); return 0;");
+func("memmovedownq", "defined(__USE_KOS)", test: "extern void *a, *b; a = memmovedownq(a, b, 16); return 0;");
+func("memsetw", "defined(__USE_KOS)", test: "extern void *a; a = memsetw(a, 0xcc, 16); return 0;");
+func("memsetl", "defined(__USE_KOS)", test: "extern void *a; a = memsetl(a, 0xcc, 16); return 0;");
+func("memsetq", "defined(__USE_KOS)", test: "extern void *a; a = memsetq(a, 0xcc, 16); return 0;");
+func("mempsetw", "defined(__USE_KOS)", test: "extern void *a; a = mempsetw(a, 0xcc, 16); return 0;");
+func("mempsetl", "defined(__USE_KOS)", test: "extern void *a; a = mempsetl(a, 0xcc, 16); return 0;");
+func("mempsetq", "defined(__USE_KOS)", test: "extern void *a; a = mempsetq(a, 0xcc, 16); return 0;");
 func("memchrw", "defined(__USE_KOS)", test: "extern void const *a; return memchrw(a, 0xcc, 16) != 0;");
 func("memchrl", "defined(__USE_KOS)", test: "extern void const *a; return memchrl(a, 0xcc, 16) != 0;");
 func("memchrq", "defined(__USE_KOS)", test: "extern void const *a; return memchrq(a, 0xcc, 16) != 0;");
@@ -5824,6 +5835,61 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_bzero 1
 #endif
 
+#ifdef CONFIG_NO_bzerow
+#undef CONFIG_HAVE_bzerow
+#elif !defined(CONFIG_HAVE_bzerow) && \
+      (defined(bzerow) || defined(__bzerow_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bzerow 1
+#endif
+
+#ifdef CONFIG_NO_bzerol
+#undef CONFIG_HAVE_bzerol
+#elif !defined(CONFIG_HAVE_bzerol) && \
+      (defined(bzerol) || defined(__bzerol_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bzerol 1
+#endif
+
+#ifdef CONFIG_NO_bzeroq
+#undef CONFIG_HAVE_bzeroq
+#elif !defined(CONFIG_HAVE_bzeroq) && \
+      (defined(bzeroq) || defined(__bzeroq_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bzeroq 1
+#endif
+
+#ifdef CONFIG_NO_bcmp
+#undef CONFIG_HAVE_bcmp
+#elif !defined(CONFIG_HAVE_bcmp) && \
+      (defined(bcmp) || defined(__bcmp_defined) || defined(CONFIG_HAVE_STRINGS_H))
+#define CONFIG_HAVE_bcmp 1
+#endif
+
+#ifdef CONFIG_NO_bcmpw
+#undef CONFIG_HAVE_bcmpw
+#elif !defined(CONFIG_HAVE_bcmpw) && \
+      (defined(bcmpw) || defined(__bcmpw_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bcmpw 1
+#endif
+
+#ifdef CONFIG_NO_bcmpl
+#undef CONFIG_HAVE_bcmpl
+#elif !defined(CONFIG_HAVE_bcmpl) && \
+      (defined(bcmpl) || defined(__bcmpl_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bcmpl 1
+#endif
+
+#ifdef CONFIG_NO_bcmpq
+#undef CONFIG_HAVE_bcmpq
+#elif !defined(CONFIG_HAVE_bcmpq) && \
+      (defined(bcmpq) || defined(__bcmpq_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
+       defined(__USE_STRING_BWLQ)))
+#define CONFIG_HAVE_bcmpq 1
+#endif
+
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
@@ -6204,6 +6270,27 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_memsetq) && \
       (defined(memsetq) || defined(__memsetq_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memsetq 1
+#endif
+
+#ifdef CONFIG_NO_mempsetw
+#undef CONFIG_HAVE_mempsetw
+#elif !defined(CONFIG_HAVE_mempsetw) && \
+      (defined(mempsetw) || defined(__mempsetw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempsetw 1
+#endif
+
+#ifdef CONFIG_NO_mempsetl
+#undef CONFIG_HAVE_mempsetl
+#elif !defined(CONFIG_HAVE_mempsetl) && \
+      (defined(mempsetl) || defined(__mempsetl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempsetl 1
+#endif
+
+#ifdef CONFIG_NO_mempsetq
+#undef CONFIG_HAVE_mempsetq
+#elif !defined(CONFIG_HAVE_mempsetq) && \
+      (defined(mempsetq) || defined(__mempsetq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempsetq 1
 #endif
 
 #ifdef CONFIG_NO_memchrw
@@ -9547,6 +9634,17 @@ DECL_END
 #define DeeSystem_DEFINE_memsetl(name) _DeeSystem_DEFINE_memsetT(uint32_t, name)
 #define DeeSystem_DEFINE_memsetq(name) _DeeSystem_DEFINE_memsetT(uint64_t, name)
 
+#define _DeeSystem_DEFINE_mempsetT(T, name)               \
+	LOCAL void *name(void *__restrict p, T c, size_t n) { \
+		T *dst = (T *)p;                                  \
+		while (n--)                                       \
+			*dst++ = c;                                   \
+		return dst;                                       \
+	}
+#define DeeSystem_DEFINE_mempsetw(name) _DeeSystem_DEFINE_mempsetT(uint16_t, name)
+#define DeeSystem_DEFINE_mempsetl(name) _DeeSystem_DEFINE_mempsetT(uint32_t, name)
+#define DeeSystem_DEFINE_mempsetq(name) _DeeSystem_DEFINE_mempsetT(uint64_t, name)
+
 
 #ifdef NDEBUG
 #define DeeSytemAssert_MemmoveUp(dst, src, elem_count, elem_size)   (void)0
@@ -10071,6 +10169,30 @@ DECL_END
 #endif /* _MSC_VER && __x86_64__ */
 #endif /* !CONFIG_HAVE_memsetq */
 
+#ifndef CONFIG_HAVE_mempset
+#define CONFIG_HAVE_mempset 1
+#undef mempset
+#define mempset(dst, byte, num_bytes) ((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
+#endif /* !CONFIG_HAVE_mempset */
+
+#if !defined(CONFIG_HAVE_mempsetw) && defined(CONFIG_HAVE_memsetw)
+#define CONFIG_HAVE_mempsetw 1
+#undef mempsetw
+#define mempsetw(dst, word, num_words) ((uint16_t *)memsetw(dst, word, num_words) + (num_words))
+#endif /* !CONFIG_HAVE_mempsetw && CONFIG_HAVE_memsetw */
+
+#if !defined(CONFIG_HAVE_mempsetl) && defined(CONFIG_HAVE_memsetl)
+#define CONFIG_HAVE_mempsetl 1
+#undef mempsetl
+#define mempsetl(dst, dword, num_dwords) ((uint32_t *)memsetl(dst, dword, num_dwords) + (num_dwords))
+#endif /* !CONFIG_HAVE_mempsetl && CONFIG_HAVE_memsetl */
+
+#if !defined(CONFIG_HAVE_mempsetq) && defined(CONFIG_HAVE_memsetq)
+#define CONFIG_HAVE_mempsetq 1
+#undef mempsetq
+#define mempsetq(dst, qword, num_qwords) ((uint64_t *)memsetq(dst, qword, num_qwords) + (num_qwords))
+#endif /* !CONFIG_HAVE_mempsetq && CONFIG_HAVE_memsetq */
+
 #if !defined(CONFIG_HAVE_bzeroq) && defined(CONFIG_HAVE_memsetq)
 #define CONFIG_HAVE_bzeroq 1
 #undef bzeroq
@@ -10094,6 +10216,30 @@ DECL_END
 #undef bzero
 #define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
 #endif /* !CONFIG_HAVE_bzero */
+
+#if !defined(CONFIG_HAVE_bcmpq) && defined(CONFIG_HAVE_memcmpq)
+#define CONFIG_HAVE_bcmpq 1
+#undef bcmpq
+#define bcmpq(s1, s2, num_qwords) memcmpq(s1, s2, num_qwords)
+#endif /* !CONFIG_HAVE_bcmpq && CONFIG_HAVE_memcmpq */
+
+#if !defined(CONFIG_HAVE_bcmpl) && defined(CONFIG_HAVE_memcmpl)
+#define CONFIG_HAVE_bcmpl 1
+#undef bcmpl
+#define bcmpl(s1, s2, num_dwords) memcmpl(s1, s2, num_dwords)
+#endif /* !CONFIG_HAVE_bcmpl */
+
+#if !defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_memcmpw)
+#define CONFIG_HAVE_bcmpw 1
+#undef bcmpw
+#define bcmpw(s1, s2, num_words) memcmpw(s1, s2, num_words)
+#endif /* !CONFIG_HAVE_bcmpw */
+
+#ifndef CONFIG_HAVE_bcmp
+#define CONFIG_HAVE_bcmp 1
+#undef bcmp
+#define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes)
+#endif /* !CONFIG_HAVE_bcmp */
 
 #ifndef CONFIG_HAVE_bzeroc
 #define CONFIG_HAVE_bzeroc 1
@@ -10149,20 +10295,73 @@ DECL_END
 #endif /* !... */
 #endif /* !CONFIG_HAVE_bzeroc */
 
+#ifndef CONFIG_HAVE_bcmpc
+#define CONFIG_HAVE_bcmpc 1
+#undef bcmpc
+#if defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_bcmpl) && defined(CONFIG_HAVE_bcmpq)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 2                        \
+	 ? bcmpw(s1, s2, elem_count)             \
+	 : (elem_size) == 4                      \
+	   ? bcmpl(s1, s2, elem_count)           \
+	   : (elem_size) == 8                    \
+	     ? bcmpq(s1, s2, elem_count)         \
+	     : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_bcmpl)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 2                        \
+	 ? bcmpw(s1, s2, elem_count)             \
+	 : (elem_size) == 4                      \
+	   ? bcmpl(s1, s2, elem_count)           \
+	   : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_bcmpq)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 2                        \
+	 ? bcmpw(s1, s2, elem_count)             \
+	 : (elem_size) == 8                      \
+	   ? bcmpq(s1, s2, elem_count)           \
+	   : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpl) && defined(CONFIG_HAVE_bcmpq)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 4                        \
+	 ? bcmpl(s1, s2, elem_count)             \
+	 : (elem_size) == 8                      \
+	   ? bcmpq(s1, s2, elem_count)           \
+	   : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpq)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 8                        \
+	 ? bcmpq(s1, s2, elem_count)             \
+	 : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpl)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 4                        \
+	 ? bcmpl(s1, s2, elem_count)             \
+	 : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bcmpw)
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	((elem_size) == 2                        \
+	 ? bcmpw(s1, s2, elem_count)             \
+	 : bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define bcmpc(s1, s2, elem_count, elem_size) \
+	bcmp(s1, s2, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bcmpc */
 
 #ifndef CONFIG_HAVE_bzeroq
 #define CONFIG_HAVE_bzeroq 1
 #undef bzeroq
 #ifdef CONFIG_HAVE_bzerol
-#define bzeroq(dst, num_qwords) bzerol(dst, (num_qwords) * 2)
+#define bzeroq(dst, num_qwords) bzerol(dst, (num_qwords) << 1)
 #elif defined(CONFIG_HAVE_memsetl)
-#define bzeroq(dst, num_qwords) (void)memsetl(dst, 0, (num_qwords) * 2)
+#define bzeroq(dst, num_qwords) (void)memsetl(dst, 0, (num_qwords) << 1)
 #elif defined(CONFIG_HAVE_bzerow)
-#define bzeroq(dst, num_qwords) bzerow(dst, (num_qwords) * 4)
+#define bzeroq(dst, num_qwords) bzerow(dst, (num_qwords) << 2)
 #elif defined(CONFIG_HAVE_memsetw)
-#define bzeroq(dst, num_qwords) (void)memsetw(dst, 0, (num_qwords) * 4)
+#define bzeroq(dst, num_qwords) (void)memsetw(dst, 0, (num_qwords) << 2)
 #else /* ... */
-#define bzeroq(dst, num_qwords) bzero(dst, (num_qwords) * 8)
+#define bzeroq(dst, num_qwords) bzero(dst, (num_qwords) << 3)
 #endif /* !... */
 #endif /* !CONFIG_HAVE_bzeroq */
 
@@ -10170,19 +10369,53 @@ DECL_END
 #define CONFIG_HAVE_bzerol 1
 #undef bzerol
 #ifdef CONFIG_HAVE_bzerow
-#define bzerol(dst, num_dwords) bzerow(dst, (num_dwords) * 2)
+#define bzerol(dst, num_dwords) bzerow(dst, (num_dwords) << 1)
 #elif defined(CONFIG_HAVE_memsetw)
-#define bzerol(dst, num_dwords) (void)memsetw(dst, 0, (num_dwords) * 2)
+#define bzerol(dst, num_dwords) (void)memsetw(dst, 0, (num_dwords) << 1)
 #else /* ... */
-#define bzerol(dst, num_dwords) bzero(dst, (num_dwords) * 4)
+#define bzerol(dst, num_dwords) bzero(dst, (num_dwords) << 2)
 #endif /* !... */
 #endif /* !CONFIG_HAVE_bzerol */
 
 #ifndef CONFIG_HAVE_bzerow
 #define CONFIG_HAVE_bzerow 1
 #undef bzerow
-#define bzerow(dst, num_words) bzero(dst, (num_words) * 2)
+#define bzerow(dst, num_words) bzero(dst, (num_words) << 1)
 #endif /* !CONFIG_HAVE_bzerow */
+
+#ifndef CONFIG_HAVE_bcmpq
+#define CONFIG_HAVE_bcmpq 1
+#undef bcmpq
+#ifdef CONFIG_HAVE_bcmpl
+#define bcmpq(s1, s2, num_qwords) bcmpl(s1, s2, (num_qwords) << 1)
+#elif defined(CONFIG_HAVE_memcmpl)
+#define bcmpq(s1, s2, num_qwords) memcmpl(s1, s2, 0, (num_qwords) << 1)
+#elif defined(CONFIG_HAVE_bcmpw)
+#define bcmpq(s1, s2, num_qwords) bcmpw(s1, s2, (num_qwords) << 2)
+#elif defined(CONFIG_HAVE_memcmpw)
+#define bcmpq(s1, s2, num_qwords) memcmpw(s1, s2, 0, (num_qwords) << 2)
+#else /* ... */
+#define bcmpq(s1, s2, num_qwords) bcmp(s1, s2, (num_qwords) << 3)
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bcmpq */
+
+#ifndef CONFIG_HAVE_bcmpl
+#define CONFIG_HAVE_bcmpl 1
+#undef bcmpl
+#ifdef CONFIG_HAVE_bcmpw
+#define bcmpl(s1, s2, num_dwords) bcmpw(s1, s2, (num_dwords) << 1)
+#elif defined(CONFIG_HAVE_memcmpw)
+#define bcmpl(s1, s2, num_dwords) memcmpw(s1, s2, 0, (num_dwords) << 1)
+#else /* ... */
+#define bcmpl(s1, s2, num_dwords) bcmp(s1, s2, (num_dwords) << 2)
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bcmpl */
+
+#ifndef CONFIG_HAVE_bcmpw
+#define CONFIG_HAVE_bcmpw 1
+#undef bcmpw
+#define bcmpw(s1, s2, num_words) bcmp(s1, s2, (num_words) << 1)
+#endif /* !CONFIG_HAVE_bcmpw */
 
 /* NOTE: `memsetp' is enabled on a per-file basis by writing:
  * >> #ifndef CONFIG_HAVE_memsetp
@@ -10231,25 +10464,25 @@ DECL_END
 #ifndef CONFIG_HAVE_mempcpy
 #define CONFIG_HAVE_mempcpy 1
 #define mempcpy(dst, src, num_bytes) \
-	(void *)((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
+	((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempcpy */
 
 #ifndef CONFIG_HAVE_mempcpyw
 #define CONFIG_HAVE_mempcpyw 1
 #define mempcpyw(dst, src, num_words) \
-	(void *)((uint16_t *)memcpyw(dst, src, num_words) + (num_words))
+	((uint16_t *)memcpyw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempcpyw */
 
 #ifndef CONFIG_HAVE_mempcpyl
 #define CONFIG_HAVE_mempcpyl 1
 #define mempcpyl(dst, src, num_dwords) \
-	(void *)((uint32_t *)memcpyl(dst, src, num_dwords) + (num_dwords))
+	((uint32_t *)memcpyl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempcpyl */
 
 #ifndef CONFIG_HAVE_mempcpyq
 #define CONFIG_HAVE_mempcpyq 1
 #define mempcpyq(dst, src, num_qwords) \
-	(void *)((uint64_t *)memcpyq(dst, src, num_qwords) + (num_qwords))
+	((uint64_t *)memcpyq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempcpyq */
 
 #ifndef CONFIG_HAVE_mempcpyc
@@ -10273,19 +10506,19 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmovew
 #define CONFIG_HAVE_mempmovew 1
 #define mempmovew(dst, src, num_words) \
-	(void *)((uint16_t *)memmovew(dst, src, num_words) + (num_words))
+	((uint16_t *)memmovew(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmovew */
 
 #ifndef CONFIG_HAVE_mempmovel
 #define CONFIG_HAVE_mempmovel 1
 #define mempmovel(dst, src, num_dwords) \
-	(void *)((uint32_t *)memmovel(dst, src, num_dwords) + (num_dwords))
+	((uint32_t *)memmovel(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmovel */
 
 #ifndef CONFIG_HAVE_mempmoveq
 #define CONFIG_HAVE_mempmoveq 1
 #define mempmoveq(dst, src, num_qwords) \
-	(void *)((uint64_t *)memmoveq(dst, src, num_qwords) + (num_qwords))
+	((uint64_t *)memmoveq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmoveq */
 
 #ifndef CONFIG_HAVE_mempmovec
@@ -10303,19 +10536,19 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmoveupw
 #define CONFIG_HAVE_mempmoveupw 1
 #define mempmoveupw(dst, src, num_words) \
-	(void *)((uint16_t *)memmoveupw(dst, src, num_words) + (num_words))
+	((uint16_t *)memmoveupw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmoveupw */
 
 #ifndef CONFIG_HAVE_mempmoveupl
 #define CONFIG_HAVE_mempmoveupl 1
 #define mempmoveupl(dst, src, num_dwords) \
-	(void *)((uint32_t *)memmoveupl(dst, src, num_dwords) + (num_dwords))
+	((uint32_t *)memmoveupl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmoveupl */
 
 #ifndef CONFIG_HAVE_mempmoveupq
 #define CONFIG_HAVE_mempmoveupq 1
 #define mempmoveupq(dst, src, num_qwords) \
-	(void *)((uint64_t *)memmoveupq(dst, src, num_qwords) + (num_qwords))
+	((uint64_t *)memmoveupq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmoveupq */
 
 #ifndef CONFIG_HAVE_mempmoveupc
@@ -10333,19 +10566,19 @@ DECL_END
 #ifndef CONFIG_HAVE_mempmovedownw
 #define CONFIG_HAVE_mempmovedownw 1
 #define mempmovedownw(dst, src, num_words) \
-	(void *)((uint16_t *)memmovedownw(dst, src, num_words) + (num_words))
+	((uint16_t *)memmovedownw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmovedownw */
 
 #ifndef CONFIG_HAVE_mempmovedownl
 #define CONFIG_HAVE_mempmovedownl 1
 #define mempmovedownl(dst, src, num_dwords) \
-	(void *)((uint32_t *)memmovedownl(dst, src, num_dwords) + (num_dwords))
+	((uint32_t *)memmovedownl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmovedownl */
 
 #ifndef CONFIG_HAVE_mempmovedownq
 #define CONFIG_HAVE_mempmovedownq 1
 #define mempmovedownq(dst, src, num_qwords) \
-	(void *)((uint64_t *)memmovedownq(dst, src, num_qwords) + (num_qwords))
+	((uint64_t *)memmovedownq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmovedownq */
 
 #ifndef CONFIG_HAVE_mempmovedownc
@@ -10367,9 +10600,11 @@ DECL_END
 #undef mempmoveupb
 #undef mempmovedownb
 #undef memsetb
+#undef mempsetb
 #undef memchrb
 #undef memcmpb
 #undef bzerob
+#undef bcmpb
 #define memcpyb(dst, src, n)       (uint8_t *)memcpy(dst, src, n)
 #define memmoveb(dst, src, n)      (uint8_t *)memmove(dst, src, n)
 #define memmoveupb(dst, src, n)    (uint8_t *)memmoveup(dst, src, n)
@@ -10379,9 +10614,11 @@ DECL_END
 #define mempmoveupb(dst, src, n)   (uint8_t *)mempmoveup(dst, src, n)
 #define mempmovedownb(dst, src, n) (uint8_t *)mempmovedown(dst, src, n)
 #define memsetb(p, c, n)           (uint8_t *)memset(p, c, n)
+#define mempsetb(p, c, n)          (uint8_t *)mempset(p, c, n)
 #define memchrb(p, c, n)           (uint8_t *)memchr(p, c, n)
-#define memcmpb(s1, s2, n)         /*(int8_t)*/ memcmp(s1, s2, n)
+#define memcmpb(s1, s2, n)         memcmp(s1, s2, n)
 #define bzerob(dst, num_bytes)     bzero(dst, num_bytes)
+#define bcmpb(s1, s2, num_bytes)   bcmp(s1, s2, num_bytes)
 
 
 #undef memcpyp

@@ -47,6 +47,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 #ifndef DeeSystem_ALTSEP
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr 1
@@ -1167,9 +1173,7 @@ imod_init(InteractiveModule *__restrict self,
 		root_scope = (DeeRootScopeObject *)self->im_compiler->cp_scope;
 		if unlikely((dots = sym_alloc()) == NULL)
 			goto err_compiler;
-#ifndef NDEBUG
-		memset(dots, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+		DBG_memset(dots, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1278,9 +1282,7 @@ err_compiler_basefile:
 						COMPILER_END();
 						goto err_basefile;
 					}
-#ifndef NDEBUG
-					memset(sym, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+					DBG_memset(sym, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 					sym->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */

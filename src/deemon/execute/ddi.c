@@ -679,16 +679,17 @@ ddi_eq_impl(DeeDDIObject *__restrict self,
 		goto nope;
 	if (self->d_exdat &&
 	    (self->d_exdat->dx_size != other->d_exdat->dx_size ||
-	     memcmp(self->d_exdat->dx_data, other->d_exdat->dx_data,
-	            self->d_exdat->dx_size) != 0))
+	     bcmp(self->d_exdat->dx_data, other->d_exdat->dx_data,
+	          self->d_exdat->dx_size) != 0))
 		goto nope;
-	if (memcmp(DeeString_STR(self->d_strtab),
-	           DeeString_STR(other->d_strtab),
-	           DeeString_SIZE(self->d_strtab)) != 0)
+	if (bcmpc(DeeString_STR(self->d_strtab),
+	          DeeString_STR(other->d_strtab),
+	          DeeString_SIZE(self->d_strtab),
+	          sizeof(char)) != 0)
 		goto nope;
-	if (memcmp(self->d_strings, other->d_strings, self->d_nstring * sizeof(*self->d_strings)) != 0)
+	if (bcmpc(self->d_strings, other->d_strings, self->d_nstring, sizeof(*self->d_strings)) != 0)
 		goto nope;
-	if (memcmp(&self->d_start, &other->d_start, self->d_ddisize + sizeof(struct ddi_regs)) != 0)
+	if (bcmp(&self->d_start, &other->d_start, self->d_ddisize + sizeof(struct ddi_regs)) != 0)
 		goto nope;
 	return true;
 nope:

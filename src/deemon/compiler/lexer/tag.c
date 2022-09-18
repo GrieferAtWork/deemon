@@ -344,7 +344,7 @@ INTERN WUNUSED int (DCALL parse_tags)(void) {
 		bool is_optional;
 #define IS_TAG(x)                              \
 		(tag_name_len == COMPILER_STRLEN(x) && \
-		 !memcmp(tag_name_str, x, COMPILER_STRLEN(x)))
+		 bcmpc(tag_name_str, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 		if unlikely(yield() < 0)
 			goto err;
 again_compiler_tag:

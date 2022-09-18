@@ -513,7 +513,7 @@ do_asm:
 						--kwd_end;
 #define IS_MOD(x)                                           \
 	((size_t)(kwd_end - kwd_start) == COMPILER_STRLEN(x) && \
-	 memcmp(kwd_start, x, COMPILER_STRLEN(x) * sizeof(char)) == 0)
+	 bcmpc(kwd_start, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 					if (IS_MOD("volatile")) {
 						JITLexer_Yield(self);
 						continue;

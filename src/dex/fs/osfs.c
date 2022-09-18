@@ -2307,7 +2307,7 @@ ok_got_ownds_linkfd:
 				bzero(&oOffsetInfo, sizeof(oOffsetInfo));
 				if (ReadFile(hLink, pFileBuffer, hfInfo.nFileSizeLow, &dwBytesRead, &oOffsetInfo) &&
 				    dwBytesRead > sizeof(cygSymlinkCookie) &&
-				    memcmp(pFileBuffer, cygSymlinkCookie, sizeof(cygSymlinkCookie)) == 0) {
+				    bcmp(pFileBuffer, cygSymlinkCookie, sizeof(cygSymlinkCookie)) == 0) {
 					/* Yes! It is a cygwin symlink! -> Now to decode it. */
 					char const *symlink_text;
 					size_t symlink_size;

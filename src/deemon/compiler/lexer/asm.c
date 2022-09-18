@@ -32,6 +32,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 #define OPERAND_TYPE_OUTPUT 0
 #define OPERAND_TYPE_INPUT  1
 #define OPERAND_TYPE_LABEL  2
@@ -249,7 +255,7 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
 			struct clobber_desc const *iter = clobber_descs;
 			for (; iter != COMPILER_ENDOF(clobber_descs); ++iter) {
 				if (name->s_size == strlen(iter->cd_name) &&
-				    memcmp(name->s_text, iter->cd_name, name->s_size * sizeof(char)) == 0) {
+				    bcmpc(name->s_text, iter->cd_name, name->s_size, sizeof(char)) == 0) {
 					/* Found it! Set the proper flags and continue. */
 					result |= iter->cd_flags;
 					goto got_clobber;
@@ -386,9 +392,7 @@ PRIVATE /*REF*/ struct TPPString *
 	result->s_text[self->sp_length] = '\0';
 	/* Do final object initialization. */
 	result->s_refcnt = 1;
-#ifndef NDEBUG
-	memset(self, 0xcc, sizeof(*self));
-#endif /* !NDEBUG */
+	DBG_memset(self, 0xcc, sizeof(*self));
 	return result;
 }
 
@@ -545,11 +549,11 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 		while (size && name[size - 1] == '_')
 			--size;
 		if (size == COMPILER_STRLEN("volatile") &&
-		    memcmp(name, "volatile", size * sizeof(char)) == 0) {
+		    bcmpc(name, "volatile", size, sizeof(char)) == 0) {
 			ast_flags |= AST_FASSEMBLY_VOLATILE;
 			goto yield_prefix;
 		}
-		if (size == 4 && memcmp(name, DeeString_STR(&str_goto), size * sizeof(char)) == 0) {
+		if (size == 4 && bcmpc(name, DeeString_STR(&str_goto), size, sizeof(char)) == 0) {
 			is_asm_goto = true;
 			goto yield_prefix;
 		}

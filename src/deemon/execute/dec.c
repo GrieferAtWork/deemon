@@ -89,9 +89,11 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
 #define fs_memcmp      memcasecmp
+#define fs_bcmp        memcasecmp
 #define fs_hashobj(ob) DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
 #else /* DEE_SYSTEM_NOCASE_FS */
 #define fs_memcmp      memcmp
+#define fs_bcmp        bcmp
 #define fs_hashobj(ob) DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
 #endif /* !DEE_SYSTEM_NOCASE_FS */
 
@@ -2944,9 +2946,10 @@ mtime_cache_lookup(DeeObject *__restrict path,
 		if (DeeString_SIZE(item->me_file) !=
 		    DeeString_SIZE(path))
 			continue; /* Differing lengths. */
-		if (fs_memcmp(DeeString_STR(item->me_file),
-		              DeeString_STR(path),
-		              DeeString_SIZE(path) * sizeof(char)) != 0)
+		if (fs_bcmp(DeeString_STR(item->me_file),
+		            DeeString_STR(path),
+		            DeeString_SIZE(path) *
+		            sizeof(char)) != 0)
 			continue; /* Differing strings. */
 		/* Found it! */
 		*presult = item->me_mtim;
@@ -3031,9 +3034,10 @@ again:
 		if (DeeString_SIZE(item->me_file) !=
 		    DeeString_SIZE(path))
 			continue; /* Differing lengths. */
-		if (fs_memcmp(DeeString_STR(item->me_file),
-		              DeeString_STR(path),
-		              DeeString_SIZE(path) * sizeof(char)) != 0)
+		if (fs_bcmp(DeeString_STR(item->me_file),
+		            DeeString_STR(path),
+		            DeeString_SIZE(path) *
+		            sizeof(char)) != 0)
 			continue; /* Differing strings. */
 		/* The item already exists. (Can happen due to race conditions) */
 		goto done;

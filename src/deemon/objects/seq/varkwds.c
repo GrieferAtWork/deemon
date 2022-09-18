@@ -260,9 +260,10 @@ kwds_FindIndex(DeeKwdsObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(entry->ke_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(entry->ke_name),
+		          DeeString_STR(name),
+		          DeeString_SIZE(name),
+		          sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}
@@ -305,8 +306,8 @@ kwds_FindIndexStrLen(DeeKwdsObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(entry->ke_name) != namesize)
 			continue;
-		if (memcmp(DeeString_STR(entry->ke_name), name,
-		           namesize * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(entry->ke_name), name,
+		          namesize, sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}
@@ -334,10 +335,10 @@ again:
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (DeeString_SIZE((DeeObject *)str) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(str),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(str),
+		          DeeString_STR(name),
+		          DeeString_SIZE(name),
+		          sizeof(char)) != 0)
 			continue;
 		return true; /* It is! */
 	}
@@ -367,10 +368,8 @@ again:
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
-			    memcmp(DeeString_STR(str),
-			           DeeString_STR(name),
-			           DeeString_SIZE(name) *
-			           sizeof(char)) == 0) {
+			    bcmpc(DeeString_STR(str), DeeString_STR(name),
+			          DeeString_SIZE(name), sizeof(char)) == 0) {
 				self->vk_load = index;
 				rwlock_endwrite(&self->vk_lock);
 				return true;
@@ -455,7 +454,7 @@ again:
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (DeeString_SIZE((DeeObject *)str) != namesize)
 			continue;
-		if (memcmp(DeeString_STR(str), name, namesize * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) != 0)
 			continue;
 		return true; /* It is! */
 	}
@@ -483,9 +482,8 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
-			    DeeString_SIZE(str) == namesize &&
-			    memcmp(DeeString_STR(str), name, namesize * sizeof(char)) == 0) {
+			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
+			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
 				self->vk_load = index;
 				rwlock_endwrite(&self->vk_lock);
 				return true;
@@ -1257,10 +1255,8 @@ again:
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (DeeString_SIZE((DeeObject *)str) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(str),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(str), DeeString_STR(name),
+		          DeeString_SIZE(name), sizeof(char)) != 0)
 			continue;
 		return true; /* It is! */
 	}
@@ -1289,10 +1285,8 @@ again:
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
-			    memcmp(DeeString_STR(str),
-			           DeeString_STR(name),
-			           DeeString_SIZE(name) *
-			           sizeof(char)) == 0) {
+			    bcmpc(DeeString_STR(str), DeeString_STR(name),
+			          DeeString_SIZE(name), sizeof(char)) == 0) {
 				self->bm_load = index;
 				rwlock_endwrite(&self->bm_lock);
 				return true;
@@ -1375,7 +1369,7 @@ again:
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (DeeString_SIZE((DeeObject *)str) != namesize)
 			continue;
-		if (memcmp(DeeString_STR(str), name, namesize * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) != 0)
 			continue;
 		return true; /* It is! */
 	}
@@ -1403,9 +1397,8 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (str_hash == hash &&
-			    DeeString_SIZE(str) == namesize &&
-			    memcmp(DeeString_STR(str), name, namesize * sizeof(char)) == 0) {
+			if (str_hash == hash && DeeString_SIZE(str) == namesize &&
+			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
 				self->bm_load = index;
 				rwlock_endwrite(&self->bm_lock);
 				return true;

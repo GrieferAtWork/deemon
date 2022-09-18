@@ -1802,12 +1802,11 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	        Dee_HashPointer(self->cm_memb.m_name) ^
 	        Dee_HashPointer(self->cm_memb.m_const));
 }
-#define CLSMEMBER_CMP(a, b)              \
-	memcmp(&(a)->cm_memb, &(b)->cm_memb, \
-	       sizeof(DeeClsMemberObject) -  \
-	       offsetof(DeeClsMemberObject, cm_memb))
-
-#define DEFINE_CLSMEMBER_CMP(name, op)                          \
+#define CLSMEMBER_CMP(a, b) \
+	memcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
+#define CLSMEMBER_BCMP(a, b) \
+	bcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
+#define DEFINE_CLSMEMBER_CMP(name, CLSMEMBER_CMP, op)           \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
 	name(DeeClsMemberObject *self, DeeClsMemberObject *other) { \
 		if (DeeObject_AssertType(other, &DeeClsMember_Type))    \
@@ -1816,13 +1815,14 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	err:                                                        \
 		return NULL;                                            \
 	}
-DEFINE_CLSMEMBER_CMP(clsmember_eq, ==)
-DEFINE_CLSMEMBER_CMP(clsmember_ne, !=)
-DEFINE_CLSMEMBER_CMP(clsmember_lo, <)
-DEFINE_CLSMEMBER_CMP(clsmember_le, <=)
-DEFINE_CLSMEMBER_CMP(clsmember_gr, >)
-DEFINE_CLSMEMBER_CMP(clsmember_ge, >=)
+DEFINE_CLSMEMBER_CMP(clsmember_eq, CLSMEMBER_BCMP, ==)
+DEFINE_CLSMEMBER_CMP(clsmember_ne, CLSMEMBER_BCMP, !=)
+DEFINE_CLSMEMBER_CMP(clsmember_lo, CLSMEMBER_CMP, <)
+DEFINE_CLSMEMBER_CMP(clsmember_le, CLSMEMBER_CMP, <=)
+DEFINE_CLSMEMBER_CMP(clsmember_gr, CLSMEMBER_CMP, >)
+DEFINE_CLSMEMBER_CMP(clsmember_ge, CLSMEMBER_CMP, >=)
 #undef DEFINE_CLSMEMBER_CMP
+#undef CLSMEMBER_BCMP
 #undef CLSMEMBER_CMP
 
 PRIVATE struct type_cmp clsmember_cmp = {

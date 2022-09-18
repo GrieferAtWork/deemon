@@ -34,6 +34,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
@@ -2984,8 +2985,8 @@ print_enter_scope(DeeScopeObject *caller_scope,
 					break;
 				case SYMBOL_TYPE_MODULE:
 					if (sym->s_name->k_size == DeeString_SIZE(sym->s_module->mo_name) &&
-					    memcmp(sym->s_name->k_name, DeeString_STR(sym->s_module->mo_name),
-					           sym->s_name->k_size * sizeof(char)) == 0) {
+					    bcmpc(sym->s_name->k_name, DeeString_STR(sym->s_module->mo_name),
+					          sym->s_name->k_size, sizeof(char)) == 0) {
 						printf("import %k", sym->s_module->mo_name);
 					} else {
 						printf("import %$s = %k",

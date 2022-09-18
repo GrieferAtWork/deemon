@@ -151,7 +151,7 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
 PUBLIC WUNUSED NONNULL((2)) uint16_t DCALL
 Dee_OperatorFromName(DeeTypeObject *typetype,
                      char const *__restrict name) {
-#define EQAT(ptr, str) (memcmp(ptr, str, sizeof(str)) == 0)
+#define EQAT(ptr, str) (bcmp(ptr, str, sizeof(str)) == 0)
 #define RETURN(id)     \
 	do {               \
 		result = (id); \

@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* bcmp(), ... */
 
 DECL_BEGIN
 
@@ -112,7 +113,7 @@ function gen_switch(prefix, indent) {
 					if (suffix.endswith("\0"))
 						suffix = suffix[:-1];
 					if (#suffix <= 1) goto do_as_if;
-					print("if (memcmp(name + ", #prefix, ", ", repr suffix, ", ", #suffix, "*sizeof(char)", ") == 0) { \\");
+					print("if (bcmp(name + ", #prefix, ", ", repr suffix, ", ", #suffix, "*sizeof(char)", ") == 0) { \\");
 					print(indent, inset, target, "; /" "* ", repr name.rstrip("\0"), " *" "/ \\");
 					print(indent, "} "),;
 				} else {
@@ -195,32 +196,32 @@ print "#endif";
 ) { \
 	switch ((uint8_t)name[0]) { \
 	case 54: /* "6" */ \
-		if (memcmp(name + 1, "46", 2*sizeof(char)) == 0) { \
+		if (bcmp(name + 1, "46", 2*sizeof(char)) == 0) { \
 			CODEC_ASCII; /* "646" */ \
 		} \
 		break; \
 	case 56: /* "8" */ \
-		if (memcmp(name + 1, "859", 3*sizeof(char)) == 0) { \
+		if (bcmp(name + 1, "859", 3*sizeof(char)) == 0) { \
 			CODEC_LATIN1; /* "8859" */ \
 		} \
 		break; \
 	case 97: /* "a" */ \
-		if (memcmp(name + 1, "scii", 4*sizeof(char)) == 0) { \
+		if (bcmp(name + 1, "scii", 4*sizeof(char)) == 0) { \
 			CODEC_ASCII; /* "ascii" */ \
 		} \
 		break; \
 	case 98: /* "b" */ \
-		if (memcmp(name + 1, "ackslash-escape", 15*sizeof(char)) == 0) { \
+		if (bcmp(name + 1, "ackslash-escape", 15*sizeof(char)) == 0) { \
 			CODEC_C_ESCAPE; /* "backslash-escape" */ \
 		} \
 		break; \
 	case 99: /* "c" */ \
 		if ((uint8_t)name[1] == 45) { /* "-" */ \
-			if (memcmp(name + 2, "escape", 6*sizeof(char)) == 0) { \
+			if (bcmp(name + 2, "escape", 6*sizeof(char)) == 0) { \
 				CODEC_C_ESCAPE; /* "c-escape" */ \
 			} \
 		} else if ((uint8_t)name[1] == 112) { /* "p" */ \
-			if (memcmp(name + 2, "819", 3*sizeof(char)) == 0) { \
+			if (bcmp(name + 2, "819", 3*sizeof(char)) == 0) { \
 				CODEC_LATIN1; /* "cp819" */ \
 			} \
 		} \
@@ -276,7 +277,7 @@ print "#endif";
 		} \
 		break; \
 	case 115: /* "s" */ \
-		if (memcmp(name + 1, "tring-escape", 12*sizeof(char)) == 0) { \
+		if (bcmp(name + 1, "tring-escape", 12*sizeof(char)) == 0) { \
 			CODEC_C_ESCAPE; /* "string-escape" */ \
 		} \
 		break; \
@@ -350,7 +351,7 @@ print "#endif";
 				CODEC_UTF8; /* "u8" */ \
 			} \
 		} else if ((uint8_t)name[1] == 115) { /* "s" */ \
-			if (memcmp(name + 2, "-ascii", 6*sizeof(char)) == 0) { \
+			if (bcmp(name + 2, "-ascii", 6*sizeof(char)) == 0) { \
 				CODEC_ASCII; /* "us-ascii" */ \
 			} \
 		} else if ((uint8_t)name[1] == 116) { /* "t" */ \

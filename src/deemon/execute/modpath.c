@@ -114,6 +114,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 
 #ifdef DEE_SYSTEM_NOCASE_FS
 #define fs_memcmp                        memcasecmp
+#define fs_bcmp                          memcasecmp
 #define fs_hashobj(ob)                   DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashCaseStr(s)
 #define fs_hashutf8(s, n)                Dee_HashCaseUtf8(s, n)
@@ -127,6 +128,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HOST_WINDOWS */
 #else /* DEE_SYSTEM_NOCASE_FS */
 #define fs_memcmp                        memcmp
+#define fs_bcmp                          bcmp
 #define fs_hashobj(ob)                   DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
 #define fs_hashstr(s)                    Dee_HashStr(s)
 #define fs_hashutf8(s, n)                Dee_HashUtf8(s, n)
@@ -494,8 +496,8 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_path, &DeeString_Type);
 			if (fs_hashmodpath_equals(result, hash) &&
 			    DeeString_SIZE(result->mo_path) == DeeString_SIZE(module_file) &&
-			    fs_memcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
-			              DeeString_SIZE(module_file) * sizeof(char)) == 0) {
+			    fs_bcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
+			            DeeString_SIZE(module_file) * sizeof(char)) == 0) {
 				break; /* Found it! */
 			}
 			result = result->mo_next;
@@ -518,8 +520,8 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 			if (fs_hashmodname_equals(result, hash) &&
 			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
 			    DeeString_SIZE(result->mo_name) == DeeString_SIZE(module_name) &&
-			    fs_memcmp(DeeString_STR(result->mo_name), DeeString_STR(module_name),
-			              DeeString_SIZE(module_name) * sizeof(char)) == 0)
+			    fs_bcmp(DeeString_STR(result->mo_name), DeeString_STR(module_name),
+			            DeeString_SIZE(module_name) * sizeof(char)) == 0)
 				break; /* Found it! */
 			result = result->mo_globnext;
 		}
@@ -541,8 +543,8 @@ find_glob_module_str(/*utf-8*/ char const *__restrict module_name_str,
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
 			if (fs_hashmodname_equals(result, hash) &&
 			    DeeString_SIZE(result->mo_name) == module_name_len &&
-			    fs_memcmp(DeeString_STR(result->mo_name), module_name_str,
-			              module_name_len * sizeof(char)) == 0)
+			    fs_bcmp(DeeString_STR(result->mo_name), module_name_str,
+			            module_name_len * sizeof(char)) == 0)
 				break; /* Found it! */
 			result = result->mo_globnext;
 		}
@@ -1251,8 +1253,8 @@ DeeModule_DoGet(char const *__restrict name,
 	/* Check if the caller requested the builtin deemon module. */
 	if (size == DeeString_SIZE(&str_deemon) &&
 	    hash == DeeString_Hash((DeeObject *)&str_deemon) &&
-	    memcmp(name, DeeString_STR(&str_deemon),
-	           DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
+	    bcmp(name, DeeString_STR(&str_deemon),
+	         DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
 		/* Yes, they did. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);
@@ -1265,8 +1267,8 @@ DeeModule_DoGet(char const *__restrict name,
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
 			if (DeeString_SIZE(result->mo_name) == size &&
 			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
-			    fs_memcmp(DeeString_STR(result->mo_name), name,
-			              size * sizeof(char)) == 0) {
+			    fs_bcmp(DeeString_STR(result->mo_name), name,
+			            size * sizeof(char)) == 0) {
 				Dee_Incref(result);
 				break; /* Found it! */
 			}
@@ -1429,7 +1431,7 @@ again_search_fs_modules:
 				if (WSTR_LENGTH(utf8_path) == len &&
 				    /* TODO: Support for mixed LATIN-1/UTF-8 strings */
 				    /* TODO: UTF-8 case compare! */
-				    fs_memcmp(utf8_path, buf, len * sizeof(char)) == 0) {
+				    fs_bcmp(utf8_path, buf, len * sizeof(char)) == 0) {
 					goto got_result_set_global;
 				}
 				Dee_Decref(result);
@@ -1439,7 +1441,7 @@ again_search_fs_modules:
 				continue;
 			/* TODO: Support for mixed LATIN-1/UTF-8 strings */
 			/* TODO: UTF-8 case compare! */
-			if (fs_memcmp(utf8_path, buf, len * sizeof(char)) != 0)
+			if (fs_bcmp(utf8_path, buf, len * sizeof(char)) != 0)
 				continue;
 			/* Found it! */
 			if (!Dee_IncrefIfNotZero(result))
@@ -2151,8 +2153,8 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	 * NOTE: This check is always done in case-sensitive mode! */
 	if (DeeString_SIZE(module_name) == DeeString_SIZE(&str_deemon) &&
 	    DeeString_Hash(module_name) == DeeString_Hash((DeeObject *)&str_deemon) &&
-	    memcmp(DeeString_STR(module_name), DeeString_STR(&str_deemon),
-	           DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
+	    bcmp(DeeString_STR(module_name), DeeString_STR(&str_deemon),
+	         DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
 		/* Yes, it is. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);
@@ -2228,8 +2230,8 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 	/* First off: Check if this is a request for the builtin `deemon' module.
 	 * NOTE: This check is always done in case-sensitive mode! */
 	if (module_namesize == DeeString_SIZE(&str_deemon) &&
-	    memcmp(module_name, DeeString_STR(&str_deemon),
-	           module_namesize * sizeof(char)) == 0) {
+	    bcmp(module_name, DeeString_STR(&str_deemon),
+	         module_namesize * sizeof(char)) == 0) {
 		/* Yes, it is. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);

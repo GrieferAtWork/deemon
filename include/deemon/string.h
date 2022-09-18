@@ -43,10 +43,40 @@
 #define CONFIG_HAVE_STRING_H 1
 #endif
 
+#ifdef CONFIG_NO_STRINGS_H
+#undef CONFIG_HAVE_STRINGS_H
+#elif !defined(CONFIG_HAVE_STRINGS_H) && \
+      (__has_include(<strings.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_STRINGS_H 1
+#endif
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
+
+#ifdef CONFIG_HAVE_STRINGS_H
+#include <strings.h>
+#endif /* CONFIG_HAVE_STRINGS_H */
+
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
 #else
 #define CONFIG_HAVE_strlen 1
+#endif
+
+#ifdef CONFIG_NO_memcmp
+#undef CONFIG_HAVE_memcmp
+#else
+#define CONFIG_HAVE_memcmp 1
+#endif
+
+#ifdef CONFIG_NO_bcmp
+#undef CONFIG_HAVE_bcmp
+#elif !defined(CONFIG_HAVE_bcmp) && \
+      (defined(bcmp) || defined(__bcmp_defined) || defined(CONFIG_HAVE_STRINGS_H))
+#define CONFIG_HAVE_bcmp 1
 #endif
 
 #ifdef CONFIG_NO_UNICODE_H
@@ -56,10 +86,6 @@
       (defined(__KOS__) && __KOS_VERSION__ >= 400)))
 #define CONFIG_HAVE_UNICODE_H 1
 #endif
-
-#ifdef CONFIG_HAVE_STRING_H
-#include <string.h>
-#endif /* CONFIG_HAVE_STRING_H */
 
 #ifdef CONFIG_HAVE_UNICODE_H
 #include <unicode.h>
@@ -93,6 +119,32 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 }
 DECL_END
 #endif /* !CONFIG_HAVE_strlen */
+
+#ifndef CONFIG_HAVE_memcmp
+#define CONFIG_HAVE_memcmp 1
+DECL_BEGIN
+#undef memcmp
+#define memcmp dee_memcmp
+LOCAL WUNUSED NONNULL((1, 2)) int
+dee_memcmp(void const *s1, void const *s2, size_t n) {
+	uint8_t const *p1 = (uint8_t const *)s1;
+	uint8_t const *p2 = (uint8_t const *)s2;
+	while (n--) {
+		uint8_t v1, v2;
+		if ((v1 = *p1++) != (v2 = *p2++)) {
+			return v1 < v2 ? -1 : 1;
+		}
+	}
+	return 0;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memcmp */
+
+#ifndef CONFIG_HAVE_bcmp
+#define CONFIG_HAVE_bcmp 1
+#undef bcmp
+#define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes)
+#endif /* !CONFIG_HAVE_bcmp */
 
 
 /* Explanation of WIDTH-STRINGS vs. UTF-STRINGS:
@@ -512,14 +564,14 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 
 #define DeeString_EQUALS_ASCII(x, ascii_str)            \
 	(DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
-	 memcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
 #define DeeString_STARTSWITH_ASCII(x, ascii_str)        \
 	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) && \
-	 memcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
-#define DeeString_ENDSWITH_ASCII(x, ascii_str)                                 \
-	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                        \
-	 memcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
-	        ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+#define DeeString_ENDSWITH_ASCII(x, ascii_str)                               \
+	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                      \
+	 bcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
+	      ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
 
 /* Return the unicode character-width of characters found in the given string `x' */
 #define DeeString_WIDTH(x)                                          \

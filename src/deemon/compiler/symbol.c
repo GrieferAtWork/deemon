@@ -42,6 +42,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 INTDEF struct module_symbol empty_module_buckets[];
 DEFINE_STRUCT_CACHE_EX(sym, struct symbol,
                        MAX(sizeof(struct symbol),
@@ -1527,9 +1533,7 @@ new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1573,9 +1577,7 @@ INTERN WUNUSED struct symbol *DCALL new_unnamed_symbol(void) {
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1602,9 +1604,7 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1633,9 +1633,7 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 	result = sym_alloc();
 	if unlikely(!result)
 		goto err;
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct symbol));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct symbol));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */

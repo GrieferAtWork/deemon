@@ -1777,8 +1777,8 @@ sockaddr_eq(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
 	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
 		goto err;
-	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
-	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
+	return_bool(bcmp(&self->sa_addr, &other->sa_addr,
+	                 SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
 err:
 	return NULL;
 }
@@ -1788,8 +1788,8 @@ sockaddr_ne(DeeSockAddrObject *self,
             DeeSockAddrObject *other) {
 	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
 		goto err;
-	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
-	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) != 0);
+	return_bool(bcmp(&self->sa_addr, &other->sa_addr,
+	                 SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) != 0);
 err:
 	return NULL;
 }

@@ -116,7 +116,8 @@ attr_eq(Attr *self, Attr *other) {
 			goto nope;
 		if (DeeString_SIZE(my_name) != DeeString_SIZE(ot_name))
 			goto nope;
-		if (memcmp(DeeString_STR(my_name), DeeString_STR(ot_name), DeeString_SIZE(ot_name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(my_name), DeeString_STR(ot_name),
+		          DeeString_SIZE(ot_name), sizeof(char)) != 0)
 			goto nope;
 	} else {
 		if (strcmp(self->a_name, other->a_name) != 0)

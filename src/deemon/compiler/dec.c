@@ -54,6 +54,12 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 
 INTERN struct dec_writer current_dec;
 #define sym_alloc() ((struct dec_sym *)Dee_Malloc(sizeof(struct dec_sym)))
@@ -393,9 +399,7 @@ do_realloc:
 	}
 	/* Reserve one relocation. */
 	result += sec->ds_relc++;
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct dec_rel));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct dec_rel));
 done:
 	return result;
 }

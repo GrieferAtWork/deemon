@@ -68,9 +68,9 @@ DECL_BEGIN
 #define INIT_THIS(frame) frame.cf_this = (DeeObject *)UINT32_C(0xcccccccc)
 #elif defined(UINT64_C) && defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8
 #define INIT_THIS(frame) frame.cf_this = (DeeObject *)UINT64_C(0xcccccccccccccccc)
-#else
-#define INIT_THIS(frame) memset(&frame.cf_this, 0xcc, sizeof(DeeObject *))
-#endif
+#else /* ... */
+#define INIT_THIS(frame) DBG_memset(&frame.cf_this, 0xcc, sizeof(DeeObject *))
+#endif /* !... */
 
 
 #ifdef CALL_KW
@@ -91,10 +91,10 @@ kwds_find_index(DeeKwdsObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(entry->ke_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) *
-		           sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(entry->ke_name),
+		          DeeString_STR(name),
+		          DeeString_SIZE(name),
+		          sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}

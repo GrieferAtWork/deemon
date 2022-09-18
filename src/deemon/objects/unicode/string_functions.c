@@ -3921,11 +3921,9 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
-			dst.cp8 += fill_front;
-			memcpyb(dst.cp8, my_str.cp8, my_len);
-			dst.cp8 += my_len;
-			memfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
+			dst.cp8 = mempfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
+			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
+			mempfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
 			break;
 
 		CASE_WIDTH_2BYTE:
@@ -3941,11 +3939,9 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
-			dst.cp16 += fill_front;
-			memcpyw(dst.cp16, my_str.cp16, my_len);
-			dst.cp16 += my_len;
-			memfilw(dst.cp16, fill_back, fl_str.cp16, fl_len);
+			dst.cp16 = mempfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
+			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
+			mempfilw(dst.cp16, fill_back, fl_str.cp16, fl_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
 
@@ -3962,11 +3958,9 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
-			dst.cp32 += fill_front;
-			memcpyl(dst.cp32, my_str.cp32, my_len);
-			dst.cp32 += my_len;
-			memfill(dst.cp32, fill_back, fl_str.cp32, fl_len);
+			dst.cp32 = mempfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
+			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
+			mempfill(dst.cp32, fill_back, fl_str.cp32, fl_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
 		}
@@ -3979,10 +3973,8 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memsetb(dst.cp8, UNICODE_SPACE, fill_front);
-			dst.cp8 += fill_front;
-			memcpyb(dst.cp8, my_str.cp8, my_len);
-			dst.cp8 += my_len;
+			dst.cp8 = mempsetb(dst.cp8, UNICODE_SPACE, fill_front);
+			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			memsetb(dst.cp8, UNICODE_SPACE, fill_back);
 			break;
 
@@ -3991,10 +3983,8 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memsetw(dst.cp16, UNICODE_SPACE, fill_front);
-			dst.cp16 += fill_front;
-			memcpyw(dst.cp16, my_str.cp16, my_len);
-			dst.cp16 += my_len;
+			dst.cp16 = mempsetw(dst.cp16, UNICODE_SPACE, fill_front);
+			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
 			memsetw(dst.cp16, UNICODE_SPACE, fill_back);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4004,10 +3994,8 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memsetl(dst.cp32, UNICODE_SPACE, fill_front);
-			dst.cp32 += fill_front;
-			memcpyl(dst.cp32, my_str.cp32, my_len);
-			dst.cp32 += my_len;
+			dst.cp32 = mempsetl(dst.cp32, UNICODE_SPACE, fill_front);
+			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
 			memsetl(dst.cp32, UNICODE_SPACE, fill_back);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -4048,9 +4036,8 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memcpyb(dst.cp8, my_str.cp8, my_len);
-			dst.cp8 += my_len;
-			memfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
+			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
+			mempfilb(dst.cp8, fill_back, fl_str.cp8, fl_len);
 			break;
 
 		CASE_WIDTH_2BYTE:
@@ -4066,9 +4053,8 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memcpyw(dst.cp16, my_str.cp16, my_len);
-			dst.cp16 += my_len;
-			memfilw(dst.cp16, fill_back, fl_str.cp16, fl_len);
+			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
+			mempfilw(dst.cp16, fill_back, fl_str.cp16, fl_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
 
@@ -4085,9 +4071,8 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memcpyl(dst.cp32, my_str.cp32, my_len);
-			dst.cp32 += my_len;
-			memfill(dst.cp32, fill_back, fl_str.cp32, fl_len);
+			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
+			mempfill(dst.cp32, fill_back, fl_str.cp32, fl_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
 		}
@@ -4100,8 +4085,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memcpyb(dst.cp8, my_str.cp8, my_len);
-			dst.cp8 += my_len;
+			dst.cp8 = mempcpyb(dst.cp8, my_str.cp8, my_len);
 			memsetb(dst.cp8, UNICODE_SPACE, fill_back);
 			break;
 
@@ -4110,8 +4094,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memcpyw(dst.cp16, my_str.cp16, my_len);
-			dst.cp16 += my_len;
+			dst.cp16 = mempcpyw(dst.cp16, my_str.cp16, my_len);
 			memsetw(dst.cp16, UNICODE_SPACE, fill_back);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4121,8 +4104,7 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memcpyl(dst.cp32, my_str.cp32, my_len);
-			dst.cp32 += my_len;
+			dst.cp32 = mempcpyl(dst.cp32, my_str.cp32, my_len);
 			memsetl(dst.cp32, UNICODE_SPACE, fill_back);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -4163,8 +4145,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
-			dst.cp8 += fill_front;
+			dst.cp8 = mempfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
 
@@ -4181,8 +4162,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
-			dst.cp16 += fill_front;
+			dst.cp16 = mempfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
 			memcpyw(dst.cp16, my_str.cp16, my_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4200,8 +4180,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
-			dst.cp32 += fill_front;
+			dst.cp32 = mempfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
 			memcpyl(dst.cp32, my_str.cp32, my_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -4215,8 +4194,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			if unlikely(!result)
 				goto err;
 			dst.cp8 = DeeString_As1Byte((DeeObject *)result);
-			memsetb(dst.cp8, UNICODE_SPACE, fill_front);
-			dst.cp8 += fill_front;
+			dst.cp8 = mempsetb(dst.cp8, UNICODE_SPACE, fill_front);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
 
@@ -4225,8 +4203,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp16 = buf.cp16 = DeeString_New2ByteBuffer(result_length);
 			if unlikely(!buf.cp16)
 				goto err;
-			memsetw(dst.cp16, UNICODE_SPACE, fill_front);
-			dst.cp16 += fill_front;
+			dst.cp16 = mempsetw(dst.cp16, UNICODE_SPACE, fill_front);
 			memcpyw(dst.cp16, my_str.cp16, my_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4236,8 +4213,7 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 			dst.cp32 = buf.cp32 = DeeString_New4ByteBuffer(result_length);
 			if unlikely(!buf.cp32)
 				goto err;
-			memsetl(dst.cp32, UNICODE_SPACE, fill_front);
-			dst.cp32 += fill_front;
+			dst.cp32 = mempsetl(dst.cp32, UNICODE_SPACE, fill_front);
 			memcpyl(dst.cp32, my_str.cp32, my_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -4280,8 +4256,10 @@ string_count(String *self, size_t argc,
 		endptr.cp8 = lhs.cp8 + end;
 		lhs.cp8 += begin;
 		while ((lhs.cp8 = memmemb(lhs.cp8, endptr.cp8 - lhs.cp8,
-		                          rhs.cp8, WSTR_LENGTH(rhs.cp8))) != NULL)
-			++result, lhs.cp8 += WSTR_LENGTH(rhs.cp8);
+		                          rhs.cp8, WSTR_LENGTH(rhs.cp8))) != NULL) {
+			lhs.cp8 += WSTR_LENGTH(rhs.cp8);
+			++result;
+		}
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4301,8 +4279,10 @@ string_count(String *self, size_t argc,
 		endptr.cp16 = lhs.cp16 + end;
 		lhs.cp16 += begin;
 		while ((lhs.cp16 = memmemw(lhs.cp16, endptr.cp16 - lhs.cp16,
-		                           rhs.cp16, WSTR_LENGTH(rhs.cp16))) != NULL)
-			++result, lhs.cp16 += WSTR_LENGTH(rhs.cp16);
+		                           rhs.cp16, WSTR_LENGTH(rhs.cp16))) != NULL) {
+			lhs.cp16 += WSTR_LENGTH(rhs.cp16);
+			++result;
+		}
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4322,8 +4302,10 @@ string_count(String *self, size_t argc,
 		endptr.cp32 = lhs.cp32 + end;
 		lhs.cp32 += begin;
 		while ((lhs.cp32 = memmeml(lhs.cp32, endptr.cp32 - lhs.cp32,
-		                           rhs.cp32, WSTR_LENGTH(rhs.cp32))) != NULL)
-			++result, lhs.cp32 += WSTR_LENGTH(rhs.cp32);
+		                           rhs.cp32, WSTR_LENGTH(rhs.cp32))) != NULL) {
+			lhs.cp32 += WSTR_LENGTH(rhs.cp32);
+			++result;
+		}
 		break;
 	}
 	return DeeInt_NewSize(result);
@@ -4362,8 +4344,10 @@ string_casecount(String *self, size_t argc,
 		lhs.cp8 += begin;
 		while ((lhs.cp8 = memcasememb(lhs.cp8, endptr.cp8 - lhs.cp8,
 		                              rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                              &match_length)) != NULL)
-			++result, lhs.cp8 += match_length;
+		                              &match_length)) != NULL) {
+			lhs.cp8 += match_length;
+			++result;
+		}
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -4384,8 +4368,10 @@ string_casecount(String *self, size_t argc,
 		lhs.cp16 += begin;
 		while ((lhs.cp16 = memcasememw(lhs.cp16, endptr.cp16 - lhs.cp16,
 		                               rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                               &match_length)) != NULL)
-			++result, lhs.cp16 += match_length;
+		                               &match_length)) != NULL) {
+			lhs.cp16 += match_length;
+			++result;
+		}
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -4406,8 +4392,10 @@ string_casecount(String *self, size_t argc,
 		lhs.cp32 += begin;
 		while ((lhs.cp32 = memcasememl(lhs.cp32, endptr.cp32 - lhs.cp32,
 		                               rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                               &match_length)) != NULL)
-			++result, lhs.cp32 += match_length;
+		                               &match_length)) != NULL) {
+			lhs.cp32 += match_length;
+			++result;
+		}
 		break;
 	}
 	return DeeInt_NewSize(result);
@@ -4599,8 +4587,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp8++ = *my_str.cp8++;
 				--my_len;
 			}
-			memfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
-			dst.cp8 += fill_front;
+			dst.cp8 = mempfilb(dst.cp8, fill_front, fl_str.cp8, fl_len);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
 
@@ -4621,8 +4608,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp16++ = *my_str.cp16++;
 				--my_len;
 			}
-			memfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
-			dst.cp16 += fill_front;
+			dst.cp16 = mempfilw(dst.cp16, fill_front, fl_str.cp16, fl_len);
 			memcpyw(dst.cp16, my_str.cp16, my_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4644,8 +4630,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp32++ = *my_str.cp32++;
 				--my_len;
 			}
-			memfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
-			dst.cp32 += fill_front;
+			dst.cp32 = mempfill(dst.cp32, fill_front, fl_str.cp32, fl_len);
 			memcpyl(dst.cp32, my_str.cp32, my_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -4663,8 +4648,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp8++ = *my_str.cp8++;
 				--my_len;
 			}
-			memsetb(dst.cp8, UNICODE_ZERO, fill_front);
-			dst.cp8 += fill_front;
+			dst.cp8 = mempsetb(dst.cp8, UNICODE_ZERO, fill_front);
 			memcpyb(dst.cp8, my_str.cp8, my_len);
 			break;
 
@@ -4677,8 +4661,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp16++ = *my_str.cp16++;
 				--my_len;
 			}
-			memsetw(dst.cp16, UNICODE_ZERO, fill_front);
-			dst.cp16 += fill_front;
+			dst.cp16 = mempsetw(dst.cp16, UNICODE_ZERO, fill_front);
 			memcpyw(dst.cp16, my_str.cp16, my_len);
 			result = (DREF String *)DeeString_Pack2ByteBuffer(buf.cp16);
 			break;
@@ -4692,8 +4675,7 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 				*dst.cp32++ = *my_str.cp32++;
 				--my_len;
 			}
-			memsetl(dst.cp32, UNICODE_ZERO, fill_front);
-			dst.cp32 += fill_front;
+			dst.cp32 = mempsetl(dst.cp32, UNICODE_ZERO, fill_front);
 			memcpyl(dst.cp32, my_str.cp32, my_len);
 			result = (DREF String *)DeeString_Pack4ByteBuffer(buf.cp32);
 			break;
@@ -5905,9 +5887,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		lhs_len = lhs->s_len;
 		if (lhs_end > lhs_len)
 			lhs_end = lhs_len;
-		if (lhs_start >= lhs_end)
+		if (lhs_start >= lhs_end) {
 			lhs_len = 0;
-		else {
+		} else {
 			lhs_str += lhs_start;
 			lhs_len = lhs_end - lhs_start;
 		}
@@ -5917,9 +5899,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			rhs_len = rhs->s_len;
 			if (rhs_end > rhs_len)
 				rhs_end = rhs_len;
-			if (rhs_start >= rhs_end)
+			if (rhs_start >= rhs_end) {
 				rhs_len = 0;
-			else {
+			} else {
 				rhs_len = rhs_end - rhs_start;
 			}
 			/* Most simple case: compare ascii/single-byte strings. */
@@ -5937,9 +5919,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -5958,9 +5940,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -5985,9 +5967,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		rhs_len = rhs->s_len;
 		if (rhs_end > rhs_len)
 			rhs_end = rhs_len;
-		if (rhs_start >= rhs_end)
+		if (rhs_start >= rhs_end) {
 			rhs_len = 0;
-		else {
+		} else {
 			rhs_str += rhs_start;
 			rhs_len = rhs_end - rhs_start;
 		}
@@ -6001,9 +5983,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6022,9 +6004,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6057,45 +6039,32 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
+				int result;
 				uint16_t *rhs_str;
 				size_t common_len;
 				rhs_str = (uint16_t *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef CONFIG_HAVE_memcmpw
-				{
-					int result;
-					result = memcmpw(lhs_str, rhs_str, common_len);
-					if (result != 0)
-						return result;
-				}
-#else /* CONFIG_HAVE_memcmpw */
-				{
-					size_t i;
-					for (i = 0; i < common_len; ++i) {
-						if (lhs_str[i] == rhs_str[i])
-							continue;
-						return lhs_str[i] < rhs_str[i] ? -1 : 1;
-					}
-				}
-#endif /* !CONFIG_HAVE_memcmpw */
+				result = memcmpw(lhs_str, rhs_str, common_len);
+				if (result != 0)
+					return result;
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -6105,9 +6074,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6131,9 +6100,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6146,9 +6115,9 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6161,36 +6130,23 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
+				int result;
 				uint32_t *rhs_str;
 				size_t common_len;
 				rhs_str = (uint32_t *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef CONFIG_HAVE_memcmpl
-				{
-					int result;
-					result = memcmpl(lhs_str, rhs_str, common_len);
-					if (result != 0)
-						return result;
-				}
-#else /* CONFIG_HAVE_memcmpl */
-				{
-					size_t i;
-					for (i = 0; i < common_len; ++i) {
-						if (lhs_str[i] == rhs_str[i])
-							continue;
-						return lhs_str[i] < rhs_str[i] ? -1 : 1;
-					}
-				}
-#endif /* !CONFIG_HAVE_memcmpl */
+				result = memcmpl(lhs_str, rhs_str, common_len);
+				if (result != 0)
+					return result;
 			}	break;
 
 			default:
@@ -6246,9 +6202,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		lhs_len = lhs->s_len;
 		if (lhs_end > lhs_len)
 			lhs_end = lhs_len;
-		if (lhs_start >= lhs_end)
+		if (lhs_start >= lhs_end) {
 			lhs_len = 0;
-		else {
+		} else {
 			lhs_str += lhs_start;
 			lhs_len = lhs_end - lhs_start;
 		}
@@ -6257,9 +6213,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			rhs_len = rhs->s_len;
 			if (rhs_end > rhs_len)
 				rhs_end = rhs_len;
-			if (rhs_start >= rhs_end)
+			if (rhs_start >= rhs_end) {
 				rhs_len = 0;
-			else {
+			} else {
 				rhs_len = rhs_end - rhs_start;
 			}
 			/* Most simple case: compare ascii/single-byte strings. */
@@ -6275,9 +6231,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6291,9 +6247,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6314,9 +6270,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 		rhs_len = rhs->s_len;
 		if (rhs_end > rhs_len)
 			rhs_end = rhs_len;
-		if (rhs_start >= rhs_end)
+		if (rhs_start >= rhs_end) {
 			rhs_len = 0;
-		else {
+		} else {
 			rhs_str += rhs_start;
 			rhs_len = rhs_end - rhs_start;
 		}
@@ -6329,9 +6285,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6345,9 +6301,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6376,9 +6332,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6390,9 +6346,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6406,9 +6362,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6428,9 +6384,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			lhs_len = WSTR_LENGTH(lhs_str);
 			if (lhs_end > lhs_len)
 				lhs_end = lhs_len;
-			if (lhs_start >= lhs_end)
+			if (lhs_start >= lhs_end) {
 				lhs_len = 0;
-			else {
+			} else {
 				lhs_str += lhs_start;
 				lhs_len = lhs_end - lhs_start;
 			}
@@ -6442,9 +6398,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}
@@ -6458,9 +6414,9 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 				rhs_len = WSTR_LENGTH(rhs_str);
 				if (rhs_end > rhs_len)
 					rhs_end = rhs_len;
-				if (rhs_start >= rhs_end)
+				if (rhs_start >= rhs_end) {
 					rhs_len = 0;
-				else {
+				} else {
 					rhs_str += rhs_start;
 					rhs_len = rhs_end - rhs_start;
 				}

@@ -243,8 +243,8 @@ struct Dee_module_symbol {
 	;
 };
 
-#define Dee_MODULE_SYMBOL_EQUALS(x, name, size)                \
-	(memcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
+#define Dee_MODULE_SYMBOL_EQUALS(x, name, size)              \
+	(bcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
 	 (x)->ss_name[size] == 0)
 #define Dee_MODULE_SYMBOL_GETNAMESTR(x) ((x)->ss_name)
 #define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : strlen((x)->ss_name))

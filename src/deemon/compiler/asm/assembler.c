@@ -60,6 +60,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 INTDEF struct module_symbol empty_module_buckets[];
 
 /* Assert opcode relations assumed by the optimizer. */
@@ -208,7 +214,7 @@ ddi_newfile(char const *__restrict filename,
 	for (; result; result = result->f_prev) {
 		if (result->f_namesize != filename_length)
 			continue;
-		if (memcmp(result->f_name, filename, filename_length * sizeof(char)) != 0)
+		if (bcmpc(result->f_name, filename, filename_length, sizeof(char)) != 0)
 			continue;
 		/* This filename has already been used before! */
 		goto done;
@@ -561,6 +567,7 @@ PRIVATE WUNUSED int DCALL asm_realloc_exc(void) {
 		}
 		new_alloc = UINT16_MAX;
 	}
+
 	/* Must allocate more exception handlers. */
 do_realloc:
 	new_vector = (struct asm_exc *)Dee_TryRealloc(new_vector, new_alloc * sizeof(struct asm_exc));
@@ -581,6 +588,7 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc)(void) {
 	struct asm_exc *result;
 	ASSERT(current_assembler.a_exceptc <=
 	       current_assembler.a_excepta);
+
 	/* Allocate more exception vector memory if necessary. */
 	if (current_assembler.a_exceptc == current_assembler.a_excepta) {
 		if (asm_realloc_exc())
@@ -589,10 +597,9 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc)(void) {
 	ASSERT(current_assembler.a_exceptc < current_assembler.a_excepta);
 	result = current_assembler.a_exceptv;
 	result += current_assembler.a_exceptc++;
+
 	/* The caller will be filling in the returned structure. */
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct asm_exc));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct asm_exc));
 	return result;
 err:
 	return NULL;
@@ -602,6 +609,7 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
 	struct asm_exc *result;
 	ASSERT(priority <= current_assembler.a_exceptc);
 	ASSERT(current_assembler.a_exceptc <= current_assembler.a_excepta);
+
 	/* Allocate more exception vector memory if necessary. */
 	if (current_assembler.a_exceptc == current_assembler.a_excepta) {
 		if (asm_realloc_exc())
@@ -609,18 +617,19 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
 	}
 	ASSERT(current_assembler.a_exceptc < current_assembler.a_excepta);
 	result = current_assembler.a_exceptv;
+
 	/* Shift all handlers with a greater priority. */
 	memmoveupc(result + priority + 1,
 	           result + priority,
 	           current_assembler.a_exceptc - priority,
 	           sizeof(struct asm_exc));
 	++current_assembler.a_exceptc;
+
 	/* Return the exception entry at the given priority (index). */
 	result += priority;
+
 	/* The caller will be filling in the returned structure. */
-#ifndef NDEBUG
-	memset(result, 0xcc, sizeof(struct asm_exc));
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, sizeof(struct asm_exc));
 	return result;
 err:
 	return NULL;
@@ -1694,9 +1703,7 @@ INTERN WUNUSED instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 	ASSERT(current_assembler.a_curr->sec_iter <=
 	       current_assembler.a_curr->sec_end);
 end:
-#ifndef NDEBUG
-	memset(result, 0xcc, n_bytes);
-#endif /* !NDEBUG */
+	DBG_memset(result, 0xcc, n_bytes);
 	return result;
 }
 
@@ -2582,7 +2589,7 @@ asm_newconst_string(char const *__restrict str, size_t len) {
 				continue;
 			if (DeeString_SIZE(ob) != len)
 				continue;
-			if (memcmp(DeeString_STR(ob), str, len * sizeof(char)) != 0)
+			if (bcmpc(DeeString_STR(ob), str, len, sizeof(char)) != 0)
 				continue;
 			return result; /* Found it! */
 		}

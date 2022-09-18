@@ -337,12 +337,15 @@ UNIQUE(err_kargv):
 #endif /* !CALL_THIS */
 	/* Initialize references stored within the keyword argument extension. */
 #if CODE_FLAGS & CODE_FVARKWDS
+	/* ... */
+#elif defined(NDEBUG)
+	/* ... */
 #elif __SIZEOF_POINTER__ == 4 && defined(UINT32_C)
 	frame.cf_kw->fk_varkwds = (DREF DeeObject *)UINT32_C(0xcccccccc);
 #elif __SIZEOF_POINTER__ == 8 && defined(UINT64_C)
 	frame.cf_kw->fk_varkwds = (DREF DeeObject *)UINT64_C(0xcccccccccccccccc);
 #else /* __SIZEOF_POINTER__... */
-	memset(&frame.cf_kw->fk_varkwds, 0xcc, sizeof(void *));
+	DBG_memset(&frame.cf_kw->fk_varkwds, 0xcc, sizeof(void *));
 #endif /* !__SIZEOF_POINTER__... */
 #if CODE_FLAGS & CODE_FVARKWDS
 	ASSERT(frame.cf_kw->fk_kw == kw);

@@ -26,6 +26,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/module.h>
@@ -356,7 +357,7 @@ find_opinfo(struct opinfo const *__restrict v, unsigned int c,
 	unsigned int i;
 	for (i = 0; i < c; ++i) {
 		char const *name = v[i].oi_sname;
-		if (!memcmp(name, str, len) && !name[len])
+		if (bcmpc(name, str, len, sizeof(char)) == 0 && !name[len])
 			return &v[i];
 	}
 	return NULL;

@@ -1435,7 +1435,7 @@ DeeStruct_Eq(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	         DeeSType_Check(tp_self));
 	/* Compare object data. */
 	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
-		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) == 0);
+		return_bool(bcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) == 0);
 	err_unimplemented_operator(orig_type, OPERATOR_EQ);
 	return NULL;
 }
@@ -1450,7 +1450,7 @@ DeeStruct_Ne(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	         DeeSType_Check(tp_self));
 	/* Compare object data. */
 	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
-		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) != 0);
+		return_bool(bcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) != 0);
 	err_unimplemented_operator(orig_type, OPERATOR_NE);
 	return NULL;
 }

@@ -162,8 +162,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 		}
 		ASSERT(DeeBytes_Check(line));
 		if (DeeBytes_SIZE(line) >= COMPILER_STRLEN(str_processor) &&
-		    memcmp(DeeBytes_DATA(line), str_processor,
-		           COMPILER_STRLEN(str_processor) * sizeof(char)) == 0)
+		    bcmpc(DeeBytes_DATA(line), str_processor,
+		          COMPILER_STRLEN(str_processor), sizeof(char)) == 0)
 			++result; /* Found one! */
 		Dee_Decref(line);
 	}

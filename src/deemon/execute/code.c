@@ -49,6 +49,12 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
 
@@ -1137,9 +1143,10 @@ code_eq_impl(DeeCodeObject *__restrict self,
 			if (DeeString_SIZE(self->co_keywords[i]) !=
 			    DeeString_SIZE(other->co_keywords[i]))
 				goto nope;
-			if (memcmp(DeeString_STR(self->co_keywords[i]),
-			           DeeString_STR(other->co_keywords[i]),
-			           DeeString_SIZE(self->co_keywords[i]) * sizeof(char)) != 0)
+			if (bcmpc(DeeString_STR(self->co_keywords[i]),
+			          DeeString_STR(other->co_keywords[i]),
+			          DeeString_SIZE(self->co_keywords[i]),
+			          sizeof(char)) != 0)
 				goto nope;
 		}
 	} else if (other->co_keywords) {
@@ -1201,7 +1208,7 @@ code_eq_impl(DeeCodeObject *__restrict self,
 	                           (DeeObject *)other->co_ddi);
 	if (temp <= 0)
 		goto err_temp;
-	if (memcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
+	if (bcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
 		goto nope;
 	return 1;
 err_temp:
@@ -1455,7 +1462,7 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 				if likely(len < COMPILER_LENOF(except_flags_db[0].ef_name)) {
 					for (i = 0; i < COMPILER_LENOF(except_flags_db); ++i) {
 						if (except_flags_db[i].ef_name[len] == '\0' &&
-						    memcmp(except_flags_db[i].ef_name, s, len) == 0) {
+						    bcmpc(except_flags_db[i].ef_name, s, len, sizeof(char)) == 0) {
 							self->eh_flags |= except_flags_db[i].ef_flag;
 							goto got_flag;
 						}
@@ -1767,7 +1774,7 @@ err_r_except_temp_iter:
 				if likely(len < COMPILER_LENOF(code_flags_db[0].cf_name)) {
 					for (i = 0; i < COMPILER_LENOF(code_flags_db); ++i) {
 						if (code_flags_db[i].cf_name[len] == '\0' &&
-						    memcmp(code_flags_db[i].cf_name, s, len) == 0) {
+						    bcmpc(code_flags_db[i].cf_name, s, len, sizeof(char)) == 0) {
 							result->co_flags |= code_flags_db[i].cf_flag;
 							goto got_flag;
 						}

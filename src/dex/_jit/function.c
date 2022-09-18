@@ -158,7 +158,8 @@ again:
 			continue;
 		if (entry->oe_namelen != namelen)
 			continue;
-		if (memcmp(entry->oe_namestr, namestr, namelen * sizeof(char)) != 0)
+		if (bcmpc(entry->oe_namestr, namestr,
+		          namelen, sizeof(char)) != 0)
 			continue;
 		/* Existing entry! */
 		return entry;
@@ -916,9 +917,8 @@ compare_objtabs(JITObjectTable *__restrict a,
 				goto nope;
 			if (a->ot_list[i].oe_namelen != b->ot_list[i].oe_namelen)
 				goto nope;
-			if (memcmp(a->ot_list[i].oe_namestr,
-			           b->ot_list[i].oe_namestr,
-			           a->ot_list[i].oe_namelen * sizeof(char)) != 0)
+			if (bcmpc(a->ot_list[i].oe_namestr, b->ot_list[i].oe_namestr,
+			          a->ot_list[i].oe_namelen, sizeof(char)) != 0)
 				goto nope;
 			if (a->ot_list[i].oe_value) {
 				if (!b->ot_list[i].oe_value)
@@ -961,12 +961,13 @@ jf_equal(JITFunction *__restrict a,
 	if ((a->jf_source_end - a->jf_source_start) !=
 	    (b->jf_source_end - b->jf_source_start))
 		goto nope;
-	if (memcmp(a->jf_source_start, b->jf_source_start,
-	           (size_t)(a->jf_source_end - a->jf_source_start)) != 0)
+	if (bcmpc(a->jf_source_start, b->jf_source_start,
+	          (size_t)(a->jf_source_end - a->jf_source_start),
+	          sizeof(char)) != 0)
 		goto nope;
 	if (a->jf_flags != b->jf_flags)
 		goto nope;
-	if (memcmp(a->jf_argv, b->jf_argv, a->jf_argc_max * sizeof(size_t)) != 0)
+	if (bcmpc(a->jf_argv, b->jf_argv, a->jf_argc_max, sizeof(size_t)) != 0)
 		goto nope;
 	if (a->jf_args.ot_mask != b->jf_args.ot_mask)
 		goto nope;

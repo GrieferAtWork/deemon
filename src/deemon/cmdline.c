@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 
 DECL_BEGIN
 
@@ -107,7 +107,7 @@ find_short_option(struct cmd_option const *__restrict options,
 	for (; !CMD_OPTION_ISSENTINEL(options); ++options) {
 		if ((options->co_flags & req_mask) != req_flags)
 			continue; /* Invalid flags. */
-		if (memcmp(options->co_shortnam, name, name_len * sizeof(char)) != 0)
+		if (bcmpc(options->co_shortnam, name, name_len, sizeof(char)) != 0)
 			continue; /* Different name. */
 		if (options->co_shortnam[name_len])
 			continue; /* Name too long. */
@@ -129,7 +129,7 @@ find_long_option(struct cmd_option const *__restrict options,
 			continue; /* Invalid flags. */
 		if (!options->co_longname)
 			continue; /* No long name available. */
-		if (memcmp(options->co_longname, name, name_len * sizeof(char)) != 0)
+		if (bcmpc(options->co_longname, name, name_len, sizeof(char)) != 0)
 			continue; /* Different name. */
 		if (options->co_longname[name_len])
 			continue; /* Name too long. */

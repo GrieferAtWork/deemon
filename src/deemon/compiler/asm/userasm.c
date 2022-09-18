@@ -52,6 +52,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset memset
+#else /* !NDEBUG */
+#define DBG_memset(...) (void)0
+#endif /* NDEBUG */
+
 #ifndef CONFIG_LANGUAGE_NO_ASM
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
@@ -1320,12 +1326,8 @@ struct cleanup_mode {
 };
 
 
-#ifndef NDEBUG
 #define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) \
-	memset(sym, 0xcc, sizeof(struct symbol))
-#else /* NDEBUG */
-#define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) (void)0
-#endif /* !NDEBUG */
+	DBG_memset(sym, 0xcc, sizeof(struct symbol))
 #define INITIALIZE_FAKE_LOCAL_SYMBOL(sym, lid)               \
 	(DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym),                  \
 	 (sym)->s_decl.l_file = NULL,                            \

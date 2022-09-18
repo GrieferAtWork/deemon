@@ -284,8 +284,8 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 			goto err;                                               \
 		if (self->ci_combi != other->ci_combi)                      \
 			if_diff_combi;                                          \
-		result = memcmp(self->ci_indices, other->ci_indices,        \
-		                self->ci_combi->c_comlen * sizeof(size_t)); \
+		result = bcmpc(self->ci_indices, other->ci_indices,         \
+		               self->ci_combi->c_comlen, sizeof(size_t));   \
 		return_bool_(result op 0);                                  \
 	err:                                                            \
 		return NULL;                                                \
@@ -309,8 +309,8 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 				goto again_lock;                                    \
 			}                                                       \
 		}                                                           \
-		result = memcmp(self->ci_indices, other->ci_indices,        \
-		                self->ci_combi->c_comlen * sizeof(size_t)); \
+		result = bcmpc(self->ci_indices, other->ci_indices,         \
+		               self->ci_combi->c_comlen, sizeof(size_t));   \
 		rwlock_endread(&other->ci_lock);                            \
 		rwlock_endread(&self->ci_lock);                             \
 		return_bool_(result op 0);                                  \

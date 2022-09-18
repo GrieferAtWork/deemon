@@ -300,9 +300,10 @@ class_maker_newcattr(struct class_maker *__restrict self,
 		if (DeeString_SIZE(result->ca_name) !=
 		    DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name),
+		          DeeString_STR(name),
+		          DeeString_SIZE(name),
+		          sizeof(char)) != 0)
 			continue;
 		/* Duplicate name */
 		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
@@ -349,9 +350,10 @@ class_maker_newiattr(struct class_maker *__restrict self,
 		if (DeeString_SIZE(result->ca_name) !=
 		    DeeString_SIZE(name))
 			continue;
-		if (memcmp(DeeString_STR(result->ca_name),
-		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(result->ca_name),
+		          DeeString_STR(name),
+		          DeeString_SIZE(name),
+		          sizeof(char)) != 0)
 			continue;
 		/* Duplicate name */
 		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
@@ -1272,7 +1274,7 @@ next:
 			if (size < MAX_CALLBACK_NAME_LENGTH) {
 				for (i = 0; i < COMPILER_LENOF(callback_names); ++i) {
 					/* Check if this is the property that was named. */
-					if (memcmp(callback_names[i].cn_name, name, size * sizeof(char)) != 0)
+					if (bcmpc(callback_names[i].cn_name, name, size, sizeof(char)) != 0)
 						continue;
 					callback_id = callback_names[i].cn_id;
 					/* Warn if the callback name has been marked as deprecated. */

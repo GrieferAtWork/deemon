@@ -37,7 +37,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
@@ -1364,7 +1364,8 @@ file_class_open(DeeObject *UNUSED(self),
 				for (i = 0; i < COMPILER_LENOF(open_options); ++i) {
 					if (open_options[i].name[optlen])
 						continue;
-					if (memcmp(open_options[i].name, iter, optlen * sizeof(char)) != 0)
+					if (bcmpc(open_options[i].name, iter,
+					          optlen, sizeof(char)) != 0)
 						continue;
 					if (oflags & open_options[i].mask)
 						goto err_invalid_oflags; /* Check illegal old flags. */

@@ -1018,7 +1018,7 @@ bytes_eq(Bytes *self, DeeObject *other) {
 	other_size = DeeBytes_SIZE(other);
 	if (DeeBytes_SIZE(self) != other_size)
 		return_false;
-	return_bool(memcmp(DeeBytes_DATA(self), other_data, other_size) == 0);
+	return_bool(bcmp(DeeBytes_DATA(self), other_data, other_size) == 0);
 err:
 	return NULL;
 }
@@ -1035,7 +1035,7 @@ bytes_ne(Bytes *self, DeeObject *other) {
 	other_size = DeeBytes_SIZE(other);
 	if (DeeBytes_SIZE(self) != other_size)
 		return_true;
-	return_bool(memcmp(DeeBytes_DATA(self), other_data, other_size) != 0);
+	return_bool(bcmp(DeeBytes_DATA(self), other_data, other_size) != 0);
 err:
 	return NULL;
 }

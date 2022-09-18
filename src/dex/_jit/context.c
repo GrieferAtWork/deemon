@@ -123,10 +123,8 @@ do_reload: {
 			continue;
 		if (ent->oe_namestr == (char *)self->js_objent.jo_namestr)
 			break; /* Exact same string */
-		if (memcmp(ent->oe_namestr,
-		           self->js_objent.jo_namestr,
-		           self->js_objent.jo_namelen *
-		           sizeof(char)) != 0)
+		if (bcmpc(ent->oe_namestr, self->js_objent.jo_namestr,
+		          self->js_objent.jo_namelen, sizeof(char)) != 0)
 			continue;
 		/* Found it! */
 		break;
@@ -1053,9 +1051,9 @@ set_object_entry:
 			JITLValue lv;
 			/* XXX: Cache the this-argument? */
 			if unlikely(namelen == COMPILER_STRLEN(JIT_RTSYM_THIS) &&
-			            memcmp(name, JIT_RTSYM_THIS,
-			                   COMPILER_STRLEN(JIT_RTSYM_THIS) *
-			                   sizeof(char)) == 0)
+			            bcmpc(name, JIT_RTSYM_THIS,
+			                  COMPILER_STRLEN(JIT_RTSYM_THIS),
+			                  sizeof(char)) == 0)
 				goto err_unknown_var;
 			if (JITContext_Lookup(self, (JITSymbol *)&lv, JIT_RTSYM_THIS,
 			                      COMPILER_STRLEN(JIT_RTSYM_THIS), LOOKUP_SYM_NORMAL))

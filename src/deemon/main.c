@@ -971,8 +971,9 @@ display_help_query(dformatprinter printer, void *arg,
 	for (; !CMD_OPTION_ISSENTINEL(group); ++group) {
 		if ((query_length < COMPILER_LENOF(group->co_shortnam) &&
 		     group->co_shortnam[query_length] == '\0' &&
-		     memcmp(query, group->co_shortnam, query_length * sizeof(char)) == 0) ||
-		    (group->co_longname && memcmp(group->co_longname, query, query_length) == 0)) {
+		     bcmpc(query, group->co_shortnam, query_length, sizeof(char)) == 0) ||
+		    (group->co_longname &&
+		     bcmpc(group->co_longname, query, query_length, sizeof(char)) == 0)) {
 			/* Found the option in question. */
 			if (!comma)
 				return display_help_single(printer, arg, group, prefix);

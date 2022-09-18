@@ -36,7 +36,7 @@
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -646,7 +646,8 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 			continue; /* NOTE: This also captures `dummy' */
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) == 0) {
+		if (bcmpc(DeeString_STR(item->di_key), key,
+		          keylen, sizeof(char)) == 0) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -710,7 +711,8 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 			continue; /* NOTE: This also captures `dummy' */
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) == 0) {
+		if (bcmpc(DeeString_STR(item->di_key), key,
+		          keylen, sizeof(char)) == 0) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -765,7 +767,8 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 			continue; /* NOTE: This also captures `dummy' */
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) == 0) {
+		if (bcmpc(DeeString_STR(item->di_key), key,
+		          keylen, sizeof(char)) == 0) {
 			DeeDict_LockEndRead(self);
 			return true;
 		}
@@ -845,7 +848,8 @@ again_lock:
 			continue; /* NOTE: This also captures `dummy' */
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->di_key), key,
+		          keylen, sizeof(char)) != 0)
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {
@@ -1001,7 +1005,8 @@ again:
 			continue;
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->di_key), key,
+		          keylen, sizeof(char)) != 0)
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {

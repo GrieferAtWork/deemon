@@ -32,6 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
@@ -686,7 +687,7 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
 			continue;
 		/* Found it! */
 		return_reference_(item->di_value);
@@ -740,7 +741,7 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
 			continue;
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
 			continue;
 		/* Found it! */
 		return_reference_(item->di_value);
@@ -791,7 +792,7 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(item->di_key) != keylen)
 			continue;
-		if (memcmp(DeeString_STR(item->di_key), key, keylen * sizeof(char)) != 0)
+		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
 			continue;
 		/* Found it! */
 		return true;
