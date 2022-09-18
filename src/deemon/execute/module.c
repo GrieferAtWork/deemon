@@ -1312,20 +1312,12 @@ module_get_path(DeeModuleObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_isglobal(DeeModuleObject *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return_bool(self->mo_globpself != NULL);
-#else /* CONFIG_NO_THREADS */
-	return_bool(ATOMIC_READ(self->mo_globpself) != NULL);
-#endif /* !CONFIG_NO_THREADS */
+	return_bool(DeeModule_IsGlobal(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_haspath(DeeModuleObject *__restrict self) {
-#ifdef CONFIG_NO_THREADS
-	return_bool(self->mo_pself != NULL);
-#else /* CONFIG_NO_THREADS */
-	return_bool(ATOMIC_READ(self->mo_pself) != NULL);
-#endif /* !CONFIG_NO_THREADS */
+	return_bool(DeeModule_HasPath(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

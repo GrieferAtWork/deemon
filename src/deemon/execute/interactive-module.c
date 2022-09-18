@@ -1083,10 +1083,8 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_path = (DREF struct string_object *)source_pathname;
 
 	/* Set global hook members as NULL pointers. */
-	self->im_module.mo_pself     = NULL;
-	self->im_module.mo_next      = NULL;
-	self->im_module.mo_globpself = NULL;
-	self->im_module.mo_globnext  = NULL;
+	LIST_ENTRY_UNBOUND_INIT(&self->im_module.mo_link);
+	LIST_ENTRY_UNBOUND_INIT(&self->im_module.mo_globlink);
 
 	/* Reset imports, globals and flags. */
 	self->im_module.mo_importc = 0;

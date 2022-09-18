@@ -77,14 +77,15 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
-	DeeModuleObject **iter, **end;
+	DeeModuleObject *const *iter, *const *end;
 	char *module_pathstr, *module_pathend;
 	if (!self->mo_importc)
 		goto done;
 	dec_curr = SC_IMPORTS;
 	if (dec_putw(self->mo_importc))
 		goto err; /* Dec_Strmap.i_len */
-	end = (iter = (DeeModuleObject **)self->mo_importv) + self->mo_importc;
+	iter = self->mo_importv;
+	end  = iter + self->mo_importc;
 	module_pathstr = module_pathend = NULL;
 	for (; iter < end; ++iter) {
 		DeeModuleObject *mod = *iter;
@@ -92,7 +93,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		uint32_t addr;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 		dec_curr = SC_STRING;
-		if (mod->mo_globpself) {
+		if (DeeModule_IsGlobal(mod)) {
 			/* Globally available module (loadable as part of the library path). */
 			char const *global_name;
 import_module_by_name:
@@ -100,7 +101,8 @@ import_module_by_name:
 			if unlikely(!global_name)
 				goto err;
 			data = dec_allocstr(global_name,
-			                    (WSTR_LENGTH(global_name) + 1) * sizeof(char));
+			                    (WSTR_LENGTH(global_name) + 1) *
+			                    sizeof(char));
 			if unlikely(!data)
 				goto err;
 		} else {

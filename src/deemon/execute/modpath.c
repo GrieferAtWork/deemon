@@ -137,6 +137,16 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
 #endif /* !DEE_SYSTEM_NOCASE_FS */
 
+#define DeeString_FS_EQUALS_STR(lhs, rhs)            \
+	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) &&   \
+	 fs_bcmp(DeeString_STR(lhs), DeeString_STR(rhs), \
+	         DeeString_SIZE(lhs) * sizeof(char)) == 0)
+#define DeeString_FS_EQUALS_BUF(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) == (rhs_size) &&                \
+	 fs_bcmp(DeeString_STR(lhs), rhs_base,               \
+	         DeeString_SIZE(lhs) * sizeof(char)) == 0)
+
+
 
 /* Begin loading the given module.
  * @return: 0: You're now responsible to load the module.
@@ -462,23 +472,20 @@ DeeModule_LoadSourceStream(/*Module*/ DeeObject *__restrict self,
 
 
 
-
-struct module_bucket {
-	DeeModuleObject *mb_list; /* [0..1][weak] Chain of modules in this bucket. */
-};
+LIST_HEAD(module_object_list, module_object);
 
 /* Filesystem-based module hash table. */
-PRIVATE size_t                modules_c = 0;    /* [lock(modules_lock)] Amount of modules in-cache. */
-PRIVATE size_t                modules_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
-PRIVATE struct module_bucket *modules_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
+PRIVATE size_t /*               */ modules_c = 0;    /* [lock(modules_lock)] Amount of modules in-cache. */
+PRIVATE size_t /*               */ modules_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
+PRIVATE struct module_object_list *modules_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
 PRIVATE rwlock_t modules_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 /* Name-based, global module hash table. */
-PRIVATE size_t                modules_glob_c = 0;    /* [lock(modules_glob_lock)] Amount of modules in-cache. */
-PRIVATE size_t                modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
-PRIVATE struct module_bucket *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
+PRIVATE size_t /*               */ modules_glob_c = 0;    /* [lock(modules_glob_lock)] Amount of modules in-cache. */
+PRIVATE size_t /*               */ modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
+PRIVATE struct module_object_list *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
 PRIVATE rwlock_t modules_glob_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -486,21 +493,16 @@ PRIVATE rwlock_t modules_glob_lock = RWLOCK_INIT;
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 	DeeModuleObject *result = NULL;
-#ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_reading(&modules_lock));
-#endif /* !CONFIG_NO_THREADS */
 	if (modules_a) {
-		result = modules_v[hash % modules_a].mb_list;
+		result = LIST_FIRST(&modules_v[hash % modules_a]);
 		while (result) {
 			ASSERTF(result->mo_path, "All modules found in the file cache must have a path assigned");
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_path, &DeeString_Type);
 			if (fs_hashmodpath_equals(result, hash) &&
-			    DeeString_SIZE(result->mo_path) == DeeString_SIZE(module_file) &&
-			    fs_bcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
-			            DeeString_SIZE(module_file) * sizeof(char)) == 0) {
+			    DeeString_FS_EQUALS_STR(result->mo_path, module_file))
 				break; /* Found it! */
-			}
-			result = result->mo_next;
+			result = LIST_NEXT(result, mo_link);
 		}
 	}
 	return result;
@@ -510,20 +512,15 @@ PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
 	dhash_t hash = fs_hashobj(module_name);
 	DeeModuleObject *result = NULL;
-#ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_reading(&modules_glob_lock));
-#endif /* !CONFIG_NO_THREADS */
 	if (modules_glob_a) {
-		result = modules_glob_v[hash % modules_glob_a].mb_list;
+		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
 			if (fs_hashmodname_equals(result, hash) &&
-			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
-			    DeeString_SIZE(result->mo_name) == DeeString_SIZE(module_name) &&
-			    fs_bcmp(DeeString_STR(result->mo_name), DeeString_STR(module_name),
-			            DeeString_SIZE(module_name) * sizeof(char)) == 0)
+			    DeeString_FS_EQUALS_STR(result->mo_name, module_name))
 				break; /* Found it! */
-			result = result->mo_globnext;
+			result = LIST_NEXT(result, mo_globlink);
 		}
 	}
 	return result;
@@ -534,26 +531,22 @@ find_glob_module_str(/*utf-8*/ char const *__restrict module_name_str,
                      size_t module_name_len) {
 	dhash_t hash = fs_hashutf8(module_name_str, module_name_len);
 	DeeModuleObject *result = NULL;
-#ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_reading(&modules_glob_lock));
-#endif /* !CONFIG_NO_THREADS */
 	if (modules_glob_a) {
-		result = modules_glob_v[hash % modules_glob_a].mb_list;
+		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
 			if (fs_hashmodname_equals(result, hash) &&
-			    DeeString_SIZE(result->mo_name) == module_name_len &&
-			    fs_bcmp(DeeString_STR(result->mo_name), module_name_str,
-			            module_name_len * sizeof(char)) == 0)
+			    DeeString_FS_EQUALS_BUF(result->mo_name, module_name_str, module_name_len))
 				break; /* Found it! */
-			result = result->mo_globnext;
+			result = LIST_NEXT(result, mo_globlink);
 		}
 	}
 	return result;
 }
 
 PRIVATE bool DCALL rehash_file_modules(void) {
-	struct module_bucket *new_vector, *biter, *bend, *dst;
+	struct module_object_list *new_vector, *biter, *bend, *dst;
 	DeeModuleObject *iter, *next;
 	size_t new_size = modules_a * 2;
 #ifndef CONFIG_NO_THREADS
@@ -562,7 +555,7 @@ PRIVATE bool DCALL rehash_file_modules(void) {
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
-	new_vector = (struct module_bucket *)Dee_TryCalloc(new_size * sizeof(struct module_bucket));
+	new_vector = (struct module_object_list *)Dee_TryCalloc(new_size * sizeof(struct module_object_list));
 	if unlikely(!new_vector) {
 		if (modules_a != 0)
 			return true; /* Don't actually need to rehash. */
@@ -575,17 +568,17 @@ do_alloc_new_vector:
 	ASSERT(new_size != 0);
 	bend = (biter = modules_v) + modules_a;
 	for (; biter < bend; ++biter) {
-		iter = biter->mb_list;
+		iter = LIST_FIRST(biter);
 		while (iter) {
-			next = iter->mo_next;
+			next = LIST_NEXT(iter, mo_link);
 			ASSERTF(iter->mo_path, "All modules found in the file cache must have a path assigned");
 			ASSERT_OBJECT_TYPE_EXACT(iter->mo_path, &DeeString_Type);
+
 			/* Re-hash this entry. */
 			dst = &new_vector[fs_hashmodpath(iter) % new_size];
-			if ((iter->mo_next = dst->mb_list) != NULL)
-				iter->mo_next->mo_pself = &iter->mo_next;
-			iter->mo_pself = &dst->mb_list;
-			dst->mb_list   = iter;
+			LIST_REMOVE(iter, mo_link);
+			LIST_INSERT_HEAD(dst, iter, mo_link);
+
 			/* Continue with the next. */
 			iter = next;
 		}
@@ -597,7 +590,7 @@ do_alloc_new_vector:
 }
 
 PRIVATE bool DCALL rehash_glob_modules(void) {
-	struct module_bucket *new_vector, *biter, *bend, *dst;
+	struct module_object_list *new_vector, *biter, *bend, *dst;
 	DeeModuleObject *iter, *next;
 	size_t new_size = modules_glob_a * 2;
 #ifndef CONFIG_NO_THREADS
@@ -606,7 +599,7 @@ PRIVATE bool DCALL rehash_glob_modules(void) {
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
-	new_vector = (struct module_bucket *)Dee_TryCalloc(new_size * sizeof(struct module_bucket));
+	new_vector = (struct module_object_list *)Dee_TryCalloc(new_size * sizeof(struct module_object_list));
 	if unlikely(!new_vector) {
 		if (modules_glob_a != 0)
 			return true; /* Don't actually need to rehash. */
@@ -619,16 +612,16 @@ do_alloc_new_vector:
 	ASSERT(new_size != 0);
 	bend = (biter = modules_glob_v) + modules_glob_a;
 	for (; biter < bend; ++biter) {
-		iter = biter->mb_list;
+		iter = LIST_FIRST(biter);
 		while (iter) {
-			next = iter->mo_globnext;
+			next = LIST_NEXT(iter, mo_globlink);
 			ASSERT_OBJECT_TYPE_EXACT(iter->mo_name, &DeeString_Type);
+
 			/* Re-hash this entry. */
 			dst = &new_vector[fs_hashobj(iter->mo_name) % new_size];
-			if ((iter->mo_globnext = dst->mb_list) != NULL)
-				iter->mo_globnext->mo_globpself = &iter->mo_globnext;
-			iter->mo_globpself = &dst->mb_list;
-			dst->mb_list       = iter;
+			LIST_REMOVE(iter, mo_globlink);
+			LIST_INSERT_HEAD(dst, iter, mo_globlink);
+
 			/* Continue with the next. */
 			iter = next;
 		}
@@ -643,12 +636,10 @@ do_alloc_new_vector:
 PRIVATE NONNULL((1)) bool DCALL
 add_file_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
-	struct module_bucket *bucket;
-	ASSERT(!self->mo_pself);
+	struct module_object_list *bucket;
+	ASSERT(!LIST_ISBOUND(self, mo_link));
 	ASSERT_OBJECT_TYPE_EXACT(self->mo_path, &DeeString_Type);
-#ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_writing(&modules_lock));
-#endif /* !CONFIG_NO_THREADS */
 	if (modules_c >= modules_a && !rehash_file_modules())
 		return false;
 	ASSERT(modules_a != 0);
@@ -656,10 +647,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 	hash = fs_hashmodpath(self);
 	Dee_DPRINTF("[RT] Caching module by-file %r\n", self->mo_path);
 	bucket = &modules_v[hash % modules_a];
-	if ((self->mo_next = bucket->mb_list) != NULL)
-		self->mo_next->mo_pself = &self->mo_next;
-	self->mo_pself  = &bucket->mb_list;
-	bucket->mb_list = self;
+	LIST_INSERT_HEAD(bucket, self, mo_link);
 	++modules_c;
 	return true;
 }
@@ -667,8 +655,8 @@ add_file_module(DeeModuleObject *__restrict self) {
 PRIVATE NONNULL((1)) bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
-	struct module_bucket *bucket;
-	ASSERT(!self->mo_globpself);
+	struct module_object_list *bucket;
+	ASSERT(!LIST_ISBOUND(self, mo_globlink));
 	ASSERT(self->mo_name);
 #ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_writing(&modules_glob_lock));
@@ -679,12 +667,9 @@ add_glob_module(DeeModuleObject *__restrict self) {
 		return false;
 	ASSERT(modules_glob_a != 0);
 	/* Insert the module into the table. */
-	hash = fs_hashobj((DeeObject *)self->mo_name);
+	hash   = fs_hashobj((DeeObject *)self->mo_name);
 	bucket = &modules_glob_v[hash % modules_glob_a];
-	if ((self->mo_globnext = bucket->mb_list) != NULL)
-		self->mo_globnext->mo_globpself = &self->mo_globnext;
-	self->mo_globpself = &bucket->mb_list;
-	bucket->mb_list    = self;
+	LIST_INSERT_HEAD(bucket, self, mo_globlink);
 	++modules_glob_c;
 	return true;
 }
@@ -693,25 +678,29 @@ add_glob_module(DeeModuleObject *__restrict self) {
 
 INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
-	if (self->mo_pself) {
+	if (LIST_ISBOUND(self, mo_link)) {
 		rwlock_write(&modules_lock);
-		if ((*self->mo_pself = self->mo_next) != NULL)
-			self->mo_next->mo_pself = self->mo_pself;
-		if (!--modules_c) {
-			Dee_Free(modules_v);
-			modules_v = NULL;
-			modules_a = 0;
+		COMPILER_READ_BARRIER();
+		if (LIST_ISBOUND(self, mo_link)) {
+			LIST_REMOVE(self, mo_link);
+			if (!--modules_c) {
+				Dee_Free(modules_v);
+				modules_v = NULL;
+				modules_a = 0;
+			}
+			rwlock_endwrite(&modules_lock);
 		}
-		rwlock_endwrite(&modules_lock);
 	}
-	if (self->mo_globpself) {
+	if (LIST_ISBOUND(self, mo_globlink)) {
 		rwlock_write(&modules_glob_lock);
-		if ((*self->mo_globpself = self->mo_globnext) != NULL)
-			self->mo_globnext->mo_globpself = self->mo_globpself;
-		if (!--modules_glob_c) {
-			Dee_Free(modules_glob_v);
-			modules_glob_v = NULL;
-			modules_glob_a = 0;
+		COMPILER_READ_BARRIER();
+		if (LIST_ISBOUND(self, mo_globlink)) {
+			LIST_REMOVE(self, mo_globlink);
+			if (!--modules_glob_c) {
+				Dee_Free(modules_glob_v);
+				modules_glob_v = NULL;
+				modules_glob_a = 0;
+			}
 		}
 		rwlock_endwrite(&modules_glob_lock);
 	}
@@ -1260,19 +1249,17 @@ DeeModule_DoGet(char const *__restrict name,
 		Dee_Incref(result);
 		goto done;
 	}
+
 	rwlock_read(&modules_glob_lock);
 	if (modules_glob_a) {
-		result = modules_glob_v[hash % modules_glob_a].mb_list;
+		result = LIST_FIRST(&modules_glob_v[hash % modules_glob_a]);
 		while (result) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
-			if (DeeString_SIZE(result->mo_name) == size &&
-			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
-			    fs_bcmp(DeeString_STR(result->mo_name), name,
-			            size * sizeof(char)) == 0) {
+			if (DeeString_FS_EQUALS_BUF(result->mo_name, name, size)) {
 				Dee_Incref(result);
 				break; /* Found it! */
 			}
-			result = result->mo_globnext;
+			result = LIST_NEXT(result, mo_globlink);
 		}
 	}
 	rwlock_endread(&modules_glob_lock);
@@ -1415,8 +1402,7 @@ again_search_fs_modules:
 	/* Search for modules that have already been cached. */
 	rwlock_read(&modules_lock);
 	if (modules_a) {
-		result = modules_v[hash % modules_a].mb_list;
-		for (; result; result = result->mo_next) {
+		LIST_FOREACH (result, &modules_v[hash % modules_a], mo_link) {
 			char *utf8_path;
 			if (fs_hashmodpath(result) != hash)
 				continue;
@@ -1448,13 +1434,13 @@ again_search_fs_modules:
 				break;
 			rwlock_endread(&modules_lock);
 got_result_set_global:
-			if (module_global_name && likely(!result->mo_globpself)) {
+			if (module_global_name && likely(!LIST_ISBOUND(result, mo_globlink))) {
 				DeeModuleObject *existing_module;
 				/* Cache the module as global (if it wasn't already) */
 again_find_existing_global_module:
 				rwlock_write(&modules_glob_lock);
 				COMPILER_READ_BARRIER();
-				if likely(result->mo_globpself == NULL) {
+				if likely(!LIST_ISBOUND(result, mo_globlink)) {
 					/* TODO: Must change `result->mo_name' to `module_global_name'
 					 * ${LIBPATH}/foo/bar.dee:
 					 * >> global helper = import(".bar");
@@ -1475,8 +1461,8 @@ again_find_existing_global_module:
 					 * >> print a.helper.__isglobal__; // true
 					 * NOTE: This requires some changes to the runtime, as `mo_name' is
 					 *       currently assumed to be `[const]', when that must to be changed to:
-					 *       [const_if(mo_globpself != NULL)]
-					 *       [lock_if(mo_globpself == NULL, INTERNAL(modules_glob_lock))]
+					 *       [const_if(mo_globlink != NULL)]
+					 *       [lock_if(mo_globlink == NULL, INTERNAL(modules_glob_lock))]
 					 */
 
 					existing_module = find_glob_module(result->mo_name);

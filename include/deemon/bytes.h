@@ -130,7 +130,7 @@ DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeObject *__restrict self, siz
 
 /* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
  * The given `flags' determines if the view is read-only, or can be modified.
- * @param: flags: Set of `DEE_BUFFER_F*' */
+ * @param: flags: Set of `Dee_BUFFER_F*' */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags);
