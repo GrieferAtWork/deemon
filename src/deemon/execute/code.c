@@ -716,7 +716,6 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
-	uint16_t i;
 	ASSERTF(!self->co_module ||
 	        !DeeModule_Check(self->co_module) ||
 	        self != self->co_module->mo_root ||
@@ -727,24 +726,24 @@ code_fini(DeeCodeObject *__restrict self) {
 	/* Clear default argument objects. */
 	if (self->co_argc_max != self->co_argc_min) {
 		uint16_t count = self->co_argc_max - self->co_argc_min;
-		for (i = 0; i < count; ++i)
-			Dee_XDecref(self->co_defaultv[i]);
+		Dee_XDecrefv(self->co_defaultv, count);
 	}
 	/* Clear static variables/constants. */
-	for (i = 0; i < self->co_staticc; ++i)
-		Dee_Decref(self->co_staticv[i]);
+	Dee_Decrefv(self->co_staticv, self->co_staticc);
 
 	/* Clear exception handlers. */
-	for (i = 0; i < self->co_exceptc; ++i)
-		Dee_XDecref(self->co_exceptv[i].eh_mask);
+	{
+		uint16_t i;
+		for (i = 0; i < self->co_exceptc; ++i)
+			Dee_XDecref(self->co_exceptv[i].eh_mask);
+	}
 
 	/* Clear debug information. */
 	Dee_Decref(self->co_ddi);
 
 	/* Clear keyword names. */
 	if (self->co_keywords) {
-		for (i = 0; i < self->co_argc_max; ++i)
-			Dee_Decref(self->co_keywords[i]);
+		Dee_Decrefv(self->co_keywords, self->co_argc_max);
 		Dee_Free((void *)self->co_keywords);
 	}
 
@@ -1267,7 +1266,6 @@ PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_copy(DeeCodeObject *__restrict self) {
 	DREF DeeCodeObject *result;
-	uint16_t i;
 	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
 	                                                  self->co_codebytes);
 	if unlikely(!result)
@@ -1275,17 +1273,15 @@ code_copy(DeeCodeObject *__restrict self) {
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
 	atomic_rwlock_init(&result->co_static_lock);
 	if (result->co_keywords) {
-		if (!result->co_argc_max)
+		if (!result->co_argc_max) {
 			result->co_keywords = NULL;
-		else {
+		} else {
 			result->co_keywords = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
 			                                                          sizeof(DREF DeeStringObject *));
 			if unlikely(!result->co_keywords)
 				goto err_r;
-			memcpyc((void *)result->co_keywords, self->co_keywords,
-			        result->co_argc_max, sizeof(DREF DeeStringObject *));
-			for (i = 0; i < result->co_argc_max; ++i)
-				Dee_Incref(result->co_keywords[i]);
+			Dee_Movrefv((DREF DeeObject **)result->co_keywords,
+			            self->co_keywords, result->co_argc_max);
 		}
 	}
 	ASSERT(result->co_argc_max >= result->co_argc_min);
@@ -1296,10 +1292,7 @@ code_copy(DeeCodeObject *__restrict self) {
 		result->co_defaultv = (DREF DeeObject **)Dee_Malloc(n * sizeof(DREF DeeObject *));
 		if unlikely(!result->co_defaultv)
 			goto err_r_keywords;
-		memcpyc((void *)result->co_defaultv, self->co_defaultv,
-		        n, sizeof(DREF DeeObject *));
-		for (i = 0; i < n; ++i)
-			Dee_XIncref(result->co_defaultv[i]);
+		Dee_XMovrefv((DREF DeeObject **)result->co_defaultv, self->co_defaultv, n);
 	}
 	ASSERT((result->co_staticc != 0) ==
 	       (result->co_staticv != NULL));
@@ -1309,15 +1302,13 @@ code_copy(DeeCodeObject *__restrict self) {
 		if unlikely(!result->co_staticv)
 			goto err_r_default;
 		atomic_rwlock_read(&self->co_static_lock);
-		memcpyc((void *)result->co_staticv, self->co_staticv,
-		        result->co_staticc, sizeof(DREF DeeObject *));
-		for (i = 0; i < result->co_staticc; ++i)
-			Dee_Incref(result->co_staticv[i]);
+		Dee_Movrefv(result->co_staticv, self->co_staticv, result->co_staticc);
 		atomic_rwlock_endread(&self->co_static_lock);
 	}
-	if (!result->co_exceptc)
+	if (!result->co_exceptc) {
 		result->co_exceptv = NULL;
-	else {
+	} else {
+		uint16_t i;
 		result->co_exceptv = (struct except_handler *)Dee_Malloc(result->co_exceptc *
 		                                                         sizeof(struct except_handler));
 		if unlikely(!result->co_exceptv)
@@ -1338,21 +1329,18 @@ done:
 	return result;
 err_r_static:
 	if (result->co_staticv) {
-		for (i = 0; i < result->co_staticc; ++i)
-			Dee_Decref(result->co_staticv[i]);
+		Dee_Decrefv(result->co_staticv, result->co_staticc);
 		Dee_Free(result->co_staticv);
 	}
 err_r_default:
 	if (result->co_defaultv) {
 		uint16_t n = result->co_argc_max - result->co_argc_min;
-		for (i = 0; i < n; ++i)
-			Dee_XDecref(result->co_defaultv[i]);
+		Dee_XDecrefv(result->co_defaultv, n);
 		Dee_Free((void *)result->co_defaultv);
 	}
 err_r_keywords:
 	if (result->co_keywords) {
-		for (i = 0; i < result->co_argc_max; ++i)
-			Dee_Decref(result->co_keywords[i]);
+		Dee_Decrefv(result->co_keywords, result->co_argc_max);
 		Dee_Free((void *)result->co_keywords);
 	}
 err_r:
@@ -1583,15 +1571,16 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_buf;
 	/* Copy text bytes. */
 	result->co_codebytes = (code_size_t)text_buf.bb_size;
-	memcpyc(result->co_code,
-	        text_buf.bb_base,
-	        text_buf.bb_size,
-	        sizeof(instruction_t));
+	{
+		instruction_t *endp;
+		endp = (instruction_t *)mempcpyc(result->co_code, text_buf.bb_base,
+		                                 text_buf.bb_size, sizeof(instruction_t));
 #if ASM_RET_NONE == 0
-	bzero(result->co_code + text_buf.bb_size, INSTRLEN_MAX);
+		bzero(endp, INSTRLEN_MAX);
 #else /* ASM_RET_NONE == 0 */
-	memset(result->co_code + text_buf.bb_size, ASM_RET_NONE, INSTRLEN_MAX);
+		memset(endp, ASM_RET_NONE, INSTRLEN_MAX);
 #endif /* ASM_RET_NONE != 0 */
+	}
 	DeeObject_PutBuf(text, &text_buf, Dee_BUFFER_FREADONLY);
 	/* Load keyword arguments */
 	result->co_keywords = NULL;
@@ -1658,8 +1647,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			} else if (DeeError_Catch(&DeeError_UnboundItem)) {
 				default_vec[i] = NULL; /* Optional argument */
 			} else {
-				while (i--)
-					Dee_XDecref(default_vec[i]);
+				Dee_XDecrefv(default_vec, i);
 				Dee_Free(default_vec);
 				goto err_r_keywords;
 			}
@@ -1720,9 +1708,9 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			ASSERT(except_c <= except_a);
 			if (except_c >= except_a) {
 				uint16_t new_except_a = except_a * 2;
-				if (!except_a)
+				if (!except_a) {
 					new_except_a = 2;
-				else if unlikely(new_except_a <= except_a) {
+				} else if unlikely(new_except_a <= except_a) {
 					if unlikely(except_a == (uint16_t)-1) {
 						DeeError_Throwf(&DeeError_IntegerOverflow,
 						                "Too many exception handlers");
@@ -1758,8 +1746,9 @@ err_r_except_temp_iter:
 			goto err_r_except_temp_iter;
 		Dee_Decref(iter);
 		if (except_a > except_c) {
-			new_except_v = (struct except_handler *)Dee_TryRealloc(except_v, except_c *
-			                                                                 sizeof(struct except_handler));
+			new_except_v = (struct except_handler *)Dee_TryRealloc(except_v,
+			                                                       except_c *
+			                                                       sizeof(struct except_handler));
 			if likely(new_except_v)
 				except_v = new_except_v;
 		}
@@ -1809,9 +1798,9 @@ got_flag:
 			result->co_flags |= CODE_FASSEMBLY;
 		}
 	}
-	if (DeeNone_Check(ddi))
+	if (DeeNone_Check(ddi)) {
 		ddi = &empty_ddi;
-	else {
+	} else {
 		if (DeeObject_AssertTypeExact(ddi, &DeeDDI_Type))
 			goto err_r_except;
 	}
@@ -1841,23 +1830,18 @@ err_r_except:
 	}
 err_r_statics:
 	if (result->co_staticv) {
-		uint16_t i;
-		for (i = 0; i < result->co_staticc; ++i)
-			Dee_Decref(result->co_staticv[i]);
+		Dee_Decrefv(result->co_staticv, result->co_staticc);
 		Dee_Free((void *)result->co_staticv);
 	}
 err_r_default_v:
 	if (result->co_defaultv) {
 		result->co_argc_max -= result->co_argc_min;
-		while (result->co_argc_max--)
-			Dee_XDecref(result->co_defaultv[result->co_argc_max]);
+		Dee_XDecrefv(result->co_defaultv, result->co_argc_max);
 		Dee_Free((void *)result->co_defaultv);
 	}
 err_r_keywords:
 	if (result->co_keywords) {
-		uint16_t i;
-		for (i = 0; i < result->co_argc_max; ++i)
-			Dee_Decref(result->co_keywords[i]);
+		Dee_Decrefv(result->co_keywords, result->co_argc_max);
 		Dee_Free((void *)result->co_keywords);
 	}
 err_r:

@@ -366,11 +366,7 @@ F(fini)(STRUCT_TYPE *__restrict self) {
 	Dee_Decref(self->sg_kw);
 #endif /* DEFINE_CALLATTRKW */
 #if defined(DEFINE_CALLATTR) || defined(DEFINE_CALLATTRKW)
-	{
-		size_t i;
-		for (i = 0; i < self->sg_argc; ++i)
-			Dee_Decref(self->sg_argv[i]);
-	}
+	Dee_Decrefv(self->sg_argv, self->sg_argc);
 #endif /* DEFINE_CALLATTR || DEFINE_CALLATTRKW */
 }
 
@@ -382,11 +378,7 @@ F(visit)(STRUCT_TYPE *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sg_kw);
 #endif /* DEFINE_CALLATTRKW */
 #if defined(DEFINE_CALLATTR) || defined(DEFINE_CALLATTRKW)
-	{
-		size_t i;
-		for (i = 0; i < self->sg_argc; ++i)
-			Dee_Visit(self->sg_argv[i]);
-	}
+	Dee_Visitv(self->sg_argv, self->sg_argc);
 #endif /* DEFINE_CALLATTR || DEFINE_CALLATTRKW */
 }
 
@@ -464,7 +456,6 @@ done:
 PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(copy)(STRUCT_TYPE *__restrict other) {
 	DREF STRUCT_TYPE *result;
-	size_t i;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(offsetof(STRUCT_TYPE, sg_argv) +
 	                                              (other->sg_argc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
@@ -472,10 +463,7 @@ F(copy)(STRUCT_TYPE *__restrict other) {
 	result->se_seq  = other->se_seq;
 	result->sg_attr = other->sg_attr;
 	result->sg_argc = other->sg_argc;
-	memcpyc(result->sg_argv, other->sg_argv,
-	        result->sg_argc, sizeof(DREF DeeObject *));
-	for (i = 0; i < result->sg_argc; ++i)
-		Dee_Incref(result->sg_argv[i]);
+	Dee_Movrefv(result->sg_argv, other->sg_argv, result->sg_argc);
 #ifdef DEFINE_CALLATTRKW
 	result->sg_kw = other->sg_kw;
 	Dee_Incref(result->sg_kw);
@@ -515,8 +503,7 @@ F(deep)(STRUCT_TYPE *__restrict other) {
 done:
 	return result;
 err_r_argv:
-	while (i--)
-		Dee_Decref(result->sg_argv[i]);
+	Dee_Decrefv(result->sg_argv, i);
 /*err_r_kw:*/
 #ifdef DEFINE_CALLATTRKW
 	Dee_Decref(result->sg_kw);
@@ -533,7 +520,6 @@ F(init)(size_t argc, DeeObject *const *argv) {
 	DREF STRUCT_TYPE *result;
 	DeeStringObject *attr;
 	DeeObject *seq;
-	size_t i;
 	DeeObject *args = Dee_EmptyTuple;
 #ifdef DEFINE_CALLATTR
 	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqEachCallAttr", &seq, &attr, &args))
@@ -554,10 +540,7 @@ F(init)(size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	result->sg_argc = DeeTuple_SIZE(args);
-	memcpyc(result->sg_argv, DeeTuple_ELEM(args),
-	        DeeTuple_SIZE(args), sizeof(DREF DeeObject *));
-	for (i = 0; i < DeeTuple_SIZE(args); ++i)
-		Dee_Incref(result->sg_argv[i]);
+	Dee_Movrefv(result->sg_argv, DeeTuple_ELEM(args), DeeTuple_SIZE(args));
 #ifdef DEFINE_CALLATTRKW
 	result->sg_kw = kw;
 	Dee_Incref(kw);

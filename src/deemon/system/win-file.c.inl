@@ -103,10 +103,8 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
 		{
 			char temp[512];
 			while (bufsize) {
-				size_t part;
-				part = MIN(bufsize, sizeof(temp) - sizeof(char));
-				memcpyc(temp, buffer, part, sizeof(char));
-				temp[part] = '\0';
+				size_t part = MIN(bufsize, sizeof(temp) - sizeof(char));
+				*(char *)mempcpyc(temp, buffer, part, sizeof(char)) = '\0';
 				DBG_ALIGNMENT_DISABLE();
 				OutputDebugStringA(temp);
 				DBG_ALIGNMENT_ENABLE();
@@ -757,10 +755,11 @@ again:
 	pending_count = ATOMIC_READ(self->sf_pendingc);
 	if unlikely(pending_count) {
 		size_t temp;
-		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2];
+		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2], *p;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		memcpyc(with_pending, self->sf_pending, pending_count, sizeof(unsigned char));
-		memcpyc(with_pending + pending_count, buffer, bufsize, sizeof(unsigned char));
+		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending,
+		                              pending_count, sizeof(unsigned char));
+		memcpyc(p, buffer, bufsize, sizeof(unsigned char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
@@ -795,15 +794,14 @@ again:
 		return 0;
 	pending_count = ATOMIC_READ(self->sf_pendingc);
 	if (pending_count) {
-		unsigned char with_pending[64];
+		unsigned char with_pending[64], *p;
 		size_t total_length;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		memcpyc(with_pending, self->sf_pending, pending_count, sizeof(char));
+		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending, pending_count, sizeof(char));
 		total_length = pending_count + bufsize;
 		if (total_length > COMPILER_LENOF(with_pending))
 			total_length = COMPILER_LENOF(with_pending);
-		memcpyc(with_pending + pending_count, buffer,
-		        total_length - pending_count, sizeof(char));
+		memcpyc(p, buffer, total_length - pending_count, sizeof(char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
 			goto again;
 		num_written = write_utf8_to_console(self,

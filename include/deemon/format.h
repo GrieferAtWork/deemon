@@ -63,8 +63,8 @@ DECL_BEGIN
  *               This is to `%.DIGIT' what `%$s' is to `%.?s'
  *   - `%?...': Take the width of the output text as a `size_t'
  *   - `%b': Integer option: Same as `o', but output as a binary.
- *   - `%k': Taking a `DeeObject *', print `__str__' or `none' when `NULL' was passed.
- *   - `%r': Taking a `DeeObject *', print `__repr__' or `none' when `NULL' was passed.
+ *   - `%k': Taking a `DeeObject *', print `__str__' (return `-1', but don't set an (additional) error if NULL)
+ *   - `%r': Taking a `DeeObject *', print `__repr__' (return `-1', but don't set an (additional) error if NULL)
  *   - `%K': Same as `%k', but decref() the object afterwards.
  *   - `%R': Same as `%r', but decref() the object afterwards.
  * HINT: To guaranty fulfillment of `K' and `R' operands,

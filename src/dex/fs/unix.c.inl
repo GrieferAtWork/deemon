@@ -143,16 +143,16 @@ LOCAL ssize_t (readlink)(char const *UNUSED(path),
 LOCAL DIR *(opendir)(char const *name) {
 	DIR *result;
 	size_t namelen = strlen(name);
-	char *query    = (char *)malloc((namelen + 3) * sizeof(char));
+	char *p, *query = (char *)malloc((namelen + 3) * sizeof(char));
 	if unlikely(!query)
 		goto err;
 	result = (DIR *)malloc(sizeof(DIR));
 	if unlikely(!result)
 		goto done;
-	memcpyc(query, name, namelen, sizeof(char));
-	query[namelen]     = '\\';
-	query[namelen + 1] = '*';
-	query[namelen + 2] = '\0';
+	p = (char *)mempcpyc(query, name, namelen, sizeof(char));
+	*p++ = '\\';
+	*p++ = '*';
+	*p++ = '\0';
 	result->d_isfirst  = 1;
 	result->d_hnd      = _findfirst32(query, (struct _finddata32_t *)&result->d_ent.d_attrib);
 	if unlikely(result->d_hnd == -1) {
@@ -1468,8 +1468,8 @@ query_iter(Dir *__restrict self) {
 			temp_filename        = (char *)Dee_AMalloc((temp_filesize + 1) * sizeof(char));
 			if unlikely(!temp_filename)
 				goto err_r;
-			memcpyc(temp_filename, query_str, temp_filesize, sizeof(char));
-			temp_filename[temp_filesize] = '\0'; /* Override the '/' to terminate the string. */
+			/* Override the '/' to terminate the string. */
+			*(char *)mempcpyc(temp_filename, query_str, temp_filesize, sizeof(char)) = '\0';
 			DBG_ALIGNMENT_DISABLE();
 			result->q_iter.di_hnd = opendir(temp_filename);
 			/* Free the temporary buffer, but preserve errno. */

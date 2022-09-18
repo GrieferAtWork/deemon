@@ -246,10 +246,10 @@ bsci_next(BytesSplitIterator *__restrict self) {
 	start = self->bsi_iter;
 	if (!start)
 		return ITER_DONE;
-	end = (uint8_t *)dee_memasciicasemem(start,
-	                                     self->bsi_end - start,
-	                                     self->bsi_sep_ptr,
-	                                     self->bsi_sep_len);
+	end = (uint8_t *)memasciicasemem(start,
+	                                 self->bsi_end - start,
+	                                 self->bsi_sep_ptr,
+	                                 self->bsi_sep_len);
 	if (!end) {
 		self->bsi_iter = NULL;
 		return DeeBytes_NewView(self->bsi_bytes->b_orig,
@@ -262,10 +262,10 @@ bsci_next(BytesSplitIterator *__restrict self) {
 		start = ATOMIC_READ(self->bsi_iter);
 		if (!start)
 			return ITER_DONE;
-		end = (uint8_t *)dee_memasciicasemem(start,
-		                                     self->bsi_end - start,
-		                                     self->bsi_sep_ptr,
-		                                     self->bsi_sep_len);
+		end = (uint8_t *)memasciicasemem(start,
+		                                 self->bsi_end - start,
+		                                 self->bsi_sep_ptr,
+		                                 self->bsi_sep_len);
 		if (!end) {
 			if (!ATOMIC_CMPXCH_WEAK(self->bsi_iter, start, NULL))
 				continue;

@@ -309,14 +309,13 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 		}
 		bufiter = buffer;
 		/* Create the path for the filename. */
-		memcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
-		bufiter += (size_t)(next - iter);
-		if (next[-1] != '/' && next[-1] != '\\')
-			*bufiter++ = '\\';
-		memcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
-		bufiter[szApplicationNameLength] = 0; /* Ensure zero-termination */
-		ASSERT(bFixUnc ? bufiter + szApplicationNameLength == buffer + WSTR_LENGTH(buffer)
-		               : bufiter + szApplicationNameLength <= buffer + WSTR_LENGTH(buffer));
+		bufiter = (LPWSTR)mempcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
+		if (next[-1] != (WCHAR)'/' && next[-1] != (WCHAR)'\\')
+			*bufiter++ = (WCHAR)'\\';
+		bufiter  = (LPWSTR)mempcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
+		*bufiter = (WCHAR)'\0'; /* Ensure zero-termination */
+		ASSERT(bFixUnc ? bufiter == buffer + WSTR_LENGTH(buffer)
+		               : bufiter <= buffer + WSTR_LENGTH(buffer));
 		if (bFixUnc) {
 			LPWSTR pathname;
 			DREF DeeStringObject *result, *fixed_result;
@@ -425,13 +424,12 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 				goto err_buffer;
 			buffer = new_buffer;
 		}
-		bufiter = buffer;
 		/* Create the path for the filename. */
-		memcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
-		bufiter += szApplicationNameLength;
-		memcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
-		bufiter[(size_t)(next - iter)] = 0; /* Ensure zero-termination */
-		ASSERT(bufiter + (size_t)(next - iter) <= buffer + WSTR_LENGTH(buffer));
+		bufiter  = buffer;
+		bufiter  = (LPWSTR)mempcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
+		bufiter  = (LPWSTR)mempcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
+		*bufiter = (WCHAR)'\0'; /* Ensure zero-termination */
+		ASSERT(bufiter <= buffer + WSTR_LENGTH(buffer));
 		/* All right. Let's do this! */
 		DBG_ALIGNMENT_DISABLE();
 		if (CreateProcessW(buffer, lpCommandLine, lpProcessAttributes,

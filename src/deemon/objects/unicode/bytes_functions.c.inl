@@ -138,10 +138,10 @@ bytes_casefind(Bytes *self, size_t argc,
 	if (start >= end)
 		ptr = NULL;
 	else {
-		ptr = (uint8_t *)dee_memasciicasemem(DeeBytes_DATA(self) + start,
-		                                     end - start,
-		                                     needle.n_data,
-		                                     needle.n_size);
+		ptr = (uint8_t *)memasciicasemem(DeeBytes_DATA(self) + start,
+		                                 end - start,
+		                                 needle.n_data,
+		                                 needle.n_size);
 	}
 	if (!ptr)
 		goto not_found;
@@ -171,9 +171,9 @@ bytes_rfind(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		result = NULL;
-	else {
+	} else {
 		result = (uint8_t *)memrmemb(DeeBytes_DATA(self) + start,
 		                             end - start,
 		                             needle.n_data,
@@ -202,13 +202,13 @@ bytes_caserfind(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		ptr = NULL;
-	else {
-		ptr = (uint8_t *)dee_memasciicasermem(DeeBytes_DATA(self) + start,
-		                                      end - start,
-		                                      needle.n_data,
-		                                      needle.n_size);
+	} else {
+		ptr = (uint8_t *)memasciicasermem(DeeBytes_DATA(self) + start,
+		                                  end - start,
+		                                  needle.n_data,
+		                                  needle.n_size);
 	}
 	if (!ptr)
 		goto not_found;
@@ -238,9 +238,9 @@ bytes_index(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		result = NULL;
-	else {
+	} else {
 		result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
 		                            end - start,
 		                            needle.n_data,
@@ -271,13 +271,13 @@ bytes_caseindex(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		ptr = NULL;
-	else {
-		ptr = (uint8_t *)dee_memasciicasemem(DeeBytes_DATA(self) + start,
-		                                     end - start,
-		                                     needle.n_data,
-		                                     needle.n_size);
+	} else {
+		ptr = (uint8_t *)memasciicasemem(DeeBytes_DATA(self) + start,
+		                                 end - start,
+		                                 needle.n_data,
+		                                 needle.n_size);
 	}
 	if (!ptr) {
 		err_index_not_found((DeeObject *)self, find_ob);
@@ -307,9 +307,9 @@ bytes_rindex(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		result = NULL;
-	else {
+	} else {
 		result = (uint8_t *)memrmemb(DeeBytes_DATA(self) + start,
 		                             end - start,
 		                             needle.n_data,
@@ -340,13 +340,13 @@ bytes_caserindex(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		ptr = NULL;
-	else {
-		ptr = (uint8_t *)dee_memasciicasermem(DeeBytes_DATA(self) + start,
-		                                      end - start,
-		                                      needle.n_data,
-		                                      needle.n_size);
+	} else {
+		ptr = (uint8_t *)memasciicasermem(DeeBytes_DATA(self) + start,
+		                                  end - start,
+		                                  needle.n_data,
+		                                  needle.n_size);
 	}
 	if (!ptr) {
 		err_index_not_found((DeeObject *)self, find_ob);
@@ -421,10 +421,10 @@ bytes_casefind_specific_needle(Bytes *self, DeeObject *find_ob,
 	end = *p_end + needle.n_size;
 	if (end > mylen)
 		end = mylen;
-	result = (uint8_t *)dee_memasciicasemem(DeeBytes_DATA(self) + start,
-	                                        end - start,
-	                                        needle.n_data,
-	                                        needle.n_size);
+	result = (uint8_t *)memasciicasemem(DeeBytes_DATA(self) + start,
+	                                    end - start,
+	                                    needle.n_data,
+	                                    needle.n_size);
 	if (result != NULL) {
 		*p_end = (size_t)(result - DeeBytes_DATA(self));
 		*p_match_length = needle.n_size;
@@ -445,10 +445,10 @@ bytes_caserfind_specific_needle(Bytes *self, DeeObject *find_ob,
 	if (get_needle(&needle, find_ob))
 		goto err;
 	start = *p_start;
-	result = (uint8_t *)dee_memasciicasermem(DeeBytes_DATA(self) + start,
-	                                         end - start,
-	                                         needle.n_data,
-	                                         needle.n_size);
+	result = (uint8_t *)memasciicasermem(DeeBytes_DATA(self) + start,
+	                                     end - start,
+	                                     needle.n_data,
+	                                     needle.n_size);
 	if (result != NULL) {
 		*p_start        = (size_t)(result - DeeBytes_DATA(self));
 		*p_did_find_any = true;
@@ -1036,7 +1036,7 @@ bytes_casecount(Bytes *self, size_t argc,
 		end -= start;
 		iter += start;
 		while (end >= needle.n_size) {
-			if (dee_memasciicaseeq(iter, needle.n_data, needle.n_size))
+			if (memasciicaseeq(iter, needle.n_data, needle.n_size))
 				++result;
 			--end;
 			++iter;
@@ -1087,10 +1087,10 @@ bytes_casecontains_f(Bytes *self, size_t argc,
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
 		return_false;
-	return_bool(dee_memasciicasemem(DeeBytes_DATA(self) + start,
-	                                end - start,
-	                                needle.n_data,
-	                                needle.n_size) != NULL);
+	return_bool(memasciicasemem(DeeBytes_DATA(self) + start,
+	                            end - start,
+	                            needle.n_data,
+	                            needle.n_size) != NULL);
 err:
 	return NULL;
 }
@@ -2053,7 +2053,7 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 	block_begin = begin;
 	if likely(max_count) {
 		while (begin < end) {
-			if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
+			if (memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
 				if unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
 					goto err_printer;
@@ -2174,7 +2174,7 @@ bytes_tocasereplace(Bytes *__restrict self, size_t argc,
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	if likely(max_count) {
 		while (begin < end) {
-			if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
+			if (memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
 				memcpy(begin, replace_needle.n_data, replace_needle.n_size);
 				begin += find_needle.n_size;
@@ -2380,8 +2380,8 @@ bytes_casestartswith(Bytes *self, size_t argc,
 		end = DeeBytes_SIZE(self);
 	if (start > end || (end - start) < needle.n_size)
 		return_false;
-	return_bool(dee_memasciicaseeq(DeeBytes_DATA(self) + start,
-	                               needle.n_data, needle.n_size));
+	return_bool(memasciicaseeq(DeeBytes_DATA(self) + start,
+	                           needle.n_data, needle.n_size));
 err:
 	return NULL;
 }
@@ -2421,9 +2421,9 @@ bytes_caseendswith(Bytes *self, size_t argc,
 		end = DeeBytes_SIZE(self);
 	if (start > end || (end - start) < needle.n_size)
 		return_false;
-	return_bool(dee_memasciicaseeq(DeeBytes_DATA(self) +
-	                               (end - needle.n_size),
-	                               needle.n_data, needle.n_size));
+	return_bool(memasciicaseeq(DeeBytes_DATA(self) +
+	                           (end - needle.n_size),
+	                           needle.n_data, needle.n_size));
 err:
 	return NULL;
 }
@@ -2507,10 +2507,10 @@ bytes_caseparition(Bytes *self, size_t argc,
 		return DeeTuple_Pack(3, Dee_EmptyBytes, Dee_EmptyBytes, Dee_EmptyBytes);
 	end -= start;
 	return bytes_pack_partition(self,
-	                            dee_memasciicasemem(DeeBytes_DATA(self) + start,
-	                                                end,
-	                                                needle.n_data,
-	                                                needle.n_size),
+	                            memasciicasemem(DeeBytes_DATA(self) + start,
+	                                            end,
+	                                            needle.n_data,
+	                                            needle.n_size),
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
@@ -2561,10 +2561,10 @@ bytes_caserparition(Bytes *self, size_t argc,
 		return DeeTuple_Pack(3, Dee_EmptyBytes, Dee_EmptyBytes, Dee_EmptyBytes);
 	end -= start;
 	return bytes_pack_partition(self,
-	                            dee_memasciicasermem(DeeBytes_DATA(self) + start,
-	                                                 end,
-	                                                 needle.n_data,
-	                                                 needle.n_size),
+	                            memasciicasermem(DeeBytes_DATA(self) + start,
+	                                             end,
+	                                             needle.n_data,
+	                                             needle.n_size),
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
@@ -2992,8 +2992,8 @@ bytes_vercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	int8_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "vercompare"))
 		goto err;
-	result = dee_strverscmpb(args.lhs_ptr, args.lhs_len,
-	                         args.rhs_ptr, args.lhs_len);
+	result = strverscmpb(args.lhs_ptr, args.lhs_len,
+	                     args.rhs_ptr, args.lhs_len);
 	return DeeInt_NewS8(result);
 err:
 	return NULL;
@@ -3068,8 +3068,8 @@ bytes_casevercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	int8_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "casevercompare"))
 		goto err;
-	result = dee_strcaseverscmpb(args.lhs_ptr, args.lhs_len, /* TODO: ASCII variant */
-	                             args.rhs_ptr, args.lhs_len);
+	result = strcaseverscmpb(args.lhs_ptr, args.lhs_len, /* TODO: ASCII variant */
+	                         args.rhs_ptr, args.lhs_len);
 	return DeeInt_NewS8(result);
 err:
 	return NULL;
@@ -4052,8 +4052,8 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(end <= start)
 		goto match_not_found; /* Empty search area. */
 	scan_len    = end - start;
-	match_start = dee_memasciicasemem(scan_str + start, scan_len,
-	                                  s_open.n_data, s_open.n_size);
+	match_start = memasciicasemem(scan_str + start, scan_len,
+	                              s_open.n_data, s_open.n_size);
 	if unlikely(!match_start)
 		goto match_not_found;
 	match_end = find_asciicasematchb(match_start + s_open.n_size, scan_len - (match_start - (scan_str + start)),
@@ -4122,8 +4122,8 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(end <= start)
 		goto match_not_found; /* Empty search area. */
 	scan_len  = end - start;
-	match_end = dee_memasciicasermem(scan_str + start, scan_len,
-	                                 s_clos.n_data, s_clos.n_size);
+	match_end = memasciicasermem(scan_str + start, scan_len,
+	                             s_clos.n_data, s_clos.n_size);
 	if unlikely(!match_end)
 		goto match_not_found;
 	match_start = rfind_asciicasematchb(scan_str + start,

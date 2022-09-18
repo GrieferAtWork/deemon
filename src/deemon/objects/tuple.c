@@ -546,8 +546,7 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
 	if unlikely(!elem) {
 err_cleanup:
 		/* Cleanup elements we've already assigned. */
-		while (used_size--)
-			Dee_Decref(result->t_elem[used_size]);
+		Dee_Decrefv(result->t_elem, used_size);
 		Dee_DecrefNokill(&DeeTuple_Type);
 		tuple_tp_free(result);
 		result = NULL;
@@ -585,8 +584,9 @@ err_cleanup:
 		}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 		ASSERT(result->ob_refcnt == 1);
-		next = (DREF DeeObject *)DeeObject_TryRealloc(result, offsetof(DeeTupleObject, t_elem) +
-		                                                      used_size * sizeof(DREF DeeObject *));
+		next = (DREF DeeObject *)DeeObject_TryRealloc(result,
+		                                              offsetof(DeeTupleObject, t_elem) +
+		                                              used_size * sizeof(DREF DeeObject *));
 		if likely(next)
 			result = (DREF DeeTupleObject *)next;
 		result->t_size = used_size;
@@ -783,14 +783,14 @@ DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t ar
 	} else if unlikely(!argc) {
 		result = (DREF DeeTupleObject *)self;
 	} else {
+		DREF DeeObject **iter;
 		size_t mylen = DeeTuple_SIZE(self);
 		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(mylen + argc);
 		if unlikely(!result)
 			goto err;
-		Dee_Movrefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
+		iter = Dee_Movrefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
+		memcpyc(iter, argv, argc, sizeof(DREF DeeObject *));
 		Dee_Decref_unlikely(self);
-		memcpyc(DeeTuple_ELEM(result) + mylen, argv,
-		        argc, sizeof(DREF DeeObject *));
 	}
 	return (DREF DeeObject *)result;
 err:
@@ -1871,9 +1871,8 @@ tuple_repeat(Tuple *self,
 	/* Fill in the resulting tuple with repetitions of ourself. */
 	dst = DeeTuple_ELEM(result);
 	while (count--) {
-		memcpyc(dst, DeeTuple_ELEM(self),
-		        my_length, sizeof(DREF DeeObject *));
-		dst += my_length;
+		dst = (DREF DeeObject **)mempcpyc(dst, DeeTuple_ELEM(self),
+		                                  my_length, sizeof(DREF DeeObject *));
 	}
 	return result;
 return_empty:

@@ -217,8 +217,8 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifdef LOCAL_IS_NOCASE
-#define LOCAL_memchr dee_memasciicasechr
-#define LOCAL_MEMEQB dee_memasciicaseeq
+#define LOCAL_memchr memasciicasechr
+#define LOCAL_MEMEQB memasciicaseeq
 #else /* LOCAL_IS_NOCASE */
 #define LOCAL_memchr memchr
 #define LOCAL_MEMEQB MEMEQB

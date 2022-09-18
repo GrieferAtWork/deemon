@@ -39,6 +39,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 
 	case 0:
 		break;
+
 	case 1:
 		dst[0] = src[0];
 		break;
@@ -96,6 +97,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 			        sizeof(DREF DeeObject *));
 		}
 	}	break;
+
 	}
 	return 0;
 err:
@@ -190,6 +192,7 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 			        sizeof(DREF DeeObject *));
 		}
 	}	break;
+
 	}
 	return 0;
 err:

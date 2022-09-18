@@ -6535,22 +6535,22 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strverscmpb(my_str.cp8, my_len,
-		                         ot_str.cp8, ot_len);
+		result = strverscmpb(my_str.cp8, my_len,
+		                     ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6564,22 +6564,22 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strverscmpw(my_str.cp16, my_len,
-		                         ot_str.cp16, ot_len);
+		result = strverscmpw(my_str.cp16, my_len,
+		                     ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6593,22 +6593,22 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strverscmpl(my_str.cp32, my_len,
-		                         ot_str.cp32, ot_len);
+		result = strverscmpl(my_str.cp32, my_len,
+		                     ot_str.cp32, ot_len);
 		break;
 	}
 	return DeeInt_NewS32(result);
@@ -6634,22 +6634,22 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strcaseverscmpb(my_str.cp8, my_len,
-		                             ot_str.cp8, ot_len);
+		result = strcaseverscmpb(my_str.cp8, my_len,
+		                         ot_str.cp8, ot_len);
 		break;
 
 	CASE_WIDTH_2BYTE:
@@ -6663,22 +6663,22 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strcaseverscmpw(my_str.cp16, my_len,
-		                             ot_str.cp16, ot_len);
+		result = strcaseverscmpw(my_str.cp16, my_len,
+		                         ot_str.cp16, ot_len);
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -6692,22 +6692,22 @@ string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
-		result = dee_strcaseverscmpl(my_str.cp32, my_len,
-		                             ot_str.cp32, ot_len);
+		result = strcaseverscmpl(my_str.cp32, my_len,
+		                         ot_str.cp32, ot_len);
 		break;
 	}
 	return DeeInt_NewS32(result);
@@ -6733,17 +6733,17 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6762,17 +6762,17 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6791,17 +6791,17 @@ string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6834,17 +6834,17 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6863,17 +6863,17 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6892,17 +6892,17 @@ string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6934,17 +6934,17 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -6972,17 +6972,17 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7010,17 +7010,17 @@ string_common(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7059,17 +7059,17 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7099,17 +7099,17 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7139,17 +7139,17 @@ string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7195,17 +7195,17 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7231,17 +7231,17 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7267,17 +7267,17 @@ string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7319,17 +7319,17 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7355,17 +7355,17 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7391,17 +7391,17 @@ string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7440,17 +7440,17 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7469,17 +7469,17 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7498,17 +7498,17 @@ string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7539,17 +7539,17 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7568,17 +7568,17 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7597,17 +7597,17 @@ string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7643,17 +7643,17 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7673,17 +7673,17 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7703,17 +7703,17 @@ string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7750,17 +7750,17 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len     = WSTR_LENGTH(ot_str.cp8);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp8 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp8 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7780,17 +7780,17 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp16);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp16 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp16 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -7810,17 +7810,17 @@ string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 		ot_len = WSTR_LENGTH(ot_str.cp32);
 		if (args.my_end > my_len)
 			args.my_end = my_len;
-		if (args.my_end <= args.my_start)
+		if (args.my_end <= args.my_start) {
 			my_len = 0;
-		else {
+		} else {
 			my_str.cp32 += args.my_start;
 			my_len = args.my_end - args.my_start;
 		}
 		if (args.ot_end > ot_len)
 			args.ot_end = ot_len;
-		if (args.ot_end <= args.ot_start)
+		if (args.ot_end <= args.ot_start) {
 			ot_len = 0;
-		else {
+		} else {
 			ot_str.cp32 += args.ot_start;
 			ot_len = args.ot_end - args.ot_start;
 		}
@@ -9429,7 +9429,7 @@ PRIVATE int (DCALL regex_get_rules)(char const *__restrict rules_str,
 				size_t i;
 				if (rule_length < COMPILER_LENOF(regex_rule_names[0].name)) {
 					for (i = 0; i < COMPILER_LENOF(regex_rule_names); ++i) {
-						if (!dee_asciicaseeq(regex_rule_names[i].name, name_start, rule_length))
+						if (!asciicaseeq(regex_rule_names[i].name, name_start, rule_length))
 							continue;
 						*result |= regex_rule_names[i].flag;
 						goto got_rule_name;
@@ -12087,6 +12087,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 		 * a printer). */
 		struct string_utf *lhs_utf;
 		struct string_utf *rhs_utf;
+
 		/* Simple case: `other' is an empty string, so just re-use `self'. */
 		if (DeeString_IsEmpty(other))
 			return_reference_(self);
@@ -12094,8 +12095,10 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 		rhs_utf = ((String *)other)->s_data;
 		if (!lhs_utf || lhs_utf->u_width == STRING_WIDTH_1BYTE) {
 			if (!rhs_utf || rhs_utf->u_width == STRING_WIDTH_1BYTE) {
+				char *p;
 				DREF String *result;
 				size_t total_length = self->s_len + DeeString_SIZE(other);
+
 				/* Most likely case: both strings use 1-byte characters,
 				 * so we don't even need to use a multi-byte buffer! */
 				result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
@@ -12103,17 +12106,18 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 				if unlikely(!result)
 					goto err;
 				result->s_len = total_length;
+
 				/* Copy characters into the resulting string. */
-				memcpyc(result->s_str, self->s_str,
-				        self->s_len, sizeof(char));
-				memcpyc(result->s_str + self->s_len,
-				        DeeString_STR(other),
-				        DeeString_SIZE(other),
-				        sizeof(char));
+				p = (char *)mempcpyc(result->s_str, self->s_str,
+				                     self->s_len, sizeof(char));
+				p = (char *)mempcpyc(p, DeeString_STR(other),
+				                     DeeString_SIZE(other), sizeof(char));
+
 				/* finalize the resulting string. */
-				result->s_str[total_length] = '\0';
-				result->s_hash              = DEE_STRING_HASH_UNSET;
-				result->s_data              = NULL;
+				ASSERT(p == result->s_str + total_length);
+				*p             = '\0';
+				result->s_hash = DEE_STRING_HASH_UNSET;
+				result->s_data = NULL;
 				DeeObject_Init(result, &DeeString_Type);
 				return result;
 			}
@@ -12125,9 +12129,11 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			 * a 2/4-byte string, we don't have to painfully convert that
 			 * string into UTF-8, since we can simply generate the UTF-8
 			 * sequence by concat-ing the 2 we already got! */
+			char *p;
 			DREF String *result;
 			struct string_utf *result_utf;
 			size_t total_length = self->s_len + DeeString_SIZE(other);
+
 			/* Most likely case: both strings use 1-byte characters,
 			 * so we don't even need to use a multi-byte buffer! */
 			result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
@@ -12215,16 +12221,17 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 				}
 			}
 			result->s_len = total_length;
+
 			/* Copy characters into the resulting string. */
-			memcpyc(result->s_str, self->s_str,
-			        self->s_len, sizeof(char));
-			memcpyc(result->s_str + self->s_len,
-			        DeeString_STR(other),
-			        DeeString_SIZE(other),
-			        sizeof(char));
+			p = (char *)mempcpyc(result->s_str, self->s_str,
+			                     self->s_len, sizeof(char));
+			p = (char *)mempcpyc(p, DeeString_STR(other),
+			                     DeeString_SIZE(other), sizeof(char));
+
 			/* finalize the resulting string. */
-			result->s_str[total_length] = '\0';
-			result->s_hash              = DEE_STRING_HASH_UNSET;
+			ASSERT(p == result->s_str + total_length);
+			*p             = '\0';
+			result->s_hash = DEE_STRING_HASH_UNSET;
 			if (lhs_utf->u_data[STRING_WIDTH_1BYTE] == (size_t *)DeeString_STR(self) &&
 			    rhs_utf->u_data[STRING_WIDTH_1BYTE] == (size_t *)DeeString_STR(other))
 				result_utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
@@ -12245,6 +12252,7 @@ err_r_2_4:
 		/* Print our own string. */
 		if unlikely(unicode_printer_printstring(&printer, (DeeObject *)self) < 0)
 			goto err_printer;
+
 		/* Print the other object (as a string). */
 		if unlikely(DeeObject_Print(other, &unicode_printer_print, &printer) < 0)
 			goto err_printer;
@@ -12280,10 +12288,8 @@ string_mul(String *self, DeeObject *other) {
 			goto err;
 		src = (uint8_t *)DeeString_STR(self);
 		dst = (uint8_t *)DeeString_STR(result);
-		while (repeat--) {
-			memcpyb(dst, src, my_length);
-			dst += my_length;
-		}
+		while (repeat--)
+			dst = (uint8_t *)mempcpyb(dst, src, my_length);
 		return result;
 	}	break;
 
@@ -12296,10 +12302,8 @@ string_mul(String *self, DeeObject *other) {
 		dst = str = DeeString_New2ByteBuffer(total_length);
 		if unlikely(!str)
 			goto err;
-		while (repeat--) {
-			memcpyw(dst, src, my_length);
-			dst += my_length;
-		}
+		while (repeat--)
+			dst = (uint16_t *)mempcpyw(dst, src, my_length);
 		return (DREF String *)DeeString_Pack2ByteBuffer(str);
 	}	break;
 
@@ -12312,10 +12316,8 @@ string_mul(String *self, DeeObject *other) {
 		dst = str = DeeString_New4ByteBuffer(total_length);
 		if unlikely(!str)
 			goto err;
-		while (repeat--) {
-			memcpyl(dst, src, my_length);
-			dst += my_length;
-		}
+		while (repeat--)
+			dst = (uint32_t *)mempcpyl(dst, src, my_length);
 		return (DREF String *)DeeString_Pack4ByteBuffer(str);
 	}	break;
 

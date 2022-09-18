@@ -1097,13 +1097,10 @@ handle_backslash_in_text:
 					Dee_DecrefDokill(result);
 					return NULL;
 				}
-				memcpyc(tmp->ob_digit,
-				        result->ob_digit,
-				        size_z,
-				        sizeof(digit));
+				*(digit *)mempcpyc(tmp->ob_digit, result->ob_digit,
+				                   size_z, sizeof(digit)) = (digit)c;
 				Dee_DecrefDokill(result);
-				result                   = tmp;
-				result->ob_digit[size_z] = (digit)c;
+				result = tmp;
 				++size_z;
 			}
 		}

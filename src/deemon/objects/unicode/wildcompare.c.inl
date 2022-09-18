@@ -33,8 +33,8 @@
 
 #ifdef CASEFOLD
 PRIVATE int DCALL
-wildcompare(unicode_foldreader(T) *string,
-            unicode_foldreader(T) *pattern) {
+dee_wildcompare(unicode_foldreader(T) *string,
+                unicode_foldreader(T) * pattern) {
 	uint32_t pattern_ch, ch;
 	for (;;) {
 		if (unicode_foldreader_empty(*string)) {
@@ -66,7 +66,7 @@ wildcompare(unicode_foldreader(T) *string,
 					/* Recursively check if the rest of the string and pattern match */
 					unicode_foldreader(T) string_copy  = *string;
 					unicode_foldreader(T) pattern_copy = *pattern;
-					if (!wildcompare(&string_copy, &pattern_copy))
+					if (!dee_wildcompare(&string_copy, &pattern_copy))
 						return 0;
 				} else if (unicode_foldreader_empty(*string)) {
 					return -1; /* Wildcard suffix not found */
@@ -87,8 +87,8 @@ wildcompare(unicode_foldreader(T) *string,
 #else /* CASEFOLD */
 
 PRIVATE Treturn DCALL
-wildcompare(T const *string, size_t string_length,
-            T const *pattern, size_t pattern_length) {
+dee_wildcompare(T const *string, size_t string_length,
+                T const *pattern, size_t pattern_length) {
 	T card_post;
 	T const *string_end  = string + string_length;
 	T const *pattern_end = pattern + pattern_length;
@@ -128,8 +128,8 @@ wildcompare(T const *string, size_t string_length,
 #endif /* !NOCASE */
 				{
 					/* Recursively check if the rest of the string and pattern match */
-					if (!wildcompare(string, (size_t)(string_end - string),
-					                 pattern, (size_t)(pattern_end - pattern)))
+					if (!dee_wildcompare(string, (size_t)(string_end - string),
+					                     pattern, (size_t)(pattern_end - pattern)))
 						return 0;
 				} else if (string >= string_end) {
 					return -(Treturn)card_post; /* Wildcard suffix not found */
@@ -158,7 +158,7 @@ next:
 #undef CASEFOLD
 #undef NOCASE
 #undef Treturn
-#undef wildcompare
+#undef dee_wildcompare
 #undef T
 
 

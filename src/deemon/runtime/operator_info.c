@@ -144,8 +144,7 @@ Dee_OperatorFromNameLen(DeeTypeObject *typetype,
 	char buf[32];
 	if (namelen >= COMPILER_LENOF(buf))
 		return (uint16_t)-1; /* No valid operator has that long of a name... */
-	memcpyc(buf, name, namelen, sizeof(char));
-	buf[namelen] = 0;
+	*(char *)mempcpyc(buf, name, namelen, sizeof(char)) = '\0';
 	return Dee_OperatorFromName(typetype, buf);
 }
 

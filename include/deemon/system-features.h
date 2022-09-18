@@ -814,6 +814,26 @@ func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) ==
 func("mempmove", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
 func("mempcpy", "defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
 func("mempset", "defined(__USE_KOS)", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
+func("mempcpyw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyw(a, b, 16) == (char *)a + 32;");
+func("mempcpyl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyl(a, b, 16) == (char *)a + 64;");
+func("mempcpyq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyq(a, b, 16) == (char *)a + 128;");
+func("mempcpyc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempcpyc(a, b, 16, 2) == (char *)a + 32;");
+
+func("mempmovew", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovew(a, b, 16) == (char *)a + 32;");
+func("mempmovel", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovel(a, b, 16) == (char *)a + 64;");
+func("mempmoveq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveq(a, b, 16) == (char *)a + 128;");
+func("mempmovec", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovec(a, b, 16, 2) == (char *)a + 32;");
+
+func("mempmoveupw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupw(a, b, 16) == (char *)a + 32;");
+func("mempmoveupl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupl(a, b, 16) == (char *)a + 64;");
+func("mempmoveupq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupq(a, b, 16) == (char *)a + 128;");
+func("mempmoveupc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmoveupc(a, b, 16, 2) == (char *)a + 32;");
+
+func("mempmovedownw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownw(a, b, 16) == (char *)a + 32;");
+func("mempmovedownl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownl(a, b, 16) == (char *)a + 64;");
+func("mempmovedownq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownq(a, b, 16) == (char *)a + 128;");
+func("mempmovedownc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovedownc(a, b, 16, 2) == (char *)a + 32;");
+
 
 func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
 func("memcpyw", "defined(__USE_KOS)", test: "extern void *a, *b; memcpyw(a, b, 16); return 0;");
@@ -5913,6 +5933,118 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_mempset 1
 #endif
 
+#ifdef CONFIG_NO_mempcpyw
+#undef CONFIG_HAVE_mempcpyw
+#elif !defined(CONFIG_HAVE_mempcpyw) && \
+      (defined(mempcpyw) || defined(__mempcpyw_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempcpyw 1
+#endif
+
+#ifdef CONFIG_NO_mempcpyl
+#undef CONFIG_HAVE_mempcpyl
+#elif !defined(CONFIG_HAVE_mempcpyl) && \
+      (defined(mempcpyl) || defined(__mempcpyl_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempcpyl 1
+#endif
+
+#ifdef CONFIG_NO_mempcpyq
+#undef CONFIG_HAVE_mempcpyq
+#elif !defined(CONFIG_HAVE_mempcpyq) && \
+      (defined(mempcpyq) || defined(__mempcpyq_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempcpyq 1
+#endif
+
+#ifdef CONFIG_NO_mempcpyc
+#undef CONFIG_HAVE_mempcpyc
+#elif !defined(CONFIG_HAVE_mempcpyc) && \
+      (defined(mempcpyc) || defined(__mempcpyc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempcpyc 1
+#endif
+
+#ifdef CONFIG_NO_mempmovew
+#undef CONFIG_HAVE_mempmovew
+#elif !defined(CONFIG_HAVE_mempmovew) && \
+      (defined(mempmovew) || defined(__mempmovew_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmovew 1
+#endif
+
+#ifdef CONFIG_NO_mempmovel
+#undef CONFIG_HAVE_mempmovel
+#elif !defined(CONFIG_HAVE_mempmovel) && \
+      (defined(mempmovel) || defined(__mempmovel_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmovel 1
+#endif
+
+#ifdef CONFIG_NO_mempmoveq
+#undef CONFIG_HAVE_mempmoveq
+#elif !defined(CONFIG_HAVE_mempmoveq) && \
+      (defined(mempmoveq) || defined(__mempmoveq_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmoveq 1
+#endif
+
+#ifdef CONFIG_NO_mempmovec
+#undef CONFIG_HAVE_mempmovec
+#elif !defined(CONFIG_HAVE_mempmovec) && \
+      (defined(mempmovec) || defined(__mempmovec_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmovec 1
+#endif
+
+#ifdef CONFIG_NO_mempmoveupw
+#undef CONFIG_HAVE_mempmoveupw
+#elif !defined(CONFIG_HAVE_mempmoveupw) && \
+      (defined(mempmoveupw) || defined(__mempmoveupw_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmoveupw 1
+#endif
+
+#ifdef CONFIG_NO_mempmoveupl
+#undef CONFIG_HAVE_mempmoveupl
+#elif !defined(CONFIG_HAVE_mempmoveupl) && \
+      (defined(mempmoveupl) || defined(__mempmoveupl_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmoveupl 1
+#endif
+
+#ifdef CONFIG_NO_mempmoveupq
+#undef CONFIG_HAVE_mempmoveupq
+#elif !defined(CONFIG_HAVE_mempmoveupq) && \
+      (defined(mempmoveupq) || defined(__mempmoveupq_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmoveupq 1
+#endif
+
+#ifdef CONFIG_NO_mempmoveupc
+#undef CONFIG_HAVE_mempmoveupc
+#elif !defined(CONFIG_HAVE_mempmoveupc) && \
+      (defined(mempmoveupc) || defined(__mempmoveupc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmoveupc 1
+#endif
+
+#ifdef CONFIG_NO_mempmovedownw
+#undef CONFIG_HAVE_mempmovedownw
+#elif !defined(CONFIG_HAVE_mempmovedownw) && \
+      (defined(mempmovedownw) || defined(__mempmovedownw_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmovedownw 1
+#endif
+
+#ifdef CONFIG_NO_mempmovedownl
+#undef CONFIG_HAVE_mempmovedownl
+#elif !defined(CONFIG_HAVE_mempmovedownl) && \
+      (defined(mempmovedownl) || defined(__mempmovedownl_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmovedownl 1
+#endif
+
+#ifdef CONFIG_NO_mempmovedownq
+#undef CONFIG_HAVE_mempmovedownq
+#elif !defined(CONFIG_HAVE_mempmovedownq) && \
+      (defined(mempmovedownq) || defined(__mempmovedownq_defined) || defined(__USE_STRING_BWLQ))
+#define CONFIG_HAVE_mempmovedownq 1
+#endif
+
+#ifdef CONFIG_NO_mempmovedownc
+#undef CONFIG_HAVE_mempmovedownc
+#elif !defined(CONFIG_HAVE_mempmovedownc) && \
+      (defined(mempmovedownc) || defined(__mempmovedownc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_mempmovedownc 1
+#endif
+
 #ifdef CONFIG_NO_memcpyc
 #undef CONFIG_HAVE_memcpyc
 #elif !defined(CONFIG_HAVE_memcpyc) && \
@@ -8064,9 +8196,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_RAW)
 #define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY O_RAW
-#else
+#else /* ... */
 #define O_BINARY 0
-#endif
+#endif /* !... */
 #elif !defined(O_BINARY)
 #define O_BINARY O_BINARY
 #endif /* !CONFIG_HAVE_O_BINARY */
@@ -8078,9 +8210,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SHORT_LIVED)
 #define CONFIG_HAVE_O_SHORT_LIVED 1
 #define O_SHORT_LIVED _O_SHORT_LIVED
-#else
+#else /* ... */
 #define O_SHORT_LIVED 0
-#endif
+#endif /* !... */
 #elif !defined(O_SHORT_LIVED)
 #define O_SHORT_LIVED O_SHORT_LIVED
 #endif /* !CONFIG_HAVE_O_SHORT_LIVED */
@@ -8092,9 +8224,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SEQUENTIAL)
 #define CONFIG_HAVE_O_SEQUENTIAL 1
 #define O_SEQUENTIAL _O_SEQUENTIAL
-#else
+#else /* ... */
 #define O_SEQUENTIAL 0
-#endif
+#endif /* !... */
 #elif !defined(O_SEQUENTIAL)
 #define O_SEQUENTIAL O_SEQUENTIAL
 #endif /* !CONFIG_HAVE_O_SEQUENTIAL */
@@ -8106,9 +8238,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RANDOM)
 #define CONFIG_HAVE_O_RANDOM 1
 #define O_RANDOM _O_RANDOM
-#else
+#else /* ... */
 #define O_RANDOM 0
-#endif
+#endif /* !... */
 #elif !defined(O_RANDOM)
 #define O_RANDOM O_RANDOM
 #endif /* !CONFIG_HAVE_O_RANDOM */
@@ -8120,9 +8252,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_PATH)
 #define CONFIG_HAVE_O_PATH 1
 #define O_PATH _O_PATH
-#else
+#else /* ... */
 #define O_PATH 0
-#endif
+#endif /* !... */
 #elif !defined(O_PATH)
 #define O_PATH O_PATH
 #endif /* !CONFIG_HAVE_O_PATH */
@@ -8134,9 +8266,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOATIME)
 #define CONFIG_HAVE_O_NOATIME 1
 #define O_NOATIME _O_NOATIME
-#else
+#else /* ... */
 #define O_NOATIME 0
-#endif
+#endif /* !... */
 #elif !defined(O_NOATIME)
 #define O_NOATIME O_NOATIME
 #endif /* !CONFIG_HAVE_O_NOATIME */
@@ -8148,9 +8280,9 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOCTTY)
 #define CONFIG_HAVE_O_NOCTTY 1
 #define O_NOCTTY _O_NOCTTY
-#else
+#else /* ... */
 #define O_NOCTTY 0
-#endif
+#endif /* !... */
 #elif !defined(O_NOCTTY)
 #define O_NOCTTY O_NOCTTY
 #endif /* !CONFIG_HAVE_O_NOCTTY */
@@ -8163,7 +8295,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TEXT)
 #define CONFIG_HAVE_O_TEXT 1
 #define O_TEXT _O_TEXT
-#endif
+#endif /* ... */
 #elif !defined(O_TEXT)
 #define O_TEXT O_TEXT
 #endif /* !CONFIG_HAVE_O_TEXT */
@@ -8175,7 +8307,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_WTEXT)
 #define CONFIG_HAVE_O_WTEXT 1
 #define O_WTEXT _O_WTEXT
-#endif
+#endif /* ... */
 #elif !defined(O_WTEXT)
 #define O_WTEXT O_WTEXT
 #endif /* !CONFIG_HAVE_O_WTEXT */
@@ -8187,7 +8319,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_U16TEXT)
 #define CONFIG_HAVE_O_U16TEXT 1
 #define O_U16TEXT _O_U16TEXT
-#endif
+#endif /* ... */
 #elif !defined(O_U16TEXT)
 #define O_U16TEXT O_U16TEXT
 #endif /* !CONFIG_HAVE_O_U16TEXT */
@@ -8199,7 +8331,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_U8TEXT)
 #define CONFIG_HAVE_O_U8TEXT 1
 #define O_U8TEXT _O_U8TEXT
-#endif
+#endif /* ... */
 #elif !defined(O_U8TEXT)
 #define O_U8TEXT O_U8TEXT
 #endif /* !CONFIG_HAVE_O_U8TEXT */
@@ -8211,7 +8343,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TEMPORARY)
 #define CONFIG_HAVE_O_TEMPORARY 1
 #define O_TEMPORARY _O_TEMPORARY
-#endif
+#endif /* ... */
 #elif !defined(O_TEMPORARY)
 #define O_TEMPORARY O_TEMPORARY
 #endif /* !CONFIG_HAVE_O_TEMPORARY */
@@ -8223,7 +8355,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_OBTAIN_DIR)
 #define CONFIG_HAVE_O_OBTAIN_DIR 1
 #define O_OBTAIN_DIR _O_OBTAIN_DIR
-#endif
+#endif /* ... */
 #elif !defined(O_OBTAIN_DIR)
 #define O_OBTAIN_DIR O_OBTAIN_DIR
 #endif /* !CONFIG_HAVE_O_OBTAIN_DIR */
@@ -8235,7 +8367,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CREAT)
 #define CONFIG_HAVE_O_CREAT 1
 #define O_CREAT _O_CREAT
-#endif
+#endif /* ... */
 #elif !defined(O_CREAT)
 #define O_CREAT O_CREAT
 #endif /* !CONFIG_HAVE_O_CREAT */
@@ -8247,7 +8379,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TRUNC)
 #define CONFIG_HAVE_O_TRUNC 1
 #define O_TRUNC _O_TRUNC
-#endif
+#endif /* ... */
 #elif !defined(O_TRUNC)
 #define O_TRUNC O_TRUNC
 #endif /* !CONFIG_HAVE_O_TRUNC */
@@ -8259,7 +8391,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RDONLY)
 #define CONFIG_HAVE_O_RDONLY 1
 #define O_RDONLY _O_RDONLY
-#endif
+#endif /* ... */
 #elif !defined(O_RDONLY)
 #define O_RDONLY O_RDONLY
 #endif /* !CONFIG_HAVE_O_RDONLY */
@@ -8271,7 +8403,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_WRONLY)
 #define CONFIG_HAVE_O_WRONLY 1
 #define O_WRONLY _O_WRONLY
-#endif
+#endif /* ... */
 #elif !defined(O_WRONLY)
 #define O_WRONLY O_WRONLY
 #endif /* !CONFIG_HAVE_O_WRONLY */
@@ -8283,7 +8415,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RDWR)
 #define CONFIG_HAVE_O_RDWR 1
 #define O_RDWR _O_RDWR
-#endif
+#endif /* ... */
 #elif !defined(O_RDWR)
 #define O_RDWR O_RDWR
 #endif /* !CONFIG_HAVE_O_RDWR */
@@ -8298,7 +8430,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif 0 /* The combination might overlap with something else... */
 #define CONFIG_HAVE_O_ACCMODE 1
 #define O_ACCMODE (O_RDONLY | O_WRONLY | O_RDWR)
-#endif
+#endif /* ... */
 #elif !defined(O_ACCMODE)
 #define O_ACCMODE O_ACCMODE
 #endif /* !CONFIG_HAVE_O_ACCMODE */
@@ -8319,7 +8451,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CLOEXEC)
 #define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC _O_CLOEXEC
-#endif
+#endif /* ... */
 #elif !defined(O_CLOEXEC)
 #define O_CLOEXEC O_CLOEXEC
 #endif /* !CONFIG_HAVE_O_CLOEXEC */
@@ -8331,7 +8463,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXCL)
 #define CONFIG_HAVE_O_EXCL 1
 #define O_EXCL _O_EXCL
-#endif
+#endif /* ... */
 #elif !defined(O_EXCL)
 #define O_EXCL O_EXCL
 #endif /* !CONFIG_HAVE_O_EXCL */
@@ -8343,7 +8475,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_APPEND)
 #define CONFIG_HAVE_O_APPEND 1
 #define O_APPEND _O_APPEND
-#endif
+#endif /* ... */
 #elif !defined(O_APPEND)
 #define O_APPEND O_APPEND
 #endif /* !CONFIG_HAVE_O_APPEND */
@@ -8364,7 +8496,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NDELAY)
 #define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK O_NDELAY
-#endif
+#endif /* ... */
 #elif !defined(O_NONBLOCK)
 #define O_NONBLOCK O_NONBLOCK
 #endif /* !CONFIG_HAVE_O_NONBLOCK */
@@ -8376,7 +8508,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RSYNC)
 #define CONFIG_HAVE_O_RSYNC 1
 #define O_RSYNC _O_RSYNC
-#endif
+#endif /* ... */
 #elif !defined(O_RSYNC)
 #define O_RSYNC O_RSYNC
 #endif /* !CONFIG_HAVE_O_RSYNC */
@@ -8388,7 +8520,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SYNC)
 #define CONFIG_HAVE_O_SYNC 1
 #define O_SYNC _O_SYNC
-#endif
+#endif /* ... */
 #elif !defined(O_SYNC)
 #define O_SYNC O_SYNC
 #endif /* !CONFIG_HAVE_O_SYNC */
@@ -8400,7 +8532,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DSYNC)
 #define CONFIG_HAVE_O_DSYNC 1
 #define O_DSYNC _O_DSYNC
-#endif
+#endif /* ... */
 #elif !defined(O_DSYNC)
 #define O_DSYNC O_DSYNC
 #endif /* !CONFIG_HAVE_O_DSYNC */
@@ -8412,7 +8544,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_ASYNC)
 #define CONFIG_HAVE_O_ASYNC 1
 #define O_ASYNC _O_ASYNC
-#endif
+#endif /* ... */
 #elif !defined(O_ASYNC)
 #define O_ASYNC O_ASYNC
 #endif /* !CONFIG_HAVE_O_ASYNC */
@@ -8424,7 +8556,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DIRECT)
 #define CONFIG_HAVE_O_DIRECT 1
 #define O_DIRECT _O_DIRECT
-#endif
+#endif /* ... */
 #endif /* O_DIRECT */
 
 #ifndef CONFIG_HAVE_O_LARGEFILE
@@ -8434,7 +8566,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_LARGEFILE)
 #define CONFIG_HAVE_O_LARGEFILE 1
 #define O_LARGEFILE _O_LARGEFILE
-#endif
+#endif /* ... */
 #elif !defined(O_LARGEFILE)
 #define O_LARGEFILE O_LARGEFILE
 #endif /* !CONFIG_HAVE_O_LARGEFILE */
@@ -8446,7 +8578,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DIRECTORY)
 #define CONFIG_HAVE_O_DIRECTORY 1
 #define O_DIRECTORY _O_DIRECTORY
-#endif
+#endif /* ... */
 #elif !defined(O_DIRECTORY)
 #define O_DIRECTORY O_DIRECTORY
 #endif /* !CONFIG_HAVE_O_DIRECTORY */
@@ -8458,7 +8590,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOFOLLOW)
 #define CONFIG_HAVE_O_NOFOLLOW 1
 #define O_NOFOLLOW _O_NOFOLLOW
-#endif
+#endif /* ... */
 #elif !defined(O_NOFOLLOW)
 #define O_NOFOLLOW O_NOFOLLOW
 #endif /* !CONFIG_HAVE_O_NOFOLLOW */
@@ -8470,7 +8602,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TMPFILE)
 #define CONFIG_HAVE_O_TMPFILE 1
 #define O_TMPFILE _O_TMPFILE
-#endif
+#endif /* ... */
 #elif !defined(O_TMPFILE)
 #define O_TMPFILE O_TMPFILE
 #endif /* !CONFIG_HAVE_O_TMPFILE */
@@ -8482,7 +8614,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CLOFORK)
 #define CONFIG_HAVE_O_CLOFORK 1
 #define O_CLOFORK _O_CLOFORK
-#endif
+#endif /* ... */
 #elif !defined(O_CLOFORK)
 #define O_CLOFORK O_CLOFORK
 #endif /* !CONFIG_HAVE_O_CLOFORK */
@@ -8494,7 +8626,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SYMLINK)
 #define CONFIG_HAVE_O_SYMLINK 1
 #define O_SYMLINK _O_SYMLINK
-#endif
+#endif /* ... */
 #elif !defined(O_SYMLINK)
 #define O_SYMLINK O_SYMLINK
 #endif /* !CONFIG_HAVE_O_SYMLINK */
@@ -8508,7 +8640,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define O_DOSPATH _O_DOSPATH
 #elif defined(CONFIG_HAVE__MSC_VER)
 #define O_DOSPATH 0
-#endif
+#endif /* ... */
 #elif !defined(O_DOSPATH)
 #define O_DOSPATH O_DOSPATH
 #endif /* !CONFIG_HAVE_O_DOSPATH */
@@ -8520,7 +8652,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SHLOCK)
 #define CONFIG_HAVE_O_SHLOCK 1
 #define O_SHLOCK _O_SHLOCK
-#endif
+#endif /* ... */
 #elif !defined(O_SHLOCK)
 #define O_SHLOCK O_SHLOCK
 #endif /* !CONFIG_HAVE_O_SHLOCK */
@@ -8532,7 +8664,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXLOCK)
 #define CONFIG_HAVE_O_EXLOCK 1
 #define O_EXLOCK _O_EXLOCK
-#endif
+#endif /* ... */
 #elif !defined(O_EXLOCK)
 #define O_EXLOCK O_EXLOCK
 #endif /* !CONFIG_HAVE_O_EXLOCK */
@@ -8544,7 +8676,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_XATTR)
 #define CONFIG_HAVE_O_XATTR 1
 #define O_XATTR _O_XATTR
-#endif
+#endif /* ... */
 #elif !defined(O_XATTR)
 #define O_XATTR O_XATTR
 #endif /* !CONFIG_HAVE_O_XATTR */
@@ -8556,7 +8688,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXEC)
 #define CONFIG_HAVE_O_EXEC 1
 #define O_EXEC _O_EXEC
-#endif
+#endif /* ... */
 #elif !defined(O_EXEC)
 #define O_EXEC O_EXEC
 #endif /* !CONFIG_HAVE_O_EXEC */
@@ -8568,7 +8700,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SEARCH)
 #define CONFIG_HAVE_O_SEARCH 1
 #define O_SEARCH _O_SEARCH
-#endif
+#endif /* ... */
 #elif !defined(O_SEARCH)
 #define O_SEARCH O_SEARCH
 #endif /* !CONFIG_HAVE_O_SEARCH */
@@ -8580,7 +8712,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TTY_INIT)
 #define CONFIG_HAVE_O_TTY_INIT 1
 #define O_TTY_INIT _O_TTY_INIT
-#endif
+#endif /* ... */
 #elif !defined(O_TTY_INIT)
 #define O_TTY_INIT O_TTY_INIT
 #endif /* !CONFIG_HAVE_O_TTY_INIT */
@@ -8592,7 +8724,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOLINKS)
 #define CONFIG_HAVE_O_NOLINKS 1
 #define O_NOLINKS _O_NOLINKS
-#endif
+#endif /* ... */
 #elif !defined(O_NOLINKS)
 #define O_NOLINKS O_NOLINKS
 #endif /* !CONFIG_HAVE_O_NOLINKS */
@@ -8708,8 +8840,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* pthread_unsuspend_np = pthread_continue */
 
 /* We'd need both suspend() and continue() functions (they only come as pairs!) */
-#if (defined(CONFIG_HAVE_pthread_continue) && !defined(CONFIG_HAVE_pthread_suspend)) || \
-    (!defined(CONFIG_HAVE_pthread_continue) && defined(CONFIG_HAVE_pthread_suspend))
+#if ((defined(CONFIG_HAVE_pthread_continue) && !defined(CONFIG_HAVE_pthread_suspend)) || \
+     (!defined(CONFIG_HAVE_pthread_continue) && defined(CONFIG_HAVE_pthread_suspend)))
 #undef CONFIG_HAVE_pthread_suspend
 #undef CONFIG_HAVE_pthread_continue
 #undef CONFIG_HAVE_pthread_suspend_np
@@ -9028,16 +9160,18 @@ DECL_END
 		return NULL;                                      \
 	}
 
-#define _DeeSystem_DEFINE_memcmpT(rT, T, name)        \
-	LOCAL WUNUSED NONNULL((1)) rT                     \
+#define _DeeSystem_DEFINE_memcmpT(T, name)            \
+	LOCAL WUNUSED NONNULL((1, 2)) int                 \
 	name(void const *s1, void const *s2, size_t n) {  \
 		T const *p1 = (T const *)s1;                  \
 		T const *p2 = (T const *)s2;                  \
-		T v1, v2;                                     \
-		v1 = v2 = 0;                                  \
-		while (n-- && ((v1 = *p1++) == (v2 = *p2++))) \
-			;                                         \
-		return (rT)v1 - (rT)v2;                       \
+		while (n--) {                                 \
+			T v1, v2;                                 \
+			if ((v1 = *p1++) != (v2 = *p2++)) {       \
+				return v1 < v2 ? -1 : 1;              \
+			}                                         \
+		}                                             \
+		return 0;                                     \
 	}
 
 #define DeeSystem_DEFINE_memrchr(name) _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
@@ -9049,9 +9183,9 @@ DECL_END
 #define DeeSystem_DEFINE_memchrl(name) _DeeSystem_DEFINE_memchrT(uint32_t, uint32_t, uint32_t, name)
 #define DeeSystem_DEFINE_memchrq(name) _DeeSystem_DEFINE_memchrT(uint64_t, uint64_t, uint64_t, name)
 
-#define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(int16_t, int16_t, name)
-#define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(int32_t, int32_t, name)
-#define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(int64_t, int64_t, name)
+#define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(uint16_t, name)
+#define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(uint32_t, name)
+#define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(uint64_t, name)
 
 #ifndef CONFIG_HAVE_memchr
 #define CONFIG_HAVE_memchr 1
@@ -9067,7 +9201,7 @@ DECL_END
 DECL_BEGIN
 #undef memcmp
 #define memcmp dee_memcmp
-_DeeSystem_DEFINE_memcmpT(int, uint8_t, dee_memcmp)
+_DeeSystem_DEFINE_memcmpT(uint8_t, dee_memcmp)
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
@@ -9362,9 +9496,8 @@ DECL_END
 	     void const *__restrict needle, size_t needle_len) {                                   \
 		void const *candidate;                                                                 \
 		uint8_t marker;                                                                        \
-		if                                                                                     \
-			unlikely(!needle_len || needle_len > haystack_len)                                 \
-		return NULL;                                                                           \
+		if unlikely(!needle_len || needle_len > haystack_len)                                  \
+			return NULL;                                                                       \
 		haystack_len -= needle_len;                                                            \
 		marker = (uint8_t)tolower(*(uint8_t *)needle);                                         \
 		while ((candidate = _##name##_memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
@@ -10101,6 +10234,30 @@ DECL_END
 	(void *)((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempcpy */
 
+#ifndef CONFIG_HAVE_mempcpyw
+#define CONFIG_HAVE_mempcpyw 1
+#define mempcpyw(dst, src, num_words) \
+	(void *)((uint16_t *)memcpyw(dst, src, num_words) + (num_words))
+#endif /* !CONFIG_HAVE_mempcpyw */
+
+#ifndef CONFIG_HAVE_mempcpyl
+#define CONFIG_HAVE_mempcpyl 1
+#define mempcpyl(dst, src, num_dwords) \
+	(void *)((uint32_t *)memcpyl(dst, src, num_dwords) + (num_dwords))
+#endif /* !CONFIG_HAVE_mempcpyl */
+
+#ifndef CONFIG_HAVE_mempcpyq
+#define CONFIG_HAVE_mempcpyq 1
+#define mempcpyq(dst, src, num_qwords) \
+	(void *)((uint64_t *)memcpyq(dst, src, num_qwords) + (num_qwords))
+#endif /* !CONFIG_HAVE_mempcpyq */
+
+#ifndef CONFIG_HAVE_mempcpyc
+#define CONFIG_HAVE_mempcpyc 1
+#define mempcpyc(dst, src, elem_count, elem_size) \
+	(void *)((uint8_t *)memcpyc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+#endif /* !CONFIG_HAVE_mempcpyc */
+
 #ifndef CONFIG_HAVE_mempset
 #define CONFIG_HAVE_mempset 1
 #define mempset(dst, byte, num_bytes) \
@@ -10113,17 +10270,89 @@ DECL_END
 	(void *)((uint8_t *)memmove(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmove */
 
+#ifndef CONFIG_HAVE_mempmovew
+#define CONFIG_HAVE_mempmovew 1
+#define mempmovew(dst, src, num_words) \
+	(void *)((uint16_t *)memmovew(dst, src, num_words) + (num_words))
+#endif /* !CONFIG_HAVE_mempmovew */
+
+#ifndef CONFIG_HAVE_mempmovel
+#define CONFIG_HAVE_mempmovel 1
+#define mempmovel(dst, src, num_dwords) \
+	(void *)((uint32_t *)memmovel(dst, src, num_dwords) + (num_dwords))
+#endif /* !CONFIG_HAVE_mempmovel */
+
+#ifndef CONFIG_HAVE_mempmoveq
+#define CONFIG_HAVE_mempmoveq 1
+#define mempmoveq(dst, src, num_qwords) \
+	(void *)((uint64_t *)memmoveq(dst, src, num_qwords) + (num_qwords))
+#endif /* !CONFIG_HAVE_mempmoveq */
+
+#ifndef CONFIG_HAVE_mempmovec
+#define CONFIG_HAVE_mempmovec 1
+#define mempmovec(dst, src, elem_count, elem_size) \
+	(void *)((uint8_t *)memmovec(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+#endif /* !CONFIG_HAVE_mempmovec */
+
 #ifndef CONFIG_HAVE_mempmoveup
 #define CONFIG_HAVE_mempmoveup 1
 #define mempmoveup(dst, src, num_bytes) \
 	(void *)((uint8_t *)memmoveup(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmoveup */
 
+#ifndef CONFIG_HAVE_mempmoveupw
+#define CONFIG_HAVE_mempmoveupw 1
+#define mempmoveupw(dst, src, num_words) \
+	(void *)((uint16_t *)memmoveupw(dst, src, num_words) + (num_words))
+#endif /* !CONFIG_HAVE_mempmoveupw */
+
+#ifndef CONFIG_HAVE_mempmoveupl
+#define CONFIG_HAVE_mempmoveupl 1
+#define mempmoveupl(dst, src, num_dwords) \
+	(void *)((uint32_t *)memmoveupl(dst, src, num_dwords) + (num_dwords))
+#endif /* !CONFIG_HAVE_mempmoveupl */
+
+#ifndef CONFIG_HAVE_mempmoveupq
+#define CONFIG_HAVE_mempmoveupq 1
+#define mempmoveupq(dst, src, num_qwords) \
+	(void *)((uint64_t *)memmoveupq(dst, src, num_qwords) + (num_qwords))
+#endif /* !CONFIG_HAVE_mempmoveupq */
+
+#ifndef CONFIG_HAVE_mempmoveupc
+#define CONFIG_HAVE_mempmoveupc 1
+#define mempmoveupc(dst, src, elem_count, elem_size) \
+	(void *)((uint8_t *)memmoveupc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+#endif /* !CONFIG_HAVE_mempmoveupc */
+
 #ifndef CONFIG_HAVE_mempmovedown
 #define CONFIG_HAVE_mempmovedown 1
 #define mempmovedown(dst, src, num_bytes) \
 	(void *)((uint8_t *)memmovedown(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmovedown */
+
+#ifndef CONFIG_HAVE_mempmovedownw
+#define CONFIG_HAVE_mempmovedownw 1
+#define mempmovedownw(dst, src, num_words) \
+	(void *)((uint16_t *)memmovedownw(dst, src, num_words) + (num_words))
+#endif /* !CONFIG_HAVE_mempmovedownw */
+
+#ifndef CONFIG_HAVE_mempmovedownl
+#define CONFIG_HAVE_mempmovedownl 1
+#define mempmovedownl(dst, src, num_dwords) \
+	(void *)((uint32_t *)memmovedownl(dst, src, num_dwords) + (num_dwords))
+#endif /* !CONFIG_HAVE_mempmovedownl */
+
+#ifndef CONFIG_HAVE_mempmovedownq
+#define CONFIG_HAVE_mempmovedownq 1
+#define mempmovedownq(dst, src, num_qwords) \
+	(void *)((uint64_t *)memmovedownq(dst, src, num_qwords) + (num_qwords))
+#endif /* !CONFIG_HAVE_mempmovedownq */
+
+#ifndef CONFIG_HAVE_mempmovedownc
+#define CONFIG_HAVE_mempmovedownc 1
+#define mempmovedownc(dst, src, elem_count, elem_size) \
+	(void *)((uint8_t *)memmovedownc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
+#endif /* !CONFIG_HAVE_mempmovedownc */
 
 
 
@@ -10133,55 +10362,82 @@ DECL_END
 #undef memmoveb
 #undef memmoveupb
 #undef memmovedownb
+#undef mempcpyb
+#undef mempmoveb
+#undef mempmoveupb
+#undef mempmovedownb
 #undef memsetb
 #undef memchrb
 #undef memcmpb
 #undef bzerob
-#define memcpyb(dst, src, n)      (uint8_t *)memcpy(dst, src, n)
-#define memmoveb(dst, src, n)     (uint8_t *)memmove(dst, src, n)
-#define memmoveupb(dst, src, n)   (uint8_t *)memmoveup(dst, src, n)
-#define memmovedownb(dst, src, n) (uint8_t *)memmovedown(dst, src, n)
-#define memsetb(p, c, n)          (uint8_t *)memset(p, c, n)
-#define memchrb(p, c, n)          (uint8_t *)memchr(p, c, n)
-#define memcmpb(s1, s2, n)        /*(int8_t)*/ memcmp(s1, s2, n)
-#define bzerob(dst, num_bytes)    bzero(dst, num_bytes)
+#define memcpyb(dst, src, n)       (uint8_t *)memcpy(dst, src, n)
+#define memmoveb(dst, src, n)      (uint8_t *)memmove(dst, src, n)
+#define memmoveupb(dst, src, n)    (uint8_t *)memmoveup(dst, src, n)
+#define memmovedownb(dst, src, n)  (uint8_t *)memmovedown(dst, src, n)
+#define mempcpyb(dst, src, n)      (uint8_t *)mempcpy(dst, src, n)
+#define mempmoveb(dst, src, n)     (uint8_t *)mempmove(dst, src, n)
+#define mempmoveupb(dst, src, n)   (uint8_t *)mempmoveup(dst, src, n)
+#define mempmovedownb(dst, src, n) (uint8_t *)mempmovedown(dst, src, n)
+#define memsetb(p, c, n)           (uint8_t *)memset(p, c, n)
+#define memchrb(p, c, n)           (uint8_t *)memchr(p, c, n)
+#define memcmpb(s1, s2, n)         /*(int8_t)*/ memcmp(s1, s2, n)
+#define bzerob(dst, num_bytes)     bzero(dst, num_bytes)
 
 
 #undef memcpyp
 #undef memmovep
 #undef memmoveupp
 #undef memmovedownp
+#undef mempcpyp
+#undef mempmovep
+#undef mempmoveupp
+#undef mempmovedownp
 #if __SIZEOF_POINTER__ == 4
-#define memcpyp      memcpyl
-#define memmovep     memmovel
-#define memmoveupp   memmoveupl
-#define memmovedownp memmovedownl
+#define memcpyp       memcpyl
+#define memmovep      memmovel
+#define memmoveupp    memmoveupl
+#define memmovedownp  memmovedownl
+#define mempcpyp      mempcpyl
+#define mempmovep     mempmovel
+#define mempmoveupp   mempmoveupl
+#define mempmovedownp mempmovedownl
 #elif __SIZEOF_POINTER__ == 8
-#define memcpyp      memcpyq
-#define memmovep     memmoveq
-#define memmoveupp   memmoveupq
-#define memmovedownp memmovedownq
+#define memcpyp       memcpyq
+#define memmovep      memmoveq
+#define memmoveupp    memmoveupq
+#define memmovedownp  memmovedownq
+#define mempcpyp      mempcpyq
+#define mempmovep     mempmoveq
+#define mempmoveupp   mempmoveupq
+#define mempmovedownp mempmovedownq
 #elif __SIZEOF_POINTER__ == 2
-#define memcpyp      memcpyw
-#define memmovep     memmovew
-#define memmoveupp   memmoveupw
-#define memmovedownp memmovedownw
+#define memcpyp       memcpyw
+#define memmovep      memmovew
+#define memmoveupp    memmoveupw
+#define memmovedownp  memmovedownw
+#define mempcpyp      mempcpyw
+#define mempmovep     mempmovew
+#define mempmoveupp   mempmoveupw
+#define mempmovedownp mempmovedownw
 #elif __SIZEOF_POINTER__ == 1
-#define memcpyp      memcpyb
-#define memmovep     memmoveb
-#define memmoveupp   memmoveupb
-#define memmovedownp memmovedownb
+#define memcpyp       memcpyb
+#define memmovep      memmoveb
+#define memmoveupp    memmoveupb
+#define memmovedownp  memmovedownb
+#define mempcpyp      mempcpyb
+#define mempmovep     mempmoveb
+#define mempmoveupp   mempmoveupb
+#define mempmovedownp mempmovedownb
 #else /* __SIZEOF_POINTER__ == ... */
-#define memcpyp(dst, src, num_pointers)      memcpyc(dst, src, num_pointers, __SIZEOF_POINTER__)
-#define memmovep(dst, src, num_pointers)     memmovec(dst, src, num_pointers, __SIZEOF_POINTER__)
-#define memmoveupp(dst, src, num_pointers)   memmoveupc(dst, src, num_pointers, __SIZEOF_POINTER__)
-#define memmovedownp(dst, src, num_pointers) memmovedownc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memcpyp(dst, src, num_pointers)       memcpyc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmovep(dst, src, num_pointers)      memmovec(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmoveupp(dst, src, num_pointers)    memmoveupc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmovedownp(dst, src, num_pointers)  memmovedownc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define mempcpyp(dst, src, num_pointers)      mempcpyc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define mempmovep(dst, src, num_pointers)     mempmovec(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define mempmoveupp(dst, src, num_pointers)   mempmoveupc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define mempmovedownp(dst, src, num_pointers) mempmovedownc(dst, src, num_pointers, __SIZEOF_POINTER__)
 #endif /* __SIZEOF_POINTER__ != ... */
-
-
-//func("memsetw", "defined(__USE_KOS)", test: "extern char *a; memsetw(a, 0xcc, 16); return 0;");
-//func("memsetl", "defined(__USE_KOS)", test: "extern char *a; memsetl(a, 0xcc, 16); return 0;");
-//func("memsetq", "defined(__USE_KOS)", test: "extern char *a; memsetq(a, 0xcc, 16); return 0;");
 
 
 

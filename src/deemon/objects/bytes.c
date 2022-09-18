@@ -1141,7 +1141,7 @@ bytes_mul(Bytes *self, DeeObject *other) {
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	if (repeat == 1)
 		return bytes_copy(self);
-	my_length = DeeString_SIZE(self);
+	my_length = DeeBytes_SIZE(self);
 	if (OVERFLOW_UMUL(my_length, repeat, &total_length))
 		goto err_overflow;
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(total_length);

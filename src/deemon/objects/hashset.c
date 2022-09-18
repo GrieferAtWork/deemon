@@ -189,10 +189,10 @@ set_init_sequence(Set *__restrict self,
 			                                                 sizeof(struct hashset_item));
 			if unlikely(!self->s_elem)
 				goto err;
-			memcpyc(self->s_elem, src->rs_elem,
-			        self->s_mask + 1,
-			        sizeof(struct hashset_item));
-			end = (iter = self->s_elem) + (self->s_mask + 1);
+			iter = (struct hashset_item *)memcpyc(self->s_elem, src->rs_elem,
+			                                      self->s_mask + 1,
+			                                      sizeof(struct hashset_item));
+			end  = iter + (self->s_mask + 1);
 			for (; iter != end; ++iter)
 				Dee_XIncref(iter->si_key);
 		}
@@ -274,10 +274,10 @@ again:
 				goto again;
 			goto err;
 		}
-		memcpyc(self->s_elem, other->s_elem,
-		        self->s_mask + 1,
-		        sizeof(struct hashset_item));
-		end = (iter = self->s_elem) + (self->s_mask + 1);
+		iter = (struct hashset_item *)memcpyc(self->s_elem, other->s_elem,
+		                                      self->s_mask + 1,
+		                                      sizeof(struct hashset_item));
+		end  = iter + (self->s_mask + 1);
 		for (; iter != end; ++iter) {
 			if (!iter->si_key)
 				continue;
@@ -859,8 +859,7 @@ again:
 		result->s_data = NULL;
 		result->s_hash = hash;
 		result->s_len  = search_item_length;
-		memcpyc(result->s_str, search_item, search_item_length, sizeof(char));
-		result->s_str[search_item_length] = '\0';
+		*(char *)mempcpyc(result->s_str, search_item, search_item_length, sizeof(char)) = '\0';
 	}
 #ifndef CONFIG_NO_THREADS
 	if (!DeeHashSet_LockUpgrade(me)) {
@@ -954,8 +953,7 @@ again:
 		new_item->s_data = NULL;
 		new_item->s_hash = hash;
 		new_item->s_len  = search_item_length;
-		memcpyc(new_item->s_str, search_item, search_item_length, sizeof(char));
-		new_item->s_str[search_item_length] = '\0';
+		*(char *)mempcpyc(new_item->s_str, search_item, search_item_length, sizeof(char)) = '\0';
 	}
 #ifndef CONFIG_NO_THREADS
 	if (!DeeHashSet_LockUpgrade(me)) {

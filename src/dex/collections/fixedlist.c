@@ -163,8 +163,7 @@ done:
 	DeeGC_Track((DeeObject *)result);
 	return result;
 err_r:
-	while (itemc--)
-		Dee_Decref(result->fl_elem[itemc]);
+	Dee_Decrefv(result->fl_elem, itemc);
 	DeeGCObject_Free(result);
 err:
 	return NULL;
@@ -200,8 +199,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 	DeeGC_Track((DeeObject *)result);
 	return result;
 err_r:
-	while (i--)
-		Dee_Decref(result->fl_elem[i]);
+	Dee_Decrefv(result->fl_elem, i);
 	DeeGCObject_Free(result);
 err:
 	return NULL;
@@ -307,10 +305,8 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 fl_fini(FixedList *__restrict self) {
-	size_t i;
 	weakref_support_fini(self);
-	for (i = 0; i < self->fl_size; ++i)
-		Dee_XDecref(self->fl_elem[i]);
+	Dee_XDecrefv(self->fl_elem, self->fl_size);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -332,8 +328,7 @@ fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	}
 	rwlock_endwrite(&self->fl_lock);
 	/* Drop references to all of the old items. */
-	for (i = 0; i < self->fl_size; ++i)
-		Dee_XDecref(items[i]);
+	Dee_XDecrefv(items, self->fl_size);
 	Dee_AFree(items);
 	return 0;
 err_items:
@@ -346,7 +341,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_moveassign(FixedList *__restrict self,
               FixedList *__restrict other) {
 	DREF DeeObject **items;
-	size_t i;
 	if (self == other)
 		return 0;
 	if unlikely(self->fl_size != other->fl_size) {
@@ -370,15 +364,16 @@ write_self_again:
 		}
 	}
 #endif /* !CONFIG_NO_THREADS */
+
 	/* Transfer objects. */
 	memcpyc(items, self->fl_elem, self->fl_size, sizeof(DREF DeeObject *));          /* Backup old objects. */
 	memcpyc(self->fl_elem, other->fl_elem, self->fl_size, sizeof(DREF DeeObject *)); /* Copy new objects. */
 	bzeroc(other->fl_elem, self->fl_size, sizeof(DREF DeeObject *));                 /* Steal references. */
 	rwlock_endwrite(&other->fl_lock);
 	rwlock_endwrite(&self->fl_lock);
+
 	/* Drop references to all of the old items. */
-	for (i = 0; i < self->fl_size; ++i)
-		Dee_XDecref(items[i]);
+	Dee_XDecrefv(items, self->fl_size);
 	Dee_AFree(items);
 	return 0;
 /*
@@ -429,16 +424,14 @@ again:
 		if (buflen >= COMPILER_LENOF(buf)) {
 			rwlock_endwrite(&self->fl_lock);
 			Dee_Decref(ob);
-			while (buflen--)
-				Dee_Decref(buf[buflen]);
+			Dee_Decrefv(buf, buflen);
 			goto again;
 		}
 		buf[buflen++] = ob; /* Inherit reference. */
 	}
 	rwlock_endwrite(&self->fl_lock);
 	/* Drop all of the references we took. */
-	while (buflen--)
-		Dee_Decref(buf[buflen]);
+	Dee_Decrefv(buf, buflen);
 }
 
 PRIVATE void DCALL
@@ -458,16 +451,14 @@ again:
 		if (buflen >= COMPILER_LENOF(buf)) {
 			rwlock_endwrite(&self->fl_lock);
 			Dee_Decref(ob);
-			while (buflen--)
-				Dee_Decref(buf[buflen]);
+			Dee_Decrefv(buf, buflen);
 			goto again;
 		}
 		buf[buflen++] = ob; /* Inherit reference. */
 	}
 	rwlock_endwrite(&self->fl_lock);
 	/* Drop all of the references we took. */
-	while (buflen--)
-		Dee_Decref(buf[buflen]);
+	Dee_Decrefv(buf, buflen);
 }
 
 
@@ -776,9 +767,9 @@ fl_getrange(FixedList *__restrict self,
 	dssize_t end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
-	if (DeeNone_Check(end))
+	if (DeeNone_Check(end)) {
 		end_index = (dssize_t)self->fl_size;
-	else {
+	} else {
 		if (DeeObject_AsSSize(end, &end_index))
 			goto err;
 	}
@@ -795,9 +786,9 @@ fl_delrange(FixedList *__restrict self,
 	dssize_t end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
-	if (DeeNone_Check(end))
+	if (DeeNone_Check(end)) {
 		end_index = (dssize_t)self->fl_size;
-	else {
+	} else {
 		if (DeeObject_AsSSize(end, &end_index))
 			goto err;
 	}

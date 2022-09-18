@@ -1792,8 +1792,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DPRINTER_CC
 sprintf_callback(char **__restrict pbuffer,
                  char const *__restrict data, size_t datalen) {
-	memcpyc(*pbuffer, data, datalen, sizeof(char));
-	*pbuffer += datalen;
+	*pbuffer = (char *)mempcpyc(*pbuffer, data, datalen, sizeof(char));
 	return (dssize_t)datalen;
 }
 

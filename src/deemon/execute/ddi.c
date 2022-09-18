@@ -423,9 +423,9 @@ next_ip:
 					--save->s_save.dx_spnama;
 				if (flags & DDI_STATE_FNONAMES)
 					save->s_save.dx_spnama = 0;
-				if (!save->s_save.dx_spnama)
+				if (!save->s_save.dx_spnama) {
 					save->s_save.dx_spnamv = NULL;
-				else {
+				} else {
 					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMalloc(save->s_save.dx_spnama *
 					                                                   sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_spnamv) {

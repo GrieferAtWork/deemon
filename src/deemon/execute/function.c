@@ -877,22 +877,19 @@ yf_copy(YFunction *__restrict self,
 	struct code_frame_kwds *kw;
 	self->yf_kw = NULL;
 	if (other->yf_kw) {
-		size_t i, count;
+		size_t count;
 		count = (other->yf_func->fo_code->co_argc_max - DeeTuple_SIZE(other->yf_args));
 		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
 		                                          (count * sizeof(DREF DeeObject *)));
 		if unlikely(!kw)
 			goto err;
 		self->yf_kw = kw;
-		memcpyc(kw->fk_kargv, &other->yf_kw->fk_kargv,
-		        count, sizeof(DREF DeeObject *));
+		Dee_XMovrefv(kw->fk_kargv, other->yf_kw->fk_kargv, count);
 		if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
 			self->yf_kw->fk_kw      = other->yf_kw->fk_kw;
 			self->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
 			Dee_Incref(self->yf_kw->fk_kw);
 		}
-		for (i = 0; i < count; ++i)
-			Dee_XIncref(kw->fk_kargv[i]);
 	}
 	self->yf_func = other->yf_func;
 	self->yf_args = other->yf_args;

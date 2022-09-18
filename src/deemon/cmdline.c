@@ -279,8 +279,7 @@ has_opt:
 				for (dst = cmdline, i = 0; i < (unsigned int)argc; ++i) {
 					size_t len = strlen(argv[i]);
 					/* Copy the argument. */
-					memcpyc(dst, argv[i], len, sizeof(char));
-					dst += len;
+					dst = (char *)mempcpyc(dst, argv[i], len, sizeof(char));
 					*dst++ = ' ';
 				}
 				dst[-1] = '\0';

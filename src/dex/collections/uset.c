@@ -340,7 +340,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 				ASSERT(self->s_elem != empty_set_items);
 				/* Must discard dummy items. */
 				end = (iter = self->s_elem) + (self->s_mask + 1);
-				for (; iter != end; ++iter) {
+				for (; iter < end; ++iter) {
 					ASSERT(iter->si_key == NULL ||
 					       iter->si_key == dummy);
 					if (iter->si_key == dummy)
@@ -370,7 +370,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 	if (self->s_elem != empty_set_items) {
 		/* Re-insert all existing items into the new set vector. */
 		end = (iter = self->s_elem) + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct uset_item *item;
 			dhash_t i, perturb;
 			/* Skip dummy keys. */
@@ -804,11 +804,11 @@ again:
 				goto again;
 			return -1;
 		}
-		memcpyc(self->s_elem, other->s_elem,
-		        self->s_mask + 1,
-		        sizeof(struct uset_item));
-		end = (iter = self->s_elem) + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		iter = (struct uset_item *)memcpyc(self->s_elem, other->s_elem,
+		                                   self->s_mask + 1,
+		                                   sizeof(struct uset_item));
+		end  = iter + (self->s_mask + 1);
+		for (; iter < end; ++iter) {
 			if (!iter->si_key)
 				continue;
 			Dee_Incref(iter->si_key);
@@ -902,9 +902,7 @@ next_item:
 	Dee_Free(items);
 	return 0;
 err_items_v:
-	i = item_count;
-	while (i--)
-		Dee_Decref(items[i]);
+	Dee_Decrefv(items, item_count);
 err_items:
 	Dee_Free(items);
 	return -1;
@@ -1027,7 +1025,7 @@ again:
 	vector   = self->s_elem;
 	mask     = self->s_mask;
 	end      = (iter = vector) + (mask + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DREF DeeObject *key;
 		if (iter->si_key == NULL ||
 		    iter->si_key == dummy)
@@ -1727,8 +1725,11 @@ URoSet_FromIterator(DeeObject *__restrict iterator) {
 	return result;
 err_r:
 	DeeObject_Free(result);
-	Dee_XDecrefv((DREF DeeObject **)result->rs_elem,
-	             result->rs_mask + 1);
+	{
+		STATIC_ASSERT(sizeof(DREF DeeObject *) == sizeof(struct uset_item));
+		Dee_XDecrefv((DREF DeeObject **)result->rs_elem,
+		             result->rs_mask + 1);
+	}
 err:
 	return NULL;
 }

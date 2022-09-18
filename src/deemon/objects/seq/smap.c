@@ -806,9 +806,9 @@ done_decref_vector:
 			goto err_cannot_inherit;
 		/* Simply copy all the elements, transferring
 		 * all the references that they represent. */
-		memcpyc(vector, me->sm_vector,
-		        me->sm_length * 2,
-		        sizeof(DREF DeeObject *));
+		vector = (DREF DeeObject **)memcpyc(vector, me->sm_vector,
+		                                    me->sm_length * 2,
+		                                    sizeof(DREF DeeObject *));
 		/* Give the SharedMap its very own copy
 		 * which it will take to its grave. */
 		me->sm_vector = (DeeSharedItem *)vector;

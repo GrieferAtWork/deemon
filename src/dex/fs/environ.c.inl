@@ -106,8 +106,7 @@ DeeString_TryNewSized(char const *__restrict str, size_t len) {
 	result->s_data = NULL;
 	result->s_hash = (dhash_t)-1;
 	result->s_len  = len;
-	memcpyc(result->s_str, str, len, sizeof(char));
-	result->s_str[len] = '\0';
+	*(char *)mempcpyc(result->s_str, str, len, sizeof(char)) = '\0';
 done:
 	return (DREF DeeObject *)result;
 }

@@ -489,8 +489,7 @@ again:
 	}
 	Deque_LockEndWrite(self);
 	/* Drop references to popped objects. */
-	for (i = 0; i < result; ++i)
-		Dee_Decref(pop_objv[i]);
+	Dee_Decrefv(pop_objv, result);
 	Dee_AFree(pop_objv);
 	return (dssize_t)result;
 }
@@ -692,10 +691,7 @@ err_restart_collect:
 				i     = 0;
 				count = self->d_bucket_sz;
 			}
-			while (count--) {
-				Dee_Decref(iter->db_items[i]);
-				++i;
-			}
+			Dee_Decrefv(iter->db_items + i, count);
 			Dee_Free(iter);
 			if (iter == copy_tail)
 				break;
@@ -761,14 +757,12 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 deq_fini(Deque *__restrict self) {
-	size_t i;
 	DequeBucket *iter, *next;
 	weakref_support_fini(self);
 	if (!self->d_size)
 		return;
 	iter = self->d_head;
-	for (i = 0; i < self->d_head_use; ++i)
-		Dee_Decref(iter->db_items[i + self->d_head_idx]);
+	Dee_Decrefv(iter->db_items + self->d_head_idx, self->d_head_use);
 	if (iter != self->d_tail) {
 		for (;;) {
 			next = iter->db_next;
@@ -776,11 +770,9 @@ deq_fini(Deque *__restrict self) {
 			iter = next;
 			if (iter == self->d_tail)
 				break;
-			for (i = 0; i < self->d_bucket_sz; ++i)
-				Dee_Decref(iter->db_items[i]);
+			Dee_Decrefv(iter->db_items, self->d_bucket_sz);
 		}
-		for (i = 0; i < self->d_tail_sz; ++i)
-			Dee_Decref(iter->db_items[i]);
+		Dee_Decrefv(iter->db_items, self->d_tail_sz);
 	}
 	Dee_Free(iter);
 }
@@ -916,21 +908,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL deq_bool(Deque *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 deq_visit(Deque *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
 	DequeBucket *iter;
 	if (!self->d_size)
 		return;
 	Deque_LockRead(self);
 	iter = self->d_head;
-	for (i = 0; i < self->d_head_use; ++i)
-		Dee_Visit(iter->db_items[i + self->d_head_idx]);
+	Dee_Visitv(iter->db_items + self->d_head_idx, self->d_head_use);
 	if (iter != self->d_tail) {
 		while ((iter = iter->db_next) != self->d_tail) {
-			for (i = 0; i < self->d_bucket_sz; ++i)
-				Dee_Visit(iter->db_items[i]);
+			Dee_Visitv(iter->db_items, self->d_bucket_sz);
 		}
-		for (i = 0; i < self->d_tail_sz; ++i)
-			Dee_Visit(iter->db_items[i]);
+		Dee_Visitv(iter->db_items, self->d_tail_sz);
 	}
 	Deque_LockEndRead(self);
 }
@@ -1703,9 +1691,9 @@ deqiter_init(DequeIteratorObject *__restrict self,
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
 	COMPILER_READ_BARRIER();
-	if unlikely(index >= self->di_deq->d_size)
+	if unlikely(index >= self->di_deq->d_size) {
 		--self->di_ver;
-	else {
+	} else {
 		DequeIterator_InitAt(&self->di_iter, self->di_deq, index);
 	}
 	Deque_LockEndRead(self->di_deq);
@@ -1738,9 +1726,9 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 	DREF DeeObject *result;
 	atomic_rwlock_write(&self->di_lock);
 	Deque_LockRead(self->di_deq);
-	if (self->di_ver != self->di_deq->d_version)
+	if (self->di_ver != self->di_deq->d_version) {
 		result = ITER_DONE;
-	else {
+	} else {
 		result = DequeIterator_ITEM(&self->di_iter);
 		Dee_Incref(result);
 		if (DequeIterator_HasNext(&self->di_iter, self->di_deq))

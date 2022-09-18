@@ -1867,14 +1867,15 @@ err_yield_function_temp:
 				struct opinfo const *info;
 				operator_name_kwd = NULL;
 				if ((info = Dee_OperatorInfo(NULL, operator_name)) != NULL) {
-					char opname[4 + COMPILER_LENOF(info->oi_sname)];
+					char opname[2 + COMPILER_LENOF(info->oi_sname) + 3];
 					size_t opnamelen = strlen(info->oi_sname);
-					memcpyc(opname + 2, info->oi_sname, opnamelen, sizeof(char));
-					opname[0]           = '_';
-					opname[1]           = '_';
-					opname[opnamelen + 2] = '_';
-					opname[opnamelen + 3] = '_';
-					opname[opnamelen + 4] = '\0';
+					char *p = opname;
+					*p++ = '_';
+					*p++ = '_';
+					p = (char *)mempcpyc(p, info->oi_sname, opnamelen, sizeof(char));
+					*p++ = '_';
+					*p++ = '_';
+					*p++ = '\0';
 					operator_name_kwd = TPPLexer_LookupKeyword(opname, opnamelen + 4, 1);
 					if unlikely(!operator_name_kwd)
 						goto err_anno;

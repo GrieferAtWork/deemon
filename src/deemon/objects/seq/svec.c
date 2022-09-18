@@ -1562,7 +1562,6 @@ svec_ctor(SharedVector *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 svec_copy(SharedVector *__restrict self,
           SharedVector *__restrict other) {
-	size_t i;
 again:
 	atomic_rwlock_read(&other->sv_lock);
 	self->sv_length = other->sv_length;
@@ -1574,12 +1573,8 @@ again:
 			goto again;
 		goto err;
 	}
-	memcpyc((DREF DeeObject **)self->sv_vector,
-	        other->sv_vector,
-	        self->sv_length,
-	        sizeof(DREF DeeObject *));
-	for (i = 0; i < self->sv_length; ++i)
-		Dee_Incref(self->sv_vector[i]);
+	Dee_Movrefv((DREF DeeObject **)self->sv_vector,
+	            other->sv_vector, self->sv_length);
 	atomic_rwlock_endread(&other->sv_lock);
 	atomic_rwlock_init(&self->sv_lock);
 	return 0;
@@ -1599,8 +1594,7 @@ svec_deep(SharedVector *__restrict self,
 	}
 	return 0;
 err_r:
-	for (i = 0; i < self->sv_length; ++i)
-		Dee_Decref(self->sv_vector[i]);
+	Dee_Decrefv(self->sv_vector, self->sv_length);
 	Dee_Free((void *)self->sv_vector);
 err:
 	return -1;
@@ -1700,32 +1694,32 @@ done:
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
-	DREF DeeObject *const *begin, *const *iter;
+	size_t length;
+	DREF DeeObject *const *vector;
 	DREF DeeObject **vector_copy;
 	SharedVector *me = (SharedVector *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &SharedVector_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
-		iter = (begin = me->sv_vector) + me->sv_length;
-		while (iter-- != begin)
-			Dee_Decref(*iter);
+		Dee_Decrefv(me->sv_vector, me->sv_length);
 		Dee_DecrefNokill(&SharedVector_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
 	}
+
 	/* Difficult case: must duplicate the vector. */
 	atomic_rwlock_write(&me->sv_lock);
 	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sv_length *
 	                                               sizeof(DREF DeeObject *));
 	if unlikely(!vector_copy)
 		goto err_cannot_inherit;
+
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
-	memcpyc(vector_copy,
-	        me->sv_vector,
-	        me->sv_length,
-	        sizeof(DREF DeeObject *));
+	vector_copy = (DREF DeeObject **)memcpyc(vector_copy, me->sv_vector,
+	                                         me->sv_length, sizeof(DREF DeeObject *));
+
 	/* Give the SharedVector its very own copy
 	 * which it will take to its grave. */
 	me->sv_vector = vector_copy;
@@ -1735,14 +1729,16 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 
 err_cannot_inherit:
 	/* Special case: failed to create a copy that the vector may call its own. */
-	iter = (begin = me->sv_vector) + me->sv_length;
+	vector = me->sv_vector;
+	length = me->sv_length;
+
 	/* Override with an empty vector. */
 	me->sv_vector = NULL;
 	me->sv_length = 0;
 	atomic_rwlock_endwrite(&me->sv_lock);
+
 	/* Destroy the items that the caller wanted the vector to inherit. */
-	while (iter-- != begin)
-		Dee_Decref(*iter);
+	Dee_Decrefv(vector, length);
 	Dee_Decref(me);
 }
 

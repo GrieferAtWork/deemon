@@ -2651,8 +2651,7 @@ read_filename:
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpyw(result_string, self->di_data.cFileName, length);
-	result_string[length] = 0;
+	*(WCHAR *)mempcpyw(result_string, self->di_data.cFileName, length) = (WCHAR)'\0';
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();
 	if (!FindNextFileW(self->di_hnd, &self->di_data)) {
@@ -3030,8 +3029,7 @@ read_filename:
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpyw(result_string, self->q_iter.di_data.cFileName, length);
-	result_string[length] = 0;
+	*(WCHAR *)mempcpyw(result_string, self->q_iter.di_data.cFileName, length) = (WCHAR)'\0';
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();
 	if (!FindNextFileW(self->q_iter.di_hnd, &self->q_iter.di_data)) {

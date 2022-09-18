@@ -174,6 +174,14 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 
 
 /* Case-insensitive string functions. */
+#undef memcasechr
+#undef memcaserchr
+#undef memcasechrb
+#undef memcaserchrb
+#undef memcasechrw
+#undef memcaserchrw
+#undef memcasechrl
+#undef memcaserchrl
 #define memcasechr(haystack, needle, haystack_length)   dee_memcasechrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
 #define memcaserchr(haystack, needle, haystack_length)  dee_memcaserchrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
 #define memcasechrb(haystack, needle, haystack_length)  dee_memcasechrb(haystack, needle, haystack_length)
@@ -323,6 +331,12 @@ DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
 		return 3;                                                                \
 	}
 #endif /* !__INTELLISENSE__ */
+#undef foldcmpb
+#undef foldcmpw
+#undef foldcmpl
+#define foldcmpb dee_foldcmpb
+#define foldcmpw dee_foldcmpw
+#define foldcmpl dee_foldcmpl
 DEFINE_FOLD_COMPARE(dee_foldcmpb, uint8_t)
 DEFINE_FOLD_COMPARE(dee_foldcmpw, uint16_t)
 DEFINE_FOLD_COMPARE(dee_foldcmpl, uint32_t)
@@ -447,15 +461,15 @@ uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#define MEMCASEEQB(a, a_size, b, b_size) dee_memcaseeqb(a, a_size, b, b_size)
-#define MEMCASEEQW(a, a_size, b, b_size) dee_memcaseeqw(a, a_size, b, b_size)
-#define MEMCASEEQL(a, a_size, b, b_size) dee_memcaseeql(a, a_size, b, b_size)
+#define MEMCASEEQB(a, a_size, b, b_size)         dee_memcaseeqb(a, a_size, b, b_size)
+#define MEMCASEEQW(a, a_size, b, b_size)         dee_memcaseeqw(a, a_size, b, b_size)
+#define MEMCASEEQL(a, a_size, b, b_size)         dee_memcaseeql(a, a_size, b, b_size)
 #define MEMCASESTARTSWITHB(a, a_size, b, b_size) dee_memcasestartswithb(a, a_size, b, b_size)
 #define MEMCASESTARTSWITHW(a, a_size, b, b_size) dee_memcasestartswithw(a, a_size, b, b_size)
 #define MEMCASESTARTSWITHL(a, a_size, b, b_size) dee_memcasestartswithl(a, a_size, b, b_size)
-#define MEMCASEENDSWITHB(a, a_size, b, b_size) dee_memcaseendswithb(a, a_size, b, b_size)
-#define MEMCASEENDSWITHW(a, a_size, b, b_size) dee_memcaseendswithw(a, a_size, b, b_size)
-#define MEMCASEENDSWITHL(a, a_size, b, b_size) dee_memcaseendswithl(a, a_size, b, b_size)
+#define MEMCASEENDSWITHB(a, a_size, b, b_size)   dee_memcaseendswithb(a, a_size, b, b_size)
+#define MEMCASEENDSWITHW(a, a_size, b, b_size)   dee_memcaseendswithw(a, a_size, b, b_size)
+#define MEMCASEENDSWITHL(a, a_size, b, b_size)   dee_memcaseendswithl(a, a_size, b, b_size)
 
 #define DEFINE_MEMCASEEQ(name, T)                     \
 	LOCAL bool DCALL                                  \
@@ -474,6 +488,12 @@ uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 		}                                             \
 		return unicode_foldreader_empty(b_reader);    \
 	}
+#undef memcaseeqb
+#undef memcaseeqw
+#undef memcaseeql
+#define memcaseeqb dee_memcaseeqb
+#define memcaseeqw dee_memcaseeqw
+#define memcaseeql dee_memcaseeql
 DEFINE_MEMCASEEQ(dee_memcaseeqb, uint8_t)
 DEFINE_MEMCASEEQ(dee_memcaseeqw, uint16_t)
 DEFINE_MEMCASEEQ(dee_memcaseeql, uint32_t)
@@ -495,6 +515,12 @@ DEFINE_MEMCASEEQ(dee_memcaseeql, uint32_t)
 		}                                             \
 		return (size_t)(a_reader.uf_dataptr - a);     \
 	}
+#undef memcasestartswithb
+#undef memcasestartswithw
+#undef memcasestartswithl
+#define memcasestartswithb dee_memcasestartswithb
+#define memcasestartswithw dee_memcasestartswithw
+#define memcasestartswithl dee_memcasestartswithl
 DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithb, uint8_t)
 DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithw, uint16_t)
 DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithl, uint32_t)
@@ -516,17 +542,16 @@ DEFINE_MEMCASESTARTSWITH(dee_memcasestartswithl, uint32_t)
 		}                                                  \
 		return a_size - a_reader.uf_datalen;               \
 	}
+#undef memcaseendswithb
+#undef memcaseendswithw
+#undef memcaseendswithl
+#define memcaseendswithb dee_memcaseendswithb
+#define memcaseendswithw dee_memcaseendswithw
+#define memcaseendswithl dee_memcaseendswithl
 DEFINE_MEMCASEENDSWITH(dee_memcaseendswithb, uint8_t)
 DEFINE_MEMCASEENDSWITH(dee_memcaseendswithw, uint16_t)
 DEFINE_MEMCASEENDSWITH(dee_memcaseendswithl, uint32_t)
 #undef DEFINE_MEMCASEENDSWITH
-
-#define memcasememb  dee_memcasememb
-#define memcasermemb dee_memcasermemb
-#define memcasememw  dee_memcasememw
-#define memcasermemw dee_memcasermemw
-#define memcasememl  dee_memcasememl
-#define memcasermeml dee_memcasermeml
 
 #define DEFINE_MEMCASEMEM(name, rname, T, MEMCASESTARTSWITH, MEMCASEENDSWITH)                   \
 	LOCAL T *DCALL                                                                              \
@@ -559,11 +584,25 @@ DEFINE_MEMCASEENDSWITH(dee_memcaseendswithl, uint32_t)
 		}                                                                                       \
 		return NULL;                                                                            \
 	}
+#undef memcasememb
+#undef memcasermemb
+#undef memcasememw
+#undef memcasermemw
+#undef memcasememl
+#undef memcasermeml
+#define memcasememb  dee_memcasememb
+#define memcasermemb dee_memcasermemb
+#define memcasememw  dee_memcasememw
+#define memcasermemw dee_memcasermemw
+#define memcasememl  dee_memcasememl
+#define memcasermeml dee_memcasermeml
 DEFINE_MEMCASEMEM(dee_memcasememb, dee_memcasermemb, uint8_t, MEMCASESTARTSWITHB, MEMCASEENDSWITHB)
 DEFINE_MEMCASEMEM(dee_memcasememw, dee_memcasermemw, uint16_t, MEMCASESTARTSWITHW, MEMCASEENDSWITHW)
 DEFINE_MEMCASEMEM(dee_memcasememl, dee_memcasermeml, uint32_t, MEMCASESTARTSWITHL, MEMCASEENDSWITHL)
 #undef DEFINE_MEMCASEMEM
 
+#undef memcasecmpb
+#define memcasecmpb dee_memcasecmpb
 LOCAL int DCALL
 dee_memcasecmpb(uint8_t const *a, size_t a_size,
                 uint8_t const *b, size_t b_size) {
@@ -587,6 +626,8 @@ dee_memcasecmpb(uint8_t const *a, size_t a_size,
 
 
 /* ASCII case-insensitive functions (for `Bytes'). */
+#undef memasciicaseeq
+#define memasciicaseeq dee_memasciicaseeq
 LOCAL bool DCALL
 dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -604,6 +645,8 @@ dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	return true;
 }
 
+#undef memasciicasechr
+#define memasciicasechr dee_memasciicasechr
 LOCAL uint8_t *DCALL
 dee_memasciicasechr(uint8_t const *__restrict haystack,
                     uint8_t needle, size_t haystack_length) {
@@ -616,6 +659,8 @@ dee_memasciicasechr(uint8_t const *__restrict haystack,
 	return NULL;
 }
 
+#undef memasciicaserchr
+#define memasciicaserchr dee_memasciicaserchr
 LOCAL uint8_t *DCALL
 dee_memasciicaserchr(uint8_t const *__restrict haystack,
                      uint8_t needle, size_t haystack_length) {
@@ -628,6 +673,8 @@ dee_memasciicaserchr(uint8_t const *__restrict haystack,
 	return NULL;
 }
 
+#undef memasciicasemem
+#define memasciicasemem dee_memasciicasemem
 LOCAL uint8_t *DCALL
 dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
                     uint8_t const *needle, size_t needle_length) {
@@ -647,6 +694,8 @@ dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
 	return NULL;
 }
 
+#undef memasciicasermem
+#define memasciicasermem dee_memasciicasermem
 LOCAL uint8_t *DCALL
 dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
                      uint8_t const *needle, size_t needle_length) {
@@ -666,6 +715,7 @@ dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
 	return NULL;
 }
 
+#undef memasciicasecmp
 #define memasciicasecmp dee_memasciicasecmp
 LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -695,6 +745,8 @@ LOCAL bool DCALL dee_strcaseeq(char const *a, char const *b) {
 	return !*b;
 }
 
+#undef asciicaseeq
+#define asciicaseeq dee_asciicaseeq
 LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 	while (length--) {
 		if (tolower(*a) != tolower(*b))
@@ -748,10 +800,18 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 			temp = SSIZE_MAX;                                    \
 		return temp;                                             \
 	}
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_compareb, uint8_t, )
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparew, uint16_t, )
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparel, uint32_t, )
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb, uint8_t, (uint8_t)tolower)
+#undef fuzzy_compareb
+#undef fuzzy_comparew
+#undef fuzzy_comparel
+#undef fuzzy_asciicasecompareb
+#define fuzzy_compareb          dee_fuzzy_compareb
+#define fuzzy_comparew          dee_fuzzy_comparew
+#define fuzzy_comparel          dee_fuzzy_comparel
+#define fuzzy_asciicasecompareb dee_fuzzy_asciicasecompareb
+DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_compareb, uint8_t, )
+DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_comparew, uint16_t, )
+DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_comparel, uint32_t, )
+DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_asciicasecompareb, uint8_t, (uint8_t)tolower)
 #undef DEFINE_FUZZY_COMPARE_FUNCTION
 
 #define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(name, T)                               \
@@ -805,9 +865,15 @@ DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb, uint8_t, (uint8_t)tolower
 			temp = SSIZE_MAX;                                                    \
 		return temp;                                                             \
 	}
-DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecompareb, uint8_t)
-DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecomparew, uint16_t)
-DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecomparel, uint32_t)
+#undef fuzzy_casecompareb
+#undef fuzzy_casecomparew
+#undef fuzzy_casecomparel
+#define fuzzy_casecompareb dee_fuzzy_casecompareb
+#define fuzzy_casecomparew dee_fuzzy_casecomparew
+#define fuzzy_casecomparel dee_fuzzy_casecomparel
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecompareb, uint8_t)
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparew, uint16_t)
+DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 #undef DEFINE_FUZZY_FOLDCOMPARE_FUNCTION
 
 #define DEFINE_VERSION_COMPARE_FUNCTION(name, T, Ts, transform, IF_TRANSFORM)           \
@@ -866,6 +932,18 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(fuzzy_casecomparel, uint32_t)
 	}
 #define DEE_PRIVATE_IF_FALSE(x)
 #define DEE_PRIVATE_IF_TRUE(x) x
+#undef strverscmpb
+#undef strverscmpw
+#undef strverscmpl
+#undef strcaseverscmpb
+#undef strcaseverscmpw
+#undef strcaseverscmpl
+#define strverscmpb     dee_strverscmpb
+#define strverscmpw     dee_strverscmpw
+#define strverscmpl     dee_strverscmpl
+#define strcaseverscmpb dee_strcaseverscmpb
+#define strcaseverscmpw dee_strcaseverscmpw
+#define strcaseverscmpl dee_strcaseverscmpl
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpb, uint8_t, int8_t, , DEE_PRIVATE_IF_FALSE)
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpw, uint16_t, int16_t, , DEE_PRIVATE_IF_FALSE)
 DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpl, uint32_t, int32_t, , DEE_PRIVATE_IF_FALSE)
@@ -948,13 +1026,27 @@ DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, int32_t, DeeUni_T
 		}                                                                               \
 		return NULL;                                                                    \
 	}
-DEFINE_FIND_MATCH_FUNCTION(find_asciicasematchb, uint8_t, dee_memasciicasemem, dee_memasciicaseeq)
-DEFINE_FIND_MATCH_FUNCTION(find_matchb, uint8_t, memmemb, MEMEQB)
-DEFINE_FIND_MATCH_FUNCTION(find_matchw, uint16_t, memmemw, MEMEQW)
-DEFINE_FIND_MATCH_FUNCTION(find_matchl, uint32_t, memmeml, MEMEQL)
-DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchb, uint8_t, memcasememb, MEMCASESTARTSWITHB)
-DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchw, uint16_t, memcasememw, MEMCASESTARTSWITHW)
-DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchl, uint32_t, memcasememl, MEMCASESTARTSWITHL)
+#undef find_asciicasematchb
+#undef find_matchb
+#undef find_matchw
+#undef find_matchl
+#undef find_casematchb
+#undef find_casematchw
+#undef find_casematchl
+#define find_asciicasematchb dee_find_asciicasematchb
+#define find_matchb          dee_find_matchb
+#define find_matchw          dee_find_matchw
+#define find_matchl          dee_find_matchl
+#define find_casematchb      dee_find_casematchb
+#define find_casematchw      dee_find_casematchw
+#define find_casematchl      dee_find_casematchl
+DEFINE_FIND_MATCH_FUNCTION(dee_find_asciicasematchb, uint8_t, memasciicasemem, memasciicaseeq)
+DEFINE_FIND_MATCH_FUNCTION(dee_find_matchb, uint8_t, memmemb, MEMEQB)
+DEFINE_FIND_MATCH_FUNCTION(dee_find_matchw, uint16_t, memmemw, MEMEQW)
+DEFINE_FIND_MATCH_FUNCTION(dee_find_matchl, uint32_t, memmeml, MEMEQL)
+DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchb, uint8_t, memcasememb, MEMCASESTARTSWITHB)
+DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchw, uint16_t, memcasememw, MEMCASESTARTSWITHW)
+DEFINE_CASEFIND_MATCH_FUNCTION(dee_find_casematchl, uint32_t, memcasememl, MEMCASESTARTSWITHL)
 #undef DEFINE_CASEFIND_MATCH_FUNCTION
 #undef DEFINE_FIND_MATCH_FUNCTION
 
@@ -1026,54 +1118,82 @@ DEFINE_CASEFIND_MATCH_FUNCTION(find_casematchl, uint32_t, memcasememl, MEMCASEST
 		}                                                                                \
 		return NULL;                                                                     \
 	}
-DEFINE_RFIND_MATCH_FUNCTION(rfind_asciicasematchb, uint8_t, dee_memasciicasermem, dee_memasciicaseeq)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_matchb, uint8_t, memrmemb, MEMEQB)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_matchw, uint16_t, memrmemw, MEMEQW)
-DEFINE_RFIND_MATCH_FUNCTION(rfind_matchl, uint32_t, memrmeml, MEMEQL)
-DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchb, uint8_t, memcasermemb, MEMCASEENDSWITHB)
-DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchw, uint16_t, memcasermemw, MEMCASEENDSWITHW)
-DEFINE_CASERFIND_MATCH_FUNCTION(rfind_casematchl, uint32_t, memcasermeml, MEMCASEENDSWITHL)
+#undef rfind_asciicasematchb
+#undef rfind_matchb
+#undef rfind_matchw
+#undef rfind_matchl
+#undef rfind_casematchb
+#undef rfind_casematchw
+#undef rfind_casematchl
+#define rfind_asciicasematchb dee_rfind_asciicasematchb
+#define rfind_matchb          dee_rfind_matchb
+#define rfind_matchw          dee_rfind_matchw
+#define rfind_matchl          dee_rfind_matchl
+#define rfind_casematchb      dee_rfind_casematchb
+#define rfind_casematchw      dee_rfind_casematchw
+#define rfind_casematchl      dee_rfind_casematchl
+DEFINE_RFIND_MATCH_FUNCTION(dee_rfind_asciicasematchb, uint8_t, memasciicasermem, memasciicaseeq)
+DEFINE_RFIND_MATCH_FUNCTION(dee_rfind_matchb, uint8_t, memrmemb, MEMEQB)
+DEFINE_RFIND_MATCH_FUNCTION(dee_rfind_matchw, uint16_t, memrmemw, MEMEQW)
+DEFINE_RFIND_MATCH_FUNCTION(dee_rfind_matchl, uint32_t, memrmeml, MEMEQL)
+DEFINE_CASERFIND_MATCH_FUNCTION(dee_rfind_casematchb, uint8_t, memcasermemb, MEMCASEENDSWITHB)
+DEFINE_CASERFIND_MATCH_FUNCTION(dee_rfind_casematchw, uint16_t, memcasermemw, MEMCASEENDSWITHW)
+DEFINE_CASERFIND_MATCH_FUNCTION(dee_rfind_casematchl, uint32_t, memcasermeml, MEMCASEENDSWITHL)
 #undef DEFINE_CASERFIND_MATCH_FUNCTION
 #undef DEFINE_RFIND_MATCH_FUNCTION
 
+#undef wildcompareb
+#undef wildcomparew
+#undef wildcomparel
+#undef wildcasecompareb
+#undef wildcasecomparew
+#undef wildcasecomparel
+#define wildcompareb     dee_wildcompareb
+#define wildcomparew     dee_wildcomparew
+#define wildcomparel     dee_wildcomparel
+#define wildcasecompareb dee_wildcasecompareb
+#define wildcasecomparew dee_wildcasecomparew
+#define wildcasecomparel dee_wildcasecomparel
 
 /* Pull in definitions for wild-compare functions. */
-#define T           uint8_t
-#define wildcompare wildcompareb
+#define T               uint8_t
+#define dee_wildcompare dee_wildcompareb
 #include "wildcompare.c.inl"
-#define T           uint16_t
-#define wildcompare wildcomparew
+#define T               uint16_t
+#define dee_wildcompare dee_wildcomparew
 #include "wildcompare.c.inl"
-#define Treturn     int64_t
-#define T           uint32_t
-#define wildcompare wildcomparel
+#define Treturn         int64_t
+#define T               uint32_t
+#define dee_wildcompare dee_wildcomparel
 #include "wildcompare.c.inl"
 
 #define NOCASE
-#define T           uint8_t
-#define wildcompare dee_wildasccicasecompareb
+#define T               uint8_t
+#define dee_wildcompare dee_wildasccicasecompareb
 #include "wildcompare.c.inl"
 
 
 #define CASEFOLD
-#define T           uint8_t
-#define wildcompare wildcasecompareb
+#define T               uint8_t
+#define dee_wildcompare dee_wildcasecompareb
 #include "wildcompare.c.inl"
 #define CASEFOLD
-#define T           uint16_t
-#define wildcompare wildcasecomparew
+#define T               uint16_t
+#define dee_wildcompare dee_wildcasecomparew
 #include "wildcompare.c.inl"
 #define CASEFOLD
-#define T           uint32_t
-#define wildcompare wildcasecomparel
+#define T               uint32_t
+#define dee_wildcompare dee_wildcasecomparel
 #include "wildcompare.c.inl"
 
 typedef DeeStringObject String;
 
 
+#undef memfilb
+#define memfilb dee_memfilb
 PRIVATE void DCALL
-memfilb(uint8_t *__restrict dst, size_t num_bytes,
-        uint8_t const *__restrict src, size_t src_bytes) {
+dee_memfilb(uint8_t *__restrict dst, size_t num_bytes,
+            uint8_t const *__restrict src, size_t src_bytes) {
 	ASSERT(src_bytes != 0);
 	if (src_bytes == 1) {
 		memsetb(dst, src[0], num_bytes);
@@ -1087,9 +1207,11 @@ memfilb(uint8_t *__restrict dst, size_t num_bytes,
 	}
 }
 
+#undef memfilw
+#define memfilw dee_memfilw
 PRIVATE void DCALL
-memfilw(uint16_t *__restrict dst, size_t num_words,
-        uint16_t const *__restrict src, size_t src_words) {
+dee_memfilw(uint16_t *__restrict dst, size_t num_words,
+            uint16_t const *__restrict src, size_t src_words) {
 	ASSERT(src_words != 0);
 	if (src_words == 1) {
 		memsetw(dst, src[0], num_words);
@@ -1103,9 +1225,11 @@ memfilw(uint16_t *__restrict dst, size_t num_words,
 	}
 }
 
+#undef memfill
+#define memfill dee_memfill
 PRIVATE void DCALL
-memfill(uint32_t *__restrict dst, size_t num_dwords,
-        uint32_t const *__restrict src, size_t src_dwords) {
+dee_memfill(uint32_t *__restrict dst, size_t num_dwords,
+            uint32_t const *__restrict src, size_t src_dwords) {
 	ASSERT(src_dwords != 0);
 	if (src_dwords == 1) {
 		memsetl(dst, src[0], num_dwords);

@@ -944,8 +944,7 @@ display_help_single(dformatprinter printer, void *arg,
 		                          sizeof(option->co_shortnam));
 		if unlikely(!buf)
 			goto err;
-		memcpyc(buf, prefix, prefix_length, sizeof(char));
-		dst    = buf + prefix_length;
+		dst    = (char *)mempcpyc(buf, prefix, prefix_length, sizeof(char));
 		*dst++ = '-';
 		memcpy(dst, option->co_shortnam, sizeof(option->co_shortnam));
 		dst += strlen(option->co_shortnam);
@@ -985,8 +984,7 @@ display_help_query(dformatprinter printer, void *arg,
 				                          sizeof(group->co_shortnam));
 				if unlikely(!buf)
 					goto err;
-				memcpyc(buf, prefix, prefix_length, sizeof(char));
-				dst    = buf + prefix_length;
+				dst    = (char *)mempcpyc(buf, prefix, prefix_length, sizeof(char));
 				*dst++ = '-';
 				memcpy(dst, group->co_shortnam, sizeof(group->co_shortnam));
 				dst += strlen(group->co_shortnam);

@@ -963,17 +963,15 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 		host_buffer = (char *)Dee_AMalloc((host_length + 1) * sizeof(char));
 		if unlikely(!host_buffer)
 			goto err;
-		memcpyc(host_buffer, host, host_length, sizeof(char));
-		host_buffer[host_length] = '\0';
-		host                     = host_buffer;
+		*(char *)mempcpyc(host_buffer, host, host_length, sizeof(char)) = '\0';
+		host = host_buffer;
 	}
 	if (port[port_length]) {
 		port_buffer = (char *)Dee_AMalloc((port_length + 1) * sizeof(char));
 		if unlikely(!port_buffer)
 			goto err;
-		memcpyc(port_buffer, port, port_length, sizeof(char));
-		port_buffer[port_length] = '\0';
-		port                     = port_buffer;
+		*(char *)mempcpyc(port_buffer, port, port_length, sizeof(char)) = '\0';
+		port = port_buffer;
 	}
 #ifdef AF_INET
 	if (family == AF_INET)

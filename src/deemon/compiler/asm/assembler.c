@@ -1103,10 +1103,9 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		                            current_assembler.a_sect[i].sec_begin);
 		size_t j, count;
 		struct asm_rel *dst;
-		memcpyc(sc_main.sec_iter,
-		        current_assembler.a_sect[i].sec_begin,
-		        sect_size, sizeof(instruction_t));
-		sc_main.sec_iter += sect_size;
+		sc_main.sec_iter = (instruction_t *)mempcpyc(sc_main.sec_iter,
+		                                             current_assembler.a_sect[i].sec_begin,
+		                                             sect_size, sizeof(instruction_t));
 		/* Also copy relocations. */
 		dst   = sc_main.sec_relv + sc_main.sec_relc;
 		count = current_assembler.a_sect[i].sec_relc;

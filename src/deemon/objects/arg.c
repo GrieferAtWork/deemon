@@ -1212,7 +1212,7 @@ DeeKwdsMapping_Decref(DREF DeeObject *self) {
 	me = (DREF KwdsMapping *)self;
 	if (DeeObject_IsShared(me)) {
 		/* The mapping is being shared, so we must construct a copy of its argument list. */
-		size_t i, argc = me->kmo_kwds->kw_size;
+		size_t argc = me->kmo_kwds->kw_size;
 		DREF DeeObject **argv;
 		if (!argc) {
 clear_argv:
@@ -1231,10 +1231,7 @@ clear_argv:
 				Dee_Free(argv);
 				argv = NULL;
 			} else {
-				memcpyc(argv, me->kmo_argv,
-				        argc, sizeof(DREF DeeObject *));
-				for (i = 0; i < argc; ++i)
-					Dee_Incref(argv[i]);
+				Dee_Movrefv(argv, me->kmo_argv, argc);
 			}
 			me->kmo_argv = argv; /* Remember the old arguments. */
 			atomic_rwlock_endwrite(&me->kmo_lock);

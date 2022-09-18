@@ -46,8 +46,9 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	length = DeeString_SIZE(name);
-	iter = str = DeeString_STR(name);
-	end        = iter + length;
+	str    = DeeString_STR(name);
+	iter   = str;
+	end    = iter + length;
 	for (; iter < end; ++iter) {
 		/* TODO: Use case folding to normalize codec names! */
 		/* TODO: When `DeeString_STR_ISUTF8()' is true, must `DeeString_SetUtf8()' the result! */
@@ -56,17 +57,14 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			result = DeeString_NewBuffer(length);
 			if unlikely(!result)
 				goto err;
-			memcpyc(DeeString_STR(result),
-			        str,
-			        (size_t)(iter - str),
-			        sizeof(char));
-			dst = DeeString_STR(result) + (size_t)(iter - str);
+			dst = (char *)mempcpyc(DeeString_STR(result), str,
+			                       (size_t)(iter - str), sizeof(char));
 			for (; iter < end; ++iter) {
-				if (*iter == '_')
+				if (*iter == '_') {
 					*dst++ = '-';
-				else if (DeeUni_IsUpper(*iter))
+				} else if (DeeUni_IsUpper(*iter)) {
 					*dst++ = (uint8_t)DeeUni_ToLower(*iter);
-				else {
+				} else {
 					*dst++ = *iter;
 				}
 			}

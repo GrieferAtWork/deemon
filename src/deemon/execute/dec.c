@@ -976,7 +976,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 		filend = (char *)(self->df_base + self->df_size);
 		while (count--) {
 			size_t name_len;
-			char *name = strtab + Dec_DecodePointer(&reader);
+			char *p, *name = strtab + Dec_DecodePointer(&reader);
 			if unlikely(name >= filend)
 				goto changed; /* Corrupted */
 			name_len = strlen(name);
@@ -985,8 +985,9 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 			filename = DeeString_NewBuffer(module_pathlen + name_len);
 			if unlikely(!filename)
 				goto err;
-			memcpyc(DeeString_STR(filename), module_pathstr, module_pathlen, sizeof(char));
-			memcpyc(DeeString_STR(filename) + module_pathlen, filename, name_len, sizeof(char));
+			p = (char *)mempcpyc(DeeString_STR(filename), module_pathstr,
+			                     module_pathlen, sizeof(char));
+			memcpyc(p, filename, name_len, sizeof(char));
 			other = DecTime_Lookup(filename);
 			Dee_Decref(filename);
 			if unlikely(other == (uint64_t)-1)

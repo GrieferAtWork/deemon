@@ -350,15 +350,14 @@ set_utf8_and_return_1byte:
 		*(size_t *)result = result_length;
 		result += sizeof(size_t);
 		/* Copy leading ASCII-only data. */
-		memcpyc(result, DeeString_STR(self),
-		        (size_t)(iter - (uint8_t *)DeeString_STR(self)),
-		        sizeof(uint8_t));
-		dst = result + (size_t)(iter - (uint8_t *)DeeString_STR(self));
+		dst = (uint8_t *)mempcpyc(result, DeeString_STR(self),
+		                          (size_t)(iter - (uint8_t *)DeeString_STR(self)),
+		                          sizeof(uint8_t));
 		for (; iter < end; ++iter) {
 			ch = *iter;
-			if (ch <= 0x7f)
+			if (ch <= 0x7f) {
 				*dst++ = ch;
-			else {
+			} else {
 				/* Encode the LATIN-1 character in UTF-8 */
 				*dst++ = 0xc0 | ((ch & 0xc0) >> 6);
 				*dst++ = 0x80 | (ch & 0x3f);
@@ -438,15 +437,14 @@ set_utf8_and_return_1byte:
 		*(size_t *)result = result_length;
 		result += sizeof(size_t);
 		/* Copy leading ASCII-only data. */
-		memcpyc(result, DeeString_STR(self),
-		        (size_t)(iter - (uint8_t *)DeeString_STR(self)),
-		        sizeof(uint8_t));
-		dst = result + (size_t)(iter - (uint8_t *)DeeString_STR(self));
+		dst = (uint8_t *)mempcpyc(result, DeeString_STR(self),
+		                          (size_t)(iter - (uint8_t *)DeeString_STR(self)),
+		                          sizeof(uint8_t));
 		for (; iter < end; ++iter) {
 			ch = *iter;
-			if (ch <= 0x7f)
+			if (ch <= 0x7f) {
 				*dst++ = ch;
-			else {
+			} else {
 				/* Encode the LATIN-1 character in UTF-8 */
 				*dst++ = 0xc0 | ((ch & 0xc0) >> 6);
 				*dst++ = 0x80 | (ch & 0x3f);
@@ -2285,9 +2283,9 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 	                                         (length + 1) * sizeof(char));
 	if unlikely(!result)
 		goto err;
-	memcpyc(result->s_str, str, length, sizeof(char));
+	iter = (uint8_t *)memcpyc(result->s_str, str, length, sizeof(char));
+	end  = iter + length;
 	/* Search for multi-byte character sequences. */
-	end = (iter = (uint8_t *)result->s_str) + length;
 	while (iter < end) {
 		uint8_t seqlen, ch = *iter;
 		uint32_t ch32;

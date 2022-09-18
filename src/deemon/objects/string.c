@@ -232,8 +232,10 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 			result = reloc;
 		result->s_len = self->ap_length;
 	}
+
 	/* Make sure to terminate the c-string representation. */
 	result->s_str[self->ap_length] = '\0';
+
 	/* Do final object initialization. */
 	DeeObject_Init(result, &DeeString_Type);
 	result->s_hash = (dhash_t)-1;
@@ -255,6 +257,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) char *
 		if (result)
 			return result;
 	}
+
 	/* Append a new string. */
 	error = ascii_printer_print(self, str, length);
 	if unlikely(error < 0)
@@ -278,6 +281,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		self = NULL;
 	ASSERTF(!self || DeeString_Check(self), "Not a string buffer");
 	ASSERTF(!self || !DeeObject_IsShared(self), "String buffers cannot be shared");
+
 	/* Special case: Resize-to-zero. */
 	if unlikely(!num_bytes) {
 		if (self)
@@ -285,6 +289,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		Dee_Incref(Dee_EmptyString);
 		return Dee_EmptyString;
 	}
+
 	/* Re-allocate the buffer. */
 	result = (DREF String *)DeeObject_Realloc(self,
 	                                          offsetof(String, s_str) +
@@ -309,6 +314,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		self = NULL;
 	ASSERTF(!self || DeeString_Check(self), "Not a string buffer");
 	ASSERTF(!self || !DeeObject_IsShared(self), "String buffers cannot be shared");
+
 	/* Special case: Resize-to-zero. */
 	if unlikely(!num_bytes) {
 		if (self)
@@ -316,6 +322,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 		Dee_Incref(Dee_EmptyString);
 		return Dee_EmptyString;
 	}
+
 	/* Re-allocate the buffer. */
 	result = (DREF String *)DeeObject_TryRealloc(self,
 	                                             offsetof(String, s_str) +
@@ -470,6 +477,7 @@ DeeString_Hash(DeeObject *__restrict self) {
 			str    = DeeString_Get4Byte(self);
 			result = Dee_Hash4Byte(str, WSTR_LENGTH(str));
 		}	break;
+
 		}
 		DeeString_HASH(self) = result;
 	}
@@ -498,6 +506,7 @@ DeeString_HashCase(DeeObject *__restrict self) {
 		str    = DeeString_Get4Byte(self);
 		result = Dee_HashCase4Byte(str, WSTR_LENGTH(str));
 	}	break;
+
 	}
 	return result;
 }
@@ -611,6 +620,19 @@ compare_string_bytes(String *__restrict lhs,
 	return 1;
 }
 
+#ifndef CONFIG_HAVE_memcmpw
+#define CONFIG_HAVE_memcmpw 1
+#define memcmpw dee_memcmpw
+DeeSystem_DEFINE_memcmpw(dee_memcmpw)
+#endif /* !CONFIG_HAVE_memcmpw */
+
+#ifndef CONFIG_HAVE_memcmpl
+#define CONFIG_HAVE_memcmpl 1
+#define memcmpl dee_memcmpl
+DeeSystem_DEFINE_memcmpl(dee_memcmpl)
+#endif /* !CONFIG_HAVE_memcmpl */
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_strings(String *__restrict lhs,
                 String *__restrict rhs) {
@@ -720,28 +742,15 @@ compare_strings(String *__restrict lhs,
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
+				int result;
 				uint16_t *rhs_str;
 				size_t common_len;
 				rhs_str    = (uint16_t *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef __USE_KOS
-				{
-					int result;
-					result = memcmpw(lhs_str, rhs_str, common_len);
-					if (result != 0)
-						return result;
-				}
-#else /* __USE_KOS */
-				{
-					size_t i;
-					for (i = 0; i < common_len; ++i) {
-						if (lhs_str[i] == rhs_str[i])
-							continue;
-						return lhs_str[i] < rhs_str[i] ? -1 : 1;
-					}
-				}
-#endif /* !__USE_KOS */
+				result     = memcmpw(lhs_str, rhs_str, common_len);
+				if (result != 0)
+					return result;
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -781,28 +790,15 @@ compare_strings(String *__restrict lhs,
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
+				int result;
 				uint32_t *rhs_str;
 				size_t common_len;
 				rhs_str    = (uint32_t *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
-#ifdef __USE_KOS
-				{
-					int result;
-					result = memcmpl(lhs_str, rhs_str, common_len);
-					if (result != 0)
-						return result;
-				}
-#else /* __USE_KOS */
-				{
-					size_t i;
-					for (i = 0; i < common_len; ++i) {
-						if (lhs_str[i] == rhs_str[i])
-							continue;
-						return lhs_str[i] < rhs_str[i] ? -1 : 1;
-					}
-				}
-#endif /* !__USE_KOS */
+				result     = memcmpl(lhs_str, rhs_str, common_len);
+				if (result != 0)
+					return result;
 			}	break;
 
 			default: __builtin_unreachable();
@@ -825,9 +821,9 @@ compare_strings(String *__restrict lhs,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 string_compare(String *lhs, DeeObject *rhs) {
 	int result;
-	if (DeeBytes_Check(rhs))
+	if (DeeBytes_Check(rhs)) {
 		result = compare_string_bytes(lhs, (DeeBytesObject *)rhs);
-	else {
+	} else {
 		if (DeeObject_AssertTypeExact(rhs, &DeeString_Type))
 			goto err;
 		result = compare_strings(lhs, (String *)rhs);

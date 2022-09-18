@@ -629,10 +629,12 @@ tpp_unknown_file(int mode, char *__restrict filename,
 	struct TPPKeyword *keyword_entry;
 	DREF DeeObject *path, *stream;
 	struct TPPFile *result;
+
 	/* Only search the library path if the
 	 * include mode is that of a system header. */
 	if (!(mode & TPPLEXER_OPENFILE_MODE_SYSTEM))
 		return NULL;
+
 	/* Try to pre-allocate a decently-sized buffer. */
 	buflen = 128 + filename_size;
 	buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
@@ -645,6 +647,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 	}
 	libpath = DeeModule_GetPath();
 	DeeList_LockRead(libpath);
+
 	/* Go through all library paths and generate the filename of a system header. */
 	for (i = 0; i < DeeList_SIZE(libpath); ++i) {
 		size_t req_length;
@@ -672,6 +675,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			buflen = req_length;
 		}
 		dst = buffer->s_str;
+
 		/* Copy the library path. */
 #ifdef ALTSEP
 		{
@@ -685,20 +689,27 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			}
 		}
 #else /* ALTSEP */
-		memcpyc(dst, DeeString_STR(path), DeeString_SIZE(path), sizeof(char));
-		dst += DeeString_SIZE(path);
+		dst = (char *)mempcpyc(dst,
+		                       DeeString_STR(path),
+		                       DeeString_SIZE(path),
+		                       sizeof(char));
 #endif /* !ALTSEP */
+
 		/* Drop our reference to the library path. */
 		Dee_Decref(path);
+
 		/* Add a separator after the library path (if there wasn't one to being with) */
 		if (dst != buffer->s_str && dst[-1] != SEP)
 			*dst++ = SEP;
+
 		/* Now copy the include prefix. */
-		memcpyc(dst, include_prefix, COMPILER_STRLEN(include_prefix), sizeof(char));
-		dst += COMPILER_STRLEN(include_prefix);
+		dst = (char *)mempcpyc(dst, include_prefix,
+		                       COMPILER_STRLEN(include_prefix),
+		                       sizeof(char));
+
 		/* Finally, copy the filename that's been given to us by TPP. */
-		memcpyc(dst, filename, filename_size, sizeof(char));
-		dst += filename_size;
+		dst = (char *)mempcpyc(dst, filename, filename_size, sizeof(char));
+
 		/* Ensure ZERO-termination. */
 		*dst       = 0;
 		req_length = (size_t)(dst - buffer->s_str);
@@ -720,6 +731,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		 * NOTE: The reference to `DeeString_Type' is added if we succeed in opening the file. */
 		DeeObject_InitNoref(buffer, &DeeString_Type);
 		buffer->s_len = req_length;
+
 		/* Try to truncate the used portion of the buffer. */
 		if (buffer->s_len != buflen) {
 			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(buffer, offsetof(DeeStringObject, s_str) +
@@ -732,9 +744,11 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		stream = DeeFile_Open((DeeObject *)buffer, OPEN_FRDONLY, 0);
 		if (stream != ITER_DONE) {       /* Error or success. */
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
+
 			/* Check for errors that may have occurred during `DeeFile_Open()' */
 			if unlikely(!stream)
 				goto err_streamopen_failed;
+
 			/* Use the stream to open a new TPP file descriptor. */
 			result = TPPFile_OpenStream((stream_t)stream, DeeString_STR(buffer));
 			Dee_Decref(buffer); /* Drop our own reference to the buffer. */
@@ -743,8 +757,10 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				Dee_Decref(stream);
 				goto err;
 			}
+
 			/* Setup the TPP descriptor such that it inherits the stream. */
 			result->f_textfile.f_ownedstream = (stream_t)stream;
+
 			/* All right! We've got the new file descriptor.
 			 * Now to cache it in a keyword entry. */
 			if (!keyword_entry) {
@@ -752,6 +768,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 				if unlikely(!keyword_entry)
 					goto err_r;
 			}
+
 			/* Ensure that rare data has been allocated for the keyword. */
 			if unlikely(!TPPKeyword_API_MAKERARE(keyword_entry))
 				goto err_r;
@@ -774,6 +791,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 	DeeList_LockEndRead(libpath);
 done_notfound:
 	result = NULL;
+
 /*done:*/
 	/* Free the temporary filename-buffer. */
 	if (buffer && buffer->s_data) {

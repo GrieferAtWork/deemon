@@ -453,7 +453,7 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 			goto done;
 	}
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		/*utf-8*/ char *key_utf8, *value_utf8, *line;
+		/*utf-8*/ char *key_utf8, *value_utf8, *line, *p;
 		size_t key_length, value_length, line_length;
 		ASSERT(result_len <= result_alloc);
 		if (result_len >= result_alloc) {
@@ -489,10 +489,11 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 		line = (char *)Dee_Malloc((line_length + 1) * sizeof(char));
 		if unlikely(!line)
 			goto err_key_and_value;
-		memcpyc(line, key_utf8, key_length, sizeof(char));
-		line[key_length] = '=';
-		memcpyc(line + key_length + 1, value_utf8, value_length, sizeof(char));
-		line[key_length + 1 + value_length] = '\0';
+		p    = line;
+		p    = (char *)mempcpyc(p, key_utf8, key_length, sizeof(char));
+		*p++ = '=';
+		p    = (char *)mempcpyc(p, value_utf8, value_length, sizeof(char));
+		*p   = '\0';
 		Dee_Decref(key_and_value[1]);
 		Dee_Decref(key_and_value[0]);
 		result[result_len] = line; /* Inherit */

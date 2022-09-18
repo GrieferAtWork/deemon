@@ -3954,8 +3954,7 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		namebuf[0] = 'K';
 		namebuf[1] = '3';
 		namebuf[2] = '2';
-		memcpyc(namebuf + 3, name, namelen, sizeof(char));
-		namebuf[3 + namelen] = '\0';
+		*(char *)mempcpyc(namebuf + 3, name, namelen, sizeof(char)) = '\0';
 		DBG_ALIGNMENT_DISABLE();
 		pResult = GetProcAddress(hMod, namebuf);
 		DBG_ALIGNMENT_ENABLE();

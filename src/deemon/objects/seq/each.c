@@ -454,8 +454,7 @@ se_enter(SeqEachBase *__restrict self) {
 		if (DeeObject_Enter(elem[i]))
 			goto err_elem_i;
 	}
-	while (count--)
-		Dee_Decref(elem[count]);
+	Dee_Decrefv(elem, count);
 	Dee_Free(elem);
 	return 0;
 err_elem_i:
@@ -464,8 +463,7 @@ err_elem_i:
 			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
 /*err_elem:*/
-	while (count--)
-		Dee_Decref(elem[count]);
+	Dee_Decrefv(elem, count);
 	Dee_Free(elem);
 err:
 	return -1;
@@ -643,14 +641,10 @@ seo_ctor(SeqEachOperator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_copy(SeqEachOperator *__restrict self,
          SeqEachOperator *__restrict other) {
-	size_t i;
 	self->se_seq    = other->se_seq;
 	self->so_opname = other->so_opname;
 	self->so_opargc = other->so_opargc;
-	memcpyc(self->so_opargv, other->so_opargv,
-	        self->so_opargc, sizeof(DREF DeeObject *));
-	for (i = 0; i < self->so_opargc; ++i)
-		Dee_Incref(self->so_opargv[i]);
+	Dee_Movrefv(self->so_opargv, other->so_opargv, self->so_opargc);
 	Dee_Incref(self->se_seq);
 	return 0;
 }
@@ -671,8 +665,7 @@ seo_deep(SeqEachOperator *__restrict self,
 	self->so_opargc = other->so_opargc;
 	return 0;
 err_i:
-	while (i--)
-		Dee_Decref(self->so_opargv[i]);
+	Dee_Decrefv(self->so_opargv, i);
 	Dee_Decref(self->se_seq);
 err:
 	return -1;
@@ -681,7 +674,6 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_init(SeqEachOperator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	size_t i;
 	DeeObject *name;
 	DeeObject *args = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqEachOperator",
@@ -709,10 +701,7 @@ seo_init(SeqEachOperator *__restrict self,
 			goto err;
 	}
 	self->so_opargc = (uint16_t)DeeTuple_SIZE(args);
-	memcpyc(self->so_opargv, DeeTuple_ELEM(args),
-	        self->so_opargc, sizeof(DREF DeeObject *));
-	for (i = 0; i < self->so_opargc; ++i)
-		Dee_Incref(self->so_opargv[i]);
+	Dee_Movrefv(self->so_opargv, DeeTuple_ELEM(args), self->so_opargc);
 	Dee_Incref(self->se_seq);
 	return 0;
 err:
@@ -721,18 +710,14 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 seo_fini(SeqEachOperator *__restrict self) {
-	size_t i;
 	Dee_Decref(self->se_seq);
-	for (i = 0; i < self->so_opargc; ++i)
-		Dee_Decref(self->so_opargv[i]);
+	Dee_Decrefv(self->so_opargv, self->so_opargc);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 seo_visit(SeqEachOperator *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
 	Dee_Visit(self->se_seq);
-	for (i = 0; i < self->so_opargc; ++i)
-		Dee_Visit(self->so_opargv[i]);
+	Dee_Visitv(self->so_opargv, self->so_opargc);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -778,10 +763,12 @@ sew_call_kw(DeeObject *__restrict self, size_t argc,
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
 		goto err;
-	return kw
-	       ? (Dee_Incref(kw),
-	          seqeach_makeop2(self, OPERATOR_CALL, tuple, kw))
-	       : (seqeach_makeop1(self, OPERATOR_CALL, tuple));
+	if (kw) {
+		Dee_Incref(kw);
+		return seqeach_makeop2(self, OPERATOR_CALL, tuple, kw);
+	} else {
+		return seqeach_makeop1(self, OPERATOR_CALL, tuple);
+	}
 err:
 	return NULL;
 }
@@ -1038,8 +1025,7 @@ sew_enter(DeeObject *__restrict self) {
 		if (DeeObject_Enter(elem[i]))
 			goto err_elem_i;
 	}
-	while (count--)
-		Dee_Decref(elem[count]);
+	Dee_Decrefv(elem, count);
 	Dee_Free(elem);
 	return 0;
 err_elem_i:
@@ -1048,8 +1034,7 @@ err_elem_i:
 			DeeError_Print(s_unhandled_leave_message, ERROR_PRINT_DOHANDLE);
 	}
 /*err_elem:*/
-	while (count--)
-		Dee_Decref(elem[count]);
+	Dee_Decrefv(elem, count);
 	Dee_Free(elem);
 err:
 	return -1;
@@ -1540,7 +1525,6 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *__restrict attr,
                     size_t argc,
                     DeeObject *const *argv) {
-	size_t i;
 	DREF SeqEachCallAttr *result;
 	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(offsetof(SeqEachCallAttr, sg_argv) +
 	                                                  (argc * sizeof(DREF DeeObject *)));
@@ -1549,10 +1533,7 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
 	result->se_seq  = self;
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_argc = argc;
-	memcpyc(result->sg_argv, argv,
-	        argc, sizeof(DREF DeeObject *));
-	for (i = 0; i < argc; ++i)
-		Dee_Incref(argv[i]);
+	Dee_Movrefv(result->sg_argv, argv, argc);
 	Dee_Incref(self);
 	Dee_Incref(attr);
 	DeeObject_Init(result, &SeqEachCallAttr_Type);
@@ -1566,7 +1547,6 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
                       size_t argc,
                       DeeObject *const *argv,
                       DeeObject *kw) {
-	size_t i;
 	DREF SeqEachCallAttrKw *result;
 	if (!kw)
 		return DeeSeqEach_CallAttr(self, attr, argc, argv);
@@ -1578,10 +1558,7 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_kw   = kw;
 	result->sg_argc = argc;
-	memcpyc(result->sg_argv, argv,
-	        argc, sizeof(DREF DeeObject *));
-	for (i = 0; i < argc; ++i)
-		Dee_Incref(argv[i]);
+	Dee_Movrefv(result->sg_argv, argv, argc);
 	Dee_Incref(self);
 	Dee_Incref(attr);
 	Dee_Incref(kw);

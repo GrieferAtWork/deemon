@@ -1495,9 +1495,8 @@ again:
 			buffer_copy->s_len  = buffer_length;
 			buffer_copy->s_data = NULL;
 			buffer_copy->s_hash = DEE_STRING_HASH_UNSET;
-			memcpyc(buffer_copy->s_str, written_buffer->s_str,
-			        self->w_printer.up_length, sizeof(char));
-			self->w_printer.up_buffer = buffer_copy->s_str;
+			self->w_printer.up_buffer = (char *)memcpyc(buffer_copy->s_str, written_buffer->s_str,
+			                                            self->w_printer.up_length, sizeof(char));
 			DeeFile_LockEndWrite(self);
 			Dee_Decref_unlikely(written_buffer);
 			goto again;

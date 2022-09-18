@@ -2687,7 +2687,8 @@ thread_ctor(DeeThreadObject *__restrict self,
 		/* The thread callback object. */
 		self->t_threadmain = argv[0];
 		Dee_Incref(self->t_threadmain);
-		--argc, ++argv;
+		--argc;
+		++argv;
 	}
 	if (argc) {
 		self->t_threadargs = (DREF struct tuple_object *)argv[0];
@@ -4152,9 +4153,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
-			memcpyc(new_vector, vector->cf_frame,
-			        code->co_localc, sizeof(DREF DeeObject *));
-			vector->cf_frame = new_vector;
+			vector->cf_frame = (DREF DeeObject **)memcpyc(new_vector, vector->cf_frame,
+			                                              code->co_localc, sizeof(DREF DeeObject *));
 		}
 		if (!vector->cf_argc) {
 			vector->cf_argv = NULL;
@@ -4163,9 +4163,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
-			memcpyc(new_vector, vector->cf_argv,
-			        vector->cf_argc, sizeof(DREF DeeObject *));
-			vector->cf_argv = new_vector;
+			vector->cf_argv = (DREF DeeObject **)memcpyc(new_vector, vector->cf_argv,
+			                                             vector->cf_argc, sizeof(DREF DeeObject *));
 		}
 	}
 	return true;

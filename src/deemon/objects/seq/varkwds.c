@@ -305,7 +305,8 @@ kwds_FindIndexStrLen(DeeKwdsObject *__restrict self,
 			continue;
 		if (DeeString_SIZE(entry->ke_name) != namesize)
 			continue;
-		if (memcmp(DeeString_STR(entry->ke_name), name, namesize * sizeof(char)) != 0)
+		if (memcmp(DeeString_STR(entry->ke_name), name,
+		           namesize * sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}
@@ -340,6 +341,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
 		size_t index;
@@ -349,6 +351,7 @@ again:
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
+
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
 			i = perturb = str_hash & self->vk_mask;
@@ -360,6 +363,7 @@ again:
 				ent->ve_str = str;
 				break;
 			}
+
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
@@ -397,6 +401,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
 		size_t index;
@@ -406,6 +411,7 @@ again:
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
+
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
 			i = perturb = str_hash & self->vk_mask;
@@ -417,6 +423,7 @@ again:
 				ent->ve_str = str;
 				break;
 			}
+
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    strcmp(DeeString_STR(str), name) == 0) {
@@ -452,6 +459,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->vk_load) < self->vk_ckwc) {
 		size_t index;
@@ -461,6 +469,7 @@ again:
 		while (index < self->vk_ckwc) {
 			dhash_t str_hash;
 			str = self->vk_ckwv[index++];
+
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
 			i = perturb = str_hash & self->vk_mask;
@@ -472,6 +481,7 @@ again:
 				ent->ve_str = str;
 				break;
 			}
+
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == namesize &&
@@ -672,10 +682,9 @@ missing:
 PRIVATE NONNULL((1)) void DCALL
 blv_fini(BlackListVarkwds *__restrict self) {
 	if (self->vk_argv) {
-		size_t i, argc;
+		size_t argc;
 		argc = DeeKwds_SIZE(self->vk_kwds);
-		for (i = 0; i < argc; ++i)
-			Dee_Decref(self->vk_argv[i]);
+		Dee_Decrefv(self->vk_argv, argc);
 		Dee_Free(self->vk_argv);
 	}
 	Dee_Decref(self->vk_code);
@@ -686,10 +695,9 @@ PRIVATE NONNULL((1, 2)) void DCALL
 blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_read(&self->vk_lock);
 	if (self->vk_argv) {
-		size_t i, argc;
+		size_t argc;
 		argc = DeeKwds_SIZE(self->vk_kwds);
-		for (i = 0; i < argc; ++i)
-			Dee_Visit(self->vk_argv[i]);
+		Dee_Visitv(self->vk_argv, argc);
 	}
 	rwlock_endread(&self->vk_lock);
 	Dee_Visit(self->vk_code);
@@ -707,6 +715,7 @@ blv_bool(BlackListVarkwds *__restrict self) {
 		name = kw->kw_map[i].ke_name;
 		if (!name)
 			continue;
+
 		/* Check if this keyword has been black-listed. */
 		if (!BlackListVarkwds_IsBlackListed(self, (DeeObject *)name))
 			return 1; /* non-empty. */
@@ -723,6 +732,7 @@ blv_nsi_size(BlackListVarkwds *__restrict self) {
 		name = kw->kw_map[i].ke_name;
 		if (!name)
 			continue;
+
 		/* Check if this keyword has been black-listed. */
 		if (!BlackListVarkwds_IsBlackListed(self, (DeeObject *)name))
 			++result;
@@ -813,7 +823,7 @@ PRIVATE struct type_member tpconst blv_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwds *DCALL
 blv_copy(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwds *result;
-	size_t i, count;
+	size_t count;
 	result = (DREF BlackListVarkwds *)DeeObject_Malloc(offsetof(BlackListVarkwds, vk_blck) +
 	                                                   (self->vk_mask + 1) *
 	                                                   sizeof(BlackListVarkwdsEntry));
@@ -825,10 +835,7 @@ blv_copy(BlackListVarkwds *__restrict self) {
 	if unlikely(!result->vk_argv)
 		goto err_r;
 	rwlock_read(&self->vk_lock);
-	for (i = 0; i < count; ++i) {
-		result->vk_argv[i] = self->vk_argv[i];
-		Dee_Incref(result->vk_argv[i]);
-	}
+	Dee_Movrefv(result->vk_argv, self->vk_argv, count);
 	result->vk_load = self->vk_load;
 	memcpyc(result->vk_blck,
 	        self->vk_blck,
@@ -866,16 +873,14 @@ blv_deep(BlackListVarkwds *__restrict self) {
 	if unlikely(!result->vk_argv)
 		goto err_r;
 	rwlock_read(&self->vk_lock);
-	for (i = 0; i < count; ++i) {
-		result->vk_argv[i] = self->vk_argv[i];
-		Dee_Incref(result->vk_argv[i]);
-	}
+	Dee_Movrefv(result->vk_argv, self->vk_argv, count);
 	result->vk_load = self->vk_load;
 	memcpyc(result->vk_blck,
 	        self->vk_blck,
 	        self->vk_mask + 1,
 	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->vk_lock);
+
 	/* Construct deep copies of all of the arguments. */
 	for (i = 0; i < count; ++i) {
 		if (DeeObject_InplaceDeepCopy(&result->vk_argv[i]))
@@ -893,9 +898,7 @@ blv_deep(BlackListVarkwds *__restrict self) {
 done:
 	return result;
 err_r_argv:
-	i = count;
-	while (i--)
-		Dee_Decref(result->vk_argv[i]);
+	Dee_Decrefv(result->vk_argv, count);
 	Dee_Free(result->vk_argv);
 err_r:
 	DeeObject_Free(result);
@@ -976,6 +979,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 		 *    keyword which would have to be blacklisted when access is made. */
 		return DeeKwdsMapping_New((DeeObject *)kwds, argv);
 	}
+
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;
@@ -1015,45 +1019,28 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 		DeeObject_Free(me);
 		return;
 	}
+
 	/* Must transform the object such that it can continue to exist without causing problems. */
 	kwdc = DeeKwds_SIZE(me->vk_kwds);
 	argv = (DREF DeeObject **)Dee_TryMalloc(kwdc * sizeof(DREF DeeObject *));
 	if likely(argv) {
-		size_t i;
 		/* Initialize the argument vector copy. */
-		memcpyc(argv, me->vk_argv,
-		        kwdc, sizeof(DREF DeeObject *));
-		for (i = 0; i < kwdc; ++i)
-			Dee_Incref(argv[i]);
+		Dee_Movrefv(argv, me->vk_argv, kwdc);
 	}
+
 	/* Override the old argv such that the object holds its own copy. */
 	rwlock_write(&me->vk_lock);
 	me->vk_argv = argv; /* Inherit */
 	rwlock_endwrite(&me->vk_lock);
+
 	/* Construct references to pointed-to objects (done now, so we could
 	 * skip that step within the `!DeeObject_IsShared(me)' path above) */
 	Dee_Incref(me->vk_code);
 	Dee_Incref(me->vk_kwds);
+
 	/* Drop our own reference (which should still be shared right now) */
 	Dee_Decref_unlikely(self);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1277,6 +1264,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
 		size_t index;
@@ -1297,6 +1285,7 @@ again:
 				ent->ve_str = str;
 				break;
 			}
+
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == DeeString_SIZE(name) &&
@@ -1334,6 +1323,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
 		size_t index;
@@ -1389,6 +1379,7 @@ again:
 			continue;
 		return true; /* It is! */
 	}
+
 	/* Check if more arguments need to be loaded. */
 	if (ATOMIC_READ(self->bm_load) < self->bm_ckwc) {
 		size_t index;
@@ -1398,6 +1389,7 @@ again:
 		while (index < self->bm_ckwc) {
 			dhash_t str_hash;
 			str = self->bm_ckwv[index++];
+
 			/* Remember the string by caching it within out hash-vector. */
 			str_hash = DeeString_Hash((DeeObject *)str);
 			i = perturb = str_hash & self->bm_mask;
@@ -1409,6 +1401,7 @@ again:
 				ent->ve_str = str;
 				break;
 			}
+
 			/* Check if this one's our's, and stop loading if it is. */
 			if (str_hash == hash &&
 			    DeeString_SIZE(str) == namesize &&
@@ -1698,6 +1691,7 @@ blm_copy(BlackListMapping *__restrict self) {
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
+
 	/* Create a copy of the original keywords, since we're acting as a proxy. */
 	result->bm_kw = DeeObject_Copy(self->bm_kw);
 	if unlikely(!result->bm_kw)
@@ -1814,6 +1808,7 @@ BlackListMapping_New(struct code_object *__restrict code,
 		/* No keyword information --> Re-return the unfiltered input mapping object. */
 		return_reference_(kw);
 	}
+
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;

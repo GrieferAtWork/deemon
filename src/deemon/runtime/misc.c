@@ -1782,8 +1782,7 @@ debug_printer(void *UNUSED(closure),
 		while (bufsize) {
 			size_t part;
 			part = MIN(bufsize, sizeof(temp) - sizeof(char));
-			memcpy(temp, buffer, part);
-			temp[part] = '\0';
+			*(char *)mempcpy(temp, buffer, part) = '\0';
 			DBG_ALIGNMENT_DISABLE();
 			OutputDebugStringA(temp);
 			DBG_ALIGNMENT_ENABLE();

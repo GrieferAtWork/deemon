@@ -78,9 +78,11 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 		result->d_elem = (struct dict_item *)empty_dict_items;
 	} else {
 		size_t min_mask = 16 - 1, mask;
+
 		/* Figure out how large the mask of the Dict is going to be. */
 		while ((num_keyitems & min_mask) != num_keyitems)
 			min_mask = (min_mask << 1) | 1;
+
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
 		result->d_elem = (struct dict_item *)Dee_TryCalloc((mask + 1) * sizeof(struct dict_item));
@@ -91,6 +93,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 			if unlikely(!result->d_elem)
 				goto err_r;
 		}
+
 		/* Without any dummy items, these are identical. */
 		result->d_size = num_keyitems;
 		result->d_used = num_keyitems;
@@ -112,6 +115,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 		}
 	}
 	atomic_rwlock_init(&result->d_lock);
+
 	/* Initialize and start tracking the new Dict. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeDict_Type);
@@ -188,6 +192,7 @@ dict_init_sequence(Dict *__restrict self,
 	DeeTypeObject *tp = Dee_TYPE(sequence);
 	if (tp == &DeeDict_Type)
 		return dict_copy(self, (Dict *)sequence);
+
 	/* Optimizations for `_RoDict' */
 	if (tp == &DeeRoDict_Type) {
 		struct dict_item *iter, *end;
@@ -195,9 +200,9 @@ dict_init_sequence(Dict *__restrict self,
 		atomic_rwlock_init(&self->d_lock);
 		self->d_mask = src->rd_mask;
 		self->d_used = self->d_size = src->rd_size;
-		if unlikely(!self->d_size)
+		if unlikely(!self->d_size) {
 			self->d_elem = (struct dict_item *)empty_dict_items;
-		else {
+		} else {
 			self->d_elem = (struct dict_item *)Dee_Malloc((src->rd_mask + 1) *
 			                                              sizeof(struct dict_item));
 			if unlikely(!self->d_elem)
@@ -936,9 +941,7 @@ again:
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
 		key_ob->s_len  = key_len;
-		memcpyc(key_ob->s_str, key,
-		        key_len + 1,
-		        sizeof(char));
+		memcpyc(key_ob->s_str, key, key_len + 1, sizeof(char));
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
 		/* Fill in the target slot. */
@@ -1036,9 +1039,7 @@ again:
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
 		key_ob->s_len  = keylen;
-		memcpyc(key_ob->s_str, key,
-		        keylen, sizeof(char));
-		key_ob->s_str[keylen] = '\0';
+		*(char *)mempcpyc(key_ob->s_str, key, keylen, sizeof(char)) = '\0';
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
 		/* Fill in the target slot. */

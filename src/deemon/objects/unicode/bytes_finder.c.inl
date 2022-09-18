@@ -175,9 +175,9 @@ bcfi_next(BytesFindIterator *__restrict self) {
 	uint8_t *ptr, *new_ptr;
 again:
 	ptr     = ATOMIC_READ(self->bfi_ptr);
-	new_ptr = (uint8_t *)dee_memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                                         self->bfi_needle_ptr,
-	                                         self->bfi_needle_len);
+	new_ptr = (uint8_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
+	                                     self->bfi_needle_ptr,
+	                                     self->bfi_needle_len);
 	if (new_ptr) {
 		size_t result;
 		if (!ATOMIC_CMPXCH_WEAK(self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
@@ -215,9 +215,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
 	uint8_t *ptr;
 	ptr = ATOMIC_READ(self->bfi_ptr);
-	ptr = dee_memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                          self->bfi_needle_ptr,
-	                          self->bfi_needle_len);
+	ptr = memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
+	                      self->bfi_needle_ptr,
+	                      self->bfi_needle_len);
 	return ptr != NULL;
 }
 

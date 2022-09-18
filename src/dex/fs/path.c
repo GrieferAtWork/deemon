@@ -160,10 +160,12 @@ fs_pathdrive(DeeObject *__restrict path) {
 		drive_length = (size_t)(drive_start - DeeString_STR(path));
 		result       = DeeString_NewBuffer(drive_length + 1);
 		if likely(result) {
-			char *dst = DeeString_STR(result);
-			memcpyc(dst, DeeString_STR(path), drive_length, sizeof(char));
+			char *dst;
+			dst = DeeString_STR(result);
+			dst = (char *)mempcpyc(dst, DeeString_STR(path),
+			                       drive_length, sizeof(char));
 			/* Alway follow up with a slash. */
-			dst[drive_length] = *drive_start == '/' ? '/' : '\\';
+			*dst = *drive_start == '/' ? '/' : '\\';
 		}
 		return result;
 	}
@@ -434,8 +436,7 @@ done_merge_paths:
 			if unlikely(!result)
 				goto err_pwd;
 			dst = DeeString_STR(result);
-			memcpyc(dst, pwd_begin, pwd_length, sizeof(char));
-			dst += pwd_length;
+			dst = (char *)mempcpyc(dst, pwd_begin, pwd_length, sizeof(char));
 			*dst++ = SEP;
 			memcpyc(dst, pth_begin, pth_length, sizeof(char));
 			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
@@ -765,10 +766,9 @@ return_single_dot:
 	dst = DeeString_STR(result);
 	while (uprefs) {
 		size_t part = MIN(uprefs, (size_t)MAX_UPREF_COPY);
-		memcpyc(dst, (void *)aligned_upref_buffer,
-		        part * COMPILER_LENOF(aligned_upref_buffer[0]),
-		        sizeof(char));
-		dst += part * COMPILER_LENOF(aligned_upref_buffer[0]);
+		dst = (char *)mempcpyc(dst, (void *)aligned_upref_buffer,
+		                       part * COMPILER_LENOF(aligned_upref_buffer[0]),
+		                       sizeof(char));
 		uprefs -= part;
 	}
 	/* With upwards references out of the way, copy the remainder of the given path. */
@@ -1007,8 +1007,7 @@ print_env:
 				char *temp    = (char *)Dee_Malloc((length + 1) * sizeof(char));
 				if unlikely(!temp)
 					goto err;
-				memcpyc(temp, name_start, length, sizeof(char));
-				temp[length] = '\0';
+				*(char *)mempcpyc(temp, name_start, length, sizeof(char)) = '\0';
 				/* Now print the environment variable. */
 				error = fs_printenv(name_start, &printer, !!(options & FS_EXPAND_FNOFAIL));
 				Dee_Free(temp);
