@@ -115,10 +115,10 @@ struct dec_writer {
 };
 #define DEC_FOREACH_SECTION_VARS \
 	struct dec_section *_main_section
-#define DEC_FOREACH_SECTION(sec)                                   \
-	for (_main_section = current_dec.dw_sec_defl;                  \
-	     _main_section != COMPILER_ENDOF(current_dec.dw_sec_defl); \
-	     ++_main_section)                                          \
+#define DEC_FOREACH_SECTION(sec)                                  \
+	for (_main_section = current_dec.dw_sec_defl;                 \
+	     _main_section < COMPILER_ENDOF(current_dec.dw_sec_defl); \
+	     ++_main_section)                                         \
 		for ((sec) = _main_section; (sec); (sec) = (sec)->ds_next)
 
 

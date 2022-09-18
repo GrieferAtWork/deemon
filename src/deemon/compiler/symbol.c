@@ -538,8 +538,9 @@ scope_fini(DeeScopeObject *__restrict self) {
 	struct symbol **biter, **bend, *iter, *next;
 	weakref_support_fini(self);
 	DeeCompiler_DelItem(self);
-	bend = (biter = self->s_map) + self->s_mapa;
-	for (; biter != bend; ++biter) {
+	biter = self->s_map;
+	bend  = biter + self->s_mapa;
+	for (; biter < bend; ++biter) {
 		iter = *biter;
 		while (iter) {
 			next = iter->s_next;
@@ -573,8 +574,9 @@ PRIVATE NONNULL((1, 2)) void DCALL
 scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
 	struct symbol **biter, **bend, *iter;
 	recursive_rwlock_read(&DeeCompiler_Lock);
-	bend = (biter = self->s_map) + self->s_mapa;
-	for (; biter != bend; ++biter) {
+	biter = self->s_map;
+	bend  = biter + self->s_mapa;
+	for (; biter < bend; ++biter) {
 		iter = *biter;
 		while (iter) {
 			visitsym(iter, proc, arg);
@@ -721,8 +723,9 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 	ASSERT(self->bs_argc_max >= self->bs_argc_min);
 	{
 		struct text_label **biter, **bend, *iter, *next;
-		bend = (biter = self->bs_lbl) + self->bs_lbla;
-		for (; biter != bend; ++biter) {
+		biter = self->bs_lbl;
+		bend  = biter + self->bs_lbla;
+		for (; biter < bend; ++biter) {
 			iter = *biter;
 			while (iter) {
 				next = iter->tl_next;
@@ -1193,8 +1196,9 @@ rehash_realloc:
 		return -1;
 	}
 	/* Rehash all symbols. */
-	bend = (biter = iter->s_map) + old_size;
-	for (; biter != bend; ++biter) {
+	biter = iter->s_map;
+	bend  = biter + old_size;
+	for (; biter < bend; ++biter) {
 		sym_iter = *biter;
 		while (sym_iter) {
 			s_next           = sym_iter->s_next;
@@ -1766,8 +1770,9 @@ rehash_realloc:
 		return -1;
 	}
 	/* Rehash all text_labels. */
-	bend = (biter = current_basescope->bs_lbl) + old_size;
-	for (; biter != bend; ++biter) {
+	biter = current_basescope->bs_lbl;
+	bend  = biter + old_size;
+	for (; biter < bend; ++biter) {
 		lbl_iter = *biter;
 		while (lbl_iter) {
 			s_next            = lbl_iter->tl_next;

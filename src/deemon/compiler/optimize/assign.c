@@ -140,7 +140,7 @@ do_xcopy_3:
 		if unlikely(!dst)
 			goto err;
 		temp->a_multiple.m_astv = dst;
-		for (; iter != end; ++iter, ++dst) {
+		for (; iter < end; ++iter, ++dst) {
 			*dst = *iter;
 			ast_incref(*dst);
 		}
@@ -157,7 +157,7 @@ do_xcopy_3:
 		if unlikely(!dst)
 			goto err;
 		temp->a_try.t_catchv = dst;
-		for (; iter != end; ++iter, ++dst) {
+		for (; iter < end; ++iter, ++dst) {
 			*dst = *iter;
 			ast_xincref(dst->ce_mask);
 			ast_incref(dst->ce_code);

@@ -9380,7 +9380,7 @@ PRIVATE int (DCALL regex_get_rules)(char const *__restrict rules_str,
 			char *name_start = (char *)rules_str;
 			while (*rules_str && *rules_str != ',')
 				++rules_str;
-			if (rules_str != name_start) {
+			if (rules_str > name_start) {
 				size_t rule_length = (size_t)(rules_str - name_start);
 				size_t i;
 				if (rule_length < COMPILER_LENOF(regex_rule_names[0].name)) {
@@ -12366,7 +12366,8 @@ string_eq_bytes(String *__restrict self,
 		my_str.cp16 = DeeString_Get2Byte((DeeObject *)self);
 		if (bytes_size != WSTR_LENGTH(my_str.cp16))
 			break;
-		while (bytes_size--) {
+		while (bytes_size) {
+			--bytes_size;
 			if (my_str.cp16[bytes_size] != (uint16_t)(bytes_data[bytes_size]))
 				goto nope;
 		}
@@ -12376,7 +12377,8 @@ string_eq_bytes(String *__restrict self,
 		my_str.cp32 = DeeString_Get4Byte((DeeObject *)self);
 		if (bytes_size != WSTR_LENGTH(my_str.cp32))
 			break;
-		while (bytes_size--) {
+		while (bytes_size) {
+			--bytes_size;
 			if (my_str.cp32[bytes_size] != (uint32_t)(bytes_data[bytes_size]))
 				goto nope;
 		}

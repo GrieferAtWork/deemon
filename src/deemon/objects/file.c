@@ -1707,7 +1707,8 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 			Dee_Decref(old_stream);
 		if (old_stream != default_stream)
 			result = true;
-	} while (++id != DEE_STDCNT);
+		++id;
+	} while (id != DEE_STDCNT);
 	return result;
 }
 

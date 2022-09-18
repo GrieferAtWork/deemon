@@ -293,25 +293,25 @@ int skip(tok_t expected_tok, int wnum, ...);
 #endif /* !__INTELLISENSE__ */
 
 
-#define SKIP_WRAPLF(iter, end)                                 \
-	(*(iter) == '\\' && (iter) != (end) - 1                    \
-	 ? ((iter)[1] == '\n'                                      \
-	    ? ((iter) += 2, 1)                                     \
-	    : (iter)[1] == '\r'                                    \
-	      ? ((iter) +=                                         \
-	         ((iter) != (end)-2 && (iter)[2] == '\n') ? 3 : 2, \
-	         1)                                                \
-	      : 0)                                                 \
+#define SKIP_WRAPLF(iter, end)                                  \
+	(*(iter) == '\\' && (iter) + 1 < (end)                      \
+	 ? ((iter)[1] == '\n'                                       \
+	    ? ((iter) += 2, 1)                                      \
+	    : (iter)[1] == '\r'                                     \
+	      ? ((iter) +=                                          \
+	         ((iter) + 2 < (end) && (iter)[2] == '\n') ? 3 : 2, \
+	         1)                                                 \
+	      : 0)                                                  \
 	 : 0)
-#define SKIP_WRAPLF_REV(iter, begin)                                          \
-	((iter)[-1] == '\n' && (iter) != (begin) + 1                              \
-	 ? ((iter)[-2] == '\\'                                                    \
-	    ? ((iter) -= 2, 1)                                                    \
-	    : ((iter)[-2] == '\r' && (iter) != (begin) + 2 && (iter)[-3] == '\\') \
-	      ? ((iter) -= 3, 1)                                                  \
-	      : 0)                                                                \
-	 : (((iter)[-1] == '\r' && (iter) != (begin) + 1 && (iter)[-2] == '\\')   \
-	    ? ((iter) -= 2, 1)                                                    \
+#define SKIP_WRAPLF_REV(iter, begin)                                       \
+	((iter)[-1] == '\n' && (iter)-1 > (begin)                              \
+	 ? ((iter)[-2] == '\\'                                                 \
+	    ? ((iter) -= 2, 1)                                                 \
+	    : ((iter)[-2] == '\r' && (iter)-2 > (begin) && (iter)[-3] == '\\') \
+	      ? ((iter) -= 3, 1)                                               \
+	      : 0)                                                             \
+	 : (((iter)[-1] == '\r' && (iter)-1 > (begin) && (iter)[-2] == '\\')   \
+	    ? ((iter) -= 2, 1)                                                 \
 	    : 0))
 
 INTDEF struct TPPKeyword TPPKeyword_Empty;

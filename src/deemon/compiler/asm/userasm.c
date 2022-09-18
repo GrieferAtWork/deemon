@@ -777,7 +777,7 @@ retry:
 	}
 	iter = instr->am_overloads;
 	end  = iter + instr->am_num_overloads;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		/* Search for a suitable overload. */
 		if (iter->ao_opcount != invoc->ai_opcount)
 			continue;
@@ -2047,7 +2047,7 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 	/* NOTE: Technically, representations are [1..1], the the caller uses this function
 	 *       to cleanup partially constructed operand representations allocated through
 	 *       calloc(). */
-	for (; iter != end; ++iter)
+	for (; iter < end; ++iter)
 		Dee_XDecref(*iter);
 	Dee_Free(self->af_opreprv);
 	ascii_printer_fini(&self->af_printer);
@@ -2087,9 +2087,9 @@ next:
 
 	case '%':
 		/* Flush everything up to this point. */
-		if (flush_start != iter - 1)
+		if ((iter - 1) > flush_start)
 			print(flush_start, (size_t)(iter - flush_start) - 1);
-		ch        = *iter++;
+		ch = *iter++;
 		has_paren = false;
 		if (ch == '(') {
 			/* To prevent ambiguity, we allow format options to be surrounded by (...) */
@@ -2130,6 +2130,7 @@ next:
 				do {
 					ch = *iter++;
 				} while (DeeUni_IsSymCont(ch));
+
 				/* Lookup the name of the operand. */
 				name = TPPLexer_LookupKeyword(name_start, (size_t)(iter - name_start) - 1, 0);
 				if unlikely(!name) {
@@ -2139,10 +2140,11 @@ err_unknown_operand:
 					                (size_t)(iter - name_start) - 1, name);
 					goto err;
 				}
-				op_end = (op_iter = self->af_ast->a_assembly.as_opv) +
-				         self->af_ast->a_assembly.as_opc;
+				op_iter = self->af_ast->a_assembly.as_opv;
+				op_end  = op_iter + self->af_ast->a_assembly.as_opc;
+
 				/* Search for an operand matching the given name. */
-				for (opno = 0; op_iter != op_end; ++op_iter, ++opno) {
+				for (opno = 0; op_iter < op_end; ++op_iter, ++opno) {
 					if (op_iter->ao_name == name)
 						goto has_operand; /* Found it! */
 				}
@@ -2176,18 +2178,20 @@ has_operand:
 				--iter;
 			}
 			ASSERT(opno <= self->af_ast->a_assembly.as_opc);
+
 			/* Label operands must be prefixed with `l' */
 			if ((opno >= (self->af_ast->a_assembly.as_num_i +
 			              self->af_ast->a_assembly.as_num_o)) !=
 			    (mod == 'l')) {
-
 				DeeError_Throwf(&DeeError_CompilerError,
 				                mod == 'l' ? "Only label operands may be prefixed by `l'"
 				                           : "A label operand must be prefixed by `l'");
 				goto err;
 			}
+
 			/* Load the representation used for this operand. */
 			oprepr = self->af_opreprv[opno];
+
 			/* Print the operand's representation. */
 			print(DeeString_STR(oprepr), DeeString_SIZE(oprepr));
 		}
@@ -2208,7 +2212,7 @@ done_special:
 	}
 	--iter;
 	ASSERT(!*iter);
-	if (flush_start != iter)
+	if (flush_start < iter)
 		print(flush_start, (size_t)(iter - flush_start));
 
 	/* Special case: empty assembly text. */
@@ -2588,7 +2592,7 @@ compile_operator(struct asm_operand *__restrict op, bool is_output) {
 	ASSERT(op->ao_type);
 	format = op->ao_type->s_text;
 	if (is_output) {
-		/* Since there is no portable way of providing a values, `=X', while
+		/* Since there is no portable way of providing a value, `=X', while
 		 * having an explicitly defined meaning, can't actually be used, since
 		 * there would be nothing to store into it.
 		 * However, `+X' is portable, and has the meaning of `op = op', which

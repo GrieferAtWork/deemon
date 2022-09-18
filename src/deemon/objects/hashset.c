@@ -193,7 +193,7 @@ set_init_sequence(Set *__restrict self,
 			                                      self->s_mask + 1,
 			                                      sizeof(struct hashset_item));
 			end  = iter + (self->s_mask + 1);
-			for (; iter != end; ++iter)
+			for (; iter < end; ++iter)
 				Dee_XIncref(iter->si_key);
 		}
 		weakref_support_init(self);
@@ -278,7 +278,7 @@ again:
 		                                      self->s_mask + 1,
 		                                      sizeof(struct hashset_item));
 		end  = iter + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->si_key)
 				continue;
 			Dee_Incref(iter->si_key);
@@ -407,7 +407,7 @@ PRIVATE NONNULL((1)) void DCALL set_fini(Set *__restrict self) {
 	if (self->s_elem != empty_set_items) {
 		struct hashset_item *iter, *end;
 		end = (iter = self->s_elem) + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->si_key)
 				continue;
 			Dee_Decref(iter->si_key);
@@ -436,7 +436,7 @@ PRIVATE NONNULL((1)) void DCALL set_clear(Set *__restrict self) {
 	if (elem != empty_set_items) {
 		struct hashset_item *iter, *end;
 		end = (iter = elem) + (mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->si_key)
 				continue;
 			Dee_Decref(iter->si_key);
@@ -455,7 +455,7 @@ set_visit(Set *__restrict self, dvisit_t proc, void *arg) {
 	if (self->s_elem != empty_set_items) {
 		struct hashset_item *iter, *end;
 		end = (iter = self->s_elem) + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->si_key)
 				continue;
 			/* Visit all keys and associated values. */
@@ -487,7 +487,7 @@ set_rehash(Set *__restrict self, int sizedir) {
 				ASSERT(self->s_elem != empty_set_items);
 				/* Must discard dummy items. */
 				end = (iter = self->s_elem) + (self->s_mask + 1);
-				for (; iter != end; ++iter) {
+				for (; iter < end; ++iter) {
 					ASSERT(iter->si_key == NULL ||
 					       iter->si_key == dummy);
 					if (iter->si_key == dummy)
@@ -516,7 +516,7 @@ set_rehash(Set *__restrict self, int sizedir) {
 	if (self->s_elem != empty_set_items) {
 		/* Re-insert all existing items into the new set vector. */
 		end = (iter = self->s_elem) + (self->s_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct hashset_item *item;
 			dhash_t i, perturb;
 			/* Skip dummy keys. */
@@ -834,10 +834,7 @@ again:
 		}
 		if (item->si_hash != hash)
 			continue; /* Non-matching hash */
-		if (DeeString_SIZE(item->si_key) != search_item_length)
-			continue; /* Non-matching length */
-		if (bcmpc(DeeString_STR(item->si_key), search_item,
-		          search_item_length, sizeof(char)) != 0)
+		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		existing_key = item->si_key;
 		Dee_Incref(existing_key);
@@ -930,10 +927,7 @@ again:
 		}
 		if (item->si_hash != hash)
 			continue; /* Non-matching hash */
-		if (DeeString_SIZE(item->si_key) != search_item_length)
-			continue; /* Non-matching length */
-		if (bcmpc(DeeString_STR(item->si_key), search_item,
-		          search_item_length, sizeof(char)) != 0)
+		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		DeeHashSet_LockEndRead(me);
 		Dee_XDecref(new_item);
@@ -1016,11 +1010,8 @@ again_lock:
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(old_item))
 			continue; /* Not-a-string. */
-		if (DeeString_SIZE(old_item) != search_item_length)
-			continue; /* Differing lengths. */
-		if (bcmpc(DeeString_STR(old_item), search_item,
-		          search_item_length, sizeof(char)) != 0)
-			continue; /* Different strings. */
+		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+			continue; /* Differing strings. */
 		/* Found it! */
 #ifndef CONFIG_NO_THREADS
 		if (!DeeHashSet_LockUpgrade(me)) {
@@ -1120,9 +1111,8 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 			continue; /* Not-a-string. */
 		if (DeeString_SIZE(item->si_key) != search_item_length)
 			continue; /* Not-a-string. */
-		if (bcmpc(DeeString_STR(item->si_key), search_item,
-		          search_item_length, sizeof(char)) != 0)
-			continue; /* Different strings. */
+		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+			continue; /* Differing strings. */
 		DeeHashSet_LockEndRead(me);
 		return true;
 	}
@@ -1206,7 +1196,7 @@ setiterator_next(SetIterator *__restrict self) {
 		if unlikely(item < set->s_elem)
 			goto set_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->si_key || item->si_key == dummy))
+		while (item < end && (!item->si_key || item->si_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -1497,7 +1487,7 @@ seti_nii_peek(SetIterator *__restrict self) {
 	if unlikely(item < set->s_elem)
 		goto set_has_changed;
 	/* Search for the next non-empty item. */
-	while (item != end && (!item->si_key || item->si_key == dummy))
+	while (item < end && (!item->si_key || item->si_key == dummy))
 		++item;
 	if (item == end)
 		goto iter_exhausted;
@@ -1652,7 +1642,7 @@ again:
 	vector   = self->s_elem;
 	mask     = self->s_mask;
 	end      = (iter = vector) + (mask + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DREF DeeObject *key;
 		if (iter->si_key == NULL ||
 		    iter->si_key == dummy)

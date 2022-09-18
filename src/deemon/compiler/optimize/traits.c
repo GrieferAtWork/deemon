@@ -496,7 +496,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
 		 * NOTE: This is true for all types of multiple-asts. */
 		end = (iter = self->a_multiple.m_astv) +
 		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (ast_has_sideeffects(*iter))
 				return true;
 		}
@@ -1065,7 +1065,7 @@ INTERN WUNUSED NONNULL((1, 2)) bool
 		struct catch_expr *iter, *end;
 		end = (iter = self->a_try.t_catchv) +
 		      self->a_try.t_catchc;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (iter->ce_mask &&
 			    ast_uses_symbol(iter->ce_mask, sym))
 				goto yup;
@@ -1133,7 +1133,7 @@ INTERN WUNUSED NONNULL((1, 2)) bool
 		end = (iter = self->a_assembly.as_opv) +
 		      (self->a_assembly.as_num_i +
 		       self->a_assembly.as_num_o);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (ast_uses_symbol(iter->ao_expr, sym))
 				goto yup;
 		}

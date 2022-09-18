@@ -143,7 +143,7 @@ INTERN WUNUSED NONNULL((1)) int
 	 * until eventually jumping to where the break was meant to go. */
 	end         = (iter = try_ast->a_try.t_catchv) + try_ast->a_try.t_catchc;
 	old_finflag = current_assembler.a_finflag;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (!(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY))
 			continue;
 		my_first_finally = asm_newsym();
@@ -182,6 +182,7 @@ gen_guard:
 	bzero(guard, sizeof(guard));
 	is_guarding = false;
 	for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
+		ASSERT(guard_begin[i] <= guard_end[i]);
 		if (guard_begin[i] != guard_end[i]) {
 			guard[i].b = asm_newsym();
 			if unlikely(!guard[i].b)
@@ -318,7 +319,7 @@ gen_guard:
 				/* Search for the next finally-handler. */
 				struct catch_expr *iter2     = iter + 1;
 				struct asm_sym *next_finally = existing_finally;
-				for (; iter2 != end; ++iter2) {
+				for (; iter2 < end; ++iter2) {
 					if (!(iter2->ce_flags & EXCEPTION_HANDLER_FFINALLY))
 						continue;
 					next_finally = asm_newsym();
@@ -857,8 +858,7 @@ do_multimask_rethrow:
 
 		/* Drop the reference to a compile-time catch mask. */
 		if (catch_mask_v != &catch_mask) {
-			while (catch_mask_c--)
-				Dee_XDecref(catch_mask_v[catch_mask_c]);
+			Dee_XDecrefv(catch_mask_v, catch_mask_c);
 			Dee_Free(catch_mask_v);
 		}
 		Dee_XDecref(catch_mask);
@@ -872,8 +872,7 @@ do_multimask_rethrow:
 	return 0;
 err_hand_frame:
 	if (catch_mask_v != &catch_mask) {
-		while (catch_mask_c--)
-			Dee_Decref(catch_mask_v[catch_mask_c]);
+		Dee_XDecrefv(catch_mask_v, catch_mask_c);
 		Dee_Free(catch_mask_v);
 	}
 	Dee_XDecref(catch_mask);

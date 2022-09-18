@@ -584,6 +584,11 @@ JITLexer_ErrorTrace(JITLexer *__restrict self,
 #define JIT_OBJECT_ENTRY_TYPE_ATTR       1 /* Unbound (non-static) class member */
 #define JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED 2 /* Bound (static or non-static) class member */
 struct jit_object_entry {
+#define jit_object_entry_eqname(self, rhs_str, rhs_len, rhs_hsh) \
+	((self)->oe_namehsh == (rhs_hsh) &&                          \
+	 (self)->oe_namelen == (rhs_len) &&                          \
+	 bcmpc((self)->oe_namestr, rhs_str, rhs_len, sizeof(char)) == 0)
+
 	/*utf-8*/ char const       *oe_namestr;    /* [0..oe_namelen] Name of the object
 	                                            * NOTE: `NULL' indicates an unused/sentinal entry;
 	                                            *       `ITER_DONE' indicates a deleted entry. */

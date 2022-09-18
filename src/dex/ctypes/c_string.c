@@ -378,12 +378,12 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 		uint8_t *end;
 		if (dst.p8 < src.p8) {
 			end = (iter = dst.p8) + num_bytes;
-			while (iter != end)
+			while (iter < end)
 				*iter++ = *src.p8++;
 		} else {
 			iter = (end = dst.p8) + num_bytes;
 			src.p8 += num_bytes;
-			while (iter != end)
+			while (iter < end)
 				*--iter = *--src.p8;
 		}
 	},
@@ -410,12 +410,12 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 		uint8_t *end;
 		if (dst.p8 < src.p8) {
 			end = (iter = dst.p8) + num_bytes;
-			while (iter != end)
+			while (iter < end)
 				*iter++ = *src.p8++;
 		} else {
 			iter = (end = dst.p8) + num_bytes;
 			src.p8 += num_bytes;
-			while (iter != end)
+			while (iter < end)
 				*--iter = *--src.p8;
 		}
 	},

@@ -6079,12 +6079,14 @@ Dee_bytes_printer_print(void *__restrict self,
 	}
 again_flush:
 	flush_start = (char *)text;
-	while (textlen && (unsigned char)*text < 0xc0)
-		++text, --textlen;
+	while (textlen && (unsigned char)*text < 0xc0) {
+		++text;
+		--textlen;
+	}
+
 	/* Print ASCII text. */
-	if (flush_start != text) {
-		if unlikely(bytes_printer_append(me,
-		                                 (uint8_t *)flush_start,
+	if (flush_start > text) {
+		if unlikely(bytes_printer_append(me, (uint8_t *)flush_start,
 		                                 (size_t)(text - flush_start)) < 0)
 			goto err;
 	}

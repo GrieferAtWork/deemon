@@ -304,7 +304,7 @@ push_tuple_parts:
 			/* Collect constant parts. */
 			while (end < len && asm_allowconst(DeeTuple_GET(value, end)))
 				++end;
-			if (end != start) {
+			if (end > start) {
 				DREF DeeObject *subrange;
 				if (end == start + 1) {
 					if (asm_gpush_constexpr(DeeTuple_GET(value, start)))
@@ -375,7 +375,7 @@ push_tuple_parts:
 			while (end < DeeList_SIZE(value) &&
 			       asm_allowconst(DeeList_GET(value, end)))
 				++end;
-			if (end != start) {
+			if (end > start) {
 				DREF DeeObject *subrange;
 				if (end == start + 1) {
 					/* Special case: encode as  `pack List, #1' */

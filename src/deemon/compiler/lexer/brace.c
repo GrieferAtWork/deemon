@@ -128,8 +128,9 @@ do_realloc_dict:
 	}
 	if (elemc != elema) {
 		DREF struct ast **new_elemv;
-		new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, (elemc * 2) *
-		                                                      sizeof(DREF struct ast *));
+		new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
+		                                               (elemc * 2) *
+		                                               sizeof(DREF struct ast *));
 		if likely(new_elemv)
 			elemv = new_elemv;
 	}

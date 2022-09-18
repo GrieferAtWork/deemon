@@ -792,7 +792,7 @@ again:
 	if (self->st_array.sa_size) {
 		ASSERT(self->st_array.sa_list);
 		bend = (biter = self->st_array.sa_list) + (self->st_array.sa_mask + 1);
-		for (; biter != bend; ++biter) {
+		for (; biter < bend; ++biter) {
 			iter = LIST_FIRST(biter);
 			while (iter) {
 				next = LIST_NEXT(iter, at_chain);

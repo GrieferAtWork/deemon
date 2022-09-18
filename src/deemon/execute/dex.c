@@ -372,7 +372,7 @@ dex_initialize(DeeDexObject *__restrict self) {
 				                                  (DeeObject *)hooks->dn_name,
 				                                  hooks->dn_callback,
 				                                  hooks->dn_arg) < 0) {
-					while (hooks != self->d_dex->d_notify) {
+					while (hooks > self->d_dex->d_notify) {
 						--hooks;
 						DeeNotify_EndListen((uint16_t)hooks->dn_class,
 						                    (DeeObject *)hooks->dn_name,

@@ -559,7 +559,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 		goto done;
 	}
 	end = (iter = mod->mo_bucketv) + (mod->mo_bucketm + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		struct symbol *sym;
 		struct TPPKeyword *name;
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))

@@ -82,9 +82,10 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		atomic_lock_init(&result->tb_lock);
 		dst = result->tb_frames + thread->t_execsz;
 		src = thread->t_exec;
-		while (dst-- != result->tb_frames) {
+		while (dst > result->tb_frames) {
 			DeeCodeObject *code;
 			DeeObject *dont_track_this = NULL;
+			--dst;
 			ASSERT(src != NULL);
 			ASSERT(src != CODE_FRAME_NOT_EXECUTING);
 			/* Do a shallow memcopy of the execution frame. */
@@ -515,7 +516,7 @@ traceback_visit(DeeTracebackObject *__restrict self,
 	atomic_lock_acquire(&self->tb_lock);
 	Dee_Visit(self->tb_thread);
 	end = (iter = self->tb_frames) + self->tb_numframes;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DREF DeeObject **oiter, **oend;
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
@@ -546,10 +547,12 @@ PRIVATE NONNULL((1)) void DCALL
 traceback_clear(DeeTracebackObject *__restrict self) {
 	DREF DeeObject *decref_later_buffer[64], **decref_later;
 	struct code_frame *iter, *end;
+again:
 	decref_later = decref_later_buffer;
 	atomic_lock_acquire(&self->tb_lock);
-	end = (iter = self->tb_frames) + self->tb_numframes;
-	for (; iter != end; ++iter) {
+	iter = self->tb_frames;
+	end  = iter + self->tb_numframes;
+	for (; iter < end; ++iter) {
 		DREF DeeObject **oiter, **oend;
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
@@ -625,14 +628,18 @@ traceback_clear(DeeTracebackObject *__restrict self) {
 		}
 	}
 	atomic_lock_release(&self->tb_lock);
-	while (decref_later-- != decref_later_buffer)
+	while (decref_later != decref_later_buffer) {
+		--decref_later;
 		Dee_Decref(*decref_later);
+	}
 	return;
 clear_buffer:
 	atomic_lock_release(&self->tb_lock);
-	while (decref_later-- != decref_later_buffer)
+	while (decref_later != decref_later_buffer) {
+		--decref_later;
 		Dee_Decref(*decref_later);
-	decref_later = decref_later_buffer;
+	}
+	goto again;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF TraceIterator *DCALL

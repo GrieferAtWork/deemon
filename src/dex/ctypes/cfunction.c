@@ -467,7 +467,7 @@ again:
 	if (self->st_cfunction.sf_size) {
 		ASSERT(self->st_cfunction.sf_list);
 		bend = (biter = self->st_cfunction.sf_list) + (self->st_cfunction.sf_mask + 1);
-		for (; biter != bend; ++biter) {
+		for (; biter < bend; ++biter) {
 			iter = LIST_FIRST(biter);
 			while (iter) {
 				next = LIST_NEXT(iter, ft_chain);

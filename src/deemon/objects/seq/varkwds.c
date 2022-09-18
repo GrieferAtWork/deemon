@@ -331,7 +331,7 @@ again:
 		str = self->vk_blck[i & self->vk_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (DeeString_SIZE((DeeObject *)str) != DeeString_SIZE(name))
 			continue;
@@ -394,7 +394,7 @@ again:
 		str = self->vk_blck[i & self->vk_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (strcmp(DeeString_STR(str), name) != 0)
 			continue;
@@ -450,13 +450,10 @@ again:
 		str = self->vk_blck[i & self->vk_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_SIZE((DeeObject *)str) != namesize)
-			continue;
-		if (bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) != 0)
-			continue;
-		return true; /* It is! */
+		if (DeeString_EQUALS_BUF(str, name, namesize))
+			return true; /* It is! */
 	}
 
 	/* Check if more arguments need to be loaded. */
@@ -1251,14 +1248,10 @@ again:
 		str = self->bm_blck[i & self->bm_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_SIZE((DeeObject *)str) != DeeString_SIZE(name))
-			continue;
-		if (bcmpc(DeeString_STR(str), DeeString_STR(name),
-		          DeeString_SIZE(name), sizeof(char)) != 0)
-			continue;
-		return true; /* It is! */
+		if (DeeString_EQUALS_STR(str, name))
+			return true; /* It is! */
 	}
 
 	/* Check if more arguments need to be loaded. */
@@ -1311,7 +1304,7 @@ again:
 		str = self->bm_blck[i & self->bm_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
 		if (strcmp(DeeString_STR(str), name) != 0)
 			continue;
@@ -1365,13 +1358,10 @@ again:
 		str = self->bm_blck[i & self->bm_mask].ve_str;
 		if (!str)
 			break;
-		if (DeeString_HASH((DeeObject *)str) != hash)
+		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_SIZE((DeeObject *)str) != namesize)
-			continue;
-		if (bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) != 0)
-			continue;
-		return true; /* It is! */
+		if (DeeString_EQUALS_BUF(str, name, namesize))
+			return true; /* It is! */
 	}
 
 	/* Check if more arguments need to be loaded. */

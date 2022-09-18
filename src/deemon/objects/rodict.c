@@ -133,7 +133,7 @@ rodictiterator_next_item(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->di_key)
+		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -172,7 +172,7 @@ rodictiterator_next_key(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->di_key)
+		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -211,7 +211,7 @@ rodictiterator_next_value(DictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->di_key)
+		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -659,10 +659,8 @@ DeeRoDict_GetItemString(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (strcmp(key, DeeString_STR(item->di_key)) != 0)
-			continue;
-		/* Found it! */
-		return_reference_(item->di_value);
+		if (strcmp(DeeString_STR(item->di_key), key) == 0)
+			return_reference_(item->di_value); /* Found it! */
 	}
 	err_unknown_key_str(self, key);
 	return NULL;
@@ -685,12 +683,8 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
-			continue;
-		/* Found it! */
-		return_reference_(item->di_value);
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+			return_reference_(item->di_value); /* Found it! */
 	}
 	err_unknown_key_str(self, key);
 	return NULL;
@@ -713,10 +707,8 @@ DeeRoDict_GetItemStringDef(DeeObject *self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (strcmp(key, DeeString_STR(item->di_key)) != 0)
-			continue;
-		/* Found it! */
-		return_reference_(item->di_value);
+		if (strcmp(DeeString_STR(item->di_key), key) == 0)
+			return_reference_(item->di_value); /* Found it! */
 	}
 	return_reference_(def);
 }
@@ -739,12 +731,8 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
-			continue;
-		/* Found it! */
-		return_reference_(item->di_value);
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+			return_reference_(item->di_value); /* Found it! */
 	}
 	return_reference_(def);
 }
@@ -765,10 +753,8 @@ DeeRoDict_HasItemString(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (strcmp(key, DeeString_STR(item->di_key)) != 0)
-			continue;
-		/* Found it! */
-		return true;
+		if (strcmp(DeeString_STR(item->di_key), key) == 0)
+			return true; /* Found it! */
 	}
 	return false;
 }
@@ -790,12 +776,8 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key, keylen, sizeof(char)) != 0)
-			continue;
-		/* Found it! */
-		return true;
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+			return true; /* Found it! */
 	}
 	return false;
 }

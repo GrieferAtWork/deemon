@@ -383,7 +383,8 @@ DEFINE_FOLD_COMPARE(dee_foldcmpl, uint32_t)
 		uint32_t fold[UNICODE_FOLDED_MAX];                         \
 		size_t len     = DeeUni_ToFolded(needle, fold);            \
 		size_t datalen = 0;                                        \
-		while (iter-- != (T *)haystack) {                          \
+		while (iter > (T *)haystack) {                             \
+			--iter;                                                \
 			++datalen;                                             \
 			if (dee_foldcmp(iter, datalen, fold, len))             \
 				return iter;                                       \
@@ -686,7 +687,8 @@ dee_memasciicaserchr(uint8_t const *__restrict haystack,
                      uint8_t needle, size_t haystack_length) {
 	uint8_t *iter = (uint8_t *)haystack + haystack_length;
 	needle        = (uint8_t)tolower(needle);
-	while (iter-- != (uint8_t *)haystack) {
+	while (iter > (uint8_t *)haystack) {
+		--iter;
 		if ((uint8_t)tolower(*iter) == needle)
 			return iter;
 	}
@@ -771,7 +773,8 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 	while (length--) {
 		if (tolower(*a) != tolower(*b))
 			return false;
-		++a, ++b;
+		++a;
+		++b;
 	}
 	return true;
 }

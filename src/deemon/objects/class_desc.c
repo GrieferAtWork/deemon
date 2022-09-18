@@ -1116,24 +1116,10 @@ class_attribute_eq(struct class_attribute *__restrict lhs,
 		goto nope;
 	if (lhs->ca_hash != rhs->ca_hash)
 		goto nope;
-	if (DeeString_SIZE(lhs->ca_name) !=
-	    DeeString_SIZE(rhs->ca_name))
+	if (!DeeString_EQUALS_STR(lhs->ca_name, rhs->ca_name))
 		goto nope;
-	if (bcmpc(DeeString_STR(lhs->ca_name),
-	          DeeString_STR(rhs->ca_name),
-	          DeeString_SIZE(lhs->ca_name),
-	          sizeof(char)) != 0)
+	if (lhs->ca_doc && !DeeString_EQUALS_STR(lhs->ca_doc, rhs->ca_doc))
 		goto nope;
-	if (lhs->ca_doc) {
-		if (DeeString_SIZE(lhs->ca_doc) !=
-		    DeeString_SIZE(rhs->ca_doc))
-			goto nope;
-		if (bcmpc(DeeString_STR(lhs->ca_doc),
-		          DeeString_STR(rhs->ca_doc),
-		          DeeString_SIZE(lhs->ca_doc),
-		          sizeof(char)) != 0)
-			goto nope;
-	}
 	return true;
 nope:
 	return false;
@@ -1160,12 +1146,7 @@ cd_eq(ClassDescriptor *self,
 	if (self->cd_name) {
 		if (!other->cd_name)
 			goto nope;
-		if (DeeString_SIZE(self->cd_name) != DeeString_SIZE(other->cd_name))
-			goto nope;
-		if (bcmpc(DeeString_STR(self->cd_name),
-		          DeeString_STR(other->cd_name),
-		          DeeString_SIZE(other->cd_name),
-		          sizeof(char)) != 0)
+		if (!DeeString_EQUALS_STR(self->cd_name, other->cd_name))
 			goto nope;
 	} else {
 		if (other->cd_name)
@@ -1174,12 +1155,7 @@ cd_eq(ClassDescriptor *self,
 	if (self->cd_doc) {
 		if (!other->cd_doc)
 			goto nope;
-		if (DeeString_SIZE(self->cd_doc) != DeeString_SIZE(other->cd_doc))
-			goto nope;
-		if (bcmpc(DeeString_STR(self->cd_doc),
-		          DeeString_STR(other->cd_doc),
-		          DeeString_SIZE(other->cd_doc),
-		          sizeof(char)) != 0)
+		if (!DeeString_EQUALS_STR(self->cd_doc, other->cd_doc))
 			goto nope;
 	} else {
 		if (other->cd_doc)
@@ -1637,10 +1613,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 				break;
 			if (ent->ca_hash != hash)
 				continue;
-			if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0]))
-				continue;
-			if (bcmpc(DeeString_STR(ent->ca_name), DeeString_STR(data[0]),
-			          DeeString_SIZE(ent->ca_name), sizeof(char)) != 0)
+			if (!DeeString_EQUALS_STR(ent->ca_name, data[0]))
 				continue;
 			/* Duplicate attribute. */
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1868,10 +1841,7 @@ got_flag:
 					break;
 				if (ent->ca_hash != hash)
 					continue;
-				if (DeeString_SIZE(ent->ca_name) != DeeString_SIZE(data[0]))
-					continue;
-				if (bcmpc(DeeString_STR(ent->ca_name), DeeString_STR(data[0]),
-				          DeeString_SIZE(data[0]), sizeof(char)) != 0)
+				if (!DeeString_EQUALS_STR(ent->ca_name, data[0]))
 					continue;
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Duplicate class attribute %r",
@@ -4222,12 +4192,8 @@ DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_SIZE(result->ca_name) != DeeString_SIZE(name))
-			continue;
-		if (bcmpc(DeeString_STR(result->ca_name), DeeString_STR(name),
-		          DeeString_SIZE(name), sizeof(char)) != 0)
-			continue;
-		return result;
+		if (DeeString_EQUALS_STR(result->ca_name, name))
+			return result;
 	}
 	return NULL;
 }
@@ -4265,12 +4231,8 @@ DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_SIZE(result->ca_name) != attrlen)
-			continue;
-		if (bcmpc(DeeString_STR(result->ca_name), name,
-		          attrlen, sizeof(char)) != 0)
-			continue;
-		return result;
+		if (DeeString_EQUALS_BUF(result->ca_name, name, attrlen))
+			return result;
 	}
 	return NULL;
 }
@@ -4288,12 +4250,8 @@ DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_SIZE(result->ca_name) != DeeString_SIZE(name))
-			continue;
-		if (bcmpc(DeeString_STR(result->ca_name), DeeString_STR(name),
-		          DeeString_SIZE(name), sizeof(char)) != 0)
-			continue;
-		return result;
+		if (DeeString_EQUALS_STR(result->ca_name, name))
+			return result;
 	}
 	return NULL;
 }
@@ -4330,12 +4288,8 @@ DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObj
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_SIZE(result->ca_name) != attrlen)
-			continue;
-		if (bcmpc(DeeString_STR(result->ca_name), name,
-		          attrlen, sizeof(char)) != 0)
-			continue;
-		return result;
+		if (DeeString_EQUALS_BUF(result->ca_name, name, attrlen))
+			return result;
 	}
 	return NULL;
 }

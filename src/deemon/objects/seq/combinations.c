@@ -63,16 +63,16 @@ INTDEF DeeTypeObject SeqPermutationsIterator_Type;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject        *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
-	DREF DeeObject       **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
-	                                      * The vector of elements found in `c_seq'
-	                                      * NOTE: When `NULL', elements from `c_seq' are accessed through
-	                                      *       the GETITEM interface, as those items are being used. */
-	size_t                 c_seqlen;     /* [const][!0] The length of the sequence (in items) */
-	size_t                 c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
+	DREF DeeObject  *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
+	DREF DeeObject **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
+	                                * The vector of elements found in `c_seq'
+	                                * NOTE: When `NULL', elements from `c_seq' are accessed through
+	                                *       the GETITEM interface, as those items are being used. */
+	size_t           c_seqlen;     /* [const][!0] The length of the sequence (in items) */
+	size_t           c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
 	struct type_seq *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
-	                                      * to-be used to access the items of `c_seq' */
-	DeeTypeObject         *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
+	                                * to-be used to access the items of `c_seq' */
+	DeeTypeObject   *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
 } Combinations;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -228,8 +228,8 @@ comiter_next(CombinationsIterator *__restrict self) {
 		self->ci_first = false;
 		goto copy_indices;
 	}
-	i = comlen;
-	while (i--) {
+	for (i = comlen; i;) {
+		--i;
 		if (self->ci_indices[i] != i + seqlen - comlen)
 			goto update_indices;
 	}

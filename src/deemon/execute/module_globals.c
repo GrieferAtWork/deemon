@@ -111,12 +111,12 @@ mei_visit(ModuleExportsIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-#define DEFINE_MEI_COMPARE(name, op)                                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(ModuleExportsIterator *self, ModuleExportsIterator *other) {      \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                                   \
-		return_bool_(READ_INDEX(self) op READ_INDEX(other));               \
+#define DEFINE_MEI_COMPARE(name, op)                                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
+	name(ModuleExportsIterator *self, ModuleExportsIterator *other) { \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))         \
+			return NULL;                                              \
+		return_bool(READ_INDEX(self) op READ_INDEX(other));           \
 	}
 DEFINE_MEI_COMPARE(mei_eq, ==)
 DEFINE_MEI_COMPARE(mei_ne, !=)

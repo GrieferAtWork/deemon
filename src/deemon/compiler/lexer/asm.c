@@ -60,14 +60,14 @@ operand_list_fini(struct operand_list *__restrict self) {
 	end = (iter = self->ol_v) +
 	      (self->ol_count[OPERAND_TYPE_OUTPUT] +
 	       self->ol_count[OPERAND_TYPE_INPUT]);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		ASSERT(iter->ao_type);
 		ASSERT(iter->ao_expr);
 		TPPString_Decref(iter->ao_type);
 		ast_decref(iter->ao_expr);
 	}
 	end = self->ol_v + self->ol_c;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		ASSERT(!iter->ao_type);
 		ASSERT(iter->ao_label);
 		ASSERT(iter->ao_label->tl_goto);
@@ -89,8 +89,9 @@ operand_list_add(struct operand_list *__restrict self,
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v, new_alloc *
-		                                                          sizeof(struct asm_operand));
+		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v,
+		                                              new_alloc *
+		                                              sizeof(struct asm_operand));
 		if unlikely(!result) {
 			if (new_alloc != self->ol_c + 1) {
 				new_alloc = self->ol_c + 1;
@@ -253,9 +254,9 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
 			goto err;
 		if (name->s_size < COMPILER_LENOF(clobber_descs[0].cd_name)) {
 			struct clobber_desc const *iter = clobber_descs;
-			for (; iter != COMPILER_ENDOF(clobber_descs); ++iter) {
-				if (name->s_size == strlen(iter->cd_name) &&
-				    bcmpc(name->s_text, iter->cd_name, name->s_size, sizeof(char)) == 0) {
+			for (; iter < COMPILER_ENDOF(clobber_descs); ++iter) {
+				if (bcmpc(name->s_text, iter->cd_name, name->s_size, sizeof(char)) == 0 &&
+				    iter->cd_name[name->s_size] == '\0') {
 					/* Found it! Set the proper flags and continue. */
 					result |= iter->cd_flags;
 					goto got_clobber;
@@ -382,8 +383,9 @@ PRIVATE /*REF*/ struct TPPString *
 	/* Deallocate unused memory. */
 	if likely(self->sp_length != result->s_size) {
 		DREF struct TPPString *reloc;
-		reloc = (DREF struct TPPString *)Dee_TryRealloc(result, offsetof(struct TPPString, s_text) +
-		                                                        (self->sp_length + 1) * sizeof(char));
+		reloc = (DREF struct TPPString *)Dee_TryRealloc(result,
+		                                                offsetof(struct TPPString, s_text) +
+		                                                (self->sp_length + 1) * sizeof(char));
 		if likely(reloc)
 			result         = reloc;
 		result->s_size = self->sp_length;

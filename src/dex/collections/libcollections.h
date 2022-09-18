@@ -190,7 +190,7 @@ DequeIterator_GetIndex(DequeIterator *__restrict self,
 		result = DEQUE_TAILSTART(deq) + self->di_index;
 	} else {
 		DequeBucket *iter = deq->d_head;
-		result            = self->di_index - DEQUE_HEADFREE(deq);
+		result = self->di_index - DEQUE_HEADFREE(deq);
 		for (; iter != self->di_bucket; iter = iter->db_next)
 			result += deq->d_bucket_sz;
 	}

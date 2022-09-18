@@ -152,7 +152,7 @@ DeeString_CFormat(dformatprinter printer,
 	}	__WHILE0
 	ASSERT(!argc || argv);
 	end = (iter = flush_start = (char *)format) + format_len;
-	while (iter != end) {
+	while (iter < end) {
 		size_t width, precision;
 		uint16_t flags;
 		char *format_start;

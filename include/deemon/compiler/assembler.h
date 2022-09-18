@@ -183,7 +183,8 @@ struct asm_sec {
 	struct asm_rel *sec_relv;  /* [0..sec_relc|ALLOC(sec_rela)][owned][sort(ASCENDING(ar_addr))]
 	                            * Ordered vector of relocations. */
 };
-#define ASM_SEC_ADDR(x) ((code_addr_t)((x).sec_iter - (x).sec_begin))
+#define ASM_SEC_ADDR(x)    ((code_addr_t)((x).sec_iter - (x).sec_begin))
+#define ASM_SEC_ISEMPTY(x) ((x)->sec_iter <= (x)->sec_begin)
 
 struct ddi_binding {
 #define DDI_BINDING_CLASS_LOCAL 0x0000 /* The binding refers to a local variable. */

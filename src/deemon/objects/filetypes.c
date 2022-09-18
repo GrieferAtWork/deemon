@@ -77,7 +77,7 @@ mf_read(MemoryFile *__restrict self, void *__restrict buffer,
 			result = bufsize;
 		/* Copy data into the given buffer. */
 		memcpy(buffer, self->mf_ptr, result);
-		*(uintptr_t *)&self->mf_ptr += result;
+		self->mf_ptr = (char *)((uint8_t *)self->mf_ptr + result);
 	}
 	DeeFile_LockEndWrite(self);
 	return result;

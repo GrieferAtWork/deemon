@@ -1622,9 +1622,9 @@ LOCAL size_t DCALL get_file_offset(char *p) {
 LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
 count_linefeeds(char const *iter, char const *end) {
 	int result = 0;
-	while (iter != end) {
+	while (iter < end) {
 		if (*iter == '\r') {
-			if (iter != end - 1 && iter[1] == '\n')
+			if ((iter + 1) < end && iter[1] == '\n')
 				++iter;
 			++result;
 		} else if (*iter == '\n') {

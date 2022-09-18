@@ -87,7 +87,7 @@ dictiterator_next_key(DictIterator *__restrict self) {
 		if unlikely(item < Dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -144,7 +144,7 @@ dictiterator_next_item(DictIterator *__restrict self) {
 		if unlikely(item < Dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -206,7 +206,7 @@ dictiterator_next_value(DictIterator *__restrict self) {
 		if unlikely(item < Dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS

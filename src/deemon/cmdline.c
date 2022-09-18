@@ -47,7 +47,7 @@ INTERN int DCALL cmd_runlate(void) {
 	struct late_cmd_option *iter, *end;
 	int result = 0;
 	end = (iter = late_options.lco_optv) + late_options.lco_optc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		result = (*iter->lco_func)(iter->lco_arg);
 		if unlikely(result != 0)
 			break;

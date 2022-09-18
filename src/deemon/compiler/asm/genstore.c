@@ -1883,16 +1883,16 @@ asm_gpop_expr(struct ast *__restrict self) {
 
 	case AST_MULTIPLE:
 		if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
-			size_t i = 0;
+			size_t i;
 			/* Special case: Store to KEEP-last multiple AST:
 			 *               Evaluate all branches but the last without using them.
-			 *               Then simply write the value to the last expression.
-			 */
+			 *               Then simply write the value to the last expression. */
 			if (self->a_multiple.m_astc == 0)
 				return asm_gpop();
+			i = 0;
 			if (self->a_multiple.m_astc > 1) {
 				ASM_PUSH_SCOPE(self->a_scope, err);
-				for (; i != self->a_multiple.m_astc - 1; ++i) {
+				for (; i < self->a_multiple.m_astc - 1; ++i) {
 					if (ast_genasm(self->a_multiple.m_astv[i], ASM_G_FNORMAL))
 						goto err;
 				}

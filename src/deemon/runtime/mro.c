@@ -154,7 +154,7 @@ membercache_rehash(struct membercache *__restrict self) {
 	} else {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->mc_table) + (self->mc_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct membercache_slot *item;
 			dhash_t i, perturb;
 			/* Skip unused entires. */

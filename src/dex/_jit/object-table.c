@@ -199,11 +199,7 @@ again:
 			}
 			break;
 		}
-		if (entry->oe_namehsh != namehsh)
-			continue;
-		if (entry->oe_namelen != namelen)
-			continue;
-		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
+		if (!jit_object_entry_eqname(entry, namestr, namelen, namehsh))
 			continue;
 		/* Existing entry! */
 		if (override_existing) {
@@ -246,11 +242,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 			continue;
 		if (!entry->oe_namestr)
 			break;
-		if (entry->oe_namehsh != namehsh)
-			continue;
-		if (entry->oe_namelen != namelen)
-			continue;
-		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
+		if (!jit_object_entry_eqname(entry, namestr, namelen, namehsh))
 			continue;
 		/* Found it! */
 		value = entry->oe_value;
@@ -285,13 +277,8 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
 			continue;
 		if (!entry->oe_namestr)
 			break;
-		if (entry->oe_namehsh != namehsh)
-			continue;
-		if (entry->oe_namelen != namelen)
-			continue;
-		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
-			continue;
-		return entry;
+		if (jit_object_entry_eqname(entry, namestr, namelen, namehsh))
+			return entry;
 	}
 	return NULL;
 }
@@ -346,14 +333,8 @@ again:
 			}
 			break;
 		}
-		if (entry->oe_namehsh != namehsh)
-			continue;
-		if (entry->oe_namelen != namelen)
-			continue;
-		if (bcmpc(entry->oe_namestr, namestr, namelen, sizeof(char)) != 0)
-			continue;
-		/* Existing entry! */
-		return entry;
+		if (jit_object_entry_eqname(entry, namestr, namelen, namehsh))
+			return entry; /* Existing entry! */
 	}
 	++self->ot_used;
 	result_entry->oe_namestr = namestr;

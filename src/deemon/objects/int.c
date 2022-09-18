@@ -450,11 +450,11 @@ DeeInt_GetSleb(DeeObject *__restrict self,
 		end = src + size;
 	}
 	for (;;) {
-		if (src != end && num_bits < 7) {
+		if (src < end && num_bits < 7) {
 			/* Read one more digit. */
 			temp |= (twodigits)*src++ << num_bits;
 			num_bits += DIGIT_BITS;
-			if (src == end) {
+			if (src >= end) {
 				/* Truncate zero-bits from the most significant digit. */
 				while (num_bits &&
 				       !((temp >> (num_bits - 1))&1))
@@ -500,11 +500,11 @@ DeeInt_GetUleb(DeeObject *__restrict self,
 	src = me->ob_digit;
 	end = src + (size_t)me->ob_size;
 	for (;;) {
-		if (src != end && num_bits < 7) {
+		if (src < end && num_bits < 7) {
 			/* Read one more digit. */
 			temp |= (twodigits)*src++ << num_bits;
 			num_bits += DIGIT_BITS;
-			if (src == end) {
+			if (src >= end) {
 				/* Truncate zero-bits from the most significant digit. */
 				while (num_bits &&
 				       !((temp >> (num_bits - 1))&1))
@@ -1053,7 +1053,7 @@ handle_backslash_in_text:
 				}
 				if (begin[1] == '\r') {
 					begin += 2;
-					if (begin != end && *begin == '\n')
+					if (begin < end && *begin == '\n')
 						++begin;
 					goto parse_ch;
 				}
@@ -1066,7 +1066,7 @@ handle_backslash_in_text:
 		}
 #else
 		c = (digit)_PyLong_DigitValue[Py_CHARMASK(*begin++)];
-		for (i = 1; i < convwidth && begin != end; ++i, ++begin) {
+		for (i = 1; i < convwidth && begin < end; ++i, ++begin) {
 			c = (twodigits)(c * radix + (int)_PyLong_DigitValue[Py_CHARMASK(*begin)]);
 			ASSERT(c < DIGIT_BASE);
 		}

@@ -203,7 +203,7 @@ notify_rehash(int sizedir) {
 	if (notify_list != empty_notifications) {
 		/* Re-insert all existing items into the new notify vector. */
 		end = (iter = notify_list) + (notify_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct notify_entry *item;
 			dhash_t i, perturb;
 			/* Skip dummy keys. */

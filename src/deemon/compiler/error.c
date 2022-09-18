@@ -180,7 +180,7 @@ INTERN void DCALL
 parser_errors_fini(struct parser_errors *__restrict self) {
 	DREF DeeCompilerErrorObject **iter, **end;
 	end = (iter = self->pe_errorv) + self->pe_errorc;
-	for (; iter != end; ++iter)
+	for (; iter < end; ++iter)
 		Dee_Decref(*iter);
 	Dee_Free(self->pe_errorv);
 }

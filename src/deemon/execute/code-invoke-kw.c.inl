@@ -406,8 +406,10 @@ UNIQUE(err_kargv):
 		frame.cf_stacksz = 0;
 		result = DeeCode_ExecFrameSafe(&frame);
 		/* Delete remaining stack objects. */
-		while (frame.cf_sp != frame.cf_stack)
-			--frame.cf_sp, Dee_Decref(*frame.cf_sp);
+		while (frame.cf_sp > frame.cf_stack) {
+			--frame.cf_sp;
+			Dee_Decref(*frame.cf_sp);
+		}
 		/* Safe code execution allows for stack-space extension into heap memory.
 		 * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
 		if (frame.cf_stacksz)
@@ -416,32 +418,39 @@ UNIQUE(err_kargv):
 	} else {
 		result = DeeCode_ExecFrameFast(&frame);
 		/* Delete remaining stack objects. */
-		while (frame.cf_sp != frame.cf_stack)
-			--frame.cf_sp, Dee_Decref(*frame.cf_sp);
+		while (frame.cf_sp > frame.cf_stack) {
+			--frame.cf_sp;
+			Dee_Decref(*frame.cf_sp);
+		}
 	}
+
 	/* Delete remaining local variables. */
-	while (frame.cf_sp != frame.cf_frame)
-		--frame.cf_sp, Dee_XDecref(*frame.cf_sp);
+	while (frame.cf_sp > frame.cf_frame) {
+		--frame.cf_sp;
+		Dee_XDecref(*frame.cf_sp);
+	}
 
 #if CODE_FLAGS & CODE_FVARKWDS
 	if (frame.cf_kw->fk_varkwds)
 		VARKWDS_DECREF(frame.cf_kw->fk_varkwds);
 #endif /* CODE_FLAGS & CODE_FVARKWDS */
+
 #ifdef Dee_Alloca
 	if (code->co_flags & CODE_FHEAPFRAME)
 #endif /* Dee_Alloca */
 	{
 		Dee_Free(frame.cf_frame);
 	}
+
 #ifdef CALL_TUPLE
 	if (frame.cf_vargs != (DREF struct tuple_object *)args)
 #endif /* CALL_TUPLE */
 	{
 		Dee_XDecref(frame.cf_vargs);
 	}
+
 #ifdef KW_IS_MAPPING
-	while (ex_argc--)
-		Dee_XDecref(frame.cf_kw->fk_kargv[ex_argc]);
+	Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 #endif /* KW_IS_MAPPING */
 		/* Cleanup keyword extension data. */
 #ifndef Dee_Alloca

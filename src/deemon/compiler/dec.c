@@ -88,7 +88,7 @@ INTERN void DCALL dec_writer_fini(void) {
 	}
 	/* Clear all sections and their associated data. */
 	for (sec_iter = current_dec.dw_sec_defl;
-	     sec_iter != COMPILER_ENDOF(current_dec.dw_sec_defl); ++sec_iter) {
+	     sec_iter < COMPILER_ENDOF(current_dec.dw_sec_defl); ++sec_iter) {
 		struct dec_section *iter, *next;
 		Dee_Free(sec_iter->ds_begin);
 		Dee_Free(sec_iter->ds_relv);
@@ -456,7 +456,7 @@ INTERN WUNUSED uint8_t (DCALL dec_link)(void) {
 	struct dec_rel *iter, *end;
 	DEC_FOREACH_SECTION(sec) {
 		end = (iter = sec->ds_relv) + sec->ds_relc;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct dec_sym *relsym = iter->dr_sym;
 			uint8_t *target        = sec->ds_begin + iter->dr_addr;
 			uint32_t relval;

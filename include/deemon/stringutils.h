@@ -161,7 +161,7 @@ DFUNDEF NONNULL((1)) void
 				uint8_t *iter, *end;                          \
 				iter = (uint8_t *)_str_;                      \
 				end  = (uint8_t *)_str_ + _len_;              \
-				for (; iter != end; ++iter)                   \
+				for (; iter < end; ++iter)                    \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
 			                                                  \
@@ -169,7 +169,7 @@ DFUNDEF NONNULL((1)) void
 				uint16_t *iter, *end;                         \
 				iter = (uint16_t *)_str_;                     \
 				end  = (uint16_t *)_str_ + _len_;             \
-				for (; iter != end; ++iter)                   \
+				for (; iter < end; ++iter)                    \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
 			                                                  \
@@ -177,7 +177,7 @@ DFUNDEF NONNULL((1)) void
 				uint32_t *iter, *end;                         \
 				iter = (uint32_t *)_str_;                     \
 				end  = (uint32_t *)_str_ + _len_;             \
-				for (; iter != end; ++iter)                   \
+				for (; iter < end; ++iter)                    \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
 			                                                  \

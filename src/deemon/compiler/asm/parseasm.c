@@ -110,7 +110,6 @@ userassembler_fini(void) {
 
 PRIVATE WUNUSED bool FCALL symtab_rehash(void) {
 	struct asm_sym **new_map, **biter, **bend;
-	struct asm_sym *sym_iter, *s_next, **bucket;
 	size_t old_size = symtab.st_alloc;
 	size_t new_size = old_size;
 	if (!new_size)
@@ -132,11 +131,15 @@ rehash_realloc:
 			goto rehash_realloc;
 		return false;
 	}
+
 	/* Rehash all symbols. */
-	bend = (biter = symtab.st_map) + old_size;
-	for (; biter != bend; ++biter) {
+	biter = symtab.st_map;
+	bend  = biter + old_size;
+	for (; biter < bend; ++biter) {
+		struct asm_sym *sym_iter;
 		sym_iter = *biter;
 		while (sym_iter) {
+			struct asm_sym *s_next, **bucket;
 			s_next             = sym_iter->as_uhnxt;
 			bucket             = &new_map[sym_iter->as_uname->k_id % new_size];
 			sym_iter->as_uhnxt = *bucket;

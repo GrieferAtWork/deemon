@@ -610,9 +610,9 @@ function printTextSegmentElement(fp: File, t: Object) {
 	if (t is doctext.List) {
 		local commonPrefix = none;
 		for (local prefix, none: t.items) {
-			if (commonPrefix is none)
+			if (commonPrefix is none) {
 				commonPrefix = prefix;
-			else if (commonPrefix != prefix) {
+			} else if (commonPrefix != prefix) {
 				commonPrefix = none;
 				break;
 			}
@@ -623,9 +623,9 @@ function printTextSegmentElement(fp: File, t: Object) {
 				"+" : "square",
 				"*" : "circle",
 			}.get(commonPrefix);
-			if (style is none)
+			if (style is none) {
 				commonPrefix = none;
-			else {
+			} else {
 				fp	<< "<ul class=\"FlowList\" style=\"list-style-type:"
 					<< style << ";\">";
 			}
@@ -673,14 +673,14 @@ function printTextSegmentElement(fp: File, t: Object) {
 	if (t is doctext.ArgumentReference) {
 		/* TODO: Highlight the same argument everywhere when hovering over one of them. */
 		fp << "<code>";
-		fp << escapeSpecialHtmlCharacters(t.name);
-		fp << "</code>";
+		   << escapeSpecialHtmlCharacters(t.name);
+		   << "</code>";
 		return;
 	}
 	if (t is doctext.ExternalReference) {
-		fp	<< "<code><a href=\"/modules" << t.path << "\">"
-			<< t.name
-			<< "</a></code>";
+		fp << "<code><a href=\"/modules" << t.path << "\">"
+		   << t.name
+		   << "</a></code>";
 		return;
 	}
 	/* Fallback... */

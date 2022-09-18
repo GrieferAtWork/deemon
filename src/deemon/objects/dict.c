@@ -211,7 +211,7 @@ dict_init_sequence(Dict *__restrict self,
 			        self->d_mask + 1,
 			        sizeof(struct dict_item));
 			end = (iter = self->d_elem) + (self->d_mask + 1);
-			for (; iter != end; ++iter) {
+			for (; iter < end; ++iter) {
 				if (!iter->di_key)
 					continue;
 				Dee_Incref(iter->di_key);
@@ -305,7 +305,7 @@ again:
 		        self->d_mask + 1,
 		        sizeof(struct dict_item));
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Incref(iter->di_key);
@@ -461,7 +461,7 @@ PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self) {
 	if (self->d_elem != empty_dict_items) {
 		struct dict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Decref(iter->di_key);
@@ -490,7 +490,7 @@ PRIVATE NONNULL((1)) void DCALL dict_clear(Dict *__restrict self) {
 	if (elem != empty_dict_items) {
 		struct dict_item *iter, *end;
 		end = (iter = elem) + (mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Decref(iter->di_key);
@@ -509,7 +509,7 @@ dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 	if (self->d_elem != empty_dict_items) {
 		struct dict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			/* Visit all keys and associated values. */
@@ -542,7 +542,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 				ASSERT(self->d_elem != empty_dict_items);
 				/* Must discard dummy items. */
 				end = (iter = self->d_elem) + (self->d_mask + 1);
-				for (; iter != end; ++iter) {
+				for (; iter < end; ++iter) {
 					ASSERT(iter->di_key == NULL ||
 					       iter->di_key == dummy);
 					if (iter->di_key == dummy)
@@ -570,7 +570,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	if (self->d_elem != empty_dict_items) {
 		/* Re-insert all existing items into the new Dict vector. */
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct dict_item *item;
 			dhash_t i, perturb;
 			/* Skip dummy keys. */
@@ -644,10 +644,7 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key,
-		          keylen, sizeof(char)) == 0) {
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -677,7 +674,7 @@ DeeDict_GetItemStringDef(DeeObject *self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (!strcmp(DeeString_STR(item->di_key), key)) {
+		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -709,10 +706,7 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key,
-		          keylen, sizeof(char)) == 0) {
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -740,7 +734,7 @@ DeeDict_HasItemString(DeeObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (!strcmp(DeeString_STR(item->di_key), key)) {
+		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
 			DeeDict_LockEndRead(self);
 			return true;
 		}
@@ -765,10 +759,7 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key,
-		          keylen, sizeof(char)) == 0) {
+		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
 			DeeDict_LockEndRead(self);
 			return true;
 		}
@@ -846,10 +837,7 @@ again_lock:
 			continue; // Non-matching hash
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key,
-		          keylen, sizeof(char)) != 0)
+		if (!DeeString_EQUALS_BUF(item->di_key, key, keylen))
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {
@@ -1003,10 +991,7 @@ again:
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_SIZE(item->di_key) != keylen)
-			continue;
-		if (bcmpc(DeeString_STR(item->di_key), key,
-		          keylen, sizeof(char)) != 0)
+		if (!DeeString_EQUALS_BUF(item->di_key, key, keylen))
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {
@@ -1710,7 +1695,7 @@ again:
 	vector   = self->d_elem;
 	mask     = self->d_mask;
 	end      = (iter = vector) + (mask + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DREF DeeObject *key, *value;
 		if (iter->di_key == NULL ||
 		    iter->di_key == dummy)

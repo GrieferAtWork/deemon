@@ -996,12 +996,12 @@ DeeFormat_Quote8(dformatprinter printer, void *arg,
 	uint8_t ch;
 	uint8_t const *iter, *end, *flush_start;
 	char const *c_hex;
-	end             = (iter = flush_start = text) + textlen;
-	c_hex           = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
+	end   = (iter = flush_start = text) + textlen;
+	c_hex = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
 	encoded_text[0] = '\\';
 	if (!(flags & FORMAT_QUOTE_FPRINTRAW))
 		print("\"", 1);
-	while (iter != end) {
+	while (iter < end) {
 		ch = *iter;
 		if (ch < 32 || ch >= 127 || ch == '\'' ||
 		    ch == '\"' || ch == '\\' ||

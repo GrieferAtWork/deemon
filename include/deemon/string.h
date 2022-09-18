@@ -562,6 +562,19 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_IsEmpty(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len == 0)
 
 
+#define DeeString_EQUALS_STR(lhs, rhs)             \
+	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) && \
+	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs),  \
+	      DeeString_SIZE(lhs) * sizeof(char)) == 0)
+#define DeeString_STARTSWITH_STR(lhs, rhs)         \
+	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs) && \
+	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs),  \
+	      DeeString_SIZE(rhs) * sizeof(char)) == 0)
+#define DeeString_ENDSWITH_STR(lhs, rhs)            \
+	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs) &&  \
+	 bcmp(DeeString_END(lhs) - DeeString_SIZE(rhs), \
+	      DeeString_STR(rhs), DeeString_SIZE(rhs) * sizeof(char)) == 0)
+
 #define DeeString_EQUALS_ASCII(x, ascii_str)            \
 	(DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
 	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
@@ -572,6 +585,20 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                      \
 	 bcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
 	      ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+
+#define DeeString_EQUALS_BUF(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) == (rhs_size) &&             \
+	 bcmp(DeeString_STR(lhs), rhs_base,               \
+	      DeeString_SIZE(lhs) * sizeof(char)) == 0)
+#define DeeString_STARTSWITH_BUF(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) >= (rhs_size) &&                 \
+	 bcmp(DeeString_STR(lhs), rhs_base,                   \
+	      (rhs_size) * sizeof(char)) == 0)
+#define DeeString_ENDSWITH_BUF(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) >= (rhs_size) &&               \
+	 bcmp(DeeString_END(lhs) - (rhs_size),              \
+	      rhs_base, (rhs_size) * sizeof(char)) == 0)
+
 
 /* Return the unicode character-width of characters found in the given string `x' */
 #define DeeString_WIDTH(x)                                          \

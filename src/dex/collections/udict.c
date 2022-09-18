@@ -128,7 +128,7 @@ udictiterator_next(UDictIterator *__restrict self) {
 		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -197,7 +197,7 @@ udictiterator_nextkey(UDictIterator *__restrict self) {
 		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -254,7 +254,7 @@ udictiterator_nextvalue(UDictIterator *__restrict self) {
 		if unlikely(item < dict->d_elem)
 			goto dict_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->di_key || item->di_key == dummy))
+		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -355,7 +355,7 @@ udict_fini(UDict *__restrict self) {
 	if (self->d_elem != empty_dict_items) {
 		struct udict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Decref(iter->di_key);
@@ -466,7 +466,7 @@ again:
 		        self->d_mask + 1,
 		        sizeof(struct udict_item));
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Incref(iter->di_key);
@@ -635,7 +635,7 @@ udict_clear(UDict *__restrict self) {
 	if (elem != empty_dict_items) {
 		struct udict_item *iter, *end;
 		end = (iter = elem) + (mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			Dee_Decref(iter->di_key);
@@ -654,7 +654,7 @@ udict_visit(UDict *__restrict self, dvisit_t proc, void *arg) {
 	if (self->d_elem != empty_dict_items) {
 		struct udict_item *iter, *end;
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!iter->di_key)
 				continue;
 			/* Visit all keys and associated values. */
@@ -686,7 +686,7 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 				ASSERT(self->d_elem != empty_dict_items);
 				/* Must discard dummy items. */
 				end = (iter = self->d_elem) + (self->d_mask + 1);
-				for (; iter != end; ++iter) {
+				for (; iter < end; ++iter) {
 					ASSERT(iter->di_key == NULL ||
 					       iter->di_key == dummy);
 					if (iter->di_key == dummy)
@@ -714,7 +714,7 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 	if (self->d_elem != empty_dict_items) {
 		/* Re-insert all existing items into the new Dict vector. */
 		end = (iter = self->d_elem) + (self->d_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct udict_item *item;
 			dhash_t i, perturb;
 			/* Skip dummy keys. */
@@ -1264,7 +1264,7 @@ again:
 	vector   = self->d_elem;
 	mask     = self->d_mask;
 	end      = (iter = vector) + (mask + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DREF DeeObject *key, *value;
 		if (iter->di_key == NULL ||
 		    iter->di_key == dummy)
@@ -1539,7 +1539,7 @@ urodictiterator_nextitem(URoDictIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->di_key)
+		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS

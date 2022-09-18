@@ -447,7 +447,6 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 INTERN void DCALL assembler_fini(void) {
 	struct asm_sym *iter;
 	uint16_t i;
-	struct asm_exc *xiter, *xend;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	userassembler_fini();
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -459,6 +458,7 @@ INTERN void DCALL assembler_fini(void) {
 		}
 		Dee_Free(current_assembler.a_sect[i].sec_relv);
 	}
+
 	/* Free up symbols. */
 	iter = current_assembler.a_syms;
 	while (iter) {
@@ -467,19 +467,19 @@ INTERN void DCALL assembler_fini(void) {
 		DeeSlab_FREE(iter);
 		iter = next;
 	}
+
 	/* Free up constant variables. */
-	for (i = 0; i < current_assembler.a_constc; ++i)
-		Dee_Decref(current_assembler.a_constv[i]);
+	Dee_Decrefv(current_assembler.a_constv, current_assembler.a_constc);
 	Dee_Free(current_assembler.a_constv);
+
 	/* Free up static variables. */
 	for (i = 0; i < current_assembler.a_staticc; ++i)
 		Dee_Decref(current_assembler.a_staticv[i].ss_init);
 	Dee_Free(current_assembler.a_staticv);
+
 	/* Free up exception handlers. */
-	xend = (xiter = current_assembler.a_exceptv) +
-	       current_assembler.a_exceptc;
-	for (; xiter != xend; ++xiter)
-		Dee_XDecref(xiter->ex_mask);
+	for (i = 0; i < current_assembler.a_exceptc; ++i)
+		Dee_XDecref(current_assembler.a_exceptv[i].ex_mask);
 	Dee_Free(current_assembler.a_exceptv);
 	Dee_Free(current_assembler.a_localuse);
 	Dee_Free(current_assembler.a_refv);
@@ -753,16 +753,14 @@ common_adj16_delop:
 			             (size_t)(end - iter),
 			             sizeof(instruction_t));
 			/* Adjust the addresses of all relocations above. */
-			while (rel_begin != rel_end &&
-			       rel_begin->ar_addr <= deladdr)
+			while (rel_begin < rel_end && rel_begin->ar_addr <= deladdr)
 				++rel_begin;
-			for (rel_iter = rel_begin;
-			     rel_iter != rel_end; ++rel_iter) {
+			for (rel_iter = rel_begin; rel_iter < rel_end; ++rel_iter) {
 				ASSERT(rel_iter->ar_addr > deladdr);
 				--rel_iter->ar_addr; /* Adjust relocation address. */
 			}
 			/* Must also adjust the declaration addresses of all symbols. */
-			for (sym_iter           = current_assembler.a_syms;
+			for (sym_iter = current_assembler.a_syms;
 			     sym_iter; sym_iter = sym_iter->as_next) {
 				/* NOTE: All symbols should be defined as part of the first section,
 				 *       but some unused symbols may still be hanging around... */
@@ -927,7 +925,7 @@ INTERN bool DCALL asm_minjmp(void) {
 	if (!(current_assembler.a_flag & ASM_FOPTIMIZE))
 		goto done;
 	end = (iter = sc_main.sec_relv) + sc_main.sec_relc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		switch (iter->ar_type) {
 
 		case R_DMN_DISP16: {
@@ -1169,7 +1167,7 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	}
 	/* Fix relocations for static variables. */
 	end = (iter = sc_main.sec_relv) + sc_main.sec_relc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		uint16_t *imm_addr;
 		uint16_t static_id;
 		if ((iter->ar_type & ~R_DMN_FUSER) != R_DMN_STATIC16)
@@ -1224,7 +1222,7 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 	instruction_t *code = sc_main.sec_begin;
 	/* Link together text and resolve relocations. */
 	end = (iter = sc_main.sec_relv) + sc_main.sec_relc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		instruction_t *target;
 		int32_t rel_value;
 		if (!REL_HASSYM(iter->ar_type & ~(R_DMN_FUSER)))
@@ -1320,7 +1318,7 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 	instruction_t *code = sc_main.sec_begin;
 	/* Link together text and resolve relocations. */
 	end = (iter = sc_main.sec_relv) + sc_main.sec_relc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		instruction_t *target;
 		int32_t rel_value;
 		if ((iter->ar_type & ~(R_DMN_FUSER)) == R_DMN_NONE)
@@ -1457,10 +1455,12 @@ INTERN WUNUSED struct except_handler *DCALL asm_pack_exceptv(void) {
 		}
 	}
 #endif /* CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
-	dst  = exceptv + current_assembler.a_exceptc;
-	iter = (begin = current_assembler.a_exceptv) +
-	       current_assembler.a_exceptc;
-	while ((--dst, iter-- != begin)) {
+	dst   = exceptv + current_assembler.a_exceptc;
+	begin = current_assembler.a_exceptv;
+	iter  = begin + current_assembler.a_exceptc;
+	while (iter > begin) {
+		--dst;
+		--iter;
 #ifndef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
 		dst->eh_mask  = iter->ex_mask;
 		dst->eh_flags = iter->ex_flags;
@@ -1497,10 +1497,12 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	if unlikely(!ddi)
 		goto err;
 	total_codesize = (code_size_t)(sc_main.sec_iter - sc_main.sec_begin);
-	if (sc_main.sec_iter != sc_main.sec_end) {
+	if (sc_main.sec_iter < sc_main.sec_end) {
 		/* Try to release as much code memory as possible. - We won't be needing it anymore. */
-		result = (DREF DeeCodeObject *)DeeGCObject_TryRealloc(sc_main.sec_code, offsetof(DeeCodeObject, co_code) +
-		                                                                        (sc_main.sec_iter - sc_main.sec_begin) * sizeof(instruction_t));
+		result = (DREF DeeCodeObject *)DeeGCObject_TryRealloc(sc_main.sec_code,
+		                                                      offsetof(DeeCodeObject, co_code) +
+		                                                      (sc_main.sec_iter - sc_main.sec_begin) *
+		                                                      sizeof(instruction_t));
 		if (!result)
 			result = sc_main.sec_code;
 	} else {
@@ -2743,7 +2745,7 @@ INTERN WUNUSED int32_t DCALL asm_newlocal(void) {
 	/* Search for unused local variable indices. */
 	end = (iter = current_assembler.a_localuse) +
 	      ((current_assembler.a_localc + 7) / 8);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (*iter == 0xff)
 			continue;
 		/* We might have got something here... */
@@ -2792,7 +2794,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 	if (current_rootscope->rs_bucketv != empty_module_buckets) {
 		/* Re-hash the table. */
 		end = (iter = current_rootscope->rs_bucketv) + (current_rootscope->rs_bucketm + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			dhash_t i, perturb;
 			i = perturb = (iter->ss_hash & new_mask);
 			for (;; MODULE_HASHNX(i, perturb)) {
@@ -3280,13 +3282,13 @@ done:
 
 
 INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
-	struct text_label **biter, **bend;
-	bend = (biter = current_basescope->bs_lbl) +
-	       current_basescope->bs_lbla;
-	for (; biter != bend; ++biter) {
-		struct text_label *iter;
-		for (iter = *biter; iter; iter = iter->tl_next) {
-			struct asm_sym *sym = iter->tl_asym;
+	struct text_label **btl_iter, **btl_end;
+	btl_iter = current_basescope->bs_lbl;
+	btl_end  = btl_iter + current_basescope->bs_lbla;
+	for (; btl_iter < btl_end; ++btl_iter) {
+		struct text_label *tl_iter;
+		for (tl_iter = *btl_iter; tl_iter; tl_iter = tl_iter->tl_next) {
+			struct asm_sym *sym = tl_iter->tl_asym;
 			if (!sym)
 				continue; /* Label was never instantiated. */
 			if (!sym->as_used)
@@ -3295,25 +3297,26 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 				/* Error: User-defined label was never defined. */
 				return DeeError_Throwf(&DeeError_CompilerError,
 				                       "Label `%s' has never been defined",
-				                       iter->tl_name->k_name);
+				                       tl_iter->tl_name->k_name);
 			}
 		}
 	}
+
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	{
-		struct asm_sym *iter = current_assembler.a_syms;
-		for (; iter; iter = iter->as_next) {
-			if (ASM_SYM_DEFINED(iter))
+		struct asm_sym *as_iter = current_assembler.a_syms;
+		for (; as_iter; as_iter = as_iter->as_next) {
+			if (ASM_SYM_DEFINED(as_iter))
 				continue; /* Skip symbols that are defined. */
-			if (!iter->as_used)
+			if (!as_iter->as_used)
 				continue; /* Skip symbols that are unused. */
-			ASSERTF(iter->as_uname != NULL,
+			ASSERTF(as_iter->as_uname != NULL,
 			        "Unnamed (aka. internal) symbol not defined.\n"
 			        "%s(%d) : Symbol was allocated here",
-			        iter->as_file, iter->as_line);
+			        as_iter->as_file, as_iter->as_line);
 			return DeeError_Throwf(&DeeError_CompilerError,
 			                       "Assembly symbol `%s' has never been defined",
-			                       iter->as_uname->k_name);
+			                       as_iter->as_uname->k_name);
 		}
 	}
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -3369,10 +3372,8 @@ do_savearg:
 	{
 		unsigned int i;
 		for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
-			if (i != SECTION_TEXT &&
-			    current_assembler.a_sect[i].sec_iter ==
-			    current_assembler.a_sect[i].sec_begin)
-				continue; /* Skip empty seconds. */
+			if (i != SECTION_TEXT && ASM_SEC_ISEMPTY(&current_assembler.a_sect[i]))
+				continue; /* Skip empty sections. */
 			current_assembler.a_curr = &current_assembler.a_sect[i];
 			if (asm_put(ASM_RET_NONE))
 				goto err;
@@ -3403,6 +3404,7 @@ do_savearg:
 		link_error = asm_linkstack();
 		if unlikely(link_error != 0)
 			goto err_link;
+
 		/* Remove unused assembly symbols to improve the
 		 * capabilities of `asm_peephole()'.
 		 * This function is not called as apart of the optimization
@@ -3411,7 +3413,6 @@ do_savearg:
 		if (current_assembler.a_flag & ASM_FPEEPHOLE)
 			asm_delunused_symbols();
 	}
-
 
 	/* Keep shrinking `jmp', deleting DELOP instructions
 	 * and doing peephole optimizations while possible. */
@@ -3423,6 +3424,7 @@ do_savearg:
 		did_something = link_error != 0;
 		if (asm_rmdelop())
 			did_something = true;
+
 		/* Only minimize jumps if peephole and rmdelop didn't do anything.
 		 * This way, we keep just as big as possible to improve how peephole
 		 * optimizes jump forwarding. - Otherwise, peephole would have a hard

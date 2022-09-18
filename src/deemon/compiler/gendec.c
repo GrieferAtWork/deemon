@@ -86,7 +86,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		goto err; /* Dec_Strmap.i_len */
 	end = (iter = (DeeModuleObject **)self->mo_importv) + self->mo_importc;
 	module_pathstr = module_pathend = NULL;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		DeeModuleObject *mod = *iter;
 		uint8_t *data;
 		uint32_t addr;
@@ -161,9 +161,10 @@ import_module_by_name:
 			 * characters to deal with up-path reference, which is then
 			 * followed by `other_pathstr.replace(SEP, ".")' */
 			num_dots = 1; /* +1 leading dot to identify the use of a local dependency name. */
-			while (self_pathstr != self_pathend) {
-				if (*self_pathstr++ == SEP)
+			while (self_pathstr < self_pathend) {
+				if (*self_pathstr == SEP)
 					++num_dots;
+				++self_pathstr;
 			}
 
 			/* Rewind to exclude the extension. */
@@ -195,8 +196,7 @@ import_module_by_name:
 			if (is_dec_file) {
 				/* In dec files, we must erase the first `.' character of the filename. */
 				char *last_dot = (char *)buffer;
-				for (; other_pathpart != other_pathend;
-				     ++other_pathpart, ++buffer) {
+				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
 					if ((*buffer = *other_pathpart) == SEP)
 						*(char *)buffer = '.', last_dot = (char *)buffer + 1;
 				}
@@ -213,8 +213,7 @@ import_module_by_name:
 				--dec_curr->ds_iter;
 				;
 			} else {
-				for (; other_pathpart != other_pathend;
-				     ++other_pathpart, ++buffer) {
+				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
 					if ((*buffer = *other_pathpart) == SEP)
 						*buffer = '.';
 				}
@@ -241,7 +240,6 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_globals(DeeModuleObject *__restrict self) {
-#if 1
 	struct module_symbol *symbegin, *symend;
 	struct module_symbol *symiter;
 	uint16_t globalc, symcount, normali;
@@ -262,7 +260,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		uint8_t *ptr;
 		uint32_t addr;
 		struct module_symbol *first_alias = NULL;
-		for (symiter = symbegin; symiter != symend; ++symiter) {
+		for (symiter = symbegin; symiter < symend; ++symiter) {
 			if (!symiter->ss_name)
 				continue; /* Skip empty entries. */
 			if (symiter->ss_flags & MODSYM_FEXTERN) {
@@ -335,7 +333,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			 *       that was aliasing the current global variable
 			 *       associated with the current `normali' address. */
 			ASSERT(first_alias != NULL);
-			for (++first_alias; first_alias != symend; ++first_alias) {
+			for (++first_alias; first_alias < symend; ++first_alias) {
 				if (!first_alias->ss_name)
 					continue;
 				if (first_alias->ss_flags & MODSYM_FEXTERN)
@@ -390,7 +388,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 	if (has_special_symbols) {
 		/* Emit special (extern) symbols */
 		dec_curr = exttab;
-		for (symiter = symbegin; symiter != symend; ++symiter) {
+		for (symiter = symbegin; symiter < symend; ++symiter) {
 			uint8_t *ptr;
 			uint32_t addr;
 			size_t name_len;
@@ -449,64 +447,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		goto err; /* Dec_Glbmap.g_cnt */
 	if (dec_putw(symcount))
 		goto err; /* Dec_Glbmap.g_len */
-		          /* ... This is where the 2 sections we've created above will appear. */
-#else
-	struct module_symbol *symbegin, *symend;
-	struct module_symbol *symiter;
-	uint16_t symcount = 0;
-	dec_curr = SC_GLOBALS;
-	symend = (symbegin = self->mo_bucketv) +
-	         (self->mo_bucketm + 1);
-	/* Count the actual number of symbols defined by the module. */
-	for (symiter = symbegin;
-	     symiter != symend; ++symiter) {
-		if (symiter->ss_name)
-			++symcount;
-	}
-	if (dec_putw(self->mo_globalc))
-		goto err; /* Dec_Glbmap.g_cnt */
-	if (dec_putw(symcount))
-		goto err; /* Dec_Glbmap.g_len */
-	/* Go through and define descriptors for all exported symbols. */
-	for (symiter = symbegin;
-	     symiter != symend; ++symiter) {
-		uint8_t *nameptr;
-		uint32_t nameaddr;
-		DeeStringObject *docstr;
-		if (!symiter->ss_name)
-			continue;
-		if (dec_putw(symiter->ss_flags))
-			goto err; /* Dec_GlbSym.s_flg */
-		if (dec_putw(symiter->ss_index))
-			goto err; /* Dec_GlbSym.s_addr */
-		dec_curr = SC_STRING;
-		nameptr = dec_allocstr(DeeString_STR(symiter->ss_name),
-		                       (DeeString_SIZE(symiter->ss_name) + 1) * sizeof(char));
-		if unlikely(!nameptr)
-			goto err;
-		nameaddr = dec_ptr2addr(nameptr);
-		dec_curr = SC_GLOBALS;
-		if (dec_putptr(nameaddr))
-			goto err; /* Dec_GlbSym.s_nam */
-		docstr = symiter->ss_doc;
-		if (!docstr || (current_dec.dw_flags & DEC_WRITE_FNODOC))
-			docstr = (DeeStringObject *)Dee_EmptyString;
-		if (dec_putptr(DeeString_SIZE(docstr)))
-			goto err; /* Dec_GlbSym.s_doclen */
-		if (DeeString_SIZE(docstr)) {
-			/* Also include the symbol's documentation string. */
-			dec_curr = SC_STRING;
-			nameptr = dec_allocstr(DeeString_STR(docstr),
-			                       DeeString_SIZE(docstr) * sizeof(char));
-			if unlikely(!nameptr)
-				goto err;
-			nameaddr = dec_ptr2addr(nameptr);
-			dec_curr = SC_GLOBALS;
-			if (dec_putptr(nameaddr))
-				goto err; /* Dec_GlbSym.s_doc */
-		}
-	}
-#endif
+	/* ... This is where the 2 sections we've created above will appear. */
 	return 0;
 err:
 	return -1;
@@ -1574,7 +1515,7 @@ INTERN WUNUSED NONNULL((1)) int
 		if (use_8bit) {
 			if (dec_putb((uint8_t)self->co_exceptc))
 				goto err; /* Dec_8BitCodeExceptions.ces_len */
-			for (; iter != end; ++iter) {
+			for (; iter < end; ++iter) {
 				if (dec_putw(iter->eh_flags))
 					goto err; /* Dec_8BitCodeExcept.ce_flags */
 				if (dec_putw((uint16_t)iter->eh_start))
@@ -1591,7 +1532,7 @@ INTERN WUNUSED NONNULL((1)) int
 		} else {
 			if (dec_putw(self->co_exceptc))
 				goto err; /* Dec_CodeExceptions.ces_len */
-			for (; iter != end; ++iter) {
+			for (; iter < end; ++iter) {
 				if (dec_putw(iter->eh_flags))
 					goto err; /* Dec_CodeExcept.ce_flags */
 				if (dec_putl(iter->eh_start))

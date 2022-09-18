@@ -251,7 +251,7 @@ JIT_atof(JITLexer *__restrict self, char const *__restrict start, size_t length)
 		}
 next:
 		;
-	} while (iter != end);
+	} while (iter < end);
 done:
 	return DeeFloat_New(fltval);
 flt_ext:

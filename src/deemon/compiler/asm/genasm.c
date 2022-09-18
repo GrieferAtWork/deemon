@@ -373,7 +373,7 @@ empty_operand:
 			}
 			/* Print each expression individually. */
 			end = (iter = DeeTuple_ELEM(items)) + DeeTuple_SIZE(items);
-			for (; iter != end; ++iter) {
+			for (; iter < end; ++iter) {
 				instruction_t item_mode;
 				int32_t const_cid;
 				DeeObject *elem;
@@ -468,11 +468,11 @@ fallback:
 		for (i = 0; i < cnt; ++i) {
 			instruction_t elem_mode;
 			elem_mode = mode;
-			if (i != cnt - 1)
+			if (i < cnt - 1)
 				elem_mode &= ~(PRINT_MODE_SP | PRINT_MODE_NL);
-			if (ast_genprint(elem_mode,
-			                 print_expression->a_multiple.m_astv[i],
-			                 ddi_ast))
+			if unlikely(ast_genprint(elem_mode,
+			                         print_expression->a_multiple.m_astv[i],
+			                         ddi_ast))
 				goto err;
 		}
 		return 0;
@@ -755,10 +755,10 @@ done_push_none:
 		}
 
 		/* When `need_all' is true, we must push the results of all elements onto the stack. */
-		need_all           = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
-		active_size        = 0;
+		need_all    = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
+		active_size = 0;
 		expand_encountered = false;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct ast *elem = *iter;
 			/* Only need to push the last element when _we_ are supposed to push our result. */
 			unsigned int need_this;

@@ -472,10 +472,10 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	                                        num_bytes);
 	if unlikely(!result)
 		goto done;
-	result->b_base           = (uint8_t *)memcpy(result->b_data, data, num_bytes);
-	result->b_size           = num_bytes;
-	result->b_orig           = (DREF DeeObject *)result;
-	result->b_flags          = Dee_BUFFER_FWRITABLE;
+	result->b_base  = (uint8_t *)memcpy(result->b_data, data, num_bytes);
+	result->b_size  = num_bytes;
+	result->b_orig  = (DREF DeeObject *)result;
+	result->b_flags = Dee_BUFFER_FWRITABLE;
 	result->b_buffer.bb_base = result->b_data;
 	result->b_buffer.bb_size = num_bytes;
 #ifndef __INTELLISENSE__
@@ -620,11 +620,11 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 			char *str = DeeString_STR(argv[1]);
 			if (WSTR_LENGTH(str) != 1)
 				goto err_invalid_mode;
-			if (str[0] == 'r')
-				;
-			else if (str[0] == 'w')
+			if (str[0] == 'r') {
+				/* ... */
+			} else if (str[0] == 'w') {
 				flags = Dee_BUFFER_FWRITABLE;
-			else {
+			} else {
 				goto err_invalid_mode;
 			}
 			if (argc >= 3) {
@@ -1120,9 +1120,8 @@ bytes_add(Bytes *self, DeeObject *other) {
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self) +
 	                                                       buffer.bb_size);
 	if likely(result) {
-		void *ptr;
-		ptr = mempcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		memcpy(ptr, buffer.bb_base, buffer.bb_size);
+		void *p = mempcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+		memcpy(p, buffer.bb_base, buffer.bb_size);
 	}
 	DeeObject_PutBuf(other, &buffer, Dee_BUFFER_FREADONLY);
 	return result;

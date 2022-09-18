@@ -1140,13 +1140,8 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		if (!other->co_keywords)
 			goto nope;
 		for (i = 0; i < self->co_argc_max; ++i) {
-			if (DeeString_SIZE(self->co_keywords[i]) !=
-			    DeeString_SIZE(other->co_keywords[i]))
-				goto nope;
-			if (bcmpc(DeeString_STR(self->co_keywords[i]),
-			          DeeString_STR(other->co_keywords[i]),
-			          DeeString_SIZE(self->co_keywords[i]),
-			          sizeof(char)) != 0)
+			if (!DeeString_EQUALS_STR(self->co_keywords[i],
+			                          other->co_keywords[i]))
 				goto nope;
 		}
 	} else if (other->co_keywords) {

@@ -1263,7 +1263,8 @@ yfi_run_finally(YFIterator *__restrict self) {
 	if (!(code->co_flags & CODE_FFINALLY))
 		return;
 exec_finally:
-	iter = (begin = code->co_exceptv) + code->co_exceptc;
+	begin = code->co_exceptv;
+	iter  = begin + code->co_exceptc;
 	/* NOTE: The frame-PC is allowed to equal the end of the
 	 *       associated code object, because it contains the
 	 *       address of the next instruction to-be executed.
@@ -1272,8 +1273,9 @@ exec_finally:
 	ASSERT(self->yi_frame.cf_ip >= code->co_code &&
 	       self->yi_frame.cf_ip <= code->co_code + code->co_codebytes);
 	ipaddr = (code_addr_t)(self->yi_frame.cf_ip - code->co_code);
-	while (iter-- != begin) {
+	while (iter > begin) {
 		DREF DeeObject *result, **req_sp;
+		--iter;
 		if (!(iter->eh_flags & EXCEPTION_HANDLER_FFINALLY))
 			continue;
 		if (!(ipaddr > iter->eh_start && ipaddr <= iter->eh_end))

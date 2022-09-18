@@ -120,7 +120,7 @@ sock_getmsgflagsof(DeeObject *__restrict name,
 			}
 			if (part_length < COMPILER_LENOF(sock_msg_names[0].md_name)) {
 				for (desc = sock_msg_names;
-				     desc != COMPILER_ENDOF(sock_msg_names); ++desc) {
+				     desc < COMPILER_ENDOF(sock_msg_names); ++desc) {
 					if (!MEMCASEEQ(desc->md_name, iter, part_length))
 						continue;
 					/* Found it! */
@@ -149,7 +149,7 @@ INTERN WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	int match_mask               = 0;
 	for (desc = sock_msg_names;
-	     desc != COMPILER_ENDOF(sock_msg_names); ++desc) {
+	     desc < COMPILER_ENDOF(sock_msg_names); ++desc) {
 		if (flags & desc->md_flag) {
 			/* Print the string representation of this flag. */
 			if (ascii_printer_printf(&printer, "%sMSG_%s",
@@ -332,7 +332,7 @@ PRIVATE struct type_desc const sock_type_names[] = {
 INTERN WUNUSED DREF DeeObject *DCALL
 sock_getafname(int value) {
 	struct af_desc const *iter = sock_af_names;
-	for (; iter != COMPILER_ENDOF(sock_af_names); ++iter) {
+	for (; iter < COMPILER_ENDOF(sock_af_names); ++iter) {
 		if (iter->ad_value != value)
 			continue;
 		return DeeString_Newf("AF_%s", iter->ad_name);
@@ -343,7 +343,7 @@ sock_getafname(int value) {
 INTERN WUNUSED DREF DeeObject *DCALL
 sock_gettypename(int value) {
 	struct type_desc const *iter = sock_type_names;
-	for (; iter != COMPILER_ENDOF(sock_type_names); ++iter) {
+	for (; iter < COMPILER_ENDOF(sock_type_names); ++iter) {
 		if (iter->td_value != value)
 			continue;
 		return DeeString_Newf("SOCK_%s", iter->td_name);
@@ -358,7 +358,7 @@ sock_getafvalue(char const *__restrict name, int *__restrict presult) {
 	if (MEMCASEEQ(name, "AF_", 3 * sizeof(char)))
 		name += 3;
 	name_len = strlen(name);
-	for (; iter != COMPILER_ENDOF(sock_af_names); ++iter) {
+	for (; iter < COMPILER_ENDOF(sock_af_names); ++iter) {
 		if (!MEMCASEEQ(iter->ad_name, name, name_len * sizeof(char)))
 			continue;
 		*presult = iter->ad_value;
@@ -374,7 +374,7 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 	if (MEMCASEEQ(name, "SOCK_", 5 * sizeof(char)))
 		name += 5;
 	name_len = strlen(name);
-	for (; iter != COMPILER_ENDOF(sock_type_names); ++iter) {
+	for (; iter < COMPILER_ENDOF(sock_type_names); ++iter) {
 		if (!MEMCASEEQ(iter->td_name, name, name_len * sizeof(char)))
 			continue;
 		*presult = iter->td_value;
@@ -574,7 +574,7 @@ get_shutdown_mode(char const *__restrict mode,
 		break;
 	}
 	iter = shutdown_options, mode_length = strlen(used_mode);
-	for (; iter != COMPILER_ENDOF(shutdown_options); ++iter) {
+	for (; iter < COMPILER_ENDOF(shutdown_options); ++iter) {
 		if (!MEMCASEEQ(iter->so_nam, mode, mode_length * sizeof(char)))
 			continue;
 		*presult = iter->so_opt;
@@ -1180,7 +1180,7 @@ do_gethostbyname:
 			    special_family == AF_AUTO) {
 				struct inet6_hostname const *iter;
 				for (iter = speical_inet6_names;
-				     iter != COMPILER_ENDOF(speical_inet6_names); ++iter) {
+				     iter < COMPILER_ENDOF(speical_inet6_names); ++iter) {
 					if (!MEMCASEEQ(iter->name, special_name, special_size))
 						continue;
 					memcpy(&self->sa_inet6.sin6_addr, &iter->addr, 16);
@@ -1194,7 +1194,7 @@ do_gethostbyname:
 			    special_family == AF_AUTO) {
 				struct inet_hostname const *iter;
 				for (iter = speical_inet_names;
-				     iter != COMPILER_ENDOF(speical_inet_names); ++iter) {
+				     iter < COMPILER_ENDOF(speical_inet_names); ++iter) {
 					if (!MEMCASEEQ(iter->name, special_name, special_size))
 						continue;
 					self->sa_inet.sin_addr.s_addr = iter->addr;

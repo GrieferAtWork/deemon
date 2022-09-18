@@ -89,14 +89,8 @@ kwds_find_index(DeeKwdsObject *__restrict self,
 			break;
 		if (entry->ke_hash != hash)
 			continue;
-		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
-			continue;
-		if (bcmpc(DeeString_STR(entry->ke_name),
-		          DeeString_STR(name),
-		          DeeString_SIZE(name),
-		          sizeof(char)) != 0)
-			continue;
-		return entry->ke_index;
+		if (DeeString_EQUALS_STR(entry->ke_name, name))
+			return entry->ke_index;
 	}
 	return (size_t)-1;
 }
@@ -330,11 +324,13 @@ err_ex_frame:
 		if unlikely(code->co_flags & CODE_FASSEMBLY) {
 			frame.cf_stacksz = 0;
 			result           = DeeCode_ExecFrameSafe(&frame);
+
 			/* Delete remaining stack objects. */
-			while (frame.cf_sp != frame.cf_stack) {
+			while (frame.cf_sp > frame.cf_stack) {
 				--frame.cf_sp;
 				Dee_Decref(*frame.cf_sp);
 			}
+
 			/* Safe code execution allows for stack-space extension into heap memory.
 			 * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
 			if (frame.cf_stacksz)
@@ -342,14 +338,16 @@ err_ex_frame:
 			frame.cf_sp = frame.cf_frame + code->co_localc;
 		} else {
 			result = DeeCode_ExecFrameFast(&frame);
+
 			/* Delete remaining stack objects. */
-			while (frame.cf_sp != frame.cf_stack) {
+			while (frame.cf_sp > frame.cf_stack) {
 				--frame.cf_sp;
 				Dee_Decref(*frame.cf_sp);
 			}
 		}
+
 		/* Delete remaining local variables. */
-		while (frame.cf_sp != frame.cf_frame) {
+		while (frame.cf_sp > frame.cf_frame) {
 			--frame.cf_sp;
 			Dee_XDecref(*frame.cf_sp);
 		}
@@ -360,6 +358,7 @@ err_ex_frame:
 		{
 			Dee_Free(frame.cf_frame);
 		}
+
 #ifdef CALL_TUPLE
 		if (code->co_argc_max != 0)
 #endif /* CALL_TUPLE */

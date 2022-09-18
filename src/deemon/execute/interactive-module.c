@@ -245,12 +245,12 @@ imod_parse_statement(InteractiveModule *__restrict self,
 	DREF struct ast *result, *merge;
 	bool should_yield = false;
 	if ((mode & Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE) &&
-	    token.t_file != self->im_basefile)
-		;
-	else if ((mode & (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
-	                  Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) ==
-	         (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
-	          Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) {
+	    token.t_file != self->im_basefile) {
+		/* ... */
+	} else if ((mode & (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
+	                    Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) ==
+	           (Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR |
+	            Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT)) {
 		should_yield = true;
 	} else if (mode & Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR) {
 		should_yield = !is_statement();
@@ -1050,7 +1050,7 @@ imod_init(InteractiveModule *__restrict self,
 			name_end = name + size;
 #ifdef DeeSystem_ALTSEP
 			name_start = name_end;
-			while (name_start != name && !DeeSystem_IsSep(name_start[-1]))
+			while (name_start > name && !DeeSystem_IsSep(name_start[-1]))
 				--name_start;
 #else /* DeeSystem_ALTSEP */
 			name_start = (char *)memrchr(name, DeeSystem_SEP, size);
@@ -1059,9 +1059,9 @@ imod_init(InteractiveModule *__restrict self,
 			++name_start;
 #endif /* !DeeSystem_ALTSEP */
 			/* Get rid of a file extension in the module name. */
-			while (name_end != name_start && name_end[-1] != '.')
+			while (name_end > name_start && name_end[-1] != '.')
 				--name_end;
-			while (name_end != name_start && name_end[-1] == '.')
+			while (name_end > name_start && name_end[-1] == '.')
 				--name_end;
 			if (name_end == name_start)
 				name_end = name + size;

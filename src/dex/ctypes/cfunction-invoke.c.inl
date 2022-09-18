@@ -93,7 +93,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 	argp_iter = (void **)end;
 #endif /* !VARARGS */
 
-	if (iter != end) {
+	if (iter < end) {
 		arg_iter = argv;
 #define argt tp_self->ft_argv[(size_t)(arg_iter - argv)]
 		ffi_argtyv = tp_self->ft_ffi_arg_type_v;

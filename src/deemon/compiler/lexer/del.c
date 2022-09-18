@@ -173,8 +173,9 @@ ast_parse_del(unsigned int lookup_mode) {
 				DREF struct ast **new_delv;
 				size_t new_dela = dela * 2;
 do_realloc_delv:
-				new_delv = (DREF struct ast **)Dee_TryRealloc(delv, new_dela *
-				                                                    sizeof(DREF struct ast *));
+				new_delv = (DREF struct ast **)Dee_TryRealloc(delv,
+				                                              new_dela *
+				                                              sizeof(DREF struct ast *));
 				if unlikely(!new_delv) {
 					if (new_dela != delc + 1) {
 						new_dela = delc + 1;

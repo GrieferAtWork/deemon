@@ -169,7 +169,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 	if unlikely(!(self->mo_flags & MODULE_FDIDLOAD))
 		goto err;
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (!MODULE_SYMBOL_GETNAMESTR(iter))
 			continue; /* Skip empty entries. */
 		if (iter->ss_index == gid) {
@@ -1108,7 +1108,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 		return 0;
 	}
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		uint16_t perm;
 		DREF DeeTypeObject *attr_type;
 		/* Skip empty and hidden entries. */
@@ -1455,22 +1455,20 @@ module_unbind(DeeModuleObject *__restrict self);
 
 PRIVATE NONNULL((1)) void DCALL
 module_fini(DeeModuleObject *__restrict self) {
-	struct module_symbol *iter, *end;
-	DREF DeeModuleObject **miter, **mend;
-	size_t i;
 	weakref_support_fini(self);
 	module_unbind(self);
 	Dee_Decref(self->mo_name);
 	Dee_XDecref(self->mo_root);
 	Dee_XDecref(self->mo_path);
 	if (self->mo_flags & MODULE_FDIDLOAD) {
-		for (i = 0; i < self->mo_globalc; ++i)
-			Dee_XDecref(self->mo_globalv[i]);
+		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
 		Dee_Free(self->mo_globalv);
 	}
 	if (self->mo_bucketv != empty_module_buckets) {
-		end = (iter = self->mo_bucketv) + self->mo_bucketm + 1;
-		for (; iter != end; ++iter) {
+		struct module_symbol *iter, *end;
+		iter = self->mo_bucketv;
+		end  = iter + self->mo_bucketm + 1;
+		for (; iter < end; ++iter) {
 			if (!MODULE_SYMBOL_GETNAMESTR(iter))
 				continue;
 			if (iter->ss_flags & MODSYM_FNAMEOBJ)
@@ -1480,17 +1478,13 @@ module_fini(DeeModuleObject *__restrict self) {
 		}
 		Dee_Free((void *)self->mo_bucketv);
 	}
-
-	mend = (miter = (DREF DeeModuleObject **)self->mo_importv) + self->mo_importc;
-	for (; miter != mend; ++miter)
-		Dee_Decref(*miter);
+	Dee_Decrefv(self->mo_importv, self->mo_importc);
 	Dee_Free((void *)self->mo_importv);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 module_visit(DeeModuleObject *__restrict self,
              dvisit_t proc, void *arg) {
-	size_t i;
 	rwlock_read(&self->mo_lock);
 
 	/* Visit the root-code object. */
@@ -1501,14 +1495,13 @@ module_visit(DeeModuleObject *__restrict self,
 
 	/* Visit global variables. */
 	if (self->mo_flags & MODULE_FDIDLOAD) {
-		for (i = 0; i < self->mo_globalc; ++i)
-			Dee_XVisit(self->mo_globalv[i]);
+		Dee_XVisitv(self->mo_globalv, self->mo_globalc);
 	}
 
 	rwlock_endread(&self->mo_lock);
+
 	/* Visit imported modules. */
-	for (i = 0; i < self->mo_importc; ++i)
-		Dee_XVisit(self->mo_importv[i]);
+	Dee_XVisitv(self->mo_importv, self->mo_importc);
 }
 
 PRIVATE NONNULL((1)) void DCALL

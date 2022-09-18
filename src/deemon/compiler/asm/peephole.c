@@ -103,7 +103,7 @@ LOCAL struct asm_rel *DCALL
 relocation_at(code_addr_t addr) {
 	struct asm_rel *iter = sc_main.sec_relv;
 	struct asm_rel *end  = iter + sc_main.sec_relc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (iter->ar_addr != addr)
 			continue;
 		if (iter->ar_type == R_DMN_NONE)
@@ -122,16 +122,16 @@ delete_assembly(code_addr_t begin, code_size_t size) {
 	bool result              = false;
 	instruction_t *iter, *iter_end;
 	/* Delete all relocations within the area we're about to delete. */
-	while (rel_iter != rel_end && rel_iter->ar_addr < begin)
+	while (rel_iter < rel_end && rel_iter->ar_addr < begin)
 		++rel_iter;
-	while (rel_iter != rel_end && rel_iter->ar_addr < end) {
+	while (rel_iter < rel_end && rel_iter->ar_addr < end) {
 		result = true;
 		asm_reldel(rel_iter);
 		++rel_iter;
 	}
 	iter     = sc_main.sec_begin + begin;
 	iter_end = iter + size;
-	while (iter != iter_end) {
+	while (iter < iter_end) {
 		if (*iter != ASM_DELOP)
 			result = true;
 		*iter++ = ASM_DELOP;
@@ -927,15 +927,15 @@ do_noreturn_optimization:
 				nearest_symbol_addr = text_size;
 			new_ip = sc_main.sec_begin + nearest_symbol_addr;
 			ASSERT(new_ip >= iter);
-			if (new_ip != iter) {
+			if (new_ip > iter) {
 				/* Now delete everything that is in-between. */
 				struct asm_rel *rel_iter = sc_main.sec_relv;
 				struct asm_rel *rel_end  = rel_iter + sc_main.sec_relc;
 				code_addr_t start_ip     = (code_addr_t)(iter - sc_main.sec_begin);
 				/* Delete all relocations within the area we're about to delete. */
-				while (rel_iter != rel_end && rel_iter->ar_addr < start_ip)
+				while (rel_iter < rel_end && rel_iter->ar_addr < start_ip)
 					++rel_iter;
-				while (rel_iter != rel_end && rel_iter->ar_addr < nearest_symbol_addr) {
+				while (rel_iter < rel_end && rel_iter->ar_addr < nearest_symbol_addr) {
 					asm_reldel(rel_iter);
 					++rel_iter;
 				}
@@ -943,7 +943,7 @@ do_noreturn_optimization:
 					if (*iter != ASM_DELOP)
 						SET_RESULTF(iter, "Delete unreachable instruction 0x%.2I8x", *iter);
 					*iter++ = ASM_DELOP;
-				} while (iter != new_ip);
+				} while (iter < new_ip);
 			}
 			if (!nearest_symbol)
 				goto done;

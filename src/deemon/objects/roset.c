@@ -133,7 +133,7 @@ rosetiterator_next(SetIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->si_key)
+		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS

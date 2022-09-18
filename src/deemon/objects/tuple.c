@@ -101,8 +101,7 @@ INTERN size_t DCALL
 tuplecache_clear(size_t max_clear) {
 	size_t result = 0;
 	struct tuple_cache *iter;
-	for (iter = cache;
-	     iter != COMPILER_ENDOF(cache); ++iter) {
+	for (iter = cache; iter < COMPILER_ENDOF(cache); ++iter) {
 		struct cached_object *elem;
 		atomic_lock_acquire(&iter->c_lock);
 		while ((elem = iter->c_head) != NULL && result < max_clear) {

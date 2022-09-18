@@ -423,11 +423,8 @@ kwds_findstr_len(Kwds *__restrict self,
 			break;
 		if (entry->ke_hash != hash)
 			continue;
-		if (DeeString_SIZE(entry->ke_name) != namesize)
-			continue;
-		if (bcmpc(DeeString_STR(entry->ke_name), name, namesize, sizeof(char)) != 0)
-			continue;
-		return entry->ke_index;
+		if (DeeString_EQUALS_BUF(entry->ke_name, name, namesize))
+			return entry->ke_index;
 	}
 	return (size_t)-1;
 }

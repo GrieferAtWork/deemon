@@ -407,8 +407,9 @@ bs_copy(BytesSplit *__restrict self,
 	self->bs_sep_ptr   = other->bs_sep_ptr;
 	self->bs_sep_len   = other->bs_sep_len;
 	if (self->bs_sep_ptr == other->bs_sep_buf) {
-		memcpy(self->bs_sep_buf, other->bs_sep_buf, sizeof(self->bs_sep_buf));
-		self->bs_sep_ptr = self->bs_sep_buf;
+		self->bs_sep_ptr = (uint8_t *)memcpy(self->bs_sep_buf,
+		                                     other->bs_sep_buf,
+		                                     sizeof(self->bs_sep_buf));
 	}
 	Dee_Incref(self->bs_bytes);
 	Dee_XIncref(self->bs_sep_owner);
@@ -425,8 +426,9 @@ bs_deepcopy(BytesSplit *__restrict self,
 	self->bs_sep_ptr   = other->bs_sep_ptr;
 	self->bs_sep_len   = other->bs_sep_len;
 	if (self->bs_sep_ptr == other->bs_sep_buf) {
-		memcpy(self->bs_sep_buf, other->bs_sep_buf, sizeof(self->bs_sep_buf));
-		self->bs_sep_ptr = self->bs_sep_buf;
+		self->bs_sep_ptr = (uint8_t *)memcpy(self->bs_sep_buf,
+		                                     other->bs_sep_buf,
+		                                     sizeof(self->bs_sep_buf));
 	}
 	if (!self->bs_sep_owner) {
 		/* ... */

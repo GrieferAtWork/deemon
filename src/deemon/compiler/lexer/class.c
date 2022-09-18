@@ -108,8 +108,9 @@ relocate_attribute(struct class_attribute *__restrict old_attr,
                    struct class_attribute *__restrict new_attr) {
 	struct symbol **biter, **bend, *iter;
 	ASSERT(DeeScope_IsClassScope(current_scope));
-	bend = (biter = current_scope->s_map) + current_scope->s_mapa;
-	for (; biter != bend; ++biter) {
+	biter = current_scope->s_map;
+	bend  = biter + current_scope->s_mapa;
+	for (; biter < bend; ++biter) {
 		for (iter = *biter; iter; iter = iter->s_next) {
 			if (iter->s_type == SYMBOL_TYPE_CATTR &&
 			    iter->s_attr.a_attr == old_attr)

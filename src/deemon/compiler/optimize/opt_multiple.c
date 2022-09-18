@@ -58,7 +58,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	is_unreachable = false;
 	only_constexpr = true;
 multiple_continue_at_iter:
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		bool using_value = result_used;
 		int temp;
 		if (self->a_flag == AST_FMULTIPLE_KEEPLAST && iter != end - 1)
@@ -73,7 +73,8 @@ multiple_continue_at_iter:
 		else if (is_unreachable ||
 		         /* Delete branches that are unreachable or have no side-effects. */
 		         (self->a_flag == AST_FMULTIPLE_KEEPLAST &&
-		          (iter != end - 1 || !result_used) && !ast_has_sideeffects(*iter))) {
+		          (iter != end - 1 || !result_used) &&
+		          !ast_has_sideeffects(*iter))) {
 			/* Get rid of this one. */
 			OPTIMIZE_VERBOSEAT(*iter, is_unreachable ? "Delete unreachable AST\n"
 			                                         : "Delete AST without side-effects\n");

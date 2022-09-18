@@ -53,7 +53,7 @@ DeeSystem_DEFINE_qsort(dee_qsort)
 PRIVATE void DCALL ddi_load_symbols(void) {
 	struct ddi_checkpoint *iter, *end;
 	end = (iter = ddi.da_checkv) + ddi.da_checkc;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		ASSERT(iter->dc_sym);
 		ASSERT(ASM_SYM_DEFINED(iter->dc_sym));
 		/* NOTE: We disregard the fact that we're still holding
@@ -110,7 +110,7 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 	uint32_t *vector = *pvector, *iter, *end;
 	uint32_t size    = *psize;
 	end              = (iter = vector) + size;
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (*iter == offset_value)
 			return (int32_t)(iter - vector);
 	}
@@ -359,7 +359,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 		bzero(&old_state, sizeof(struct ddi_gen_state));
 		end      = (iter = ddi.da_checkv) + ddi.da_checkc;
 		did_last = false, is_first = true;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			/* If the UIP didn't change, don't do anything. */
 			if (iter->dc_addr == old_state.reg_uip && !is_first)
 				continue;

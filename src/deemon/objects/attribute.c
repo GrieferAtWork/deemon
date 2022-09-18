@@ -114,10 +114,7 @@ attr_eq(Attr *self, Attr *other) {
 		DeeStringObject *ot_name = COMPILER_CONTAINER_OF(other->a_name, DeeStringObject, s_str);
 		if (DeeString_Hash((DeeObject *)my_name) != DeeString_Hash((DeeObject *)ot_name))
 			goto nope;
-		if (DeeString_SIZE(my_name) != DeeString_SIZE(ot_name))
-			goto nope;
-		if (bcmpc(DeeString_STR(my_name), DeeString_STR(ot_name),
-		          DeeString_SIZE(ot_name), sizeof(char)) != 0)
+		if (!DeeString_EQUALS_STR(my_name, ot_name))
 			goto nope;
 	} else {
 		if (strcmp(self->a_name, other->a_name) != 0)
@@ -1105,7 +1102,7 @@ enumattr_start(EnumAttrIter *__restrict self) {
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
 	if unlikely(enum_error == -1) {
 		/* Discard all unyielded attributes and enter an error state. */
-		while (self->ei_bufpos != self->ei_buffer) {
+		while (self->ei_bufpos > self->ei_buffer) {
 			--self->ei_bufpos;
 			Dee_Decref(*self->ei_bufpos);
 		}

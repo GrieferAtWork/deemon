@@ -63,11 +63,14 @@ cmdline_add_arg(struct ascii_printer *__restrict printer,
 	    ascii_printer_putc(printer, ' '))
 		goto err;
 	start_length = printer->ap_length;
-	end          = (iter = begin = flush_start = DeeString_STR(arg)) + DeeString_SIZE(arg);
-	for (; iter != end; ++iter) {
+	begin        = DeeString_STR(arg);
+	iter         = begin;
+	flush_start  = begin;
+	end          = begin + DeeString_SIZE(arg);
+	for (; iter < end; ++iter) {
 		if (*iter == '\"') {
 			char *quote_start = iter;
-			while (iter != begin && iter[-1] == '\\')
+			while (iter > begin && iter[-1] == '\\')
 				--iter;
 			if (ascii_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
 				goto err;
@@ -162,7 +165,7 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
 	if unlikely(!result)
 		goto done;
 	end = (iter = DeeString_STR(cmdline)) + DeeString_SIZE(cmdline);
-	while (iter != end) {
+	while (iter < end) {
 		bool is_quoting = false;
 		unsigned int num_slashes;
 		char *flush_start;
@@ -170,10 +173,10 @@ cmdline_split(DeeStringObject *__restrict cmdline) {
 		/* Skip leading whitespace. */
 		while (*iter == ' ' || *iter == '\t')
 			++iter;
-		if (iter == end)
+		if (iter >= end)
 			goto done_printer; /* End of argument list. */
 		flush_start = iter;
-		while (iter != end &&
+		while (iter < end &&
 		       (is_quoting || (*iter != ' ' && *iter != '\t'))) {
 			char *part_start = iter;
 			num_slashes      = 0;

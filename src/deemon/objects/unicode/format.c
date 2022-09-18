@@ -266,7 +266,7 @@ Formatter_GetValue(struct formatter *__restrict self,
 	result = Formatter_GetOne(self, &fmt_start, do_eval);
 	if unlikely(!result)
 		goto err;
-	if (fmt_start != fmt_end) {
+	if (fmt_start < fmt_end) {
 		error_unused_format_string(fmt_start, fmt_end);
 		goto err;
 	}
@@ -806,7 +806,7 @@ check_print_error:
 		if unlikely(print_error < 0)
 			goto err;
 		ASSERT(format_start <= format_end);
-		if (format_start != format_end) {
+		if (format_start < format_end) {
 			error_unused_format_string(format_start, format_end);
 			goto err;
 		}
@@ -869,7 +869,7 @@ format_bytes_impl(struct formatter *__restrict self,
 		unsigned int recursion;
 		dssize_t print_error;
 		if (ch == '}' &&
-		    self->f_iter != self->f_end &&
+		    self->f_iter < self->f_end &&
 		    *self->f_iter == '}') {
 			/* Replace `}}' with `}' */
 			print_format(self->f_flush_start,
@@ -971,7 +971,7 @@ check_print_error:
 		if unlikely(print_error < 0)
 			goto err;
 		ASSERT(format_start <= format_end);
-		if (format_start != format_end) {
+		if (format_start < format_end) {
 			error_unused_format_string(format_start, format_end);
 			goto err;
 		}

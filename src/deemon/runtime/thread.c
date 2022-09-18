@@ -268,7 +268,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 	if (self->t_deepassoc.da_list != empty_deep_assoc) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->t_deepassoc.da_list) + (self->t_deepassoc.da_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct deep_assoc_entry *item;
 			dhash_t i, perturb;
 			/* Skip NULL entires. */
@@ -390,7 +390,7 @@ deepcopy_clear(DeeThreadObject *__restrict thread_self) {
 	thread_self->t_deepassoc.da_used = 0;
 	end                              = (iter = begin) + (mask + 1);
 	/* Go through and clear out all the generated mappings. */
-	for (; iter != end; ++iter) {
+	for (; iter < end; ++iter) {
 		if (!iter->de_old)
 			continue;
 		Dee_Decref(iter->de_old);

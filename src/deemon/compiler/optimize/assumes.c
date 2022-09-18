@@ -59,7 +59,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 	if (self->aa_syms.sa_elem) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->aa_syms.sa_elem) + (self->aa_syms.sa_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct ast_symbol_assume *item;
 			dhash_t i, perturb;
 			/* Skip NULL entires. */

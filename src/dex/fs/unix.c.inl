@@ -887,8 +887,9 @@ do_ishidden(DeeObject *__restrict path) {
 		goto done;
 	}
 	/* Check if the filename starts with a `.' (DOT) */
-	iter = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
-	while (iter != begin && iter[-1] != '/')
+	begin = DeeString_STR(path);
+	iter  = begin + DeeString_SIZE(path);
+	while (iter > begin && iter[-1] != '/')
 		--iter;
 	return *iter == '.';
 done:

@@ -628,8 +628,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 Dec_BuiltinID(DeeObject *__restrict obj) {
 	struct builtin_desc *iter;
-	for (iter = builtin_descs;
-	     iter != COMPILER_ENDOF(builtin_descs); ++iter) {
+	for (iter = builtin_descs; iter < COMPILER_ENDOF(builtin_descs); ++iter) {
 		if (iter->bd_obj == obj)
 			return iter->bd_id;
 	}
@@ -1045,9 +1044,10 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	importv = (DREF DeeModuleObject **)Dee_Malloc(importc * sizeof(DREF DeeModuleObject *));
 	if unlikely(!importv)
 		goto err;
-	modend = (moditer = importv) + importc;
-	reader = impmap->i_map;
-	for (; moditer != modend; ++moditer) {
+	moditer = importv;
+	modend  = importv + importc;
+	reader  = impmap->i_map;
+	for (; moditer < modend; ++moditer) {
 		uint32_t off;
 		char const *module_name;
 		if unlikely(reader >= end)
@@ -1113,8 +1113,10 @@ stop:
 	return result;
 stop_imports:
 	if (importv) {
-		while (moditer-- != importv)
+		while (moditer > importv) {
+			--moditer;
 			Dee_Decref(*moditer);
+		}
 		Dee_Free(importv);
 	}
 	goto stop;
@@ -2659,7 +2661,7 @@ err_r_static:
 err_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);
-	while (result->co_argc_max != result->co_argc_min) {
+	while (result->co_argc_max > result->co_argc_min) {
 		--result->co_argc_max;
 		Dee_XDecref(result->co_defaultv[result->co_argc_max - result->co_argc_min]);
 	}
@@ -2685,7 +2687,7 @@ corrupt_r_static:
 corrupt_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);
-	while (result->co_argc_max != result->co_argc_min) {
+	while (result->co_argc_max > result->co_argc_min) {
 		--result->co_argc_max;
 		Dee_XDecref(result->co_defaultv[result->co_argc_max - result->co_argc_min]);
 	}
@@ -2943,13 +2945,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 			break; /* Entry not found. */
 		if (MTIME_ENTRY_HASH(item) != hash)
 			continue; /* Differing hashes. */
-		if (DeeString_SIZE(item->me_file) !=
-		    DeeString_SIZE(path))
-			continue; /* Differing lengths. */
-		if (fs_bcmp(DeeString_STR(item->me_file),
-		            DeeString_STR(path),
-		            DeeString_SIZE(path) *
-		            sizeof(char)) != 0)
+		if (!DeeString_EQUALS_STR(item->me_file, path))
 			continue; /* Differing strings. */
 		/* Found it! */
 		*presult = item->me_mtim;
@@ -2978,7 +2974,7 @@ mtime_cache_rehash(void) {
 	if (mtime_cache.mc_list != empty_mtime_items) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = mtime_cache.mc_list) + (mtime_cache.mc_mask + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			struct mtime_entry *item;
 			dhash_t i, perturb;
 			/* Skip NULL entires. */
@@ -3031,13 +3027,7 @@ again:
 		}
 		if (MTIME_ENTRY_HASH(item) != hash)
 			continue; /* Non-matching hash */
-		if (DeeString_SIZE(item->me_file) !=
-		    DeeString_SIZE(path))
-			continue; /* Differing lengths. */
-		if (fs_bcmp(DeeString_STR(item->me_file),
-		            DeeString_STR(path),
-		            DeeString_SIZE(path) *
-		            sizeof(char)) != 0)
+		if (!DeeString_EQUALS_STR(item->me_file, path))
 			continue; /* Differing strings. */
 		/* The item already exists. (Can happen due to race conditions) */
 		goto done;

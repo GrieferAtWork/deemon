@@ -150,7 +150,7 @@ fs_pathdrive(DeeObject *__restrict path) {
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	/* TODO: Unicode support */
 	end = (drive_start = DeeString_STR(path)) + DeeString_SIZE(path);
-	for (; drive_start != end; ++drive_start) {
+	for (; drive_start < end; ++drive_start) {
 		size_t drive_length;
 		if (ISSEP(*drive_start))
 			break; /* Stop on the first slash. */
@@ -976,10 +976,10 @@ home_lookup_failed:
 		}
 		if (*iter == '{') {
 			name_start = ++iter;
-			while (*iter != '}' && iter != end)
+			while (*iter != '}' && iter < end)
 				++iter;
 			name_end = iter;
-			if (iter != end)
+			if (iter < end)
 				++iter;
 			flush_start = iter;
 		} else {
@@ -1049,10 +1049,10 @@ print_env:
 				goto err;
 		}
 		name_start = iter++;
-		while (*iter != '%' && iter != end)
+		while (*iter != '%' && iter < end)
 			++iter;
 		name_end = iter;
-		if (iter != end)
+		if (iter < end)
 			++iter;
 		flush_start = iter;
 		goto print_env;

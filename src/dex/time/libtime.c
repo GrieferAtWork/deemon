@@ -412,7 +412,7 @@ get_repr_name(uint8_t repr) {
 	char const *result = NULL;
 	/* Search for the last entry (which contants the longest name) */
 	for (iter = repr_desc;
-	     iter != COMPILER_ENDOF(repr_desc); ++iter) {
+	     iter < COMPILER_ENDOF(repr_desc); ++iter) {
 		if (iter->repr == repr)
 			result = iter->name;
 	}
@@ -425,7 +425,7 @@ get_repr_id(char const *__restrict name, size_t length) {
 	struct repr_name const *iter;
 	if (length < COMPILER_LENOF(repr_desc[0].name)) {
 		for (iter = repr_desc;
-		     iter != COMPILER_ENDOF(repr_desc); ++iter) {
+		     iter < COMPILER_ENDOF(repr_desc); ++iter) {
 			if (MEMCASEEQ(iter->name, name, length * sizeof(char))) {
 				result = iter->repr;
 				break;
@@ -475,7 +475,7 @@ time_as(DeeTimeObject *self,
 	len = DeeString_SIZE(name);
 	if (len < COMPILER_LENOF(repr_desc[0].name)) {
 		for (iter = repr_desc;
-		     iter != COMPILER_ENDOF(repr_desc); ++iter) {
+		     iter < COMPILER_ENDOF(repr_desc); ++iter) {
 			if (MEMCASEEQ(iter->name, str, len * sizeof(char)))
 				return time_asrepr(self, iter->repr);
 		}

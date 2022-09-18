@@ -4331,7 +4331,8 @@ do_setattr_this_c:
 				}
 
 				TARGET(ASM_CMP_SO, -2, +1) {
-					bool is_same = SECOND == FIRST;
+					bool is_same;
+					is_same = SECOND == FIRST;
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(is_same);
@@ -4340,7 +4341,8 @@ do_setattr_this_c:
 				}
 
 				TARGET(ASM_CMP_DO, -2, +1) {
-					bool is_diff = SECOND != FIRST;
+					bool is_diff;
+					is_diff = SECOND != FIRST;
 					POPREF();
 					Dee_Decref(TOP);
 					TOP = DeeBool_For(is_diff);
@@ -6905,7 +6907,8 @@ end_return:
 			ASSERT(code->co_exceptc != 0);
 			/* Execute finally handlers. */
 			current_except = code->co_exceptv + code->co_exceptc;
-			while (current_except-- != code->co_exceptv) {
+			while (current_except > code->co_exceptv) {
+				--current_except;
 				if (current_except->eh_flags & EXCEPTION_HANDLER_FFINALLY &&
 				    ip_addr >= current_except->eh_start &&
 				    ip_addr < current_except->eh_end) {
@@ -6990,7 +6993,8 @@ handle_except:
 				this_thread->t_except->ef_trace = DeeTraceback_New(this_thread);
 			current_exception = this_thread->t_except->ef_error;
 			current_except    = code->co_exceptv + code->co_exceptc;
-			while (current_except-- != code->co_exceptv) {
+			while (current_except > code->co_exceptv) {
+				--current_except;
 				if (!(ip_addr >= current_except->eh_start &&
 				    ip_addr < current_except->eh_end))
 					continue;

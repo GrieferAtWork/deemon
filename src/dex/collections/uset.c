@@ -99,7 +99,7 @@ usetiterator_next(USetIterator *__restrict self) {
 		if unlikely(item < set->s_elem)
 			goto set_has_changed;
 		/* Search for the next non-empty item. */
-		while (item != end && (!item->si_key || item->si_key == dummy))
+		while (item < end && (!item->si_key || item->si_key == dummy))
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS
@@ -1373,7 +1373,7 @@ urosetiterator_next(URoSetIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 		if (item >= end)
 			goto iter_exhausted;
-		while (item != end && !item->si_key)
+		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
 #ifdef CONFIG_NO_THREADS

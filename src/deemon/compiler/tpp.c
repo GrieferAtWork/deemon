@@ -229,9 +229,9 @@ INTERN WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void) {
 			/* Keyword has leading/terminating underscores.
 			 * >> Remove them and use that keyword instead! */
 			end = (begin = result->k_name) + result->k_size;
-			while (begin != end && *begin == '_')
+			while (begin < end && *begin == '_')
 				++begin;
-			while (end != begin && end[-1] == '_')
+			while (end > begin && end[-1] == '_')
 				--end;
 			/* NOTE: Don't create the keyword if it doesn't exist!
 			 *    >> Callers only use this function to unify attribute names & arguments! */
@@ -395,7 +395,7 @@ hashof_lower(void const *data, size_t size) {
 	hash_t result = 1;
 	unsigned char const *iter, *end;
 	end = (iter = (unsigned char const *)data) + size;
-	for (; iter != end; ++iter)
+	for (; iter < end; ++iter)
 		result = result * 263 + tolower(*iter);
 	return result;
 }
@@ -444,7 +444,7 @@ lowercase_keyword(char const *__restrict name,
 	{
 		char *iter, *end;
 		end = (iter = kwd_entry->k_name) + namelen;
-		for (; iter != end; ++iter)
+		for (; iter < end; ++iter)
 			*iter = tolower(*iter);
 	}
 	kwd_entry->k_name[namelen] = '\0';
@@ -557,8 +557,8 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 	if likely(me->e_message)
 		printob((DeeObject *)me->e_message);
 	if (main_loc) {
-		for (iter                   = &me->ce_locs;
-		     iter != main_loc; iter = iter->cl_prev) {
+		for (iter = &me->ce_locs; iter != main_loc;
+		     iter = iter->cl_prev) {
 			if (!iter->cl_file)
 				continue;
 			PRINT("\n");
@@ -681,7 +681,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		{
 			char *iter, *end;
 			end = (iter = DeeString_STR(path)) + DeeString_SIZE(path);
-			for (; iter != end; ++iter, ++dst) {
+			for (; iter < end; ++iter, ++dst) {
 				char ch = *iter;
 				if (ch == ALTSEP)
 					ch = SEP;
@@ -699,7 +699,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		Dee_Decref(path);
 
 		/* Add a separator after the library path (if there wasn't one to being with) */
-		if (dst != buffer->s_str && dst[-1] != SEP)
+		if (dst > buffer->s_str && dst[-1] != SEP)
 			*dst++ = SEP;
 
 		/* Now copy the include prefix. */

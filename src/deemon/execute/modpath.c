@@ -810,9 +810,9 @@ got_result_modulepath:
 		++name_start;
 #endif /* !CONFIG_HOST_WINDOWS */
 		/* Get rid of a file extension in the module name. */
-		while (name_end != name_start && name_end[-1] != '.')
+		while (name_end > name_start && name_end[-1] != '.')
 			--name_end;
-		while (name_end != name_start && name_end[-1] == '.')
+		while (name_end > name_start && name_end[-1] == '.')
 			--name_end;
 		if (name_end == name_start)
 			name_end = name + size;
@@ -989,7 +989,7 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 			name_end = name + size;
 #ifdef CONFIG_HOST_WINDOWS
 			name_start = name_end;
-			while (name_start != name && !ISSEP(name_start[-1]))
+			while (name_start > name && !ISSEP(name_start[-1]))
 				--name_start;
 #else /* CONFIG_HOST_WINDOWS */
 			name_start = (char *)memrchr(name, SEP, size);
@@ -999,9 +999,9 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 #endif /* !CONFIG_HOST_WINDOWS */
 
 			/* Get rid of a file extension in the module name. */
-			while (name_end != name_start && name_end[-1] != '.')
+			while (name_end > name_start && name_end[-1] != '.')
 				--name_end;
-			while (name_end != name_start && name_end[-1] == '.')
+			while (name_end > name_start && name_end[-1] == '.')
 				--name_end;
 			if (name_end == name_start)
 				name_end = name + size;
@@ -1374,7 +1374,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 				dst -= 3;
 				while (dst > buf && dst[-1] != SEP)
 					--dst;
-				if (dst != buf)
+				if (dst > buf)
 					--dst;
 				continue;
 			}
@@ -2441,7 +2441,7 @@ DeeModule_Import(DeeObject *__restrict module_name,
 			goto err;
 		end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
 		/* Find the end of the current path. */
-		while (begin != end && !ISSEP(end[-1]))
+		while (end > begin && !ISSEP(end[-1]))
 			--end;
 		result = DeeModule_OpenRelative(module_name, begin, (size_t)(end - begin), options, throw_error);
 	} else {
@@ -2719,7 +2719,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 			name_end = name + size;
 #ifdef CONFIG_HOST_WINDOWS
 			name_start = name_end;
-			while (name_start != name && !ISSEP(name_start[-1]))
+			while (name_start > name && !ISSEP(name_start[-1]))
 				--name_start;
 #else /* CONFIG_HOST_WINDOWS */
 			name_start = (char *)memrchr(name, SEP, size);
@@ -2729,9 +2729,9 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 #endif /* !CONFIG_HOST_WINDOWS */
 
 			/* Get rid of a file extension in the module name. */
-			while (name_end != name_start && name_end[-1] != '.')
+			while (name_end > name_start && name_end[-1] != '.')
 				--name_end;
-			while (name_end != name_start && name_end[-1] == '.')
+			while (name_end > name_start && name_end[-1] == '.')
 				--name_end;
 			if (name_end == name_start)
 				name_end = name + size;

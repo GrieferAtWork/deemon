@@ -1030,7 +1030,7 @@ do_xdecref_3:
 		DREF struct ast **iter, **end;
 		end = (iter = self->a_multiple.m_astv) +
 		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter)
+		for (; iter < end; ++iter)
 			ast_decref(*iter);
 		Dee_Free(self->a_multiple.m_astv);
 	}	break;
@@ -1040,7 +1040,7 @@ do_xdecref_3:
 		ast_decref(self->a_try.t_guard);
 		end = (iter = self->a_try.t_catchv) +
 		      self->a_try.t_catchc;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			ast_xdecref(iter->ce_mask);
 			ast_decref(iter->ce_code);
 		}
@@ -1091,14 +1091,14 @@ do_xdecref_3:
 				ast_decwrite(op->ao_expr);
 			}
 		}
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			ASSERT(iter->ao_type);
 			ASSERT(iter->ao_expr);
 			TPPString_Decref(iter->ao_type);
 			ast_decref(iter->ao_expr);
 		}
 		end += self->a_assembly.as_num_l;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			ASSERT(!iter->ao_type);
 			ASSERT(iter->ao_label);
 			ASSERT(iter->ao_label->tl_goto);
@@ -1169,7 +1169,7 @@ do_xvisit_3:
 		DREF struct ast **iter, **end;
 		end = (iter = self->a_multiple.m_astv) +
 		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter)
+		for (; iter < end; ++iter)
 			ast_visit(*iter);
 	}	break;
 
@@ -1178,7 +1178,7 @@ do_xvisit_3:
 		ast_visit(self->a_try.t_guard);
 		end = (iter = self->a_try.t_catchv) +
 		      self->a_try.t_catchc;
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (iter->ce_mask)
 				ast_visit(iter->ce_mask);
 			ast_visit(iter->ce_code);
@@ -1201,7 +1201,7 @@ do_xvisit_3:
 		end = (iter = self->a_assembly.as_opv) +
 		      (self->a_assembly.as_num_o +
 		       self->a_assembly.as_num_i);
-		for (; iter != end; ++iter)
+		for (; iter < end; ++iter)
 			ast_visit(iter->ao_expr);
 	}	break;
 
