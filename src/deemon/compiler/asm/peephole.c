@@ -91,8 +91,8 @@ next_instr_sp(instruction_t *__restrict iter, uint16_t *__restrict pstacksz) {
 
 LOCAL struct asm_sym *DCALL
 symbol_at(code_addr_t addr) {
-	struct asm_sym *iter = current_assembler.a_syms;
-	for (; iter; iter = iter->as_next) {
+	struct asm_sym *iter;
+	SLIST_FOREACH (iter, &current_assembler.a_syms, as_link) {
 		if (iter->as_addr == addr)
 			return iter;
 	}
@@ -221,8 +221,8 @@ do_print:
 /* Use symbols to validate our expected stack-depth. */
 PRIVATE void DCALL
 validate_stack_depth(code_addr_t ip, uint16_t stacksz) {
-	struct asm_sym *iter = current_assembler.a_syms;
-	for (; iter; iter = iter->as_next) {
+	struct asm_sym *iter;
+	SLIST_FOREACH (iter, &current_assembler.a_syms, as_link) {
 		if (!ASM_SYM_DEFINED(iter))
 			continue;
 		if (iter->as_sect != 0)
@@ -416,7 +416,6 @@ switch_on_opcode:
 }
 
 
-INTDEF bool DCALL asm_delunused_symbols(void);
 INTERN WUNUSED int DCALL asm_peephole(void) {
 #ifdef CONFIG_LOG_PEEPHOLE_OPTS
 #ifdef CONFIG_LOG_PEEPHOLE_SOURCE
@@ -442,6 +441,7 @@ INTERN WUNUSED int DCALL asm_peephole(void) {
 	bool should_delete_unused_symbols = false;
 	if (!(current_assembler.a_flag & ASM_FPEEPHOLE))
 		goto done_raw;
+
 	/* In order to perform peephole optimizations, we must first know
 	 * in which places we must not merge operators, those places being
 	 * locations where symbols have been defined as targets for jumps,
@@ -453,7 +453,7 @@ INTERN WUNUSED int DCALL asm_peephole(void) {
 	 *       Repeatedly doing that and peephole optimization, we should
 	 *       be able to delete any unused code so long as it doesn't have
 	 *       cross-references. */
-	result = asm_delunused_symbols();
+	result = asm_delunusedsyms();
 
 	/* Allocate a bitset that describes which
 	 * bytes of code should not be optimized. */
@@ -464,8 +464,8 @@ INTERN WUNUSED int DCALL asm_peephole(void) {
 	if unlikely(!protected_code)
 		goto done_raw;
 	{
-		struct asm_sym *sym = current_assembler.a_syms;
-		for (; sym; sym = sym->as_next) {
+		struct asm_sym *sym;
+		SLIST_FOREACH (sym, &current_assembler.a_syms, as_link) {
 			code_addr_t symaddr = sym->as_addr;
 			ASSERT(symaddr <= (code_size_t)(sc_main.sec_iter - sc_main.sec_begin));
 			protected_code[symaddr / 8] |= 1 << (symaddr % 8);
@@ -877,14 +877,14 @@ do_noreturn_optimization:
 			/* Search for the next defined symbol, continue
 			 * there, and delete all intermittent instructions. */
 			struct asm_sym *nearest_symbol = NULL;
+			struct asm_sym *sym_iter;
 			code_addr_t current_symbol_addr;
 			code_addr_t nearest_symbol_addr = (code_addr_t)-1;
 			code_size_t text_size;
 			instruction_t *new_ip;
 			iter                     = DeeAsm_NextInstrSp(iter, &stacksz);
 			current_symbol_addr      = (code_addr_t)(iter - sc_main.sec_begin);
-			struct asm_sym *sym_iter = current_assembler.a_syms;
-			for (; sym_iter; sym_iter = sym_iter->as_next) {
+			SLIST_FOREACH (sym_iter, &current_assembler.a_syms, as_link) {
 				if (!ASM_SYM_DEFINED(sym_iter))
 					continue;
 				if (!sym_iter->as_used)
@@ -2468,22 +2468,6 @@ done_raw:
 err:
 	Dee_Free(protected_code);
 	return -1;
-}
-
-INTERN bool DCALL asm_delunusedsyms(void) {
-	bool result = false;
-	struct asm_sym **piter, *iter;
-	piter = &current_assembler.a_syms;
-	while ((iter = *piter) != NULL) {
-		if (iter->as_used == 0) {
-			result = true;
-			*piter = iter->as_next;
-			DeeSlab_FREE(iter);
-			continue;
-		}
-		piter = &iter->as_next;
-	}
-	return result;
 }
 
 DECL_END

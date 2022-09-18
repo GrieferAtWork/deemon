@@ -445,7 +445,6 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 }
 
 INTERN void DCALL assembler_fini(void) {
-	struct asm_sym *iter;
 	uint16_t i;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	userassembler_fini();
@@ -460,12 +459,10 @@ INTERN void DCALL assembler_fini(void) {
 	}
 
 	/* Free up symbols. */
-	iter = current_assembler.a_syms;
-	while (iter) {
-		struct asm_sym *next;
-		next = iter->as_next;
-		DeeSlab_FREE(iter);
-		iter = next;
+	{
+		struct asm_sym *iter, *next;
+		SLIST_FOREACH_SAFE(iter, &current_assembler.a_syms, as_link, next)
+			DeeSlab_FREE(iter);
 	}
 
 	/* Free up constant variables. */
@@ -500,19 +497,15 @@ INTERN void DCALL assembler_fini(void) {
 }
 
 
-INTERN bool DCALL asm_delunused_symbols(void) {
+INTERN bool DCALL asm_delunusedsyms(void) {
 	bool result = false;
-	struct asm_sym **piter, *iter;
-	piter = &current_assembler.a_syms;
-	while ((iter = *piter) != NULL) {
-		if (!iter->as_used) {
-			/* Unused symbol. */
-			*piter = iter->as_next;
-			DeeSlab_FREE(iter); /* Free this symbol. */
-			continue;
-		}
-		piter = &iter->as_next;
-	}
+	struct asm_sym *iter;
+	SLIST_REMOVEALL(&current_assembler.a_syms, &iter,
+	                struct asm_sym, as_link,
+	                iter->as_used == 0, {
+		DeeSlab_FREE(iter);
+		result = true;
+	});
 	return result;
 }
 
@@ -532,7 +525,6 @@ asm_newsym_dbg(char const *file, int line)
 #endif /* !NDEBUG */
 	if unlikely(!result)
 		goto done;
-	result->as_next = current_assembler.a_syms;
 	result->as_sect = SECTION_INVALID;
 #ifndef NDEBUG
 	result->as_addr = 0xcccccccc;
@@ -543,12 +535,12 @@ asm_newsym_dbg(char const *file, int line)
 	result->as_uhnxt = NULL;
 	result->as_uprev = NULL;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	current_assembler.a_syms = result;
-	result->as_used          = 0; /* Unused by default. */
+	result->as_used = 0; /* Unused by default. */
 #ifndef NDEBUG
 	result->as_file = file;
 	result->as_line = line;
 #endif /* !NDEBUG */
+	SLIST_INSERT(&current_assembler.a_syms, result, as_link);
 done:
 	return result;
 }
@@ -752,6 +744,7 @@ common_adj16_delop:
 			             iter + 1,
 			             (size_t)(end - iter),
 			             sizeof(instruction_t));
+
 			/* Adjust the addresses of all relocations above. */
 			while (rel_begin < rel_end && rel_begin->ar_addr <= deladdr)
 				++rel_begin;
@@ -759,15 +752,16 @@ common_adj16_delop:
 				ASSERT(rel_iter->ar_addr > deladdr);
 				--rel_iter->ar_addr; /* Adjust relocation address. */
 			}
+
 			/* Must also adjust the declaration addresses of all symbols. */
-			for (sym_iter = current_assembler.a_syms;
-			     sym_iter; sym_iter = sym_iter->as_next) {
+			SLIST_FOREACH (sym_iter, &current_assembler.a_syms, as_link) {
 				/* NOTE: All symbols should be defined as part of the first section,
 				 *       but some unused symbols may still be hanging around... */
 				if (sym_iter->as_sect == 0 &&
 				    sym_iter->as_addr > deladdr)
 					--sym_iter->as_addr; /* Adjust the address of all symbols _ABOVE_ the deleted opcode. */
 			}
+
 			/* NOTE: We don't need to worry about adjusting exception handlers as
 			 *       they're using assembly symbols, meaning that we've already
 			 *       adjusted for them by updating symbol addresses. */
@@ -1069,13 +1063,14 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 	}
 	/* Fix symbol addresses by moving them into the `sc_main'. */
 	{
-		struct asm_sym *iter = current_assembler.a_syms;
-		for (; iter; iter = iter->as_next) {
-			if (!ASM_SYM_DEFINED(iter))
+		struct asm_sym *sym_iter;
+		SLIST_FOREACH (sym_iter, &current_assembler.a_syms, as_link) {
+			if (!ASM_SYM_DEFINED(sym_iter))
 				continue;
+
 			/* Adjust the symbol to point into the main section. */
-			iter->as_addr += code_offsets[iter->as_sect];
-			iter->as_sect = 0;
+			sym_iter->as_addr += code_offsets[sym_iter->as_sect];
+			sym_iter->as_sect = 0;
 		}
 	}
 
@@ -3304,8 +3299,8 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	{
-		struct asm_sym *as_iter = current_assembler.a_syms;
-		for (; as_iter; as_iter = as_iter->as_next) {
+		struct asm_sym *as_iter;
+		SLIST_FOREACH (as_iter, &current_assembler.a_syms, as_link) {
 			if (ASM_SYM_DEFINED(as_iter))
 				continue; /* Skip symbols that are defined. */
 			if (!as_iter->as_used)
@@ -3411,7 +3406,7 @@ do_savearg:
 		 * cycle below, because peephole optimization will automatically
 		 * remove unused symbols if it manages to get rid of some symbol. */
 		if (current_assembler.a_flag & ASM_FPEEPHOLE)
-			asm_delunused_symbols();
+			asm_delunusedsyms();
 	}
 
 	/* Keep shrinking `jmp', deleting DELOP instructions

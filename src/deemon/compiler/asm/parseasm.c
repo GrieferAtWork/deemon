@@ -544,12 +544,11 @@ yield_done:
 			if (name->k_size == 1 && name->k_name[0] == '.') {
 				/* Special symbol: The current text address. */
 				result->ie_val = 0;
-				if (current_assembler.a_syms &&
-				    current_assembler.a_syms->as_sect ==
-				    (current_assembler.a_curr - current_assembler.a_sect) &&
-				    current_assembler.a_syms->as_addr == asm_ip())
-					result->ie_sym = current_assembler.a_syms;
-				else {
+				if (!SLIST_EMPTY(&current_assembler.a_syms) &&
+				    (SLIST_FIRST(&current_assembler.a_syms)->as_sect == (current_assembler.a_curr - current_assembler.a_sect)) &&
+				    (SLIST_FIRST(&current_assembler.a_syms)->as_addr == asm_ip())) {
+					result->ie_sym = SLIST_FIRST(&current_assembler.a_syms);
+				} else {
 					result->ie_sym = asm_newsym();
 					asm_defsym(result->ie_sym);
 				}

@@ -24,6 +24,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include <hybrid/byteorder.h>
+#include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
 #include <stdint.h>
@@ -100,24 +101,25 @@ struct asm_exc;
 
 struct string_object;
 struct module_object;
+SLIST_HEAD(asm_sym_slist, asm_sym);
 
 struct asm_sym {
-	struct asm_sym    *as_next;  /* [0..1][owned] Next symbol. */
-	code_addr_t        as_addr;  /* [valid_if(as_sect != SECTION_INVALID)] Address at which this symbol is defined. */
+	SLIST_ENTRY(asm_sym) as_link;  /* [0..1][owned] Next symbol. */
+	code_addr_t          as_addr;  /* [valid_if(as_sect != SECTION_INVALID)] Address at which this symbol is defined. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	struct TPPKeyword *as_uname; /* [0..1] Symbol name. */
-	struct asm_sym    *as_uhnxt; /* [0..1] Next symbol with the same hash. */
-	struct asm_sym    *as_uprev; /* [0..1] Previous iteration of this symbol (used by symbols that can be re-defined; aka. indexed symbols) */
+	struct TPPKeyword   *as_uname; /* [0..1] Symbol name. */
+	struct asm_sym      *as_uhnxt; /* [0..1] Next symbol with the same hash. */
+	struct asm_sym      *as_uprev; /* [0..1] Previous iteration of this symbol (used by symbols that can be re-defined; aka. indexed symbols) */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 #define ASM_SYM_STCK_INVALID 0xffff
-	uint16_t           as_stck;  /* [valid_if(!= ASM_SYM_STCK_INVALID)]
-	                              * The execution stack depth where this symbol is defined. */
-	uint16_t           as_sect;  /* Section index or `SECTION_INVALID' when not defined. */
-	uint16_t           as_hand;  /* The exception handler depth active where the symbol is defined. */
-	uint16_t           as_used;  /* The number of times that this symbols is used in relocations. */
+	uint16_t             as_stck;  /* [valid_if(!= ASM_SYM_STCK_INVALID)]
+	                                * The execution stack depth where this symbol is defined. */
+	uint16_t             as_sect;  /* Section index or `SECTION_INVALID' when not defined. */
+	uint16_t             as_hand;  /* The exception handler depth active where the symbol is defined. */
+	uint16_t             as_used;  /* The number of times that this symbols is used in relocations. */
 #ifndef NDEBUG
-	char const        *as_file;  /* The file where this symbol was allocated. */
-	int                as_line;  /* The line where this symbol was allocated. */
+	char const          *as_file;  /* The file where this symbol was allocated. */
+	int                  as_line;  /* The line where this symbol was allocated. */
 #endif /* !NDEBUG */
 };
 #define ASM_SYM_DEFINED(x) ((x)->as_sect != SECTION_INVALID)
@@ -659,7 +661,7 @@ struct asm_symbol_static {
 struct assembler {
 	struct asm_sec         a_sect[SECTION_COUNT]; /* Assembly sections. */
 	struct asm_sec        *a_curr;     /* [1..1][in(a_sect)] The current target section. */
-	struct asm_sym        *a_syms;     /* [0..1][owned] Chain of assembly symbols allocated by the assembler. */
+	struct asm_sym_slist   a_syms;     /* [0..1][owned] Chain of assembly symbols allocated by the assembler. */
 	struct asm_sym        *a_finsym;   /* [0..1] The address of the current, top finally handler. */
 	uint8_t               *a_localuse; /* [0..((a_localc+7)/8)|ALLOC(a_locala)][if(!ASM_FREUSELOC, == NULL)][owned] Bitset of local variables that are currently in use. */
 	DREF DeeObject       **a_constv;   /* [1..1][0..a_constc|ALLOC(a_consta)][owned] Vector of constant variables.
