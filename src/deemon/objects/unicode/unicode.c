@@ -490,19 +490,23 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	size_t i, length;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = ((String *)self)->s_data;
+
 	/* Simple case: No UTF data, or 1-byte string means that the string's
 	 *              1-byte variant has no special encoding (aka. is LATIN-1). */
 	if (!utf || utf->u_width == STRING_WIDTH_1BYTE)
 		return (uint8_t *)DeeString_STR(self);
+
 	/* The single-byte variant of the string was already allocated.
 	 * Check how that variant's INV-byte flag compares to the caller's
 	 * allow_invalid option. */
 	if (!allow_invalid && (utf->u_flags & STRING_UTF_FINVBYT))
 		goto err_invalid_string;
+
 	/* Check for a cached single-byte variant. */
 	result = (uint8_t *)utf->u_data[STRING_WIDTH_1BYTE];
 	if (result)
 		return result;
+
 	/* Since strings are allowed to use a wider default width than they
 	 * may actually need, `self' may still only contain characters that
 	 * fit into the 00-FF unicode range, so regardless of `allow_invalid'
@@ -519,6 +523,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		return (uint8_t *)DeeString_STR(self);
 	}
+
 	/* Try to construct the single-byte variant. */
 	result = (uint8_t *)Dee_Malloc(sizeof(size_t) +
 	                               (length + 1) * sizeof(uint8_t));
@@ -558,9 +563,11 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 
 	default: __builtin_unreachable();
 	}
+
 	/* All right. - We've managed to construct the single-byte variant. */
 	if (contains_invalid)
 		ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FINVBYT);
+
 	/* Deal with race conditions. */
 	if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_1BYTE], NULL, (size_t *)result)) {
 		Dee_Free((size_t *)result - 1);

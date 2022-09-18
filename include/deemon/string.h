@@ -439,7 +439,11 @@ struct Dee_string_object {
 	                        s_str); /* [const][s_len] The single-byte string text.
 	                                 * This string is either encoded as UTF-8, when the string's character
 	                                 * width isn't 1 byte, or encoded as LATIN-1, if all characters fit
-	                                 * within the unicode range U+0000 - U+00FF */
+	                                 * within the unicode range U+0000 - U+00FF
+	                                 * Which of these 2 is the case can be determined with:
+	                                 * - DeeString_STR_ISUTF8
+	                                 * - DeeString_STR_ISLATIN1
+	                                 */
 };
 
 #define Dee_DEFINE_STRING(name, str)                              \
@@ -562,6 +566,22 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_IsEmpty(x) (((DeeStringObject *)Dee_REQUIRES_OBJECT(x))->s_len == 0)
 
 
+#define DeeString_EQUALS_ASCII(x, ascii_str)            \
+	(DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
+	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+#define DeeString_STARTSWITH_ASCII(x, ascii_str)        \
+	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) && \
+	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+#define DeeString_ENDSWITH_ASCII(x, ascii_str)                               \
+	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                      \
+	 bcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
+	      ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
+
+/* FIXME: These macros need to check for `DeeString_STR_ISUTF8()':
+ * >> local a = string.fromseq({ 0x100 });
+ * >> local b = string.fromseq({ 0xc4, 0x80 });
+ * >> assert a.__str_bytes__ == b.__str_bytes__; // Same str-bytes, but different strings!
+ */
 #define DeeString_EQUALS_STR(lhs, rhs)             \
 	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) && \
 	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs),  \
@@ -575,17 +595,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	 bcmp(DeeString_END(lhs) - DeeString_SIZE(rhs), \
 	      DeeString_STR(rhs), DeeString_SIZE(rhs) * sizeof(char)) == 0)
 
-#define DeeString_EQUALS_ASCII(x, ascii_str)            \
-	(DeeString_SIZE(x) == COMPILER_STRLEN(ascii_str) && \
-	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
-#define DeeString_STARTSWITH_ASCII(x, ascii_str)        \
-	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) && \
-	 bcmp(DeeString_STR(x), ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
-#define DeeString_ENDSWITH_ASCII(x, ascii_str)                               \
-	(DeeString_SIZE(x) >= COMPILER_STRLEN(ascii_str) &&                      \
-	 bcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
-	      ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
-
+/* FIXME: These macros don't account for `DeeString_STR_ISUTF8()' */
 #define DeeString_EQUALS_BUF(lhs, rhs_base, rhs_size) \
 	(DeeString_SIZE(lhs) == (rhs_size) &&             \
 	 bcmp(DeeString_STR(lhs), rhs_base,               \

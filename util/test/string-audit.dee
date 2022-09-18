@@ -1,0 +1,107 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+if (!hasattr(string, "__str_bytes__"))
+	return; /* Auditing functions weren't compiled in */
+
+
+local s = string.fromseq({ 0x7f });
+assert s.__str_bytes__ == "\x7f".bytes();
+assert s.__wstr_bytes__ == "\x7f".bytes();
+assert s.__str_bytes_islatin1__;
+assert !s.__str_bytes_isutf8__;
+assert s.__str_width__ == 1;
+assert s.__wstr_bytes__ == "\x7f".bytes();
+assert s.__utf8_bytes__ == "\x7f".bytes();
+assert s.__utf16_bytes__ in ["\x7f\x00".bytes(), "\x00\x7f".bytes()];
+assert s.__utf32_bytes__ in ["\x7f\x00\x00\x00".bytes(), "\x00\x00\x00\x7f".bytes()];
+assert s.__1byte_bytes__ == "\x7f".bytes();
+assert s.__2byte_bytes__ in ["\x7f\x00".bytes(), "\x00\x7f".bytes()];
+assert s.__4byte_bytes__ in ["\x7f\x00\x00\x00".bytes(), "\x00\x00\x00\x7f".bytes()];
+assert s.isascii();
+
+local s = string.fromseq({ 0xff });
+assert s.__str_bytes__ == "\xff".bytes();
+assert s.__wstr_bytes__ == "\xff".bytes();
+assert s.__str_bytes_islatin1__;
+assert !s.__str_bytes_isutf8__;
+assert s.__str_width__ == 1;
+assert s.__wstr_bytes__ == "\xff".bytes();
+assert s.__utf8_bytes__ == "\xc3\xbf".bytes();
+assert s.__utf16_bytes__ in ["\xff\x00".bytes(), "\x00\xff".bytes()];
+assert s.__utf32_bytes__ in ["\xff\x00\x00\x00".bytes(), "\x00\x00\x00\xff".bytes()];
+assert s.__1byte_bytes__ == "\xff".bytes();
+assert s.__2byte_bytes__ in ["\xff\x00".bytes(), "\x00\xff".bytes()];
+assert s.__4byte_bytes__ in ["\xff\0\0\0".bytes(), "\0\0\0\xff".bytes()];
+assert !s.isascii();
+
+local s = string.fromseq({ 0x100 });
+assert s.__str_bytes__ == "\xc4\x80".bytes();
+assert s.__wstr_bytes__ in ["\x00\x01".bytes(), "\x01\x00".bytes()];
+assert !s.__str_bytes_islatin1__;
+assert s.__str_bytes_isutf8__;
+assert s.__str_width__ == 2;
+assert s.__wstr_bytes__ in ["\1\0".bytes(), "\0\1".bytes()];
+assert s.__utf8_bytes__ == "\xc4\x80".bytes();
+assert s.__utf16_bytes__ in ["\1\0".bytes(), "\0\1".bytes()];
+assert s.__utf32_bytes__ in ["\0\1\0\0".bytes(), "\0\0\1\0".bytes()];
+assert (try s.__1byte_bytes__ catch (e...) e) is UnicodeEncodeError;
+assert s.__2byte_bytes__ in ["\1\0".bytes(), "\0\1".bytes()];
+assert s.__4byte_bytes__ in ["\0\1\0\0".bytes(), "\0\0\1\0".bytes()];
+assert !s.isascii();
+
+local s = string.fromseq({ 0xC4, 0x80 });
+assert s.__str_bytes__ == "\xc4\x80".bytes(); /* !CAUTION!: Same str_bytes as U+0100 */
+assert s.__wstr_bytes__ == "\xc4\x80".bytes();
+assert s.__str_bytes_islatin1__;
+assert !s.__str_bytes_isutf8__;
+assert s.__str_width__ == 1;
+assert s.__wstr_bytes__ == "\xc4\x80".bytes();
+assert s.__utf8_bytes__ == "\xc3\x84\xc2\x80".bytes();
+assert s.__utf16_bytes__ in ["\xc4\0\x80\0".bytes(), "\0\xc4\0\x80".bytes()];
+assert s.__utf32_bytes__ in ["\xc4\0\0\0\x80\0\0\0".bytes(), "\0\0\0\xc4\0\0\0\x80".bytes()];
+assert s.__1byte_bytes__ == "\xc4\x80".bytes();
+assert s.__2byte_bytes__ in ["\xc4\0\x80\0".bytes(), "\0\xc4\0\x80".bytes()];
+assert s.__4byte_bytes__ in ["\xc4\0\0\0\x80\0\0\0".bytes(), "\0\0\0\xc4\0\0\0\x80".bytes()];
+assert !s.isascii();
+
+/* Deemon does actually allow you to create the (theoretical) character U+FFFFFFFF */
+local s = string.fromseq({ 0xffffffff });
+assert s == "\Uffffffff";
+assert s.__str_bytes__ == "\xfe\x83\xbf\xbf\xbf\xbf\xbf".bytes();
+assert s.__wstr_bytes__ == "\xff\xff\xff\xff".bytes();
+assert !s.__str_bytes_islatin1__;
+assert s.__str_bytes_isutf8__;
+assert s.__str_width__ == 4;
+assert s.__wstr_bytes__ == "\xff\xff\xff\xff".bytes();
+assert s.__utf8_bytes__ == "\xfe\x83\xbf\xbf\xbf\xbf\xbf".bytes();
+assert (try s.__utf16_bytes__ catch (e...) e) is UnicodeEncodeError;
+assert s.__utf32_bytes__ == "\xff\xff\xff\xff".bytes();
+assert (try s.__1byte_bytes__ catch (e...) e) is UnicodeEncodeError;
+assert (try s.__2byte_bytes__ catch (e...) e) is UnicodeEncodeError;
+assert s.__4byte_bytes__ == "\xff\xff\xff\xff".bytes();
+assert !s.isascii();
+
+/* ... but that's where the limit is; characters beyond that point can't be represented */
+assert (try string.fromseq({ 0xffffffff + 1 }) catch (e...) e) is IntegerOverflow;
+assert (try string.fromseq({ -1 }) catch (e...) e) is IntegerOverflow;

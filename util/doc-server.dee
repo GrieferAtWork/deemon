@@ -672,8 +672,8 @@ function printTextSegmentElement(fp: File, t: Object) {
 	}
 	if (t is doctext.ArgumentReference) {
 		/* TODO: Highlight the same argument everywhere when hovering over one of them. */
-		fp << "<code>";
-		   << escapeSpecialHtmlCharacters(t.name);
+		fp << "<code>"
+		   << escapeSpecialHtmlCharacters(t.name)
 		   << "</code>";
 		return;
 	}

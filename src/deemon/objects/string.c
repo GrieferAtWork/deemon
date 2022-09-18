@@ -1510,7 +1510,7 @@ err_empty:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_sizeof(String *self) {
+string_sizeof(String *__restrict self) {
 	size_t result;
 	struct string_utf *utf;
 	result = offsetof(String, s_str);
@@ -1535,6 +1535,118 @@ string_sizeof(String *self) {
 	}
 	return DeeInt_NewSize(result);
 }
+
+
+/* Expose auditing internals for `deemon.string' */
+#undef CONFIG_HAVE_STRING_AUDITING_INTERNALS
+#if 1
+#define CONFIG_HAVE_STRING_AUDITING_INTERNALS
+#endif
+
+#ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_str_bytes(String *__restrict self) {
+	return DeeBytes_NewView((DeeObject *)self,
+	                        DeeString_STR(self),
+	                        DeeString_SIZE(self) * sizeof(char),
+	                        Dee_BUFFER_FREADONLY);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_str_bytes_isutf8(String *__restrict self) {
+	return_bool(DeeString_STR_ISUTF8(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_str_bytes_islatin1(String *__restrict self) {
+	return_bool(DeeString_STR_ISLATIN1(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_str_width(String *__restrict self) {
+	int width   = DeeString_WIDTH(self);
+	size_t size = STRING_SIZEOF_WIDTH(width);
+	return DeeInt_NewSize(size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_wstr_bytes(String *__restrict self) {
+	return DeeBytes_NewView((DeeObject *)self,
+	                        DeeString_WSTR(self),
+	                        DeeString_WSIZ(self),
+	                        Dee_BUFFER_FREADONLY);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_utf8_bytes(String *__restrict self) {
+	char *utf8 = DeeString_AsUtf8((DeeObject *)self);
+	if unlikely(!utf8)
+		goto err;
+	return DeeBytes_NewView((DeeObject *)self,
+	                        utf8, WSTR_LENGTH(utf8),
+	                        Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_utf16_bytes(String *__restrict self) {
+	uint16_t *utf16 = DeeString_AsUtf16((DeeObject *)self, STRING_ERROR_FSTRICT);
+	if unlikely(!utf16)
+		goto err;
+	return DeeBytes_NewView((DeeObject *)self,
+	                        utf16, WSTR_LENGTH(utf16) << 1,
+	                        Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_utf32_bytes(String *__restrict self) {
+	uint32_t *utf32 = DeeString_AsUtf32((DeeObject *)self);
+	if unlikely(!utf32)
+		goto err;
+	return DeeBytes_NewView((DeeObject *)self,
+	                        utf32, WSTR_LENGTH(utf32) << 2,
+	                        Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_1byte_bytes(String *__restrict self) {
+	uint8_t *b1;
+	if (self->s_data && self->s_data->u_width != Dee_STRING_WIDTH_1BYTE)
+		goto err_too_large;
+	b1 = DeeString_As1Byte((DeeObject *)self);
+	return DeeBytes_NewView((DeeObject *)self,
+	                        b1, WSTR_LENGTH(b1),
+	                        Dee_BUFFER_FREADONLY);
+err_too_large:
+	DeeError_Throwf(&DeeError_UnicodeEncodeError,
+	                "String %r contains ordinals greater than U+00FF",
+	                self);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_audit_2byte_bytes(String *__restrict self) {
+	uint16_t *b2;
+	if (self->s_data && self->s_data->u_width > Dee_STRING_WIDTH_2BYTE)
+		goto err_too_large;
+	b2 = DeeString_As2Byte((DeeObject *)self);
+	return DeeBytes_NewView((DeeObject *)self,
+	                        b2, WSTR_LENGTH(b2) << 1,
+	                        Dee_BUFFER_FREADONLY);
+err_too_large:
+	DeeError_Throwf(&DeeError_UnicodeEncodeError,
+	                "String %r contains ordinals greater than U+FFFF",
+	                self);
+	return NULL;
+}
+
+#define string_audit_4byte_bytes string_audit_utf32_bytes
+#endif /* CONFIG_HAVE_STRING_AUDITING_INTERNALS */
 
 
 PRIVATE struct type_getset tpconst string_getsets[] = {
@@ -1564,6 +1676,57 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	{ STR___sizeof__,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeof, NULL, NULL,
 	  DOC("->?Dint") },
+
+#ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
+	{ "__str_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "Internal function to view the bytes of ${DeeString_STR()}") },
+	{ "__str_bytes_isutf8__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes_isutf8, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Value of ${DeeString_STR_ISUTF8()}") },
+	{ "__str_bytes_islatin1__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes_islatin1, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Value of ${DeeString_STR_ISLATIN1()}") },
+	{ "__str_width__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_width, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}") },
+	{ "__wstr_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_wstr_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "Internal function to view the bytes of ${DeeString_WSTR()}") },
+	{ "__utf8_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf8_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "Internal function to view the bytes of ${DeeString_AsUtf8()}") },
+	{ "__utf16_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf16_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals that can't be encoded as utf-16\n"
+	      "Internal function to view the bytes of ${DeeString_AsUtf16()}") },
+	{ "__utf32_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf32_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "Internal function to view the bytes of ${DeeString_AsUtf32()}") },
+	{ "__1byte_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_1byte_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xff\n"
+	      "Internal function to view the bytes of ${DeeString_As1Byte()}") },
+	{ "__2byte_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_2byte_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xffff\n"
+	      "Internal function to view the bytes of ${DeeString_As2Byte()}") },
+	{ "__4byte_bytes__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_4byte_bytes, NULL, NULL,
+	  DOC("->?DBytes\n"
+	      "Internal function to view the bytes of ${DeeString_As4Byte()}") },
+#endif /* CONFIG_HAVE_STRING_AUDITING_INTERNALS */
+
 	{ NULL }
 };
 
