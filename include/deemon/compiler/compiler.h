@@ -35,40 +35,45 @@
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
 
+#include <hybrid/sequence/list.h>
+
 #include <stdint.h>
 
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_compiler_object  compiler_object
-#define Dee_compiler_options compiler_options
-#define Dee_compiler_items   compiler_items
+#define Dee_compiler_item_object      compiler_item_object
+#define Dee_compiler_item_object_list compiler_item_object_list
+#define Dee_compiler_wrapper_object   compiler_wrapper_object
+#define Dee_compiler_object           compiler_object
+#define Dee_compiler_options          compiler_options
+#define Dee_compiler_items            compiler_items
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_compiler_object DeeCompilerObject;
 struct Dee_compiler_options;
 
 #ifdef CONFIG_BUILDING_DEEMON
-#define Dee_COMPILER_ITEM_OBJECT_HEAD(T)                                                                                          \
-	Dee_OBJECT_HEAD                                                                                                               \
-	DREF DeeCompilerObject *ci_compiler; /* [1..1][const] The associated compiler. */                                             \
-	DeeCompilerItemObject **ci_pself;    /* [1..1][== self][1..1][lock(co_compiler->cp_item_lock)] Compiler item self-pointer. */ \
-	DeeCompilerItemObject  *ci_next;     /* [0..1][lock(co_compiler->cp_item_lock)] Next compiler item. */                        \
-	T                      *ci_value;    /* [0..1][lock(DeeCompiler_Lock)] Pointer to the associated object.                      \
-	                                      * What exactly is pointed to depends on the compiler item type.                         \
-	                                      * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type',                    \
-	                                      *       this field is [DREF][1..1][const] */
+#define Dee_COMPILER_ITEM_OBJECT_HEAD(T)                                                                                    \
+	Dee_OBJECT_HEAD                                                                                                         \
+	DREF DeeCompilerObject              *ci_compiler; /* [1..1][const] The associated compiler. */                          \
+	LIST_ENTRY(Dee_compiler_item_object) ci_link;     /* [1..1][lock(co_compiler->cp_item_lock)] Compiler item link. */     \
+	T                                   *ci_value;    /* [0..1][lock(DeeCompiler_Lock)] Pointer to the associated object.   \
+	                                                   * What exactly is pointed to depends on the compiler item type.      \
+	                                                   * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type', \
+	                                                   *       this field is [DREF][1..1][const] */
 
-typedef struct compiler_item_object DeeCompilerItemObject;
-typedef struct compiler_wrapper_object DeeCompilerWrapperObject;
-struct compiler_item_object {
+typedef struct Dee_compiler_item_object DeeCompilerItemObject;
+typedef struct Dee_compiler_wrapper_object DeeCompilerWrapperObject;
+struct Dee_compiler_item_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(void)
 };
-struct compiler_wrapper_object {
+struct Dee_compiler_wrapper_object {
 	Dee_OBJECT_HEAD
 	DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
 };
 #define Dee_COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
+
 INTDEF DeeTypeObject DeeCompilerItem_Type;
 INTDEF DeeTypeObject DeeCompilerObjItem_Type;
 INTDEF DeeTypeObject DeeCompilerWrapper_Type;
@@ -100,13 +105,13 @@ INTDEF NONNULL((1)) void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict
 #define DeeCompilerItem_VALUE(self, T) \
 	((T *)DeeCompilerItem_GetValue((DeeObject *)Dee_REQUIRES_OBJECT(self)))
 
-
+LIST_HEAD(Dee_compiler_item_object_list, Dee_compiler_item_object);
 struct Dee_compiler_items {
-	size_t                  ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
-	size_t                  ci_mask; /* [lock(ci_lock)] Hash-map mask. */
-	DeeCompilerItemObject **ci_list; /* [0..1][0..ci_mask+1][owned][lock(ci_lock)] Hash-map of compiler items. */
+	size_t                                ci_size; /* [lock(ci_lock)] Amount of existing compiler items. */
+	size_t                                ci_mask; /* [lock(ci_lock)] Hash-map mask. */
+	struct Dee_compiler_item_object_list *ci_list; /* [0..1][0..ci_mask+1][owned][lock(ci_lock)] Hash-map of compiler items. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t     ci_lock; /* Lock for compiler items. */
+	Dee_atomic_rwlock_t                   ci_lock; /* Lock for compiler items. */
 #endif /* !CONFIG_NO_THREADS */
 };
 #endif /* CONFIG_BUILDING_DEEMON */
