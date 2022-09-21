@@ -280,6 +280,7 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_and, "atomic_and", ATOMIC_AND)
 DEFINE_ATOMIC_BINOP_VOID(capi_atomic_or, "atomic_or", ATOMIC_OR)
 DEFINE_ATOMIC_BINOP_VOID(capi_atomic_xor, "atomic_xor", ATOMIC_XOR)
 DEFINE_ATOMIC_BINOP_VOID(capi_atomic_nand, "atomic_nand", ATOMIC_NAND)
+DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", ATOMIC_WRITE)
 #undef DEFINE_ATOMIC_BINOP_VOID
 
 #define DEFINE_ATOMIC_UNOP(capi_atomic_name, atomic_name, ATOMIC_NAME)                      \
@@ -318,6 +319,7 @@ DEFINE_ATOMIC_UNOP(capi_atomic_fetchinc, "atomic_fetchinc", ATOMIC_FETCHINC)
 DEFINE_ATOMIC_UNOP(capi_atomic_fetchdec, "atomic_fetchdec", ATOMIC_FETCHDEC)
 DEFINE_ATOMIC_UNOP(capi_atomic_incfetch, "atomic_incfetch", ATOMIC_INCFETCH)
 DEFINE_ATOMIC_UNOP(capi_atomic_decfetch, "atomic_decfetch", ATOMIC_DECFETCH)
+DEFINE_ATOMIC_UNOP(capi_atomic_read, "atomic_read", ATOMIC_READ)
 #undef DEFINE_ATOMIC_UNOP
 
 #define DEFINE_ATOMIC_UNOP_VOID(capi_atomic_name, atomic_name, ATOMIC_NAME) \

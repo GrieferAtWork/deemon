@@ -214,10 +214,12 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_and(size_t argc, DeeObject *con
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_or(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_xor(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_nand(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_write(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_fetchinc(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_fetchdec(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_incfetch(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_decfetch(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_read(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_inc(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_dec(size_t argc, DeeObject *const *argv);
 

@@ -618,6 +618,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
 //PRIVATE DEFINE_CMETHOD(ctypes_strsep, capi_strsep);
 //PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, capi_strtok_r);
 
+/* Atomic functions */
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch, capi_atomic_cmpxch);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch_val, capi_atomic_cmpxch_val);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchadd, capi_atomic_fetchadd);
@@ -638,10 +639,12 @@ PRIVATE DEFINE_CMETHOD(ctypes_atomic_and, capi_atomic_and);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_or, capi_atomic_or);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_xor, capi_atomic_xor);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_nand, capi_atomic_nand);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_write, capi_atomic_write);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchinc, capi_atomic_fetchinc);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchdec, capi_atomic_fetchdec);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_incfetch, capi_atomic_incfetch);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_decfetch, capi_atomic_decfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_read, capi_atomic_read);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_inc, capi_atomic_inc);
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_dec, capi_atomic_dec);
 
@@ -1170,6 +1173,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
 	  DOC("TODO") },*/
 
+	/* Atomic functions */
 	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
 	      "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
@@ -1237,6 +1241,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "atomic_nand", (DeeObject *)&ctypes_atomic_nand, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
 	      "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}") },
+	{ "atomic_write", (DeeObject *)&ctypes_atomic_write, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,value:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind = value}") },
 	{ "atomic_fetchinc", (DeeObject *)&ctypes_atomic_fetchinc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${ptr.ind++}") },
@@ -1249,6 +1256,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "atomic_decfetch", (DeeObject *)&ctypes_atomic_decfetch, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
 	      "Atomic operation for ${--ptr.ind}") },
+	{ "atomic_read", (DeeObject *)&ctypes_atomic_read, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${copy ptr.ind}") },
 	{ "atomic_inc", (DeeObject *)&ctypes_atomic_inc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured)\n"
 	      "Atomic operation for ${++ptr.ind}") },
