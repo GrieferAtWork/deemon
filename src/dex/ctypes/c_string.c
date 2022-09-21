@@ -27,6 +27,8 @@
 #include "c_api.h"
 /**/
 
+#include <hybrid/overflow.h>
+
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -254,20 +256,29 @@ dee_strnrchr(char const *haystack, int needle, size_t maxlen) {
 }
 #endif /* !CONFIG_HAVE_strnrchr */
 
+PRIVATE ATTR_COLD int DCALL err_overflow_on_total_size(void) {
+	return DeeError_Throwf(&DeeError_IntegerOverflow,
+	                       "Overflow in total buffer size");
+}
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcpy", &ob_dst, &ob_src, &num_bytes))
+	size_t num_bytes, elem_count = 1;
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memcpy",
+	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
+	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+		goto err_overflow;
 	CTYPES_PROTECTED_MEMCPY(dst.ptr, src.ptr, num_bytes, goto err);
 	return DeePointer_NewVoid(dst.ptr);
+err_overflow:
+	err_overflow_on_total_size();
 err:
 	return NULL;
 }
@@ -276,15 +287,20 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempcpy(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":mempcpy", &ob_dst, &ob_src, &num_bytes))
+	size_t num_bytes, elem_count = 1;
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempcpy",
+	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
+	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+		goto err_overflow;
 	CTYPES_PROTECTED_MEMCPY(dst.ptr, src.ptr, num_bytes, goto err);
 	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
+err_overflow:
+	err_overflow_on_total_size();
 err:
 	return NULL;
 }
@@ -295,7 +311,8 @@ capi_memccpy(size_t argc, DeeObject *const *argv) {
 	union pointer dst, src;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ood" UNPuSIZ ":memccpy", &ob_dst, &ob_src, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "ood" UNPuSIZ ":memccpy",
+	                  &ob_dst, &ob_src, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
@@ -323,7 +340,8 @@ capi_memset(size_t argc, DeeObject *const *argv) {
 	int byte;
 	union pointer dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memset", &ob_dst, &byte, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memset",
+	                  &ob_dst, &byte, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
@@ -345,7 +363,8 @@ capi_mempset(size_t argc, DeeObject *const *argv) {
 	int byte;
 	union pointer dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":mempset", &ob_dst, &byte, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":mempset",
+	                  &ob_dst, &byte, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
@@ -365,13 +384,16 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_memmove(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memmove", &ob_dst, &ob_src, &num_bytes))
+	size_t num_bytes, elem_count = 1;
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memmove",
+	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
+	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+		goto err_overflow;
 	CTYPES_PROTECTED(
 	memmove(dst.ptr, src.ptr, num_bytes), {
 		uint8_t *iter;
@@ -389,6 +411,8 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 	},
 	goto err);
 	return DeePointer_NewVoid(dst.ptr);
+err_overflow:
+	err_overflow_on_total_size();
 err:
 	return NULL;
 }
@@ -397,13 +421,16 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempmove(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
-	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":mempmove", &ob_dst, &ob_src, &num_bytes))
+	size_t num_bytes, elem_count = 1;
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempmove",
+	                  &ob_dst, &ob_src, &num_bytes, &elem_count))
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
+	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+		goto err_overflow;
 	CTYPES_PROTECTED(
 	memmove(dst.ptr, src.ptr, num_bytes), {
 		uint8_t *iter;
@@ -421,11 +448,11 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 	},
 	goto err);
 	return DeePointer_NewVoid(dst.p8 + num_bytes);
+err_overflow:
+	err_overflow_on_total_size();
 err:
 	return NULL;
 }
-
-
 
 
 
@@ -436,7 +463,8 @@ capi_memchr(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memchr", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memchr",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -463,7 +491,8 @@ capi_memrchr(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrchr", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrchr",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -491,7 +520,8 @@ capi_memend(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memend", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memend",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -516,7 +546,8 @@ capi_memrend(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrend", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrend",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -542,7 +573,8 @@ capi_memlen(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memlen", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memlen",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -568,7 +600,8 @@ capi_memrlen(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrlen", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memrlen",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -593,7 +626,8 @@ capi_rawmemchr(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemchr", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemchr",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -617,7 +651,8 @@ capi_rawmemrchr(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -641,7 +676,8 @@ capi_rawmemlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemlen", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemlen",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -666,7 +702,8 @@ capi_rawmemrlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -693,7 +730,8 @@ capi_memxchr(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxchr", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxchr",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -720,7 +758,8 @@ capi_memxrchr(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrchr", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrchr",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -748,7 +787,8 @@ capi_memxend(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxend", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxend",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -773,7 +813,8 @@ capi_memxrend(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrend", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrend",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -798,7 +839,8 @@ capi_memxlen(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxlen", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxlen",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -824,7 +866,8 @@ capi_memxrlen(size_t argc, DeeObject *const *argv) {
 	union pointer haystack;
 	int needle;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrlen", &ob_haystack, &needle, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "od" UNPuSIZ ":memxrlen",
+	                  &ob_haystack, &needle, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -849,7 +892,8 @@ capi_rawmemxchr(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -873,7 +917,8 @@ capi_rawmemxrchr(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -897,7 +942,8 @@ capi_rawmemxlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -922,7 +968,8 @@ capi_rawmemxrlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer haystack;
 	int needle;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen", &ob_haystack, &needle))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen",
+	                  &ob_haystack, &needle))
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
@@ -949,7 +996,8 @@ capi_memcmp(size_t argc, DeeObject *const *argv) {
 	int result;
 	union pointer a, b;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcmp", &ob_a, &ob_b, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcmp",
+	                  &ob_a, &ob_b, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
 		goto err;
@@ -976,7 +1024,8 @@ capi_memcasecmp(size_t argc, DeeObject *const *argv) {
 	int result;
 	union pointer a, b;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcasecmp", &ob_a, &ob_b, &num_bytes))
+	if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ ":memcasecmp",
+	                  &ob_a, &ob_b, &num_bytes))
 		goto err;
 	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
 		goto err;
@@ -1068,7 +1117,8 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasemem", &ob_a, &haystack_len, &ob_b, &needle_len))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasemem",
+	                  &ob_a, &haystack_len, &ob_b, &needle_len))
 		goto err;
 	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
 		goto err;
@@ -1135,7 +1185,8 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memrmem", &ob_a, &haystack_len, &ob_b, &needle_len))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memrmem",
+	                  &ob_a, &haystack_len, &ob_b, &needle_len))
 		goto err;
 	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
 		goto err;
@@ -1196,7 +1247,8 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 	union pointer result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasermem", &ob_a, &haystack_len, &ob_b, &needle_len))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasermem",
+	                  &ob_a, &haystack_len, &ob_b, &needle_len))
 		goto err;
 	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
 		goto err;

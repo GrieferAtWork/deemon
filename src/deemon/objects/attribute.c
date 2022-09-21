@@ -567,7 +567,7 @@ err:
 
 PRIVATE struct type_method tpconst attr_class_methods[] = {
 	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_exists,
-	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
+	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
 	      "the given arguments exists, returning ?t/?f indicative of this\n"
@@ -583,7 +583,7 @@ PRIVATE struct type_method tpconst attr_class_methods[] = {
 	      "}}"),
 	  TYPE_METHOD_FKWDS },
 	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
-	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
+	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Same as ?#{op:constructor}, but return ?N if the attribute doesn't exist\n"
 	      "${"
@@ -608,7 +608,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_doc      = */ DOC("The descriptor object for abstract object attributes\n"
 
 	                         "\n"
-	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)\n"
+	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)\n"
 	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. ?#flags)\n"
 	                         "@param flagval Set of attribute flags required when searching for matches (s.a. ?#flags) "
 	                                        "(When only this is given, and @flagmask is omit (as possible when "

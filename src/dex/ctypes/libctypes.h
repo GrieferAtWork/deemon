@@ -383,6 +383,24 @@ DeeObject_TryAsPointer(DeeObject *self,
                        DeeSTypeObject *pointer_base,
                        union pointer *__restrict result);
 
+/* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
+ * pointer-base type. For use with type-generic functions (such as the `atomic_*' api)
+ * @return:  1: The conversion failed.
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TryAsGenericPointer(DeeObject *self,
+                              DeeSTypeObject **__restrict p_pointer_base,
+                              union pointer *__restrict result);
+
+/* S.a. `DeeObject_TryAsGenericPointer()'
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsGenericPointer(DeeObject *self,
+                           DeeSTypeObject **__restrict p_pointer_base,
+                           union pointer *__restrict result);
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeePointer_New(DeePointerTypeObject *pointer_type,
                void *pointer_value);

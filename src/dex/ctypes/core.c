@@ -78,9 +78,10 @@ null_pointer:
 		result->ptr = NULL;
 		return 0;
 	}
+
 	if (DeePointer_Check(self)) {
 		DeeSTypeObject *base;
-		base = ((DeePointerTypeObject *)self)->pt_orig;
+		base = ((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig;
 		/* A pointer of the same type, or a void-pointer. */
 		if (base == pointer_base ||
 		    base == &DeeCVoid_Type ||
@@ -88,13 +89,17 @@ null_pointer:
 			result->ptr = ((struct pointer_object *)self)->p_ptr.ptr;
 			return 0;
 		}
+		goto nope;
 	}
+
 	/* int(0) also counts as a NULL-pointer. */
 	if (DeeInt_Check(self)) {
 		uint32_t val;
 		if (DeeInt_TryAsU32(self, &val) && val == 0)
 			goto null_pointer;
+		goto nope;
 	}
+
 	/* Special handling for strings (which can be cast to `char *') */
 	if (DeeString_Check(self)) {
 		if (pointer_base == &DeeCVoid_Type) {
@@ -125,7 +130,10 @@ null_pointer:
 				goto err;
 			return 0;
 		}
+		goto nope;
 	}
+
+	/* Taking the pointer of a Bytes object yield the buffer's base */
 	if (DeeBytes_Check(self)) {
 		if (pointer_base == &DeeCVoid_Type ||
 		    pointer_base == &DeeCChar_Type ||
@@ -134,13 +142,93 @@ null_pointer:
 			result->ptr = DeeBytes_DATA(self);
 			return 0;
 		}
+		goto nope;
 	}
+
+	/* Special handling for lvalue->pointer */
+	if (DeeLValue_Check(self)) {
+		DeeSTypeObject *lv_base;
+		lv_base = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+		if (DeePointerType_Check(lv_base)) {
+			DeeSTypeObject *base;
+			base = ((DeePointerTypeObject *)lv_base)->pt_orig;
+			/* A pointer of the same type, or a void-pointer. */
+			if (base == pointer_base ||
+			    base == &DeeCVoid_Type ||
+			    pointer_base == &DeeCVoid_Type) {
+				/* Lvalue -> pointer (must deref) */
+				CTYPES_FAULTPROTECT(result->ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
+				                    goto err);
+				return 0;
+			}
+		}
+		goto nope;
+	}
+
 	/* Conversion failed. */
+nope:
 	return 1;
 err:
 	return -1;
 }
 
+/* S.a. `DeeObject_TryAsGenericPointer()'
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsGenericPointer(DeeObject *self,
+                           DeeSTypeObject **__restrict p_pointer_base,
+                           union pointer *__restrict result) {
+	int error;
+	error = DeeObject_TryAsGenericPointer(self, p_pointer_base, result);
+	if (error <= 0)
+		return error;
+	return DeeObject_TypeAssertFailed(self, (DeeTypeObject *)&DeePointer_Type);
+}
+
+/* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
+ * pointer-base type. For use with type-generic functions (such as the `atomic_*' api)
+ * @return:  1: The conversion failed.
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TryAsGenericPointer(DeeObject *self,
+                              DeeSTypeObject **__restrict p_pointer_base,
+                              union pointer *__restrict result) {
+	if (DeePointer_Check(self)) {
+		DeeSTypeObject *base;
+		base = ((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig;
+		result->ptr = ((struct pointer_object *)self)->p_ptr.ptr;
+		*p_pointer_base = base;
+		return 0;
+	}
+
+	if (DeeBytes_Check(self)) {
+		result->ptr = DeeBytes_DATA(self);
+		*p_pointer_base = &DeeCUInt8_Type;
+		return 0;
+	}
+
+	/* Special handling for lvalue->pointer */
+	if (DeeLValue_Check(self)) {
+		DeeSTypeObject *lv_base;
+		lv_base = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+		if (DeePointerType_Check(lv_base)) {
+			*p_pointer_base = ((DeePointerTypeObject *)lv_base)->pt_orig;
+			/* Lvalue -> pointer (must deref) */
+			CTYPES_FAULTPROTECT(result->ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
+			                    goto err);
+			return 0;
+		}
+		goto nope;
+	}
+
+	/* Conversion failed. */
+nope:
+	return 1;
+err:
+	return -1;
+}
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

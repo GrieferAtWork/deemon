@@ -540,10 +540,10 @@ PRIVATE DEFINE_CMETHOD(ctypes_mempset, capi_mempset);
 PRIVATE DEFINE_CMETHOD(ctypes_memmove, capi_memmove);
 PRIVATE DEFINE_CMETHOD(ctypes_mempmove, capi_mempmove);
 PRIVATE DEFINE_CMETHOD(ctypes_memchr, capi_memchr);
-PRIVATE DEFINE_CMETHOD(ctypes_memlen, capi_memlen);
-PRIVATE DEFINE_CMETHOD(ctypes_memend, capi_memend);
 PRIVATE DEFINE_CMETHOD(ctypes_memrchr, capi_memrchr);
+PRIVATE DEFINE_CMETHOD(ctypes_memlen, capi_memlen);
 PRIVATE DEFINE_CMETHOD(ctypes_memrlen, capi_memrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_memend, capi_memend);
 PRIVATE DEFINE_CMETHOD(ctypes_memrend, capi_memrend);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemchr, capi_rawmemchr);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemlen, capi_rawmemlen);
@@ -617,6 +617,33 @@ PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
 //PRIVATE DEFINE_CMETHOD(ctypes_strsep, capi_strsep);
 //PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, capi_strtok_r);
 
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch, capi_atomic_cmpxch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch_val, capi_atomic_cmpxch_val);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchadd, capi_atomic_fetchadd);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchsub, capi_atomic_fetchsub);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchand, capi_atomic_fetchand);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchor, capi_atomic_fetchor);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchxor, capi_atomic_fetchxor);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchnand, capi_atomic_fetchnand);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_addfetch, capi_atomic_addfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_subfetch, capi_atomic_subfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_andfetch, capi_atomic_andfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_orfetch, capi_atomic_orfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_xorfetch, capi_atomic_xorfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_nandfetch, capi_atomic_nandfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_add, capi_atomic_add);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_sub, capi_atomic_sub);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_and, capi_atomic_and);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_or, capi_atomic_or);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_xor, capi_atomic_xor);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_nand, capi_atomic_nand);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchinc, capi_atomic_fetchinc);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_fetchdec, capi_atomic_fetchdec);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_incfetch, capi_atomic_incfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_decfetch, capi_atomic_decfetch);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_inc, capi_atomic_inc);
+PRIVATE DEFINE_CMETHOD(ctypes_atomic_dec, capi_atomic_dec);
+
 
 
 
@@ -678,8 +705,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "ulong", (DeeObject *)&DeeCULong_Type },
 	{ "llong", (DeeObject *)&DeeCLLong_Type },
 	{ "ullong", (DeeObject *)&DeeCULLong_Type },
-
-	/* TODO: Support for atomics */
 
 	/* Other, platform-specific C-types. */
 	{ "size_t", (DeeObject *)&CUINT_SIZED(__SIZEOF_SIZE_T__) },
@@ -838,14 +863,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "}}") },
 
 	{ "memcpy", (DeeObject *)&ctypes_memcpy, MODSYM_FNORMAL,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
+	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
 	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
-	      "Copies @n bytes of memory from @src to @dst\n"
+	      "Copies @size * @count bytes of memory from @src to @dst\n"
 	      "Note that the source and destination ranges may not overlap") },
 	{ "mempcpy", (DeeObject *)&ctypes_mempcpy, MODSYM_FNORMAL,
-	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
-	      "Same as ?Gmemcpy, but returns ${dst + size}") },
+	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"
+	      "@return Always re-returns ${dst + size * count} as a ?Aptr?Gvoid\n"
+	      "Same as ?Gmemcpy, but returns ${dst + size * count}") },
 	{ "memccpy", (DeeObject *)&ctypes_memccpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "@return The last modified by in @dst\n"
@@ -870,18 +895,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Return a pointer to the first byte in the specified @haystack+@haystack_size "
 	      "that equals @needle, or return a NULL-pointer if not found") },
-	{ "memlen", (DeeObject *)&ctypes_memlen, MODSYM_FNORMAL,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found") },
-	{ "memend", (DeeObject *)&ctypes_memend, MODSYM_FNORMAL,
-	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
 	{ "memrchr", (DeeObject *)&ctypes_memrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance") },
+	{ "memlen", (DeeObject *)&ctypes_memlen, MODSYM_FNORMAL,
+	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
+	      "Return the offset from @haystack of the first byte equal to @needle, or @haystack_size if now found") },
 	{ "memrlen", (DeeObject *)&ctypes_memrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
 	      "Same as :memlen, but if @needle appears multiple times, return the offset of the last instance") },
+	{ "memend", (DeeObject *)&ctypes_memend, MODSYM_FNORMAL,
+	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
+	      "Return a pointer to the first byte in @haystack that is equal to @needle, or @haystack+@haystack_size if now found") },
 	{ "memrend", (DeeObject *)&ctypes_memrend, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :memend, but if @needle appears multiple times, return a pointer to the last instance\n"
@@ -1140,6 +1165,92 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("TODO") },
 	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
 	  DOC("TODO") },*/
+
+	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
+	      "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
+	      "When @weak is true, the operation is allowed to fail sporadically, even when "
+	      "memory at @ptr and @oldval are identical\n"
+	      "This is a type-generic operation, with the address-width of the atomic operation "
+	      "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
+	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Same as ?Gatomic_cmpxch, except that rather than returning !t or !f indicative of "
+	      "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
+	      "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
+	      "by @ptr remains unchanged") },
+	{ "atomic_fetchadd", (DeeObject *)&ctypes_atomic_fetchadd, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}") },
+	{ "atomic_fetchsub", (DeeObject *)&ctypes_atomic_fetchsub, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind -= addend; r; })}") },
+	{ "atomic_fetchand", (DeeObject *)&ctypes_atomic_fetchand, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind &= mask; r; })}") },
+	{ "atomic_fetchor", (DeeObject *)&ctypes_atomic_fetchor, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind |= mask; r; })}") },
+	{ "atomic_fetchxor", (DeeObject *)&ctypes_atomic_fetchxor, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind ^= mask; r; })}") },
+	{ "atomic_fetchnand", (DeeObject *)&ctypes_atomic_fetchnand, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind = ~(ptr.ind & mask); r; })}") },
+	{ "atomic_addfetch", (DeeObject *)&ctypes_atomic_addfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind += addend; copy ptr.ind; })}") },
+	{ "atomic_subfetch", (DeeObject *)&ctypes_atomic_subfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind -= addend; copy ptr.ind; })}") },
+	{ "atomic_andfetch", (DeeObject *)&ctypes_atomic_andfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind &= mask; copy ptr.ind; })}") },
+	{ "atomic_orfetch", (DeeObject *)&ctypes_atomic_orfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind |= mask; copy ptr.ind; })}") },
+	{ "atomic_xorfetch", (DeeObject *)&ctypes_atomic_xorfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind ^= mask; copy ptr.ind; })}") },
+	{ "atomic_nandfetch", (DeeObject *)&ctypes_atomic_nandfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${({ ptr.ind = ~(ptr.ind & mask); copy ptr.ind; })}") },
+	{ "atomic_add", (DeeObject *)&ctypes_atomic_add, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind += addend}") },
+	{ "atomic_sub", (DeeObject *)&ctypes_atomic_sub, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind -= addend}") },
+	{ "atomic_and", (DeeObject *)&ctypes_atomic_and, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind &= mask}") },
+	{ "atomic_or", (DeeObject *)&ctypes_atomic_or, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind |= mask}") },
+	{ "atomic_xor", (DeeObject *)&ctypes_atomic_xor, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind ^= mask}") },
+	{ "atomic_nand", (DeeObject *)&ctypes_atomic_nand, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+	      "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}") },
+	{ "atomic_fetchinc", (DeeObject *)&ctypes_atomic_fetchinc, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${ptr.ind++}") },
+	{ "atomic_fetchdec", (DeeObject *)&ctypes_atomic_fetchdec, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${ptr.ind--}") },
+	{ "atomic_incfetch", (DeeObject *)&ctypes_atomic_incfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${++ptr.ind}") },
+	{ "atomic_decfetch", (DeeObject *)&ctypes_atomic_decfetch, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+	      "Atomic operation for ${--ptr.ind}") },
+	{ "atomic_inc", (DeeObject *)&ctypes_atomic_inc, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)\n"
+	      "Atomic operation for ${++ptr.ind}") },
+	{ "atomic_dec", (DeeObject *)&ctypes_atomic_dec, MODSYM_FNORMAL,
+	  DOC("(ptr:?Aptr?GStructured)\n"
+	      "Atomic operation for ${--ptr.ind}") },
 	{ NULL }
 };
 

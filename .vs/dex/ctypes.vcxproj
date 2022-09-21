@@ -71,6 +71,7 @@
     <ClCompile Include="..\..\src\dex\ctypes\builtins.c" />
     <ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
     <ClCompile Include="..\..\src\dex\ctypes\core.c" />
+    <ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
     <ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
     <ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
     <ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c" />

@@ -439,7 +439,9 @@ struct Dee_string_object {
 	                        s_str); /* [const][s_len] The single-byte string text.
 	                                 * This string is either encoded as UTF-8, when the string's character
 	                                 * width isn't 1 byte, or encoded as LATIN-1, if all characters fit
-	                                 * within the unicode range U+0000 - U+00FF
+	                                 * within the unicode range U+0000 - U+00FF, though in this case it is
+	                                 * also possible for this string to also be UTF-8 (iow: here, it is
+	                                 * ambiguous)
 	                                 * Which of these 2 is the case can be determined with:
 	                                 * - DeeString_STR_ISUTF8
 	                                 * - DeeString_STR_ISLATIN1

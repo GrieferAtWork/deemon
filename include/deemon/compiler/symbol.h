@@ -347,7 +347,7 @@ struct class_attribute;
  *   EXAMPLES:
  *       !Pfoo           // string("foo")
  *       !!+!1!2         // int(1) + int(2)
- *       !C!L2!N!N!VAi   // i in list([none, none])
+ *       !C!L2!N!N!Ai    // i in list([none, none])
  *       !A!1.0!P{a-\>b} // float(1.0).operator getattr("a->b")
  *
  *
