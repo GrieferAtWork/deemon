@@ -381,6 +381,32 @@ err:
 
 
 INTERN WUNUSED DREF DeeObject *DCALL
+capi_bzero(size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *ob_dst;
+	union pointer dst;
+	size_t num_bytes, elem_count = 1;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ "|" UNPuSIZ ":bzero",
+	                  &ob_dst, &num_bytes, &elem_count))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+		goto err;
+	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
+		goto err_overflow;
+	CTYPES_PROTECTED(
+	bzero(dst.ptr, num_bytes), {
+		while (num_bytes--)
+			*dst.p8++ = 0;
+	},
+	goto err);
+	return_none;
+err_overflow:
+	err_overflow_on_total_size();
+err:
+	return NULL;
+}
+
+
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memmove(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;

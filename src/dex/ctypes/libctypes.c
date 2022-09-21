@@ -537,6 +537,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_mempcpy, capi_mempcpy);
 PRIVATE DEFINE_CMETHOD(ctypes_memccpy, capi_memccpy);
 PRIVATE DEFINE_CMETHOD(ctypes_memset, capi_memset);
 PRIVATE DEFINE_CMETHOD(ctypes_mempset, capi_mempset);
+PRIVATE DEFINE_CMETHOD(ctypes_bzero, capi_bzero);
 PRIVATE DEFINE_CMETHOD(ctypes_memmove, capi_memmove);
 PRIVATE DEFINE_CMETHOD(ctypes_mempmove, capi_mempmove);
 PRIVATE DEFINE_CMETHOD(ctypes_memchr, capi_memchr);
@@ -882,7 +883,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "mempset", (DeeObject *)&ctypes_mempset, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
-	      "Same as :memset, but returns ${dst + size}") },
+	      "Same as ?Gmemset, but returns ${dst + size}") },
+	{ "bzero", (DeeObject *)&ctypes_bzero, MODSYM_FNORMAL,
+	  DOC("(dst:?Aptr?Gvoid,size:?Dint,count=!1)\n"
+	      "Same as ?Gmemset, but always fills memory with ${0}s") },
 	{ "memmove", (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"

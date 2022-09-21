@@ -109,6 +109,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_mempcpy(size_t argc, DeeObject *const 
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memccpy(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memset(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_mempset(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_bzero(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memmove(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_mempmove(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memchr(size_t argc, DeeObject *const *argv);
