@@ -37,7 +37,6 @@ DECL_BEGIN
 #endif /* !CONFIG_NO_WANT_WINDOWS_STD_FILES */
 #endif /* CONFIG_HOST_WINDOWS */
 
-
 #ifdef DEE_SOURCE
 #define Dee_unicode_printer unicode_printer
 #endif /* DEE_SOURCE */
@@ -46,15 +45,33 @@ struct Dee_unicode_printer;
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define DEE_SYSTEM_NOCASE_FS 1
+#define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+#define DEE_SYSTEM_NOCASE_FS
+#define DeeSystem_DELIM    ';'
+#define DeeSystem_DELIM_S  ";"
 #define DeeSystem_SEP      '\\'
-#define DeeSystem_ALTSEP   '/'
 #define DeeSystem_SEP_S    "\\"
+#define DeeSystem_ALTSEP   '/'
 #define DeeSystem_ALTSEP_S "/"
 #define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
 #define DeeSystem_IsAbs(x) ((x)[0] && (x)[1] == ':')
+#elif defined(__CYGWIN__) || defined(__CYGWIN32__)
+/* Cygwin paths also accept r'\' as alias for r'/' */
+#undef DEE_SYSTEM_NOCASE_FS
+#define DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+#define DeeSystem_DELIM    ':'
+#define DeeSystem_DELIM_S  ":"
+#define DeeSystem_SEP      '/'
+#define DeeSystem_SEP_S    "/"
+#define DeeSystem_ALTSEP   '\\'
+#define DeeSystem_ALTSEP_S "\\"
+#define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
+#define DeeSystem_IsAbs(x) ((x)[0] == '/')
 #else /* CONFIG_HOST_WINDOWS */
 #undef DEE_SYSTEM_NOCASE_FS
+#undef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
+#define DeeSystem_DELIM    ':'
+#define DeeSystem_DELIM_S  ":"
 #define DeeSystem_SEP      '/'
 #define DeeSystem_SEP_S    "/"
 #define DeeSystem_IsSep(x) ((x) == '/')

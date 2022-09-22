@@ -31,6 +31,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
+#include <deemon/system.h>          /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
 
 #include "../../runtime/strings.h"
 
@@ -68,7 +69,7 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 		if likely(filename) {
 			char *path_start; /* Relative module import. */
 			path_start = (char *)memrchr(filename, '/', filename_length);
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
 			{
 				char *path_start2;
 				path_start2 = (char *)memrchr(filename, '\\', filename_length);
@@ -76,7 +77,7 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 				if (!path_start || path_start2 > path_start)
 					path_start = path_start2;
 			}
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
 			if (path_start)
 				++path_start;
 			else {

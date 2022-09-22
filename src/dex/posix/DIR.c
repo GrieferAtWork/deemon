@@ -789,8 +789,8 @@ err_printer:
 						goto err_printer;
 				}
 #else /* posix_opendir_USE_FindFirstFileExW */
-				if (lastch != '/') {
-					if (unicode_printer_putc(&printer, '/'))
+				if (lastch != DeeSystem_SEP) {
+					if (unicode_printer_putc(&printer, DeeSystem_SEP))
 						goto err_printer;
 				}
 #endif /* !posix_opendir_USE_FindFirstFileExW */

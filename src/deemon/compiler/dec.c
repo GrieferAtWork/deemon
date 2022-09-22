@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memrchr(), memmem(), bzero(), ... */
-#include <deemon/system.h>          /* DeeSystem_Unlink() */
+#include <deemon/system.h>          /* DeeSystem_SEP, DeeSystem_Unlink() */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -681,12 +681,6 @@ done:
 }
 #endif
 
-#ifdef CONFIG_HOST_WINDOWS
-#define SEP '\\'
-#else /* CONFIG_HOST_WINDOWS */
-#define SEP '/'
-#endif /* !CONFIG_HOST_WINDOWS */
-
 
 /* Create and emit a DEC file for the given module. */
 INTERN WUNUSED NONNULL((1)) int
@@ -727,7 +721,7 @@ INTERN WUNUSED NONNULL((1)) int
 				goto cannot_create;
 			if (dec_filestr[dec_filelen - 1] == '.')
 				break;
-			if (dec_filestr[dec_filelen - 1] == SEP)
+			if (dec_filestr[dec_filelen - 1] == DeeSystem_SEP)
 				goto cannot_create;
 			--dec_filelen;
 		}
@@ -737,7 +731,7 @@ INTERN WUNUSED NONNULL((1)) int
 		{
 			size_t pathlen;
 			char *dst, *dec_filestart;
-			dec_filestart = (char *)memrchr(dec_filestr, SEP, dec_filelen);
+			dec_filestart = (char *)memrchr(dec_filestr, DeeSystem_SEP, dec_filelen);
 			if (dec_filestart)
 				++dec_filestart;
 			else {

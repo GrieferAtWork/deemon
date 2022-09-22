@@ -198,11 +198,11 @@ handle_error:
 	if unlikely(unicode_printer_commit_utf8(&printer, buffer, (size_t)req_size) < 0)
 		goto err_buf;
 	bufsize = UNICODE_PRINTER_LENGTH(&printer);
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
+	while (bufsize && !DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1)))
 		--bufsize;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) == '/')
+	while (bufsize && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1)))
 		--bufsize;
-	UNICODE_PRINTER_SETCHAR(&printer, bufsize, '/');
+	UNICODE_PRINTER_SETCHAR(&printer, bufsize, DeeSystem_SEP);
 	unicode_printer_truncate(&printer, bufsize + 1);
 	return unicode_printer_pack(&printer);
 err_buf:
@@ -752,7 +752,12 @@ again:
 	/* Check if $PATH should be searched for the executable.
 	 * We do this when the specified executable doesn't contain
 	 * any slashes. - Otherwise, search $PATH for it. */
-	search_path = strchr(used_exe, '/') == NULL;
+#ifdef DeeSystem_ALTSEP
+	search_path = strchr(used_exe, DeeSystem_SEP) == NULL &&
+	              strchr(used_exe, DeeSystem_ALTSEP) == NULL;
+#else /* DeeSystem_ALTSEP */
+	search_path = strchr(used_exe, DeeSystem_SEP) == NULL;
+#endif /* !DeeSystem_ALTSEP */
 
 	/* Actually spawn the process */
 	cpid = process_do_spawn(used_exe,

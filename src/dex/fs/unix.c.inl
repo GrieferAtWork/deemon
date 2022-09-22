@@ -889,7 +889,7 @@ do_ishidden(DeeObject *__restrict path) {
 	/* Check if the filename starts with a `.' (DOT) */
 	begin = DeeString_STR(path);
 	iter  = begin + DeeString_SIZE(path);
-	while (iter > begin && iter[-1] != '/')
+	while (iter > begin && !DeeSystem_IsSep(iter[-1]))
 		--iter;
 	return *iter == '.';
 done:
@@ -1455,7 +1455,19 @@ query_iter(Dir *__restrict self) {
 	query_str = DeeString_AsUtf8((DeeObject *)self->d_path);
 	if unlikely(!query_str)
 		goto err;
-	query_start = (char *)memrchr(query_str, '/', WSTR_LENGTH(query_str));
+	query_start = (char *)memrchr(query_str, DeeSystem_SEP, WSTR_LENGTH(query_str));
+#ifdef DeeSystem_ALTSEP
+	{
+		char *query_start2;
+		query_start2 = (char *)memrchr(query_str, DeeSystem_ALTSEP, WSTR_LENGTH(query_str));
+		if (!query_start) {
+			query_start = query_start2;
+		} else if (query_start2) {
+			if (query_start2 > query_start)
+				query_start = query_start2;
+		}
+	}
+#endif /* DeeSystem_ALTSEP */
 	if (!query_start) {
 		/* Open a directory descriptor. */
 		result->q_iter.di_hnd = opendir(".");
@@ -1484,7 +1496,7 @@ query_iter(Dir *__restrict self) {
 			DBG_ALIGNMENT_DISABLE();
 			result->q_iter.di_hnd = opendir(query_str);
 			DBG_ALIGNMENT_ENABLE();
-			*query_start = '/';
+			*query_start = DeeSystem_SEP;
 		}
 		++query_start;
 	}

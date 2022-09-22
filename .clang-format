@@ -254,7 +254,7 @@ IncludeCategories:
     Priority:        1
   - Regex:           '<(.*/compiler|__stdinc|__stdcxx|__crt|features)[.]h>'
     Priority:        2
-  - Regex:           '<(kernel|debugger|dev|drivers|fs|misc|sched)/.*>'
+  - Regex:           '<deemon/.*>'
     Priority:        3
   - Regex:           '<hybrid/.*[.]h>'
     Priority:        4

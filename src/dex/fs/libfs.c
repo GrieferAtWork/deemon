@@ -69,9 +69,9 @@ err:
 #define COPYFILE_BUFSIZE 4096
 #elif defined(BUFSIZ)
 #define COPYFILE_BUFSIZE BUFSIZ
-#else
+#else /* ... */
 #define COPYFILE_BUFSIZE 512
-#endif
+#endif /* !... */
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_copyfile(DeeObject *__restrict existing_file,
@@ -517,41 +517,25 @@ err:
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
-f_libfs_issep(size_t argc, DeeObject *const *argv)
-#ifdef CONFIG_HOST_WINDOWS
-{
+f_libfs_issep(size_t argc, DeeObject *const *argv) {
 	DeeObject *str;
 	if (DeeArg_Unpack(argc, argv, "o:issep", &str))
 		goto err;
 	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
 		goto err;
 	return_bool(DeeString_SIZE(str) == 1 &&
-	            (DeeString_STR(str)[0] == '\\' ||
-	             DeeString_STR(str)[0] == '/'));
+	            DeeSystem_IsSep(DeeString_STR(str)[0]));
 err:
 	return NULL;
 }
 
-INTERN DEFINE_STRING(libfs_sep, "\\");
-INTERN DEFINE_STRING(libfs_altsep, "/");
-INTERN DEFINE_STRING(libfs_delim, ";");
-#else /* CONFIG_HOST_WINDOWS */
-{
-	DeeObject *str;
-	if (DeeArg_Unpack(argc, argv, "o:issep", &str))
-		goto err;
-	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
-		goto err;
-	return_bool(DeeString_SIZE(str) == 1 &&
-	            DeeString_STR(str)[0] == '/');
-err:
-	return NULL;
-}
-
-INTERN DEFINE_STRING(libfs_sep, "/");
+INTERN DEFINE_STRING(libfs_sep, DeeSystem_SEP_S);
+#ifdef DeeSystem_ALTSEP_S
+INTERN DEFINE_STRING(libfs_altsep, DeeSystem_ALTSEP_S);
+#else /* DeeSystem_ALTSEP_S */
 #define libfs_altsep libfs_sep
-INTERN DEFINE_STRING(libfs_delim, ":");
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DeeSystem_ALTSEP_S */
+INTERN DEFINE_STRING(libfs_delim, DeeSystem_DELIM_S);
 
 
 #ifdef CONFIG_HOST_WINDOWS

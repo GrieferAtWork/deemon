@@ -27,6 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memrchr(), qsort(), bzero(), ... */
+#include <deemon/system.h>          /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteorder.h>
@@ -385,7 +386,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				int32_t temp;
 				filename   = (char *)TPPFile_Filename(new_state.tpp_file, &length);
 				file_begin = (char *)memrchr(filename, '/', length);
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
 				{
 					char *file_begin2;
 					file_begin2 = (char *)memrchr(filename, '\\', length);
@@ -393,7 +394,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					if (!file_begin || file_begin2 > file_begin)
 						file_begin = file_begin2;
 				}
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
 				if (file_begin) {
 					char *tab_str, backup;
 					tab_str = ascii_printer_allocstr(&strtab, file_begin + 1,

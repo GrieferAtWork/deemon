@@ -2056,7 +2056,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 #ifdef CONFIG_HOST_WINDOWS
 	if unlikely(module_pathsize < 2 || module_path[1] != ':')
 #else /* CONFIG_HOST_WINDOWS */
-	if unlikely(!module_pathsize || module_path[0] != '/')
+	if unlikely(!module_pathsize || !DeeSystem_IsAbs(module_path))
 #endif /* !CONFIG_HOST_WINDOWS */
 	{
 		/* Must make the given module path absolute. */

@@ -2743,10 +2743,20 @@ capi_strtok_r(size_t argc, DeeObject *const *argv) {
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_basename(size_t argc, DeeObject *const *argv) {
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DERROR_NOTIMPLEMENTED();
+	DeeObject *ob_str;
+	union pointer str;
+	if (DeeArg_Unpack(argc, argv, "o:strend", &ob_str))
+		goto err;
+	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
+		goto err;
+	CTYPES_PROTECTED(
+	str.pchar = strend(str.pchar), {
+		while (*str.pchar++)
+			;
+	},
+	goto err);
+	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
+err:
 	return NULL;
 }
 

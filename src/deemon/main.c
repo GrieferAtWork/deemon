@@ -2534,9 +2534,7 @@ err:
 	DeeError_Handled(ERROR_HANDLED_RESTORE);
 	return false;
 }
-#define IS_SEP(x) ((x) == '\\' || (x) == '/')
 #else /* CONFIG_HOST_WINDOWS */
-#define IS_SEP(x) ((x) == '/')
 #ifdef CONFIG_HAVE_chdir
 #define os_trychdir(path) (chdir(path) == 0)
 #else /* CONFIG_HAVE_chdir */
@@ -2579,7 +2577,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 	char *path_end;
 	path_end = strend(filename);
 	while (path_end > filename) {
-		if (IS_SEP(*path_end)) {
+		if (DeeSystem_IsSep(*path_end)) {
 			char backup = *path_end, *iter;
 			bool chdir_ok;
 			unsigned int num_uprefs;
@@ -2596,7 +2594,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 			num_uprefs = 1;
 			iter       = filename;
 			while (iter < path_end) {
-				if (IS_SEP(*iter))
+				if (DeeSystem_IsSep(*iter))
 					++num_uprefs;
 				++iter;
 			}
@@ -2615,11 +2613,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 				*iter++ = '.';
 				if (!--num_uprefs)
 					break;
-#ifdef CONFIG_HOST_WINDOWS
-				*iter++ = '\\';
-#else /* CONFIG_HOST_WINDOWS */
-				*iter++ = '/';
-#endif /* !CONFIG_HOST_WINDOWS */
+				*iter++ = DeeSystem_SEP;
 			}
 			/* Back back to the original folder. */
 			*iter = '\0';

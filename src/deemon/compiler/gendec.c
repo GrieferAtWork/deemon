@@ -42,6 +42,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
+#include <deemon/system.h> /* DeeSystem_SEP,  */
 #include <deemon/system-features.h> /* memmovedownc(), ... */
 #include <deemon/tuple.h>
 
@@ -63,17 +64,11 @@ DECL_BEGIN
 #define SC_STRING     (&current_dec.dw_sec_defl[DEC_SECTION_STRING])
 
 
-#ifdef CONFIG_HOST_WINDOWS
-#define SEP '\\'
-#else /* CONFIG_HOST_WINDOWS */
-#define SEP '/'
-#endif /* !CONFIG_HOST_WINDOWS */
-
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_NOCASE_FS
 #define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch) || (var) == ((lower_ch) - 'a' + 'A'))
-#else /* CONFIG_HOST_WINDOWS */
+#else /* DEE_SYSTEM_NOCASE_FS */
 #define PATH_CASECMP(var, lower_ch) ((var) == (lower_ch))
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_NOCASE_FS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
@@ -128,7 +123,7 @@ import_module_by_name:
 				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
 				/* NOTE: No need to check for alternative separators
 				 *       because the path has been sanitized. */
-				while (module_pathstr < module_pathend && module_pathend[-1] != SEP)
+				while (module_pathstr < module_pathend && module_pathend[-1] != DeeSystem_SEP)
 					--module_pathend;
 			}
 			self_pathstr = module_pathstr;
@@ -139,18 +134,18 @@ import_module_by_name:
 			other_pathpart = other_pathstr;
 			while (self_pathpart < self_pathend &&
 			       other_pathpart < other_pathend) {
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_NOCASE_FS
 				/* Do a case-insensitive match on windows. */
 				if (DeeUni_ToLower(*self_pathpart) !=
 				    DeeUni_ToLower(*other_pathpart))
 					break;
-#else /* CONFIG_HOST_WINDOWS */
+#else /* DEE_SYSTEM_NOCASE_FS */
 				if (*self_pathpart != *other_pathpart)
 					break;
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_NOCASE_FS */
 				++self_pathpart;
 				++other_pathpart;
-				if (self_pathpart[-1] == SEP) {
+				if (self_pathpart[-1] == DeeSystem_SEP) {
 					/* Save the first character after the last matching separator. */
 					self_pathstr  = self_pathpart;
 					other_pathstr = other_pathpart;
@@ -159,12 +154,12 @@ import_module_by_name:
 
 			/* All right! we've gotten rid of the common path portion.
 			 * Now to handle the portion that isn't common.
-			 * For this, we need to write 1+self_pathstr.count(SEP) `.'
+			 * For this, we need to write 1+self_pathstr.count(DeeSystem_SEP) `.'
 			 * characters to deal with up-path reference, which is then
-			 * followed by `other_pathstr.replace(SEP, ".")' */
+			 * followed by `other_pathstr.replace(DeeSystem_SEP, ".")' */
 			num_dots = 1; /* +1 leading dot to identify the use of a local dependency name. */
 			while (self_pathstr < self_pathend) {
-				if (*self_pathstr == SEP)
+				if (*self_pathstr == DeeSystem_SEP)
 					++num_dots;
 				++self_pathstr;
 			}
@@ -199,7 +194,7 @@ import_module_by_name:
 				/* In dec files, we must erase the first `.' character of the filename. */
 				char *last_dot = (char *)buffer;
 				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
-					if ((*buffer = *other_pathpart) == SEP)
+					if ((*buffer = *other_pathpart) == DeeSystem_SEP)
 						*(char *)buffer = '.', last_dot = (char *)buffer + 1;
 				}
 				if (*last_dot != '.') {
@@ -216,7 +211,7 @@ import_module_by_name:
 				;
 			} else {
 				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
-					if ((*buffer = *other_pathpart) == SEP)
+					if ((*buffer = *other_pathpart) == DeeSystem_SEP)
 						*buffer = '.';
 				}
 			}

@@ -26,11 +26,11 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/system-features.h> /* bcmpc(), ... */
 #include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>

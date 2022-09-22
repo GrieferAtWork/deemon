@@ -36,6 +36,7 @@
 #include <deemon/module.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -605,10 +606,10 @@ err:
 #endif
 
 #ifdef __INTELLISENSE__
-#define SEP '/'
-#ifdef CONFIG_HOST_WINDOWS
-#define ALTSEP '\\'
-#endif /* CONFIG_HOST_WINDOWS */
+#define SEP DeeSystem_SEP
+#ifdef DeeSystem_ALTSEP
+#define ALTSEP DeeSystem_ALTSEP
+#endif /* DeeSystem_ALTSEP */
 #define TPPKeyword_API_MAKERARE(self) \
 	TPPKeyword_MAKERARE(self)
 #endif /* __INTELLISENSE__ */
