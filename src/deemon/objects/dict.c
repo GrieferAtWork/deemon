@@ -48,6 +48,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp 1
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 /* A dummy object used by Dict and HashSet to refer to deleted
  * keys that are still apart of the hash chain.
  * DO NOT EXPOSE THIS OBJECT TO USER-CODE! */

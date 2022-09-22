@@ -44,6 +44,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp 1
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 #ifdef CONFIG_NO_THREADS
 #define BLVI_GETITER(self)             (self)->ki_iter
 #else /* CONFIG_NO_THREADS */

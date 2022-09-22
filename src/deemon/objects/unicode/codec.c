@@ -39,6 +39,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp 1
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCodec_NormalizeName(DeeObject *__restrict name) {
 	char *iter, *end, *str;

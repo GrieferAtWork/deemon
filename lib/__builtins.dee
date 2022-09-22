@@ -259,10 +259,10 @@ local __objects = deemon.List {
 	/* 0x00c5 */ ctypes.memcpy,
 	/* 0x00c6 */ ctypes.memmove,
 	/* 0x00c7 */ ctypes.memcmp,
-	/* 0x00c8 */ ctypes.strcoll,
+	/* 0x00c8 */ ctypes.strcmp, /* __builtin_strcoll */
 	/* 0x00c9 */ ctypes.strcmp,
 	/* 0x00ca */ ctypes.strncmp,
-	/* 0x00cb */ ctypes.strxfrm,
+	/* 0x00cb */ none, /* __builtin_strxfrm */
 	/* 0x00cc */ ctypes.strcpy,
 	/* 0x00cd */ ctypes.strncpy,
 	/* 0x00ce */ ctypes.strcat,

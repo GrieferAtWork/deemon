@@ -11641,7 +11641,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "?#restartswith" /**/ "|?#startswith" /*       */ "|Check if @this string starts with a regular expression&"
 	      "?#reendswith" /*  */ "|?#endswith" /*         */ "|Check if @this string ends with a regular expression&"
 	      "?#recontains" /*  */ "|?#contains" /*         */ "|Check if @this stirng contains a regular expression anywhere&"
-	      "?#recount" /*     */ "|?#count" /*            */ "|Count the number of occurances of a regular expression&"
+	      "?#recount" /*     */ "|?#count" /*            */ "|Count the number of occurrences of a regular expression&"
 	      "?#restrip" /*     */ "|?#strip" /*            */ "|Strip all leading and trailing regular expression matches&"
 	      "?#relstrip" /*    */ "|?#lstrip" /*           */ "|Strip all leading regular expression matches&"
 	      "?#rerstrip" /*    */ "|?#rstrip" /*           */ "|Strip all trailing regular expression matches}\n"

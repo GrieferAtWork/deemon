@@ -118,6 +118,13 @@ PRIVATE struct cc_entry const cc_db[] = {
 	{ "default", FFI_DEFAULT_ABI },
 };
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp 1
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 
 INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
 cc_trylookup(char const *__restrict name) {

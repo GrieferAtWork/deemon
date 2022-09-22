@@ -781,6 +781,15 @@ functest('strrchr("foo", 102)', stdc);
 functest('strnchr("foo", 102, 3)', "defined(__USE_KOS)");
 functest('strnrchr("foo", 102, 3)', "defined(__USE_KOS)");
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
+functest('strchrnul("foo", 102)', "defined(__USE_GNU) || defined(__USE_NETBSD)");
+functest('strrchrnul("foo", 102)', "defined(__USE_KOS)");
+functest('strnchrnul("foo", 102, 3)', "defined(__USE_KOS)");
+functest('strnrchrnul("foo", 102, 3)', "defined(__USE_KOS)");
+functest('strcasestr("foo", "o")', "defined(__USE_GNU) || defined(__USE_BSD)");
+functest('basename("foo")', "defined(__USE_GNU)");
+functest('strverscmp("foo", "bar")', "defined(__USE_GNU)");
+functest('strfry((char *)"foo")', "defined(__USE_GNU)");
+functest('memfrob((char *)"foo", 3)', "defined(__USE_GNU)");
 
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
 func("bzerow", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", test: "extern void *a; bzerow(a, 42); return 0;");
@@ -818,6 +827,18 @@ func("bcmpq", "defined(CONFIG_HAVE_STRINGS_H) && defined(__USE_STRING_BWLQ)", te
 func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
 func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
+functest('strcmp("foo", "bar")', stdc);
+functest('strncmp("foo", "bar", 3)', stdc);
+functest('strcpy((char *)0, "bar")', stdc);
+functest('stpcpy((char *)0, "bar")', "defined(__USE_XOPEN2K8)");
+functest('stpncpy((char *)0, "bar", 3)', "defined(__USE_XOPEN2K8)");
+functest('strcat((char *)0, "bar")', stdc);
+functest('strncpy((char *)0, "bar", 3)', stdc);
+functest('strncat((char *)0, "bar", 3)', stdc);
+functest('strstr("foobar", "foo")', stdc);
+functest('strcasestr("foobar", "foo")', "defined(__USE_GNU) || defined(__USE_BSD)");
+functest('strnstr("foobar", "foo", 6)', "defined(__USE_BSD) || defined(__USE_KOS)");
+functest('strncasestr("foobar", "foo", 6)', "0");
 func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
 func("mempmove", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
 func("mempcpy", "defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
@@ -5828,6 +5849,71 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_strnlen 1
 #endif
 
+#ifdef CONFIG_NO_strchrnul
+#undef CONFIG_HAVE_strchrnul
+#elif !defined(CONFIG_HAVE_strchrnul) && \
+      (defined(strchrnul) || defined(__strchrnul_defined) || (defined(__USE_GNU) || \
+       defined(__USE_NETBSD)))
+#define CONFIG_HAVE_strchrnul 1
+#endif
+
+#ifdef CONFIG_NO_strrchrnul
+#undef CONFIG_HAVE_strrchrnul
+#elif !defined(CONFIG_HAVE_strrchrnul) && \
+      (defined(strrchrnul) || defined(__strrchrnul_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strrchrnul 1
+#endif
+
+#ifdef CONFIG_NO_strnchrnul
+#undef CONFIG_HAVE_strnchrnul
+#elif !defined(CONFIG_HAVE_strnchrnul) && \
+      (defined(strnchrnul) || defined(__strnchrnul_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strnchrnul 1
+#endif
+
+#ifdef CONFIG_NO_strnrchrnul
+#undef CONFIG_HAVE_strnrchrnul
+#elif !defined(CONFIG_HAVE_strnrchrnul) && \
+      (defined(strnrchrnul) || defined(__strnrchrnul_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strnrchrnul 1
+#endif
+
+#ifdef CONFIG_NO_strcasestr
+#undef CONFIG_HAVE_strcasestr
+#elif !defined(CONFIG_HAVE_strcasestr) && \
+      (defined(strcasestr) || defined(__strcasestr_defined) || (defined(__USE_GNU) || \
+       defined(__USE_BSD)))
+#define CONFIG_HAVE_strcasestr 1
+#endif
+
+#ifdef CONFIG_NO_basename
+#undef CONFIG_HAVE_basename
+#elif !defined(CONFIG_HAVE_basename) && \
+      (defined(basename) || defined(__basename_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_basename 1
+#endif
+
+#ifdef CONFIG_NO_strverscmp
+#undef CONFIG_HAVE_strverscmp
+#elif !defined(CONFIG_HAVE_strverscmp) && \
+      (defined(strverscmp) || defined(__strverscmp_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_strverscmp 1
+#endif
+
+#ifdef CONFIG_NO_strfry
+#undef CONFIG_HAVE_strfry
+#elif !defined(CONFIG_HAVE_strfry) && \
+      (defined(strfry) || defined(__strfry_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_strfry 1
+#endif
+
+#ifdef CONFIG_NO_memfrob
+#undef CONFIG_HAVE_memfrob
+#elif !defined(CONFIG_HAVE_memfrob) && \
+      (defined(memfrob) || defined(__memfrob_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_memfrob 1
+#endif
+
 #ifdef CONFIG_NO_bzero
 #undef CONFIG_HAVE_bzero
 #elif !defined(CONFIG_HAVE_bzero) && \
@@ -5970,6 +6056,85 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_memmove
 #else
 #define CONFIG_HAVE_memmove 1
+#endif
+
+#ifdef CONFIG_NO_strcmp
+#undef CONFIG_HAVE_strcmp
+#else
+#define CONFIG_HAVE_strcmp 1
+#endif
+
+#ifdef CONFIG_NO_strncmp
+#undef CONFIG_HAVE_strncmp
+#else
+#define CONFIG_HAVE_strncmp 1
+#endif
+
+#ifdef CONFIG_NO_strcpy
+#undef CONFIG_HAVE_strcpy
+#else
+#define CONFIG_HAVE_strcpy 1
+#endif
+
+#ifdef CONFIG_NO_stpcpy
+#undef CONFIG_HAVE_stpcpy
+#elif !defined(CONFIG_HAVE_stpcpy) && \
+      (defined(stpcpy) || defined(__stpcpy_defined) || defined(__USE_XOPEN2K8))
+#define CONFIG_HAVE_stpcpy 1
+#endif
+
+#ifdef CONFIG_NO_stpncpy
+#undef CONFIG_HAVE_stpncpy
+#elif !defined(CONFIG_HAVE_stpncpy) && \
+      (defined(stpncpy) || defined(__stpncpy_defined) || defined(__USE_XOPEN2K8))
+#define CONFIG_HAVE_stpncpy 1
+#endif
+
+#ifdef CONFIG_NO_strcat
+#undef CONFIG_HAVE_strcat
+#else
+#define CONFIG_HAVE_strcat 1
+#endif
+
+#ifdef CONFIG_NO_strncpy
+#undef CONFIG_HAVE_strncpy
+#else
+#define CONFIG_HAVE_strncpy 1
+#endif
+
+#ifdef CONFIG_NO_strncat
+#undef CONFIG_HAVE_strncat
+#else
+#define CONFIG_HAVE_strncat 1
+#endif
+
+#ifdef CONFIG_NO_strstr
+#undef CONFIG_HAVE_strstr
+#else
+#define CONFIG_HAVE_strstr 1
+#endif
+
+#ifdef CONFIG_NO_strcasestr
+#undef CONFIG_HAVE_strcasestr
+#elif !defined(CONFIG_HAVE_strcasestr) && \
+      (defined(strcasestr) || defined(__strcasestr_defined) || (defined(__USE_GNU) || \
+       defined(__USE_BSD)))
+#define CONFIG_HAVE_strcasestr 1
+#endif
+
+#ifdef CONFIG_NO_strnstr
+#undef CONFIG_HAVE_strnstr
+#elif !defined(CONFIG_HAVE_strnstr) && \
+      (defined(strnstr) || defined(__strnstr_defined) || (defined(__USE_BSD) || \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_strnstr 1
+#endif
+
+#ifdef CONFIG_NO_strncasestr
+#undef CONFIG_HAVE_strncasestr
+#elif !defined(CONFIG_HAVE_strncasestr) && \
+      (defined(strncasestr) || defined(__strncasestr_defined))
+#define CONFIG_HAVE_strncasestr 1
 #endif
 
 #ifdef CONFIG_NO_memcmp
@@ -9261,6 +9426,76 @@ DECL_END
 		return 0;                                     \
 	}
 
+#define _DeeSystem_DEFINE_strcmpT(T, unsignedT, name)        \
+	LOCAL WUNUSED NONNULL((1, 2)) int                        \
+	name(T const *s1, T const *s2) {                         \
+		T c1, c2;                                            \
+		do {                                                 \
+			if unlikely((c1 = *s1++) != (c2 = *s2++))        \
+				return (int)((unsignedT)c1 - (unsignedT)c2); \
+		} while (c1);                                        \
+		return 0;                                            \
+	}
+
+#define _DeeSystem_DEFINE_strncmpT(T, unsignedT, name)       \
+	LOCAL WUNUSED NONNULL((1, 2)) int                        \
+	name(T const *s1, T const *s2, size_t maxlen) {          \
+		T c1, c2;                                            \
+		do {                                                 \
+			if (!maxlen--)                                   \
+				break;                                       \
+			if unlikely((c1 = *s1++) != (c2 = *s2++))        \
+				return (int)((unsignedT)c1 - (unsignedT)c2); \
+		} while (c1);                                        \
+		return 0;                                            \
+	}
+
+#define _DeeSystem_DEFINE_strcasecmpT(T, unsignedT, name)           \
+	LOCAL WUNUSED NONNULL((1, 2)) int                               \
+	name(T const *s1, T const *s2) {                                \
+		T c1, c2;                                                   \
+		do {                                                        \
+			if unlikely((c1 = *s1++) != (c2 = *s2++) &&             \
+			            ((c1 = (char)tolower((unsigned char)c1)) != \
+			             (c2 = (char)tolower((unsigned char)c2))))  \
+				return (int)((unsignedT)c1 - (unsignedT)c2);        \
+		} while (c1);                                               \
+		return 0;                                                   \
+	}
+
+#define _DeeSystem_DEFINE_strncasecmpT(T, unsignedT, name)          \
+	LOCAL WUNUSED NONNULL((1, 2)) int                               \
+	name(T const *s1, T const *s2, size_t maxlen) {                 \
+		T c1, c2;                                                   \
+		do {                                                        \
+			if (!maxlen--)                                          \
+				break;                                              \
+			if unlikely((c1 = *s1++) != (c2 = *s2++) &&             \
+			            ((c1 = (char)tolower((unsigned char)c1)) != \
+			             (c2 = (char)tolower((unsigned char)c2))))  \
+				return (int)((unsignedT)c1 - (unsignedT)c2);        \
+		} while (c1);                                               \
+		return 0;                                                   \
+	}
+
+#define _DeeSystem_DEFINE_stpncpyT(T, name, strnlen)                \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                               \
+	name(T *buf, T const *src, size_t buflen) {                     \
+		size_t srclen = strnlen(src, buflen);                       \
+		memcpy(buf, src, srclen * sizeof(T));                       \
+		bzero(buf + srclen, (size_t)(buflen - srclen) * sizeof(T)); \
+		return buf + srclen;                                        \
+	}
+
+#define _DeeSystem_DEFINE_strncpyT(T, name, strnlen)                \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                               \
+	name(T *buf, T const *src, size_t buflen) {                     \
+		size_t srclen = strnlen(src, buflen);                       \
+		memcpy(buf, src, srclen * sizeof(T));                       \
+		bzero(buf + srclen, (size_t)(buflen - srclen) * sizeof(T)); \
+		return buf;                                                 \
+	}
+
 #define DeeSystem_DEFINE_memrchr(name) _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
 #define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
 #define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t, uint32_t, uint32_t, name)
@@ -9273,6 +9508,44 @@ DECL_END
 #define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(uint16_t, name)
 #define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(uint32_t, name)
 #define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(uint64_t, name)
+
+#define DeeSystem_DEFINE_strcmp(name)      _DeeSystem_DEFINE_strcmpT(char, unsigned char, name)
+#define DeeSystem_DEFINE_strncmp(name)     _DeeSystem_DEFINE_strncmpT(char, unsigned char, name)
+#define DeeSystem_DEFINE_strcasecmp(name)  _DeeSystem_DEFINE_strcasecmpT(char, unsigned char, name)
+#define DeeSystem_DEFINE_strncasecmp(name) _DeeSystem_DEFINE_strncasecmpT(char, unsigned char, name)
+#define DeeSystem_DEFINE_stpncpy(name)     _DeeSystem_DEFINE_stpncpyT(char, name, strnlen)
+#define DeeSystem_DEFINE_strncpy(name)     _DeeSystem_DEFINE_strncpyT(char, name, strnlen)
+
+#ifndef CONFIG_HAVE_strcpy
+#define CONFIG_HAVE_strcpy 1
+#undef strcpy
+#define strcpy(dst, src) ((char *)memcpy(dst, src, (strlen(src) + 1) * sizeof(char)))
+#endif /* !CONFIG_HAVE_strcpy */
+
+#ifndef CONFIG_HAVE_strcat
+#define CONFIG_HAVE_strcat 1
+#undef strcat
+#define strcat(dst, src) (memcpy(strend(dst), src, (strlen(src) + 1) * sizeof(char)), (char *)(dst))
+#endif /* !CONFIG_HAVE_strcat */
+
+#if !defined(CONFIG_HAVE_strncpy) && defined(CONFIG_HAVE_stpncpy)
+#define CONFIG_HAVE_strncpy 1
+#undef strncpy
+#define strncpy(buf, src, buflen) (stpncpy(buf, src, buflen), (char *)(buf))
+#endif /* !CONFIG_HAVE_strncpy && CONFIG_HAVE_stpncpy */
+
+#ifndef CONFIG_HAVE_strncat
+#define CONFIG_HAVE_strncat 1
+#undef strncat
+#define strncat(dst, src, max_srclen) \
+	(*(char *)mempcpy(strend(buf), src, strnlen(src, max_srclen) * sizeof(char)) = '\0', (char *)(dst))
+#endif /* !CONFIG_HAVE_strncat */
+
+#ifndef CONFIG_HAVE_stpcpy
+#define CONFIG_HAVE_stpcpy 1
+#undef stpcpy
+#define stpcpy(dst, src) ((char *)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1)
+#endif /* !CONFIG_HAVE_stpcpy */
 
 #ifndef CONFIG_HAVE_memchr
 #define CONFIG_HAVE_memchr 1

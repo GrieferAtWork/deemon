@@ -41,6 +41,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp 1
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 INTDEF int DCALL skip_lf(void);
 #define is_semicolon() (tok == ';' || tok == '\n')
 PRIVATE tok_t DCALL yield_semicolon(void) {

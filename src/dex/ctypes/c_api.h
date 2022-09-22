@@ -132,6 +132,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_rawmemxchr(size_t argc, DeeObject *con
 INTDEF WUNUSED DREF DeeObject *DCALL capi_rawmemxlen(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_rawmemxrchr(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_rawmemxrlen(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_bcmp(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memcmp(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memcasecmp(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_memmem(size_t argc, DeeObject *const *argv);
@@ -171,27 +172,27 @@ INTDEF WUNUSED DREF DeeObject *DCALL capi_stpcpy(size_t argc, DeeObject *const *
 INTDEF WUNUSED DREF DeeObject *DCALL capi_stpncpy(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strstr(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strcasestr(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strnstr(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strncasestr(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strverscmp(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strtok(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_index(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_rindex(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strspn(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strcspn(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strpbrk(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strcoll(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strncoll(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strcasecoll(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strncasecoll(size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL capi_strxfrm(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strrev(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strnrev(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strlwr(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strupr(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strnlwr(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strnupr(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strset(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strnset(size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED DREF DeeObject *DCALL capi_strfry(size_t argc, DeeObject *const *argv);
-//TODO:INTDEF WUNUSED DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject *const *argv);
-//TODO:INTDEF WUNUSED DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_memfrob(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_stresep(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strtok(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL capi_basename(size_t argc, DeeObject *const *argv);
 
 /* Atomic functions */
 INTDEF WUNUSED DREF DeeObject *DCALL capi_atomic_cmpxch(size_t argc, DeeObject *const *argv);

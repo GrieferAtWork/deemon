@@ -560,6 +560,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_rawmemxchr, capi_rawmemxchr);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemxlen, capi_rawmemxlen);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrchr, capi_rawmemxrchr);
 PRIVATE DEFINE_CMETHOD(ctypes_rawmemxrlen, capi_rawmemxrlen);
+PRIVATE DEFINE_CMETHOD(ctypes_bcmp, capi_bcmp);
 PRIVATE DEFINE_CMETHOD(ctypes_memcmp, capi_memcmp);
 PRIVATE DEFINE_CMETHOD(ctypes_memcasecmp, capi_memcasecmp);
 PRIVATE DEFINE_CMETHOD(ctypes_memmem, capi_memmem);
@@ -567,6 +568,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_memcasemem, capi_memcasemem);
 PRIVATE DEFINE_CMETHOD(ctypes_memrmem, capi_memrmem);
 PRIVATE DEFINE_CMETHOD(ctypes_memcasermem, capi_memcasermem);
 PRIVATE DEFINE_CMETHOD(ctypes_memrev, capi_memrev);
+PRIVATE DEFINE_CMETHOD(ctypes_memfrob, capi_memfrob);
 
 PRIVATE DEFINE_CMETHOD(ctypes_strlen, capi_strlen);
 PRIVATE DEFINE_CMETHOD(ctypes_strend, capi_strend);
@@ -596,27 +598,26 @@ PRIVATE DEFINE_CMETHOD(ctypes_stpcpy, capi_stpcpy);
 PRIVATE DEFINE_CMETHOD(ctypes_stpncpy, capi_stpncpy);
 PRIVATE DEFINE_CMETHOD(ctypes_strstr, capi_strstr);
 PRIVATE DEFINE_CMETHOD(ctypes_strcasestr, capi_strcasestr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnstr, capi_strnstr);
+PRIVATE DEFINE_CMETHOD(ctypes_strncasestr, capi_strncasestr);
 PRIVATE DEFINE_CMETHOD(ctypes_strverscmp, capi_strverscmp);
-PRIVATE DEFINE_CMETHOD(ctypes_strtok, capi_strtok);
-PRIVATE DEFINE_CMETHOD(ctypes_index, capi_index);
-PRIVATE DEFINE_CMETHOD(ctypes_rindex, capi_rindex);
 PRIVATE DEFINE_CMETHOD(ctypes_strspn, capi_strspn);
 PRIVATE DEFINE_CMETHOD(ctypes_strcspn, capi_strcspn);
 PRIVATE DEFINE_CMETHOD(ctypes_strpbrk, capi_strpbrk);
-PRIVATE DEFINE_CMETHOD(ctypes_strcoll, capi_strcoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strncoll, capi_strncoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strcasecoll, capi_strcasecoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strncasecoll, capi_strncasecoll);
-PRIVATE DEFINE_CMETHOD(ctypes_strxfrm, capi_strxfrm);
 PRIVATE DEFINE_CMETHOD(ctypes_strrev, capi_strrev);
 PRIVATE DEFINE_CMETHOD(ctypes_strnrev, capi_strnrev);
 PRIVATE DEFINE_CMETHOD(ctypes_strlwr, capi_strlwr);
 PRIVATE DEFINE_CMETHOD(ctypes_strupr, capi_strupr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnlwr, capi_strnlwr);
+PRIVATE DEFINE_CMETHOD(ctypes_strnupr, capi_strnupr);
 PRIVATE DEFINE_CMETHOD(ctypes_strset, capi_strset);
 PRIVATE DEFINE_CMETHOD(ctypes_strnset, capi_strnset);
 PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
-//PRIVATE DEFINE_CMETHOD(ctypes_strsep, capi_strsep);
-//PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, capi_strtok_r);
+PRIVATE DEFINE_CMETHOD(ctypes_strsep, capi_strsep);
+PRIVATE DEFINE_CMETHOD(ctypes_stresep, capi_stresep);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok, capi_strtok);
+PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, capi_strtok_r);
+PRIVATE DEFINE_CMETHOD(ctypes_basename, capi_basename);
 
 /* Atomic functions */
 PRIVATE DEFINE_CMETHOD(ctypes_atomic_cmpxch, capi_atomic_cmpxch);
@@ -965,14 +966,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "rawmemxrlen", (DeeObject *)&ctypes_rawmemxrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
 	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
+	{ "bcmp", (DeeObject *)&ctypes_bcmp, MODSYM_FNORMAL,
+	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+	      "Same as ?Gmemcmp, but only returns $0 when buffer are equal, and non-$0 otherwise") },
 	{ "memcmp", (DeeObject *)&ctypes_memcmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
-	      "Compare bytes from 2 buffers in @a and @b of equal haystack_size @haystack_size, and "
+	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
+	      "Compare bytes from 2 buffers in @lhs and @rhs of equal @size, and "
 	      "search for the first non-matching byte, returning ${< 0} if that byte "
-	      "in @a is smaller than its counterpart in @b, ${> 0} if the opposite "
+	      "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
 	      "is true, and ${== 0} no such byte exists") },
 	{ "memcasecmp", (DeeObject *)&ctypes_memcasecmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
+	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
 	      "into a common casing prior to comparison") },
 	{ "memmem", (DeeObject *)&ctypes_memmem, MODSYM_FNORMAL,
@@ -997,6 +1001,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
 	      "byte contains the old value of the last byte, and the last byte the value of the first, "
 	      "and so on.") },
+	{ "memfrob", (DeeObject *)&ctypes_memfrob, MODSYM_FNORMAL,
+	  DOC("(buf:?Aptr?Gchar,size:?Dint)->?Aptr?Gvoid\n"
+	      "Randomly shuffle the order of bytes in @buf, creating an anagram") },
 
 	{ "strlen", (DeeObject *)&ctypes_strlen, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Dint\n"
@@ -1049,17 +1056,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
 	      "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found") },
 	{ "strcmp", (DeeObject *)&ctypes_strcmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Compare the given strings @a and @b, returning ${<0}, "
+	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
+	      "Compare the given strings @lhs and @rhs, returning ${<0}, "
 	      "${==0} or ${>0} indicative of their relation to one-another") },
 	{ "strncmp", (DeeObject *)&ctypes_strncmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
 	      "Same as ?Gstrcmp, but limit the max number of compared characters to @maxlen") },
 	{ "strcasecmp", (DeeObject *)&ctypes_strcasecmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
+	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar)->?Dint\n"
 	      "Same as ?Gstrcmp, but ignore casing") },
 	{ "strncasecmp", (DeeObject *)&ctypes_strncasecmp, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
+	  DOC("(lhs:?Aptr?Gchar,rhs:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
 	      "Same as ?Gstrncmp, but ignore casing") },
 	{ "strcpy", (DeeObject *)&ctypes_strcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
@@ -1107,18 +1114,21 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strcasestr", (DeeObject *)&ctypes_strcasestr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ?Gstrstr, but ignore casing") },
+	{ "strnstr", (DeeObject *)&ctypes_strnstr, MODSYM_FNORMAL,
+	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
+	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
+	{ "strncasestr", (DeeObject *)&ctypes_strncasestr, MODSYM_FNORMAL,
+	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar,haystack_maxlen:?Dint)->?Aptr?Gchar\n"
+	      "Same as ?Gstrnstr, but ignore casing") },
 	{ "strverscmp", (DeeObject *)&ctypes_strverscmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as ?Gstrcmp, but do special handling for version strings (s.a. :string.vercompare)") },
-	{ "strtok", (DeeObject *)&ctypes_strtok, MODSYM_FNORMAL,
-	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Split @str at each occurance of @delim and return the resulting strings individually") },
-	{ "index", (DeeObject *)&ctypes_index, MODSYM_FNORMAL,
+	      "Same as ?Gstrcmp, but do special handling for version strings (s.a. ?Avercompare?Dstring)") },
+	{ "index", (DeeObject *)&ctypes_strchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrchr, but return ${strend(haystack)} when @needle is $0") },
-	{ "rindex", (DeeObject *)&ctypes_rindex, MODSYM_FNORMAL,
+	      "Alias for ?Gstrchr") },
+	{ "rindex", (DeeObject *)&ctypes_strrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as ?Gstrrchr, but return ${strend(haystack)} when @needle is $0") },
+	      "Alias for ?Gstrrchr") },
 	{ "strspn", (DeeObject *)&ctypes_strspn, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that is also "
@@ -1131,22 +1141,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Return a pointer to the first character in @str, that is also apart of @accept\n"
 	      "If no such character exists, a NULL-pointer is returned") },
-	{ "strcoll", (DeeObject *)&ctypes_strcoll, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Compare @a and @b using the currently set locale") },
-	{ "strncoll", (DeeObject *)&ctypes_strncoll, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as ?Gstrcoll, but limit the number of scanned characters to @maxlen") },
-	{ "strcasecoll", (DeeObject *)&ctypes_strcasecoll, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as ?Gstrcoll, but ignore casing") },
-	{ "strncasecoll", (DeeObject *)&ctypes_strncasecoll, MODSYM_FNORMAL,
-	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as ?Gstrcasecoll, but limit the number of scanned characters to @maxlen") },
-	{ "strxfrm", (DeeObject *)&ctypes_strxfrm, MODSYM_FNORMAL,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,num:?Dint)->?Dint\n"
-	      "Transform up to @num characters from @src, using the current locale, and "
-	      "store them in @dst before returning the number of stored characters") },
 	{ "strrev", (DeeObject *)&ctypes_strrev, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Reverse the order of characters in @str and re-return the given @str") },
@@ -1159,6 +1153,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strupr", (DeeObject *)&ctypes_strupr, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Convert all characters in @str to upper-case and re-return the given @str") },
+	{ "strnlwr", (DeeObject *)&ctypes_strnlwr, MODSYM_FNORMAL,
+	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+	      "Convert all characters in @str to lower-case and re-return the given @str") },
+	{ "strnupr", (DeeObject *)&ctypes_strnupr, MODSYM_FNORMAL,
+	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
+	      "Convert all characters in @str to upper-case and re-return the given @str") },
 	{ "strset", (DeeObject *)&ctypes_strset, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,chr:?Dint)->?Aptr?Gchar\n"
 	      "Set all characters in @str to @chr and re-return the given @str") },
@@ -1168,10 +1168,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strfry", (DeeObject *)&ctypes_strfry, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "xor all characters within @str with $42, implementing _very_ simplistic encryption") },
-	/*{ "strsep", (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
-	  DOC("TODO") },
+	{ "strsep", (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
+	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar") },
+	{ "stresep", (DeeObject *)&ctypes_stresep, MODSYM_FNORMAL,
+	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar,escape:?Dint)->?Aptr?Gchar") },
+	{ "strtok", (DeeObject *)&ctypes_strtok, MODSYM_FNORMAL,
+	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
+	      "Split @str at each occurrence of @delim and return the resulting strings individually") },
 	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
-	  DOC("TODO") },*/
+	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar)->?Aptr?Gchar") },
+	{ "basename", (DeeObject *)&ctypes_basename, MODSYM_FNORMAL,
+	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar") },
 
 	/* Atomic functions */
 	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,

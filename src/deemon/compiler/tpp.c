@@ -143,7 +143,6 @@ DECL_END
 #define vsprintf(buf, format, args) \
 	(int)(unsigned int)(size_t)(Dee_vsprintf(buf, format, args) - (buf))
 
-/* TODO: TPP has a non-redundant dependency on `char *strcpy(char *dst, char const *src))' */
 /* TODO: TPP has a non-redundant dependency on `time_t time(time_t *ptr)' */
 /* TODO: TPP has a non-redundant dependency on `struct tm *localtime(time_t const *tmr)' */
 /* TODO: TPP has a non-redundant dependency on `void srand(unsigned int seed)' */
