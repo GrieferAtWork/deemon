@@ -58,7 +58,7 @@ union atomic_operand {
 	uint64_t ao_u64;
 };
 
-PRIVATE NONNULL((1, 3, 4)) int DCALL
+PRIVATE NONNULL((1, 2, 3)) int DCALL
 get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
                    union atomic_operand *__restrict result) {
 	int error;
@@ -190,7 +190,7 @@ capi_atomic_cmpxch_val(size_t argc, DeeObject *const *argv) {
 	}, goto err_result_obj);
 	DeeObject_Init(result_obj, (DeeTypeObject *)basetype);
 	return result_obj;
-err_result_obj:
+CTYPES_FAULTPROTECT_LABEL(err_result_obj)
 	DeeObject_Free(result_obj);
 err:
 	return NULL;
@@ -228,7 +228,7 @@ err:
 		}, goto err_result_obj);                                                                           \
 		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                                             \
 		return result_obj;                                                                                 \
-err_result_obj:                                                                                            \
+CTYPES_FAULTPROTECT_LABEL(err_result_obj)                                                                  \
 		DeeObject_Free(result_obj);                                                                        \
 err:                                                                                                       \
 		return NULL;                                                                                       \
@@ -310,7 +310,7 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", ATOMIC_WRITE)
 		}, goto err_result_obj);                                                            \
 		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                              \
 		return result_obj;                                                                  \
-err_result_obj:                                                                             \
+CTYPES_FAULTPROTECT_LABEL(err_result_obj)                                                   \
 		DeeObject_Free(result_obj);                                                         \
 err:                                                                                        \
 		return NULL;                                                                        \

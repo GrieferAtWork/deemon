@@ -110,6 +110,13 @@ INTDEF void ctypes_kos_guard(void);
 #endif /* !... */
 #endif /* 1 */
 
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+#define CTYPES_FAULTPROTECT_LABEL(x) x:
+#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
+#define CTYPES_FAULTPROTECT_LABEL(x) /* nothing */
+#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
+
+
 #ifndef CTYPES_FAULTPROTECT
 #define CTYPES_FAULTPROTECT(expr, error) expr
 #endif /* !CTYPES_FAULTPROTECT */

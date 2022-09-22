@@ -9538,7 +9538,7 @@ DECL_END
 #define CONFIG_HAVE_strncat 1
 #undef strncat
 #define strncat(dst, src, max_srclen) \
-	(*(char *)mempcpy(strend(buf), src, strnlen(src, max_srclen) * sizeof(char)) = '\0', (char *)(dst))
+	(*(char *)mempcpy(strend(dst), src, strnlen(src, max_srclen) * sizeof(char)) = '\0', (char *)(dst))
 #endif /* !CONFIG_HAVE_strncat */
 
 #ifndef CONFIG_HAVE_stpcpy

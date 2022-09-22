@@ -501,7 +501,7 @@ INTERN bool DCALL asm_delunusedsyms(void) {
 	bool result = false;
 	struct asm_sym *iter;
 	SLIST_REMOVEALL(&current_assembler.a_syms, &iter,
-	                struct asm_sym, as_link,
+	                asm_sym, as_link,
 	                iter->as_used == 0, {
 		DeeSlab_FREE(iter);
 		result = true;
