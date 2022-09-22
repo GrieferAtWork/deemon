@@ -68,10 +68,6 @@
 
 #include <stdarg.h>
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN

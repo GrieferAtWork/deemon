@@ -48,9 +48,9 @@
 
 #include "../runtime/runtime_error.h"
 
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
 #include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 
 #ifdef CONFIG_HAVE_LINK_H
 #include <link.h>

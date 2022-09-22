@@ -530,14 +530,14 @@ dee_strverscmp(char const *s1, char const *s2) {
 				if (c1 < '0' || c1 > '9')
 					break;
 				vala *= 10;
-				vala += c1-'0';
+				vala += c1 - '0';
 			}
 			for (;;) {
 				c2 = *s2++;
 				if (c2 < '0' || c2 > '9')
 					break;
 				valb *= 10;
-				valb += c2-'0';
+				valb += c2 - '0';
 			}
 
 			/* Return difference between digits. */
@@ -2562,14 +2562,14 @@ capi_strverscmp(size_t argc, DeeObject *const *argv) {
 					if (c1 < '0' || c1 > '9')
 						break;
 					vala *= 10;
-					vala += c1-'0';
+					vala += c1 - '0';
 				}
 				for (;;) {
 					c2 = *b.pchar++;
 					if (c2 < '0' || c2 > '9')
 						break;
 					valb *= 10;
-					valb += c2-'0';
+					valb += c2 - '0';
 				}
 	
 				/* Return difference between digits. */
