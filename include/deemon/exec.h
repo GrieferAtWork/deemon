@@ -87,10 +87,7 @@ DFUNDEF void DCALL DeeModule_InitPath(void);
 /* Initialize the module path sub-system and return its global list of path. */
 #define DeeModule_GetPath() (DeeModule_InitPath(), (DeeObject *)&DeeModule_Path)
 
-/* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__' */
-DDATDEF char const DeeExec_Timestamp[];
-
-/* Return the time (in milliseconds since 01.01.1970) when deemon was compiled.
+/* Return the time (in UTC milliseconds since 01.01.1970) when deemon was compiled.
  * This value is also used to initialize the `mo_ctime' value of the builtin
  * `deemon' module, automatically forcing user-code to be recompiled if the
  * associated deemon core has changed, and if they are using the `deemon' module. */

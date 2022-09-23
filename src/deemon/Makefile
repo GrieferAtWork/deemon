@@ -20,3 +20,10 @@ DEEMON_CORE_OBJECTS += $(foreach F,$(DEEMON_CORE_SOURCE_FILES),$(BLD_PATH)/core/
 # Include GCC's automatically generated source dependency files
 -include $(foreach F,$(DEEMON_CORE_OBJECTS),$(F:.o=.MF))
 
+# Special rule for building "exec.c"
+ifndef CONFIG_SH_NO_DATE_TIMESTAMP
+$(BLD_PATH)/core/src/deemon/execute/exec.o: $(SRC_ROOT)/src/deemon/execute/exec.c
+	@mkdir -p $(dir $@)
+	$(CORE_CC) -MMD -MF $(@:.o=.MF) -c -o $@ -DBUILD_TIMESTAMP=$(shell date -u +%s) $(CFLAGS) $(CORE_CFLAGS) $<
+endif
+

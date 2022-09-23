@@ -863,22 +863,49 @@ try_compile_minimal() {
 	return $?
 }
 
+# log_checking_begin $message
+CURRENT_CHECK_MESSAGE=""
+log_checking_begin() {
+	echo -n "[ ] $1..."
+	echo "$1..." >> "$CONFIG_LOG"
+	CURRENT_CHECK_MESSAGE="$1"
+}
+
+# log_checking_yes
+# log_checking_yes $status
+log_checking_yes() {
+	local status="$1"
+	if test -z "$status"; then
+		status="yes"
+	fi
+	echo -e "\r[+] $CURRENT_CHECK_MESSAGE... ($status)"
+	echo "$CURRENT_CHECK_MESSAGE... ($status)" >> "$CONFIG_LOG"
+}
+
+# log_checking_no
+# log_checking_no $status
+log_checking_no() {
+	local status="$1"
+	if test -z "$status"; then
+		status="no"
+	fi
+	echo -e "\r[-] $CURRENT_CHECK_MESSAGE... ($status)"
+	echo "$CURRENT_CHECK_MESSAGE... ($status)" >> "$CONFIG_LOG"
+}
+
 # e.g. try_check_feature "STDIO_H" "header <$1>"
 try_check_feature() {
-	echo -n "[?] Checking for $2..."
-	echo "Checking for $2..." >> "$CONFIG_LOG"
+	log_checking_begin "Checking for $2"
 	if try_compile; then
-		echo -e "\r[+] Checking for $2... (yes)"
-		echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
+		log_checking_yes
 		return 0
 	else
-		echo -e "\r[-] Checking for $2... (no)"
+		log_checking_no
 		local FPROC=$(cat "$CONFTEST")
 		FPROC="| ${FPROC//
 /
 | }"
 		cat >> "$CONFIG_LOG" <<EOF
-Checking for $2... (no)
 The failing program was:
 $FPROC
 --------------------------------------------------------------------------------
@@ -887,20 +914,17 @@ EOF
 	fi
 }
 try_check_feature_raw() {
-	echo -n "[?] Checking for $2..."
-	echo "Checking for $2..." >> "$CONFIG_LOG"
+	log_checking_begin "Checking for $2"
 	if try_compile_raw; then
-		echo -e "\r[+] Checking for $2... (yes)"
-		echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
+		log_checking_yes
 		return 0
 	else
-		echo -e "\r[-] Checking for $2... (no)"
+		log_checking_no
 		local FPROC=$(cat "$CONFTEST")
 		FPROC="| ${FPROC//
 /
 | }"
 		cat >> "$CONFIG_LOG" <<EOF
-Checking for $2... (no)
 The failing program was:
 $FPROC
 --------------------------------------------------------------------------------
@@ -957,8 +981,7 @@ EOF
 }
 
 # Check if we need to add argc/argv to conftest files
-echo -n "Checking how to compile a simple source file..."
-echo "Checking how to compile a simple source file..." >> "$CONFIG_LOG"
+log_checking_begin "Checking how to compile a simple source file"
 cat > "$CONFTEST" <<EOF
 $CONFTEST_MAIN{return 0;}
 EOF
@@ -969,13 +992,11 @@ if ! try_compile_raw; then
 $CONFTEST_MAIN{return 0;}
 EOF
 	if ! try_compile_raw; then
-		echo "Cannot compile a simple source file" | tee -a "$CONFIG_LOG"
+		log_checking_no "Cannot compile a simple source file"
 		exit 1
 	fi
 fi
-
-echo " ('$CONFTEST_MAIN { ... }')"
-echo "Checking how to compile a simple source file... ('$CONFTEST_MAIN { ... }')" >> "$CONFIG_LOG"
+log_checking_yes "'$CONFTEST_MAIN { ... }'"
 
 # Check for features
 in_features_region=no
@@ -1140,26 +1161,22 @@ fi
 
 
 # ieee754 detection trick stolen from autoconf
-echo -n "[?] Checking for ieee754..."
-echo "Checking for ieee754..." >> "$CONFIG_LOG"
+log_checking_begin "Checking for ieee754"
 cat > "$CONFTEST" <<EOF
 double d = 90904234967036810337470478905505011476211692735615632014797120844053488865816695273723469097858056257517020191247487429516932130503560650002327564517570778480236724525140520121371739201496540132640109977779420565776568942592.0;
 EOF
 if try_compile_minimal; then
 	echo "#define CONFIG_HAVE_FPU 1" >> "$CONFINC"
 	if grep "seesnoon" "$CONFTEST_OUT" > /dev/null 2>&1; then
-		echo -e "\r[+] Checking for ieee754... (little-endian)"
-		echo "Checking for ieee754... little-endian" >> "$CONFIG_LOG"
+		log_checking_yes "little-endian"
 		echo "#define CONFIG_HAVE_IEEE754 1" >> "$CONFINC"
 		echo "#define CONFIG_HAVE_IEEE754_LE 1" >> "$CONFINC"
 	elif grep "noonsees" "$CONFTEST_OUT" > /dev/null 2>&1; then
-		echo -e "\r[+] Checking for ieee754... (big-endian)"
-		echo "Checking for ieee754... big-endian" >> "$CONFIG_LOG"
+		log_checking_yes "big-endian"
 		echo "#define CONFIG_HAVE_IEEE754 1" >> "$CONFINC"
 		echo "#define CONFIG_HAVE_IEEE754_BE 1" >> "$CONFINC"
 	else
-		echo -e "\r[-] Checking for ieee754... (no)"
-		echo "Checking for ieee754... no" >> "$CONFIG_LOG"
+		log_checking_no
 		echo "#define CONFIG_NO_IEEE754 1" >> "$CONFINC"
 	fi
 else
@@ -1168,12 +1185,10 @@ else
 double d = 0.0;
 EOF
 	if try_compile_minimal; then
-		echo -e "\r[-] Checking for ieee754... (no)"
-		echo "Checking for ieee754... no" >> "$CONFIG_LOG"
+		log_checking_no
 		echo "#define CONFIG_HAVE_FPU 1" >> "$CONFINC"
 	else
-		echo -e "\r[-] Checking for ieee754... (no FPU support)"
-		echo "Checking for ieee754... no FPU support" >> "$CONFIG_LOG"
+		log_checking_no "no FPU support"
 		echo "#define CONFIG_NO_FPU 1" >> "$CONFINC"
 	fi
 fi
@@ -1306,5 +1321,14 @@ if ! [ -z "$CONFIG_DEX_CTYPES_LDFLAGS" ]; then
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
 	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mk"
+fi
+
+# Check if `date -u +%s` works
+log_checking_begin "Checking if 'date -u +%s' works"
+if date -u +%s > /dev/null 2>&1; then
+	log_checking_yes
+else
+	log_checking_no
+	echo "CONFIG_SH_NO_DATE_TIMESTAMP := true" >> "$BLD_ROOT/config.mk"
 fi
 

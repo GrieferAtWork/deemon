@@ -880,20 +880,15 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 PRIVATE uint64_t DCALL
 nt_getunixfiletime(uint64_t filetime) {
-	uint64_t result;
-	SYSTEMTIME systime;
-	/* System-time only has millisecond-precision, so we copy over that part. */
-	result = (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND)) %
-	         MICROSECONDS_PER_MILLISECOND;
+	uint64_t result, local_filetime;
+	/* Windows FILETIME is in local time (but we want UTC) */
 	DBG_ALIGNMENT_DISABLE();
-	FileTimeToSystemTime((LPFILETIME)&filetime, &systime);
-	SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime);
-	SystemTimeToFileTime(&systime, (LPFILETIME)&filetime);
+	LocalFileTimeToFileTime((LPFILETIME)&filetime, (LPFILETIME)&local_filetime);
 	DBG_ALIGNMENT_ENABLE();
-	/* Copy over millisecond information and everything above. */
-	result += (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND));
+	result = FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND);
 	/* Window's filetime started counting on 01.01.1601. */
-	return result - (time_yer2day(1970) - time_yer2day(1601)) * MICROSECONDS_PER_DAY;
+	result -= (time_yer2day(1970) - time_yer2day(1601)) * MICROSECONDS_PER_DAY;
+	return result;
 }
 #endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX || DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
 

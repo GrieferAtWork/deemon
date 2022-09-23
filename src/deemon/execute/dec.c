@@ -1098,7 +1098,10 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			 * described on the DEC header, stop loading. */
 			if unlikely(modtime > timestamp) {
 				GOTO_CORRUPTEDF(reader, stop_imports_module,
-				                "Module changed since dec file was created (%I64u > %I64u)",
+				                "Dependency %q of module %r in %$q changed "
+				                "after .dec file was created (%I64u > %I64u)",
+				                strtab + off, self->df_module->mo_name,
+				                module_pathlen, module_pathstr,
 				                modtime, timestamp);
 			}
 		}
