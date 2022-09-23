@@ -1178,7 +1178,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar,save_ptr:?Aptr?Aptr?Gchar)->?Aptr?Gchar") },
 	{ "basename", (DeeObject *)&ctypes_basename, MODSYM_FNORMAL,
-	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar") },
+	  DOC("(filename:?Aptr?Gchar)->?Aptr?Gchar") },
 
 	/* Atomic functions */
 	{ "atomic_cmpxch", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,

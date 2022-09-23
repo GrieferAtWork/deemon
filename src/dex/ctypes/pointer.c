@@ -51,17 +51,7 @@ pointer_str(DeePointerTypeObject *tp_self,
 	/* Special case: pointer-to-character-type */
 	if (tp_self->pt_orig == &DeeCChar_Type) {
 		size_t length;
-#ifndef CONFIG_HAVE_CTYPES_FAULTPROTECT
-		length = strlen(value.pchar);
-#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT)
 		CTYPES_FAULTPROTECT(length = strlen(value.pchar), return NULL);
-#else /* ... */
-		length = 0;
-		CTYPES_FAULTPROTECT({
-			while (value.pchar[length])
-				++length;
-		}, return NULL);
-#endif /* !... */
 		return DeeString_NewUtf8(value.pchar, length, STRING_ERROR_FREPLAC);
 	} else if (tp_self->pt_orig == &DeeCChar16_Type
 #if __SIZEOF_WCHAR_T__ == 2
@@ -69,17 +59,15 @@ pointer_str(DeePointerTypeObject *tp_self,
 #endif /* __SIZEOF_WCHAR_T__ == 2 */
 	           ) {
 		size_t length;
-#if !defined(CONFIG_HAVE_CTYPES_FAULTPROTECT) && __SIZEOF_WCHAR_T__ == 2
-		length = wcslen(value.pwchar);
-#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT) && __SIZEOF_WCHAR_T__ == 2
+#if __SIZEOF_WCHAR_T__ == 2
 		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
-#else /* ... */
+#else /* __SIZEOF_WCHAR_T__ == 2 */
 		length = 0;
 		CTYPES_FAULTPROTECT({
 			while (value.p16[length])
 				++length;
 		}, return NULL);
-#endif /* !... */
+#endif /* __SIZEOF_WCHAR_T__ != 2 */
 		return DeeString_NewUtf16(value.p16, length, STRING_ERROR_FREPLAC);
 	} else if (tp_self->pt_orig == &DeeCChar32_Type
 #if __SIZEOF_WCHAR_T__ == 4
@@ -87,33 +75,21 @@ pointer_str(DeePointerTypeObject *tp_self,
 #endif /* __SIZEOF_WCHAR_T__ == 4 */
 	           ) {
 		size_t length;
-#if !defined(CONFIG_HAVE_CTYPES_FAULTPROTECT) && __SIZEOF_WCHAR_T__ == 4
-		length = wcslen(value.pwchar);
-#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT) && __SIZEOF_WCHAR_T__ == 4
+#if __SIZEOF_WCHAR_T__ == 4
 		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
-#else /* ... */
+#else /* __SIZEOF_WCHAR_T__ == 4 */
 		length = 0;
 		CTYPES_FAULTPROTECT({
 			while (value.p32[length])
 				++length;
 		}, return NULL);
-#endif /* !... */
+#endif /* __SIZEOF_WCHAR_T__ != 4 */
 		return DeeString_NewUtf32(value.p32, length, STRING_ERROR_FREPLAC);
 	}
 #if __SIZEOF_WCHAR_T__ != 2 && __SIZEOF_WCHAR_T__ != 4
 	else if (tp_self->pt_orig == &DeeCWChar_Type) {
 		size_t length;
-#ifndef CONFIG_HAVE_CTYPES_FAULTPROTECT
-		length = wcslen(value.pwchar);
-#elif defined(CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT)
 		CTYPES_FAULTPROTECT(length = wcslen(value.pwchar), return NULL);
-#else /* ... */
-		length = 0;
-		CTYPES_FAULTPROTECT({
-			while (value.pwchar[length])
-				++length;
-		}, return NULL);
-#endif /* !... */
 		return DeeString_NewWide(value.pwchar, length, STRING_ERROR_FREPLAC);
 	}
 #endif /* __SIZEOF_WCHAR_T__ != 2 && __SIZEOF_WCHAR_T__ != 4 */
@@ -671,11 +647,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 	dst = (uint8_t *)DeeStruct_Data(result);
 	src = (uint8_t *)self->l_ptr.ptr;
 	/* Copy data into the copy of the underlying object. */
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-	CTYPES_FAULTPROTECT({
-		memcpy(dst, src, datasize);
-	}, {
+	CTYPES_FAULTPROTECT(memcpy(dst, src, datasize), {
 		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
 			(*orig_type->st_base.tp_init.tp_alloc.tp_free)(result);
 		} else if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
@@ -685,24 +657,6 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 		}
 		return NULL;
 	});
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-	CTYPES_FAULTPROTECT({
-		while (datasize--)
-			*dst++ = *src++;
-	}, {
-		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
-			(*orig_type->st_base.tp_init.tp_alloc.tp_free)(result);
-		} else if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
-			DeeGCObject_Free(result);
-		} else {
-			DeeObject_Free(result);
-		}
-		return NULL;
-	});
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-	memcpy(dst, src, datasize);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 
 	DeeObject_Init(result, (DeeTypeObject *)orig_type);
 	/* Handle GC objects (see above) */

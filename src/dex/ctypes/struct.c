@@ -537,19 +537,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 		/* Found it! (clear out the memory of this object) */
 		dst  = (uint8_t *)((uintptr_t)self + field->sf_offset);
 		size = DeeSType_Sizeof(field->sf_type->lt_orig);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		CTYPES_FAULTPROTECT({
-			while (size--)
-				*dst++ = 0;
-		},
-		                    return -1);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		bzero(dst, size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
 	return err_unknown_attribute((DeeTypeObject *)tp_self, name, "delete");
@@ -638,19 +626,7 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
 		dst  = (uint8_t *)self;
 		src  = (uint8_t *)DeeStruct_Data(value);
 		size = DeeSType_Sizeof(tp_self);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(memcpy(dst, src, size), return -1);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		CTYPES_FAULTPROTECT({
-			while (size--)
-				*dst++ = *src++;
-		},
-		return -1);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memcpy(dst, src, size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
 	if (DeeNone_Check(value)) {
@@ -658,19 +634,7 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
 		size_t size; /* Clear memory. */
 		dst  = (uint8_t *)self;
 		size = DeeSType_Sizeof(tp_self);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		CTYPES_FAULTPROTECT({
-			while (size--)
-				*dst++ = 0;
-		},
-		return -1);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		bzero(dst, size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
 	/* Fallback: assign a sequence:

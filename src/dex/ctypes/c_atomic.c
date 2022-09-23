@@ -190,12 +190,19 @@ capi_atomic_cmpxch_val(size_t argc, DeeObject *const *argv) {
 	}, goto err_result_obj);
 	DeeObject_Init(result_obj, (DeeTypeObject *)basetype);
 	return result_obj;
-CTYPES_FAULTPROTECT_LABEL(err_result_obj)
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+err_result_obj:
 	DeeObject_Free(result_obj);
+#endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err:
 	return NULL;
 }
 
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
+#define IF_HAVE_FAULTPROTECT(x) x
+#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
+#define IF_HAVE_FAULTPROTECT(x) /* nothing */
+#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 
 #define DEFINE_ATOMIC_BINOP(capi_atomic_name, atomic_name, ATOMIC_NAME)                                    \
 	INTERN WUNUSED DREF DeeObject *DCALL                                                                   \
@@ -228,8 +235,8 @@ err:
 		}, goto err_result_obj);                                                                           \
 		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                                             \
 		return result_obj;                                                                                 \
-CTYPES_FAULTPROTECT_LABEL(err_result_obj)                                                                  \
-		DeeObject_Free(result_obj);                                                                        \
+IF_HAVE_FAULTPROTECT(err_result_obj:                                                                       \
+		DeeObject_Free(result_obj);)                                                                       \
 err:                                                                                                       \
 		return NULL;                                                                                       \
 	}
@@ -310,8 +317,8 @@ DEFINE_ATOMIC_BINOP_VOID(capi_atomic_write, "atomic_write", ATOMIC_WRITE)
 		}, goto err_result_obj);                                                            \
 		DeeObject_Init(result_obj, (DeeTypeObject *)basetype);                              \
 		return result_obj;                                                                  \
-CTYPES_FAULTPROTECT_LABEL(err_result_obj)                                                   \
-		DeeObject_Free(result_obj);                                                         \
+IF_HAVE_FAULTPROTECT(err_result_obj:                                                        \
+		DeeObject_Free(result_obj);)                                                        \
 err:                                                                                        \
 		return NULL;                                                                        \
 	}

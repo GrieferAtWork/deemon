@@ -1321,19 +1321,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 		dst  = (uint8_t *)self;
 		src  = (uint8_t *)DeeStruct_Data(value);
 		size = DeeSType_Sizeof(orig_type);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(memcpy(dst, src, size), return -1);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		CTYPES_FAULTPROTECT({
-			while (size--)
-				*dst++ = *src++;
-		},
-		return -1);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memcpy(dst, src, size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
 	if (DeeNone_Check(value)) {
@@ -1341,19 +1329,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 		size_t size; /* Clear memory. */
 		dst  = (uint8_t *)self;
 		size = DeeSType_Sizeof(orig_type);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		CTYPES_FAULTPROTECT({
-			while (size--)
-				*dst++ = 0;
-		},
-		return -1);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		bzero(dst, size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
 	return err_unimplemented_operator(orig_type, OPERATOR_ASSIGN);

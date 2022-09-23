@@ -385,20 +385,7 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 		item_size = DeeSType_Sizeof(tp_self->at_orig);
 		del_size  = (size_t)(end - begin) * item_size;
 		del_begin = (uint8_t *)((uintptr_t)base + (size_t)begin * item_size);
-#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
 		CTYPES_FAULTPROTECT(bzero(del_begin, del_size), goto err);
-#else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-		/* Use inline code so that fault-protect can guard against it. */
-		CTYPES_FAULTPROTECT({
-			while (del_size--)
-				*del_begin++ = 0;
-		},
-		goto err);
-#endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
-#else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		bzero(del_begin, del_size);
-#endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	}
 	return 0;
 err:

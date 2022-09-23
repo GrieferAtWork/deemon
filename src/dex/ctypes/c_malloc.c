@@ -51,7 +51,7 @@ capi_free(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
-	CTYPES_RECURSIVE_FAULTPROTECT(Dee_Free(ptr.ptr), goto err);
+	CTYPES_FAULTPROTECT(Dee_Free(ptr.ptr), goto err);
 	return_none;
 err:
 	return NULL;
@@ -92,9 +92,7 @@ capi_realloc(size_t argc, DeeObject *const *argv) {
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_RECURSIVE_FAULTPROTECT(
-	ptr.ptr = Dee_Realloc(ptr.ptr, new_size),
-	goto err_r);
+	CTYPES_FAULTPROTECT(ptr.ptr = Dee_Realloc(ptr.ptr, new_size), goto err_r);
 	if unlikely(!ptr.ptr)
 		goto err_r;
 	/* Update the resulting pointer. */
@@ -168,16 +166,16 @@ capi_tryrealloc(size_t argc, DeeObject *const *argv) {
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_RECURSIVE_FAULTPROTECT(
+	CTYPES_FAULTPROTECT(
 	ptr.ptr = Dee_TryRealloc(ptr.ptr, new_size),
 	goto err_r);
 	/* Update the resulting pointer. */
 	((struct pointer_object *)result)->p_ptr.ptr = ptr.ptr;
 	return result;
-#ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_r:
 	Dee_Decref(result);
-#endif /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
+#endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err:
 	return NULL;
 }
@@ -220,11 +218,11 @@ capi_strdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED_STRNLEN(len, str.pchar, maxlen, goto err);
+	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen), goto err);
 	resptr = Dee_Malloc((len + 1) * sizeof(char));
 	if unlikely(!resptr)
 		goto err;
-	CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
+	CTYPES_FAULTPROTECT(memcpyc(resptr, str.pchar, len, sizeof(char)), goto err_r);
 	((char *)resptr)[len] = '\0';
 	result = DeePointer_NewChar(resptr);
 	if unlikely(!result)
@@ -248,11 +246,12 @@ capi_trystrdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED_STRNLEN(len, str.pchar, maxlen, goto err);
+	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen), goto err);
 	resptr = Dee_TryMalloc((len + 1) * sizeof(char));
 	if likely(resptr) {
-		CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
-		((char *)resptr)[len] = '\0';
+		CTYPES_FAULTPROTECT({
+			*(char *)mempcpyc(resptr, str.pchar, len, sizeof(char)) = '\0';
+		}, goto err_r);
 	}
 	result = DeePointer_NewChar(resptr);
 	if unlikely(!result)

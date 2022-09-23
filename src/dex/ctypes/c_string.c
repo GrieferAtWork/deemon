@@ -27,8 +27,6 @@
 #include "c_api.h"
 /**/
 
-#include <hybrid/overflow.h>
-
 #include <deemon/arg.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -36,6 +34,9 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* memmem(), tolower(), toupper(), ... */
+#include <deemon/system.h>
+
+#include <hybrid/overflow.h>
 
 DECL_BEGIN
 
@@ -550,6 +551,32 @@ dee_strverscmp(char const *s1, char const *s2) {
 }
 #endif /* !CONFIG_HAVE_strverscmp */
 
+#ifndef CONFIG_HAVE_basename
+#define CONFIG_HAVE_basename 1
+#undef basename
+#define basename dee_basename
+LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
+dee_basename(char const *filename) {
+	/* >> char *slash = strrchr(filename, '/');
+	 * >> return slash ? slash + 1 : (char *)filename; */
+	char *result, *iter = (char *)filename;
+#ifdef CONFIG_HOST_WINDOWS
+	/* Skip drive letter. */
+	if (isalpha(iter[0]) && iter[1] == ':')
+		iter += 2;
+#endif /* CONFIG_HOST_WINDOWS */
+	result = iter;
+	for (;;) {
+		char ch = *iter++;
+		if (DeeSystem_IsSep(ch))
+			result = iter;
+		if (!ch)
+			break;
+	}
+	return result;
+}
+#endif /* !CONFIG_HAVE_basename */
+
 PRIVATE ATTR_COLD int DCALL err_overflow_on_total_size(void) {
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
 	                       "Overflow in total buffer size");
@@ -569,7 +596,7 @@ capi_memcpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
 		goto err_overflow;
-	CTYPES_PROTECTED_MEMCPY(dst.ptr, src.ptr, num_bytes, goto err);
+	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err_overflow:
 	err_overflow_on_total_size();
@@ -591,7 +618,7 @@ capi_mempcpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
 		goto err_overflow;
-	CTYPES_PROTECTED_MEMCPY(dst.ptr, src.ptr, num_bytes, goto err);
+	CTYPES_FAULTPROTECT(memcpy(dst.ptr, src.ptr, num_bytes), goto err);
 	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
 err_overflow:
 	err_overflow_on_total_size();
@@ -612,16 +639,7 @@ capi_memccpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
-	CTYPES_PROTECTED(
-	dst.ptr = memccpy(dst.ptr, src.ptr, needle, num_bytes), {
-		while (num_bytes--) {
-			uint8_t byte = *src.p8++;
-			*dst.p8++    = byte;
-			if (byte == (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(dst.ptr = memccpy(dst.ptr, src.ptr, needle, num_bytes), goto err);
 	--dst.p8;
 	return DeePointer_NewVoid(dst.ptr);
 err:
@@ -639,13 +657,7 @@ capi_memset(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
-	CTYPES_PROTECTED(
-	memset(dst.ptr, byte, num_bytes), {
-		uint8_t *iter = dst.p8;
-		while (num_bytes--)
-			*iter++ = (uint8_t)byte;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -662,12 +674,7 @@ capi_mempset(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
-	CTYPES_PROTECTED(
-	memset(dst.ptr, byte, num_bytes), {
-		while (num_bytes--)
-			*dst.p8++ = (uint8_t)byte;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(memset(dst.ptr, byte, num_bytes), goto err);
 	return DeePointer_NewVoid((void *)(dst.uint + num_bytes));
 err:
 	return NULL;
@@ -686,12 +693,7 @@ capi_bzero(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
 		goto err_overflow;
-	CTYPES_PROTECTED(
-	bzero(dst.ptr, num_bytes), {
-		while (num_bytes--)
-			*dst.p8++ = 0;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(bzero(dst.ptr, num_bytes), goto err);
 	return_none;
 err_overflow:
 	err_overflow_on_total_size();
@@ -714,22 +716,7 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
 		goto err_overflow;
-	CTYPES_PROTECTED(
-	memmove(dst.ptr, src.ptr, num_bytes), {
-		uint8_t *iter;
-		uint8_t *end;
-		if (dst.p8 < src.p8) {
-			end = (iter = dst.p8) + num_bytes;
-			while (iter < end)
-				*iter++ = *src.p8++;
-		} else {
-			iter = (end = dst.p8) + num_bytes;
-			src.p8 += num_bytes;
-			while (iter < end)
-				*--iter = *--src.p8;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err_overflow:
 	err_overflow_on_total_size();
@@ -751,22 +738,7 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (elem_count != 1 && OVERFLOW_UMUL(num_bytes, elem_count, &num_bytes))
 		goto err_overflow;
-	CTYPES_PROTECTED(
-	memmove(dst.ptr, src.ptr, num_bytes), {
-		uint8_t *iter;
-		uint8_t *end;
-		if (dst.p8 < src.p8) {
-			end = (iter = dst.p8) + num_bytes;
-			while (iter < end)
-				*iter++ = *src.p8++;
-		} else {
-			iter = (end = dst.p8) + num_bytes;
-			src.p8 += num_bytes;
-			while (iter < end)
-				*--iter = *--src.p8;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(memmove(dst.ptr, src.ptr, num_bytes), goto err);
 	return DeePointer_NewVoid(dst.p8 + num_bytes);
 err_overflow:
 	err_overflow_on_total_size();
@@ -788,17 +760,7 @@ capi_memchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memchr(haystack.ptr, needle, num_bytes), {
-		result.ptr = NULL;
-		for (; num_bytes--; ++haystack.p8) {
-			if (*haystack.p8 == (uint8_t)needle) {
-				result.ptr = haystack.ptr;
-				break;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memchr(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -816,18 +778,7 @@ capi_memrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memrchr(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8 + num_bytes;
-		result.ptr = NULL;
-		while (iter != haystack.p8) {
-			if (*--iter == (uint8_t)needle) {
-				result.ptr = iter;
-				break;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrchr(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -845,15 +796,7 @@ capi_memend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memend(haystack.ptr, needle, num_bytes), {
-		result.p8 = haystack.p8;
-		for (; num_bytes--; ++result.p8) {
-			if (*result.p8 == (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memend(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -871,16 +814,7 @@ capi_memrend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memrend(haystack.ptr, needle, num_bytes), {
-		result.p8 = haystack.p8;
-		result.p8 += num_bytes;
-		while (num_bytes--) {
-			if (*--result.p8 == (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrend(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -898,16 +832,7 @@ capi_memlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memlen(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8;
-		for (; num_bytes--; ++iter) {
-			if (*iter == (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memlen(haystack.ptr, needle, num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -925,16 +850,7 @@ capi_memrlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memrlen(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8 + num_bytes;
-		while (num_bytes--) {
-			if (*--iter == (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memrlen(haystack.ptr, needle, num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -951,15 +867,7 @@ capi_rawmemchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = rawmemchr(haystack.ptr, needle), {
-		result.p8 = haystack.p8;
-		for (;; ++result.p8) {
-			if (*result.p8 == (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemchr(haystack.ptr, needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -976,15 +884,7 @@ capi_rawmemrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = rawmemrchr(haystack.ptr, needle), {
-		result.p8 = haystack.p8;
-		for (;;) {
-			if (*--result.p8 == (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemrchr(haystack.ptr, needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1001,16 +901,7 @@ capi_rawmemlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = rawmemlen(haystack.ptr, needle), {
-		uint8_t *iter = haystack.p8;
-		for (;; ++iter) {
-			if (*iter == (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = rawmemlen(haystack.ptr, needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1027,16 +918,7 @@ capi_rawmemrlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = rawmemrlen(haystack.ptr, needle), {
-		uint8_t *iter = haystack.p8;
-		for (;;) {
-			if (*--iter == (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = rawmemrlen(haystack.ptr, needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1055,17 +937,7 @@ capi_memxchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memxchr(haystack.ptr, needle, num_bytes), {
-		result.ptr = NULL;
-		for (; num_bytes--; ++haystack.p8) {
-			if (*haystack.p8 != (uint8_t)needle) {
-				result.ptr = haystack.ptr;
-				break;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxchr(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1083,18 +955,7 @@ capi_memxrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memxrchr(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8 + num_bytes;
-		result.ptr = NULL;
-		while (iter != haystack.p8) {
-			if (*--iter != (uint8_t)needle) {
-				result.ptr = iter;
-				break;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxrchr(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1112,15 +973,7 @@ capi_memxend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memxend(haystack.ptr, needle, num_bytes), {
-		result.p8 = haystack.p8;
-		for (; num_bytes--; ++result.p8) {
-			if (*result.p8 != (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxend(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1138,15 +991,7 @@ capi_memxrend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memxrend(haystack.ptr, needle, num_bytes), {
-		result.p8 = haystack.p8 + num_bytes;
-		while (num_bytes--) {
-			if (*--result.p8 != (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memxrend(haystack.ptr, needle, num_bytes), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1164,16 +1009,7 @@ capi_memxlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memxlen(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8;
-		for (; num_bytes--; ++iter) {
-			if (*iter != (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memxlen(haystack.ptr, needle, num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1191,16 +1027,7 @@ capi_memxrlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memxrlen(haystack.ptr, needle, num_bytes), {
-		uint8_t *iter = haystack.p8 + num_bytes;
-		while (num_bytes--) {
-			if (*--iter != (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memxrlen(haystack.ptr, needle, num_bytes), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1217,15 +1044,7 @@ capi_rawmemxchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = rawmemxchr(haystack.ptr, needle), {
-		result.p8 = haystack.p8;
-		for (;; ++result.p8) {
-			if (*result.p8 != (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemxchr(haystack.ptr, needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1242,15 +1061,7 @@ capi_rawmemxrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = rawmemxrchr(haystack.ptr, needle), {
-		result.p8 = haystack.p8;
-		for (;;) {
-			if (*--result.p8 != (uint8_t)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = rawmemxrchr(haystack.ptr, needle), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1267,16 +1078,7 @@ capi_rawmemxlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = rawmemxlen(haystack.ptr, needle), {
-		uint8_t *iter = haystack.p8;
-		for (;; ++iter) {
-			if (*iter != (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = rawmemxlen(haystack.ptr, needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1293,16 +1095,7 @@ capi_rawmemxrlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_haystack, &DeeCVoid_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result = rawmemxrlen(haystack.ptr, needle), {
-		uint8_t *iter = haystack.p8;
-		for (;;) {
-			if (*--iter != (uint8_t)needle)
-				break;
-		}
-		result = (size_t)(iter - haystack.p8);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = rawmemxrlen(haystack.ptr, needle), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1323,16 +1116,7 @@ capi_bcmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = bcmp(a.ptr, b.ptr, num_bytes), {
-		uint8_t av;
-		uint8_t bv;
-		av = bv = 0;
-		while (num_bytes-- && ((av = *a.p8++) == (bv = *b.p8++)))
-			;
-		result = av == bv ? 0 : 1;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = bcmp(a.ptr, b.ptr, num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1351,16 +1135,7 @@ capi_memcmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memcmp(a.ptr, b.ptr, num_bytes), {
-		uint8_t av;
-		uint8_t bv;
-		av = bv = 0;
-		while (num_bytes-- && ((av = *a.p8++) == (bv = *b.p8++)))
-			;
-		result = (int)av - (int)bv;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memcmp(a.ptr, b.ptr, num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1379,19 +1154,7 @@ capi_memcasecmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = memcasecmp(a.ptr, b.ptr, num_bytes), {
-		uint8_t av;
-		uint8_t bv;
-		av = bv = 0;
-		while (num_bytes-- &&
-		       (((av = *a.p8++) == (bv = *b.p8++)) ||
-		        (av = tolower(av), bv = tolower(bv),
-		         av == bv)))
-			;
-		result = (int)av - (int)bv;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = memcasecmp(a.ptr, b.ptr, num_bytes), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -1410,48 +1173,7 @@ capi_memmem(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memmem(a.ptr, haystack_len, b.ptr, needle_len), {
-		void const *candidate;
-		uint8_t marker;
-		result.ptr = NULL;
-		if unlikely(!needle_len) {
-			result.ptr = a.ptr;
-		} else if unlikely(!needle_len > haystack_len) {
-		} else {
-			haystack_len -= needle_len;
-			marker = *b.p8;
-			for (;;) {
-				uint8_t *iter = a.p8;
-				uint8_t *iter2;
-				uint8_t av;
-				uint8_t bv;
-				size_t temp = haystack_len;
-				candidate   = NULL;
-				for (; temp--; ++iter) {
-					if (*iter == marker) {
-						candidate = iter;
-						break;
-					}
-				}
-				if (!candidate)
-					break;
-				av = bv = 0;
-				temp    = needle_len;
-				iter    = (uint8_t *)candidate;
-				iter2   = b.p8;
-				while (temp-- && ((av = *iter++) == (bv = *iter2++)))
-					;
-				if (av == bv) {
-					result.ptr = (void *)candidate;
-					break;
-				}
-				haystack_len = ((uintptr_t)a.p8 + haystack_len) - (uintptr_t)candidate;
-				a.ptr        = (void *)((uintptr_t)candidate + 1);
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memmem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1471,53 +1193,7 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), {
-		void const *candidate;
-		uint8_t marker1;
-		uint8_t marker2;
-		result.ptr = NULL;
-		if unlikely(!needle_len) {
-			result.ptr = a.ptr;
-		} else if unlikely(!needle_len > haystack_len) {
-		} else {
-			haystack_len -= needle_len;
-			marker1 = (uint8_t)tolower(*b.p8);
-			marker2 = (uint8_t)toupper(marker1);
-			for (;;) {
-				uint8_t *iter = a.p8;
-				uint8_t *iter2;
-				uint8_t av;
-				uint8_t bv;
-				size_t temp = haystack_len;
-				candidate   = NULL;
-				for (; temp--; ++iter) {
-					if (*iter == marker1 || *iter == marker2) {
-						candidate = iter;
-						break;
-					}
-				}
-				if (!candidate)
-					break;
-				av = bv = 0;
-				temp    = needle_len;
-				iter    = (uint8_t *)candidate;
-				iter2   = b.p8;
-				while (temp-- &&
-				       (((av = *iter++) == (bv = *iter2++)) ||
-				        (av = tolower(av), bv = tolower(bv),
-				         av == bv)))
-					;
-				if (av == bv) {
-					result.ptr = (void *)candidate;
-					break;
-				}
-				haystack_len = ((uintptr_t)a.p8 + haystack_len) - (uintptr_t)candidate;
-				a.ptr        = (void *)((uintptr_t)candidate + 1);
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1538,47 +1214,7 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memrmem(a.ptr, haystack_len, b.ptr, needle_len), {
-		void const *candidate;
-		uint8_t marker;
-		result.ptr = NULL;
-		if unlikely(!needle_len) {
-			result.ptr = a.p8 + haystack_len;
-		} else if unlikely(!needle_len > haystack_len) {
-		} else {
-			haystack_len -= needle_len - 1;
-			marker = *(uint8_t *)b.ptr;
-			for (;;) {
-				uint8_t *iter = a.p8 + haystack_len;
-				uint8_t *iter2;
-				uint8_t av;
-				uint8_t bv;
-				size_t temp;
-				while (iter != a.p8) {
-					if (*--iter == (uint8_t)marker)
-						break;
-				}
-				if (iter == a.p8)
-					break;
-				candidate = iter;
-				av = bv = 0;
-				temp    = needle_len;
-				iter    = (uint8_t *)candidate;
-				iter2   = b.p8;
-				while (temp-- && ((av = *iter++) == (bv = *iter2++)))
-					;
-				if (av == bv) {
-					result.ptr = (void *)candidate;
-					break;
-				}
-				if unlikely(candidate == b.ptr)
-					break;
-				haystack_len = (uintptr_t)candidate - (uintptr_t)a.ptr;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memrmem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1599,55 +1235,7 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.ptr = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), {
-		void const *candidate;
-		uint8_t marker1;
-		uint8_t marker2;
-		result.ptr = NULL;
-		if unlikely(!needle_len) {
-			result.ptr = a.p8 + haystack_len;
-		} else if unlikely(!needle_len > haystack_len) {
-		} else {
-			haystack_len -= needle_len - 1;
-			marker1 = (uint8_t)tolower(*(uint8_t *)b.ptr);
-			marker2 = (uint8_t)toupper(marker1);
-			for (;;) {
-				uint8_t *iter = a.p8 + haystack_len;
-				uint8_t *iter2;
-				uint8_t av;
-				uint8_t bv;
-				size_t temp;
-				while (iter != a.p8) {
-					--iter;
-					if (*iter == (uint8_t)marker1)
-						break;
-					if (*iter == (uint8_t)marker2)
-						break;
-				}
-				if (iter == a.p8)
-					break;
-				candidate = iter;
-				av = bv = 0;
-				temp    = needle_len;
-				iter    = (uint8_t *)candidate;
-				iter2   = b.p8;
-				while (temp-- &&
-				       (((av = *iter++) == (bv = *iter2++)) ||
-				        (av = tolower(av), bv = tolower(bv),
-				         av == bv)))
-					;
-				if (av == bv) {
-					result.ptr = (void *)candidate;
-					break;
-				}
-				if unlikely(candidate == b.ptr)
-					break;
-				haystack_len = (uintptr_t)candidate - (uintptr_t)a.ptr;
-			}
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.ptr = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), goto err);
 	return DeePointer_NewVoid(result.ptr);
 err:
 	return NULL;
@@ -1662,18 +1250,7 @@ capi_memrev(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
-	CTYPES_PROTECTED(
-	memrev(dst.ptr, num_bytes), {
-		uint8_t *iter;
-		uint8_t *end;
-		end = (iter = (uint8_t *)dst.ptr) + num_bytes;
-		while (iter < end) {
-			uint8_t temp = *iter;
-			*iter++      = *--end;
-			*end         = temp;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(memrev(dst.ptr, num_bytes), goto err);
 	return DeePointer_NewVoid(dst.ptr);
 err:
 	return NULL;
@@ -1688,7 +1265,7 @@ capi_strlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED_STRLEN(result, str.pchar, goto err);
+	CTYPES_FAULTPROTECT(result = strlen(str.pchar), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1702,12 +1279,7 @@ capi_strend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED(
-	str.pchar = strend(str.pchar), {
-		while (*str.pchar++)
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(str.pchar = strend(str.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
 err:
 	return NULL;
@@ -1723,7 +1295,7 @@ capi_strnlen(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED_STRNLEN(result, str.pchar, maxlen, goto err);
+	CTYPES_FAULTPROTECT(result = strnlen(str.pchar, maxlen), goto err);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1738,12 +1310,7 @@ capi_strnend(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED(
-	str.pchar = strnend(str.pchar, maxlen), {
-		for (; maxlen && *str.pchar; --maxlen, ++str.pchar)
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(str.pchar = strnend(str.pchar, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
 err:
 	return NULL;
@@ -1761,20 +1328,7 @@ capi_strchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strchr(haystack.pchar, needle), {
-		result.pchar = NULL;
-		for (;; ++haystack.pchar) {
-			char ch = *haystack.pchar;
-			if (ch == (char)(unsigned char)needle) {
-				result.pchar = haystack.pchar;
-				break;
-			}
-			if (!ch)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchr(haystack.pchar, needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1791,18 +1345,7 @@ capi_strrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strrchr(haystack.pchar, needle), {
-		result.pchar = NULL;
-		for (;; ++haystack.pchar) {
-			char ch = *haystack.pchar;
-			if (ch == (char)(unsigned char)needle)
-				result.pchar = haystack.pchar;
-			if (!ch)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchr(haystack.pchar, needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1819,20 +1362,7 @@ capi_strnchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnchr(haystack.pchar, needle, maxlen), {
-		result.pchar = NULL;
-		for (; maxlen--; ++haystack.pchar) {
-			char ch = *haystack.pchar;
-			if (ch == (char)(unsigned char)needle) {
-				result.pchar = haystack.pchar;
-				break;
-			}
-			if (!ch)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnchr(haystack.pchar, needle, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1849,18 +1379,7 @@ capi_strnrchr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnrchr(haystack.pchar, needle, maxlen), {
-		result.pchar = NULL;
-		for (; maxlen--; ++haystack.pchar) {
-			char ch = *haystack.pchar;
-			if (ch == (char)(unsigned char)needle)
-				result.pchar = haystack.pchar;
-			if (!ch)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchr(haystack.pchar, needle, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1876,15 +1395,7 @@ capi_stroff(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strchrnul(haystack.pchar, needle), {
-		result.pchar = haystack.pchar;
-		for (; *result.pchar; ++result.pchar) {
-			if ((unsigned char)*result.pchar == (unsigned char)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, needle), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1900,15 +1411,7 @@ capi_strroff(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strrchrnul(haystack.pchar, needle), {
-		result.pchar = haystack.pchar - 1;
-		do {
-			if unlikely((unsigned char)*haystack.pchar == (unsigned char)needle)
-				result.pchar = haystack.pchar;
-		} while (*haystack.pchar++);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, needle), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1925,13 +1428,7 @@ capi_strnoff(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnchrnul(haystack.pchar, needle, maxlen), {
-		result.pchar = haystack.pchar;
-		for (; maxlen-- && *result.pchar && (unsigned char)*result.pchar != (unsigned char)needle; ++result.pchar)
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnchrnul(haystack.pchar, needle, maxlen), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1948,15 +1445,7 @@ capi_strnroff(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), {
-		result.pchar = haystack.pchar - 1;
-		for (; maxlen-- && *haystack.pchar; ++haystack.pchar) {
-			if unlikely((unsigned char)*haystack.pchar == (unsigned char)needle)
-				result.pchar = haystack.pchar;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), goto err);
 	return DeeInt_NewSize((size_t)(result.pchar - haystack.pchar));
 err:
 	return NULL;
@@ -1972,15 +1461,7 @@ capi_strchrnul(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strchrnul(haystack.pchar, needle), {
-		result.pchar = haystack.pchar;
-		for (; *result.pchar; ++result.pchar) {
-			if ((unsigned char)*result.pchar == (unsigned char)needle)
-				break;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strchrnul(haystack.pchar, needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -1996,15 +1477,7 @@ capi_strrchrnul(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strrchrnul(haystack.pchar, needle), {
-		result.pchar = haystack.pchar - 1;
-		do {
-			if unlikely((unsigned char)*haystack.pchar == (unsigned char)needle)
-				result.pchar = haystack.pchar;
-		} while (*haystack.pchar++);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strrchrnul(haystack.pchar, needle), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2020,12 +1493,7 @@ capi_strnchrnul(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	haystack.pchar = strnchrnul(haystack.pchar, needle, maxlen), {
-		for (; maxlen-- && *haystack.pchar && (unsigned char)*haystack.pchar != (unsigned char)needle; ++haystack.pchar)
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(haystack.pchar = strnchrnul(haystack.pchar, needle, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, haystack.pchar);
 err:
 	return NULL;
@@ -2042,15 +1510,7 @@ capi_strnrchrnul(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_dst, &DeeCChar_Type, &haystack))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), {
-		result.pchar = haystack.pchar - 1;
-		for (; maxlen-- && *haystack.pchar; ++haystack.pchar) {
-			if unlikely((unsigned char)*haystack.pchar == (unsigned char)needle)
-				result.pchar = haystack.pchar;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnrchrnul(haystack.pchar, needle, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2067,19 +1527,7 @@ capi_strcmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = strcmp(a.pchar, b.pchar), {
-		char c1;
-		char c2;
-		result = 0;
-		do {
-			if unlikely((c1 = *a.pchar++) != (c2 = *b.pchar++)) {
-				result = (int)((unsigned char)c1 - (unsigned char)c2);
-				break;
-			}
-		} while (c1);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = strcmp(a.pchar, b.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2098,21 +1546,7 @@ capi_strncmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = strncmp(a.pchar, b.pchar, maxlen), {
-		char c1;
-		char c2;
-		result = 0;
-		do {
-			if (!maxlen--)
-				break;
-			if unlikely((c1 = *a.pchar++) != (c2 = *b.pchar++)) {
-				result = (int)((unsigned char)c1 - (unsigned char)c2);
-				break;
-			}
-		} while (c1);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = strncmp(a.pchar, b.pchar, maxlen), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2129,21 +1563,7 @@ capi_strcasecmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = strcasecmp(a.pchar, b.pchar), {
-		char c1;
-		char c2;
-		result = 0;
-		do {
-			if unlikely((c1 = *a.pchar++) != (c2 = *b.pchar++) &&
-			            ((c1 = (char)tolower((unsigned int)c1)) !=
-			             (c2 = (char)tolower((unsigned int)c2)))) {
-				result = (int)((unsigned char)c1 - (unsigned char)c2);
-				break;
-			}
-		} while (c1);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = strcasecmp(a.pchar, b.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2162,23 +1582,7 @@ capi_strncasecmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = strncasecmp(a.pchar, b.pchar, maxlen), {
-		char c1;
-		char c2;
-		result = 0;
-		do {
-			if (!maxlen--)
-				break;
-			if unlikely((c1 = *a.pchar++) != (c2 = *b.pchar++) &&
-			            ((c1 = (char)tolower((unsigned int)c1)) !=
-			             (c2 = (char)tolower((unsigned int)c2)))) {
-				result = (int)((unsigned char)c1 - (unsigned char)c2);
-				break;
-			}
-		} while (c1);
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = strncasecmp(a.pchar, b.pchar, maxlen), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2194,13 +1598,7 @@ capi_strcpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strcpy(a.pchar, b.pchar), {
-		result.pchar = a.pchar;
-		while ((*a.pchar++ = *b.pchar++) != '\0')
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcpy(a.pchar, b.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2217,19 +1615,7 @@ capi_strncpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strncpy(a.pchar, b.pchar, maxlen), {
-		size_t i;
-		size_t srclen = 0;
-		while (srclen < maxlen && b.pchar[srclen])
-			++srclen;
-		for (i = 0; i < srclen; ++i)
-			a.pchar[i] = b.pchar[i];
-		for (; i < srclen; ++i)
-			a.pchar[i] = '\0';
-		result.pchar = a.pchar;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncpy(a.pchar, b.pchar, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2245,15 +1631,7 @@ capi_strcat(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strcat(a.pchar, b.pchar), {
-		result.pchar = a.pchar;
-		while (*a.pchar)
-			++a.pchar;
-		while ((*a.pchar++ = *b.pchar++) != '\0')
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcat(a.pchar, b.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2270,20 +1648,7 @@ capi_strncat(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strncat(a.pchar, b.pchar, maxlen), {
-		size_t i;
-		size_t srclen = 0;
-		result.pchar = a.pchar;
-		while (srclen < maxlen && b.pchar[srclen])
-			++srclen;
-		while (*a.pchar)
-			++a.pchar;
-		for (i = 0; i < srclen; ++i)
-			a.pchar[i] = b.pchar[i];
-		a.pchar[i] = '\0';
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncat(a.pchar, b.pchar, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2299,13 +1664,7 @@ capi_stpcpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = stpcpy(a.pchar, b.pchar), {
-		while ((*a.pchar++ = *b.pchar++) != '\0')
-			;
-		result.pchar = a.pchar;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = stpcpy(a.pchar, b.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2322,19 +1681,7 @@ capi_stpncpy(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = stpncpy(a.pchar, b.pchar, maxlen), {
-		size_t i;
-		size_t srclen = 0;
-		while (srclen < maxlen && b.pchar[srclen])
-			++srclen;
-		for (i = 0; i < srclen; ++i)
-			a.pchar[i] = b.pchar[i];
-		for (; i < srclen; ++i)
-			a.pchar[i] = 0;
-		result.pchar = a.pchar + srclen;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = stpncpy(a.pchar, b.pchar, maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2350,30 +1697,7 @@ capi_strstr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strstr(a.pchar, b.pchar), {
-		char ch;
-		char needle_start;
-		needle_start = *b.pchar++;
-		result.pchar = NULL;
-		while ((ch = *a.pchar++) != '\0') {
-			if (ch == needle_start) {
-				char const *hay2;
-				char const *ned_iter;
-				hay2     = a.pchar;
-				ned_iter = b.pchar;
-				while ((ch = *ned_iter++) != '\0') {
-					if (*hay2++ != ch)
-						goto miss;
-				}
-				result.pchar = (char *)a.pchar - 1;
-				break;
-			}
-miss:
-			;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strstr(a.pchar, b.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2389,32 +1713,7 @@ capi_strcasestr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strcasestr(a.pchar, b.pchar), {
-		char ch;
-		char needle_start;
-		needle_start = *b.pchar++;
-		needle_start = (char)tolower((unsigned char)needle_start);
-		result.pchar = NULL;
-		while ((ch = *a.pchar++) != '\0') {
-			if (ch == needle_start || (char)tolower((unsigned char)ch) == needle_start) {
-				char const *hay2;
-				char const *ned_iter;
-				hay2     = a.pchar;
-				ned_iter = b.pchar;
-				while ((ch = *ned_iter++) != '\0') {
-					char hay2_ch = *hay2++;
-					if (hay2_ch != ch && (char)tolower((unsigned char)hay2_ch) != (char)tolower((unsigned char)ch))
-						goto miss;
-				}
-				result.pchar = (char *)a.pchar - 1;
-				break;
-			}
-miss:
-			;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strcasestr(a.pchar, b.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2431,31 +1730,7 @@ capi_strnstr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strnstr(a.pchar, b.pchar, haystack_maxlen), {
-		char ch;
-		char needle_start = *b.pchar++;
-		result.pchar = NULL;
-		while (haystack_maxlen-- && (ch = *a.pchar++) != '\0') {
-			if (ch == needle_start) {
-				char const *hay2;
-				char const *ned_iter;
-				size_t maxlen2;
-				hay2     = a.pchar;
-				ned_iter = b.pchar;
-				maxlen2  = haystack_maxlen;
-				while ((ch = *ned_iter++) != '\0') {
-					if (!maxlen2-- || *hay2++ != ch)
-						goto miss;
-				}
-				result.pchar = (char *)a.pchar - 1;
-				break;
-			}
-miss:
-			;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strnstr(a.pchar, b.pchar, haystack_maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2472,36 +1747,7 @@ capi_strncasestr(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result.pchar = strncasestr(a.pchar, b.pchar, haystack_maxlen), {
-		char ch;
-		char needle_start = *b.pchar++;
-		needle_start = (char)tolower((unsigned char)needle_start);
-		result.pchar = NULL;
-		while (haystack_maxlen-- && (ch = *a.pchar++) != '\0') {
-			if (ch == needle_start || (char)tolower((unsigned char)ch) == needle_start) {
-				char const *hay2;
-				char const *ned_iter;
-				size_t maxlen2;
-				hay2     = a.pchar;
-				ned_iter = b.pchar;
-				maxlen2  = haystack_maxlen;
-				while ((ch = *ned_iter++) != '\0') {
-					char hay2_ch;
-					if (!maxlen2--)
-						goto miss;
-					hay2_ch = *hay2++;
-					if (hay2_ch != ch && (char)tolower((unsigned char)hay2_ch) != (char)tolower((unsigned char)ch))
-						goto miss;
-				}
-				result.pchar = (char *)a.pchar - 1;
-				break;
-			}
-miss:
-			;
-		}
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result.pchar = strncasestr(a.pchar, b.pchar, haystack_maxlen), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, result.pchar);
 err:
 	return NULL;
@@ -2518,71 +1764,7 @@ capi_strverscmp(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(ob_b, &DeeCChar_Type, &b))
 		goto err;
-	CTYPES_PROTECTED(
-	result = strverscmp(a.pchar, b.pchar), {
-		result = 0;
-		char const *s1_start = a.pchar;
-		char c1;
-		char c2;
-		do {
-			if ((c1 = *a.pchar) != (c2 = *b.pchar)) {
-				unsigned int vala;
-				unsigned int valb;
-	
-				/* Unwind common digits. */
-				while (a.pchar != s1_start) {
-					if (a.pchar[-1] < '0' || a.pchar[-1] > '9')
-						break;
-					c2 = c1 = *--a.pchar;
-					--b.pchar;
-				}
-	
-				/* Check if both strings have digit sequences in the same places. */
-				if ((c1 < '0' || c1 > '9') &&
-				    (c2 < '0' || c2 > '9')) {
-					result = (int)((unsigned char)c1 - (unsigned char)c2);
-					goto done;
-				}
-	
-				/* Deal with leading zeros. */
-				if (c1 == '0') {
-					result = -1;
-					goto done;
-				}
-				if (c2 == '0') {
-					result = 1;
-					goto done;
-				}
-	
-				/* Compare digits. */
-				vala = c1 - '0';
-				valb = c2 - '0';
-				for (;;) {
-					c1 = *a.pchar++;
-					if (c1 < '0' || c1 > '9')
-						break;
-					vala *= 10;
-					vala += c1 - '0';
-				}
-				for (;;) {
-					c2 = *b.pchar++;
-					if (c2 < '0' || c2 > '9')
-						break;
-					valb *= 10;
-					valb += c2 - '0';
-				}
-	
-				/* Return difference between digits. */
-				result = (int)vala - (int)valb;
-				goto done;
-			}
-			++a.pchar;
-			++b.pchar;
-		} while (c1 != '\0');
-done:
-		;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(result = strverscmp(a.pchar, b.pchar), goto err);
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2745,16 +1927,11 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_basename(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob_str;
 	union pointer str;
-	if (DeeArg_Unpack(argc, argv, "o:strend", &ob_str))
+	if (DeeArg_Unpack(argc, argv, "o:basename", &ob_str))
 		goto err;
 	if (DeeObject_AsPointer(ob_str, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_PROTECTED(
-	str.pchar = strend(str.pchar), {
-		while (*str.pchar++)
-			;
-	},
-	goto err);
+	CTYPES_FAULTPROTECT(str.pchar = basename(str.pchar), goto err);
 	return DeePointer_NewFor(&DeeCChar_Type, str.ptr);
 err:
 	return NULL;
