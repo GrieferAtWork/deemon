@@ -619,7 +619,7 @@ do_suspend_thread(DeeThreadObject *__restrict self) {
 #elif defined(USE_SUSPEND_SIGNALS)
 			unsigned int timeout;
 			int error;
-			ATOMIC_FETCHOR(self->t_state, THREAD_STATE_SUSPENDREQ);
+			ATOMIC_OR(self->t_state, THREAD_STATE_SUSPENDREQ);
 restart:
 			timeout = 10;
 			/* Send the signal to the thread. */
@@ -848,7 +848,7 @@ handle_iter:
 		error = DeeThread_Interrupt((DeeObject *)iter,
 		                            &DeeError_Interrupt_instance,
 		                            NULL);
-		ATOMIC_FETCHOR(iter->t_state, THREAD_STATE_SHUTDOWNINTR);
+		ATOMIC_OR(iter->t_state, THREAD_STATE_SHUTDOWNINTR);
 		/* NOTE: Also handle interrupt signals on error, because we're
 		 *       the ones trying to interrupt all the other threads. */
 		if (error < 0)
@@ -1333,7 +1333,7 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 	DBG_ALIGNMENT_ENABLE();
 	/* Clear the suspension-requested flag for the calling thread,
 	 * indicating that the thread is now being suspended. */
-	ATOMIC_FETCHAND(caller->t_state, ~THREAD_STATE_SUSPENDREQ);
+	ATOMIC_AND(caller->t_state, ~THREAD_STATE_SUSPENDREQ);
 	/* Suspension is really as simple as this (NOTE: `pause()' is async-safe) */
 	while (caller->t_suspended) {
 #ifdef CONFIG_HAVE_pause
@@ -1410,7 +1410,7 @@ next_interrupt:
 		Dee_Free(next);
 		/* NOTE: Don't clear the interrupted-flag since
 		 *       there are still unhandled interrupts left. */
-		ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_INTERRUPTING);
+		ATOMIC_AND(self->t_state, ~THREAD_STATE_INTERRUPTING);
 		if (!interrupt_args)
 			goto throw_main;
 		/* When an asynchronous callback is to-be executed, also handle
@@ -1427,8 +1427,8 @@ next_interrupt:
 	}
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
-	ATOMIC_FETCHAND(self->t_state, ~(THREAD_STATE_INTERRUPTING |
-	                                 THREAD_STATE_INTERRUPTED));
+	ATOMIC_AND(self->t_state, ~(THREAD_STATE_INTERRUPTING |
+	                            THREAD_STATE_INTERRUPTED));
 	/* Last interrupt action. */
 	if (interrupt_args) {
 		ASSERT(interrupt_main != NULL);
@@ -1568,7 +1568,7 @@ PRIVATE void *thread_entry(DREF DeeThreadObject *__restrict self)
 	/* If the thread was started as suspended, wait for the suspension to clean out.
 	 * HINT: The suspended-requested flag was already cleared above. */
 	while (ATOMIC_READ(self->t_suspended)) {
-		ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_SUSPENDREQ);
+		ATOMIC_AND(self->t_state, ~THREAD_STATE_SUSPENDREQ);
 		pause();
 	}
 #endif /* USE_SUSPEND_SIGNALS */
@@ -1602,11 +1602,11 @@ early_err:
 			/* Likely case: Sill no main function. - Store the one we've just figured out. */
 			Dee_Incref(threadmain);
 			self->t_threadmain = threadmain;
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 		} else {
 			/* Call the new thread-main function that has been defined. */
 			Dee_Incref(old_main);
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 			Dee_Decref(threadmain);
 			threadmain = old_main;
 		}
@@ -1634,7 +1634,7 @@ set_result:
 				SCHED_YIELD();
 			ASSERT(!self->t_threadres);
 			self->t_threadres = result; /* Inherit reference. */
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 		}
 	} else {
 		DeeObject *current;
@@ -1712,7 +1712,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(me->t_thread == NULL) {
 		DWORD error;
-		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+		ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 		/* Drop the reference that never came to be... */
 		del_running_thread(me);
 		Dee_DecrefNokill(self);
@@ -1732,7 +1732,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		me->t_join = CreateSemaphoreW(NULL, 0, 0x7fffffff, NULL);
 		if unlikely(me->t_join == NULL) {
 			error = (int)GetLastError();
-			ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 			/* Drop the reference that never came to be... */
 			del_running_thread(me);
 			Dee_DecrefNokill(self);
@@ -1756,7 +1756,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(error != 0) {
-			ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 			/* Drop the reference that never came to be... */
 			del_running_thread(me);
 			Dee_DecrefNokill(self);
@@ -2038,7 +2038,7 @@ again:
 			goto done_join;
 		if (me->t_state & THREAD_STATE_DETACHED) {
 			/* Special case: The thread was detached, but not joined. */
-			ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+			ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot join thread %k after being detached",
 			                self);
@@ -2059,16 +2059,16 @@ again:
 
 			case WAIT_IO_COMPLETION:
 				/* Interrupt. */
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				goto again;
 
 			case WAIT_TIMEOUT:
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				return 1; /* Timeout */
 
 			case WAIT_FAILED:
 				/* Error */
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				DBG_ALIGNMENT_DISABLE();
 				wait_state = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
@@ -2102,16 +2102,16 @@ again:
 
 			case WAIT_IO_COMPLETION:
 				/* Interrupt. */
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				goto again;
 
 			case WAIT_TIMEOUT:
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				return 1; /* Timeout */
 
 			case WAIT_FAILED:
 				/* Error */
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				DBG_ALIGNMENT_DISABLE();
 				wait_state = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
@@ -2152,7 +2152,7 @@ again:
 				}
 			}
 			if unlikely(error != 0) {
-				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+				ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 				error = DeeSystem_GetErrno();
 				/* Don't throw an error on busy/timeout. */
 #ifdef ETIMEDOUT /* Returned by `sem_timedwait' */
@@ -2177,13 +2177,13 @@ again:
 			if (timeout_microseconds == (uint64_t)-1) {
 				while (!ATOMIC_READ(me->t_join)) {
 					if (DeeThread_Sleep(1000)) {
-						ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+						ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 						goto err; /* Interrupt received. */
 					}
 				}
 			} else if (timeout_microseconds == 0) {
 				if (!ATOMIC_READ(me->t_join)) {
-					ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+					ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 					return 1; /* time-join failed. */
 				}
 			} else {
@@ -2194,11 +2194,11 @@ again:
 					if (ATOMIC_READ(me->t_join))
 						break;
 					if (DeeThread_Sleep(1000)) {
-						ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+						ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 						goto err;
 					}
 					if (DeeThread_GetTimeMicroSeconds() >= end_time) {
-						ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
+						ATOMIC_AND(me->t_state, ~THREAD_STATE_DETACHING);
 						return 1; /* Timeout. */
 					}
 				}
@@ -2237,7 +2237,7 @@ relock_state:
 				req_alloc -= current_alloc;
 				if unlikely(!try_alloc_wrappers(&error_frames, &req_alloc)) {
 					current_alloc = total_alloc - req_alloc;
-					ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+					ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 					/* Try to collect memory before allocating more wrappers. */
 					do {
 						if (!Dee_CollectMemory(sizeof(struct except_frame))) {
@@ -2287,7 +2287,7 @@ relock_state:
 				frame_src = frame_src->ef_prev;
 			}
 			ASSERT(!frame_src);
-			ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 			/* Append the list of new exception to those of the calling thread. */
 			me                 = DeeThread_Self();
 			frame_dst->ef_prev = me->t_except; /* Inherit */
@@ -2299,7 +2299,7 @@ relock_state:
 		if (!result)
 			result = Dee_None;
 		Dee_Incref(result);
-		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+		ATOMIC_AND(me->t_state, ~THREAD_STATE_STARTING);
 		/* Save the thread-result in the caller-provided field. */
 		*pthread_result = result; /* Inherit reference. */
 	}
@@ -2371,8 +2371,8 @@ thread_doclear(DeeThreadObject *__restrict self) {
 	self->t_interrupt.ti_next = NULL;
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
-	ATOMIC_FETCHAND(self->t_state, ~(THREAD_STATE_INTERRUPTING |
-	                                 THREAD_STATE_INTERRUPTED));
+	ATOMIC_AND(self->t_state, ~(THREAD_STATE_INTERRUPTING |
+	                            THREAD_STATE_INTERRUPTED));
 	/* Decref() all pending interrupts. */
 	if (old_intr.ti_intr) {
 		for (;;) {
@@ -2403,7 +2403,7 @@ thread_doclear(DeeThreadObject *__restrict self) {
 	self->t_threadmain = NULL;
 	self->t_threadargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
 	self->t_threadres  = NULL;
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	if (tls_data)
 		fini_tls_data(tls_data);
 	while (old_except) {
@@ -2455,7 +2455,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 			Dee_XVisit(iter->ti_args);
 		} while ((iter = iter->ti_next) != NULL);
 	}
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_INTERRUPTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_INTERRUPTING);
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_STARTING) &
 	       THREAD_STATE_STARTING)
 		SCHED_YIELD();
@@ -2498,7 +2498,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 		if (self->t_tlsdata)
 			visit_tls_data(self->t_tlsdata, proc, arg);
 	}
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2643,7 +2643,7 @@ thread_repr(DeeThreadObject *__restrict self) {
 	threadargs = (DREF DeeObject *)self->t_threadargs;
 	Dee_XIncref(threadmain);
 	Dee_Incref(threadargs);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	unicode_printer_init(&printer);
 	if unlikely(UNICODE_PRINTER_PRINT(&printer, "thread(") < 0)
 		goto err;
@@ -2941,14 +2941,14 @@ thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 		ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
 		if (self->t_exceptsz == 0) {
 			/* No active exceptions. */
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 			err_no_active_exception();
 			goto err;
 		}
 		result = self->t_except->ef_error;
 		ASSERT_OBJECT(result);
 		Dee_Incref(result);
-		ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+		ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 		return result;
 #endif /* !CONFIG_NO_THREADS */
 	}
@@ -2977,7 +2977,7 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 		ASSERT((self->t_exceptsz != 0) == (self->t_except != NULL));
 		if (self->t_exceptsz == 0) {
 			/* No active exceptions. */
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 			err_no_active_exception();
 			goto err;
 		}
@@ -2988,7 +2988,7 @@ thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *arg
 			result = Dee_None;
 		ASSERT_OBJECT(result);
 		Dee_Incref(result);
-		ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+		ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 		return result;
 #endif /* !CONFIG_NO_THREADS */
 	}
@@ -3257,7 +3257,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 		SCHED_YIELD();
 	result = self->t_threadmain;
 	Dee_XIncref(result);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	/* If the callback isn't set, lookup the `run' member function. */
 	if (!result)
 		result = DeeObject_GetAttr((DeeObject *)self, (DeeObject *)&str_run);
@@ -3303,7 +3303,7 @@ restart:
 	old_callback       = self->t_threadmain;
 	self->t_threadmain = value;
 	Dee_XIncref(value);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	Dee_XDecref(old_callback);
 	return 0;
 #endif /* !CONFIG_NO_THREADS */
@@ -3326,7 +3326,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 		SCHED_YIELD();
 	result = (DREF DeeObject *)self->t_threadargs;
 	Dee_Incref(result);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	return result;
 #endif /* !CONFIG_NO_THREADS */
 }
@@ -3367,7 +3367,7 @@ restart:
 	old_callargs       = (DREF DeeObject *)self->t_threadargs;
 	self->t_threadargs = (DREF DeeTupleObject *)value;
 	Dee_Incref(value);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	Dee_Decref(old_callargs);
 	return 0;
 err:
@@ -3406,7 +3406,7 @@ restart:
 	if (!result)
 		result = Dee_None;
 	Dee_XIncref(result);
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	return result;
 #endif /* !CONFIG_NO_THREADS */
 }
@@ -3455,7 +3455,7 @@ restart:
 		                  count * sizeof(DREF DeeObject *));
 		result         = (DREF DeeTupleObject *)DeeObject_TryMalloc(reqsize);
 		if unlikely(!result) {
-			ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+			ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 			if (Dee_CollectMemory(reqsize))
 				goto restart;
 			goto err;
@@ -3486,7 +3486,7 @@ restart:
 		}
 		DeeObject_Init(result, &DeeTuple_Type);
 	}
-	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
+	ATOMIC_AND(self->t_state, ~THREAD_STATE_STARTING);
 	return (DREF DeeObject *)result;
 err_start_over:
 	{

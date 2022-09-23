@@ -407,7 +407,7 @@ FORCELOCAL void
 		mask = (uintptr_t)1 << (index % (__SIZEOF_POINTER__ * 8));
 		/* Clear the in-use bit in the availability bitset. */
 #ifdef NDEBUG
-		ATOMIC_FETCHAND(page->sp_inuse[i], ~mask);
+		ATOMIC_AND(page->sp_inuse[i], ~mask);
 #else /* NDEBUG */
 		{
 			uintptr_t oldval;

@@ -197,12 +197,12 @@ begin_loading:
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_FailLoading(DeeModuleObject *__restrict self) {
-	ATOMIC_FETCHAND(self->mo_flags, ~(MODULE_FLOADING));
+	ATOMIC_AND(self->mo_flags, ~(MODULE_FLOADING));
 }
 
 PRIVATE NONNULL((1)) void DCALL
 DeeModule_DoneLoading(DeeModuleObject *__restrict self) {
-	ATOMIC_FETCHOR(self->mo_flags, MODULE_FDIDLOAD);
+	ATOMIC_OR(self->mo_flags, MODULE_FDIDLOAD);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2965,7 +2965,7 @@ pack_code_in_return:
 #ifdef CONFIG_NO_THREADS
 	result->mo_flags |= current_rootscope->rs_flags;
 #else /* CONFIG_NO_THREADS */
-	ATOMIC_FETCHOR(result->mo_flags, current_rootscope->rs_flags);
+	ATOMIC_OR(result->mo_flags, current_rootscope->rs_flags);
 #endif /* !CONFIG_NO_THREADS */
 	result->mo_bucketm = current_rootscope->rs_bucketm;
 	result->mo_bucketv = current_rootscope->rs_bucketv;
@@ -2994,7 +2994,7 @@ pack_code_in_return:
 
 	COMPILER_END();
 	Dee_Decref(compiler);
-	ATOMIC_FETCHOR(result->mo_flags, MODULE_FDIDLOAD);
+	ATOMIC_OR(result->mo_flags, MODULE_FDIDLOAD);
 	return (DREF DeeObject *)result;
 err_r_compiler_code:
 	ast_xdecref(code);
@@ -3002,7 +3002,7 @@ err_r_compiler:
 	COMPILER_END();
 	Dee_Decref(compiler);
 err_r:
-	ATOMIC_FETCHAND(result->mo_flags, ~(MODULE_FLOADING));
+	ATOMIC_AND(result->mo_flags, ~(MODULE_FLOADING));
 	Dee_Decref_likely(result);
 	goto err;
 err_module_name:

@@ -382,7 +382,7 @@ set_utf8_and_return_1byte:
 		return (char *)result;
 	}
 	/* No latin1 characters here! */
-	ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FASCII);
+	ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -469,7 +469,7 @@ set_utf8_and_return_1byte:
 		return (char *)result;
 	}
 	/* No latin1 characters here! */
-	ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FASCII);
+	ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -519,7 +519,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 		/* The actual length of the string matches the length of of its single-byte
 		 * variant, in other words meaning that all of its characters could fit into
 		 * that range, and that the string consists only of ASCII characters. */
-		ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FASCII);
+		ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		return (uint8_t *)DeeString_STR(self);
 	}
@@ -566,7 +566,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 
 	/* All right. - We've managed to construct the single-byte variant. */
 	if (contains_invalid)
-		ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FINVBYT);
+		ATOMIC_OR(utf->u_flags, STRING_UTF_FINVBYT);
 
 	/* Deal with race conditions. */
 	if (!ATOMIC_CMPXCH(utf->u_data[STRING_WIDTH_1BYTE], NULL, (size_t *)result)) {
@@ -875,7 +875,7 @@ print_ascii:
 	}
 	if (flush_start == (uint8_t *)DeeString_STR(self)) {
 		/* The entire string is ASCII (remember this fact!) */
-		ATOMIC_FETCHOR(utf->u_flags, STRING_UTF_FASCII);
+		ATOMIC_OR(utf->u_flags, STRING_UTF_FASCII);
 		goto print_ascii;
 	}
 	/* Flush the remainder. */

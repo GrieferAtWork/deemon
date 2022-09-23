@@ -793,7 +793,7 @@ done_procenv_argv:
 	Dee_Free(used_argv);
 done_procenv:
 	rwlock_read(&self->p_lock);
-	ATOMIC_FETCHAND(self->p_state, ~PROCESS_FSTARTING);
+	ATOMIC_AND(self->p_state, ~PROCESS_FSTARTING);
 	rwlock_endread(&self->p_lock);
 	Dee_XDecref(procenv);
 	Dee_XDecref(procerr);
@@ -816,7 +816,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 		SCHED_YIELD();
 	if (!(self->p_state & (PROCESS_FSTARTED | PROCESS_FTERMINATED))) {
 		/* Process was never started. */
-		ATOMIC_FETCHAND(self->p_state, ~THREAD_STATE_DETACHING);
+		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that hasn't been started",
 		                self);
@@ -824,7 +824,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (!(self->p_state & PROCESS_FCHILD)) {
 		/* Process isn't one of our children. */
-		ATOMIC_FETCHAND(self->p_state, ~THREAD_STATE_DETACHING);
+		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that isn't a child",
 		                self);
@@ -832,7 +832,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (self->p_state & THREAD_STATE_DETACHED) {
 		/* Process was already detached. */
-		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 		return_false;
 	}
 #ifdef CONFIG_HAVE_detach
@@ -997,7 +997,7 @@ again:
 		goto err;
 	}
 	if (result == 0) {
-		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 		return 1; /* Wait failed (timeout) */
 	}
 	if (result > 0)
@@ -1007,7 +1007,7 @@ again:
 	if (result == EINTR)
 		goto again;
 #endif /* EINTR */
-	ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+	ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
 	                          "Failed to join process %k", self);
 err:
@@ -1068,7 +1068,7 @@ process_dojoin(Process *__restrict self,
 		}
 		if (self->p_state & PROCESS_FDETACHED) {
 			/* Special case: The process was detached, but not joined. */
-			ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+			ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot join process %k after being detached",
 			                self);
@@ -1156,7 +1156,7 @@ process_hasterminated(Process *self) {
 		goto nope;
 	error = tryjoinpid(self->p_pid, &self->p_status);
 	if (error <= 0) {
-		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 		goto nope;
 	}
 	/* Delete the detaching-flag and set the detached-flag. */

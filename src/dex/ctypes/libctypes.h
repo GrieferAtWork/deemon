@@ -907,33 +907,32 @@ DeeStructType_FromSequence(DeeObject *name,
 
 
 
-/* A special type that can be interface with native system libraries:
+/* A special type to interface with native system libraries:
  *
- * >> @"@throw FileNotFound The given @name wasn't found"
- * >> @"@throw ValueError The given @default_cc calling convention could not be found"
- * >> this(string name);
- * >> this(string name, string default_cc);
+ * >> @@@throw FileNotFound The given @name wasn't found
+ * >> @@@throw ValueError The given @default_cc calling convention could not be found
+ * >> this(name: string);
+ * >> this(name: string, default_cc: string);
  * >>
- * >> // Lookup exports
- * >> @"@throw KeyError: No export under that name"
- * >> operator [] (string name) -> void.ptr;
- * >> @"@throw AttributeError: No export under that name"
- * >> operator . (string name) -> int.vfunc(default_cc).ptr;
+ * >> @@Lookup exports
+ * >> @@@throw KeyError: No export under that name
+ * >> operator [] (name: string): void.ptr;
+ * >> @@@throw AttributeError: No export under that name
+ * >> operator . (name: string): int.vfunc(default_cc).ptr;
  * >>
- * >> // Check export presence.
- * >> operator contains (string name): bool;
+ * >> @@Check export presence.
+ * >> operator contains(name: string): bool;
  * >>
- * >> // Optionally (if not supported, throw an UnsupportedAPI error):
- * >> //    enumerate exported symbols.
- * >> operator iter() -> iterator;
+ * >> @@enumerate exported symbols.
+ * >> @@Optional (if not supported, throw an UnsupportedAPI error)
+ * >> operator iter(): Iterator;
  * >> operator enumattr();
  * >>
- * >> // Returns the image load address.
- * >> // NOTE: Only accessible via the class: `shlib.base(my_shlib)'
- * >> function base() -> void.ptr;
- * >>
+ * >> @@Returns the image load address.
+ * >> @@NOTE: Only accessible via the class: `shlib.base(my_shlib)'
+ * >> function base(): void.ptr;
  *
- * NOTE: This type is not derived from `sequence', but simply `object'
+ * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
  */
 INTDEF DeeTypeObject DeeShlib_Type;
 

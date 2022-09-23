@@ -616,7 +616,7 @@ PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
 #ifdef CONFIG_NO_THREADS
 #define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), deemon_module.mo_flags |= MODULE_FHASCTIME)
 #else /* CONFIG_NO_THREADS */
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), ATOMIC_FETCHOR(deemon_module.mo_flags, MODULE_FHASCTIME))
+#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), ATOMIC_OR(deemon_module.mo_flags, MODULE_FHASCTIME))
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_NO_DEC */
 

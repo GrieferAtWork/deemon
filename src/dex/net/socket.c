@@ -197,7 +197,7 @@ again:
 			return -1;
 		}
 		memcpy(&self->s_sockaddr, result, sizeof(SockAddr));
-		ATOMIC_FETCHOR(self->s_state, SOCKET_FHASSOCKADDR);
+		ATOMIC_OR(self->s_state, SOCKET_FHASSOCKADDR);
 		socket_endread(self);
 	} else {
 		socket_endread(self);
@@ -356,7 +356,7 @@ again_shutdown:
 			DBG_ALIGNMENT_DISABLE();
 			error = GET_NET_ERROR();
 			DBG_ALIGNMENT_ENABLE();
-			ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+			ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 			socket_endread(self);
 			if (error == EINVAL)
 				err_invalid_shutdown_how(error, mode);
@@ -366,8 +366,8 @@ again_shutdown:
 			goto err;
 		}
 		/* Indicate that shutdown has been completed. */
-		ATOMIC_FETCHOR(self->s_state, new_state);
-		ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+		ATOMIC_OR(self->s_state, new_state);
+		ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 		socket_upgrade(self); /* it's ok if this blocks. */
 	} else {
 		socket_write(self);
@@ -426,7 +426,7 @@ again_shutdown:
 			if (error == ENOTCONN) {
 				/* Ignore not-connected errors. */
 			} else {
-				ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+				ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 				socket_endread(self);
 				if (error == EINVAL)
 					err_invalid_shutdown_how(error, mode);
@@ -439,8 +439,8 @@ again_shutdown:
 			}
 		}
 		/* Indicate that shutdown has been completed. */
-		ATOMIC_FETCHOR(self->s_state, new_state);
-		ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
+		ATOMIC_OR(self->s_state, new_state);
+		ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 		socket_endread(self);
 	}
 	return_none;
@@ -468,8 +468,7 @@ again:
 		goto err;
 	socket_read(self);
 	/* Enter the binding-state. */
-	if (ATOMIC_FETCHOR(self->s_state, SOCKET_FBINDING) &
-	    SOCKET_FBINDING) {
+	if (ATOMIC_FETCHOR(self->s_state, SOCKET_FBINDING) & SOCKET_FBINDING) {
 
 		socket_endread(self);
 		/* The socket is already in the middle of a binding-call. */
@@ -490,7 +489,7 @@ again:
 		/* Save the (now) active socket address. */
 		memcpy(&self->s_sockaddr, addr, sizeof(SockAddr));
 		COMPILER_WRITE_BARRIER();
-		ATOMIC_FETCHOR(self->s_state, SOCKET_FBOUND | SOCKET_FHASSOCKADDR);
+		ATOMIC_OR(self->s_state, SOCKET_FBOUND | SOCKET_FHASSOCKADDR);
 	}
 	/* Unset the binding-flag. */
 	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FBINDING);
@@ -662,16 +661,16 @@ restart_select:
 				goto err_connect_failure;
 		}
 	}
-	ATOMIC_FETCHOR(self->s_state, SOCKET_FCONNECTED | SOCKET_FHASSOCKADDR);
+	ATOMIC_OR(self->s_state, SOCKET_FCONNECTED | SOCKET_FHASSOCKADDR);
 	/* Unset the connecting-flag. */
-	ATOMIC_FETCHAND(self->s_state, ~SOCKET_FCONNECTING);
+	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
 	socket_endread(self);
 	return 0;
 err_connect_failed:
-	ATOMIC_FETCHAND(self->s_state, ~SOCKET_FCONNECTING);
+	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
 	goto err;
 err_connect_failure:
-	ATOMIC_FETCHAND(self->s_state, ~SOCKET_FCONNECTING);
+	ATOMIC_AND(self->s_state, ~SOCKET_FCONNECTING);
 	socket_endread(self);
 	/* Handle errors. */
 	if (error == EADDRNOTAVAIL) {
@@ -774,7 +773,7 @@ again:
 	error = listen(self->s_socket, max_backlog);
 	DBG_ALIGNMENT_ENABLE();
 	if likely(error >= 0)
-		ATOMIC_FETCHOR(self->s_state, SOCKET_FLISTENING);
+		ATOMIC_OR(self->s_state, SOCKET_FLISTENING);
 	/* Unset the binding-flag. */
 	state = ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSTARTLISTENING);
 	socket_endread(self);
@@ -1381,7 +1380,7 @@ again:
 				err_configure_send(self);
 				goto err;
 			}
-			ATOMIC_FETCHOR(self->s_state, SOCKET_FSENDCONFOK);
+			ATOMIC_OR(self->s_state, SOCKET_FSENDCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1482,7 +1481,7 @@ again:
 				err_configure_recv(self);
 				goto err;
 			}
-			ATOMIC_FETCHOR(self->s_state, SOCKET_FRECVCONFOK);
+			ATOMIC_OR(self->s_state, SOCKET_FRECVCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1590,7 +1589,7 @@ again:
 				err_configure_send(self);
 				goto err;
 			}
-			ATOMIC_FETCHOR(self->s_state, SOCKET_FSENDCONFOK);
+			ATOMIC_OR(self->s_state, SOCKET_FSENDCONFOK);
 			socket_downgrade(self);
 		}
 	}
@@ -1715,7 +1714,7 @@ again:
 				err_configure_recv(self);
 				goto err;
 			}
-			ATOMIC_FETCHOR(self->s_state, SOCKET_FRECVCONFOK);
+			ATOMIC_OR(self->s_state, SOCKET_FRECVCONFOK);
 			socket_downgrade(self);
 		}
 	}

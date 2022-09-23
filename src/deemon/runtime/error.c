@@ -336,7 +336,7 @@ INTDEF uint8_t keyboard_interrupt_counter;
 			if ((counter = ATOMIC_READ(keyboard_interrupt_counter)) == 0xff)             \
 				break;                                                                   \
 		} while (!ATOMIC_CMPXCH_WEAK(keyboard_interrupt_counter, counter, counter + 1)); \
-		ATOMIC_FETCHOR(DeeThread_Main.t_state, THREAD_STATE_INTERRUPTED);                \
+		ATOMIC_OR(DeeThread_Main.t_state, THREAD_STATE_INTERRUPTED);                     \
 	}	__WHILE0
 
 #ifndef CONFIG_NO_THREADS

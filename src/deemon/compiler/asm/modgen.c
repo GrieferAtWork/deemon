@@ -77,7 +77,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #ifdef CONFIG_NO_THREADS
 	mod->mo_flags |= current_rootscope->rs_flags;
 #else /* CONFIG_NO_THREADS */
-	ATOMIC_FETCHOR(mod->mo_flags, current_rootscope->rs_flags);
+	ATOMIC_OR(mod->mo_flags, current_rootscope->rs_flags);
 #endif /* !CONFIG_NO_THREADS */
 	mod->mo_bucketm = current_rootscope->rs_bucketm;
 	mod->mo_bucketv = current_rootscope->rs_bucketv;
@@ -116,7 +116,7 @@ module_compile(DeeModuleObject *__restrict mod,
 #ifdef CONFIG_NO_THREADS
 	mod->mo_flags |= MODULE_FHASCTIME;
 #else /* CONFIG_NO_THREADS */
-	ATOMIC_FETCHOR(mod->mo_flags, MODULE_FHASCTIME);
+	ATOMIC_OR(mod->mo_flags, MODULE_FHASCTIME);
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_NO_DEC */
 

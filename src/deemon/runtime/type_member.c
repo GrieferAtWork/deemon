@@ -724,7 +724,7 @@ type_member_set(struct type_member const *desc,
 		if (boolval) {
 #ifndef CONFIG_NO_THREADS
 			if (desc->m_field.m_type & STRUCT_ATOMIC) {
-				ATOMIC_FETCHOR(*pfield, mask);
+				ATOMIC_OR(*pfield, mask);
 			} else
 #endif /* !CONFIG_NO_THREADS */
 			{
@@ -733,7 +733,7 @@ type_member_set(struct type_member const *desc,
 		} else {
 #ifndef CONFIG_NO_THREADS
 			if (desc->m_field.m_type & STRUCT_ATOMIC) {
-				ATOMIC_FETCHAND(*pfield, ~mask);
+				ATOMIC_AND(*pfield, ~mask);
 			} else
 #endif /* !CONFIG_NO_THREADS */
 			{

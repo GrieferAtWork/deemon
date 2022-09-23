@@ -2001,7 +2001,7 @@ err_nt:
 	if (error == ERROR_INVALID_PARAMETER &&
 	    (dwFlags & SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)) {
 		/* Older versions of windows didn't accept this flag. */
-		ATOMIC_FETCHAND(dwSymlinkAdditionalFlags, ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
+		ATOMIC_AND(dwSymlinkAdditionalFlags, ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
 		dwFlags &= ~SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 		goto again;
 	}

@@ -209,7 +209,7 @@ again:
 				Dee_Decref(result);
 				goto again;
 			}
-			ATOMIC_FETCHOR(self->a_info.a_perm, ATTR_NAMEOBJ);
+			ATOMIC_OR(self->a_info.a_perm, ATTR_NAMEOBJ);
 			Dee_Incref(result);
 		}
 	}
@@ -247,7 +247,7 @@ again:
 				Dee_Decref(result);
 				goto again;
 			}
-			ATOMIC_FETCHOR(self->a_info.a_perm, ATTR_DOCOBJ);
+			ATOMIC_OR(self->a_info.a_perm, ATTR_DOCOBJ);
 			Dee_Incref(result);
 		}
 	}

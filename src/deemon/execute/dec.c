@@ -1096,8 +1096,11 @@ DecFile_LoadImports(DecFile *__restrict self) {
 				GOTO_CORRUPTED(reader, err_imports_module);
 			/* If the module has changed since the time
 			 * described on the DEC header, stop loading. */
-			if unlikely(modtime > timestamp)
-				GOTO_CORRUPTED(reader, stop_imports_module);
+			if unlikely(modtime > timestamp) {
+				GOTO_CORRUPTEDF(reader, stop_imports_module,
+				                "Module changed since dec file was created (%I64u > %I64u)",
+				                modtime, timestamp);
+			}
 		}
 		*moditer = module; /* Inherit */
 	}
@@ -2820,31 +2823,31 @@ done_map:
 PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 	uint64_t result;
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (((DeeModuleObject *)self)->mo_flags & MODULE_FHASCTIME) {
-		result = ((DeeModuleObject *)self)->mo_ctime;
+	DeeModuleObject *me = (DeeModuleObject *)self;
+	ASSERT_OBJECT_TYPE(me, &DeeModule_Type);
+	if (me->mo_flags & MODULE_FHASCTIME) {
+		result = me->mo_ctime;
 		ASSERT(result != (uint64_t)-1);
-	} else if ((DeeModuleObject *)self == &deemon_module) {
+	} else if (me == &deemon_module) {
 		/* `DeeExec_GetTimestamp()' already uses the `mo_ctime' field
 		 *  of `deemon_module' as cache if that field is available. */
 		result = DeeExec_GetTimestamp();
 	} else {
 		/* Lookup the last-modified time of the module's path file. */
-		DeeStringObject *path;
-		path = ((DeeModuleObject *)self)->mo_path;
-		if unlikely(!path)
+		DeeStringObject *path = me->mo_path;
+		if unlikely(!path) {
 			result = 0;
-		else {
+		} else {
 			result = DecTime_Lookup((DeeObject *)path);
 			if unlikely(result == (uint64_t)-1)
 				goto done;
 		}
 		/* Cache the result value in the module itself. */
-		((DeeModuleObject *)self)->mo_ctime = result;
+		me->mo_ctime = result;
 #ifdef CONFIG_NO_THREADS
-		((DeeModuleObject *)self)->mo_flags |= MODULE_FHASCTIME;
+		me->mo_flags |= MODULE_FHASCTIME;
 #else /* CONFIG_NO_THREADS */
-		ATOMIC_FETCHOR(((DeeModuleObject *)self)->mo_flags, MODULE_FHASCTIME);
+		ATOMIC_OR(me->mo_flags, MODULE_FHASCTIME);
 #endif /* !CONFIG_NO_THREADS */
 	}
 done:

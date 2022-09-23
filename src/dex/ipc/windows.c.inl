@@ -876,7 +876,7 @@ done_cmdline_copy:
 	Dee_Free(wCmdLineCopy);
 done_procenv:
 	rwlock_read(&self->p_lock);
-	ATOMIC_FETCHAND(self->p_state, ~PROCESS_FSTARTING);
+	ATOMIC_AND(self->p_state, ~PROCESS_FSTARTING);
 	rwlock_endread(&self->p_lock);
 	Dee_XDecref(procenv);
 	Dee_XDecref(procerr);
@@ -976,7 +976,7 @@ again:
 		}
 		if (self->p_state & PROCESS_FDETACHED) {
 			/* Special case: The process was detached, but not joined. */
-			ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+			ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Cannot join process %k after being detached",
 			                self);
@@ -998,16 +998,16 @@ again:
 
 			case WAIT_IO_COMPLETION:
 				/* Interrupt. */
-				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+				ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 				goto again;
 
 			case WAIT_TIMEOUT:
-				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+				ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 				return 1; /* Timeout */
 
 			case WAIT_FAILED:
 				/* Error */
-				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+				ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 				{
 					DWORD dwError;
 					DBG_ALIGNMENT_DISABLE();
@@ -1055,7 +1055,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 		SCHED_YIELD();
 	if (!(self->p_state & (PROCESS_FSTARTED | PROCESS_FTERMINATED))) {
 		/* Process was never started. */
-		ATOMIC_FETCHAND(self->p_state, ~THREAD_STATE_DETACHING);
+		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that hasn't been started",
 		                self);
@@ -1063,7 +1063,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (!(self->p_state & PROCESS_FCHILD)) {
 		/* Process isn't one of our children. */
-		ATOMIC_FETCHAND(self->p_state, ~THREAD_STATE_DETACHING);
+		ATOMIC_AND(self->p_state, ~THREAD_STATE_DETACHING);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot detach process %k that isn't a child",
 		                self);
@@ -1071,7 +1071,7 @@ process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	if (self->p_state & THREAD_STATE_DETACHED) {
 		/* Process was already detached. */
-		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		ATOMIC_AND(self->p_state, ~PROCESS_FDETACHING);
 		return_false;
 	}
 

@@ -205,7 +205,7 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 	} while (!ATOMIC_CMPXCH_WEAK(PTRLOCK_LBYTE(self), lold, lold & ~(PTRLOCK_LOCK_MASK)));
 	ASSERTF((lold & PTRLOCK_LOCK_MASK) != 0, "Pointer was not locked.");
 #else /* NDEBUG */
-	ATOMIC_FETCHAND(PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
+	ATOMIC_AND(PTRLOCK_LBYTE(self), ~(PTRLOCK_LOCK_MASK));
 #endif /* !NDEBUG */
 }
 

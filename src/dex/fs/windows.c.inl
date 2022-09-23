@@ -1712,7 +1712,7 @@ stat_get_nttype(Stat *__restrict self, bool try_get) {
 		if (self->s_valid & STAT_FNONTTYPE)
 			goto err_noinfo;
 		if (self->s_hand == INVALID_HANDLE_VALUE) {
-			ATOMIC_FETCHOR(self->s_valid, STAT_FNONTTYPE);
+			ATOMIC_OR(self->s_valid, STAT_FNONTTYPE);
 			goto err_noinfo;
 		}
 		if (DeeThread_CheckInterrupt())

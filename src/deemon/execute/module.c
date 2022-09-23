@@ -80,7 +80,7 @@ again:
 			Dee_Decref(result);
 			goto again;
 		}
-		ATOMIC_FETCHOR(self->ss_flags, MODSYM_FNAMEOBJ);
+		ATOMIC_OR(self->ss_flags, MODSYM_FNAMEOBJ);
 		Dee_Incref(result);
 	}
 done:
@@ -114,7 +114,7 @@ again:
 			Dee_Decref(result);
 			goto again;
 		}
-		ATOMIC_FETCHOR(self->ss_flags, MODSYM_FDOCOBJ);
+		ATOMIC_OR(self->ss_flags, MODSYM_FDOCOBJ);
 		Dee_Incref(result);
 	}
 done:
@@ -1010,10 +1010,10 @@ begin_init:
 	}
 
 	/* Set the did-init flag when we're done now. */
-	ATOMIC_FETCHOR(me->mo_flags, MODULE_FDIDINIT);
+	ATOMIC_OR(me->mo_flags, MODULE_FDIDINIT);
 	return 0;
 err:
-	ATOMIC_FETCHAND(me->mo_flags, ~(MODULE_FINITIALIZING));
+	ATOMIC_AND(me->mo_flags, ~(MODULE_FINITIALIZING));
 	return -1;
 }
 

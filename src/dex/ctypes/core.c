@@ -226,8 +226,10 @@ DeeObject_TryAsGenericPointer(DeeObject *self,
 	/* Conversion failed. */
 nope:
 	return 1;
+#ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err:
 	return -1;
+#endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 }
 
 

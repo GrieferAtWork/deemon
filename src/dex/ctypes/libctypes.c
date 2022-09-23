@@ -1003,7 +1003,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "and so on.") },
 	{ "memfrob", (DeeObject *)&ctypes_memfrob, MODSYM_FNORMAL,
 	  DOC("(buf:?Aptr?Gchar,size:?Dint)->?Aptr?Gvoid\n"
-	      "Randomly shuffle the order of bytes in @buf, creating an anagram") },
+	      "xor all bytse within @buf with $42, implementing _very_ simplistic encryption") },
 
 	{ "strlen", (DeeObject *)&ctypes_strlen, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Dint\n"
@@ -1167,7 +1167,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Same as ?Gstrset, but limit the operator to up to @maxlen characters") },
 	{ "strfry", (DeeObject *)&ctypes_strfry, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "xor all characters within @str with $42, implementing _very_ simplistic encryption") },
+	      "Randomly shuffle the order of characters in @str, creating an anagram") },
 	{ "strsep", (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
 	  DOC("(stringp:?Aptr?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar") },
 	{ "stresep", (DeeObject *)&ctypes_stresep, MODSYM_FNORMAL,
