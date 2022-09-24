@@ -173,6 +173,169 @@ INTDEF DeeTypeObject DeeDir_Type;
 #endif
 
 
+
+/* STAT bitflags. */
+
+/* (Mostly) standard UNIX stat flag bits. (We try to mirror these on NT) */
+#ifdef CONFIG_HOST_WINDOWS
+#define STAT_IFMT   0170000 /* These bits determine file type. */
+#define STAT_IFDIR  0040000 /* Directory. */
+#define STAT_IFCHR  0020000 /* Character device. */
+#define STAT_IFBLK  0060000 /* Block device. */
+#define STAT_IFREG  0100000 /* Regular file. */
+#define STAT_IFIFO  0010000 /* FIFO. */
+#define STAT_IFLNK  0120000 /* Symbolic link. */
+#define STAT_IFSOCK 0140000 /* Socket. */
+#define STAT_ISUID  0004000 /* Set user ID on execution. */
+#define STAT_ISGID  0002000 /* Set group ID on execution. */
+#define STAT_ISVTX  0001000 /* Save swapped text after use (sticky). */
+#else /* CONFIG_HOST_WINDOWS */
+#ifdef S_IFMT
+#define STAT_IFMT S_IFMT
+#elif defined(__S_IFMT)
+#define STAT_IFMT __S_IFMT
+#else /* ... */
+#define STAT_IFMT 0170000
+#endif /* !... */
+#ifdef S_IFDIR
+#define STAT_IFDIR S_IFDIR
+#elif defined(__S_IFDIR)
+#define STAT_IFDIR __S_IFDIR
+#else /* ... */
+#define STAT_IFDIR 0040000 /* Directory. */
+#endif /* !... */
+#ifdef S_IFCHR
+#define STAT_IFCHR S_IFCHR
+#elif defined(__S_IFCHR)
+#define STAT_IFCHR __S_IFCHR
+#else /* ... */
+#define STAT_IFCHR 0020000 /* Character device. */
+#endif /* !... */
+#ifdef S_IFBLK
+#define STAT_IFBLK S_IFBLK
+#elif defined(__S_IFBLK)
+#define STAT_IFBLK __S_IFBLK
+#else /* ... */
+#define STAT_IFBLK 0060000 /* Block device. */
+#endif /* !... */
+#ifdef S_IFREG
+#define STAT_IFREG S_IFREG
+#elif defined(__S_IFREG)
+#define STAT_IFREG __S_IFREG
+#else /* ... */
+#define STAT_IFREG 0100000 /* Regular file. */
+#endif /* !... */
+#ifdef S_IFIFO
+#define STAT_IFIFO S_IFIFO
+#elif defined(__S_IFIFO)
+#define STAT_IFIFO __S_IFIFO
+#else /* ... */
+#define STAT_IFIFO 0010000 /* FIFO. */
+#endif /* !... */
+#ifdef S_IFLNK
+#define STAT_IFLNK S_IFLNK
+#elif defined(__S_IFLNK)
+#define STAT_IFLNK __S_IFLNK
+#else /* ... */
+#define STAT_IFLNK 0120000 /* Symbolic link. */
+#endif /* !... */
+#ifdef S_IFSOCK
+#define STAT_IFSOCK S_IFSOC
+#elif defined(__S_IFSOC)
+#define STAT_IFSOCK __S_IFSOC
+#else /* ... */
+#define STAT_IFSOCK 0140000 /* Socket. */
+#endif /* !... */
+#ifdef S_ISUID
+#define STAT_ISUID S_ISUID
+#elif defined(__S_ISUID)
+#define STAT_ISUID __S_ISUID
+#else /* ... */
+#define STAT_ISUID 0004000 /* Set user ID on execution. */
+#endif /* !... */
+#ifdef S_ISGID
+#define STAT_ISGID S_ISGID
+#elif defined(__S_ISGID)
+#define STAT_ISGID __S_ISGID
+#else /* ... */
+#define STAT_ISGID 0002000 /* Set group ID on execution. */
+#endif /* !... */
+#ifdef S_ISVTX
+#define STAT_ISVTX S_ISVTX
+#elif defined(__S_ISVTX)
+#define STAT_ISVTX __S_ISVTX
+#else /* ... */
+#define STAT_ISVTX 0001000 /* Save swapped text after use (sticky). */
+#endif /* !... */
+#endif /* !CONFIG_HOST_WINDOWS */
+
+#ifdef S_ISDIR
+#define STAT_ISDIR(mode) S_ISDIR(mode)
+#elif defined(__S_ISDIR)
+#define STAT_ISDIR(mode) __S_ISDIR(mode)
+#else /* S_ISDIR */
+#define STAT_ISDIR(mode) (((mode) & STAT_IFMT) == STAT_IFDIR)
+#endif /* !S_ISDIR */
+
+#ifdef S_ISCHR
+#define STAT_ISCHR(mode) S_ISCHR(mode)
+#elif defined(__S_ISCHR)
+#define STAT_ISCHR(mode) __S_ISCHR(mode)
+#else /* S_ISCHR */
+#define STAT_ISCHR(mode) (((mode) & STAT_IFMT) == STAT_IFCHR)
+#endif /* !S_ISCHR */
+
+#ifdef S_ISBLK
+#define STAT_ISBLK(mode) S_ISBLK(mode)
+#elif defined(__S_ISBLK)
+#define STAT_ISBLK(mode) __S_ISBLK(mode)
+#else /* S_ISBLK */
+#define STAT_ISBLK(mode) (((mode) & STAT_IFMT) == STAT_IFBLK)
+#endif /* !S_ISBLK */
+
+#ifdef S_ISREG
+#define STAT_ISREG(mode) S_ISREG(mode)
+#elif defined(__S_ISREG)
+#define STAT_ISREG(mode) __S_ISREG(mode)
+#else /* S_ISREG */
+#define STAT_ISREG(mode) (((mode) & STAT_IFMT) == STAT_IFREG)
+#endif /* !S_ISREG */
+
+#ifdef S_ISFIFO
+#define STAT_ISFIFO(mode) S_ISFIFO(mode)
+#elif defined(__S_ISFIFO)
+#define STAT_ISFIFO(mode) __S_ISFIFO(mode)
+#else /* S_ISFIFO */
+#define STAT_ISFIFO(mode) (((mode) & STAT_IFMT) == STAT_IFIFO)
+#endif /* !S_ISFIFO */
+
+#ifdef S_ISLNK
+#define STAT_ISLNK(mode) S_ISLNK(mode)
+#elif defined(__S_ISLNK)
+#define STAT_ISLNK(mode) __S_ISLNK(mode)
+#else /* S_ISLNK */
+#define STAT_ISLNK(mode) (((mode) & STAT_IFMT) == STAT_IFLNK)
+#endif /* !S_ISLNK */
+
+#ifdef S_ISSOCK
+#define STAT_ISSOCK(mode) S_ISSOCK(mode)
+#elif defined(__S_ISSOCK)
+#define STAT_ISSOCK(mode) __S_ISSOCK(mode)
+#else /* S_ISSOCK */
+#define STAT_ISSOCK(mode) (((mode) & STAT_IFMT) == STAT_IFSOCK)
+#endif /* !S_ISSOCK */
+
+#define STAT_IRUSR 0000400           /* Read by owner. */
+#define STAT_IWUSR 0000200           /* Write by owner. */
+#define STAT_IXUSR 0000100           /* Execute by owner. */
+#define STAT_IRGRP (STAT_IRUSR >> 3) /* Read by group. */
+#define STAT_IWGRP (STAT_IWUSR >> 3) /* Write by group. */
+#define STAT_IXGRP (STAT_IXUSR >> 3) /* Execute by group. */
+#define STAT_IROTH (STAT_IRUSR >> 6) /* Read by other. */
+#define STAT_IWOTH (STAT_IWUSR >> 6) /* Write by other. */
+#define STAT_IXOTH (STAT_IXUSR >> 6) /* Execute by other. */
+
+
 DECL_END
 
 #endif /* !GUARD_DEX_POSIX_LIBPOSIX_H */

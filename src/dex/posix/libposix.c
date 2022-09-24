@@ -619,10 +619,110 @@ INTDEF DeeObject posix_DTTOIF;
 INTDEF DeeObject posix_IFTODT;
 INTDEF DeeObject posix_fdopendir;
 
+
+
+/*[[[deemon
+local names = {
+	"IFMT", "IFDIR", "IFCHR", "IFBLK", "IFREG",
+	"IFIFO", "IFLNK", "IFSOCK", "ISUID", "ISGID",
+	"ISVTX", "IRUSR", "IWUSR", "IXUSR", "IRGRP",
+	"IWGRP", "IXGRP", "IROTH", "IWOTH", "IXOTH"
+};
+import * from _dexutils;
+include("p-stat-constants.def");
+for (local x: names)
+	gi("S_" + x, "STAT_" + x);
+]]]*/
+#include "p-stat-constants.def"
+//[[[end]]]
+
+
+
+/* Stat helper functions. */
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISDIR(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISDIR", &arg))
+		goto err;
+	return_bool(STAT_ISDIR(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISCHR(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISCHR", &arg))
+		goto err;
+	return_bool(STAT_ISCHR(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISBLK(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISBLK", &arg))
+		goto err;
+	return_bool(STAT_ISBLK(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISREG(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISREG", &arg))
+		goto err;
+	return_bool(STAT_ISREG(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISFIFO(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISFIFO", &arg))
+		goto err;
+	return_bool(STAT_ISFIFO(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISLNK(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISLNK", &arg))
+		goto err;
+	return_bool(STAT_ISLNK(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISSOCK(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISSOCK", &arg))
+		goto err;
+	return_bool(STAT_ISSOCK(arg));
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_CMETHOD(libposix_S_ISDIR, &posix_S_ISDIR);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISCHR, &posix_S_ISCHR);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISBLK, &posix_S_ISBLK);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISREG, &posix_S_ISREG);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISFIFO, &posix_S_ISFIFO);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISLNK, &posix_S_ISLNK);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISSOCK, &posix_S_ISSOCK);
+
+
+
 PRIVATE struct dex_symbol symbols[] = {
 	/* E* errno codes */
 	D(POSIX_ERRNO_DEFS)
-	/* IMPORTANT: Declarations surrounding errno codes must come after the start! */
+	/* IMPORTANT: errno codes must come first! */
 
 
 	{ "stubs", &PosixStubsList_Singleton, MODSYM_FNORMAL,
@@ -871,6 +971,37 @@ PRIVATE struct dex_symbol symbols[] = {
 	        "as well as enumerating all variables (${for (key, item: environ) ...})")
 	},)
 
+	/* stat.st_mode bits. */
+	LIBPOSIX_S_IFMT_DEF
+	LIBPOSIX_S_IFDIR_DEF
+	LIBPOSIX_S_IFCHR_DEF
+	LIBPOSIX_S_IFBLK_DEF
+	LIBPOSIX_S_IFREG_DEF
+	LIBPOSIX_S_IFIFO_DEF
+	LIBPOSIX_S_IFLNK_DEF
+	LIBPOSIX_S_IFSOCK_DEF
+	LIBPOSIX_S_ISUID_DEF
+	LIBPOSIX_S_ISGID_DEF
+	LIBPOSIX_S_ISVTX_DEF
+	LIBPOSIX_S_IRUSR_DEF
+	LIBPOSIX_S_IWUSR_DEF
+	LIBPOSIX_S_IXUSR_DEF
+	LIBPOSIX_S_IRGRP_DEF
+	LIBPOSIX_S_IWGRP_DEF
+	LIBPOSIX_S_IXGRP_DEF
+	LIBPOSIX_S_IROTH_DEF
+	LIBPOSIX_S_IWOTH_DEF
+	LIBPOSIX_S_IXOTH_DEF
+
+	/* stat.st_mode helper functions. */
+	{ "S_ISDIR", (DeeObject *)&libposix_S_ISDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISCHR", (DeeObject *)&libposix_S_ISCHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISBLK", (DeeObject *)&libposix_S_ISBLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISREG", (DeeObject *)&libposix_S_ISREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISFIFO", (DeeObject *)&libposix_S_ISFIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
@@ -907,39 +1038,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"
 	                                          "(fd:?Dint,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
-
-
-	/* stat.st_mode bits. */
-	DEFINE_LIBFS_ALIAS_S(S_IFMT, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFDIR, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFCHR, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFBLK, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFREG, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFIFO, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFLNK, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IFSOCK, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISUID, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISGID, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISVTX, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IRUSR, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IWUSR, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IXUSR, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IRGRP, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IWGRP, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IXGRP, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IROTH, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IWOTH, "->?Dint\n")
-	DEFINE_LIBFS_ALIAS_S(S_IXOTH, "->?Dint\n")
-
-	/* stat.st_mode helper functions. */
-	DEFINE_LIBFS_ALIAS_S(S_ISDIR, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISCHR, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISBLK, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISREG, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISFIFO, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISLNK, "(mode:?Dint)->?Dbool\n")
-	DEFINE_LIBFS_ALIAS_S(S_ISSOCK, "(mode:?Dint)->?Dbool\n")
-
 #undef DEFINE_LIBFS_ALIAS_S
 #undef DEFINE_LIBFS_ALIAS
 #undef DEFINE_LIBFS_ALIAS_S_ALT
