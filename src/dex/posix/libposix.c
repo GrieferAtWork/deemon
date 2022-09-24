@@ -28,6 +28,7 @@
 #ifndef __INTELLISENSE__
 #include "p-access.c.inl"
 #include "p-cpucount.c.inl"
+#include "p-environ.c.inl"
 #include "p-errno.c.inl"
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
@@ -110,6 +111,11 @@ local ALL_STUBS = {
 	("posix_euidaccess_USE_STUB",   { "euidaccess" }),
 	("posix_cpu_count_USE_STUB",    { "cpu_count" }),
 	("posix_opendir_USE_STUB",      { "dirent", "DIR", "opendir", "fdopendir" }),
+	("posix_getenv_USE_STUB",       { "getenv" }),
+	("posix_setenv_USE_STUB",       { "setenv", "putenv" }),
+	("posix_unsetenv_USE_STUB",     { "unsetenv" }),
+	("posix_clearenv_USE_STUB",     { "clearenv" }),
+	("posix_enumenv_USE_STUB",      { "environ" }),
 };
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -347,6 +353,41 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_opendir_USE_STUB /* nothing */
 #define str_posix_opendir_USE_STUB /* nothing */
 #endif /* !posix_opendir_USE_STUB */
+#ifdef posix_getenv_USE_STUB
+#define len_posix_getenv_USE_STUB +7
+#define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
+#else /* posix_getenv_USE_STUB */
+#define len_posix_getenv_USE_STUB /* nothing */
+#define str_posix_getenv_USE_STUB /* nothing */
+#endif /* !posix_getenv_USE_STUB */
+#ifdef posix_setenv_USE_STUB
+#define len_posix_setenv_USE_STUB +14
+#define str_posix_setenv_USE_STUB 's', 'e', 't', 'e', 'n', 'v', '\0', 'p', 'u', 't', 'e', 'n', 'v', '\0',
+#else /* posix_setenv_USE_STUB */
+#define len_posix_setenv_USE_STUB /* nothing */
+#define str_posix_setenv_USE_STUB /* nothing */
+#endif /* !posix_setenv_USE_STUB */
+#ifdef posix_unsetenv_USE_STUB
+#define len_posix_unsetenv_USE_STUB +9
+#define str_posix_unsetenv_USE_STUB 'u', 'n', 's', 'e', 't', 'e', 'n', 'v', '\0',
+#else /* posix_unsetenv_USE_STUB */
+#define len_posix_unsetenv_USE_STUB /* nothing */
+#define str_posix_unsetenv_USE_STUB /* nothing */
+#endif /* !posix_unsetenv_USE_STUB */
+#ifdef posix_clearenv_USE_STUB
+#define len_posix_clearenv_USE_STUB +9
+#define str_posix_clearenv_USE_STUB 'c', 'l', 'e', 'a', 'r', 'e', 'n', 'v', '\0',
+#else /* posix_clearenv_USE_STUB */
+#define len_posix_clearenv_USE_STUB /* nothing */
+#define str_posix_clearenv_USE_STUB /* nothing */
+#endif /* !posix_clearenv_USE_STUB */
+#ifdef posix_enumenv_USE_STUB
+#define len_posix_enumenv_USE_STUB +8
+#define str_posix_enumenv_USE_STUB 'e', 'n', 'v', 'i', 'r', 'o', 'n', '\0',
+#else /* posix_enumenv_USE_STUB */
+#define len_posix_enumenv_USE_STUB /* nothing */
+#define str_posix_enumenv_USE_STUB /* nothing */
+#endif /* !posix_enumenv_USE_STUB */
 #define POSIX_STUBS_TOTLEN 0 \
 	len_posix_truncate_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -376,6 +417,11 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_euidaccess_USE_STUB \
 	len_posix_cpu_count_USE_STUB \
 	len_posix_opendir_USE_STUB \
+	len_posix_getenv_USE_STUB \
+	len_posix_setenv_USE_STUB \
+	len_posix_unsetenv_USE_STUB \
+	len_posix_clearenv_USE_STUB \
+	len_posix_enumenv_USE_STUB \
 /**/
 #if POSIX_STUBS_TOTLEN != 0
 PRIVATE struct {
@@ -418,6 +464,11 @@ PRIVATE struct {
 		str_posix_euidaccess_USE_STUB
 		str_posix_cpu_count_USE_STUB
 		str_posix_opendir_USE_STUB
+		str_posix_getenv_USE_STUB
+		str_posix_setenv_USE_STUB
+		str_posix_unsetenv_USE_STUB
+		str_posix_clearenv_USE_STUB
+		str_posix_enumenv_USE_STUB
 	},
 	{ Dee_STRING_WIDTH_1BYTE,
 	  Dee_STRING_UTF_FASCII,
@@ -757,13 +808,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: urandom() */
 	/* TODO: getrandom() */
 
-	/* Environ control */
-	D(POSIX_GETENV_DEF)
-	D(POSIX_SETENV_DEF)
-	D(POSIX_PUTENV_DEF)
-	D(POSIX_UNSETENV_DEF)
-	D(POSIX_CLEARENV_DEF)
-
 	/* Python-like helper functions */
 	D(POSIX_CPU_COUNT_DEF_DOC("Returns the ## of available processors on the host machine"))
 	/* TODO: get_inheritable() */
@@ -805,8 +849,29 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(if:?Dint)->?Dint\n"
 	      "Convert an ${S_IF*} constant to ${DT_*}") },
 
+	/* Environ control */
+	D(POSIX_GETENV_DEF_DOC("@throws KeyError The given @varname wasn't found, and @defl wasn't given\n"
+	                       "Same as ${environ[varname]}\n"))
+	D(POSIX_SETENV_DEF_DOC("Same as ${environ[varname] = value}. When @replace is !f, only "
+	                       "add new variables, but don't override one that was already set\n"))
+	D(POSIX_PUTENV_DEF_DOC("If @envline constains $'=', same as ${local name, none, value = envline.partition(\"=\")...; setenv(name, value);}\n"
+	                       "Otherwise, same as ?#unsetenv"))
+	D(POSIX_UNSETENV_DEF_DOC("Returns !t if @varname was deleted, and !f if @varname didn't exist in ?Genviron"))
+	D(POSIX_CLEARENV_DEF_DOC("Clear ?Genviron"))
+	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
+	    DOC("->?S?T2?Dstring?Dstring\n"
+	        "A :mapping-style singleton instance that can be used to "
+	        "access and enumerate environment variables by name:\n"
+	        "${"
+	        "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"
+	        "}\n"
+	        "Other mapping operations known from :Dict can be used "
+	        "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
+	        "check for the existance of (${... in environ}) environment variables, "
+	        "as well as enumerating all variables (${for (key, item: environ) ...})")
+	},)
 
-/* Forward-aliases to `libfs' */
+	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
 	    DOC(proto "Alias for ?Efs:" libfs_name) }, )
@@ -818,7 +883,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(environ, "->?S?T2?Dstring?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(stat, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(lstat, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(getcwd, "->?Dstring\n")

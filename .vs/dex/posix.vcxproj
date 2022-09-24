@@ -70,6 +70,7 @@
     <None Include="..\..\src\dex\posix\p-access-constants.def" />
     <None Include="..\..\src\dex\posix\p-access.c.inl" />
     <None Include="..\..\src\dex\posix\p-cpucount.c.inl" />
+    <None Include="..\..\src\dex\posix\p-environ.c.inl" />
     <None Include="..\..\src\dex\posix\p-errno-constants.def" />
     <None Include="..\..\src\dex\posix\p-errno.c.inl" />
     <None Include="..\..\src\dex\posix\p-exit-constants.def" />

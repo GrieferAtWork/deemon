@@ -1025,7 +1025,7 @@ while read line; do
 						t="${t%%\'*}"
 						;;
 					*)
-						t="return (int)*&$n;"
+						t="(void)*&$n; return 0;"
 						;;
 				esac
 				check_generic "$n" "$t"

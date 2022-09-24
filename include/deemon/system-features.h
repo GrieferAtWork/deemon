@@ -259,6 +259,7 @@ header_nostdinc("sys/select.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("netdb.h", unix);
 header_nostdinc("math.h", addparen(stdc) + " && !defined(CONFIG_NO_FPU)");
 header_nostdinc("sys/param.h");
+header_nostdinc("envlock.h");
 
 include_known_headers();
 
@@ -633,6 +634,40 @@ func("wrename", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; w
 func("_wrename", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wrename(s, t);");
 
 func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'return getenv("PATH") ? 0 : 1;');
+func("setenv", "defined(CONFIG_HAVE_STDLIB_H) && defined(__USE_XOPEN2K)", test: 'return setenv("A", "B", 1);');
+func("unsetenv", "defined(CONFIG_HAVE_STDLIB_H) && defined(__USE_XOPEN2K)", test: 'return unsetenv("A");');
+func("putenv", "defined(CONFIG_HAVE_STDLIB_H) && (" + addparen(msvc) + "|| defined(__USE_MISC) || defined(__USE_XOPEN) || defined(__USE_DOS))", test: 'return putenv((char *)"A=B");');
+func("_putenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return _putenv((char *)"A=B");');
+func("clearenv", "defined(CONFIG_HAVE_STDLIB_H) && defined(__USE_MISC)", test: 'return clearenv();');
+func("putenv_s", "0", test: 'return putenv_s("A", "B");');
+func("_putenv_s", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return _putenv_s("A", "B");');
+var("environ");
+var("_environ");
+var("__environ");
+func("__p__environ", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return ***__p__environ();');
+func("wgetenv", "0", test: "wchar_t t[] = { 'P', 'A', 'T', 'H', 0 }; return wgetenv(t) ? 0 : 1;");
+func("_wgetenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: "wchar_t t[] = { 'P', 'A', 'T', 'H', 0 }; return _wgetenv(t) ? 0 : 1;");
+func("wsetenv", "0", test: "wchar_t t[] = { 'A', 0 }; return wsetenv(t, t, 1);");
+func("_wsetenv", "0", test: "wchar_t t[] = { 'A', 0 }; return wsetenv(t, t, 1);");
+func("wunsetenv", "0", test: "wchar_t t[] = { 'A', 0 }; return wunsetenv(t);");
+func("_wunsetenv", "0", test: "wchar_t t[] = { 'A', 0 }; return _wunsetenv(t);");
+func("wputenv", "0", test: "wchar_t t[] = { 'P', 'A', 'T', 'H', 0 }; return _wputenv(t);");
+func("_wputenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: "wchar_t t[] = { 'P', 'A', 'T', 'H', 0 }; return _wputenv(t);");
+func("wputenv_s", "0", test: "wchar_t t[] = { 'A', 0 }; return wputenv_s(t, t);");
+func("_wputenv_s", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: "wchar_t t[] = { 'A', 0 }; return _wputenv_s(t, t);");
+var("wenviron");
+var("_wenviron");
+var("__wenviron");
+func("__p__wenviron", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return ***__p__wenviron();');
+func("ENV_LOCK", "defined(CONFIG_HAVE_ENVLOCK_H) || (defined(ENV_LOCK) && defined(ENV_UNLOCK))", test: 'ENV_LOCK; return 0;');
+func("ENV_UNLOCK", "defined(CONFIG_HAVE_ENVLOCK_H) || (defined(ENV_LOCK) && defined(ENV_UNLOCK))", test: 'ENV_UNLOCK; return 0;');
+
+var("__argc");
+var("__argv");
+var("__wargv");
+func("__p___argc", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return *__p___argc();');
+func("__p___argv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return ***__p___argv();');
+func("__p___wargv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(msvc), test: 'return ***__p___wargv();');
 
 func("wcslen", "defined(CONFIG_HAVE_WCHAR_H) && " + addparen(stdc), test: "wchar_t s[] = { 'a', 'b', 'c', 0 }; return (int)wcslen(s);");
 
@@ -777,6 +812,7 @@ func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawme
 functest('atoi("42")', stdc);
 functest('strlen("foo")', stdc);
 functest('strchr("foo", 102)', stdc);
+func('wcschr', stdc, test: "wchar_t c[] = { 'A', 0 }; wcschr(c, 'A');");
 functest('strrchr("foo", 102)', stdc);
 functest('strnchr("foo", 102, 3)', "defined(__USE_KOS)");
 functest('strnrchr("foo", 102, 3)', "defined(__USE_KOS)");
@@ -943,10 +979,6 @@ var("_errno");
 var("__errno");
 var("_doserrno", msvc);
 var("doserrno");
-
-var("environ");
-var("_environ");
-var("__environ");
 
 functest("sysconf(0)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 functest("_sysconf(0)");
@@ -1583,6 +1615,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_PARAM_H) && \
       (__has_include(<sys/param.h>))
 #define CONFIG_HAVE_SYS_PARAM_H 1
+#endif
+
+#ifdef CONFIG_NO_ENVLOCK_H
+#undef CONFIG_HAVE_ENVLOCK_H
+#elif !defined(CONFIG_HAVE_ENVLOCK_H) && \
+      (__has_include(<envlock.h>))
+#define CONFIG_HAVE_ENVLOCK_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -4874,6 +4913,253 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_getenv 1
 #endif
 
+#ifdef CONFIG_NO_setenv
+#undef CONFIG_HAVE_setenv
+#elif !defined(CONFIG_HAVE_setenv) && \
+      (defined(setenv) || defined(__setenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(__USE_XOPEN2K)))
+#define CONFIG_HAVE_setenv 1
+#endif
+
+#ifdef CONFIG_NO_unsetenv
+#undef CONFIG_HAVE_unsetenv
+#elif !defined(CONFIG_HAVE_unsetenv) && \
+      (defined(unsetenv) || defined(__unsetenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(__USE_XOPEN2K)))
+#define CONFIG_HAVE_unsetenv 1
+#endif
+
+#ifdef CONFIG_NO_putenv
+#undef CONFIG_HAVE_putenv
+#elif !defined(CONFIG_HAVE_putenv) && \
+      (defined(putenv) || defined(__putenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       (defined(_MSC_VER)|| defined(__USE_MISC) || defined(__USE_XOPEN) || defined(__USE_DOS))))
+#define CONFIG_HAVE_putenv 1
+#endif
+
+#ifdef CONFIG_NO__putenv
+#undef CONFIG_HAVE__putenv
+#elif !defined(CONFIG_HAVE__putenv) && \
+      (defined(_putenv) || defined(___putenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__putenv 1
+#endif
+
+#ifdef CONFIG_NO_clearenv
+#undef CONFIG_HAVE_clearenv
+#elif !defined(CONFIG_HAVE_clearenv) && \
+      (defined(clearenv) || defined(__clearenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_clearenv 1
+#endif
+
+#ifdef CONFIG_NO_putenv_s
+#undef CONFIG_HAVE_putenv_s
+#elif !defined(CONFIG_HAVE_putenv_s) && \
+      (defined(putenv_s) || defined(__putenv_s_defined))
+#define CONFIG_HAVE_putenv_s 1
+#endif
+
+#ifdef CONFIG_NO__putenv_s
+#undef CONFIG_HAVE__putenv_s
+#elif !defined(CONFIG_HAVE__putenv_s) && \
+      (defined(_putenv_s) || defined(___putenv_s_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__putenv_s 1
+#endif
+
+#ifdef CONFIG_NO_environ
+#undef CONFIG_HAVE_environ
+#elif !defined(CONFIG_HAVE_environ) && \
+      (defined(environ) || defined(__environ_defined))
+#define CONFIG_HAVE_environ 1
+#endif
+
+#ifdef CONFIG_NO__environ
+#undef CONFIG_HAVE__environ
+#elif !defined(CONFIG_HAVE__environ) && \
+      (defined(_environ) || defined(___environ_defined))
+#define CONFIG_HAVE__environ 1
+#endif
+
+#ifdef CONFIG_NO___environ
+#undef CONFIG_HAVE___environ
+#elif !defined(CONFIG_HAVE___environ) && \
+      (defined(__environ) || defined(____environ_defined))
+#define CONFIG_HAVE___environ 1
+#endif
+
+#ifdef CONFIG_NO___p__environ
+#undef CONFIG_HAVE___p__environ
+#elif !defined(CONFIG_HAVE___p__environ) && \
+      (defined(__p__environ) || defined(____p__environ_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___p__environ 1
+#endif
+
+#ifdef CONFIG_NO_wgetenv
+#undef CONFIG_HAVE_wgetenv
+#elif !defined(CONFIG_HAVE_wgetenv) && \
+      (defined(wgetenv) || defined(__wgetenv_defined))
+#define CONFIG_HAVE_wgetenv 1
+#endif
+
+#ifdef CONFIG_NO__wgetenv
+#undef CONFIG_HAVE__wgetenv
+#elif !defined(CONFIG_HAVE__wgetenv) && \
+      (defined(_wgetenv) || defined(___wgetenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__wgetenv 1
+#endif
+
+#ifdef CONFIG_NO_wsetenv
+#undef CONFIG_HAVE_wsetenv
+#elif !defined(CONFIG_HAVE_wsetenv) && \
+      (defined(wsetenv) || defined(__wsetenv_defined))
+#define CONFIG_HAVE_wsetenv 1
+#endif
+
+#ifdef CONFIG_NO__wsetenv
+#undef CONFIG_HAVE__wsetenv
+#elif !defined(CONFIG_HAVE__wsetenv) && \
+      (defined(_wsetenv) || defined(___wsetenv_defined))
+#define CONFIG_HAVE__wsetenv 1
+#endif
+
+#ifdef CONFIG_NO_wunsetenv
+#undef CONFIG_HAVE_wunsetenv
+#elif !defined(CONFIG_HAVE_wunsetenv) && \
+      (defined(wunsetenv) || defined(__wunsetenv_defined))
+#define CONFIG_HAVE_wunsetenv 1
+#endif
+
+#ifdef CONFIG_NO__wunsetenv
+#undef CONFIG_HAVE__wunsetenv
+#elif !defined(CONFIG_HAVE__wunsetenv) && \
+      (defined(_wunsetenv) || defined(___wunsetenv_defined))
+#define CONFIG_HAVE__wunsetenv 1
+#endif
+
+#ifdef CONFIG_NO_wputenv
+#undef CONFIG_HAVE_wputenv
+#elif !defined(CONFIG_HAVE_wputenv) && \
+      (defined(wputenv) || defined(__wputenv_defined))
+#define CONFIG_HAVE_wputenv 1
+#endif
+
+#ifdef CONFIG_NO__wputenv
+#undef CONFIG_HAVE__wputenv
+#elif !defined(CONFIG_HAVE__wputenv) && \
+      (defined(_wputenv) || defined(___wputenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__wputenv 1
+#endif
+
+#ifdef CONFIG_NO_wputenv_s
+#undef CONFIG_HAVE_wputenv_s
+#elif !defined(CONFIG_HAVE_wputenv_s) && \
+      (defined(wputenv_s) || defined(__wputenv_s_defined))
+#define CONFIG_HAVE_wputenv_s 1
+#endif
+
+#ifdef CONFIG_NO__wputenv_s
+#undef CONFIG_HAVE__wputenv_s
+#elif !defined(CONFIG_HAVE__wputenv_s) && \
+      (defined(_wputenv_s) || defined(___wputenv_s_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE__wputenv_s 1
+#endif
+
+#ifdef CONFIG_NO_wenviron
+#undef CONFIG_HAVE_wenviron
+#elif !defined(CONFIG_HAVE_wenviron) && \
+      (defined(wenviron) || defined(__wenviron_defined))
+#define CONFIG_HAVE_wenviron 1
+#endif
+
+#ifdef CONFIG_NO__wenviron
+#undef CONFIG_HAVE__wenviron
+#elif !defined(CONFIG_HAVE__wenviron) && \
+      (defined(_wenviron) || defined(___wenviron_defined))
+#define CONFIG_HAVE__wenviron 1
+#endif
+
+#ifdef CONFIG_NO___wenviron
+#undef CONFIG_HAVE___wenviron
+#elif !defined(CONFIG_HAVE___wenviron) && \
+      (defined(__wenviron) || defined(____wenviron_defined))
+#define CONFIG_HAVE___wenviron 1
+#endif
+
+#ifdef CONFIG_NO___p__wenviron
+#undef CONFIG_HAVE___p__wenviron
+#elif !defined(CONFIG_HAVE___p__wenviron) && \
+      (defined(__p__wenviron) || defined(____p__wenviron_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___p__wenviron 1
+#endif
+
+#ifdef CONFIG_NO_ENV_LOCK
+#undef CONFIG_HAVE_ENV_LOCK
+#elif !defined(CONFIG_HAVE_ENV_LOCK) && \
+      (defined(ENV_LOCK) || defined(__ENV_LOCK_defined) || (defined(CONFIG_HAVE_ENVLOCK_H) || \
+       (defined(ENV_LOCK) && defined(ENV_UNLOCK))))
+#define CONFIG_HAVE_ENV_LOCK 1
+#endif
+
+#ifdef CONFIG_NO_ENV_UNLOCK
+#undef CONFIG_HAVE_ENV_UNLOCK
+#elif !defined(CONFIG_HAVE_ENV_UNLOCK) && \
+      (defined(ENV_UNLOCK) || defined(__ENV_UNLOCK_defined) || (defined(CONFIG_HAVE_ENVLOCK_H) || \
+       (defined(ENV_LOCK) && defined(ENV_UNLOCK))))
+#define CONFIG_HAVE_ENV_UNLOCK 1
+#endif
+
+#ifdef CONFIG_NO___argc
+#undef CONFIG_HAVE___argc
+#elif !defined(CONFIG_HAVE___argc) && \
+      (defined(__argc) || defined(____argc_defined))
+#define CONFIG_HAVE___argc 1
+#endif
+
+#ifdef CONFIG_NO___argv
+#undef CONFIG_HAVE___argv
+#elif !defined(CONFIG_HAVE___argv) && \
+      (defined(__argv) || defined(____argv_defined))
+#define CONFIG_HAVE___argv 1
+#endif
+
+#ifdef CONFIG_NO___wargv
+#undef CONFIG_HAVE___wargv
+#elif !defined(CONFIG_HAVE___wargv) && \
+      (defined(__wargv) || defined(____wargv_defined))
+#define CONFIG_HAVE___wargv 1
+#endif
+
+#ifdef CONFIG_NO___p___argc
+#undef CONFIG_HAVE___p___argc
+#elif !defined(CONFIG_HAVE___p___argc) && \
+      (defined(__p___argc) || defined(____p___argc_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___p___argc 1
+#endif
+
+#ifdef CONFIG_NO___p___argv
+#undef CONFIG_HAVE___p___argv
+#elif !defined(CONFIG_HAVE___p___argv) && \
+      (defined(__p___argv) || defined(____p___argv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___p___argv 1
+#endif
+
+#ifdef CONFIG_NO___p___wargv
+#undef CONFIG_HAVE___p___wargv
+#elif !defined(CONFIG_HAVE___p___wargv) && \
+      (defined(__p___wargv) || defined(____p___wargv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
+       defined(_MSC_VER)))
+#define CONFIG_HAVE___p___wargv 1
+#endif
+
 #ifdef CONFIG_NO_wcslen
 #undef CONFIG_HAVE_wcslen
 #elif !defined(CONFIG_HAVE_wcslen) && \
@@ -5819,6 +6105,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE_strchr
 #else
 #define CONFIG_HAVE_strchr 1
+#endif
+
+#ifdef CONFIG_NO_wcschr
+#undef CONFIG_HAVE_wcschr
+#else
+#define CONFIG_HAVE_wcschr 1
 #endif
 
 #ifdef CONFIG_NO_strrchr
@@ -6794,27 +7086,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_doserrno) && \
       (defined(doserrno) || defined(__doserrno_defined))
 #define CONFIG_HAVE_doserrno 1
-#endif
-
-#ifdef CONFIG_NO_environ
-#undef CONFIG_HAVE_environ
-#elif !defined(CONFIG_HAVE_environ) && \
-      (defined(environ) || defined(__environ_defined))
-#define CONFIG_HAVE_environ 1
-#endif
-
-#ifdef CONFIG_NO__environ
-#undef CONFIG_HAVE__environ
-#elif !defined(CONFIG_HAVE__environ) && \
-      (defined(_environ) || defined(___environ_defined))
-#define CONFIG_HAVE__environ 1
-#endif
-
-#ifdef CONFIG_NO___environ
-#undef CONFIG_HAVE___environ
-#elif !defined(CONFIG_HAVE___environ) && \
-      (defined(__environ) || defined(____environ_defined))
-#define CONFIG_HAVE___environ 1
 #endif
 
 #ifdef CONFIG_NO_sysconf
@@ -8366,13 +8637,93 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_HAVE__environ
 #define CONFIG_HAVE_environ 1
 #undef environ
-#define environ    _environ
+#define environ _environ
 #elif defined(CONFIG_HAVE___environ)
 #define CONFIG_HAVE_environ 1
 #undef environ
-#define environ   __environ
+#define environ __environ
+#elif defined(CONFIG_HAVE___p__environ)
+#define CONFIG_HAVE_environ 1
+#undef environ
+#define environ (*__p__environ())
 #endif /* environ = __environ */
 #endif /* !CONFIG_HAVE_environ*/
+
+#ifndef CONFIG_HAVE_wenviron
+#ifdef CONFIG_HAVE__wenviron
+#define CONFIG_HAVE_wenviron 1
+#undef wenviron
+#define wenviron _wenviron
+#elif defined(CONFIG_HAVE___wenviron)
+#define CONFIG_HAVE_wenviron 1
+#undef wenviron
+#define wenviron __wenviron
+#elif defined(CONFIG_HAVE___p__wenviron)
+#define CONFIG_HAVE_wenviron 1
+#undef wenviron
+#define wenviron (*__p__wenviron())
+#endif /* wenviron = __wenviron */
+#endif /* !CONFIG_HAVE_wenviron */
+
+#if !defined(CONFIG_HAVE___argc) && defined(CONFIG_HAVE___p___argc)
+#define CONFIG_HAVE___argc 1
+#define __argc (*__p___argc())
+#endif /* !CONFIG_HAVE___argc && CONFIG_HAVE___p___argc */
+
+#if !defined(CONFIG_HAVE___argv) && defined(CONFIG_HAVE___p___argv)
+#define CONFIG_HAVE___argv 1
+#define __argv (*__p___argv())
+#endif /* !CONFIG_HAVE___argv && CONFIG_HAVE___p___argv */
+
+#if !defined(CONFIG_HAVE___wargv) && defined(CONFIG_HAVE___p___wargv)
+#define CONFIG_HAVE___wargv 1
+#define __wargv (*__p___wargv())
+#endif /* !CONFIG_HAVE___wargv && CONFIG_HAVE___p___wargv */
+
+#if !defined(CONFIG_HAVE_putenv) && defined(CONFIG_HAVE__putenv)
+#define CONFIG_HAVE_putenv 1
+#define putenv _putenv
+#endif /* putenv = _putenv */
+
+#ifndef CONFIG_HAVE_putenv_s
+#ifdef CONFIG_HAVE__putenv_s
+#define CONFIG_HAVE_putenv_s 1
+#define putenv_s _putenv_s
+#elif defined(CONFIG_HAVE_setenv)
+#define CONFIG_HAVE_putenv_s 1
+#define putenv_s(name, var) setenv(name, var, 1)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_putenv_s */
+
+#if !defined(CONFIG_HAVE_wgetenv) && defined(CONFIG_HAVE__wgetenv)
+#define CONFIG_HAVE_wgetenv 1
+#define wgetenv _wgetenv
+#endif /* wgetenv = _wgetenv */
+
+#if !defined(CONFIG_HAVE_wsetenv) && defined(CONFIG_HAVE__wsetenv)
+#define CONFIG_HAVE_wsetenv 1
+#define wsetenv _wsetenv
+#endif /* wsetenv = _wsetenv */
+
+#if !defined(CONFIG_HAVE_wputenv) && defined(CONFIG_HAVE__wputenv)
+#define CONFIG_HAVE_wputenv 1
+#define wputenv _wputenv
+#endif /* wputenv = _wputenv */
+
+#if !defined(CONFIG_HAVE_wunsetenv) && defined(CONFIG_HAVE__wunsetenv)
+#define CONFIG_HAVE_wunsetenv 1
+#define wunsetenv _wunsetenv
+#endif /* wunsetenv = _wunsetenv */
+
+#ifndef CONFIG_HAVE_wputenv_s
+#ifdef CONFIG_HAVE__wputenv_s
+#define CONFIG_HAVE_wputenv_s 1
+#define wputenv_s _wputenv_s
+#elif defined(CONFIG_HAVE_wsetenv)
+#define CONFIG_HAVE_wputenv_s 1
+#define wputenv_s(name, var) wsetenv(name, var, 1)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_wputenv_s */
 
 #if !defined(CONFIG_HAVE_execv) && defined(CONFIG_HAVE_execve) && defined(CONFIG_HAVE_environ)
 #define CONFIG_HAVE_execv 1
@@ -9320,10 +9671,10 @@ DECL_BEGIN
 #undef strchr
 #define strchr dee_strchr
 LOCAL WUNUSED NONNULL((1)) char *
-dee_strchr(char const *haystack, char needle) {
+dee_strchr(char const *haystack, int needle) {
 	for (;; ++haystack) {
 		char ch = *haystack;
-		if (ch == needle)
+		if ((unsigned char)ch == (unsigned char)(unsigned int)needle)
 			return (char *)haystack;
 		if (!ch)
 			break;

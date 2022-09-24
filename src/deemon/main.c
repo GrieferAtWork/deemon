@@ -2566,12 +2566,12 @@ dchdir_and_format_source_files(char *__restrict filename) {
 	 * The idea here is that format-scripts usually do
 	 * something like this:
 	 * >> import * from deemon;
-	 * >> for (local line: File.open("../../defs/mydef.def")) {
+	 * >> for (local line: File.open("../../defs/mydef.def")) { // ... where this assumes the current PWD
 	 * >>     line = line.strip();
 	 * >>     if (!line || line.startswith("#"))
 	 * >>         continue;
 	 * >>     local x, y = line.scanf("%d = %d")...;
-	 * >>     print "DEFINE(" + x + ", " + y + ")";
+	 * >>     print(f"DEFINE({x}, {y})");
 	 * >> }
 	 */
 	char *path_end;
