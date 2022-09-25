@@ -2221,9 +2221,9 @@ stat_is_nt_exe_filename(DeeObject *__restrict path) {
 	for (;;) {
 		if (ext_begin == path_str)
 			return 0;
-		if (ext_begin[-1] == '.')
-			break;
 		--ext_begin;
+		if (*ext_begin == '.')
+			break;
 		if (*ext_begin == '/' ||
 		    *ext_begin == '\\')
 			return 0;
