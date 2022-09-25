@@ -1182,7 +1182,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@throw SystemError Failed to change permission for some reason\n"
 	      "@throw ValueError The given @mode is malformed or not recognized\n"
 	      "Change the permissions associated with a given @path\n"
-	      "If @path referrs to a symbolic link, change the permissions "
+	      "If @path refers to a symbolic link, change the permissions "
 	      "of that link, rather than those of the pointed-to file") },
 	{ "chown", (DeeObject *)&libfs_chown, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,user:?X3?Guser?Dstring?Dint,group:?X3?Ggroup?Dstring?Dint)\n"
@@ -1213,7 +1213,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@throw ValueError The given @user or @group could not be found\n"
 	      "@throw SystemError Failed to change ownership for some reason\n"
 	      "Change the ownership of a given @path\n"
-	      "If @path referrs to a symbolic link, change the ownership "
+	      "If @path refers to a symbolic link, change the ownership "
 	      "of that link, rather than those of the pointed-to file") },
 	{ "mkdir", (DeeObject *)&libfs_mkdir, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n"
@@ -1501,7 +1501,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "$\"V\"|Expand $\"%<nam>%\" to ${env[nam]}&"
 	      "$\"p\"|Expand $\".\" and $\"..\" folders names while also deleting multiple consecutive "
 	      /*  */ "slashes, as well as all whitespace surrounding them. On hosts with an ?GALTSEP differing "
-	      /*  */ "from ?GSEP, all occurrances of ?GALTSEP are also replaced with ?GSEP. "
+	      /*  */ "from ?GSEP, all occurrences of ?GALTSEP are also replaced with ?GSEP. "
 	      /*  */ "This option, alongside $\"c\" and $\"a\" should be used before a path-string can be considered "
 	      /*  */ "uniform and suitable to be used as key in a hash-table used for mapping files to objects. "
 	      /*  */ "Note that the deemon core uses an option similar to this to implement the mapping "

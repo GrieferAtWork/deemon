@@ -414,7 +414,7 @@ print barfoo;
 	print --x;  /* 31 */
 }
 
-/* While they should be fairly self-explainatory, especially to something
+/* While they should be fairly self-explanatory, especially to something
  * who already knows C, it should be mentioned that while inplace operators
  * are their own operators at runtime, an expression such as `x += 20'
  * may also be emulated as `x = x + 20' when the type of `x' is immutable.

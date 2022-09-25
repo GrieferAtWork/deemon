@@ -1905,53 +1905,55 @@ PRIVATE struct type_cmp tuple_cmp = {
 PUBLIC DeeTypeObject DeeTuple_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Tuple),
-	/* .tp_doc      = */ DOC("A builtin type that is similar to :list, however represents a fixed-length, "
-	                         "immutable sequence of objects. Tuples are fast, low-level :Sequence-like objects "
-	                         "that are written as ${(elem1, elem2, etc)}, with the exception of single-element "
-	                         "tuples being written as ${(single_element,)}\n"
+	/* .tp_doc      = */ DOC("A builtin type that is similar to ?DList, however represents a fixed-length, "
+	                         /**/ "immutable sequence of objects. Tuples are fast, low-level ?DSequence-like objects "
+	                         /**/ "that are written as ${(elem1, elem2, etc)}, with the exception of single-element "
+	                         /**/ "tuples being written as ${(single_element,)}\n"
 
 	                         "\n"
 	                         "()\n"
-	                         "Construct an empty Tuple\n"
+	                         "Construct an empty ?.\n"
 
 	                         "\n"
 	                         "(items:?S?O)\n"
-	                         "Construct a new Tuple that is pre-initializes with the elements from @items\n"
+	                         "Construct a new ?. that is pre-initializes with the elements from @items\n"
 
 	                         "\n"
 	                         "str->\n"
-	                         "Returns the concatenation of all of @this Tuple's elements converted to strings:\n"
+	                         "Returns the concatenation of all of @this ?.'s elements converted to strings:\n"
 	                         "${"
-	                         "operator str() {\n"
-	                         "	return \"\".join(this);\n"
-	                         "}}\n"
+	                         /**/ "operator str() {\n"
+	                         /**/ "	return \"\".join(this);\n"
+	                         /**/ "}"
+	                         "}\n"
 
 	                         "\n"
 	                         "repr->\n"
-	                         "Returns a representation of @this Tuple:\n"
+	                         "Returns a representation of @this ?.:\n"
 	                         "${"
-	                         "operator repr() {\n"
-	                         "	if (#this == 1)\n"
-	                         "		return \"({!r},)\".format({ this[0] });\n"
-	                         "	return \"(\" + \", \".join(for (local x: this) repr x) + \")\";\n"
-	                         "}}\n"
+	                         /**/ "operator repr() {\n"
+	                         /**/ "	if (#this == 1)\n"
+	                         /**/ "		return \"({!r},)\".format({ this[0] });\n"
+	                         /**/ "	return \"(\" + \", \".join(for (local x: this) repr x) + \")\";\n"
+	                         /**/ "}"
+	                         "}\n"
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns ?t if @this Tuple is non-empty\n"
+	                         "Returns ?t if @this ?. is non-empty\n"
 
 	                         "\n"
 	                         "+->\n"
 	                         "+(other:?S?O)->\n"
 	                         "@throw NotImplemented The given @other isn't iterable\n"
-	                         "Returns a new Tuple consisting of the elements from @this, followed by "
-	                         "those from @other, which may be another Tuple, or a generic sequence\n"
+	                         "Returns a new ?. consisting of the elements from @this, followed by "
+	                         /**/ "those from @other, which may be another ?., or a generic sequence\n"
 
 	                         "\n"
 	                         "*(count:?Dint)->\n"
 	                         "@throw IntegerOverflow The given @count is negative, or too large\n"
-	                         "Return a new Tuple consisting of the elements from @this, repeated @count times\n"
-	                         "When @count is $0, an empty Tuple is returned. When @count is $1, @this Tuple is re-returned\n"
+	                         "Return a new ?. consisting of the elements from @this, repeated @count times\n"
+	                         "When @count is $0, an empty ?. is returned. When @count is $1, @this ?. is re-returned\n"
 
 	                         "\n"
 	                         "==->\n"
@@ -1961,31 +1963,31 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         ">->\n"
 	                         ">=->\n"
 	                         "Perform a lexicographical comparison between the elements of @this "
-	                         "Tuple and the given @other sequence\n"
+	                         /**/ "?. and the given @other sequence\n"
 
 	                         "\n"
 	                         "iter->\n"
-	                         "Returns an iterator for enumerating the elements of @this Tuple\n"
+	                         "Returns an iterator for enumerating the elements of @this ?.\n"
 
 	                         "\n"
 	                         "#->\n"
-	                         "Returns the number of elements contained inside of @this Tuple\n"
+	                         "Returns the number of elements contained inside of @this ?.\n"
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns ?t if @elem is apart of @this Tuple, or @false otherwise\n"
+	                         "Returns ?t if @elem is apart of @this ?., or @false otherwise\n"
 
 	                         "\n"
 	                         "[]->\n"
 	                         "@throw IntegerOverflow The given @index is negative, or too large\n"
 	                         "@throw IndexError The given @index is out of bounds\n"
-	                         "Returns the @index'th item of @this Tuple\n"
+	                         "Returns the @index'th item of @this ?.\n"
 
 	                         "\n"
 	                         "[:]->?.\n"
-	                         "Returns a new Tuple for the given subrange, following the usual rules for "
-	                         "negative @start or @end values, as well as ?N being passed for either "
-	                         "(s.a. :Sequence.op:getrange)"),
+	                         "Returns a new ?. for the given subrange, following the usual rules for "
+	                         /**/ "negative @start or @end values, as well as ?N being passed for "
+	                         /**/ "either (s.a. ?A{op:getrange}?DSequence)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

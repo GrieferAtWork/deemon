@@ -478,7 +478,7 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 				if unlikely(error < 0)
 					goto err_printer;
 			}
-		default_case:
+default_case:
 			is_after_linefeed = false;
 			break;
 		}
@@ -555,7 +555,8 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 			ast_flags |= AST_FASSEMBLY_VOLATILE;
 			goto yield_prefix;
 		}
-		if (size == 4 && bcmpc(name, DeeString_STR(&str_goto), size, sizeof(char)) == 0) {
+		if (size == 4 && bcmpc(name, DeeString_STR(&str_goto),
+		                       size, sizeof(char)) == 0) {
 			is_asm_goto = true;
 			goto yield_prefix;
 		}
@@ -606,23 +607,28 @@ with_paren:
 		 *    >>    ".ddi ...\nthrow %0\n"
 		 *    >>    :
 		 *    >>    : "P" (42));
-		 * A DDI directive is automatically inserted at the start, as
-		 * well as after every linefeed or `;' character, excluding
-		 * multiple consecutive line-feeds or `;', as well as some that
-		 * may be trailing. - In other words: before every actual
-		 * directive or instruction.
+		 *
+		 * A DDI directive is automatically inserted at the start, as well
+		 * as after every linefeed or `;' character, excluding multiple
+		 * consecutive line-feeds or `;', as well as some that may be
+		 * trailing. - In other words: before every actual directive or
+		 * instruction.
+		 *
 		 * Additionally, no DDI directives are inserted before instructions
 		 * that start with a `.' token (i.e. pseudo instructions; aka.
 		 * assembler directives). That way, the user may override DDI
 		 * information for a single instruction at a time.
-		 * Using this, debug information is automatically generated
-		 * in associated with the locations of instructions, rather
-		 * than leaving it up to the programmer to include DDI directives
+		 *
+		 * Using this, debug information is automatically generated in
+		 * associated with the locations of instructions, rather than
+		 * leaving it up to the programmer to include DDI directives
 		 * manually.
-		 * Further special handling is done to prevent the generation
-		 * of DDI directions inside of recursive () or [] pairs. However,
+		 *
+		 * Further special handling is done to prevent the generation of
+		 * DDI directions inside of recursive () or [] pairs. However,
 		 * recursive {} pairs will still produce DDi directives in order
 		 * to allow for brace-like inner code object definitions.
+		 *
 		 * Also note that the generated DDI information will even contain
 		 * column information for the exact positions of found instructions.
 		 * Assembly is terminated once a `}' token matching the initial `{'

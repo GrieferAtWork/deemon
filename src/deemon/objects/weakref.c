@@ -362,8 +362,8 @@ PRIVATE struct type_member tpconst ob_weakref_members[] = {
 	                      "->?DCallable\n"
 	                      "@throw UnboundAttribute No callback has been specified\n"
 	                      "The second argument passed to the constructor, specifying "
-	                      /**/ "an optional callback to-be executed when the bound object "
-	                      /**/ "dies on its own\n"
+	                      /**/ "an optional callback to-be executed when the bound "
+	                      /**/ "object dies on its own\n"
 	                      "When invoked, the callback is passed a reference to @this WeakRef object"),
 	TYPE_MEMBER_END
 };
@@ -398,8 +398,8 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns true if the weak reference is currently bound. Note however that this "
-	                         /**/ "information is volatile and may not longer be up-to-date by the time the operator returns\n"
+	                         "Returns true if the weak reference is currently bound. Note however that this information "
+	                         /**/ "is volatile and may not longer be up-to-date by the time the operator returns\n"
 
 	                         "\n"
 	                         "==(other:?X2?.?N)->\n"
@@ -409,8 +409,8 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         ">(other:?X2?.?N)->\n"
 	                         ">=(other:?X2?.?N)->\n"
 	                         "When compared with ?N, test for the pointed-to object being bound. "
-	                         /**/ "Otherwise, compare the pointed-to object of @this weak reference to "
-	                         /**/ "that of @other\n"
+	                         /**/ "Otherwise, compare the pointed-to object of @this weak reference "
+	                         /**/ "to that of @other\n"
 
 	                         "\n"
 	                         ":=(other:?X2?.?O)->\n"
@@ -502,8 +502,8 @@ weakrefable_moveassign(WeakRefAble *__restrict self,
 PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_WeakRefAble),
-	/* .tp_doc      = */ DOC("An base class that user-defined classes can "
-	                         "be derived from to become weakly referencable"),
+	/* .tp_doc      = */ DOC("An base class that user-defined classes can be "
+	                         /**/ "derived from to become weakly referenceable"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(WeakRefAble),
 	/* .tp_features = */ TF_NONE,

@@ -1653,26 +1653,26 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	{ "ordinals",
 	  &DeeString_Ordinals, NULL, NULL,
 	  DOC("->?S?Dint\n"
-	      "Returns a proxy view for the characters of @this string as a sequence of "
-	      "integers referring to the ordinal values of each character (s.a. ?#ord)") },
+	      "Returns a proxy view for the characters of @this ?. as a sequence of "
+	      /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)") },
 	{ "__hashed__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this string has been hashed") },
+	      "Evaluates to ?t if @this ?. has been hashed") },
 	{ "__hasutf__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasutf, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this string owns a UTF container") },
+	      "Evaluates to ?t if @this ?. owns a UTF container") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
 	  DOC("->?.\n"
-	      "@throw ValueError @this string is empty\n"
-	      "Returns the first character of @this string") },
+	      "@throw ValueError @this ?. is empty\n"
+	      "Returns the first character of @this ?.") },
 	{ DeeString_STR(&str_last),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
 	  DOC("->?.\n"
-	      "@throw ValueError @this string is empty\n"
-	      "Returns the last character of @this string") },
+	      "@throw ValueError @this ?. is empty\n"
+	      "Returns the last character of @this ?.") },
 	{ STR___sizeof__,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeof, NULL, NULL,
 	  DOC("->?Dint") },
@@ -1767,46 +1767,50 @@ PUBLIC DeeTypeObject DeeString_Type = {
 
 	                         "\n"
 	                         "str->\n"
-	                         "Simply re-return @this string\n"
+	                         "Simply re-return @this ?.\n"
 
 	                         "\n"
 	                         "repr->\n"
-	                         "Returns @this string as a C-style escaped string\n"
+	                         "Returns @this ?. as a C-style escaped string\n"
 	                         "${"
-	                         "operator repr() {\n"
-	                         "	return \"\\\"{}\\\"\".format({ this.encode(\"c-escape\") });\n"
-	                         "}}\n"
+	                         /**/ "operator repr() {\n"
+	                         /**/ "	return \"\\\"{}\\\"\".format({ this.encode(\"c-escape\") });\n"
+	                         /**/ "}"
+	                         "}\n"
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns ?t if @this string is non-empty\n"
+	                         "Returns ?t if @this ?. is non-empty\n"
 	                         "${"
-	                         "operator bool() {\n"
-	                         "	return ##this != 0;\n"
-	                         "}}\n"
+	                         /**/ "operator bool() {\n"
+	                         /**/ "	return ##this != 0;\n"
+	                         /**/ "}"
+	                         "}\n"
 
 	                         "\n"
 	                         "+(other:?X3?.?DBytes?O)->\n"
 	                         "Return a new string that is the concatenation of @this and ${str other}\n"
 	                         "${"
-	                         "operator + (other) {\n"
-	                         "	return \"{}{}\".format({ this, other });\n"
-	                         "}}\n"
+	                         /**/ "operator + (other) {\n"
+	                         /**/ "	return \"{}{}\".format({ this, other });\n"
+	                         /**/ "}"
+	                         "}\n"
 
 	                         "\n"
 	                         "*(times:?Dint)->\n"
 	                         "@throw IntegerOverflow @times is negative, or too large\n"
-	                         "Returns @this string repeated @times number of times\n"
+	                         "Returns @this ?. repeated @times number of times\n"
+
 	                         "\n"
 	                         "%(args:?DTuple)->\n"
 	                         "%(arg:?O)->\n"
-	                         "Using @this string as a printf-style format string, use a tuple found "
-	                         "in @args to format it into a new string, which is then returned\n"
+	                         "Using @this ?. as a printf-style format string, use a tuple found "
+	                         /**/ "in @args to format it into a new string, which is then returned\n"
 	                         "If @arg isn't a tuple, it is packed into one and the call is identical "
-	                         "to ${this.operator % (pack(arg))}\n"
+	                         /**/ "to ${this.operator % (pack(arg))}\n"
 	                         "${"
-	                         "local x = 42;\n"
-	                         "print \"x = %d\" % x; /* \"x = 42\" */"
+	                         /**/ "local x = 42;\n"
+	                         /**/ "print \"x = %d\" % x; /* \"x = 42\" */"
 	                         "}\n"
 
 	                         "\n"
@@ -1816,34 +1820,34 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "!=(other:?X2?.?DBytes)->\n"
 	                         ">(other:?X2?.?DBytes)->\n"
 	                         ">=(other:?X2?.?DBytes)->\n"
-	                         "Perform a lexicographical comparison between @this string "
-	                         "and @other, and return the result\n"
+	                         "Perform a lexicographical comparison between @this ?. "
+	                         /**/ "and @other, and return the result\n"
 
 	                         "\n"
 	                         "iter->\n"
 	                         "Return a string iterator that can be used to enumerate each of "
-	                         "the string's characters individually\n"
+	                         /**/ "the string's characters individually\n"
 
 	                         "\n"
 	                         "#->\n"
-	                         "Returns the length of @this string in characters\n"
+	                         "Returns the length of @this ?. in characters\n"
 
 	                         "\n"
 	                         "contains(substr:?X2?.?DBytes)->\n"
-	                         "Returns ?t if @substr is apart of @this string\n"
+	                         "Returns ?t if @substr is apart of @this ?.\n"
 	                         "${"
-	                         ">print \"foo\" in \"bar\";    /* false */\n"
-	                         ">print \"foo\" in \"foobar\"; /* true */"
+	                         /**/ ">print \"foo\" in \"bar\";    /* false */\n"
+	                         /**/ ">print \"foo\" in \"foobar\"; /* true */"
 	                         "}\n"
 
 	                         "\n"
 	                         "[]->?.\n"
 	                         "@throw IntegerOverflow @index is negative\n"
 	                         "@throw IndexError @index is greater than ${##this}\n"
-	                         "Returns the @{index}th character of @this string\n"
+	                         "Returns the @{index}th character of @this ?.\n"
 	                         "${"
-	                         "print \"foo\"[0]; /* \"f\" */\n"
-	                         "print \"foo\"[1]; /* \"o\" */"
+	                         /**/ "print \"foo\"[0]; /* \"f\" */\n"
+	                         /**/ "print \"foo\"[1]; /* \"o\" */"
 	                         "}\n"
 
 	                         "\n"
@@ -1852,13 +1856,13 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "If @end is greater than ${##this}, it is truncated to that value\n"
 	                         "If @start is greater than, or equal to @end, an empty string is returned\n"
 	                         "If either @start or @end is negative, ${##this} is added before "
-	                         "further index transformations are performed\n"
+	                         /**/ "further index transformations are performed\n"
 	                         "As per convention, ?N may be passed for @end as an alias for ${##this}\n"
 	                         "${"
-	                         "print \"foo\"[:-1];      /* \"fo\" */\n"
-	                         "print \"bar\"[1:];       /* \"ar\" */\n"
-	                         "print \"foobar\"[3:123]; /* \"bar\" */\n"
-	                         "print \"bizbuz\"[5:4];   /* \"\" */"
+	                         /**/ "print \"foo\"[:-1];      /* \"fo\" */\n"
+	                         /**/ "print \"bar\"[1:];       /* \"ar\" */\n"
+	                         /**/ "print \"foobar\"[3:123]; /* \"bar\" */\n"
+	                         /**/ "print \"bizbuz\"[5:4];   /* \"\" */"
 	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FNAMEOBJECT | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

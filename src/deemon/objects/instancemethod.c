@@ -342,20 +342,20 @@ PRIVATE struct type_getset tpconst im_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "The type within which the bound function was defined "
-	      "(alias for :Function.__module__ though ${__func__.__module__})\n"
+	      "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
 	      "If something other than a user-level function was set for ?#__func__, "
-	      "a $\"__module__\" attribute will be loaded from it, with its value "
-	      "then forwarded") },
+	      /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
+	      /**/ "then forwarded") },
 	{ NULL }
 };
 
 PRIVATE struct type_member tpconst im_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(InstanceMethod, im_this),
 	                      "->\n"
-	                      "The object to which @this :InstanceMethod is bound"),
+	                      "The object to which @this ?DInstanceMethod is bound"),
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(InstanceMethod, im_func),
 	                      "->?DCallable\n"
-	                      "The unbound class-function that is being bound by this :InstanceMethod"),
+	                      "The unbound class-function that is being bound by this ?DInstanceMethod"),
 	TYPE_MEMBER_END
 };
 
@@ -369,7 +369,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	                         "\n"
 	                         "call(args!)->\n"
 	                         "Invoke the $func used to construct @this "
-	                         "InstanceMethod as ${func(thisarg, args...)}"),
+	                         /**/ "InstanceMethod as ${func(thisarg, args...)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -443,7 +443,7 @@ class Table {
 	public member cells: {{(string, {(string | Object)...})...}...};
 
 	@@Set of row numbers that should be rendered as thick,
-	@@where @0 referrs to the bottom of the first row.
+	@@where @0 refers to the bottom of the first row.
 	public member thickRows: Set with int;
 
 	@@Set to @true if this @Table should be be preceded by a line-feed

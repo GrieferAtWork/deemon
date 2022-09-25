@@ -81,7 +81,7 @@ public:
 		/* Seperately, inside of non-static class member functions, 2 new
 		 * builtin keywords becomes available, one of them being `this',
 		 * and the other being `super' (see below)
-		 * `this' simply referrs to the instance on which an member is being
+		 * `this' simply refers to the instance on which an member is being
 		 * addressed, where that instance then provides its members as regular
 		 * attributes. - For this purpose, the compiler will interpret the
 		 * expressions `my_private_member' and `this.my_private_member' as

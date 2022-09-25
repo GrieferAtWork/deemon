@@ -3068,18 +3068,18 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	      "@throw ValueError Attmpted to set the List preallocation size to a value lower than ${##this}\n"
 	      "The number of allocated items\n"
 	      "When using performing a del-operation on this property, the allocation will "
-	      "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
+	      /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
 	      "Note however that when lowering the amount of allocated vector space, failure to "
-	      "reallocate the internal List vector is ignored, and the allocated List size will "
-	      "not be modified\n"
+	      /**/ "reallocate the internal List vector is ignored, and the allocated List size will "
+	      /**/ "not be modified\n"
 	      "Similarly, failure to allocate more memory when increasing the allocated size "
-	      "of a List is ignored, with the previously allocated size remaining unchanged.\n"
+	      /**/ "of a List is ignored, with the previously allocated size remaining unchanged.\n"
 	      "${"
-	      "del mylist.allocated;\n"
-	      "/* Same as this: */\n"
-	      "mylist.shrink();\n"
-	      "/* And same as an atomic variant of: */\n"
-	      "mylist.allocated = ##mylist;"
+	      /**/ "del mylist.allocated;\n"
+	      /**/ "/* Same as this: */\n"
+	      /**/ "mylist.shrink();\n"
+	      /**/ "/* And same as an atomic variant of: */\n"
+	      /**/ "mylist.allocated = ##mylist;"
 	      "}") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_get_first,
@@ -3161,22 +3161,26 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	{ DeeString_STR(&str_removeif),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
-	      "@return The number of removed items"
+	      "@return The number of removed items\n"
 	      "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	  TYPE_METHOD_FKWDS },
 
 	{ DeeString_STR(&str_pushfront),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushfront,
-	  DOC("(item)\nInserts @item at the fron of this @this List. Same as ${this.insert(0,item)}") },
+	  DOC("(item)\n"
+	      "Inserts @item at the fron of this @this List. Same as ${this.insert(0,item)}") },
 	{ DeeString_STR(&str_pushback),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushback,
-	  DOC("(item)\nInserts @item at the end of this @this List. Same as ?#append") },
+	  DOC("(item)\n"
+	      "Inserts @item at the end of this @this List. Same as ?#append") },
 	{ DeeString_STR(&str_popfront),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popfront,
-	  DOC("->\nSame as ${this.pop(0)}") },
+	  DOC("->\n"
+	      "Same as ${this.pop(0)}") },
 	{ DeeString_STR(&str_popback),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popback,
-	  DOC("->\nSame as ${this.pop(-1)}") },
+	  DOC("->\n"
+	      "Same as ${this.pop(-1)}") },
 
 	/* List ordering functions. */
 	{ "reverse",
@@ -3194,7 +3198,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	  DOC("->?S?O\n"
 	      "(key:?DCallable)->?S?O\n"
 	      "Return a sequence that contains all elements from @this sequence, "
-	      "but sorted in ascending order, or in accordance to @key\n"
+	      /**/ "but sorted in ascending order, or in accordance to @key\n"
 	      "The type of sequence returned is implementation-defined"),
 	  TYPE_METHOD_FKWDS },
 
@@ -3756,7 +3760,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 
 	                         "\n"
 	                         "(size:?Dint,filler=!N)\n"
-	                         "Create a new List consiting of @size elements, all initialized to @filler\n"
+	                         "Create a new List consisting of @size elements, all initialized to @filler\n"
 
 	                         "\n"
 	                         "copy->\n"
@@ -3774,11 +3778,11 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "repr->\n"
 	                         "Returns the items of @this List, following List syntax rather than abstract sequence syntax:\n"
 	                         "${"
-	                         "local x = [];\n"
-	                         "x.append(10);\n"
-	                         "x.append(20);\n"
-	                         "x.append(30);\n"
-	                         "print repr x; /* `[10, 20, 30]' */"
+	                         /**/ "local x = [];\n"
+	                         /**/ "x.append(10);\n"
+	                         /**/ "x.append(20);\n"
+	                         /**/ "x.append(30);\n"
+	                         /**/ "print repr x; /* `[10, 20, 30]' */"
 	                         "}\n"
 
 	                         "\n"
@@ -3840,8 +3844,8 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "@throw NotImplemented The given @items cannot be iterated\n"
 	                         "@throw IntegerOverflow @start or @end are too large\n"
 	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range "
-	                         "before inserting all elements from @items at the range's start. - This operation "
-	                         "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
+	                         /**/ "before inserting all elements from @items at the range's start. - This operation "
+	                         /**/ "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
 
 	                         "\n"
 	                         "iter->\n"

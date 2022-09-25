@@ -592,6 +592,7 @@ INTERN DeeTypeObject DictItemsIterator_Type =
 INIT_PROXY_ITERATOR_TYPE("_DictItemsIterator",
                          DOC("()\n"
                              "(dictitems:?Ert:DictItems)\n"
+
                              "\n"
                              "next->?T2?O?O"),
                          &dictiterator_next_item);

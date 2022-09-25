@@ -1254,7 +1254,7 @@ again:
 					 *       tp_free function, is the reason why no GC-able type from who's
 					 *       destruct a user-callback that can somehow get ahold of the
 					 *       instance being destroyed (which is also possible for any
-					 *       weakly referencable type), is allowed to assume that it
+					 *       weakly referenceable type), is allowed to assume that it
 					 *       will actually be called, limiting its use to pre-allocated object
 					 *       caches that allocate their instances using `DeeObject_Malloc'. */
 					Dee_Incref(type);
@@ -2164,11 +2164,11 @@ PRIVATE struct type_method tpconst object_methods[] = {
 	{ meth_deepcopy+1,   &object_deepcopy, DOC("->\n@return A deep copy of @this object") },
 	{ meth_assign+2,     &object_assign, DOC("(other)->@this\nAssigns @other to @this and") },
 	{ meth_moveassign+2, &object_moveassign, DOC("(other)->@this\nMove-assign @other to @this and") },
-	{ meth_str+1,        &object_dostr, DOC("->?Dstring\n@return: @this converted to a :string") },
-	{ meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return: The :string representation of @this") },
-	{ meth_bool+1,       &object_bool, DOC("->?Dbool\n@return: The :bool value of @this") },
-	{ meth_call+2,       &object_call, DOC("(args:?DTuple)->\nCall @this using the given @args :Tuple") },
-	{ meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args :Tuple") },
+	{ meth_str+1,        &object_dostr, DOC("->?Dstring\n@return @this converted to a ?Dstring") },
+	{ meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return The ?Dstring representation of @this") },
+	{ meth_bool+1,       &object_bool, DOC("->?Dbool\n@return The ?Dbool value of @this") },
+	{ meth_call+2,       &object_call, DOC("(args:?DTuple)->\nCall @this using the given @args ?DTuple") },
+	{ meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args ?DTuple") },
 	{ meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
 	{ meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
 	{ meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
@@ -2203,12 +2203,12 @@ PRIVATE struct type_method tpconst object_methods[] = {
 	{ meth_iternext+1,   &object_iternext, DOC("->\n@return The result of ${this.operator next()}") },
 	{ meth_getattr+2,    &object_getattr, DOC("(name:?Dstring)->\n@return The result of ${this.operator . (name)}") },
 	{ meth_callattr,     &object_callattr, DOC("(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}") },
-	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning ?t or ?f indicative of this") },
+	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning !t or !f indicative of this") },
 	{ meth_delattr+2,    &object_delattr, DOC("(name:?Dstring)\nInvokes ${this.operator del . (name)}") },
 	{ meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}") },
 	{ meth_enumattr+1,   &object_enumattr, DOC("()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}") },
 	{ DeeString_STR(&str___format__), &object_format_method,
-	  DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. :string.format)") },
+	  DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. ?Aformat?Dstring)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Aliases for backwards compatibility with deemon < v200 */
 	{ "__iterself__",    &object_iterself, DOC("->\nDeprecated alias for ?#__iter__") },
@@ -2277,18 +2277,18 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	  &object_class_get, NULL, NULL,
 	  DOC("->?DType\n"
 	      "Returns the class of @this Type, which is usually identical to "
-	      "?#type, however in the case of a super-proxy, the viewed Type is "
-	      "returned, rather than the actual Type") },
+	      /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
+	      /**/ "returned, rather than the actual Type") },
 	{ "super", &DeeSuper_Of, NULL, NULL,
 	  DOC("->?Dsuper\n"
 	      "Returns a view for the super-instance of @this object") },
 	{ "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the instance object "
-	      "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
+	      /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
 	      "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	      "is ?f), an empty sequence is returned\n"
-	      "The class-attribute table can be accessed through :Type.__ctable__") },
+	      /**/ "is ?f), an empty sequence is returned\n"
+	      "The class-attribute table can be accessed through ?A__ctable__?DType") },
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	{ "id", &object_id_get, NULL, NULL,
@@ -2326,9 +2326,10 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	                         "str->\n"
 	                         "Returns the name of the object's Type\n"
 	                         "${"
-	                         "operator str(): string {\n"
-	                         "	return str type this;\n"
-	                         "}}\n"),
+	                         /**/ "operator str(): string {\n"
+	                         /**/ "	return str type this;\n"
+	                         /**/ "}"
+	                         "}\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2724,7 +2725,7 @@ unpack_init_info(DeeObject *__restrict info,
 		Dee_XIncref(*pinit_kw);
 	} else {
 		size_t fast_size;
-		/* Use the fast-sequence iterface. */
+		/* Use the fast-sequence interface. */
 		fast_size = DeeFastSeq_GetSize(info);
 		if (fast_size != DEE_FASTSEQ_NOTFAST) {
 			if (fast_size == 1) {
@@ -3556,9 +3557,9 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
 	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
 	      "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
-	      /**/ "has a mandatory constructor that can't be invoked without any arguments. "
-	      /**/ "Note that a user-defined class never has a mandatory constructor, with this "
-	      /**/ "only affecting builtin types such as :InstanceMethod or :Property\n"
+	      /*            */ "has a mandatory constructor that can't be invoked without any arguments. "
+	      /*            */ "Note that a user-defined class never has a mandatory constructor, with this "
+	      /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty\n"
 
 	      "A extended way of constructing and initializing a Type, that involves providing explicit "
 	      /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
@@ -3566,38 +3567,39 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      /**/ "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
 
 	      "${"
-	      "import List from deemon;\n"
-	      "class MyList: List {\n"
-	      "	this = del; /* Delete the regular constructor. */\n"
-	      "	member mylist_member;\n"
-	      "	appendmember() {\n"
-	      "		this.append(mylist_member);\n"
-	      "	}\n"
-	      "}\n"
-	      "local x = MyList.newinstance({\n"
-	      "	MyList: ({ \"mylist_member\" : \"abc\" }, none),\n"
-	      "	List:   ({ }, pack([10, 20, 30])),\n"
-	      "});\n"
-	      "print repr x;          /* [10, 20, 30] */\n"
-	      "print x.mylist_member; /* \"abc\" */\n"
-	      "x.appendmember();\n"
-	      "print repr x;          /* [10, 20, 30, \"abc\"] */"
+	      /**/ "import List from deemon;\n"
+	      /**/ "class MyList: List {\n"
+	      /**/ "	this = del; /* Delete the regular constructor. */\n"
+	      /**/ "	member mylist_member;\n"
+	      /**/ "	appendmember() {\n"
+	      /**/ "		this.append(mylist_member);\n"
+	      /**/ "	}\n"
+	      /**/ "}\n"
+	      /**/ "local x = MyList.newinstance({\n"
+	      /**/ "	MyList: ({ \"mylist_member\" : \"abc\" }, none),\n"
+	      /**/ "	List:   ({ }, pack([10, 20, 30])),\n"
+	      /**/ "});\n"
+	      /**/ "print repr x;          /* [10, 20, 30] */\n"
+	      /**/ "print x.mylist_member; /* \"abc\" */\n"
+	      /**/ "x.appendmember();\n"
+	      /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
 	      "}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Returns ?t if this type, or one of its sub-classes defines an "
-	      "instance-attribute @name, and doesn't define any attribute-operators. "
-	      "Otherwise, return ?f\n"
+	      /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
+	      /**/ "Otherwise, return ?f\n"
 
 	      "${"
-	      "function hasattribute(name: string): bool {\n"
-	      "	import attribute from deemon;\n"
-	      "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
-	      "}}\n"
+	      /**/ "function hasattribute(name: string): bool {\n"
+	      /**/ "	import attribute from deemon;\n"
+	      /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
+	      /**/ "}"
+	      "}\n"
 
 	      "Note that this function only searches instance-attributes, meaning that class/static "
-	      /**/ "attributes/members such as :string.Iterator are not matched, whereas something like :string.find is\n"
+	      /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something like ?Afind?Dstring is\n"
 	      "Note that this function is quite similar to #hasinstanceattr, however unlike "
 	      /**/ "that function, this function will stop searching the base-classes of @this Type "
 	      /**/ "when one of that types implements one of the attribute operators."),
@@ -3607,10 +3609,11 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "Similar to #hasattribute, but only looks at attributes declared by "
 	      /**/ "@this Type, excluding any defined by a sub-class.\n"
 	      "${"
-	      "function hasprivateattribute(name: string): bool {\n"
-	      "	import attribute from deemon;\n"
-	      "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
-	      "}}"),
+	      /**/ "function hasprivateattribute(name: string): bool {\n"
+	      /**/ "	import attribute from deemon;\n"
+	      /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
+	      /**/ "}"
+	      "}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
@@ -3705,29 +3708,29 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
 	      /**/ "however in ambiguous cases where both the Type, as well as instances implement "
-	      /**/ "an attribute of the same name (s.a. :Dict.Keys vs. :Dict.keys), using regular "
+	      /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
 	      /**/ "attribute lookup on the Type (as in ${Dict.keys}) will always return the Type-attribute, "
 	      /**/ "rather than a wrapper around the instance attribute.\n"
 	      "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 
 	      "${"
-	      "import Dict from deemon;\n"
-	      "local dictKeysFunction = Dict.getinstanceattr(\"keys\");\n"
-	      "local myDictInstance = Dict();\n"
-	      "myDictInstance[\"foo\"] = \"bar\";\n"
-	      "// Same as `myDictInstance.keys()' -- { \"foo\" }\n"
-	      "print repr dictKeysFunction(myDictInstance);"
+	      /**/ "import Dict from deemon;\n"
+	      /**/ "local dictKeysFunction = Dict.getinstanceattr(\"keys\");\n"
+	      /**/ "local myDictInstance = Dict();\n"
+	      /**/ "myDictInstance[\"foo\"] = \"bar\";\n"
+	      /**/ "// Same as `myDictInstance.keys()' -- { \"foo\" }\n"
+	      /**/ "print repr dictKeysFunction(myDictInstance);"
 	      "}\n"
 
 	      "Note that one minor exception exists to the default lookup rule, and it relates to how "
-	      "attributes of :Type itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
+	      /**/ "attributes of ?DType itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
 	      "In this case, access is always made as an instance-bound, meaning that for this purpose, "
-	      ":Type is considered an instance of :Type (typetype), rather than the type of :Type (typetype) "
-	      "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
-	      "return a class method object taking 2 arguments, rather than the intended single argument)\n"
+	      /**/ "?DType is considered an instance of ?DType (typetype), rather than the type of ?DType (typetype) "
+	      /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
+	      /**/ "return a class method object taking 2 arguments, rather than the intended single argument)\n"
 	      "Also note that the `*instanceattr' functions will not check for types that have overwritten "
-	      "one of the attribute-operators, but will continue search for matching attribute names, even "
-	      "if those attributes would normally have been overshadowed by attribute callbacks"),
+	      /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
+	      /**/ "if those attributes would normally have been overshadowed by attribute callbacks"),
 	  TYPE_METHOD_FKWDS },
 	{ name_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
 	  DOC("(name:?Dstring,args!)->\n"
@@ -4018,7 +4021,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Type implements the buffer interface\n"
-	      "The most prominent Type to which this applies is :Bytes, however other types also support this") },
+	      "The most prominent Type to which this applies is ?DBytes, however other types also support this") },
 	/* TODO: __bases__->?S?DType  Sequence of all of this type's bases, starting with the immediate ?#__base__,
 	 *                            followed by its base, and so on. */
 	/* TODO: __mro__->?S?DType    Method Resolution Order. Same as ?#__bases__, but preceded by @this
@@ -4043,17 +4046,18 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	{ "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the class object table, "
-	      /**/ "as referenced by :rt.ClassDescriptor.attribute.addr\n"
+	      /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
 	      "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
-	      "The instance-attribute table can be accessed through :Object.__itable__") },
+	      "The instance-attribute table can be accessed through ?A__itable__?DObject") },
 	{ "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
 	  DOC("->?S?X2?Dstring?Dint\n"
 	      "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
 	      "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
 	      "${"
-	      "function hasprivateoperator(name: string | int): bool {\n"
-	      "	return name in this.__operators__;\n"
-	      "}}\n"
+	      /**/ "function hasprivateoperator(name: string | int): bool {\n"
+	      /**/ "	return name in this.__operators__;\n"
+	      /**/ "}"
+	      "}\n"
 	      "Also note that this set doesn't differentiate between overwritten and deleted operators, "
 	      /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
 	      /**/ ":NotImplemented exception\n"
@@ -4072,7 +4076,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	{ "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
-	      /**/ "be instantiated, is a singletone (such as ?N), or has variable-length instances (?#isvariable)") },
+	      /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
@@ -4188,7 +4192,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Type),
 	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the Type of anything "
-	                         "that is also a Type, such as :int or :List, and even itself"),
+	                         /**/ "that is also a Type, such as ?Dint or ?DList, and even itself"),
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,

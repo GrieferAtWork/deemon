@@ -650,9 +650,9 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_doc      = */ DOC("()\n"
 		                         "(s:?DBytes,start=!0,end=!-1)\n"
 		                         "Create a file stream for reading data of the given @s as a buffer, "
-		                         "starting at its byte-offset @start and ending at @end\n"
+		                         /**/ "starting at its byte-offset @start and ending at @end\n"
 		                         "Note that the given indices @start and @end refer to byte "
-		                         "offsets, and not character offsets, not its preferred encoding"),
+		                         /**/ "offsets, and not character offsets, not its preferred encoding"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS | TF_NONLOOPING,

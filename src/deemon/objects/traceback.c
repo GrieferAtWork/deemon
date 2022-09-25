@@ -717,7 +717,7 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
 	{ "current", &traceback_current, NULL, NULL,
 	  DOC("->?.\n"
-	      "@throw RuntimeError No exception was being handled"
+	      "@throw RuntimeError No exception was being handled\n"
 	      "Returns the traceback associated with the current exception") },
 	{ NULL }
 };

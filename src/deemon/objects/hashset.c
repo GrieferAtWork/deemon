@@ -1836,7 +1836,7 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_unify,
 	  DOC("(ob)->\n"
 	      "Insert @ob into the set if it wasn't inserted before, "
-	      "and re-return it, or the pre-existing instance") },
+	      /**/ "and re-return it, or the pre-existing instance") },
 	{ DeeString_STR(&str_insert),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
 	  DOC("(ob)->?Dbool\n"
@@ -1956,7 +1956,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	                         "\n"
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
-	                         "in @this HashSet, following a random order"),
+	                         /**/ "in @this HashSet, following a random order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Set),
 	/* .tp_features = */ TF_NONE,

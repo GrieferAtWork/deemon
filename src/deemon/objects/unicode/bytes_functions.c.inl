@@ -4208,7 +4208,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
 	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Same as :string.decode, but instead use the data of @this Bytes object as characters to decode"),
+	      "Same as ?Adecode?Dstring, but instead use the data of @this ?. object as characters to decode"),
 	  TYPE_METHOD_FKWDS },
 	{ "encode",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_encode,
@@ -4216,17 +4216,17 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
 	      "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Same as :string.encode, but instead use the data of @this Bytes object as characters to decode"),
+	      "Same as ?Aencode?Dstring, but instead use the data of @this ?. object as characters to decode"),
 	  TYPE_METHOD_FKWDS },
 	{ "bytes",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Same as ?#substr (here for ABI compatibility with :string.bytes)"),
+	      "Same as ?#substr (here for ABI compatibility with ?Abytes?Dstring)"),
 	  TYPE_METHOD_FKWDS },
 	{ "ord",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_ord,
 	  DOC("->?Dint\n"
-	      "@throw ValueError The length of @this Bytes object is not equal to $1\n"
+	      "@throw ValueError The length of @this ?. object is not equal to $1\n"
 	      "Same as ${this[0]}\n"
 
 	      "\n"
@@ -4239,11 +4239,11 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "resized",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_resized,
 	  DOC("(new_size:?Dint,filler?:?Dint)->?.\n"
-	      "Return a new writable Bytes object with a length of @new_size, and its "
-	      "first ${(##this, new_size) < ...} bytes initialized from ${this.substr(0, new_size)}, "
-	      "with the remainder then either left uninitialized, or initialized to @filler\n"
-	      "Note that because a Bytes object cannot be resized in-line, code using this function "
-	      "must make use of the returned Bytes object:\n"
+	      "Return a new writable ?. object with a length of @new_size, and its "
+	      /**/ "first ${(##this, new_size) < ...} bytes initialized from ${this.substr(0, new_size)}, "
+	      /**/ "with the remainder then either left uninitialized, or initialized to @filler\n"
+	      "Note that because a ?. object cannot be resized in-line, code using this function "
+	      /**/ "must make use of the returned ?. object:\n"
 	      "${"
 	      "local x = \"foobar\";\n"
 	      "local y = x.bytes();\n"
@@ -4254,21 +4254,21 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "reverse",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reverse,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
+	      "@throw BufferError @this ?. object is not writable\n"
 	      "Same as ?#reversed, but modifications are performed "
-	      "in-line, before @this Bytes object is re-returned"),
+	      /**/ "in-line, before @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "makereadonly",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makereadonly,
 	  DOC("->?.\n"
-	      "The inverse of ?#makewritable, either re-returning @this Bytes object if it "
-	      "already is read-only, or construct a view for the data contained within @this "
-	      "Bytes object, but making that view read-only") },
+	      "The inverse of ?#makewritable, either re-returning @this ?. object if it "
+	      /**/ "already is read-only, or construct a view for the data contained within @this "
+	      /**/ "?. object, but making that view read-only") },
 	{ "makewritable",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makewritable,
 	  DOC("->?.\n"
-	      "Either re-return @this Bytes object is it already ?#iswritable, or create a "
-	      "copy (s.a. ?#{op:copy}) and return it:\n"
+	      "Either re-return @this ?. object is it already ?#iswritable, or create a "
+	      /**/ "copy (s.a. ?#{op:copy}) and return it:\n"
 	      "${"
 	      "function makewritable() {\n"
 	      "	if (this.iswritable)\n"
@@ -4279,10 +4279,10 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_hex,
 	  DOC("(start=!0,end=!-1)->?Dstring\n"
 	      "Returns a hex-encoded string for the bytes contained within "
-	      "${this.substr(start, end)}, that is a string containing 2 characters "
-	      "for each encoded byte, both of which are lower-case hexadecimal digits\n"
+	      /**/ "${this.substr(start, end)}, that is a string containing 2 characters "
+	      /**/ "for each encoded byte, both of which are lower-case hexadecimal digits\n"
 	      "The returned string is formatted such that ?#fromhex can be used to decode "
-	      "it into another Bytes object"),
+	      /**/ "it into another ?. object"),
 	  TYPE_METHOD_FKWDS },
 
 	/* Bytes formatting / scanning. */
@@ -4302,7 +4302,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all "
-	      "characters in ${this.substr(start, end)} are printable") },
+	      /**/ "characters in ${this.substr(start, end)} are printable") },
 	{ "isalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalpha,
 	  DOC("->?Dbool\n"
@@ -4311,7 +4311,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are alphabetical") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are alphabetical") },
 	{ "isspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isspace,
 	  DOC("->?Dbool\n"
@@ -4320,7 +4320,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are space-characters") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are space-characters") },
 	{ "isspacexlf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isspacexlf,
 	  DOC("->?Dbool\n"
@@ -4339,7 +4339,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are line-feeds") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are line-feeds") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_islower,
 	  DOC("->?Dbool\n"
@@ -4348,7 +4348,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are lower-case") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are lower-case") },
 	{ "isupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isupper,
 	  DOC("->?Dbool\n"
@@ -4357,7 +4357,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are upper-case") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are upper-case") },
 	{ "iscntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_iscntrl,
 	  DOC("->?Dbool\n"
@@ -4366,7 +4366,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are control characters") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are control characters") },
 	{ "isdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdigit,
 	  DOC("->?Dbool\n"
@@ -4375,7 +4375,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are digits") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are digits") },
 	{ "isdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdecimal,
 	  DOC("->?Dbool\n"
@@ -4384,7 +4384,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are dicimal characters") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are dicimal characters") },
 	{ "issymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymstrt,
 	  DOC("->?Dbool\n"
@@ -4393,7 +4393,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} can be used to start a symbol name") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} can be used to start a symbol name") },
 	{ "issymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymcont,
 	  DOC("->?Dbool\n"
@@ -4402,7 +4402,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} can be used to continue a symbol name") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} can be used to continue a symbol name") },
 	{ "isalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalnum,
 	  DOC("->?Dbool\n"
@@ -4411,7 +4411,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} are alpha-numerical") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} are alpha-numerical") },
 	{ "isnumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isnumeric,
 	  DOC("->?Dbool\n"
@@ -4420,7 +4420,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
-	      "as ASCII characters) in ${this.substr(start, end)} qualify as digit or decimal characters") },
+	      /**/ "as ASCII characters) in ${this.substr(start, end)} qualify as digit or decimal characters") },
 	{ "istitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_istitle,
 	  DOC("(index:?Dint)->?Dbool\n"
@@ -4432,20 +4432,20 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
-	      "follows title-casing, meaning that space is followed by upper-case") },
+	      /**/ "follows title-casing, meaning that space is followed by upper-case") },
 	{ "issymbol",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymbol,
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if the character at ${this[index]} can be used "
-	      "to start a symbol name. Same as ${this.issymstrt(index)}\n"
+	      /**/ "to start a symbol name. Same as ${this.issymstrt(index)}\n"
 
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
-	      "is a valid symbol name") },
+	      /**/ "is a valid symbol name") },
 	{ "isascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isascii,
 	  DOC("->?Dbool\n"
@@ -4454,7 +4454,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
-	      "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
+	      /**/ "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asnumber,
 	  DOC("->?Dint\n"
@@ -4466,7 +4466,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Return the numeric value of the @index'th or only character of @this string, "
-	      "or throw a :ValueError or return @defl if that character isn't #isnumeric") },
+	      /**/ "or throw a :ValueError or return @defl if that character isn't #isnumeric") },
 	{ "asdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdigit,
 	  DOC("->?Dint\n"
@@ -4478,7 +4478,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Same as ?#asnumber, but only succeed if the selected character "
-	      "matches ?#isdigit, rather than ?#isnumeric") },
+	      /**/ "matches ?#isdigit, rather than ?#isnumeric") },
 	{ "asdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdecimal,
 	  DOC("->?Dint\n"
@@ -4490,7 +4490,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Same as ?#asnumber, but only succeed if the selected character "
-	      "matches ?#isdecimal, rather than ?#isnumeric") },
+	      /**/ "matches ?#isdecimal, rather than ?#isnumeric") },
 
 	{ "isanyprint",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyprint,
@@ -4594,71 +4594,71 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "lower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this Bytes object converted to lower-case (when interpreted as ASCII)"),
+	      "Returns a writable copy of @this ?. object converted to lower-case (when interpreted as ASCII)"),
 	  TYPE_METHOD_FKWDS },
 	{ "upper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_upper,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this Bytes object converted to upper-case (when interpreted as ASCII)"),
+	      "Returns a writable copy of @this ?. object converted to upper-case (when interpreted as ASCII)"),
 	  TYPE_METHOD_FKWDS },
 	{ "title",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_title,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this Bytes object converted to title-casing (when interpreted as ASCII)"),
+	      "Returns a writable copy of @this ?. object converted to title-casing (when interpreted as ASCII)"),
 	  TYPE_METHOD_FKWDS },
 	{ "capitalize",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_capitalize,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this Bytes object with each word capitalized (when interpreted as ASCII)"),
+	      "Returns a writable copy of @this ?. object with each word capitalized (when interpreted as ASCII)"),
 	  TYPE_METHOD_FKWDS },
 	{ "swapcase",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_swapcase,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this Bytes object with the casing of each "
-	      "character that has two different casings swapped (when interpreted as ASCII)"),
+	      "Returns a writable copy of @this ?. object with the casing of each "
+	      /**/ "character that has two different casings swapped (when interpreted as ASCII)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Alias for ?#{lower}. This function exists to match :string.casefold in "
-	      "order to improve binary compatibility between :Bytes and :string objects"),
+	      "Alias for ?#{lower}. This function exists to match ?Acasefold?Dstring in "
+	      /**/ "order to improve binary compatibility between ?. and ?Dstring objects"),
 	  TYPE_METHOD_FKWDS },
 
 	/* Inplace variants of bytes conversion functions */
 	{ "tolower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#lower, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#lower, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "toupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toupper,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#upper, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#upper, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "totitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_totitle,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#title, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#title, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "tocapitalize",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tocapitalize,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#capitalize, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#capitalize, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "toswapcase",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toswapcase,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#swapcase, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#swapcase, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "tocasefold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
+	      "@throw BufferError @this ?. object is not writable\n"
 	      "Alias for ?#tolower, here to coincide with ?#casefold existing as an alias for ?#lower"),
 	  TYPE_METHOD_FKWDS },
 
@@ -4668,7 +4668,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "Find up to @max occurrances of @find and replace each with @replace, then return the resulting data as a writable Bytes object"),
+	      "Find up to @max occurrences of @find and replace each with @replace, then return the resulting data as a writable ?. object"),
 	  TYPE_METHOD_FKWDS },
 	{ "toreplace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toreplace,
@@ -4676,8 +4676,8 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
 	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as ?#replace, but the Bytes object is modified in-place, and @this is re-returned"),
+	      "@throw BufferError @this ?. object is not writable\n"
+	      "Same as ?#replace, but the ?. object is modified in-place, and @this is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "find",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_find,
@@ -4685,7 +4685,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index, or ${-1} if no such position exists"),
+	      /**/ "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "rfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfind,
@@ -4693,21 +4693,21 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index, or ${-1} if no such position exists"),
+	      /**/ "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "index",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_index,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index"),
+	      /**/ "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "rindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindex,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index"),
+	      /**/ "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "findany",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findany,
@@ -4715,7 +4715,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index, or ${-1} if no such position exists"),
+	      /**/ "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "rfindany",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindany,
@@ -4723,33 +4723,33 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index, or ${-1} if no such position exists"),
+	      /**/ "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "indexany",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexany,
 	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index"),
+	      /**/ "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "rindexany",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexany,
 	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
-	      "and return its starting index"),
+	      /**/ "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "findall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findall,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
 	      "Find all instances of @needle within ${this.substr(start, end)}, "
-	      "and return their starting indeces as a sequence"),
+	      /**/ "and return their starting indices as a sequence"),
 	  TYPE_METHOD_FKWDS },
 	{ "count",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_count,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "Count the number of instances of @needle that exists within ${this.substr(start, end)}, "
-	      "and return now many were found"),
+	      /**/ "and return now many were found"),
 	  TYPE_METHOD_FKWDS },
 	{ "contains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_contains_f,
@@ -4759,25 +4759,25 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "substr",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Similar to ${this[start:end]}, and semantically equialent to :string.substr\n"
-	      "This function can be used to view a sub-set of bytes from @this Bytes object\n"
-	      "Modifications then made to the returned Bytes object will affect the same memory already described by @this Bytes object"),
+	      "Similar to ${this[start:end]}, and semantically equialent to ?Asubstr?Dstring\n"
+	      "This function can be used to view a sub-set of bytes from @this ?. object\n"
+	      "Modifications then made to the returned ?. object will affect the same memory already described by @this ?. object"),
 	  TYPE_METHOD_FKWDS },
 	{ "strip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_strip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all leading and trailing whitespace-characters, or "
-	      "characters apart of @mask, and return a sub-view of @this Bytes object") },
+	      /**/ "characters apart of @mask, and return a sub-view of @this ?. object") },
 	{ "lstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lstrip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all leading whitespace-characters, or characters "
-	      "apart of @mask, and return a sub-view of @this Bytes object") },
+	      /**/ "apart of @mask, and return a sub-view of @this ?. object") },
 	{ "rstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rstrip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all trailing whitespace-characters, or characters "
-	      "apart of @mask, and return a sub-view of @this Bytes object") },
+	      /**/ "apart of @mask, and return a sub-view of @this ?. object") },
 	{ "sstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
@@ -4832,17 +4832,17 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstriplines,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
-	      "than bytes apart of its $mask character.") },
+	      /**/ "than bytes apart of its $mask character.") },
 	{ "lsstriplines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lsstriplines,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
-	      "than bytes apart of its $mask character.") },
+	      /**/ "than bytes apart of its $mask character.") },
 	{ "rsstriplines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rsstriplines,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
 	      "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
-	      "than bytes apart of its $mask character.") },
+	      /**/ "than bytes apart of its $mask character.") },
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_startswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
@@ -4857,7 +4857,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_parition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
-	      "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
+	      /**/ "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	      "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
@@ -4873,31 +4873,31 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Compare the sub-string ${left = this.substr(my_start, my_end)} with ${right = other.substr(other_start, other_end)}, "
-	      "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
+	      /**/ "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
 	{ "vercompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_vercompare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Performs a version-string comparison. This is similar to ?#compare, but rather than "
-	      "performing a strict lexicographical comparison, the numbers found in the strings "
-	      "being compared are comparsed as a whole, solving the common problem seen in applications "
-	      "such as file navigators showing a file order of $\"foo1.txt\", $\"foo10.txt\", "
-	      "$\"foo11.txt\", $\"foo2.txt\", etc...\n"
+	      /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
+	      /**/ "being compared are compared as a whole, solving the common problem seen in applications "
+	      /**/ "such as file navigators showing a file order of $\"foo1.txt\", $\"foo10.txt\", "
+	      /**/ "$\"foo11.txt\", $\"foo2.txt\", etc...\n"
 	      "This function is a portable implementation of the GNU function "
-	      "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
-	      "for which you may follow the link for further details") },
+	      /**/ "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
+	      /**/ "for which you may follow the link for further details") },
 	{ "wildcompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wildcompare,
 	  DOC("(pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
-	      "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
-	      "if ${left > right}, or ${== 0} if they are equal\n"
+	      /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
+	      /**/ "if ${left > right}, or ${== 0} if they are equal\n"
 	      "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
-	      "be matched with any single character from @this, and $\"*\" to be matched to "
-	      "any number of characters") },
+	      /**/ "be matched with any single character from @this, and $\"*\" to be matched to "
+	      /**/ "any number of characters") },
 	{ "fuzzycompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fuzzycompare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
@@ -4906,10 +4906,10 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
 	      "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
 	      "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
-	      "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
-	      "the score is to $0, the more alike they are\n"
+	      /**/ "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
+	      /**/ "the score is to $0, the more alike they are\n"
 	      "The intended use of this function is for auto-completion, as well as warning "
-	      "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
+	      /**/ "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
 	      "Note that there is another version ?#casefuzzycompare that also ignores casing") },
 	{ "wmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wmatch,
@@ -4932,7 +4932,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
 	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-	      "@throw BufferError @this Bytes object is not writable\n"
+	      "@throw BufferError @this ?. object is not writable\n"
 	      "Same as ?#toreplace, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefind",
@@ -5118,23 +5118,23 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "center",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_center,
 	  DOC("(width:?Dint,filler:?X3?.?Dstring?Dint=!P{ })->?.\n"
-	      "Use a writable copy of @this Bytes object as result, then evenly "
-	      "insert @filler at the front and back to pad its length to @width bytes") },
+	      "Use a writable copy of @this ?. object as result, then evenly "
+	      /**/ "insert @filler at the front and back to pad its length to @width bytes") },
 	{ "ljust",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_ljust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use a writable copy of @this Bytes object as result, then "
-	      "insert @filler at the back to pad its length to @width bytes") },
+	      "Use a writable copy of @this ?. object as result, then "
+	      /**/ "insert @filler at the back to pad its length to @width bytes") },
 	{ "rjust",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rjust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use a writable copy of @this Bytes object as result, then "
-	      "insert @filler at the front to pad its length to @width bytes") },
+	      "Use a writable copy of @this ?. object as result, then "
+	      /**/ "insert @filler at the front to pad its length to @width bytes") },
 	{ "zfill",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_zfill,
 	  DOC("(width:?Dint,filler=!P{0})->?.\n"
 	      "Skip leading ${\'+\'} and ${\'-\'} ascii-characters, then insert @filler "
-	      "to pad the resulting string to a length of @width bytes") },
+	      /**/ "to pad the resulting string to a length of @width bytes") },
 	{ "reversed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
@@ -5144,58 +5144,58 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_expandtabs,
 	  DOC("(tabwidth=!8)->?.\n"
 	      "Expand tab characters with whitespace offset from the "
-	      "start of their respective line at multiples of @tabwidth\n"
-	      "Note that in the event of no tabs being found, @this Bytes object may be re-returned") },
+	      /**/ "start of their respective line at multiples of @tabwidth\n"
+	      "Note that in the event of no tabs being found, @this ?. object may be re-returned") },
 	{ "unifylines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_unifylines,
 	  DOC("(replacement:?X3?.?Dstring?Dint=!P{\\\n})->?.\n"
 	      "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
-	      "found in @this Bytes object to make exclusive use of @replacement\n"
+	      "found in @this ?. object to make exclusive use of @replacement\n"
 	      "Note that in the event of no line-feeds differing from @replacement being found, "
-	      "@this Bytes object may be re-returned") },
+	      /**/ "@this ?. object may be re-returned") },
 
 	/* Bytes splitter functions. */
 	{ "join",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_join,
 	  DOC("(seq:?S?O)->?.\n"
 	      "Iterate @seq and convert all items into string, inserting @this "
-	      "Bytes object before each string's :string.bytes representation element, "
-	      "starting only with the second. :Bytes objects contained in @seq are not "
-	      "converted to and from strings, but inserted directly") },
+	      /**/ "?. object before each string's ?Abytes?Dstring representation element, "
+	      /**/ "starting only with the second. ?. objects contained in @seq are not "
+	      /**/ "converted to and from strings, but inserted directly") },
 	{ "split",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_split,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
-	      "Split @this Bytes object at each instance of @sep, "
-	      "returning a sequence of the resulting parts\n"
+	      "Split @this ?. object at each instance of @sep, "
+	      /**/ "returning a sequence of the resulting parts\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      "memory") },
+	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	      /**/ "memory") },
 	{ "casesplit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesplit,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
 	      "Same as ?#split, however ascii-casing is ignored during character comparisons\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      "memory") },
+	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	      /**/ "memory") },
 	{ "splitlines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
-	      "Split @this Bytes object at each linefeed, returning a sequence of all contained lines\n"
+	      "Split @this ?. object at each linefeed, returning a sequence of all contained lines\n"
 	      "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
 	      "When @keepends is ?t, items found in the returned sequence will still have their "
-	      "original, trailing line-feed appended\n"
+	      /**/ "original, trailing line-feed appended\n"
 	      "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      "memory") },
+	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	      /**/ "memory") },
 
 	/* String indentation. */
 	{ "indent",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indent,
 	  DOC("(filler:?X3?.?Dstring?Dint=!P{\t})->?.\n"
-	      "Using @this Bytes object as result, insert @filler at the front, as well as after "
-	      "every ascii-linefeed with the exception of one that may be located at its end\n"
-	      "The inteded use is for generating strings from structured data, such as HTML:\n"
+	      "Using @this ?. object as result, insert @filler at the front, as well as after "
+	      /**/ "every ascii-linefeed with the exception of one that may be located at its end\n"
+	      "The intended use is for generating strings from structured data, such as HTML:\n"
 	      "${"
 	      "text = \"<html>\n{}\n</html>\".format({\n"
 	      "	get_html_bytes().strip().indent()\n"
@@ -5205,8 +5205,8 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_dedent,
 	  DOC("(max_chars=!1,mask?:?X3?.?Dstring?Dint)->?.\n"
 	      "Using @this string as result, remove up to @max_chars whitespace "
-	      "(s.a. ?#isspace) characters, or if given: characters apart of @mask "
-	      "from the front, as well as following any linefeed") },
+	      /**/ "(s.a. ?#isspace) characters, or if given characters apart of @mask "
+	      /**/ "from the front, as well as following any linefeed") },
 
 	/* Common-character search functions. */
 	{ "common",
@@ -5215,7 +5215,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Returns the number of common leading bytes shared between @this and @other, "
-	      "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true") },
+	      /**/ "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true") },
 	{ "rcommon",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rcommon,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
@@ -5240,14 +5240,14 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "Similar to ?#find, but do a recursive search for the "
-	      "first @close that doesn't have a match @{open}\n"
+	      /**/ "first @close that doesn't have a match @{open}\n"
 	      "For more information, see :string.findmatch") },
 	{ "indexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
 	      "Same as ?#findmatch, but throw an :IndexError instead of "
-	      "returning ${-1} if no @close without a matching @open exists") },
+	      /**/ "returning ${-1} if no @close without a matching @open exists") },
 	{ "casefindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
@@ -5264,7 +5264,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
-	      "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
+	      /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
 	      "${"
 	      "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
 	      "lcol = s.find(\")\");\n"
@@ -5296,18 +5296,18 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_partitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
-	      "the matched string portion, the first being the substring prior to the match, "
-	      "the second being the matched string itself (including the @open and @close strings), "
-	      "and the third being the substring after the match\n"
-	      "For more information see :string.partitionmatch") },
+	      /**/ "the matched string portion, the first being the substring prior to the match, "
+	      /**/ "the second being the matched string itself (including the @open and @close strings), "
+	      /**/ "and the third being the substring after the match\n"
+	      "For more information see ?Apartitionmatch?Dstring") },
 	{ "rpartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rpartitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
-	      "the matched string portion, the first being the substring prior to the match, "
-	      "the second being the matched string itself (including the @open and @close strings), "
-	      "and the third being the substring after the match.\n"
-	      "For more information see :string.rpartitionmatch") },
+	      /**/ "the matched string portion, the first being the substring prior to the match, "
+	      /**/ "the second being the matched string itself (including the @open and @close strings), "
+	      /**/ "and the third being the substring after the match.\n"
+	      "For more information see ?Arpartitionmatch?Dstring") },
 	{ "casepartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casepartitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
@@ -5320,21 +5320,21 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	{ "segments",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_segments,
 	  DOC("(substring_length:?Dint)->?S?.\n"
-	      "Split @this Bytes object into segments, each exactly @substring_length characters long, with the "
-	      "last segment containing the remaining characters and having a length of between "
-	      "$1 and @substring_length characters.\n"
+	      "Split @this ?. object into segments, each exactly @substring_length characters long, with the "
+	      /**/ "last segment containing the remaining characters and having a length of between "
+	      /**/ "$1 and @substring_length characters.\n"
 	      "This function is similar to ?#distribute, but instead of being given the "
-	      "length of sub-strings and figuring out their amount, this function takes "
-	      "the amount of sub-strings and figures out their lengths") },
+	      /**/ "length of sub-strings and figuring out their amount, this function takes "
+	      /**/ "the amount of sub-strings and figures out their lengths") },
 	{ "distribute",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_distribute,
 	  DOC("(substring_count:?Dint)->?S?.\n"
-	      "Split @this Bytes object into @substring_count similarly sized sub-strings, each with a "
-	      "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
-	      "sub-string containing all remaining characters.\n"
+	      "Split @this ?. object into @substring_count similarly sized sub-strings, each with a "
+	      /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+	      /**/ "sub-string containing all remaining characters.\n"
 	      "This function is similar to ?#segments, but instead of being given the "
-	      "amount of sub-strings and figuring out their lengths, this function takes "
-	      "the length of sub-strings and figures out their amount") },
+	      /**/ "amount of sub-strings and figuring out their lengths, this function takes "
+	      /**/ "the length of sub-strings and figures out their amount") },
 
 	{ NULL }
 };

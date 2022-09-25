@@ -1607,16 +1607,16 @@ PRIVATE struct type_method tpconst buffer_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_flush,
 	  DOC("()\n"
 	      "Similar to ?#sync, but never synchronize the underlying file, regardless "
-	      "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf") },
+	      /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf") },
 	{ "setbuf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_setbuf,
 	  DOC("(mode:?Dstring,size=!0)\n"
 	      "@throw ValueError The given @mode is malformed, or not recognized\n"
 	      "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
 	      "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
-	      "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
-	      "the buffer to keep its buffer size implementation-defined, as well as allow it to "
-	      "dynamically change said size if doing so is deemed useful\n"
+	      /**/ "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
+	      /**/ "the buffer to keep its buffer size implementation-defined, as well as allow it to "
+	      /**/ "dynamically change said size if doing so is deemed useful\n"
 	      "The given @mode must case-insensitively equal to one of the following:\n"
 	      "#T{Mode|Description~"
 	      "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others&"
@@ -1688,10 +1688,10 @@ PRIVATE struct type_getset tpconst buffer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "Forward to the $isatty property of the file being buffered\n"
 	      "Note that in order to implement auto-buffering, file buffers are allowed to "
-	      "cache the return value of ${this.file.isatty}, furthermore allowing this "
-	      "property to simply return that cached value, in other words meaning that "
-	      "any side-effects caused by the underlying $isatty may not come into effect "
-	      "following repeated calls") },
+	      /**/ "cache the return value of ${this.file.isatty}, furthermore allowing this "
+	      /**/ "property to simply return that cached value, in other words meaning that "
+	      /**/ "any side-effects caused by the underlying $isatty may not come into effect "
+	      /**/ "following repeated calls") },
 	{ "filename",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_filename, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -1724,7 +1724,7 @@ PRIVATE struct type_method tpconst buffer_class_methods[] = {
 	  DOC("()\n"
 	      "Flush all buffers that are connected to TTY file descriptors\n"
 	      "This function is automatically called at the same time as :AppExit.atexit, "
-	      "as well as prior to any read operation on any other TTY buffer that might block") },
+	      /**/ "as well as prior to any read operation on any other TTY buffer that might block") },
 	{ NULL }
 };
 
@@ -1738,9 +1738,9 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		                         "@throw ValueError The given @mode is malformed, or not recognized\n"
 		                         "Construct a new buffer for @fp using the given @mode and @size\n"
 		                         "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
-		                         "the buffering mode is set to $\"none\". Otherwise a buffer size of $0 causes "
-		                         "the buffer to use an implementation-defined buffer size, as well as allow it to "
-		                         "dynamically change said size if doing so is deemed useful\n"
+		                         /**/ "the buffering mode is set to $\"none\". Otherwise a buffer size of $0 causes "
+		                         /**/ "the buffer to use an implementation-defined buffer size, as well as allow it to "
+		                         /**/ "dynamically change said size if doing so is deemed useful\n"
 		                         "The given @mode must case-insensitively equal to one of the following:\n"
 		                         "#T{Mode|Description~"
 		                         "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others&"
@@ -1757,22 +1757,22 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		                         /*                                */  "also invoke that same operator on the contained file&"
 		                         "$\"ro\", $\"ro-\", $\"ro,\", $\"readonly,\"|Disable write-access to the underlying @fp}\n"
 		                         "${"
-		                         "import File from deemon;\n"
-		                         "local base_fp = File.open(\"foo.txt\", \"rdonly,nobuf\"); /* Open without buffering */\n"
-		                         "local fp = File.Buffer(base_fp, \"sync,full\"); /* Create a buffer wrapper */\n"
-		                         "fp.write(\"foo\"); /* Write data to buffer */\n"
-		                         "fp.sync(); /* Commit data to disk */"
+		                         /**/ "import File from deemon;\n"
+		                         /**/ "local base_fp = File.open(\"foo.txt\", \"rdonly,nobuf\"); /* Open without buffering */\n"
+		                         /**/ "local fp = File.Buffer(base_fp, \"sync,full\"); /* Create a buffer wrapper */\n"
+		                         /**/ "fp.write(\"foo\"); /* Write data to buffer */\n"
+		                         /**/ "fp.sync(); /* Commit data to disk */"
 		                         "}\n"
 		                         "The most notably useful feature made possible through use of buffers is "
-		                         "the possibility of adding ?#getc and ?#ungetc support to file types that "
-		                         "normally wouldn't support the later\n"
+		                         /**/ "the possibility of adding ?#getc and ?#ungetc support to file types that "
+		                         /**/ "normally wouldn't support the later\n"
 		                         "During initialization, deemon will assign the standard "
-		                         "streams :File.stdin, :File.stdout and :File.stderr as follows:\n"
+		                         /**/ "streams ?Astdin?DFile, ?Astdout?DFile and ?Astderr?DFile as follows:\n"
 		                         "${"
-		                         "import File from deemon;\n"
-		                         "File.stdin = File.Buffer(File.default_stdin, \"ro,auto\");\n"
-		                         "File.stdout = File.Buffer(File.default_stdout, \"auto\");\n"
-		                         "File.stderr = File.Buffer(File.default_stderr, \"auto\");"
+		                         /**/ "import File from deemon;\n"
+		                         /**/ "File.stdin = File.Buffer(File.default_stdin, \"ro,auto\");\n"
+		                         /**/ "File.stdout = File.Buffer(File.default_stdout, \"auto\");\n"
+		                         /**/ "File.stderr = File.Buffer(File.default_stderr, \"auto\");"
 		                         "}"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,

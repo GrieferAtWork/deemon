@@ -551,7 +551,6 @@ again:
 			self->t_value = ITER_DONE;
 			COMPILER_BARRIER();
 			Dee_Decref(item);
-			;
 		} else {
 			/* Mark the variable as unbound. */
 			self->t_value = ITER_DONE;

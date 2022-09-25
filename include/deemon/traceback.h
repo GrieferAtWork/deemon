@@ -129,16 +129,16 @@ struct frame_object {
 #define DEEFRAME_FREADONLY 0x0000 /* Contents of the frame may not be modified. */
 #define DEEFRAME_FWRITABLE 0x0001 /* Contents of the frame may be modified. */
 #define DEEFRAME_FUNDEFSP  0x0002 /* The stack-pointer of the frame is undefined.
-	                               * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
-	                               * pointer may be obtainable from DDI information, as well
-	                               * as use of the current PC, alongside further validation. */
+                                   * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
+                                   * pointer may be obtainable from DDI information, as well
+                                   * as use of the current PC, alongside further validation. */
 #define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined.
-	                               * This flag is set after `DEEFRAME_FUNDEFSP' was set and
-	                               * the actual stack pointer could still not be determined
-	                               * from meta-information.
-	                               * However, this should not happen for normal code, as a truely
-	                               * inconsistent stack can (should) only happen when the function
-	                               * contains custom user-assembly. */
+                                   * This flag is set after `DEEFRAME_FUNDEFSP' was set and
+                                   * the actual stack pointer could still not be determined
+                                   * from meta-information.
+                                   * However, this should not happen for normal code, as a truly
+                                   * inconsistent stack can (should) only happen when the function
+                                   * contains custom user-assembly. */
 #define DEEFRAME_FREGENGSP 0x0008 /* The SP pointer was reverse engineered and stored in `f_revsp' */
 #ifndef CONFIG_NO_THREADS
 #define DEEFRAME_FRECLOCK  0x8000 /* The frame uses a recursive lock. */

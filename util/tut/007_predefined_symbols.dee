@@ -27,7 +27,7 @@ print none;   /* none */
 print true;   /* true */
 print false;  /* false */
 
-/* Both `true' and `false' should be self-explainatory. They are simply
+/* Both `true' and `false' should be self-explanatory. They are simply
  * the 2 possible incarnations of the boolean singleton object, and are
  * commonly used as return values for comparison operators, or function
  * results. */

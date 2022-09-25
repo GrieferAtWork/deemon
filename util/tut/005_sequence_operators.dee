@@ -50,7 +50,7 @@ print repr(());           /* This is an empty Tuple `()' */
 
 /* lists, and how they actually differ from tuples.
  * To anwer this, I have to reach ahead a little bit and quickly
- * introduce variables. - They should be self-explainatory for now,
+ * introduce variables. - They should be self-explanatory for now,
  * so don't worry about them for the time being. */
 local x = [10, 20, 30];
 print repr x; /* [10, 20, 30] */
@@ -96,7 +96,7 @@ print repr [10, 20, 30, 40][:-1];   /* [10, 20, 30] */
  * in that expression taking the value of either the lowest, or the greatest
  * index, meaning that `seq[2:]' usually behaves the same as `seq[2:#seq]'.
  * Secondly, passing negative values for either `<start>' or `<end>' will
- * have that index be internally transformed to instead referr to that
+ * have that index be internally transformed to instead refer to that
  * value added to the length of the sequence:
  * In other words: `seq[:-1]' is the same as `seq[:-1 + #seq]' aka. `seq[:#seq - 1]' */
 

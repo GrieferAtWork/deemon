@@ -499,7 +499,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${-128 ... 127}, return the same value as @s8\n"
 	      "Otherwise, an integer in the range ${128 ... 255} is returned as ${256 - this}\n"
 	      "This is the same behavior as casting an 8-bit integer to becoming signed, by "
-	      "re-interpreting the most significant bit as a sign-bit") },
+	      /**/ "re-interpreting the most significant bit as a sign-bit") },
 	{ "signed16",
 	  &numeric_signed16, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -508,7 +508,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${-32768 ... 32767}, return the same value as @s16\n"
 	      "Otherwise, an integer in the range ${32768 ... 65535} is returned as ${65536 - this}\n"
 	      "This is the same behavior as casting an 16-bit integer to becoming signed, by "
-	      "re-interpreting the most significant bit as a sign-bit") },
+	      /**/ "re-interpreting the most significant bit as a sign-bit") },
 	{ "signed32",
 	  &numeric_signed32, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -517,7 +517,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${-2147483648 ... 2147483647}, return the same value as @s32\n"
 	      "Otherwise, an integer in the range ${2147483648 ... 4294967295} is returned as ${4294967296 - this}\n"
 	      "This is the same behavior as casting an 32-bit integer to becoming signed, by "
-	      "re-interpreting the most significant bit as a sign-bit") },
+	      /**/ "re-interpreting the most significant bit as a sign-bit") },
 	{ "signed64",
 	  &numeric_signed64, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -526,7 +526,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${-9223372036854775808 ... 9223372036854775807}, return the same value as @s64\n"
 	      "Otherwise, an integer in the range ${9223372036854775808 ... 18446744073709551615} is returned as ${18446744073709551616 - this}\n"
 	      "This is the same behavior as casting an 64-bit integer to becoming signed, by "
-	      "re-interpreting the most significant bit as a sign-bit") },
+	      /**/ "re-interpreting the most significant bit as a sign-bit") },
 	{ "signed128",
 	  &numeric_signed128, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -535,7 +535,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${-170141183460469231731687303715884105728 ... 170141183460469231731687303715884105727}, return the same value as @s128\n"
 	      "Otherwise, an integer in the range ${170141183460469231731687303715884105728 ... 340282366920938463463374607431768211455} is returned as ${340282366920938463463374607431768211456 - this}\n"
 	      "This is the same behavior as casting an 128-bit integer to becoming signed, by "
-	      "re-interpreting the most significant bit as a sign-bit") },
+	      /**/ "re-interpreting the most significant bit as a sign-bit") },
 	{ "unsigned8",
 	  &numeric_unsigned8, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -544,7 +544,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${0 ... 255}, return the same value as @u8\n"
 	      "Otherwise, an integer in the range ${-128 ... -1} is returned as ${256 + this}\n"
 	      "This is the same behavior as casting an 8-bit integer to becoming unsigned, by "
-	      "ignoring the most significant bit from potentially being a sign-bit") },
+	      /**/ "ignoring the most significant bit from potentially being a sign-bit") },
 	{ "unsigned16",
 	  &numeric_unsigned16, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -553,7 +553,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${0 ... 65535}, return the same value as @u16\n"
 	      "Otherwise, an integer in the range ${-32768 ... -1} is returned as ${65536 + this}\n"
 	      "This is the same behavior as casting an 16-bit integer to becoming unsigned, by "
-	      "ignoring the most significant bit from potentially being a sign-bit") },
+	      /**/ "ignoring the most significant bit from potentially being a sign-bit") },
 	{ "unsigned32",
 	  &numeric_unsigned32, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -562,7 +562,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${0 ... 4294967295}, return the same value as @u32\n"
 	      "Otherwise, an integer in the range ${-2147483648 ... -1} is returned as ${4294967296 + this}\n"
 	      "This is the same behavior as casting an 32-bit integer to becoming unsigned, by "
-	      "ignoring the most significant bit from potentially being a sign-bit") },
+	      /**/ "ignoring the most significant bit from potentially being a sign-bit") },
 	{ "unsigned64",
 	  &numeric_unsigned64, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -571,7 +571,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${0 ... 18446744073709551615}, return the same value as @u64\n"
 	      "Otherwise, an integer in the range ${-9223372036854775808 ... -1} is returned as ${18446744073709551616 + this}\n"
 	      "This is the same behavior as casting an 64-bit integer to becoming unsigned, by "
-	      "ignoring the most significant bit from potentially being a sign-bit") },
+	      /**/ "ignoring the most significant bit from potentially being a sign-bit") },
 	{ "unsigned128",
 	  &numeric_unsigned128, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -580,7 +580,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "When @this number fits the range ${0 ... 340282366920938463463374607431768211455}, return the same value as @u128\n"
 	      "Otherwise, an integer in the range ${-170141183460469231731687303715884105728 ... -1} is returned as ${340282366920938463463374607431768211456 + this}\n"
 	      "This is the same behavior as casting an 128-bit integer to becoming unsigned, by "
-	      "ignoring the most significant bit from potentially being a sign-bit") },
+	      /**/ "ignoring the most significant bit from potentially being a sign-bit") },
 
 	{ "swap16",
 	  &numeric_swap16, NULL, NULL,
@@ -771,15 +771,15 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	      "@throw IntegerOverflow When ${this <= 0}\n"
 	      "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	      "${"
-	      "local n = this.ctz;\n"
-	      "assert this == (this >> n) << n;"
+	      /**/ "local n = this.ctz;\n"
+	      /**/ "assert this == (this >> n) << n;"
 	      "}") },
 	{ "msb", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&numeric_get_msb, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw IntegerOverflow When ${this < 0}\n"
 	      "MostSignificantBit: return the index of the most significant 1-bit:\n"
 	      "${"
-	      "assert (this >> this.msb) == 1;"
+	      /**/ "assert (this >> this.msb) == 1;"
 	      "}") },
 
 	{ NULL }

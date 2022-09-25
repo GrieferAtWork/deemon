@@ -3060,7 +3060,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	      "exception may not get a chance to execute all remaining interrupts before stopping\n"
 	      "Also note that remaining interrupts may still be executing once ?#terminated already "
 	      "returns ?t, as indicative of the thread no longer being able to receive new interrupts. "
-	      "However to truely ensure that all interrupts have been processed, you must ?#join @this thread\n"
+	      "However to truly ensure that all interrupts have been processed, you must ?#join @this thread\n"
 	      "User-code may also check for interrupts explicitly by calling ?#check_interrupt") },
 
 	{ "started", &thread_started,

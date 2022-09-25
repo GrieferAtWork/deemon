@@ -6635,7 +6635,7 @@ target_breakpoint:
 	ADJUST_CFA_OFFSET(-4)
 	/* _always_ load new SP/PC from the frame to ensure that we are in a
 	 * consistent state before handling potential exception, or moving on.
-	 * For an explaination of why we do it this way, look at the C implementation. */
+	 * For an explanation of why we do it this way, look at the C implementation. */
 	movl   FRAME_PC, PC
 	movl   FRAME_SP, SP
 	/* Check how we're to continue execution. */

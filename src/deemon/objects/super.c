@@ -707,7 +707,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Super),
 	/* .tp_doc      = */ DOC("Emulate access to an instance of a derived class in "
-	                         "a way that bypasses overwritten operators/methods\n"
+	                         /**/ "a way that bypasses overwritten operators/methods\n"
 
 	                         "\n"
 	                         "()\n"
@@ -793,7 +793,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	                         "del.->\n"
 	                         ".=->\n"
 	                         "Invoke the same operator implemented by the first "
-	                         "reachable type, following regular method resolution order"),
+	                         /**/ "reachable type, following regular method resolution order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FMOVEANY | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

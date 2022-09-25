@@ -10319,9 +10319,9 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_decode,
 	  DOC("(codec:?.,errors=!Pstrict)->?X2?.?O\n"
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
+	      "@throw UnicodeDecodeError @this ?. could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Decode @this string, re-interpreting its underlying character bytes as @codec\n"
+	      "Decode @this ?., re-interpreting its underlying character bytes as @codec\n"
 	      "Prior to processing, @codec is normalized as follows:\n"
 	      "${"
 	      "name = name.lower().replace(\"_\", \"-\");\n"
@@ -10336,23 +10336,23 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
 	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
-	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:string|Decode ${this.bytes()} as a UTF-8 encoded byte sequence&"
-	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in host-endian&"
-	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in little-endian&"
-	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in big-endian&"
-	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in host-endian&"
-	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in little-endian&"
-	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in big-endian&"
-	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character}\n"
-	      "If the given @codec is not apart of this list, a call is made to :codecs:decode"),
+	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|?.|Decode ${this.bytes()} as a UTF-8 encoded byte sequence&"
+	      "$\"utf-16\"|$\"utf16\", $\"u16\"|?.|Decode ${this.bytes()} as a UTF-16 sequence, encoded in host-endian&"
+	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|?.|Decode ${this.bytes()} as a UTF-16 sequence, encoded in little-endian&"
+	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|?.|Decode ${this.bytes()} as a UTF-16 sequence, encoded in big-endian&"
+	      "$\"utf-32\"|$\"utf32\", $\"u32\"|?.|Decode ${this.bytes()} as a UTF-32 sequence, encoded in host-endian&"
+	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|?.|Decode ${this.bytes()} as a UTF-32 sequence, encoded in little-endian&"
+	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?.|Decode ${this.bytes()} as a UTF-32 sequence, encoded in big-endian&"
+	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character}\n"
+	      "If the given @codec is not apart of this list, a call is made to ?Ecodecs:decode"),
 	  TYPE_METHOD_FKWDS },
 	{ "encode",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_encode,
 	  DOC("(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	      "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
+	      "@throw UnicodeEncodeError @this ?. could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Encode @this string, re-interpreting its underlying character bytes as @codec\n"
+	      "Encode @this ?., re-interpreting its underlying character bytes as @codec\n"
 	      "Prior to processing, @codec is normalized as follows:\n${"
 	      "name = name.lower().replace(\"_\", \"-\");\n"
 	      "if (name.startswith(\"iso-\"))\n"
@@ -10366,41 +10366,41 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
 	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
-	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:Bytes|Encode character of @this string as a UTF-8 encoded byte sequence&"
-	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:Bytes|Encode 'as a UTF-16 sequence, encoded in host-endian&"
-	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian&"
-	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in big-endian&"
-	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in host-endian&"
-	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in little-endian&"
-	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in big-endian&"
-	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Encode @this string as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
-	      "If the given @codec is not apart of this list, a call is made to :codecs:encode"),
+	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|?DBytes|Encode character of @this ?. as a UTF-8 encoded byte sequence&"
+	      "$\"utf-16\"|$\"utf16\", $\"u16\"|?DBytes|Encode 'as a UTF-16 sequence, encoded in host-endian&"
+	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|?DBytes|Encode @this ?. as a UTF-16 sequence, encoded in little-endian&"
+	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|?DBytes|Encode @this ?. as a UTF-16 sequence, encoded in big-endian&"
+	      "$\"utf-32\"|$\"utf32\", $\"u32\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in host-endian&"
+	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in little-endian&"
+	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in big-endian&"
+	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Encode @this ?. as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
+	      "If the given @codec is not apart of this list, a call is made to ?Ecodecs:encode"),
 	  TYPE_METHOD_FKWDS },
 	{ "bytes",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_bytes,
 	  DOC("(allow_invalid=!f)->?DBytes\n"
 	      "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
-	      "@throw ValueError @allow_invalid is ?f, and @this string contains characters above $0xff\n"
+	      "@throw ValueError @allow_invalid is ?f, and @this ?. contains characters above $0xff\n"
 	      "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
-	      "using a single byte per character. A character greater than $0xff either causes : ValueError "
+	      "using a single byte per character. A character greater than $0xff either causes :ValueError "
 	      "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
 	      "$\"?\" in the returned Bytes object") },
 	{ "ord",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_ord,
 	  DOC("->?Dint\n"
-	      "@throw ValueError The length of @this string is not equal to $1\n"
-	      "Return the ordinal integral value of @this single-character string\n"
+	      "@throw ValueError The length of @this ?. is not equal to $1\n"
+	      "Return the ordinal integral value of @this single-character ?.\n"
 	      "\n"
 	      "(index:?Dint)->?Dint\n"
 	      "@throw IntegerOverflow The given @index is lower than $0\n"
 	      "@throw IndexError The given @index is greater than ${##this}\n"
-	      "Returns the ordinal integral value of the @index'th character of @this string") },
+	      "Returns the ordinal integral value of the @index'th character of @this ?.") },
 
 	/* String formatting / scanning. */
 	{ DeeString_STR(&str_format),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_format,
 	  DOC("(args:?S?O)->?.\n"
-	      "Format @this string using @args:\n"
+	      "Format @this ?. using @args:\n"
 
 	      "This kind of formating is the most powerful variant of string "
 	      /**/ "formatting available in deemon.\n"
@@ -10471,29 +10471,29 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "then be formatted can be altered through use of spec string portion\n"
 
 	      "If a spec portion is not present, ${str selected_object} is simply appended "
-	      /**/ "to the resulting string. Otherwise, ${selected_object.__format__(spec_string)} "
+	      /**/ "to the resulting ?.. Otherwise, ${selected_object.__format__(spec_string)} "
 	      /**/ "is invoked, and the resulting object is appended instead\n"
 
-	      "For this purpose, :Object implements a function :object.__format__ that provides "
-	      /**/ "some basic spec options, which are also used for types not derived from :Object, "
+	      "For this purpose, ?DObject implements a function ?A__format__?DObject that provides "
+	      /**/ "some basic spec options, which are also used for types not derived from ?DObject, "
 	      /**/ "or ones overwriting ${operator .}, where invocationg with $\"__format__\" throws "
 	      /**/ "either a :NotImplemented or :AttributeError error.\n"
 
-	      "When used, :Object.__format__ provides the following functionality, with a "
+	      "When used, ?A__format__?DObject provides the following functionality, with a "
 	      /**/ ":ValueError being thrown for anything else, or anything not matching these "
 	      /**/ "criteria\n"
 
 	      "#T{Spec option|Description~"
-	      "$\"{:42}\"|Will append ${selected_object.operator str().ljust(42)} to the resulting string (s.a. ?#ljust)&"
+	      "$\"{:42}\"|Will append ${selected_object.operator str().ljust(42)} to the resulting ?. (s.a. ?#ljust)&"
 	      "$\"{:<42}\"|Same as $\"{:42}\"&"
-	      "$\"{:>42}\"|Will append ${selected_object.operator str().rjust(42)} to the resulting string (s.a. ?#rjust)&"
-	      "$\"{:^42}\"|Will append ${selected_object.operator str().center(42)} to the resulting string (s.a. ?#center)&"
-	      "$\"{:=42}\"|Will append ${selected_object.operator str().zfill(42)} to the resulting string (s.a. ?#zfill)&"
-	      "$\"{:42:foo}\"|Will append ${selected_object.operator str().ljust(42, \"foo\")} to the resulting string (s.a. ?#ljust)&"
+	      "$\"{:>42}\"|Will append ${selected_object.operator str().rjust(42)} to the resulting ?. (s.a. ?#rjust)&"
+	      "$\"{:^42}\"|Will append ${selected_object.operator str().center(42)} to the resulting ?. (s.a. ?#center)&"
+	      "$\"{:=42}\"|Will append ${selected_object.operator str().zfill(42)} to the resulting ?. (s.a. ?#zfill)&"
+	      "$\"{:42:foo}\"|Will append ${selected_object.operator str().ljust(42, \"foo\")} to the resulting ?. (s.a. ?#ljust)&"
 	      "$\"{:<42:foo}\"|Same as $\"{:42:foo}\"&"
-	      "$\"{:>42:foo}\"|Will append ${selected_object.operator str().rjust(42, \"foo\")} to the resulting string (s.a. ?#rjust)&"
-	      "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42, \"foo\")} to the resulting string (s.a. ?#center)&"
-	      "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42, \"foo\")} to the resulting string (s.a. ?#zfill)"
+	      "$\"{:>42:foo}\"|Will append ${selected_object.operator str().rjust(42, \"foo\")} to the resulting ?. (s.a. ?#rjust)&"
+	      "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42, \"foo\")} to the resulting ?. (s.a. ?#center)&"
+	      "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42, \"foo\")} to the resulting ?. (s.a. ?#zfill)"
 	      "}") },
 	{ "scanf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_scanf,
@@ -10501,7 +10501,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw ValueError The given @format is malformed\n"
 	      "@throw ValueError Conversion to an integer failed\n"
 
-	      "Scan @this string using a scanf-like format string @format\n"
+	      "Scan @this ?. using a scanf-like format string @format\n"
 
 	      "No major changes have been made from C's scanf function, however regex-like range "
 	      /**/ "expressions are supported, and the returned sequence ends as soon as either @format "
@@ -10515,20 +10515,20 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "#T{Format pattern|Yielded type|Description~"
 	      "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns ?t ($r\"\\s*\")&"
 	      "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns ?t ($r\"\\n\")&"
-	      "$\"%o\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<8)+\" and yield the result as an octal integer&"
-	      "$\"%d\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<10)+\" and yield the result as an decimal integer&"
-	      "$\"%x\", $\"%p\"|:int|Match up to `width' characters with $r\"[+-]*((?\\d<16)|[a-fA-F])+\" and yield the result as a hexadecimal integer&"
-	      "$\"%i\", $\"%u\"|:int|Match up to `width' characters with $r\"[+-]*((?\\d=0)([xX](?\\d<16)+|[bB](?\\d<2)+)|(?\\d<10)+)\" and yield the result as an integer with automatic radix&"
-	      "$\"%s\"|:string|Match up to `width' characters with $r\"\\S+\" and return them as a string&"
-	      "$\"%c\"|:string|Consume exactly `width' (see above) or one characters and return them as a string&"
-	      "$\"%[...]\"|:string|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")"
+	      "$\"%o\"|?Dint|Match up to `width' characters with $r\"[+-]*(?\\d<8)+\" and yield the result as an octal integer&"
+	      "$\"%d\"|?Dint|Match up to `width' characters with $r\"[+-]*(?\\d<10)+\" and yield the result as an decimal integer&"
+	      "$\"%x\", $\"%p\"|?Dint|Match up to `width' characters with $r\"[+-]*((?\\d<16)|[a-fA-F])+\" and yield the result as a hexadecimal integer&"
+	      "$\"%i\", $\"%u\"|?Dint|Match up to `width' characters with $r\"[+-]*((?\\d=0)([xX](?\\d<16)+|[bB](?\\d<2)+)|(?\\d<10)+)\" and yield the result as an integer with automatic radix&"
+	      "$\"%s\"|?.|Match up to `width' characters with $r\"\\S+\" and return them as a ?.&"
+	      "$\"%c\"|?.|Consume exactly `width' (see above) or one characters and return them as a ?.&"
+	      "$\"%[...]\"|?.|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")"
 	      "}\n"
 
 	      "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
 	      /**/ "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored") },
 
 	/* What about something like this?:
-	 * >> print "You name is $your_name, and I'm ${my_name}"
+	 * >> print "Your name is $your_name, and I'm ${my_name}"
 	 * >>       .substitute({ .your_name = "foo", .my_name = "bar" });
 	 * >> print "You owe $guy $$10 dollars!"
 	 * >>       .substitute({ .guy = "me" });
@@ -10709,7 +10709,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "(index:?Dint,defl)->\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
-	      "Return the numeric value of the @index'th or only character of @this string, "
+	      "Return the numeric value of the @index'th or only character of @this ?., "
 	      /**/ "or throw a :ValueError or return @defl if that character isn't ?#isnumeric\n"
 	      "${"
 	      "print \"5\".isdigit();   /* true */\n"
@@ -10846,33 +10846,33 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "lower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string converted to lower-case"),
+	      "Returns @this ?. converted to lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "upper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_upper,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string converted to upper-case"),
+	      "Returns @this ?. converted to upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "title",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_title,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string converted to title-casing"),
+	      "Returns @this ?. converted to title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "capitalize",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_capitalize,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string with each word capitalized"),
+	      "Returns @this ?. with each word capitalized"),
 	  TYPE_METHOD_FKWDS },
 	{ "swapcase",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_swapcase,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string with the casing of each "
+	      "Returns @this ?. with the casing of each "
 	      /**/ "character that has two different casings swapped"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefold,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns @this string with its casing folded.\n"
+	      "Returns @this ?. with its casing folded.\n"
 
 	      "The equivalent of the string returned by this function is what is "
 	      /**/ "used by the case-insensitive string APIs, such as ?#casefind\n"
@@ -10896,7 +10896,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ DeeString_STR(&str_replace),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_replace,
 	  DOC("(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "Find up to @max occurrances of @find and replace each with @replace, then return the resulting string"),
+	      "Find up to @max occurrences of @find and replace each with @replace, then return the resulting ?."),
 	  TYPE_METHOD_FKWDS },
 	{ "find",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_find,
@@ -10954,7 +10954,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_findall,
 	  DOC("(needle:?.,start=!0,end=!-1)->?S?Dint\n"
 	      "Find all instances of @needle within ${this.substr(start, end)}, "
-	      "and return their starting indeces as a sequence"),
+	      "and return their starting indices as a sequence"),
 	  TYPE_METHOD_FKWDS },
 	{ "count",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_count,
@@ -10973,7 +10973,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	      /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
-	      /**/ "passing negative values for either @start or @end will cause :int.SIZE_MAX to "
+	      /**/ "passing negative values for either @start or @end will cause ?ASIZE_MAX?Dint to "
 	      /**/ "be used for that argument:\n"
 
 	      "${"
@@ -10996,21 +10996,21 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_strip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all leading and trailing whitespace-characters, or "
-	      /**/ "characters apart of @mask, and return the resulting string") },
+	      /**/ "characters apart of @mask, and return the resulting ?.") },
 	{ "lstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all leading whitespace-characters, or "
-	      /**/ "characters apart of @mask, and return the resulting string") },
+	      /**/ "characters apart of @mask, and return the resulting ?.") },
 	{ "rstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all trailing whitespace-characters, or "
-	      /**/ "characters apart of @mask, and return the resulting string") },
+	      /**/ "characters apart of @mask, and return the resulting ?.") },
 	{ "sstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all leading and trailing instances of @needle from @this string\n"
+	      "Strip all leading and trailing instances of @needle from @this ?.\n"
 
 	      "${"
 	      "function sstrip(needle: string): string {\n"
@@ -11024,7 +11024,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "lsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lsstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all leading instances of @needle from @this string\n"
+	      "Strip all leading instances of @needle from @this ?.\n"
 
 	      "${"
 	      "function lsstrip(needle: string): string {\n"
@@ -11036,7 +11036,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "rsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rsstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all trailing instances of @needle from @this string\n"
+	      "Strip all trailing instances of @needle from @this ?.\n"
 
 	      "${"
 	      "function lsstrip(needle: string): string {\n"
@@ -11120,7 +11120,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	      /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
-	      /**/ "being compared are comparsed as a whole, solving the common problem seen in applications "
+	      /**/ "being compared are compared as a whole, solving the common problem seen in applications "
 	      /**/ "such as file navigators showing a file order of #C{foo1.txt}, #C{foo10.txt}, #C{foo11.txt}, "
 	      /**/ "#C{foo2.txt}, etc...\n"
 
@@ -11339,23 +11339,23 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "center",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_center,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use @this string as result, then evenly insert @filler at "
+	      "Use @this ?. as result, then evenly insert @filler at "
 	      /**/ "the front and back to pad its length to @width characters") },
 	{ "ljust",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_ljust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use @this string as result, then insert @filler "
+	      "Use @this ?. as result, then insert @filler "
 	      /**/ "at the back to pad its length to @width characters") },
 	{ "rjust",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rjust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use @this string as result, then insert @filler "
+	      "Use @this ?. as result, then insert @filler "
 	      /**/ "at the front to pad its length to @width characters") },
 	{ "zfill",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_zfill,
 	  DOC("(width:?Dint,filler=!P{0})->?.\n"
 	      "Skip leading ${\'+\'} and ${\'-\'} characters, then insert @filler "
-	      /**/ "to pad the resulting string to a length of @width characters") },
+	      /**/ "to pad the resulting ?. to a length of @width characters") },
 	{ "reversed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
@@ -11369,19 +11369,19 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "unifylines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_unifylines,
 	  DOC("(replacement=!P{\\\n})->?.\n"
-	      "Unify all linefeed character sequences found in @this string to "
+	      "Unify all linefeed character sequences found in @this ?. to "
 	      /**/ "make exclusive use of @replacement") },
 
 	/* String -- sequence interaction. */
 	{ "join",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_join,
 	  DOC("(seq:?S?O)->?.\n"
-	      "Iterate @seq and convert all items into string, inserting @this "
-	      /**/ "string before each element, starting only with the second") },
+	      "Iterate @seq and convert all items into strings, inserting @this "
+	      /**/ "?. before each element, starting only with the second") },
 	{ "split",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_split,
 	  DOC("(sep:?.)->?S?.\n"
-	      "Split @this string at each instance of @sep, returning a "
+	      "Split @this ?. at each instance of @sep, returning a "
 	      /**/ "sequence of the resulting parts") },
 	{ "casesplit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesplit,
@@ -11390,7 +11390,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "splitlines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
-	      "Split @this string at each linefeed, returning a sequence of all contained lines\n"
+	      "Split @this ?. at each linefeed, returning a sequence of all contained lines\n"
 	      "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
 	      "When @keepends is ?t, items found in the returned sequence will still have their "
 	      /**/ "original, trailing line-feed appended") },
@@ -11399,9 +11399,9 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "indent",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_indent,
 	  DOC("(filler=!P{\t})->?.\n"
-	      "Using @this string as result, insert @filler at the front, as well as after "
+	      "Using @this ?. as result, insert @filler at the front, as well as after "
 	      /**/ "every linefeed with the exception of one that may be located at its end\n"
-	      "The inteded use is for generating strings from structured data, such as HTML:\n"
+	      "The intended use is for generating strings from structured data, such as HTML:\n"
 
 	      "${"
 	      "text = getHtmlText();\n"
@@ -11410,7 +11410,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "dedent",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_dedent,
 	  DOC("(max_chars=!1,mask?:?.)->?.\n"
-	      "Using @this string as result, remove up to @max_chars whitespace "
+	      "Using @this ?. as result, remove up to @max_chars whitespace "
 	      /**/ "(s.a. ?#isspace) characters, or if given: characters apart of @mask "
 	      /**/ "from the front, as well as following any linefeed") },
 
@@ -11522,7 +11522,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
-	      "the second being the matched string itself (including the @open and @close strings), "
+	      "the second being the matched ?. itself (including the @open and @close strings), "
 	      "and the third being the substring after the match:\n"
 
 	      "${"
@@ -11548,7 +11548,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	      /**/ "the matched string portion, the first being the substring prior to the match, "
-	      /**/ "the second being the matched string itself (including the @open and @close strings), "
+	      /**/ "the second being the matched ?. itself (including the @open and @close strings), "
 	      /**/ "and the third being the substring after the match:\n"
 
 	      "${"
@@ -11583,7 +11583,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "segments",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_segments,
 	  DOC("(substring_length:?Dint)->?S?.\n"
-	      "Split @this string into segments, each exactly @substring_length characters long, with the "
+	      "Split @this ?. into segments, each exactly @substring_length characters long, with the "
 	      /**/ "last segment containing the remaining characters and having a length of between "
 	      /**/ "$1 and @substring_length characters.\n"
 	      "This function is similar to ?#distribute, but instead of being given the "
@@ -11592,7 +11592,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	{ "distribute",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_distribute,
 	  DOC("(substring_count:?Dint)->?S?.\n"
-	      "Split @this string into @substring_count similarly sized sub-strings, each with a "
+	      "Split @this ?. into @substring_count similarly sized sub-strings, each with a "
 	      /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	      /**/ "sub-string containing all remaining characters.\n"
 	      "This function is similar to ?#segments, but instead of being given the "
@@ -11608,9 +11608,9 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@return The number of leading characters in ${this.substr(start, end)} "
 	      /*    */ "matched by @pattern, or $0 if @pattern could not be fully matched\n"
 
-	      "Check if ${this.substr(start, end)} string matches the given regular expression @pattern\n"
+	      "Check if ${this.substr(start, end)} matches the given regular expression @pattern\n"
 
-	      "When specified, @rules must be a comma-separated and case-insensitive string "
+	      "When specified, @rules must be a comma-separated and case-insensitive ?. "
 	      /**/ "consisting of a set of the following Name-options, or a tightly packed set of the "
 	      /**/ "following Short-options:\n"
 
@@ -11638,8 +11638,8 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "?#refindall" /*   */ "|?#findall" /*          */ "|Enumerate all sub-ranges matched by a regex pattern in ascending order&"
 	      "?#relocateall" /* */ "|-" /*                  */ "|Enumerate all sub-strings matched by a regex pattern in ascending order&"
 	      "?#resplit" /*     */ "|?#split" /*            */ "|Enumerate all sub-strings matched by a regex pattern in ascending order&"
-	      "?#restartswith" /**/ "|?#startswith" /*       */ "|Check if @this string starts with a regular expression&"
-	      "?#reendswith" /*  */ "|?#endswith" /*         */ "|Check if @this string ends with a regular expression&"
+	      "?#restartswith" /**/ "|?#startswith" /*       */ "|Check if @this ?. starts with a regular expression&"
+	      "?#reendswith" /*  */ "|?#endswith" /*         */ "|Check if @this ?. ends with a regular expression&"
 	      "?#recontains" /*  */ "|?#contains" /*         */ "|Check if @this stirng contains a regular expression anywhere&"
 	      "?#recount" /*     */ "|?#count" /*            */ "|Count the number of occurrences of a regular expression&"
 	      "?#restrip" /*     */ "|?#strip" /*            */ "|Strip all leading and trailing regular expression matches&"
@@ -11799,16 +11799,16 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematches,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @pattern matches the entirety of the specified range of @this string\n"
+	      "Check if @pattern matches the entirety of the specified range of @this ?.\n"
 	      "This function behaves identical to ${this.rematch(...) == ?#this}") },
 	{ "refind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
@@ -11816,8 +11816,8 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "/* If the pattern count not be matched, both `start' and `end' will be `none' singleton */\n"
 	      "local start, end = data.refind(r\"\\b\\w\\b\")...;\n"
 	      "/* Since `none' is equal to `0' when casted to `int', calling `substr' with none-arguments\n"
-	      " * is the same as calling `data.substr(0, 0)', meaning that this an empty string will be\n"
-	      " * returned when `refind' didn't manage to find anything.\n"
+	      " * is the same as calling `data.substr(0, 0)', meaning that an empty string will be returned\n"
+	      " * when `refind' didn't manage to find anything.\n"
 	      " * Note however that `operator [:]' functions differently, as it interprets `none' as a\n"
 	      " * placeholder for either `0' of `#data', so calling `data[start:end]' would re-produce\n"
 	      " * `data' itself in the event of `refind' having failed. */\n"
@@ -11826,7 +11826,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerfind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the last sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists (s.a. #refind)") },
@@ -11834,7 +11834,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
@@ -11843,7 +11843,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
@@ -11852,7 +11852,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.refind(pattern, start, end, rules)...)}\n"
@@ -11863,7 +11863,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerlocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.rerfind(pattern, start, end, rules)...)}\n"
@@ -11873,7 +11873,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_repartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "A hybrid between ?#refind and ?#partition\n${"
@@ -11891,7 +11891,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerpartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "A hybrid between ?#rerfind and ?#rpartition\n${"
@@ -11909,16 +11909,16 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rereplace,
 	  DOC("(pattern:?.,replace_str:?.,max_count:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	      "(pattern:?.,replace_str:?.,rules=!P{},max_count:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#replace, however the string to search for is implemented as a regular expression "
+	      "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
 	      "pattern, with the sub-string matched by it then getting replaced by @replace_str") },
 	{ "refindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refindall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
@@ -11927,7 +11927,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocateall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#relocate, but return a sequence of all matched "
@@ -11938,11 +11938,11 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_resplit,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#split, but use a regular expression in order to "
-	      "express the sections of the string around which to perform the split\n"
+	      "express the sections of the ?. around which to perform the split\n"
 
 	      "${"
 	      "local data = \"10 , 20,30 40, 50\";\n"
@@ -11957,10 +11957,10 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restartswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
+	      "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
 	      "${"
 	      "function restartswith(pattern: string) {\n"
 	      "	return this.rematch(pattern: string) != 0;\n"
@@ -11969,10 +11969,10 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reendswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
+	      "Check if @this ?. ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
 	      "${"
 	      "function restartswith(pattern: string) {\n"
 	      "	local rpos = this.rerfind(pattern);\n"
@@ -11982,31 +11982,31 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading and trailing matches for @pattern from @this string and return the result (s.a. ?#strip)") },
+	      "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)") },
 	{ "relstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading matches for @pattern from @this string and return the result (s.a. ?#lstrip)") },
+	      "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)") },
 	{ "rerstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all trailing matches for @pattern from @this string and return the result (s.a. ?#lstrip)") },
+	      "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)") },
 	{ "recount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recount,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
@@ -12015,7 +12015,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
@@ -12038,7 +12038,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 	if (DeeString_Check(other)) {
 		/* In the likely case of `other' also being a string, we can
 		 * try to perform some optimizations by looking at the common,
-		 * required character width, and creating the resulting string
+		 * required character width, and creating the resulting ?.
 		 * in accordance to what _it_ requires (bypassing the need of
 		 * a printer). */
 		struct string_utf *lhs_utf;

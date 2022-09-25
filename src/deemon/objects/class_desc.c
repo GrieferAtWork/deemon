@@ -836,7 +836,7 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	      "This is done so-as to allow instance attributes such as member functions to be stored "
 	      "within the class itself, rather than having to be copied into each and every instance "
 	      "of the class\n"
-	      "S.a. :Type.__ctable__ and :Type.__itable__") },
+	      "S.a. ?A__ctable__?DType and ?A__itable__?DType") },
 	{ "isprivate", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isprivate, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to ?t if @this class attribute was declared as $private") },
@@ -851,7 +851,7 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	      "written once (aka. when not already bound)") },
 	{ "ismethod", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_ismethod, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this class attribute referrs to a method\n"
+	      "Evaluates to ?t if @this class attribute refers to a method\n"
 	      "When set, reading from the attribute will return a an object "
 	      "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
 	      "Note however that this is rarely ever required to be done, as method attributes "
@@ -877,8 +877,8 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	      "Returns ?t if @this class attribute is exclusive to the "
 	      "class-namespace (i.e. was declared as $static)\n"
 	      "During enumeration of attributes, all attributes where this is ?t "
-	      "are enumated by :ClassDescriptor.cattr, while all for which it isn't "
-	      "are enumated by :ClassDescriptor.iattr") },
+	      "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
+	      "are enumated by ?Aiattr?Ert:ClassDescriptor") },
 	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns a comma-separated string describing the flags of @this class attribute\n"
@@ -1337,7 +1337,7 @@ PRIVATE struct type_member tpconst cd_members[] = {
 	                         "An interrupt exception (such as :Interrupt) is not caught by ${catch(...)} "
 	                         "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
 	                         "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
-	                         "optional function calls such as invocations of :fs:unlink from accidentally handling "
+	                         "optional function calls such as invocations of ?Efs:unlink from accidentally handling "
 	                         "unwanted types of exceptions such as :KeyboardInterrupt, as caused "
 	                         "by the user pressing CTRL+C to terminate the running script, and (normally) not "
 	                         "expecting it to continue running because the error was silently swallowed by an "
@@ -1972,10 +1972,10 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassDescriptor",
 	/* .tp_doc      = */ DOC("(name:?Dstring,doc:?Dstring=!P{},flags:?X2?Dstring?Dint=!P{},"
-	                         "operators:?S?T2?X2?Dstring?Dint?Dint=!T0,"
-	                         "iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
-	                         "cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
-	                         "isize?:?Dint,csize?:?Dint)\n"
+	                         /**/ "operators:?S?T2?X2?Dstring?Dint?Dint=!T0,"
+	                         /**/ "iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
+	                         /**/ "cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
+	                         /**/ "isize?:?Dint,csize?:?Dint)\n"
 	                         "@throw ValueError Some operator or attribute was defined multiple times\n"
 	                         "@throw ValueError A specified operator name wasn't recognized (custom operators must be encoded as IDs)\n"
 	                         "@throw ValueError A specified set of flags contains an invalid option\n"
@@ -1984,13 +1984,13 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         "Create a new class descriptor\n"
 	                         "The given @flags is a comma-separated string of flags as described in ?#flags\n"
 	                         "The given @isize and @csize determine the allocated sizes of the instance class "
-	                         "member tables. - When omitted, these sizes are automatically calculated by "
-	                         "determining the greatest used table indices within @operators, @iattr and @cattr\n"
+	                         /**/ "member tables. - When omitted, these sizes are automatically calculated by "
+	                         /**/ "determining the greatest used table indices within @operators, @iattr and @cattr\n"
 	                         "Note that both @iattr and @cattr take mappings of attribute names to one either "
-	                         "the associated table_index, or a tuple of (table_index, flags[, doc]), where flags is "
-	                         "a comma-separated string of flags as described in ?Aflags?#Attribute\n"
+	                         /**/ "the associated table_index, or a tuple of (table_index, flags[, doc]), where flags is "
+	                         /**/ "a comma-separated string of flags as described in ?Aflags?#Attribute\n"
 	                         "Hint: Once created, a _ClassDescriptor object can be used "
-	                         "with :rt:makeclass to create custom class types at runtime"),
+	                         /**/ "with :rt:makeclass to create custom class types at runtime"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

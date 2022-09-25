@@ -308,7 +308,7 @@ PRIVATE struct type_cmp cell_cmp = {
 PRIVATE struct type_getset tpconst cell_getsets[] = {
 	{ "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
 	  DOC("@throw UnboundAttribute Attempted to read from an empty Cell\n"
-	      "read/write access to the underlying, contained :Object") },
+	      "Read/write access to the underlying, contained ?O") },
 	{ NULL }
 };
 
@@ -466,7 +466,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_delete,
 	  DOC("->?Dbool\n"
 	      "Delete the value stored in @this Cell, returning ?t if "
-	      "the Cell wasn't empty before, or ?f if it already was") },
+	      /**/ "the Cell wasn't empty before, or ?f if it already was") },
 	{ DeeString_STR(&str_pop),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_pop,
 	  DOC("->\n"
@@ -479,7 +479,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_set,
 	  DOC("(value)->?Dbool\n"
 	      "Set (override) @this Cell's value, returning ?t if a previous value "
-	      "has been overwritten, or ?f if no value had been set before") },
+	      /**/ "has been overwritten, or ?f if no value had been set before") },
 	{ DeeString_STR(&str_xch),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
 	  DOC("(value)->\n"
@@ -493,7 +493,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpdel,
 	  DOC("(old_value)->?Dbool\n"
 	      "Atomically check if the stored object's id matches @{old_value}. If this is "
-	      "the case, delete the stored object and return ?t. Otherwise, return ?f") },
+	      /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f") },
 	{ "cmpxch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
@@ -502,26 +502,26 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	      "\n"
 	      "(old_value,new_value,def)->\n"
 	      "Do an id-compare of the stored object against @old_value and overwrite "
-	      "that object with @new_value when they match. Otherwise, don't modify the "
-	      "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
+	      /**/ "that object with @new_value when they match. Otherwise, don't modify the "
+	      /**/ "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
 	      "This is equivalent to the atomic execution of the following:\n"
 	      "${"
-	      "local result = this.value;\n"
-	      "if (this && result === old_value)\n"
-	      "	this.value = new_value;\n"
-	      "return result;"
+	      /**/ "local result = this.value;\n"
+	      /**/ "if (this && result === old_value)\n"
+	      /**/ "	this.value = new_value;\n"
+	      /**/ "return result;"
 	      "}\n"
 
 	      "\n"
 	      "(new_value)->?Dbool\n"
 	      "Return ?t and atomically set @new_value as stored object only "
-	      "if no object had been set before. Otherwise, return ?f") },
+	      /**/ "if no object had been set before. Otherwise, return ?f") },
 	{ "cmpset",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpset,
 	  DOC("(old_value)->?Dbool\n"
 	      "(old_value,new_value)->?Dbool\n"
 	      "Atomically check if the stored value equals @old_value and return ?t "
-	      "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
+	      /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
 	      "When @new_value is omit, the function behaves identical to ?#cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "del",

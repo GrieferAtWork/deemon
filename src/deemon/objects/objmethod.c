@@ -582,14 +582,14 @@ dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dki_kwds);
 }
 
-#define DEFINE_DOCKWDSITER_COMPARE(name, op)                                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
-	name(DocKwdsIterator *self, DocKwdsIterator *other) {                         \
-		if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type)) \
-			goto err;                                                             \
-		return_bool(DOCKWDSITER_RDITER(self) op DOCKWDSITER_RDITER(other));       \
-	err:                                                                          \
-		return NULL;                                                              \
+#define DEFINE_DOCKWDSITER_COMPARE(name, op)                                \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
+	name(DocKwdsIterator *self, DocKwdsIterator *other) {                   \
+		if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type))        \
+			goto err;                                                       \
+		return_bool(DOCKWDSITER_RDITER(self) op DOCKWDSITER_RDITER(other)); \
+	err:                                                                    \
+		return NULL;                                                        \
 	}
 DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_eq, ==)
 DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_ne, !=)
@@ -980,7 +980,7 @@ done:
 PRIVATE ATTR_COLD int DCALL err_classmethod_argc_zero(void) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "ClassMethod objects must be called "
-	                       "with at least 1 argument");
+	                       /**/ "with at least 1 argument");
 }
 
 
@@ -2176,8 +2176,8 @@ PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "Returns the type as part of which @this method was declared, or ?N "
-	      "if @this method was declared as part of a module, or if the type could "
-	      "not be located") },
+	      /**/ "if @this method was declared as part of a module, or if the type could "
+	      /**/ "not be located") },
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
@@ -2386,7 +2386,7 @@ fatal_invalid_except(DeeObject *__restrict return_value,
                      uint16_t excepted, void *callback_addr) {
 	Dee_DPRINTF("Exception depth was improperly modified:\n"
 	            "After a return value %p from C-function %p, the exception "
-	            "depth should have been %u, but was actually %u\n"
+	            /**/ "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
 	Dee_BREAKPOINT();

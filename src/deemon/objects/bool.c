@@ -359,6 +359,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_bool),
 	/* .tp_doc      = */ DOC("()\n"
 	                         "Return the $false singleton\n"
+
 	                         "\n"
 	                         "(ob)\n"
 	                         "Convert the given @ob into a boolean"),

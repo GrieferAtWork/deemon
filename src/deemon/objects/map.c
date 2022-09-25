@@ -80,7 +80,7 @@ DOC_DEF(map_byhash_doc,
         "(template:?O)->?S?T2?O?O\n"
         "@param template The object who's hash should be used to search for collisions\n"
         "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
-        "key-value pairs, search for pairs where the key matches the hash of @template");
+        /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
 
 INTDEF struct type_method tpconst map_methods[];
 INTERN struct type_method tpconst map_methods[] = {
@@ -1326,21 +1326,21 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	{ "keys",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_keys, NULL, NULL,
 	  DOC("->?#Keys\n"
-	      "Returns a :Sequence that can be enumerated to view only the keys of @this Mapping") },
+	      "Returns a ?DSequence that can be enumerated to view only the keys of @this Mapping") },
 	{ "values",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_values, NULL, NULL,
 	  DOC("->?#Values\n"
-	      "Returns a :Sequence that can be enumerated to view only the values of @this Mapping") },
+	      "Returns a ?DSequence that can be enumerated to view only the values of @this Mapping") },
 	{ "items",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_items, NULL, NULL,
 	  DOC("->?#Items\n"
-	      "Returns a :Sequence that can be enumerated to view the key-item "
-	      "pairs as 2-element sequences, the same way they could be viewed "
-	      "if @this Mapping itself was being iterated\n"
-	      "Note however that the returned :Sequence is pure, meaning that it "
-	      "implements a index-based getitem and getrange operators, the same "
-	      "way one would expect of any regular object implementing the sequence "
-	      "protocol") },
+	      "Returns a ?DSequence that can be enumerated to view the key-item "
+	      /**/ "pairs as 2-element sequences, the same way they could be viewed "
+	      /**/ "if @this Mapping itself was being iterated\n"
+	      "Note however that the returned ?DSequence is pure, meaning that it "
+	      /**/ "implements a index-based getitem and getrange operators, the same "
+	      /**/ "way one would expect of any regular object implementing the sequence "
+	      /**/ "protocol") },
 	{ "iterkeys",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterkeys, NULL, NULL,
 	  DOC("->?AIterator?#Keys\n"
@@ -1361,10 +1361,10 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	  &MapByAttr_New, NULL, NULL,
 	  DOC("->?Ert:MappingByAttr\n"
 	      "Construct a wrapper for @this mapping that behaves like a generic class object, "
-	      "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
-	      "(during all of $get, $del and $set).\n"
+	      /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
+	      /**/ "(during all of $get, $del and $set).\n"
 	      "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
-	      "interfaces, but instead simply behaves like a completely generic object.\n"
+	      /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
 	      "This attribute only makes sense if @this mapping behaves like ${{string: Object}}.") },
 	{ "frozen",
 	  &DeeRoDict_FromSequence, NULL, NULL,
@@ -1432,7 +1432,7 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	  NULL,
 	  DOC("->?DType\n"
 	      "Returns the iterator class used by instances of @this Mapping type\n"
-	      "This member must be overwritten by sub-classes of :Mapping") },
+	      "This member must be overwritten by sub-classes of ?DMapping") },
 	{ "Frozen",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_frozen_get,
 	  NULL,
@@ -1468,8 +1468,8 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_doc      = */ DOC("A recommended abstract base class for any Mapping "
 	                         "type that wishes to implement a key-value protocol\n"
 	                         "An object derived from this class must implement ${operator iter}, "
-	                         "and preferrably (but optionally) or ${operator []} (getitem)\n"
-	                         "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
+	                         /**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
+	                         /**/ "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
 
 	                         "\n"
 	                         "()\n"
@@ -1479,7 +1479,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	                         "\n"
 	                         "repr->\n"
 	                         "Returns the representation of all sequence elements, "
-	                         "using abstract mapping syntax\n"
+	                         /**/ "using abstract mapping syntax\n"
 	                         "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
 
 	                         "\n"

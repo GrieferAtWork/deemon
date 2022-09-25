@@ -3473,15 +3473,15 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
 	  DOC("(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
-	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	      "or ?N (for host-endian)\n"
+	      /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+	      /*            */ "or ?N (for host-endian)\n"
 	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	      "@throw ValueError The given @byteorder string isn't recognized\n"
 	      "Returns the data of @this integer as a @length bytes long "
-	      "writable Bytes object that is disjunct from @this integer.\n"
+	      /**/ "writable Bytes object that is disjunct from @this integer.\n"
 	      "When @signed is ?f, throw an :IntegerOverflow if @this "
-	      "integer is negative. Otherwise use two's complement to encode "
-	      "negative integers"),
+	      /**/ "integer is negative. Otherwise use two's complement to encode "
+	      /**/ "negative integers"),
 	  TYPE_METHOD_FKWDS },
 	{ "bitcount",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bitcount,
@@ -3493,10 +3493,10 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_forcecopy,
 	  DOC("->?.\n"
 	      "Internal function to force the creation of a copy of @this "
-	      "integer without performing aliasing for known constants.\n"
+	      /**/ "integer without performing aliasing for known constants.\n"
 	      "This function is implementation-specific and used by tests "
-	      "in order to ensure that inplace-optimization of certain "
-	      "operators functions correctly") },
+	      /**/ "in order to ensure that inplace-optimization of certain "
+	      /**/ "operators functions correctly") },
 	{ "divmod",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_divmod_f,
 	  DOC("(y:?.)->?T2?.?.\n"
@@ -3687,15 +3687,15 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	      "@throw IntegerOverflow When ${this < 0}\n"
 	      "CountTrailingZeros: return the number of trailing zero-bits:\n"
 	      "${"
-	      "local n = this.ctz;\n"
-	      "assert this == (this >> n) << n;"
+	      /**/ "local n = this.ctz;\n"
+	      /**/ "assert this == (this >> n) << n;"
 	      "}") },
 	{ "msb", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_msb, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw IntegerOverflow When ${this <= 0}\n"
 	      "MostSignificantBit: return the index of the most significant 1-bit:\n"
 	      "${"
-	      "assert (this >> this.msb) == 1;"
+	      /**/ "assert (this >> this.msb) == 1;"
 	      "}") },
 
 	{ DeeString_STR(&str_int), &DeeObject_NewRef, NULL, NULL,
@@ -3718,16 +3718,16 @@ PRIVATE struct type_member tpconst int_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("SIZE_MAX", &int_size_max,
 	                      "The max value acceptable for sequence sizes, or indices\n"
 	                      "Note that despite its name, this constant is not necessarily "
-	                      "equal to the well-known C-constant of the same name, accessible "
-	                      "in deemon as ${(size_t from ctypes).max}\n"
+	                      /**/ "equal to the well-known C-constant of the same name, accessible "
+	                      /**/ "in deemon as ${(size_t from ctypes).max}\n"
 	                      "Note that this value is guarantied to be sufficiently great, such that "
-	                      "a sequence consisting of SIZE_MAX elements, each addressed as its own "
-	                      "member, or modifiable index in some array, is impossible to achieve due "
-	                      "to memory constraints.\n"
+	                      /**/ "a sequence consisting of SIZE_MAX elements, each addressed as its own "
+	                      /**/ "member, or modifiable index in some array, is impossible to achieve due "
+	                      /**/ "to memory constraints.\n"
 	                      "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
 	                      "Custom, mutable sequences with sizes greater than this may experience inaccuracies "
-	                      "with the default implementation of function such as :Sequence.insert's index-argument "
-	                      "potentially not being able to correctly determine if a negative or positive number was given\n"
+	                      /**/ "with the default implementation of function such as :Sequence.insert's index-argument "
+	                      /**/ "potentially not being able to correctly determine if a negative or positive number was given\n"
 	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),
 	{ NULL }
 };
@@ -3737,9 +3737,9 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_int),
 	/* .tp_doc      = */ DOC("The builtin type for representing and operating "
-	                         "with whole numbers of an arbitrary precision\n"
+	                         /**/ "with whole numbers of an arbitrary precision\n"
 	                         "Note that integers themself are immutable, and that "
-	                         "inplace operators will change the pointed-object object\n"
+	                         /**/ "inplace operators will change the pointed-object object\n"
 
 	                         "\n"
 	                         "()\n"
@@ -3757,7 +3757,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "@throw ValueError The given @radix is invalid\n"
 	                         "Convert the given :string or :Bytes object @s into an integer\n"
 	                         "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
-	                         "Otherwise, use @radix as it is provided\n"
+	                         /**/ "Otherwise, use @radix as it is provided\n"
 
 	                         "\n"
 	                         "str->\n"
@@ -3785,7 +3785,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "\n"
 	                         "inv->\n"
 	                         "Return the result of ${-(this + 1)}. This matches the mathematical "
-	                         "equivalent of a bit-wise inversion in 2'th complement arithmetic\n"
+	                         /**/ "equivalent of a bit-wise inversion in 2'th complement arithmetic\n"
 
 	                         "\n"
 	                         "neg->\n"
@@ -3822,7 +3822,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         ">>(count:?.)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this right a total of @count times. "
-	                         "All bits that fall off of the end are discarded\n"
+	                         /**/ "All bits that fall off of the end are discarded\n"
 
 	                         "\n"
 	                         "&->\n"

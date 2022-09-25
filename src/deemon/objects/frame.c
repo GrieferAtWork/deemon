@@ -600,12 +600,12 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
 	  DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
 	      "Returns a sequence of tuples describing the Frame location, "
-	      "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
+	      /**/ "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
 	      "Rarely ever does the location consist of more than a single "
-	      "location tuple, however if a function call has been inlined "
-	      "as a call from another location, the compiler will generate DDI "
-	      "instrumentation to ensure consistent debug information for both "
-	      "the inlined function, as well as the call-site") },
+	      /**/ "location tuple, however if a function call has been inlined "
+	      /**/ "as a call from another location, the compiler will generate DDI "
+	      /**/ "instrumentation to ensure consistent debug information for both "
+	      /**/ "the inlined function, as well as the call-site") },
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"

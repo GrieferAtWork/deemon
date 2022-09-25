@@ -1988,21 +1988,23 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	  DOC("(key)->\n"
 	      "(key,def)->\n"
 	      "@throw KeyError No @def was given and @key was not found\n"
-	      "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
+	      "Delete @key from @this and return its previously assigned "
+	      /**/ "value or @def when @key had no item associated") },
 	{ DeeString_STR(&str_clear),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_doclear,
 	  DOC("()\n"
-	      "Clear all values from @this :Dict") },
+	      "Clear all values from @this ?.") },
 	{ "popitem",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_popsomething,
 	  DOC("->?T2?O?O\n"
 	      "@return A random pair key-value pair that has been removed\n"
-	      "@throw ValueError @this :Dict was empty") },
+	      "@throw ValueError @this ?. was empty") },
 	{ "setdefault",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setdefault,
 	  DOC("(key,def=!N)->\n"
 	      "@return The object currently assigned to @key\n"
-	      "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
+	      "Lookup @key in @this ?. and return its value if found. "
+	      /**/ "Otherwise, assign @def to @key and return it instead") },
 	{ "setold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setold,
 	  DOC("(key,value)->?Dbool\n"
@@ -2027,7 +2029,7 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
 	      "Iterate @items and unpack each element into 2 others, using them as "
-	      "key and value to insert into @this Dict") },
+	      /**/ "key and value to insert into @this ?.") },
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_byhash,
 	  DOC_GET(map_byhash_doc),
@@ -2052,19 +2054,19 @@ INTERN struct type_getset tpconst dict_getsets[] = {
 	{ "keys",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys, NULL, NULL,
 	  DOC("->?AKeys?.\n"
-	      "@return A proxy sequence for viewing the keys of @this :Dict") },
+	      "@return A proxy sequence for viewing the keys of @this ?.") },
 	{ "values",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values, NULL, NULL,
 	  DOC("->?AValues?.\n"
-	      "@return A proxy sequence for viewing the values of @this :Dict") },
+	      "@return A proxy sequence for viewing the values of @this ?.") },
 	{ "items",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items, NULL, NULL,
 	  DOC("->?AItems?.\n"
-	      "@return A proxy sequence for viewing the key-value pairs of @this :Dict") },
+	      "@return A proxy sequence for viewing the key-value pairs of @this ?.") },
 	{ "frozen",
 	  &DeeRoDict_FromSequence, NULL, NULL,
 	  DOC("->?Ert:RoDict\n"
-	      "Returns a read-only (frozen) copy of @this Dict") },
+	      "Returns a read-only (frozen) copy of @this ?.") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "max_load_factor",
 	  &set_get_maxloadfactor,
@@ -2100,14 +2102,16 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Dict),
 	/* .tp_doc      = */ DOC("The builtin mapping object for translating keys to items\n"
+
 	                         "\n"
 	                         "()\n"
-	                         "Create a new, empty Dict\n"
+	                         "Create a new, empty ?.\n"
+
 	                         "\n"
 	                         "(items:?S?T2?O?O)\n"
-	                         "Create a new Dict, using key-items pairs extracted from @items.\n"
+	                         "Create a new ?., using key-items pairs extracted from @items.\n"
 	                         "Iterate @items and unpack each element into 2 others, using them "
-	                         "as key and value to insert into @this Dict"),
+	                         /**/ "as key and value to insert into @this ?."),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Dict),
 	/* .tp_features = */ TF_NONE,

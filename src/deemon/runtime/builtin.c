@@ -124,6 +124,7 @@ INTERN struct static_module_struct deemon_module_head = {
 };
 
 
+/* TODO: Do this init statically (auto-generate code for each variant of the hash-function) */
 PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
 	struct module_symbol *iter;
 	for (iter = deemon_builtins; iter < COMPILER_ENDOF(deemon_builtins); ++iter) {
@@ -157,7 +158,7 @@ PRIVATE int init_state = INIT_PENDING;
 PUBLIC ATTR_RETNONNULL DeeModuleObject *
 DCALL DeeModule_GetDeemon(void) {
 	/* Lazily calculate hashes of exported objects upon first access. */
-	if 		unlikely(init_state != INIT_COMPLET) {
+	if unlikely(init_state != INIT_COMPLET) {
 #ifdef CONFIG_NO_THREADS
 		init_builtins();
 		init_state = INIT_COMPLET;

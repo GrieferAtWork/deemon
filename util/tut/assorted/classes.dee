@@ -306,7 +306,7 @@ print "done";
 // Fun facts:
 //   - All member functions of classes are implicitly
 //     declared with '__attribute__((__thiscall__, __super__(...)))',
-//     where '...' referrs to the base of the class
+//     where '...' refers to the base of the class
 //   - The attribute operators are only invoked if all
 //     other possibilities of finding an attribute
 //     have failed. Meaning that you can't overwrite

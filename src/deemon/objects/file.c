@@ -1822,7 +1822,7 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 	{ DeeString_STR(&str_Joined),
 	  &file_class_getjoined, NULL, NULL,
 	  DOC("->?DType\n"
-	      "Deprecated alias for :files:joined") },
+	      "Deprecated alias for ?Efiles:Joined") },
 	{ NULL }
 };
 
@@ -1856,7 +1856,7 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	                      /**/ "Starting with deemon v200, these streams can now be found "
 	                      /**/ "under ${File.stdxxx} and the ${File.io} type has been "
 	                      /**/ "renamed to ?#System\n"
-	                      /**/ "With that in mind, this field is now simply an alias for :File"),
+	                      /**/ "With that in mind, this field is now simply an alias for ?DFile"),
 	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
 	                      "Deprecated argument for #?seek (Use the string $\"set\" instead"),
 	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
@@ -2496,11 +2496,11 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	      "@param mustmmap When !t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
 	      "@param mapshared When !t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
 	      "Map the contents of the file into memory. If $mmap isn't supported by the this file, "
-	      "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
+	      /**/ "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
 	      "The returned ?DBytes object is always writable, though changes "
-	      "are only reflected within files when @mapshared is !t.\n"
+	      /**/ "are only reflected within files when @mapshared is !t.\n"
 	      "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
-	      "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
+	      /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
 	  TYPE_METHOD_FKWDS },
 
 	{ NULL }
@@ -2627,9 +2627,9 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_doc      = */ DOC("The base class for all file types\n"
 
 		                         "Types derived from this are able to implement a variety of "
-		                         "new operators related to file operations, which are then "
-		                         "used by the member functions and other operators provided "
-		                         "by this type, or can also be used directly:\n"
+		                         /**/ "new operators related to file operations, which are then "
+		                         /**/ "used by the member functions and other operators provided "
+		                         /**/ "by this type, or can also be used directly:\n"
 
 		                         "#T{Operator prototype|Description~"
 		                         /**/ "${operator read(size: int): Bytes}|"

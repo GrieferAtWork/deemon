@@ -1689,7 +1689,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	      "Parse strings are include-strings, which has the same behavior as parsing "
 	      "all strings as though they were raw string literals, meaning that a "
 	      "backslash-escape sequences are not recognized\n"
-	      "The inteded use for this is to parse the string of an ${##include} directive\n"
+	      "The intended use for this is to parse the string of an ${##include} directive\n"
 	      "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
 	      "won't not recognize escape sequences for non-raw string literals, either\n"
 	      "Note: This field is preserved by ?#flags") },

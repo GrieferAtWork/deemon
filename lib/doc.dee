@@ -1220,7 +1220,7 @@ class TypeExpr: WeakRefAble {
 		})";
 	}
 
-	@@Returns true if @this Type expression referrs to @none
+	@@Returns true if @this Type expression refers to @none
 	public final property isnone: bool = {
 		get(): bool {
 			if (m_docstring is string)
@@ -1230,7 +1230,7 @@ class TypeExpr: WeakRefAble {
 	}
 
 	@@Returns @true if the type referred to by @this TypeExpr
-	@@accepts any kind of input (aka. referrs to @Object)
+	@@accepts any kind of input (aka. refers to @Object)
 	@@Seperately, a X-expression with at least one element
 	@@accepting anything, also accepts anything itself.
 	public final property acceptsany: bool = {
@@ -1734,7 +1734,7 @@ done:
 	}
 
 	@@Initialize @m_cache as @(module_name: string | module | none, module_attr: string | none)
-	@@When @module_name is set to @".", referr to the current module.
+	@@When @module_name is set to @".", refer to the current module.
 	private Edecode() {
 		switch (m_docstring[1]) {
 
@@ -3456,7 +3456,7 @@ set_is_type:
 		return f"Doc({ repr path })";
 	}
 
-	@@Returns @true if @this doc node has allowed to referr to child nodes
+	@@Returns @true if @this doc node has allowed to refer to child nodes
 	public final property haschildren: bool = {
 		get() {
 			if (object is bound) {

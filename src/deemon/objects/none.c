@@ -238,27 +238,33 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_none),
 	/* .tp_doc      = */ DOC("None is a singleton object that can be used in any operation "
-	                         "as either a placeholder, or as a no-op object. Besides being a "
-	                         "no-op for everything, it has several special characteristics, "
-	                         "such as its ability of being expanded in any number of itself "
-	                         "without causing :{UnpackError}s to be thrown, only being one "
-	                         "of them\n"
+	                         /**/ "as either a placeholder, or as a no-op object. Besides being a "
+	                         /**/ "no-op for everything, it has several special characteristics, "
+	                         /**/ "such as its ability of being expanded in any number of itself "
+	                         /**/ "without causing :{UnpackError}s to be thrown, only being one "
+	                         /**/ "of them\n"
+
 	                         "\n"
 	                         "(args!)\n"
 	                         "Taking any number of arguments, return the none-singleton\n"
+
 	                         "\n"
 	                         "str->\n"
 	                         "repr->\n"
 	                         "Always returns $\"none\"\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Always returns $false\n"
+
 	                         "\n"
 	                         "int->\n"
 	                         "Always returns $0\n"
+
 	                         "\n"
 	                         "float->\n"
 	                         "Always returns $0.0\n"
+
 	                         "\n"
 	                         "copy->\n"
 	                         "deepcopy->\n"
