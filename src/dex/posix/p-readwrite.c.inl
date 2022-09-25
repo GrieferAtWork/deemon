@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_READWRITE_C_INL
 #define GUARD_DEX_POSIX_P_READWRITE_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 #include <hybrid/byteorder.h>
@@ -90,9 +90,9 @@ typedef union {
 #undef posix_read_USE_READ
 #undef posix_read_USE_STUB
 #ifdef CONFIG_HAVE_read
-#define posix_read_USE_READ 1
+#define posix_read_USE_READ
 #else /* CONFIG_HAVE_read */
-#define posix_read_USE_STUB 1
+#define posix_read_USE_STUB
 #endif /* !CONFIG_HAVE_read */
 
 /* Figure out how to implement `lseek()' */
@@ -100,12 +100,12 @@ typedef union {
 #undef posix_lseek_USE_STUB
 #undef posix_lseek_IS64
 #ifdef CONFIG_HAVE_lseek64
-#define posix_lseek_IS64 1
-#define posix_lseek_USE_LSEEK64 1
+#define posix_lseek_IS64
+#define posix_lseek_USE_LSEEK64
 #elif defined(CONFIG_HAVE_lseek)
-#define posix_lseek_USE_LSEEK 1
+#define posix_lseek_USE_LSEEK
 #else /* CONFIG_HAVE_lseek */
-#define posix_lseek_USE_STUB 1
+#define posix_lseek_USE_STUB
 #endif /* !CONFIG_HAVE_lseek */
 
 /* Figure out how to implement `pread()' */
@@ -116,23 +116,23 @@ typedef union {
 #undef posix_pread_USE_STUB
 #undef posix_pread_IS64
 #if defined(CONFIG_HAVE_pread64)
-#define posix_pread_IS64 1
-#define posix_pread_USE_PREAD64 1
+#define posix_pread_IS64
+#define posix_pread_USE_PREAD64
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define posix_pread_IS64 1
-#define posix_pread_USE_READFILE 1
+#define posix_pread_IS64
+#define posix_pread_USE_READFILE
 #elif (defined(CONFIG_HAVE_pread) && \
        (defined(posix_lseek_USE_STUB) || defined(posix_read_USE_STUB) || !defined(posix_lseek_IS64)))
-#define posix_pread_USE_PREAD 1
+#define posix_pread_USE_PREAD
 #elif (!defined(posix_read_USE_STUB) && \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
-#define posix_pread_IS64 1
+#define posix_pread_IS64
 #endif /* CONFIG_HAVE_lseek64 */
-#define posix_pread_USE_LSEEK_READ 1
-#else
-#define posix_pread_USE_STUB 1
-#endif
+#define posix_pread_USE_LSEEK_READ
+#else /* ... */
+#define posix_pread_USE_STUB
+#endif /* !... */
 
 #ifdef posix_pread_IS64
 #define PREAD_OFF_T  int64_t
@@ -153,9 +153,9 @@ typedef union {
 #undef posix_write_USE_WRITE
 #undef posix_write_USE_STUB
 #ifdef CONFIG_HAVE_write
-#define posix_write_USE_WRITE 1
+#define posix_write_USE_WRITE
 #else /* CONFIG_HAVE_write */
-#define posix_write_USE_STUB 1
+#define posix_write_USE_STUB
 #endif /* !CONFIG_HAVE_write */
 
 /* Figure out how to implement `pwrite()' */
@@ -166,23 +166,23 @@ typedef union {
 #undef posix_pwrite_USE_STUB
 #undef posix_pwrite_IS64
 #if defined(CONFIG_HAVE_pwrite64)
-#define posix_pwrite_IS64 1
-#define posix_pwrite_USE_PWRITE64 1
+#define posix_pwrite_IS64
+#define posix_pwrite_USE_PWRITE64
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define posix_pwrite_IS64 1
-#define posix_pwrite_USE_WRITEFILE 1
+#define posix_pwrite_IS64
+#define posix_pwrite_USE_WRITEFILE
 #elif (defined(CONFIG_HAVE_pwrite) && \
        (defined(posix_lseek_USE_STUB) || defined(posix_write_USE_STUB) || !defined(posix_lseek_IS64)))
-#define posix_pwrite_USE_PWRITE 1
+#define posix_pwrite_USE_PWRITE
 #elif (!defined(CONFIG_HAVE_write) && \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
-#define posix_pwrite_IS64 1
+#define posix_pwrite_IS64
 #endif /* CONFIG_HAVE_lseek64 */
-#define posix_pwrite_USE_LSEEK_WRITE 1
-#else
-#define posix_pwrite_USE_STUB 1
-#endif
+#define posix_pwrite_USE_LSEEK_WRITE
+#else /* ... */
+#define posix_pwrite_USE_STUB
+#endif /* !... */
 
 #ifdef posix_pwrite_IS64
 #define PWRITE_OFF_T  int64_t
@@ -225,12 +225,11 @@ err:
 #endif /* posix_read_USE_READ */
 
 #ifdef posix_read_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)buf;
 	(void)count;
-	posix_err_unsupported("read");
-	return -1;
+	return posix_err_unsupported("read");
 #endif /* !posix_read_USE_STUB */
 }
 #endif /* !posix_read_USE_STUB */
@@ -321,7 +320,7 @@ err:
 #endif /* !posix_read_USE_STUB */
 
 #ifdef posix_read_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)argc;
 	(void)argv;
 	posix_err_unsupported("read");
@@ -424,7 +423,7 @@ err:
 #endif /* posix_lseek_USE_LSEEK || posix_lseek_USE_LSEEK64 */
 
 #ifdef posix_lseek_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)offset;
 	(void)whence;
@@ -549,13 +548,12 @@ err:
 #endif /* posix_pread_USE_LSEEK_READ */
 
 #ifdef posix_pread_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)buf;
 	(void)count;
 	(void)offset;
-	posix_err_unsupported("pread");
-	return -1;
+	return posix_err_unsupported("pread");
 #endif /* posix_pread_USE_STUB */
 
 }
@@ -658,7 +656,7 @@ err:
 #endif /* !posix_pread_USE_STUB */
 
 #ifdef posix_pread_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)argc;
 	(void)argv;
 	posix_err_unsupported("pread");
@@ -729,7 +727,7 @@ err:
 #endif /* posix_write_USE_WRITE */
 
 #ifdef posix_write_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)buf;
 	posix_err_unsupported("write");
@@ -854,13 +852,12 @@ err:
 #endif /* posix_pwrite_USE_LSEEK_WRITE */
 
 #ifdef posix_pwrite_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)buf;
 	(void)count;
 	(void)offset;
-	posix_err_unsupported("pwrite");
-	return -1;
+	return posix_err_unsupported("pwrite");
 #endif /* posix_pwrite_USE_STUB */
 
 }
@@ -913,7 +910,7 @@ err:
 #endif /* !posix_pwrite_USE_STUB */
 
 #ifdef posix_pwrite_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)argc;
 	(void)argv;
 	posix_err_unsupported("pwrite");

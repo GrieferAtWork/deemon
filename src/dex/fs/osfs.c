@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_FS_OSFS_C
 #define GUARD_DEX_FS_OSFS_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include "libfs.h"
 /**/

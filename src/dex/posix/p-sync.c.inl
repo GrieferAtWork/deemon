@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_SYNC_C_INL
 #define GUARD_DEX_POSIX_P_SYNC_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -30,21 +30,21 @@ DECL_BEGIN
 #undef posix_fsync_USE_FSYNC
 #undef posix_fsync_USE_STUB
 #ifdef CONFIG_HAVE_fsync
-#define posix_fsync_USE_FSYNC 1
-#else
-#define posix_fsync_USE_STUB 1
-#endif
+#define posix_fsync_USE_FSYNC
+#else /* ... */
+#define posix_fsync_USE_STUB
+#endif /* !... */
 
 /* Figure out how to implement `fdatasync()' */
 #undef posix_fdatasync_USE_FDATASYNC
 #undef posix_fdatasync_USE_FSYNC
 #undef posix_fdatasync_USE_STUB
 #ifdef CONFIG_HAVE_fdatasync
-#define posix_fdatasync_USE_FDATASYNC 1
+#define posix_fdatasync_USE_FDATASYNC
 #elif !defined(posix_fsync_USE_STUB)
-#define posix_fdatasync_USE_FSYNC 1
+#define posix_fdatasync_USE_FSYNC
 #else
-#define posix_fdatasync_USE_STUB 1
+#define posix_fdatasync_USE_STUB
 #endif
 
 
@@ -135,7 +135,7 @@ err:
 #endif /* posix_fsync_USE_FSYNC */
 
 #ifdef posix_fsync_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("fsync");
 	return NULL;
@@ -200,7 +200,7 @@ err:
 #endif /* !posix_fdatasync_USE_FSYNC */
 
 #ifdef posix_fdatasync_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("fdatasync");
 	return NULL;

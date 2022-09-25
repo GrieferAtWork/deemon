@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_THREADING_NOTHREAD_C_INL
 #define GUARD_DEX_THREADING_NOTHREAD_C_INL 1
 #define CONFIG_BUILDING_LIBTHREADING 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

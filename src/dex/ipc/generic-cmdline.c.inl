@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_IPC_GENERIC_CMDLINE_C_INL
 #define GUARD_DEX_IPC_GENERIC_CMDLINE_C_INL 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>

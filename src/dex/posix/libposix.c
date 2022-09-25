@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_LIBPOSIX_C
 #define GUARD_DEX_POSIX_LIBPOSIX_C 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 /**/
@@ -50,7 +50,7 @@
 #include "p-fs.c.inl"
 #else /* !__INTELLISENSE__ */
 #define NEED_posix_dfd_abspath
-#define NEED_ERR_UNSUPPORTED
+#define NEED_posix_err_unsupported
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/error.h>
@@ -87,6 +87,16 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path) {
 #define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
 		int error;
 		HANDLE hDfd;
+		if (DeeInt_Check(dfd)) {
+			int dfd_intval;
+			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
+				if (dfd_intval == AT_FDCWD) {
+					/* Caller made an explicit request for the path to be relative! */
+					unicode_printer_fini(&printer);
+					return_reference_(path);
+				}
+			}
+		}
 		hDfd = DeeNTSystem_GetHandle(dfd);
 		if unlikely(hDfd == INVALID_HANDLE_VALUE)
 			goto err_printer;
@@ -167,18 +177,18 @@ err:
 #endif /* NEED_posix_dfd_abspath */
 
 
-#ifdef NEED_ERR_UNSUPPORTED
-#undef NEED_ERR_UNSUPPORTED
+#ifdef NEED_posix_err_unsupported
+#undef NEED_posix_err_unsupported
 INTERN ATTR_NOINLINE ATTR_UNUSED ATTR_COLD NONNULL((1)) int DCALL
 posix_err_unsupported(char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "Unsupported function `%s'",
 	                       name);
 }
-#endif /* NEED_ERR_UNSUPPORTED */
+#endif /* NEED_posix_err_unsupported */
 
-#if defined(NEED_GET_DFD_FILENAME) || defined(__INTELLISENSE__)
-#undef NEED_GET_DFD_FILENAME
+#if defined(NEED_libposix_get_dfd_filename) || defined(__INTELLISENSE__)
+#undef NEED_libposix_get_dfd_filename
 INTERN WUNUSED DREF /*String*/ DeeObject *DCALL
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) {
 	(void)dfd;
@@ -188,7 +198,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
-#endif /* NEED_GET_DFD_FILENAME */
+#endif /* NEED_libposix_get_dfd_filename */
 
 #ifndef CONFIG_HAVE_errno
 #define posix_errno_USE_STUB
@@ -256,6 +266,8 @@ local ALL_STUBS = {
 	("posix_stat_isfifo_IS_STUB", { "stat.isfifo" }),
 	("posix_stat_islnk_IS_STUB", { "stat.islnk" }),
 	("posix_stat_issock_IS_STUB", { "stat.issock" }),
+	("stat_class_isexe_IS_STUB", { "stat.isexe" }),
+	("stat_class_ishidden_IS_STUB", { "stat.ishidden" }),
 };
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -1252,18 +1264,18 @@ PRIVATE struct dex_symbol symbols[] = {
 
 
 	/* Directory access */
-	{ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FNORMAL },
-	{ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },
-	{ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
-	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
-	      "Read the contents of a given directory. The returned "
-	      "object may be iterated to yield ?Gdirent objects.\n"
-	      "Additionally, you may specify @skipdots as !f if you "
-	      "wish to include the special $'.' and $'..' entires.") },
-	{ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
-	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
-	      "Same as ?Gopendir, but the default value of @inheritfd is !t, "
-	      "mimicking the behavior of the native $fdopendir function") },
+	D({ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FNORMAL },)
+	D({ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },)
+	D({ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
+	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
+	        "Read the contents of a given directory. The returned "
+	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
+	        "Additionally, you may specify @skipdots as !f if you "
+	        /**/ "wish to include the special $'.' and $'..' entires.") },)
+	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
+	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
+	        "Same as ?Gopendir, but the default value of @inheritfd is !t, "
+	        /**/ "mimicking the behavior of the native $fdopendir function") },)
 
 	/* File type constants. */
 	D({ "DT_UNKNOWN", (DeeObject *)&posix_DT_UNKNOWN, MODSYM_FNORMAL },)
@@ -1276,11 +1288,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "DT_SOCK", (DeeObject *)&posix_DT_SOCK, MODSYM_FNORMAL },)
 	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FNORMAL },)
 	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FNORMAL,
-	  DOC("(dt:?Dint)->?Dint\n"
-	      "Convert a ${DT_*} constant to ${S_IF*}") },)
+	    DOC("(dt:?Dint)->?Dint\n"
+	        "Convert a ${DT_*} constant to ${S_IF*}") },)
 	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FNORMAL,
-	  DOC("(if:?Dint)->?Dint\n"
-	      "Convert an ${S_IF*} constant to ${DT_*}") },)
+	    DOC("(if:?Dint)->?Dint\n"
+	        "Convert an ${S_IF*} constant to ${DT_*}") },)
 
 	/* Environ control */
 	D(POSIX_GETENV_DEF_DOC("@throws KeyError The given @varname wasn't found, and @defl wasn't given\n"
@@ -1294,14 +1306,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ "environ", &DeeEnviron_Singleton, MODSYM_FREADONLY,
 	    DOC("->?S?T2?Dstring?Dstring\n"
 	        "A :mapping-style singleton instance that can be used to "
-	        "access and enumerate environment variables by name:\n"
+	        /**/ "access and enumerate environment variables by name:\n"
 	        "${"
-	        "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"
+	        /**/ "print environ[\"PATH\"]; /* \"/bin:/usr/bin:...\" */"
 	        "}\n"
-	        "Other mapping operations known from :Dict can be used "
-	        "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
-	        "check for the existance of (${... in environ}) environment variables, "
-	        "as well as enumerating all variables (${for (key, item: environ) ...})")
+	        "Other mapping operations known from ?DMapping can be used "
+	        /**/ "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
+	        /**/ "check for the existance of (${... in environ}) environment variables, "
+	        /**/ "as well as enumerating all variables (${for (key, item: environ) ...})")
 	},)
 
 	/* stat.st_mode bits. */
@@ -1339,8 +1351,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* stat & frields */
 	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },)
 	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },)
-	D({ "fstat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },) /* Alias */
-	D({ "fstatat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },) /* Alias */
+	D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
+	D(POSIX_FSTATAT_DEF_DOC("More restrictive alias for ?Gstat"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \

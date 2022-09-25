@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_THREADING_UNIX_C_INL
 #define GUARD_DEX_THREADING_UNIX_C_INL 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 /* TODO */
 

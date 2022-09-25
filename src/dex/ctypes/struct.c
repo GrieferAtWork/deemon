@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_CTYPES_STRUCT_C
 #define GUARD_DEX_CTYPES_STRUCT_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include "libctypes.h"
 /**/

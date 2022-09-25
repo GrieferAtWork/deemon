@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEEMON_RUNTIME_MRO_C
 #define GUARD_DEEMON_RUNTIME_MRO_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

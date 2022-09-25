@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_STAT_C_INL
 #define GUARD_DEX_POSIX_P_STAT_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 /**/
@@ -37,6 +37,7 @@ DECL_BEGIN
 #undef posix_stat_USE_WINDOWS
 #undef posix_stat_USE_stat64
 #undef posix_stat_USE_stat
+#undef posix_stat_USE_fopen
 #undef posix_stat_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
 #define posix_stat_USE_WINDOWS
@@ -54,6 +55,8 @@ DECL_BEGIN
 #define posix_stat_USE_wstat64
 #elif (defined(CONFIG_HAVE_wstat) || defined(CONFIG_HAVE_fstat) || defined(CONFIG_HAVE_wfstatat))
 #define posix_stat_USE_wstat
+#elif defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64)
+#define posix_stat_USE_fopen
 #else /* ... */
 #define posix_stat_USE_STUB
 #endif /* !... */
@@ -142,6 +145,8 @@ DECL_BEGIN
 #ifdef CONFIG_HAVE_fstatat
 #define posix_stat_USED_fstatat fstatat
 #endif /* CONFIG_HAVE_fstatat */
+#elif defined(posix_stat_USE_fopen)
+#define posix_stat_NO_NATIVE_DFD
 #endif /* ... */
 
 #ifdef posix_stat_USED_STRUCT_STAT
@@ -531,6 +536,13 @@ struct dee_stat {
 #ifdef posix_stat_USED_STRUCT_STAT
 	struct posix_stat_USED_STRUCT_STAT st_info; /* Unix stat information */
 #endif /* posix_stat_USED_STRUCT_STAT */
+
+#ifdef posix_stat_USE_fopen
+	FILE *st_file; /* [1..1][const] Linked file */
+#ifdef CONFIG_HAVE_fclose
+#define dee_stat_fini(self) (void)fclose((self)->st_file)
+#endif /* CONFIG_HAVE_fclose */
+#endif /* posix_stat_USE_fopen */
 };
 
 #ifndef dee_stat_fini
@@ -541,15 +553,15 @@ struct dee_stat {
 
 #ifdef posix_stat_USE_STUB
 PRIVATE ATTR_COLD int DCALL err_stat_not_implemented(void) {
-	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "No way to implement stat");
+#define NEED_posix_err_unsupported
+	return posix_err_unsupported("stat");
 }
 #endif /* !posix_stat_USE_STUB */
 
 #ifndef posix_stat_HAVE_lstat
 PRIVATE ATTR_COLD int DCALL err_lstat_not_implemented(void) {
-	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "No way to implement lstat");
+#define NEED_posix_err_unsupported
+	return posix_err_unsupported("lstat");
 }
 #endif /* !posix_stat_HAVE_lstat */
 
@@ -842,6 +854,30 @@ again:
 	}
 #endif /* posix_stat_USED_STRUCT_STAT */
 
+#ifdef posix_stat_USE_fopen
+	(void)atflags;
+	{
+		char *utf8_filename;
+		utf8_filename = DeeString_AsUtf8(path_or_file);
+		if unlikely(!utf8_filename)
+			goto err;
+#define NEED_err
+#ifdef CONFIG_HAVE_fopen64
+		self->st_file = fopen64(utf8_filename, "r");
+#else /* CONFIG_HAVE_fopen64 */
+		self->st_file = fopen(utf8_filename, "r");
+#endif /* !CONFIG_HAVE_fopen64 */
+		if unlikely(!self->st_file) {
+			if (atflags & DEE_STAT_F_TRY)
+				return 1;
+			return DeeError_Throwf(&DeeError_FileNotFound,
+			                       "Path %r could not be found",
+			                       path_or_file);
+		}
+		return 0;
+	}
+#endif /* !posix_stat_USE_fopen */
+
 #ifdef posix_stat_USE_STUB
 	(void)self;
 	(void)dfd;
@@ -1003,6 +1039,103 @@ err:
 #endif /* !posix_stat_HAVE_lstat */
 }
 
+
+/*[[[deemon import("_dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
+#define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_fstat, posix_fstat_f);
+#ifndef POSIX_KWDS_FD_DEFINED
+#define POSIX_KWDS_FD_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
+#endif /* !POSIX_KWDS_FD_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *fd;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fstat", &fd))
+		goto err;
+	return posix_fstat_f_impl(fd);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd)
+/*[[[end]]]*/
+{
+	DREF DeeStatObject *result;
+	if unlikely(DeeString_Check(fd)) {
+		DeeObject_TypeAssertFailed(fd, &DeeInt_Type);
+		goto err;
+	}
+	result = DeeObject_MALLOC(DeeStatObject);
+	if unlikely(!result)
+		goto err;
+	if unlikely(dee_stat_init(&result->so_stat, NULL, fd, DEE_STAT_F_NORMAL))
+		goto err_r;
+	DeeObject_Init(result, &DeeStat_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+/*[[[deemon import("_dexutils").gw("fstatat", "dfd:?X2?DFile?Dint,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
+#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X2?DFile?Dint,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_fstatat, posix_fstatat_f);
+#ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
+#define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { K(dfd), K(path), K(atflags), KEND });
+#endif /* !POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *dfd;
+	DeeObject *path;
+	unsigned int atflags = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atflags, "oo|u:fstatat", &dfd, &path, &atflags))
+		goto err;
+	return posix_fstatat_f_impl(dfd, path, atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+/*[[[end]]]*/
+{
+	DREF DeeStatObject *result;
+	if unlikely(DeeString_Check(dfd)) {
+		DeeObject_TypeAssertFailed(dfd, &DeeInt_Type);
+		goto err;
+	}
+#ifdef posix_stat_HAVE_lstat
+	if (atflags & ~AT_SYMLINK_NOFOLLOW)
+#else /* posix_stat_HAVE_lstat */
+	if (atflags)
+#endif /* !posix_stat_HAVE_lstat */
+	{
+#ifndef posix_stat_HAVE_lstat
+		if (atflags & AT_SYMLINK_NOFOLLOW) {
+			err_lstat_not_implemented();
+			goto err;
+		}
+#endif /* !posix_stat_HAVE_lstat */
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Invalid `atflags' argument: %#x",
+		                atflags);
+		goto err;
+	}
+	result = DeeObject_MALLOC(DeeStatObject);
+	if unlikely(!result)
+		goto err;
+	if unlikely(dee_stat_init(&result->so_stat, dfd, path, atflags))
+		goto err_r;
+	DeeObject_Init(result, &DeeStat_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
 
 #ifndef dee_stat_fini_IS_NOOP
 #define HAVE_stat_fini
@@ -1228,6 +1361,42 @@ err_nosize:
 	return NULL;
 #elif defined(posix_stat_HAVE_st_size)
 	return DeeInt_NEWU(self->so_stat.st_info.st_size);
+#elif (defined(posix_stat_USE_fopen) && defined(SEEK_END) &&                                           \
+       (defined(CONFIG_HAVE_fseeko64) || defined(CONFIG_HAVE_fseeko) || defined(CONFIG_HAVE_fseek)) && \
+       (defined(CONFIG_HAVE_ftello64) || defined(CONFIG_HAVE_ftello) || defined(CONFIG_HAVE_ftell)))
+#ifdef CONFIG_HAVE_fseeko64
+	if (fseeko64(self->so_stat.st_file, 0, SEEK_END) == -1)
+#elif defined(CONFIG_HAVE_fseeko)
+	if (fseeko(self->so_stat.st_file, 0, SEEK_END) == -1)
+#else /* ... */
+	if (fseek(self->so_stat.st_file, 0, SEEK_END) == -1)
+#endif /* !... */
+	{
+#ifdef CONFIG_HAVE_ferror
+#ifdef CONFIG_HAVE_clearerr
+		clearerr(self->so_stat.st_file);
+		if (fseeko64(self->so_stat.st_file, 0, SEEK_END) == -1)
+#endif /* CONFIG_HAVE_clearerr */
+		{
+			if (ferror(self->so_stat.st_file))
+				goto err_seek_error;
+#define NEED_err_seek_error
+		}
+#endif /* CONFIG_HAVE_ferror */
+	}
+#ifdef CONFIG_HAVE_ftello64
+	return DeeInt_NewU64((uint64_t)ftello64(self->so_stat.st_file));
+#elif defined(CONFIG_HAVE_ftello)
+	return DeeInt_NewUIntptr((uintptr_t)ftello(self->so_stat.st_file));
+#else /* ... */
+	return DeeInt_NewULong((unsigned long)ftell(self->so_stat.st_file));
+#endif /* !... */
+#ifdef NEED_err_seek_error
+#undef NEED_err_seek_error
+err_seek_error:
+	DeeError_Throwf(&DeeError_FSError, "Unable to seek file");
+	return NULL;
+#endif /* NEED_err_seek_error */
 #else /* ... */
 #define posix_stat_get_size_IS_STUB
 	(void)self;
@@ -1351,6 +1520,9 @@ stat_isdir(DeeStatObject *__restrict self) {
 	return_bool(self->so_stat.st_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 #elif defined(posix_stat_HAVE_st_mode)
 	return_bool(STAT_ISDIR(self->so_stat.st_info.st_mode));
+#elif defined(posix_stat_USE_fopen)
+	(void)self;
+	return_false;
 #else /* ... */
 #define posix_stat_isdir_IS_STUB
 	(void)self;
@@ -1422,6 +1594,9 @@ stat_isreg(DeeStatObject *__restrict self) {
 	               FILE_ATTRIBUTE_REPARSE_POINT)));
 #elif defined(posix_stat_HAVE_st_mode)
 	return_bool(STAT_ISREG(self->so_stat.st_info.st_mode));
+#elif defined(posix_stat_USE_fopen)
+	(void)self;
+	return_true; /* ... probably ... */
 #else /* ... */
 #define posix_stat_isreg_IS_STUB
 	(void)self;
@@ -1452,6 +1627,10 @@ stat_islnk(DeeStatObject *__restrict self) {
 	return_bool(stat_get_nttype(&self->so_stat, true) == FILE_TYPE_PIPE);
 #elif defined(posix_stat_HAVE_st_mode)
 	return_bool(STAT_ISLNK(self->so_stat.st_info.st_mode));
+#elif !defined(posix_stat_USE_STUB) && !defined(posix_stat_HAVE_lstat)
+	/* Without lstat, anything that can be stat'd is guaranted to be regular */
+	(void)self;
+	return_false;
 #else /* ... */
 #define posix_stat_islnk_IS_STUB
 	(void)self;
@@ -1978,7 +2157,7 @@ err:
 	unsigned int used_atflags;
 	DeeObject *dfd, *path_or_file;
 	(void)self;
-	if (stat_unpack_args(argc, argv, stat_unpack_args_format("isexe"),
+	if (stat_unpack_args(argc, argv, stat_unpack_args_format("ishidden"),
 	                     &dfd, &path_or_file, &used_atflags))
 		goto err;
 	if unlikely(dfd) {
@@ -2117,7 +2296,7 @@ stat_class_isexe(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return_bool_(result);
 err:
 	return NULL;
-#else /* posix_stat_USE_WINDOWS */
+#elif defined(posix_stat_USED_STRUCT_STAT)
 	DREF DeeObject *result;
 	struct dee_stat st;
 	int error;
@@ -2152,7 +2331,13 @@ err:
 	return result;
 err:
 	return NULL;
-#endif /* !posix_stat_USE_WINDOWS */
+#else /* ... */
+#define stat_class_isexe_IS_STUB
+	(void)self;
+#define NEED_err_stat_no_mode_info
+	err_stat_no_mode_info();
+	return NULL;
+#endif /* !... */
 }
 
 
@@ -2243,14 +2428,14 @@ PRIVATE struct type_getset tpconst stat_getsets[] = {
 	{ "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
-	      "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
+	      /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
 #endif /* HAVE_stat_getntattr_np */
 #ifdef HAVE_stat_getnttype_np
 	{ "nttype_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnttype_np, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this stat-file does not contain valid NT-type information\n"
 	      "Non-portable windows extension for retrieving the NT type of this stat-file, that "
-	      "type being one of the `FILE_TYPE_*' constants found in windows system headers") },
+	      /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers") },
 #endif /* HAVE_stat_getnttype_np */
 	{ NULL }
 };
@@ -2262,107 +2447,107 @@ PRIVATE struct type_method tpconst stat_class_methods[] = {
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the referred file exists, or if the given file described "
-	      "can be used with ?Gstat") },
+	      /**/ "check if the referred file exists, or if the given "
+	      /**/ "file described can be used with ?Gstat") },
 	{ "isdir", &stat_class_isdir,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing directory") },
+	      /**/ "check if the passed parameters refer to an existing directory") },
 	{ "ischr", &stat_class_ischr,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing character-device") },
+	      /**/ "check if the passed parameters refer to an existing character-device") },
 	{ "isblk", &stat_class_isblk,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing block-device") },
+	      /**/ "check if the passed parameters refer to an existing block-device") },
 	{ "isdev", &stat_class_isdev,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing character- or block-device") },
+	      /**/ "check if the passed parameters refer to an existing character- or block-device") },
 	{ "isreg", &stat_class_isreg,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing regular file") },
+	      /**/ "check if the passed parameters refer to an existing regular file") },
 	{ "isfifo", &stat_class_isfifo,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing pipe") },
+	      /**/ "check if the passed parameters refer to an existing pipe") },
 	{ "islnk", &stat_class_islnk,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing symbolic link") },
+	      /**/ "check if the passed parameters refer to an existing symbolic link") },
 	{ "issock", &stat_class_issock,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an existing socket") },
+	      /**/ "check if the passed parameters refer to an existing socket") },
 	{ "ishidden", &stat_class_ishidden,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of "
-	      ":stat, check if the passed parameters refer to a hidden file. "
-	      "If the filesystem encodes the hidden-attribute as part of the "
-	      "filename, this function always returns ?f if the path-string "
-	      "of the file described by the passed arguments cannot be determined") },
+	      /**/ "?Gstat, check if the passed parameters refer to a hidden file. "
+	      /**/ "If the filesystem encodes the hidden-attribute as part of the "
+	      /**/ "filename, this function always returns ?f if the path-string "
+	      /**/ "of the file described by the passed arguments cannot be determined") },
 	{ "isexe", &stat_class_isexe,
 	  DOC("(st:?.)->?Dbool\n"
 	      "(path:?Dstring,atflags=!0)\n"
 	      "(fp:?DFile)\n"
 	      "(fd:?Dint)\n"
-	      "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	      "@interrupt\n"
 	      "Taking the same arguments as the constructor of ?Gstat, "
-	      "check if the passed parameters refer to an executable file. "
-	      "If the filesystem encodes the executable-attribute as part of the "
-	      "filename, this function always returns ?f if the path-string "
-	      "of the file described by the passed arguments cannot be determined") },
+	      /**/ "check if the passed parameters refer to an executable file. "
+	      /**/ "If the filesystem encodes the executable-attribute as part of the "
+	      /**/ "filename, this function always returns ?f if the path-string "
+	      /**/ "of the file described by the passed arguments cannot be determined") },
 	{ NULL }
 };
 
@@ -2548,7 +2733,7 @@ err_stat_no_nttype_info(void) {
 #undef NEED_err_stat_no_info
 INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
 err_stat_no_info(char const *__restrict level) {
-	return DeeError_Throwf(&DeeError_ValueError,
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
 	                       "The stat object does not contain any %s information",
 	                       level);
 }
@@ -2564,7 +2749,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 	/* .tp_doc      = */ DOC("(path:?Dstring,atflags=!0)\n"
 	                         "(fp:?DFile)\n"
 	                         "(fd:?Dint)\n"
-	                         "(dfd:?Dint,path:?Dstring,atflags=!0)\n"
+	                         "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
 	                         "@interrupt\n"
 	                         "@throw FileNotFound The given @path or @fp could not be found\n"
 	                         "@throw SystemError Failed to query file information for some reason\n"
@@ -2626,12 +2811,12 @@ INTERN DeeTypeObject DeeLStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "lstat",
 	/* .tp_doc      = */ DOC("(path:?Dstring)\n"
-	                         "(dfd:?Dint,path:?Dstring)\n"
+	                         "(dfd:?X2?DFile?Dint,path:?Dstring)\n"
 	                         "@interrupt\n"
 	                         "@throw FileNotFound The given @path or @fp could not be found\n"
 	                         "@throw SystemError Failed to query file information for some reason\n"
 	                         "Same as its base type ?Gstat, but query information without "
-	                         "dereferencing the final link"),
+	                         /**/ "dereferencing the final link"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_PIPE_C_INL
 #define GUARD_DEX_POSIX_P_PIPE_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -32,12 +32,12 @@ DECL_BEGIN
 #undef posix_pipe_USE_CREATEPIPE
 #undef posix_pipe_USE_STUB
 #if defined(CONFIG_HAVE_pipe) || defined(CONFIG_HAVE_pipe2)
-#define posix_pipe_USE_PIPE 1
+#define posix_pipe_USE_PIPE
 #elif defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define posix_pipe_USE_CREATEPIPE 1
-#else
-#define posix_pipe_USE_STUB 1
-#endif
+#define posix_pipe_USE_CREATEPIPE
+#else /* ... */
+#define posix_pipe_USE_STUB
+#endif /* !... */
 
 
 /* Figure out how to implement `pipe2()' */
@@ -47,18 +47,18 @@ DECL_BEGIN
 #undef posix_pipe2_USE_PIPE
 #undef posix_pipe2_USE_STUB
 #if defined(CONFIG_HAVE_pipe2)
-#define posix_pipe2_USE_PIPE2 1
+#define posix_pipe2_USE_PIPE2
 #elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_pipe_USE_STUB)
-#define posix_pipe2_USE_PIPE 1
+#define posix_pipe2_USE_PIPE
 #elif (defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) &&                                                \
        (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
        (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
-#define posix_pipe2_USE_PIPE_FCNTL 1
+#define posix_pipe2_USE_PIPE_FCNTL
 #elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define posix_pipe2_USE_CREATEPIPE 1
-#else
-#define posix_pipe2_USE_STUB 1
-#endif
+#define posix_pipe2_USE_CREATEPIPE
+#else /* ... */
+#define posix_pipe2_USE_STUB
+#endif /* !... */
 
 
 
@@ -178,7 +178,7 @@ err:
 #endif /* posix_pipe_USE_CREATEPIPE */
 
 #ifdef posix_pipe_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	posix_err_unsupported("pipe");
 	return NULL;
 #endif /* posix_pipe_USE_STUB */
@@ -391,7 +391,7 @@ err:
 #endif /* posix_pipe2_USE_PIPE */
 
 #ifdef posix_pipe2_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)oflags;
 	posix_err_unsupported("pipe2");
 	return NULL;

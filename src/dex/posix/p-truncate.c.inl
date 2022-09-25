@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_TRUNCATE_C_INL
 #define GUARD_DEX_POSIX_P_TRUNCATE_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -28,27 +28,27 @@ DECL_BEGIN
 
 /* Figure out how we want to implement `truncate()' */
 #if defined(CONFIG_HAVE_wtruncate64)
-#define posix_truncate_USE_WTRUNCATE64 1
+#define posix_truncate_USE_WTRUNCATE64
 #elif defined(CONFIG_HAVE_wtruncate)
-#define posix_truncate_USE_WTRUNCATE 1
+#define posix_truncate_USE_WTRUNCATE
 #elif defined(CONFIG_HAVE_truncate64)
-#define posix_truncate_USE_TRUNCATE64 1
+#define posix_truncate_USE_TRUNCATE64
 #elif defined(CONFIG_HAVE_truncate)
-#define posix_truncate_USE_TRUNCATE 1
+#define posix_truncate_USE_TRUNCATE
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_truncate_USE_WOPEN_FTRUNCATE64 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE64
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_truncate_USE_WOPEN_FTRUNCATE 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate64)
-#define posix_truncate_USE_OPEN_FTRUNCATE64 1
+#define posix_truncate_USE_OPEN_FTRUNCATE64
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate)
-#define posix_truncate_USE_OPEN_FTRUNCATE 1
+#define posix_truncate_USE_OPEN_FTRUNCATE
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64)
-#define posix_truncate_USE_WOPEN_FTRUNCATE64 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE64
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate)
-#define posix_truncate_USE_WOPEN_FTRUNCATE 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE
 #else
-#define posix_truncate_USE_STUB 1
+#define posix_truncate_USE_STUB
 #endif
 
 
@@ -175,7 +175,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char co
 #endif /* posix_truncate_USE_TRUNCATE || TRUNCATE_IMPL_WOPEN_TRUNCATE */
 {
 #ifdef posix_truncate_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)len;
 	posix_err_unsupported("truncate");
@@ -331,7 +331,7 @@ EINTR_LABEL(again)
 err:
 #else /* CONFIG_HAVE_ftruncate || CONFIG_HAVE_ftruncate64 */
 	/* TODO: Implement using `truncate(frealpath(fd), ...)' */
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	(void)len;
 	posix_err_unsupported("ftruncate");

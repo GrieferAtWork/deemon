@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_RT_SLAB_C
 #define GUARD_DEX_RT_SLAB_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_FS_LIBDISASM_C
 #define GUARD_DEX_FS_LIBDISASM_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #define _KOS_SOURCE 1
 
 #include <deemon/api.h>

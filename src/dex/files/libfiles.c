@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_FILES_LIBFILES_C
 #define GUARD_DEX_FILES_LIBFILES_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include "libfiles.h"
 /**/

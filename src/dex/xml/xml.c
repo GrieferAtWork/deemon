@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_XML_XML_C
 #define GUARD_DEX_XML_XML_C 1
 #define CONFIG_BUILDING_LIBXML 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #define _KOS_SOURCE 1
 #define _GNU_SOURCE 1
 

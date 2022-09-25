@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_CPUCOUNT_C_INL
 #define GUARD_DEX_POSIX_P_CPUCOUNT_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -37,24 +37,24 @@ DECL_BEGIN
 #undef posix_cpu_count_USE_PROC_CPUINFO
 #undef posix_cpu_count_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define posix_cpu_count_USE_GETSYSTEMINFO 1
+#define posix_cpu_count_USE_GETSYSTEMINFO
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROCESSORS_ONLN)
-#define posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN 1
+#define posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_AVAILCPU) && defined(CONFIG_HAVE_HW_NCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU 1
+#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_AVAILCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU 1
+#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_NCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_NCPU 1
+#define posix_cpu_count_USE_SYSCTL_HW_NCPU
 #elif defined(CONFIG_HAVE_mpctl) && defined(CONFIG_HAVE_MPC_GETNUMSPUS)
-#define posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS 1
+#define posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROC_ONLN)
-#define posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN 1
+#define posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN
 #elif defined(CONFIG_HAVE_PROCFS)
-#define posix_cpu_count_USE_PROC_CPUINFO 1
-#else
-#define posix_cpu_count_USE_STUB 1
-#endif
+#define posix_cpu_count_USE_PROC_CPUINFO
+#else /* ... */
+#define posix_cpu_count_USE_STUB
+#endif /* !... */
 
 /*[[[deemon import("_dexutils").gw("cpu_count", "->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);

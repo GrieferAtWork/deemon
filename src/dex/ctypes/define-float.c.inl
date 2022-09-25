@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #define T         double
 #define TYPE_NAME DeeCDouble_Type
 #endif /* __INTELLISENSE__ */

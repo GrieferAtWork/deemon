@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_SOCKET_SOCKET_C
 #define GUARD_DEX_SOCKET_SOCKET_C 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include "libnet.h"
 /**/

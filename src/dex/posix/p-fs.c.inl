@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_FS_C_INL
 #define GUARD_DEX_POSIX_P_FS_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -156,7 +156,7 @@ EINTR_LABEL(again)
 	}
 	return DeeInt_NewInt(result);
 #else /* CONFIG_HAVE_fchownat */
-#define NEED_GET_DFD_FILENAME 1
+#define NEED_libposix_get_dfd_filename 1
 	DREF DeeObject *func;
 	DREF DeeObject *result;
 	DREF DeeObject *args[3];
@@ -239,7 +239,7 @@ EINTR_LABEL(again)
 	}
 	return DeeInt_NewInt(result);
 #else /* CONFIG_HAVE_fchmodat */
-#define NEED_GET_DFD_FILENAME 1
+#define NEED_libposix_get_dfd_filename 1
 	DREF DeeObject *func;
 	DREF DeeObject *result;
 	DREF DeeObject *args[2];

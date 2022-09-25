@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_REALPATH_C_INL
 #define GUARD_DEX_POSIX_P_REALPATH_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 /**/
@@ -31,14 +31,14 @@ DECL_BEGIN
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
-#   define PATH_MAX PATHMAX
+#define PATH_MAX PATHMAX
 #elif defined(MAX_PATH)
-#   define PATH_MAX MAX_PATH
+#define PATH_MAX MAX_PATH
 #elif defined(MAXPATH)
-#   define PATH_MAX MAXPATH
-#else
-#   define PATH_MAX 260
-#endif
+#define PATH_MAX MAXPATH
+#else /* ... */
+#define PATH_MAX 260
+#endif /* !... */
 #endif /* !PATH_MAX */
 
 /************************************************************************/

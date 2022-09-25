@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_SCHED_C_INL
 #define GUARD_DEX_POSIX_P_SCHED_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -33,32 +33,32 @@ DECL_BEGIN
 #undef posix_system_USE_FORK_EXEC
 #undef posix_system_USE_STUB
 #if defined(CONFIG_HAVE_wsystem) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_system_USE_WSYSTEM 1
+#define posix_system_USE_WSYSTEM
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit) && \
       defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_system_USE_FORK_WEXEC 1
+#define posix_system_USE_FORK_WEXEC
 #elif defined(CONFIG_HAVE_system)
-#define posix_system_USE_SYSTEM 1
+#define posix_system_USE_SYSTEM
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_execv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
-#define posix_system_USE_FORK_EXEC 1
+#define posix_system_USE_FORK_EXEC
 #elif defined(CONFIG_HAVE_wsystem)
-#define posix_system_USE_WSYSTEM 1
+#define posix_system_USE_WSYSTEM
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
-#define posix_system_USE_FORK_WEXEC 1
-#else
-#define posix_system_USE_STUB 1
-#endif
+#define posix_system_USE_FORK_WEXEC
+#else /* ... */
+#define posix_system_USE_STUB
+#endif /* !... */
 
 /* Figure out how to implement `getpid()' */
 #undef posix_getpid_USE_GETPID
 #undef posix_getpid_USE_STUB
 #ifdef CONFIG_HAVE_getpid
-#define posix_getpid_USE_GETPID 1
+#define posix_getpid_USE_GETPID
 #else /* CONFIG_HAVE_getpid */
-#define posix_getpid_USE_STUB 1
+#define posix_getpid_USE_STUB
 #endif /* !CONFIG_HAVE_getpid */
 
 
@@ -195,7 +195,7 @@ EINTR_LABEL(again)
 		}
 		status = WIFEXITED(status)
 		         ? WEXITSTATUS(status)
-		         : 1;
+		         :;
 	}
 	return DeeInt_NewInt(status);
 #ifdef EINTR
@@ -205,7 +205,7 @@ err:
 #endif /* posix_system_USE_FORK_WEXEC || posix_system_USE_FORK_EXEC */
 
 #ifdef posix_system_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)command;
 	posix_err_unsupported("system");
 	return NULL;
@@ -285,7 +285,7 @@ err:
 #endif /* posix_getpid_USE_GETPID */
 
 #ifdef posix_getpid_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)command;
 	posix_err_unsupported("getpid");
 	return NULL;

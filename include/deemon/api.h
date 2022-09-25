@@ -82,7 +82,7 @@
 /* Expose definitions that don't comply with the deemon C symbol namespace.
  * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
 #if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #endif /* !DEE_SOURCE && CONFIG_BUILDING_DEEMON */
 
 /* Disable garbage */

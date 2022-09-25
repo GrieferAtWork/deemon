@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_FD_C_INL
 #define GUARD_DEX_POSIX_P_FD_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -66,9 +66,9 @@ print "/" "**" "/";
 #undef posix_isatty_USE_ISATTY
 #undef posix_isatty_USE_STUB
 #ifdef CONFIG_HAVE_isatty
-#define posix_isatty_USE_ISATTY 1
+#define posix_isatty_USE_ISATTY
 #else /* CONFIG_HAVE_isatty2 */
-#define posix_isatty_USE_STUB 1
+#define posix_isatty_USE_STUB
 #endif /* !CONFIG_HAVE_isatty2 */
 
 
@@ -76,9 +76,9 @@ print "/" "**" "/";
 #undef posix_umask_USE_UMASK
 #undef posix_umask_USE_STUB
 #ifdef CONFIG_HAVE_umask
-#define posix_umask_USE_UMASK 1
+#define posix_umask_USE_UMASK
 #else /* CONFIG_HAVE_umask2 */
-#define posix_umask_USE_STUB 1
+#define posix_umask_USE_STUB
 #endif /* !CONFIG_HAVE_umask2 */
 
 
@@ -86,9 +86,9 @@ print "/" "**" "/";
 #undef posix_dup_USE_DUP
 #undef posix_dup_USE_STUB
 #ifdef CONFIG_HAVE_dup
-#define posix_dup_USE_DUP 1
+#define posix_dup_USE_DUP
 #else /* CONFIG_HAVE_dup2 */
-#define posix_dup_USE_STUB 1
+#define posix_dup_USE_STUB
 #endif /* !CONFIG_HAVE_dup2 */
 
 
@@ -96,9 +96,9 @@ print "/" "**" "/";
 #undef posix_dup2_USE_DUP2
 #undef posix_dup2_USE_STUB
 #ifdef CONFIG_HAVE_dup2
-#define posix_dup2_USE_DUP2 1
+#define posix_dup2_USE_DUP2
 #else /* CONFIG_HAVE_dup2 */
-#define posix_dup2_USE_STUB 1
+#define posix_dup2_USE_STUB
 #endif /* !CONFIG_HAVE_dup2 */
 
 
@@ -109,20 +109,20 @@ print "/" "**" "/";
 #undef posix_dup3_USE_DUP2_SETHANDLEINFORMATION
 #undef posix_dup3_USE_STUB
 #if defined(CONFIG_HAVE_dup3)
-#define posix_dup3_USE_DUP3 1
+#define posix_dup3_USE_DUP3
 #elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_dup2_USE_STUB)
-#define posix_dup3_USE_DUP2 1
+#define posix_dup3_USE_DUP2
 #elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_fcntl) &&                \
        (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) &&      \
                                             defined(CONFIG_HAVE_FD_CLOEXEC))) && \
        (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
-#define posix_dup3_USE_DUP2_FCNTL 1
+#define posix_dup3_USE_DUP2_FCNTL
 #elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_get_osfhandle) && \
        defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC))
-#define posix_dup3_USE_DUP2_SETHANDLEINFORMATION 1
-#else
-#define posix_dup3_USE_STUB 1
-#endif
+#define posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#else /* ... */
+#define posix_dup3_USE_STUB
+#endif /* !... */
 
 
 
@@ -130,9 +130,9 @@ print "/" "**" "/";
 #undef posix_close_USE_CLOSE
 #undef posix_close_USE_STUB
 #ifdef CONFIG_HAVE_close
-#define posix_close_USE_CLOSE 1
+#define posix_close_USE_CLOSE
 #else /* CONFIG_HAVE_close */
-#define posix_close_USE_STUB 1
+#define posix_close_USE_STUB
 #endif /* !CONFIG_HAVE_close */
 
 
@@ -197,7 +197,7 @@ err:
 #endif /* posix_isatty_USE_ISATTY */
 
 #ifdef posix_isatty_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("isatty");
 	return NULL;
@@ -248,7 +248,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 #endif /* posix_umask_USE_UMASK */
 
 #ifdef posix_umask_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)mask;
 	posix_err_unsupported("umask");
 	return NULL;
@@ -308,7 +308,7 @@ err:
 #endif /* posix_dup_USE_DUP */
 
 #ifdef posix_dup_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("dup");
 	return NULL;
@@ -374,7 +374,7 @@ err:
 #endif /* posix_dup2_USE_DUP2 */
 
 #ifdef posix_dup2_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)oldfd;
 	(void)newfd;
 	posix_err_unsupported("dup2");
@@ -560,7 +560,7 @@ err:
 #endif /* posix_dup3_USE_DUP2 */
 
 #ifdef posix_dup3_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)oldfd;
 	(void)newfd;
 	(void)oflags;
@@ -629,7 +629,7 @@ err:
 #endif /* posix_close_USE_CLOSE */
 
 #ifdef posix_close_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)fd;
 	posix_err_unsupported("close");
 	return NULL;

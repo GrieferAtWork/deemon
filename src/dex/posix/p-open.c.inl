@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_OPEN_C_INL
 #define GUARD_DEX_POSIX_P_OPEN_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -195,13 +195,13 @@ print "/" "**" "/";
 #define POSIX_OPEN_DEFAULT_FLAGS (O_BINARY)
 #elif defined(CONFIG_HAVE_O_OBTAIN_DIR)
 #define POSIX_OPEN_DEFAULT_FLAGS (O_OBTAIN_DIR)
-#endif
+#endif /* ... */
 
 /* Flags that are automatically passed by `creat()' (but not by `_creat()'). */
 #undef POSIX_CREAT_DEFAULT_FLAGS
 #if defined(CONFIG_HAVE_O_BINARY)
 #define POSIX_CREAT_DEFAULT_FLAGS (O_BINARY)
-#endif
+#endif /* CONFIG_HAVE_O_BINARY */
 
 
 
@@ -212,32 +212,32 @@ print "/" "**" "/";
 #undef posix_open_USE_OPEN
 #undef posix_open_USE_STUB
 #if (defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_open_USE_WOPEN 1
+#define posix_open_USE_WOPEN
 #elif defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64)
-#define posix_open_USE_OPEN 1
+#define posix_open_USE_OPEN
 #elif defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)
-#define posix_open_USE_WOPEN 1
-#else
-#define posix_open_USE_STUB 1
-#endif
+#define posix_open_USE_WOPEN
+#else /* ... */
+#define posix_open_USE_STUB
+#endif /* !... */
 
 /* Figure out how to implement `creat()' */
 #undef posix_creat_USE_WCREAT
 #undef posix_creat_USE_CREAT
 #undef posix_creat_USE_STUB
 #if (defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_creat_USE_WCREAT 1
+#define posix_creat_USE_WCREAT
 #elif defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64)
-#define posix_creat_USE_CREAT 1
+#define posix_creat_USE_CREAT
 #elif defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)
-#define posix_creat_USE_WCREAT 1
-#else
-#define posix_creat_USE_STUB 1
-#endif
+#define posix_creat_USE_WCREAT
+#else /* ... */
+#define posix_creat_USE_STUB
+#endif /* !... */
 #if !(defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC)) || \
       defined(posix_open_USE_STUB)
 #undef POSIX_CREAT_DEFAULT_FLAGS
-#endif
+#endif /* ... */
 
 
 
@@ -351,7 +351,7 @@ err:
 #endif /* posix_open_USE_WOPEN || posix_open_USE_OPEN */
 
 #ifdef posix_open_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)filename;
 	(void)oflags;
 	(void)mode;
@@ -537,7 +537,7 @@ err:
 #endif /* posix_creat_USE_WCREAT || posix_creat_USE_CREAT */
 
 #ifdef posix_creat_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)filename;
 	(void)mode;
 	posix_err_unsupported("creat");

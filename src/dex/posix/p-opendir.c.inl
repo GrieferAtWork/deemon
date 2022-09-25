@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_OPENDIR_C_INL
 #define GUARD_DEX_POSIX_P_OPENDIR_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 /**/
@@ -40,9 +40,9 @@
 /* TODO: Add another option to implement using `_findfirst()' */
 #elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
 #define posix_opendir_USE_opendir
-#else
+#else /* ... */
 #define posix_opendir_USE_STUB
-#endif
+#endif /* !... */
 
 #if (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(CONFIG_HAVE_struct_dirent_d_fileno))
 #define CONFIG_HAVE_struct_dirent_d_ino
@@ -351,19 +351,19 @@ err:
 INTERN DEFINE_CMETHOD(posix_DTTOIF, &posix_DTTOIF_f);
 INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f);
 
+/* High-level wrappers around `struct dirent' and `DIR'
+ * Note that `DIR' has a constructor that behaves just like `opendir(3)',
+ * which is also why `posix.opendir' is exported as an alias for `posix.DIR' */
+INTDEF DeeTypeObject DeeDirIterator_Type;
+INTDEF DeeTypeObject DeeDir_Type;
 
 
 
 
 
-
-
-
-
-
-
-
-
+/************************************************************************/
+/* DIR                                                                  */
+/************************************************************************/
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DeeDirIteratorObject *__restrict self);
 

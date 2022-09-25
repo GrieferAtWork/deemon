@@ -144,22 +144,15 @@ DECL_BEGIN
 
 INTDEF ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
 posix_err_unsupported(char const *__restrict name);
-#undef NEED_ERR_UNSUPPORTED
+#undef NEED_posix_err_unsupported
 
 INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
-#undef NEED_GET_DFD_FILENAME
+#undef NEED_libposix_get_dfd_filename
 
 #if defined(ENOSYS) || defined(ENOTSUP) || defined(EOPNOTSUPP)
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 #endif /* ENOSYS || ENOTSUP || EOPNOTSUPP */
-
-/* High-level wrappers around `struct dirent' and `DIR'
- * Note that `DIR' has a constructor that behaves just like `opendir(3)',
- * which is also why `posix.opendir' is exported as an alias for `posix.DIR' */
-INTDEF DeeTypeObject DeeDirIterator_Type;
-INTDEF DeeTypeObject DeeDir_Type;
-
 
 /* STAT bitflags. */
 
@@ -181,6 +174,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFMT S_IFMT
 #elif defined(__S_IFMT)
 #define STAT_IFMT __S_IFMT
+#elif defined(_S_IFMT)
+#define STAT_IFMT _S_IFMT
+#elif defined(_IFMT)
+#define STAT_IFMT _IFMT
 #else /* ... */
 #define STAT_IFMT 0170000
 #endif /* !... */
@@ -188,6 +185,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFDIR S_IFDIR
 #elif defined(__S_IFDIR)
 #define STAT_IFDIR __S_IFDIR
+#elif defined(_S_IFDIR)
+#define STAT_IFDIR _S_IFDIR
+#elif defined(_IFDIR)
+#define STAT_IFDIR _IFDIR
 #else /* ... */
 #define STAT_IFDIR 0040000 /* Directory. */
 #endif /* !... */
@@ -195,6 +196,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFCHR S_IFCHR
 #elif defined(__S_IFCHR)
 #define STAT_IFCHR __S_IFCHR
+#elif defined(_S_IFCHR)
+#define STAT_IFCHR _S_IFCHR
+#elif defined(_IFCHR)
+#define STAT_IFCHR _IFCHR
 #else /* ... */
 #define STAT_IFCHR 0020000 /* Character device. */
 #endif /* !... */
@@ -202,6 +207,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFBLK S_IFBLK
 #elif defined(__S_IFBLK)
 #define STAT_IFBLK __S_IFBLK
+#elif defined(_S_IFBLK)
+#define STAT_IFBLK _S_IFBLK
+#elif defined(_IFBLK)
+#define STAT_IFBLK _IFBLK
 #else /* ... */
 #define STAT_IFBLK 0060000 /* Block device. */
 #endif /* !... */
@@ -209,6 +218,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFREG S_IFREG
 #elif defined(__S_IFREG)
 #define STAT_IFREG __S_IFREG
+#elif defined(_S_IFREG)
+#define STAT_IFREG _S_IFREG
+#elif defined(_IFREG)
+#define STAT_IFREG _IFREG
 #else /* ... */
 #define STAT_IFREG 0100000 /* Regular file. */
 #endif /* !... */
@@ -216,6 +229,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFIFO S_IFIFO
 #elif defined(__S_IFIFO)
 #define STAT_IFIFO __S_IFIFO
+#elif defined(_S_IFIFO)
+#define STAT_IFIFO _S_IFIFO
+#elif defined(_IFIFO)
+#define STAT_IFIFO _IFIFO
 #else /* ... */
 #define STAT_IFIFO 0010000 /* FIFO. */
 #endif /* !... */
@@ -223,6 +240,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFLNK S_IFLNK
 #elif defined(__S_IFLNK)
 #define STAT_IFLNK __S_IFLNK
+#elif defined(_S_IFLNK)
+#define STAT_IFLNK _S_IFLNK
+#elif defined(_IFLNK)
+#define STAT_IFLNK _IFLNK
 #else /* ... */
 #define STAT_IFLNK 0120000 /* Symbolic link. */
 #endif /* !... */
@@ -230,6 +251,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IFSOCK S_IFSOC
 #elif defined(__S_IFSOC)
 #define STAT_IFSOCK __S_IFSOC
+#elif defined(_S_IFSOC)
+#define STAT_IFSOCK _S_IFSOC
+#elif defined(_IFSOC)
+#define STAT_IFSOCK _IFSOC
 #else /* ... */
 #define STAT_IFSOCK 0140000 /* Socket. */
 #endif /* !... */
@@ -237,6 +262,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_ISUID S_ISUID
 #elif defined(__S_ISUID)
 #define STAT_ISUID __S_ISUID
+#elif defined(_S_ISUID)
+#define STAT_ISUID _S_ISUID
+#elif defined(_ISUID)
+#define STAT_ISUID _ISUID
 #else /* ... */
 #define STAT_ISUID 0004000 /* Set user ID on execution. */
 #endif /* !... */
@@ -244,6 +273,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_ISGID S_ISGID
 #elif defined(__S_ISGID)
 #define STAT_ISGID __S_ISGID
+#elif defined(_S_ISGID)
+#define STAT_ISGID _S_ISGID
+#elif defined(_ISGID)
+#define STAT_ISGID _ISGID
 #else /* ... */
 #define STAT_ISGID 0002000 /* Set group ID on execution. */
 #endif /* !... */
@@ -251,6 +284,10 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_ISVTX S_ISVTX
 #elif defined(__S_ISVTX)
 #define STAT_ISVTX __S_ISVTX
+#elif defined(_S_ISVTX)
+#define STAT_ISVTX _S_ISVTX
+#elif defined(_ISVTX)
+#define STAT_ISVTX _ISVTX
 #else /* ... */
 #define STAT_ISVTX 0001000 /* Save swapped text after use (sticky). */
 #endif /* !... */
@@ -337,6 +374,14 @@ INTDEF DeeTypeObject DeeDir_Type;
 #undef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW 0x0100
 #endif /* CONFIG_HAVE_AT_SYMLINK_NOFOLLOW */
+
+/* Windows doesn't natively have an `AT_FDCWD', but we
+ * need something to check for in `posix_dfd_abspath()' */
+#ifdef CONFIG_HOST_WINDOWS
+#undef AT_FDCWD
+#define AT_FDCWD (-1)
+#endif /* CONFIG_HOST_WINDOWS */
+
 
 
 /************************************************************************/

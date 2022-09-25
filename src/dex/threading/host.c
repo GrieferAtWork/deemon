@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_THREADING_HOST_C
 #define GUARD_DEX_THREADING_HOST_C 1
 #define CONFIG_BUILDING_LIBTHREADING 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include <deemon/api.h>
 

@@ -19,25 +19,7 @@
  */
 #ifndef GUARD_DEX_FS_HOST_C
 #define GUARD_DEX_FS_HOST_C 1
-/* Pre-define macros for features required by some hosts. */
-#ifndef DEE_SOURCE
-#define DEE_SOURCE      1
-#endif /* !DEE_SOURCE */
-#ifndef _KOS_SOURCE
-#define _KOS_SOURCE     1
-#endif /* !_KOS_SOURCE */
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE     1
-#endif /* !_BSD_SOURCE */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE     1
-#endif /* !_GNU_SOURCE */
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#endif /* !_POSIX_C_SOURCE */
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE   500
-#endif /* !_XOPEN_SOURCE */
+#define DEE_SOURCE
 
 #include <deemon/file.h> /* DEESYSTEM_FILE_USE_* */
 

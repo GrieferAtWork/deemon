@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_ERRNO_C_INL
 #define GUARD_DEX_POSIX_P_ERRNO_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 #include <deemon/system-features.h>
@@ -423,7 +423,7 @@ posix_errno_get_f(size_t argc, DeeObject *const *argv) {
 #ifdef CONFIG_HAVE_errno
 	return DeeInt_NewInt(DeeSystem_GetErrno());
 #else /* CONFIG_HAVE_errno */
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	posix_err_unsupported("errno");
 #endif /* !CONFIG_HAVE_errno */
 err:
@@ -438,7 +438,7 @@ posix_errno_del_f(size_t argc, DeeObject *const *argv) {
 	DeeSystem_SetErrno(EOK);
 	return_none;
 #else /* CONFIG_HAVE_errno */
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	posix_err_unsupported("errno");
 #endif /* !CONFIG_HAVE_errno */
 err:
@@ -454,7 +454,7 @@ posix_errno_set_f(size_t argc, DeeObject *const *argv) {
 	DeeSystem_SetErrno(value);
 	return_none;
 #else /* CONFIG_HAVE_errno */
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	posix_err_unsupported("errno");
 #endif /* !CONFIG_HAVE_errno */
 err:

@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_FS_ENVIRON_C_INL
 #define GUARD_DEX_FS_ENVIRON_C_INL 1
 #ifndef DEE_SOURCE
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 #endif /* !DEE_SOURCE */
 
 #include "libfs.h"

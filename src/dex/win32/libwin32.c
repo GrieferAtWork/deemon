@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_WIN32_LIBWIN32_C
 #define GUARD_DEX_WIN32_LIBWIN32_C 1
 #define CONFIG_BUILDING_LIBWIN32 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include "libwin32.h"
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)

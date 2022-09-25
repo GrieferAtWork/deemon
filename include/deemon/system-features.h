@@ -737,6 +737,7 @@ func("ftello64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)", t
 func("_fseeki64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc), test: "extern FILE *fp; return _fseeki64(fp, 0, SEEK_SET);");
 func("_ftelli64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc), test: "extern FILE *fp; return _ftelli64(fp) != 0;");
 func("fflush", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fflush(fp);");
+func("clearerr", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; clearerr(fp); return 0;");
 func("ferror", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return ferror(fp);");
 func("fclose", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fclose(fp);");
 func("fileno", "defined(CONFIG_HAVE_STDIO_H) && " + "!" + addparen(msvc), test: "extern FILE *fp; return fileno(fp);");
@@ -5660,6 +5661,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fflush) && \
       (defined(fflush) || defined(__fflush_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fflush 1
+#endif
+
+#ifdef CONFIG_NO_clearerr
+#undef CONFIG_HAVE_clearerr
+#elif !defined(CONFIG_HAVE_clearerr) && \
+      (defined(clearerr) || defined(__clearerr_defined) || defined(CONFIG_HAVE_STDIO_H))
+#define CONFIG_HAVE_clearerr 1
 #endif
 
 #ifdef CONFIG_NO_ferror

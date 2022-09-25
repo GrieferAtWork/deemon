@@ -19,8 +19,8 @@
  */
 #ifndef GUARD_DEX_POSIX_P_ACCESS_C_INL
 #define GUARD_DEX_POSIX_P_ACCESS_C_INL 1
-#define CONFIG_BUILDING_LIBPOSIX 1
-#define DEE_SOURCE 1
+#define CONFIG_BUILDING_LIBPOSIX
+#define DEE_SOURCE
 
 #include "libposix.h"
 
@@ -67,36 +67,36 @@ print "/" "**" "/";
 #undef posix_access_USE_ACCESS
 #undef posix_access_USE_STUB
 #if defined(CONFIG_HAVE_waccess) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_access_USE_WACCESS 1
+#define posix_access_USE_WACCESS
 #elif defined(CONFIG_HAVE_access)
-#define posix_access_USE_ACCESS 1
+#define posix_access_USE_ACCESS
 #elif defined(CONFIG_HAVE_waccess)
-#define posix_access_USE_WACCESS 1
+#define posix_access_USE_WACCESS
 #else
-#define posix_access_USE_STUB 1
+#define posix_access_USE_STUB
 #endif
 
 /* Figure out how to implement `euidaccess()' */
 #undef posix_euidaccess_USE_EUIDACCESS
 #undef posix_euidaccess_USE_STUB
 #if defined(CONFIG_HAVE_euidaccess)
-#define posix_euidaccess_USE_EUIDACCESS 1
-#else
-#define posix_euidaccess_USE_STUB 1
-#endif
+#define posix_euidaccess_USE_EUIDACCESS
+#else /* ... */
+#define posix_euidaccess_USE_STUB
+#endif /* !... */
 
 /* Figure out how to implement `faccessat()' */
 #undef posix_faccessat_USE_FACCESSAT
 #undef posix_faccessat_USE_ACCESS
 #undef posix_faccessat_USE_STUB
 #if defined(CONFIG_HAVE_faccessat)
-#define posix_faccessat_USE_FACCESSAT 1
+#define posix_faccessat_USE_FACCESSAT
 #elif !defined(posix_access_USE_STUB) && \
      (!defined(AT_EACCESS) || !defined(posix_euidaccess_USE_STUB))
-#define posix_faccessat_USE_ACCESS 1
-#else
-#define posix_faccessat_USE_STUB 1
-#endif
+#define posix_faccessat_USE_ACCESS
+#else /* ... */
+#define posix_faccessat_USE_STUB
+#endif /* !... */
 
 
 
@@ -205,7 +205,7 @@ err:
 #endif /* posix_access_USE_WACCESS || posix_access_USE_ACCESS */
 
 #ifdef posix_access_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)filename;
 	(void)how;
 	posix_err_unsupported("access");
@@ -282,7 +282,7 @@ err:
 #endif /* posix_euidaccess_USE_EUIDACCESS */
 
 #ifdef posix_euidaccess_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)filename;
 	(void)how;
 	posix_err_unsupported("euidaccess");
@@ -358,7 +358,7 @@ err:
 #ifdef posix_faccessat_USE_ACCESS
 	DREF DeeObject *result;
 	DREF DeeObject *fullname;
-#define NEED_GET_DFD_FILENAME 1
+#define NEED_libposix_get_dfd_filename 1
 	fullname = libposix_get_dfd_filename(dfd, filename, atflags);
 	if unlikely(!fullname)
 		goto err;
@@ -393,7 +393,7 @@ err:
 #endif /* posix_faccessat_USE_ACCESS */
 
 #ifdef posix_faccessat_USE_STUB
-#define NEED_ERR_UNSUPPORTED 1
+#define NEED_posix_err_unsupported
 	(void)dfd;
 	(void)filename;
 	(void)how;

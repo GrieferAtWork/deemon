@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_IPC_UNIX_C_INL
 #define GUARD_DEX_IPC_UNIX_C_INL 1
-#define DEE_SOURCE 1
+#define DEE_SOURCE
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
