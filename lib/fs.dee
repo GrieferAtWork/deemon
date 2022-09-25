@@ -41,13 +41,13 @@ global final DEV_STDOUT = "/dev/stdout";
 global final DEV_STDERR = "/dev/stderr";
 #endif /* !__WINDOWS__ */
 
-/* Exceptions. */
-global final NoDirectory = posix.NoDirectory;
-global final IsDirectory = posix.IsDirectory;
-global final CrossDevice = posix.CrossDevice;
-global final NotEmpty = posix.NotEmpty;
-global final BusyFile = posix.BusyFile;
-global final NoLink = posix.NoLink;
+/* Exceptions. (deprecated) */
+global final NoDirectory = Error.SystemError.FSError.FileNotFound.NoDirectory;
+global final IsDirectory = Error.SystemError.FSError.FileExists.IsDirectory;
+global final CrossDevice = Error.SystemError.FSError.CrossDeviceLink;
+global final NotEmpty = Error.SystemError.FSError.FileExists.DirectoryNotEmpty;
+global final BusyFile = Error.SystemError.FSError.BusyFile;
+global final NoLink = Error.SystemError.FSError.FileNotFound.NoSymlink;
 
 /* Functions from posix. */
 global final stat = posix.stat;

@@ -78,19 +78,21 @@
     <None Include="..\..\src\dex\posix\p-fd-constants.def" />
     <None Include="..\..\src\dex\posix\p-fd.c.inl" />
     <None Include="..\..\src\dex\posix\p-fs.c.inl" />
+    <None Include="..\..\src\dex\posix\p-ondemand.c.inl" />
     <None Include="..\..\src\dex\posix\p-open-constants.def" />
     <None Include="..\..\src\dex\posix\p-open.c.inl" />
+    <None Include="..\..\src\dex\posix\p-opendir.c.inl" />
     <None Include="..\..\src\dex\posix\p-pipe.c.inl" />
     <None Include="..\..\src\dex\posix\p-readwrite-constants.def" />
     <None Include="..\..\src\dex\posix\p-readwrite.c.inl" />
     <None Include="..\..\src\dex\posix\p-realpath.c.inl" />
     <None Include="..\..\src\dex\posix\p-sched.c.inl" />
     <None Include="..\..\src\dex\posix\p-stat-constants.def" />
+    <None Include="..\..\src\dex\posix\p-stat.c.inl" />
     <None Include="..\..\src\dex\posix\p-sync.c.inl" />
     <None Include="..\..\src\dex\posix\p-truncate.c.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\dex\posix\DIR.c" />
     <ClCompile Include="..\..\src\dex\posix\libposix.c" />
   </ItemGroup>
   <ItemGroup>

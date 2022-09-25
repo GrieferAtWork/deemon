@@ -1068,8 +1068,23 @@ PRIVATE struct type_member tpconst fserror_class_members[] = {
 	TYPE_MEMBER_CONST("FileNotFound", &DeeError_FileNotFound),
 	TYPE_MEMBER_CONST("FileExists", &DeeError_FileExists),
 	TYPE_MEMBER_CONST("FileClosed", &DeeError_FileClosed),
+	TYPE_MEMBER_CONST("CrossDeviceLink", &DeeError_CrossDeviceLink),
+	TYPE_MEMBER_CONST("BusyFile", &DeeError_BusyFile),
 	TYPE_MEMBER_END
 };
+
+PRIVATE struct type_member tpconst file_exists_class_members[] = {
+	TYPE_MEMBER_CONST("IsDirectory", &DeeError_IsDirectory),
+	TYPE_MEMBER_CONST("DirectoryNotEmpty", &DeeError_DirectoryNotEmpty),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst file_not_found_class_members[] = {
+	TYPE_MEMBER_CONST("NoDirectory", &DeeError_NoDirectory),
+	TYPE_MEMBER_CONST("NoSymlink", &DeeError_NoSymlink),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_FSError =
 INIT_CUSTOM_ERROR("FSError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
@@ -1093,17 +1108,56 @@ INIT_CUSTOM_ERROR("ReadOnlyFile", "An error derived from :FileAccessError that i
 PUBLIC DeeTypeObject DeeError_FileNotFound =
 INIT_CUSTOM_ERROR("FileNotFound", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, file_not_found_class_members);
 PUBLIC DeeTypeObject DeeError_FileExists =
 INIT_CUSTOM_ERROR("FileExists", "An error derived from :FSError that is thrown when attempting "
                                 "to create a filesystem object when the target path already exists",
                   TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL);
+                  NULL, NULL, NULL, file_exists_class_members);
 PUBLIC DeeTypeObject DeeError_FileClosed =
 INIT_CUSTOM_ERROR("FileClosed", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL);
+
+PUBLIC DeeTypeObject DeeError_NoDirectory =
+INIT_CUSTOM_ERROR("NoDirectory", "An error derived from :FileNotFound that is thrown when a "
+                                 "directory was expected, but something different was found",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_IsDirectory =
+INIT_CUSTOM_ERROR("IsDirectory", "An error derived from :FileExists that is thrown when something "
+                                 "other than a directory was expected, but one was found none-the-less",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_CrossDeviceLink =
+INIT_CUSTOM_ERROR("CrossDeviceLink", "An error derived from :FSError that is thrown when attempting "
+                                     "to move a file between different devices or partitions",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_DirectoryNotEmpty =
+INIT_CUSTOM_ERROR("DirectoryNotEmpty", "An error derived from :FileExists that is thrown when "
+                                       "attempting to remove a directory that isn't empty",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileExists,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_BusyFile =
+INIT_CUSTOM_ERROR("BusyFile", "An error derived from :FSError that is thrown when "
+                              "attempting to remove a file or directory that is being "
+                              "used by another process",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FSError,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+PUBLIC DeeTypeObject DeeError_NoSymlink =
+INIT_CUSTOM_ERROR("NoSymlink", "An error derived from :FileNotFound that is thrown when attempting "
+                               "to invoke :readlink on a file that isn't a symbolic link",
+                  TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FileNotFound,
+                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL);
+
 /* END::SystemError */
 
 

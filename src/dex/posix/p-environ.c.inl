@@ -354,7 +354,7 @@ DECL_END
  * @return:  0: Doesn't exist
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-environ_hasenv(DeeStringObject *__restrict name) {
+posix_environ_hasenv(DeeStringObject *__restrict name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	bool result;
 	LPWSTR wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
@@ -454,7 +454,7 @@ err_unknown_env_var(DeeObject *__restrict name) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-environ_getenv(DeeStringObject *name, DeeObject *defl) {
+posix_environ_getenv(DeeStringObject *name, DeeObject *defl) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256, error;
@@ -625,7 +625,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace) {
+posix_environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace) {
 #ifdef posix_setenv_USE_SetEnvironmentVariableW
 	LPWSTR wname, wvalue;
 	wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
@@ -1026,7 +1026,7 @@ err:
  * @return:  1: Not deleted because never defined
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-environ_unsetenv(DeeStringObject *__restrict name) {
+posix_environ_unsetenv(DeeStringObject *__restrict name) {
 #ifdef posix_unsetenv_USE_SetEnvironmentVariableW
 	LPWSTR wname;
 	wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
@@ -1228,7 +1228,7 @@ err:
 }
 
 PRIVATE WUNUSED int DCALL
-environ_clearenv(void) {
+posix_environ_clearenv(void) {
 #ifdef posix_clearenv_USE_SetEnvironmentStringsW
 	static WCHAR empty_wenviron[] = { '\0', '\0' };
 	environ_lock_write();
@@ -1469,7 +1469,7 @@ PRIVATE ATTR_COLD int DCALL err_environ_enum_not_supported(void) {
 #endif /* posix_enumenv_USE_STUB */
 
 PRIVATE WUNUSED size_t DCALL
-environ_getcount(void) {
+posix_environ_getcount(void) {
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
 	size_t result = 0;
 	LPWCH strings = GetEnvironmentStringsW();
@@ -2170,7 +2170,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 environ_getitem(DeeObject *UNUSED(self), DeeObject *key) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	return environ_getenv((DeeStringObject *)key, NULL);
+	return posix_environ_getenv((DeeStringObject *)key, NULL);
 err:
 	return NULL;
 }
@@ -2180,7 +2180,7 @@ environ_delitem(DeeObject *UNUSED(self), DeeObject *key) {
 	int error;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	error = environ_unsetenv((DeeStringObject *)key);
+	error = posix_environ_unsetenv((DeeStringObject *)key);
 	if (error > 0)
 		error = err_unknown_env_var(key);
 	return error;
@@ -2195,7 +2195,7 @@ environ_setitem(DeeObject *UNUSED(self),
 		goto err;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
-	return environ_setenv((DeeStringObject *)key,
+	return posix_environ_setenv((DeeStringObject *)key,
 	                      (DeeStringObject *)value,
 	                      true);
 err:
@@ -2207,7 +2207,7 @@ environ_contains(DeeObject *UNUSED(self), DeeObject *key) {
 	int exists;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	exists = environ_hasenv((DeeStringObject *)key);
+	exists = posix_environ_hasenv((DeeStringObject *)key);
 	if unlikely(exists < 0)
 		goto err;
 	return_bool_(exists);
@@ -2217,7 +2217,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 environ_nsi_getsize(DeeObject *__restrict UNUSED(self)) {
-	return environ_getcount();
+	return posix_environ_getcount();
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -2226,7 +2226,7 @@ environ_nsi_getdefault(DeeObject *UNUSED(self),
                        DeeObject *defl) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	return environ_getenv((DeeStringObject *)key, defl);
+	return posix_environ_getenv((DeeStringObject *)key, defl);
 err:
 	return NULL;
 }
@@ -2342,7 +2342,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname,
 {
 	if (DeeObject_AssertTypeExact(varname, &DeeString_Type))
 		goto err;
-	return environ_getenv((DeeStringObject *)varname, defl);
+	return posix_environ_getenv((DeeStringObject *)varname, defl);
 err:
 	return NULL;
 }
@@ -2375,7 +2375,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_setenv_f_impl(DeeObject *varname,
 		goto err;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
-	if unlikely(environ_setenv((DeeStringObject *)varname,
+	if unlikely(posix_environ_setenv((DeeStringObject *)varname,
 	                           (DeeStringObject *)value,
 	                           replace))
 		goto err;
@@ -2429,12 +2429,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_putenv_f_impl(DeeObject *envline)
 			Dee_Decref_likely(name);
 			goto err;
 		}
-		error = environ_setenv(name, value, true);
+		error = posix_environ_setenv(name, value, true);
 		Dee_Decref_likely(value);
 		Dee_Decref_likely(name);
 	} else {
 		/* Remove from environ */
-		error = environ_unsetenv((DeeStringObject *)envline);
+		error = posix_environ_unsetenv((DeeStringObject *)envline);
 	}
 	if unlikely(error)
 		goto err;
@@ -2468,7 +2468,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unsetenv_f_impl(DeeObject *varnam
 	int error;
 	if (DeeObject_AssertTypeExact(varname, &DeeString_Type))
 		goto err;
-	error = environ_unsetenv((DeeStringObject *)varname);
+	error = posix_environ_unsetenv((DeeStringObject *)varname);
 	if unlikely(error < 0)
 		goto err;
 	return_bool_(error == 0);
@@ -2493,7 +2493,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_clearenv_f_impl(void)
 /*[[[end]]]*/
 {
-	if unlikely(environ_clearenv())
+	if unlikely(posix_environ_clearenv())
 		goto err;
 	return_none;
 err:

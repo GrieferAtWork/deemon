@@ -1109,9 +1109,18 @@ feature("struct_stat_st_rdev", "defined(CONFIG_HAVE_stat)", test: "struct stat s
 feature("struct_stat_st_size", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_size = 0; return st.st_size;");
 feature("struct_stat_st_blksize", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blksize = 0; return st.st_blksize;");
 feature("struct_stat_st_blocks", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_blocks = 0; return st.st_blocks;");
-feature("struct_stat_st_tim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
-feature("struct_stat_st_timespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = st.st_ctimespec.tv_sec = st.st_mtimespec.tv_sec = 0; st.st_atimespec.tv_nsec = st.st_ctimespec.tv_nsec = st.st_mtimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_ctimespec.tv_sec + st.st_mtimespec.tv_sec + st.st_atimespec.tv_nsec + st.st_ctimespec.tv_nsec + st.st_mtimespec.tv_nsec;");
-feature("struct_stat_st_timensec", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
+feature("struct_stat_st_atime", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_atime = 0; return st.st_atime;");
+feature("struct_stat_st_atim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = 0; st.st_atim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_atim.tv_nsec;");
+feature("struct_stat_st_atimespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = 0; st.st_atimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_atimespec.tv_nsec;");
+feature("struct_stat_st_atimensec", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_atimensec = 0; return 0;");
+feature("struct_stat_st_mtime", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_mtime = 0; return st.st_mtime;");
+feature("struct_stat_st_mtim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_mtim.tv_sec = 0; st.st_mtim.tv_nsec = 0; return st.st_mtim.tv_sec + st.st_mtim.tv_nsec;");
+feature("struct_stat_st_mtimespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_mtimespec.tv_sec = 0; st.st_mtimespec.tv_nsec = 0; return st.st_mtimespec.tv_sec + st.st_mtimespec.tv_nsec;");
+feature("struct_stat_st_mtimensec", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_mtimensec = 0; return 0;");
+feature("struct_stat_st_ctime", "defined(CONFIG_HAVE_stat)", test: "struct stat st; st.st_ctime = 0; return st.st_ctime;");
+feature("struct_stat_st_ctim", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_ctim.tv_sec = 0; st.st_ctim.tv_nsec = 0; return st.st_ctim.tv_sec + st.st_ctim.tv_nsec;");
+feature("struct_stat_st_ctimespec", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_ctimespec.tv_sec = 0; st.st_ctimespec.tv_nsec = 0; return st.st_ctimespec.tv_sec + st.st_ctimespec.tv_nsec;");
+feature("struct_stat_st_ctimensec", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_ctimensec = 0; return 0;");
 feature("struct_stat_st_btime", "defined(_STATBUF_ST_BTIME)", test: "struct stat st; st.st_btime = 0; return st.st_btime;");
 feature("struct_stat_st_btim", "defined(_STATBUF_ST_BTIM)", test: "struct stat st; st.st_btim.tv_sec = 0; st.st_btim.tv_nsec = 0; return st.st_btim.tv_sec + st.st_btim.tv_nsec;");
 feature("struct_stat_st_btimespec", "defined(_STATBUF_ST_BTIMESPEC)", test: "struct stat st; st.st_btimespec.tv_sec = 0; st.st_btimespec.tv_nsec = 0; return st.st_btimespec.tv_sec + st.st_btimespec.tv_nsec;");
@@ -1120,6 +1129,37 @@ feature("struct_stat_st_birthtime", "defined(_STATBUF_ST_BIRTHTIME)", test: "str
 feature("struct_stat_st_birthtim", "defined(_STATBUF_ST_BIRTHTIM)", test: "struct stat st; st.st_birthtim.tv_sec = 0; st.st_birthtim.tv_nsec = 0; return st.st_birthtim.tv_sec + st.st_birthtim.tv_nsec;");
 feature("struct_stat_st_birthtimespec", "defined(_STATBUF_ST_BIRTHTIMESPEC)", test: "struct stat st; st.st_birthtimespec.tv_sec = 0; st.st_birthtimespec.tv_nsec = 0; return st.st_birthtimespec.tv_sec + st.st_birthtimespec.tv_nsec;");
 feature("struct_stat_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", test: "struct stat st; st.st_birthtimensec = 0; return st.st_birthtimensec;");
+
+feature("struct_stat64_st_dev", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_dev = 0; return st.st_dev;");
+feature("struct_stat64_st_ino", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_ino = 0; return st.st_ino;");
+feature("struct_stat64_st_mode", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_mode = 0; return st.st_mode;");
+feature("struct_stat64_st_nlink", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_nlink = 0; return st.st_nlink;");
+feature("struct_stat64_st_uid", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_uid = 0; return st.st_uid;");
+feature("struct_stat64_st_gid", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_gid = 0; return st.st_gid;");
+feature("struct_stat64_st_rdev", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_rdev = 0; return st.st_rdev;");
+feature("struct_stat64_st_size", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_size = 0; return st.st_size;");
+feature("struct_stat64_st_blksize", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_blksize = 0; return st.st_blksize;");
+feature("struct_stat64_st_blocks", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_blocks = 0; return st.st_blocks;");
+feature("struct_stat64_st_atime", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_atime = 0; return st.st_atime;");
+feature("struct_stat64_st_atim", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat64 st; st.st_atim.tv_sec = 0; st.st_atim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_atim.tv_nsec;");
+feature("struct_stat64_st_atimespec", "defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat64 st; st.st_atimespec.tv_sec = 0; st.st_atimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_atimespec.tv_nsec;");
+feature("struct_stat64_st_atimensec", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat64 st; st.st_atimensec = 0; return 0;");
+feature("struct_stat64_st_mtime", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_mtime = 0; return st.st_mtime;");
+feature("struct_stat64_st_mtim", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat64 st; st.st_mtim.tv_sec = 0; st.st_mtim.tv_nsec = 0; return st.st_mtim.tv_sec + st.st_mtim.tv_nsec;");
+feature("struct_stat64_st_mtimespec", "defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat64 st; st.st_mtimespec.tv_sec = 0; st.st_mtimespec.tv_nsec = 0; return st.st_mtimespec.tv_sec + st.st_mtimespec.tv_nsec;");
+feature("struct_stat64_st_mtimensec", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat64 st; st.st_mtimensec = 0; return 0;");
+feature("struct_stat64_st_ctime", "defined(CONFIG_HAVE_stat64)", test: "struct stat64 st; st.st_ctime = 0; return st.st_ctime;");
+feature("struct_stat64_st_ctim", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat64 st; st.st_ctim.tv_sec = 0; st.st_ctim.tv_nsec = 0; return st.st_ctim.tv_sec + st.st_ctim.tv_nsec;");
+feature("struct_stat64_st_ctimespec", "defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat64 st; st.st_ctimespec.tv_sec = 0; st.st_ctimespec.tv_nsec = 0; return st.st_ctimespec.tv_sec + st.st_ctimespec.tv_nsec;");
+feature("struct_stat64_st_ctimensec", "defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat64 st; st.st_ctimensec = 0; return 0;");
+feature("struct_stat64_st_btime", "defined(_STATBUF_ST_BTIME)", test: "struct stat64 st; st.st_btime = 0; return st.st_btime;");
+feature("struct_stat64_st_btim", "defined(_STATBUF_ST_BTIM)", test: "struct stat64 st; st.st_btim.tv_sec = 0; st.st_btim.tv_nsec = 0; return st.st_btim.tv_sec + st.st_btim.tv_nsec;");
+feature("struct_stat64_st_btimespec", "defined(_STATBUF_ST_BTIMESPEC)", test: "struct stat64 st; st.st_btimespec.tv_sec = 0; st.st_btimespec.tv_nsec = 0; return st.st_btimespec.tv_sec + st.st_btimespec.tv_nsec;");
+feature("struct_stat64_st_btimensec", "defined(_STATBUF_ST_BTIMENSEC)", test: "struct stat64 st; st.st_btimensec = 0; return st.st_btimensec;");
+feature("struct_stat64_st_birthtime", "defined(_STATBUF_ST_BIRTHTIME)", test: "struct stat64 st; st.st_birthtime = 0; return st.st_birthtime;");
+feature("struct_stat64_st_birthtim", "defined(_STATBUF_ST_BIRTHTIM)", test: "struct stat64 st; st.st_birthtim.tv_sec = 0; st.st_birthtim.tv_nsec = 0; return st.st_birthtim.tv_sec + st.st_birthtim.tv_nsec;");
+feature("struct_stat64_st_birthtimespec", "defined(_STATBUF_ST_BIRTHTIMESPEC)", test: "struct stat64 st; st.st_birthtimespec.tv_sec = 0; st.st_birthtimespec.tv_nsec = 0; return st.st_birthtimespec.tv_sec + st.st_birthtimespec.tv_nsec;");
+feature("struct_stat64_st_birthtimensec", "defined(_STATBUF_ST_BIRTHTIMENSEC)", test: "struct stat64 st; st.st_birthtimensec = 0; return st.st_birthtimensec;");
 
 // If va_list _is_ an array, the assignment done by this test breaks
 feature("VA_LIST_IS_NOT_ARRAY", "!defined(__VA_LIST_IS_ARRAY)", test: "extern va_list a, b; a = b; return 0;");
@@ -7968,26 +8008,91 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_struct_stat_st_blocks 1
 #endif
 
-#ifdef CONFIG_NO_struct_stat_st_tim
-#undef CONFIG_HAVE_struct_stat_st_tim
-#elif !defined(CONFIG_HAVE_struct_stat_st_tim) && \
+#ifdef CONFIG_NO_struct_stat_st_atime
+#undef CONFIG_HAVE_struct_stat_st_atime
+#elif !defined(CONFIG_HAVE_struct_stat_st_atime) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_atime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_atim
+#undef CONFIG_HAVE_struct_stat_st_atim
+#elif !defined(CONFIG_HAVE_struct_stat_st_atim) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat_st_tim 1
+#define CONFIG_HAVE_struct_stat_st_atim 1
 #endif
 
-#ifdef CONFIG_NO_struct_stat_st_timespec
-#undef CONFIG_HAVE_struct_stat_st_timespec
-#elif !defined(CONFIG_HAVE_struct_stat_st_timespec) && \
+#ifdef CONFIG_NO_struct_stat_st_atimespec
+#undef CONFIG_HAVE_struct_stat_st_atimespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_atimespec) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_timespec 1
+#define CONFIG_HAVE_struct_stat_st_atimespec 1
 #endif
 
-#ifdef CONFIG_NO_struct_stat_st_timensec
-#undef CONFIG_HAVE_struct_stat_st_timensec
-#elif !defined(CONFIG_HAVE_struct_stat_st_timensec) && \
+#ifdef CONFIG_NO_struct_stat_st_atimensec
+#undef CONFIG_HAVE_struct_stat_st_atimensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_atimensec) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat_st_timensec 1
+#define CONFIG_HAVE_struct_stat_st_atimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_mtime
+#undef CONFIG_HAVE_struct_stat_st_mtime
+#elif !defined(CONFIG_HAVE_struct_stat_st_mtime) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_mtime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_mtim
+#undef CONFIG_HAVE_struct_stat_st_mtim
+#elif !defined(CONFIG_HAVE_struct_stat_st_mtim) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat_st_mtim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_mtimespec
+#undef CONFIG_HAVE_struct_stat_st_mtimespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_mtimespec) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat_st_mtimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_mtimensec
+#undef CONFIG_HAVE_struct_stat_st_mtimensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_mtimensec) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat_st_mtimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_ctime
+#undef CONFIG_HAVE_struct_stat_st_ctime
+#elif !defined(CONFIG_HAVE_struct_stat_st_ctime) && \
+      (defined(CONFIG_HAVE_stat))
+#define CONFIG_HAVE_struct_stat_st_ctime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_ctim
+#undef CONFIG_HAVE_struct_stat_st_ctim
+#elif !defined(CONFIG_HAVE_struct_stat_st_ctim) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat_st_ctim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_ctimespec
+#undef CONFIG_HAVE_struct_stat_st_ctimespec
+#elif !defined(CONFIG_HAVE_struct_stat_st_ctimespec) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat_st_ctimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat_st_ctimensec
+#undef CONFIG_HAVE_struct_stat_st_ctimensec
+#elif !defined(CONFIG_HAVE_struct_stat_st_ctimensec) && \
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat_st_ctimensec 1
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_btime
@@ -8044,6 +8149,219 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtimensec) && \
       (defined(_STATBUF_ST_BIRTHTIMENSEC))
 #define CONFIG_HAVE_struct_stat_st_birthtimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_dev
+#undef CONFIG_HAVE_struct_stat64_st_dev
+#elif !defined(CONFIG_HAVE_struct_stat64_st_dev) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_dev 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_ino
+#undef CONFIG_HAVE_struct_stat64_st_ino
+#elif !defined(CONFIG_HAVE_struct_stat64_st_ino) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_ino 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_mode
+#undef CONFIG_HAVE_struct_stat64_st_mode
+#elif !defined(CONFIG_HAVE_struct_stat64_st_mode) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_mode 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_nlink
+#undef CONFIG_HAVE_struct_stat64_st_nlink
+#elif !defined(CONFIG_HAVE_struct_stat64_st_nlink) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_nlink 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_uid
+#undef CONFIG_HAVE_struct_stat64_st_uid
+#elif !defined(CONFIG_HAVE_struct_stat64_st_uid) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_uid 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_gid
+#undef CONFIG_HAVE_struct_stat64_st_gid
+#elif !defined(CONFIG_HAVE_struct_stat64_st_gid) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_gid 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_rdev
+#undef CONFIG_HAVE_struct_stat64_st_rdev
+#elif !defined(CONFIG_HAVE_struct_stat64_st_rdev) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_rdev 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_size
+#undef CONFIG_HAVE_struct_stat64_st_size
+#elif !defined(CONFIG_HAVE_struct_stat64_st_size) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_size 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_blksize
+#undef CONFIG_HAVE_struct_stat64_st_blksize
+#elif !defined(CONFIG_HAVE_struct_stat64_st_blksize) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_blksize 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_blocks
+#undef CONFIG_HAVE_struct_stat64_st_blocks
+#elif !defined(CONFIG_HAVE_struct_stat64_st_blocks) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_blocks 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_atime
+#undef CONFIG_HAVE_struct_stat64_st_atime
+#elif !defined(CONFIG_HAVE_struct_stat64_st_atime) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_atime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_atim
+#undef CONFIG_HAVE_struct_stat64_st_atim
+#elif !defined(CONFIG_HAVE_struct_stat64_st_atim) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat64_st_atim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_atimespec
+#undef CONFIG_HAVE_struct_stat64_st_atimespec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_atimespec) && \
+      (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat64_st_atimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_atimensec
+#undef CONFIG_HAVE_struct_stat64_st_atimensec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_atimensec) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat64_st_atimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_mtime
+#undef CONFIG_HAVE_struct_stat64_st_mtime
+#elif !defined(CONFIG_HAVE_struct_stat64_st_mtime) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_mtime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_mtim
+#undef CONFIG_HAVE_struct_stat64_st_mtim
+#elif !defined(CONFIG_HAVE_struct_stat64_st_mtim) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat64_st_mtim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_mtimespec
+#undef CONFIG_HAVE_struct_stat64_st_mtimespec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_mtimespec) && \
+      (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat64_st_mtimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_mtimensec
+#undef CONFIG_HAVE_struct_stat64_st_mtimensec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_mtimensec) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat64_st_mtimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_ctime
+#undef CONFIG_HAVE_struct_stat64_st_ctime
+#elif !defined(CONFIG_HAVE_struct_stat64_st_ctime) && \
+      (defined(CONFIG_HAVE_stat64))
+#define CONFIG_HAVE_struct_stat64_st_ctime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_ctim
+#undef CONFIG_HAVE_struct_stat64_st_ctim
+#elif !defined(CONFIG_HAVE_struct_stat64_st_ctim) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
+#define CONFIG_HAVE_struct_stat64_st_ctim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_ctimespec
+#undef CONFIG_HAVE_struct_stat64_st_ctimespec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_ctimespec) && \
+      (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_struct_stat64_st_ctimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_ctimensec
+#undef CONFIG_HAVE_struct_stat64_st_ctimensec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_ctimensec) && \
+      (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_struct_stat64_st_ctimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_btime
+#undef CONFIG_HAVE_struct_stat64_st_btime
+#elif !defined(CONFIG_HAVE_struct_stat64_st_btime) && \
+      (defined(_STATBUF_ST_BTIME))
+#define CONFIG_HAVE_struct_stat64_st_btime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_btim
+#undef CONFIG_HAVE_struct_stat64_st_btim
+#elif !defined(CONFIG_HAVE_struct_stat64_st_btim) && \
+      (defined(_STATBUF_ST_BTIM))
+#define CONFIG_HAVE_struct_stat64_st_btim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_btimespec
+#undef CONFIG_HAVE_struct_stat64_st_btimespec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_btimespec) && \
+      (defined(_STATBUF_ST_BTIMESPEC))
+#define CONFIG_HAVE_struct_stat64_st_btimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_btimensec
+#undef CONFIG_HAVE_struct_stat64_st_btimensec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_btimensec) && \
+      (defined(_STATBUF_ST_BTIMENSEC))
+#define CONFIG_HAVE_struct_stat64_st_btimensec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_birthtime
+#undef CONFIG_HAVE_struct_stat64_st_birthtime
+#elif !defined(CONFIG_HAVE_struct_stat64_st_birthtime) && \
+      (defined(_STATBUF_ST_BIRTHTIME))
+#define CONFIG_HAVE_struct_stat64_st_birthtime 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_birthtim
+#undef CONFIG_HAVE_struct_stat64_st_birthtim
+#elif !defined(CONFIG_HAVE_struct_stat64_st_birthtim) && \
+      (defined(_STATBUF_ST_BIRTHTIM))
+#define CONFIG_HAVE_struct_stat64_st_birthtim 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_birthtimespec
+#undef CONFIG_HAVE_struct_stat64_st_birthtimespec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_birthtimespec) && \
+      (defined(_STATBUF_ST_BIRTHTIMESPEC))
+#define CONFIG_HAVE_struct_stat64_st_birthtimespec 1
+#endif
+
+#ifdef CONFIG_NO_struct_stat64_st_birthtimensec
+#undef CONFIG_HAVE_struct_stat64_st_birthtimensec
+#elif !defined(CONFIG_HAVE_struct_stat64_st_birthtimensec) && \
+      (defined(_STATBUF_ST_BIRTHTIMENSEC))
+#define CONFIG_HAVE_struct_stat64_st_birthtimensec 1
 #endif
 
 #ifdef CONFIG_NO_VA_LIST_IS_NOT_ARRAY
@@ -8469,6 +8787,30 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef waccess
 #define waccess _waccess
 #endif /* waccess = _waccess */
+
+#if !defined(CONFIG_HAVE_stat64) && (defined(CONFIG_HAVE_fstatat64) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_stat64 1
+#undef stat64
+#define stat64(name, buf) fstatat64(AT_FDCWD, name, buf, 0)
+#endif /* stat64 = fstatat64 */
+
+#if !defined(CONFIG_HAVE_lstat64) && (defined(CONFIG_HAVE_fstatat64) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lstat64 1
+#undef lstat64
+#define lstat64(name, buf) fstatat64(AT_FDCWD, name, buf, AT_SYMLINK_NOFOLLOW)
+#endif /* lstat64 = fstatat64 */
+
+#if !defined(CONFIG_HAVE_stat) && (defined(CONFIG_HAVE_fstatat) && defined(CONFIG_HAVE_AT_FDCWD))
+#define CONFIG_HAVE_stat 1
+#undef stat
+#define stat(name, buf) fstatat(AT_FDCWD, name, buf, 0)
+#endif /* stat = fstatat */
+
+#if !defined(CONFIG_HAVE_lstat) && (defined(CONFIG_HAVE_fstatat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
+#define CONFIG_HAVE_lstat 1
+#undef lstat
+#define lstat(name, buf) fstatat(AT_FDCWD, name, buf, AT_SYMLINK_NOFOLLOW)
+#endif /* lstat = fstatat */
 
 #if defined(CONFIG_HAVE_euidaccess) && !defined(CONFIG_HAVE_eaccess)
 #define CONFIG_HAVE_eaccess 1

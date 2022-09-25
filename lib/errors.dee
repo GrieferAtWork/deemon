@@ -66,7 +66,13 @@ final global		FSError = SystemError.FSError;
 final global			FileAccessError = FSError.FileAccessError;
 final global				ReadOnlyFile = FileAccessError.ReadOnlyFile;
 final global			FileNotFound = FSError.FileNotFound;
+final global				NoDirectory = FileNotFound.NoDirectory;
+final global				NoSymlink = FileNotFound.NoSymlink;
 final global			FileExists = FSError.FileExists;
+final global				IsDirectory = FileExists.IsDirectory;
+final global				DirectoryNotEmpty = FileExists.DirectoryNotEmpty;
 final global			FileClosed = FSError.FileClosed;
+final global			CrossDeviceLink = FSError.CrossDeviceLink;
+final global			BusyFile = FSError.BusyFile;
 final global	AppExit = deemon.Error.AppExit;
 

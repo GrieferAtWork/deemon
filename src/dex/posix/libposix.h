@@ -42,6 +42,8 @@
 
 #include <hybrid/sched/yield.h>
 
+#include <stdbool.h>
+
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
@@ -157,21 +159,6 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
  * which is also why `posix.opendir' is exported as an alias for `posix.DIR' */
 INTDEF DeeTypeObject DeeDirIterator_Type;
 INTDEF DeeTypeObject DeeDir_Type;
-
-
-/* Figure out how we want to implement the DIR-system */
-#undef posix_opendir_USE_FindFirstFileExW
-#undef posix_opendir_USE_opendir
-#undef posix_opendir_USE_STUB
-#if defined(CONFIG_HOST_WINDOWS)
-#define posix_opendir_USE_FindFirstFileExW
-/* TODO: Add another option to implement using `_findfirst()' */
-#elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
-#define posix_opendir_USE_opendir
-#else
-#define posix_opendir_USE_STUB
-#endif
-
 
 
 /* STAT bitflags. */
@@ -293,6 +280,14 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_ISBLK(mode) (((mode) & STAT_IFMT) == STAT_IFBLK)
 #endif /* !S_ISBLK */
 
+#ifdef S_ISDEV
+#define STAT_ISDEV(mode) S_ISDEV(mode)
+#elif defined(__S_ISDEV)
+#define STAT_ISDEV(mode) __S_ISDEV(mode)
+#else /* S_ISDEV */
+#define STAT_ISDEV(mode) (STAT_ISCHR(mode) || STAT_ISBLK(mode))
+#endif /* !S_ISDEV */
+
 #ifdef S_ISREG
 #define STAT_ISREG(mode) S_ISREG(mode)
 #elif defined(__S_ISREG)
@@ -335,6 +330,154 @@ INTDEF DeeTypeObject DeeDir_Type;
 #define STAT_IWOTH (STAT_IWUSR >> 6) /* Write by other. */
 #define STAT_IXOTH (STAT_IXUSR >> 6) /* Execute by other. */
 
+/* If the hosting operating system doesn't provide it,
+ * we still need a value for `AT_SYMLINK_NOFOLLOW' that
+ * we can then use in requests. */
+#ifndef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
+#undef AT_SYMLINK_NOFOLLOW
+#define AT_SYMLINK_NOFOLLOW 0x0100
+#endif /* CONFIG_HAVE_AT_SYMLINK_NOFOLLOW */
+
+
+/************************************************************************/
+/* environ functions                                                    */
+/************************************************************************/
+
+/* @return:  1: Exists
+ * @return:  0: Doesn't exist
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+posix_environ_hasenv(DeeStringObject *__restrict name);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+posix_environ_getenv(DeeStringObject *name, DeeObject *defl);
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+posix_environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace);
+
+/* @return:  0: Success
+ * @return:  1: Not deleted because never defined
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+posix_environ_unsetenv(DeeStringObject *__restrict name);
+
+PRIVATE WUNUSED int DCALL
+posix_environ_clearenv(void);
+
+PRIVATE WUNUSED size_t DCALL
+posix_environ_getcount(void);
+
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+err_unknown_env_var(DeeObject *__restrict name);
+/************************************************************************/
+
+
+
+/************************************************************************/
+/* ON-demand helper functions                                           */
+/************************************************************************/
+
+/* Construct an absolute path from `dfd:path'
+ * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
+ * @param: path: Must be a `string' */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+posix_dfd_abspath(DeeObject *dfd, DeeObject *path);
+
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_access(int error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_dir(int error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_handle_closed(int error, DeeObject *__restrict path);
+
+#ifdef CONFIG_HOST_WINDOWS
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_no_dir(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_found(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_no_access(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chattr_no_access(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_handle_closed(DWORD error, DeeObject *__restrict path);
+
+INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully changed working directories.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully retrieved attributes.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
+                       GET_FILEEX_INFO_LEVELS fInfoLevelId,
+                       LPVOID lpFileInformation);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully retrieved attributes.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+nt_GetFileAttributes(DeeObject *__restrict lpFileName,
+                     DWORD *__restrict presult);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully set attributes.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+nt_SetFileAttributes(DeeObject *__restrict lpFileName,
+                     DWORD dwFileAttributes);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully created the new directory.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+nt_CreateDirectory(DeeObject *__restrict lpPathName,
+                   LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully removed the given directory.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+nt_RemoveDirectory(DeeObject *__restrict lpPathName);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully removed the given file.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+nt_DeleteFile(DeeObject *__restrict lpFileName);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully moved the given file.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+nt_MoveFile(DeeObject *__restrict lpExistingFileName,
+            DeeObject *__restrict lpNewFileName);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully created the hardlink.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+nt_CreateHardLink(DeeObject *__restrict lpFileName,
+                  DeeObject *__restrict lpExistingFileName,
+                  LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+/* Work around a problem with long path names.
+ * @return:  0: Successfully created the symlink.
+ * @return: -1: A deemon callback failed and an error was thrown.
+ * @return:  1: The system call failed (See GetLastError()) */
+INTDEF int DCALL
+nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
+                      DeeObject *__restrict lpTargetFileName,
+                      DWORD dwFlags);
+
+#endif /* CONFIG_HOST_WINDOWS */
+/************************************************************************/
 
 DECL_END
 

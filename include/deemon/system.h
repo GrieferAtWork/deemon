@@ -54,7 +54,8 @@ struct Dee_unicode_printer;
 #define DeeSystem_ALTSEP   '/'
 #define DeeSystem_ALTSEP_S "/"
 #define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
-#define DeeSystem_IsAbs(x) ((x)[0] && (x)[1] == ':')
+#define DeeSystem_IsAbs(x) ((x)[0] && ((x)[1] == ':' || ((x)[0] == '\\' && (x)[1] == '\\')))
+#undef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #elif defined(__CYGWIN__) || defined(__CYGWIN32__)
 /* Cygwin paths also accept r'\' as alias for r'/' */
 #undef DEE_SYSTEM_NOCASE_FS
@@ -67,6 +68,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_ALTSEP_S "\\"
 #define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
 #define DeeSystem_IsAbs(x) ((x)[0] == '/')
+#define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #else /* CONFIG_HOST_WINDOWS */
 #undef DEE_SYSTEM_NOCASE_FS
 #undef DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH
@@ -76,6 +78,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_SEP_S    "/"
 #define DeeSystem_IsSep(x) ((x) == '/')
 #define DeeSystem_IsAbs(x) ((x)[0] == '/')
+#define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #endif /* !CONFIG_HOST_WINDOWS */
 
 /* Print the current working directory to the given `printer'
@@ -209,6 +212,16 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwCreationDisposition,
                        /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
                        /*HANDLE*/ void *hTemplateFile);
+
+/* Same as `DeeNTSystem_CreateFile()', but try not to modify the file's last-accessed timestamp */
+DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
+DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
+                              /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
+                              /*DWORD*/ DeeNT_DWORD dwShareMode,
+                              /*LPSECURITY_ATTRIBUTES*/ void *lpSecurityAttributes,
+                              /*DWORD*/ DeeNT_DWORD dwCreationDisposition,
+                              /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
+                              /*HANDLE*/ void *hTemplateFile);
 
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL

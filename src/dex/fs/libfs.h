@@ -395,17 +395,8 @@ INTDEF WUNUSED DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, u
 	(FS_EXPAND_FHOME | FS_EXPAND_FVARS | FS_EXPAND_FPATH | FS_EXPAND_FNOFAIL)
 
 
-/* New error classes added for the filesystem. */
-INTDEF DeeTypeObject DeeError_NoDirectory; /* extends FileNotFound */
-INTDEF DeeTypeObject DeeError_IsDirectory; /* extends FileExists */
-INTDEF DeeTypeObject DeeError_CrossDevice; /* extends FSError */
-INTDEF DeeTypeObject DeeError_NotEmpty;    /* extends FSError */
-INTDEF DeeTypeObject DeeError_BusyFile;    /* extends FSError */
-INTDEF DeeTypeObject DeeError_NoLink;      /* extends FileNotFound */
-
-
 /* Imported module access. */
-#define TIME_MODULE   DEX.d_imports[0]
+#define TIME_MODULE DEX.d_imports[0]
 
 /* Construct a new time object from `microseconds' */
 INTDEF WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);

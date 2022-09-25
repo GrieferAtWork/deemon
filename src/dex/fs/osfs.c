@@ -2231,13 +2231,13 @@ fs_readlink(DeeObject *__restrict path) {
 	bool owns_linkfd;
 	if (DeeString_Check(path)) {
 again_createfile:
-		hLink = DeeNTSystem_CreateFile(path,
-		                               FILE_READ_DATA | FILE_READ_ATTRIBUTES,
-		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                               NULL,
-		                               OPEN_EXISTING,
-		                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-		                               NULL);
+		hLink = DeeNTSystem_CreateFileNoATime(path,
+		                                      FILE_READ_DATA | FILE_READ_ATTRIBUTES,
+		                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                                      NULL,
+		                                      OPEN_EXISTING,
+		                                      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                                      NULL);
 		if unlikely(!hLink)
 			goto err;
 		if unlikely(hLink == INVALID_HANDLE_VALUE)
@@ -2350,7 +2350,7 @@ cygwin_symlink_utf8:
 					goto free_buffer_and_return_result;
 				}
 			}
-			DeeNTSystem_ThrowErrorf(&DeeError_NoLink, error,
+			DeeNTSystem_ThrowErrorf(&DeeError_NoSymlink, error,
 			                        "Path %r is not a symbolic link",
 			                        path);
 		} else if (DeeNTSystem_IsUnsupportedError(error)) {
@@ -2546,7 +2546,7 @@ handle_error:
 #ifdef EINVAL
 				if (error == EINVAL) {
 no_link:
-					DeeUnixSystem_ThrowErrorf(&DeeError_NoLink, error,
+					DeeUnixSystem_ThrowErrorf(&DeeError_NoSymlink, error,
 					                          "Path %r is not a symbolic link",
 					                          path);
 				} else
@@ -2603,7 +2603,7 @@ no_link:
 					error = EINVAL;
 					goto no_link;
 #else /* EINVAL */
-					DeeError_Throwf(&DeeError_NoLink,
+					DeeError_Throwf(&DeeError_NoSymlink,
 					                "Path %r is not a symbolic link",
 					                path);
 					goto err_printer_buffer;
@@ -2690,13 +2690,13 @@ DeeObject_AsPathHandleWithWriteAttributes(DeeObject *__restrict path,
 	int result;
 	if (DeeString_Check(path)) {
 again:
-		*phandle = DeeNTSystem_CreateFile(path,
-		                                  FILE_WRITE_ATTRIBUTES,
-		                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                                  NULL,
-		                                  OPEN_EXISTING,
-		                                  FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
-		                                  NULL);
+		*phandle = DeeNTSystem_CreateFileNoATime(path,
+		                                         FILE_WRITE_ATTRIBUTES,
+		                                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                                         NULL,
+		                                         OPEN_EXISTING,
+		                                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
+		                                         NULL);
 		if (*phandle == INVALID_HANDLE_VALUE) {
 			DWORD dwError;
 			DBG_ALIGNMENT_DISABLE();
@@ -3232,7 +3232,7 @@ nt_ErrPathNoAccess(DWORD dwError, DeeObject *__restrict path) {
 #ifdef WANT_NT_ERRPATHNOTEMPTY
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 nt_ErrPathNotEmpty(DWORD dwError, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_NotEmpty, dwError,
+	return DeeNTSystem_ThrowErrorf(&DeeError_DirectoryNotEmpty, dwError,
 	                               "The directory %r cannot be deleted because it is not empty",
 	                               path);
 }
@@ -3292,7 +3292,7 @@ INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 nt_ErrPathCrossDev2(DWORD dwError,
                     DeeObject *__restrict existing_path,
                     DeeObject *__restrict new_path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_CrossDevice, dwError,
+	return DeeNTSystem_ThrowErrorf(&DeeError_CrossDeviceLink, dwError,
 	                               "Paths %r and %r are not apart of the same filesystem",
 	                               existing_path, new_path);
 }
@@ -3391,7 +3391,7 @@ unix_ErrPathNoAccess(int errno_value, DeeObject *__restrict path) {
 #ifdef WANT_UNIX_ERRPATHNOTEMPTY
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 unix_ErrPathNotEmpty(int errno_value, DeeObject *__restrict path) {
-	return DeeUnixSystem_ThrowErrorf(&DeeError_NotEmpty, errno_value,
+	return DeeUnixSystem_ThrowErrorf(&DeeError_DirectoryNotEmpty, errno_value,
 	                                 "The directory %r cannot be deleted because it is not empty",
 	                                 path);
 }
@@ -3451,7 +3451,7 @@ INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 unix_ErrPathCrossDev2(int errno_value,
                       DeeObject *__restrict existing_path,
                       DeeObject *__restrict new_path) {
-	return DeeUnixSystem_ThrowErrorf(&DeeError_CrossDevice, errno_value,
+	return DeeUnixSystem_ThrowErrorf(&DeeError_CrossDeviceLink, errno_value,
 	                                 "Paths %r and %r are not apart of the same filesystem",
 	                                 existing_path, new_path);
 }

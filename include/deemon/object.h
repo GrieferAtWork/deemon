@@ -243,7 +243,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #ifdef __INTELLISENSE__
 #define Dee_REQUIRES_OBJECT(x) ((void)&(x)->ob_refcnt, (x))
 #else /* __INTELLISENSE__ */
-#define Dee_REQUIRES_OBJECT(x) (x)
+#define Dee_REQUIRES_OBJECT /* nothing */
 #endif /* !__INTELLISENSE__ */
 
 

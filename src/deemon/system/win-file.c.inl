@@ -364,6 +364,9 @@ again:
 		}
 		goto err;
 	}
+
+	/* TODO: O_NOATIME -> DeeNTSystem_CreateFileNoATime(hFile); */
+
 	/* Simple case: The open was successful. */
 	Dee_Incref(filename);
 #if 0 /* XXX: Only if `fp' is a pipe */

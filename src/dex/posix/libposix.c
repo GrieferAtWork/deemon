@@ -33,18 +33,28 @@
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
 #include "p-open.c.inl"
+#include "p-opendir.c.inl"
 #include "p-pipe.c.inl"
 #include "p-readwrite.c.inl"
 #include "p-realpath.c.inl"
 #include "p-sched.c.inl"
+#include "p-stat.c.inl"
 #include "p-sync.c.inl"
 #include "p-truncate.c.inl"
+
+/* Include p-ondemand.c.inl last, since it defined functions on-demand */
+#include "p-ondemand.c.inl"
 
 /* Include fs.c.inl last, since this once #undef's a
  * bunch of stuff that may be needed by other components. */
 #include "p-fs.c.inl"
-#endif /* !__INTELLISENSE__ */
+#else /* !__INTELLISENSE__ */
+#define NEED_posix_dfd_abspath
+#define NEED_ERR_UNSUPPORTED
+#endif /* __INTELLISENSE__ */
 
+#include <deemon/error.h>
+#include <deemon/error_types.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 
@@ -52,8 +62,112 @@
 DECL_BEGIN
 
 
+#ifdef NEED_posix_dfd_abspath
+#undef NEED_posix_dfd_abspath
+/* Construct an absolute path from `dfd:path'
+ * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
+ * @param: path: Must be a `string' */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+posix_dfd_abspath(DeeObject *dfd, DeeObject *path) {
+	struct unicode_printer printer;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
 
-#if defined(NEED_ERR_UNSUPPORTED) || defined(__INTELLISENSE__)
+	/* Check if `path' is absolute. - If it is, then we must use _it_ */
+	if (DeeSystem_IsAbs(DeeString_STR(path)))
+		return_reference_(path);
+
+	/* Must combine `dfd' with `path' */
+	unicode_printer_init(&printer);
+	if (DeeString_Check(dfd)) {
+		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
+			goto err_printer;
+	} else {
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
+		int error;
+		HANDLE hDfd;
+		hDfd = DeeNTSystem_GetHandle(dfd);
+		if unlikely(hDfd == INVALID_HANDLE_VALUE)
+			goto err_printer;
+		error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
+		if unlikely(error != 0) {
+			if (error > 0) {
+				DeeNTSystem_ThrowLastErrorf(NULL,
+				                            "Failed to print path of HANDLE %p",
+				                            hDfd);
+			}
+			goto err_printer;
+		}
+#endif /* CONFIG_HOST_WINDOWS */
+
+#ifdef CONFIG_HOST_UNIX
+		int os_dfd;
+		os_dfd = DeeUnixSystem_GetFD(dfd);
+		if unlikely(os_dfd == -1)
+			goto err_printer;
+#ifdef CONFIG_HAVE_PROCFS
+		if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
+			goto err_printer;
+#else /* CONFIG_HAVE_PROCFS */
+#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
+		{
+			int error;
+			error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
+			if unlikely(error != 0)
+				goto err_printer;
+		}
+#endif /* !CONFIG_HAVE_PROCFS */
+#endif /* CONFIG_HOST_UNIX */
+	}
+
+	/* Trim trailing slashes. */
+#ifdef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
+#undef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
+	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
+		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
+		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
+			--newlen;
+		if (newlen >= UNICODE_PRINTER_LENGTH(&printer)) {
+			/* Append trailing slash */
+			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
+				goto err_printer;
+		} else {
+			/* Trailing slash is already present (but make sure that there's only 1 of them) */
+			++newlen;
+			unicode_printer_truncate(&printer, newlen);
+		}
+	}
+#endif /* posix_dfd_abspath_MUST_NORMALIZE_SLASHES */
+
+#ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
+	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
+		/* Must skip leading slashes in `path' */
+		char *utf8_path = DeeString_AsUtf8(path);
+		if unlikely(!utf8_path)
+			goto err_printer;
+		while (DeeSystem_IsSep(*utf8_path))
+			++utf8_path;
+		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
+			goto err_printer;
+	} else
+#endif /* !DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES */
+	{
+		if unlikely(unicode_printer_printstring(&printer, path) < 0)
+			goto err_printer;
+	}
+
+	/* Pack the resulting string together */
+	return unicode_printer_pack(&printer);
+err_printer:
+	unicode_printer_fini(&printer);
+err:
+	return NULL;
+}
+#endif /* NEED_posix_dfd_abspath */
+
+
+#ifdef NEED_ERR_UNSUPPORTED
 #undef NEED_ERR_UNSUPPORTED
 INTERN ATTR_NOINLINE ATTR_UNUSED ATTR_COLD NONNULL((1)) int DCALL
 posix_err_unsupported(char const *__restrict name) {
@@ -80,6 +194,10 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 #define posix_errno_USE_STUB
 #endif /* !CONFIG_HAVE_errno */
 
+#undef posix_lstat_USE_STUB
+#ifndef posix_stat_HAVE_lstat
+#define posix_lstat_USE_STUB
+#endif /* !posix_stat_HAVE_lstat */
 
 /*[[[deemon
 local ALL_STUBS = {
@@ -116,6 +234,28 @@ local ALL_STUBS = {
 	("posix_unsetenv_USE_STUB",     { "unsetenv" }),
 	("posix_clearenv_USE_STUB",     { "clearenv" }),
 	("posix_enumenv_USE_STUB",      { "environ" }),
+	("posix_stat_USE_STUB",         { "stat" }),
+	("posix_lstat_USE_STUB",        { "lstat" }),
+	("posix_stat_get_dev_IS_STUB", { "stat.st_dev" }),
+	("posix_stat_get_ino_IS_STUB", { "stat.st_ino" }),
+	("posix_stat_get_mode_IS_STUB", { "stat.st_mode" }),
+	("posix_stat_get_nlink_IS_STUB", { "stat.st_nlink" }),
+	("posix_stat_get_uid_IS_STUB", { "stat.st_uid" }),
+	("posix_stat_get_gid_IS_STUB", { "stat.st_gid" }),
+	("posix_stat_get_rdev_IS_STUB", { "stat.st_rdev" }),
+	("posix_stat_get_size_IS_STUB", { "stat.st_size" }),
+	("posix_stat_get_atime_IS_STUB", { "stat.st_atime" }),
+	("posix_stat_get_mtime_IS_STUB", { "stat.st_mtime" }),
+	("posix_stat_get_ctime_IS_STUB", { "stat.st_ctime" }),
+	("posix_stat_get_birthtime_IS_STUB", { "stat.st_birthtime" }),
+	("posix_stat_isdir_IS_STUB", { "stat.isdir" }),
+	("posix_stat_ischr_IS_STUB", { "stat.ischr" }),
+	("posix_stat_isblk_IS_STUB", { "stat.isblk" }),
+	("posix_stat_isdev_IS_STUB", { "stat.isdev" }),
+	("posix_stat_isreg_IS_STUB", { "stat.isreg" }),
+	("posix_stat_isfifo_IS_STUB", { "stat.isfifo" }),
+	("posix_stat_islnk_IS_STUB", { "stat.islnk" }),
+	("posix_stat_issock_IS_STUB", { "stat.issock" }),
 };
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -388,6 +528,160 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_enumenv_USE_STUB /* nothing */
 #define str_posix_enumenv_USE_STUB /* nothing */
 #endif /* !posix_enumenv_USE_STUB */
+#ifdef posix_stat_USE_STUB
+#define len_posix_stat_USE_STUB +5
+#define str_posix_stat_USE_STUB 's', 't', 'a', 't', '\0',
+#else /* posix_stat_USE_STUB */
+#define len_posix_stat_USE_STUB /* nothing */
+#define str_posix_stat_USE_STUB /* nothing */
+#endif /* !posix_stat_USE_STUB */
+#ifdef posix_lstat_USE_STUB
+#define len_posix_lstat_USE_STUB +6
+#define str_posix_lstat_USE_STUB 'l', 's', 't', 'a', 't', '\0',
+#else /* posix_lstat_USE_STUB */
+#define len_posix_lstat_USE_STUB /* nothing */
+#define str_posix_lstat_USE_STUB /* nothing */
+#endif /* !posix_lstat_USE_STUB */
+#ifdef posix_stat_get_dev_IS_STUB
+#define len_posix_stat_get_dev_IS_STUB +12
+#define str_posix_stat_get_dev_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'd', 'e', 'v', '\0',
+#else /* posix_stat_get_dev_IS_STUB */
+#define len_posix_stat_get_dev_IS_STUB /* nothing */
+#define str_posix_stat_get_dev_IS_STUB /* nothing */
+#endif /* !posix_stat_get_dev_IS_STUB */
+#ifdef posix_stat_get_ino_IS_STUB
+#define len_posix_stat_get_ino_IS_STUB +12
+#define str_posix_stat_get_ino_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'i', 'n', 'o', '\0',
+#else /* posix_stat_get_ino_IS_STUB */
+#define len_posix_stat_get_ino_IS_STUB /* nothing */
+#define str_posix_stat_get_ino_IS_STUB /* nothing */
+#endif /* !posix_stat_get_ino_IS_STUB */
+#ifdef posix_stat_get_mode_IS_STUB
+#define len_posix_stat_get_mode_IS_STUB +13
+#define str_posix_stat_get_mode_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'm', 'o', 'd', 'e', '\0',
+#else /* posix_stat_get_mode_IS_STUB */
+#define len_posix_stat_get_mode_IS_STUB /* nothing */
+#define str_posix_stat_get_mode_IS_STUB /* nothing */
+#endif /* !posix_stat_get_mode_IS_STUB */
+#ifdef posix_stat_get_nlink_IS_STUB
+#define len_posix_stat_get_nlink_IS_STUB +14
+#define str_posix_stat_get_nlink_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'n', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_stat_get_nlink_IS_STUB */
+#define len_posix_stat_get_nlink_IS_STUB /* nothing */
+#define str_posix_stat_get_nlink_IS_STUB /* nothing */
+#endif /* !posix_stat_get_nlink_IS_STUB */
+#ifdef posix_stat_get_uid_IS_STUB
+#define len_posix_stat_get_uid_IS_STUB +12
+#define str_posix_stat_get_uid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'u', 'i', 'd', '\0',
+#else /* posix_stat_get_uid_IS_STUB */
+#define len_posix_stat_get_uid_IS_STUB /* nothing */
+#define str_posix_stat_get_uid_IS_STUB /* nothing */
+#endif /* !posix_stat_get_uid_IS_STUB */
+#ifdef posix_stat_get_gid_IS_STUB
+#define len_posix_stat_get_gid_IS_STUB +12
+#define str_posix_stat_get_gid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'g', 'i', 'd', '\0',
+#else /* posix_stat_get_gid_IS_STUB */
+#define len_posix_stat_get_gid_IS_STUB /* nothing */
+#define str_posix_stat_get_gid_IS_STUB /* nothing */
+#endif /* !posix_stat_get_gid_IS_STUB */
+#ifdef posix_stat_get_rdev_IS_STUB
+#define len_posix_stat_get_rdev_IS_STUB +13
+#define str_posix_stat_get_rdev_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'r', 'd', 'e', 'v', '\0',
+#else /* posix_stat_get_rdev_IS_STUB */
+#define len_posix_stat_get_rdev_IS_STUB /* nothing */
+#define str_posix_stat_get_rdev_IS_STUB /* nothing */
+#endif /* !posix_stat_get_rdev_IS_STUB */
+#ifdef posix_stat_get_size_IS_STUB
+#define len_posix_stat_get_size_IS_STUB +13
+#define str_posix_stat_get_size_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 's', 'i', 'z', 'e', '\0',
+#else /* posix_stat_get_size_IS_STUB */
+#define len_posix_stat_get_size_IS_STUB /* nothing */
+#define str_posix_stat_get_size_IS_STUB /* nothing */
+#endif /* !posix_stat_get_size_IS_STUB */
+#ifdef posix_stat_get_atime_IS_STUB
+#define len_posix_stat_get_atime_IS_STUB +14
+#define str_posix_stat_get_atime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'a', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_atime_IS_STUB */
+#define len_posix_stat_get_atime_IS_STUB /* nothing */
+#define str_posix_stat_get_atime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_atime_IS_STUB */
+#ifdef posix_stat_get_mtime_IS_STUB
+#define len_posix_stat_get_mtime_IS_STUB +14
+#define str_posix_stat_get_mtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'm', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_mtime_IS_STUB */
+#define len_posix_stat_get_mtime_IS_STUB /* nothing */
+#define str_posix_stat_get_mtime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_mtime_IS_STUB */
+#ifdef posix_stat_get_ctime_IS_STUB
+#define len_posix_stat_get_ctime_IS_STUB +14
+#define str_posix_stat_get_ctime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'c', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_ctime_IS_STUB */
+#define len_posix_stat_get_ctime_IS_STUB /* nothing */
+#define str_posix_stat_get_ctime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_ctime_IS_STUB */
+#ifdef posix_stat_get_birthtime_IS_STUB
+#define len_posix_stat_get_birthtime_IS_STUB +18
+#define str_posix_stat_get_birthtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'b', 'i', 'r', 't', 'h', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_birthtime_IS_STUB */
+#define len_posix_stat_get_birthtime_IS_STUB /* nothing */
+#define str_posix_stat_get_birthtime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_birthtime_IS_STUB */
+#ifdef posix_stat_isdir_IS_STUB
+#define len_posix_stat_isdir_IS_STUB +11
+#define str_posix_stat_isdir_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'd', 'i', 'r', '\0',
+#else /* posix_stat_isdir_IS_STUB */
+#define len_posix_stat_isdir_IS_STUB /* nothing */
+#define str_posix_stat_isdir_IS_STUB /* nothing */
+#endif /* !posix_stat_isdir_IS_STUB */
+#ifdef posix_stat_ischr_IS_STUB
+#define len_posix_stat_ischr_IS_STUB +11
+#define str_posix_stat_ischr_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'c', 'h', 'r', '\0',
+#else /* posix_stat_ischr_IS_STUB */
+#define len_posix_stat_ischr_IS_STUB /* nothing */
+#define str_posix_stat_ischr_IS_STUB /* nothing */
+#endif /* !posix_stat_ischr_IS_STUB */
+#ifdef posix_stat_isblk_IS_STUB
+#define len_posix_stat_isblk_IS_STUB +11
+#define str_posix_stat_isblk_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'b', 'l', 'k', '\0',
+#else /* posix_stat_isblk_IS_STUB */
+#define len_posix_stat_isblk_IS_STUB /* nothing */
+#define str_posix_stat_isblk_IS_STUB /* nothing */
+#endif /* !posix_stat_isblk_IS_STUB */
+#ifdef posix_stat_isdev_IS_STUB
+#define len_posix_stat_isdev_IS_STUB +11
+#define str_posix_stat_isdev_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'd', 'e', 'v', '\0',
+#else /* posix_stat_isdev_IS_STUB */
+#define len_posix_stat_isdev_IS_STUB /* nothing */
+#define str_posix_stat_isdev_IS_STUB /* nothing */
+#endif /* !posix_stat_isdev_IS_STUB */
+#ifdef posix_stat_isreg_IS_STUB
+#define len_posix_stat_isreg_IS_STUB +11
+#define str_posix_stat_isreg_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'r', 'e', 'g', '\0',
+#else /* posix_stat_isreg_IS_STUB */
+#define len_posix_stat_isreg_IS_STUB /* nothing */
+#define str_posix_stat_isreg_IS_STUB /* nothing */
+#endif /* !posix_stat_isreg_IS_STUB */
+#ifdef posix_stat_isfifo_IS_STUB
+#define len_posix_stat_isfifo_IS_STUB +12
+#define str_posix_stat_isfifo_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'f', 'i', 'f', 'o', '\0',
+#else /* posix_stat_isfifo_IS_STUB */
+#define len_posix_stat_isfifo_IS_STUB /* nothing */
+#define str_posix_stat_isfifo_IS_STUB /* nothing */
+#endif /* !posix_stat_isfifo_IS_STUB */
+#ifdef posix_stat_islnk_IS_STUB
+#define len_posix_stat_islnk_IS_STUB +11
+#define str_posix_stat_islnk_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'l', 'n', 'k', '\0',
+#else /* posix_stat_islnk_IS_STUB */
+#define len_posix_stat_islnk_IS_STUB /* nothing */
+#define str_posix_stat_islnk_IS_STUB /* nothing */
+#endif /* !posix_stat_islnk_IS_STUB */
+#ifdef posix_stat_issock_IS_STUB
+#define len_posix_stat_issock_IS_STUB +12
+#define str_posix_stat_issock_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 's', 'o', 'c', 'k', '\0',
+#else /* posix_stat_issock_IS_STUB */
+#define len_posix_stat_issock_IS_STUB /* nothing */
+#define str_posix_stat_issock_IS_STUB /* nothing */
+#endif /* !posix_stat_issock_IS_STUB */
 #define POSIX_STUBS_TOTLEN 0 \
 	len_posix_truncate_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -422,6 +716,28 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_unsetenv_USE_STUB \
 	len_posix_clearenv_USE_STUB \
 	len_posix_enumenv_USE_STUB \
+	len_posix_stat_USE_STUB \
+	len_posix_lstat_USE_STUB \
+	len_posix_stat_get_dev_IS_STUB \
+	len_posix_stat_get_ino_IS_STUB \
+	len_posix_stat_get_mode_IS_STUB \
+	len_posix_stat_get_nlink_IS_STUB \
+	len_posix_stat_get_uid_IS_STUB \
+	len_posix_stat_get_gid_IS_STUB \
+	len_posix_stat_get_rdev_IS_STUB \
+	len_posix_stat_get_size_IS_STUB \
+	len_posix_stat_get_atime_IS_STUB \
+	len_posix_stat_get_mtime_IS_STUB \
+	len_posix_stat_get_ctime_IS_STUB \
+	len_posix_stat_get_birthtime_IS_STUB \
+	len_posix_stat_isdir_IS_STUB \
+	len_posix_stat_ischr_IS_STUB \
+	len_posix_stat_isblk_IS_STUB \
+	len_posix_stat_isdev_IS_STUB \
+	len_posix_stat_isreg_IS_STUB \
+	len_posix_stat_isfifo_IS_STUB \
+	len_posix_stat_islnk_IS_STUB \
+	len_posix_stat_issock_IS_STUB \
 /**/
 #if POSIX_STUBS_TOTLEN != 0
 PRIVATE struct {
@@ -469,6 +785,28 @@ PRIVATE struct {
 		str_posix_unsetenv_USE_STUB
 		str_posix_clearenv_USE_STUB
 		str_posix_enumenv_USE_STUB
+		str_posix_stat_USE_STUB
+		str_posix_lstat_USE_STUB
+		str_posix_stat_get_dev_IS_STUB
+		str_posix_stat_get_ino_IS_STUB
+		str_posix_stat_get_mode_IS_STUB
+		str_posix_stat_get_nlink_IS_STUB
+		str_posix_stat_get_uid_IS_STUB
+		str_posix_stat_get_gid_IS_STUB
+		str_posix_stat_get_rdev_IS_STUB
+		str_posix_stat_get_size_IS_STUB
+		str_posix_stat_get_atime_IS_STUB
+		str_posix_stat_get_mtime_IS_STUB
+		str_posix_stat_get_ctime_IS_STUB
+		str_posix_stat_get_birthtime_IS_STUB
+		str_posix_stat_isdir_IS_STUB
+		str_posix_stat_ischr_IS_STUB
+		str_posix_stat_isblk_IS_STUB
+		str_posix_stat_isdev_IS_STUB
+		str_posix_stat_isreg_IS_STUB
+		str_posix_stat_isfifo_IS_STUB
+		str_posix_stat_islnk_IS_STUB
+		str_posix_stat_issock_IS_STUB
 	},
 	{ Dee_STRING_WIDTH_1BYTE,
 	  Dee_STRING_UTF_FASCII,
@@ -605,22 +943,6 @@ PRIVATE char const *import_table[] = {
 #endif /* !__INTELLISENSE__ */
 
 
-/* DT_* constants. */
-INTDEF DeeObject posix_DT_UNKNOWN;
-INTDEF DeeObject posix_DT_FIFO;
-INTDEF DeeObject posix_DT_CHR;
-INTDEF DeeObject posix_DT_DIR;
-INTDEF DeeObject posix_DT_BLK;
-INTDEF DeeObject posix_DT_REG;
-INTDEF DeeObject posix_DT_LNK;
-INTDEF DeeObject posix_DT_SOCK;
-INTDEF DeeObject posix_DT_WHT;
-INTDEF DeeObject posix_DTTOIF;
-INTDEF DeeObject posix_IFTODT;
-INTDEF DeeObject posix_fdopendir;
-
-
-
 /*[[[deemon
 local names = {
 	"IFMT", "IFDIR", "IFCHR", "IFBLK", "IFREG",
@@ -670,6 +992,16 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
+posix_S_ISDEV(size_t argc, DeeObject *const *argv) {
+	unsigned int arg;
+	if (DeeArg_Unpack(argc, argv, "u:S_ISDEV", &arg))
+		goto err;
+	return_bool(STAT_ISDEV(arg));
+err:
+	return NULL;
+}
+
+INTERN WUNUSED DREF DeeObject *DCALL
 posix_S_ISREG(size_t argc, DeeObject *const *argv) {
 	unsigned int arg;
 	if (DeeArg_Unpack(argc, argv, "u:S_ISREG", &arg))
@@ -712,6 +1044,7 @@ err:
 PRIVATE DEFINE_CMETHOD(libposix_S_ISDIR, &posix_S_ISDIR);
 PRIVATE DEFINE_CMETHOD(libposix_S_ISCHR, &posix_S_ISCHR);
 PRIVATE DEFINE_CMETHOD(libposix_S_ISBLK, &posix_S_ISBLK);
+PRIVATE DEFINE_CMETHOD(libposix_S_ISDEV, &posix_S_ISDEV);
 PRIVATE DEFINE_CMETHOD(libposix_S_ISREG, &posix_S_ISREG);
 PRIVATE DEFINE_CMETHOD(libposix_S_ISFIFO, &posix_S_ISFIFO);
 PRIVATE DEFINE_CMETHOD(libposix_S_ISLNK, &posix_S_ISLNK);
@@ -719,11 +1052,11 @@ PRIVATE DEFINE_CMETHOD(libposix_S_ISSOCK, &posix_S_ISSOCK);
 
 
 
+
 PRIVATE struct dex_symbol symbols[] = {
 	/* E* errno codes */
 	D(POSIX_ERRNO_DEFS)
 	/* IMPORTANT: errno codes must come first! */
-
 
 	{ "stubs", &PosixStubsList_Singleton, MODSYM_FNORMAL,
 	  DOC("->?S?Dstring\n"
@@ -927,27 +1260,27 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "object may be iterated to yield ?Gdirent objects.\n"
 	      "Additionally, you may specify @skipdots as !f if you "
 	      "wish to include the special $'.' and $'..' entires.") },
-	{ "fdopendir", &posix_fdopendir, MODSYM_FNORMAL,
+	{ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
 	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
 	      "Same as ?Gopendir, but the default value of @inheritfd is !t, "
 	      "mimicking the behavior of the native $fdopendir function") },
 
 	/* File type constants. */
-	{ "DT_UNKNOWN", &posix_DT_UNKNOWN, MODSYM_FNORMAL },
-	{ "DT_FIFO", &posix_DT_FIFO, MODSYM_FNORMAL },
-	{ "DT_CHR", &posix_DT_CHR, MODSYM_FNORMAL },
-	{ "DT_DIR", &posix_DT_DIR, MODSYM_FNORMAL },
-	{ "DT_BLK", &posix_DT_BLK, MODSYM_FNORMAL },
-	{ "DT_REG", &posix_DT_REG, MODSYM_FNORMAL },
-	{ "DT_LNK", &posix_DT_LNK, MODSYM_FNORMAL },
-	{ "DT_SOCK", &posix_DT_SOCK, MODSYM_FNORMAL },
-	{ "DT_WHT", &posix_DT_WHT, MODSYM_FNORMAL },
-	{ "DTTOIF", &posix_DTTOIF, MODSYM_FNORMAL,
+	D({ "DT_UNKNOWN", (DeeObject *)&posix_DT_UNKNOWN, MODSYM_FNORMAL },)
+	D({ "DT_FIFO", (DeeObject *)&posix_DT_FIFO, MODSYM_FNORMAL },)
+	D({ "DT_CHR", (DeeObject *)&posix_DT_CHR, MODSYM_FNORMAL },)
+	D({ "DT_DIR", (DeeObject *)&posix_DT_DIR, MODSYM_FNORMAL },)
+	D({ "DT_BLK", (DeeObject *)&posix_DT_BLK, MODSYM_FNORMAL },)
+	D({ "DT_REG", (DeeObject *)&posix_DT_REG, MODSYM_FNORMAL },)
+	D({ "DT_LNK", (DeeObject *)&posix_DT_LNK, MODSYM_FNORMAL },)
+	D({ "DT_SOCK", (DeeObject *)&posix_DT_SOCK, MODSYM_FNORMAL },)
+	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FNORMAL },)
+	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FNORMAL,
 	  DOC("(dt:?Dint)->?Dint\n"
-	      "Convert a ${DT_*} constant to ${S_IF*}") },
-	{ "IFTODT", &posix_IFTODT, MODSYM_FNORMAL,
+	      "Convert a ${DT_*} constant to ${S_IF*}") },)
+	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FNORMAL,
 	  DOC("(if:?Dint)->?Dint\n"
-	      "Convert an ${S_IF*} constant to ${DT_*}") },
+	      "Convert an ${S_IF*} constant to ${DT_*}") },)
 
 	/* Environ control */
 	D(POSIX_GETENV_DEF_DOC("@throws KeyError The given @varname wasn't found, and @defl wasn't given\n"
@@ -997,10 +1330,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "S_ISDIR", (DeeObject *)&libposix_S_ISDIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISCHR", (DeeObject *)&libposix_S_ISCHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISBLK", (DeeObject *)&libposix_S_ISBLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+	{ "S_ISDEV", (DeeObject *)&libposix_S_ISDEV, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISREG", (DeeObject *)&libposix_S_ISREG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISFIFO", (DeeObject *)&libposix_S_ISFIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
+
+	/* stat & frields */
+	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },)
+	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },)
+	D({ "fstat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },) /* Alias */
+	D({ "fstatat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },) /* Alias */
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
@@ -1014,8 +1354,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(stat, "(path:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(lstat, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(getcwd, "->?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(gethostname, "->?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(chdir, "(path:?Dstring)\n")
@@ -1031,8 +1369,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(link, "(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(symlink, "(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")
 	DEFINE_LIBFS_ALIAS_S(readlink, "(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
-	DEFINE_LIBFS_ALIAS_S_ALT("fstat", stat, "(fp:?DFile)\n(fd:?Dint)\n")
-	DEFINE_LIBFS_ALIAS_S_ALT("fstatat", stat, "(dfd:?Dint,path:?Dstring,atflags=!0)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchdir", chdir, "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
@@ -1087,7 +1423,11 @@ PRIVATE struct dex_symbol symbols[] = {
 PUBLIC struct dex DEX = {
 	/* .d_symbols      = */ symbols,
 	/* .d_init         = */ NULL,
+#ifdef HAVE_posix_dex_fini
+	/* .d_fini         = */ &posix_dex_fini,
+#else /* HAVE_posix_dex_fini */
 	/* .d_fini         = */ NULL,
+#endif /* !HAVE_posix_dex_fini */
 	/* .d_import_names = */ { import_table }
 };
 

@@ -69,32 +69,16 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 		DeeSystem_IF_E2(errno_value, EROFS, ETXTBSY,              { tp = &DeeError_ReadOnlyFile; goto got_tp; });
 		DeeSystem_IF_E1(errno_value, EFBIG,                       { tp = &DeeError_IntegerOverflow; goto got_tp; });
 		DeeSystem_IF_E1(errno_value, EINTR,                       { tp = &DeeError_Interrupt; goto got_tp; });
-		{
-			char const *fs_error_name = NULL;
-			/* Special handling for error types that are implemented by the `fs' module. */
-			DeeSystem_IF_E1(errno_value, EBUSY,     { fs_error_name = "BusyFile"; goto got_fs_error_name; });
-			DeeSystem_IF_E1(errno_value, ENOTDIR,   { fs_error_name = "NoDirectory"; goto got_fs_error_name; });
-			DeeSystem_IF_E1(errno_value, ENOTEMPTY, { fs_error_name = "NotEmpty"; goto got_fs_error_name; });
-			DeeSystem_IF_E1(errno_value, EXDEV,     { fs_error_name = "CrossDevice"; goto got_fs_error_name; });
-			DeeSystem_IF_E1(errno_value, ENOLINK,   { fs_error_name = "NoLink"; goto got_fs_error_name; });
-			__IF0 {
-				DREF DeeTypeObject *fs_error_type;
-got_fs_error_name:
-				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
-				if unlikely(!fs_error_type)
-					goto err;
-				result = DeeUnixSystem_VThrowErrorf(fs_error_type,
-				                                    errno_value,
-				                                    format,
-				                                    args);
-				Dee_Decref(fs_error_type);
-				goto done;
-			}
-		}
+		DeeSystem_IF_E1(errno_value, EBUSY,                       { tp = &DeeError_BusyFile; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOTDIR,                     { tp = &DeeError_NoDirectory; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOTEMPTY,                   { tp = &DeeError_DirectoryNotEmpty; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EXDEV,                       { tp = &DeeError_CrossDeviceLink; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOLINK,                     { tp = &DeeError_NoSymlink; goto got_tp; });
 		/* Fallback: Just use a SystemError */
 		tp = &DeeError_SystemError;
 		goto got_tp;
 	}
+
 	/* Check for error types derived from `errors.SystemError' */
 got_tp:
 	if (DeeType_Check(tp) &&

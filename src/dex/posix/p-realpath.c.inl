@@ -193,13 +193,13 @@ again_realpath:
 #ifdef posix_realpath_USE_WINDOWS
 		{
 			HANDLE hFile;
-			hFile = DeeNTSystem_CreateFile(filename,
-			                               FILE_READ_ATTRIBUTES,
-			                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-			                               NULL,
-			                               OPEN_EXISTING,
-			                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-			                               NULL);
+			hFile = DeeNTSystem_CreateFileNoATime(filename,
+			                                      FILE_READ_ATTRIBUTES,
+			                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+			                                      NULL,
+			                                      OPEN_EXISTING,
+			                                      FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+			                                      NULL);
 			if unlikely(hFile == NULL)
 				goto err;
 			if unlikely(hFile == INVALID_HANDLE_VALUE) {

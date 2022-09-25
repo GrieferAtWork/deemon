@@ -135,8 +135,8 @@ BUILTIN_REUSE(enumattr, &DeeEnumAttr_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 /* Functionality groups. */
 BUILTIN_DOC_REUSE(gc, &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY,
                   "A sequence-like singleton that can be used to either enumerate all "
-                  "tracked GC objects, check if an object is being tracked, or collect "
-                  "all GC objects no longer referenced anywhere else")
+                  /**/ "tracked GC objects, check if an object is being tracked, or collect "
+                  /**/ "all GC objects no longer referenced anywhere else")
 
 /* Alias because `import' has special behavior when
  * used as compile-time immediate attribute name.
@@ -186,11 +186,11 @@ BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "@throw AttributeError The attribute doesn't exist, and @allow_missing is ?f\n"
             "@return Indicative of attribute @attr of @ob currently being bound\n"
             "If the attribute doesn't exist, return ?f, or throw an :AttributeError, "
-            "depending on the given @allow_missing\n"
+            /**/ "depending on the given @allow_missing\n"
             "${"
-            "import boundattr from deemon;\n"
-            "print boundattr(foo, \"bar\", true);\n"
-            "print foo.bar is bound; /* Functionally equivalent */"
+            /**/ "import boundattr from deemon;\n"
+            /**/ "print boundattr(foo, \"bar\", true);\n"
+            /**/ "print foo.bar is bound; /* Functionally equivalent */"
             "}")
 
 /* Check if a given object item is bound.
@@ -202,11 +202,12 @@ BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "@throw KeyError The given @key doesn't exist, and @allow_missing is ?f\n"
             "@return Indicative of item @index or @key of @ob currently being bound\n"
             "If the item doesn't exist, return ?f, or throw an :IndexError or :KeyError, "
-            "depending on the given @allow_missing\n"
+            /**/ "depending on the given @allow_missing\n"
             "${"
-            "import bounditem from deemon;\n"
-            "print bounditem(foo, 42, true);\n"
-            "print foo[42] is bound; /* Functionally equivalent */}")
+            /**/ "import bounditem from deemon;\n"
+            /**/ "print bounditem(foo, 42, true);\n"
+            /**/ "print foo[42] is bound; /* Functionally equivalent */"
+            "}")
 
 /* Compare 2 objects, returning one of -1, 0 or 1.
  * >> compare(lhs: Object, rhs: Object): int; */
@@ -217,8 +218,8 @@ BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "@throw ValueError The instances @lhs and @rhs cannot be compared\n"
             "@return One of ${-1}, $0, or $1, indicative of the relation between @lhs and @rhs\n"
             "${"
-            "import compare from deemon;\n"
-            "print compare(\"foo\", \"bar\"); /* 1 */"
+            /**/ "import compare from deemon;\n"
+            /**/ "print compare(\"foo\", \"bar\"); /* 1 */"
             "}")
 
 /* Load a module, given its name.
@@ -229,7 +230,7 @@ BUILTIN_DOC_REUSE(import, &builtin_import, MODSYM_FNORMAL,
                   "(module_name:?Dstring,base?:?DModule)->?DModule\n"
                   "@throw ValueError The given @module_name is invalid\n"
                   "@throw FileNotFound The named @module_name could not be found\n"
-                  "@return The :Module associated with the given @module_name")
+                  "@return The ?DModule associated with the given @module_name")
 
 
 /* TODO: Add more options to this function */
@@ -237,13 +238,13 @@ BUILTIN_DOC_REUSE(exec, &builtin_exec, MODSYM_FNORMAL,
                   "(expr:?X3?Dstring?DBytes?DFile,globals?:?S?T2?Dstring?O,base?:?DModule)->?O\n"
                   "Evaluate a user-code deemon expression and return the result\n"
                   "This type of evaluation is much more restrictive than evaluation of "
-                  "normal user-code, as rather than being parsed, optimized, assembled "
-                  "and linked into a full byte-code object, execution happens with the "
-                  "help of a separate JIT compiler\n"
+                  /**/ "normal user-code, as rather than being parsed, optimized, assembled "
+                  /**/ "and linked into a full byte-code object, execution happens with the "
+                  /**/ "help of a separate JIT compiler\n"
                   "Note however that this compiler will never support preprocessor features "
-                  "such as directives, macros or escaped line-feeds, as well as other "
-                  "language-level features such as goto-labels or true support for type "
-                  "annotations\n"
+                  /**/ "such as directives, macros or escaped line-feeds, as well as other "
+                  /**/ "language-level features such as goto-labels or true support for type "
+                  /**/ "annotations\n"
                   "The given @expr is either evaluated as an expression or statement, "
                   "i.e. both $\"10 + 20\" and $\"print 42;\" are accepted")
 

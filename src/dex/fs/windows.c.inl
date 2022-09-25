@@ -1467,9 +1467,7 @@ struct stat_object {
 
 
 /* Missing stat information errors. */
-PRIVATE ATTR_NOINLINE ATTR_COLD int
-DCALL
-err_no_info(char const *__restrict level) {
+PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_info(char const *__restrict level) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "The stat object does not contain any %s information",
 	                       level);

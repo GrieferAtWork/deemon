@@ -1841,32 +1841,17 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 			tp = &DeeError_UnsupportedAPI;
 		} else if (DeeNTSystem_IsInvalidArgument(dwError)) {
 			tp = &DeeError_ValueError;
+		} else if (DeeNTSystem_IsBusy(dwError)) {
+			tp = &DeeError_BusyFile;
+		} else if (DeeNTSystem_IsNotDir(dwError)) {
+			tp = &DeeError_NoDirectory;
+		} else if (DeeNTSystem_IsNotEmpty(dwError)) {
+			tp = &DeeError_DirectoryNotEmpty;
+		} else if (DeeNTSystem_IsXDev(dwError)) {
+			tp = &DeeError_CrossDeviceLink;
+		} else if (DeeNTSystem_IsNoLink(dwError)) {
+			tp = &DeeError_NoSymlink;
 		} else {
-			char const *fs_error_name = NULL;
-			/* Special handling for error types that are implemented by the `fs' module. */
-			if (DeeNTSystem_IsBusy(dwError)) {
-				fs_error_name = "BusyFile";
-			} else if (DeeNTSystem_IsNotDir(dwError)) {
-				fs_error_name = "NoDirectory";
-			} else if (DeeNTSystem_IsNotEmpty(dwError)) {
-				fs_error_name = "NotEmpty";
-			} else if (DeeNTSystem_IsXDev(dwError)) {
-				fs_error_name = "CrossDevice";
-			} else if (DeeNTSystem_IsNoLink(dwError)) {
-				fs_error_name = "NoLink";
-			}
-			if (fs_error_name) {
-				DREF DeeTypeObject *fs_error_type;
-				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
-				if unlikely(!fs_error_type)
-					goto err;
-				result = DeeNTSystem_VThrowErrorf(fs_error_type,
-				                                  dwError,
-				                                  format,
-				                                  args);
-				Dee_Decref(fs_error_type);
-				goto done;
-			}
 			/* Fallback: Just use a SystemError */
 			tp = &DeeError_SystemError;
 		}
@@ -1877,15 +1862,12 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 		DREF DeeSystemErrorObject *error;
 		DREF DeeStringObject *message;
 		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);
-		if unlikely(!error) {
-			result = -1;
-			goto done;
-		}
+		if unlikely(!error)
+			goto err;
 		message = (DREF DeeStringObject *)DeeString_VNewf(format, args);
 		if unlikely(!message) {
 			DeeObject_FREE(error);
-			result = -1;
-			goto done;
+			goto err;
 		}
 		error->e_message    = message; /* Inherit reference */
 		error->e_inner      = NULL;
@@ -1898,11 +1880,9 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 		/* Unlikely to happen: Just throw a regular, old error. */
 		result = DeeError_VThrowf(tp, format, args);
 	}
-done:
 	return result;
 err:
-	result = -1;
-	goto done;
+	return -1;
 }
 
 PUBLIC ATTR_COLD NONNULL((2)) int
@@ -2045,6 +2025,49 @@ again_createfile:
 err:
 	return NULL;
 }
+
+/* Same as `DeeNTSystem_CreateFile()', but try not to modify the file's last-accessed timestamp */
+PUBLIC WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
+DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
+                              /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
+                              /*DWORD*/ DeeNT_DWORD dwShareMode,
+                              /*LPSECURITY_ATTRIBUTES*/ void *lpSecurityAttributes,
+                              /*DWORD*/ DeeNT_DWORD dwCreationDisposition,
+                              /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
+                              /*HANDLE*/ void *hTemplateFile) {
+	HANDLE hResult;
+	/* Need to add `FILE_WRITE_ATTRIBUTES' so we're allowed to call `SetFileTime()' */
+	hResult = DeeNTSystem_CreateFile(lpFileName,
+	                                 dwDesiredAccess | FILE_WRITE_ATTRIBUTES,
+	                                 dwShareMode,
+	                                 lpSecurityAttributes,
+	                                 dwCreationDisposition,
+	                                 dwFlagsAndAttributes,
+	                                 hTemplateFile);
+	if (hResult == INVALID_HANDLE_VALUE && !(dwDesiredAccess & FILE_WRITE_ATTRIBUTES)) {
+		hResult = DeeNTSystem_CreateFile(lpFileName,
+		                                 dwDesiredAccess,
+		                                 dwShareMode,
+		                                 lpSecurityAttributes,
+		                                 dwCreationDisposition,
+		                                 dwFlagsAndAttributes,
+		                                 hTemplateFile);
+	} else if (hResult != NULL) {
+		BOOL bResult;
+		FILETIME ftLastAccessed;
+		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
+		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+		DBG_ALIGNMENT_DISABLE();
+		bResult = SetFileTime((HANDLE)hResult, NULL, &ftLastAccessed, NULL);
+		DBG_ALIGNMENT_ENABLE();
+		if (!bResult) {
+			DWORD dwError = GetLastError();
+			Dee_DPRINTF("DeeNTSystem_CreateFileNoATime: SetFileTime: GetLastError: %lu\n", dwError);
+		}
+	}
+	return hResult;
+}
+
 
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL

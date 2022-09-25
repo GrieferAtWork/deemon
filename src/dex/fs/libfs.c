@@ -1047,38 +1047,6 @@ PRIVATE DEFINE_CMETHOD(libfs_S_ISSOCK, &f_libfs_S_ISSOCK);
 		/* .tp_class_members = */ members                      \
 	}
 
-INTERN DeeTypeObject DeeError_NoDirectory =
-INIT_FS_ERROR("NoDirectory",
-              "An error derived from :FileNotFound that is thrown when a "
-              "directory was expected, but something different was found",
-              &DeeError_FileNotFound, NULL);
-INTERN DeeTypeObject DeeError_IsDirectory =
-INIT_FS_ERROR("IsDirectory",
-              "An error derived from :FileExists that is thrown when something "
-              "other than a directory was expected, but one was found none-the-less",
-              &DeeError_FileExists, NULL);
-INTERN DeeTypeObject DeeError_CrossDevice =
-INIT_FS_ERROR("CrossDevice",
-              "An error derived from :FSError that is thrown when attempting "
-              "to move a file between different devices or partitions",
-              &DeeError_FSError, NULL);
-INTERN DeeTypeObject DeeError_NotEmpty =
-INIT_FS_ERROR("NotEmpty",
-              "An error derived from :FSError that is thrown when "
-              "attempting to remove a directory that isn't empty",
-              &DeeError_FSError, NULL);
-INTERN DeeTypeObject DeeError_BusyFile =
-INIT_FS_ERROR("BusyFile",
-              "An error derived from :FSError that is thrown when "
-              "attempting to remove a file or directory that is being "
-              "used by another process",
-              &DeeError_FSError, NULL);
-INTERN DeeTypeObject DeeError_NoLink =
-INIT_FS_ERROR("NoLink",
-              "An error derived from :FileNotFound that is thrown when attempting "
-              "to invoke :readlink on a file that isn't a symbolic link",
-              &DeeError_FileNotFound, NULL);
-
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },
@@ -1087,10 +1055,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Group", (DeeObject *)&DeeGroup_Type, MODSYM_FNORMAL },
 	{ "NoDirectory", (DeeObject *)&DeeError_NoDirectory, MODSYM_FNORMAL },
 	{ "IsDirectory", (DeeObject *)&DeeError_IsDirectory, MODSYM_FNORMAL },
-	{ "CrossDevice", (DeeObject *)&DeeError_CrossDevice, MODSYM_FNORMAL },
-	{ "NotEmpty", (DeeObject *)&DeeError_NotEmpty, MODSYM_FNORMAL },
+	{ "CrossDevice", (DeeObject *)&DeeError_CrossDeviceLink, MODSYM_FNORMAL },
+	{ "NotEmpty", (DeeObject *)&DeeError_DirectoryNotEmpty, MODSYM_FNORMAL },
 	{ "BusyFile", (DeeObject *)&DeeError_BusyFile, MODSYM_FNORMAL },
-	{ "NoLink", (DeeObject *)&DeeError_NoLink, MODSYM_FNORMAL },
+	{ "NoLink", (DeeObject *)&DeeError_NoSymlink, MODSYM_FNORMAL },
 	{ "dir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },
 	{ "query", (DeeObject *)&DeeQuery_Type, MODSYM_FNORMAL },
 	{ "environ", &DeeEnv_Singleton, MODSYM_FNORMAL,

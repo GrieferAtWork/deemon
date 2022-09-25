@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_POSIX_DIR_C
-#define GUARD_DEX_POSIX_DIR_C 1
+#ifndef GUARD_DEX_POSIX_P_OPENDIR_C_INL
+#define GUARD_DEX_POSIX_P_OPENDIR_C_INL 1
 #define CONFIG_BUILDING_LIBPOSIX 1
 #define DEE_SOURCE 1
 
@@ -31,7 +31,18 @@
 
 #include <hybrid/atomic.h>
 
-#include "../fs/libfs.h" /* For `STAT_*' constants */
+/* Figure out how we want to implement the DIR-system */
+#undef posix_opendir_USE_FindFirstFileExW
+#undef posix_opendir_USE_opendir
+#undef posix_opendir_USE_STUB
+#if defined(CONFIG_HOST_WINDOWS)
+#define posix_opendir_USE_FindFirstFileExW
+/* TODO: Add another option to implement using `_findfirst()' */
+#elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
+#define posix_opendir_USE_opendir
+#else
+#define posix_opendir_USE_STUB
+#endif
 
 #if (!defined(CONFIG_HAVE_struct_dirent_d_ino) && defined(CONFIG_HAVE_struct_dirent_d_fileno))
 #define CONFIG_HAVE_struct_dirent_d_ino
@@ -236,15 +247,15 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !... */
 
 /* Define the DT_* constants for export. */
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_UNKNOWN, USED_DT_UNKNOWN);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_FIFO, USED_DT_FIFO);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_CHR, USED_DT_CHR);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_DIR, USED_DT_DIR);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_BLK, USED_DT_BLK);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_REG, USED_DT_REG);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_LNK, USED_DT_LNK);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_SOCK, USED_DT_SOCK);
-INTERN DEFINE_D_TYPE_CONSTANT(posix_DT_WHT, USED_DT_WHT);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_UNKNOWN, USED_DT_UNKNOWN);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_FIFO, USED_DT_FIFO);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_CHR, USED_DT_CHR);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_DIR, USED_DT_DIR);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_BLK, USED_DT_BLK);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_REG, USED_DT_REG);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_LNK, USED_DT_LNK);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_SOCK, USED_DT_SOCK);
+PRIVATE DEFINE_D_TYPE_CONSTANT(posix_DT_WHT, USED_DT_WHT);
 
 #ifdef posix_opendir_USE_GENERIC_DT_CONSTANTS
 #define USED_IFTODT(mode)    (((mode)&0170000) >> 12)
@@ -843,10 +854,10 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 		fullname = diriter_get_d_fullname(self);
 		if unlikely(!fullname)
 			goto err;
-		hFile = DeeNTSystem_CreateFile((DeeObject *)fullname, GENERIC_READ,
-		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-		                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-		                               NULL);
+		hFile = DeeNTSystem_CreateFileNoATime((DeeObject *)fullname, GENERIC_READ,
+		                                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+		                                      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                                      NULL);
 		if unlikely(hFile == NULL)
 			goto err_fullname;
 		if unlikely(hFile == INVALID_HANDLE_VALUE) {
@@ -1292,7 +1303,7 @@ PRIVATE struct type_member tpconst dir_class_members[] = {
 
 INTERN DeeTypeObject DeeDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_Dir",
+	/* .tp_name     = */ "DIR",
 	/* .tp_doc      = */ DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -1339,4 +1350,4 @@ INTERN DeeTypeObject DeeDir_Type = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_POSIX_DIR_C */
+#endif /* !GUARD_DEX_POSIX_P_OPENDIR_C_INL */
