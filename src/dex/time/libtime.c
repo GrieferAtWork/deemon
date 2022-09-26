@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_TIME_LIBTIME_C
 #define GUARD_DEX_TIME_LIBTIME_C 1
-#define CONFIG_BUILDING_LIBTIME 1
+#define CONFIG_BUILDING_LIBTIME
 #define DEE_SOURCE
 
 #include "libtime.h"

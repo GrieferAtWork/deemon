@@ -95,7 +95,7 @@ typedef DeeSystemFileObject SystemFile;
 #ifdef CONFIG_HOST_WINDOWS
 
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
-#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
@@ -334,7 +334,7 @@ err:
  *      we are pretty safe to assume that they are ~real~
  *      external symbols that can be linked against. */
 #if !defined(stdin) && !defined(stdout) && !defined(stderr)
-#define CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD 1
+#define CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
 #endif
 #endif /* !CONFIG_CANNOT_STATIC_INITIALIZE_SYSF_STD */
 #endif /* !CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
@@ -433,7 +433,7 @@ DeeFile_DefaultStd(unsigned int id) {
 
 #ifndef CONFIG_HAVE_fread
 #ifdef CONFIG_HAVE_fgetc
-#define CONFIG_HAVE_fread 1
+#define CONFIG_HAVE_fread
 #undef fread
 #define fread dee_fread
 PRIVATE size_t DCALL
@@ -453,7 +453,7 @@ dee_fread(void *buf, size_t elemsize, size_t elemcount, FILE *stream) {
 
 #ifndef CONFIG_HAVE_fwrite
 #ifdef CONFIG_HAVE_fputc
-#define CONFIG_HAVE_fwrite 1
+#define CONFIG_HAVE_fwrite
 #undef fwrite
 #define fwrite dee_fwrite
 PRIVATE size_t DCALL
@@ -745,7 +745,7 @@ sysfile_putc(SystemFile *__restrict self, int ch,
 INTERN DeeSysFD DCALL
 DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #if 1
-#define CONFIG_DONT_EXPOSE_FILENO 1
+#define CONFIG_DONT_EXPOSE_FILENO
 	/* Due to the unpredictable race condition and the fact that
 	 * it's up to the kernel to deal with closed file descriptors,
 	 * we could never safely expose the underlying FILE * to the

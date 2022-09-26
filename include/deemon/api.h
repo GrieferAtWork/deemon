@@ -107,7 +107,7 @@
        (__has_include(<crtdbg.h>) ||     \
         (defined(__NO_has_include) &&    \
          (defined(_MSC_VER) || defined(__KOS_SYSTEM_HEADERS__)))))
-#define CONFIG_HAVE_CRTDBG_H 1
+#define CONFIG_HAVE_CRTDBG_H
 #endif /* ... */
 
 #if defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG)
@@ -204,7 +204,7 @@
 
 DECL_BEGIN
 
-/* #define CONFIG_NO_THREADS 1 */
+/* #define CONFIG_NO_THREADS */
 
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
  *          happen to an object over the course of its lifetime.
@@ -233,18 +233,18 @@ DECL_BEGIN
 #if (!defined(CONFIG_TRACE_REFCHANGES) && \
      !defined(CONFIG_NO_TRACE_REFCHANGES))
 #if !defined(NDEBUG) && 0
-#define CONFIG_TRACE_REFCHANGES 1
+#define CONFIG_TRACE_REFCHANGES
 #else /* !NDEBUG */
-#define CONFIG_NO_TRACE_REFCHANGES 1 
+#define CONFIG_NO_TRACE_REFCHANGES 
 #endif /* NDEBUG */
 #endif /* !CONFIG_TRACE_REFCHANGES && !CONFIG_NO_TRACE_REFCHANGES */
 
 #if (!defined(CONFIG_NO_BADREFCNT_CHECKS) && \
      !defined(CONFIG_BADREFCNT_CHECKS))
 #ifdef NDEBUG
-#define CONFIG_NO_BADREFCNT_CHECKS 1
+#define CONFIG_NO_BADREFCNT_CHECKS
 #else /* NDEBUG */
-#define CONFIG_BADREFCNT_CHECKS 1
+#define CONFIG_BADREFCNT_CHECKS
 #endif /* !NDEBUG */
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_BADREFCNT_CHECKS */
 
@@ -255,25 +255,25 @@ DECL_BEGIN
  * -> So just disable them! */
 #undef CONFIG_HAVE_EXEC_ASM
 #else /* CONFIG_TRACE_REFCHANGES */
-#define CONFIG_NO_TRACE_REFCHANGES 1
+#define CONFIG_NO_TRACE_REFCHANGES
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 
 #if (!defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && \
      !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
 #ifndef __OPTIMIZE_SIZE__
-#define CONFIG_CALLTUPLE_OPTIMIZATIONS 1
+#define CONFIG_CALLTUPLE_OPTIMIZATIONS
 #else /* !__OPTIMIZE_SIZE__ */
-#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS 1
+#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
 
 #if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
      !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
 #ifndef __OPTIMIZE_SIZE__
-#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
+#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #else /* !__OPTIMIZE_SIZE__ */
-#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
+#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
@@ -293,13 +293,13 @@ DECL_BEGIN
 #if (CONFIG_DEFAULT_MESSAGE_FORMAT_GCC + 0) == 0
 #undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
 #ifdef _MSC_VER
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 #else /* _MSC_VER */
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
 #endif /* !_MSC_VER */
 #endif /* !CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
 #else /* CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
 #endif /* !CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
 #else /* !CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 #undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
@@ -307,33 +307,33 @@ DECL_BEGIN
 #elif defined(CONFIG_DEFAULT_MESSAGE_FORMAT_GCC)
 #if (CONFIG_DEFAULT_MESSAGE_FORMAT_GCC + 0) == 0
 #undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 #endif
 #elif defined(_MSC_VER)
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 #else /* ... */
-#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
 #endif /* !... */
 
 
 
 #ifdef CONFIG_FORCE_HOST_WINDOWS
-#define CONFIG_HOST_WINDOWS 1
+#define CONFIG_HOST_WINDOWS
 #elif defined(CONFIG_FORCE_HOST_UNIX)
-#define CONFIG_HOST_UNIX 1
+#define CONFIG_HOST_UNIX
 #else /* CONFIG_FORCE_HOST_... */
 #if (defined(__WINDOWS__) || defined(_WIN16) || defined(WIN16) ||    \
      defined(_WIN32) || defined(WIN32) || defined(_WIN64) ||         \
      defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
      defined(_WIN32_WCE) || defined(WIN32_WCE))
-#define CONFIG_HOST_WINDOWS 1
+#define CONFIG_HOST_WINDOWS
 #endif /* Windows... */
 #if (defined(__CYGWIN__) || defined(__CYGWIN32__) ||                    \
      defined(__unix__) || defined(__unix) || defined(unix) ||           \
      defined(__linux__) || defined(__linux) || defined(linux) ||        \
      defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
      defined(__solaris__) || defined(__DragonFly__))
-#define CONFIG_HOST_UNIX 1
+#define CONFIG_HOST_UNIX
 #endif /* Unix... */
 #endif /* !CONFIG_FORCE_HOST_... */
 
@@ -341,7 +341,7 @@ DECL_BEGIN
 #if ((!defined(__i386__) && !defined(__x86_64__)) || \
      (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
 #undef CONFIG_NO_OBJECT_SLABS
-#define CONFIG_NO_OBJECT_SLABS 1 /* Unrecognized environment (disable slabs) */
+#define CONFIG_NO_OBJECT_SLABS /* Unrecognized environment (disable slabs) */
 #endif /* ... */
 
 
@@ -393,7 +393,7 @@ DECL_BEGIN
  * like `DeeObject_CallPack()' by not needing to pack everything together
  * into a temporary vector that would have to be allocated on the heap.
  */
-#define CONFIG_VA_LIST_IS_STACK_POINTER 1
+#define CONFIG_VA_LIST_IS_STACK_POINTER
 #endif
 
 
@@ -435,7 +435,7 @@ extern void (__debugbreak)(void);
  * addressed: `foo: printf("foo = %p", &&foo);'
  * ... as well as such addresses to be used
  * by `goto': `void *ip = &&foo; goto *ip;' */
-#define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS 1
+#define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
 #endif /* __GNUC__ */
 
 /* Calling convention used for the deemon API */

@@ -68,7 +68,7 @@ DECL_BEGIN
 typedef DeeSystemFileObject SystemFile;
 
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
-#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */

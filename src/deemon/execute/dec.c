@@ -73,14 +73,14 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifdef DEE_SYSTEM_NOCASE_FS
 #ifndef CONFIG_HAVE_memcasecmp
-#define CONFIG_HAVE_memcasecmp 1
+#define CONFIG_HAVE_memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */

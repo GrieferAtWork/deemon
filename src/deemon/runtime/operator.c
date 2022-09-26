@@ -288,7 +288,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
  *          inheriting their constructor from non-GC sub-classes.
  */
 #undef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
-#define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS 1
+#define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL

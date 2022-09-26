@@ -34,14 +34,14 @@
 #undef CONFIG_HAVE_STRING_H
 #elif !defined(CONFIG_HAVE_STRING_H) && \
       (defined(__NO_has_include) || __has_include(<string.h>))
-#define CONFIG_HAVE_STRING_H 1
+#define CONFIG_HAVE_STRING_H
 #endif
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
 #elif !defined(CONFIG_HAVE_STRING_H) && \
       (defined(__NO_has_include) || __has_include(<string.h>))
-#define CONFIG_HAVE_STRING_H 1
+#define CONFIG_HAVE_STRING_H
 #endif
 
 /* Figure out how to get alloca() (if it is even available) */
@@ -51,7 +51,7 @@
       (__has_include(<alloca.h>) || (defined(__NO_has_include) && ((defined(__CYGWIN__) || \
        defined(__CYGWIN32__)) || (defined(__linux__) || defined(__linux) || defined(linux)) || \
        defined(__KOS__))))
-#define CONFIG_HAVE_ALLOCA_H 1
+#define CONFIG_HAVE_ALLOCA_H
 #endif
 
 #ifdef CONFIG_NO_MALLOC_H
@@ -60,7 +60,7 @@
       (__has_include(<malloc.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__CYGWIN__) || defined(__CYGWIN32__)) || (defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_MALLOC_H 1
+#define CONFIG_HAVE_MALLOC_H
 #endif
 
 #ifdef CONFIG_HAVE_STRING_H
@@ -82,41 +82,41 @@
 #ifdef CONFIG_NO_memset
 #undef CONFIG_HAVE_memset
 #else
-#define CONFIG_HAVE_memset 1
+#define CONFIG_HAVE_memset
 #endif
 
 #ifdef CONFIG_NO_bzero
 #undef CONFIG_HAVE_bzero
 #elif !defined(CONFIG_HAVE_bzero) && \
       (defined(bzero) || defined(__bzero_defined) || defined(CONFIG_HAVE_STRINGS_H))
-#define CONFIG_HAVE_bzero 1
+#define CONFIG_HAVE_bzero
 #endif
 
 #ifdef CONFIG_NO_alloca
 #undef CONFIG_HAVE_alloca
 #elif !defined(CONFIG_HAVE_alloca) && \
       (defined(alloca) || defined(__alloca_defined) || defined(CONFIG_HAVE_ALLOCA_H))
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #endif
 
 #ifdef CONFIG_NO__alloca
 #undef CONFIG_HAVE__alloca
 #elif !defined(CONFIG_HAVE__alloca) && \
       (defined(_alloca) || defined(___alloca_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__alloca 1
+#define CONFIG_HAVE__alloca
 #endif
 
 /* Try to substitute alloca() with alternatives */
 #ifndef CONFIG_HAVE_alloca
 #ifdef CONFIG_HAVE__alloca
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #define alloca _alloca
 #elif __has_builtin(__builtin_alloca)
 #define alloca __builtin_alloca
 #else /* ... */
 #include <hybrid/__alloca.h>
 #ifdef __hybrid_alloca
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #define alloca __hybrid_alloca
 #endif /* __hybrid_alloca */
 #endif /* !... */
@@ -708,7 +708,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #if !defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) || \
      defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
      defined(CONFIG_NO_OBJECT_SLABS)
-#define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO 1
+#define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
 #ifdef GUARD_DEEMON_OBJECT_H
 #define DEE_TYPE_FIXED_ALLOCATOR_S(T)    DEE_TYPE_AUTO_ALLOCATOR(T)
 #define DEE_TYPE_FIXED_ALLOCATOR_GC_S(T) DEE_TYPE_AUTO_ALLOCATOR(T)
@@ -776,7 +776,7 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 #define DEE_AMALLOC_MAX      512
 
 #ifndef CONFIG_HAVE_memset
-#define CONFIG_HAVE_memset 1
+#define CONFIG_HAVE_memset
 DECL_BEGIN
 #undef memset
 #define memset dee_memset
@@ -791,7 +791,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memset */
 
 #ifndef CONFIG_HAVE_bzero
-#define CONFIG_HAVE_bzero 1
+#define CONFIG_HAVE_bzero
 #undef bzero
 #define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
 #endif /* !CONFIG_HAVE_bzero */

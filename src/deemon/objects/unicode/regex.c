@@ -30,7 +30,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */

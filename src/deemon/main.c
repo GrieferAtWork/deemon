@@ -59,14 +59,14 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp 1
+#define CONFIG_HAVE_strcmp
 #undef strcmp
 #define strcmp dee_strcmp
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 #ifndef CONFIG_HAVE_atoi
-#define CONFIG_HAVE_atoi 1
+#define CONFIG_HAVE_atoi
 #undef atoi
 #define atoi dee_atoi
 PRIVATE int DCALL dee_atoi(char const *s) {
@@ -1394,7 +1394,7 @@ done:
 
 #undef CONFIG_ALWAYS_LOG_LEAKS
 #if !defined(NDEBUG) && 0
-#define CONFIG_ALWAYS_LOG_LEAKS 1
+#define CONFIG_ALWAYS_LOG_LEAKS
 #endif
 
 #ifndef NDEBUG

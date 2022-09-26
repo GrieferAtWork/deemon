@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_THREADING_TLS_C
 #define GUARD_DEX_THREADING_TLS_C 1
-#define CONFIG_BUILDING_LIBTHREADING 1
+#define CONFIG_BUILDING_LIBTHREADING
 #define DEE_SOURCE
 
 #include <deemon/alloc.h>

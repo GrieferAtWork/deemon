@@ -119,7 +119,7 @@ DeeType_IsInherited(DeeTypeObject const *test_type,
  * weakref usage, so we don't actually use it!. */
 #undef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
 #if 0
-#define CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS 1
+#define CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
 #endif
 
 #ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
@@ -1124,7 +1124,7 @@ PUBLIC NONNULL((1)) void
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 {
 #undef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
-	//#define CONFIG_OBJECT_DESTROY_CHECK_MEMORY 1
+	//#define CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 	DeeTypeObject *orig_type, *type;
 #ifndef CONFIG_TRACE_REFCHANGES
 again:

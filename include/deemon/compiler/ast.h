@@ -39,7 +39,7 @@ struct ast;
 
 
 #undef CONFIG_AST_IS_STRUCT
-//#define CONFIG_AST_IS_STRUCT 1 /* Can't be done. - Otherwise, the GC visiting ASTs wouldn't work! */
+//#define CONFIG_AST_IS_STRUCT /* Can't be done. - Otherwise, the GC visiting ASTs wouldn't work! */
 
 
 struct catch_expr {
@@ -678,7 +678,7 @@ INTDEF NONNULL((1)) void FCALL loc_here(struct ast_loc *__restrict info);
  *       Besides that, debug information is initialized to NULL. */
 
 #if defined(NDEBUG) || defined(__INTELLISENSE__)
-#define CONFIG_NO_AST_DEBUG 1
+#define CONFIG_NO_AST_DEBUG
 #define DEFINE_AST_GENERATOR(attr, name, args) \
 	INTDEF WUNUSED attr DREF struct ast *DCALL name args
 #else /* NDEBUG || __INTELLISENSE__ */

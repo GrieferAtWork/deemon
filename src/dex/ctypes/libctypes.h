@@ -41,7 +41,7 @@ DECL_BEGIN
 
 #undef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef _MSC_VER
-#define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
+#define CONFIG_HAVE_CTYPES_FAULTPROTECT
 #define CTYPES_FAULTPROTECT(expr, error)                                                 \
 	do {                                                                                 \
 		__try {                                                                          \
@@ -51,7 +51,7 @@ DECL_BEGIN
 		}                                                                                \
 	}	__WHILE0
 
-#define CONFIG_HAVE_CTYPES_SEH_GUARD 1
+#define CONFIG_HAVE_CTYPES_SEH_GUARD
 struct _EXCEPTION_POINTERS;
 void *__cdecl _exception_info(void);
 INTDEF int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info);
@@ -67,8 +67,8 @@ DECL_BEGIN
 #ifdef E_SEGFAULT
 INTDEF void ctypes_kos_guard(void);
 
-#define CONFIG_HAVE_CTYPES_KOS_GUARD 1
-#define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
+#define CONFIG_HAVE_CTYPES_KOS_GUARD
+#define CONFIG_HAVE_CTYPES_FAULTPROTECT
 #define CTYPES_FAULTPROTECT(expr, error) \
 	do {                                 \
 		TRY {                            \
@@ -504,15 +504,15 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject 
 #endif
 
 #ifdef __CHAR_UNSIGNED__
-#define CONFIG_CTYPES_CHAR_UNSIGNED   1
+#define CONFIG_CTYPES_CHAR_UNSIGNED
 #endif /* __CHAR_UNSIGNED__ */
 
 #ifdef __WCHAR_UNSIGNED__
-#define CONFIG_CTYPES_WCHAR_UNSIGNED  1
+#define CONFIG_CTYPES_WCHAR_UNSIGNED
 #endif /* __WCHAR_UNSIGNED__ */
 
-#define CONFIG_CTYPES_CHAR16_UNSIGNED 1
-#define CONFIG_CTYPES_CHAR32_UNSIGNED 1
+#define CONFIG_CTYPES_CHAR16_UNSIGNED
+#define CONFIG_CTYPES_CHAR32_UNSIGNED
 
 #define CONFIG_CTYPES_ALIGNOF_POINTER __SIZEOF_POINTER__
 #define CONFIG_CTYPES_ALIGNOF_LVALUE  CONFIG_CTYPES_ALIGNOF_POINTER
@@ -605,7 +605,7 @@ INTDEF DeeSTypeObject  DeeCLDouble_Type;
 #define DeeCSChar_Type  DeeCInt64_Type
 #define DeeCUChar_Type  DeeCUInt64_Type
 #else
-#define CONFIG_SUCHAR_NEEDS_OWN_TYPE 1
+#define CONFIG_SUCHAR_NEEDS_OWN_TYPE
 INTDEF DeeSTypeObject   DeeCSChar_Type;
 INTDEF DeeSTypeObject   DeeCUChar_Type;
 #endif
@@ -627,7 +627,7 @@ INTDEF DeeSTypeObject   DeeCUChar_Type;
 #define DeeCShort_Type  DeeCInt64_Type
 #define DeeCUShort_Type DeeCUInt64_Type
 #else
-#define CONFIG_SHORT_NEEDS_OWN_TYPE 1
+#define CONFIG_SHORT_NEEDS_OWN_TYPE
 INTDEF DeeSTypeObject   DeeCShort_Type;
 INTDEF DeeSTypeObject   DeeCUShort_Type;
 #endif
@@ -649,7 +649,7 @@ INTDEF DeeSTypeObject   DeeCUShort_Type;
 #define DeeCInt_Type    DeeCInt64_Type
 #define DeeCUInt_Type   DeeCUInt64_Type
 #else
-#define CONFIG_INT_NEEDS_OWN_TYPE 1
+#define CONFIG_INT_NEEDS_OWN_TYPE
 INTDEF DeeSTypeObject   DeeCInt_Type;
 INTDEF DeeSTypeObject   DeeCUInt_Type;
 #endif
@@ -671,7 +671,7 @@ INTDEF DeeSTypeObject   DeeCUInt_Type;
 #define DeeCLong_Type   DeeCInt64_Type
 #define DeeCULong_Type  DeeCUInt64_Type
 #else
-#define CONFIG_LONG_NEEDS_OWN_TYPE 1
+#define CONFIG_LONG_NEEDS_OWN_TYPE
 INTDEF DeeSTypeObject   DeeCLong_Type;
 INTDEF DeeSTypeObject   DeeCULong_Type;
 #endif
@@ -693,7 +693,7 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 #define DeeCLLong_Type  DeeCInt64_Type
 #define DeeCULLong_Type DeeCUInt64_Type
 #else
-#define CONFIG_LLONG_NEEDS_OWN_TYPE 1
+#define CONFIG_LLONG_NEEDS_OWN_TYPE
 INTDEF DeeSTypeObject   DeeCLLong_Type;
 INTDEF DeeSTypeObject   DeeCULLong_Type;
 #endif
@@ -702,7 +702,7 @@ INTDEF DeeSTypeObject   DeeCULLong_Type;
      (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
       CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT))
 /* Make `long' its own distinct type. */
-#define CONFIG_LONG_NEEDS_OWN_TYPE 1
+#define CONFIG_LONG_NEEDS_OWN_TYPE
 #undef DeeCLong_Type
 #undef DeeCULong_Type
 INTDEF DeeSTypeObject   DeeCLong_Type;

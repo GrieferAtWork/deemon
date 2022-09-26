@@ -625,13 +625,13 @@ compare_string_bytes(String *__restrict lhs,
 }
 
 #ifndef CONFIG_HAVE_memcmpw
-#define CONFIG_HAVE_memcmpw 1
+#define CONFIG_HAVE_memcmpw
 #define memcmpw dee_memcmpw
 DeeSystem_DEFINE_memcmpw(dee_memcmpw)
 #endif /* !CONFIG_HAVE_memcmpw */
 
 #ifndef CONFIG_HAVE_memcmpl
-#define CONFIG_HAVE_memcmpl 1
+#define CONFIG_HAVE_memcmpl
 #define memcmpl dee_memcmpl
 DeeSystem_DEFINE_memcmpl(dee_memcmpl)
 #endif /* !CONFIG_HAVE_memcmpl */

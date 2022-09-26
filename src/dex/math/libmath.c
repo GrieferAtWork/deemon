@@ -142,12 +142,12 @@ LOCAL int DCALL math_checkerr_i(int x) {
 
 /* Substitue a couple of simple functions. */
 #ifndef CONFIG_HAVE_fabs
-#define CONFIG_HAVE_fabs 1
+#define CONFIG_HAVE_fabs
 #define fabs(x) ((x) < 0.0 ? -(x) : (x))
 #endif /* !CONFIG_HAVE_fabs */
 
 #ifndef CONFIG_HAVE_signbit
-#define CONFIG_HAVE_signbit 1
+#define CONFIG_HAVE_signbit
 #define signbit(x) (0.0 == -0.0 ? (x) < 0.0 : (x) <= -0.0)
 #endif /* !CONFIG_HAVE_signbit */
 

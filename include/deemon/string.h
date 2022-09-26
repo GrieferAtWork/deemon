@@ -40,7 +40,7 @@
 #undef CONFIG_HAVE_STRING_H
 #elif !defined(CONFIG_HAVE_STRING_H) && \
       (defined(__NO_has_include) || __has_include(<string.h>))
-#define CONFIG_HAVE_STRING_H 1
+#define CONFIG_HAVE_STRING_H
 #endif
 
 #ifdef CONFIG_NO_STRINGS_H
@@ -49,7 +49,7 @@
       (__has_include(<strings.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_STRINGS_H 1
+#define CONFIG_HAVE_STRINGS_H
 #endif
 
 #ifdef CONFIG_HAVE_STRING_H
@@ -63,20 +63,20 @@
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
 #else
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 #endif
 
 #ifdef CONFIG_NO_memcmp
 #undef CONFIG_HAVE_memcmp
 #else
-#define CONFIG_HAVE_memcmp 1
+#define CONFIG_HAVE_memcmp
 #endif
 
 #ifdef CONFIG_NO_bcmp
 #undef CONFIG_HAVE_bcmp
 #elif !defined(CONFIG_HAVE_bcmp) && \
       (defined(bcmp) || defined(__bcmp_defined) || defined(CONFIG_HAVE_STRINGS_H))
-#define CONFIG_HAVE_bcmp 1
+#define CONFIG_HAVE_bcmp
 #endif
 
 #ifdef CONFIG_NO_UNICODE_H
@@ -84,7 +84,7 @@
 #elif !defined(CONFIG_HAVE_UNICODE_H) && \
       (__has_include(<unicode.h>) || (defined(__NO_has_include) && \
       (defined(__KOS__) && __KOS_VERSION__ >= 400)))
-#define CONFIG_HAVE_UNICODE_H 1
+#define CONFIG_HAVE_UNICODE_H
 #endif
 
 #ifdef CONFIG_HAVE_UNICODE_H
@@ -107,7 +107,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strlen
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 DECL_BEGIN
 #undef strlen
 #define strlen dee_strlen
@@ -121,7 +121,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_strlen */
 
 #ifndef CONFIG_HAVE_memcmp
-#define CONFIG_HAVE_memcmp 1
+#define CONFIG_HAVE_memcmp
 DECL_BEGIN
 #undef memcmp
 #define memcmp dee_memcmp
@@ -141,7 +141,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
 #ifndef CONFIG_HAVE_bcmp
-#define CONFIG_HAVE_bcmp 1
+#define CONFIG_HAVE_bcmp
 #undef bcmp
 #define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes)
 #endif /* !CONFIG_HAVE_bcmp */

@@ -785,7 +785,7 @@ EOF
 				echo "#define $N $V" >> "$BLD_ROOT/include/deemon/config.h"
 			fi
 		elif ! [ -z "$feat" ]; then
-			echo "#define $feat 1" >> "$BLD_ROOT/include/deemon/config.h"
+			echo "#define $feat" >> "$BLD_ROOT/include/deemon/config.h"
 		fi
 	done
 fi
@@ -937,19 +937,19 @@ EOF
 # Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
 check_feature() {
 	if try_check_feature "$1" "$2"; then
-		echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_$1" >> "$CONFINC"
 		return 0
 	else
-		echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+		echo "#define CONFIG_NO_$1 /* Missing! */" >> "$CONFINC"
 		return 1
 	fi
 }
 check_feature_raw() {
 	if try_check_feature_raw "$1" "$2"; then
-		echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_$1" >> "$CONFINC"
 		return 0
 	else
-		echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+		echo "#define CONFIG_NO_$1 /* Missing! */" >> "$CONFINC"
 		return 1
 	fi
 }
@@ -1101,7 +1101,7 @@ $CONFTEST_MAIN{typedef int myT[$n != 0 ? 1 : -1]; extern myT foo; return foo[0];
 EOF
 					check_feature "$n" "$n being non-zero"
 				else
-					echo "#define CONFIG_NO_$n 1 /* Missing! */" >> "$CONFINC"
+					echo "#define CONFIG_NO_$n /* Missing! */" >> "$CONFINC"
 				fi
 				;;
 			*( )print*( )\"*)
@@ -1138,14 +1138,14 @@ if [[ "$WITH_SYSTEM_LIBFFI" == 1 ]]; then
 $CONFTEST_MAIN{return $1;}
 EOF
 		if try_check_feature "$1" "$1"; then
-			echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+			echo "#define CONFIG_HAVE_$1" >> "$CONFINC"
 			return 0
 		else
-			echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+			echo "#define CONFIG_NO_$1 /* Missing! */" >> "$CONFINC"
 			return 1
 		fi
 	}
-	echo "#define CONFIG_HAVE_SYSTEM_FFI 1" >> "$CONFINC"
+	echo "#define CONFIG_HAVE_SYSTEM_FFI" >> "$CONFINC"
 	check_ffi_cc FFI_SYSV
 	check_ffi_cc FFI_STDCALL
 	check_ffi_cc FFI_THISCALL
@@ -1166,30 +1166,30 @@ cat > "$CONFTEST" <<EOF
 double d = 90904234967036810337470478905505011476211692735615632014797120844053488865816695273723469097858056257517020191247487429516932130503560650002327564517570778480236724525140520121371739201496540132640109977779420565776568942592.0;
 EOF
 if try_compile_minimal; then
-	echo "#define CONFIG_HAVE_FPU 1" >> "$CONFINC"
+	echo "#define CONFIG_HAVE_FPU" >> "$CONFINC"
 	if grep "seesnoon" "$CONFTEST_OUT" > /dev/null 2>&1; then
 		log_checking_yes "little-endian"
-		echo "#define CONFIG_HAVE_IEEE754 1" >> "$CONFINC"
-		echo "#define CONFIG_HAVE_IEEE754_LE 1" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_IEEE754" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_IEEE754_LE" >> "$CONFINC"
 	elif grep "noonsees" "$CONFTEST_OUT" > /dev/null 2>&1; then
 		log_checking_yes "big-endian"
-		echo "#define CONFIG_HAVE_IEEE754 1" >> "$CONFINC"
-		echo "#define CONFIG_HAVE_IEEE754_BE 1" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_IEEE754" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_IEEE754_BE" >> "$CONFINC"
 	else
 		log_checking_no
-		echo "#define CONFIG_NO_IEEE754 1" >> "$CONFINC"
+		echo "#define CONFIG_NO_IEEE754" >> "$CONFINC"
 	fi
 else
-	echo "#define CONFIG_NO_IEEE754 1" >> "$CONFINC"
+	echo "#define CONFIG_NO_IEEE754" >> "$CONFINC"
 	cat > "$CONFTEST" <<EOF
 double d = 0.0;
 EOF
 	if try_compile_minimal; then
 		log_checking_no
-		echo "#define CONFIG_HAVE_FPU 1" >> "$CONFINC"
+		echo "#define CONFIG_HAVE_FPU" >> "$CONFINC"
 	else
 		log_checking_no "no FPU support"
-		echo "#define CONFIG_NO_FPU 1" >> "$CONFINC"
+		echo "#define CONFIG_NO_FPU" >> "$CONFINC"
 	fi
 fi
 

@@ -126,7 +126,7 @@ struct asm_sym {
 
 
 #if __SIZEOF_POINTER__ == 4
-#define CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER 1
+#define CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
 #endif /* __SIZEOF_POINTER__ == 4 */
 
 struct asm_exc {

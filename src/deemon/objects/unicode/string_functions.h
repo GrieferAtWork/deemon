@@ -68,119 +68,119 @@ DECL_BEGIN
 
 /* Suplement non-standard <string.h> functions */
 #ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #undef memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_memmem
-#define CONFIG_HAVE_memmem 1
+#define CONFIG_HAVE_memmem
 #undef memmem
 #define memmem  dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
 #ifndef CONFIG_HAVE_memrmem
-#define CONFIG_HAVE_memrmem 1
+#define CONFIG_HAVE_memrmem
 #undef memrmem
 #define memrmem dee_memrmem
 DeeSystem_DEFINE_memrmem(dee_memrmem)
 #endif /* !CONFIG_HAVE_memrmem */
 
 #ifndef CONFIG_HAVE_memsetw
-#define CONFIG_HAVE_memsetw 1
+#define CONFIG_HAVE_memsetw
 #undef memsetw
 #define memsetw dee_memsetw
 DeeSystem_DEFINE_memsetw(dee_memsetw)
 #endif /* !CONFIG_HAVE_memsetw */
 
 #ifndef CONFIG_HAVE_memsetl
-#define CONFIG_HAVE_memsetl 1
+#define CONFIG_HAVE_memsetl
 #undef memsetl
 #define memsetl dee_memsetl
 DeeSystem_DEFINE_memsetl(dee_memsetl)
 #endif /* !CONFIG_HAVE_memsetl */
 
 #ifndef CONFIG_HAVE_mempsetw
-#define CONFIG_HAVE_mempsetw 1
+#define CONFIG_HAVE_mempsetw
 #undef mempsetw
 #define mempsetw dee_mempsetw
 DeeSystem_DEFINE_mempsetw(dee_mempsetw)
 #endif /* !CONFIG_HAVE_mempsetw */
 
 #ifndef CONFIG_HAVE_mempsetl
-#define CONFIG_HAVE_mempsetl 1
+#define CONFIG_HAVE_mempsetl
 #undef mempsetl
 #define mempsetl dee_mempsetl
 DeeSystem_DEFINE_mempsetl(dee_mempsetl)
 #endif /* !CONFIG_HAVE_mempsetl */
 
 #ifndef CONFIG_HAVE_memcmpw
-#define CONFIG_HAVE_memcmpw 1
+#define CONFIG_HAVE_memcmpw
 #undef memcmpw
 #define memcmpw dee_memcmpw
 DeeSystem_DEFINE_memcmpw(dee_memcmpw)
 #endif /* !CONFIG_HAVE_memcmpw */
 
 #ifndef CONFIG_HAVE_memcmpl
-#define CONFIG_HAVE_memcmpl 1
+#define CONFIG_HAVE_memcmpl
 #undef memcmpl
 #define memcmpl dee_memcmpl
 DeeSystem_DEFINE_memcmpl(dee_memcmpl)
 #endif /* !CONFIG_HAVE_memcmpl */
 
 #ifndef CONFIG_HAVE_memchrw
-#define CONFIG_HAVE_memchrw 1
+#define CONFIG_HAVE_memchrw
 #undef memchrw
 #define memchrw dee_memchrw
 DeeSystem_DEFINE_memchrw(dee_memchrw)
 #endif /* !CONFIG_HAVE_memchrw */
 
 #ifndef CONFIG_HAVE_memchrl
-#define CONFIG_HAVE_memchrl 1
+#define CONFIG_HAVE_memchrl
 #undef memchrl
 #define memchrl dee_memchrl
 DeeSystem_DEFINE_memchrl(dee_memchrl)
 #endif /* !CONFIG_HAVE_memchrl */
 
 #ifndef CONFIG_HAVE_memrchrw
-#define CONFIG_HAVE_memrchrw 1
+#define CONFIG_HAVE_memrchrw
 #undef memrchrw
 #define memrchrw dee_memrchrw
 DeeSystem_DEFINE_memrchrw(dee_memrchrw)
 #endif /* !CONFIG_HAVE_memrchrw */
 
 #ifndef CONFIG_HAVE_memrchrl
-#define CONFIG_HAVE_memrchrl 1
+#define CONFIG_HAVE_memrchrl
 #undef memrchrl
 #define memrchrl dee_memrchrl
 DeeSystem_DEFINE_memrchrl(dee_memrchrl)
 #endif /* !CONFIG_HAVE_memrchrl */
 
 #ifndef CONFIG_HAVE_memmemw
-#define CONFIG_HAVE_memmemw 1
+#define CONFIG_HAVE_memmemw
 #undef memmemw
 #define memmemw dee_memmemw
 DeeSystem_DEFINE_memmemw(dee_memmemw, memchrw, MEMEQW)
 #endif /* !CONFIG_HAVE_memmemw */
 
 #ifndef CONFIG_HAVE_memmeml
-#define CONFIG_HAVE_memmeml 1
+#define CONFIG_HAVE_memmeml
 #undef memmeml
 #define memmeml dee_memmeml
 DeeSystem_DEFINE_memmeml(dee_memmeml, memchrl, MEMEQL)
 #endif /* !CONFIG_HAVE_memmeml */
 
 #ifndef CONFIG_HAVE_memrmemw
-#define CONFIG_HAVE_memrmemw 1
+#define CONFIG_HAVE_memrmemw
 #undef memrmemw
 #define memrmemw dee_memrmemw
 DeeSystem_DEFINE_memrmemw(dee_memrmemw, memrchrw, MEMEQW)
 #endif /* !CONFIG_HAVE_memrmemw */
 
 #ifndef CONFIG_HAVE_memrmeml
-#define CONFIG_HAVE_memrmeml 1
+#define CONFIG_HAVE_memrmeml
 #undef memrmeml
 #define memrmeml dee_memrmeml
 DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)

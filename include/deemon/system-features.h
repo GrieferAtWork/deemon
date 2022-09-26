@@ -36,7 +36,7 @@
 #undef CONFIG_HAVE_IEEE754_BE
 #else /* CONFIG_NO_FPU */
 #ifndef CONFIG_HAVE_FPU
-#define CONFIG_HAVE_FPU 1
+#define CONFIG_HAVE_FPU
 #endif /* !CONFIG_HAVE_FPU */
 #ifdef CONFIG_NO_IEEE754
 #undef CONFIG_HAVE_IEEE754
@@ -48,18 +48,18 @@
 #undef CONFIG_HAVE_IEEE754_BE
 #else /* CONFIG_NO_IEEE754 */
 #ifndef CONFIG_HAVE_IEEE754
-#define CONFIG_HAVE_IEEE754 1
+#define CONFIG_HAVE_IEEE754
 #endif /* !CONFIG_HAVE_IEEE754 */
 #if !defined(CONFIG_HAVE_IEEE754_LE) && !defined(CONFIG_HAVE_IEEE754_BE)
 #ifndef __FLOAT_WORD_ORDER__
-#define CONFIG_HAVE_IEEE754_LE 1 /* Fallback... */
+#define CONFIG_HAVE_IEEE754_LE /* Fallback... */
 #elif __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define CONFIG_HAVE_IEEE754_LE 1
+#define CONFIG_HAVE_IEEE754_LE
 #elif __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
-#define CONFIG_HAVE_IEEE754_BE 1
+#define CONFIG_HAVE_IEEE754_BE
 #else /* __FLOAT_WORD_ORDER__ == ... */
 #undef CONFIG_HAVE_IEEE754
-#define CONFIG_NO_IEEE754 1
+#define CONFIG_NO_IEEE754
 #endif /* __FLOAT_WORD_ORDER__ != ... */
 #endif /* !CONFIG_HAVE_IEEE754_LE && !CONFIG_HAVE_IEEE754_BE */
 #endif /* !CONFIG_NO_IEEE754 */
@@ -111,7 +111,7 @@ function feature(name, default_requirements, test = none) {
 		}
 		print(default_requirements, ")");
 	}
-	print("#define CONFIG_HAVE_", name, " 1");
+	print("#define CONFIG_HAVE_", name);
 	print("#endif");
 	print;
 }
@@ -151,12 +151,12 @@ function constant_nonzero(name) {
 	print("#elif defined(CONFIG_HAVE_", name, ")");
 	print("#elif defined(", name, ")");
 	print("#if ", name, " != 0");
-	print("#define CONFIG_HAVE_", name, " 1");
+	print("#define CONFIG_HAVE_", name);
 	print("#else /" "* ", name, " *" "/");
-	print("#define CONFIG_NO_", name, " 1");
+	print("#define CONFIG_NO_", name);
 	print("#endif /" "* ", name, " *" "/");
 	print("#elif defined(__", name, "__defined)");
-	print("#define CONFIG_HAVE_", name, " 1");
+	print("#define CONFIG_HAVE_", name);
 	print("#endif");
 	print;
 }
@@ -279,29 +279,29 @@ func("execvp", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; r
 func("_execvp", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvp("a", argv);');
 func("execvpe", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execvpe("a", argv, argv);');
 func("_execvpe", msvc, test: 'char const *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvpe("a", argv, argv);');
-func("wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecv(s, argv);");
+func("wexecv", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecv(s, argv);");
 func("_wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
-func("wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecve(s, argv, argv);");
+func("wexecve", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecve(s, argv, argv);");
 func("_wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
-func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvp(s, argv);");
+func("wexecvp", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvp(s, argv);");
 func("_wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);");
-func("wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvpe(s, argv, argv);");
+func("wexecvpe", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvpe(s, argv, argv);");
 func("_wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
-func("spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnv(42, "a", argv);');
+func("spawnv", "0", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnv(42, "a", argv);');
 func("_spawnv", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
-func("spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnve(42, "a", argv, argv);');
+func("spawnve", "0", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnve(42, "a", argv, argv);');
 func("_spawnve", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
-func("spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvp(42, "a", argv);');
+func("spawnvp", "0", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvp(42, "a", argv);');
 func("_spawnvp", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
-func("spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvpe(42, "a", argv, argv);');
+func("spawnvpe", "0", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvpe(42, "a", argv, argv);');
 func("_spawnvpe", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
-func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnv(42, s, argv);");
+func("wspawnv", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnv(42, s, argv);");
 func("_wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
-func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnve(42, s, argv, argv);");
+func("wspawnve", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnve(42, s, argv, argv);");
 func("_wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
-func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvp(42, s, argv);");
+func("wspawnvp", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvp(42, s, argv);");
 func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
-func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
+func("wspawnvpe", "0", test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
 func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
 func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return fexecve(42, argv, argv);');
 
@@ -1209,7 +1209,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_IO_H) && \
       (__has_include(<io.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        defined(__KOS__))))
-#define CONFIG_HAVE_IO_H 1
+#define CONFIG_HAVE_IO_H
 #endif
 
 #ifdef CONFIG_NO_DIRECT_H
@@ -1217,7 +1217,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_DIRECT_H) && \
       (__has_include(<direct.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        defined(__KOS__))))
-#define CONFIG_HAVE_DIRECT_H 1
+#define CONFIG_HAVE_DIRECT_H
 #endif
 
 #ifdef CONFIG_NO_PROCESS_H
@@ -1225,7 +1225,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_PROCESS_H) && \
       (__has_include(<process.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        defined(__KOS__))))
-#define CONFIG_HAVE_PROCESS_H 1
+#define CONFIG_HAVE_PROCESS_H
 #endif
 
 #ifdef CONFIG_NO_SYS_STAT_H
@@ -1234,7 +1234,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<sys/stat.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)))))
-#define CONFIG_HAVE_SYS_STAT_H 1
+#define CONFIG_HAVE_SYS_STAT_H
 #endif
 
 #ifdef CONFIG_NO_FCNTL_H
@@ -1243,7 +1243,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<fcntl.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)))))
-#define CONFIG_HAVE_FCNTL_H 1
+#define CONFIG_HAVE_FCNTL_H
 #endif
 
 #ifdef CONFIG_NO_SYS_FCNTL_H
@@ -1251,7 +1251,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_FCNTL_H) && \
       (__has_include(<sys/fcntl.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_FCNTL_H 1
+#define CONFIG_HAVE_SYS_FCNTL_H
 #endif
 
 #ifdef CONFIG_NO_SYS_IOCTL_H
@@ -1260,7 +1260,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<sys/ioctl.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_SYS_IOCTL_H 1
+#define CONFIG_HAVE_SYS_IOCTL_H
 #endif
 
 #ifdef CONFIG_NO_ALLOCA_H
@@ -1269,7 +1269,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<alloca.h>) || (defined(__NO_has_include) && ((defined(__CYGWIN__) || \
        defined(__CYGWIN32__)) || (defined(__linux__) || defined(__linux) || defined(linux)) || \
        defined(__KOS__))))
-#define CONFIG_HAVE_ALLOCA_H 1
+#define CONFIG_HAVE_ALLOCA_H
 #endif
 
 #ifdef CONFIG_NO_MALLOC_H
@@ -1278,14 +1278,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<malloc.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__CYGWIN__) || defined(__CYGWIN32__)) || (defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_MALLOC_H 1
+#define CONFIG_HAVE_MALLOC_H
 #endif
 
 #ifdef CONFIG_NO_IOCTL_H
 #undef CONFIG_HAVE_IOCTL_H
 #elif !defined(CONFIG_HAVE_IOCTL_H) && \
       (__has_include(<ioctl.h>))
-#define CONFIG_HAVE_IOCTL_H 1
+#define CONFIG_HAVE_IOCTL_H
 #endif
 
 #ifdef CONFIG_NO_DIRENT_H
@@ -1294,7 +1294,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<dirent.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_DIRENT_H 1
+#define CONFIG_HAVE_DIRENT_H
 #endif
 
 #ifdef CONFIG_NO_UNISTD_H
@@ -1303,7 +1303,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<unistd.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_UNISTD_H 1
+#define CONFIG_HAVE_UNISTD_H
 #endif
 
 #ifdef CONFIG_NO_SYS_UNISTD_H
@@ -1311,7 +1311,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_UNISTD_H) && \
       (__has_include(<sys/unistd.h>) || (defined(__NO_has_include) && (defined(__CYGWIN__) || \
        defined(__CYGWIN32__))))
-#define CONFIG_HAVE_SYS_UNISTD_H 1
+#define CONFIG_HAVE_SYS_UNISTD_H
 #endif
 
 #ifdef CONFIG_NO_ERRNO_H
@@ -1320,35 +1320,35 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<errno.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)))))
-#define CONFIG_HAVE_ERRNO_H 1
+#define CONFIG_HAVE_ERRNO_H
 #endif
 
 #ifdef CONFIG_NO_SYS_ERRNO_H
 #undef CONFIG_HAVE_SYS_ERRNO_H
 #elif !defined(CONFIG_HAVE_SYS_ERRNO_H) && \
       (__has_include(<sys/errno.h>))
-#define CONFIG_HAVE_SYS_ERRNO_H 1
+#define CONFIG_HAVE_SYS_ERRNO_H
 #endif
 
 #ifdef CONFIG_NO_STDARG_H
 #undef CONFIG_HAVE_STDARG_H
 #elif !defined(CONFIG_HAVE_STDARG_H) && \
       (defined(__NO_has_include) || __has_include(<stdarg.h>))
-#define CONFIG_HAVE_STDARG_H 1
+#define CONFIG_HAVE_STDARG_H
 #endif
 
 #ifdef CONFIG_NO_STDIO_H
 #undef CONFIG_HAVE_STDIO_H
 #elif !defined(CONFIG_HAVE_STDIO_H) && \
       (defined(__NO_has_include) || __has_include(<stdio.h>))
-#define CONFIG_HAVE_STDIO_H 1
+#define CONFIG_HAVE_STDIO_H
 #endif
 
 #ifdef CONFIG_NO_STDLIB_H
 #undef CONFIG_HAVE_STDLIB_H
 #elif !defined(CONFIG_HAVE_STDLIB_H) && \
       (defined(__NO_has_include) || __has_include(<stdlib.h>))
-#define CONFIG_HAVE_STDLIB_H 1
+#define CONFIG_HAVE_STDLIB_H
 #endif
 
 #ifdef CONFIG_NO_FEATURES_H
@@ -1357,7 +1357,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<features.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_FEATURES_H 1
+#define CONFIG_HAVE_FEATURES_H
 #endif
 
 #ifdef CONFIG_NO_SCHED_H
@@ -1366,7 +1366,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<sched.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_SCHED_H 1
+#define CONFIG_HAVE_SCHED_H
 #endif
 
 #ifdef CONFIG_NO_SIGNAL_H
@@ -1375,7 +1375,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<signal.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_SIGNAL_H 1
+#define CONFIG_HAVE_SIGNAL_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SIGNAL_H
@@ -1383,7 +1383,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_SIGNAL_H) && \
       (__has_include(<sys/signal.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_SIGNAL_H 1
+#define CONFIG_HAVE_SYS_SIGNAL_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SYSCALL_H
@@ -1391,7 +1391,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_SYSCALL_H) && \
       (__has_include(<sys/syscall.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_SYSCALL_H 1
+#define CONFIG_HAVE_SYS_SYSCALL_H
 #endif
 
 #ifdef CONFIG_NO_PTHREAD_H
@@ -1400,7 +1400,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<pthread.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_PTHREAD_H 1
+#define CONFIG_HAVE_PTHREAD_H
 #endif
 
 #ifdef CONFIG_NO_SYS_TYPES_H
@@ -1408,7 +1408,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_TYPES_H) && \
       (__has_include(<sys/types.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_TYPES_H 1
+#define CONFIG_HAVE_SYS_TYPES_H
 #endif
 
 #ifdef CONFIG_NO_SEMAPHORE_H
@@ -1416,7 +1416,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SEMAPHORE_H) && \
       (__has_include(<semaphore.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SEMAPHORE_H 1
+#define CONFIG_HAVE_SEMAPHORE_H
 #endif
 
 #ifdef CONFIG_NO_TIME_H
@@ -1425,7 +1425,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<time.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)))))
-#define CONFIG_HAVE_TIME_H 1
+#define CONFIG_HAVE_TIME_H
 #endif
 
 #ifdef CONFIG_NO_SYS_TIME_H
@@ -1433,7 +1433,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_TIME_H) && \
       (__has_include(<sys/time.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_TIME_H 1
+#define CONFIG_HAVE_SYS_TIME_H
 #endif
 
 #ifdef CONFIG_NO_SYS_MMAN_H
@@ -1441,7 +1441,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_MMAN_H) && \
       (__has_include(<sys/mman.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_MMAN_H 1
+#define CONFIG_HAVE_SYS_MMAN_H
 #endif
 
 #ifdef CONFIG_NO_SYS_RESOURCE_H
@@ -1449,7 +1449,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_RESOURCE_H) && \
       (__has_include(<sys/resource.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_RESOURCE_H 1
+#define CONFIG_HAVE_SYS_RESOURCE_H
 #endif
 
 #ifdef CONFIG_NO_SYS_WAIT_H
@@ -1458,7 +1458,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<sys/wait.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_SYS_WAIT_H 1
+#define CONFIG_HAVE_SYS_WAIT_H
 #endif
 
 #ifdef CONFIG_NO_WAIT_H
@@ -1466,7 +1466,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_WAIT_H) && \
       (__has_include(<wait.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_WAIT_H 1
+#define CONFIG_HAVE_WAIT_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SIGNALFD_H
@@ -1474,21 +1474,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
       (__has_include(<sys/signalfd.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_SIGNALFD_H 1
+#define CONFIG_HAVE_SYS_SIGNALFD_H
 #endif
 
 #ifdef CONFIG_NO_CTYPE_H
 #undef CONFIG_HAVE_CTYPE_H
 #elif !defined(CONFIG_HAVE_CTYPE_H) && \
       (defined(__NO_has_include) || __has_include(<ctype.h>))
-#define CONFIG_HAVE_CTYPE_H 1
+#define CONFIG_HAVE_CTYPE_H
 #endif
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
 #elif !defined(CONFIG_HAVE_STRING_H) && \
       (defined(__NO_has_include) || __has_include(<string.h>))
-#define CONFIG_HAVE_STRING_H 1
+#define CONFIG_HAVE_STRING_H
 #endif
 
 #ifdef CONFIG_NO_STRINGS_H
@@ -1497,14 +1497,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<strings.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_STRINGS_H 1
+#define CONFIG_HAVE_STRINGS_H
 #endif
 
 #ifdef CONFIG_NO_WCHAR_H
 #undef CONFIG_HAVE_WCHAR_H
 #elif !defined(CONFIG_HAVE_WCHAR_H) && \
       (defined(__NO_has_include) || __has_include(<wchar.h>))
-#define CONFIG_HAVE_WCHAR_H 1
+#define CONFIG_HAVE_WCHAR_H
 #endif
 
 #ifdef CONFIG_NO_DLFCN_H
@@ -1513,14 +1513,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<dlfcn.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_DLFCN_H 1
+#define CONFIG_HAVE_DLFCN_H
 #endif
 
 #ifdef CONFIG_NO_FLOAT_H
 #undef CONFIG_HAVE_FLOAT_H
 #elif !defined(CONFIG_HAVE_FLOAT_H) && \
       (defined(__NO_has_include) || __has_include(<float.h>))
-#define CONFIG_HAVE_FLOAT_H 1
+#define CONFIG_HAVE_FLOAT_H
 #endif
 
 #ifdef CONFIG_NO_CRTDBG_H
@@ -1528,70 +1528,70 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_CRTDBG_H) && \
       (__has_include(<crtdbg.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        defined(__KOS_SYSTEM_HEADERS__))))
-#define CONFIG_HAVE_CRTDBG_H 1
+#define CONFIG_HAVE_CRTDBG_H
 #endif
 
 #ifdef CONFIG_NO_LIMITS_H
 #undef CONFIG_HAVE_LIMITS_H
 #elif !defined(CONFIG_HAVE_LIMITS_H) && \
       (defined(__NO_has_include) || __has_include(<limits.h>))
-#define CONFIG_HAVE_LIMITS_H 1
+#define CONFIG_HAVE_LIMITS_H
 #endif
 
 #ifdef CONFIG_NO_SETJMP_H
 #undef CONFIG_HAVE_SETJMP_H
 #elif !defined(CONFIG_HAVE_SETJMP_H) && \
       (defined(__NO_has_include) || __has_include(<setjmp.h>))
-#define CONFIG_HAVE_SETJMP_H 1
+#define CONFIG_HAVE_SETJMP_H
 #endif
 
 #ifdef CONFIG_NO_LINK_H
 #undef CONFIG_HAVE_LINK_H
 #elif !defined(CONFIG_HAVE_LINK_H) && \
       (__has_include(<link.h>))
-#define CONFIG_HAVE_LINK_H 1
+#define CONFIG_HAVE_LINK_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_BLUETOOTH_H
 #undef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H) && \
       (__has_include(<bluetooth/bluetooth.h>))
-#define CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H 1
+#define CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_RFCOMM_H
 #undef CONFIG_HAVE_BLUETOOTH_RFCOMM_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_RFCOMM_H) && \
       (__has_include(<bluetooth/rfcomm.h>))
-#define CONFIG_HAVE_BLUETOOTH_RFCOMM_H 1
+#define CONFIG_HAVE_BLUETOOTH_RFCOMM_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_L2CAP_H
 #undef CONFIG_HAVE_BLUETOOTH_L2CAP_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_L2CAP_H) && \
       (__has_include(<bluetooth/l2cap.h>))
-#define CONFIG_HAVE_BLUETOOTH_L2CAP_H 1
+#define CONFIG_HAVE_BLUETOOTH_L2CAP_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_SCO_H
 #undef CONFIG_HAVE_BLUETOOTH_SCO_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_SCO_H) && \
       (__has_include(<bluetooth/sco.h>))
-#define CONFIG_HAVE_BLUETOOTH_SCO_H 1
+#define CONFIG_HAVE_BLUETOOTH_SCO_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_HCI_H
 #undef CONFIG_HAVE_BLUETOOTH_HCI_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_HCI_H) && \
       (__has_include(<bluetooth/hci.h>))
-#define CONFIG_HAVE_BLUETOOTH_HCI_H 1
+#define CONFIG_HAVE_BLUETOOTH_HCI_H
 #endif
 
 #ifdef CONFIG_NO_BLUETOOTH_H
 #undef CONFIG_HAVE_BLUETOOTH_H
 #elif !defined(CONFIG_HAVE_BLUETOOTH_H) && \
       (__has_include(<bluetooth.h>))
-#define CONFIG_HAVE_BLUETOOTH_H 1
+#define CONFIG_HAVE_BLUETOOTH_H
 #endif
 
 #ifdef CONFIG_NO_LINUX_NETLINK_H
@@ -1599,7 +1599,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_LINUX_NETLINK_H) && \
       (__has_include(<linux/netlink.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_LINUX_NETLINK_H 1
+#define CONFIG_HAVE_LINUX_NETLINK_H
 #endif
 
 #ifdef CONFIG_NO_ASM_TYPES_H
@@ -1607,7 +1607,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ASM_TYPES_H) && \
       (__has_include(<asm/types.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_ASM_TYPES_H 1
+#define CONFIG_HAVE_ASM_TYPES_H
 #endif
 
 #ifdef CONFIG_NO_SYS_UN_H
@@ -1615,7 +1615,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_UN_H) && \
       (__has_include(<sys/un.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_UN_H 1
+#define CONFIG_HAVE_SYS_UN_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SOCKET_H
@@ -1624,7 +1624,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<sys/socket.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_SYS_SOCKET_H 1
+#define CONFIG_HAVE_SYS_SOCKET_H
 #endif
 
 #ifdef CONFIG_NO_SYS_SELECT_H
@@ -1632,7 +1632,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_SELECT_H) && \
       (__has_include(<sys/select.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_SELECT_H 1
+#define CONFIG_HAVE_SYS_SELECT_H
 #endif
 
 #ifdef CONFIG_NO_NETDB_H
@@ -1641,28 +1641,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<netdb.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE_NETDB_H 1
+#define CONFIG_HAVE_NETDB_H
 #endif
 
 #ifdef CONFIG_NO_MATH_H
 #undef CONFIG_HAVE_MATH_H
 #elif !defined(CONFIG_HAVE_MATH_H) && \
       (__has_include(<math.h>) || (defined(__NO_has_include) && !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_MATH_H 1
+#define CONFIG_HAVE_MATH_H
 #endif
 
 #ifdef CONFIG_NO_SYS_PARAM_H
 #undef CONFIG_HAVE_SYS_PARAM_H
 #elif !defined(CONFIG_HAVE_SYS_PARAM_H) && \
       (__has_include(<sys/param.h>))
-#define CONFIG_HAVE_SYS_PARAM_H 1
+#define CONFIG_HAVE_SYS_PARAM_H
 #endif
 
 #ifdef CONFIG_NO_ENVLOCK_H
 #undef CONFIG_HAVE_ENVLOCK_H
 #elif !defined(CONFIG_HAVE_ENVLOCK_H) && \
       (__has_include(<envlock.h>))
-#define CONFIG_HAVE_ENVLOCK_H 1
+#define CONFIG_HAVE_ENVLOCK_H
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -1825,7 +1825,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_HAVE__Exit
 #elif !defined(CONFIG_HAVE__Exit) && \
       (defined(_Exit) || defined(___Exit_defined) || defined(__USE_ISOC99))
-#define CONFIG_HAVE__Exit 1
+#define CONFIG_HAVE__Exit
 #endif
 
 #ifdef CONFIG_NO__exit
@@ -1834,19 +1834,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(_exit) || defined(___exit_defined) || (defined(_MSC_VER) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
-#define CONFIG_HAVE__exit 1
+#define CONFIG_HAVE__exit
 #endif
 
 #ifdef CONFIG_NO_exit
 #undef CONFIG_HAVE_exit
 #else
-#define CONFIG_HAVE_exit 1
+#define CONFIG_HAVE_exit
 #endif
 
 #ifdef CONFIG_NO_atexit
 #undef CONFIG_HAVE_atexit
 #else
-#define CONFIG_HAVE_atexit 1
+#define CONFIG_HAVE_atexit
 #endif
 
 #ifdef CONFIG_NO_execv
@@ -1854,14 +1854,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_execv) && \
       (defined(execv) || defined(__execv_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_execv 1
+#define CONFIG_HAVE_execv
 #endif
 
 #ifdef CONFIG_NO__execv
 #undef CONFIG_HAVE__execv
 #elif !defined(CONFIG_HAVE__execv) && \
       (defined(_execv) || defined(___execv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execv 1
+#define CONFIG_HAVE__execv
 #endif
 
 #ifdef CONFIG_NO_execve
@@ -1870,14 +1870,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(execve) || defined(__execve_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_execve 1
+#define CONFIG_HAVE_execve
 #endif
 
 #ifdef CONFIG_NO__execve
 #undef CONFIG_HAVE__execve
 #elif !defined(CONFIG_HAVE__execve) && \
       (defined(_execve) || defined(___execve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execve 1
+#define CONFIG_HAVE__execve
 #endif
 
 #ifdef CONFIG_NO_execvp
@@ -1886,14 +1886,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(execvp) || defined(__execvp_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_execvp 1
+#define CONFIG_HAVE_execvp
 #endif
 
 #ifdef CONFIG_NO__execvp
 #undef CONFIG_HAVE__execvp
 #elif !defined(CONFIG_HAVE__execvp) && \
       (defined(_execvp) || defined(___execvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execvp 1
+#define CONFIG_HAVE__execvp
 #endif
 
 #ifdef CONFIG_NO_execvpe
@@ -1902,203 +1902,203 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(execvpe) || defined(__execvpe_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_execvpe 1
+#define CONFIG_HAVE_execvpe
 #endif
 
 #ifdef CONFIG_NO__execvpe
 #undef CONFIG_HAVE__execvpe
 #elif !defined(CONFIG_HAVE__execvpe) && \
       (defined(_execvpe) || defined(___execvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execvpe 1
+#define CONFIG_HAVE__execvpe
 #endif
 
 #ifdef CONFIG_NO_wexecv
 #undef CONFIG_HAVE_wexecv
 #elif !defined(CONFIG_HAVE_wexecv) && \
-      (defined(wexecv) || defined(__wexecv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecv 1
+      (defined(wexecv) || defined(__wexecv_defined))
+#define CONFIG_HAVE_wexecv
 #endif
 
 #ifdef CONFIG_NO__wexecv
 #undef CONFIG_HAVE__wexecv
 #elif !defined(CONFIG_HAVE__wexecv) && \
       (defined(_wexecv) || defined(___wexecv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wexecv 1
+#define CONFIG_HAVE__wexecv
 #endif
 
 #ifdef CONFIG_NO_wexecve
 #undef CONFIG_HAVE_wexecve
 #elif !defined(CONFIG_HAVE_wexecve) && \
-      (defined(wexecve) || defined(__wexecve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecve 1
+      (defined(wexecve) || defined(__wexecve_defined))
+#define CONFIG_HAVE_wexecve
 #endif
 
 #ifdef CONFIG_NO__wexecve
 #undef CONFIG_HAVE__wexecve
 #elif !defined(CONFIG_HAVE__wexecve) && \
       (defined(_wexecve) || defined(___wexecve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wexecve 1
+#define CONFIG_HAVE__wexecve
 #endif
 
 #ifdef CONFIG_NO_wexecvp
 #undef CONFIG_HAVE_wexecvp
 #elif !defined(CONFIG_HAVE_wexecvp) && \
-      (defined(wexecvp) || defined(__wexecvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecvp 1
+      (defined(wexecvp) || defined(__wexecvp_defined))
+#define CONFIG_HAVE_wexecvp
 #endif
 
 #ifdef CONFIG_NO__wexecvp
 #undef CONFIG_HAVE__wexecvp
 #elif !defined(CONFIG_HAVE__wexecvp) && \
       (defined(_wexecvp) || defined(___wexecvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wexecvp 1
+#define CONFIG_HAVE__wexecvp
 #endif
 
 #ifdef CONFIG_NO_wexecvpe
 #undef CONFIG_HAVE_wexecvpe
 #elif !defined(CONFIG_HAVE_wexecvpe) && \
-      (defined(wexecvpe) || defined(__wexecvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecvpe 1
+      (defined(wexecvpe) || defined(__wexecvpe_defined))
+#define CONFIG_HAVE_wexecvpe
 #endif
 
 #ifdef CONFIG_NO__wexecvpe
 #undef CONFIG_HAVE__wexecvpe
 #elif !defined(CONFIG_HAVE__wexecvpe) && \
       (defined(_wexecvpe) || defined(___wexecvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wexecvpe 1
+#define CONFIG_HAVE__wexecvpe
 #endif
 
 #ifdef CONFIG_NO_spawnv
 #undef CONFIG_HAVE_spawnv
 #elif !defined(CONFIG_HAVE_spawnv) && \
-      (defined(spawnv) || defined(__spawnv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnv 1
+      (defined(spawnv) || defined(__spawnv_defined))
+#define CONFIG_HAVE_spawnv
 #endif
 
 #ifdef CONFIG_NO__spawnv
 #undef CONFIG_HAVE__spawnv
 #elif !defined(CONFIG_HAVE__spawnv) && \
       (defined(_spawnv) || defined(___spawnv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__spawnv 1
+#define CONFIG_HAVE__spawnv
 #endif
 
 #ifdef CONFIG_NO_spawnve
 #undef CONFIG_HAVE_spawnve
 #elif !defined(CONFIG_HAVE_spawnve) && \
-      (defined(spawnve) || defined(__spawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnve 1
+      (defined(spawnve) || defined(__spawnve_defined))
+#define CONFIG_HAVE_spawnve
 #endif
 
 #ifdef CONFIG_NO__spawnve
 #undef CONFIG_HAVE__spawnve
 #elif !defined(CONFIG_HAVE__spawnve) && \
       (defined(_spawnve) || defined(___spawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__spawnve 1
+#define CONFIG_HAVE__spawnve
 #endif
 
 #ifdef CONFIG_NO_spawnvp
 #undef CONFIG_HAVE_spawnvp
 #elif !defined(CONFIG_HAVE_spawnvp) && \
-      (defined(spawnvp) || defined(__spawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnvp 1
+      (defined(spawnvp) || defined(__spawnvp_defined))
+#define CONFIG_HAVE_spawnvp
 #endif
 
 #ifdef CONFIG_NO__spawnvp
 #undef CONFIG_HAVE__spawnvp
 #elif !defined(CONFIG_HAVE__spawnvp) && \
       (defined(_spawnvp) || defined(___spawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__spawnvp 1
+#define CONFIG_HAVE__spawnvp
 #endif
 
 #ifdef CONFIG_NO_spawnvpe
 #undef CONFIG_HAVE_spawnvpe
 #elif !defined(CONFIG_HAVE_spawnvpe) && \
-      (defined(spawnvpe) || defined(__spawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnvpe 1
+      (defined(spawnvpe) || defined(__spawnvpe_defined))
+#define CONFIG_HAVE_spawnvpe
 #endif
 
 #ifdef CONFIG_NO__spawnvpe
 #undef CONFIG_HAVE__spawnvpe
 #elif !defined(CONFIG_HAVE__spawnvpe) && \
       (defined(_spawnvpe) || defined(___spawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__spawnvpe 1
+#define CONFIG_HAVE__spawnvpe
 #endif
 
 #ifdef CONFIG_NO_wspawnv
 #undef CONFIG_HAVE_wspawnv
 #elif !defined(CONFIG_HAVE_wspawnv) && \
-      (defined(wspawnv) || defined(__wspawnv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnv 1
+      (defined(wspawnv) || defined(__wspawnv_defined))
+#define CONFIG_HAVE_wspawnv
 #endif
 
 #ifdef CONFIG_NO__wspawnv
 #undef CONFIG_HAVE__wspawnv
 #elif !defined(CONFIG_HAVE__wspawnv) && \
       (defined(_wspawnv) || defined(___wspawnv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wspawnv 1
+#define CONFIG_HAVE__wspawnv
 #endif
 
 #ifdef CONFIG_NO_wspawnve
 #undef CONFIG_HAVE_wspawnve
 #elif !defined(CONFIG_HAVE_wspawnve) && \
-      (defined(wspawnve) || defined(__wspawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnve 1
+      (defined(wspawnve) || defined(__wspawnve_defined))
+#define CONFIG_HAVE_wspawnve
 #endif
 
 #ifdef CONFIG_NO__wspawnve
 #undef CONFIG_HAVE__wspawnve
 #elif !defined(CONFIG_HAVE__wspawnve) && \
       (defined(_wspawnve) || defined(___wspawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wspawnve 1
+#define CONFIG_HAVE__wspawnve
 #endif
 
 #ifdef CONFIG_NO_wspawnvp
 #undef CONFIG_HAVE_wspawnvp
 #elif !defined(CONFIG_HAVE_wspawnvp) && \
-      (defined(wspawnvp) || defined(__wspawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnvp 1
+      (defined(wspawnvp) || defined(__wspawnvp_defined))
+#define CONFIG_HAVE_wspawnvp
 #endif
 
 #ifdef CONFIG_NO__wspawnvp
 #undef CONFIG_HAVE__wspawnvp
 #elif !defined(CONFIG_HAVE__wspawnvp) && \
       (defined(_wspawnvp) || defined(___wspawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wspawnvp 1
+#define CONFIG_HAVE__wspawnvp
 #endif
 
 #ifdef CONFIG_NO_wspawnvpe
 #undef CONFIG_HAVE_wspawnvpe
 #elif !defined(CONFIG_HAVE_wspawnvpe) && \
-      (defined(wspawnvpe) || defined(__wspawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnvpe 1
+      (defined(wspawnvpe) || defined(__wspawnvpe_defined))
+#define CONFIG_HAVE_wspawnvpe
 #endif
 
 #ifdef CONFIG_NO__wspawnvpe
 #undef CONFIG_HAVE__wspawnvpe
 #elif !defined(CONFIG_HAVE__wspawnvpe) && \
       (defined(_wspawnvpe) || defined(___wspawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wspawnvpe 1
+#define CONFIG_HAVE__wspawnvpe
 #endif
 
 #ifdef CONFIG_NO_fexecve
 #undef CONFIG_HAVE_fexecve
 #elif !defined(CONFIG_HAVE_fexecve) && \
       (defined(fexecve) || defined(__fexecve_defined) || defined(__USE_XOPEN2K8))
-#define CONFIG_HAVE_fexecve 1
+#define CONFIG_HAVE_fexecve
 #endif
 
 #ifdef CONFIG_NO_cwait
 #undef CONFIG_HAVE_cwait
 #elif !defined(CONFIG_HAVE_cwait) && \
       (defined(cwait) || defined(__cwait_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_cwait 1
+#define CONFIG_HAVE_cwait
 #endif
 
 #ifdef CONFIG_NO__cwait
 #undef CONFIG_HAVE__cwait
 #elif !defined(CONFIG_HAVE__cwait) && \
       (defined(_cwait) || defined(___cwait_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__cwait 1
+#define CONFIG_HAVE__cwait
 #endif
 
 #ifdef CONFIG_NO_wait
@@ -2106,7 +2106,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_wait) && \
       (defined(wait) || defined(__wait_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_wait 1
+#define CONFIG_HAVE_wait
 #endif
 
 #ifdef CONFIG_NO_waitpid
@@ -2115,7 +2115,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(waitpid) || defined(__waitpid_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_waitpid 1
+#define CONFIG_HAVE_waitpid
 #endif
 
 #ifdef CONFIG_NO_wait4
@@ -2123,7 +2123,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_wait4) && \
       (defined(wait4) || defined(__wait4_defined) || ((defined(__linux__) || defined(__linux) || \
        defined(linux)) || defined(__KOS__)))
-#define CONFIG_HAVE_wait4 1
+#define CONFIG_HAVE_wait4
 #endif
 
 #ifdef CONFIG_NO_waitid
@@ -2131,7 +2131,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_waitid) && \
       (defined(waitid) || defined(__waitid_defined) || ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__)))
-#define CONFIG_HAVE_waitid 1
+#define CONFIG_HAVE_waitid
 #endif
 
 #ifdef CONFIG_NO_sigprocmask
@@ -2140,7 +2140,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(sigprocmask) || defined(__sigprocmask_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_sigprocmask 1
+#define CONFIG_HAVE_sigprocmask
 #endif
 
 #ifdef CONFIG_NO_detach
@@ -2148,27 +2148,27 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_detach) && \
       (defined(detach) || defined(__detach_defined) || (defined(__KOS__) && defined(__USE_KOS) && \
        __KOS_VERSION__ >= 300))
-#define CONFIG_HAVE_detach 1
+#define CONFIG_HAVE_detach
 #endif
 
 #ifdef CONFIG_NO_system
 #undef CONFIG_HAVE_system
 #else
-#define CONFIG_HAVE_system 1
+#define CONFIG_HAVE_system
 #endif
 
 #ifdef CONFIG_NO_wsystem
 #undef CONFIG_HAVE_wsystem
 #elif !defined(CONFIG_HAVE_wsystem) && \
       (defined(wsystem) || defined(__wsystem_defined))
-#define CONFIG_HAVE_wsystem 1
+#define CONFIG_HAVE_wsystem
 #endif
 
 #ifdef CONFIG_NO__wsystem
 #undef CONFIG_HAVE__wsystem
 #elif !defined(CONFIG_HAVE__wsystem) && \
       (defined(_wsystem) || defined(___wsystem_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wsystem 1
+#define CONFIG_HAVE__wsystem
 #endif
 
 #ifdef CONFIG_NO_creat
@@ -2176,14 +2176,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_creat) && \
       (defined(creat) || defined(__creat_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_creat 1
+#define CONFIG_HAVE_creat
 #endif
 
 #ifdef CONFIG_NO__creat
 #undef CONFIG_HAVE__creat
 #elif !defined(CONFIG_HAVE__creat) && \
       (defined(_creat) || defined(___creat_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__creat 1
+#define CONFIG_HAVE__creat
 #endif
 
 #ifdef CONFIG_NO__wcreat
@@ -2191,7 +2191,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wcreat) && \
       (defined(_wcreat) || defined(___wcreat_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wcreat 1
+#define CONFIG_HAVE__wcreat
 #endif
 
 #ifdef CONFIG_NO_open
@@ -2199,14 +2199,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_open) && \
       (defined(open) || defined(__open_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_open 1
+#define CONFIG_HAVE_open
 #endif
 
 #ifdef CONFIG_NO__open
 #undef CONFIG_HAVE__open
 #elif !defined(CONFIG_HAVE__open) && \
       (defined(_open) || defined(___open_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__open 1
+#define CONFIG_HAVE__open
 #endif
 
 #ifdef CONFIG_NO__wopen
@@ -2214,14 +2214,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wopen) && \
       (defined(_wopen) || defined(___wopen_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wopen 1
+#define CONFIG_HAVE__wopen
 #endif
 
 #ifdef CONFIG_NO_open64
 #undef CONFIG_HAVE_open64
 #elif !defined(CONFIG_HAVE_open64) && \
       (defined(open64) || defined(__open64_defined) || defined(__USE_LARGEFILE64))
-#define CONFIG_HAVE_open64 1
+#define CONFIG_HAVE_open64
 #endif
 
 #ifdef CONFIG_NO_fcntl
@@ -2230,28 +2230,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fcntl) || defined(__fcntl_defined) || ((defined(CONFIG_HAVE_FCNTL_H) || \
        defined(CONFIG_HAVE_SYS_FCNTL_H)) && (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_fcntl 1
+#define CONFIG_HAVE_fcntl
 #endif
 
 #ifdef CONFIG_NO_F_SETFD
 #undef CONFIG_HAVE_F_SETFD
 #elif !defined(CONFIG_HAVE_F_SETFD) && \
       (defined(F_SETFD) || defined(__F_SETFD_defined))
-#define CONFIG_HAVE_F_SETFD 1
+#define CONFIG_HAVE_F_SETFD
 #endif
 
 #ifdef CONFIG_NO_F_SETFL
 #undef CONFIG_HAVE_F_SETFL
 #elif !defined(CONFIG_HAVE_F_SETFL) && \
       (defined(F_SETFL) || defined(__F_SETFL_defined))
-#define CONFIG_HAVE_F_SETFL 1
+#define CONFIG_HAVE_F_SETFL
 #endif
 
 #ifdef CONFIG_NO_FD_CLOEXEC
 #undef CONFIG_HAVE_FD_CLOEXEC
 #elif !defined(CONFIG_HAVE_FD_CLOEXEC) && \
       (defined(FD_CLOEXEC) || defined(__FD_CLOEXEC_defined))
-#define CONFIG_HAVE_FD_CLOEXEC 1
+#define CONFIG_HAVE_FD_CLOEXEC
 #endif
 
 #ifdef CONFIG_NO_O_BINARY
@@ -2259,12 +2259,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_BINARY)
 #elif defined(O_BINARY)
 #if O_BINARY != 0
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #else /* O_BINARY */
-#define CONFIG_NO_O_BINARY 1
+#define CONFIG_NO_O_BINARY
 #endif /* O_BINARY */
 #elif defined(__O_BINARY__defined)
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #endif
 
 #ifdef CONFIG_NO___O_BINARY
@@ -2272,12 +2272,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_BINARY)
 #elif defined(__O_BINARY)
 #if __O_BINARY != 0
-#define CONFIG_HAVE___O_BINARY 1
+#define CONFIG_HAVE___O_BINARY
 #else /* __O_BINARY */
-#define CONFIG_NO___O_BINARY 1
+#define CONFIG_NO___O_BINARY
 #endif /* __O_BINARY */
 #elif defined(____O_BINARY__defined)
-#define CONFIG_HAVE___O_BINARY 1
+#define CONFIG_HAVE___O_BINARY
 #endif
 
 #ifdef CONFIG_NO__O_BINARY
@@ -2285,12 +2285,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_BINARY)
 #elif defined(_O_BINARY)
 #if _O_BINARY != 0
-#define CONFIG_HAVE__O_BINARY 1
+#define CONFIG_HAVE__O_BINARY
 #else /* _O_BINARY */
-#define CONFIG_NO__O_BINARY 1
+#define CONFIG_NO__O_BINARY
 #endif /* _O_BINARY */
 #elif defined(___O_BINARY__defined)
-#define CONFIG_HAVE__O_BINARY 1
+#define CONFIG_HAVE__O_BINARY
 #endif
 
 #ifdef CONFIG_NO___O_RAW
@@ -2298,12 +2298,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_RAW)
 #elif defined(__O_RAW)
 #if __O_RAW != 0
-#define CONFIG_HAVE___O_RAW 1
+#define CONFIG_HAVE___O_RAW
 #else /* __O_RAW */
-#define CONFIG_NO___O_RAW 1
+#define CONFIG_NO___O_RAW
 #endif /* __O_RAW */
 #elif defined(____O_RAW__defined)
-#define CONFIG_HAVE___O_RAW 1
+#define CONFIG_HAVE___O_RAW
 #endif
 
 #ifdef CONFIG_NO__O_RAW
@@ -2311,12 +2311,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RAW)
 #elif defined(_O_RAW)
 #if _O_RAW != 0
-#define CONFIG_HAVE__O_RAW 1
+#define CONFIG_HAVE__O_RAW
 #else /* _O_RAW */
-#define CONFIG_NO__O_RAW 1
+#define CONFIG_NO__O_RAW
 #endif /* _O_RAW */
 #elif defined(___O_RAW__defined)
-#define CONFIG_HAVE__O_RAW 1
+#define CONFIG_HAVE__O_RAW
 #endif
 
 #ifdef CONFIG_NO_O_RAW
@@ -2324,12 +2324,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_RAW)
 #elif defined(O_RAW)
 #if O_RAW != 0
-#define CONFIG_HAVE_O_RAW 1
+#define CONFIG_HAVE_O_RAW
 #else /* O_RAW */
-#define CONFIG_NO_O_RAW 1
+#define CONFIG_NO_O_RAW
 #endif /* O_RAW */
 #elif defined(__O_RAW__defined)
-#define CONFIG_HAVE_O_RAW 1
+#define CONFIG_HAVE_O_RAW
 #endif
 
 #ifdef CONFIG_NO_O_SHORT_LIVED
@@ -2337,12 +2337,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SHORT_LIVED)
 #elif defined(O_SHORT_LIVED)
 #if O_SHORT_LIVED != 0
-#define CONFIG_HAVE_O_SHORT_LIVED 1
+#define CONFIG_HAVE_O_SHORT_LIVED
 #else /* O_SHORT_LIVED */
-#define CONFIG_NO_O_SHORT_LIVED 1
+#define CONFIG_NO_O_SHORT_LIVED
 #endif /* O_SHORT_LIVED */
 #elif defined(__O_SHORT_LIVED__defined)
-#define CONFIG_HAVE_O_SHORT_LIVED 1
+#define CONFIG_HAVE_O_SHORT_LIVED
 #endif
 
 #ifdef CONFIG_NO___O_SHORT_LIVED
@@ -2350,12 +2350,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SHORT_LIVED)
 #elif defined(__O_SHORT_LIVED)
 #if __O_SHORT_LIVED != 0
-#define CONFIG_HAVE___O_SHORT_LIVED 1
+#define CONFIG_HAVE___O_SHORT_LIVED
 #else /* __O_SHORT_LIVED */
-#define CONFIG_NO___O_SHORT_LIVED 1
+#define CONFIG_NO___O_SHORT_LIVED
 #endif /* __O_SHORT_LIVED */
 #elif defined(____O_SHORT_LIVED__defined)
-#define CONFIG_HAVE___O_SHORT_LIVED 1
+#define CONFIG_HAVE___O_SHORT_LIVED
 #endif
 
 #ifdef CONFIG_NO__O_SHORT_LIVED
@@ -2363,12 +2363,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SHORT_LIVED)
 #elif defined(_O_SHORT_LIVED)
 #if _O_SHORT_LIVED != 0
-#define CONFIG_HAVE__O_SHORT_LIVED 1
+#define CONFIG_HAVE__O_SHORT_LIVED
 #else /* _O_SHORT_LIVED */
-#define CONFIG_NO__O_SHORT_LIVED 1
+#define CONFIG_NO__O_SHORT_LIVED
 #endif /* _O_SHORT_LIVED */
 #elif defined(___O_SHORT_LIVED__defined)
-#define CONFIG_HAVE__O_SHORT_LIVED 1
+#define CONFIG_HAVE__O_SHORT_LIVED
 #endif
 
 #ifdef CONFIG_NO_O_SEQUENTIAL
@@ -2376,12 +2376,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SEQUENTIAL)
 #elif defined(O_SEQUENTIAL)
 #if O_SEQUENTIAL != 0
-#define CONFIG_HAVE_O_SEQUENTIAL 1
+#define CONFIG_HAVE_O_SEQUENTIAL
 #else /* O_SEQUENTIAL */
-#define CONFIG_NO_O_SEQUENTIAL 1
+#define CONFIG_NO_O_SEQUENTIAL
 #endif /* O_SEQUENTIAL */
 #elif defined(__O_SEQUENTIAL__defined)
-#define CONFIG_HAVE_O_SEQUENTIAL 1
+#define CONFIG_HAVE_O_SEQUENTIAL
 #endif
 
 #ifdef CONFIG_NO___O_SEQUENTIAL
@@ -2389,12 +2389,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SEQUENTIAL)
 #elif defined(__O_SEQUENTIAL)
 #if __O_SEQUENTIAL != 0
-#define CONFIG_HAVE___O_SEQUENTIAL 1
+#define CONFIG_HAVE___O_SEQUENTIAL
 #else /* __O_SEQUENTIAL */
-#define CONFIG_NO___O_SEQUENTIAL 1
+#define CONFIG_NO___O_SEQUENTIAL
 #endif /* __O_SEQUENTIAL */
 #elif defined(____O_SEQUENTIAL__defined)
-#define CONFIG_HAVE___O_SEQUENTIAL 1
+#define CONFIG_HAVE___O_SEQUENTIAL
 #endif
 
 #ifdef CONFIG_NO__O_SEQUENTIAL
@@ -2402,12 +2402,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SEQUENTIAL)
 #elif defined(_O_SEQUENTIAL)
 #if _O_SEQUENTIAL != 0
-#define CONFIG_HAVE__O_SEQUENTIAL 1
+#define CONFIG_HAVE__O_SEQUENTIAL
 #else /* _O_SEQUENTIAL */
-#define CONFIG_NO__O_SEQUENTIAL 1
+#define CONFIG_NO__O_SEQUENTIAL
 #endif /* _O_SEQUENTIAL */
 #elif defined(___O_SEQUENTIAL__defined)
-#define CONFIG_HAVE__O_SEQUENTIAL 1
+#define CONFIG_HAVE__O_SEQUENTIAL
 #endif
 
 #ifdef CONFIG_NO_O_RANDOM
@@ -2415,12 +2415,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_RANDOM)
 #elif defined(O_RANDOM)
 #if O_RANDOM != 0
-#define CONFIG_HAVE_O_RANDOM 1
+#define CONFIG_HAVE_O_RANDOM
 #else /* O_RANDOM */
-#define CONFIG_NO_O_RANDOM 1
+#define CONFIG_NO_O_RANDOM
 #endif /* O_RANDOM */
 #elif defined(__O_RANDOM__defined)
-#define CONFIG_HAVE_O_RANDOM 1
+#define CONFIG_HAVE_O_RANDOM
 #endif
 
 #ifdef CONFIG_NO___O_RANDOM
@@ -2428,12 +2428,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_RANDOM)
 #elif defined(__O_RANDOM)
 #if __O_RANDOM != 0
-#define CONFIG_HAVE___O_RANDOM 1
+#define CONFIG_HAVE___O_RANDOM
 #else /* __O_RANDOM */
-#define CONFIG_NO___O_RANDOM 1
+#define CONFIG_NO___O_RANDOM
 #endif /* __O_RANDOM */
 #elif defined(____O_RANDOM__defined)
-#define CONFIG_HAVE___O_RANDOM 1
+#define CONFIG_HAVE___O_RANDOM
 #endif
 
 #ifdef CONFIG_NO__O_RANDOM
@@ -2441,12 +2441,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RANDOM)
 #elif defined(_O_RANDOM)
 #if _O_RANDOM != 0
-#define CONFIG_HAVE__O_RANDOM 1
+#define CONFIG_HAVE__O_RANDOM
 #else /* _O_RANDOM */
-#define CONFIG_NO__O_RANDOM 1
+#define CONFIG_NO__O_RANDOM
 #endif /* _O_RANDOM */
 #elif defined(___O_RANDOM__defined)
-#define CONFIG_HAVE__O_RANDOM 1
+#define CONFIG_HAVE__O_RANDOM
 #endif
 
 #ifdef CONFIG_NO_O_PATH
@@ -2454,12 +2454,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_PATH)
 #elif defined(O_PATH)
 #if O_PATH != 0
-#define CONFIG_HAVE_O_PATH 1
+#define CONFIG_HAVE_O_PATH
 #else /* O_PATH */
-#define CONFIG_NO_O_PATH 1
+#define CONFIG_NO_O_PATH
 #endif /* O_PATH */
 #elif defined(__O_PATH__defined)
-#define CONFIG_HAVE_O_PATH 1
+#define CONFIG_HAVE_O_PATH
 #endif
 
 #ifdef CONFIG_NO___O_PATH
@@ -2467,12 +2467,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_PATH)
 #elif defined(__O_PATH)
 #if __O_PATH != 0
-#define CONFIG_HAVE___O_PATH 1
+#define CONFIG_HAVE___O_PATH
 #else /* __O_PATH */
-#define CONFIG_NO___O_PATH 1
+#define CONFIG_NO___O_PATH
 #endif /* __O_PATH */
 #elif defined(____O_PATH__defined)
-#define CONFIG_HAVE___O_PATH 1
+#define CONFIG_HAVE___O_PATH
 #endif
 
 #ifdef CONFIG_NO__O_PATH
@@ -2480,12 +2480,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_PATH)
 #elif defined(_O_PATH)
 #if _O_PATH != 0
-#define CONFIG_HAVE__O_PATH 1
+#define CONFIG_HAVE__O_PATH
 #else /* _O_PATH */
-#define CONFIG_NO__O_PATH 1
+#define CONFIG_NO__O_PATH
 #endif /* _O_PATH */
 #elif defined(___O_PATH__defined)
-#define CONFIG_HAVE__O_PATH 1
+#define CONFIG_HAVE__O_PATH
 #endif
 
 #ifdef CONFIG_NO_O_NOATIME
@@ -2493,12 +2493,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NOATIME)
 #elif defined(O_NOATIME)
 #if O_NOATIME != 0
-#define CONFIG_HAVE_O_NOATIME 1
+#define CONFIG_HAVE_O_NOATIME
 #else /* O_NOATIME */
-#define CONFIG_NO_O_NOATIME 1
+#define CONFIG_NO_O_NOATIME
 #endif /* O_NOATIME */
 #elif defined(__O_NOATIME__defined)
-#define CONFIG_HAVE_O_NOATIME 1
+#define CONFIG_HAVE_O_NOATIME
 #endif
 
 #ifdef CONFIG_NO___O_NOATIME
@@ -2506,12 +2506,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NOATIME)
 #elif defined(__O_NOATIME)
 #if __O_NOATIME != 0
-#define CONFIG_HAVE___O_NOATIME 1
+#define CONFIG_HAVE___O_NOATIME
 #else /* __O_NOATIME */
-#define CONFIG_NO___O_NOATIME 1
+#define CONFIG_NO___O_NOATIME
 #endif /* __O_NOATIME */
 #elif defined(____O_NOATIME__defined)
-#define CONFIG_HAVE___O_NOATIME 1
+#define CONFIG_HAVE___O_NOATIME
 #endif
 
 #ifdef CONFIG_NO__O_NOATIME
@@ -2519,12 +2519,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOATIME)
 #elif defined(_O_NOATIME)
 #if _O_NOATIME != 0
-#define CONFIG_HAVE__O_NOATIME 1
+#define CONFIG_HAVE__O_NOATIME
 #else /* _O_NOATIME */
-#define CONFIG_NO__O_NOATIME 1
+#define CONFIG_NO__O_NOATIME
 #endif /* _O_NOATIME */
 #elif defined(___O_NOATIME__defined)
-#define CONFIG_HAVE__O_NOATIME 1
+#define CONFIG_HAVE__O_NOATIME
 #endif
 
 #ifdef CONFIG_NO_O_NOCTTY
@@ -2532,12 +2532,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NOCTTY)
 #elif defined(O_NOCTTY)
 #if O_NOCTTY != 0
-#define CONFIG_HAVE_O_NOCTTY 1
+#define CONFIG_HAVE_O_NOCTTY
 #else /* O_NOCTTY */
-#define CONFIG_NO_O_NOCTTY 1
+#define CONFIG_NO_O_NOCTTY
 #endif /* O_NOCTTY */
 #elif defined(__O_NOCTTY__defined)
-#define CONFIG_HAVE_O_NOCTTY 1
+#define CONFIG_HAVE_O_NOCTTY
 #endif
 
 #ifdef CONFIG_NO___O_NOCTTY
@@ -2545,12 +2545,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NOCTTY)
 #elif defined(__O_NOCTTY)
 #if __O_NOCTTY != 0
-#define CONFIG_HAVE___O_NOCTTY 1
+#define CONFIG_HAVE___O_NOCTTY
 #else /* __O_NOCTTY */
-#define CONFIG_NO___O_NOCTTY 1
+#define CONFIG_NO___O_NOCTTY
 #endif /* __O_NOCTTY */
 #elif defined(____O_NOCTTY__defined)
-#define CONFIG_HAVE___O_NOCTTY 1
+#define CONFIG_HAVE___O_NOCTTY
 #endif
 
 #ifdef CONFIG_NO__O_NOCTTY
@@ -2558,12 +2558,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOCTTY)
 #elif defined(_O_NOCTTY)
 #if _O_NOCTTY != 0
-#define CONFIG_HAVE__O_NOCTTY 1
+#define CONFIG_HAVE__O_NOCTTY
 #else /* _O_NOCTTY */
-#define CONFIG_NO__O_NOCTTY 1
+#define CONFIG_NO__O_NOCTTY
 #endif /* _O_NOCTTY */
 #elif defined(___O_NOCTTY__defined)
-#define CONFIG_HAVE__O_NOCTTY 1
+#define CONFIG_HAVE__O_NOCTTY
 #endif
 
 #ifdef CONFIG_NO_O_TEXT
@@ -2571,12 +2571,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_TEXT)
 #elif defined(O_TEXT)
 #if O_TEXT != 0
-#define CONFIG_HAVE_O_TEXT 1
+#define CONFIG_HAVE_O_TEXT
 #else /* O_TEXT */
-#define CONFIG_NO_O_TEXT 1
+#define CONFIG_NO_O_TEXT
 #endif /* O_TEXT */
 #elif defined(__O_TEXT__defined)
-#define CONFIG_HAVE_O_TEXT 1
+#define CONFIG_HAVE_O_TEXT
 #endif
 
 #ifdef CONFIG_NO___O_TEXT
@@ -2584,12 +2584,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_TEXT)
 #elif defined(__O_TEXT)
 #if __O_TEXT != 0
-#define CONFIG_HAVE___O_TEXT 1
+#define CONFIG_HAVE___O_TEXT
 #else /* __O_TEXT */
-#define CONFIG_NO___O_TEXT 1
+#define CONFIG_NO___O_TEXT
 #endif /* __O_TEXT */
 #elif defined(____O_TEXT__defined)
-#define CONFIG_HAVE___O_TEXT 1
+#define CONFIG_HAVE___O_TEXT
 #endif
 
 #ifdef CONFIG_NO__O_TEXT
@@ -2597,12 +2597,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TEXT)
 #elif defined(_O_TEXT)
 #if _O_TEXT != 0
-#define CONFIG_HAVE__O_TEXT 1
+#define CONFIG_HAVE__O_TEXT
 #else /* _O_TEXT */
-#define CONFIG_NO__O_TEXT 1
+#define CONFIG_NO__O_TEXT
 #endif /* _O_TEXT */
 #elif defined(___O_TEXT__defined)
-#define CONFIG_HAVE__O_TEXT 1
+#define CONFIG_HAVE__O_TEXT
 #endif
 
 #ifdef CONFIG_NO_O_WTEXT
@@ -2610,12 +2610,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_WTEXT)
 #elif defined(O_WTEXT)
 #if O_WTEXT != 0
-#define CONFIG_HAVE_O_WTEXT 1
+#define CONFIG_HAVE_O_WTEXT
 #else /* O_WTEXT */
-#define CONFIG_NO_O_WTEXT 1
+#define CONFIG_NO_O_WTEXT
 #endif /* O_WTEXT */
 #elif defined(__O_WTEXT__defined)
-#define CONFIG_HAVE_O_WTEXT 1
+#define CONFIG_HAVE_O_WTEXT
 #endif
 
 #ifdef CONFIG_NO___O_WTEXT
@@ -2623,12 +2623,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_WTEXT)
 #elif defined(__O_WTEXT)
 #if __O_WTEXT != 0
-#define CONFIG_HAVE___O_WTEXT 1
+#define CONFIG_HAVE___O_WTEXT
 #else /* __O_WTEXT */
-#define CONFIG_NO___O_WTEXT 1
+#define CONFIG_NO___O_WTEXT
 #endif /* __O_WTEXT */
 #elif defined(____O_WTEXT__defined)
-#define CONFIG_HAVE___O_WTEXT 1
+#define CONFIG_HAVE___O_WTEXT
 #endif
 
 #ifdef CONFIG_NO__O_WTEXT
@@ -2636,12 +2636,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_WTEXT)
 #elif defined(_O_WTEXT)
 #if _O_WTEXT != 0
-#define CONFIG_HAVE__O_WTEXT 1
+#define CONFIG_HAVE__O_WTEXT
 #else /* _O_WTEXT */
-#define CONFIG_NO__O_WTEXT 1
+#define CONFIG_NO__O_WTEXT
 #endif /* _O_WTEXT */
 #elif defined(___O_WTEXT__defined)
-#define CONFIG_HAVE__O_WTEXT 1
+#define CONFIG_HAVE__O_WTEXT
 #endif
 
 #ifdef CONFIG_NO_O_U16TEXT
@@ -2649,12 +2649,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_U16TEXT)
 #elif defined(O_U16TEXT)
 #if O_U16TEXT != 0
-#define CONFIG_HAVE_O_U16TEXT 1
+#define CONFIG_HAVE_O_U16TEXT
 #else /* O_U16TEXT */
-#define CONFIG_NO_O_U16TEXT 1
+#define CONFIG_NO_O_U16TEXT
 #endif /* O_U16TEXT */
 #elif defined(__O_U16TEXT__defined)
-#define CONFIG_HAVE_O_U16TEXT 1
+#define CONFIG_HAVE_O_U16TEXT
 #endif
 
 #ifdef CONFIG_NO___O_U16TEXT
@@ -2662,12 +2662,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_U16TEXT)
 #elif defined(__O_U16TEXT)
 #if __O_U16TEXT != 0
-#define CONFIG_HAVE___O_U16TEXT 1
+#define CONFIG_HAVE___O_U16TEXT
 #else /* __O_U16TEXT */
-#define CONFIG_NO___O_U16TEXT 1
+#define CONFIG_NO___O_U16TEXT
 #endif /* __O_U16TEXT */
 #elif defined(____O_U16TEXT__defined)
-#define CONFIG_HAVE___O_U16TEXT 1
+#define CONFIG_HAVE___O_U16TEXT
 #endif
 
 #ifdef CONFIG_NO__O_U16TEXT
@@ -2675,12 +2675,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_U16TEXT)
 #elif defined(_O_U16TEXT)
 #if _O_U16TEXT != 0
-#define CONFIG_HAVE__O_U16TEXT 1
+#define CONFIG_HAVE__O_U16TEXT
 #else /* _O_U16TEXT */
-#define CONFIG_NO__O_U16TEXT 1
+#define CONFIG_NO__O_U16TEXT
 #endif /* _O_U16TEXT */
 #elif defined(___O_U16TEXT__defined)
-#define CONFIG_HAVE__O_U16TEXT 1
+#define CONFIG_HAVE__O_U16TEXT
 #endif
 
 #ifdef CONFIG_NO_O_U8TEXT
@@ -2688,12 +2688,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_U8TEXT)
 #elif defined(O_U8TEXT)
 #if O_U8TEXT != 0
-#define CONFIG_HAVE_O_U8TEXT 1
+#define CONFIG_HAVE_O_U8TEXT
 #else /* O_U8TEXT */
-#define CONFIG_NO_O_U8TEXT 1
+#define CONFIG_NO_O_U8TEXT
 #endif /* O_U8TEXT */
 #elif defined(__O_U8TEXT__defined)
-#define CONFIG_HAVE_O_U8TEXT 1
+#define CONFIG_HAVE_O_U8TEXT
 #endif
 
 #ifdef CONFIG_NO___O_U8TEXT
@@ -2701,12 +2701,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_U8TEXT)
 #elif defined(__O_U8TEXT)
 #if __O_U8TEXT != 0
-#define CONFIG_HAVE___O_U8TEXT 1
+#define CONFIG_HAVE___O_U8TEXT
 #else /* __O_U8TEXT */
-#define CONFIG_NO___O_U8TEXT 1
+#define CONFIG_NO___O_U8TEXT
 #endif /* __O_U8TEXT */
 #elif defined(____O_U8TEXT__defined)
-#define CONFIG_HAVE___O_U8TEXT 1
+#define CONFIG_HAVE___O_U8TEXT
 #endif
 
 #ifdef CONFIG_NO__O_U8TEXT
@@ -2714,12 +2714,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_U8TEXT)
 #elif defined(_O_U8TEXT)
 #if _O_U8TEXT != 0
-#define CONFIG_HAVE__O_U8TEXT 1
+#define CONFIG_HAVE__O_U8TEXT
 #else /* _O_U8TEXT */
-#define CONFIG_NO__O_U8TEXT 1
+#define CONFIG_NO__O_U8TEXT
 #endif /* _O_U8TEXT */
 #elif defined(___O_U8TEXT__defined)
-#define CONFIG_HAVE__O_U8TEXT 1
+#define CONFIG_HAVE__O_U8TEXT
 #endif
 
 #ifdef CONFIG_NO_O_TEMPORARY
@@ -2727,12 +2727,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_TEMPORARY)
 #elif defined(O_TEMPORARY)
 #if O_TEMPORARY != 0
-#define CONFIG_HAVE_O_TEMPORARY 1
+#define CONFIG_HAVE_O_TEMPORARY
 #else /* O_TEMPORARY */
-#define CONFIG_NO_O_TEMPORARY 1
+#define CONFIG_NO_O_TEMPORARY
 #endif /* O_TEMPORARY */
 #elif defined(__O_TEMPORARY__defined)
-#define CONFIG_HAVE_O_TEMPORARY 1
+#define CONFIG_HAVE_O_TEMPORARY
 #endif
 
 #ifdef CONFIG_NO___O_TEMPORARY
@@ -2740,12 +2740,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_TEMPORARY)
 #elif defined(__O_TEMPORARY)
 #if __O_TEMPORARY != 0
-#define CONFIG_HAVE___O_TEMPORARY 1
+#define CONFIG_HAVE___O_TEMPORARY
 #else /* __O_TEMPORARY */
-#define CONFIG_NO___O_TEMPORARY 1
+#define CONFIG_NO___O_TEMPORARY
 #endif /* __O_TEMPORARY */
 #elif defined(____O_TEMPORARY__defined)
-#define CONFIG_HAVE___O_TEMPORARY 1
+#define CONFIG_HAVE___O_TEMPORARY
 #endif
 
 #ifdef CONFIG_NO__O_TEMPORARY
@@ -2753,12 +2753,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TEMPORARY)
 #elif defined(_O_TEMPORARY)
 #if _O_TEMPORARY != 0
-#define CONFIG_HAVE__O_TEMPORARY 1
+#define CONFIG_HAVE__O_TEMPORARY
 #else /* _O_TEMPORARY */
-#define CONFIG_NO__O_TEMPORARY 1
+#define CONFIG_NO__O_TEMPORARY
 #endif /* _O_TEMPORARY */
 #elif defined(___O_TEMPORARY__defined)
-#define CONFIG_HAVE__O_TEMPORARY 1
+#define CONFIG_HAVE__O_TEMPORARY
 #endif
 
 #ifdef CONFIG_NO_O_OBTAIN_DIR
@@ -2766,12 +2766,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_OBTAIN_DIR)
 #elif defined(O_OBTAIN_DIR)
 #if O_OBTAIN_DIR != 0
-#define CONFIG_HAVE_O_OBTAIN_DIR 1
+#define CONFIG_HAVE_O_OBTAIN_DIR
 #else /* O_OBTAIN_DIR */
-#define CONFIG_NO_O_OBTAIN_DIR 1
+#define CONFIG_NO_O_OBTAIN_DIR
 #endif /* O_OBTAIN_DIR */
 #elif defined(__O_OBTAIN_DIR__defined)
-#define CONFIG_HAVE_O_OBTAIN_DIR 1
+#define CONFIG_HAVE_O_OBTAIN_DIR
 #endif
 
 #ifdef CONFIG_NO___O_OBTAIN_DIR
@@ -2779,12 +2779,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_OBTAIN_DIR)
 #elif defined(__O_OBTAIN_DIR)
 #if __O_OBTAIN_DIR != 0
-#define CONFIG_HAVE___O_OBTAIN_DIR 1
+#define CONFIG_HAVE___O_OBTAIN_DIR
 #else /* __O_OBTAIN_DIR */
-#define CONFIG_NO___O_OBTAIN_DIR 1
+#define CONFIG_NO___O_OBTAIN_DIR
 #endif /* __O_OBTAIN_DIR */
 #elif defined(____O_OBTAIN_DIR__defined)
-#define CONFIG_HAVE___O_OBTAIN_DIR 1
+#define CONFIG_HAVE___O_OBTAIN_DIR
 #endif
 
 #ifdef CONFIG_NO__O_OBTAIN_DIR
@@ -2792,12 +2792,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_OBTAIN_DIR)
 #elif defined(_O_OBTAIN_DIR)
 #if _O_OBTAIN_DIR != 0
-#define CONFIG_HAVE__O_OBTAIN_DIR 1
+#define CONFIG_HAVE__O_OBTAIN_DIR
 #else /* _O_OBTAIN_DIR */
-#define CONFIG_NO__O_OBTAIN_DIR 1
+#define CONFIG_NO__O_OBTAIN_DIR
 #endif /* _O_OBTAIN_DIR */
 #elif defined(___O_OBTAIN_DIR__defined)
-#define CONFIG_HAVE__O_OBTAIN_DIR 1
+#define CONFIG_HAVE__O_OBTAIN_DIR
 #endif
 
 #ifdef CONFIG_NO_O_CREAT
@@ -2805,12 +2805,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_CREAT)
 #elif defined(O_CREAT)
 #if O_CREAT != 0
-#define CONFIG_HAVE_O_CREAT 1
+#define CONFIG_HAVE_O_CREAT
 #else /* O_CREAT */
-#define CONFIG_NO_O_CREAT 1
+#define CONFIG_NO_O_CREAT
 #endif /* O_CREAT */
 #elif defined(__O_CREAT__defined)
-#define CONFIG_HAVE_O_CREAT 1
+#define CONFIG_HAVE_O_CREAT
 #endif
 
 #ifdef CONFIG_NO___O_CREAT
@@ -2818,12 +2818,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_CREAT)
 #elif defined(__O_CREAT)
 #if __O_CREAT != 0
-#define CONFIG_HAVE___O_CREAT 1
+#define CONFIG_HAVE___O_CREAT
 #else /* __O_CREAT */
-#define CONFIG_NO___O_CREAT 1
+#define CONFIG_NO___O_CREAT
 #endif /* __O_CREAT */
 #elif defined(____O_CREAT__defined)
-#define CONFIG_HAVE___O_CREAT 1
+#define CONFIG_HAVE___O_CREAT
 #endif
 
 #ifdef CONFIG_NO__O_CREAT
@@ -2831,12 +2831,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CREAT)
 #elif defined(_O_CREAT)
 #if _O_CREAT != 0
-#define CONFIG_HAVE__O_CREAT 1
+#define CONFIG_HAVE__O_CREAT
 #else /* _O_CREAT */
-#define CONFIG_NO__O_CREAT 1
+#define CONFIG_NO__O_CREAT
 #endif /* _O_CREAT */
 #elif defined(___O_CREAT__defined)
-#define CONFIG_HAVE__O_CREAT 1
+#define CONFIG_HAVE__O_CREAT
 #endif
 
 #ifdef CONFIG_NO_O_TRUNC
@@ -2844,12 +2844,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_TRUNC)
 #elif defined(O_TRUNC)
 #if O_TRUNC != 0
-#define CONFIG_HAVE_O_TRUNC 1
+#define CONFIG_HAVE_O_TRUNC
 #else /* O_TRUNC */
-#define CONFIG_NO_O_TRUNC 1
+#define CONFIG_NO_O_TRUNC
 #endif /* O_TRUNC */
 #elif defined(__O_TRUNC__defined)
-#define CONFIG_HAVE_O_TRUNC 1
+#define CONFIG_HAVE_O_TRUNC
 #endif
 
 #ifdef CONFIG_NO___O_TRUNC
@@ -2857,12 +2857,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_TRUNC)
 #elif defined(__O_TRUNC)
 #if __O_TRUNC != 0
-#define CONFIG_HAVE___O_TRUNC 1
+#define CONFIG_HAVE___O_TRUNC
 #else /* __O_TRUNC */
-#define CONFIG_NO___O_TRUNC 1
+#define CONFIG_NO___O_TRUNC
 #endif /* __O_TRUNC */
 #elif defined(____O_TRUNC__defined)
-#define CONFIG_HAVE___O_TRUNC 1
+#define CONFIG_HAVE___O_TRUNC
 #endif
 
 #ifdef CONFIG_NO__O_TRUNC
@@ -2870,96 +2870,96 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TRUNC)
 #elif defined(_O_TRUNC)
 #if _O_TRUNC != 0
-#define CONFIG_HAVE__O_TRUNC 1
+#define CONFIG_HAVE__O_TRUNC
 #else /* _O_TRUNC */
-#define CONFIG_NO__O_TRUNC 1
+#define CONFIG_NO__O_TRUNC
 #endif /* _O_TRUNC */
 #elif defined(___O_TRUNC__defined)
-#define CONFIG_HAVE__O_TRUNC 1
+#define CONFIG_HAVE__O_TRUNC
 #endif
 
 #ifdef CONFIG_NO_O_RDONLY
 #undef CONFIG_HAVE_O_RDONLY
 #elif !defined(CONFIG_HAVE_O_RDONLY) && \
       (defined(O_RDONLY) || defined(__O_RDONLY_defined))
-#define CONFIG_HAVE_O_RDONLY 1
+#define CONFIG_HAVE_O_RDONLY
 #endif
 
 #ifdef CONFIG_NO___O_RDONLY
 #undef CONFIG_HAVE___O_RDONLY
 #elif !defined(CONFIG_HAVE___O_RDONLY) && \
       (defined(__O_RDONLY) || defined(____O_RDONLY_defined))
-#define CONFIG_HAVE___O_RDONLY 1
+#define CONFIG_HAVE___O_RDONLY
 #endif
 
 #ifdef CONFIG_NO__O_RDONLY
 #undef CONFIG_HAVE__O_RDONLY
 #elif !defined(CONFIG_HAVE__O_RDONLY) && \
       (defined(_O_RDONLY) || defined(___O_RDONLY_defined))
-#define CONFIG_HAVE__O_RDONLY 1
+#define CONFIG_HAVE__O_RDONLY
 #endif
 
 #ifdef CONFIG_NO_O_WRONLY
 #undef CONFIG_HAVE_O_WRONLY
 #elif !defined(CONFIG_HAVE_O_WRONLY) && \
       (defined(O_WRONLY) || defined(__O_WRONLY_defined))
-#define CONFIG_HAVE_O_WRONLY 1
+#define CONFIG_HAVE_O_WRONLY
 #endif
 
 #ifdef CONFIG_NO___O_WRONLY
 #undef CONFIG_HAVE___O_WRONLY
 #elif !defined(CONFIG_HAVE___O_WRONLY) && \
       (defined(__O_WRONLY) || defined(____O_WRONLY_defined))
-#define CONFIG_HAVE___O_WRONLY 1
+#define CONFIG_HAVE___O_WRONLY
 #endif
 
 #ifdef CONFIG_NO__O_WRONLY
 #undef CONFIG_HAVE__O_WRONLY
 #elif !defined(CONFIG_HAVE__O_WRONLY) && \
       (defined(_O_WRONLY) || defined(___O_WRONLY_defined))
-#define CONFIG_HAVE__O_WRONLY 1
+#define CONFIG_HAVE__O_WRONLY
 #endif
 
 #ifdef CONFIG_NO_O_RDWR
 #undef CONFIG_HAVE_O_RDWR
 #elif !defined(CONFIG_HAVE_O_RDWR) && \
       (defined(O_RDWR) || defined(__O_RDWR_defined))
-#define CONFIG_HAVE_O_RDWR 1
+#define CONFIG_HAVE_O_RDWR
 #endif
 
 #ifdef CONFIG_NO___O_RDWR
 #undef CONFIG_HAVE___O_RDWR
 #elif !defined(CONFIG_HAVE___O_RDWR) && \
       (defined(__O_RDWR) || defined(____O_RDWR_defined))
-#define CONFIG_HAVE___O_RDWR 1
+#define CONFIG_HAVE___O_RDWR
 #endif
 
 #ifdef CONFIG_NO__O_RDWR
 #undef CONFIG_HAVE__O_RDWR
 #elif !defined(CONFIG_HAVE__O_RDWR) && \
       (defined(_O_RDWR) || defined(___O_RDWR_defined))
-#define CONFIG_HAVE__O_RDWR 1
+#define CONFIG_HAVE__O_RDWR
 #endif
 
 #ifdef CONFIG_NO_O_ACCMODE
 #undef CONFIG_HAVE_O_ACCMODE
 #elif !defined(CONFIG_HAVE_O_ACCMODE) && \
       (defined(O_ACCMODE) || defined(__O_ACCMODE_defined))
-#define CONFIG_HAVE_O_ACCMODE 1
+#define CONFIG_HAVE_O_ACCMODE
 #endif
 
 #ifdef CONFIG_NO___O_ACCMODE
 #undef CONFIG_HAVE___O_ACCMODE
 #elif !defined(CONFIG_HAVE___O_ACCMODE) && \
       (defined(__O_ACCMODE) || defined(____O_ACCMODE_defined))
-#define CONFIG_HAVE___O_ACCMODE 1
+#define CONFIG_HAVE___O_ACCMODE
 #endif
 
 #ifdef CONFIG_NO__O_ACCMODE
 #undef CONFIG_HAVE__O_ACCMODE
 #elif !defined(CONFIG_HAVE__O_ACCMODE) && \
       (defined(_O_ACCMODE) || defined(___O_ACCMODE_defined))
-#define CONFIG_HAVE__O_ACCMODE 1
+#define CONFIG_HAVE__O_ACCMODE
 #endif
 
 #ifdef CONFIG_NO_O_CLOEXEC
@@ -2967,12 +2967,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_CLOEXEC)
 #elif defined(O_CLOEXEC)
 #if O_CLOEXEC != 0
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #else /* O_CLOEXEC */
-#define CONFIG_NO_O_CLOEXEC 1
+#define CONFIG_NO_O_CLOEXEC
 #endif /* O_CLOEXEC */
 #elif defined(__O_CLOEXEC__defined)
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #endif
 
 #ifdef CONFIG_NO___O_NOINHERIT
@@ -2980,12 +2980,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NOINHERIT)
 #elif defined(__O_NOINHERIT)
 #if __O_NOINHERIT != 0
-#define CONFIG_HAVE___O_NOINHERIT 1
+#define CONFIG_HAVE___O_NOINHERIT
 #else /* __O_NOINHERIT */
-#define CONFIG_NO___O_NOINHERIT 1
+#define CONFIG_NO___O_NOINHERIT
 #endif /* __O_NOINHERIT */
 #elif defined(____O_NOINHERIT__defined)
-#define CONFIG_HAVE___O_NOINHERIT 1
+#define CONFIG_HAVE___O_NOINHERIT
 #endif
 
 #ifdef CONFIG_NO__O_NOINHERIT
@@ -2993,12 +2993,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOINHERIT)
 #elif defined(_O_NOINHERIT)
 #if _O_NOINHERIT != 0
-#define CONFIG_HAVE__O_NOINHERIT 1
+#define CONFIG_HAVE__O_NOINHERIT
 #else /* _O_NOINHERIT */
-#define CONFIG_NO__O_NOINHERIT 1
+#define CONFIG_NO__O_NOINHERIT
 #endif /* _O_NOINHERIT */
 #elif defined(___O_NOINHERIT__defined)
-#define CONFIG_HAVE__O_NOINHERIT 1
+#define CONFIG_HAVE__O_NOINHERIT
 #endif
 
 #ifdef CONFIG_NO_O_NOINHERIT
@@ -3006,12 +3006,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NOINHERIT)
 #elif defined(O_NOINHERIT)
 #if O_NOINHERIT != 0
-#define CONFIG_HAVE_O_NOINHERIT 1
+#define CONFIG_HAVE_O_NOINHERIT
 #else /* O_NOINHERIT */
-#define CONFIG_NO_O_NOINHERIT 1
+#define CONFIG_NO_O_NOINHERIT
 #endif /* O_NOINHERIT */
 #elif defined(__O_NOINHERIT__defined)
-#define CONFIG_HAVE_O_NOINHERIT 1
+#define CONFIG_HAVE_O_NOINHERIT
 #endif
 
 #ifdef CONFIG_NO___O_CLOEXEC
@@ -3019,12 +3019,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_CLOEXEC)
 #elif defined(__O_CLOEXEC)
 #if __O_CLOEXEC != 0
-#define CONFIG_HAVE___O_CLOEXEC 1
+#define CONFIG_HAVE___O_CLOEXEC
 #else /* __O_CLOEXEC */
-#define CONFIG_NO___O_CLOEXEC 1
+#define CONFIG_NO___O_CLOEXEC
 #endif /* __O_CLOEXEC */
 #elif defined(____O_CLOEXEC__defined)
-#define CONFIG_HAVE___O_CLOEXEC 1
+#define CONFIG_HAVE___O_CLOEXEC
 #endif
 
 #ifdef CONFIG_NO__O_CLOEXEC
@@ -3032,12 +3032,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CLOEXEC)
 #elif defined(_O_CLOEXEC)
 #if _O_CLOEXEC != 0
-#define CONFIG_HAVE__O_CLOEXEC 1
+#define CONFIG_HAVE__O_CLOEXEC
 #else /* _O_CLOEXEC */
-#define CONFIG_NO__O_CLOEXEC 1
+#define CONFIG_NO__O_CLOEXEC
 #endif /* _O_CLOEXEC */
 #elif defined(___O_CLOEXEC__defined)
-#define CONFIG_HAVE__O_CLOEXEC 1
+#define CONFIG_HAVE__O_CLOEXEC
 #endif
 
 #ifdef CONFIG_NO_O_EXCL
@@ -3045,12 +3045,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_EXCL)
 #elif defined(O_EXCL)
 #if O_EXCL != 0
-#define CONFIG_HAVE_O_EXCL 1
+#define CONFIG_HAVE_O_EXCL
 #else /* O_EXCL */
-#define CONFIG_NO_O_EXCL 1
+#define CONFIG_NO_O_EXCL
 #endif /* O_EXCL */
 #elif defined(__O_EXCL__defined)
-#define CONFIG_HAVE_O_EXCL 1
+#define CONFIG_HAVE_O_EXCL
 #endif
 
 #ifdef CONFIG_NO___O_EXCL
@@ -3058,12 +3058,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_EXCL)
 #elif defined(__O_EXCL)
 #if __O_EXCL != 0
-#define CONFIG_HAVE___O_EXCL 1
+#define CONFIG_HAVE___O_EXCL
 #else /* __O_EXCL */
-#define CONFIG_NO___O_EXCL 1
+#define CONFIG_NO___O_EXCL
 #endif /* __O_EXCL */
 #elif defined(____O_EXCL__defined)
-#define CONFIG_HAVE___O_EXCL 1
+#define CONFIG_HAVE___O_EXCL
 #endif
 
 #ifdef CONFIG_NO__O_EXCL
@@ -3071,12 +3071,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXCL)
 #elif defined(_O_EXCL)
 #if _O_EXCL != 0
-#define CONFIG_HAVE__O_EXCL 1
+#define CONFIG_HAVE__O_EXCL
 #else /* _O_EXCL */
-#define CONFIG_NO__O_EXCL 1
+#define CONFIG_NO__O_EXCL
 #endif /* _O_EXCL */
 #elif defined(___O_EXCL__defined)
-#define CONFIG_HAVE__O_EXCL 1
+#define CONFIG_HAVE__O_EXCL
 #endif
 
 #ifdef CONFIG_NO_O_APPEND
@@ -3084,12 +3084,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_APPEND)
 #elif defined(O_APPEND)
 #if O_APPEND != 0
-#define CONFIG_HAVE_O_APPEND 1
+#define CONFIG_HAVE_O_APPEND
 #else /* O_APPEND */
-#define CONFIG_NO_O_APPEND 1
+#define CONFIG_NO_O_APPEND
 #endif /* O_APPEND */
 #elif defined(__O_APPEND__defined)
-#define CONFIG_HAVE_O_APPEND 1
+#define CONFIG_HAVE_O_APPEND
 #endif
 
 #ifdef CONFIG_NO___O_APPEND
@@ -3097,12 +3097,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_APPEND)
 #elif defined(__O_APPEND)
 #if __O_APPEND != 0
-#define CONFIG_HAVE___O_APPEND 1
+#define CONFIG_HAVE___O_APPEND
 #else /* __O_APPEND */
-#define CONFIG_NO___O_APPEND 1
+#define CONFIG_NO___O_APPEND
 #endif /* __O_APPEND */
 #elif defined(____O_APPEND__defined)
-#define CONFIG_HAVE___O_APPEND 1
+#define CONFIG_HAVE___O_APPEND
 #endif
 
 #ifdef CONFIG_NO__O_APPEND
@@ -3110,12 +3110,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_APPEND)
 #elif defined(_O_APPEND)
 #if _O_APPEND != 0
-#define CONFIG_HAVE__O_APPEND 1
+#define CONFIG_HAVE__O_APPEND
 #else /* _O_APPEND */
-#define CONFIG_NO__O_APPEND 1
+#define CONFIG_NO__O_APPEND
 #endif /* _O_APPEND */
 #elif defined(___O_APPEND__defined)
-#define CONFIG_HAVE__O_APPEND 1
+#define CONFIG_HAVE__O_APPEND
 #endif
 
 #ifdef CONFIG_NO_O_NONBLOCK
@@ -3123,12 +3123,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NONBLOCK)
 #elif defined(O_NONBLOCK)
 #if O_NONBLOCK != 0
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #else /* O_NONBLOCK */
-#define CONFIG_NO_O_NONBLOCK 1
+#define CONFIG_NO_O_NONBLOCK
 #endif /* O_NONBLOCK */
 #elif defined(__O_NONBLOCK__defined)
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #endif
 
 #ifdef CONFIG_NO___O_NONBLOCK
@@ -3136,12 +3136,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NONBLOCK)
 #elif defined(__O_NONBLOCK)
 #if __O_NONBLOCK != 0
-#define CONFIG_HAVE___O_NONBLOCK 1
+#define CONFIG_HAVE___O_NONBLOCK
 #else /* __O_NONBLOCK */
-#define CONFIG_NO___O_NONBLOCK 1
+#define CONFIG_NO___O_NONBLOCK
 #endif /* __O_NONBLOCK */
 #elif defined(____O_NONBLOCK__defined)
-#define CONFIG_HAVE___O_NONBLOCK 1
+#define CONFIG_HAVE___O_NONBLOCK
 #endif
 
 #ifdef CONFIG_NO__O_NONBLOCK
@@ -3149,12 +3149,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NONBLOCK)
 #elif defined(_O_NONBLOCK)
 #if _O_NONBLOCK != 0
-#define CONFIG_HAVE__O_NONBLOCK 1
+#define CONFIG_HAVE__O_NONBLOCK
 #else /* _O_NONBLOCK */
-#define CONFIG_NO__O_NONBLOCK 1
+#define CONFIG_NO__O_NONBLOCK
 #endif /* _O_NONBLOCK */
 #elif defined(___O_NONBLOCK__defined)
-#define CONFIG_HAVE__O_NONBLOCK 1
+#define CONFIG_HAVE__O_NONBLOCK
 #endif
 
 #ifdef CONFIG_NO___O_NDELAY
@@ -3162,12 +3162,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NDELAY)
 #elif defined(__O_NDELAY)
 #if __O_NDELAY != 0
-#define CONFIG_HAVE___O_NDELAY 1
+#define CONFIG_HAVE___O_NDELAY
 #else /* __O_NDELAY */
-#define CONFIG_NO___O_NDELAY 1
+#define CONFIG_NO___O_NDELAY
 #endif /* __O_NDELAY */
 #elif defined(____O_NDELAY__defined)
-#define CONFIG_HAVE___O_NDELAY 1
+#define CONFIG_HAVE___O_NDELAY
 #endif
 
 #ifdef CONFIG_NO__O_NDELAY
@@ -3175,12 +3175,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NDELAY)
 #elif defined(_O_NDELAY)
 #if _O_NDELAY != 0
-#define CONFIG_HAVE__O_NDELAY 1
+#define CONFIG_HAVE__O_NDELAY
 #else /* _O_NDELAY */
-#define CONFIG_NO__O_NDELAY 1
+#define CONFIG_NO__O_NDELAY
 #endif /* _O_NDELAY */
 #elif defined(___O_NDELAY__defined)
-#define CONFIG_HAVE__O_NDELAY 1
+#define CONFIG_HAVE__O_NDELAY
 #endif
 
 #ifdef CONFIG_NO_O_NDELAY
@@ -3188,12 +3188,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NDELAY)
 #elif defined(O_NDELAY)
 #if O_NDELAY != 0
-#define CONFIG_HAVE_O_NDELAY 1
+#define CONFIG_HAVE_O_NDELAY
 #else /* O_NDELAY */
-#define CONFIG_NO_O_NDELAY 1
+#define CONFIG_NO_O_NDELAY
 #endif /* O_NDELAY */
 #elif defined(__O_NDELAY__defined)
-#define CONFIG_HAVE_O_NDELAY 1
+#define CONFIG_HAVE_O_NDELAY
 #endif
 
 #ifdef CONFIG_NO_O_RSYNC
@@ -3201,12 +3201,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_RSYNC)
 #elif defined(O_RSYNC)
 #if O_RSYNC != 0
-#define CONFIG_HAVE_O_RSYNC 1
+#define CONFIG_HAVE_O_RSYNC
 #else /* O_RSYNC */
-#define CONFIG_NO_O_RSYNC 1
+#define CONFIG_NO_O_RSYNC
 #endif /* O_RSYNC */
 #elif defined(__O_RSYNC__defined)
-#define CONFIG_HAVE_O_RSYNC 1
+#define CONFIG_HAVE_O_RSYNC
 #endif
 
 #ifdef CONFIG_NO___O_RSYNC
@@ -3214,12 +3214,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_RSYNC)
 #elif defined(__O_RSYNC)
 #if __O_RSYNC != 0
-#define CONFIG_HAVE___O_RSYNC 1
+#define CONFIG_HAVE___O_RSYNC
 #else /* __O_RSYNC */
-#define CONFIG_NO___O_RSYNC 1
+#define CONFIG_NO___O_RSYNC
 #endif /* __O_RSYNC */
 #elif defined(____O_RSYNC__defined)
-#define CONFIG_HAVE___O_RSYNC 1
+#define CONFIG_HAVE___O_RSYNC
 #endif
 
 #ifdef CONFIG_NO__O_RSYNC
@@ -3227,12 +3227,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_RSYNC)
 #elif defined(_O_RSYNC)
 #if _O_RSYNC != 0
-#define CONFIG_HAVE__O_RSYNC 1
+#define CONFIG_HAVE__O_RSYNC
 #else /* _O_RSYNC */
-#define CONFIG_NO__O_RSYNC 1
+#define CONFIG_NO__O_RSYNC
 #endif /* _O_RSYNC */
 #elif defined(___O_RSYNC__defined)
-#define CONFIG_HAVE__O_RSYNC 1
+#define CONFIG_HAVE__O_RSYNC
 #endif
 
 #ifdef CONFIG_NO_O_SYNC
@@ -3240,12 +3240,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SYNC)
 #elif defined(O_SYNC)
 #if O_SYNC != 0
-#define CONFIG_HAVE_O_SYNC 1
+#define CONFIG_HAVE_O_SYNC
 #else /* O_SYNC */
-#define CONFIG_NO_O_SYNC 1
+#define CONFIG_NO_O_SYNC
 #endif /* O_SYNC */
 #elif defined(__O_SYNC__defined)
-#define CONFIG_HAVE_O_SYNC 1
+#define CONFIG_HAVE_O_SYNC
 #endif
 
 #ifdef CONFIG_NO___O_SYNC
@@ -3253,12 +3253,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SYNC)
 #elif defined(__O_SYNC)
 #if __O_SYNC != 0
-#define CONFIG_HAVE___O_SYNC 1
+#define CONFIG_HAVE___O_SYNC
 #else /* __O_SYNC */
-#define CONFIG_NO___O_SYNC 1
+#define CONFIG_NO___O_SYNC
 #endif /* __O_SYNC */
 #elif defined(____O_SYNC__defined)
-#define CONFIG_HAVE___O_SYNC 1
+#define CONFIG_HAVE___O_SYNC
 #endif
 
 #ifdef CONFIG_NO__O_SYNC
@@ -3266,12 +3266,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SYNC)
 #elif defined(_O_SYNC)
 #if _O_SYNC != 0
-#define CONFIG_HAVE__O_SYNC 1
+#define CONFIG_HAVE__O_SYNC
 #else /* _O_SYNC */
-#define CONFIG_NO__O_SYNC 1
+#define CONFIG_NO__O_SYNC
 #endif /* _O_SYNC */
 #elif defined(___O_SYNC__defined)
-#define CONFIG_HAVE__O_SYNC 1
+#define CONFIG_HAVE__O_SYNC
 #endif
 
 #ifdef CONFIG_NO_O_DSYNC
@@ -3279,12 +3279,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_DSYNC)
 #elif defined(O_DSYNC)
 #if O_DSYNC != 0
-#define CONFIG_HAVE_O_DSYNC 1
+#define CONFIG_HAVE_O_DSYNC
 #else /* O_DSYNC */
-#define CONFIG_NO_O_DSYNC 1
+#define CONFIG_NO_O_DSYNC
 #endif /* O_DSYNC */
 #elif defined(__O_DSYNC__defined)
-#define CONFIG_HAVE_O_DSYNC 1
+#define CONFIG_HAVE_O_DSYNC
 #endif
 
 #ifdef CONFIG_NO___O_DSYNC
@@ -3292,12 +3292,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_DSYNC)
 #elif defined(__O_DSYNC)
 #if __O_DSYNC != 0
-#define CONFIG_HAVE___O_DSYNC 1
+#define CONFIG_HAVE___O_DSYNC
 #else /* __O_DSYNC */
-#define CONFIG_NO___O_DSYNC 1
+#define CONFIG_NO___O_DSYNC
 #endif /* __O_DSYNC */
 #elif defined(____O_DSYNC__defined)
-#define CONFIG_HAVE___O_DSYNC 1
+#define CONFIG_HAVE___O_DSYNC
 #endif
 
 #ifdef CONFIG_NO__O_DSYNC
@@ -3305,12 +3305,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DSYNC)
 #elif defined(_O_DSYNC)
 #if _O_DSYNC != 0
-#define CONFIG_HAVE__O_DSYNC 1
+#define CONFIG_HAVE__O_DSYNC
 #else /* _O_DSYNC */
-#define CONFIG_NO__O_DSYNC 1
+#define CONFIG_NO__O_DSYNC
 #endif /* _O_DSYNC */
 #elif defined(___O_DSYNC__defined)
-#define CONFIG_HAVE__O_DSYNC 1
+#define CONFIG_HAVE__O_DSYNC
 #endif
 
 #ifdef CONFIG_NO_O_ASYNC
@@ -3318,12 +3318,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_ASYNC)
 #elif defined(O_ASYNC)
 #if O_ASYNC != 0
-#define CONFIG_HAVE_O_ASYNC 1
+#define CONFIG_HAVE_O_ASYNC
 #else /* O_ASYNC */
-#define CONFIG_NO_O_ASYNC 1
+#define CONFIG_NO_O_ASYNC
 #endif /* O_ASYNC */
 #elif defined(__O_ASYNC__defined)
-#define CONFIG_HAVE_O_ASYNC 1
+#define CONFIG_HAVE_O_ASYNC
 #endif
 
 #ifdef CONFIG_NO___O_ASYNC
@@ -3331,12 +3331,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_ASYNC)
 #elif defined(__O_ASYNC)
 #if __O_ASYNC != 0
-#define CONFIG_HAVE___O_ASYNC 1
+#define CONFIG_HAVE___O_ASYNC
 #else /* __O_ASYNC */
-#define CONFIG_NO___O_ASYNC 1
+#define CONFIG_NO___O_ASYNC
 #endif /* __O_ASYNC */
 #elif defined(____O_ASYNC__defined)
-#define CONFIG_HAVE___O_ASYNC 1
+#define CONFIG_HAVE___O_ASYNC
 #endif
 
 #ifdef CONFIG_NO__O_ASYNC
@@ -3344,12 +3344,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_ASYNC)
 #elif defined(_O_ASYNC)
 #if _O_ASYNC != 0
-#define CONFIG_HAVE__O_ASYNC 1
+#define CONFIG_HAVE__O_ASYNC
 #else /* _O_ASYNC */
-#define CONFIG_NO__O_ASYNC 1
+#define CONFIG_NO__O_ASYNC
 #endif /* _O_ASYNC */
 #elif defined(___O_ASYNC__defined)
-#define CONFIG_HAVE__O_ASYNC 1
+#define CONFIG_HAVE__O_ASYNC
 #endif
 
 #ifdef CONFIG_NO_O_DIRECT
@@ -3357,12 +3357,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_DIRECT)
 #elif defined(O_DIRECT)
 #if O_DIRECT != 0
-#define CONFIG_HAVE_O_DIRECT 1
+#define CONFIG_HAVE_O_DIRECT
 #else /* O_DIRECT */
-#define CONFIG_NO_O_DIRECT 1
+#define CONFIG_NO_O_DIRECT
 #endif /* O_DIRECT */
 #elif defined(__O_DIRECT__defined)
-#define CONFIG_HAVE_O_DIRECT 1
+#define CONFIG_HAVE_O_DIRECT
 #endif
 
 #ifdef CONFIG_NO___O_DIRECT
@@ -3370,12 +3370,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_DIRECT)
 #elif defined(__O_DIRECT)
 #if __O_DIRECT != 0
-#define CONFIG_HAVE___O_DIRECT 1
+#define CONFIG_HAVE___O_DIRECT
 #else /* __O_DIRECT */
-#define CONFIG_NO___O_DIRECT 1
+#define CONFIG_NO___O_DIRECT
 #endif /* __O_DIRECT */
 #elif defined(____O_DIRECT__defined)
-#define CONFIG_HAVE___O_DIRECT 1
+#define CONFIG_HAVE___O_DIRECT
 #endif
 
 #ifdef CONFIG_NO__O_DIRECT
@@ -3383,12 +3383,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DIRECT)
 #elif defined(_O_DIRECT)
 #if _O_DIRECT != 0
-#define CONFIG_HAVE__O_DIRECT 1
+#define CONFIG_HAVE__O_DIRECT
 #else /* _O_DIRECT */
-#define CONFIG_NO__O_DIRECT 1
+#define CONFIG_NO__O_DIRECT
 #endif /* _O_DIRECT */
 #elif defined(___O_DIRECT__defined)
-#define CONFIG_HAVE__O_DIRECT 1
+#define CONFIG_HAVE__O_DIRECT
 #endif
 
 #ifdef CONFIG_NO_O_LARGEFILE
@@ -3396,12 +3396,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_LARGEFILE)
 #elif defined(O_LARGEFILE)
 #if O_LARGEFILE != 0
-#define CONFIG_HAVE_O_LARGEFILE 1
+#define CONFIG_HAVE_O_LARGEFILE
 #else /* O_LARGEFILE */
-#define CONFIG_NO_O_LARGEFILE 1
+#define CONFIG_NO_O_LARGEFILE
 #endif /* O_LARGEFILE */
 #elif defined(__O_LARGEFILE__defined)
-#define CONFIG_HAVE_O_LARGEFILE 1
+#define CONFIG_HAVE_O_LARGEFILE
 #endif
 
 #ifdef CONFIG_NO___O_LARGEFILE
@@ -3409,12 +3409,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_LARGEFILE)
 #elif defined(__O_LARGEFILE)
 #if __O_LARGEFILE != 0
-#define CONFIG_HAVE___O_LARGEFILE 1
+#define CONFIG_HAVE___O_LARGEFILE
 #else /* __O_LARGEFILE */
-#define CONFIG_NO___O_LARGEFILE 1
+#define CONFIG_NO___O_LARGEFILE
 #endif /* __O_LARGEFILE */
 #elif defined(____O_LARGEFILE__defined)
-#define CONFIG_HAVE___O_LARGEFILE 1
+#define CONFIG_HAVE___O_LARGEFILE
 #endif
 
 #ifdef CONFIG_NO__O_LARGEFILE
@@ -3422,12 +3422,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_LARGEFILE)
 #elif defined(_O_LARGEFILE)
 #if _O_LARGEFILE != 0
-#define CONFIG_HAVE__O_LARGEFILE 1
+#define CONFIG_HAVE__O_LARGEFILE
 #else /* _O_LARGEFILE */
-#define CONFIG_NO__O_LARGEFILE 1
+#define CONFIG_NO__O_LARGEFILE
 #endif /* _O_LARGEFILE */
 #elif defined(___O_LARGEFILE__defined)
-#define CONFIG_HAVE__O_LARGEFILE 1
+#define CONFIG_HAVE__O_LARGEFILE
 #endif
 
 #ifdef CONFIG_NO_O_DIRECTORY
@@ -3435,12 +3435,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_DIRECTORY)
 #elif defined(O_DIRECTORY)
 #if O_DIRECTORY != 0
-#define CONFIG_HAVE_O_DIRECTORY 1
+#define CONFIG_HAVE_O_DIRECTORY
 #else /* O_DIRECTORY */
-#define CONFIG_NO_O_DIRECTORY 1
+#define CONFIG_NO_O_DIRECTORY
 #endif /* O_DIRECTORY */
 #elif defined(__O_DIRECTORY__defined)
-#define CONFIG_HAVE_O_DIRECTORY 1
+#define CONFIG_HAVE_O_DIRECTORY
 #endif
 
 #ifdef CONFIG_NO___O_DIRECTORY
@@ -3448,12 +3448,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_DIRECTORY)
 #elif defined(__O_DIRECTORY)
 #if __O_DIRECTORY != 0
-#define CONFIG_HAVE___O_DIRECTORY 1
+#define CONFIG_HAVE___O_DIRECTORY
 #else /* __O_DIRECTORY */
-#define CONFIG_NO___O_DIRECTORY 1
+#define CONFIG_NO___O_DIRECTORY
 #endif /* __O_DIRECTORY */
 #elif defined(____O_DIRECTORY__defined)
-#define CONFIG_HAVE___O_DIRECTORY 1
+#define CONFIG_HAVE___O_DIRECTORY
 #endif
 
 #ifdef CONFIG_NO__O_DIRECTORY
@@ -3461,12 +3461,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DIRECTORY)
 #elif defined(_O_DIRECTORY)
 #if _O_DIRECTORY != 0
-#define CONFIG_HAVE__O_DIRECTORY 1
+#define CONFIG_HAVE__O_DIRECTORY
 #else /* _O_DIRECTORY */
-#define CONFIG_NO__O_DIRECTORY 1
+#define CONFIG_NO__O_DIRECTORY
 #endif /* _O_DIRECTORY */
 #elif defined(___O_DIRECTORY__defined)
-#define CONFIG_HAVE__O_DIRECTORY 1
+#define CONFIG_HAVE__O_DIRECTORY
 #endif
 
 #ifdef CONFIG_NO_O_NOFOLLOW
@@ -3474,12 +3474,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NOFOLLOW)
 #elif defined(O_NOFOLLOW)
 #if O_NOFOLLOW != 0
-#define CONFIG_HAVE_O_NOFOLLOW 1
+#define CONFIG_HAVE_O_NOFOLLOW
 #else /* O_NOFOLLOW */
-#define CONFIG_NO_O_NOFOLLOW 1
+#define CONFIG_NO_O_NOFOLLOW
 #endif /* O_NOFOLLOW */
 #elif defined(__O_NOFOLLOW__defined)
-#define CONFIG_HAVE_O_NOFOLLOW 1
+#define CONFIG_HAVE_O_NOFOLLOW
 #endif
 
 #ifdef CONFIG_NO___O_NOFOLLOW
@@ -3487,12 +3487,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NOFOLLOW)
 #elif defined(__O_NOFOLLOW)
 #if __O_NOFOLLOW != 0
-#define CONFIG_HAVE___O_NOFOLLOW 1
+#define CONFIG_HAVE___O_NOFOLLOW
 #else /* __O_NOFOLLOW */
-#define CONFIG_NO___O_NOFOLLOW 1
+#define CONFIG_NO___O_NOFOLLOW
 #endif /* __O_NOFOLLOW */
 #elif defined(____O_NOFOLLOW__defined)
-#define CONFIG_HAVE___O_NOFOLLOW 1
+#define CONFIG_HAVE___O_NOFOLLOW
 #endif
 
 #ifdef CONFIG_NO__O_NOFOLLOW
@@ -3500,12 +3500,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOFOLLOW)
 #elif defined(_O_NOFOLLOW)
 #if _O_NOFOLLOW != 0
-#define CONFIG_HAVE__O_NOFOLLOW 1
+#define CONFIG_HAVE__O_NOFOLLOW
 #else /* _O_NOFOLLOW */
-#define CONFIG_NO__O_NOFOLLOW 1
+#define CONFIG_NO__O_NOFOLLOW
 #endif /* _O_NOFOLLOW */
 #elif defined(___O_NOFOLLOW__defined)
-#define CONFIG_HAVE__O_NOFOLLOW 1
+#define CONFIG_HAVE__O_NOFOLLOW
 #endif
 
 #ifdef CONFIG_NO_O_TMPFILE
@@ -3513,12 +3513,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_TMPFILE)
 #elif defined(O_TMPFILE)
 #if O_TMPFILE != 0
-#define CONFIG_HAVE_O_TMPFILE 1
+#define CONFIG_HAVE_O_TMPFILE
 #else /* O_TMPFILE */
-#define CONFIG_NO_O_TMPFILE 1
+#define CONFIG_NO_O_TMPFILE
 #endif /* O_TMPFILE */
 #elif defined(__O_TMPFILE__defined)
-#define CONFIG_HAVE_O_TMPFILE 1
+#define CONFIG_HAVE_O_TMPFILE
 #endif
 
 #ifdef CONFIG_NO___O_TMPFILE
@@ -3526,12 +3526,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_TMPFILE)
 #elif defined(__O_TMPFILE)
 #if __O_TMPFILE != 0
-#define CONFIG_HAVE___O_TMPFILE 1
+#define CONFIG_HAVE___O_TMPFILE
 #else /* __O_TMPFILE */
-#define CONFIG_NO___O_TMPFILE 1
+#define CONFIG_NO___O_TMPFILE
 #endif /* __O_TMPFILE */
 #elif defined(____O_TMPFILE__defined)
-#define CONFIG_HAVE___O_TMPFILE 1
+#define CONFIG_HAVE___O_TMPFILE
 #endif
 
 #ifdef CONFIG_NO__O_TMPFILE
@@ -3539,12 +3539,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TMPFILE)
 #elif defined(_O_TMPFILE)
 #if _O_TMPFILE != 0
-#define CONFIG_HAVE__O_TMPFILE 1
+#define CONFIG_HAVE__O_TMPFILE
 #else /* _O_TMPFILE */
-#define CONFIG_NO__O_TMPFILE 1
+#define CONFIG_NO__O_TMPFILE
 #endif /* _O_TMPFILE */
 #elif defined(___O_TMPFILE__defined)
-#define CONFIG_HAVE__O_TMPFILE 1
+#define CONFIG_HAVE__O_TMPFILE
 #endif
 
 #ifdef CONFIG_NO_O_CLOFORK
@@ -3552,12 +3552,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_CLOFORK)
 #elif defined(O_CLOFORK)
 #if O_CLOFORK != 0
-#define CONFIG_HAVE_O_CLOFORK 1
+#define CONFIG_HAVE_O_CLOFORK
 #else /* O_CLOFORK */
-#define CONFIG_NO_O_CLOFORK 1
+#define CONFIG_NO_O_CLOFORK
 #endif /* O_CLOFORK */
 #elif defined(__O_CLOFORK__defined)
-#define CONFIG_HAVE_O_CLOFORK 1
+#define CONFIG_HAVE_O_CLOFORK
 #endif
 
 #ifdef CONFIG_NO___O_CLOFORK
@@ -3565,12 +3565,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_CLOFORK)
 #elif defined(__O_CLOFORK)
 #if __O_CLOFORK != 0
-#define CONFIG_HAVE___O_CLOFORK 1
+#define CONFIG_HAVE___O_CLOFORK
 #else /* __O_CLOFORK */
-#define CONFIG_NO___O_CLOFORK 1
+#define CONFIG_NO___O_CLOFORK
 #endif /* __O_CLOFORK */
 #elif defined(____O_CLOFORK__defined)
-#define CONFIG_HAVE___O_CLOFORK 1
+#define CONFIG_HAVE___O_CLOFORK
 #endif
 
 #ifdef CONFIG_NO__O_CLOFORK
@@ -3578,12 +3578,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_CLOFORK)
 #elif defined(_O_CLOFORK)
 #if _O_CLOFORK != 0
-#define CONFIG_HAVE__O_CLOFORK 1
+#define CONFIG_HAVE__O_CLOFORK
 #else /* _O_CLOFORK */
-#define CONFIG_NO__O_CLOFORK 1
+#define CONFIG_NO__O_CLOFORK
 #endif /* _O_CLOFORK */
 #elif defined(___O_CLOFORK__defined)
-#define CONFIG_HAVE__O_CLOFORK 1
+#define CONFIG_HAVE__O_CLOFORK
 #endif
 
 #ifdef CONFIG_NO_O_SYMLINK
@@ -3591,12 +3591,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SYMLINK)
 #elif defined(O_SYMLINK)
 #if O_SYMLINK != 0
-#define CONFIG_HAVE_O_SYMLINK 1
+#define CONFIG_HAVE_O_SYMLINK
 #else /* O_SYMLINK */
-#define CONFIG_NO_O_SYMLINK 1
+#define CONFIG_NO_O_SYMLINK
 #endif /* O_SYMLINK */
 #elif defined(__O_SYMLINK__defined)
-#define CONFIG_HAVE_O_SYMLINK 1
+#define CONFIG_HAVE_O_SYMLINK
 #endif
 
 #ifdef CONFIG_NO___O_SYMLINK
@@ -3604,12 +3604,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SYMLINK)
 #elif defined(__O_SYMLINK)
 #if __O_SYMLINK != 0
-#define CONFIG_HAVE___O_SYMLINK 1
+#define CONFIG_HAVE___O_SYMLINK
 #else /* __O_SYMLINK */
-#define CONFIG_NO___O_SYMLINK 1
+#define CONFIG_NO___O_SYMLINK
 #endif /* __O_SYMLINK */
 #elif defined(____O_SYMLINK__defined)
-#define CONFIG_HAVE___O_SYMLINK 1
+#define CONFIG_HAVE___O_SYMLINK
 #endif
 
 #ifdef CONFIG_NO__O_SYMLINK
@@ -3617,12 +3617,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SYMLINK)
 #elif defined(_O_SYMLINK)
 #if _O_SYMLINK != 0
-#define CONFIG_HAVE__O_SYMLINK 1
+#define CONFIG_HAVE__O_SYMLINK
 #else /* _O_SYMLINK */
-#define CONFIG_NO__O_SYMLINK 1
+#define CONFIG_NO__O_SYMLINK
 #endif /* _O_SYMLINK */
 #elif defined(___O_SYMLINK__defined)
-#define CONFIG_HAVE__O_SYMLINK 1
+#define CONFIG_HAVE__O_SYMLINK
 #endif
 
 #ifdef CONFIG_NO_O_DOSPATH
@@ -3630,12 +3630,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_DOSPATH)
 #elif defined(O_DOSPATH)
 #if O_DOSPATH != 0
-#define CONFIG_HAVE_O_DOSPATH 1
+#define CONFIG_HAVE_O_DOSPATH
 #else /* O_DOSPATH */
-#define CONFIG_NO_O_DOSPATH 1
+#define CONFIG_NO_O_DOSPATH
 #endif /* O_DOSPATH */
 #elif defined(__O_DOSPATH__defined)
-#define CONFIG_HAVE_O_DOSPATH 1
+#define CONFIG_HAVE_O_DOSPATH
 #endif
 
 #ifdef CONFIG_NO___O_DOSPATH
@@ -3643,12 +3643,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_DOSPATH)
 #elif defined(__O_DOSPATH)
 #if __O_DOSPATH != 0
-#define CONFIG_HAVE___O_DOSPATH 1
+#define CONFIG_HAVE___O_DOSPATH
 #else /* __O_DOSPATH */
-#define CONFIG_NO___O_DOSPATH 1
+#define CONFIG_NO___O_DOSPATH
 #endif /* __O_DOSPATH */
 #elif defined(____O_DOSPATH__defined)
-#define CONFIG_HAVE___O_DOSPATH 1
+#define CONFIG_HAVE___O_DOSPATH
 #endif
 
 #ifdef CONFIG_NO__O_DOSPATH
@@ -3656,12 +3656,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_DOSPATH)
 #elif defined(_O_DOSPATH)
 #if _O_DOSPATH != 0
-#define CONFIG_HAVE__O_DOSPATH 1
+#define CONFIG_HAVE__O_DOSPATH
 #else /* _O_DOSPATH */
-#define CONFIG_NO__O_DOSPATH 1
+#define CONFIG_NO__O_DOSPATH
 #endif /* _O_DOSPATH */
 #elif defined(___O_DOSPATH__defined)
-#define CONFIG_HAVE__O_DOSPATH 1
+#define CONFIG_HAVE__O_DOSPATH
 #endif
 
 #ifdef CONFIG_NO_O_SHLOCK
@@ -3669,12 +3669,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SHLOCK)
 #elif defined(O_SHLOCK)
 #if O_SHLOCK != 0
-#define CONFIG_HAVE_O_SHLOCK 1
+#define CONFIG_HAVE_O_SHLOCK
 #else /* O_SHLOCK */
-#define CONFIG_NO_O_SHLOCK 1
+#define CONFIG_NO_O_SHLOCK
 #endif /* O_SHLOCK */
 #elif defined(__O_SHLOCK__defined)
-#define CONFIG_HAVE_O_SHLOCK 1
+#define CONFIG_HAVE_O_SHLOCK
 #endif
 
 #ifdef CONFIG_NO___O_SHLOCK
@@ -3682,12 +3682,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SHLOCK)
 #elif defined(__O_SHLOCK)
 #if __O_SHLOCK != 0
-#define CONFIG_HAVE___O_SHLOCK 1
+#define CONFIG_HAVE___O_SHLOCK
 #else /* __O_SHLOCK */
-#define CONFIG_NO___O_SHLOCK 1
+#define CONFIG_NO___O_SHLOCK
 #endif /* __O_SHLOCK */
 #elif defined(____O_SHLOCK__defined)
-#define CONFIG_HAVE___O_SHLOCK 1
+#define CONFIG_HAVE___O_SHLOCK
 #endif
 
 #ifdef CONFIG_NO__O_SHLOCK
@@ -3695,12 +3695,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SHLOCK)
 #elif defined(_O_SHLOCK)
 #if _O_SHLOCK != 0
-#define CONFIG_HAVE__O_SHLOCK 1
+#define CONFIG_HAVE__O_SHLOCK
 #else /* _O_SHLOCK */
-#define CONFIG_NO__O_SHLOCK 1
+#define CONFIG_NO__O_SHLOCK
 #endif /* _O_SHLOCK */
 #elif defined(___O_SHLOCK__defined)
-#define CONFIG_HAVE__O_SHLOCK 1
+#define CONFIG_HAVE__O_SHLOCK
 #endif
 
 #ifdef CONFIG_NO_O_EXLOCK
@@ -3708,12 +3708,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_EXLOCK)
 #elif defined(O_EXLOCK)
 #if O_EXLOCK != 0
-#define CONFIG_HAVE_O_EXLOCK 1
+#define CONFIG_HAVE_O_EXLOCK
 #else /* O_EXLOCK */
-#define CONFIG_NO_O_EXLOCK 1
+#define CONFIG_NO_O_EXLOCK
 #endif /* O_EXLOCK */
 #elif defined(__O_EXLOCK__defined)
-#define CONFIG_HAVE_O_EXLOCK 1
+#define CONFIG_HAVE_O_EXLOCK
 #endif
 
 #ifdef CONFIG_NO___O_EXLOCK
@@ -3721,12 +3721,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_EXLOCK)
 #elif defined(__O_EXLOCK)
 #if __O_EXLOCK != 0
-#define CONFIG_HAVE___O_EXLOCK 1
+#define CONFIG_HAVE___O_EXLOCK
 #else /* __O_EXLOCK */
-#define CONFIG_NO___O_EXLOCK 1
+#define CONFIG_NO___O_EXLOCK
 #endif /* __O_EXLOCK */
 #elif defined(____O_EXLOCK__defined)
-#define CONFIG_HAVE___O_EXLOCK 1
+#define CONFIG_HAVE___O_EXLOCK
 #endif
 
 #ifdef CONFIG_NO__O_EXLOCK
@@ -3734,12 +3734,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXLOCK)
 #elif defined(_O_EXLOCK)
 #if _O_EXLOCK != 0
-#define CONFIG_HAVE__O_EXLOCK 1
+#define CONFIG_HAVE__O_EXLOCK
 #else /* _O_EXLOCK */
-#define CONFIG_NO__O_EXLOCK 1
+#define CONFIG_NO__O_EXLOCK
 #endif /* _O_EXLOCK */
 #elif defined(___O_EXLOCK__defined)
-#define CONFIG_HAVE__O_EXLOCK 1
+#define CONFIG_HAVE__O_EXLOCK
 #endif
 
 #ifdef CONFIG_NO_O_XATTR
@@ -3747,12 +3747,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_XATTR)
 #elif defined(O_XATTR)
 #if O_XATTR != 0
-#define CONFIG_HAVE_O_XATTR 1
+#define CONFIG_HAVE_O_XATTR
 #else /* O_XATTR */
-#define CONFIG_NO_O_XATTR 1
+#define CONFIG_NO_O_XATTR
 #endif /* O_XATTR */
 #elif defined(__O_XATTR__defined)
-#define CONFIG_HAVE_O_XATTR 1
+#define CONFIG_HAVE_O_XATTR
 #endif
 
 #ifdef CONFIG_NO___O_XATTR
@@ -3760,12 +3760,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_XATTR)
 #elif defined(__O_XATTR)
 #if __O_XATTR != 0
-#define CONFIG_HAVE___O_XATTR 1
+#define CONFIG_HAVE___O_XATTR
 #else /* __O_XATTR */
-#define CONFIG_NO___O_XATTR 1
+#define CONFIG_NO___O_XATTR
 #endif /* __O_XATTR */
 #elif defined(____O_XATTR__defined)
-#define CONFIG_HAVE___O_XATTR 1
+#define CONFIG_HAVE___O_XATTR
 #endif
 
 #ifdef CONFIG_NO__O_XATTR
@@ -3773,12 +3773,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_XATTR)
 #elif defined(_O_XATTR)
 #if _O_XATTR != 0
-#define CONFIG_HAVE__O_XATTR 1
+#define CONFIG_HAVE__O_XATTR
 #else /* _O_XATTR */
-#define CONFIG_NO__O_XATTR 1
+#define CONFIG_NO__O_XATTR
 #endif /* _O_XATTR */
 #elif defined(___O_XATTR__defined)
-#define CONFIG_HAVE__O_XATTR 1
+#define CONFIG_HAVE__O_XATTR
 #endif
 
 #ifdef CONFIG_NO_O_EXEC
@@ -3786,12 +3786,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_EXEC)
 #elif defined(O_EXEC)
 #if O_EXEC != 0
-#define CONFIG_HAVE_O_EXEC 1
+#define CONFIG_HAVE_O_EXEC
 #else /* O_EXEC */
-#define CONFIG_NO_O_EXEC 1
+#define CONFIG_NO_O_EXEC
 #endif /* O_EXEC */
 #elif defined(__O_EXEC__defined)
-#define CONFIG_HAVE_O_EXEC 1
+#define CONFIG_HAVE_O_EXEC
 #endif
 
 #ifdef CONFIG_NO___O_EXEC
@@ -3799,12 +3799,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_EXEC)
 #elif defined(__O_EXEC)
 #if __O_EXEC != 0
-#define CONFIG_HAVE___O_EXEC 1
+#define CONFIG_HAVE___O_EXEC
 #else /* __O_EXEC */
-#define CONFIG_NO___O_EXEC 1
+#define CONFIG_NO___O_EXEC
 #endif /* __O_EXEC */
 #elif defined(____O_EXEC__defined)
-#define CONFIG_HAVE___O_EXEC 1
+#define CONFIG_HAVE___O_EXEC
 #endif
 
 #ifdef CONFIG_NO__O_EXEC
@@ -3812,12 +3812,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_EXEC)
 #elif defined(_O_EXEC)
 #if _O_EXEC != 0
-#define CONFIG_HAVE__O_EXEC 1
+#define CONFIG_HAVE__O_EXEC
 #else /* _O_EXEC */
-#define CONFIG_NO__O_EXEC 1
+#define CONFIG_NO__O_EXEC
 #endif /* _O_EXEC */
 #elif defined(___O_EXEC__defined)
-#define CONFIG_HAVE__O_EXEC 1
+#define CONFIG_HAVE__O_EXEC
 #endif
 
 #ifdef CONFIG_NO_O_SEARCH
@@ -3825,12 +3825,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_SEARCH)
 #elif defined(O_SEARCH)
 #if O_SEARCH != 0
-#define CONFIG_HAVE_O_SEARCH 1
+#define CONFIG_HAVE_O_SEARCH
 #else /* O_SEARCH */
-#define CONFIG_NO_O_SEARCH 1
+#define CONFIG_NO_O_SEARCH
 #endif /* O_SEARCH */
 #elif defined(__O_SEARCH__defined)
-#define CONFIG_HAVE_O_SEARCH 1
+#define CONFIG_HAVE_O_SEARCH
 #endif
 
 #ifdef CONFIG_NO___O_SEARCH
@@ -3838,12 +3838,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_SEARCH)
 #elif defined(__O_SEARCH)
 #if __O_SEARCH != 0
-#define CONFIG_HAVE___O_SEARCH 1
+#define CONFIG_HAVE___O_SEARCH
 #else /* __O_SEARCH */
-#define CONFIG_NO___O_SEARCH 1
+#define CONFIG_NO___O_SEARCH
 #endif /* __O_SEARCH */
 #elif defined(____O_SEARCH__defined)
-#define CONFIG_HAVE___O_SEARCH 1
+#define CONFIG_HAVE___O_SEARCH
 #endif
 
 #ifdef CONFIG_NO__O_SEARCH
@@ -3851,12 +3851,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_SEARCH)
 #elif defined(_O_SEARCH)
 #if _O_SEARCH != 0
-#define CONFIG_HAVE__O_SEARCH 1
+#define CONFIG_HAVE__O_SEARCH
 #else /* _O_SEARCH */
-#define CONFIG_NO__O_SEARCH 1
+#define CONFIG_NO__O_SEARCH
 #endif /* _O_SEARCH */
 #elif defined(___O_SEARCH__defined)
-#define CONFIG_HAVE__O_SEARCH 1
+#define CONFIG_HAVE__O_SEARCH
 #endif
 
 #ifdef CONFIG_NO_O_TTY_INIT
@@ -3864,12 +3864,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_TTY_INIT)
 #elif defined(O_TTY_INIT)
 #if O_TTY_INIT != 0
-#define CONFIG_HAVE_O_TTY_INIT 1
+#define CONFIG_HAVE_O_TTY_INIT
 #else /* O_TTY_INIT */
-#define CONFIG_NO_O_TTY_INIT 1
+#define CONFIG_NO_O_TTY_INIT
 #endif /* O_TTY_INIT */
 #elif defined(__O_TTY_INIT__defined)
-#define CONFIG_HAVE_O_TTY_INIT 1
+#define CONFIG_HAVE_O_TTY_INIT
 #endif
 
 #ifdef CONFIG_NO___O_TTY_INIT
@@ -3877,12 +3877,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_TTY_INIT)
 #elif defined(__O_TTY_INIT)
 #if __O_TTY_INIT != 0
-#define CONFIG_HAVE___O_TTY_INIT 1
+#define CONFIG_HAVE___O_TTY_INIT
 #else /* __O_TTY_INIT */
-#define CONFIG_NO___O_TTY_INIT 1
+#define CONFIG_NO___O_TTY_INIT
 #endif /* __O_TTY_INIT */
 #elif defined(____O_TTY_INIT__defined)
-#define CONFIG_HAVE___O_TTY_INIT 1
+#define CONFIG_HAVE___O_TTY_INIT
 #endif
 
 #ifdef CONFIG_NO__O_TTY_INIT
@@ -3890,12 +3890,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_TTY_INIT)
 #elif defined(_O_TTY_INIT)
 #if _O_TTY_INIT != 0
-#define CONFIG_HAVE__O_TTY_INIT 1
+#define CONFIG_HAVE__O_TTY_INIT
 #else /* _O_TTY_INIT */
-#define CONFIG_NO__O_TTY_INIT 1
+#define CONFIG_NO__O_TTY_INIT
 #endif /* _O_TTY_INIT */
 #elif defined(___O_TTY_INIT__defined)
-#define CONFIG_HAVE__O_TTY_INIT 1
+#define CONFIG_HAVE__O_TTY_INIT
 #endif
 
 #ifdef CONFIG_NO_O_NOLINKS
@@ -3903,12 +3903,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE_O_NOLINKS)
 #elif defined(O_NOLINKS)
 #if O_NOLINKS != 0
-#define CONFIG_HAVE_O_NOLINKS 1
+#define CONFIG_HAVE_O_NOLINKS
 #else /* O_NOLINKS */
-#define CONFIG_NO_O_NOLINKS 1
+#define CONFIG_NO_O_NOLINKS
 #endif /* O_NOLINKS */
 #elif defined(__O_NOLINKS__defined)
-#define CONFIG_HAVE_O_NOLINKS 1
+#define CONFIG_HAVE_O_NOLINKS
 #endif
 
 #ifdef CONFIG_NO___O_NOLINKS
@@ -3916,12 +3916,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE___O_NOLINKS)
 #elif defined(__O_NOLINKS)
 #if __O_NOLINKS != 0
-#define CONFIG_HAVE___O_NOLINKS 1
+#define CONFIG_HAVE___O_NOLINKS
 #else /* __O_NOLINKS */
-#define CONFIG_NO___O_NOLINKS 1
+#define CONFIG_NO___O_NOLINKS
 #endif /* __O_NOLINKS */
 #elif defined(____O_NOLINKS__defined)
-#define CONFIG_HAVE___O_NOLINKS 1
+#define CONFIG_HAVE___O_NOLINKS
 #endif
 
 #ifdef CONFIG_NO__O_NOLINKS
@@ -3929,164 +3929,164 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif defined(CONFIG_HAVE__O_NOLINKS)
 #elif defined(_O_NOLINKS)
 #if _O_NOLINKS != 0
-#define CONFIG_HAVE__O_NOLINKS 1
+#define CONFIG_HAVE__O_NOLINKS
 #else /* _O_NOLINKS */
-#define CONFIG_NO__O_NOLINKS 1
+#define CONFIG_NO__O_NOLINKS
 #endif /* _O_NOLINKS */
 #elif defined(___O_NOLINKS__defined)
-#define CONFIG_HAVE__O_NOLINKS 1
+#define CONFIG_HAVE__O_NOLINKS
 #endif
 
 #ifdef CONFIG_NO_AT_SYMLINK_NOFOLLOW
 #undef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
 #elif !defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW) && \
       (defined(AT_SYMLINK_NOFOLLOW) || defined(__AT_SYMLINK_NOFOLLOW_defined))
-#define CONFIG_HAVE_AT_SYMLINK_NOFOLLOW 1
+#define CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
 #endif
 
 #ifdef CONFIG_NO_AT_REMOVEDIR
 #undef CONFIG_HAVE_AT_REMOVEDIR
 #elif !defined(CONFIG_HAVE_AT_REMOVEDIR) && \
       (defined(AT_REMOVEDIR) || defined(__AT_REMOVEDIR_defined))
-#define CONFIG_HAVE_AT_REMOVEDIR 1
+#define CONFIG_HAVE_AT_REMOVEDIR
 #endif
 
 #ifdef CONFIG_NO_AT_EACCESS
 #undef CONFIG_HAVE_AT_EACCESS
 #elif !defined(CONFIG_HAVE_AT_EACCESS) && \
       (defined(AT_EACCESS) || defined(__AT_EACCESS_defined))
-#define CONFIG_HAVE_AT_EACCESS 1
+#define CONFIG_HAVE_AT_EACCESS
 #endif
 
 #ifdef CONFIG_NO_AT_SYMLINK_FOLLOW
 #undef CONFIG_HAVE_AT_SYMLINK_FOLLOW
 #elif !defined(CONFIG_HAVE_AT_SYMLINK_FOLLOW) && \
       (defined(AT_SYMLINK_FOLLOW) || defined(__AT_SYMLINK_FOLLOW_defined))
-#define CONFIG_HAVE_AT_SYMLINK_FOLLOW 1
+#define CONFIG_HAVE_AT_SYMLINK_FOLLOW
 #endif
 
 #ifdef CONFIG_NO_AT_NO_AUTOMOUNT
 #undef CONFIG_HAVE_AT_NO_AUTOMOUNT
 #elif !defined(CONFIG_HAVE_AT_NO_AUTOMOUNT) && \
       (defined(AT_NO_AUTOMOUNT) || defined(__AT_NO_AUTOMOUNT_defined))
-#define CONFIG_HAVE_AT_NO_AUTOMOUNT 1
+#define CONFIG_HAVE_AT_NO_AUTOMOUNT
 #endif
 
 #ifdef CONFIG_NO_AT_EMPTY_PATH
 #undef CONFIG_HAVE_AT_EMPTY_PATH
 #elif !defined(CONFIG_HAVE_AT_EMPTY_PATH) && \
       (defined(AT_EMPTY_PATH) || defined(__AT_EMPTY_PATH_defined))
-#define CONFIG_HAVE_AT_EMPTY_PATH 1
+#define CONFIG_HAVE_AT_EMPTY_PATH
 #endif
 
 #ifdef CONFIG_NO_AT_SYMLINK_REGULAR
 #undef CONFIG_HAVE_AT_SYMLINK_REGULAR
 #elif !defined(CONFIG_HAVE_AT_SYMLINK_REGULAR) && \
       (defined(AT_SYMLINK_REGULAR) || defined(__AT_SYMLINK_REGULAR_defined))
-#define CONFIG_HAVE_AT_SYMLINK_REGULAR 1
+#define CONFIG_HAVE_AT_SYMLINK_REGULAR
 #endif
 
 #ifdef CONFIG_NO_AT_CHANGE_CTIME
 #undef CONFIG_HAVE_AT_CHANGE_CTIME
 #elif !defined(CONFIG_HAVE_AT_CHANGE_CTIME) && \
       (defined(AT_CHANGE_CTIME) || defined(__AT_CHANGE_CTIME_defined))
-#define CONFIG_HAVE_AT_CHANGE_CTIME 1
+#define CONFIG_HAVE_AT_CHANGE_CTIME
 #endif
 
 #ifdef CONFIG_NO_AT_REMOVEREG
 #undef CONFIG_HAVE_AT_REMOVEREG
 #elif !defined(CONFIG_HAVE_AT_REMOVEREG) && \
       (defined(AT_REMOVEREG) || defined(__AT_REMOVEREG_defined))
-#define CONFIG_HAVE_AT_REMOVEREG 1
+#define CONFIG_HAVE_AT_REMOVEREG
 #endif
 
 #ifdef CONFIG_NO_AT_ALTPATH
 #undef CONFIG_HAVE_AT_ALTPATH
 #elif !defined(CONFIG_HAVE_AT_ALTPATH) && \
       (defined(AT_ALTPATH) || defined(__AT_ALTPATH_defined))
-#define CONFIG_HAVE_AT_ALTPATH 1
+#define CONFIG_HAVE_AT_ALTPATH
 #endif
 
 #ifdef CONFIG_NO_AT_DOSPATH
 #undef CONFIG_HAVE_AT_DOSPATH
 #elif !defined(CONFIG_HAVE_AT_DOSPATH) && \
       (defined(AT_DOSPATH) || defined(__AT_DOSPATH_defined))
-#define CONFIG_HAVE_AT_DOSPATH 1
+#define CONFIG_HAVE_AT_DOSPATH
 #endif
 
 #ifdef CONFIG_NO_AT_FDCWD
 #undef CONFIG_HAVE_AT_FDCWD
 #elif !defined(CONFIG_HAVE_AT_FDCWD) && \
       (defined(AT_FDCWD) || defined(__AT_FDCWD_defined))
-#define CONFIG_HAVE_AT_FDCWD 1
+#define CONFIG_HAVE_AT_FDCWD
 #endif
 
 #ifdef CONFIG_NO_AT_FDROOT
 #undef CONFIG_HAVE_AT_FDROOT
 #elif !defined(CONFIG_HAVE_AT_FDROOT) && \
       (defined(AT_FDROOT) || defined(__AT_FDROOT_defined))
-#define CONFIG_HAVE_AT_FDROOT 1
+#define CONFIG_HAVE_AT_FDROOT
 #endif
 
 #ifdef CONFIG_NO_AT_THIS_TASK
 #undef CONFIG_HAVE_AT_THIS_TASK
 #elif !defined(CONFIG_HAVE_AT_THIS_TASK) && \
       (defined(AT_THIS_TASK) || defined(__AT_THIS_TASK_defined))
-#define CONFIG_HAVE_AT_THIS_TASK 1
+#define CONFIG_HAVE_AT_THIS_TASK
 #endif
 
 #ifdef CONFIG_NO_AT_THIS_PROCESS
 #undef CONFIG_HAVE_AT_THIS_PROCESS
 #elif !defined(CONFIG_HAVE_AT_THIS_PROCESS) && \
       (defined(AT_THIS_PROCESS) || defined(__AT_THIS_PROCESS_defined))
-#define CONFIG_HAVE_AT_THIS_PROCESS 1
+#define CONFIG_HAVE_AT_THIS_PROCESS
 #endif
 
 #ifdef CONFIG_NO_AT_PARENT_PROCESS
 #undef CONFIG_HAVE_AT_PARENT_PROCESS
 #elif !defined(CONFIG_HAVE_AT_PARENT_PROCESS) && \
       (defined(AT_PARENT_PROCESS) || defined(__AT_PARENT_PROCESS_defined))
-#define CONFIG_HAVE_AT_PARENT_PROCESS 1
+#define CONFIG_HAVE_AT_PARENT_PROCESS
 #endif
 
 #ifdef CONFIG_NO_AT_GROUP_LEADER
 #undef CONFIG_HAVE_AT_GROUP_LEADER
 #elif !defined(CONFIG_HAVE_AT_GROUP_LEADER) && \
       (defined(AT_GROUP_LEADER) || defined(__AT_GROUP_LEADER_defined))
-#define CONFIG_HAVE_AT_GROUP_LEADER 1
+#define CONFIG_HAVE_AT_GROUP_LEADER
 #endif
 
 #ifdef CONFIG_NO_AT_SESSION_LEADER
 #undef CONFIG_HAVE_AT_SESSION_LEADER
 #elif !defined(CONFIG_HAVE_AT_SESSION_LEADER) && \
       (defined(AT_SESSION_LEADER) || defined(__AT_SESSION_LEADER_defined))
-#define CONFIG_HAVE_AT_SESSION_LEADER 1
+#define CONFIG_HAVE_AT_SESSION_LEADER
 #endif
 
 #ifdef CONFIG_NO_AT_DOS_DRIVEMIN
 #undef CONFIG_HAVE_AT_DOS_DRIVEMIN
 #elif !defined(CONFIG_HAVE_AT_DOS_DRIVEMIN) && \
       (defined(AT_DOS_DRIVEMIN) || defined(__AT_DOS_DRIVEMIN_defined))
-#define CONFIG_HAVE_AT_DOS_DRIVEMIN 1
+#define CONFIG_HAVE_AT_DOS_DRIVEMIN
 #endif
 
 #ifdef CONFIG_NO_AT_DOS_DRIVEMAX
 #undef CONFIG_HAVE_AT_DOS_DRIVEMAX
 #elif !defined(CONFIG_HAVE_AT_DOS_DRIVEMAX) && \
       (defined(AT_DOS_DRIVEMAX) || defined(__AT_DOS_DRIVEMAX_defined))
-#define CONFIG_HAVE_AT_DOS_DRIVEMAX 1
+#define CONFIG_HAVE_AT_DOS_DRIVEMAX
 #endif
 
 #ifdef CONFIG_NO_AT_FDDRIVE_CWD
 #undef CONFIG_HAVE_AT_FDDRIVE_CWD
 #elif 0
-#define CONFIG_HAVE_AT_FDDRIVE_CWD 1
+#define CONFIG_HAVE_AT_FDDRIVE_CWD
 #endif
 
 #ifdef CONFIG_NO_AT_FDDRIVE_ROOT
 #undef CONFIG_HAVE_AT_FDDRIVE_ROOT
 #elif 0
-#define CONFIG_HAVE_AT_FDDRIVE_ROOT 1
+#define CONFIG_HAVE_AT_FDDRIVE_ROOT
 #endif
 
 #ifdef CONFIG_NO_read
@@ -4094,14 +4094,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_read) && \
       (defined(read) || defined(__read_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_read 1
+#define CONFIG_HAVE_read
 #endif
 
 #ifdef CONFIG_NO__read
 #undef CONFIG_HAVE__read
 #elif !defined(CONFIG_HAVE__read) && \
       (defined(_read) || defined(___read_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__read 1
+#define CONFIG_HAVE__read
 #endif
 
 #ifdef CONFIG_NO_write
@@ -4109,14 +4109,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_write) && \
       (defined(write) || defined(__write_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_write 1
+#define CONFIG_HAVE_write
 #endif
 
 #ifdef CONFIG_NO__write
 #undef CONFIG_HAVE__write
 #elif !defined(CONFIG_HAVE__write) && \
       (defined(_write) || defined(___write_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__write 1
+#define CONFIG_HAVE__write
 #endif
 
 #ifdef CONFIG_NO_lseek
@@ -4124,35 +4124,35 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lseek) && \
       (defined(lseek) || defined(__lseek_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_lseek 1
+#define CONFIG_HAVE_lseek
 #endif
 
 #ifdef CONFIG_NO_lseek64
 #undef CONFIG_HAVE_lseek64
 #elif !defined(CONFIG_HAVE_lseek64) && \
       (defined(lseek64) || defined(__lseek64_defined) || defined(__USE_LARGEFILE64))
-#define CONFIG_HAVE_lseek64 1
+#define CONFIG_HAVE_lseek64
 #endif
 
 #ifdef CONFIG_NO__lseek
 #undef CONFIG_HAVE__lseek
 #elif !defined(CONFIG_HAVE__lseek) && \
       (defined(_lseek) || defined(___lseek_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__lseek 1
+#define CONFIG_HAVE__lseek
 #endif
 
 #ifdef CONFIG_NO__lseek64
 #undef CONFIG_HAVE__lseek64
 #elif !defined(CONFIG_HAVE__lseek64) && \
       (defined(_lseek64) || defined(___lseek64_defined))
-#define CONFIG_HAVE__lseek64 1
+#define CONFIG_HAVE__lseek64
 #endif
 
 #ifdef CONFIG_NO__lseeki64
 #undef CONFIG_HAVE__lseeki64
 #elif !defined(CONFIG_HAVE__lseeki64) && \
       (defined(_lseeki64) || defined(___lseeki64_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__lseeki64 1
+#define CONFIG_HAVE__lseeki64
 #endif
 
 #ifdef CONFIG_NO_chdir
@@ -4160,28 +4160,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_chdir) && \
       (defined(chdir) || defined(__chdir_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_chdir 1
+#define CONFIG_HAVE_chdir
 #endif
 
 #ifdef CONFIG_NO__chdir
 #undef CONFIG_HAVE__chdir
 #elif !defined(CONFIG_HAVE__chdir) && \
       (defined(_chdir) || defined(___chdir_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__chdir 1
+#define CONFIG_HAVE__chdir
 #endif
 
 #ifdef CONFIG_NO_wchdir
 #undef CONFIG_HAVE_wchdir
 #elif !defined(CONFIG_HAVE_wchdir) && \
       (defined(wchdir) || defined(__wchdir_defined))
-#define CONFIG_HAVE_wchdir 1
+#define CONFIG_HAVE_wchdir
 #endif
 
 #ifdef CONFIG_NO__wchdir
 #undef CONFIG_HAVE__wchdir
 #elif !defined(CONFIG_HAVE__wchdir) && \
       (defined(_wchdir) || defined(___wchdir_defined) || defined(_WDIRECT_DEFINED))
-#define CONFIG_HAVE__wchdir 1
+#define CONFIG_HAVE__wchdir
 #endif
 
 #ifdef CONFIG_NO_readlink
@@ -4189,7 +4189,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_readlink) && \
       (defined(readlink) || defined(__readlink_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_readlink 1
+#define CONFIG_HAVE_readlink
 #endif
 
 #ifdef CONFIG_NO_freadlinkat
@@ -4197,21 +4197,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_freadlinkat) && \
       (defined(freadlinkat) || defined(__freadlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)))
-#define CONFIG_HAVE_freadlinkat 1
+#define CONFIG_HAVE_freadlinkat
 #endif
 
 #ifdef CONFIG_NO_stat
 #undef CONFIG_HAVE_stat
 #elif !defined(CONFIG_HAVE_stat) && \
       (defined(stat) || defined(__stat_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
-#define CONFIG_HAVE_stat 1
+#define CONFIG_HAVE_stat
 #endif
 
 #ifdef CONFIG_NO_fstat
 #undef CONFIG_HAVE_fstat
 #elif !defined(CONFIG_HAVE_fstat) && \
       (defined(fstat) || defined(__fstat_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
-#define CONFIG_HAVE_fstat 1
+#define CONFIG_HAVE_fstat
 #endif
 
 #ifdef CONFIG_NO_lstat
@@ -4219,7 +4219,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lstat) && \
       (defined(lstat) || defined(__lstat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_lstat 1
+#define CONFIG_HAVE_lstat
 #endif
 
 #ifdef CONFIG_NO_stat64
@@ -4227,7 +4227,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_stat64) && \
       (defined(stat64) || defined(__stat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_stat64 1
+#define CONFIG_HAVE_stat64
 #endif
 
 #ifdef CONFIG_NO_fstat64
@@ -4235,7 +4235,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fstat64) && \
       (defined(fstat64) || defined(__fstat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_fstat64 1
+#define CONFIG_HAVE_fstat64
 #endif
 
 #ifdef CONFIG_NO_lstat64
@@ -4243,7 +4243,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lstat64) && \
       (defined(lstat64) || defined(__lstat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_lstat64 1
+#define CONFIG_HAVE_lstat64
 #endif
 
 #ifdef CONFIG_NO_fstatat
@@ -4251,7 +4251,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fstatat) && \
       (defined(fstatat) || defined(__fstatat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_fstatat 1
+#define CONFIG_HAVE_fstatat
 #endif
 
 #ifdef CONFIG_NO_fstatat64
@@ -4259,7 +4259,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fstatat64) && \
       (defined(fstatat64) || defined(__fstatat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)))
-#define CONFIG_HAVE_fstatat64 1
+#define CONFIG_HAVE_fstatat64
 #endif
 
 #ifdef CONFIG_NO__wstat
@@ -4267,14 +4267,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wstat) && \
       (defined(_wstat) || defined(___wstat_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wstat 1
+#define CONFIG_HAVE__wstat
 #endif
 
 #ifdef CONFIG_NO_wstat
 #undef CONFIG_HAVE_wstat
 #elif !defined(CONFIG_HAVE_wstat) && \
       (defined(wstat) || defined(__wstat_defined))
-#define CONFIG_HAVE_wstat 1
+#define CONFIG_HAVE_wstat
 #endif
 
 #ifdef CONFIG_NO__wstat64
@@ -4282,42 +4282,42 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wstat64) && \
       (defined(_wstat64) || defined(___wstat64_defined) || (defined(_WIO_DEFINED) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE__wstat64 1
+#define CONFIG_HAVE__wstat64
 #endif
 
 #ifdef CONFIG_NO_wstat64
 #undef CONFIG_HAVE_wstat64
 #elif !defined(CONFIG_HAVE_wstat64) && \
       (defined(wstat64) || defined(__wstat64_defined))
-#define CONFIG_HAVE_wstat64 1
+#define CONFIG_HAVE_wstat64
 #endif
 
 #ifdef CONFIG_NO__wlstat
 #undef CONFIG_HAVE__wlstat
 #elif !defined(CONFIG_HAVE__wlstat) && \
       (defined(_wlstat) || defined(___wlstat_defined))
-#define CONFIG_HAVE__wlstat 1
+#define CONFIG_HAVE__wlstat
 #endif
 
 #ifdef CONFIG_NO_wlstat
 #undef CONFIG_HAVE_wlstat
 #elif !defined(CONFIG_HAVE_wlstat) && \
       (defined(wlstat) || defined(__wlstat_defined))
-#define CONFIG_HAVE_wlstat 1
+#define CONFIG_HAVE_wlstat
 #endif
 
 #ifdef CONFIG_NO__wlstat64
 #undef CONFIG_HAVE__wlstat64
 #elif !defined(CONFIG_HAVE__wlstat64) && \
       (defined(_wlstat64) || defined(___wlstat64_defined))
-#define CONFIG_HAVE__wlstat64 1
+#define CONFIG_HAVE__wlstat64
 #endif
 
 #ifdef CONFIG_NO_wlstat64
 #undef CONFIG_HAVE_wlstat64
 #elif !defined(CONFIG_HAVE_wlstat64) && \
       (defined(wlstat64) || defined(__wlstat64_defined))
-#define CONFIG_HAVE_wlstat64 1
+#define CONFIG_HAVE_wlstat64
 #endif
 
 #ifdef CONFIG_NO_mkdir
@@ -4326,28 +4326,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(mkdir) || defined(__mkdir_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_mkdir 1
+#define CONFIG_HAVE_mkdir
 #endif
 
 #ifdef CONFIG_NO__mkdir
 #undef CONFIG_HAVE__mkdir
 #elif !defined(CONFIG_HAVE__mkdir) && \
       (defined(_mkdir) || defined(___mkdir_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__mkdir 1
+#define CONFIG_HAVE__mkdir
 #endif
 
 #ifdef CONFIG_NO_wmkdir
 #undef CONFIG_HAVE_wmkdir
 #elif !defined(CONFIG_HAVE_wmkdir) && \
       (defined(wmkdir) || defined(__wmkdir_defined))
-#define CONFIG_HAVE_wmkdir 1
+#define CONFIG_HAVE_wmkdir
 #endif
 
 #ifdef CONFIG_NO__wmkdir
 #undef CONFIG_HAVE__wmkdir
 #elif !defined(CONFIG_HAVE__wmkdir) && \
       (defined(_wmkdir) || defined(___wmkdir_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__wmkdir 1
+#define CONFIG_HAVE__wmkdir
 #endif
 
 #ifdef CONFIG_NO_chmod
@@ -4356,14 +4356,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(chmod) || defined(__chmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_chmod 1
+#define CONFIG_HAVE_chmod
 #endif
 
 #ifdef CONFIG_NO__chmod
 #undef CONFIG_HAVE__chmod
 #elif !defined(CONFIG_HAVE__chmod) && \
       (defined(_chmod) || defined(___chmod_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__chmod 1
+#define CONFIG_HAVE__chmod
 #endif
 
 #ifdef CONFIG_NO__wchmod
@@ -4371,7 +4371,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wchmod) && \
       (defined(_wchmod) || defined(___wchmod_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wchmod 1
+#define CONFIG_HAVE__wchmod
 #endif
 
 #ifdef CONFIG_NO_mkfifo
@@ -4380,7 +4380,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(mkfifo) || defined(__mkfifo_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_mkfifo 1
+#define CONFIG_HAVE_mkfifo
 #endif
 
 #ifdef CONFIG_NO_lchmod
@@ -4388,7 +4388,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lchmod) && \
       (defined(lchmod) || defined(__lchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_MISC)))
-#define CONFIG_HAVE_lchmod 1
+#define CONFIG_HAVE_lchmod
 #endif
 
 #ifdef CONFIG_NO_fchmodat
@@ -4396,7 +4396,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fchmodat) && \
       (defined(fchmodat) || defined(__fchmodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_fchmodat 1
+#define CONFIG_HAVE_fchmodat
 #endif
 
 #ifdef CONFIG_NO_mkdirat
@@ -4404,7 +4404,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_mkdirat) && \
       (defined(mkdirat) || defined(__mkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_mkdirat 1
+#define CONFIG_HAVE_mkdirat
 #endif
 
 #ifdef CONFIG_NO_fmkdirat
@@ -4412,7 +4412,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fmkdirat) && \
       (defined(fmkdirat) || defined(__fmkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_KOS) && defined(__USE_ATFILE)))
-#define CONFIG_HAVE_fmkdirat 1
+#define CONFIG_HAVE_fmkdirat
 #endif
 
 #ifdef CONFIG_NO_mkfifoat
@@ -4420,7 +4420,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_mkfifoat) && \
       (defined(mkfifoat) || defined(__mkfifoat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_mkfifoat 1
+#define CONFIG_HAVE_mkfifoat
 #endif
 
 #ifdef CONFIG_NO_fchmod
@@ -4428,7 +4428,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fchmod) && \
       (defined(fchmod) || defined(__fchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_POSIX)))
-#define CONFIG_HAVE_fchmod 1
+#define CONFIG_HAVE_fchmod
 #endif
 
 #ifdef CONFIG_NO_mknod
@@ -4436,7 +4436,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_mknod) && \
       (defined(mknod) || defined(__mknod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))))
-#define CONFIG_HAVE_mknod 1
+#define CONFIG_HAVE_mknod
 #endif
 
 #ifdef CONFIG_NO_mknodat
@@ -4444,7 +4444,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_mknodat) && \
       (defined(mknodat) || defined(__mknodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)))
-#define CONFIG_HAVE_mknodat 1
+#define CONFIG_HAVE_mknodat
 #endif
 
 #ifdef CONFIG_NO_utimensat
@@ -4452,7 +4452,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_utimensat) && \
       (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_utimensat 1
+#define CONFIG_HAVE_utimensat
 #endif
 
 #ifdef CONFIG_NO_utimensat64
@@ -4460,7 +4460,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_utimensat64) && \
       (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_utimensat64 1
+#define CONFIG_HAVE_utimensat64
 #endif
 
 #ifdef CONFIG_NO_futimens
@@ -4468,7 +4468,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_futimens) && \
       (defined(futimens) || defined(__futimens_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_futimens 1
+#define CONFIG_HAVE_futimens
 #endif
 
 #ifdef CONFIG_NO_futimens64
@@ -4476,14 +4476,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_futimens64) && \
       (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_futimens64 1
+#define CONFIG_HAVE_futimens64
 #endif
 
 #ifdef CONFIG_NO_time
 #undef CONFIG_HAVE_time
 #elif !defined(CONFIG_HAVE_time) && \
       (defined(time) || defined(__time_defined) || defined(CONFIG_HAVE_TIME_H))
-#define CONFIG_HAVE_time 1
+#define CONFIG_HAVE_time
 #endif
 
 #ifdef CONFIG_NO_time64
@@ -4491,7 +4491,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_time64) && \
       (defined(time64) || defined(__time64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_TIME64)))
-#define CONFIG_HAVE_time64 1
+#define CONFIG_HAVE_time64
 #endif
 
 #ifdef CONFIG_NO_clock_gettime
@@ -4499,7 +4499,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_clock_gettime) && \
       (defined(clock_gettime) || defined(__clock_gettime_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_POSIX199309)))
-#define CONFIG_HAVE_clock_gettime 1
+#define CONFIG_HAVE_clock_gettime
 #endif
 
 #ifdef CONFIG_NO_clock_gettime64
@@ -4507,7 +4507,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_clock_gettime64) && \
       (defined(clock_gettime64) || defined(__clock_gettime64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_POSIX199309) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_clock_gettime64 1
+#define CONFIG_HAVE_clock_gettime64
 #endif
 
 #ifdef CONFIG_NO_CLOCK_REALTIME
@@ -4515,14 +4515,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_CLOCK_REALTIME) && \
       (defined(CLOCK_REALTIME) || defined(__CLOCK_REALTIME_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_POSIX199309)))
-#define CONFIG_HAVE_CLOCK_REALTIME 1
+#define CONFIG_HAVE_CLOCK_REALTIME
 #endif
 
 #ifdef CONFIG_NO_gettimeofday
 #undef CONFIG_HAVE_gettimeofday
 #elif !defined(CONFIG_HAVE_gettimeofday) && \
       (defined(gettimeofday) || defined(__gettimeofday_defined) || defined(CONFIG_HAVE_SYS_TIME_H))
-#define CONFIG_HAVE_gettimeofday 1
+#define CONFIG_HAVE_gettimeofday
 #endif
 
 #ifdef CONFIG_NO_gettimeofday64
@@ -4530,7 +4530,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_gettimeofday64) && \
       (defined(gettimeofday64) || defined(__gettimeofday64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_TIME64)))
-#define CONFIG_HAVE_gettimeofday64 1
+#define CONFIG_HAVE_gettimeofday64
 #endif
 
 #ifdef CONFIG_NO_utimes
@@ -4538,7 +4538,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_utimes) && \
       (defined(utimes) || defined(__utimes_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_MISC)))
-#define CONFIG_HAVE_utimes 1
+#define CONFIG_HAVE_utimes
 #endif
 
 #ifdef CONFIG_NO_utimes64
@@ -4546,14 +4546,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_utimes64) && \
       (defined(utimes64) || defined(__utimes64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_MISC) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_utimes64 1
+#define CONFIG_HAVE_utimes64
 #endif
 
 #ifdef CONFIG_NO_lutimes
 #undef CONFIG_HAVE_lutimes
 #elif !defined(CONFIG_HAVE_lutimes) && \
       (defined(lutimes) || defined(__lutimes_defined) || defined(CONFIG_HAVE_SYS_TIME_H))
-#define CONFIG_HAVE_lutimes 1
+#define CONFIG_HAVE_lutimes
 #endif
 
 #ifdef CONFIG_NO_lutimes64
@@ -4561,7 +4561,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lutimes64) && \
       (defined(lutimes64) || defined(__lutimes64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_TIME64)))
-#define CONFIG_HAVE_lutimes64 1
+#define CONFIG_HAVE_lutimes64
 #endif
 
 #ifdef CONFIG_NO_futimesat
@@ -4569,7 +4569,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_futimesat) && \
       (defined(futimesat) || defined(__futimesat_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_GNU)))
-#define CONFIG_HAVE_futimesat 1
+#define CONFIG_HAVE_futimesat
 #endif
 
 #ifdef CONFIG_NO_futimesat64
@@ -4577,7 +4577,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_futimesat64) && \
       (defined(futimesat64) || defined(__futimesat64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
        defined(__USE_GNU) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_futimesat64 1
+#define CONFIG_HAVE_futimesat64
 #endif
 
 #ifdef _MSC_VER
@@ -4592,7 +4592,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_euidaccess) && \
       (defined(euidaccess) || defined(__euidaccess_defined) || (defined(F_OK) && \
        defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)))
-#define CONFIG_HAVE_euidaccess 1
+#define CONFIG_HAVE_euidaccess
 #endif
 
 #ifdef CONFIG_NO_eaccess
@@ -4600,7 +4600,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_eaccess) && \
       (defined(eaccess) || defined(__eaccess_defined) || (defined(F_OK) && defined(X_OK) && \
        defined(W_OK) && defined(R_OK) && defined(__USE_GNU)))
-#define CONFIG_HAVE_eaccess 1
+#define CONFIG_HAVE_eaccess
 #endif
 
 #ifdef CONFIG_NO_faccessat
@@ -4608,7 +4608,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_faccessat) && \
       (defined(faccessat) || defined(__faccessat_defined) || (defined(F_OK) && \
        defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)))
-#define CONFIG_HAVE_faccessat 1
+#define CONFIG_HAVE_faccessat
 #endif
 
 #ifdef CONFIG_NO_access
@@ -4617,14 +4617,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(access) || defined(__access_defined) || ((defined(CONFIG_HAVE_UNISTD_H) || \
        !defined(_MSC_VER)) && defined(F_OK) && defined(X_OK) && defined(W_OK) && \
        defined(R_OK)))
-#define CONFIG_HAVE_access 1
+#define CONFIG_HAVE_access
 #endif
 
 #ifdef CONFIG_NO__access
 #undef CONFIG_HAVE__access
 #elif !defined(CONFIG_HAVE__access) && \
       (defined(_access) || defined(___access_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__access 1
+#define CONFIG_HAVE__access
 #endif
 
 #ifdef CONFIG_NO__waccess
@@ -4632,14 +4632,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__waccess) && \
       (defined(_waccess) || defined(___waccess_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__waccess 1
+#define CONFIG_HAVE__waccess
 #endif
 
 #ifdef CONFIG_NO_fchownat
 #undef CONFIG_HAVE_fchownat
 #elif !defined(CONFIG_HAVE_fchownat) && \
       (defined(fchownat) || defined(__fchownat_defined) || defined(__USE_ATFILE))
-#define CONFIG_HAVE_fchownat 1
+#define CONFIG_HAVE_fchownat
 #endif
 
 #ifdef CONFIG_NO_pread
@@ -4647,7 +4647,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pread) && \
       (defined(pread) || defined(__pread_defined) || (defined(__USE_UNIX98) || \
        defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_pread 1
+#define CONFIG_HAVE_pread
 #endif
 
 #ifdef CONFIG_NO_pwrite
@@ -4655,7 +4655,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pwrite) && \
       (defined(pwrite) || defined(__pwrite_defined) || (defined(__USE_UNIX98) || \
        defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_pwrite 1
+#define CONFIG_HAVE_pwrite
 #endif
 
 #ifdef CONFIG_NO_pread64
@@ -4663,7 +4663,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pread64) && \
       (defined(pread64) || defined(__pread64_defined) || (defined(__USE_LARGEFILE64) && \
        (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_pread64 1
+#define CONFIG_HAVE_pread64
 #endif
 
 #ifdef CONFIG_NO_pwrite64
@@ -4671,7 +4671,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pwrite64) && \
       (defined(pwrite64) || defined(__pwrite64_defined) || (defined(__USE_LARGEFILE64) && \
        (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_pwrite64 1
+#define CONFIG_HAVE_pwrite64
 #endif
 
 #ifdef CONFIG_NO_close
@@ -4679,14 +4679,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_close) && \
       (defined(close) || defined(__close_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_close 1
+#define CONFIG_HAVE_close
 #endif
 
 #ifdef CONFIG_NO__close
 #undef CONFIG_HAVE__close
 #elif !defined(CONFIG_HAVE__close) && \
       (defined(_close) || defined(___close_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__close 1
+#define CONFIG_HAVE__close
 #endif
 
 #ifdef CONFIG_NO_sync
@@ -4694,7 +4694,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sync) && \
       (defined(sync) || defined(__sync_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_sync 1
+#define CONFIG_HAVE_sync
 #endif
 
 #ifdef CONFIG_NO_fsync
@@ -4704,7 +4704,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        _POSIX_FSYNC+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))))
-#define CONFIG_HAVE_fsync 1
+#define CONFIG_HAVE_fsync
 #endif
 
 #ifdef CONFIG_NO_fdatasync
@@ -4713,14 +4713,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fdatasync) || defined(__fdatasync_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_fdatasync 1
+#define CONFIG_HAVE_fdatasync
 #endif
 
 #ifdef CONFIG_NO__commit
 #undef CONFIG_HAVE__commit
 #elif !defined(CONFIG_HAVE__commit) && \
       (defined(_commit) || defined(___commit_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__commit 1
+#define CONFIG_HAVE__commit
 #endif
 
 #ifdef CONFIG_NO_getpid
@@ -4729,28 +4729,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(getpid) || defined(__getpid_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_getpid 1
+#define CONFIG_HAVE_getpid
 #endif
 
 #ifdef CONFIG_NO__getpid
 #undef CONFIG_HAVE__getpid
 #elif !defined(CONFIG_HAVE__getpid) && \
       (defined(_getpid) || defined(___getpid_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__getpid 1
+#define CONFIG_HAVE__getpid
 #endif
 
 #ifdef CONFIG_NO_umask
 #undef CONFIG_HAVE_umask
 #elif !defined(CONFIG_HAVE_umask) && \
       (defined(umask) || defined(__umask_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
-#define CONFIG_HAVE_umask 1
+#define CONFIG_HAVE_umask
 #endif
 
 #ifdef CONFIG_NO__umask
 #undef CONFIG_HAVE__umask
 #elif !defined(CONFIG_HAVE__umask) && \
       (defined(_umask) || defined(___umask_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__umask 1
+#define CONFIG_HAVE__umask
 #endif
 
 #ifdef CONFIG_NO_dup
@@ -4758,14 +4758,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_dup) && \
       (defined(dup) || defined(__dup_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_dup 1
+#define CONFIG_HAVE_dup
 #endif
 
 #ifdef CONFIG_NO__dup
 #undef CONFIG_HAVE__dup
 #elif !defined(CONFIG_HAVE__dup) && \
       (defined(_dup) || defined(___dup_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__dup 1
+#define CONFIG_HAVE__dup
 #endif
 
 #ifdef CONFIG_NO_dup2
@@ -4773,21 +4773,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_dup2) && \
       (defined(dup2) || defined(__dup2_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_dup2 1
+#define CONFIG_HAVE_dup2
 #endif
 
 #ifdef CONFIG_NO__dup2
 #undef CONFIG_HAVE__dup2
 #elif !defined(CONFIG_HAVE__dup2) && \
       (defined(_dup2) || defined(___dup2_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__dup2 1
+#define CONFIG_HAVE__dup2
 #endif
 
 #ifdef CONFIG_NO_dup3
 #undef CONFIG_HAVE_dup3
 #elif !defined(CONFIG_HAVE_dup3) && \
       (defined(dup3) || defined(__dup3_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_dup3 1
+#define CONFIG_HAVE_dup3
 #endif
 
 #ifdef CONFIG_NO_isatty
@@ -4796,14 +4796,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(isatty) || defined(__isatty_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_isatty 1
+#define CONFIG_HAVE_isatty
 #endif
 
 #ifdef CONFIG_NO__isatty
 #undef CONFIG_HAVE__isatty
 #elif !defined(CONFIG_HAVE__isatty) && \
       (defined(_isatty) || defined(___isatty_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__isatty 1
+#define CONFIG_HAVE__isatty
 #endif
 
 #ifdef CONFIG_NO_getcwd
@@ -4812,28 +4812,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(getcwd) || defined(__getcwd_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_getcwd 1
+#define CONFIG_HAVE_getcwd
 #endif
 
 #ifdef CONFIG_NO__getcwd
 #undef CONFIG_HAVE__getcwd
 #elif !defined(CONFIG_HAVE__getcwd) && \
       (defined(_getcwd) || defined(___getcwd_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__getcwd 1
+#define CONFIG_HAVE__getcwd
 #endif
 
 #ifdef CONFIG_NO_wgetcwd
 #undef CONFIG_HAVE_wgetcwd
 #elif !defined(CONFIG_HAVE_wgetcwd) && \
       (defined(wgetcwd) || defined(__wgetcwd_defined))
-#define CONFIG_HAVE_wgetcwd 1
+#define CONFIG_HAVE_wgetcwd
 #endif
 
 #ifdef CONFIG_NO__wgetcwd
 #undef CONFIG_HAVE__wgetcwd
 #elif !defined(CONFIG_HAVE__wgetcwd) && \
       (defined(_wgetcwd) || defined(___wgetcwd_defined) || defined(_WDIRECT_DEFINED))
-#define CONFIG_HAVE__wgetcwd 1
+#define CONFIG_HAVE__wgetcwd
 #endif
 
 #ifdef CONFIG_NO_unlink
@@ -4842,28 +4842,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(unlink) || defined(__unlink_defined) || (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
-#define CONFIG_HAVE_unlink 1
+#define CONFIG_HAVE_unlink
 #endif
 
 #ifdef CONFIG_NO__unlink
 #undef CONFIG_HAVE__unlink
 #elif !defined(CONFIG_HAVE__unlink) && \
       (defined(_unlink) || defined(___unlink_defined) || defined(_CRT_DIRECTORY_DEFINED))
-#define CONFIG_HAVE__unlink 1
+#define CONFIG_HAVE__unlink
 #endif
 
 #ifdef CONFIG_NO_rmdir
 #undef CONFIG_HAVE_rmdir
 #elif !defined(CONFIG_HAVE_rmdir) && \
       (defined(rmdir) || defined(__rmdir_defined) || defined(CONFIG_HAVE_UNISTD_H))
-#define CONFIG_HAVE_rmdir 1
+#define CONFIG_HAVE_rmdir
 #endif
 
 #ifdef CONFIG_NO__rmdir
 #undef CONFIG_HAVE__rmdir
 #elif !defined(CONFIG_HAVE__rmdir) && \
       (defined(_rmdir) || defined(___rmdir_defined) || defined(CONFIG_HAVE_DIRECT_H))
-#define CONFIG_HAVE__rmdir 1
+#define CONFIG_HAVE__rmdir
 #endif
 
 #ifdef CONFIG_NO_unlinkat
@@ -4871,28 +4871,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_unlinkat) && \
       (defined(unlinkat) || defined(__unlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        defined(__USE_ATFILE)))
-#define CONFIG_HAVE_unlinkat 1
+#define CONFIG_HAVE_unlinkat
 #endif
 
 #ifdef CONFIG_NO_remove
 #undef CONFIG_HAVE_remove
 #elif !defined(CONFIG_HAVE_remove) && \
       (defined(remove) || defined(__remove_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_remove 1
+#define CONFIG_HAVE_remove
 #endif
 
 #ifdef CONFIG_NO_rename
 #undef CONFIG_HAVE_rename
 #elif !defined(CONFIG_HAVE_rename) && \
       (defined(rename) || defined(__rename_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_rename 1
+#define CONFIG_HAVE_rename
 #endif
 
 #ifdef CONFIG_NO_wunlink
 #undef CONFIG_HAVE_wunlink
 #elif !defined(CONFIG_HAVE_wunlink) && \
       (defined(wunlink) || defined(__wunlink_defined))
-#define CONFIG_HAVE_wunlink 1
+#define CONFIG_HAVE_wunlink
 #endif
 
 #ifdef CONFIG_NO__wunlink
@@ -4900,14 +4900,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wunlink) && \
       (defined(_wunlink) || defined(___wunlink_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wunlink 1
+#define CONFIG_HAVE__wunlink
 #endif
 
 #ifdef CONFIG_NO_wrmdir
 #undef CONFIG_HAVE_wrmdir
 #elif !defined(CONFIG_HAVE_wrmdir) && \
       (defined(wrmdir) || defined(__wrmdir_defined))
-#define CONFIG_HAVE_wrmdir 1
+#define CONFIG_HAVE_wrmdir
 #endif
 
 #ifdef CONFIG_NO__wrmdir
@@ -4915,28 +4915,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wrmdir) && \
       (defined(_wrmdir) || defined(___wrmdir_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wrmdir 1
+#define CONFIG_HAVE__wrmdir
 #endif
 
 #ifdef CONFIG_NO_wremove
 #undef CONFIG_HAVE_wremove
 #elif !defined(CONFIG_HAVE_wremove) && \
       (defined(wremove) || defined(__wremove_defined))
-#define CONFIG_HAVE_wremove 1
+#define CONFIG_HAVE_wremove
 #endif
 
 #ifdef CONFIG_NO__wremove
 #undef CONFIG_HAVE__wremove
 #elif !defined(CONFIG_HAVE__wremove) && \
       (defined(_wremove) || defined(___wremove_defined) || defined(_WSTDIO_DEFINED))
-#define CONFIG_HAVE__wremove 1
+#define CONFIG_HAVE__wremove
 #endif
 
 #ifdef CONFIG_NO_wrename
 #undef CONFIG_HAVE_wrename
 #elif !defined(CONFIG_HAVE_wrename) && \
       (defined(wrename) || defined(__wrename_defined))
-#define CONFIG_HAVE_wrename 1
+#define CONFIG_HAVE_wrename
 #endif
 
 #ifdef CONFIG_NO__wrename
@@ -4944,14 +4944,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wrename) && \
       (defined(_wrename) || defined(___wrename_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wrename 1
+#define CONFIG_HAVE__wrename
 #endif
 
 #ifdef CONFIG_NO_getenv
 #undef CONFIG_HAVE_getenv
 #elif !defined(CONFIG_HAVE_getenv) && \
       (defined(getenv) || defined(__getenv_defined) || defined(CONFIG_HAVE_STDLIB_H))
-#define CONFIG_HAVE_getenv 1
+#define CONFIG_HAVE_getenv
 #endif
 
 #ifdef CONFIG_NO_setenv
@@ -4959,7 +4959,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_setenv) && \
       (defined(setenv) || defined(__setenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(__USE_XOPEN2K)))
-#define CONFIG_HAVE_setenv 1
+#define CONFIG_HAVE_setenv
 #endif
 
 #ifdef CONFIG_NO_unsetenv
@@ -4967,7 +4967,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_unsetenv) && \
       (defined(unsetenv) || defined(__unsetenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(__USE_XOPEN2K)))
-#define CONFIG_HAVE_unsetenv 1
+#define CONFIG_HAVE_unsetenv
 #endif
 
 #ifdef CONFIG_NO_putenv
@@ -4975,7 +4975,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_putenv) && \
       (defined(putenv) || defined(__putenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        (defined(_MSC_VER)|| defined(__USE_MISC) || defined(__USE_XOPEN) || defined(__USE_DOS))))
-#define CONFIG_HAVE_putenv 1
+#define CONFIG_HAVE_putenv
 #endif
 
 #ifdef CONFIG_NO__putenv
@@ -4983,7 +4983,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__putenv) && \
       (defined(_putenv) || defined(___putenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__putenv 1
+#define CONFIG_HAVE__putenv
 #endif
 
 #ifdef CONFIG_NO_clearenv
@@ -4991,14 +4991,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_clearenv) && \
       (defined(clearenv) || defined(__clearenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(__USE_MISC)))
-#define CONFIG_HAVE_clearenv 1
+#define CONFIG_HAVE_clearenv
 #endif
 
 #ifdef CONFIG_NO_putenv_s
 #undef CONFIG_HAVE_putenv_s
 #elif !defined(CONFIG_HAVE_putenv_s) && \
       (defined(putenv_s) || defined(__putenv_s_defined))
-#define CONFIG_HAVE_putenv_s 1
+#define CONFIG_HAVE_putenv_s
 #endif
 
 #ifdef CONFIG_NO__putenv_s
@@ -5006,28 +5006,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__putenv_s) && \
       (defined(_putenv_s) || defined(___putenv_s_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__putenv_s 1
+#define CONFIG_HAVE__putenv_s
 #endif
 
 #ifdef CONFIG_NO_environ
 #undef CONFIG_HAVE_environ
 #elif !defined(CONFIG_HAVE_environ) && \
       (defined(environ) || defined(__environ_defined))
-#define CONFIG_HAVE_environ 1
+#define CONFIG_HAVE_environ
 #endif
 
 #ifdef CONFIG_NO__environ
 #undef CONFIG_HAVE__environ
 #elif !defined(CONFIG_HAVE__environ) && \
       (defined(_environ) || defined(___environ_defined))
-#define CONFIG_HAVE__environ 1
+#define CONFIG_HAVE__environ
 #endif
 
 #ifdef CONFIG_NO___environ
 #undef CONFIG_HAVE___environ
 #elif !defined(CONFIG_HAVE___environ) && \
       (defined(__environ) || defined(____environ_defined))
-#define CONFIG_HAVE___environ 1
+#define CONFIG_HAVE___environ
 #endif
 
 #ifdef CONFIG_NO___p__environ
@@ -5035,14 +5035,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___p__environ) && \
       (defined(__p__environ) || defined(____p__environ_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE___p__environ 1
+#define CONFIG_HAVE___p__environ
 #endif
 
 #ifdef CONFIG_NO_wgetenv
 #undef CONFIG_HAVE_wgetenv
 #elif !defined(CONFIG_HAVE_wgetenv) && \
       (defined(wgetenv) || defined(__wgetenv_defined))
-#define CONFIG_HAVE_wgetenv 1
+#define CONFIG_HAVE_wgetenv
 #endif
 
 #ifdef CONFIG_NO__wgetenv
@@ -5050,42 +5050,42 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wgetenv) && \
       (defined(_wgetenv) || defined(___wgetenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wgetenv 1
+#define CONFIG_HAVE__wgetenv
 #endif
 
 #ifdef CONFIG_NO_wsetenv
 #undef CONFIG_HAVE_wsetenv
 #elif !defined(CONFIG_HAVE_wsetenv) && \
       (defined(wsetenv) || defined(__wsetenv_defined))
-#define CONFIG_HAVE_wsetenv 1
+#define CONFIG_HAVE_wsetenv
 #endif
 
 #ifdef CONFIG_NO__wsetenv
 #undef CONFIG_HAVE__wsetenv
 #elif !defined(CONFIG_HAVE__wsetenv) && \
       (defined(_wsetenv) || defined(___wsetenv_defined))
-#define CONFIG_HAVE__wsetenv 1
+#define CONFIG_HAVE__wsetenv
 #endif
 
 #ifdef CONFIG_NO_wunsetenv
 #undef CONFIG_HAVE_wunsetenv
 #elif !defined(CONFIG_HAVE_wunsetenv) && \
       (defined(wunsetenv) || defined(__wunsetenv_defined))
-#define CONFIG_HAVE_wunsetenv 1
+#define CONFIG_HAVE_wunsetenv
 #endif
 
 #ifdef CONFIG_NO__wunsetenv
 #undef CONFIG_HAVE__wunsetenv
 #elif !defined(CONFIG_HAVE__wunsetenv) && \
       (defined(_wunsetenv) || defined(___wunsetenv_defined))
-#define CONFIG_HAVE__wunsetenv 1
+#define CONFIG_HAVE__wunsetenv
 #endif
 
 #ifdef CONFIG_NO_wputenv
 #undef CONFIG_HAVE_wputenv
 #elif !defined(CONFIG_HAVE_wputenv) && \
       (defined(wputenv) || defined(__wputenv_defined))
-#define CONFIG_HAVE_wputenv 1
+#define CONFIG_HAVE_wputenv
 #endif
 
 #ifdef CONFIG_NO__wputenv
@@ -5093,14 +5093,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wputenv) && \
       (defined(_wputenv) || defined(___wputenv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wputenv 1
+#define CONFIG_HAVE__wputenv
 #endif
 
 #ifdef CONFIG_NO_wputenv_s
 #undef CONFIG_HAVE_wputenv_s
 #elif !defined(CONFIG_HAVE_wputenv_s) && \
       (defined(wputenv_s) || defined(__wputenv_s_defined))
-#define CONFIG_HAVE_wputenv_s 1
+#define CONFIG_HAVE_wputenv_s
 #endif
 
 #ifdef CONFIG_NO__wputenv_s
@@ -5108,28 +5108,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wputenv_s) && \
       (defined(_wputenv_s) || defined(___wputenv_s_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__wputenv_s 1
+#define CONFIG_HAVE__wputenv_s
 #endif
 
 #ifdef CONFIG_NO_wenviron
 #undef CONFIG_HAVE_wenviron
 #elif !defined(CONFIG_HAVE_wenviron) && \
       (defined(wenviron) || defined(__wenviron_defined))
-#define CONFIG_HAVE_wenviron 1
+#define CONFIG_HAVE_wenviron
 #endif
 
 #ifdef CONFIG_NO__wenviron
 #undef CONFIG_HAVE__wenviron
 #elif !defined(CONFIG_HAVE__wenviron) && \
       (defined(_wenviron) || defined(___wenviron_defined))
-#define CONFIG_HAVE__wenviron 1
+#define CONFIG_HAVE__wenviron
 #endif
 
 #ifdef CONFIG_NO___wenviron
 #undef CONFIG_HAVE___wenviron
 #elif !defined(CONFIG_HAVE___wenviron) && \
       (defined(__wenviron) || defined(____wenviron_defined))
-#define CONFIG_HAVE___wenviron 1
+#define CONFIG_HAVE___wenviron
 #endif
 
 #ifdef CONFIG_NO___p__wenviron
@@ -5137,7 +5137,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___p__wenviron) && \
       (defined(__p__wenviron) || defined(____p__wenviron_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE___p__wenviron 1
+#define CONFIG_HAVE___p__wenviron
 #endif
 
 #ifdef CONFIG_NO_ENV_LOCK
@@ -5145,7 +5145,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ENV_LOCK) && \
       (defined(ENV_LOCK) || defined(__ENV_LOCK_defined) || (defined(CONFIG_HAVE_ENVLOCK_H) || \
        (defined(ENV_LOCK) && defined(ENV_UNLOCK))))
-#define CONFIG_HAVE_ENV_LOCK 1
+#define CONFIG_HAVE_ENV_LOCK
 #endif
 
 #ifdef CONFIG_NO_ENV_UNLOCK
@@ -5153,28 +5153,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ENV_UNLOCK) && \
       (defined(ENV_UNLOCK) || defined(__ENV_UNLOCK_defined) || (defined(CONFIG_HAVE_ENVLOCK_H) || \
        (defined(ENV_LOCK) && defined(ENV_UNLOCK))))
-#define CONFIG_HAVE_ENV_UNLOCK 1
+#define CONFIG_HAVE_ENV_UNLOCK
 #endif
 
 #ifdef CONFIG_NO___argc
 #undef CONFIG_HAVE___argc
 #elif !defined(CONFIG_HAVE___argc) && \
       (defined(__argc) || defined(____argc_defined))
-#define CONFIG_HAVE___argc 1
+#define CONFIG_HAVE___argc
 #endif
 
 #ifdef CONFIG_NO___argv
 #undef CONFIG_HAVE___argv
 #elif !defined(CONFIG_HAVE___argv) && \
       (defined(__argv) || defined(____argv_defined))
-#define CONFIG_HAVE___argv 1
+#define CONFIG_HAVE___argv
 #endif
 
 #ifdef CONFIG_NO___wargv
 #undef CONFIG_HAVE___wargv
 #elif !defined(CONFIG_HAVE___wargv) && \
       (defined(__wargv) || defined(____wargv_defined))
-#define CONFIG_HAVE___wargv 1
+#define CONFIG_HAVE___wargv
 #endif
 
 #ifdef CONFIG_NO___p___argc
@@ -5182,7 +5182,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___p___argc) && \
       (defined(__p___argc) || defined(____p___argc_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE___p___argc 1
+#define CONFIG_HAVE___p___argc
 #endif
 
 #ifdef CONFIG_NO___p___argv
@@ -5190,7 +5190,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___p___argv) && \
       (defined(__p___argv) || defined(____p___argv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE___p___argv 1
+#define CONFIG_HAVE___p___argv
 #endif
 
 #ifdef CONFIG_NO___p___wargv
@@ -5198,21 +5198,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___p___wargv) && \
       (defined(__p___wargv) || defined(____p___wargv_defined) || (defined(CONFIG_HAVE_STDLIB_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE___p___wargv 1
+#define CONFIG_HAVE___p___wargv
 #endif
 
 #ifdef CONFIG_NO_wcslen
 #undef CONFIG_HAVE_wcslen
 #elif !defined(CONFIG_HAVE_wcslen) && \
       (defined(wcslen) || defined(__wcslen_defined) || defined(CONFIG_HAVE_WCHAR_H))
-#define CONFIG_HAVE_wcslen 1
+#define CONFIG_HAVE_wcslen
 #endif
 
 #ifdef CONFIG_NO_qsort
 #undef CONFIG_HAVE_qsort
 #elif !defined(CONFIG_HAVE_qsort) && \
       (defined(qsort) || defined(__qsort_defined) || defined(CONFIG_HAVE_STDLIB_H))
-#define CONFIG_HAVE_qsort 1
+#define CONFIG_HAVE_qsort
 #endif
 
 #ifdef CONFIG_NO_truncate
@@ -5221,7 +5221,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(truncate) || defined(__truncate_defined) || ((defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_truncate 1
+#define CONFIG_HAVE_truncate
 #endif
 
 #ifdef CONFIG_NO_truncate64
@@ -5230,7 +5230,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(truncate64) || defined(__truncate64_defined) || (defined(__USE_LARGEFILE64) && \
        ((defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_truncate64 1
+#define CONFIG_HAVE_truncate64
 #endif
 
 #ifdef CONFIG_NO_ftruncate
@@ -5240,7 +5240,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)) || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
        defined(__USE_XOPEN2K)))
-#define CONFIG_HAVE_ftruncate 1
+#define CONFIG_HAVE_ftruncate
 #endif
 
 #ifdef CONFIG_NO_ftruncate64
@@ -5250,21 +5250,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        ((defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix)) || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
        defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_ftruncate64 1
+#define CONFIG_HAVE_ftruncate64
 #endif
 
 #ifdef CONFIG_NO__chsize
 #undef CONFIG_HAVE__chsize
 #elif !defined(CONFIG_HAVE__chsize) && \
       (defined(_chsize) || defined(___chsize_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__chsize 1
+#define CONFIG_HAVE__chsize
 #endif
 
 #ifdef CONFIG_NO__chsize_s
 #undef CONFIG_HAVE__chsize_s
 #elif !defined(CONFIG_HAVE__chsize_s) && \
       (defined(_chsize_s) || defined(___chsize_s_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__chsize_s 1
+#define CONFIG_HAVE__chsize_s
 #endif
 
 #ifdef CONFIG_NO_getpgid
@@ -5272,7 +5272,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_getpgid) && \
       (defined(getpgid) || defined(__getpgid_defined) || (defined(_POSIX_JOB_CONTROL) && \
        _POSIX_JOB_CONTROL+0 != 0))
-#define CONFIG_HAVE_getpgid 1
+#define CONFIG_HAVE_getpgid
 #endif
 
 #ifdef CONFIG_NO_setpgid
@@ -5280,7 +5280,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_setpgid) && \
       (defined(setpgid) || defined(__setpgid_defined) || (defined(_POSIX_JOB_CONTROL) && \
        _POSIX_JOB_CONTROL+0 != 0))
-#define CONFIG_HAVE_setpgid 1
+#define CONFIG_HAVE_setpgid
 #endif
 
 #ifdef CONFIG_NO_setreuid
@@ -5290,7 +5290,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        _POSIX_SAVED_IDS+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))))
-#define CONFIG_HAVE_setreuid 1
+#define CONFIG_HAVE_setreuid
 #endif
 
 #ifdef CONFIG_NO_nice
@@ -5300,7 +5300,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        ((defined(_POSIX_PRIORITY_SCHEDULING) && _POSIX_PRIORITY_SCHEDULING+0 != \
        0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))))
-#define CONFIG_HAVE_nice 1
+#define CONFIG_HAVE_nice
 #endif
 
 #ifdef CONFIG_NO_mmap
@@ -5310,7 +5310,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        _POSIX_MAPPED_FILES+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))))
-#define CONFIG_HAVE_mmap 1
+#define CONFIG_HAVE_mmap
 #endif
 
 #ifdef CONFIG_NO_mmap64
@@ -5320,28 +5320,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        ((defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))))
-#define CONFIG_HAVE_mmap64 1
+#define CONFIG_HAVE_mmap64
 #endif
 
 #ifdef CONFIG_NO_munmap
 #undef CONFIG_HAVE_munmap
 #elif !defined(CONFIG_HAVE_munmap) && \
       (defined(munmap) || defined(__munmap_defined) || CONFIG_HAVE_mmap)
-#define CONFIG_HAVE_munmap 1
+#define CONFIG_HAVE_munmap
 #endif
 
 #ifdef CONFIG_NO_fmapfile
 #undef CONFIG_HAVE_fmapfile
 #elif !defined(CONFIG_HAVE_fmapfile) && \
       (defined(fmapfile) || defined(__fmapfile_defined))
-#define CONFIG_HAVE_fmapfile 1
+#define CONFIG_HAVE_fmapfile
 #endif
 
 #ifdef CONFIG_NO_unmapfile
 #undef CONFIG_HAVE_unmapfile
 #elif !defined(CONFIG_HAVE_unmapfile) && \
       (defined(unmapfile) || defined(__unmapfile_defined))
-#define CONFIG_HAVE_unmapfile 1
+#define CONFIG_HAVE_unmapfile
 #endif
 
 #ifdef CONFIG_NO_getpagesize
@@ -5349,84 +5349,84 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_getpagesize) && \
       (defined(getpagesize) || defined(__getpagesize_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        (defined(__USE_MISC) || !defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_getpagesize 1
+#define CONFIG_HAVE_getpagesize
 #endif
 
 #ifdef CONFIG_NO_MAP_ANONYMOUS
 #undef CONFIG_HAVE_MAP_ANONYMOUS
 #elif !defined(CONFIG_HAVE_MAP_ANONYMOUS) && \
       (defined(MAP_ANONYMOUS) || defined(__MAP_ANONYMOUS_defined))
-#define CONFIG_HAVE_MAP_ANONYMOUS 1
+#define CONFIG_HAVE_MAP_ANONYMOUS
 #endif
 
 #ifdef CONFIG_NO_MAP_ANON
 #undef CONFIG_HAVE_MAP_ANON
 #elif !defined(CONFIG_HAVE_MAP_ANON) && \
       (defined(MAP_ANON) || defined(__MAP_ANON_defined))
-#define CONFIG_HAVE_MAP_ANON 1
+#define CONFIG_HAVE_MAP_ANON
 #endif
 
 #ifdef CONFIG_NO_MAP_PRIVATE
 #undef CONFIG_HAVE_MAP_PRIVATE
 #elif !defined(CONFIG_HAVE_MAP_PRIVATE) && \
       (defined(MAP_PRIVATE) || defined(__MAP_PRIVATE_defined))
-#define CONFIG_HAVE_MAP_PRIVATE 1
+#define CONFIG_HAVE_MAP_PRIVATE
 #endif
 
 #ifdef CONFIG_NO_MAP_SHARED
 #undef CONFIG_HAVE_MAP_SHARED
 #elif !defined(CONFIG_HAVE_MAP_SHARED) && \
       (defined(MAP_SHARED) || defined(__MAP_SHARED_defined))
-#define CONFIG_HAVE_MAP_SHARED 1
+#define CONFIG_HAVE_MAP_SHARED
 #endif
 
 #ifdef CONFIG_NO_MAP_GROWSUP
 #undef CONFIG_HAVE_MAP_GROWSUP
 #elif !defined(CONFIG_HAVE_MAP_GROWSUP) && \
       (defined(MAP_GROWSUP) || defined(__MAP_GROWSUP_defined))
-#define CONFIG_HAVE_MAP_GROWSUP 1
+#define CONFIG_HAVE_MAP_GROWSUP
 #endif
 
 #ifdef CONFIG_NO_MAP_GROWSDOWN
 #undef CONFIG_HAVE_MAP_GROWSDOWN
 #elif !defined(CONFIG_HAVE_MAP_GROWSDOWN) && \
       (defined(MAP_GROWSDOWN) || defined(__MAP_GROWSDOWN_defined))
-#define CONFIG_HAVE_MAP_GROWSDOWN 1
+#define CONFIG_HAVE_MAP_GROWSDOWN
 #endif
 
 #ifdef CONFIG_NO_MAP_FILE
 #undef CONFIG_HAVE_MAP_FILE
 #elif !defined(CONFIG_HAVE_MAP_FILE) && \
       (defined(MAP_FILE) || defined(__MAP_FILE_defined))
-#define CONFIG_HAVE_MAP_FILE 1
+#define CONFIG_HAVE_MAP_FILE
 #endif
 
 #ifdef CONFIG_NO_MAP_STACK
 #undef CONFIG_HAVE_MAP_STACK
 #elif !defined(CONFIG_HAVE_MAP_STACK) && \
       (defined(MAP_STACK) || defined(__MAP_STACK_defined))
-#define CONFIG_HAVE_MAP_STACK 1
+#define CONFIG_HAVE_MAP_STACK
 #endif
 
 #ifdef CONFIG_NO_MAP_UNINITIALIZED
 #undef CONFIG_HAVE_MAP_UNINITIALIZED
 #elif !defined(CONFIG_HAVE_MAP_UNINITIALIZED) && \
       (defined(MAP_UNINITIALIZED) || defined(__MAP_UNINITIALIZED_defined))
-#define CONFIG_HAVE_MAP_UNINITIALIZED 1
+#define CONFIG_HAVE_MAP_UNINITIALIZED
 #endif
 
 #ifdef CONFIG_NO_PROT_READ
 #undef CONFIG_HAVE_PROT_READ
 #elif !defined(CONFIG_HAVE_PROT_READ) && \
       (defined(PROT_READ) || defined(__PROT_READ_defined))
-#define CONFIG_HAVE_PROT_READ 1
+#define CONFIG_HAVE_PROT_READ
 #endif
 
 #ifdef CONFIG_NO_PROT_WRITE
 #undef CONFIG_HAVE_PROT_WRITE
 #elif !defined(CONFIG_HAVE_PROT_WRITE) && \
       (defined(PROT_WRITE) || defined(__PROT_WRITE_defined))
-#define CONFIG_HAVE_PROT_WRITE 1
+#define CONFIG_HAVE_PROT_WRITE
 #endif
 
 #ifdef CONFIG_NO_pipe
@@ -5435,21 +5435,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(pipe) || defined(__pipe_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_pipe 1
+#define CONFIG_HAVE_pipe
 #endif
 
 #ifdef CONFIG_NO_pipe2
 #undef CONFIG_HAVE_pipe2
 #elif !defined(CONFIG_HAVE_pipe2) && \
       (defined(pipe2) || defined(__pipe2_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_pipe2 1
+#define CONFIG_HAVE_pipe2
 #endif
 
 #ifdef CONFIG_NO__pipe
 #undef CONFIG_HAVE__pipe
 #elif !defined(CONFIG_HAVE__pipe) && \
       (defined(_pipe) || defined(___pipe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__pipe 1
+#define CONFIG_HAVE__pipe
 #endif
 
 #ifdef CONFIG_NO_usleep
@@ -5457,7 +5457,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_usleep) && \
       (defined(usleep) || defined(__usleep_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))))
-#define CONFIG_HAVE_usleep 1
+#define CONFIG_HAVE_usleep
 #endif
 
 #ifdef CONFIG_NO_useconds_t
@@ -5465,7 +5465,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_useconds_t) && \
       (defined(useconds_t) || defined(__useconds_t_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        (defined(__USE_XOPEN) || defined(__USE_XOPEN2K))))
-#define CONFIG_HAVE_useconds_t 1
+#define CONFIG_HAVE_useconds_t
 #endif
 
 #ifdef CONFIG_NO_nanosleep
@@ -5473,7 +5473,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_nanosleep) && \
       (defined(nanosleep) || defined(__nanosleep_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_POSIX199309)))
-#define CONFIG_HAVE_nanosleep 1
+#define CONFIG_HAVE_nanosleep
 #endif
 
 #ifdef CONFIG_NO_nanosleep64
@@ -5481,7 +5481,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_nanosleep64) && \
       (defined(nanosleep64) || defined(__nanosleep64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
        defined(__USE_POSIX199309) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_nanosleep64 1
+#define CONFIG_HAVE_nanosleep64
 #endif
 
 #ifdef CONFIG_NO_fork
@@ -5489,7 +5489,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fork) && \
       (defined(fork) || defined(__fork_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_fork 1
+#define CONFIG_HAVE_fork
 #endif
 
 #ifdef CONFIG_NO_vfork
@@ -5497,7 +5497,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_vfork) && \
       (defined(vfork) || defined(__vfork_defined) || ((defined(__USE_XOPEN_EXTENDED) && \
        !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)))
-#define CONFIG_HAVE_vfork 1
+#define CONFIG_HAVE_vfork
 #endif
 
 #ifdef CONFIG_NO_fchown
@@ -5506,7 +5506,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fchown) || defined(__fchown_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_fchown 1
+#define CONFIG_HAVE_fchown
 #endif
 
 #ifdef CONFIG_NO_fchdir
@@ -5515,7 +5515,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fchdir) || defined(__fchdir_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_fchdir 1
+#define CONFIG_HAVE_fchdir
 #endif
 
 #ifdef CONFIG_NO_pause
@@ -5523,7 +5523,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pause) && \
       (defined(pause) || defined(__pause_defined) || (defined(__linux__) || defined(__linux) || \
        defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
-#define CONFIG_HAVE_pause 1
+#define CONFIG_HAVE_pause
 #endif
 
 #ifdef CONFIG_NO_select
@@ -5532,7 +5532,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(select) || defined(__select_defined) || (defined(CONFIG_HAVE_SYS_SELECT_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_select 1
+#define CONFIG_HAVE_select
 #endif
 
 #ifdef CONFIG_NO_pselect
@@ -5541,7 +5541,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(pselect) || defined(__pselect_defined) || (defined(CONFIG_HAVE_SYS_SELECT_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_pselect 1
+#define CONFIG_HAVE_pselect
 #endif
 
 #ifdef CONFIG_NO___iob_func
@@ -5549,7 +5549,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___iob_func) && \
       (defined(__iob_func) || defined(____iob_func_defined) || (defined(_MSC_VER) && \
        !defined(_ACRTIMP_ALT)))
-#define CONFIG_HAVE___iob_func 1
+#define CONFIG_HAVE___iob_func
 #endif
 
 #ifdef CONFIG_NO___acrt_iob_func
@@ -5557,21 +5557,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE___acrt_iob_func) && \
       (defined(__acrt_iob_func) || defined(____acrt_iob_func_defined) || (defined(_MSC_VER) && \
        defined(_ACRTIMP_ALT)))
-#define CONFIG_HAVE___acrt_iob_func 1
+#define CONFIG_HAVE___acrt_iob_func
 #endif
 
 #ifdef CONFIG_NO_fseek
 #undef CONFIG_HAVE_fseek
 #elif !defined(CONFIG_HAVE_fseek) && \
       (defined(fseek) || defined(__fseek_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fseek 1
+#define CONFIG_HAVE_fseek
 #endif
 
 #ifdef CONFIG_NO_ftell
 #undef CONFIG_HAVE_ftell
 #elif !defined(CONFIG_HAVE_ftell) && \
       (defined(ftell) || defined(__ftell_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_ftell 1
+#define CONFIG_HAVE_ftell
 #endif
 
 #ifdef CONFIG_NO_fseek64
@@ -5579,7 +5579,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fseek64) && \
       (defined(fseek64) || defined(__fseek64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        0))
-#define CONFIG_HAVE_fseek64 1
+#define CONFIG_HAVE_fseek64
 #endif
 
 #ifdef CONFIG_NO_ftell64
@@ -5587,7 +5587,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ftell64) && \
       (defined(ftell64) || defined(__ftell64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        0))
-#define CONFIG_HAVE_ftell64 1
+#define CONFIG_HAVE_ftell64
 #endif
 
 #ifdef CONFIG_NO__fseek64
@@ -5595,7 +5595,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__fseek64) && \
       (defined(_fseek64) || defined(___fseek64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        0))
-#define CONFIG_HAVE__fseek64 1
+#define CONFIG_HAVE__fseek64
 #endif
 
 #ifdef CONFIG_NO__ftell64
@@ -5603,7 +5603,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__ftell64) && \
       (defined(_ftell64) || defined(___ftell64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        0))
-#define CONFIG_HAVE__ftell64 1
+#define CONFIG_HAVE__ftell64
 #endif
 
 #ifdef CONFIG_NO_fseeko
@@ -5612,7 +5612,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(fseeko) || defined(__fseeko_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_fseeko 1
+#define CONFIG_HAVE_fseeko
 #endif
 
 #ifdef CONFIG_NO_ftello
@@ -5621,7 +5621,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(ftello) || defined(__ftello_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_ftello 1
+#define CONFIG_HAVE_ftello
 #endif
 
 #ifdef CONFIG_NO_fseeko64
@@ -5629,7 +5629,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fseeko64) && \
       (defined(fseeko64) || defined(__fseeko64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_fseeko64 1
+#define CONFIG_HAVE_fseeko64
 #endif
 
 #ifdef CONFIG_NO_ftello64
@@ -5637,7 +5637,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ftello64) && \
       (defined(ftello64) || defined(__ftello64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_ftello64 1
+#define CONFIG_HAVE_ftello64
 #endif
 
 #ifdef CONFIG_NO__fseeki64
@@ -5645,7 +5645,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__fseeki64) && \
       (defined(_fseeki64) || defined(___fseeki64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__fseeki64 1
+#define CONFIG_HAVE__fseeki64
 #endif
 
 #ifdef CONFIG_NO__ftelli64
@@ -5653,35 +5653,35 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__ftelli64) && \
       (defined(_ftelli64) || defined(___ftelli64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__ftelli64 1
+#define CONFIG_HAVE__ftelli64
 #endif
 
 #ifdef CONFIG_NO_fflush
 #undef CONFIG_HAVE_fflush
 #elif !defined(CONFIG_HAVE_fflush) && \
       (defined(fflush) || defined(__fflush_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fflush 1
+#define CONFIG_HAVE_fflush
 #endif
 
 #ifdef CONFIG_NO_clearerr
 #undef CONFIG_HAVE_clearerr
 #elif !defined(CONFIG_HAVE_clearerr) && \
       (defined(clearerr) || defined(__clearerr_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_clearerr 1
+#define CONFIG_HAVE_clearerr
 #endif
 
 #ifdef CONFIG_NO_ferror
 #undef CONFIG_HAVE_ferror
 #elif !defined(CONFIG_HAVE_ferror) && \
       (defined(ferror) || defined(__ferror_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_ferror 1
+#define CONFIG_HAVE_ferror
 #endif
 
 #ifdef CONFIG_NO_fclose
 #undef CONFIG_HAVE_fclose
 #elif !defined(CONFIG_HAVE_fclose) && \
       (defined(fclose) || defined(__fclose_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fclose 1
+#define CONFIG_HAVE_fclose
 #endif
 
 #ifdef CONFIG_NO_fileno
@@ -5689,7 +5689,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fileno) && \
       (defined(fileno) || defined(__fileno_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        !defined(_MSC_VER)))
-#define CONFIG_HAVE_fileno 1
+#define CONFIG_HAVE_fileno
 #endif
 
 #ifdef CONFIG_NO__fileno
@@ -5697,14 +5697,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__fileno) && \
       (defined(_fileno) || defined(___fileno_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(_MSC_VER)))
-#define CONFIG_HAVE__fileno 1
+#define CONFIG_HAVE__fileno
 #endif
 
 #ifdef CONFIG_NO_fftruncate
 #undef CONFIG_HAVE_fftruncate
 #elif !defined(CONFIG_HAVE_fftruncate) && \
       (defined(fftruncate) || defined(__fftruncate_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_fftruncate 1
+#define CONFIG_HAVE_fftruncate
 #endif
 
 #ifdef CONFIG_NO_fftruncate64
@@ -5712,91 +5712,91 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fftruncate64) && \
       (defined(fftruncate64) || defined(__fftruncate64_defined) || (defined(__USE_KOS) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_fftruncate64 1
+#define CONFIG_HAVE_fftruncate64
 #endif
 
 #ifdef CONFIG_NO_getc
 #undef CONFIG_HAVE_getc
 #elif !defined(CONFIG_HAVE_getc) && \
       (defined(getc) || defined(__getc_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_getc 1
+#define CONFIG_HAVE_getc
 #endif
 
 #ifdef CONFIG_NO_fgetc
 #undef CONFIG_HAVE_fgetc
 #elif !defined(CONFIG_HAVE_fgetc) && \
       (defined(fgetc) || defined(__fgetc_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fgetc 1
+#define CONFIG_HAVE_fgetc
 #endif
 
 #ifdef CONFIG_NO_putc
 #undef CONFIG_HAVE_putc
 #elif !defined(CONFIG_HAVE_putc) && \
       (defined(putc) || defined(__putc_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_putc 1
+#define CONFIG_HAVE_putc
 #endif
 
 #ifdef CONFIG_NO_fputc
 #undef CONFIG_HAVE_fputc
 #elif !defined(CONFIG_HAVE_fputc) && \
       (defined(fputc) || defined(__fputc_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fputc 1
+#define CONFIG_HAVE_fputc
 #endif
 
 #ifdef CONFIG_NO_fread
 #undef CONFIG_HAVE_fread
 #elif !defined(CONFIG_HAVE_fread) && \
       (defined(fread) || defined(__fread_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fread 1
+#define CONFIG_HAVE_fread
 #endif
 
 #ifdef CONFIG_NO_fwrite
 #undef CONFIG_HAVE_fwrite
 #elif !defined(CONFIG_HAVE_fwrite) && \
       (defined(fwrite) || defined(__fwrite_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fwrite 1
+#define CONFIG_HAVE_fwrite
 #endif
 
 #ifdef CONFIG_NO_ungetc
 #undef CONFIG_HAVE_ungetc
 #elif !defined(CONFIG_HAVE_ungetc) && \
       (defined(ungetc) || defined(__ungetc_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_ungetc 1
+#define CONFIG_HAVE_ungetc
 #endif
 
 #ifdef CONFIG_NO_setvbuf
 #undef CONFIG_HAVE_setvbuf
 #elif !defined(CONFIG_HAVE_setvbuf) && \
       (defined(setvbuf) || defined(__setvbuf_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_setvbuf 1
+#define CONFIG_HAVE_setvbuf
 #endif
 
 #ifdef CONFIG_NO__IONBF
 #undef CONFIG_HAVE__IONBF
 #elif !defined(CONFIG_HAVE__IONBF) && \
       (defined(_IONBF) || defined(___IONBF_defined))
-#define CONFIG_HAVE__IONBF 1
+#define CONFIG_HAVE__IONBF
 #endif
 
 #ifdef CONFIG_NO__IOFBF
 #undef CONFIG_HAVE__IOFBF
 #elif !defined(CONFIG_HAVE__IOFBF) && \
       (defined(_IOFBF) || defined(___IOFBF_defined))
-#define CONFIG_HAVE__IOFBF 1
+#define CONFIG_HAVE__IOFBF
 #endif
 
 #ifdef CONFIG_NO__IOLBF
 #undef CONFIG_HAVE__IOLBF
 #elif !defined(CONFIG_HAVE__IOLBF) && \
       (defined(_IOLBF) || defined(___IOLBF_defined))
-#define CONFIG_HAVE__IOLBF 1
+#define CONFIG_HAVE__IOLBF
 #endif
 
 #ifdef CONFIG_NO_fopen
 #undef CONFIG_HAVE_fopen
 #elif !defined(CONFIG_HAVE_fopen) && \
       (defined(fopen) || defined(__fopen_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fopen 1
+#define CONFIG_HAVE_fopen
 #endif
 
 #ifdef CONFIG_NO_fopen64
@@ -5804,70 +5804,70 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fopen64) && \
       (defined(fopen64) || defined(__fopen64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        defined(__USE_LARGEFILE64)))
-#define CONFIG_HAVE_fopen64 1
+#define CONFIG_HAVE_fopen64
 #endif
 
 #ifdef CONFIG_NO_fprintf
 #undef CONFIG_HAVE_fprintf
 #elif !defined(CONFIG_HAVE_fprintf) && \
       (defined(fprintf) || defined(__fprintf_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_fprintf 1
+#define CONFIG_HAVE_fprintf
 #endif
 
 #ifdef CONFIG_NO_stdin
 #undef CONFIG_HAVE_stdin
 #elif !defined(CONFIG_HAVE_stdin) && \
       (defined(stdin) || defined(__stdin_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_stdin 1
+#define CONFIG_HAVE_stdin
 #endif
 
 #ifdef CONFIG_NO_stdout
 #undef CONFIG_HAVE_stdout
 #elif !defined(CONFIG_HAVE_stdout) && \
       (defined(stdout) || defined(__stdout_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_stdout 1
+#define CONFIG_HAVE_stdout
 #endif
 
 #ifdef CONFIG_NO_stderr
 #undef CONFIG_HAVE_stderr
 #elif !defined(CONFIG_HAVE_stderr) && \
       (defined(stderr) || defined(__stderr_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_stderr 1
+#define CONFIG_HAVE_stderr
 #endif
 
 #ifdef CONFIG_NO_sem_init
 #undef CONFIG_HAVE_sem_init
 #elif !defined(CONFIG_HAVE_sem_init) && \
       (defined(sem_init) || defined(__sem_init_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
-#define CONFIG_HAVE_sem_init 1
+#define CONFIG_HAVE_sem_init
 #endif
 
 #ifdef CONFIG_NO_sem_destroy
 #undef CONFIG_HAVE_sem_destroy
 #elif !defined(CONFIG_HAVE_sem_destroy) && \
       (defined(sem_destroy) || defined(__sem_destroy_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
-#define CONFIG_HAVE_sem_destroy 1
+#define CONFIG_HAVE_sem_destroy
 #endif
 
 #ifdef CONFIG_NO_sem_wait
 #undef CONFIG_HAVE_sem_wait
 #elif !defined(CONFIG_HAVE_sem_wait) && \
       (defined(sem_wait) || defined(__sem_wait_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
-#define CONFIG_HAVE_sem_wait 1
+#define CONFIG_HAVE_sem_wait
 #endif
 
 #ifdef CONFIG_NO_sem_trywait
 #undef CONFIG_HAVE_sem_trywait
 #elif !defined(CONFIG_HAVE_sem_trywait) && \
       (defined(sem_trywait) || defined(__sem_trywait_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
-#define CONFIG_HAVE_sem_trywait 1
+#define CONFIG_HAVE_sem_trywait
 #endif
 
 #ifdef CONFIG_NO_sem_post
 #undef CONFIG_HAVE_sem_post
 #elif !defined(CONFIG_HAVE_sem_post) && \
       (defined(sem_post) || defined(__sem_post_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
-#define CONFIG_HAVE_sem_post 1
+#define CONFIG_HAVE_sem_post
 #endif
 
 #ifdef CONFIG_NO_sem_timedwait
@@ -5875,7 +5875,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sem_timedwait) && \
       (defined(sem_timedwait) || defined(__sem_timedwait_defined) || (defined(CONFIG_HAVE_SEMAPHORE_H) && \
        defined(__USE_XOPEN2K)))
-#define CONFIG_HAVE_sem_timedwait 1
+#define CONFIG_HAVE_sem_timedwait
 #endif
 
 #ifdef CONFIG_NO_sem_timedwait64
@@ -5883,7 +5883,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sem_timedwait64) && \
       (defined(sem_timedwait64) || defined(__sem_timedwait64_defined) || (defined(CONFIG_HAVE_SEMAPHORE_H) && \
        defined(__USE_XOPEN2K) && defined(__USE_TIME64)))
-#define CONFIG_HAVE_sem_timedwait64 1
+#define CONFIG_HAVE_sem_timedwait64
 #endif
 
 #ifdef CONFIG_NO_pthread_suspend
@@ -5891,7 +5891,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_suspend) && \
       (defined(pthread_suspend) || defined(__pthread_suspend_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
        0))
-#define CONFIG_HAVE_pthread_suspend 1
+#define CONFIG_HAVE_pthread_suspend
 #endif
 
 #ifdef CONFIG_NO_pthread_continue
@@ -5899,7 +5899,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_continue) && \
       (defined(pthread_continue) || defined(__pthread_continue_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
        0))
-#define CONFIG_HAVE_pthread_continue 1
+#define CONFIG_HAVE_pthread_continue
 #endif
 
 #ifdef CONFIG_NO_pthread_suspend_np
@@ -5907,7 +5907,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_suspend_np) && \
       (defined(pthread_suspend_np) || defined(__pthread_suspend_np_defined) || \
        (defined(CONFIG_HAVE_PTHREAD_H) && 0))
-#define CONFIG_HAVE_pthread_suspend_np 1
+#define CONFIG_HAVE_pthread_suspend_np
 #endif
 
 #ifdef CONFIG_NO_pthread_unsuspend_np
@@ -5915,7 +5915,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_unsuspend_np) && \
       (defined(pthread_unsuspend_np) || defined(__pthread_unsuspend_np_defined) || \
        (defined(CONFIG_HAVE_PTHREAD_H) && 0))
-#define CONFIG_HAVE_pthread_unsuspend_np 1
+#define CONFIG_HAVE_pthread_unsuspend_np
 #endif
 
 #ifdef CONFIG_NO_pthread_setname
@@ -5923,7 +5923,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_setname) && \
       (defined(pthread_setname) || defined(__pthread_setname_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
        0))
-#define CONFIG_HAVE_pthread_setname 1
+#define CONFIG_HAVE_pthread_setname
 #endif
 
 #ifdef CONFIG_NO_pthread_setname_np
@@ -5931,98 +5931,98 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pthread_setname_np) && \
       (defined(pthread_setname_np) || defined(__pthread_setname_np_defined) || \
        (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)))
-#define CONFIG_HAVE_pthread_setname_np 1
+#define CONFIG_HAVE_pthread_setname_np
 #endif
 
 #ifdef CONFIG_NO_abort
 #undef CONFIG_HAVE_abort
 #elif !defined(CONFIG_HAVE_abort) && \
       (defined(abort) || defined(__abort_defined) || defined(CONFIG_HAVE_STDLIB_H))
-#define CONFIG_HAVE_abort 1
+#define CONFIG_HAVE_abort
 #endif
 
 #ifdef CONFIG_NO_strerror
 #undef CONFIG_HAVE_strerror
 #elif !defined(CONFIG_HAVE_strerror) && \
       (defined(strerror) || defined(__strerror_defined) || defined(CONFIG_HAVE_STRING_H))
-#define CONFIG_HAVE_strerror 1
+#define CONFIG_HAVE_strerror
 #endif
 
 #ifdef CONFIG_NO_strerrordesc_np
 #undef CONFIG_HAVE_strerrordesc_np
 #elif !defined(CONFIG_HAVE_strerrordesc_np) && \
       (defined(strerrordesc_np) || defined(__strerrordesc_np_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_strerrordesc_np 1
+#define CONFIG_HAVE_strerrordesc_np
 #endif
 
 #ifdef CONFIG_NO_strerrorname_np
 #undef CONFIG_HAVE_strerrorname_np
 #elif !defined(CONFIG_HAVE_strerrorname_np) && \
       (defined(strerrorname_np) || defined(__strerrorname_np_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_strerrorname_np 1
+#define CONFIG_HAVE_strerrorname_np
 #endif
 
 #ifdef CONFIG_NO___sys_errlist
 #undef CONFIG_HAVE___sys_errlist
 #elif !defined(CONFIG_HAVE___sys_errlist) && \
       (defined(__sys_errlist) || defined(____sys_errlist_defined))
-#define CONFIG_HAVE___sys_errlist 1
+#define CONFIG_HAVE___sys_errlist
 #endif
 
 #ifdef CONFIG_NO__sys_errlist
 #undef CONFIG_HAVE__sys_errlist
 #elif !defined(CONFIG_HAVE__sys_errlist) && \
       (defined(_sys_errlist) || defined(___sys_errlist_defined))
-#define CONFIG_HAVE__sys_errlist 1
+#define CONFIG_HAVE__sys_errlist
 #endif
 
 #ifdef CONFIG_NO_sys_errlist
 #undef CONFIG_HAVE_sys_errlist
 #elif !defined(CONFIG_HAVE_sys_errlist) && \
       (defined(sys_errlist) || defined(__sys_errlist_defined))
-#define CONFIG_HAVE_sys_errlist 1
+#define CONFIG_HAVE_sys_errlist
 #endif
 
 #ifdef CONFIG_NO___sys_nerr
 #undef CONFIG_HAVE___sys_nerr
 #elif !defined(CONFIG_HAVE___sys_nerr) && \
       (defined(__sys_nerr) || defined(____sys_nerr_defined))
-#define CONFIG_HAVE___sys_nerr 1
+#define CONFIG_HAVE___sys_nerr
 #endif
 
 #ifdef CONFIG_NO__sys_nerr
 #undef CONFIG_HAVE__sys_nerr
 #elif !defined(CONFIG_HAVE__sys_nerr) && \
       (defined(_sys_nerr) || defined(___sys_nerr_defined))
-#define CONFIG_HAVE__sys_nerr 1
+#define CONFIG_HAVE__sys_nerr
 #endif
 
 #ifdef CONFIG_NO_sys_nerr
 #undef CONFIG_HAVE_sys_nerr
 #elif !defined(CONFIG_HAVE_sys_nerr) && \
       (defined(sys_nerr) || defined(__sys_nerr_defined))
-#define CONFIG_HAVE_sys_nerr 1
+#define CONFIG_HAVE_sys_nerr
 #endif
 
 #ifdef CONFIG_NO_dlopen
 #undef CONFIG_HAVE_dlopen
 #elif !defined(CONFIG_HAVE_dlopen) && \
       (defined(dlopen) || defined(__dlopen_defined) || defined(CONFIG_HAVE_DLFCN_H))
-#define CONFIG_HAVE_dlopen 1
+#define CONFIG_HAVE_dlopen
 #endif
 
 #ifdef CONFIG_NO_dlclose
 #undef CONFIG_HAVE_dlclose
 #elif !defined(CONFIG_HAVE_dlclose) && \
       (defined(dlclose) || defined(__dlclose_defined) || defined(CONFIG_HAVE_DLFCN_H))
-#define CONFIG_HAVE_dlclose 1
+#define CONFIG_HAVE_dlclose
 #endif
 
 #ifdef CONFIG_NO_dlsym
 #undef CONFIG_HAVE_dlsym
 #elif !defined(CONFIG_HAVE_dlsym) && \
       (defined(dlsym) || defined(__dlsym_defined) || defined(CONFIG_HAVE_DLFCN_H))
-#define CONFIG_HAVE_dlsym 1
+#define CONFIG_HAVE_dlsym
 #endif
 
 #ifdef CONFIG_NO_dlmodulename
@@ -6030,155 +6030,155 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_dlmodulename) && \
       (defined(dlmodulename) || defined(__dlmodulename_defined) || (defined(CONFIG_HAVE_DLFCN_H) && \
        defined(__USE_KOS)))
-#define CONFIG_HAVE_dlmodulename 1
+#define CONFIG_HAVE_dlmodulename
 #endif
 
 #ifdef CONFIG_NO_RTLD_GLOBAL
 #undef CONFIG_HAVE_RTLD_GLOBAL
 #elif !defined(CONFIG_HAVE_RTLD_GLOBAL) && \
       (defined(RTLD_GLOBAL) || defined(__RTLD_GLOBAL_defined))
-#define CONFIG_HAVE_RTLD_GLOBAL 1
+#define CONFIG_HAVE_RTLD_GLOBAL
 #endif
 
 #ifdef CONFIG_NO_RTLD_LOCAL
 #undef CONFIG_HAVE_RTLD_LOCAL
 #elif !defined(CONFIG_HAVE_RTLD_LOCAL) && \
       (defined(RTLD_LOCAL) || defined(__RTLD_LOCAL_defined))
-#define CONFIG_HAVE_RTLD_LOCAL 1
+#define CONFIG_HAVE_RTLD_LOCAL
 #endif
 
 #ifdef CONFIG_NO_RTLD_LAZY
 #undef CONFIG_HAVE_RTLD_LAZY
 #elif !defined(CONFIG_HAVE_RTLD_LAZY) && \
       (defined(RTLD_LAZY) || defined(__RTLD_LAZY_defined))
-#define CONFIG_HAVE_RTLD_LAZY 1
+#define CONFIG_HAVE_RTLD_LAZY
 #endif
 
 #ifdef CONFIG_NO_RTLD_NOW
 #undef CONFIG_HAVE_RTLD_NOW
 #elif !defined(CONFIG_HAVE_RTLD_NOW) && \
       (defined(RTLD_NOW) || defined(__RTLD_NOW_defined))
-#define CONFIG_HAVE_RTLD_NOW 1
+#define CONFIG_HAVE_RTLD_NOW
 #endif
 
 #ifdef CONFIG_NO__memicmp
 #undef CONFIG_HAVE__memicmp
 #elif !defined(CONFIG_HAVE__memicmp) && \
       (defined(_memicmp) || defined(___memicmp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__memicmp 1
+#define CONFIG_HAVE__memicmp
 #endif
 
 #ifdef CONFIG_NO_memicmp
 #undef CONFIG_HAVE_memicmp
 #elif !defined(CONFIG_HAVE_memicmp) && \
       (defined(memicmp) || defined(__memicmp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_memicmp 1
+#define CONFIG_HAVE_memicmp
 #endif
 
 #ifdef CONFIG_NO_memcasecmp
 #undef CONFIG_HAVE_memcasecmp
 #elif !defined(CONFIG_HAVE_memcasecmp) && \
       (defined(memcasecmp) || defined(__memcasecmp_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcasecmp 1
+#define CONFIG_HAVE_memcasecmp
 #endif
 
 #ifdef CONFIG_NO__stricmp
 #undef CONFIG_HAVE__stricmp
 #elif !defined(CONFIG_HAVE__stricmp) && \
       (defined(_stricmp) || defined(___stricmp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__stricmp 1
+#define CONFIG_HAVE__stricmp
 #endif
 
 #ifdef CONFIG_NO__strcmpi
 #undef CONFIG_HAVE__strcmpi
 #elif !defined(CONFIG_HAVE__strcmpi) && \
       (defined(_strcmpi) || defined(___strcmpi_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__strcmpi 1
+#define CONFIG_HAVE__strcmpi
 #endif
 
 #ifdef CONFIG_NO_stricmp
 #undef CONFIG_HAVE_stricmp
 #elif !defined(CONFIG_HAVE_stricmp) && \
       (defined(stricmp) || defined(__stricmp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_stricmp 1
+#define CONFIG_HAVE_stricmp
 #endif
 
 #ifdef CONFIG_NO_strcmpi
 #undef CONFIG_HAVE_strcmpi
 #elif !defined(CONFIG_HAVE_strcmpi) && \
       (defined(strcmpi) || defined(__strcmpi_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_strcmpi 1
+#define CONFIG_HAVE_strcmpi
 #endif
 
 #ifdef CONFIG_NO_strcasecmp
 #undef CONFIG_HAVE_strcasecmp
 #elif !defined(CONFIG_HAVE_strcasecmp) && \
       (defined(strcasecmp) || defined(__strcasecmp_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #endif
 
 #ifdef CONFIG_NO_memchr
 #undef CONFIG_HAVE_memchr
 #else
-#define CONFIG_HAVE_memchr 1
+#define CONFIG_HAVE_memchr
 #endif
 
 #ifdef CONFIG_NO_memrchr
 #undef CONFIG_HAVE_memrchr
 #elif !defined(CONFIG_HAVE_memrchr) && \
       (defined(memrchr) || defined(__memrchr_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #endif
 
 #ifdef CONFIG_NO_rawmemchr
 #undef CONFIG_HAVE_rawmemchr
 #elif !defined(CONFIG_HAVE_rawmemchr) && \
       (defined(rawmemchr) || defined(__rawmemchr_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_rawmemchr 1
+#define CONFIG_HAVE_rawmemchr
 #endif
 
 #ifdef CONFIG_NO_atoi
 #undef CONFIG_HAVE_atoi
 #else
-#define CONFIG_HAVE_atoi 1
+#define CONFIG_HAVE_atoi
 #endif
 
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
 #else
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 #endif
 
 #ifdef CONFIG_NO_strchr
 #undef CONFIG_HAVE_strchr
 #else
-#define CONFIG_HAVE_strchr 1
+#define CONFIG_HAVE_strchr
 #endif
 
 #ifdef CONFIG_NO_wcschr
 #undef CONFIG_HAVE_wcschr
 #else
-#define CONFIG_HAVE_wcschr 1
+#define CONFIG_HAVE_wcschr
 #endif
 
 #ifdef CONFIG_NO_strrchr
 #undef CONFIG_HAVE_strrchr
 #else
-#define CONFIG_HAVE_strrchr 1
+#define CONFIG_HAVE_strrchr
 #endif
 
 #ifdef CONFIG_NO_strnchr
 #undef CONFIG_HAVE_strnchr
 #elif !defined(CONFIG_HAVE_strnchr) && \
       (defined(strnchr) || defined(__strnchr_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strnchr 1
+#define CONFIG_HAVE_strnchr
 #endif
 
 #ifdef CONFIG_NO_strnrchr
 #undef CONFIG_HAVE_strnrchr
 #elif !defined(CONFIG_HAVE_strnrchr) && \
       (defined(strnrchr) || defined(__strnrchr_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strnrchr 1
+#define CONFIG_HAVE_strnrchr
 #endif
 
 #ifdef CONFIG_NO_strnlen
@@ -6186,7 +6186,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_strnlen) && \
       (defined(strnlen) || defined(__strnlen_defined) || (defined(__USE_XOPEN2K8) || \
        defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))))
-#define CONFIG_HAVE_strnlen 1
+#define CONFIG_HAVE_strnlen
 #endif
 
 #ifdef CONFIG_NO_strchrnul
@@ -6194,28 +6194,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_strchrnul) && \
       (defined(strchrnul) || defined(__strchrnul_defined) || (defined(__USE_GNU) || \
        defined(__USE_NETBSD)))
-#define CONFIG_HAVE_strchrnul 1
+#define CONFIG_HAVE_strchrnul
 #endif
 
 #ifdef CONFIG_NO_strrchrnul
 #undef CONFIG_HAVE_strrchrnul
 #elif !defined(CONFIG_HAVE_strrchrnul) && \
       (defined(strrchrnul) || defined(__strrchrnul_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strrchrnul 1
+#define CONFIG_HAVE_strrchrnul
 #endif
 
 #ifdef CONFIG_NO_strnchrnul
 #undef CONFIG_HAVE_strnchrnul
 #elif !defined(CONFIG_HAVE_strnchrnul) && \
       (defined(strnchrnul) || defined(__strnchrnul_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strnchrnul 1
+#define CONFIG_HAVE_strnchrnul
 #endif
 
 #ifdef CONFIG_NO_strnrchrnul
 #undef CONFIG_HAVE_strnrchrnul
 #elif !defined(CONFIG_HAVE_strnrchrnul) && \
       (defined(strnrchrnul) || defined(__strnrchrnul_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strnrchrnul 1
+#define CONFIG_HAVE_strnrchrnul
 #endif
 
 #ifdef CONFIG_NO_strcasestr
@@ -6223,42 +6223,42 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_strcasestr) && \
       (defined(strcasestr) || defined(__strcasestr_defined) || (defined(__USE_GNU) || \
        defined(__USE_BSD)))
-#define CONFIG_HAVE_strcasestr 1
+#define CONFIG_HAVE_strcasestr
 #endif
 
 #ifdef CONFIG_NO_basename
 #undef CONFIG_HAVE_basename
 #elif !defined(CONFIG_HAVE_basename) && \
       (defined(basename) || defined(__basename_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_basename 1
+#define CONFIG_HAVE_basename
 #endif
 
 #ifdef CONFIG_NO_strverscmp
 #undef CONFIG_HAVE_strverscmp
 #elif !defined(CONFIG_HAVE_strverscmp) && \
       (defined(strverscmp) || defined(__strverscmp_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_strverscmp 1
+#define CONFIG_HAVE_strverscmp
 #endif
 
 #ifdef CONFIG_NO_strfry
 #undef CONFIG_HAVE_strfry
 #elif !defined(CONFIG_HAVE_strfry) && \
       (defined(strfry) || defined(__strfry_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_strfry 1
+#define CONFIG_HAVE_strfry
 #endif
 
 #ifdef CONFIG_NO_memfrob
 #undef CONFIG_HAVE_memfrob
 #elif !defined(CONFIG_HAVE_memfrob) && \
       (defined(memfrob) || defined(__memfrob_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_memfrob 1
+#define CONFIG_HAVE_memfrob
 #endif
 
 #ifdef CONFIG_NO_bzero
 #undef CONFIG_HAVE_bzero
 #elif !defined(CONFIG_HAVE_bzero) && \
       (defined(bzero) || defined(__bzero_defined) || defined(CONFIG_HAVE_STRINGS_H))
-#define CONFIG_HAVE_bzero 1
+#define CONFIG_HAVE_bzero
 #endif
 
 #ifdef CONFIG_NO_bzerow
@@ -6266,7 +6266,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bzerow) && \
       (defined(bzerow) || defined(__bzerow_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bzerow 1
+#define CONFIG_HAVE_bzerow
 #endif
 
 #ifdef CONFIG_NO_bzerol
@@ -6274,7 +6274,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bzerol) && \
       (defined(bzerol) || defined(__bzerol_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bzerol 1
+#define CONFIG_HAVE_bzerol
 #endif
 
 #ifdef CONFIG_NO_bzeroq
@@ -6282,14 +6282,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bzeroq) && \
       (defined(bzeroq) || defined(__bzeroq_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bzeroq 1
+#define CONFIG_HAVE_bzeroq
 #endif
 
 #ifdef CONFIG_NO_bcmp
 #undef CONFIG_HAVE_bcmp
 #elif !defined(CONFIG_HAVE_bcmp) && \
       (defined(bcmp) || defined(__bcmp_defined) || defined(CONFIG_HAVE_STRINGS_H))
-#define CONFIG_HAVE_bcmp 1
+#define CONFIG_HAVE_bcmp
 #endif
 
 #ifdef CONFIG_NO_bcmpw
@@ -6297,7 +6297,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bcmpw) && \
       (defined(bcmpw) || defined(__bcmpw_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bcmpw 1
+#define CONFIG_HAVE_bcmpw
 #endif
 
 #ifdef CONFIG_NO_bcmpl
@@ -6305,7 +6305,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bcmpl) && \
       (defined(bcmpl) || defined(__bcmpl_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bcmpl 1
+#define CONFIG_HAVE_bcmpl
 #endif
 
 #ifdef CONFIG_NO_bcmpq
@@ -6313,145 +6313,145 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_bcmpq) && \
       (defined(bcmpq) || defined(__bcmpq_defined) || (defined(CONFIG_HAVE_STRINGS_H) && \
        defined(__USE_STRING_BWLQ)))
-#define CONFIG_HAVE_bcmpq 1
+#define CONFIG_HAVE_bcmpq
 #endif
 
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
       (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
-#define CONFIG_HAVE_memmem 1
+#define CONFIG_HAVE_memmem
 #endif
 
 #ifdef CONFIG_NO_memrmem
 #undef CONFIG_HAVE_memrmem
 #elif !defined(CONFIG_HAVE_memrmem) && \
       (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
-#define CONFIG_HAVE_memrmem 1
+#define CONFIG_HAVE_memrmem
 #endif
 
 #ifdef CONFIG_NO_memcasemem
 #undef CONFIG_HAVE_memcasemem
 #elif !defined(CONFIG_HAVE_memcasemem) && \
       (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
-#define CONFIG_HAVE_memcasemem 1
+#define CONFIG_HAVE_memcasemem
 #endif
 
 #ifdef CONFIG_NO_memcasermem
 #undef CONFIG_HAVE_memcasermem
 #elif !defined(CONFIG_HAVE_memcasermem) && \
       (defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
-#define CONFIG_HAVE_memcasermem 1
+#define CONFIG_HAVE_memcasermem
 #endif
 
 #ifdef CONFIG_NO_memmemw
 #undef CONFIG_HAVE_memmemw
 #elif 0
-#define CONFIG_HAVE_memmemw 1
+#define CONFIG_HAVE_memmemw
 #endif
 
 #ifdef CONFIG_NO_memmeml
 #undef CONFIG_HAVE_memmeml
 #elif 0
-#define CONFIG_HAVE_memmeml 1
+#define CONFIG_HAVE_memmeml
 #endif
 
 #ifdef CONFIG_NO_memmemq
 #undef CONFIG_HAVE_memmemq
 #elif 0
-#define CONFIG_HAVE_memmemq 1
+#define CONFIG_HAVE_memmemq
 #endif
 
 #ifdef CONFIG_NO_memrmemw
 #undef CONFIG_HAVE_memrmemw
 #elif 0
-#define CONFIG_HAVE_memrmemw 1
+#define CONFIG_HAVE_memrmemw
 #endif
 
 #ifdef CONFIG_NO_memrmeml
 #undef CONFIG_HAVE_memrmeml
 #elif 0
-#define CONFIG_HAVE_memrmeml 1
+#define CONFIG_HAVE_memrmeml
 #endif
 
 #ifdef CONFIG_NO_memrmemq
 #undef CONFIG_HAVE_memrmemq
 #elif 0
-#define CONFIG_HAVE_memrmemq 1
+#define CONFIG_HAVE_memrmemq
 #endif
 
 #ifdef CONFIG_NO_memcpy
 #undef CONFIG_HAVE_memcpy
 #else
-#define CONFIG_HAVE_memcpy 1
+#define CONFIG_HAVE_memcpy
 #endif
 
 #ifdef CONFIG_NO_memset
 #undef CONFIG_HAVE_memset
 #else
-#define CONFIG_HAVE_memset 1
+#define CONFIG_HAVE_memset
 #endif
 
 #ifdef CONFIG_NO_memmove
 #undef CONFIG_HAVE_memmove
 #else
-#define CONFIG_HAVE_memmove 1
+#define CONFIG_HAVE_memmove
 #endif
 
 #ifdef CONFIG_NO_strcmp
 #undef CONFIG_HAVE_strcmp
 #else
-#define CONFIG_HAVE_strcmp 1
+#define CONFIG_HAVE_strcmp
 #endif
 
 #ifdef CONFIG_NO_strncmp
 #undef CONFIG_HAVE_strncmp
 #else
-#define CONFIG_HAVE_strncmp 1
+#define CONFIG_HAVE_strncmp
 #endif
 
 #ifdef CONFIG_NO_strcpy
 #undef CONFIG_HAVE_strcpy
 #else
-#define CONFIG_HAVE_strcpy 1
+#define CONFIG_HAVE_strcpy
 #endif
 
 #ifdef CONFIG_NO_stpcpy
 #undef CONFIG_HAVE_stpcpy
 #elif !defined(CONFIG_HAVE_stpcpy) && \
       (defined(stpcpy) || defined(__stpcpy_defined) || defined(__USE_XOPEN2K8))
-#define CONFIG_HAVE_stpcpy 1
+#define CONFIG_HAVE_stpcpy
 #endif
 
 #ifdef CONFIG_NO_stpncpy
 #undef CONFIG_HAVE_stpncpy
 #elif !defined(CONFIG_HAVE_stpncpy) && \
       (defined(stpncpy) || defined(__stpncpy_defined) || defined(__USE_XOPEN2K8))
-#define CONFIG_HAVE_stpncpy 1
+#define CONFIG_HAVE_stpncpy
 #endif
 
 #ifdef CONFIG_NO_strcat
 #undef CONFIG_HAVE_strcat
 #else
-#define CONFIG_HAVE_strcat 1
+#define CONFIG_HAVE_strcat
 #endif
 
 #ifdef CONFIG_NO_strncpy
 #undef CONFIG_HAVE_strncpy
 #else
-#define CONFIG_HAVE_strncpy 1
+#define CONFIG_HAVE_strncpy
 #endif
 
 #ifdef CONFIG_NO_strncat
 #undef CONFIG_HAVE_strncat
 #else
-#define CONFIG_HAVE_strncat 1
+#define CONFIG_HAVE_strncat
 #endif
 
 #ifdef CONFIG_NO_strstr
 #undef CONFIG_HAVE_strstr
 #else
-#define CONFIG_HAVE_strstr 1
+#define CONFIG_HAVE_strstr
 #endif
 
 #ifdef CONFIG_NO_strcasestr
@@ -6459,7 +6459,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_strcasestr) && \
       (defined(strcasestr) || defined(__strcasestr_defined) || (defined(__USE_GNU) || \
        defined(__USE_BSD)))
-#define CONFIG_HAVE_strcasestr 1
+#define CONFIG_HAVE_strcasestr
 #endif
 
 #ifdef CONFIG_NO_strnstr
@@ -6467,608 +6467,608 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_strnstr) && \
       (defined(strnstr) || defined(__strnstr_defined) || (defined(__USE_BSD) || \
        defined(__USE_KOS)))
-#define CONFIG_HAVE_strnstr 1
+#define CONFIG_HAVE_strnstr
 #endif
 
 #ifdef CONFIG_NO_strncasestr
 #undef CONFIG_HAVE_strncasestr
 #elif !defined(CONFIG_HAVE_strncasestr) && \
       (defined(strncasestr) || defined(__strncasestr_defined))
-#define CONFIG_HAVE_strncasestr 1
+#define CONFIG_HAVE_strncasestr
 #endif
 
 #ifdef CONFIG_NO_memcmp
 #undef CONFIG_HAVE_memcmp
 #else
-#define CONFIG_HAVE_memcmp 1
+#define CONFIG_HAVE_memcmp
 #endif
 
 #ifdef CONFIG_NO_mempmove
 #undef CONFIG_HAVE_mempmove
 #elif !defined(CONFIG_HAVE_mempmove) && \
       (defined(mempmove) || defined(__mempmove_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmove 1
+#define CONFIG_HAVE_mempmove
 #endif
 
 #ifdef CONFIG_NO_mempcpy
 #undef CONFIG_HAVE_mempcpy
 #elif !defined(CONFIG_HAVE_mempcpy) && \
       (defined(mempcpy) || defined(__mempcpy_defined) || defined(__USE_GNU))
-#define CONFIG_HAVE_mempcpy 1
+#define CONFIG_HAVE_mempcpy
 #endif
 
 #ifdef CONFIG_NO_mempset
 #undef CONFIG_HAVE_mempset
 #elif !defined(CONFIG_HAVE_mempset) && \
       (defined(mempset) || defined(__mempset_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempset 1
+#define CONFIG_HAVE_mempset
 #endif
 
 #ifdef CONFIG_NO_mempcpyw
 #undef CONFIG_HAVE_mempcpyw
 #elif !defined(CONFIG_HAVE_mempcpyw) && \
       (defined(mempcpyw) || defined(__mempcpyw_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempcpyw 1
+#define CONFIG_HAVE_mempcpyw
 #endif
 
 #ifdef CONFIG_NO_mempcpyl
 #undef CONFIG_HAVE_mempcpyl
 #elif !defined(CONFIG_HAVE_mempcpyl) && \
       (defined(mempcpyl) || defined(__mempcpyl_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempcpyl 1
+#define CONFIG_HAVE_mempcpyl
 #endif
 
 #ifdef CONFIG_NO_mempcpyq
 #undef CONFIG_HAVE_mempcpyq
 #elif !defined(CONFIG_HAVE_mempcpyq) && \
       (defined(mempcpyq) || defined(__mempcpyq_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempcpyq 1
+#define CONFIG_HAVE_mempcpyq
 #endif
 
 #ifdef CONFIG_NO_mempcpyc
 #undef CONFIG_HAVE_mempcpyc
 #elif !defined(CONFIG_HAVE_mempcpyc) && \
       (defined(mempcpyc) || defined(__mempcpyc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempcpyc 1
+#define CONFIG_HAVE_mempcpyc
 #endif
 
 #ifdef CONFIG_NO_mempmovew
 #undef CONFIG_HAVE_mempmovew
 #elif !defined(CONFIG_HAVE_mempmovew) && \
       (defined(mempmovew) || defined(__mempmovew_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmovew 1
+#define CONFIG_HAVE_mempmovew
 #endif
 
 #ifdef CONFIG_NO_mempmovel
 #undef CONFIG_HAVE_mempmovel
 #elif !defined(CONFIG_HAVE_mempmovel) && \
       (defined(mempmovel) || defined(__mempmovel_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmovel 1
+#define CONFIG_HAVE_mempmovel
 #endif
 
 #ifdef CONFIG_NO_mempmoveq
 #undef CONFIG_HAVE_mempmoveq
 #elif !defined(CONFIG_HAVE_mempmoveq) && \
       (defined(mempmoveq) || defined(__mempmoveq_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmoveq 1
+#define CONFIG_HAVE_mempmoveq
 #endif
 
 #ifdef CONFIG_NO_mempmovec
 #undef CONFIG_HAVE_mempmovec
 #elif !defined(CONFIG_HAVE_mempmovec) && \
       (defined(mempmovec) || defined(__mempmovec_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmovec 1
+#define CONFIG_HAVE_mempmovec
 #endif
 
 #ifdef CONFIG_NO_mempmoveupw
 #undef CONFIG_HAVE_mempmoveupw
 #elif !defined(CONFIG_HAVE_mempmoveupw) && \
       (defined(mempmoveupw) || defined(__mempmoveupw_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmoveupw 1
+#define CONFIG_HAVE_mempmoveupw
 #endif
 
 #ifdef CONFIG_NO_mempmoveupl
 #undef CONFIG_HAVE_mempmoveupl
 #elif !defined(CONFIG_HAVE_mempmoveupl) && \
       (defined(mempmoveupl) || defined(__mempmoveupl_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmoveupl 1
+#define CONFIG_HAVE_mempmoveupl
 #endif
 
 #ifdef CONFIG_NO_mempmoveupq
 #undef CONFIG_HAVE_mempmoveupq
 #elif !defined(CONFIG_HAVE_mempmoveupq) && \
       (defined(mempmoveupq) || defined(__mempmoveupq_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmoveupq 1
+#define CONFIG_HAVE_mempmoveupq
 #endif
 
 #ifdef CONFIG_NO_mempmoveupc
 #undef CONFIG_HAVE_mempmoveupc
 #elif !defined(CONFIG_HAVE_mempmoveupc) && \
       (defined(mempmoveupc) || defined(__mempmoveupc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmoveupc 1
+#define CONFIG_HAVE_mempmoveupc
 #endif
 
 #ifdef CONFIG_NO_mempmovedownw
 #undef CONFIG_HAVE_mempmovedownw
 #elif !defined(CONFIG_HAVE_mempmovedownw) && \
       (defined(mempmovedownw) || defined(__mempmovedownw_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmovedownw 1
+#define CONFIG_HAVE_mempmovedownw
 #endif
 
 #ifdef CONFIG_NO_mempmovedownl
 #undef CONFIG_HAVE_mempmovedownl
 #elif !defined(CONFIG_HAVE_mempmovedownl) && \
       (defined(mempmovedownl) || defined(__mempmovedownl_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmovedownl 1
+#define CONFIG_HAVE_mempmovedownl
 #endif
 
 #ifdef CONFIG_NO_mempmovedownq
 #undef CONFIG_HAVE_mempmovedownq
 #elif !defined(CONFIG_HAVE_mempmovedownq) && \
       (defined(mempmovedownq) || defined(__mempmovedownq_defined) || defined(__USE_STRING_BWLQ))
-#define CONFIG_HAVE_mempmovedownq 1
+#define CONFIG_HAVE_mempmovedownq
 #endif
 
 #ifdef CONFIG_NO_mempmovedownc
 #undef CONFIG_HAVE_mempmovedownc
 #elif !defined(CONFIG_HAVE_mempmovedownc) && \
       (defined(mempmovedownc) || defined(__mempmovedownc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmovedownc 1
+#define CONFIG_HAVE_mempmovedownc
 #endif
 
 #ifdef CONFIG_NO_memcpyc
 #undef CONFIG_HAVE_memcpyc
 #elif !defined(CONFIG_HAVE_memcpyc) && \
       (defined(memcpyc) || defined(__memcpyc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcpyc 1
+#define CONFIG_HAVE_memcpyc
 #endif
 
 #ifdef CONFIG_NO_memcpyw
 #undef CONFIG_HAVE_memcpyw
 #elif !defined(CONFIG_HAVE_memcpyw) && \
       (defined(memcpyw) || defined(__memcpyw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcpyw 1
+#define CONFIG_HAVE_memcpyw
 #endif
 
 #ifdef CONFIG_NO_memcpyl
 #undef CONFIG_HAVE_memcpyl
 #elif !defined(CONFIG_HAVE_memcpyl) && \
       (defined(memcpyl) || defined(__memcpyl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcpyl 1
+#define CONFIG_HAVE_memcpyl
 #endif
 
 #ifdef CONFIG_NO_memcpyq
 #undef CONFIG_HAVE_memcpyq
 #elif !defined(CONFIG_HAVE_memcpyq) && \
       (defined(memcpyq) || defined(__memcpyq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcpyq 1
+#define CONFIG_HAVE_memcpyq
 #endif
 
 #ifdef CONFIG_NO_memmovec
 #undef CONFIG_HAVE_memmovec
 #elif !defined(CONFIG_HAVE_memmovec) && \
       (defined(memmovec) || defined(__memmovec_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovec 1
+#define CONFIG_HAVE_memmovec
 #endif
 
 #ifdef CONFIG_NO_memmovew
 #undef CONFIG_HAVE_memmovew
 #elif !defined(CONFIG_HAVE_memmovew) && \
       (defined(memmovew) || defined(__memmovew_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovew 1
+#define CONFIG_HAVE_memmovew
 #endif
 
 #ifdef CONFIG_NO_memmovel
 #undef CONFIG_HAVE_memmovel
 #elif !defined(CONFIG_HAVE_memmovel) && \
       (defined(memmovel) || defined(__memmovel_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovel 1
+#define CONFIG_HAVE_memmovel
 #endif
 
 #ifdef CONFIG_NO_memmoveq
 #undef CONFIG_HAVE_memmoveq
 #elif !defined(CONFIG_HAVE_memmoveq) && \
       (defined(memmoveq) || defined(__memmoveq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveq 1
+#define CONFIG_HAVE_memmoveq
 #endif
 
 #ifdef CONFIG_NO_memmoveup
 #undef CONFIG_HAVE_memmoveup
 #elif !defined(CONFIG_HAVE_memmoveup) && \
       (defined(memmoveup) || defined(__memmoveup_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveup 1
+#define CONFIG_HAVE_memmoveup
 #endif
 
 #ifdef CONFIG_NO_mempmoveup
 #undef CONFIG_HAVE_mempmoveup
 #elif !defined(CONFIG_HAVE_mempmoveup) && \
       (defined(mempmoveup) || defined(__mempmoveup_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmoveup 1
+#define CONFIG_HAVE_mempmoveup
 #endif
 
 #ifdef CONFIG_NO_memmoveupc
 #undef CONFIG_HAVE_memmoveupc
 #elif !defined(CONFIG_HAVE_memmoveupc) && \
       (defined(memmoveupc) || defined(__memmoveupc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveupc 1
+#define CONFIG_HAVE_memmoveupc
 #endif
 
 #ifdef CONFIG_NO_memmoveupw
 #undef CONFIG_HAVE_memmoveupw
 #elif !defined(CONFIG_HAVE_memmoveupw) && \
       (defined(memmoveupw) || defined(__memmoveupw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveupw 1
+#define CONFIG_HAVE_memmoveupw
 #endif
 
 #ifdef CONFIG_NO_memmoveupl
 #undef CONFIG_HAVE_memmoveupl
 #elif !defined(CONFIG_HAVE_memmoveupl) && \
       (defined(memmoveupl) || defined(__memmoveupl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveupl 1
+#define CONFIG_HAVE_memmoveupl
 #endif
 
 #ifdef CONFIG_NO_memmoveupq
 #undef CONFIG_HAVE_memmoveupq
 #elif !defined(CONFIG_HAVE_memmoveupq) && \
       (defined(memmoveupq) || defined(__memmoveupq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmoveupq 1
+#define CONFIG_HAVE_memmoveupq
 #endif
 
 #ifdef CONFIG_NO_memmovedown
 #undef CONFIG_HAVE_memmovedown
 #elif !defined(CONFIG_HAVE_memmovedown) && \
       (defined(memmovedown) || defined(__memmovedown_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovedown 1
+#define CONFIG_HAVE_memmovedown
 #endif
 
 #ifdef CONFIG_NO_mempmovedown
 #undef CONFIG_HAVE_mempmovedown
 #elif !defined(CONFIG_HAVE_mempmovedown) && \
       (defined(mempmovedown) || defined(__mempmovedown_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempmovedown 1
+#define CONFIG_HAVE_mempmovedown
 #endif
 
 #ifdef CONFIG_NO_memmovedownc
 #undef CONFIG_HAVE_memmovedownc
 #elif !defined(CONFIG_HAVE_memmovedownc) && \
       (defined(memmovedownc) || defined(__memmovedownc_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovedownc 1
+#define CONFIG_HAVE_memmovedownc
 #endif
 
 #ifdef CONFIG_NO_memmovedownw
 #undef CONFIG_HAVE_memmovedownw
 #elif !defined(CONFIG_HAVE_memmovedownw) && \
       (defined(memmovedownw) || defined(__memmovedownw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovedownw 1
+#define CONFIG_HAVE_memmovedownw
 #endif
 
 #ifdef CONFIG_NO_memmovedownl
 #undef CONFIG_HAVE_memmovedownl
 #elif !defined(CONFIG_HAVE_memmovedownl) && \
       (defined(memmovedownl) || defined(__memmovedownl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovedownl 1
+#define CONFIG_HAVE_memmovedownl
 #endif
 
 #ifdef CONFIG_NO_memmovedownq
 #undef CONFIG_HAVE_memmovedownq
 #elif !defined(CONFIG_HAVE_memmovedownq) && \
       (defined(memmovedownq) || defined(__memmovedownq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memmovedownq 1
+#define CONFIG_HAVE_memmovedownq
 #endif
 
 #ifdef CONFIG_NO_memsetw
 #undef CONFIG_HAVE_memsetw
 #elif !defined(CONFIG_HAVE_memsetw) && \
       (defined(memsetw) || defined(__memsetw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memsetw 1
+#define CONFIG_HAVE_memsetw
 #endif
 
 #ifdef CONFIG_NO_memsetl
 #undef CONFIG_HAVE_memsetl
 #elif !defined(CONFIG_HAVE_memsetl) && \
       (defined(memsetl) || defined(__memsetl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memsetl 1
+#define CONFIG_HAVE_memsetl
 #endif
 
 #ifdef CONFIG_NO_memsetq
 #undef CONFIG_HAVE_memsetq
 #elif !defined(CONFIG_HAVE_memsetq) && \
       (defined(memsetq) || defined(__memsetq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memsetq 1
+#define CONFIG_HAVE_memsetq
 #endif
 
 #ifdef CONFIG_NO_mempsetw
 #undef CONFIG_HAVE_mempsetw
 #elif !defined(CONFIG_HAVE_mempsetw) && \
       (defined(mempsetw) || defined(__mempsetw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempsetw 1
+#define CONFIG_HAVE_mempsetw
 #endif
 
 #ifdef CONFIG_NO_mempsetl
 #undef CONFIG_HAVE_mempsetl
 #elif !defined(CONFIG_HAVE_mempsetl) && \
       (defined(mempsetl) || defined(__mempsetl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempsetl 1
+#define CONFIG_HAVE_mempsetl
 #endif
 
 #ifdef CONFIG_NO_mempsetq
 #undef CONFIG_HAVE_mempsetq
 #elif !defined(CONFIG_HAVE_mempsetq) && \
       (defined(mempsetq) || defined(__mempsetq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_mempsetq 1
+#define CONFIG_HAVE_mempsetq
 #endif
 
 #ifdef CONFIG_NO_memchrw
 #undef CONFIG_HAVE_memchrw
 #elif !defined(CONFIG_HAVE_memchrw) && \
       (defined(memchrw) || defined(__memchrw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memchrw 1
+#define CONFIG_HAVE_memchrw
 #endif
 
 #ifdef CONFIG_NO_memchrl
 #undef CONFIG_HAVE_memchrl
 #elif !defined(CONFIG_HAVE_memchrl) && \
       (defined(memchrl) || defined(__memchrl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memchrl 1
+#define CONFIG_HAVE_memchrl
 #endif
 
 #ifdef CONFIG_NO_memchrq
 #undef CONFIG_HAVE_memchrq
 #elif !defined(CONFIG_HAVE_memchrq) && \
       (defined(memchrq) || defined(__memchrq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memchrq 1
+#define CONFIG_HAVE_memchrq
 #endif
 
 #ifdef CONFIG_NO_memrchrw
 #undef CONFIG_HAVE_memrchrw
 #elif !defined(CONFIG_HAVE_memrchrw) && \
       (defined(memrchrw) || defined(__memrchrw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrchrw 1
+#define CONFIG_HAVE_memrchrw
 #endif
 
 #ifdef CONFIG_NO_memrchrl
 #undef CONFIG_HAVE_memrchrl
 #elif !defined(CONFIG_HAVE_memrchrl) && \
       (defined(memrchrl) || defined(__memrchrl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrchrl 1
+#define CONFIG_HAVE_memrchrl
 #endif
 
 #ifdef CONFIG_NO_memrchrq
 #undef CONFIG_HAVE_memrchrq
 #elif !defined(CONFIG_HAVE_memrchrq) && \
       (defined(memrchrq) || defined(__memrchrq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrchrq 1
+#define CONFIG_HAVE_memrchrq
 #endif
 
 #ifdef CONFIG_NO_memcmpw
 #undef CONFIG_HAVE_memcmpw
 #elif !defined(CONFIG_HAVE_memcmpw) && \
       (defined(memcmpw) || defined(__memcmpw_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcmpw 1
+#define CONFIG_HAVE_memcmpw
 #endif
 
 #ifdef CONFIG_NO_memcmpl
 #undef CONFIG_HAVE_memcmpl
 #elif !defined(CONFIG_HAVE_memcmpl) && \
       (defined(memcmpl) || defined(__memcmpl_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcmpl 1
+#define CONFIG_HAVE_memcmpl
 #endif
 
 #ifdef CONFIG_NO_memcmpq
 #undef CONFIG_HAVE_memcmpq
 #elif !defined(CONFIG_HAVE_memcmpq) && \
       (defined(memcmpq) || defined(__memcmpq_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcmpq 1
+#define CONFIG_HAVE_memcmpq
 #endif
 
 #ifdef CONFIG_NO_rawmemrchr
 #undef CONFIG_HAVE_rawmemrchr
 #elif !defined(CONFIG_HAVE_rawmemrchr) && \
       (defined(rawmemrchr) || defined(__rawmemrchr_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_rawmemrchr 1
+#define CONFIG_HAVE_rawmemrchr
 #endif
 
 #ifdef CONFIG_NO_memend
 #undef CONFIG_HAVE_memend
 #elif !defined(CONFIG_HAVE_memend) && \
       (defined(memend) || defined(__memend_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memend 1
+#define CONFIG_HAVE_memend
 #endif
 
 #ifdef CONFIG_NO_memrend
 #undef CONFIG_HAVE_memrend
 #elif !defined(CONFIG_HAVE_memrend) && \
       (defined(memrend) || defined(__memrend_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrend 1
+#define CONFIG_HAVE_memrend
 #endif
 
 #ifdef CONFIG_NO_memlen
 #undef CONFIG_HAVE_memlen
 #elif !defined(CONFIG_HAVE_memlen) && \
       (defined(memlen) || defined(__memlen_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memlen 1
+#define CONFIG_HAVE_memlen
 #endif
 
 #ifdef CONFIG_NO_memrlen
 #undef CONFIG_HAVE_memrlen
 #elif !defined(CONFIG_HAVE_memrlen) && \
       (defined(memrlen) || defined(__memrlen_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrlen 1
+#define CONFIG_HAVE_memrlen
 #endif
 
 #ifdef CONFIG_NO_rawmemlen
 #undef CONFIG_HAVE_rawmemlen
 #elif !defined(CONFIG_HAVE_rawmemlen) && \
       (defined(rawmemlen) || defined(__rawmemlen_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_rawmemlen 1
+#define CONFIG_HAVE_rawmemlen
 #endif
 
 #ifdef CONFIG_NO_rawmemrlen
 #undef CONFIG_HAVE_rawmemrlen
 #elif !defined(CONFIG_HAVE_rawmemrlen) && \
       (defined(rawmemrlen) || defined(__rawmemrlen_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_rawmemrlen 1
+#define CONFIG_HAVE_rawmemrlen
 #endif
 
 #ifdef CONFIG_NO_memrev
 #undef CONFIG_HAVE_memrev
 #elif !defined(CONFIG_HAVE_memrev) && \
       (defined(memrev) || defined(__memrev_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memrev 1
+#define CONFIG_HAVE_memrev
 #endif
 
 #ifdef CONFIG_NO_strend
 #undef CONFIG_HAVE_strend
 #elif !defined(CONFIG_HAVE_strend) && \
       (defined(strend) || defined(__strend_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strend 1
+#define CONFIG_HAVE_strend
 #endif
 
 #ifdef CONFIG_NO_strnend
 #undef CONFIG_HAVE_strnend
 #elif !defined(CONFIG_HAVE_strnend) && \
       (defined(strnend) || defined(__strnend_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_strnend 1
+#define CONFIG_HAVE_strnend
 #endif
 
 #ifdef CONFIG_NO_memxend
 #undef CONFIG_HAVE_memxend
 #elif !defined(CONFIG_HAVE_memxend) && \
       (defined(memxend) || defined(__memxend_defined) || defined(__USE_STRING_XCHR))
-#define CONFIG_HAVE_memxend 1
+#define CONFIG_HAVE_memxend
 #endif
 
 #ifdef CONFIG_NO_memxlen
 #undef CONFIG_HAVE_memxlen
 #elif !defined(CONFIG_HAVE_memxlen) && \
       (defined(memxlen) || defined(__memxlen_defined) || defined(__USE_STRING_XCHR))
-#define CONFIG_HAVE_memxlen 1
+#define CONFIG_HAVE_memxlen
 #endif
 
 #ifdef CONFIG_NO_memxchr
 #undef CONFIG_HAVE_memxchr
 #elif !defined(CONFIG_HAVE_memxchr) && \
       (defined(memxchr) || defined(__memxchr_defined) || defined(__USE_STRING_XCHR))
-#define CONFIG_HAVE_memxchr 1
+#define CONFIG_HAVE_memxchr
 #endif
 
 #ifdef CONFIG_NO_rawmemxchr
 #undef CONFIG_HAVE_rawmemxchr
 #elif !defined(CONFIG_HAVE_rawmemxchr) && \
       (defined(rawmemxchr) || defined(__rawmemxchr_defined) || defined(__USE_STRING_XCHR))
-#define CONFIG_HAVE_rawmemxchr 1
+#define CONFIG_HAVE_rawmemxchr
 #endif
 
 #ifdef CONFIG_NO_rawmemxlen
 #undef CONFIG_HAVE_rawmemxlen
 #elif !defined(CONFIG_HAVE_rawmemxlen) && \
       (defined(rawmemxlen) || defined(__rawmemxlen_defined) || defined(__USE_STRING_XCHR))
-#define CONFIG_HAVE_rawmemxlen 1
+#define CONFIG_HAVE_rawmemxlen
 #endif
 
 #ifdef CONFIG_NO_memxrchr
 #undef CONFIG_HAVE_memxrchr
 #elif !defined(CONFIG_HAVE_memxrchr) && \
       (defined(memxrchr) || defined(__memxrchr_defined))
-#define CONFIG_HAVE_memxrchr 1
+#define CONFIG_HAVE_memxrchr
 #endif
 
 #ifdef CONFIG_NO_memxrend
 #undef CONFIG_HAVE_memxrend
 #elif !defined(CONFIG_HAVE_memxrend) && \
       (defined(memxrend) || defined(__memxrend_defined))
-#define CONFIG_HAVE_memxrend 1
+#define CONFIG_HAVE_memxrend
 #endif
 
 #ifdef CONFIG_NO_memxrlen
 #undef CONFIG_HAVE_memxrlen
 #elif !defined(CONFIG_HAVE_memxrlen) && \
       (defined(memxrlen) || defined(__memxrlen_defined))
-#define CONFIG_HAVE_memxrlen 1
+#define CONFIG_HAVE_memxrlen
 #endif
 
 #ifdef CONFIG_NO_rawmemxrchr
 #undef CONFIG_HAVE_rawmemxrchr
 #elif !defined(CONFIG_HAVE_rawmemxrchr) && \
       (defined(rawmemxrchr) || defined(__rawmemxrchr_defined))
-#define CONFIG_HAVE_rawmemxrchr 1
+#define CONFIG_HAVE_rawmemxrchr
 #endif
 
 #ifdef CONFIG_NO_rawmemxrlen
 #undef CONFIG_HAVE_rawmemxrlen
 #elif !defined(CONFIG_HAVE_rawmemxrlen) && \
       (defined(rawmemxrlen) || defined(__rawmemxrlen_defined))
-#define CONFIG_HAVE_rawmemxrlen 1
+#define CONFIG_HAVE_rawmemxrlen
 #endif
 
 #ifdef CONFIG_NO_tolower
 #undef CONFIG_HAVE_tolower
 #elif !defined(CONFIG_HAVE_tolower) && \
       (defined(tolower) || defined(__tolower_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_tolower 1
+#define CONFIG_HAVE_tolower
 #endif
 
 #ifdef CONFIG_NO_toupper
 #undef CONFIG_HAVE_toupper
 #elif !defined(CONFIG_HAVE_toupper) && \
       (defined(toupper) || defined(__toupper_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_toupper 1
+#define CONFIG_HAVE_toupper
 #endif
 
 #ifdef CONFIG_NO_islower
 #undef CONFIG_HAVE_islower
 #elif !defined(CONFIG_HAVE_islower) && \
       (defined(islower) || defined(__islower_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_islower 1
+#define CONFIG_HAVE_islower
 #endif
 
 #ifdef CONFIG_NO_isupper
 #undef CONFIG_HAVE_isupper
 #elif !defined(CONFIG_HAVE_isupper) && \
       (defined(isupper) || defined(__isupper_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_isupper 1
+#define CONFIG_HAVE_isupper
 #endif
 
 #ifdef CONFIG_NO_isdigit
 #undef CONFIG_HAVE_isdigit
 #elif !defined(CONFIG_HAVE_isdigit) && \
       (defined(isdigit) || defined(__isdigit_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_isdigit 1
+#define CONFIG_HAVE_isdigit
 #endif
 
 #ifdef CONFIG_NO_isalpha
 #undef CONFIG_HAVE_isalpha
 #elif !defined(CONFIG_HAVE_isalpha) && \
       (defined(isalpha) || defined(__isalpha_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_isalpha 1
+#define CONFIG_HAVE_isalpha
 #endif
 
 #ifdef CONFIG_NO_isalnum
 #undef CONFIG_HAVE_isalnum
 #elif !defined(CONFIG_HAVE_isalnum) && \
       (defined(isalnum) || defined(__isalnum_defined) || defined(CONFIG_HAVE_CTYPE_H))
-#define CONFIG_HAVE_isalnum 1
+#define CONFIG_HAVE_isalnum
 #endif
 
 #ifdef CONFIG_NO__dosmaperr
 #undef CONFIG_HAVE__dosmaperr
 #elif !defined(CONFIG_HAVE__dosmaperr) && \
       (defined(_MSC_VER) || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr)))
-#define CONFIG_HAVE__dosmaperr 1
+#define CONFIG_HAVE__dosmaperr
 #endif
 
 #ifdef CONFIG_NO_errno_nt2kos
 #undef CONFIG_HAVE_errno_nt2kos
 #elif !defined(CONFIG_HAVE_errno_nt2kos) && \
       (defined(__CRT_HAVE_errno_nt2kos))
-#define CONFIG_HAVE_errno_nt2kos 1
+#define CONFIG_HAVE_errno_nt2kos
 #endif
 
 #ifdef CONFIG_NO_errno_kos2nt
 #undef CONFIG_HAVE_errno_kos2nt
 #elif !defined(CONFIG_HAVE_errno_kos2nt) && \
       (defined(__CRT_HAVE_errno_kos2nt))
-#define CONFIG_HAVE_errno_kos2nt 1
+#define CONFIG_HAVE_errno_kos2nt
 #endif
 
 #ifdef CONFIG_NO__get_osfhandle
@@ -7076,7 +7076,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__get_osfhandle) && \
       (defined(_get_osfhandle) || defined(___get_osfhandle_defined) || (defined(_MSC_VER) || \
        defined(__CYGWIN__) || defined(__CYGWIN32__)))
-#define CONFIG_HAVE__get_osfhandle 1
+#define CONFIG_HAVE__get_osfhandle
 #endif
 
 #ifdef CONFIG_NO_get_osfhandle
@@ -7084,56 +7084,56 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_get_osfhandle) && \
       (defined(get_osfhandle) || defined(__get_osfhandle_defined) || (defined(__CYGWIN__) || \
        defined(__CYGWIN32__)))
-#define CONFIG_HAVE_get_osfhandle 1
+#define CONFIG_HAVE_get_osfhandle
 #endif
 
 #ifdef CONFIG_NO_open_osfhandle
 #undef CONFIG_HAVE_open_osfhandle
 #elif !defined(CONFIG_HAVE_open_osfhandle) && \
       (defined(open_osfhandle) || defined(__open_osfhandle_defined))
-#define CONFIG_HAVE_open_osfhandle 1
+#define CONFIG_HAVE_open_osfhandle
 #endif
 
 #ifdef CONFIG_NO__open_osfhandle
 #undef CONFIG_HAVE__open_osfhandle
 #elif !defined(CONFIG_HAVE__open_osfhandle) && \
       (defined(_open_osfhandle) || defined(___open_osfhandle_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__open_osfhandle 1
+#define CONFIG_HAVE__open_osfhandle
 #endif
 
 #ifdef CONFIG_NO_errno
 #undef CONFIG_HAVE_errno
 #elif !defined(CONFIG_HAVE_errno) && \
       (defined(errno) || defined(__errno_defined) || defined(CONFIG_HAVE_ERRNO_H))
-#define CONFIG_HAVE_errno 1
+#define CONFIG_HAVE_errno
 #endif
 
 #ifdef CONFIG_NO__errno
 #undef CONFIG_HAVE__errno
 #elif !defined(CONFIG_HAVE__errno) && \
       (defined(_errno) || defined(___errno_defined))
-#define CONFIG_HAVE__errno 1
+#define CONFIG_HAVE__errno
 #endif
 
 #ifdef CONFIG_NO___errno
 #undef CONFIG_HAVE___errno
 #elif !defined(CONFIG_HAVE___errno) && \
       (defined(__errno) || defined(____errno_defined))
-#define CONFIG_HAVE___errno 1
+#define CONFIG_HAVE___errno
 #endif
 
 #ifdef CONFIG_NO__doserrno
 #undef CONFIG_HAVE__doserrno
 #elif !defined(CONFIG_HAVE__doserrno) && \
       (defined(_doserrno) || defined(___doserrno_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__doserrno 1
+#define CONFIG_HAVE__doserrno
 #endif
 
 #ifdef CONFIG_NO_doserrno
 #undef CONFIG_HAVE_doserrno
 #elif !defined(CONFIG_HAVE_doserrno) && \
       (defined(doserrno) || defined(__doserrno_defined))
-#define CONFIG_HAVE_doserrno 1
+#define CONFIG_HAVE_doserrno
 #endif
 
 #ifdef CONFIG_NO_sysconf
@@ -7142,84 +7142,84 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(sysconf) || defined(__sysconf_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_sysconf 1
+#define CONFIG_HAVE_sysconf
 #endif
 
 #ifdef CONFIG_NO__sysconf
 #undef CONFIG_HAVE__sysconf
 #elif !defined(CONFIG_HAVE__sysconf) && \
       (defined(_sysconf) || defined(___sysconf_defined))
-#define CONFIG_HAVE__sysconf 1
+#define CONFIG_HAVE__sysconf
 #endif
 
 #ifdef CONFIG_NO_mpctl
 #undef CONFIG_HAVE_mpctl
 #elif !defined(CONFIG_HAVE_mpctl) && \
       (defined(mpctl) || defined(__mpctl_defined) || defined(__hpux__))
-#define CONFIG_HAVE_mpctl 1
+#define CONFIG_HAVE_mpctl
 #endif
 
 #ifdef CONFIG_NO_sysctl
 #undef CONFIG_HAVE_sysctl
 #elif !defined(CONFIG_HAVE_sysctl) && \
       (defined(sysctl) || defined(__sysctl_defined))
-#define CONFIG_HAVE_sysctl 1
+#define CONFIG_HAVE_sysctl
 #endif
 
 #ifdef CONFIG_NO__SC_NPROCESSORS_ONLN
 #undef CONFIG_HAVE__SC_NPROCESSORS_ONLN
 #elif !defined(CONFIG_HAVE__SC_NPROCESSORS_ONLN) && \
       (defined(_SC_NPROCESSORS_ONLN) || defined(___SC_NPROCESSORS_ONLN_defined))
-#define CONFIG_HAVE__SC_NPROCESSORS_ONLN 1
+#define CONFIG_HAVE__SC_NPROCESSORS_ONLN
 #endif
 
 #ifdef CONFIG_NO__SC_NPROC_ONLN
 #undef CONFIG_HAVE__SC_NPROC_ONLN
 #elif !defined(CONFIG_HAVE__SC_NPROC_ONLN) && \
       (defined(_SC_NPROC_ONLN) || defined(___SC_NPROC_ONLN_defined))
-#define CONFIG_HAVE__SC_NPROC_ONLN 1
+#define CONFIG_HAVE__SC_NPROC_ONLN
 #endif
 
 #ifdef CONFIG_NO_MPC_GETNUMSPUS
 #undef CONFIG_HAVE_MPC_GETNUMSPUS
 #elif !defined(CONFIG_HAVE_MPC_GETNUMSPUS) && \
       (defined(MPC_GETNUMSPUS) || defined(__MPC_GETNUMSPUS_defined) || defined(__hpux__))
-#define CONFIG_HAVE_MPC_GETNUMSPUS 1
+#define CONFIG_HAVE_MPC_GETNUMSPUS
 #endif
 
 #ifdef CONFIG_NO_CTL_HW
 #undef CONFIG_HAVE_CTL_HW
 #elif !defined(CONFIG_HAVE_CTL_HW) && \
       (defined(CTL_HW) || defined(__CTL_HW_defined))
-#define CONFIG_HAVE_CTL_HW 1
+#define CONFIG_HAVE_CTL_HW
 #endif
 
 #ifdef CONFIG_NO_HW_AVAILCPU
 #undef CONFIG_HAVE_HW_AVAILCPU
 #elif !defined(CONFIG_HAVE_HW_AVAILCPU) && \
       (defined(HW_AVAILCPU) || defined(__HW_AVAILCPU_defined))
-#define CONFIG_HAVE_HW_AVAILCPU 1
+#define CONFIG_HAVE_HW_AVAILCPU
 #endif
 
 #ifdef CONFIG_NO_HW_NCPU
 #undef CONFIG_HAVE_HW_NCPU
 #elif !defined(CONFIG_HAVE_HW_NCPU) && \
       (defined(HW_NCPU) || defined(__HW_NCPU_defined))
-#define CONFIG_HAVE_HW_NCPU 1
+#define CONFIG_HAVE_HW_NCPU
 #endif
 
 #ifdef CONFIG_NO_alloca
 #undef CONFIG_HAVE_alloca
 #elif !defined(CONFIG_HAVE_alloca) && \
       (defined(alloca) || defined(__alloca_defined) || defined(CONFIG_HAVE_ALLOCA_H))
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #endif
 
 #ifdef CONFIG_NO__alloca
 #undef CONFIG_HAVE__alloca
 #elif !defined(CONFIG_HAVE__alloca) && \
       (defined(_alloca) || defined(___alloca_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__alloca 1
+#define CONFIG_HAVE__alloca
 #endif
 
 #ifdef CONFIG_NO_fabs
@@ -7227,7 +7227,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fabs) && \
       (defined(fabs) || defined(__fabs_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_fabs 1
+#define CONFIG_HAVE_fabs
 #endif
 
 #ifdef CONFIG_NO_sin
@@ -7235,7 +7235,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sin) && \
       (defined(sin) || defined(__sin_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_sin 1
+#define CONFIG_HAVE_sin
 #endif
 
 #ifdef CONFIG_NO_cos
@@ -7243,7 +7243,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_cos) && \
       (defined(cos) || defined(__cos_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_cos 1
+#define CONFIG_HAVE_cos
 #endif
 
 #ifdef CONFIG_NO_tan
@@ -7251,7 +7251,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_tan) && \
       (defined(tan) || defined(__tan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_tan 1
+#define CONFIG_HAVE_tan
 #endif
 
 #ifdef CONFIG_NO_asin
@@ -7259,7 +7259,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_asin) && \
       (defined(asin) || defined(__asin_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_asin 1
+#define CONFIG_HAVE_asin
 #endif
 
 #ifdef CONFIG_NO_acos
@@ -7267,7 +7267,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_acos) && \
       (defined(acos) || defined(__acos_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_acos 1
+#define CONFIG_HAVE_acos
 #endif
 
 #ifdef CONFIG_NO_atan
@@ -7275,7 +7275,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_atan) && \
       (defined(atan) || defined(__atan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_atan 1
+#define CONFIG_HAVE_atan
 #endif
 
 #ifdef CONFIG_NO_sinh
@@ -7283,7 +7283,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sinh) && \
       (defined(sinh) || defined(__sinh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_sinh 1
+#define CONFIG_HAVE_sinh
 #endif
 
 #ifdef CONFIG_NO_cosh
@@ -7291,7 +7291,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_cosh) && \
       (defined(cosh) || defined(__cosh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_cosh 1
+#define CONFIG_HAVE_cosh
 #endif
 
 #ifdef CONFIG_NO_tanh
@@ -7299,7 +7299,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_tanh) && \
       (defined(tanh) || defined(__tanh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_tanh 1
+#define CONFIG_HAVE_tanh
 #endif
 
 #ifdef CONFIG_NO_asinh
@@ -7307,7 +7307,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_asinh) && \
       (defined(asinh) || defined(__asinh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_asinh 1
+#define CONFIG_HAVE_asinh
 #endif
 
 #ifdef CONFIG_NO_acosh
@@ -7315,7 +7315,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_acosh) && \
       (defined(acosh) || defined(__acosh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_acosh 1
+#define CONFIG_HAVE_acosh
 #endif
 
 #ifdef CONFIG_NO_atanh
@@ -7323,7 +7323,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_atanh) && \
       (defined(atanh) || defined(__atanh_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_atanh 1
+#define CONFIG_HAVE_atanh
 #endif
 
 #ifdef CONFIG_NO_copysign
@@ -7331,7 +7331,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_copysign) && \
       (defined(copysign) || defined(__copysign_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_copysign 1
+#define CONFIG_HAVE_copysign
 #endif
 
 #ifdef CONFIG_NO_atan2
@@ -7339,7 +7339,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_atan2) && \
       (defined(atan2) || defined(__atan2_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_atan2 1
+#define CONFIG_HAVE_atan2
 #endif
 
 #ifdef CONFIG_NO_exp
@@ -7347,7 +7347,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_exp) && \
       (defined(exp) || defined(__exp_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_exp 1
+#define CONFIG_HAVE_exp
 #endif
 
 #ifdef CONFIG_NO_exp2
@@ -7355,7 +7355,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_exp2) && \
       (defined(exp2) || defined(__exp2_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_exp2 1
+#define CONFIG_HAVE_exp2
 #endif
 
 #ifdef CONFIG_NO_expm1
@@ -7363,7 +7363,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_expm1) && \
       (defined(expm1) || defined(__expm1_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_expm1 1
+#define CONFIG_HAVE_expm1
 #endif
 
 #ifdef CONFIG_NO_erf
@@ -7371,7 +7371,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_erf) && \
       (defined(erf) || defined(__erf_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_erf 1
+#define CONFIG_HAVE_erf
 #endif
 
 #ifdef CONFIG_NO_erfc
@@ -7379,7 +7379,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_erfc) && \
       (defined(erfc) || defined(__erfc_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_erfc 1
+#define CONFIG_HAVE_erfc
 #endif
 
 #ifdef CONFIG_NO_fabs
@@ -7387,7 +7387,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fabs) && \
       (defined(fabs) || defined(__fabs_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_fabs 1
+#define CONFIG_HAVE_fabs
 #endif
 
 #ifdef CONFIG_NO_sqrt
@@ -7395,7 +7395,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sqrt) && \
       (defined(sqrt) || defined(__sqrt_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_sqrt 1
+#define CONFIG_HAVE_sqrt
 #endif
 
 #ifdef CONFIG_NO_log
@@ -7403,7 +7403,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_log) && \
       (defined(log) || defined(__log_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_log 1
+#define CONFIG_HAVE_log
 #endif
 
 #ifdef CONFIG_NO_log2
@@ -7411,7 +7411,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_log2) && \
       (defined(log2) || defined(__log2_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_log2 1
+#define CONFIG_HAVE_log2
 #endif
 
 #ifdef CONFIG_NO_logb
@@ -7419,7 +7419,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_logb) && \
       (defined(logb) || defined(__logb_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_logb 1
+#define CONFIG_HAVE_logb
 #endif
 
 #ifdef CONFIG_NO_log1p
@@ -7427,7 +7427,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_log1p) && \
       (defined(log1p) || defined(__log1p_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_log1p 1
+#define CONFIG_HAVE_log1p
 #endif
 
 #ifdef CONFIG_NO_log10
@@ -7435,7 +7435,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_log10) && \
       (defined(log10) || defined(__log10_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_log10 1
+#define CONFIG_HAVE_log10
 #endif
 
 #ifdef CONFIG_NO_cbrt
@@ -7443,7 +7443,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_cbrt) && \
       (defined(cbrt) || defined(__cbrt_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_cbrt 1
+#define CONFIG_HAVE_cbrt
 #endif
 
 #ifdef CONFIG_NO_tgamma
@@ -7451,7 +7451,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_tgamma) && \
       (defined(tgamma) || defined(__tgamma_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_tgamma 1
+#define CONFIG_HAVE_tgamma
 #endif
 
 #ifdef CONFIG_NO_lgamma
@@ -7459,7 +7459,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_lgamma) && \
       (defined(lgamma) || defined(__lgamma_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_lgamma 1
+#define CONFIG_HAVE_lgamma
 #endif
 
 #ifdef CONFIG_NO_pow
@@ -7467,7 +7467,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_pow) && \
       (defined(pow) || defined(__pow_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_pow 1
+#define CONFIG_HAVE_pow
 #endif
 
 #ifdef CONFIG_NO_ceil
@@ -7475,7 +7475,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ceil) && \
       (defined(ceil) || defined(__ceil_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_ceil 1
+#define CONFIG_HAVE_ceil
 #endif
 
 #ifdef CONFIG_NO_trunc
@@ -7483,7 +7483,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_trunc) && \
       (defined(trunc) || defined(__trunc_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_trunc 1
+#define CONFIG_HAVE_trunc
 #endif
 
 #ifdef CONFIG_NO_floor
@@ -7491,7 +7491,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_floor) && \
       (defined(floor) || defined(__floor_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_floor 1
+#define CONFIG_HAVE_floor
 #endif
 
 #ifdef CONFIG_NO_round
@@ -7499,7 +7499,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_round) && \
       (defined(round) || defined(__round_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_round 1
+#define CONFIG_HAVE_round
 #endif
 
 #ifdef CONFIG_NO_fmod
@@ -7507,7 +7507,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fmod) && \
       (defined(fmod) || defined(__fmod_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_fmod 1
+#define CONFIG_HAVE_fmod
 #endif
 
 #ifdef CONFIG_NO_hypot
@@ -7515,7 +7515,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_hypot) && \
       (defined(hypot) || defined(__hypot_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_hypot 1
+#define CONFIG_HAVE_hypot
 #endif
 
 #ifdef CONFIG_NO_remainder
@@ -7523,7 +7523,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_remainder) && \
       (defined(remainder) || defined(__remainder_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_remainder 1
+#define CONFIG_HAVE_remainder
 #endif
 
 #ifdef CONFIG_NO_nextafter
@@ -7531,7 +7531,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_nextafter) && \
       (defined(nextafter) || defined(__nextafter_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_nextafter 1
+#define CONFIG_HAVE_nextafter
 #endif
 
 #ifdef CONFIG_NO_nexttoward
@@ -7539,7 +7539,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_nexttoward) && \
       (defined(nexttoward) || defined(__nexttoward_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_nexttoward 1
+#define CONFIG_HAVE_nexttoward
 #endif
 
 #ifdef CONFIG_NO_fdim
@@ -7547,7 +7547,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_fdim) && \
       (defined(fdim) || defined(__fdim_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_fdim 1
+#define CONFIG_HAVE_fdim
 #endif
 
 #ifdef CONFIG_NO_nan
@@ -7555,7 +7555,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_nan) && \
       (defined(nan) || defined(__nan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_nan 1
+#define CONFIG_HAVE_nan
 #endif
 
 #ifdef CONFIG_NO_isnan
@@ -7563,7 +7563,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isnan) && \
       (defined(isnan) || defined(__isnan_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isnan 1
+#define CONFIG_HAVE_isnan
 #endif
 
 #ifdef CONFIG_NO_isinf
@@ -7571,7 +7571,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isinf) && \
       (defined(isinf) || defined(__isinf_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isinf 1
+#define CONFIG_HAVE_isinf
 #endif
 
 #ifdef CONFIG_NO_isfinite
@@ -7579,7 +7579,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isfinite) && \
       (defined(isfinite) || defined(__isfinite_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isfinite 1
+#define CONFIG_HAVE_isfinite
 #endif
 
 #ifdef CONFIG_NO_isnormal
@@ -7587,7 +7587,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isnormal) && \
       (defined(isnormal) || defined(__isnormal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isnormal 1
+#define CONFIG_HAVE_isnormal
 #endif
 
 #ifdef CONFIG_NO_signbit
@@ -7595,7 +7595,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_signbit) && \
       (defined(signbit) || defined(__signbit_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_signbit 1
+#define CONFIG_HAVE_signbit
 #endif
 
 #ifdef CONFIG_NO_isgreater
@@ -7603,7 +7603,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isgreater) && \
       (defined(isgreater) || defined(__isgreater_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isgreater 1
+#define CONFIG_HAVE_isgreater
 #endif
 
 #ifdef CONFIG_NO_isgreaterequal
@@ -7611,7 +7611,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isgreaterequal) && \
       (defined(isgreaterequal) || defined(__isgreaterequal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isgreaterequal 1
+#define CONFIG_HAVE_isgreaterequal
 #endif
 
 #ifdef CONFIG_NO_isless
@@ -7619,7 +7619,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isless) && \
       (defined(isless) || defined(__isless_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isless 1
+#define CONFIG_HAVE_isless
 #endif
 
 #ifdef CONFIG_NO_islessequal
@@ -7627,7 +7627,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_islessequal) && \
       (defined(islessequal) || defined(__islessequal_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_islessequal 1
+#define CONFIG_HAVE_islessequal
 #endif
 
 #ifdef CONFIG_NO_islessgreater
@@ -7635,7 +7635,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_islessgreater) && \
       (defined(islessgreater) || defined(__islessgreater_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_islessgreater 1
+#define CONFIG_HAVE_islessgreater
 #endif
 
 #ifdef CONFIG_NO_isunordered
@@ -7643,7 +7643,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_isunordered) && \
       (defined(isunordered) || defined(__isunordered_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_isunordered 1
+#define CONFIG_HAVE_isunordered
 #endif
 
 #ifdef CONFIG_NO_ilogb
@@ -7651,7 +7651,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ilogb) && \
       (defined(ilogb) || defined(__ilogb_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_ilogb 1
+#define CONFIG_HAVE_ilogb
 #endif
 
 #ifdef CONFIG_NO_frexp
@@ -7659,7 +7659,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_frexp) && \
       (defined(frexp) || defined(__frexp_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_frexp 1
+#define CONFIG_HAVE_frexp
 #endif
 
 #ifdef CONFIG_NO_modf
@@ -7667,7 +7667,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_modf) && \
       (defined(modf) || defined(__modf_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_modf 1
+#define CONFIG_HAVE_modf
 #endif
 
 #ifdef CONFIG_NO_ldexp
@@ -7675,7 +7675,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_ldexp) && \
       (defined(ldexp) || defined(__ldexp_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_ldexp 1
+#define CONFIG_HAVE_ldexp
 #endif
 
 #ifdef CONFIG_NO_sincos
@@ -7683,28 +7683,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sincos) && \
       (defined(sincos) || defined(__sincos_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU) && defined(__USE_GNU)))
-#define CONFIG_HAVE_sincos 1
+#define CONFIG_HAVE_sincos
 #endif
 
 #ifdef CONFIG_NO_asincos
 #undef CONFIG_HAVE_asincos
 #elif !defined(CONFIG_HAVE_asincos) && \
       (defined(asincos) || defined(__asincos_defined))
-#define CONFIG_HAVE_asincos 1
+#define CONFIG_HAVE_asincos
 #endif
 
 #ifdef CONFIG_NO_sincosh
 #undef CONFIG_HAVE_sincosh
 #elif !defined(CONFIG_HAVE_sincosh) && \
       (defined(sincosh) || defined(__sincosh_defined))
-#define CONFIG_HAVE_sincosh 1
+#define CONFIG_HAVE_sincosh
 #endif
 
 #ifdef CONFIG_NO_asincosh
 #undef CONFIG_HAVE_asincosh
 #elif !defined(CONFIG_HAVE_asincosh) && \
       (defined(asincosh) || defined(__asincosh_defined))
-#define CONFIG_HAVE_asincosh 1
+#define CONFIG_HAVE_asincosh
 #endif
 
 #ifdef CONFIG_NO_scalbn
@@ -7712,7 +7712,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_scalbn) && \
       (defined(scalbn) || defined(__scalbn_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_scalbn 1
+#define CONFIG_HAVE_scalbn
 #endif
 
 #ifdef CONFIG_NO_scalbln
@@ -7720,7 +7720,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_scalbln) && \
       (defined(scalbln) || defined(__scalbln_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_scalbln 1
+#define CONFIG_HAVE_scalbln
 #endif
 
 #ifdef CONFIG_NO_remquo
@@ -7728,161 +7728,161 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_remquo) && \
       (defined(remquo) || defined(__remquo_defined) || (defined(CONFIG_HAVE_MATH_H) && \
        !defined(CONFIG_NO_FPU)))
-#define CONFIG_HAVE_remquo 1
+#define CONFIG_HAVE_remquo
 #endif
 
 #ifdef CONFIG_NO_realpath
 #undef CONFIG_HAVE_realpath
 #elif !defined(CONFIG_HAVE_realpath) && \
       (defined(realpath) || defined(__realpath_defined))
-#define CONFIG_HAVE_realpath 1
+#define CONFIG_HAVE_realpath
 #endif
 
 #ifdef CONFIG_NO_frealpath
 #undef CONFIG_HAVE_frealpath
 #elif !defined(CONFIG_HAVE_frealpath) && \
       (defined(frealpath) || defined(__frealpath_defined))
-#define CONFIG_HAVE_frealpath 1
+#define CONFIG_HAVE_frealpath
 #endif
 
 #ifdef CONFIG_NO_frealpath4
 #undef CONFIG_HAVE_frealpath4
 #elif !defined(CONFIG_HAVE_frealpath4) && \
       (defined(frealpath4) || defined(__frealpath4_defined))
-#define CONFIG_HAVE_frealpath4 1
+#define CONFIG_HAVE_frealpath4
 #endif
 
 #ifdef CONFIG_NO_frealpathat
 #undef CONFIG_HAVE_frealpathat
 #elif !defined(CONFIG_HAVE_frealpathat) && \
       (defined(frealpathat) || defined(__frealpathat_defined))
-#define CONFIG_HAVE_frealpathat 1
+#define CONFIG_HAVE_frealpathat
 #endif
 
 #ifdef CONFIG_NO_resolvepath
 #undef CONFIG_HAVE_resolvepath
 #elif !defined(CONFIG_HAVE_resolvepath) && \
       (defined(resolvepath) || defined(__resolvepath_defined))
-#define CONFIG_HAVE_resolvepath 1
+#define CONFIG_HAVE_resolvepath
 #endif
 
 #ifdef CONFIG_NO_DT_UNKNOWN
 #undef CONFIG_HAVE_DT_UNKNOWN
 #elif !defined(CONFIG_HAVE_DT_UNKNOWN) && \
       (defined(DT_UNKNOWN) || defined(__DT_UNKNOWN_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_UNKNOWN 1
+#define CONFIG_HAVE_DT_UNKNOWN
 #endif
 
 #ifdef CONFIG_NO_DT_FIFO
 #undef CONFIG_HAVE_DT_FIFO
 #elif !defined(CONFIG_HAVE_DT_FIFO) && \
       (defined(DT_FIFO) || defined(__DT_FIFO_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_FIFO 1
+#define CONFIG_HAVE_DT_FIFO
 #endif
 
 #ifdef CONFIG_NO_DT_CHR
 #undef CONFIG_HAVE_DT_CHR
 #elif !defined(CONFIG_HAVE_DT_CHR) && \
       (defined(DT_CHR) || defined(__DT_CHR_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_CHR 1
+#define CONFIG_HAVE_DT_CHR
 #endif
 
 #ifdef CONFIG_NO_DT_DIR
 #undef CONFIG_HAVE_DT_DIR
 #elif !defined(CONFIG_HAVE_DT_DIR) && \
       (defined(DT_DIR) || defined(__DT_DIR_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_DIR 1
+#define CONFIG_HAVE_DT_DIR
 #endif
 
 #ifdef CONFIG_NO_DT_BLK
 #undef CONFIG_HAVE_DT_BLK
 #elif !defined(CONFIG_HAVE_DT_BLK) && \
       (defined(DT_BLK) || defined(__DT_BLK_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_BLK 1
+#define CONFIG_HAVE_DT_BLK
 #endif
 
 #ifdef CONFIG_NO_DT_REG
 #undef CONFIG_HAVE_DT_REG
 #elif !defined(CONFIG_HAVE_DT_REG) && \
       (defined(DT_REG) || defined(__DT_REG_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_REG 1
+#define CONFIG_HAVE_DT_REG
 #endif
 
 #ifdef CONFIG_NO_DT_LNK
 #undef CONFIG_HAVE_DT_LNK
 #elif !defined(CONFIG_HAVE_DT_LNK) && \
       (defined(DT_LNK) || defined(__DT_LNK_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_LNK 1
+#define CONFIG_HAVE_DT_LNK
 #endif
 
 #ifdef CONFIG_NO_DT_SOCK
 #undef CONFIG_HAVE_DT_SOCK
 #elif !defined(CONFIG_HAVE_DT_SOCK) && \
       (defined(DT_SOCK) || defined(__DT_SOCK_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_SOCK 1
+#define CONFIG_HAVE_DT_SOCK
 #endif
 
 #ifdef CONFIG_NO_DT_WHT
 #undef CONFIG_HAVE_DT_WHT
 #elif !defined(CONFIG_HAVE_DT_WHT) && \
       (defined(DT_WHT) || defined(__DT_WHT_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DT_WHT 1
+#define CONFIG_HAVE_DT_WHT
 #endif
 
 #ifdef CONFIG_NO_IFTODT
 #undef CONFIG_HAVE_IFTODT
 #elif !defined(CONFIG_HAVE_IFTODT) && \
       (defined(IFTODT) || defined(__IFTODT_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_IFTODT 1
+#define CONFIG_HAVE_IFTODT
 #endif
 
 #ifdef CONFIG_NO_DTTOIF
 #undef CONFIG_HAVE_DTTOIF
 #elif !defined(CONFIG_HAVE_DTTOIF) && \
       (defined(DTTOIF) || defined(__DTTOIF_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_DTTOIF 1
+#define CONFIG_HAVE_DTTOIF
 #endif
 
 #ifdef CONFIG_NO_opendir
 #undef CONFIG_HAVE_opendir
 #elif !defined(CONFIG_HAVE_opendir) && \
       (defined(opendir) || defined(__opendir_defined) || defined(CONFIG_HAVE_DIRENT_H))
-#define CONFIG_HAVE_opendir 1
+#define CONFIG_HAVE_opendir
 #endif
 
 #ifdef CONFIG_NO_fdopendir
 #undef CONFIG_HAVE_fdopendir
 #elif !defined(CONFIG_HAVE_fdopendir) && \
       (defined(fdopendir) || defined(__fdopendir_defined))
-#define CONFIG_HAVE_fdopendir 1
+#define CONFIG_HAVE_fdopendir
 #endif
 
 #ifdef CONFIG_NO_closedir
 #undef CONFIG_HAVE_closedir
 #elif !defined(CONFIG_HAVE_closedir) && \
       (defined(closedir) || defined(__closedir_defined))
-#define CONFIG_HAVE_closedir 1
+#define CONFIG_HAVE_closedir
 #endif
 
 #ifdef CONFIG_NO_readdir
 #undef CONFIG_HAVE_readdir
 #elif !defined(CONFIG_HAVE_readdir) && \
       (defined(readdir) || defined(__readdir_defined))
-#define CONFIG_HAVE_readdir 1
+#define CONFIG_HAVE_readdir
 #endif
 
 #ifdef CONFIG_NO_readdir64
 #undef CONFIG_HAVE_readdir64
 #elif !defined(CONFIG_HAVE_readdir64) && \
       (defined(readdir64) || defined(__readdir64_defined))
-#define CONFIG_HAVE_readdir64 1
+#define CONFIG_HAVE_readdir64
 #endif
 
 #ifdef CONFIG_NO_dirfd
 #undef CONFIG_HAVE_dirfd
 #elif !defined(CONFIG_HAVE_dirfd) && \
       (defined(dirfd) || defined(__dirfd_defined))
-#define CONFIG_HAVE_dirfd 1
+#define CONFIG_HAVE_dirfd
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_ino
@@ -7890,137 +7890,137 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_dirent_d_ino) && \
       (defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || \
        defined(_DIRENT_HAVE_D_INO)))
-#define CONFIG_HAVE_struct_dirent_d_ino 1
+#define CONFIG_HAVE_struct_dirent_d_ino
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_fileno
 #undef CONFIG_HAVE_struct_dirent_d_fileno
 #elif !defined(CONFIG_HAVE_struct_dirent_d_fileno) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO)))
-#define CONFIG_HAVE_struct_dirent_d_fileno 1
+#define CONFIG_HAVE_struct_dirent_d_fileno
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_off
 #undef CONFIG_HAVE_struct_dirent_d_off
 #elif !defined(CONFIG_HAVE_struct_dirent_d_off) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF)))
-#define CONFIG_HAVE_struct_dirent_d_off 1
+#define CONFIG_HAVE_struct_dirent_d_off
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_namlen
 #undef CONFIG_HAVE_struct_dirent_d_namlen
 #elif !defined(CONFIG_HAVE_struct_dirent_d_namlen) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN)))
-#define CONFIG_HAVE_struct_dirent_d_namlen 1
+#define CONFIG_HAVE_struct_dirent_d_namlen
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_reclen
 #undef CONFIG_HAVE_struct_dirent_d_reclen
 #elif !defined(CONFIG_HAVE_struct_dirent_d_reclen) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN)))
-#define CONFIG_HAVE_struct_dirent_d_reclen 1
+#define CONFIG_HAVE_struct_dirent_d_reclen
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_type
 #undef CONFIG_HAVE_struct_dirent_d_type
 #elif !defined(CONFIG_HAVE_struct_dirent_d_type) && \
       (defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE)))
-#define CONFIG_HAVE_struct_dirent_d_type 1
+#define CONFIG_HAVE_struct_dirent_d_type
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_type_size_1
 #undef CONFIG_HAVE_struct_dirent_d_type_size_1
 #elif 0
-#define CONFIG_HAVE_struct_dirent_d_type_size_1 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_1
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_type_size_2
 #undef CONFIG_HAVE_struct_dirent_d_type_size_2
 #elif 0
-#define CONFIG_HAVE_struct_dirent_d_type_size_2 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_2
 #endif
 
 #ifdef CONFIG_NO_struct_dirent_d_type_size_4
 #undef CONFIG_HAVE_struct_dirent_d_type_size_4
 #elif 0
-#define CONFIG_HAVE_struct_dirent_d_type_size_4 1
+#define CONFIG_HAVE_struct_dirent_d_type_size_4
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_dev
 #undef CONFIG_HAVE_struct_stat_st_dev
 #elif !defined(CONFIG_HAVE_struct_stat_st_dev) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_dev 1
+#define CONFIG_HAVE_struct_stat_st_dev
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_ino
 #undef CONFIG_HAVE_struct_stat_st_ino
 #elif !defined(CONFIG_HAVE_struct_stat_st_ino) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_ino 1
+#define CONFIG_HAVE_struct_stat_st_ino
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_mode
 #undef CONFIG_HAVE_struct_stat_st_mode
 #elif !defined(CONFIG_HAVE_struct_stat_st_mode) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_mode 1
+#define CONFIG_HAVE_struct_stat_st_mode
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_nlink
 #undef CONFIG_HAVE_struct_stat_st_nlink
 #elif !defined(CONFIG_HAVE_struct_stat_st_nlink) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_nlink 1
+#define CONFIG_HAVE_struct_stat_st_nlink
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_uid
 #undef CONFIG_HAVE_struct_stat_st_uid
 #elif !defined(CONFIG_HAVE_struct_stat_st_uid) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_uid 1
+#define CONFIG_HAVE_struct_stat_st_uid
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_gid
 #undef CONFIG_HAVE_struct_stat_st_gid
 #elif !defined(CONFIG_HAVE_struct_stat_st_gid) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_gid 1
+#define CONFIG_HAVE_struct_stat_st_gid
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_rdev
 #undef CONFIG_HAVE_struct_stat_st_rdev
 #elif !defined(CONFIG_HAVE_struct_stat_st_rdev) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_rdev 1
+#define CONFIG_HAVE_struct_stat_st_rdev
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_size
 #undef CONFIG_HAVE_struct_stat_st_size
 #elif !defined(CONFIG_HAVE_struct_stat_st_size) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_size 1
+#define CONFIG_HAVE_struct_stat_st_size
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_blksize
 #undef CONFIG_HAVE_struct_stat_st_blksize
 #elif !defined(CONFIG_HAVE_struct_stat_st_blksize) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_blksize 1
+#define CONFIG_HAVE_struct_stat_st_blksize
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_blocks
 #undef CONFIG_HAVE_struct_stat_st_blocks
 #elif !defined(CONFIG_HAVE_struct_stat_st_blocks) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_blocks 1
+#define CONFIG_HAVE_struct_stat_st_blocks
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_atime
 #undef CONFIG_HAVE_struct_stat_st_atime
 #elif !defined(CONFIG_HAVE_struct_stat_st_atime) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_atime 1
+#define CONFIG_HAVE_struct_stat_st_atime
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_atim
@@ -8028,28 +8028,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat_st_atim) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat_st_atim 1
+#define CONFIG_HAVE_struct_stat_st_atim
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_atimespec
 #undef CONFIG_HAVE_struct_stat_st_atimespec
 #elif !defined(CONFIG_HAVE_struct_stat_st_atimespec) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_atimespec 1
+#define CONFIG_HAVE_struct_stat_st_atimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_atimensec
 #undef CONFIG_HAVE_struct_stat_st_atimensec
 #elif !defined(CONFIG_HAVE_struct_stat_st_atimensec) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat_st_atimensec 1
+#define CONFIG_HAVE_struct_stat_st_atimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_mtime
 #undef CONFIG_HAVE_struct_stat_st_mtime
 #elif !defined(CONFIG_HAVE_struct_stat_st_mtime) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_mtime 1
+#define CONFIG_HAVE_struct_stat_st_mtime
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_mtim
@@ -8057,28 +8057,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat_st_mtim) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat_st_mtim 1
+#define CONFIG_HAVE_struct_stat_st_mtim
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_mtimespec
 #undef CONFIG_HAVE_struct_stat_st_mtimespec
 #elif !defined(CONFIG_HAVE_struct_stat_st_mtimespec) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_mtimespec 1
+#define CONFIG_HAVE_struct_stat_st_mtimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_mtimensec
 #undef CONFIG_HAVE_struct_stat_st_mtimensec
 #elif !defined(CONFIG_HAVE_struct_stat_st_mtimensec) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat_st_mtimensec 1
+#define CONFIG_HAVE_struct_stat_st_mtimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_ctime
 #undef CONFIG_HAVE_struct_stat_st_ctime
 #elif !defined(CONFIG_HAVE_struct_stat_st_ctime) && \
       (defined(CONFIG_HAVE_stat))
-#define CONFIG_HAVE_struct_stat_st_ctime 1
+#define CONFIG_HAVE_struct_stat_st_ctime
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_ctim
@@ -8086,154 +8086,154 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat_st_ctim) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat_st_ctim 1
+#define CONFIG_HAVE_struct_stat_st_ctim
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_ctimespec
 #undef CONFIG_HAVE_struct_stat_st_ctimespec
 #elif !defined(CONFIG_HAVE_struct_stat_st_ctimespec) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_ctimespec 1
+#define CONFIG_HAVE_struct_stat_st_ctimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_ctimensec
 #undef CONFIG_HAVE_struct_stat_st_ctimensec
 #elif !defined(CONFIG_HAVE_struct_stat_st_ctimensec) && \
       (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat_st_ctimensec 1
+#define CONFIG_HAVE_struct_stat_st_ctimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_btime
 #undef CONFIG_HAVE_struct_stat_st_btime
 #elif !defined(CONFIG_HAVE_struct_stat_st_btime) && \
       (defined(_STATBUF_ST_BTIME))
-#define CONFIG_HAVE_struct_stat_st_btime 1
+#define CONFIG_HAVE_struct_stat_st_btime
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_btim
 #undef CONFIG_HAVE_struct_stat_st_btim
 #elif !defined(CONFIG_HAVE_struct_stat_st_btim) && \
       (defined(_STATBUF_ST_BTIM))
-#define CONFIG_HAVE_struct_stat_st_btim 1
+#define CONFIG_HAVE_struct_stat_st_btim
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_btimespec
 #undef CONFIG_HAVE_struct_stat_st_btimespec
 #elif !defined(CONFIG_HAVE_struct_stat_st_btimespec) && \
       (defined(_STATBUF_ST_BTIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_btimespec 1
+#define CONFIG_HAVE_struct_stat_st_btimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_btimensec
 #undef CONFIG_HAVE_struct_stat_st_btimensec
 #elif !defined(CONFIG_HAVE_struct_stat_st_btimensec) && \
       (defined(_STATBUF_ST_BTIMENSEC))
-#define CONFIG_HAVE_struct_stat_st_btimensec 1
+#define CONFIG_HAVE_struct_stat_st_btimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_birthtime
 #undef CONFIG_HAVE_struct_stat_st_birthtime
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtime) && \
       (defined(_STATBUF_ST_BIRTHTIME))
-#define CONFIG_HAVE_struct_stat_st_birthtime 1
+#define CONFIG_HAVE_struct_stat_st_birthtime
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_birthtim
 #undef CONFIG_HAVE_struct_stat_st_birthtim
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtim) && \
       (defined(_STATBUF_ST_BIRTHTIM))
-#define CONFIG_HAVE_struct_stat_st_birthtim 1
+#define CONFIG_HAVE_struct_stat_st_birthtim
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_birthtimespec
 #undef CONFIG_HAVE_struct_stat_st_birthtimespec
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtimespec) && \
       (defined(_STATBUF_ST_BIRTHTIMESPEC))
-#define CONFIG_HAVE_struct_stat_st_birthtimespec 1
+#define CONFIG_HAVE_struct_stat_st_birthtimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat_st_birthtimensec
 #undef CONFIG_HAVE_struct_stat_st_birthtimensec
 #elif !defined(CONFIG_HAVE_struct_stat_st_birthtimensec) && \
       (defined(_STATBUF_ST_BIRTHTIMENSEC))
-#define CONFIG_HAVE_struct_stat_st_birthtimensec 1
+#define CONFIG_HAVE_struct_stat_st_birthtimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_dev
 #undef CONFIG_HAVE_struct_stat64_st_dev
 #elif !defined(CONFIG_HAVE_struct_stat64_st_dev) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_dev 1
+#define CONFIG_HAVE_struct_stat64_st_dev
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_ino
 #undef CONFIG_HAVE_struct_stat64_st_ino
 #elif !defined(CONFIG_HAVE_struct_stat64_st_ino) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_ino 1
+#define CONFIG_HAVE_struct_stat64_st_ino
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_mode
 #undef CONFIG_HAVE_struct_stat64_st_mode
 #elif !defined(CONFIG_HAVE_struct_stat64_st_mode) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_mode 1
+#define CONFIG_HAVE_struct_stat64_st_mode
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_nlink
 #undef CONFIG_HAVE_struct_stat64_st_nlink
 #elif !defined(CONFIG_HAVE_struct_stat64_st_nlink) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_nlink 1
+#define CONFIG_HAVE_struct_stat64_st_nlink
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_uid
 #undef CONFIG_HAVE_struct_stat64_st_uid
 #elif !defined(CONFIG_HAVE_struct_stat64_st_uid) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_uid 1
+#define CONFIG_HAVE_struct_stat64_st_uid
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_gid
 #undef CONFIG_HAVE_struct_stat64_st_gid
 #elif !defined(CONFIG_HAVE_struct_stat64_st_gid) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_gid 1
+#define CONFIG_HAVE_struct_stat64_st_gid
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_rdev
 #undef CONFIG_HAVE_struct_stat64_st_rdev
 #elif !defined(CONFIG_HAVE_struct_stat64_st_rdev) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_rdev 1
+#define CONFIG_HAVE_struct_stat64_st_rdev
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_size
 #undef CONFIG_HAVE_struct_stat64_st_size
 #elif !defined(CONFIG_HAVE_struct_stat64_st_size) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_size 1
+#define CONFIG_HAVE_struct_stat64_st_size
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_blksize
 #undef CONFIG_HAVE_struct_stat64_st_blksize
 #elif !defined(CONFIG_HAVE_struct_stat64_st_blksize) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_blksize 1
+#define CONFIG_HAVE_struct_stat64_st_blksize
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_blocks
 #undef CONFIG_HAVE_struct_stat64_st_blocks
 #elif !defined(CONFIG_HAVE_struct_stat64_st_blocks) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_blocks 1
+#define CONFIG_HAVE_struct_stat64_st_blocks
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_atime
 #undef CONFIG_HAVE_struct_stat64_st_atime
 #elif !defined(CONFIG_HAVE_struct_stat64_st_atime) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_atime 1
+#define CONFIG_HAVE_struct_stat64_st_atime
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_atim
@@ -8241,28 +8241,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat64_st_atim) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat64_st_atim 1
+#define CONFIG_HAVE_struct_stat64_st_atim
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_atimespec
 #undef CONFIG_HAVE_struct_stat64_st_atimespec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_atimespec) && \
       (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat64_st_atimespec 1
+#define CONFIG_HAVE_struct_stat64_st_atimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_atimensec
 #undef CONFIG_HAVE_struct_stat64_st_atimensec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_atimensec) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat64_st_atimensec 1
+#define CONFIG_HAVE_struct_stat64_st_atimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_mtime
 #undef CONFIG_HAVE_struct_stat64_st_mtime
 #elif !defined(CONFIG_HAVE_struct_stat64_st_mtime) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_mtime 1
+#define CONFIG_HAVE_struct_stat64_st_mtime
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_mtim
@@ -8270,28 +8270,28 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat64_st_mtim) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat64_st_mtim 1
+#define CONFIG_HAVE_struct_stat64_st_mtim
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_mtimespec
 #undef CONFIG_HAVE_struct_stat64_st_mtimespec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_mtimespec) && \
       (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat64_st_mtimespec 1
+#define CONFIG_HAVE_struct_stat64_st_mtimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_mtimensec
 #undef CONFIG_HAVE_struct_stat64_st_mtimensec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_mtimensec) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat64_st_mtimensec 1
+#define CONFIG_HAVE_struct_stat64_st_mtimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_ctime
 #undef CONFIG_HAVE_struct_stat64_st_ctime
 #elif !defined(CONFIG_HAVE_struct_stat64_st_ctime) && \
       (defined(CONFIG_HAVE_stat64))
-#define CONFIG_HAVE_struct_stat64_st_ctime 1
+#define CONFIG_HAVE_struct_stat64_st_ctime
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_ctim
@@ -8299,84 +8299,84 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_struct_stat64_st_ctim) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
        defined(__USE_XOPEN2K8))))
-#define CONFIG_HAVE_struct_stat64_st_ctim 1
+#define CONFIG_HAVE_struct_stat64_st_ctim
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_ctimespec
 #undef CONFIG_HAVE_struct_stat64_st_ctimespec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_ctimespec) && \
       (defined(CONFIG_HAVE_stat64) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_struct_stat64_st_ctimespec 1
+#define CONFIG_HAVE_struct_stat64_st_ctimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_ctimensec
 #undef CONFIG_HAVE_struct_stat64_st_ctimensec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_ctimensec) && \
       (defined(CONFIG_HAVE_stat64) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_struct_stat64_st_ctimensec 1
+#define CONFIG_HAVE_struct_stat64_st_ctimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_btime
 #undef CONFIG_HAVE_struct_stat64_st_btime
 #elif !defined(CONFIG_HAVE_struct_stat64_st_btime) && \
       (defined(_STATBUF_ST_BTIME))
-#define CONFIG_HAVE_struct_stat64_st_btime 1
+#define CONFIG_HAVE_struct_stat64_st_btime
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_btim
 #undef CONFIG_HAVE_struct_stat64_st_btim
 #elif !defined(CONFIG_HAVE_struct_stat64_st_btim) && \
       (defined(_STATBUF_ST_BTIM))
-#define CONFIG_HAVE_struct_stat64_st_btim 1
+#define CONFIG_HAVE_struct_stat64_st_btim
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_btimespec
 #undef CONFIG_HAVE_struct_stat64_st_btimespec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_btimespec) && \
       (defined(_STATBUF_ST_BTIMESPEC))
-#define CONFIG_HAVE_struct_stat64_st_btimespec 1
+#define CONFIG_HAVE_struct_stat64_st_btimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_btimensec
 #undef CONFIG_HAVE_struct_stat64_st_btimensec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_btimensec) && \
       (defined(_STATBUF_ST_BTIMENSEC))
-#define CONFIG_HAVE_struct_stat64_st_btimensec 1
+#define CONFIG_HAVE_struct_stat64_st_btimensec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_birthtime
 #undef CONFIG_HAVE_struct_stat64_st_birthtime
 #elif !defined(CONFIG_HAVE_struct_stat64_st_birthtime) && \
       (defined(_STATBUF_ST_BIRTHTIME))
-#define CONFIG_HAVE_struct_stat64_st_birthtime 1
+#define CONFIG_HAVE_struct_stat64_st_birthtime
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_birthtim
 #undef CONFIG_HAVE_struct_stat64_st_birthtim
 #elif !defined(CONFIG_HAVE_struct_stat64_st_birthtim) && \
       (defined(_STATBUF_ST_BIRTHTIM))
-#define CONFIG_HAVE_struct_stat64_st_birthtim 1
+#define CONFIG_HAVE_struct_stat64_st_birthtim
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_birthtimespec
 #undef CONFIG_HAVE_struct_stat64_st_birthtimespec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_birthtimespec) && \
       (defined(_STATBUF_ST_BIRTHTIMESPEC))
-#define CONFIG_HAVE_struct_stat64_st_birthtimespec 1
+#define CONFIG_HAVE_struct_stat64_st_birthtimespec
 #endif
 
 #ifdef CONFIG_NO_struct_stat64_st_birthtimensec
 #undef CONFIG_HAVE_struct_stat64_st_birthtimensec
 #elif !defined(CONFIG_HAVE_struct_stat64_st_birthtimensec) && \
       (defined(_STATBUF_ST_BIRTHTIMENSEC))
-#define CONFIG_HAVE_struct_stat64_st_birthtimensec 1
+#define CONFIG_HAVE_struct_stat64_st_birthtimensec
 #endif
 
 #ifdef CONFIG_NO_VA_LIST_IS_NOT_ARRAY
 #undef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 #elif !defined(CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY) && \
       (!defined(__VA_LIST_IS_ARRAY))
-#define CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY 1
+#define CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 #endif
 
 #ifndef DBL_RADIX
@@ -8406,19 +8406,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_CONSTANT_DBL_ROUNDS
 #undef CONFIG_HAVE_CONSTANT_DBL_ROUNDS
 #elif 0
-#define CONFIG_HAVE_CONSTANT_DBL_ROUNDS 1
+#define CONFIG_HAVE_CONSTANT_DBL_ROUNDS
 #endif
 
 #ifdef CONFIG_NO_CONSTANT_HUGE_VAL
 #undef CONFIG_HAVE_CONSTANT_HUGE_VAL
 #else
-#define CONFIG_HAVE_CONSTANT_HUGE_VAL 1
+#define CONFIG_HAVE_CONSTANT_HUGE_VAL
 #endif
 
 #ifdef CONFIG_NO_CONSTANT_NAN
 #undef CONFIG_HAVE_CONSTANT_NAN
 #else
-#define CONFIG_HAVE_CONSTANT_NAN 1
+#define CONFIG_HAVE_CONSTANT_NAN
 #endif
 //[[[end]]]
 
@@ -8443,7 +8443,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_PROCFS
 #undef CONFIG_HAVE_PROCFS
 #elif !defined(CONFIG_HAVE_PROCFS) && defined(CONFIG_HOST_UNIX)
-#define CONFIG_HAVE_PROCFS 1
+#define CONFIG_HAVE_PROCFS
 #endif
 
 
@@ -8453,441 +8453,441 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #undef CONFIG_PREFER_CHAR_FUNCTIONS
 #elif !defined(CONFIG_PREFER_CHAR_FUNCTIONS)
 #ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_PREFER_WCHAR_FUNCTIONS 1
+#define CONFIG_PREFER_WCHAR_FUNCTIONS
 #else /* CONFIG_HOST_WINDOWS */
-#define CONFIG_PREFER_CHAR_FUNCTIONS 1
+#define CONFIG_PREFER_CHAR_FUNCTIONS
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif
 
 
 #if 1
-#define CONFIG_HAVE_fopen_binary 1 /* fopen() accepts the "b" mode flag */
+#define CONFIG_HAVE_fopen_binary /* fopen() accepts the "b" mode flag */
 #endif
 
 
 /* Substitute some known function aliases */
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
-#define CONFIG_HAVE__Exit 1
+#define CONFIG_HAVE__Exit
 #undef _Exit
 #define _Exit(exit_code) _exit(exit_code)
 #endif /* _Exit = _exit */
 
 #if defined(CONFIG_HAVE__execv) && !defined(CONFIG_HAVE_execv)
-#define CONFIG_HAVE_execv 1
+#define CONFIG_HAVE_execv
 #undef execv
 #define execv(path, argv) _execv(path, (char const *const *)(argv))
 #endif /* execv = _execv */
 
 #if defined(CONFIG_HAVE__execve) && !defined(CONFIG_HAVE_execve)
-#define CONFIG_HAVE_execve 1
+#define CONFIG_HAVE_execve
 #undef execve
 #define execve(path, argv, envp) _execve(path, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* execve = _execve */
 
 #if defined(CONFIG_HAVE__execvp) && !defined(CONFIG_HAVE_execvp)
-#define CONFIG_HAVE_execvp 1
+#define CONFIG_HAVE_execvp
 #undef execvp
 #define execvp(file, argv) _execvp(file, (char const *const *)(argv))
 #endif /* execvp = _execvp */
 
 #if defined(CONFIG_HAVE__execvpe) && !defined(CONFIG_HAVE_execvpe)
-#define CONFIG_HAVE_execvpe 1
+#define CONFIG_HAVE_execvpe
 #undef execvpe
 #define execvpe(file, argv, envp) _execvpe(file, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* execvpe = _execvpe */
 
 #if defined(CONFIG_HAVE__wexecv) && !defined(CONFIG_HAVE_wexecv)
-#define CONFIG_HAVE_wexecv 1
+#define CONFIG_HAVE_wexecv
 #undef wexecv
 #define wexecv(path, argv) _wexecv(path, (wchar_t const *const *)(argv))
 #endif /* wexecv = _wexecv */
 
 #if defined(CONFIG_HAVE__wexecve) && !defined(CONFIG_HAVE_wexecve)
-#define CONFIG_HAVE_wexecve 1
+#define CONFIG_HAVE_wexecve
 #undef wexecve
 #define wexecve(path, argv, envp) _wexecve(path, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wexecve = _wexecve */
 
 #if defined(CONFIG_HAVE__wexecvp) && !defined(CONFIG_HAVE_wexecvp)
-#define CONFIG_HAVE_wexecvp 1
+#define CONFIG_HAVE_wexecvp
 #undef wexecvp
 #define wexecvp(file, argv) _wexecvp(file, (wchar_t const *const *)(argv))
 #endif /* wexecvp = _wexecvp */
 
 #if defined(CONFIG_HAVE__wexecvpe) && !defined(CONFIG_HAVE_wexecvpe)
-#define CONFIG_HAVE_wexecvpe 1
+#define CONFIG_HAVE_wexecvpe
 #undef wexecvpe
 #define wexecvpe(file, argv, envp) _wexecvpe(file, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wexecvpe = _wexecvpe */
 
 #if defined(CONFIG_HAVE__spawnv) && !defined(CONFIG_HAVE_spawnv)
-#define CONFIG_HAVE_spawnv 1
+#define CONFIG_HAVE_spawnv
 #undef spawnv
 #define spawnv(mode, path, argv) _spawnv(mode, path, (char const *const *)(argv))
 #endif /* spawnv = _spawnv */
 
 #if defined(CONFIG_HAVE__spawnve) && !defined(CONFIG_HAVE_spawnve)
-#define CONFIG_HAVE_spawnve 1
+#define CONFIG_HAVE_spawnve
 #undef spawnve
 #define spawnve(mode, path, argv, envp) _spawnve(mode, path, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* spawnve = _spawnve */
 
 #if defined(CONFIG_HAVE__spawnvp) && !defined(CONFIG_HAVE_spawnvp)
-#define CONFIG_HAVE_spawnvp 1
+#define CONFIG_HAVE_spawnvp
 #undef spawnvp
 #define spawnvp(mode, file, argv) _spawnvp(mode, file, (char const *const *)(argv))
 #endif /* spawnvp = _spawnvp */
 
 #if defined(CONFIG_HAVE__spawnvpe) && !defined(CONFIG_HAVE_spawnvpe)
-#define CONFIG_HAVE_spawnvpe 1
+#define CONFIG_HAVE_spawnvpe
 #undef spawnvpe
 #define spawnvpe(mode, file, argv, envp) _spawnvpe(mode, file, (char const *const *)(argv), (char const *const *)(envp))
 #endif /* spawnvpe = _spawnvpe */
 
 #if defined(CONFIG_HAVE__wspawnv) && !defined(CONFIG_HAVE_wspawnv)
-#define CONFIG_HAVE_wspawnv 1
+#define CONFIG_HAVE_wspawnv
 #undef wspawnv
 #define wspawnv(mode, path, argv) _wspawnv(mode, path, (wchar_t const *const *)(argv))
 #endif /* wspawnv = _wspawnv */
 
 #if defined(CONFIG_HAVE__wspawnve) && !defined(CONFIG_HAVE_wspawnve)
-#define CONFIG_HAVE_wspawnve 1
+#define CONFIG_HAVE_wspawnve
 #undef wspawnve
 #define wspawnve(mode, path, argv, envp) _wspawnve(mode, path, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wspawnve = _wspawnve */
 
 #if defined(CONFIG_HAVE__wspawnvp) && !defined(CONFIG_HAVE_wspawnvp)
-#define CONFIG_HAVE_wspawnvp 1
+#define CONFIG_HAVE_wspawnvp
 #undef wspawnvp
 #define wspawnvp(mode, file, argv) _wspawnvp(mode, file, (wchar_t const *const *)(argv))
 #endif /* wspawnvp = _wspawnvp */
 
 #if defined(CONFIG_HAVE__wspawnvpe) && !defined(CONFIG_HAVE_wspawnvpe)
-#define CONFIG_HAVE_wspawnvpe 1
+#define CONFIG_HAVE_wspawnvpe
 #undef wspawnvpe
 #define wspawnvpe(mode, file, argv, envp) _wspawnvpe(mode, file, (wchar_t const *const *)(argv), (wchar_t const *const *)(envp))
 #endif /* wspawnvpe = _wspawnvpe */
 
 #if defined(CONFIG_HAVE__wstat) && !defined(CONFIG_HAVE_wstat)
-#define CONFIG_HAVE_wstat 1
+#define CONFIG_HAVE_wstat
 #undef wstat
 #define wstat _wstat
 #endif /* wstat = _wstat */
 
 #if defined(CONFIG_HAVE__wstat64) && !defined(CONFIG_HAVE_wstat64)
-#define CONFIG_HAVE_wstat64 1
+#define CONFIG_HAVE_wstat64
 #undef wstat64
 #define wstat64 _wstat64
 #endif /* wstat64 = _wstat64 */
 
 #if defined(CONFIG_HAVE__wlstat) && !defined(CONFIG_HAVE_wlstat)
-#define CONFIG_HAVE_wlstat 1
+#define CONFIG_HAVE_wlstat
 #undef wlstat
 #define wlstat _wlstat
 #endif /* wlstat = _wlstat */
 
 #if defined(CONFIG_HAVE__wlstat64) && !defined(CONFIG_HAVE_wlstat64)
-#define CONFIG_HAVE_wlstat64 1
+#define CONFIG_HAVE_wlstat64
 #undef wlstat64
 #define wlstat64 _wlstat64
 #endif /* wlstat64 = _wlstat64 */
 
 #if defined(CONFIG_HAVE__cwait) && !defined(CONFIG_HAVE_cwait)
-#define CONFIG_HAVE_cwait 1
+#define CONFIG_HAVE_cwait
 #undef cwait
 #define cwait _cwait
 #endif /* cwait = _cwait */
 
 #if defined(CONFIG_HAVE__wsystem) && !defined(CONFIG_HAVE_wsystem)
-#define CONFIG_HAVE_wsystem 1
+#define CONFIG_HAVE_wsystem
 #undef wsystem
 #define wsystem _wsystem
 #endif /* wsystem = _wsystem */
 
 #if defined(CONFIG_HAVE__open) && !defined(CONFIG_HAVE_open)
-#define CONFIG_HAVE_open 1
+#define CONFIG_HAVE_open
 #undef open
 #define open _open
 #endif /* open = _open */
 
 #if defined(CONFIG_HAVE__creat) && !defined(CONFIG_HAVE_creat)
-#define CONFIG_HAVE_creat 1
+#define CONFIG_HAVE_creat
 #undef creat
 #define creat _creat
 #endif /* creat = _creat */
 
 #if defined(CONFIG_HAVE__chmod) && !defined(CONFIG_HAVE_chmod)
-#define CONFIG_HAVE_chmod 1
+#define CONFIG_HAVE_chmod
 #undef chmod
 #define chmod _chmod
 #endif /* chmod = _chmod */
 
 #if defined(CONFIG_HAVE__unlink) && !defined(CONFIG_HAVE_unlink)
-#define CONFIG_HAVE_unlink 1
+#define CONFIG_HAVE_unlink
 #undef unlink
 #define unlink _unlink
 #endif /* unlink = _unlink */
 
 #if defined(CONFIG_HAVE__wunlink) && !defined(CONFIG_HAVE_wunlink)
-#define CONFIG_HAVE_wunlink 1
+#define CONFIG_HAVE_wunlink
 #undef wunlink
 #define wunlink _wunlink
 #endif /* wunlink = _wunlink */
 
 #if defined(CONFIG_HAVE__rmdir) && !defined(CONFIG_HAVE_rmdir)
-#define CONFIG_HAVE_rmdir 1
+#define CONFIG_HAVE_rmdir
 #undef rmdir
 #define rmdir _rmdir
 #endif /* rmdir = _rmdir */
 
 #if defined(CONFIG_HAVE__wrmdir) && !defined(CONFIG_HAVE_wrmdir)
-#define CONFIG_HAVE_wrmdir 1
+#define CONFIG_HAVE_wrmdir
 #undef wrmdir
 #define wrmdir _wrmdir
 #endif /* wrmdir = _wrmdir */
 
 #if defined(CONFIG_HAVE__remove) && !defined(CONFIG_HAVE_remove)
-#define CONFIG_HAVE_remove 1
+#define CONFIG_HAVE_remove
 #undef remove
 #define remove _remove
 #endif /* remove = _remove */
 
 #if defined(CONFIG_HAVE__wremove) && !defined(CONFIG_HAVE_wremove)
-#define CONFIG_HAVE_wremove 1
+#define CONFIG_HAVE_wremove
 #undef wremove
 #define wremove _wremove
 #endif /* wremove = _wremove */
 
 #if defined(CONFIG_HAVE__rename) && !defined(CONFIG_HAVE_rename)
-#define CONFIG_HAVE_rename 1
+#define CONFIG_HAVE_rename
 #undef rename
 #define rename _rename
 #endif /* rename = _rename */
 
 #if defined(CONFIG_HAVE__wrename) && !defined(CONFIG_HAVE_wrename)
-#define CONFIG_HAVE_wrename 1
+#define CONFIG_HAVE_wrename
 #undef wrename
 #define wrename _wrename
 #endif /* wrename = _wrename */
 
 #if defined(CONFIG_HAVE__wopen) && !defined(CONFIG_HAVE_wopen)
-#define CONFIG_HAVE_wopen 1
+#define CONFIG_HAVE_wopen
 #undef wopen
 #define wopen _wopen
 #endif /* wopen = _wopen */
 
 #if defined(CONFIG_HAVE__read) && !defined(CONFIG_HAVE_read)
-#define CONFIG_HAVE_read 1
+#define CONFIG_HAVE_read
 #undef read
 #define read(fd, buf, bufsize) ((Dee_ssize_t)_read(fd, buf, (unsigned int)(bufsize)))
 #endif /* read = _read */
 
 #if defined(CONFIG_HAVE__write) && !defined(CONFIG_HAVE_write)
-#define CONFIG_HAVE_write 1
+#define CONFIG_HAVE_write
 #undef write
 #define write(fd, buf, bufsize) ((Dee_ssize_t)_write(fd, buf, (unsigned int)(bufsize)))
 #endif /* write = _write */
 
 #if defined(CONFIG_HAVE__lseek) && !defined(CONFIG_HAVE_lseek)
-#define CONFIG_HAVE_lseek 1
+#define CONFIG_HAVE_lseek
 #undef lseek
 #define lseek _lseek
 #endif /* lseek = _lseek */
 
 #if defined(CONFIG_HAVE__lseeki64) && !defined(CONFIG_HAVE_lseek64)
-#define CONFIG_HAVE_lseek64 1
+#define CONFIG_HAVE_lseek64
 #undef lseek64
 #define lseek64 _lseeki64
 #endif /* lseek64 = _lseeki64 */
 
 #if defined(CONFIG_HAVE__lseek64) && !defined(CONFIG_HAVE_lseek64)
-#define CONFIG_HAVE_lseek64 1
+#define CONFIG_HAVE_lseek64
 #undef lseek64
 #define lseek64 _lseek64
 #endif /* lseek64 = _lseek64 */
 
 #if defined(CONFIG_HAVE__close) && !defined(CONFIG_HAVE_close)
-#define CONFIG_HAVE_close 1
+#define CONFIG_HAVE_close
 #undef close
 #define close _close
 #endif /* close = _close */
 
 #if defined(CONFIG_HAVE__commit) && !defined(CONFIG_HAVE_fsync)
-#define CONFIG_HAVE_fsync 1
+#define CONFIG_HAVE_fsync
 #undef fsync
 #define fsync _commit
 #endif /* fsync = _commit */
 
 #if defined(CONFIG_HAVE__chsize) && !defined(CONFIG_HAVE_ftruncate)
-#define CONFIG_HAVE_ftruncate 1
+#define CONFIG_HAVE_ftruncate
 #undef ftruncate
 #define ftruncate _chsize
 #endif /* ftruncate = _chsize */
 
 #if defined(CONFIG_HAVE__chsize_s) && !defined(CONFIG_HAVE_ftruncate64)
-#define CONFIG_HAVE_ftruncate64 1
+#define CONFIG_HAVE_ftruncate64
 #undef ftruncate64
 #define ftruncate64 _chsize_s
 #endif /* ftruncate64 = _chsize_s */
 
 #if defined(CONFIG_HAVE__chdir) && !defined(CONFIG_HAVE_chdir)
-#define CONFIG_HAVE_chdir 1
+#define CONFIG_HAVE_chdir
 #undef chdir
 #define chdir _chdir
 #endif /* chdir = _chdir */
 
 #if defined(CONFIG_HAVE__wchdir) && !defined(CONFIG_HAVE_wchdir)
-#define CONFIG_HAVE_wchdir 1
+#define CONFIG_HAVE_wchdir
 #undef wchdir
 #define wchdir _wchdir
 #endif /* wchdir = _wchdir */
 
 #if defined(CONFIG_HAVE__getpid) && !defined(CONFIG_HAVE_getpid)
-#define CONFIG_HAVE_getpid 1
+#define CONFIG_HAVE_getpid
 #undef getpid
 #define getpid _getpid
 #endif /* getpid = _getpid */
 
 #if defined(CONFIG_HAVE__umask) && !defined(CONFIG_HAVE_umask)
-#define CONFIG_HAVE_umask 1
+#define CONFIG_HAVE_umask
 #undef umask
 #define umask _umask
 #endif /* umask = _umask */
 
 #if defined(CONFIG_HAVE__dup) && !defined(CONFIG_HAVE_dup)
-#define CONFIG_HAVE_dup 1
+#define CONFIG_HAVE_dup
 #undef dup
 #define dup _dup
 #endif /* dup = _dup */
 
 #if defined(CONFIG_HAVE__dup2) && !defined(CONFIG_HAVE_dup2)
-#define CONFIG_HAVE_dup2 1
+#define CONFIG_HAVE_dup2
 #undef dup2
 #define dup2 _dup2
 #endif /* dup2 = _dup2 */
 
 #if defined(CONFIG_HAVE__isatty) && !defined(CONFIG_HAVE_isatty)
-#define CONFIG_HAVE_isatty 1
+#define CONFIG_HAVE_isatty
 #undef isatty
 #define isatty _isatty
 #endif /* isatty = _isatty */
 
 #if defined(CONFIG_HAVE__getcwd) && !defined(CONFIG_HAVE_getcwd)
-#define CONFIG_HAVE_getcwd 1
+#define CONFIG_HAVE_getcwd
 #undef getcwd
 #define getcwd _getcwd
 #endif /* getcwd = _getcwd */
 
 #if defined(CONFIG_HAVE__wgetcwd) && !defined(CONFIG_HAVE_wgetcwd)
-#define CONFIG_HAVE_wgetcwd 1
+#define CONFIG_HAVE_wgetcwd
 #undef wgetcwd
 #define wgetcwd _wgetcwd
 #endif /* wgetcwd = _wgetcwd */
 
 #if defined(CONFIG_HAVE__access) && !defined(CONFIG_HAVE_access)
-#define CONFIG_HAVE_access 1
+#define CONFIG_HAVE_access
 #undef access
 #define access _access
 #endif /* access = _access */
 
 #if defined(CONFIG_HAVE__waccess) && !defined(CONFIG_HAVE_waccess)
-#define CONFIG_HAVE_waccess 1
+#define CONFIG_HAVE_waccess
 #undef waccess
 #define waccess _waccess
 #endif /* waccess = _waccess */
 
 #if !defined(CONFIG_HAVE_stat64) && (defined(CONFIG_HAVE_fstatat64) && defined(CONFIG_HAVE_AT_FDCWD))
-#define CONFIG_HAVE_stat64 1
+#define CONFIG_HAVE_stat64
 #undef stat64
 #define stat64(name, buf) fstatat64(AT_FDCWD, name, buf, 0)
 #endif /* stat64 = fstatat64 */
 
 #if !defined(CONFIG_HAVE_lstat64) && (defined(CONFIG_HAVE_fstatat64) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
-#define CONFIG_HAVE_lstat64 1
+#define CONFIG_HAVE_lstat64
 #undef lstat64
 #define lstat64(name, buf) fstatat64(AT_FDCWD, name, buf, AT_SYMLINK_NOFOLLOW)
 #endif /* lstat64 = fstatat64 */
 
 #if !defined(CONFIG_HAVE_stat) && (defined(CONFIG_HAVE_fstatat) && defined(CONFIG_HAVE_AT_FDCWD))
-#define CONFIG_HAVE_stat 1
+#define CONFIG_HAVE_stat
 #undef stat
 #define stat(name, buf) fstatat(AT_FDCWD, name, buf, 0)
 #endif /* stat = fstatat */
 
 #if !defined(CONFIG_HAVE_lstat) && (defined(CONFIG_HAVE_fstatat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW))
-#define CONFIG_HAVE_lstat 1
+#define CONFIG_HAVE_lstat
 #undef lstat
 #define lstat(name, buf) fstatat(AT_FDCWD, name, buf, AT_SYMLINK_NOFOLLOW)
 #endif /* lstat = fstatat */
 
 #if defined(CONFIG_HAVE_euidaccess) && !defined(CONFIG_HAVE_eaccess)
-#define CONFIG_HAVE_eaccess 1
+#define CONFIG_HAVE_eaccess
 #undef eaccess
 #define eaccess euidaccess
 #endif /* eaccess = euidaccess */
 
 #if defined(CONFIG_HAVE_eaccess) && !defined(CONFIG_HAVE_euidaccess)
-#define CONFIG_HAVE_euidaccess 1
+#define CONFIG_HAVE_euidaccess
 #undef euidaccess
 #define euidaccess eaccess
 #endif /* euidaccess = eaccess */
 
 #if defined(CONFIG_HAVE_fork) && !defined(CONFIG_HAVE_vfork)
-#define CONFIG_HAVE_vfork 1
+#define CONFIG_HAVE_vfork
 #undef vfork
 #define vfork fork
 #endif /* vfork = fork */
 
 #if defined(CONFIG_HAVE__pipe) && !defined(CONFIG_HAVE_pipe)
-#define CONFIG_HAVE_pipe 1
+#define CONFIG_HAVE_pipe
 #undef pipe
 #define pipe(fds) _pipe(fds, 4096, O_BINARY)
 #endif /* pipe = _pipe */
 
 #if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
-#define CONFIG_HAVE_mkdir 1
+#define CONFIG_HAVE_mkdir
 #undef mkdir
 #define mkdir(name, mode) _mkdir(name)
 #endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__wmkdir) && !defined(CONFIG_HAVE_wmkdir)
-#define CONFIG_HAVE_wmkdir 1
+#define CONFIG_HAVE_wmkdir
 #undef wmkdir
 #define wmkdir(name, mode) _wmkdir(name)
 #endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__fseeki64) && !defined(CONFIG_HAVE_fseeko64)
-#define CONFIG_HAVE_fseeko64 1
+#define CONFIG_HAVE_fseeko64
 #undef fseeko64
 #define fseeko64 _fseeki64
 #endif /* fseeko64 = _fseeki64 */
 
 #if defined(CONFIG_HAVE__fseek64) && !defined(CONFIG_HAVE_fseeko64)
-#define CONFIG_HAVE_fseeko64 1
+#define CONFIG_HAVE_fseeko64
 #undef fseeko64
 #define fseeko64 _fseek64
 #endif /* fseeko64 = _fseek64 */
 
 #if defined(CONFIG_HAVE_fseek64) && !defined(CONFIG_HAVE_fseeko64)
-#define CONFIG_HAVE_fseeko64 1
+#define CONFIG_HAVE_fseeko64
 #undef fseeko64
 #define fseeko64 fseek64
 #endif /* fseeko64 = fseek64 */
 
 #if defined(CONFIG_HAVE__ftelli64) && !defined(CONFIG_HAVE_ftello64)
-#define CONFIG_HAVE_ftello64 1
+#define CONFIG_HAVE_ftello64
 #undef ftello64
 #define ftello64 _ftelli64
 #endif /* ftello64 = _ftelli64 */
 
 #if defined(CONFIG_HAVE__ftell64) && !defined(CONFIG_HAVE_ftello64)
-#define CONFIG_HAVE_ftello64 1
+#define CONFIG_HAVE_ftello64
 #undef ftello64
 #define ftello64 _ftell64
 #endif /* ftello64 = _ftell64 */
 
 #if defined(CONFIG_HAVE_ftell64) && !defined(CONFIG_HAVE_ftello64)
-#define CONFIG_HAVE_ftello64 1
+#define CONFIG_HAVE_ftello64
 #undef ftello64
 #define ftello64 ftell64
 #endif /* ftello64 = ftell64 */
@@ -8915,8 +8915,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #if (defined(CONFIG_HAVE_fseek) && !defined(CONFIG_HAVE_fseeko)) && \
     (CONFIG_SIZEOF_OFF_T <= __SIZEOF_LONG__)
-#define CONFIG_HAVE_fseeko 1
-#define CONFIG_HAVE_ftello 1
+#define CONFIG_HAVE_fseeko
+#define CONFIG_HAVE_ftello
 #undef fseeko
 #undef ftello
 #define fseeko fseek
@@ -8924,8 +8924,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* fseeko = fseek */
 
 #if defined(CONFIG_HAVE_fseeko64) && !defined(CONFIG_HAVE_fseeko)
-#define CONFIG_HAVE_fseeko 1
-#define CONFIG_HAVE_ftello 1
+#define CONFIG_HAVE_fseeko
+#define CONFIG_HAVE_ftello
 #undef fseeko
 #undef ftello
 #define fseeko fseeko64
@@ -8933,8 +8933,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* fseeko = fseeko64 */
 
 #if !defined(CONFIG_HAVE_fseek) && defined(CONFIG_HAVE_fseeko)
-#define CONFIG_HAVE_fseek 1
-#define CONFIG_HAVE_ftell 1
+#define CONFIG_HAVE_fseek
+#define CONFIG_HAVE_ftell
 #undef fseek
 #undef ftell
 #define fseek fseeko
@@ -8942,58 +8942,58 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* fseeko = fseeko64 */
 
 #if defined(CONFIG_HAVE__fileno) && !defined(CONFIG_HAVE_fileno)
-#define CONFIG_HAVE_fileno 1
+#define CONFIG_HAVE_fileno
 #undef fileno
 #define fileno _fileno
 #endif /* fileno = _fileno */
 
 #if defined(CONFIG_HAVE_getc) && !defined(CONFIG_HAVE_fgetc)
-#define CONFIG_HAVE_fgetc 1
+#define CONFIG_HAVE_fgetc
 #undef fgetc
 #define fgetc getc
 #endif /* fgetc = getc */
 
 #if defined(CONFIG_HAVE_fgetc) && !defined(CONFIG_HAVE_getc)
-#define CONFIG_HAVE_getc 1
+#define CONFIG_HAVE_getc
 #undef getc
 #define getc fgetc
 #endif /* getc = fgetc */
 
 #if defined(CONFIG_HAVE_putc) && !defined(CONFIG_HAVE_fputc)
-#define CONFIG_HAVE_fputc 1
+#define CONFIG_HAVE_fputc
 #undef fputc
 #define fputc putc
 #endif /* fputc = putc */
 
 #if defined(CONFIG_HAVE_fputc) && !defined(CONFIG_HAVE_putc)
-#define CONFIG_HAVE_putc 1
+#define CONFIG_HAVE_putc
 #undef putc
 #define putc fputc
 #endif /* putc = fputc */
 
 #if defined(CONFIG_HAVE_MAP_ANON) && !defined(CONFIG_HAVE_MAP_ANONYMOUS)
-#define CONFIG_HAVE_MAP_ANONYMOUS 1
+#define CONFIG_HAVE_MAP_ANONYMOUS
 #undef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif /* MAP_ANONYMOUS = MAP_ANON */
 
 #if defined(CONFIG_HAVE_MAP_ANONYMOUS) && !defined(CONFIG_HAVE_MAP_ANON)
-#define CONFIG_HAVE_MAP_ANON 1
+#define CONFIG_HAVE_MAP_ANON
 #undef MAP_ANON
 #define MAP_ANON MAP_ANONYMOUS
 #endif /* MAP_ANON = MAP_ANONYMOUS */
 
 #ifndef CONFIG_HAVE_environ
 #ifdef CONFIG_HAVE__environ
-#define CONFIG_HAVE_environ 1
+#define CONFIG_HAVE_environ
 #undef environ
 #define environ _environ
 #elif defined(CONFIG_HAVE___environ)
-#define CONFIG_HAVE_environ 1
+#define CONFIG_HAVE_environ
 #undef environ
 #define environ __environ
 #elif defined(CONFIG_HAVE___p__environ)
-#define CONFIG_HAVE_environ 1
+#define CONFIG_HAVE_environ
 #undef environ
 #define environ (*__p__environ())
 #endif /* environ = __environ */
@@ -9001,106 +9001,106 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_wenviron
 #ifdef CONFIG_HAVE__wenviron
-#define CONFIG_HAVE_wenviron 1
+#define CONFIG_HAVE_wenviron
 #undef wenviron
 #define wenviron _wenviron
 #elif defined(CONFIG_HAVE___wenviron)
-#define CONFIG_HAVE_wenviron 1
+#define CONFIG_HAVE_wenviron
 #undef wenviron
 #define wenviron __wenviron
 #elif defined(CONFIG_HAVE___p__wenviron)
-#define CONFIG_HAVE_wenviron 1
+#define CONFIG_HAVE_wenviron
 #undef wenviron
 #define wenviron (*__p__wenviron())
 #endif /* wenviron = __wenviron */
 #endif /* !CONFIG_HAVE_wenviron */
 
 #if !defined(CONFIG_HAVE___argc) && defined(CONFIG_HAVE___p___argc)
-#define CONFIG_HAVE___argc 1
+#define CONFIG_HAVE___argc
 #define __argc (*__p___argc())
 #endif /* !CONFIG_HAVE___argc && CONFIG_HAVE___p___argc */
 
 #if !defined(CONFIG_HAVE___argv) && defined(CONFIG_HAVE___p___argv)
-#define CONFIG_HAVE___argv 1
+#define CONFIG_HAVE___argv
 #define __argv (*__p___argv())
 #endif /* !CONFIG_HAVE___argv && CONFIG_HAVE___p___argv */
 
 #if !defined(CONFIG_HAVE___wargv) && defined(CONFIG_HAVE___p___wargv)
-#define CONFIG_HAVE___wargv 1
+#define CONFIG_HAVE___wargv
 #define __wargv (*__p___wargv())
 #endif /* !CONFIG_HAVE___wargv && CONFIG_HAVE___p___wargv */
 
 #if !defined(CONFIG_HAVE_putenv) && defined(CONFIG_HAVE__putenv)
-#define CONFIG_HAVE_putenv 1
+#define CONFIG_HAVE_putenv
 #define putenv _putenv
 #endif /* putenv = _putenv */
 
 #ifndef CONFIG_HAVE_putenv_s
 #ifdef CONFIG_HAVE__putenv_s
-#define CONFIG_HAVE_putenv_s 1
+#define CONFIG_HAVE_putenv_s
 #define putenv_s _putenv_s
 #elif defined(CONFIG_HAVE_setenv)
-#define CONFIG_HAVE_putenv_s 1
+#define CONFIG_HAVE_putenv_s
 #define putenv_s(name, var) setenv(name, var, 1)
 #endif /* ... */
 #endif /* !CONFIG_HAVE_putenv_s */
 
 #if !defined(CONFIG_HAVE_wgetenv) && defined(CONFIG_HAVE__wgetenv)
-#define CONFIG_HAVE_wgetenv 1
+#define CONFIG_HAVE_wgetenv
 #define wgetenv _wgetenv
 #endif /* wgetenv = _wgetenv */
 
 #if !defined(CONFIG_HAVE_wsetenv) && defined(CONFIG_HAVE__wsetenv)
-#define CONFIG_HAVE_wsetenv 1
+#define CONFIG_HAVE_wsetenv
 #define wsetenv _wsetenv
 #endif /* wsetenv = _wsetenv */
 
 #if !defined(CONFIG_HAVE_wputenv) && defined(CONFIG_HAVE__wputenv)
-#define CONFIG_HAVE_wputenv 1
+#define CONFIG_HAVE_wputenv
 #define wputenv _wputenv
 #endif /* wputenv = _wputenv */
 
 #if !defined(CONFIG_HAVE_wunsetenv) && defined(CONFIG_HAVE__wunsetenv)
-#define CONFIG_HAVE_wunsetenv 1
+#define CONFIG_HAVE_wunsetenv
 #define wunsetenv _wunsetenv
 #endif /* wunsetenv = _wunsetenv */
 
 #ifndef CONFIG_HAVE_wputenv_s
 #ifdef CONFIG_HAVE__wputenv_s
-#define CONFIG_HAVE_wputenv_s 1
+#define CONFIG_HAVE_wputenv_s
 #define wputenv_s _wputenv_s
 #elif defined(CONFIG_HAVE_wsetenv)
-#define CONFIG_HAVE_wputenv_s 1
+#define CONFIG_HAVE_wputenv_s
 #define wputenv_s(name, var) wsetenv(name, var, 1)
 #endif /* ... */
 #endif /* !CONFIG_HAVE_wputenv_s */
 
 #if !defined(CONFIG_HAVE_execv) && defined(CONFIG_HAVE_execve) && defined(CONFIG_HAVE_environ)
-#define CONFIG_HAVE_execv 1
+#define CONFIG_HAVE_execv
 #undef execv
 #define execv(path, argv) execve(path, argv, environ)
 #endif /* execv = execve */
 
 #if !defined(CONFIG_HAVE_execvp) && defined(CONFIG_HAVE_execvpe) && defined(CONFIG_HAVE_environ)
-#define CONFIG_HAVE_execpv 1
+#define CONFIG_HAVE_execpv
 #undef execvp
 #define execvp(path, argv) execvpe(path, argv, environ)
 #endif /* execvp = execvpe */
 
 #if !defined(CONFIG_HAVE_wexecv) && defined(CONFIG_HAVE_wexecve) && defined(CONFIG_HAVE_environ)
-#define CONFIG_HAVE_wexecv 1
+#define CONFIG_HAVE_wexecv
 #undef wexecv
 #define wexecv(path, argv) wexecve(path, argv, environ)
 #endif /* wexecv = wexecve */
 
 #if !defined(CONFIG_HAVE_wexecvp) && defined(CONFIG_HAVE_wexecvpe) && defined(CONFIG_HAVE_environ)
-#define CONFIG_HAVE_wexecpv 1
+#define CONFIG_HAVE_wexecpv
 #undef wexecvp
 #define wexecvp(path, argv) wexecvpe(path, argv, environ)
 #endif /* wexecvp = wexecvpe */
 
 #if defined(CONFIG_HAVE__sysconf) && !defined(CONFIG_HAVE_sysconf)
-#define CONFIG_HAVE_sysconf 1
+#define CONFIG_HAVE_sysconf
 #undef sysconf
 #define sysconf _sysconf
 #endif /* sysconf = _sysconf */
@@ -9108,7 +9108,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 /* Try to substitute alloca() with alternatives */
 #ifndef CONFIG_HAVE_alloca
 #ifdef CONFIG_HAVE__alloca
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #define alloca _alloca
 #elif __has_builtin(__builtin_alloca)
 #define alloca __builtin_alloca
@@ -9118,14 +9118,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #else /* ... */
 #include <hybrid/__alloca.h>
 #ifdef __hybrid_alloca
-#define CONFIG_HAVE_alloca 1
+#define CONFIG_HAVE_alloca
 #define alloca __hybrid_alloca
 #endif /* __hybrid_alloca */
 #endif /* !... */
 #endif /* !CONFIG_HAVE_alloca */
 
 #ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
+#define CONFIG_HAVE_strend
 #define strend(s)  ((s) + strlen(s))
 #endif /* !CONFIG_HAVE_strend */
 
@@ -9135,19 +9135,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 /* Set optional flags to no-ops */
 #ifndef CONFIG_HAVE_O_BINARY
 #ifdef CONFIG_HAVE___O_BINARY
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #define O_BINARY __O_BINARY
 #elif defined(CONFIG_HAVE__O_BINARY)
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #define O_BINARY _O_BINARY
 #elif defined(CONFIG_HAVE___O_RAW)
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #define O_BINARY __O_RAW
 #elif defined(CONFIG_HAVE__O_RAW)
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #define O_BINARY _O_RAW
 #elif defined(CONFIG_HAVE_O_RAW)
-#define CONFIG_HAVE_O_BINARY 1
+#define CONFIG_HAVE_O_BINARY
 #define O_BINARY O_RAW
 #else /* ... */
 #define O_BINARY 0
@@ -9158,10 +9158,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SHORT_LIVED
 #ifdef CONFIG_HAVE___O_SHORT_LIVED
-#define CONFIG_HAVE_O_SHORT_LIVED 1
+#define CONFIG_HAVE_O_SHORT_LIVED
 #define O_SHORT_LIVED __O_SHORT_LIVED
 #elif defined(CONFIG_HAVE__O_SHORT_LIVED)
-#define CONFIG_HAVE_O_SHORT_LIVED 1
+#define CONFIG_HAVE_O_SHORT_LIVED
 #define O_SHORT_LIVED _O_SHORT_LIVED
 #else /* ... */
 #define O_SHORT_LIVED 0
@@ -9172,10 +9172,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SEQUENTIAL
 #ifdef CONFIG_HAVE___O_SEQUENTIAL
-#define CONFIG_HAVE_O_SEQUENTIAL 1
+#define CONFIG_HAVE_O_SEQUENTIAL
 #define O_SEQUENTIAL __O_SEQUENTIAL
 #elif defined(CONFIG_HAVE__O_SEQUENTIAL)
-#define CONFIG_HAVE_O_SEQUENTIAL 1
+#define CONFIG_HAVE_O_SEQUENTIAL
 #define O_SEQUENTIAL _O_SEQUENTIAL
 #else /* ... */
 #define O_SEQUENTIAL 0
@@ -9186,10 +9186,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_RANDOM
 #ifdef CONFIG_HAVE___O_RANDOM
-#define CONFIG_HAVE_O_RANDOM 1
+#define CONFIG_HAVE_O_RANDOM
 #define O_RANDOM __O_RANDOM
 #elif defined(CONFIG_HAVE__O_RANDOM)
-#define CONFIG_HAVE_O_RANDOM 1
+#define CONFIG_HAVE_O_RANDOM
 #define O_RANDOM _O_RANDOM
 #else /* ... */
 #define O_RANDOM 0
@@ -9200,10 +9200,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_PATH
 #ifdef CONFIG_HAVE___O_PATH
-#define CONFIG_HAVE_O_PATH 1
+#define CONFIG_HAVE_O_PATH
 #define O_PATH __O_PATH
 #elif defined(CONFIG_HAVE__O_PATH)
-#define CONFIG_HAVE_O_PATH 1
+#define CONFIG_HAVE_O_PATH
 #define O_PATH _O_PATH
 #else /* ... */
 #define O_PATH 0
@@ -9214,10 +9214,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_NOATIME
 #ifdef CONFIG_HAVE___O_NOATIME
-#define CONFIG_HAVE_O_NOATIME 1
+#define CONFIG_HAVE_O_NOATIME
 #define O_NOATIME __O_NOATIME
 #elif defined(CONFIG_HAVE__O_NOATIME)
-#define CONFIG_HAVE_O_NOATIME 1
+#define CONFIG_HAVE_O_NOATIME
 #define O_NOATIME _O_NOATIME
 #else /* ... */
 #define O_NOATIME 0
@@ -9228,10 +9228,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_NOCTTY
 #ifdef CONFIG_HAVE___O_NOCTTY
-#define CONFIG_HAVE_O_NOCTTY 1
+#define CONFIG_HAVE_O_NOCTTY
 #define O_NOCTTY __O_NOCTTY
 #elif defined(CONFIG_HAVE__O_NOCTTY)
-#define CONFIG_HAVE_O_NOCTTY 1
+#define CONFIG_HAVE_O_NOCTTY
 #define O_NOCTTY _O_NOCTTY
 #else /* ... */
 #define O_NOCTTY 0
@@ -9243,10 +9243,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_TEXT
 #ifdef CONFIG_HAVE___O_TEXT
-#define CONFIG_HAVE_O_TEXT 1
+#define CONFIG_HAVE_O_TEXT
 #define O_TEXT __O_TEXT
 #elif defined(CONFIG_HAVE__O_TEXT)
-#define CONFIG_HAVE_O_TEXT 1
+#define CONFIG_HAVE_O_TEXT
 #define O_TEXT _O_TEXT
 #endif /* ... */
 #elif !defined(O_TEXT)
@@ -9255,10 +9255,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_WTEXT
 #ifdef CONFIG_HAVE___O_WTEXT
-#define CONFIG_HAVE_O_WTEXT 1
+#define CONFIG_HAVE_O_WTEXT
 #define O_WTEXT __O_WTEXT
 #elif defined(CONFIG_HAVE__O_WTEXT)
-#define CONFIG_HAVE_O_WTEXT 1
+#define CONFIG_HAVE_O_WTEXT
 #define O_WTEXT _O_WTEXT
 #endif /* ... */
 #elif !defined(O_WTEXT)
@@ -9267,10 +9267,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_U16TEXT
 #ifdef CONFIG_HAVE___O_U16TEXT
-#define CONFIG_HAVE_O_U16TEXT 1
+#define CONFIG_HAVE_O_U16TEXT
 #define O_U16TEXT __O_U16TEXT
 #elif defined(CONFIG_HAVE__O_U16TEXT)
-#define CONFIG_HAVE_O_U16TEXT 1
+#define CONFIG_HAVE_O_U16TEXT
 #define O_U16TEXT _O_U16TEXT
 #endif /* ... */
 #elif !defined(O_U16TEXT)
@@ -9279,10 +9279,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_U8TEXT
 #ifdef CONFIG_HAVE___O_U8TEXT
-#define CONFIG_HAVE_O_U8TEXT 1
+#define CONFIG_HAVE_O_U8TEXT
 #define O_U8TEXT __O_U8TEXT
 #elif defined(CONFIG_HAVE__O_U8TEXT)
-#define CONFIG_HAVE_O_U8TEXT 1
+#define CONFIG_HAVE_O_U8TEXT
 #define O_U8TEXT _O_U8TEXT
 #endif /* ... */
 #elif !defined(O_U8TEXT)
@@ -9291,10 +9291,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_TEMPORARY
 #ifdef CONFIG_HAVE___O_TEMPORARY
-#define CONFIG_HAVE_O_TEMPORARY 1
+#define CONFIG_HAVE_O_TEMPORARY
 #define O_TEMPORARY __O_TEMPORARY
 #elif defined(CONFIG_HAVE__O_TEMPORARY)
-#define CONFIG_HAVE_O_TEMPORARY 1
+#define CONFIG_HAVE_O_TEMPORARY
 #define O_TEMPORARY _O_TEMPORARY
 #endif /* ... */
 #elif !defined(O_TEMPORARY)
@@ -9303,10 +9303,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_OBTAIN_DIR
 #ifdef CONFIG_HAVE___O_OBTAIN_DIR
-#define CONFIG_HAVE_O_OBTAIN_DIR 1
+#define CONFIG_HAVE_O_OBTAIN_DIR
 #define O_OBTAIN_DIR __O_OBTAIN_DIR
 #elif defined(CONFIG_HAVE__O_OBTAIN_DIR)
-#define CONFIG_HAVE_O_OBTAIN_DIR 1
+#define CONFIG_HAVE_O_OBTAIN_DIR
 #define O_OBTAIN_DIR _O_OBTAIN_DIR
 #endif /* ... */
 #elif !defined(O_OBTAIN_DIR)
@@ -9315,10 +9315,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_CREAT
 #ifdef CONFIG_HAVE___O_CREAT
-#define CONFIG_HAVE_O_CREAT 1
+#define CONFIG_HAVE_O_CREAT
 #define O_CREAT __O_CREAT
 #elif defined(CONFIG_HAVE__O_CREAT)
-#define CONFIG_HAVE_O_CREAT 1
+#define CONFIG_HAVE_O_CREAT
 #define O_CREAT _O_CREAT
 #endif /* ... */
 #elif !defined(O_CREAT)
@@ -9327,10 +9327,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_TRUNC
 #ifdef CONFIG_HAVE___O_TRUNC
-#define CONFIG_HAVE_O_TRUNC 1
+#define CONFIG_HAVE_O_TRUNC
 #define O_TRUNC __O_TRUNC
 #elif defined(CONFIG_HAVE__O_TRUNC)
-#define CONFIG_HAVE_O_TRUNC 1
+#define CONFIG_HAVE_O_TRUNC
 #define O_TRUNC _O_TRUNC
 #endif /* ... */
 #elif !defined(O_TRUNC)
@@ -9339,10 +9339,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_RDONLY
 #ifdef CONFIG_HAVE___O_RDONLY
-#define CONFIG_HAVE_O_RDONLY 1
+#define CONFIG_HAVE_O_RDONLY
 #define O_RDONLY __O_RDONLY
 #elif defined(CONFIG_HAVE__O_RDONLY)
-#define CONFIG_HAVE_O_RDONLY 1
+#define CONFIG_HAVE_O_RDONLY
 #define O_RDONLY _O_RDONLY
 #endif /* ... */
 #elif !defined(O_RDONLY)
@@ -9351,10 +9351,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_WRONLY
 #ifdef CONFIG_HAVE___O_WRONLY
-#define CONFIG_HAVE_O_WRONLY 1
+#define CONFIG_HAVE_O_WRONLY
 #define O_WRONLY __O_WRONLY
 #elif defined(CONFIG_HAVE__O_WRONLY)
-#define CONFIG_HAVE_O_WRONLY 1
+#define CONFIG_HAVE_O_WRONLY
 #define O_WRONLY _O_WRONLY
 #endif /* ... */
 #elif !defined(O_WRONLY)
@@ -9363,10 +9363,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_RDWR
 #ifdef CONFIG_HAVE___O_RDWR
-#define CONFIG_HAVE_O_RDWR 1
+#define CONFIG_HAVE_O_RDWR
 #define O_RDWR __O_RDWR
 #elif defined(CONFIG_HAVE__O_RDWR)
-#define CONFIG_HAVE_O_RDWR 1
+#define CONFIG_HAVE_O_RDWR
 #define O_RDWR _O_RDWR
 #endif /* ... */
 #elif !defined(O_RDWR)
@@ -9375,13 +9375,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_ACCMODE
 #ifdef CONFIG_HAVE___O_ACCMODE
-#define CONFIG_HAVE_O_ACCMODE 1
+#define CONFIG_HAVE_O_ACCMODE
 #define O_ACCMODE __O_ACCMODE
 #elif defined(CONFIG_HAVE__O_ACCMODE)
-#define CONFIG_HAVE_O_ACCMODE 1
+#define CONFIG_HAVE_O_ACCMODE
 #define O_ACCMODE _O_ACCMODE
 #elif 0 /* The combination might overlap with something else... */
-#define CONFIG_HAVE_O_ACCMODE 1
+#define CONFIG_HAVE_O_ACCMODE
 #define O_ACCMODE (O_RDONLY | O_WRONLY | O_RDWR)
 #endif /* ... */
 #elif !defined(O_ACCMODE)
@@ -9390,19 +9390,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_CLOEXEC
 #ifdef CONFIG_HAVE___O_NOINHERIT
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #define O_CLOEXEC __O_NOINHERIT
 #elif defined(CONFIG_HAVE__O_NOINHERIT)
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #define O_CLOEXEC _O_NOINHERIT
 #elif defined(CONFIG_HAVE_O_NOINHERIT)
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #define O_CLOEXEC O_NOINHERIT
 #elif defined(CONFIG_HAVE___O_CLOEXEC)
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #define O_CLOEXEC __O_CLOEXEC
 #elif defined(CONFIG_HAVE__O_CLOEXEC)
-#define CONFIG_HAVE_O_CLOEXEC 1
+#define CONFIG_HAVE_O_CLOEXEC
 #define O_CLOEXEC _O_CLOEXEC
 #endif /* ... */
 #elif !defined(O_CLOEXEC)
@@ -9411,10 +9411,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_EXCL
 #ifdef CONFIG_HAVE___O_EXCL
-#define CONFIG_HAVE_O_EXCL 1
+#define CONFIG_HAVE_O_EXCL
 #define O_EXCL __O_EXCL
 #elif defined(CONFIG_HAVE__O_EXCL)
-#define CONFIG_HAVE_O_EXCL 1
+#define CONFIG_HAVE_O_EXCL
 #define O_EXCL _O_EXCL
 #endif /* ... */
 #elif !defined(O_EXCL)
@@ -9423,10 +9423,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_APPEND
 #ifdef CONFIG_HAVE___O_APPEND
-#define CONFIG_HAVE_O_APPEND 1
+#define CONFIG_HAVE_O_APPEND
 #define O_APPEND __O_APPEND
 #elif defined(CONFIG_HAVE__O_APPEND)
-#define CONFIG_HAVE_O_APPEND 1
+#define CONFIG_HAVE_O_APPEND
 #define O_APPEND _O_APPEND
 #endif /* ... */
 #elif !defined(O_APPEND)
@@ -9435,19 +9435,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_NONBLOCK
 #ifdef CONFIG_HAVE___O_NONBLOCK
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #define O_NONBLOCK __O_NONBLOCK
 #elif defined(CONFIG_HAVE__O_NONBLOCK)
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #define O_NONBLOCK _O_NONBLOCK
 #elif defined(CONFIG_HAVE___O_NDELAY)
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #define O_NONBLOCK __O_NDELAY
 #elif defined(CONFIG_HAVE__O_NDELAY)
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #define O_NONBLOCK _O_NDELAY
 #elif defined(CONFIG_HAVE_O_NDELAY)
-#define CONFIG_HAVE_O_NONBLOCK 1
+#define CONFIG_HAVE_O_NONBLOCK
 #define O_NONBLOCK O_NDELAY
 #endif /* ... */
 #elif !defined(O_NONBLOCK)
@@ -9456,10 +9456,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_RSYNC
 #ifdef CONFIG_HAVE___O_RSYNC
-#define CONFIG_HAVE_O_RSYNC 1
+#define CONFIG_HAVE_O_RSYNC
 #define O_RSYNC __O_RSYNC
 #elif defined(CONFIG_HAVE__O_RSYNC)
-#define CONFIG_HAVE_O_RSYNC 1
+#define CONFIG_HAVE_O_RSYNC
 #define O_RSYNC _O_RSYNC
 #endif /* ... */
 #elif !defined(O_RSYNC)
@@ -9468,10 +9468,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SYNC
 #ifdef CONFIG_HAVE___O_SYNC
-#define CONFIG_HAVE_O_SYNC 1
+#define CONFIG_HAVE_O_SYNC
 #define O_SYNC __O_SYNC
 #elif defined(CONFIG_HAVE__O_SYNC)
-#define CONFIG_HAVE_O_SYNC 1
+#define CONFIG_HAVE_O_SYNC
 #define O_SYNC _O_SYNC
 #endif /* ... */
 #elif !defined(O_SYNC)
@@ -9480,10 +9480,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_DSYNC
 #ifdef CONFIG_HAVE___O_DSYNC
-#define CONFIG_HAVE_O_DSYNC 1
+#define CONFIG_HAVE_O_DSYNC
 #define O_DSYNC __O_DSYNC
 #elif defined(CONFIG_HAVE__O_DSYNC)
-#define CONFIG_HAVE_O_DSYNC 1
+#define CONFIG_HAVE_O_DSYNC
 #define O_DSYNC _O_DSYNC
 #endif /* ... */
 #elif !defined(O_DSYNC)
@@ -9492,10 +9492,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_ASYNC
 #ifdef CONFIG_HAVE___O_ASYNC
-#define CONFIG_HAVE_O_ASYNC 1
+#define CONFIG_HAVE_O_ASYNC
 #define O_ASYNC __O_ASYNC
 #elif defined(CONFIG_HAVE__O_ASYNC)
-#define CONFIG_HAVE_O_ASYNC 1
+#define CONFIG_HAVE_O_ASYNC
 #define O_ASYNC _O_ASYNC
 #endif /* ... */
 #elif !defined(O_ASYNC)
@@ -9504,20 +9504,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_DIRECT
 #ifdef CONFIG_HAVE___O_DIRECT
-#define CONFIG_HAVE_O_DIRECT 1
+#define CONFIG_HAVE_O_DIRECT
 #define O_DIRECT __O_DIRECT
 #elif defined(CONFIG_HAVE__O_DIRECT)
-#define CONFIG_HAVE_O_DIRECT 1
+#define CONFIG_HAVE_O_DIRECT
 #define O_DIRECT _O_DIRECT
 #endif /* ... */
 #endif /* O_DIRECT */
 
 #ifndef CONFIG_HAVE_O_LARGEFILE
 #ifdef CONFIG_HAVE___O_LARGEFILE
-#define CONFIG_HAVE_O_LARGEFILE 1
+#define CONFIG_HAVE_O_LARGEFILE
 #define O_LARGEFILE __O_LARGEFILE
 #elif defined(CONFIG_HAVE__O_LARGEFILE)
-#define CONFIG_HAVE_O_LARGEFILE 1
+#define CONFIG_HAVE_O_LARGEFILE
 #define O_LARGEFILE _O_LARGEFILE
 #endif /* ... */
 #elif !defined(O_LARGEFILE)
@@ -9526,10 +9526,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_DIRECTORY
 #ifdef CONFIG_HAVE___O_DIRECTORY
-#define CONFIG_HAVE_O_DIRECTORY 1
+#define CONFIG_HAVE_O_DIRECTORY
 #define O_DIRECTORY __O_DIRECTORY
 #elif defined(CONFIG_HAVE__O_DIRECTORY)
-#define CONFIG_HAVE_O_DIRECTORY 1
+#define CONFIG_HAVE_O_DIRECTORY
 #define O_DIRECTORY _O_DIRECTORY
 #endif /* ... */
 #elif !defined(O_DIRECTORY)
@@ -9538,10 +9538,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_NOFOLLOW
 #ifdef CONFIG_HAVE___O_NOFOLLOW
-#define CONFIG_HAVE_O_NOFOLLOW 1
+#define CONFIG_HAVE_O_NOFOLLOW
 #define O_NOFOLLOW __O_NOFOLLOW
 #elif defined(CONFIG_HAVE__O_NOFOLLOW)
-#define CONFIG_HAVE_O_NOFOLLOW 1
+#define CONFIG_HAVE_O_NOFOLLOW
 #define O_NOFOLLOW _O_NOFOLLOW
 #endif /* ... */
 #elif !defined(O_NOFOLLOW)
@@ -9550,10 +9550,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_TMPFILE
 #ifdef CONFIG_HAVE___O_TMPFILE
-#define CONFIG_HAVE_O_TMPFILE 1
+#define CONFIG_HAVE_O_TMPFILE
 #define O_TMPFILE __O_TMPFILE
 #elif defined(CONFIG_HAVE__O_TMPFILE)
-#define CONFIG_HAVE_O_TMPFILE 1
+#define CONFIG_HAVE_O_TMPFILE
 #define O_TMPFILE _O_TMPFILE
 #endif /* ... */
 #elif !defined(O_TMPFILE)
@@ -9562,10 +9562,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_CLOFORK
 #ifdef CONFIG_HAVE___O_CLOFORK
-#define CONFIG_HAVE_O_CLOFORK 1
+#define CONFIG_HAVE_O_CLOFORK
 #define O_CLOFORK __O_CLOFORK
 #elif defined(CONFIG_HAVE__O_CLOFORK)
-#define CONFIG_HAVE_O_CLOFORK 1
+#define CONFIG_HAVE_O_CLOFORK
 #define O_CLOFORK _O_CLOFORK
 #endif /* ... */
 #elif !defined(O_CLOFORK)
@@ -9574,10 +9574,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SYMLINK
 #ifdef CONFIG_HAVE___O_SYMLINK
-#define CONFIG_HAVE_O_SYMLINK 1
+#define CONFIG_HAVE_O_SYMLINK
 #define O_SYMLINK __O_SYMLINK
 #elif defined(CONFIG_HAVE__O_SYMLINK)
-#define CONFIG_HAVE_O_SYMLINK 1
+#define CONFIG_HAVE_O_SYMLINK
 #define O_SYMLINK _O_SYMLINK
 #endif /* ... */
 #elif !defined(O_SYMLINK)
@@ -9586,10 +9586,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_DOSPATH
 #ifdef CONFIG_HAVE___O_DOSPATH
-#define CONFIG_HAVE_O_DOSPATH 1
+#define CONFIG_HAVE_O_DOSPATH
 #define O_DOSPATH __O_DOSPATH
 #elif defined(CONFIG_HAVE__O_DOSPATH)
-#define CONFIG_HAVE_O_DOSPATH 1
+#define CONFIG_HAVE_O_DOSPATH
 #define O_DOSPATH _O_DOSPATH
 #elif defined(CONFIG_HAVE__MSC_VER)
 #define O_DOSPATH 0
@@ -9600,10 +9600,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SHLOCK
 #ifdef CONFIG_HAVE___O_SHLOCK
-#define CONFIG_HAVE_O_SHLOCK 1
+#define CONFIG_HAVE_O_SHLOCK
 #define O_SHLOCK __O_SHLOCK
 #elif defined(CONFIG_HAVE__O_SHLOCK)
-#define CONFIG_HAVE_O_SHLOCK 1
+#define CONFIG_HAVE_O_SHLOCK
 #define O_SHLOCK _O_SHLOCK
 #endif /* ... */
 #elif !defined(O_SHLOCK)
@@ -9612,10 +9612,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_EXLOCK
 #ifdef CONFIG_HAVE___O_EXLOCK
-#define CONFIG_HAVE_O_EXLOCK 1
+#define CONFIG_HAVE_O_EXLOCK
 #define O_EXLOCK __O_EXLOCK
 #elif defined(CONFIG_HAVE__O_EXLOCK)
-#define CONFIG_HAVE_O_EXLOCK 1
+#define CONFIG_HAVE_O_EXLOCK
 #define O_EXLOCK _O_EXLOCK
 #endif /* ... */
 #elif !defined(O_EXLOCK)
@@ -9624,10 +9624,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_XATTR
 #ifdef CONFIG_HAVE___O_XATTR
-#define CONFIG_HAVE_O_XATTR 1
+#define CONFIG_HAVE_O_XATTR
 #define O_XATTR __O_XATTR
 #elif defined(CONFIG_HAVE__O_XATTR)
-#define CONFIG_HAVE_O_XATTR 1
+#define CONFIG_HAVE_O_XATTR
 #define O_XATTR _O_XATTR
 #endif /* ... */
 #elif !defined(O_XATTR)
@@ -9636,10 +9636,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_EXEC
 #ifdef CONFIG_HAVE___O_EXEC
-#define CONFIG_HAVE_O_EXEC 1
+#define CONFIG_HAVE_O_EXEC
 #define O_EXEC __O_EXEC
 #elif defined(CONFIG_HAVE__O_EXEC)
-#define CONFIG_HAVE_O_EXEC 1
+#define CONFIG_HAVE_O_EXEC
 #define O_EXEC _O_EXEC
 #endif /* ... */
 #elif !defined(O_EXEC)
@@ -9648,10 +9648,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_SEARCH
 #ifdef CONFIG_HAVE___O_SEARCH
-#define CONFIG_HAVE_O_SEARCH 1
+#define CONFIG_HAVE_O_SEARCH
 #define O_SEARCH __O_SEARCH
 #elif defined(CONFIG_HAVE__O_SEARCH)
-#define CONFIG_HAVE_O_SEARCH 1
+#define CONFIG_HAVE_O_SEARCH
 #define O_SEARCH _O_SEARCH
 #endif /* ... */
 #elif !defined(O_SEARCH)
@@ -9660,10 +9660,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_TTY_INIT
 #ifdef CONFIG_HAVE___O_TTY_INIT
-#define CONFIG_HAVE_O_TTY_INIT 1
+#define CONFIG_HAVE_O_TTY_INIT
 #define O_TTY_INIT __O_TTY_INIT
 #elif defined(CONFIG_HAVE__O_TTY_INIT)
-#define CONFIG_HAVE_O_TTY_INIT 1
+#define CONFIG_HAVE_O_TTY_INIT
 #define O_TTY_INIT _O_TTY_INIT
 #endif /* ... */
 #elif !defined(O_TTY_INIT)
@@ -9672,10 +9672,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #ifndef CONFIG_HAVE_O_NOLINKS
 #ifdef CONFIG_HAVE___O_NOLINKS
-#define CONFIG_HAVE_O_NOLINKS 1
+#define CONFIG_HAVE_O_NOLINKS
 #define O_NOLINKS __O_NOLINKS
 #elif defined(CONFIG_HAVE__O_NOLINKS)
-#define CONFIG_HAVE_O_NOLINKS 1
+#define CONFIG_HAVE_O_NOLINKS
 #define O_NOLINKS _O_NOLINKS
 #endif /* ... */
 #elif !defined(O_NOLINKS)
@@ -9683,26 +9683,26 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* !CONFIG_HAVE_O_NOLINKS */
 
 #if defined(CONFIG_HAVE_open64) && !defined(CONFIG_HAVE_open)
-#define CONFIG_HAVE_open 1
+#define CONFIG_HAVE_open
 #undef open
 #define open open64
 #endif /* open = open64 */
 
 #if defined(CONFIG_HAVE_creat64) && !defined(CONFIG_HAVE_creat)
-#define CONFIG_HAVE_creat 1
+#define CONFIG_HAVE_creat
 #undef creat
 #define creat creat64
 #endif /* creat = creat64 */
 
 #if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_O_LARGEFILE)
-#define CONFIG_HAVE_open64 1
+#define CONFIG_HAVE_open64
 #undef open64
 #define open64(filename, oflags, ...) open(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
 #endif /* open64 = open */
 
 #if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_creat) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
-#define CONFIG_HAVE_creat 1
+#define CONFIG_HAVE_creat
 #undef creat
 #ifdef O_WRONLY
 #define creat(filename, mode) open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
@@ -9713,7 +9713,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #if defined(CONFIG_HAVE_open64) && !defined(CONFIG_HAVE_creat64) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
-#define CONFIG_HAVE_creat64 1
+#define CONFIG_HAVE_creat64
 #undef creat64
 #ifdef O_WRONLY
 #define creat64(filename, mode) open64(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
@@ -9723,19 +9723,19 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* creat64 = open64 */
 
 #if defined(CONFIG_HAVE_wopen) && !defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_O_LARGEFILE)
-#define CONFIG_HAVE_wopen64 1
+#define CONFIG_HAVE_wopen64
 #undef wopen64
 #define wopen64(filename, oflags, ...) wopen(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
 #endif /* wopen64 = wopen */
 
 #ifndef CONFIG_HAVE_wcreat
 #if defined(CONFIG_HAVE_wcreat64)
-#define CONFIG_HAVE_wcreat 1
+#define CONFIG_HAVE_wcreat
 #undef wcreat
 #define wcreat wcreat64 /* wcreat = wcreat64 */
 #elif defined(CONFIG_HAVE_wopen) && \
      (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
-#define CONFIG_HAVE_wcreat 1
+#define CONFIG_HAVE_wcreat
 #undef wcreat
 #ifdef O_WRONLY
 #define wcreat(filename, mode) wopen(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
@@ -9747,7 +9747,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 #if defined(CONFIG_HAVE_wopen64) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
-#define CONFIG_HAVE_wcreat64 1
+#define CONFIG_HAVE_wcreat64
 #undef wcreat64
 #ifdef O_WRONLY
 #define wcreat64(filename, mode) wopen64(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
@@ -9757,37 +9757,37 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* wcreat64 = wopen64 */
 
 #if !defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HAVE__get_osfhandle)
-#define CONFIG_HAVE_get_osfhandle 1
+#define CONFIG_HAVE_get_osfhandle
 #undef get_osfhandle
 #define get_osfhandle _get_osfhandle
 #endif /* get_osfhandle = _get_osfhandle */
 
 #if !defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HAVE__open_osfhandle)
-#define CONFIG_HAVE_open_osfhandle 1
+#define CONFIG_HAVE_open_osfhandle
 #undef open_osfhandle
 #define open_osfhandle _open_osfhandle
 #endif /* open_osfhandle = _open_osfhandle */
 
 #if defined(CONFIG_HAVE_pthread_suspend_np) && !defined(CONFIG_HAVE_pthread_suspend)
-#define CONFIG_HAVE_pthread_suspend 1
+#define CONFIG_HAVE_pthread_suspend
 #undef pthread_suspend
 #define pthread_suspend pthread_suspend_np
 #endif /* pthread_suspend = pthread_suspend_np */
 
 #if defined(CONFIG_HAVE_pthread_suspend) && !defined(CONFIG_HAVE_pthread_suspend_np)
-#define CONFIG_HAVE_pthread_suspend_np 1
+#define CONFIG_HAVE_pthread_suspend_np
 #undef pthread_suspend_np
 #define pthread_suspend_np pthread_suspend
 #endif /* pthread_suspend_np = pthread_suspend */
 
 #if defined(CONFIG_HAVE_pthread_unsuspend_np) && !defined(CONFIG_HAVE_pthread_continue)
-#define CONFIG_HAVE_pthread_continue 1
+#define CONFIG_HAVE_pthread_continue
 #undef pthread_continue
 #define pthread_continue pthread_unsuspend_np
 #endif /* pthread_continue = pthread_unsuspend_np */
 
 #if defined(CONFIG_HAVE_pthread_continue) && !defined(CONFIG_HAVE_pthread_unsuspend_np)
-#define CONFIG_HAVE_pthread_unsuspend_np 1
+#define CONFIG_HAVE_pthread_unsuspend_np
 #undef pthread_unsuspend_np
 #define pthread_unsuspend_np pthread_continue
 #endif /* pthread_unsuspend_np = pthread_continue */
@@ -9802,55 +9802,55 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* pthread_continue + pthread_suspend */
 
 #if defined(CONFIG_HAVE_pthread_setname_np) && !defined(CONFIG_HAVE_pthread_setname)
-#define CONFIG_HAVE_pthread_setname 1
+#define CONFIG_HAVE_pthread_setname
 #undef pthread_setname
 #define pthread_setname pthread_setname_np
 #endif /* pthread_setname = pthread_setname_np */
 
 #if defined(CONFIG_HAVE_pthread_setname) && !defined(CONFIG_HAVE_pthread_setname_np)
-#define CONFIG_HAVE_pthread_setname_np 1
+#define CONFIG_HAVE_pthread_setname_np
 #undef pthread_setname_np
 #define pthread_setname_np pthread_setname
 #endif /* pthread_setname_np = pthread_setname */
 
 #if defined(CONFIG_HAVE__sys_errlist) && !defined(CONFIG_HAVE_sys_errlist)
-#define CONFIG_HAVE_sys_errlist 1
+#define CONFIG_HAVE_sys_errlist
 #undef sys_errlist
 #define sys_errlist _sys_errlist
 #endif /* sys_errlist = _sys_errlist */
 
 #if defined(CONFIG_HAVE___sys_errlist) && !defined(CONFIG_HAVE_sys_errlist)
-#define CONFIG_HAVE_sys_errlist 1
+#define CONFIG_HAVE_sys_errlist
 #undef sys_errlist
 #define sys_errlist __sys_errlist
 #endif /* sys_errlist = __sys_errlist */
 
 #if defined(CONFIG_HAVE__sys_nerr) && !defined(CONFIG_HAVE_sys_nerr)
-#define CONFIG_HAVE_sys_nerr 1
+#define CONFIG_HAVE_sys_nerr
 #undef sys_nerr
 #define sys_nerr _sys_nerr
 #endif /* sys_nerr = _sys_nerr */
 
 #if defined(CONFIG_HAVE___sys_nerr) && !defined(CONFIG_HAVE_sys_nerr)
-#define CONFIG_HAVE_sys_nerr 1
+#define CONFIG_HAVE_sys_nerr
 #undef sys_nerr
 #define sys_nerr __sys_nerr
 #endif /* sys_nerr = __sys_nerr */
 
 #ifndef CONFIG_HAVE_abort
-#define CONFIG_HAVE_abort 1
+#define CONFIG_HAVE_abort
 #undef abort
 #define abort() _DeeAssert_Fail(NULL, __FILE__, __LINE__)
 #endif /* !CONFIG_HAVE_abort */
 
 #if !defined(CONFIG_HAVE_pause) && defined(CONFIG_HAVE_select)
-#define CONFIG_HAVE_pause 1
+#define CONFIG_HAVE_pause
 #undef pause
 #define pause() select(0, NULL, NULL, NULL, NULL)
 #endif /* pause = select */
 
 #if !defined(CONFIG_HAVE_doserrno) && defined(CONFIG_HAVE__doserrno)
-#define CONFIG_HAVE_doserrno 1
+#define CONFIG_HAVE_doserrno
 #undef doserrno
 #define doserrno _doserrno
 #endif /* doserrno = _doserrno */
@@ -9910,13 +9910,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* !NULL */
 
 #if defined(CONFIG_HAVE__errno) && !defined(CONFIG_HAVE_errno)
-#define CONFIG_HAVE_errno 1
+#define CONFIG_HAVE_errno
 #undef errno
 #define errno _errno
 #endif /* errno = _errno */
 
 #if defined(CONFIG_HAVE___errno) && !defined(CONFIG_HAVE_errno)
-#define CONFIG_HAVE_errno 1
+#define CONFIG_HAVE_errno
 #undef errno
 #define errno __errno
 #endif /* errno = __errno */
@@ -9932,10 +9932,10 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifndef CONFIG_HAVE_memcasecmp
 #undef memcasecmp
 #ifdef CONFIG_HAVE__memicmp
-#define CONFIG_HAVE_memcasecmp 1
+#define CONFIG_HAVE_memcasecmp
 #define memcasecmp _memicmp
 #elif defined(CONFIG_HAVE_memicmp)
-#define CONFIG_HAVE_memcasecmp 1
+#define CONFIG_HAVE_memcasecmp
 #define memcasecmp memicmp
 #endif /* ... */
 #endif /* !CONFIG_HAVE_memcasecmp */
@@ -9943,58 +9943,58 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifndef CONFIG_HAVE_strcasecmp
 #undef strcasecmp
 #ifdef CONFIG_HAVE__stricmp
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #define strcasecmp _stricmp
 #elif defined(CONFIG_HAVE__strcmpi)
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #define strcasecmp _strcmpi
 #elif defined(CONFIG_HAVE_stricmp)
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #define strcasecmp stricmp
 #elif defined(CONFIG_HAVE_strcmpi)
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #define strcasecmp strcmpi
 #endif /* ... */
 #endif /* !CONFIG_HAVE_strcasecmp */
 
 #ifndef CONFIG_HAVE_tolower
-#define CONFIG_HAVE_tolower 1
+#define CONFIG_HAVE_tolower
 #undef tolower
 #define tolower(ch) ((ch) >= 'A' && (ch) <= 'Z' ? ((ch) + ('a' - 'A')) : (ch))
 #endif /* !CONFIG_HAVE_tolower */
 
 #ifndef CONFIG_HAVE_toupper
-#define CONFIG_HAVE_toupper 1
+#define CONFIG_HAVE_toupper
 #undef toupper
 #define toupper(ch) ((ch) >= 'a' && (ch) <= 'z' ? ((ch) - ('a' - 'A')) : (ch))
 #endif /* !CONFIG_HAVE_toupper */
 
 #ifndef CONFIG_HAVE_isupper
-#define CONFIG_HAVE_isupper 1
+#define CONFIG_HAVE_isupper
 #undef isupper
 #define isupper(ch) ((ch) >= 'A' && (ch) <= 'Z')
 #endif /* !CONFIG_HAVE_isupper */
 
 #ifndef CONFIG_HAVE_islower
-#define CONFIG_HAVE_islower 1
+#define CONFIG_HAVE_islower
 #undef islower
 #define islower(ch) ((ch) >= 'a' && (ch) <= 'z')
 #endif /* !CONFIG_HAVE_islower */
 
 #ifndef CONFIG_HAVE_isalpha
-#define CONFIG_HAVE_isalpha 1
+#define CONFIG_HAVE_isalpha
 #undef isalpha
 #define isalpha(ch) (islower(ch) || isupper(ch))
 #endif /* !CONFIG_HAVE_isalpha */
 
 #ifndef CONFIG_HAVE_isdigit
-#define CONFIG_HAVE_isdigit 1
+#define CONFIG_HAVE_isdigit
 #undef isdigit
 #define isdigit(ch) ((ch) >= '0' && (ch) <= '9')
 #endif /* !CONFIG_HAVE_isdigit */
 
 #ifndef CONFIG_HAVE_isalnum
-#define CONFIG_HAVE_isalnum 1
+#define CONFIG_HAVE_isalnum
 #undef isalnum
 #define isalnum(ch) (isalpha(ch) || isdigit(ch))
 #endif /* !CONFIG_HAVE_isalnum */
@@ -10002,7 +10002,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 
 /* Mandatory <string.h> features */
 #ifndef CONFIG_HAVE_strlen
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 DECL_BEGIN
 #undef strlen
 #define strlen dee_strlen
@@ -10016,7 +10016,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_strlen */
 
 #ifndef CONFIG_HAVE_strchr
-#define CONFIG_HAVE_strchr 1
+#define CONFIG_HAVE_strchr
 DECL_BEGIN
 #undef strchr
 #define strchr dee_strchr
@@ -10035,7 +10035,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_strchr */
 
 #ifndef CONFIG_HAVE_memcpy
-#define CONFIG_HAVE_memcpy 1
+#define CONFIG_HAVE_memcpy
 DECL_BEGIN
 #undef memcpy
 #define memcpy dee_memcpy
@@ -10051,7 +10051,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcpy */
 
 #ifndef CONFIG_HAVE_memset
-#define CONFIG_HAVE_memset 1
+#define CONFIG_HAVE_memset
 DECL_BEGIN
 #undef memset
 #define memset dee_memset
@@ -10066,7 +10066,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memset */
 
 #ifndef CONFIG_HAVE_memmove
-#define CONFIG_HAVE_memmove 1
+#define CONFIG_HAVE_memmove
 DECL_BEGIN
 #undef memmove
 #define memmove dee_memmove
@@ -10218,38 +10218,38 @@ DECL_END
 #define DeeSystem_DEFINE_strncpy(name)     _DeeSystem_DEFINE_strncpyT(char, name, strnlen)
 
 #ifndef CONFIG_HAVE_strcpy
-#define CONFIG_HAVE_strcpy 1
+#define CONFIG_HAVE_strcpy
 #undef strcpy
 #define strcpy(dst, src) ((char *)memcpy(dst, src, (strlen(src) + 1) * sizeof(char)))
 #endif /* !CONFIG_HAVE_strcpy */
 
 #ifndef CONFIG_HAVE_strcat
-#define CONFIG_HAVE_strcat 1
+#define CONFIG_HAVE_strcat
 #undef strcat
 #define strcat(dst, src) (memcpy(strend(dst), src, (strlen(src) + 1) * sizeof(char)), (char *)(dst))
 #endif /* !CONFIG_HAVE_strcat */
 
 #if !defined(CONFIG_HAVE_strncpy) && defined(CONFIG_HAVE_stpncpy)
-#define CONFIG_HAVE_strncpy 1
+#define CONFIG_HAVE_strncpy
 #undef strncpy
 #define strncpy(buf, src, buflen) (stpncpy(buf, src, buflen), (char *)(buf))
 #endif /* !CONFIG_HAVE_strncpy && CONFIG_HAVE_stpncpy */
 
 #ifndef CONFIG_HAVE_strncat
-#define CONFIG_HAVE_strncat 1
+#define CONFIG_HAVE_strncat
 #undef strncat
 #define strncat(dst, src, max_srclen) \
 	(*(char *)mempcpy(strend(dst), src, strnlen(src, max_srclen) * sizeof(char)) = '\0', (char *)(dst))
 #endif /* !CONFIG_HAVE_strncat */
 
 #ifndef CONFIG_HAVE_stpcpy
-#define CONFIG_HAVE_stpcpy 1
+#define CONFIG_HAVE_stpcpy
 #undef stpcpy
 #define stpcpy(dst, src) ((char *)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1)
 #endif /* !CONFIG_HAVE_stpcpy */
 
 #ifndef CONFIG_HAVE_memchr
-#define CONFIG_HAVE_memchr 1
+#define CONFIG_HAVE_memchr
 DECL_BEGIN
 #undef memchr
 #define memchr dee_memchr
@@ -10258,7 +10258,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memchr */
 
 #ifndef CONFIG_HAVE_memcmp
-#define CONFIG_HAVE_memcmp 1
+#define CONFIG_HAVE_memcmp
 DECL_BEGIN
 #undef memcmp
 #define memcmp dee_memcmp
@@ -10634,14 +10634,14 @@ DECL_END
 
 
 #ifndef CONFIG_HAVE_memmoveup
-#define CONFIG_HAVE_memmoveup 1
+#define CONFIG_HAVE_memmoveup
 #undef memmoveup
 #define memmoveup(dst, src, n)     (DeeSytemAssert_MemmoveUp(dst, src, n, 1), memmove(dst, src, n))
 #define dee_memmoveup(dst, src, n) memmove(dst, src, n)
 #endif /* !CONFIG_HAVE_memmoveup */
 
 #ifndef CONFIG_HAVE_memmovedown
-#define CONFIG_HAVE_memmovedown 1
+#define CONFIG_HAVE_memmovedown
 #undef memmovedown
 #define memmovedown(dst, src, n)     (DeeSytemAssert_MemmoveDown(dst, src, n, 1), memmove(dst, src, n))
 #define dee_memmovedown(dst, src, n) memmove(dst, src, n)
@@ -10651,7 +10651,7 @@ DECL_END
 /* KOS's multi-byte memory function extensions */
 #ifndef CONFIG_HAVE_memcpyw
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#define CONFIG_HAVE_memcpyw 1
+#define CONFIG_HAVE_memcpyw
 DECL_BEGIN
 #undef memcpyw
 #ifdef __x86_64__
@@ -10676,7 +10676,7 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memcpyl
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#define CONFIG_HAVE_memcpyl 1
+#define CONFIG_HAVE_memcpyl
 DECL_BEGIN
 #undef memcpyl
 #ifdef __x86_64__
@@ -10701,7 +10701,7 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memcpyq
 #if defined(_MSC_VER) && defined(__x86_64__)
-#define CONFIG_HAVE_memcpyq 1
+#define CONFIG_HAVE_memcpyq
 DECL_BEGIN
 extern void __movsq(unsigned long long *, unsigned long long const *, unsigned __int64);
 #undef memcpyq
@@ -10716,7 +10716,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcpyq */
 
 #ifndef CONFIG_HAVE_memcpyc
-#define CONFIG_HAVE_memcpyc 1
+#define CONFIG_HAVE_memcpyc
 #undef memcpyc
 #if defined(CONFIG_HAVE_memcpyw) && defined(CONFIG_HAVE_memcpyl) && defined(CONFIG_HAVE_memcpyq)
 #define memcpyc(dst, src, elem_count, elem_size) \
@@ -10770,7 +10770,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcpyc */
 
 #ifndef CONFIG_HAVE_memcpyq
-#define CONFIG_HAVE_memcpyq 1
+#define CONFIG_HAVE_memcpyq
 #undef memcpyq
 #ifdef CONFIG_HAVE_memcpyl
 #define memcpyq(dst, src, n) (uint64_t *)memcpyl(dst, src, (n) * 2)
@@ -10782,7 +10782,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcpyq */
 
 #ifndef CONFIG_HAVE_memcpyl
-#define CONFIG_HAVE_memcpyl 1
+#define CONFIG_HAVE_memcpyl
 #undef memcpyl
 #ifdef CONFIG_HAVE_memcpyw
 #define memcpyl(dst, src, n) (uint32_t *)memcpyw(dst, src, (n) * 2)
@@ -10792,13 +10792,13 @@ DECL_END
 #endif /* !CONFIG_HAVE_memcpyl */
 
 #ifndef CONFIG_HAVE_memcpyw
-#define CONFIG_HAVE_memcpyw 1
+#define CONFIG_HAVE_memcpyw
 #undef memcpyw
 #define memcpyw(dst, src, n) (uint16_t *)memcpy(dst, src, (n) * 2)
 #endif /* !CONFIG_HAVE_memcpyw */
 
 #ifndef CONFIG_HAVE_memmovec
-#define CONFIG_HAVE_memmovec 1
+#define CONFIG_HAVE_memmovec
 #undef memmovec
 #if defined(CONFIG_HAVE_memmovew) && defined(CONFIG_HAVE_memmovel) && defined(CONFIG_HAVE_memmoveq)
 #define memmovec(dst, src, elem_count, elem_size) \
@@ -10852,7 +10852,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmovec */
 
 #ifndef CONFIG_HAVE_memmoveq
-#define CONFIG_HAVE_memmoveq 1
+#define CONFIG_HAVE_memmoveq
 #undef memmoveq
 #ifdef CONFIG_HAVE_memmovel
 #define memmoveq(dst, src, n) (uint64_t *)memmovel(dst, src, (n) * 2)
@@ -10864,7 +10864,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmoveq */
 
 #ifndef CONFIG_HAVE_memmovel
-#define CONFIG_HAVE_memmovel 1
+#define CONFIG_HAVE_memmovel
 #undef memmovel
 #ifdef CONFIG_HAVE_memmovew
 #define memmovel(dst, src, n) (uint32_t *)memmovew(dst, src, (n) * 2)
@@ -10874,7 +10874,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmovel */
 
 #ifndef CONFIG_HAVE_memmovew
-#define CONFIG_HAVE_memmovew 1
+#define CONFIG_HAVE_memmovew
 #undef memmovew
 #define memmovew(dst, src, n) (uint16_t *)memmove(dst, src, (n) * 2)
 #endif /* !CONFIG_HAVE_memmovew */
@@ -10884,7 +10884,7 @@ DECL_END
 #endif /* !dee_memmoveup */
 
 #ifndef CONFIG_HAVE_memmoveupc
-#define CONFIG_HAVE_memmoveupc 1
+#define CONFIG_HAVE_memmoveupc
 #undef memmoveupc
 #if defined(CONFIG_HAVE_memmoveupw) && defined(CONFIG_HAVE_memmoveupl) && defined(CONFIG_HAVE_memmoveupq)
 #define memmoveupc(dst, src, elem_count, elem_size)             \
@@ -10945,7 +10945,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmoveupc */
 
 #ifndef CONFIG_HAVE_memmoveupq
-#define CONFIG_HAVE_memmoveupq 1
+#define CONFIG_HAVE_memmoveupq
 #undef memmoveupq
 #ifdef CONFIG_HAVE_memmoveupl
 #define memmoveupq(dst, src, n) (uint64_t *)memmoveupl(dst, src, (n) * 2)
@@ -10959,7 +10959,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmoveupq */
 
 #ifndef CONFIG_HAVE_memmoveupl
-#define CONFIG_HAVE_memmoveupl 1
+#define CONFIG_HAVE_memmoveupl
 #undef memmoveupl
 #ifdef CONFIG_HAVE_memmoveupw
 #define memmoveupl(dst, src, n) (uint32_t *)memmoveupw(dst, src, (n)*2)
@@ -10971,7 +10971,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmoveupl */
 
 #ifndef CONFIG_HAVE_memmoveupw
-#define CONFIG_HAVE_memmoveupw 1
+#define CONFIG_HAVE_memmoveupw
 #undef memmoveupw
 #define memmoveupw(dst, src, n)                \
 	(DeeSytemAssert_MemmoveUp(dst, src, n, 2), \
@@ -10983,7 +10983,7 @@ DECL_END
 #endif /* !dee_memmovedown */
 
 #ifndef CONFIG_HAVE_memmovedownc
-#define CONFIG_HAVE_memmovedownc 1
+#define CONFIG_HAVE_memmovedownc
 #undef memmovedownc
 #if defined(CONFIG_HAVE_memmovedownw) && defined(CONFIG_HAVE_memmovedownl) && defined(CONFIG_HAVE_memmovedownq)
 #define memmovedownc(dst, src, elem_count, elem_size)             \
@@ -11044,7 +11044,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmovedownc */
 
 #ifndef CONFIG_HAVE_memmovedownq
-#define CONFIG_HAVE_memmovedownq 1
+#define CONFIG_HAVE_memmovedownq
 #undef memmovedownq
 #ifdef CONFIG_HAVE_memmovedownl
 #define memmovedownq(dst, src, n) (uint64_t *)memmovedownl(dst, src, (n)*2)
@@ -11058,7 +11058,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmovedownq */
 
 #ifndef CONFIG_HAVE_memmovedownl
-#define CONFIG_HAVE_memmovedownl 1
+#define CONFIG_HAVE_memmovedownl
 #undef memmovedownl
 #ifdef CONFIG_HAVE_memmovedownw
 #define memmovedownl(dst, src, n) (uint32_t *)memmovedownw(dst, src, (n)*2)
@@ -11070,7 +11070,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memmovedownl */
 
 #ifndef CONFIG_HAVE_memmovedownw
-#define CONFIG_HAVE_memmovedownw 1
+#define CONFIG_HAVE_memmovedownw
 #undef memmovedownw
 #define memmovedownw(dst, src, n)                \
 	(DeeSytemAssert_MemmoveDown(dst, src, n, 2), \
@@ -11079,7 +11079,7 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memsetw
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#define CONFIG_HAVE_memsetw 1
+#define CONFIG_HAVE_memsetw
 DECL_BEGIN
 #undef memsetw
 #ifdef __x86_64__
@@ -11104,7 +11104,7 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memsetl
 #if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#define CONFIG_HAVE_memsetl 1
+#define CONFIG_HAVE_memsetl
 DECL_BEGIN
 #undef memsetl
 #ifdef __x86_64__
@@ -11129,7 +11129,7 @@ DECL_END
 
 #ifndef CONFIG_HAVE_memsetq
 #if defined(_MSC_VER) && defined(__x86_64__)
-#define CONFIG_HAVE_memsetq 1
+#define CONFIG_HAVE_memsetq
 DECL_BEGIN
 extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64);
 #undef memsetq
@@ -11144,79 +11144,79 @@ DECL_END
 #endif /* !CONFIG_HAVE_memsetq */
 
 #ifndef CONFIG_HAVE_mempset
-#define CONFIG_HAVE_mempset 1
+#define CONFIG_HAVE_mempset
 #undef mempset
 #define mempset(dst, byte, num_bytes) ((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempset */
 
 #if !defined(CONFIG_HAVE_mempsetw) && defined(CONFIG_HAVE_memsetw)
-#define CONFIG_HAVE_mempsetw 1
+#define CONFIG_HAVE_mempsetw
 #undef mempsetw
 #define mempsetw(dst, word, num_words) ((uint16_t *)memsetw(dst, word, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempsetw && CONFIG_HAVE_memsetw */
 
 #if !defined(CONFIG_HAVE_mempsetl) && defined(CONFIG_HAVE_memsetl)
-#define CONFIG_HAVE_mempsetl 1
+#define CONFIG_HAVE_mempsetl
 #undef mempsetl
 #define mempsetl(dst, dword, num_dwords) ((uint32_t *)memsetl(dst, dword, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempsetl && CONFIG_HAVE_memsetl */
 
 #if !defined(CONFIG_HAVE_mempsetq) && defined(CONFIG_HAVE_memsetq)
-#define CONFIG_HAVE_mempsetq 1
+#define CONFIG_HAVE_mempsetq
 #undef mempsetq
 #define mempsetq(dst, qword, num_qwords) ((uint64_t *)memsetq(dst, qword, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempsetq && CONFIG_HAVE_memsetq */
 
 #if !defined(CONFIG_HAVE_bzeroq) && defined(CONFIG_HAVE_memsetq)
-#define CONFIG_HAVE_bzeroq 1
+#define CONFIG_HAVE_bzeroq
 #undef bzeroq
 #define bzeroq(dst, num_qwords) (void)memsetq(dst, 0, num_qwords)
 #endif /* !CONFIG_HAVE_bzeroq && CONFIG_HAVE_memsetq */
 
 #if !defined(CONFIG_HAVE_bzerol) && defined(CONFIG_HAVE_memsetl)
-#define CONFIG_HAVE_bzerol 1
+#define CONFIG_HAVE_bzerol
 #undef bzerol
 #define bzerol(dst, num_dwords) (void)memsetl(dst, 0, num_dwords)
 #endif /* !CONFIG_HAVE_bzerol */
 
 #if !defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_memsetw)
-#define CONFIG_HAVE_bzerow 1
+#define CONFIG_HAVE_bzerow
 #undef bzerow
 #define bzerow(dst, num_words) (void)memsetw(dst, 0, num_words)
 #endif /* !CONFIG_HAVE_bzerow */
 
 #ifndef CONFIG_HAVE_bzero
-#define CONFIG_HAVE_bzero 1
+#define CONFIG_HAVE_bzero
 #undef bzero
 #define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
 #endif /* !CONFIG_HAVE_bzero */
 
 #if !defined(CONFIG_HAVE_bcmpq) && defined(CONFIG_HAVE_memcmpq)
-#define CONFIG_HAVE_bcmpq 1
+#define CONFIG_HAVE_bcmpq
 #undef bcmpq
 #define bcmpq(s1, s2, num_qwords) memcmpq(s1, s2, num_qwords)
 #endif /* !CONFIG_HAVE_bcmpq && CONFIG_HAVE_memcmpq */
 
 #if !defined(CONFIG_HAVE_bcmpl) && defined(CONFIG_HAVE_memcmpl)
-#define CONFIG_HAVE_bcmpl 1
+#define CONFIG_HAVE_bcmpl
 #undef bcmpl
 #define bcmpl(s1, s2, num_dwords) memcmpl(s1, s2, num_dwords)
 #endif /* !CONFIG_HAVE_bcmpl */
 
 #if !defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_memcmpw)
-#define CONFIG_HAVE_bcmpw 1
+#define CONFIG_HAVE_bcmpw
 #undef bcmpw
 #define bcmpw(s1, s2, num_words) memcmpw(s1, s2, num_words)
 #endif /* !CONFIG_HAVE_bcmpw */
 
 #ifndef CONFIG_HAVE_bcmp
-#define CONFIG_HAVE_bcmp 1
+#define CONFIG_HAVE_bcmp
 #undef bcmp
 #define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes)
 #endif /* !CONFIG_HAVE_bcmp */
 
 #ifndef CONFIG_HAVE_bzeroc
-#define CONFIG_HAVE_bzeroc 1
+#define CONFIG_HAVE_bzeroc
 #undef bzeroc
 #if defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_bzerol) && defined(CONFIG_HAVE_bzeroq)
 #define bzeroc(dst, elem_count, elem_size) \
@@ -11270,7 +11270,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_bzeroc */
 
 #ifndef CONFIG_HAVE_bcmpc
-#define CONFIG_HAVE_bcmpc 1
+#define CONFIG_HAVE_bcmpc
 #undef bcmpc
 #if defined(CONFIG_HAVE_bcmpw) && defined(CONFIG_HAVE_bcmpl) && defined(CONFIG_HAVE_bcmpq)
 #define bcmpc(s1, s2, elem_count, elem_size) \
@@ -11324,7 +11324,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_bcmpc */
 
 #ifndef CONFIG_HAVE_bzeroq
-#define CONFIG_HAVE_bzeroq 1
+#define CONFIG_HAVE_bzeroq
 #undef bzeroq
 #ifdef CONFIG_HAVE_bzerol
 #define bzeroq(dst, num_qwords) bzerol(dst, (num_qwords) << 1)
@@ -11340,7 +11340,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_bzeroq */
 
 #ifndef CONFIG_HAVE_bzerol
-#define CONFIG_HAVE_bzerol 1
+#define CONFIG_HAVE_bzerol
 #undef bzerol
 #ifdef CONFIG_HAVE_bzerow
 #define bzerol(dst, num_dwords) bzerow(dst, (num_dwords) << 1)
@@ -11352,13 +11352,13 @@ DECL_END
 #endif /* !CONFIG_HAVE_bzerol */
 
 #ifndef CONFIG_HAVE_bzerow
-#define CONFIG_HAVE_bzerow 1
+#define CONFIG_HAVE_bzerow
 #undef bzerow
 #define bzerow(dst, num_words) bzero(dst, (num_words) << 1)
 #endif /* !CONFIG_HAVE_bzerow */
 
 #ifndef CONFIG_HAVE_bcmpq
-#define CONFIG_HAVE_bcmpq 1
+#define CONFIG_HAVE_bcmpq
 #undef bcmpq
 #ifdef CONFIG_HAVE_bcmpl
 #define bcmpq(s1, s2, num_qwords) bcmpl(s1, s2, (num_qwords) << 1)
@@ -11374,7 +11374,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_bcmpq */
 
 #ifndef CONFIG_HAVE_bcmpl
-#define CONFIG_HAVE_bcmpl 1
+#define CONFIG_HAVE_bcmpl
 #undef bcmpl
 #ifdef CONFIG_HAVE_bcmpw
 #define bcmpl(s1, s2, num_dwords) bcmpw(s1, s2, (num_dwords) << 1)
@@ -11386,7 +11386,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_bcmpl */
 
 #ifndef CONFIG_HAVE_bcmpw
-#define CONFIG_HAVE_bcmpw 1
+#define CONFIG_HAVE_bcmpw
 #undef bcmpw
 #define bcmpw(s1, s2, num_words) bcmp(s1, s2, (num_words) << 1)
 #endif /* !CONFIG_HAVE_bcmpw */
@@ -11402,7 +11402,7 @@ DECL_END
 #undef CONFIG_HAVE_memsetp
 #if __SIZEOF_POINTER__ == 4
 #ifdef CONFIG_HAVE_memsetl
-#define CONFIG_HAVE_memsetp 1
+#define CONFIG_HAVE_memsetp
 #define memsetp(dst, pointer, num_pointers) \
 	memsetl(dst, (uint32_t)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetl */
@@ -11410,7 +11410,7 @@ DECL_END
 #endif /* !CONFIG_HAVE_memsetl */
 #elif __SIZEOF_POINTER__ == 8
 #ifdef CONFIG_HAVE_memsetq
-#define CONFIG_HAVE_memsetp 1
+#define CONFIG_HAVE_memsetp
 #define memsetp(dst, pointer, num_pointers) \
 	memsetq(dst, (uint64_t)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetq */
@@ -11418,14 +11418,14 @@ DECL_END
 #endif /* !CONFIG_HAVE_memsetq */
 #elif __SIZEOF_POINTER__ == 2
 #ifdef CONFIG_HAVE_memsetw
-#define CONFIG_HAVE_memsetp 1
+#define CONFIG_HAVE_memsetp
 #define memsetp(dst, pointer, num_pointers) \
 	memsetw(dst, (uint16_t)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetw */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetw
 #endif /* !CONFIG_HAVE_memsetw */
 #elif __SIZEOF_POINTER__ == 1
-#define CONFIG_HAVE_memsetp 1
+#define CONFIG_HAVE_memsetp
 #define memsetp(dst, pointer, num_pointers) \
 	memset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
 #elif !defined(__DEEMON__)
@@ -11436,127 +11436,127 @@ DECL_END
 /* memp* functions --> same as their mem* equivalents, but
  * return pointer to `dst + num_*' (iow: end of written area) */
 #ifndef CONFIG_HAVE_mempcpy
-#define CONFIG_HAVE_mempcpy 1
+#define CONFIG_HAVE_mempcpy
 #define mempcpy(dst, src, num_bytes) \
 	((uint8_t *)memcpy(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempcpy */
 
 #ifndef CONFIG_HAVE_mempcpyw
-#define CONFIG_HAVE_mempcpyw 1
+#define CONFIG_HAVE_mempcpyw
 #define mempcpyw(dst, src, num_words) \
 	((uint16_t *)memcpyw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempcpyw */
 
 #ifndef CONFIG_HAVE_mempcpyl
-#define CONFIG_HAVE_mempcpyl 1
+#define CONFIG_HAVE_mempcpyl
 #define mempcpyl(dst, src, num_dwords) \
 	((uint32_t *)memcpyl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempcpyl */
 
 #ifndef CONFIG_HAVE_mempcpyq
-#define CONFIG_HAVE_mempcpyq 1
+#define CONFIG_HAVE_mempcpyq
 #define mempcpyq(dst, src, num_qwords) \
 	((uint64_t *)memcpyq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempcpyq */
 
 #ifndef CONFIG_HAVE_mempcpyc
-#define CONFIG_HAVE_mempcpyc 1
+#define CONFIG_HAVE_mempcpyc
 #define mempcpyc(dst, src, elem_count, elem_size) \
 	(void *)((uint8_t *)memcpyc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempcpyc */
 
 #ifndef CONFIG_HAVE_mempset
-#define CONFIG_HAVE_mempset 1
+#define CONFIG_HAVE_mempset
 #define mempset(dst, byte, num_bytes) \
 	(void *)((uint8_t *)memset(dst, byte, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempset */
 
 #ifndef CONFIG_HAVE_mempmove
-#define CONFIG_HAVE_mempmove 1
+#define CONFIG_HAVE_mempmove
 #define mempmove(dst, src, num_bytes) \
 	(void *)((uint8_t *)memmove(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmove */
 
 #ifndef CONFIG_HAVE_mempmovew
-#define CONFIG_HAVE_mempmovew 1
+#define CONFIG_HAVE_mempmovew
 #define mempmovew(dst, src, num_words) \
 	((uint16_t *)memmovew(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmovew */
 
 #ifndef CONFIG_HAVE_mempmovel
-#define CONFIG_HAVE_mempmovel 1
+#define CONFIG_HAVE_mempmovel
 #define mempmovel(dst, src, num_dwords) \
 	((uint32_t *)memmovel(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmovel */
 
 #ifndef CONFIG_HAVE_mempmoveq
-#define CONFIG_HAVE_mempmoveq 1
+#define CONFIG_HAVE_mempmoveq
 #define mempmoveq(dst, src, num_qwords) \
 	((uint64_t *)memmoveq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmoveq */
 
 #ifndef CONFIG_HAVE_mempmovec
-#define CONFIG_HAVE_mempmovec 1
+#define CONFIG_HAVE_mempmovec
 #define mempmovec(dst, src, elem_count, elem_size) \
 	(void *)((uint8_t *)memmovec(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmovec */
 
 #ifndef CONFIG_HAVE_mempmoveup
-#define CONFIG_HAVE_mempmoveup 1
+#define CONFIG_HAVE_mempmoveup
 #define mempmoveup(dst, src, num_bytes) \
 	(void *)((uint8_t *)memmoveup(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmoveup */
 
 #ifndef CONFIG_HAVE_mempmoveupw
-#define CONFIG_HAVE_mempmoveupw 1
+#define CONFIG_HAVE_mempmoveupw
 #define mempmoveupw(dst, src, num_words) \
 	((uint16_t *)memmoveupw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmoveupw */
 
 #ifndef CONFIG_HAVE_mempmoveupl
-#define CONFIG_HAVE_mempmoveupl 1
+#define CONFIG_HAVE_mempmoveupl
 #define mempmoveupl(dst, src, num_dwords) \
 	((uint32_t *)memmoveupl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmoveupl */
 
 #ifndef CONFIG_HAVE_mempmoveupq
-#define CONFIG_HAVE_mempmoveupq 1
+#define CONFIG_HAVE_mempmoveupq
 #define mempmoveupq(dst, src, num_qwords) \
 	((uint64_t *)memmoveupq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmoveupq */
 
 #ifndef CONFIG_HAVE_mempmoveupc
-#define CONFIG_HAVE_mempmoveupc 1
+#define CONFIG_HAVE_mempmoveupc
 #define mempmoveupc(dst, src, elem_count, elem_size) \
 	(void *)((uint8_t *)memmoveupc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmoveupc */
 
 #ifndef CONFIG_HAVE_mempmovedown
-#define CONFIG_HAVE_mempmovedown 1
+#define CONFIG_HAVE_mempmovedown
 #define mempmovedown(dst, src, num_bytes) \
 	(void *)((uint8_t *)memmovedown(dst, src, num_bytes) + (num_bytes))
 #endif /* !CONFIG_HAVE_mempmovedown */
 
 #ifndef CONFIG_HAVE_mempmovedownw
-#define CONFIG_HAVE_mempmovedownw 1
+#define CONFIG_HAVE_mempmovedownw
 #define mempmovedownw(dst, src, num_words) \
 	((uint16_t *)memmovedownw(dst, src, num_words) + (num_words))
 #endif /* !CONFIG_HAVE_mempmovedownw */
 
 #ifndef CONFIG_HAVE_mempmovedownl
-#define CONFIG_HAVE_mempmovedownl 1
+#define CONFIG_HAVE_mempmovedownl
 #define mempmovedownl(dst, src, num_dwords) \
 	((uint32_t *)memmovedownl(dst, src, num_dwords) + (num_dwords))
 #endif /* !CONFIG_HAVE_mempmovedownl */
 
 #ifndef CONFIG_HAVE_mempmovedownq
-#define CONFIG_HAVE_mempmovedownq 1
+#define CONFIG_HAVE_mempmovedownq
 #define mempmovedownq(dst, src, num_qwords) \
 	((uint64_t *)memmovedownq(dst, src, num_qwords) + (num_qwords))
 #endif /* !CONFIG_HAVE_mempmovedownq */
 
 #ifndef CONFIG_HAVE_mempmovedownc
-#define CONFIG_HAVE_mempmovedownc 1
+#define CONFIG_HAVE_mempmovedownc
 #define mempmovedownc(dst, src, elem_count, elem_size) \
 	(void *)((uint8_t *)memmovedownc(dst, src, elem_count, elem_size) + ((elem_count) * (elem_size)))
 #endif /* !CONFIG_HAVE_mempmovedownc */

@@ -73,7 +73,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
      defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) ||          \
      defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
      defined(_WIN32_WCE) || defined(WIN32_WCE))
-#define CONFIG_HOST_WINDOWS 1
+#define CONFIG_HOST_WINDOWS
 #endif /* Windows... */
 #endif /* !CONFIG_HOST_WINDOWS */
 
@@ -111,7 +111,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #if defined(CONFIG_HAVE_EXEC_ASM) || defined(__DEEMON__)
 
 #ifdef __ELF__
-#define CONFIG_USE_CFI 1
+#define CONFIG_USE_CFI
 #endif /* __ELF__ */
 
 #ifdef CONFIG_USE_CFI
@@ -234,7 +234,7 @@ END(_impl_assert_failed)
 #define CODE_FFINALLY     0x0100
 #define CODE_FCONSTRUCTOR 0x0200
 
-#define CONFIG_HAVE_EXEC_ALTSTACK 1
+#define CONFIG_HAVE_EXEC_ALTSTACK
 #define DEE_EXEC_ALTSTACK_PERIOD  1024
 
 #define ERROR_HANDLED_NORMAL    0x0000

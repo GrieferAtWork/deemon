@@ -65,26 +65,26 @@ DECL_BEGIN
  * when `gc_lock' is still being held. */
 #undef CONFIG_HAVE_PENDING_GC_OBJECTS
 #if 1
-#define CONFIG_HAVE_PENDING_GC_OBJECTS 1
+#define CONFIG_HAVE_PENDING_GC_OBJECTS
 #endif
 
 /* Use priority clear (`tp_pclear') instead of `tp_clear' */
 #undef CONFIG_GC_PRIORITY_CLEAR
 #if 1
-#define CONFIG_GC_PRIORITY_CLEAR 1
+#define CONFIG_GC_PRIORITY_CLEAR
 #endif
 
 /* Construct the dependency partners vector such that
  * it can be scanned using a bsearch-style approach. */
 #undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
 #if 1
-#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
+#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
 #endif
 
 /* Keep track of leaf objects to speed up gc traversal. */
 #undef CONFIG_GC_TRACK_LEAFS
 #if 1
-#define CONFIG_GC_TRACK_LEAFS 1
+#define CONFIG_GC_TRACK_LEAFS
 #endif
 
 

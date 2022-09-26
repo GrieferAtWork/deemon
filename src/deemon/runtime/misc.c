@@ -1753,7 +1753,7 @@ PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
 #ifndef NDEBUG
 
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
-#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */

@@ -28,9 +28,9 @@
  *       exported by the `posix' library! */
 
 #ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1
+#define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE
 #else /* CONFIG_HOST_WINDOWS */
-#define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1 /* XXX: TODO */
+#define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE /* XXX: TODO */
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #include <deemon/dex.h>

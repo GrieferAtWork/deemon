@@ -45,7 +45,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strrchr
-#define CONFIG_HAVE_strrchr 1
+#define CONFIG_HAVE_strrchr
 #undef strrchr
 #define strrchr dee_strrchr
 LOCAL WUNUSED NONNULL((1)) char *

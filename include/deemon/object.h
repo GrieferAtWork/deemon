@@ -38,13 +38,13 @@
 #undef CONFIG_HAVE_STRING_H
 #elif (!defined(CONFIG_HAVE_STRING_H) && \
        (defined(__NO_has_include) || __has_include(<string.h>)))
-#define CONFIG_HAVE_STRING_H 1
+#define CONFIG_HAVE_STRING_H
 #endif
 
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
 #else
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 #endif
 
 #ifdef CONFIG_HAVE_STRING_H
@@ -70,7 +70,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strlen
-#define CONFIG_HAVE_strlen 1
+#define CONFIG_HAVE_strlen
 #undef strlen
 #define strlen dee_strlen
 LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
@@ -980,9 +980,9 @@ LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
 #if (!defined(CONFIG_INLINE_INCREFV) && \
      !defined(CONFIG_NO_INLINE_INCREFV))
 #ifndef __OPTIMIZE_SIZE__
-#define CONFIG_INLINE_INCREFV 1
+#define CONFIG_INLINE_INCREFV
 #else /* !__OPTIMIZE_SIZE__ */
-#define CONFIG_NO_INLINE_INCREFV 1
+#define CONFIG_NO_INLINE_INCREFV
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 

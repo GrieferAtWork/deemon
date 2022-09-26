@@ -325,7 +325,7 @@ err:
      defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      defined(posix_enumenv_USE_wenviron))
 #ifndef CONFIG_HAVE_wcschr
-#define CONFIG_HAVE_wcschr 1
+#define CONFIG_HAVE_wcschr
 DECL_BEGIN
 #undef wcschr
 #define wcschr dee_wcschr

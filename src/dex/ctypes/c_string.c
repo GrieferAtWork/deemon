@@ -41,237 +41,237 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #undef memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_rawmemchr
-#define CONFIG_HAVE_rawmemchr 1
+#define CONFIG_HAVE_rawmemchr
 #undef rawmemchr
 #define rawmemchr dee_rawmemchr
 DeeSystem_DEFINE_rawmemchr(dee_rawmemchr)
 #endif /* !CONFIG_HAVE_rawmemchr */
 
 #ifndef CONFIG_HAVE_strnlen
-#define CONFIG_HAVE_strnlen 1
+#define CONFIG_HAVE_strnlen
 #undef strnlen
 #define strnlen dee_strnlen
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
 #ifndef CONFIG_HAVE_memmem
-#define CONFIG_HAVE_memmem 1
+#define CONFIG_HAVE_memmem
 #undef memmem
 #define memmem dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
 #ifndef CONFIG_HAVE_memrmem
-#define CONFIG_HAVE_memrmem 1
+#define CONFIG_HAVE_memrmem
 #undef memrmem
 #define memrmem dee_memrmem
 DeeSystem_DEFINE_memrmem(dee_memrmem)
 #endif /* !CONFIG_HAVE_memrmem */
 
 #ifndef CONFIG_HAVE_rawmemrchr
-#define CONFIG_HAVE_rawmemrchr 1
+#define CONFIG_HAVE_rawmemrchr
 #undef rawmemrchr
 #define rawmemrchr dee_rawmemrchr
 DeeSystem_DEFINE_rawmemrchr(dee_rawmemrchr)
 #endif /* !CONFIG_HAVE_rawmemrchr */
 
 #ifndef CONFIG_HAVE_memend
-#define CONFIG_HAVE_memend 1
+#define CONFIG_HAVE_memend
 #undef memend
 #define memend dee_memend
 DeeSystem_DEFINE_memend(dee_memend)
 #endif /* !CONFIG_HAVE_memend */
 
 #ifndef CONFIG_HAVE_memxend
-#define CONFIG_HAVE_memxend 1
+#define CONFIG_HAVE_memxend
 #undef memxend
 #define memxend dee_memxend
 DeeSystem_DEFINE_memxend(dee_memxend)
 #endif /* !CONFIG_HAVE_memxend */
 
 #ifndef CONFIG_HAVE_memrend
-#define CONFIG_HAVE_memrend 1
+#define CONFIG_HAVE_memrend
 #undef memrend
 #define memrend dee_memrend
 DeeSystem_DEFINE_memrend(dee_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
 #ifndef CONFIG_HAVE_memlen
-#define CONFIG_HAVE_memlen 1
+#define CONFIG_HAVE_memlen
 #undef memlen
 #define memlen dee_memlen
 DeeSystem_DEFINE_memlen(dee_memlen)
 #endif /* !CONFIG_HAVE_memlen */
 
 #ifndef CONFIG_HAVE_memxlen
-#define CONFIG_HAVE_memxlen 1
+#define CONFIG_HAVE_memxlen
 #undef memxlen
 #define memxlen dee_memxlen
 DeeSystem_DEFINE_memxlen(dee_memxlen)
 #endif /* !CONFIG_HAVE_memxlen */
 
 #ifndef CONFIG_HAVE_memrlen
-#define CONFIG_HAVE_memrlen 1
+#define CONFIG_HAVE_memrlen
 #undef memrlen
 #define memrlen dee_memrlen
 DeeSystem_DEFINE_memrlen(dee_memrlen)
 #endif /* !CONFIG_HAVE_memrlen */
 
 #ifndef CONFIG_HAVE_rawmemlen
-#define CONFIG_HAVE_rawmemlen 1
+#define CONFIG_HAVE_rawmemlen
 #undef rawmemlen
 #define rawmemlen dee_rawmemlen
 DeeSystem_DEFINE_rawmemlen(dee_rawmemlen)
 #endif /* !CONFIG_HAVE_rawmemlen */
 
 #ifndef CONFIG_HAVE_rawmemrlen
-#define CONFIG_HAVE_rawmemrlen 1
+#define CONFIG_HAVE_rawmemrlen
 #undef rawmemrlen
 #define rawmemrlen dee_rawmemrlen
 DeeSystem_DEFINE_rawmemrlen(dee_rawmemrlen)
 #endif /* !CONFIG_HAVE_rawmemrlen */
 
 #ifndef CONFIG_HAVE_memxchr
-#define CONFIG_HAVE_memxchr 1
+#define CONFIG_HAVE_memxchr
 #undef memxchr
 #define memxchr dee_memxchr
 DeeSystem_DEFINE_memxchr(dee_memxchr)
 #endif /* !CONFIG_HAVE_memxchr */
 
 #ifndef CONFIG_HAVE_rawmemxchr
-#define CONFIG_HAVE_rawmemxchr 1
+#define CONFIG_HAVE_rawmemxchr
 #undef rawmemxchr
 #define rawmemxchr dee_rawmemxchr
 DeeSystem_DEFINE_rawmemxchr(dee_rawmemxchr)
 #endif /* !CONFIG_HAVE_rawmemxchr */
 
 #ifndef CONFIG_HAVE_rawmemxlen
-#define CONFIG_HAVE_rawmemxlen 1
+#define CONFIG_HAVE_rawmemxlen
 #undef rawmemxlen
 #define rawmemxlen dee_rawmemxlen
 DeeSystem_DEFINE_rawmemxlen(dee_rawmemxlen)
 #endif /* !CONFIG_HAVE_rawmemxlen */
 
 #ifndef CONFIG_HAVE_memcasecmp
-#define CONFIG_HAVE_memcasecmp 1
+#define CONFIG_HAVE_memcasecmp
 #undef memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
 
 #ifndef CONFIG_HAVE_memcasemem
-#define CONFIG_HAVE_memcasemem 1
+#define CONFIG_HAVE_memcasemem
 #undef memcasemem
 #define memcasemem dee_memcasemem
 DeeSystem_DEFINE_memcasemem(dee_memcasemem)
 #endif /* !CONFIG_HAVE_memcasemem */
 
 #ifndef CONFIG_HAVE_memrev
-#define CONFIG_HAVE_memrev 1
+#define CONFIG_HAVE_memrev
 #undef memrev
 #define memrev dee_memrev
 DeeSystem_DEFINE_memrev(dee_memrev)
 #endif /* !CONFIG_HAVE_memrev */
 
 #ifndef CONFIG_HAVE_memxrchr
-#define CONFIG_HAVE_memxrchr 1
+#define CONFIG_HAVE_memxrchr
 #undef memxrchr
 #define memxrchr dee_memxrchr
 DeeSystem_DEFINE_memxrchr(dee_memxrchr)
 #endif /* !CONFIG_HAVE_memxrchr */
 
 #ifndef CONFIG_HAVE_memxrend
-#define CONFIG_HAVE_memxrend 1
+#define CONFIG_HAVE_memxrend
 #undef memxrend
 #define memxrend dee_memxrend
 DeeSystem_DEFINE_memxrend(dee_memxrend)
 #endif /* !CONFIG_HAVE_memxrend */
 
 #ifndef CONFIG_HAVE_memxrlen
-#define CONFIG_HAVE_memxrlen 1
+#define CONFIG_HAVE_memxrlen
 #undef memxrlen
 #define memxrlen dee_memxrlen
 DeeSystem_DEFINE_memxrlen(dee_memxrlen)
 #endif /* !CONFIG_HAVE_memxrlen */
 
 #ifndef CONFIG_HAVE_rawmemxrchr
-#define CONFIG_HAVE_rawmemxrchr 1
+#define CONFIG_HAVE_rawmemxrchr
 #undef rawmemxrchr
 #define rawmemxrchr dee_rawmemxrchr
 DeeSystem_DEFINE_rawmemxrchr(dee_rawmemxrchr)
 #endif /* !CONFIG_HAVE_rawmemxrchr */
 
 #ifndef CONFIG_HAVE_rawmemxrlen
-#define CONFIG_HAVE_rawmemxrlen 1
+#define CONFIG_HAVE_rawmemxrlen
 #undef rawmemxrlen
 #define rawmemxrlen dee_rawmemxrlen
 DeeSystem_DEFINE_rawmemxrlen(dee_rawmemxrlen)
 #endif /* !CONFIG_HAVE_rawmemxrlen */
 
 #ifndef CONFIG_HAVE_memcasermem
-#define CONFIG_HAVE_memcasermem 1
+#define CONFIG_HAVE_memcasermem
 #undef memcasermem
 #define memcasermem dee_memcasermem
 DeeSystem_DEFINE_memcasermem(dee_memcasermem)
 #endif /* !CONFIG_HAVE_memcasermem */
 
 #ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp 1
+#define CONFIG_HAVE_strcmp
 #undef strcmp
 #define strcmp dee_strcmp
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 #ifndef CONFIG_HAVE_strncmp
-#define CONFIG_HAVE_strncmp 1
+#define CONFIG_HAVE_strncmp
 #undef strncmp
 #define strncmp dee_strncmp
 DeeSystem_DEFINE_strncmp(dee_strncmp)
 #endif /* !CONFIG_HAVE_strncmp */
 
 #ifndef CONFIG_HAVE_strcasecmp
-#define CONFIG_HAVE_strcasecmp 1
+#define CONFIG_HAVE_strcasecmp
 #undef strcasecmp
 #define strcasecmp dee_strcasecmp
 DeeSystem_DEFINE_strcasecmp(dee_strcasecmp)
 #endif /* !CONFIG_HAVE_strcasecmp */
 
 #ifndef CONFIG_HAVE_strncasecmp
-#define CONFIG_HAVE_strncasecmp 1
+#define CONFIG_HAVE_strncasecmp
 #undef strncasecmp
 #define strncasecmp dee_strncasecmp
 DeeSystem_DEFINE_strncasecmp(dee_strncasecmp)
 #endif /* !CONFIG_HAVE_strncasecmp */
 
 #ifndef CONFIG_HAVE_stpncpy
-#define CONFIG_HAVE_stpncpy 1
+#define CONFIG_HAVE_stpncpy
 #undef stpncpy
 #define stpncpy dee_stpncpy
 DeeSystem_DEFINE_stpncpy(dee_stpncpy)
 #endif /* !CONFIG_HAVE_stpncpy */
 
 #ifndef CONFIG_HAVE_strncpy
-#define CONFIG_HAVE_strncpy 1
+#define CONFIG_HAVE_strncpy
 #undef strncpy
 #define strncpy dee_strncpy
 DeeSystem_DEFINE_strncpy(dee_strncpy)
 #endif /* !CONFIG_HAVE_strncpy */
 
 #ifndef CONFIG_HAVE_strnend
-#define CONFIG_HAVE_strnend 1
+#define CONFIG_HAVE_strnend
 #undef strnend
 #define strnend(x, maxlen) ((x) + strnlen(x, maxlen))
 #endif /* !CONFIG_HAVE_strnend */
 
 #ifndef CONFIG_HAVE_strrchr
-#define CONFIG_HAVE_strrchr 1
+#define CONFIG_HAVE_strrchr
 #undef strrchr
 #define strrchr dee_strrchr
 LOCAL WUNUSED NONNULL((1)) char *
@@ -289,7 +289,7 @@ dee_strrchr(char const *haystack, int needle) {
 #endif /* !CONFIG_HAVE_strrchr */
 
 #ifndef CONFIG_HAVE_strnchr
-#define CONFIG_HAVE_strnchr 1
+#define CONFIG_HAVE_strnchr
 #undef strnchr
 #define strnchr dee_strnchr
 LOCAL WUNUSED NONNULL((1)) char *
@@ -309,7 +309,7 @@ dee_strnchr(char const *haystack, int needle, size_t maxlen) {
 #endif /* !CONFIG_HAVE_strnchr */
 
 #ifndef CONFIG_HAVE_strnrchr
-#define CONFIG_HAVE_strnrchr 1
+#define CONFIG_HAVE_strnrchr
 #undef strnrchr
 #define strnrchr dee_strnrchr
 LOCAL WUNUSED NONNULL((1)) char *
@@ -327,7 +327,7 @@ dee_strnrchr(char const *haystack, int needle, size_t maxlen) {
 #endif /* !CONFIG_HAVE_strnrchr */
 
 #ifndef CONFIG_HAVE_strchrnul
-#define CONFIG_HAVE_strchrnul 1
+#define CONFIG_HAVE_strchrnul
 #undef strchrnul
 #define strchrnul dee_strchrnul
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
@@ -341,7 +341,7 @@ dee_strchrnul(char const *haystack, int needle) {
 #endif /* !CONFIG_HAVE_strchrnul */
 
 #ifndef CONFIG_HAVE_strrchrnul
-#define CONFIG_HAVE_strrchrnul 1
+#define CONFIG_HAVE_strrchrnul
 #undef strrchrnul
 #define strrchrnul dee_strrchrnul
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
@@ -356,7 +356,7 @@ dee_strrchrnul(char const *haystack, int needle) {
 #endif /* !CONFIG_HAVE_strrchrnul */
 
 #ifndef CONFIG_HAVE_strnchrnul
-#define CONFIG_HAVE_strnchrnul 1
+#define CONFIG_HAVE_strnchrnul
 #undef strnchrnul
 #define strnchrnul dee_strnchrnul
 LOCAL WUNUSED NONNULL((1)) char *
@@ -368,7 +368,7 @@ dee_strnchrnul(char const *haystack, int needle, size_t maxlen) {
 #endif /* !CONFIG_HAVE_strnchrnul */
 
 #ifndef CONFIG_HAVE_strnrchrnul
-#define CONFIG_HAVE_strnrchrnul 1
+#define CONFIG_HAVE_strnrchrnul
 #undef strnrchrnul
 #define strnrchrnul dee_strnrchrnul
 LOCAL WUNUSED NONNULL((1)) char *
@@ -383,7 +383,7 @@ dee_strnrchrnul(char const *haystack, int needle, size_t maxlen) {
 #endif /* !CONFIG_HAVE_strnrchrnul */
 
 #ifndef CONFIG_HAVE_strstr
-#define CONFIG_HAVE_strstr 1
+#define CONFIG_HAVE_strstr
 #undef strstr
 #define strstr dee_strstr
 LOCAL WUNUSED NONNULL((1, 2)) char *
@@ -408,7 +408,7 @@ miss:
 #endif /* !CONFIG_HAVE_strstr */
 
 #ifndef CONFIG_HAVE_strcasestr
-#define CONFIG_HAVE_strcasestr 1
+#define CONFIG_HAVE_strcasestr
 #undef strcasestr
 #define strcasestr dee_strcasestr
 LOCAL WUNUSED NONNULL((1, 2)) char *
@@ -435,7 +435,7 @@ miss:
 #endif /* !CONFIG_HAVE_strcasestr */
 
 #ifndef CONFIG_HAVE_strnstr
-#define CONFIG_HAVE_strnstr 1
+#define CONFIG_HAVE_strnstr
 #undef strnstr
 #define strnstr dee_strnstr
 LOCAL WUNUSED NONNULL((1, 2)) char *
@@ -462,7 +462,7 @@ miss:
 #endif /* !CONFIG_HAVE_strnstr */
 
 #ifndef CONFIG_HAVE_strncasestr
-#define CONFIG_HAVE_strncasestr 1
+#define CONFIG_HAVE_strncasestr
 #undef strncasestr
 #define strncasestr dee_strncasestr
 LOCAL WUNUSED NONNULL((1, 2)) char *
@@ -494,7 +494,7 @@ miss:
 #endif /* !CONFIG_HAVE_strncasestr */
 
 #ifndef CONFIG_HAVE_strverscmp
-#define CONFIG_HAVE_strverscmp 1
+#define CONFIG_HAVE_strverscmp
 #undef strverscmp
 #define strverscmp dee_strverscmp
 LOCAL WUNUSED NONNULL((1, 2)) int
@@ -552,7 +552,7 @@ dee_strverscmp(char const *s1, char const *s2) {
 #endif /* !CONFIG_HAVE_strverscmp */
 
 #ifndef CONFIG_HAVE_basename
-#define CONFIG_HAVE_basename 1
+#define CONFIG_HAVE_basename
 #undef basename
 #define basename dee_basename
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *

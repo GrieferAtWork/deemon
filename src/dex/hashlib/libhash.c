@@ -19,7 +19,7 @@
  */
 #ifndef GUARD_DEX_HASHLIB_LIBHASH_C
 #define GUARD_DEX_HASHLIB_LIBHASH_C 1
-#define CONFIG_BUILDING_LIBHASH 1
+#define CONFIG_BUILDING_LIBHASH
 #define DEE_SOURCE
 
 #include "libhash.h"

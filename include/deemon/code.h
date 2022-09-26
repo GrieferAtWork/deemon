@@ -757,7 +757,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 
 
 #if defined(__i386__) || defined(__x86_64__)
-#define CONFIG_HAVE_EXEC_ALTSTACK 1
+#define CONFIG_HAVE_EXEC_ALTSTACK
 #endif /* __i386__ || __x86_64__ */
 
 #ifdef CONFIG_NO_EXEC_ALTSTACK

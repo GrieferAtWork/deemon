@@ -60,23 +60,23 @@ struct cc_entry {
 
 #ifndef CONFIG_HAVE_SYSTEM_FFI
 #ifdef X86_WIN32
-#define CONFIG_HAVE_FFI_SYSV     1
-#define CONFIG_HAVE_FFI_STDCALL  1
-#define CONFIG_HAVE_FFI_THISCALL 1
-#define CONFIG_HAVE_FFI_FASTCALL 1
-#define CONFIG_HAVE_FFI_MS_CDECL 1
-#define CONFIG_HAVE_FFI_PASCAL   1
-#define CONFIG_HAVE_FFI_REGISTER 1
+#define CONFIG_HAVE_FFI_SYSV
+#define CONFIG_HAVE_FFI_STDCALL
+#define CONFIG_HAVE_FFI_THISCALL
+#define CONFIG_HAVE_FFI_FASTCALL
+#define CONFIG_HAVE_FFI_MS_CDECL
+#define CONFIG_HAVE_FFI_PASCAL
+#define CONFIG_HAVE_FFI_REGISTER
 #elif defined(X86_WIN64)
-#define CONFIG_HAVE_FFI_WIN64 1
+#define CONFIG_HAVE_FFI_WIN64
 #else /* ... */
-#define CONFIG_HAVE_FFI_SYSV     1
-#define CONFIG_HAVE_FFI_UNIX64   1
-#define CONFIG_HAVE_FFI_THISCALL 1
-#define CONFIG_HAVE_FFI_FASTCALL 1
-#define CONFIG_HAVE_FFI_STDCALL  1
-#define CONFIG_HAVE_FFI_PASCAL   1
-#define CONFIG_HAVE_FFI_REGISTER 1
+#define CONFIG_HAVE_FFI_SYSV
+#define CONFIG_HAVE_FFI_UNIX64
+#define CONFIG_HAVE_FFI_THISCALL
+#define CONFIG_HAVE_FFI_FASTCALL
+#define CONFIG_HAVE_FFI_STDCALL
+#define CONFIG_HAVE_FFI_PASCAL
+#define CONFIG_HAVE_FFI_REGISTER
 #endif /* !... */
 #endif /* !CONFIG_HAVE_SYSTEM_FFI */
 
@@ -119,7 +119,7 @@ PRIVATE struct cc_entry const cc_db[] = {
 };
 
 #ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp 1
+#define CONFIG_HAVE_strcmp
 #undef strcmp
 #define strcmp dee_strcmp
 DeeSystem_DEFINE_strcmp(dee_strcmp)

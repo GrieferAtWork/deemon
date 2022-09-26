@@ -83,7 +83,7 @@
  * >> }
  * >> #endif
  */
-#define CONFIG_NO_PTHREAD_SUSPEND 1
+#define CONFIG_NO_PTHREAD_SUSPEND
 /*#define USE_PTHREAD_SUSPEND 1*/
 
 #include <deemon/alloc.h>
@@ -162,10 +162,10 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #define os_gettid() (dthreadid_t)syscall(__NR_gettid)
 #else /* ... */
 /*#warning "Threadid is not available. Try building with `-DCONFIG_NO_THREADID' to reduce overhead"*/
-#define CONFIG_NO_THREADID_INTERNAL 1
+#define CONFIG_NO_THREADID_INTERNAL
 #endif /* !... */
 #else /* !CONFIG_NO_THREADID */
-#define CONFIG_NO_THREADID_INTERNAL 1
+#define CONFIG_NO_THREADID_INTERNAL
 #endif /* CONFIG_NO_THREADID */
 
 #ifndef os_gettid
@@ -248,7 +248,7 @@ sys_setthreadname(char const *__restrict name) {
 #define sys_setthreadname(name) \
 	pthread_setname_np(pthread_self(), name)
 #else
-#define CONFIG_NO_SETTHREADNAME 1
+#define CONFIG_NO_SETTHREADNAME
 #endif
 
 
@@ -581,11 +581,11 @@ sys_threadshutdown(DeeThreadObject *__restrict UNUSED(self)) {
 
 /* Define thread-startup as a no-op when it wasn't defined before. */
 #ifndef sys_threadstartup
-#define CONFIG_NO_SYS_THREADSTARTUP 1
+#define CONFIG_NO_SYS_THREADSTARTUP
 #define sys_threadstartup(self)  (void)0
 #endif /* !sys_threadstartup */
 #ifndef sys_threadshutdown
-#define CONFIG_NO_SYS_THREADSHUTDOWN 1
+#define CONFIG_NO_SYS_THREADSHUTDOWN
 #define sys_threadshutdown(self)  (void)0
 #endif /* !sys_threadshutdown */
 

@@ -56,7 +56,7 @@
  *       set the stack-pointer ourselves.
  * NOTE: To prevent any impact from this configuration option, the `enumattr.Iterator'
  *       type is never copyable, even when this option is disabled. */
-#define CONFIG_LONGJMP_ENUMATTR         1
+#define CONFIG_LONGJMP_ENUMATTR
 
 /* The number of attributes enumerated at once before execution will switch
  * back to user-code, yielding the new attributes until that buffer is exhausted.

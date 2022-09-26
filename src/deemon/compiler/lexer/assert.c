@@ -28,7 +28,7 @@
 DECL_BEGIN
 
 #undef CONFIG_ASSERT_DDI_USES_EXPRESSION
-#define CONFIG_ASSERT_DDI_USES_EXPRESSION 1
+#define CONFIG_ASSERT_DDI_USES_EXPRESSION
 
 /* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
 INTERN WUNUSED DREF struct ast *FCALL

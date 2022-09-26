@@ -36,13 +36,13 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
-#define CONFIG_HAVE_memrchr 1
+#define CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_qsort
-#define CONFIG_HAVE_qsort 1
+#define CONFIG_HAVE_qsort
 #define qsort   dee_qsort
 DeeSystem_DEFINE_qsort(dee_qsort)
 #endif /* !CONFIG_HAVE_qsort */

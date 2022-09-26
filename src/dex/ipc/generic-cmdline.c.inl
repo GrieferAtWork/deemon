@@ -38,7 +38,7 @@
      (__has_include(<libcmdline/api.h>) && __has_include(<libcmdline/encode.h>) && \
       __has_include(<libcmdline/decode.h>) && __has_include(<dlfcn.h>)) || \
     (defined(__KOS__) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 400)))
-#define CONFIG_HAVE_LIBCMDLINE 1
+#define CONFIG_HAVE_LIBCMDLINE
 #endif /* ... */
 
 #ifdef CONFIG_HAVE_LIBCMDLINE

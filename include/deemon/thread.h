@@ -28,13 +28,13 @@
 #include "object.h"
 
 #if defined(CONFIG_HOST_WINDOWS) /*&& !defined(__CYGWIN__)*/
-#define CONFIG_THREADS_WINDOWS 1
+#define CONFIG_THREADS_WINDOWS
 #else /* CONFIG_HOST_WINDOWS */
-#define CONFIG_THREADS_PTHREAD 1
+#define CONFIG_THREADS_PTHREAD
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_THREADS_PTHREAD
-#define CONFIG_THREADS_JOIN_SEMPAHORE 1
+#define CONFIG_THREADS_JOIN_SEMPAHORE
 #endif /* CONFIG_THREADS_PTHREAD */
 
 
@@ -48,7 +48,7 @@
      defined(CONFIG_HAVE_sem_wait) &&    \
      defined(CONFIG_HAVE_sem_trywait) && \
      defined(CONFIG_HAVE_sem_timedwait))
-#define CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T 1
+#define CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T
 #endif /* Semaphore... */
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */

@@ -403,7 +403,7 @@ INTDEF WUNUSED NONNULL((1)) bool
 #endif /* !__INTELLISENSE__ */
 
 #if !defined(NDEBUG) && 1
-#define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
+#define CONFIG_HAVE_OPTIMIZE_VERBOSE
 #define OPTIMIZE_VERBOSE(...)        ast_optimize_verbose(self, __VA_ARGS__)
 #define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast, __VA_ARGS__)
 INTDEF NONNULL((1, 2)) void

@@ -543,7 +543,7 @@ struct text_label {
 
 
 #undef CONFIG_SYMBOL_HAS_REFCNT
-#define CONFIG_SYMBOL_HAS_REFCNT 1
+#define CONFIG_SYMBOL_HAS_REFCNT
 
 
 struct symbol {
@@ -924,8 +924,8 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_get_haseffect(struct symbol *__
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_set_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 #define symbol_bnd_haseffect(self, caller_scope) symbol_get_haseffect(self, caller_scope)
 #define symbol_del_haseffect(self, caller_scope) symbol_set_haseffect(self, caller_scope)
-#define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
-#define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
+#define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
+#define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
 
 /* Check if the given symbol `self' is reachable from the given `caller_scope' */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_reachable(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);

@@ -130,7 +130,7 @@
 #define TYPE_NAME             DeeCBool_Type
 #define NO_SIGNED_TYPE_NAME   1
 #define NO_UNSIGNED_TYPE_NAME 1
-#define CONFIG_BOOL_STRING 1
+#define CONFIG_BOOL_STRING
 #include "define-integer.c.inl"
 #undef CONFIG_BOOL_STRING
 
