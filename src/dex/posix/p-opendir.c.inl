@@ -768,15 +768,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_get_d_fullname(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 #define HAVE_D_FULLNAME
-	if (self->di_hnd == INVALID_HANDLE_VALUE)
+	if (self->di_hnd != INVALID_HANDLE_VALUE)
 #elif defined(posix_opendir_USE_opendir)
 #define HAVE_D_FULLNAME
 	if (self->di_ent != NULL)
 #endif /* ... */
-	{
-		diriter_unbound_attr("d_name");
-		return NULL;
-	}
 #ifdef HAVE_D_FULLNAME
 #undef HAVE_D_FULLNAME
 	{
@@ -823,6 +819,8 @@ err_printer:
 		return path;
 	}
 #endif /* HAVE_D_FULLNAME */
+	diriter_unbound_attr("d_name");
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1073,7 +1071,8 @@ diriter_init_kw(DeeDirIteratorObject *__restrict self,
 	bool skipdots  = true;
 	bool inheritfd = false;
 	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist,
-	                    "o|bb:_DirIterator", &path, &skipdots, &inheritfd))
+	                    "o|bb:_DirIterator",
+	                    &path, &skipdots, &inheritfd))
 		goto err;
 	if (Dee_TYPE(path) == &DeeDir_Type) {
 		DeeDirObject *dir;
@@ -1111,7 +1110,7 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	      "The name of the current file") },
 	{ "d_fullname", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_fullname, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "The full filename of the current file") },
+	      "The full (absolute) filename of the current file") },
 	{ "d_type", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_type, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "The type of the current file (one of ${DT_*})") },
