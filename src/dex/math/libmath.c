@@ -140,7 +140,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 #endif /* !CONFIG_HAVE_errno */
 
 
-/* Substitue a couple of simple functions. */
+/* Substitute a couple of simple functions. */
 #ifndef CONFIG_HAVE_fabs
 #define CONFIG_HAVE_fabs
 #define fabs(x) ((x) < 0.0 ? -(x) : (x))
