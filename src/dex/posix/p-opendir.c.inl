@@ -127,7 +127,7 @@ struct dir_iterator_object {
 	OBJECT_HEAD
 	DREF DeeObject  *di_path;     /* [1..1][const] String, File, or int */
 	DREF DeeObject  *di_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
-	bool             di_skipdots; /* [const] When true, skip '.' and '..' entires. */
+	bool             di_skipdots; /* [const] When true, skip '.' and '..' entries. */
 #ifdef posix_opendir_USE_FindFirstFileExW
 	bool             di_first;    /* [lock(di_lock)] When true, we're at the first entry. */
 	HANDLE           di_hnd;      /* [0..1|NULL(INVALID_HANDLE_VALUE)][lock(di_lock)]
@@ -154,7 +154,7 @@ struct dir_iterator_object {
 struct dir_object {
 	OBJECT_HEAD
 	DREF DeeObject *d_path;      /* [1..1][const] String, File, or int */
-	bool            d_skipdots;  /* [const] When true, skip '.' and '..' entires. */
+	bool            d_skipdots;  /* [const] When true, skip '.' and '..' entries. */
 	bool            d_inheritfd; /* [const] When true, creating an iterator when `d_path' is
 	                              * something other than a string (i.e. a HANDLE or fd_t),
 	                              * then the iterator inherits that handle (iow: closes it
@@ -493,7 +493,7 @@ again_skipdots:
 							goto again_skipdots;
 					} else {
 						DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-						                        "Failed to read entires from directory %r",
+						                        "Failed to read entries from directory %r",
 						                        path);
 					}
 					DBG_ALIGNMENT_DISABLE();
@@ -622,7 +622,7 @@ again:
 						goto again;
 				} else {
 					DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-					                        "Failed to read entires from directory %r",
+					                        "Failed to read entries from directory %r",
 					                        self->di_path);
 				}
 				return NULL;
@@ -665,7 +665,7 @@ again:
 			return (DREF DeeDirIteratorObject *)ITER_DONE; /* End of directory. */
 		HANDLE_EINTR(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
-		                          "Failed to read entires from directory %r",
+		                          "Failed to read entries from directory %r",
 		                          self->di_path);
 err:
 		return NULL;

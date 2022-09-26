@@ -2874,7 +2874,7 @@ struct mtime_entry {
 #endif /* !DEE_SYSTEM_NOCASE_FS */
 
 struct mtime_cache {
-	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entires currently in use. */
+	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entries currently in use. */
 	size_t              mc_mask; /* [lock(mc_lock)] Allocated hash-vector size -1 / hash-mask. */
 	struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
 	                              * [owned_if(!= empty_mtime_items)]
@@ -2979,7 +2979,7 @@ mtime_cache_rehash(void) {
 		for (; iter < end; ++iter) {
 			struct mtime_entry *item;
 			dhash_t i, perturb;
-			/* Skip NULL entires. */
+			/* Skip NULL entries. */
 			if (!iter->me_file)
 				continue;
 			perturb = i = MTIME_ENTRY_HASH(iter) & new_mask;

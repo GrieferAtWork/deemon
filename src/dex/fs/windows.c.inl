@@ -2589,7 +2589,7 @@ diriter_copy(DirIterator *__restrict self,
 PRIVATE ATTR_COLD int DCALL
 err_handle_findnextfile(DWORD dwError, DeeObject *__restrict path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-	                               "Failed to read entires from directory %r",
+	                               "Failed to read entries from directory %r",
 	                               path);
 }
 

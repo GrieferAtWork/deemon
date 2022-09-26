@@ -1760,7 +1760,7 @@ err:
 }
 
 /* Increment the iterator, but don't generate a value
- * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
+ * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entries,
  *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
  *       only ever be incremented by 1.
  * @return:  0: Success

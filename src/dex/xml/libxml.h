@@ -46,8 +46,8 @@ struct xml_node_attr {
 
 struct xml_node_attributes {
 	size_t                nas_mask; /* Allocated hash-mask of node attributes. */
-	size_t                nas_size; /* Number of entires with `na_name_str != NULL'. */
-	size_t                nas_used; /* Number of entires with `na_name_str != NULL && na_name_str != (char *)ITER_DONE'. */
+	size_t                nas_size; /* Number of entries with `na_name_str != NULL'. */
+	size_t                nas_used; /* Number of entries with `na_name_str != NULL && na_name_str != (char *)ITER_DONE'. */
 	struct xml_node_attr *nas_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
 #define XMLNodeAttributes_NEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 };
@@ -59,8 +59,8 @@ struct xml_node_child {
 
 struct xml_node_children {
 	size_t                 ncs_mask; /* Allocated hash-mask of node children. */
-	size_t                 ncs_size; /* Number of entires with `nc_child != NULL'. */
-	size_t                 ncs_used; /* Number of entires with `nc_child != NULL && nc_child != ITER_DONE'. */
+	size_t                 ncs_size; /* Number of entries with `nc_child != NULL'. */
+	size_t                 ncs_used; /* Number of entries with `nc_child != NULL && nc_child != ITER_DONE'. */
 	struct xml_node_child *ncs_list; /* [0..nas_mask + 1][owned] Hash-vector of XML Node attributes. */
 	XMLNode               *ncs_head; /* [0..1] The first child node. */
 	XMLNode               *ncs_tail; /* [0..1] The last child node. */

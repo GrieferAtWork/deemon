@@ -140,7 +140,7 @@ again:
 		for (;;) {
 			uint8_t byte, bitno;
 			ASSERTF(iter != tls_inuse,
-			        "But `tls_nexti' said there would be unused entires...");
+			        "But `tls_nexti' said there would be unused entries...");
 			byte = *--iter;
 			if (byte == 0xff)
 				continue;

@@ -1100,7 +1100,7 @@ read_filename:
 		}
 		atomic_lock_release(&self->di_lock);
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
-		                          "Failed to read entires from directory %r",
+		                          "Failed to read entries from directory %r",
 		                          self->di_dir->d_path);
 		goto err;
 	}

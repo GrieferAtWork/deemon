@@ -527,7 +527,7 @@ struct Dee_code_object {
 	DREF struct Dee_string_object
 	                                   *const *co_keywords; /* [1..1][const][0..co_argc_max][const] Argument keywords. */
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
-	                                                         * NOTE: NULL entires refer to optional arguments, producing an error
+	                                                         * NOTE: NULL entries refer to optional arguments, producing an error
 	                                                         *       when attempted to be loaded without a user override. */
 	DREF DeeObject                           **co_staticv;  /* [1..1][lock(co_staticv)][0..co_staticc][owned] Vector of constants and static variables. */
 	/* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */

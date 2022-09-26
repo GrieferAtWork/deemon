@@ -1604,7 +1604,7 @@ INTDEF WUNUSED int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num
 		DeeScopeObject *_old_scope = current_assembler.a_scope; \
 		if (asm_enter_scope(scope))                             \
 			goto err
-/* @param: num_preserve: The amount of stack-entires to keep when returning. */
+/* @param: num_preserve: The amount of stack-entries to keep when returning. */
 #define ASM_BREAK_SCOPE(num_preserve, err)             \
 		if (asm_leave_scope(_old_scope, num_preserve)) \
 			goto err

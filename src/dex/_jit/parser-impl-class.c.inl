@@ -130,7 +130,7 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 	 *       `DeeClass_New()' in order to create the to-be returned type object. */
 
 	/* TODO: Create a new scope and:
-	 *    - Fill it with `JIT_OBJECT_ENTRY_TYPE_ATTR'-entires for every non-static
+	 *    - Fill it with `JIT_OBJECT_ENTRY_TYPE_ATTR'-entries for every non-static
 	 *      class member, as well as `JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED'-entries for
 	 *      every static class member. (in the later case, use the to-be returned
 	 *      class type as the bound object)

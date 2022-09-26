@@ -1271,7 +1271,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	        "Read the contents of a given directory. The returned "
 	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
 	        "Additionally, you may specify @skipdots as !f if you "
-	        /**/ "wish to include the special $'.' and $'..' entires.") },)
+	        /**/ "wish to include the special $'.' and $'..' entries.") },)
 	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
 	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
 	        "Same as ?Gopendir, but the default value of @inheritfd is !t, "

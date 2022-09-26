@@ -105,7 +105,7 @@ rveciter_next(RefVectorIterator *__restrict self) {
 		if (vector->rv_plock)
 			atomic_rwlock_endread(vector->rv_plock);
 #endif /* !CONFIG_NO_THREADS */
-		/* Skip NULL entires. */
+		/* Skip NULL entries. */
 		if (result)
 			break;
 	}

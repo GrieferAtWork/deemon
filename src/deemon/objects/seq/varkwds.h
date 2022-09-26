@@ -39,7 +39,7 @@ DECL_BEGIN
 
 typedef struct {
 	struct string_object  *ve_str;  /* [0..1] The keyword name that is being blacklisted.
-	                                 * `NULL' is used to identify unused/sentinel entires.
+	                                 * `NULL' is used to identify unused/sentinel entries.
 	                                 * NOTE: Even when non-NULL, this field does not hold
 	                                 *       a reference, as all possible strings are already
 	                                 *       referenced via `:vk_code->co_keywords' */

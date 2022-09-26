@@ -164,7 +164,7 @@ membercache_rehash(struct membercache *__restrict self) {
 		for (; iter < end; ++iter) {
 			struct membercache_slot *item;
 			dhash_t i, perturb;
-			/* Skip unused entires. */
+			/* Skip unused entries. */
 			if (iter->mcs_type == MEMBERCACHE_UNUSED)
 				continue;
 			perturb = i = iter->mcs_hash & new_mask;

@@ -62,7 +62,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 		for (; iter < end; ++iter) {
 			struct ast_symbol_assume *item;
 			dhash_t i, perturb;
-			/* Skip NULL entires. */
+			/* Skip NULL entries. */
 			if (!iter->sa_sym)
 				continue;
 			perturb = i = AST_SYMBOL_ASSUME_HASH(iter) & new_mask;

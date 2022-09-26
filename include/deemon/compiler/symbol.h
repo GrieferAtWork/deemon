@@ -996,7 +996,7 @@ struct base_scope_object {
 	                                    * In the event that assembler must be reset due to a linker truncation,
 	                                    * this code object will be used to restore inherited (stolen) data. */
 	DREF DeeObject    **bs_default;    /* [0..1][0..(bs_argc_max - bs_argc_min)][owned] Vector of function default arguments.
-	                                    * NOTE: NULL entires refer to optional arguments, producing an error
+	                                    * NOTE: NULL entries refer to optional arguments, producing an error
 	                                    *       when attempted to be loaded without a user override. */
 #define DeeBaseScope_IsVarargs(self, sym) ((self)->bs_varargs == (sym))
 #define DeeBaseScope_IsVarkwds(self, sym) ((self)->bs_varkwds == (sym))

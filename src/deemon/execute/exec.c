@@ -547,7 +547,7 @@ Dee_AtExit(DeeObject *callback, DeeObject *args) {
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 again:
 	rwlock_write(&atexit_lock);
-	/* Check if we're still allowed to register new entires. */
+	/* Check if we're still allowed to register new entries. */
 	if (atexit_mode & ATEXIT_FDIDRUN) {
 		rwlock_endwrite(&atexit_lock);
 		DeeError_Throwf(&DeeError_RuntimeError,

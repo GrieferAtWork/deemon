@@ -440,8 +440,8 @@ INTDEF int FCALL JITLValue_SetValue(JITLValue *__restrict self, JITContext *__re
 
 
 struct jit_lvalue_list {
-	size_t     ll_size;  /* Number of used entires. */
-	size_t     ll_alloc; /* Number of allocated entires. */
+	size_t     ll_size;  /* Number of used entries. */
+	size_t     ll_alloc; /* Number of allocated entries. */
 	JITLValue *ll_list;  /* [0..ll_size|ALLOC(ll_alloc)][owned] Vector of L-values. */
 };
 

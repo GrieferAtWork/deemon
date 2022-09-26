@@ -271,7 +271,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 		for (; iter < end; ++iter) {
 			struct deep_assoc_entry *item;
 			dhash_t i, perturb;
-			/* Skip NULL entires. */
+			/* Skip NULL entries. */
 			if (!iter->de_old)
 				continue;
 			perturb = i = (Dee_HashPointer(iter->de_old) ^
