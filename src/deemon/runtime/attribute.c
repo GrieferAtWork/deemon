@@ -1865,19 +1865,19 @@ DeeType_GetInstanceAttrString(DeeTypeObject *self,
 	 * cache.
 	 * -> `tp_cache' is purely reserved for instance-attributes (tp_methods, etc.)
 	 * -> `tp_class_cache' is used for class-attributes primarily,
-	 *     with instance-attributes overlay'd when those don't overlap
+	 *     with instance-attributes overlaid when those don't overlap
 	 *     with class attributes of the same name.
 	 * The GetInstanceAttr-API is meant as a 3 namespace that contains the same
 	 * attributes as already defined for instance-attributes (aka. those from `tp_cache'),
 	 * though instead of producing bound attributes, unbound wrappers (as produced
 	 * by the overlay onto the regular class-attribute namespace (aka. `tp_class_cache'))
 	 * are accessed.
-	 * >> import Dict from deemon;
-	 * >> local x = Dict();
-	 * >> print x.keys;                       // callable (bound)   -- tp_methods       -- instance->tp_cache
-	 * >> print Dict.keys;                    // type               -- tp_class_members -- class->tp_class_cache
-	 * >> // Access to the unbound function `/deemon/dict/i:keys':
-	 * >> print Dict.getinstanceattr("keys"); // callable (unbound) -- tp_methods       -- class->tp_cache
+	 * >> import stat from posix;
+	 * >> local x = stat(".");
+	 * >> print x.isreg;                       // callable (bound)   -- tp_methods       -- instance->tp_cache
+	 * >> print stat.isreg;                    // class-function     -- tp_class_members -- class->tp_class_cache
+	 * >> // Access to the unbound function `/posix/stat/i:isreg':
+	 * >> print stat.getinstanceattr("isreg"); // callable (unbound) -- tp_methods       -- class->tp_cache
 	 */
 	DeeTypeObject *iter;
 	DREF DeeObject *result;

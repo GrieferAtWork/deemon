@@ -2392,9 +2392,27 @@ type_str(DeeTypeObject *__restrict self) {
 		Dee_Incref(result);
 		return result;
 	}
-	if (self->tp_name)
+	if likely(self->tp_name)
 		return (DREF DeeStringObject *)DeeString_New(self->tp_name);
 	return_reference_(&str_Type);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+type_repr(DeeTypeObject *__restrict self) {
+	DREF DeeObject *mod;
+	DREF DeeStringObject *result;
+	DeeStringObject *modname;
+	if unlikely(!self->tp_name)
+		goto fallback;
+	mod = DeeType_GetModule(self);
+	if (!mod)
+		goto fallback;
+	modname = ((DeeModuleObject *)mod)->mo_name;
+	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, self->tp_name);
+	Dee_Decref(mod);
+	return result;
+fallback:
+	return type_str(self);
 }
 
 
@@ -3709,17 +3727,16 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
 	      /**/ "however in ambiguous cases where both the Type, as well as instances implement "
 	      /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
-	      /**/ "attribute lookup on the Type (as in ${Dict.keys}) will always return the Type-attribute, "
+	      /**/ "attribute lookup on the Type (as in ${posix.stat.isdir}) will always return the Type-attribute, "
 	      /**/ "rather than a wrapper around the instance attribute.\n"
 	      "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 
 	      "${"
-	      /**/ "import Dict from deemon;\n"
-	      /**/ "local dictKeysFunction = Dict.getinstanceattr(\"keys\");\n"
-	      /**/ "local myDictInstance = Dict();\n"
-	      /**/ "myDictInstance[\"foo\"] = \"bar\";\n"
-	      /**/ "// Same as `myDictInstance.keys()' -- { \"foo\" }\n"
-	      /**/ "print repr dictKeysFunction(myDictInstance);"
+	      /**/ "import stat from posix;\n"
+	      /**/ "local statIsRegFunction = stat.getinstanceattr(\"isdir\");\n"
+	      /**/ "local myStatInstance = stat(\".\");\n"
+	      /**/ "// Same as `myStatInstance.isdir()' -- true\n"
+	      /**/ "print repr statIsRegFunction(myStatInstance);"
 	      "}\n"
 
 	      "Note that one minor exception exists to the default lookup rule, and it relates to how "
@@ -4213,7 +4230,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
-		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
+		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,

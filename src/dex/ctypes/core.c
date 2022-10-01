@@ -311,7 +311,7 @@ PRIVATE struct type_method tpconst stype_methods[] = {
 	      "(calling_convention:?Dstring,types!:?DType)->function_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
 	      "@param calling_convention The name of the calling convention\n"
-	      "Same as ?#func, but enable support for varrgs") },
+	      "Same as ?#func, but enable support for varargs") },
 	{ NULL }
 	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns ?f)") },
 	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns ?f)") },
@@ -479,6 +479,11 @@ ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit((DeeObject *)self->pt_orig);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ptype_repr(DeePointerTypeObject *__restrict self) {
+	return DeeString_Newf("%r.ptr", self->pt_orig);
+}
+
 PRIVATE struct type_member tpconst ptype_members[] = {
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_True, DOC_GET(ispointer_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeePointerTypeObject, pt_orig), "->?GStructuredType"),
@@ -509,7 +514,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ptype_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
@@ -540,6 +545,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ltype_sizeof(DeeLValueTypeObject *__restrict self) {
 	size_t result = DeeSType_Sizeof(self->lt_orig);
 	return DeeInt_NewSize(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ltype_repr(DeePointerTypeObject *__restrict self) {
+	return DeeString_Newf("%r.lvalue", self->pt_orig);
 }
 
 PRIVATE struct type_getset tpconst ltype_getsets[] = {
@@ -590,7 +600,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
@@ -1779,6 +1789,11 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	Dee_Decref((DeeObject *)orig);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+atype_repr(DeeArrayTypeObject *__restrict self) {
+	return DeeString_Newf("%r[%Iu]", self->at_orig, self->at_count);
+}
+
 PRIVATE struct type_member tpconst atype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig), "->?GStructuredType"),
@@ -1814,7 +1829,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&atype_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
@@ -1869,6 +1884,46 @@ ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	for (i = 0; i < self->ft_argc; ++i)
 		Dee_Visit((DeeObject *)self->ft_argv[i]);
 }
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ftype_repr(DeeCFunctionTypeObject *__restrict self) {
+	size_t i;
+	ctypes_cc_t cc;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	bool is_first_arg = true;
+	if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->ft_orig) < 0)
+		goto err;
+	if unlikely((self->ft_cc & CC_FVARARGS ? UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
+	                                       : UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
+		goto err;
+	cc = (ctypes_cc_t)((unsigned int)self->ft_cc & ~CC_FVARARGS);
+	if (cc != CC_DEFAULT) {
+		char const *cc_name = cc_getname(cc);
+		if (cc_name) {
+			if unlikely(unicode_printer_printf(&printer,
+			                                   self->ft_argc ? "%q," : "%q",
+			                                   cc_name) < 0)
+				goto err;
+			is_first_arg = false;
+		}
+	}
+	for (i = 0; i < self->ft_argc; ++i) {
+		if (is_first_arg) {
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
+				goto err;
+			is_first_arg = false;
+		}
+		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->ft_argv[i]) < 0)
+			goto err;
+	}
+	if unlikely(unicode_printer_putascii(&printer, ')'))
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
 
 /* Assert that we can re-use some operators from `pointer_type'. */
 STATIC_ASSERT(offsetof(DeeArrayTypeObject, at_orig) ==
@@ -1933,7 +1988,11 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
+#ifdef CONFIG_NO_CFUNCTION
 		/* .tp_repr = */ NULL,
+#else /* CONFIG_NO_CFUNCTION */
+		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_repr,
+#endif /* !CONFIG_NO_CFUNCTION */
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,

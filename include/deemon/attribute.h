@@ -31,7 +31,7 @@
 #include <hybrid/spcall.h>
 
 #ifndef SPCALL_NORETURN
-/* SPCALL_NORETURN() for this to work. */
+/* We need SPCALL_NORETURN() in order to make the initial jump to a secondary stack. */
 #undef CONFIG_LONGJMP_ENUMATTR
 #else /* SPCALL_NORETURN */
 /* Enable special handling to use setjmp() / longjmp() to yield

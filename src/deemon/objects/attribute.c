@@ -172,7 +172,7 @@ PRIVATE struct type_member tpconst attr_members[] = {
 	                         /**/ "?#decl, rather than being an ?. of the declaring object ?#decl itself.\n"
 	                         "Note that practically all attributes, such as member functions, are available as both "
 	                         /**/ "instance and class ?., while in other cases an ?. will evaluate to different "
-	                         /**/ "objects depending on being invoked on a class or an instance (such as :Dict.keys)"),
+	                         /**/ "objects depending on being invoked on a class or an instance (such as ?Aisreg?Eposix:stat)"),
 	TYPE_MEMBER_BITFIELD_DOC("isclass", STRUCT_CONST, Attr, a_info.a_perm, ATTR_CMEMBER,
 	                         "Check if access to this ?. must be made though the declaring type ?#decl.\n"
 	                         "To test if an ?. can only be accessed through an instance, use ?#isinstance instead"),
@@ -618,8 +618,8 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)\n"
 	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. ?#flags)\n"
 	                         "@param flagval Set of attribute flags required when searching for matches (s.a. ?#flags) "
-	                                        "(When only this is given, and @flagmask is omit (as possible when "
-	                                        "using keyword arguments), flagmask is set to @flagval)\n"
+	                         /*          */ "(When only this is given, and @flagmask is omit (as possible when "
+	                         /*          */ "using keyword arguments), flagmask is set to @flagval)\n"
 	                         "@throw AttributeError No attribute matching the specified restrictions could be found\n"
 	                         "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	                         "Lookup an ?. enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
@@ -645,15 +645,16 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "Using @flagmask and @flagval, you can easily restrict a search to only "
 	                         /**/ "class-, or instance-attributes:\n"
 	                         "${"
-	                         /**/ "import Attribute, Dict from deemon;\n"
+	                         /**/ "import Attribute from deemon;\n"
+	                         /**/ "import stat from posix;\n"
 	                         /**/ "/* The class-variant (Attribute cannot be accessed from an instance) */\n"
-	                         /**/ "print repr Attribute(Dict, \"keys\", \"i\", \"\");\n"
+	                         /**/ "print repr Attribute(stat, \"isreg\", \"i\", \"\");\n"
 	                         /**/ "/* The class-variant (Attribute is a wrapper) */\n"
-	                         /**/ "print repr Attribute(Dict, \"keys\", \"w\");\n"
+	                         /**/ "print repr Attribute(stat, \"isreg\", \"w\");\n"
 	                         /**/ "/* The instance-variant (Attribute can be accessed from an instance) */\n"
-	                         /**/ "print repr Attribute(Dict, \"keys\", \"i\");\n"
+	                         /**/ "print repr Attribute(stat, \"isreg\", \"i\");\n"
 	                         /**/ "/* The instance-variant (Attribute isn't a wrapper) */\n"
-	                         /**/ "print repr Attribute(Dict, \"keys\", \"w\", \"\");"
+	                         /**/ "print repr Attribute(stat, \"isreg\", \"w\", \"\");"
 	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,

@@ -608,7 +608,7 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *          referenced instead.
  *          e.g.: "This implementation differs from :deemon:Sequence.find in that it accepts @start and @end arguments."
  *        - When an attribute is known for both the type and instance, the type's is preferred.
- *          e.g.: "This refers to the type and not the method: :Dict.keys"
+ *          e.g.: "This refers to the class function and not instance property: :posix:stat.isreg"
  *
  *    - @ident
  *    - @{ident}
