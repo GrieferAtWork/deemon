@@ -26,7 +26,6 @@
 
 DECL_BEGIN
 
-#undef chdir
 #undef chmod
 #undef lchmod
 #undef chown
@@ -49,7 +48,6 @@ DECL_BEGIN
 	PRIVATE DEFINE_CMETHOD(libposix_getfs_##name, &libposix_getfs_##name##_f);
 #define DEFINE_LIBFS_FORWARD_WRAPPER_S(name) \
 	DEFINE_LIBFS_FORWARD_WRAPPER(name, #name)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(chdir)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)

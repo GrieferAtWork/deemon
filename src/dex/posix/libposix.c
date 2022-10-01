@@ -51,10 +51,7 @@
 /* Include fs.c.inl last, since this once #undef's a
  * bunch of stuff that may be needed by other components. */
 #include "p-fs.c.inl"
-#else /* !__INTELLISENSE__ */
-#define NEED_posix_dfd_abspath
-#define NEED_posix_err_unsupported
-#endif /* __INTELLISENSE__ */
+#endif /* !__INTELLISENSE__ */
 
 #include <deemon/error.h>
 #include <deemon/error_types.h>
@@ -64,131 +61,6 @@
 
 DECL_BEGIN
 
-
-#ifdef NEED_posix_dfd_abspath
-#undef NEED_posix_dfd_abspath
-/* Construct an absolute path from `dfd:path'
- * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
- * @param: path: Must be a `string' */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-posix_dfd_abspath(DeeObject *dfd, DeeObject *path) {
-	struct unicode_printer printer;
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
-		goto err;
-
-	/* Check if `path' is absolute. - If it is, then we must use _it_ */
-	if (DeeSystem_IsAbs(DeeString_STR(path)))
-		return_reference_(path);
-
-	/* Must combine `dfd' with `path' */
-	unicode_printer_init(&printer);
-	if (DeeString_Check(dfd)) {
-		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
-			goto err_printer;
-	} else {
-#ifdef CONFIG_HOST_WINDOWS
-#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-		int error;
-		HANDLE hDfd;
-		if (DeeInt_Check(dfd)) {
-			int dfd_intval;
-			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
-				if (dfd_intval == AT_FDCWD) {
-					/* Caller made an explicit request for the path to be relative! */
-					unicode_printer_fini(&printer);
-					return_reference_(path);
-				}
-			}
-		}
-		hDfd = DeeNTSystem_GetHandle(dfd);
-		if unlikely(hDfd == INVALID_HANDLE_VALUE)
-			goto err_printer;
-		error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
-		if unlikely(error != 0) {
-			if (error > 0) {
-				DeeNTSystem_ThrowLastErrorf(NULL,
-				                            "Failed to print path of HANDLE %p",
-				                            hDfd);
-			}
-			goto err_printer;
-		}
-#endif /* CONFIG_HOST_WINDOWS */
-
-#ifdef CONFIG_HOST_UNIX
-		int os_dfd;
-		os_dfd = DeeUnixSystem_GetFD(dfd);
-		if unlikely(os_dfd == -1)
-			goto err_printer;
-#ifdef CONFIG_HAVE_PROCFS
-		if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
-			goto err_printer;
-#else /* CONFIG_HAVE_PROCFS */
-#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-		{
-			int error;
-			error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
-			if unlikely(error != 0)
-				goto err_printer;
-		}
-#endif /* !CONFIG_HAVE_PROCFS */
-#endif /* CONFIG_HOST_UNIX */
-	}
-
-	/* Trim trailing slashes. */
-#ifdef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-#undef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
-		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
-			--newlen;
-		if (newlen >= UNICODE_PRINTER_LENGTH(&printer)) {
-			/* Append trailing slash */
-			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
-				goto err_printer;
-		} else {
-			/* Trailing slash is already present (but make sure that there's only 1 of them) */
-			++newlen;
-			unicode_printer_truncate(&printer, newlen);
-		}
-	}
-#endif /* posix_dfd_abspath_MUST_NORMALIZE_SLASHES */
-
-#ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
-	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
-		/* Must skip leading slashes in `path' */
-		char *utf8_path = DeeString_AsUtf8(path);
-		if unlikely(!utf8_path)
-			goto err_printer;
-		while (DeeSystem_IsSep(*utf8_path))
-			++utf8_path;
-		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
-			goto err_printer;
-	} else
-#endif /* !DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES */
-	{
-		if unlikely(unicode_printer_printstring(&printer, path) < 0)
-			goto err_printer;
-	}
-
-	/* Pack the resulting string together */
-	return unicode_printer_pack(&printer);
-err_printer:
-	unicode_printer_fini(&printer);
-err:
-	return NULL;
-}
-#endif /* NEED_posix_dfd_abspath */
-
-
-#ifdef NEED_posix_err_unsupported
-#undef NEED_posix_err_unsupported
-INTERN ATTR_NOINLINE ATTR_UNUSED ATTR_COLD NONNULL((1)) int DCALL
-posix_err_unsupported(char const *__restrict name) {
-	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "Unsupported function `%s'",
-	                       name);
-}
-#endif /* NEED_posix_err_unsupported */
 
 #if defined(NEED_libposix_get_dfd_filename) || defined(__INTELLISENSE__)
 #undef NEED_libposix_get_dfd_filename
@@ -273,6 +145,7 @@ local ALL_STUBS = {
 	("stat_class_ishidden_IS_STUB", { "stat.ishidden" }),
 	("posix_gethostname_USE_STUB", { "gethostname" }),
 	("posix_chdir_USE_STUB", { "chdir" }),
+	("posix_fchdir_USE_STUB", { "fchdir" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -398,6 +271,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_euidaccess_USE_STUB /* nothing */
 #define str_posix_euidaccess_USE_STUB /* nothing */
 #endif /* !posix_euidaccess_USE_STUB */
+#ifdef posix_fchdir_USE_STUB
+#define len_posix_fchdir_USE_STUB +7
+#define str_posix_fchdir_USE_STUB 'f', 'c', 'h', 'd', 'i', 'r', '\0',
+#else /* posix_fchdir_USE_STUB */
+#define len_posix_fchdir_USE_STUB /* nothing */
+#define str_posix_fchdir_USE_STUB /* nothing */
+#endif /* !posix_fchdir_USE_STUB */
 #ifdef posix_fdatasync_USE_STUB
 #define len_posix_fdatasync_USE_STUB +10
 #define str_posix_fdatasync_USE_STUB 'f', 'd', 'a', 't', 'a', 's', 'y', 'n', 'c', '\0',
@@ -740,6 +620,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_enumenv_USE_STUB \
 	len_posix_errno_USE_STUB \
 	len_posix_euidaccess_USE_STUB \
+	len_posix_fchdir_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -813,6 +694,7 @@ PRIVATE struct {
 		str_posix_enumenv_USE_STUB
 		str_posix_errno_USE_STUB
 		str_posix_euidaccess_USE_STUB
+		str_posix_fchdir_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
@@ -1412,11 +1294,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_CHDIR_DEF_DOC("@interrupt\n"
 	                      "@throw FileNotFound The given @path could not be found\n"
 	                      "@throw NoDirectory The given @path is not a directory\n"
-	                      "@throw FileClosed The given @fp or @fd has been closed or is invalid\n"
 	                      "@throw FileAccessError The current user does not have permissions to enter @path\n"
 	                      "@throw SystemError Failed to change the current working directory for some reason\n"
 	                      "Change the current working directory to @path, which may be "
 	                      /**/ "a path relative to the old current working directory"))
+	D(POSIX_FCHDIR_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @fd could not be found\n"
+	                       "@throw NoDirectory The given @fd is not a directory\n"
+	                       "@throw FileClosed The given @fd has been closed or is invalid\n"
+	                       "@throw FileAccessError The current user does not have permissions to enter @fd\n"
+	                       "@throw SystemError Failed to change the current working directory for some reason\n"
+	                       "Change the current working directory to @fd"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
@@ -1442,7 +1330,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(link, "(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(symlink, "(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")
 	DEFINE_LIBFS_ALIAS_S(readlink, "(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
-	DEFINE_LIBFS_ALIAS_S_ALT("fchdir", chdir, "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"

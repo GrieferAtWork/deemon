@@ -427,6 +427,8 @@ err_unknown_env_var(DeeObject *__restrict name);
  * @param: path: Must be a `string' */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_abspath(DeeObject *dfd, DeeObject *path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+posix_fd_abspath(DeeObject *__restrict fd);
 
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_dir(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int errno_value, DeeObject *__restrict path);
