@@ -579,7 +579,9 @@ dee_stat_init(struct dee_stat *__restrict self, DeeObject *dfd,
 		int result;
 		DREF DeeObject *abs_path;
 #define NEED_posix_dfd_abspath
-		abs_path = posix_dfd_abspath(dfd, path_or_file);
+		abs_path = posix_dfd_abspath(dfd, path_or_file,
+		                             atflags & ~(DEE_STAT_F_TRY |
+		                                         DEE_STAT_F_LSTAT));
 		if unlikely(!abs_path)
 			goto err;
 #define NEED_err
@@ -756,7 +758,9 @@ again:
 				    DeeError_Catch(&DeeError_NotImplemented)) {
 					DREF DeeObject *abs_path;
 #define NEED_posix_dfd_abspath
-					abs_path = posix_dfd_abspath(dfd, path_or_file);
+					abs_path = posix_dfd_abspath(dfd, path_or_file,
+					                             atflags & ~(DEE_STAT_F_TRY |
+					                                         DEE_STAT_F_LSTAT));
 					if unlikely(!abs_path)
 						goto err;
 					error = dee_stat_init(self, NULL, abs_path, atflags);
@@ -993,9 +997,8 @@ stat_unpack_args(size_t argc, DeeObject *const *argv,
 				goto err;
 			}
 #endif /* !posix_stat_HAVE_lstat */
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Invalid `atflags' argument: %#x",
-			                *p_used_atflags);
+#define NEED_err_bad_atflags
+			err_bad_atflags(*p_used_atflags);
 			goto err;
 		}
 	}
@@ -2163,7 +2166,7 @@ err:
 	if unlikely(dfd) {
 		DREF DeeObject *abs_path;
 #define NEED_posix_dfd_abspath
-		abs_path = posix_dfd_abspath(dfd, path_or_file);
+		abs_path = posix_dfd_abspath(dfd, path_or_file, used_atflags);
 		if unlikely(!abs_path)
 			goto err;
 		result = stat_is_unix_hidden_filename(abs_path);
@@ -2276,7 +2279,7 @@ stat_class_isexe(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(dfd) {
 		DREF DeeObject *abs_path;
 #define NEED_posix_dfd_abspath
-		abs_path = posix_dfd_abspath(dfd, path_or_file);
+		abs_path = posix_dfd_abspath(dfd, path_or_file, used_atflags);
 		if unlikely(!abs_path)
 			goto err;
 		result = stat_is_nt_exe_filename(abs_path);

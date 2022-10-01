@@ -146,6 +146,7 @@ local ALL_STUBS = {
 	("posix_gethostname_USE_STUB", { "gethostname" }),
 	("posix_chdir_USE_STUB", { "chdir" }),
 	("posix_fchdir_USE_STUB", { "fchdir" }),
+	("posix_fchdirat_USE_STUB", { "fchdirat" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -278,6 +279,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fchdir_USE_STUB /* nothing */
 #define str_posix_fchdir_USE_STUB /* nothing */
 #endif /* !posix_fchdir_USE_STUB */
+#ifdef posix_fchdirat_USE_STUB
+#define len_posix_fchdirat_USE_STUB +9
+#define str_posix_fchdirat_USE_STUB 'f', 'c', 'h', 'd', 'i', 'r', 'a', 't', '\0',
+#else /* posix_fchdirat_USE_STUB */
+#define len_posix_fchdirat_USE_STUB /* nothing */
+#define str_posix_fchdirat_USE_STUB /* nothing */
+#endif /* !posix_fchdirat_USE_STUB */
 #ifdef posix_fdatasync_USE_STUB
 #define len_posix_fdatasync_USE_STUB +10
 #define str_posix_fdatasync_USE_STUB 'f', 'd', 'a', 't', 'a', 's', 'y', 'n', 'c', '\0',
@@ -621,6 +629,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_errno_USE_STUB \
 	len_posix_euidaccess_USE_STUB \
 	len_posix_fchdir_USE_STUB \
+	len_posix_fchdirat_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -695,6 +704,7 @@ PRIVATE struct {
 		str_posix_errno_USE_STUB
 		str_posix_euidaccess_USE_STUB
 		str_posix_fchdir_USE_STUB
+		str_posix_fchdirat_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
@@ -1305,6 +1315,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       "@throw FileAccessError The current user does not have permissions to enter @fd\n"
 	                       "@throw SystemError Failed to change the current working directory for some reason\n"
 	                       "Change the current working directory to @fd"))
+	D(POSIX_FCHDIRAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @dfd:@path could not be found\n"
+	                         "@throw NoDirectory The given @dfd:@path is not a directory\n"
+	                         "@throw FileClosed The given @dfd has been closed or is invalid\n"
+	                         "@throw FileAccessError The current user does not have permissions to enter @dfd:@path\n"
+	                         "@throw SystemError Failed to change the current working directory for some reason\n"
+	                         "@throw ValueError Invalid set of flags specified by @atflags\n"
+	                         "Change the current working directory to @dfd:@path"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \

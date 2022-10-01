@@ -91,6 +91,22 @@ DECL_BEGIN
 
 
 
+#undef posix_fchdirat_USE_fchdirat
+#undef posix_fchdirat_USE_posix_chdir
+#undef posix_fchdirat_USE_STUB
+#ifdef posix_chdir_USE_nt_SetCurrentDirectory
+#define posix_fchdirat_USE_posix_chdir
+#elif defined(CONFIG_HAVE_fchdirat)
+#define posix_fchdirat_USE_fchdirat
+#define posix_fchdirat_USE_posix_chdir
+#elif !defined(posix_chdir_USE_STUB)
+#define posix_fchdirat_USE_posix_chdir
+#else /* ... */
+#define posix_fchdirat_USE_STUB
+#endif /* !... */
+
+
+
 
 
 #ifndef posix_getenv_USE_STUB
@@ -498,12 +514,75 @@ err:
 #ifdef posix_fchdir_USE_STUB
 #define NEED_posix_err_unsupported
 	(void)fd;
-	posix_err_unsupported("chdir");
+	posix_err_unsupported("fchdir");
 	return NULL;
 #endif /* posix_fchdir_USE_STUB */
 }
 
-/* TODO: fchdirat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint) */
+
+
+/*[[[deemon import("_dexutils").gw("fchdirat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
+#define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, posix_fchdirat_f);
+#ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
+#define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { K(dfd), K(path), K(atflags), KEND });
+#endif /* !POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *dfd;
+	DeeObject *path;
+	unsigned int atflags = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_path_atflags, "oo|u:fchdirat", &dfd, &path, &atflags))
+		goto err;
+	return posix_fchdirat_f_impl(dfd, path, atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags)
+/*[[[end]]]*/
+{
+#ifdef posix_fchdirat_USE_posix_chdir
+	DREF DeeObject *abspath, *result;
+#ifdef posix_fchdirat_USE_fchdirat
+	if (!DeeString_Check(dfd) && DeeString_Check(path)) {
+		int os_dfd = DeeUnixSystem_GetFD(dfd);
+		char *utf8_path;
+		if unlikely(os_dfd == -1)
+			goto err;
+		utf8_path = DeeString_AsUtf8(path);
+		if unlikely(!utf8_path)
+			goto err;
+EINTR_LABEL(again)
+		if unlikely(fchdirat(os_fd, utf8_path, atflags) == 0)
+			return_none;
+		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+		/* fallthru to the fallback path below */
+	}
+#endif /* posix_fchdirat_USE_fchdirat */
+
+#define NEED_posix_dfd_abspath
+	abspath = posix_dfd_abspath(dfd, path, atflags);
+	if unlikely(!abspath)
+		goto err;
+	result = posix_chdir_f_impl(abspath);
+	Dee_Decref(abspath);
+	return result;
+err:
+	return NULL;
+#endif /* posix_fchdirat_USE_posix_chdir */
+
+#ifdef posix_fchdirat_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)dfd;
+	(void)path;
+	(void)atflags;
+	posix_err_unsupported("fchdirat");
+	return NULL;
+#endif /* posix_fchdirat_USE_STUB */
+}
 
 DECL_END
 

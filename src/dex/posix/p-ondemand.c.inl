@@ -73,6 +73,7 @@
 #define NEED_nt_CreateSymbolicLink
 #define NEED_posix_dfd_abspath
 #define NEED_posix_fd_abspath
+#define NEED_err_bad_atflags
 #define NEED_posix_err_unsupported
 #endif /* __INTELLISENSE__ */
 
@@ -1024,10 +1025,15 @@ err:
  * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
  * @param: path: Must be a `string' */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-posix_dfd_abspath(DeeObject *dfd, DeeObject *path) {
+posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 	struct unicode_printer printer;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
+	if unlikely(atflags != 0) {
+#define NEED_err_bad_atflags
+		err_bad_atflags(atflags);
+		goto err;
+	}
 
 	/* Check if `path' is absolute. - If it is, then we must use _it_ */
 	if (DeeSystem_IsAbs(DeeString_STR(path)))
@@ -1150,6 +1156,16 @@ posix_fd_abspath(DeeObject *__restrict fd) {
 }
 #endif /* NEED_posix_fd_abspath */
 
+
+#ifdef NEED_err_bad_atflags
+#undef NEED_err_bad_atflags
+INTERN ATTR_COLD int DCALL
+err_bad_atflags(unsigned int atflags) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Invalid atflags %#x",
+	                       atflags);
+}
+#endif /* NEED_err_bad_atflags */
 
 #ifdef NEED_posix_err_unsupported
 #undef NEED_posix_err_unsupported
