@@ -492,6 +492,13 @@ functest("AT_FDDRIVE_CWD('C')", check_defined: 1);
 functest("AT_FDDRIVE_ROOT('C')", check_defined: 1);
 
 
+func("setjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; return setjmp(env);');
+func("longjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; longjmp(env, 2);');
+func("_setjmp", "defined(CONFIG_HAVE_SETJMP_H) && (defined(__USE_MISC) || defined(__USE_XOPEN))", test: 'extern jmp_buf env; return _setjmp(env);');
+func("_longjmp", "defined(CONFIG_HAVE_SETJMP_H) && (defined(__USE_MISC) || defined(__USE_XOPEN))", test: 'extern jmp_buf env; _longjmp(env, 2);');
+func("sigsetjmp", "defined(CONFIG_HAVE_SETJMP_H) && defined(__USE_POSIX)", test: 'extern sigjmp_buf env; return sigsetjmp(env, 0);');
+func("siglongjmp", "defined(CONFIG_HAVE_SETJMP_H) && defined(__USE_POSIX)", test: 'extern sigjmp_buf env; siglongjmp(env, 2);');
+
 func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
 func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
 
@@ -508,6 +515,8 @@ functest('chdir("..")', unix);
 functest('_chdir("..")', msvc);
 func("wchdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchdir(c, 0755);");
 func("_wchdir", "defined(_WDIRECT_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchdir(c);");
+functest("fchdir(1)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
+functest('fchdirat(1, "..", 0)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE) && defined(__USE_KOS)");
 
 func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'char buf[256]; return (int)readlink("foo", buf, 256);');
 func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)", test: 'char buf[256]; return (int)freadlinkat(AT_FDCWD, "foo", buf, 256, AT_READLINK_REQSIZE);');
@@ -616,6 +625,7 @@ func("getcwd", unix, test: 'char buf[256]; char *p = getcwd(buf, 256); return p 
 func("_getcwd", msvc, test: 'char buf[256]; char *p = _getcwd(buf, 256); return p != 0;');
 func("wgetcwd", test: 'wchar_t buf[256]; wchar_t *p = wgetcwd(buf, 256); return p != 0;');
 func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; wchar_t *p = _wgetcwd(buf, 256); return p != 0;');
+func("gethostname", unix, test: 'char buf[256]; int x = gethostname(buf, 256); return x == 0;');
 
 functest('unlink("foo.txt")', unix);
 functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
@@ -687,7 +697,7 @@ functest("nice(0)", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabl
 
 func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")", test: "return mmap(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))", test: "return mmap64(NULL, 1, 0, 0, -1, 0) == (void *)0;");
-func("munmap", "CONFIG_HAVE_mmap", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
+func("munmap", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
 func("fmapfile", "0", test: 'extern struct mapfile m; return fmapfile(&m, 1, 2, 3, 4, 5, FMAPFILE_READALL);');
 func("unmapfile", "0", test: 'extern struct mapfile m; return unmapfile(&m);');
 func("getpagesize", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_MISC) || !defined(__USE_XOPEN2K))", test: 'return getpagesize() != 0;');
@@ -715,7 +725,6 @@ func("nanosleep64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) &
 functest("fork()", unix);
 func("vfork", "(defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)", test: "if (vfork() == 0) for (;;); return 0;");
 functest("fchown(1, 0, 0)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
-functest("fchdir(1)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 
 functest("pause()", unix);
 functest("select(0, NULL, NULL, NULL, NULL)", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
@@ -4089,6 +4098,52 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_AT_FDDRIVE_ROOT
 #endif
 
+#ifdef CONFIG_NO_setjmp
+#undef CONFIG_HAVE_setjmp
+#elif !defined(CONFIG_HAVE_setjmp) && \
+      (defined(setjmp) || defined(__setjmp_defined) || defined(CONFIG_HAVE_SETJMP_H))
+#define CONFIG_HAVE_setjmp
+#endif
+
+#ifdef CONFIG_NO_longjmp
+#undef CONFIG_HAVE_longjmp
+#elif !defined(CONFIG_HAVE_longjmp) && \
+      (defined(longjmp) || defined(__longjmp_defined) || defined(CONFIG_HAVE_SETJMP_H))
+#define CONFIG_HAVE_longjmp
+#endif
+
+#ifdef CONFIG_NO__setjmp
+#undef CONFIG_HAVE__setjmp
+#elif !defined(CONFIG_HAVE__setjmp) && \
+      (defined(_setjmp) || defined(___setjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN))))
+#define CONFIG_HAVE__setjmp
+#endif
+
+#ifdef CONFIG_NO__longjmp
+#undef CONFIG_HAVE__longjmp
+#elif !defined(CONFIG_HAVE__longjmp) && \
+      (defined(_longjmp) || defined(___longjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN))))
+#define CONFIG_HAVE__longjmp
+#endif
+
+#ifdef CONFIG_NO_sigsetjmp
+#undef CONFIG_HAVE_sigsetjmp
+#elif !defined(CONFIG_HAVE_sigsetjmp) && \
+      (defined(sigsetjmp) || defined(__sigsetjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_sigsetjmp
+#endif
+
+#ifdef CONFIG_NO_siglongjmp
+#undef CONFIG_HAVE_siglongjmp
+#elif !defined(CONFIG_HAVE_siglongjmp) && \
+      (defined(siglongjmp) || defined(__siglongjmp_defined) || (defined(CONFIG_HAVE_SETJMP_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_siglongjmp
+#endif
+
 #ifdef CONFIG_NO_read
 #undef CONFIG_HAVE_read
 #elif !defined(CONFIG_HAVE_read) && \
@@ -4182,6 +4237,23 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__wchdir) && \
       (defined(_wchdir) || defined(___wchdir_defined) || defined(_WDIRECT_DEFINED))
 #define CONFIG_HAVE__wchdir
+#endif
+
+#ifdef CONFIG_NO_fchdir
+#undef CONFIG_HAVE_fchdir
+#elif !defined(CONFIG_HAVE_fchdir) && \
+      (defined(fchdir) || defined(__fchdir_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_fchdir
+#endif
+
+#ifdef CONFIG_NO_fchdirat
+#undef CONFIG_HAVE_fchdirat
+#elif !defined(CONFIG_HAVE_fchdirat) && \
+      (defined(fchdirat) || defined(__fchdirat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE) && defined(__USE_KOS)))
+#define CONFIG_HAVE_fchdirat
 #endif
 
 #ifdef CONFIG_NO_readlink
@@ -4836,6 +4908,15 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE__wgetcwd
 #endif
 
+#ifdef CONFIG_NO_gethostname
+#undef CONFIG_HAVE_gethostname
+#elif !defined(CONFIG_HAVE_gethostname) && \
+      (defined(gethostname) || defined(__gethostname_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
+#define CONFIG_HAVE_gethostname
+#endif
+
 #ifdef CONFIG_NO_unlink
 #undef CONFIG_HAVE_unlink
 #elif !defined(CONFIG_HAVE_unlink) && \
@@ -5326,7 +5407,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO_munmap
 #undef CONFIG_HAVE_munmap
 #elif !defined(CONFIG_HAVE_munmap) && \
-      (defined(munmap) || defined(__munmap_defined) || CONFIG_HAVE_mmap)
+      (defined(munmap) || defined(__munmap_defined) || defined(CONFIG_HAVE_mmap))
 #define CONFIG_HAVE_munmap
 #endif
 
@@ -5507,15 +5588,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_fchown
-#endif
-
-#ifdef CONFIG_NO_fchdir
-#undef CONFIG_HAVE_fchdir
-#elif !defined(CONFIG_HAVE_fchdir) && \
-      (defined(fchdir) || defined(__fchdir_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
-       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
-       defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_fchdir
 #endif
 
 #ifdef CONFIG_NO_pause

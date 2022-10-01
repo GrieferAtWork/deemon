@@ -37,13 +37,10 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/spcall.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4611) /* Some nonsensical warning about how setjmp() is evil... */
-#endif /* _MSC_VER */
 
 DECL_BEGIN
 
@@ -53,6 +50,7 @@ DECL_BEGIN
 #define strcmp dee_strcmp
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
+
 
 typedef DeeAttributeObject        Attr;
 typedef DeeEnumAttrObject         EnumAttr;
@@ -1015,9 +1013,9 @@ enumattriter_fini(EnumAttrIter *__restrict self) {
 			Dee_Decref(*iter);
 		self->ei_bufpos = (DREF Attr **)ITER_DONE; /* Indicate that we want to stop iteration. */
 		/* Resolve execution of the iterator normally. */
-		error = setjmp(self->ei_break);
+		error = DeeSystem_SetJmp(self->ei_break);
 		if (error == 0)
-			longjmp(self->ei_continue, CNTSIG_STOP);
+			DeeSystem_LongJmp(self->ei_continue, CNTSIG_STOP);
 		if (error == BRKSIG_ERROR)
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 	}
@@ -1078,8 +1076,8 @@ again:
 	 * caller and let them yield what we've collected. */
 	if (iterator->ei_bufpos == COMPILER_ENDOF(iterator->ei_buffer)) {
 		iterator->ei_bufpos = iterator->ei_buffer;
-		if ((error = setjmp(iterator->ei_continue)) == 0)
-			longjmp(iterator->ei_break, BRKSIG_YIELD);
+		if ((error = DeeSystem_SetJmp(iterator->ei_continue)) == 0)
+			DeeSystem_LongJmp(iterator->ei_break, BRKSIG_YIELD);
 		/* Stop iteration if the other end requested this. */
 		if (error == CNTSIG_STOP)
 			return -2;
@@ -1090,8 +1088,8 @@ err_collect:
 	 * With how small our stack is, we'd probably not be able to
 	 * safely execute user-code that may be invoked from gc-callbacks
 	 * associated with the memory collection sub-system. */
-	if ((error = setjmp(iterator->ei_continue)) == 0)
-		longjmp(iterator->ei_break, BRKSIG_COLLECT);
+	if ((error = DeeSystem_SetJmp(iterator->ei_continue)) == 0)
+		DeeSystem_LongJmp(iterator->ei_break, BRKSIG_COLLECT);
 	/* Stop iteration if the other end requested this. */
 	if (error == CNTSIG_STOP)
 		return -2;
@@ -1099,11 +1097,9 @@ err_collect:
 }
 
 
-#if defined(CONFIG_HOST_WINDOWS) && defined(__x86_64__)
-ATTR_MSABI
-#endif /* CONFIG_HOST_WINDOWS && __x86_64__ */
-PRIVATE ATTR_NOINLINE ATTR_NORETURN ATTR_USED void
-enumattr_start(EnumAttrIter *__restrict self) {
+PRIVATE ATTR_NOINLINE ATTR_NORETURN ATTR_USED void SPCALL_CC
+enumattr_start(void *arg) {
+	EnumAttrIter *self = (EnumAttrIter *)arg;
 	dssize_t enum_error;
 	/* This is where execution on the fake stack starts. */
 	self->ei_bufpos = self->ei_buffer;
@@ -1118,7 +1114,7 @@ enumattr_start(EnumAttrIter *__restrict self) {
 			Dee_Decref(*self->ei_bufpos);
 		}
 		self->ei_bufpos = (DREF Attr **)ITER_DONE;
-		longjmp(self->ei_break, BRKSIG_ERROR);
+		DeeSystem_LongJmp(self->ei_break, BRKSIG_ERROR);
 		__builtin_unreachable();
 	}
 	/* Notify of the last remaining attributes (if there are any). */
@@ -1130,13 +1126,13 @@ enumattr_start(EnumAttrIter *__restrict self) {
 		memmoveupc(new_pos, self->ei_buffer,
 		           count, sizeof(Attr *));
 		self->ei_bufpos = new_pos;
-		if (setjmp(self->ei_continue) == 0)
-			longjmp(self->ei_break, BRKSIG_YIELD);
+		if (DeeSystem_SetJmp(self->ei_continue) == 0)
+			DeeSystem_LongJmp(self->ei_break, BRKSIG_YIELD);
 		ASSERT(self->ei_bufpos == self->ei_buffer);
 	}
 	/* Mark the buffer as exhausted. */
 	self->ei_bufpos = (DREF Attr **)ITER_DONE;
-	longjmp(self->ei_break, BRKSIG_STOP);
+	DeeSystem_LongJmp(self->ei_break, BRKSIG_STOP);
 	__builtin_unreachable();
 }
 #endif /* CONFIG_LONGJMP_ENUMATTR */
@@ -1155,59 +1151,11 @@ again:
 		goto iter_done;
 	if (self->ei_bufpos != COMPILER_ENDOF(self->ei_buffer)) {
 		if (!self->ei_bufpos) {
-			/* Special case: initial call. */
-			uintptr_t *new_sp;
-			/* TODO: Special handling for user-defined enumattr operators. */
-			new_sp = COMPILER_ENDOF(self->ei_stack);
-#ifndef __x86_64__
-			*--new_sp = (uintptr_t)self; /* First argument to `enumattr_start' */
-#endif /* __x86_64__ */
-			if (setjmp(self->ei_break) == 0) {
-				/* Set the  */
-#ifdef __COMPILER_HAVE_GCC_ASM
-				__asm__ __volatile__(""
-#ifdef __x86_64__
-				                     "movq %0, %%rsp\n\t"
-#ifdef CONFIG_HOST_WINDOWS
-				                     "subq $32, %%rsp\n\t" /* 32: Register scratch area... */
-#endif /* CONFIG_HOST_WINDOWS */
-#else /* __x86_64__ */
-				                     "movl %0, %%esp\n\t"
-#endif /* !__x86_64__ */
-				                     "call "
-#ifdef __USER_LABEL_PREFIX__
-				                     PP_STR(__USER_LABEL_PREFIX__)
-#endif /* __USER_LABEL_PREFIX__ */
-				                     "enumattr_start\n\t"
-				                     :
-				                     : "g" (new_sp)
-#ifdef __x86_64__
-#ifdef CONFIG_HOST_WINDOWS
-				                     , "c" (self)
-#else /* CONFIG_HOST_WINDOWS */
-				                     , "D" (self)
-#endif /* !CONFIG_HOST_WINDOWS */
-#endif /* __x86_64__ */
-				                     );
-#else /* __COMPILER_HAVE_GCC_ASM */
-				__asm {
-#ifdef __x86_64__
-#ifdef CONFIG_HOST_WINDOWS
-					MOV  RCX, self
-#else /* CONFIG_HOST_WINDOWS */
-					MOV  RDI, self
-#endif /* !CONFIG_HOST_WINDOWS */
-#ifdef CONFIG_HOST_WINDOWS
-					LEA  RSP, [new_sp - 32] /* 32: Register scratch area... */
-#else /* CONFIG_HOST_WINDOWS */
-					MOV  RSP, new_sp
-#endif /* !CONFIG_HOST_WINDOWS */
-#else /* __x86_64__ */
-					MOV  ESP, new_sp
-#endif /* !__x86_64__ */
-					CALL enumattr_start
-				}
-#endif /* !__COMPILER_HAVE_GCC_ASM */
+			if (DeeSystem_SetJmp(self->ei_break) == 0) {
+				/* Special case: initial call. */
+				SPCALL_NORETURN(enumattr_start, self,
+				                self->ei_stack,
+				                sizeof(self->ei_stack));
 				__builtin_unreachable();
 			}
 			goto again;
@@ -1220,8 +1168,8 @@ again:
 	}
 	/* Continue execution of the iterator. */
 	self->ei_bufpos = self->ei_buffer;
-	if ((error = setjmp(self->ei_break)) == 0)
-		longjmp(self->ei_continue, CNTSIG_CONTINUE);
+	if ((error = DeeSystem_SetJmp(self->ei_break)) == 0)
+		DeeSystem_LongJmp(self->ei_continue, CNTSIG_CONTINUE);
 	/* Handle signal return signals from the enumeration sub-routine. */
 	if (error == BRKSIG_COLLECT) {
 		atomic_lock_release(&self->ei_lock);
@@ -1370,7 +1318,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
                 DeeObject *self, denum_t proc, void *arg);
 
 
-/* Lookup the descriptor for a attribute, given a set of lookup rules.
+/* Lookup the descriptor for an attribute, given a set of lookup rules.
  * @param: rules: The result of follow for the lookup.
  * @return:  0: Successfully queried the attribute.
  *              The given `result' was filled, and the must finalize

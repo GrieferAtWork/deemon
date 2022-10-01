@@ -378,6 +378,9 @@
     <ClInclude Include="..\include\deemon\mapfile.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\system-sjlj.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

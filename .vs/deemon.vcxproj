@@ -137,6 +137,7 @@
     <ClInclude Include="..\include\deemon\string.h" />
     <ClInclude Include="..\include\deemon\stringutils.h" />
     <ClInclude Include="..\include\deemon\super.h" />
+    <ClInclude Include="..\include\deemon\system-sjlj.h" />
     <ClInclude Include="..\include\deemon\thread.h" />
     <ClInclude Include="..\include\deemon\traceback.h" />
     <ClInclude Include="..\include\deemon\tuple.h" />

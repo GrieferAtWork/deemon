@@ -22,26 +22,18 @@
 
 #include "api.h"
 
-#include <hybrid/host.h> /* __i386__, __x86_64__, ... */
-
 #include "object.h"
 
 #ifdef CONFIG_NO_LONGJMP_ENUMATTR
 #undef CONFIG_LONGJMP_ENUMATTR
 #else /* CONFIG_NO_LONGJMP_ENUMATTR */
 #include "system-features.h"
+#include <hybrid/spcall.h>
 
-#ifndef CONFIG_HAVE_SETJMP_H
-/* Need setjmp() and longjmp() for this to be usable. */
+#ifndef SPCALL_NORETURN
+/* SPCALL_NORETURN() for this to work. */
 #undef CONFIG_LONGJMP_ENUMATTR
-#elif !(defined(__i386__) || defined(__x86_64__))
-/* Need to be hosted by a 32- or 64-bit x86 platform. */
-#undef CONFIG_LONGJMP_ENUMATTR
-#elif !(defined(_MSC_VER) || defined(__COMPILER_HAVE_GCC_ASM))
-/* Need MSVC or GCC-style assembly support */
-#undef CONFIG_LONGJMP_ENUMATTR
-#else /* ... */
-
+#else /* SPCALL_NORETURN */
 /* Enable special handling to use setjmp() / longjmp() to yield
  * attributes, turning the tp_enumattr() into a re-entrant function call.
  * The specifics are a bit complicated, but essentially we setup a small
@@ -62,21 +54,20 @@
  * back to user-code, yielding the new attributes until that buffer is exhausted.
  * This is done to mitigate any overhead that calls to setjmp/longjmp may cause. */
 #define CONFIG_LONGJMP_ENUMATTR_CLUSTER 16
-
-#if defined(__x86_64__) && defined(_MSC_VER)
-/* Inline assembly isn't supported by the 64-bit compiler. */
-#undef CONFIG_LONGJMP_ENUMATTR
-#endif /* __x86_64__ && _MSC_VER */
-
-#endif /* !... */
+#endif /* !SPCALL_NORETURN */
 #endif /* !CONFIG_NO_LONGJMP_ENUMATTR */
 
 /* #undef CONFIG_LONGJMP_ENUMATTR */
 
 #ifdef CONFIG_LONGJMP_ENUMATTR
-#include <setjmp.h>
+#include "system-sjlj.h"
+#ifndef DeeSystem_JmpBuf
+#undef CONFIG_LONGJMP_ENUMATTR
+#endif /* !DeeSystem_JmpBuf */
 
+#ifdef CONFIG_LONGJMP_ENUMATTR
 #include "util/lock.h"
+#endif /* CONFIG_LONGJMP_ENUMATTR */
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 
 #include <stddef.h>
@@ -146,8 +137,8 @@ struct Dee_enumattr_iterator_object {
 	DREF DeeAttributeObject **ei_bufpos;           /* [0..1][in(ei_buffer)][lock(ei_lock)] Pointer to the next unused (in-enum) or full (outside-enum) item.
 	                                                *  NOTE: Initially, this pointer is set to NULL.
 	                                                *  NOTE: To indicate exhaustion, this pointer to set to ITER_DONE. */
-	jmp_buf                   ei_break;            /* [lock(ei_lock)] Jump buffer to jump into to break execution (and yield more items). */
-	jmp_buf                   ei_continue;         /* [lock(ei_lock)] Jump buffer to jump into to continue execution (and collect more items). */
+	DeeSystem_JmpBuf          ei_break;            /* [lock(ei_lock)] Jump buffer to jump into to break execution (and yield more items). */
+	DeeSystem_JmpBuf          ei_continue;         /* [lock(ei_lock)] Jump buffer to jump into to continue execution (and collect more items). */
 	uintptr_t                 ei_stack[512 + 256]; /* A small 3/6K-stack used when running the `tp_enumattr' operator. */
 #else /* CONFIG_LONGJMP_ENUMATTR */
 	DREF DeeAttributeObject **ei_iter;             /* [1..1][in(ei_seq->ea_attrv)][atomic]
@@ -174,7 +165,7 @@ struct Dee_attribute_lookup_rules {
 	uint16_t    alr_perm_value; /* Permissions value for `alr_perm_mask' */
 };
 
-/* Lookup the descriptor for a attribute, given a set of lookup rules.
+/* Lookup the descriptor for an attribute, given a set of lookup rules.
  * @param: rules: The result of follow for the lookup.
  * @return:  0: Successfully queried the attribute.
  *              The given `result' was filled, and the must finalize
