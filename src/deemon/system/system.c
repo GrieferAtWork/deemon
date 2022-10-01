@@ -373,6 +373,8 @@ PUBLIC int
 	if unlikely(!buffer)
 		goto err;
 again:
+	if (DeeThread_CheckInterrupt())
+		goto err_release;
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
 	DBG_ALIGNMENT_ENABLE();
@@ -383,6 +385,8 @@ DWORD dwError;
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again;
+		} else if (DeeNTSystem_IsIntr(dwError)) {
+			goto again;
 		} else {
 			nt_err_getcwd(dwError);
 		}
@@ -443,6 +447,11 @@ err:
 	                      unicode_printer_alloc_utf8(printer, bufsize));
 	if unlikely(!buffer)
 		goto err;
+#ifdef EINTR
+again:
+#endif /* EINTR */
+	if (DeeThread_CheckInterrupt())
+		goto err_release;
 	DBG_ALIGNMENT_DISABLE();
 	while (!IFELSE_WCHAR(wgetcwd((wchar_t *)buffer, bufsize + 1),
 	                     getcwd((char *)buffer, bufsize + 1))) {
@@ -452,6 +461,10 @@ err:
 		int error = DeeSystem_GetErrno();
 		if (error != ERANGE) {
 			DBG_ALIGNMENT_ENABLE();
+#ifdef EINTR
+			if (error == EINTR)
+				goto again;
+#endif /* EINTR */
 			DeeSystem_IF_E1(error, EACCES, {
 				DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
 				                          "Permission to read a part of the current "
@@ -520,7 +533,7 @@ err:
 	DBG_ALIGNMENT_DISABLE();
 	pwd = getenv("PWD");
 	DBG_ALIGNMENT_ENABLE();
-	if (!pwd)
+	if (pwd == NULL)
 		pwd = "";
 	DBG_ALIGNMENT_DISABLE();
 	pwdlen = strlen(pwd);

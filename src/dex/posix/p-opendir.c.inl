@@ -135,13 +135,13 @@ struct dir_iterator_object {
 	WIN32_FIND_DATAW di_data;     /* [lock(di_lock)][valid_if(di_hnd != INVALID_HANDLE_VALUE)]
 	                               * The file data for the next matching entry. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         di_lock;     /* Lock for te above fields. */
+	rwlock_t         di_lock;     /* Lock for the above fields. */
 #endif /* !CONFIG_NO_THREADS */
 #elif defined(posix_opendir_USE_opendir)
 	struct dirent   *di_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
 	DIR             *di_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         di_lock;     /* Lock for te above fields. */
+	rwlock_t         di_lock;     /* Lock for the above fields. */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* ... */
 

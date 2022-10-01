@@ -42,6 +42,9 @@
 #include "p-sync.c.inl"
 #include "p-truncate.c.inl"
 
+/**/
+#include "p-pwd.c.inl" /* This one has to come after "p-environ.c.inl" */
+
 /* Include p-ondemand.c.inl last, since it defined functions on-demand */
 #include "p-ondemand.c.inl"
 
@@ -268,6 +271,7 @@ local ALL_STUBS = {
 	("posix_stat_issock_IS_STUB", { "stat.issock" }),
 	("stat_class_isexe_IS_STUB", { "stat.isexe" }),
 	("stat_class_ishidden_IS_STUB", { "stat.ishidden" }),
+	("posix_gethostname_USE_STUB", { "gethostname" }),
 };
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -694,6 +698,27 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_issock_IS_STUB /* nothing */
 #define str_posix_stat_issock_IS_STUB /* nothing */
 #endif /* !posix_stat_issock_IS_STUB */
+#ifdef stat_class_isexe_IS_STUB
+#define len_stat_class_isexe_IS_STUB +11
+#define str_stat_class_isexe_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'e', 'x', 'e', '\0',
+#else /* stat_class_isexe_IS_STUB */
+#define len_stat_class_isexe_IS_STUB /* nothing */
+#define str_stat_class_isexe_IS_STUB /* nothing */
+#endif /* !stat_class_isexe_IS_STUB */
+#ifdef stat_class_ishidden_IS_STUB
+#define len_stat_class_ishidden_IS_STUB +14
+#define str_stat_class_ishidden_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'h', 'i', 'd', 'd', 'e', 'n', '\0',
+#else /* stat_class_ishidden_IS_STUB */
+#define len_stat_class_ishidden_IS_STUB /* nothing */
+#define str_stat_class_ishidden_IS_STUB /* nothing */
+#endif /* !stat_class_ishidden_IS_STUB */
+#ifdef posix_gethostname_USE_STUB
+#define len_posix_gethostname_USE_STUB +12
+#define str_posix_gethostname_USE_STUB 'g', 'e', 't', 'h', 'o', 's', 't', 'n', 'a', 'm', 'e', '\0',
+#else /* posix_gethostname_USE_STUB */
+#define len_posix_gethostname_USE_STUB /* nothing */
+#define str_posix_gethostname_USE_STUB /* nothing */
+#endif /* !posix_gethostname_USE_STUB */
 #define POSIX_STUBS_TOTLEN 0 \
 	len_posix_truncate_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
@@ -750,6 +775,9 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_stat_isfifo_IS_STUB \
 	len_posix_stat_islnk_IS_STUB \
 	len_posix_stat_issock_IS_STUB \
+	len_stat_class_isexe_IS_STUB \
+	len_stat_class_ishidden_IS_STUB \
+	len_posix_gethostname_USE_STUB \
 /**/
 #if POSIX_STUBS_TOTLEN != 0
 PRIVATE struct {
@@ -819,6 +847,9 @@ PRIVATE struct {
 		str_posix_stat_isfifo_IS_STUB
 		str_posix_stat_islnk_IS_STUB
 		str_posix_stat_issock_IS_STUB
+		str_stat_class_isexe_IS_STUB
+		str_stat_class_ishidden_IS_STUB
+		str_posix_gethostname_USE_STUB
 	},
 	{ Dee_STRING_WIDTH_1BYTE,
 	  Dee_STRING_UTF_FASCII,
@@ -1354,6 +1385,21 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
 	D(POSIX_FSTATAT_DEF_DOC("More restrictive alias for ?Gstat"))
 
+	/* Process Environment */
+	D(POSIX_GETCWD_DEF_DOC("@interrupt\n"
+	                       "@throw FileAccessError Permission to read a part of the current working directory's path was denied\n"
+	                       "@throw FileNotFound The current working directory has been unlinked\n"
+	                       "@throw SystemError Failed to retrieve the current working directory for some reason\n"
+	                       "Return the absolute path of the current working directory"))
+	D(POSIX_GETTMP_DEF_DOC("@interrupt\n"
+	                       "@throw SystemError Failed to retrieve a temporary path name for some reason\n"
+	                       "Return the path to a folder that can be used as temporary storage of files and directories\n"
+	                       "If (in this order) one of these environment variables is defined, "
+	                       /**/ "it will be returned $'TMPDIR', $'TMP', $'TEMP', $'TEMPDIR'"))
+	D(POSIX_GETHOSTNAME_DEF_DOC("@interrupt\n"
+	                            "@throw SystemError Failed to retrieve the name of the hosting machine for some reason\n"
+	                            "Returns the user-assigned name of the hosting machine"))
+
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
@@ -1366,8 +1412,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(getcwd, "->?Dstring\n")
-	DEFINE_LIBFS_ALIAS_S(gethostname, "->?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(chdir, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(chmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")

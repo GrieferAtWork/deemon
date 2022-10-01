@@ -35,6 +35,7 @@
 #define NEED_err_nt_chattr_no_access
 #define NEED_err_nt_handle_closed
 #define NEED_nt_GetTempPath
+#define NEED_nt_GetComputerName
 #define NEED_nt_SetCurrentDirectory
 #define NEED_nt_GetFileAttributesEx
 #define NEED_nt_GetFileAttributes
@@ -179,6 +180,51 @@ err:
 	return NULL;
 }
 #endif /* NEED_nt_GetTempPath */
+
+
+#ifdef NEED_nt_GetComputerName
+#undef NEED_nt_GetComputerName
+INTERN WUNUSED DREF DeeObject *DCALL
+nt_GetComputerName(void) {
+	DWORD bufsize = MAX_COMPUTERNAME_LENGTH + 1;
+	LPWSTR buffer, new_buffer;
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	buffer = DeeString_NewWideBuffer(bufsize - 1);
+	if unlikely(!buffer)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	if (!GetComputerNameW(buffer, &bufsize)) {
+		DWORD error = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (error == ERROR_BUFFER_OVERFLOW && bufsize &&
+		    bufsize - 1 > WSTR_LENGTH(buffer)) {
+			new_buffer = DeeString_ResizeWideBuffer(buffer, bufsize - 1);
+			if unlikely(!new_buffer)
+				goto err_result;
+			buffer = new_buffer;
+			goto again;
+		}
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err_result;
+		}
+		DeeError_Throwf(&DeeError_SystemError,
+		                "Failed to retrieve the name of the hosting machine");
+		goto err_result;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	/* Truncate the buffer and return it. */
+	buffer = DeeString_TruncateWideBuffer(buffer, bufsize);
+	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
+err_result:
+	DeeString_FreeWideBuffer(buffer);
+err:
+	return NULL;
+}
+#endif /* NEED_nt_GetComputerName */
 
 
 #ifdef NEED_nt_SetCurrentDirectory

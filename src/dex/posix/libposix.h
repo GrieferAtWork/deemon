@@ -441,6 +441,7 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chattr_no_access(DWORD error, Dee
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_handle_closed(DWORD error, DeeObject *__restrict path);
 
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
+INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
