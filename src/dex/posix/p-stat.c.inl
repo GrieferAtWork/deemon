@@ -714,8 +714,8 @@ err_nt:
 		} else if (DeeNTSystem_IsNotDir(dwError)) {
 			if (atflags & DEE_STAT_F_TRY)
 				return 1;
-#define NEED_err_nt_path_no_dir
-			err_nt_path_no_dir(dwError, path_or_file);
+#define NEED_err_nt_path_not_dir
+			err_nt_path_not_dir(dwError, path_or_file);
 		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 #define NEED_err_nt_path_no_access
 			err_nt_path_no_access(dwError, path_or_file);
@@ -830,9 +830,9 @@ again:
 		if (error == ENOTDIR) {
 			if (atflags & DEE_STAT_F_TRY)
 				return 1;
-			return err_unix_path_no_dir(error, path_or_file);
+			return err_unix_path_not_dir(error, path_or_file);
 		}
-#define NEED_err_unix_path_no_dir
+#define NEED_err_unix_path_not_dir
 #endif /* ENOTDIR */
 #ifdef ENOENT
 		if (error == ENOENT) {

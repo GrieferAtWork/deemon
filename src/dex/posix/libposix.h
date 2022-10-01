@@ -428,17 +428,43 @@ err_unknown_env_var(DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_abspath(DeeObject *dfd, DeeObject *path);
 
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_access(int error, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_dir(int error, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int error, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_handle_closed(int error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_dir(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_found2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_access(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_no_access2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chattr_no_access(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_handle_closed(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_exists(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_is_dir(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_readonly(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_not_found(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_not_writable(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_writable(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_busy(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
 
 #ifdef CONFIG_HOST_WINDOWS
-INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_no_dir(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_dir(DWORD error, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_found(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_not_found2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_no_access(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_no_access2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chattr_no_access(DWORD error, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_handle_closed(DWORD error, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_exists(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_is_dir(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_readonly(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_file_not_found(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_file_not_writable(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_writable(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_busy(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+
 
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);

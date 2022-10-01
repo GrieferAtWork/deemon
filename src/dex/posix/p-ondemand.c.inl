@@ -25,15 +25,40 @@
 #include "libposix.h"
 
 #ifdef __INTELLISENSE__
-#define NEED_err_unix_path_no_access
-#define NEED_err_unix_path_no_dir
+#define NEED_err_unix_path_not_dir
+#define NEED_err_nt_path_not_dir
 #define NEED_err_unix_path_not_found
-#define NEED_err_unix_handle_closed
-#define NEED_err_nt_path_no_dir
 #define NEED_err_nt_path_not_found
+#define NEED_err_unix_path_not_found2
+#define NEED_err_nt_path_not_found2
+#define NEED_err_unix_path_no_access
 #define NEED_err_nt_path_no_access
+#define NEED_err_unix_path_no_access2
+#define NEED_err_nt_path_no_access2
+#define NEED_err_unix_chattr_no_access
 #define NEED_err_nt_chattr_no_access
+#define NEED_err_unix_handle_closed
 #define NEED_err_nt_handle_closed
+#define NEED_err_unix_path_exists
+#define NEED_err_nt_path_exists
+#define NEED_err_unix_path_is_dir
+#define NEED_err_nt_path_is_dir
+#define NEED_err_unix_path_read_only
+#define NEED_err_nt_path_readonly
+#define NEED_err_unix_file_not_found
+#define NEED_err_nt_file_not_found
+#define NEED_err_unix_file_not_writable
+#define NEED_err_nt_file_not_writable
+#define NEED_err_unix_path_not_writable
+#define NEED_err_nt_path_not_writable
+#define NEED_err_unix_path_busy
+#define NEED_err_nt_path_busy
+#define NEED_err_unix_path_not_empty
+#define NEED_err_nt_path_not_empty
+#define NEED_err_unix_chtime_no_access
+#define NEED_err_nt_chtime_no_access
+#define NEED_err_unix_path_cross_dev2
+#define NEED_err_nt_path_cross_dev2
 #define NEED_nt_GetTempPath
 #define NEED_nt_GetComputerName
 #define NEED_nt_SetCurrentDirectory
@@ -50,25 +75,25 @@
 
 DECL_BEGIN
 
-#ifdef NEED_err_unix_path_no_access
-#undef NEED_err_unix_path_no_access
+#ifdef NEED_err_unix_path_not_dir
+#undef NEED_err_unix_path_not_dir
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_path_no_access(int error, DeeObject *__restrict path) {
-	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
-	                                 "Search permissions are not granted for path %r",
-	                                 path);
-}
-#endif /* NEED_err_unix_path_no_access */
-
-#ifdef NEED_err_unix_path_no_dir
-#undef NEED_err_unix_path_no_dir
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_path_no_dir(int error, DeeObject *__restrict path) {
+err_unix_path_not_dir(int error, DeeObject *__restrict path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_NoDirectory, error,
 	                                 "Some part of the path %r is not a directory",
 	                                 path);
 }
-#endif /* NEED_err_unix_path_no_dir */
+#endif /* NEED_err_unix_path_not_dir */
+
+#ifdef NEED_err_nt_path_not_dir
+#undef NEED_err_nt_path_not_dir
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_not_dir(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_NoDirectory, dwError,
+	                               "Some part of the path %r is not a directory",
+	                               path);
+}
+#endif /* NEED_err_nt_path_not_dir */
 
 #ifdef NEED_err_unix_path_not_found
 #undef NEED_err_unix_path_not_found
@@ -80,66 +105,329 @@ err_unix_path_not_found(int error, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_unix_path_not_found */
 
-#ifdef NEED_err_unix_handle_closed
-#undef NEED_err_unix_handle_closed
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_handle_closed(int error, DeeObject *__restrict path) {
-	return DeeUnixSystem_ThrowErrorf(&DeeError_FileClosed, error,
-	                                 "The given handle %r has been closed",
-	                                 path);
-}
-#endif /* NEED_err_unix_handle_closed */
-
-
-#ifdef NEED_err_nt_path_no_dir
-#undef NEED_err_nt_path_no_dir
-INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_path_no_dir(DWORD error, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_NoDirectory, error,
-	                               "Some part of the path %r is not a directory",
-	                               path);
-}
-#endif /* NEED_err_nt_path_no_dir */
-
 #ifdef NEED_err_nt_path_not_found
 #undef NEED_err_nt_path_not_found
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_path_not_found(DWORD error, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+err_nt_path_not_found(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
 	                               "Path %r could not be found",
 	                               path);
 }
 #endif /* NEED_err_nt_path_not_found */
 
+#ifdef NEED_err_unix_path_not_found2
+#undef NEED_err_unix_path_not_found2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_not_found2(int errno_value,
+                         DeeObject *__restrict existing_path,
+                         DeeObject *__restrict new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
+	                                 "Path %r or %r could not be found",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_not_found2 */
+
+#ifdef NEED_err_nt_path_not_found2
+#undef NEED_err_nt_path_not_found2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_path_not_found2(DWORD dwError,
+                       DeeObject *__restrict existing_path,
+                       DeeObject *__restrict new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
+	                               "Path %r or %r could not be found",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_path_not_found2 */
+
+#ifdef NEED_err_unix_path_no_access
+#undef NEED_err_unix_path_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_no_access(int error, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+	                                 "Search permissions are not granted for path %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_no_access */
+
 #ifdef NEED_err_nt_path_no_access
 #undef NEED_err_nt_path_no_access
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_path_no_access(DWORD error, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Search permissions are not granted for path %r",
 	                               path);
 }
 #endif /* NEED_err_nt_path_no_access */
 
+#ifdef NEED_err_unix_path_no_access2
+#undef NEED_err_unix_path_no_access2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_no_access2(int errno_value,
+                         DeeObject *__restrict existing_path,
+                         DeeObject *__restrict new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Access to %r or %r has not been granted",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_no_access2 */
+
+#ifdef NEED_err_nt_path_no_access2
+#undef NEED_err_nt_path_no_access2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_path_no_access2(DWORD dwError,
+                       DeeObject *__restrict existing_path,
+                       DeeObject *__restrict new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+	                               "Access to %r or %r has not been granted",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_path_no_access2 */
+
+#ifdef NEED_err_unix_chattr_no_access
+#undef NEED_err_unix_chattr_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chattr_no_access(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Changes to the attributes of %r are not allowed",
+	                                 path);
+}
+#endif /* NEED_err_unix_chattr_no_access */
+
 #ifdef NEED_err_nt_chattr_no_access
 #undef NEED_err_nt_chattr_no_access
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_chattr_no_access(DWORD error, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+err_nt_chattr_no_access(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Changes to the attributes of %r are not allowed",
 	                               path);
 }
 #endif /* NEED_err_nt_chattr_no_access */
 
+#ifdef NEED_err_unix_handle_closed
+#undef NEED_err_unix_handle_closed
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_handle_closed(int error, DeeObject *__restrict handle) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileClosed, error,
+	                                 "The given handle %r has been closed",
+	                                 handle);
+}
+#endif /* NEED_err_unix_handle_closed */
+
 #ifdef NEED_err_nt_handle_closed
 #undef NEED_err_nt_handle_closed
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_nt_handle_closed(DWORD error, DeeObject *__restrict path) {
-	return DeeNTSystem_ThrowErrorf(&DeeError_FileClosed, error,
+err_nt_handle_closed(DWORD dwError, DeeObject *__restrict handle) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileClosed, dwError,
 	                               "The given handle %r has been closed",
-	                               path);
+	                               handle);
 }
 #endif /* NEED_err_nt_handle_closed */
+
+#ifdef NEED_err_unix_path_exists
+#undef NEED_err_unix_path_exists
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_exists(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileExists, errno_value,
+	                                 "Path %r already exists",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_exists */
+
+#ifdef NEED_err_nt_path_exists
+#undef NEED_err_nt_path_exists
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_exists(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileExists, dwError,
+	                               "Path %r already exists",
+	                               path);
+}
+#endif /* NEED_err_nt_path_exists */
+
+#ifdef NEED_err_unix_path_is_dir
+#undef NEED_err_unix_path_is_dir
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_is_dir(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_IsDirectory, errno_value,
+	                                 "Path %r is a directory",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_is_dir */
+
+#ifdef NEED_err_nt_path_is_dir
+#undef NEED_err_nt_path_is_dir
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_is_dir(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, dwError,
+	                               "Path %r is a directory",
+	                               path);
+}
+#endif /* NEED_err_nt_path_is_dir */
+
+#ifdef NEED_err_unix_path_read_only
+#undef NEED_err_unix_path_read_only
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_read_only(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, errno_value,
+	                                 "Path %r is apart of a read-only filesystem",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_read_only */
+
+#ifdef NEED_err_nt_path_readonly
+#undef NEED_err_nt_path_readonly
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_readonly(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_ReadOnlyFile, dwError,
+	                               "Path %r is apart of a read-only filesystem",
+	                               path);
+}
+#endif /* NEED_err_nt_path_readonly */
+
+#ifdef NEED_err_unix_file_not_found
+#undef NEED_err_unix_file_not_found
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_file_not_found(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
+	                                 "File %r could not be found",
+	                                 path);
+}
+#endif /* NEED_err_unix_file_not_found */
+
+#ifdef NEED_err_nt_file_not_found
+#undef NEED_err_nt_file_not_found
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_file_not_found(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
+	                               "File %r could not be found",
+	                               path);
+}
+#endif /* NEED_err_nt_file_not_found */
+
+#ifdef NEED_err_unix_file_not_writable
+#undef NEED_err_unix_file_not_writable
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_file_not_writable(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Write permissions have not been granted for file %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_file_not_writable */
+
+#ifdef NEED_err_nt_file_not_writable
+#undef NEED_err_nt_file_not_writable
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_file_not_writable(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+	                               "Write permissions have not been granted for file %r",
+	                               path);
+}
+#endif /* NEED_err_nt_file_not_writable */
+
+#ifdef NEED_err_unix_path_not_writable
+#undef NEED_err_unix_path_not_writable
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_not_writable(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Write permissions have not been granted for path %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_not_writable */
+
+#ifdef NEED_err_nt_path_not_writable
+#undef NEED_err_nt_path_not_writable
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_not_writable(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+	                               "Write permissions have not been granted for path %r",
+	                               path);
+}
+#endif /* NEED_err_nt_path_not_writable */
+
+#ifdef NEED_err_unix_path_busy
+#undef NEED_err_unix_path_busy
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_busy(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_BusyFile, errno_value,
+	                                 "Path %r cannot be deleted because it is still in use",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_busy */
+
+#ifdef NEED_err_nt_path_busy
+#undef NEED_err_nt_path_busy
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_busy(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_BusyFile, dwError,
+	                               "Path %r cannot be deleted because it is still in use",
+	                               path);
+}
+#endif /* NEED_err_nt_path_busy */
+
+#ifdef NEED_err_unix_path_not_empty
+#undef NEED_err_unix_path_not_empty
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_path_not_empty(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_DirectoryNotEmpty, errno_value,
+	                                 "The directory %r cannot be deleted because it is not empty",
+	                                 path);
+}
+#endif /* NEED_err_unix_path_not_empty */
+
+#ifdef NEED_err_nt_path_not_empty
+#undef NEED_err_nt_path_not_empty
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_DirectoryNotEmpty, dwError,
+	                               "The directory %r cannot be deleted because it is not empty",
+	                               path);
+}
+#endif /* NEED_err_nt_path_not_empty */
+
+#ifdef NEED_err_unix_chtime_no_access
+#undef NEED_err_unix_chtime_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
+	                                 "Changes to the selected timestamps of %r are not allowed",
+	                                 path);
+}
+#endif /* NEED_err_unix_chtime_no_access */
+
+#ifdef NEED_err_nt_chtime_no_access
+#undef NEED_err_nt_chtime_no_access
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+	                               "Changes to the selected timestamps of %r are not allowed",
+	                               path);
+}
+#endif /* NEED_err_nt_chtime_no_access */
+
+#ifdef NEED_err_unix_path_cross_dev2
+#undef NEED_err_unix_path_cross_dev2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_cross_dev2(int errno_value,
+                         DeeObject *__restrict existing_path,
+                         DeeObject *__restrict new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_CrossDeviceLink, errno_value,
+	                                 "Paths %r and %r are not apart of the same filesystem",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_cross_dev2 */
+
+#ifdef NEED_err_nt_path_cross_dev2
+#undef NEED_err_nt_path_cross_dev2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_path_cross_dev2(DWORD dwError,
+                       DeeObject *__restrict existing_path,
+                       DeeObject *__restrict new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_CrossDeviceLink, dwError,
+	                               "Paths %r and %r are not apart of the same filesystem",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_path_cross_dev2 */
+
+
 
 
 #ifdef NEED_nt_GetTempPath
@@ -196,9 +484,9 @@ nt_GetComputerName(void) {
 again:
 	DBG_ALIGNMENT_DISABLE();
 	if (!GetComputerNameW(buffer, &bufsize)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_BUFFER_OVERFLOW && bufsize &&
+		if (dwError == ERROR_BUFFER_OVERFLOW && bufsize &&
 		    bufsize - 1 > WSTR_LENGTH(buffer)) {
 			new_buffer = DeeString_ResizeWideBuffer(buffer, bufsize - 1);
 			if unlikely(!new_buffer)
@@ -206,13 +494,13 @@ again:
 			buffer = new_buffer;
 			goto again;
 		}
-		if (DeeNTSystem_IsBadAllocError(error)) {
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err_result;
 		}
-		DeeError_Throwf(&DeeError_SystemError,
-		                "Failed to retrieve the name of the hosting machine");
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to retrieve the name of the hosting machine");
 		goto err_result;
 	}
 	DBG_ALIGNMENT_ENABLE();

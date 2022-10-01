@@ -272,7 +272,8 @@ local ALL_STUBS = {
 	("stat_class_isexe_IS_STUB", { "stat.isexe" }),
 	("stat_class_ishidden_IS_STUB", { "stat.ishidden" }),
 	("posix_gethostname_USE_STUB", { "gethostname" }),
-};
+	("posix_chdir_USE_STUB", { "chdir" }),
+}.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
 	print("#ifdef ", test);
@@ -313,62 +314,27 @@ print("#undef POSIX_STUBS_TOTLEN");
 print("#define POSIX_STUBS_TOTLEN 0");
 print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 ]]]*/
-#ifdef posix_truncate_USE_STUB
-#define len_posix_truncate_USE_STUB +9
-#define str_posix_truncate_USE_STUB 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', '\0',
-#else /* posix_truncate_USE_STUB */
-#define len_posix_truncate_USE_STUB /* nothing */
-#define str_posix_truncate_USE_STUB /* nothing */
-#endif /* !posix_truncate_USE_STUB */
-#ifdef posix_ftruncate_USE_STUB
-#define len_posix_ftruncate_USE_STUB +10
-#define str_posix_ftruncate_USE_STUB 'f', 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', '\0',
-#else /* posix_ftruncate_USE_STUB */
-#define len_posix_ftruncate_USE_STUB /* nothing */
-#define str_posix_ftruncate_USE_STUB /* nothing */
-#endif /* !posix_ftruncate_USE_STUB */
-#ifdef posix_pipe_USE_STUB
-#define len_posix_pipe_USE_STUB +5
-#define str_posix_pipe_USE_STUB 'p', 'i', 'p', 'e', '\0',
-#else /* posix_pipe_USE_STUB */
-#define len_posix_pipe_USE_STUB /* nothing */
-#define str_posix_pipe_USE_STUB /* nothing */
-#endif /* !posix_pipe_USE_STUB */
-#ifdef posix_pipe2_USE_STUB
-#define len_posix_pipe2_USE_STUB +6
-#define str_posix_pipe2_USE_STUB 'p', 'i', 'p', 'e', '2', '\0',
-#else /* posix_pipe2_USE_STUB */
-#define len_posix_pipe2_USE_STUB /* nothing */
-#define str_posix_pipe2_USE_STUB /* nothing */
-#endif /* !posix_pipe2_USE_STUB */
-#ifdef posix_strerror_USE_STUB
-#define len_posix_strerror_USE_STUB +9
-#define str_posix_strerror_USE_STUB 's', 't', 'r', 'e', 'r', 'r', 'o', 'r', '\0',
-#else /* posix_strerror_USE_STUB */
-#define len_posix_strerror_USE_STUB /* nothing */
-#define str_posix_strerror_USE_STUB /* nothing */
-#endif /* !posix_strerror_USE_STUB */
-#ifdef posix_strerrorname_USE_STUB
-#define len_posix_strerrorname_USE_STUB +13
-#define str_posix_strerrorname_USE_STUB 's', 't', 'r', 'e', 'r', 'r', 'o', 'r', 'n', 'a', 'm', 'e', '\0',
-#else /* posix_strerrorname_USE_STUB */
-#define len_posix_strerrorname_USE_STUB /* nothing */
-#define str_posix_strerrorname_USE_STUB /* nothing */
-#endif /* !posix_strerrorname_USE_STUB */
-#ifdef posix_open_USE_STUB
-#define len_posix_open_USE_STUB +11
-#define str_posix_open_USE_STUB 'o', 'p', 'e', 'n', '\0', '_', 'o', 'p', 'e', 'n', '\0',
-#else /* posix_open_USE_STUB */
-#define len_posix_open_USE_STUB /* nothing */
-#define str_posix_open_USE_STUB /* nothing */
-#endif /* !posix_open_USE_STUB */
-#ifdef posix_creat_USE_STUB
-#define len_posix_creat_USE_STUB +13
-#define str_posix_creat_USE_STUB 'c', 'r', 'e', 'a', 't', '\0', '_', 'c', 'r', 'e', 'a', 't', '\0',
-#else /* posix_creat_USE_STUB */
-#define len_posix_creat_USE_STUB /* nothing */
-#define str_posix_creat_USE_STUB /* nothing */
-#endif /* !posix_creat_USE_STUB */
+#ifdef posix_access_USE_STUB
+#define len_posix_access_USE_STUB +7
+#define str_posix_access_USE_STUB 'a', 'c', 'c', 'e', 's', 's', '\0',
+#else /* posix_access_USE_STUB */
+#define len_posix_access_USE_STUB /* nothing */
+#define str_posix_access_USE_STUB /* nothing */
+#endif /* !posix_access_USE_STUB */
+#ifdef posix_chdir_USE_STUB
+#define len_posix_chdir_USE_STUB +6
+#define str_posix_chdir_USE_STUB 'c', 'h', 'd', 'i', 'r', '\0',
+#else /* posix_chdir_USE_STUB */
+#define len_posix_chdir_USE_STUB /* nothing */
+#define str_posix_chdir_USE_STUB /* nothing */
+#endif /* !posix_chdir_USE_STUB */
+#ifdef posix_clearenv_USE_STUB
+#define len_posix_clearenv_USE_STUB +9
+#define str_posix_clearenv_USE_STUB 'c', 'l', 'e', 'a', 'r', 'e', 'n', 'v', '\0',
+#else /* posix_clearenv_USE_STUB */
+#define len_posix_clearenv_USE_STUB /* nothing */
+#define str_posix_clearenv_USE_STUB /* nothing */
+#endif /* !posix_clearenv_USE_STUB */
 #ifdef posix_close_USE_STUB
 #define len_posix_close_USE_STUB +6
 #define str_posix_close_USE_STUB 'c', 'l', 'o', 's', 'e', '\0',
@@ -376,27 +342,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_close_USE_STUB /* nothing */
 #define str_posix_close_USE_STUB /* nothing */
 #endif /* !posix_close_USE_STUB */
-#ifdef posix_isatty_USE_STUB
-#define len_posix_isatty_USE_STUB +7
-#define str_posix_isatty_USE_STUB 'i', 's', 'a', 't', 't', 'y', '\0',
-#else /* posix_isatty_USE_STUB */
-#define len_posix_isatty_USE_STUB /* nothing */
-#define str_posix_isatty_USE_STUB /* nothing */
-#endif /* !posix_isatty_USE_STUB */
-#ifdef posix_umask_USE_STUB
-#define len_posix_umask_USE_STUB +6
-#define str_posix_umask_USE_STUB 'u', 'm', 'a', 's', 'k', '\0',
-#else /* posix_umask_USE_STUB */
-#define len_posix_umask_USE_STUB /* nothing */
-#define str_posix_umask_USE_STUB /* nothing */
-#endif /* !posix_umask_USE_STUB */
-#ifdef posix_dup_USE_STUB
-#define len_posix_dup_USE_STUB +4
-#define str_posix_dup_USE_STUB 'd', 'u', 'p', '\0',
-#else /* posix_dup_USE_STUB */
-#define len_posix_dup_USE_STUB /* nothing */
-#define str_posix_dup_USE_STUB /* nothing */
-#endif /* !posix_dup_USE_STUB */
+#ifdef posix_cpu_count_USE_STUB
+#define len_posix_cpu_count_USE_STUB +10
+#define str_posix_cpu_count_USE_STUB 'c', 'p', 'u', '_', 'c', 'o', 'u', 'n', 't', '\0',
+#else /* posix_cpu_count_USE_STUB */
+#define len_posix_cpu_count_USE_STUB /* nothing */
+#define str_posix_cpu_count_USE_STUB /* nothing */
+#endif /* !posix_cpu_count_USE_STUB */
+#ifdef posix_creat_USE_STUB
+#define len_posix_creat_USE_STUB +13
+#define str_posix_creat_USE_STUB 'c', 'r', 'e', 'a', 't', '\0', '_', 'c', 'r', 'e', 'a', 't', '\0',
+#else /* posix_creat_USE_STUB */
+#define len_posix_creat_USE_STUB /* nothing */
+#define str_posix_creat_USE_STUB /* nothing */
+#endif /* !posix_creat_USE_STUB */
 #ifdef posix_dup2_USE_STUB
 #define len_posix_dup2_USE_STUB +5
 #define str_posix_dup2_USE_STUB 'd', 'u', 'p', '2', '\0',
@@ -411,6 +370,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_dup3_USE_STUB /* nothing */
 #define str_posix_dup3_USE_STUB /* nothing */
 #endif /* !posix_dup3_USE_STUB */
+#ifdef posix_dup_USE_STUB
+#define len_posix_dup_USE_STUB +4
+#define str_posix_dup_USE_STUB 'd', 'u', 'p', '\0',
+#else /* posix_dup_USE_STUB */
+#define len_posix_dup_USE_STUB /* nothing */
+#define str_posix_dup_USE_STUB /* nothing */
+#endif /* !posix_dup_USE_STUB */
+#ifdef posix_enumenv_USE_STUB
+#define len_posix_enumenv_USE_STUB +8
+#define str_posix_enumenv_USE_STUB 'e', 'n', 'v', 'i', 'r', 'o', 'n', '\0',
+#else /* posix_enumenv_USE_STUB */
+#define len_posix_enumenv_USE_STUB /* nothing */
+#define str_posix_enumenv_USE_STUB /* nothing */
+#endif /* !posix_enumenv_USE_STUB */
 #ifdef posix_errno_USE_STUB
 #define len_posix_errno_USE_STUB +6
 #define str_posix_errno_USE_STUB 'e', 'r', 'r', 'n', 'o', '\0',
@@ -418,13 +391,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_errno_USE_STUB /* nothing */
 #define str_posix_errno_USE_STUB /* nothing */
 #endif /* !posix_errno_USE_STUB */
-#ifdef posix_fsync_USE_STUB
-#define len_posix_fsync_USE_STUB +6
-#define str_posix_fsync_USE_STUB 'f', 's', 'y', 'n', 'c', '\0',
-#else /* posix_fsync_USE_STUB */
-#define len_posix_fsync_USE_STUB /* nothing */
-#define str_posix_fsync_USE_STUB /* nothing */
-#endif /* !posix_fsync_USE_STUB */
+#ifdef posix_euidaccess_USE_STUB
+#define len_posix_euidaccess_USE_STUB +11
+#define str_posix_euidaccess_USE_STUB 'e', 'u', 'i', 'd', 'a', 'c', 'c', 'e', 's', 's', '\0',
+#else /* posix_euidaccess_USE_STUB */
+#define len_posix_euidaccess_USE_STUB /* nothing */
+#define str_posix_euidaccess_USE_STUB /* nothing */
+#endif /* !posix_euidaccess_USE_STUB */
 #ifdef posix_fdatasync_USE_STUB
 #define len_posix_fdatasync_USE_STUB +10
 #define str_posix_fdatasync_USE_STUB 'f', 'd', 'a', 't', 'a', 's', 'y', 'n', 'c', '\0',
@@ -432,13 +405,34 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fdatasync_USE_STUB /* nothing */
 #define str_posix_fdatasync_USE_STUB /* nothing */
 #endif /* !posix_fdatasync_USE_STUB */
-#ifdef posix_system_USE_STUB
-#define len_posix_system_USE_STUB +7
-#define str_posix_system_USE_STUB 's', 'y', 's', 't', 'e', 'm', '\0',
-#else /* posix_system_USE_STUB */
-#define len_posix_system_USE_STUB /* nothing */
-#define str_posix_system_USE_STUB /* nothing */
-#endif /* !posix_system_USE_STUB */
+#ifdef posix_fsync_USE_STUB
+#define len_posix_fsync_USE_STUB +6
+#define str_posix_fsync_USE_STUB 'f', 's', 'y', 'n', 'c', '\0',
+#else /* posix_fsync_USE_STUB */
+#define len_posix_fsync_USE_STUB /* nothing */
+#define str_posix_fsync_USE_STUB /* nothing */
+#endif /* !posix_fsync_USE_STUB */
+#ifdef posix_ftruncate_USE_STUB
+#define len_posix_ftruncate_USE_STUB +10
+#define str_posix_ftruncate_USE_STUB 'f', 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', '\0',
+#else /* posix_ftruncate_USE_STUB */
+#define len_posix_ftruncate_USE_STUB /* nothing */
+#define str_posix_ftruncate_USE_STUB /* nothing */
+#endif /* !posix_ftruncate_USE_STUB */
+#ifdef posix_getenv_USE_STUB
+#define len_posix_getenv_USE_STUB +7
+#define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
+#else /* posix_getenv_USE_STUB */
+#define len_posix_getenv_USE_STUB /* nothing */
+#define str_posix_getenv_USE_STUB /* nothing */
+#endif /* !posix_getenv_USE_STUB */
+#ifdef posix_gethostname_USE_STUB
+#define len_posix_gethostname_USE_STUB +12
+#define str_posix_gethostname_USE_STUB 'g', 'e', 't', 'h', 'o', 's', 't', 'n', 'a', 'm', 'e', '\0',
+#else /* posix_gethostname_USE_STUB */
+#define len_posix_gethostname_USE_STUB /* nothing */
+#define str_posix_gethostname_USE_STUB /* nothing */
+#endif /* !posix_gethostname_USE_STUB */
 #ifdef posix_getpid_USE_STUB
 #define len_posix_getpid_USE_STUB +7
 #define str_posix_getpid_USE_STUB 'g', 'e', 't', 'p', 'i', 'd', '\0',
@@ -446,13 +440,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_getpid_USE_STUB /* nothing */
 #define str_posix_getpid_USE_STUB /* nothing */
 #endif /* !posix_getpid_USE_STUB */
-#ifdef posix_read_USE_STUB
-#define len_posix_read_USE_STUB +5
-#define str_posix_read_USE_STUB 'r', 'e', 'a', 'd', '\0',
-#else /* posix_read_USE_STUB */
-#define len_posix_read_USE_STUB /* nothing */
-#define str_posix_read_USE_STUB /* nothing */
-#endif /* !posix_read_USE_STUB */
+#ifdef posix_isatty_USE_STUB
+#define len_posix_isatty_USE_STUB +7
+#define str_posix_isatty_USE_STUB 'i', 's', 'a', 't', 't', 'y', '\0',
+#else /* posix_isatty_USE_STUB */
+#define len_posix_isatty_USE_STUB /* nothing */
+#define str_posix_isatty_USE_STUB /* nothing */
+#endif /* !posix_isatty_USE_STUB */
 #ifdef posix_lseek_USE_STUB
 #define len_posix_lseek_USE_STUB +6
 #define str_posix_lseek_USE_STUB 'l', 's', 'e', 'e', 'k', '\0',
@@ -460,13 +454,41 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_lseek_USE_STUB /* nothing */
 #define str_posix_lseek_USE_STUB /* nothing */
 #endif /* !posix_lseek_USE_STUB */
-#ifdef posix_write_USE_STUB
-#define len_posix_write_USE_STUB +6
-#define str_posix_write_USE_STUB 'w', 'r', 'i', 't', 'e', '\0',
-#else /* posix_write_USE_STUB */
-#define len_posix_write_USE_STUB /* nothing */
-#define str_posix_write_USE_STUB /* nothing */
-#endif /* !posix_write_USE_STUB */
+#ifdef posix_lstat_USE_STUB
+#define len_posix_lstat_USE_STUB +6
+#define str_posix_lstat_USE_STUB 'l', 's', 't', 'a', 't', '\0',
+#else /* posix_lstat_USE_STUB */
+#define len_posix_lstat_USE_STUB /* nothing */
+#define str_posix_lstat_USE_STUB /* nothing */
+#endif /* !posix_lstat_USE_STUB */
+#ifdef posix_open_USE_STUB
+#define len_posix_open_USE_STUB +11
+#define str_posix_open_USE_STUB 'o', 'p', 'e', 'n', '\0', '_', 'o', 'p', 'e', 'n', '\0',
+#else /* posix_open_USE_STUB */
+#define len_posix_open_USE_STUB /* nothing */
+#define str_posix_open_USE_STUB /* nothing */
+#endif /* !posix_open_USE_STUB */
+#ifdef posix_opendir_USE_STUB
+#define len_posix_opendir_USE_STUB +29
+#define str_posix_opendir_USE_STUB 'd', 'i', 'r', 'e', 'n', 't', '\0', 'D', 'I', 'R', '\0', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0', 'f', 'd', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0',
+#else /* posix_opendir_USE_STUB */
+#define len_posix_opendir_USE_STUB /* nothing */
+#define str_posix_opendir_USE_STUB /* nothing */
+#endif /* !posix_opendir_USE_STUB */
+#ifdef posix_pipe2_USE_STUB
+#define len_posix_pipe2_USE_STUB +6
+#define str_posix_pipe2_USE_STUB 'p', 'i', 'p', 'e', '2', '\0',
+#else /* posix_pipe2_USE_STUB */
+#define len_posix_pipe2_USE_STUB /* nothing */
+#define str_posix_pipe2_USE_STUB /* nothing */
+#endif /* !posix_pipe2_USE_STUB */
+#ifdef posix_pipe_USE_STUB
+#define len_posix_pipe_USE_STUB +5
+#define str_posix_pipe_USE_STUB 'p', 'i', 'p', 'e', '\0',
+#else /* posix_pipe_USE_STUB */
+#define len_posix_pipe_USE_STUB /* nothing */
+#define str_posix_pipe_USE_STUB /* nothing */
+#endif /* !posix_pipe_USE_STUB */
 #ifdef posix_pread_USE_STUB
 #define len_posix_pread_USE_STUB +6
 #define str_posix_pread_USE_STUB 'p', 'r', 'e', 'a', 'd', '\0',
@@ -481,41 +503,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_pwrite_USE_STUB /* nothing */
 #define str_posix_pwrite_USE_STUB /* nothing */
 #endif /* !posix_pwrite_USE_STUB */
-#ifdef posix_access_USE_STUB
-#define len_posix_access_USE_STUB +7
-#define str_posix_access_USE_STUB 'a', 'c', 'c', 'e', 's', 's', '\0',
-#else /* posix_access_USE_STUB */
-#define len_posix_access_USE_STUB /* nothing */
-#define str_posix_access_USE_STUB /* nothing */
-#endif /* !posix_access_USE_STUB */
-#ifdef posix_euidaccess_USE_STUB
-#define len_posix_euidaccess_USE_STUB +11
-#define str_posix_euidaccess_USE_STUB 'e', 'u', 'i', 'd', 'a', 'c', 'c', 'e', 's', 's', '\0',
-#else /* posix_euidaccess_USE_STUB */
-#define len_posix_euidaccess_USE_STUB /* nothing */
-#define str_posix_euidaccess_USE_STUB /* nothing */
-#endif /* !posix_euidaccess_USE_STUB */
-#ifdef posix_cpu_count_USE_STUB
-#define len_posix_cpu_count_USE_STUB +10
-#define str_posix_cpu_count_USE_STUB 'c', 'p', 'u', '_', 'c', 'o', 'u', 'n', 't', '\0',
-#else /* posix_cpu_count_USE_STUB */
-#define len_posix_cpu_count_USE_STUB /* nothing */
-#define str_posix_cpu_count_USE_STUB /* nothing */
-#endif /* !posix_cpu_count_USE_STUB */
-#ifdef posix_opendir_USE_STUB
-#define len_posix_opendir_USE_STUB +29
-#define str_posix_opendir_USE_STUB 'd', 'i', 'r', 'e', 'n', 't', '\0', 'D', 'I', 'R', '\0', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0', 'f', 'd', 'o', 'p', 'e', 'n', 'd', 'i', 'r', '\0',
-#else /* posix_opendir_USE_STUB */
-#define len_posix_opendir_USE_STUB /* nothing */
-#define str_posix_opendir_USE_STUB /* nothing */
-#endif /* !posix_opendir_USE_STUB */
-#ifdef posix_getenv_USE_STUB
-#define len_posix_getenv_USE_STUB +7
-#define str_posix_getenv_USE_STUB 'g', 'e', 't', 'e', 'n', 'v', '\0',
-#else /* posix_getenv_USE_STUB */
-#define len_posix_getenv_USE_STUB /* nothing */
-#define str_posix_getenv_USE_STUB /* nothing */
-#endif /* !posix_getenv_USE_STUB */
+#ifdef posix_read_USE_STUB
+#define len_posix_read_USE_STUB +5
+#define str_posix_read_USE_STUB 'r', 'e', 'a', 'd', '\0',
+#else /* posix_read_USE_STUB */
+#define len_posix_read_USE_STUB /* nothing */
+#define str_posix_read_USE_STUB /* nothing */
+#endif /* !posix_read_USE_STUB */
 #ifdef posix_setenv_USE_STUB
 #define len_posix_setenv_USE_STUB +14
 #define str_posix_setenv_USE_STUB 's', 'e', 't', 'e', 'n', 'v', '\0', 'p', 'u', 't', 'e', 'n', 'v', '\0',
@@ -523,27 +517,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_setenv_USE_STUB /* nothing */
 #define str_posix_setenv_USE_STUB /* nothing */
 #endif /* !posix_setenv_USE_STUB */
-#ifdef posix_unsetenv_USE_STUB
-#define len_posix_unsetenv_USE_STUB +9
-#define str_posix_unsetenv_USE_STUB 'u', 'n', 's', 'e', 't', 'e', 'n', 'v', '\0',
-#else /* posix_unsetenv_USE_STUB */
-#define len_posix_unsetenv_USE_STUB /* nothing */
-#define str_posix_unsetenv_USE_STUB /* nothing */
-#endif /* !posix_unsetenv_USE_STUB */
-#ifdef posix_clearenv_USE_STUB
-#define len_posix_clearenv_USE_STUB +9
-#define str_posix_clearenv_USE_STUB 'c', 'l', 'e', 'a', 'r', 'e', 'n', 'v', '\0',
-#else /* posix_clearenv_USE_STUB */
-#define len_posix_clearenv_USE_STUB /* nothing */
-#define str_posix_clearenv_USE_STUB /* nothing */
-#endif /* !posix_clearenv_USE_STUB */
-#ifdef posix_enumenv_USE_STUB
-#define len_posix_enumenv_USE_STUB +8
-#define str_posix_enumenv_USE_STUB 'e', 'n', 'v', 'i', 'r', 'o', 'n', '\0',
-#else /* posix_enumenv_USE_STUB */
-#define len_posix_enumenv_USE_STUB /* nothing */
-#define str_posix_enumenv_USE_STUB /* nothing */
-#endif /* !posix_enumenv_USE_STUB */
 #ifdef posix_stat_USE_STUB
 #define len_posix_stat_USE_STUB +5
 #define str_posix_stat_USE_STUB 's', 't', 'a', 't', '\0',
@@ -551,13 +524,27 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_USE_STUB /* nothing */
 #define str_posix_stat_USE_STUB /* nothing */
 #endif /* !posix_stat_USE_STUB */
-#ifdef posix_lstat_USE_STUB
-#define len_posix_lstat_USE_STUB +6
-#define str_posix_lstat_USE_STUB 'l', 's', 't', 'a', 't', '\0',
-#else /* posix_lstat_USE_STUB */
-#define len_posix_lstat_USE_STUB /* nothing */
-#define str_posix_lstat_USE_STUB /* nothing */
-#endif /* !posix_lstat_USE_STUB */
+#ifdef posix_stat_get_atime_IS_STUB
+#define len_posix_stat_get_atime_IS_STUB +14
+#define str_posix_stat_get_atime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'a', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_atime_IS_STUB */
+#define len_posix_stat_get_atime_IS_STUB /* nothing */
+#define str_posix_stat_get_atime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_atime_IS_STUB */
+#ifdef posix_stat_get_birthtime_IS_STUB
+#define len_posix_stat_get_birthtime_IS_STUB +18
+#define str_posix_stat_get_birthtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'b', 'i', 'r', 't', 'h', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_birthtime_IS_STUB */
+#define len_posix_stat_get_birthtime_IS_STUB /* nothing */
+#define str_posix_stat_get_birthtime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_birthtime_IS_STUB */
+#ifdef posix_stat_get_ctime_IS_STUB
+#define len_posix_stat_get_ctime_IS_STUB +14
+#define str_posix_stat_get_ctime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'c', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_ctime_IS_STUB */
+#define len_posix_stat_get_ctime_IS_STUB /* nothing */
+#define str_posix_stat_get_ctime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_ctime_IS_STUB */
 #ifdef posix_stat_get_dev_IS_STUB
 #define len_posix_stat_get_dev_IS_STUB +12
 #define str_posix_stat_get_dev_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'd', 'e', 'v', '\0',
@@ -565,6 +552,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_get_dev_IS_STUB /* nothing */
 #define str_posix_stat_get_dev_IS_STUB /* nothing */
 #endif /* !posix_stat_get_dev_IS_STUB */
+#ifdef posix_stat_get_gid_IS_STUB
+#define len_posix_stat_get_gid_IS_STUB +12
+#define str_posix_stat_get_gid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'g', 'i', 'd', '\0',
+#else /* posix_stat_get_gid_IS_STUB */
+#define len_posix_stat_get_gid_IS_STUB /* nothing */
+#define str_posix_stat_get_gid_IS_STUB /* nothing */
+#endif /* !posix_stat_get_gid_IS_STUB */
 #ifdef posix_stat_get_ino_IS_STUB
 #define len_posix_stat_get_ino_IS_STUB +12
 #define str_posix_stat_get_ino_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'i', 'n', 'o', '\0',
@@ -579,6 +573,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_get_mode_IS_STUB /* nothing */
 #define str_posix_stat_get_mode_IS_STUB /* nothing */
 #endif /* !posix_stat_get_mode_IS_STUB */
+#ifdef posix_stat_get_mtime_IS_STUB
+#define len_posix_stat_get_mtime_IS_STUB +14
+#define str_posix_stat_get_mtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'm', 't', 'i', 'm', 'e', '\0',
+#else /* posix_stat_get_mtime_IS_STUB */
+#define len_posix_stat_get_mtime_IS_STUB /* nothing */
+#define str_posix_stat_get_mtime_IS_STUB /* nothing */
+#endif /* !posix_stat_get_mtime_IS_STUB */
 #ifdef posix_stat_get_nlink_IS_STUB
 #define len_posix_stat_get_nlink_IS_STUB +14
 #define str_posix_stat_get_nlink_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'n', 'l', 'i', 'n', 'k', '\0',
@@ -586,20 +587,6 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_get_nlink_IS_STUB /* nothing */
 #define str_posix_stat_get_nlink_IS_STUB /* nothing */
 #endif /* !posix_stat_get_nlink_IS_STUB */
-#ifdef posix_stat_get_uid_IS_STUB
-#define len_posix_stat_get_uid_IS_STUB +12
-#define str_posix_stat_get_uid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'u', 'i', 'd', '\0',
-#else /* posix_stat_get_uid_IS_STUB */
-#define len_posix_stat_get_uid_IS_STUB /* nothing */
-#define str_posix_stat_get_uid_IS_STUB /* nothing */
-#endif /* !posix_stat_get_uid_IS_STUB */
-#ifdef posix_stat_get_gid_IS_STUB
-#define len_posix_stat_get_gid_IS_STUB +12
-#define str_posix_stat_get_gid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'g', 'i', 'd', '\0',
-#else /* posix_stat_get_gid_IS_STUB */
-#define len_posix_stat_get_gid_IS_STUB /* nothing */
-#define str_posix_stat_get_gid_IS_STUB /* nothing */
-#endif /* !posix_stat_get_gid_IS_STUB */
 #ifdef posix_stat_get_rdev_IS_STUB
 #define len_posix_stat_get_rdev_IS_STUB +13
 #define str_posix_stat_get_rdev_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'r', 'd', 'e', 'v', '\0',
@@ -614,48 +601,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_get_size_IS_STUB /* nothing */
 #define str_posix_stat_get_size_IS_STUB /* nothing */
 #endif /* !posix_stat_get_size_IS_STUB */
-#ifdef posix_stat_get_atime_IS_STUB
-#define len_posix_stat_get_atime_IS_STUB +14
-#define str_posix_stat_get_atime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'a', 't', 'i', 'm', 'e', '\0',
-#else /* posix_stat_get_atime_IS_STUB */
-#define len_posix_stat_get_atime_IS_STUB /* nothing */
-#define str_posix_stat_get_atime_IS_STUB /* nothing */
-#endif /* !posix_stat_get_atime_IS_STUB */
-#ifdef posix_stat_get_mtime_IS_STUB
-#define len_posix_stat_get_mtime_IS_STUB +14
-#define str_posix_stat_get_mtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'm', 't', 'i', 'm', 'e', '\0',
-#else /* posix_stat_get_mtime_IS_STUB */
-#define len_posix_stat_get_mtime_IS_STUB /* nothing */
-#define str_posix_stat_get_mtime_IS_STUB /* nothing */
-#endif /* !posix_stat_get_mtime_IS_STUB */
-#ifdef posix_stat_get_ctime_IS_STUB
-#define len_posix_stat_get_ctime_IS_STUB +14
-#define str_posix_stat_get_ctime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'c', 't', 'i', 'm', 'e', '\0',
-#else /* posix_stat_get_ctime_IS_STUB */
-#define len_posix_stat_get_ctime_IS_STUB /* nothing */
-#define str_posix_stat_get_ctime_IS_STUB /* nothing */
-#endif /* !posix_stat_get_ctime_IS_STUB */
-#ifdef posix_stat_get_birthtime_IS_STUB
-#define len_posix_stat_get_birthtime_IS_STUB +18
-#define str_posix_stat_get_birthtime_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'b', 'i', 'r', 't', 'h', 't', 'i', 'm', 'e', '\0',
-#else /* posix_stat_get_birthtime_IS_STUB */
-#define len_posix_stat_get_birthtime_IS_STUB /* nothing */
-#define str_posix_stat_get_birthtime_IS_STUB /* nothing */
-#endif /* !posix_stat_get_birthtime_IS_STUB */
-#ifdef posix_stat_isdir_IS_STUB
-#define len_posix_stat_isdir_IS_STUB +11
-#define str_posix_stat_isdir_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'd', 'i', 'r', '\0',
-#else /* posix_stat_isdir_IS_STUB */
-#define len_posix_stat_isdir_IS_STUB /* nothing */
-#define str_posix_stat_isdir_IS_STUB /* nothing */
-#endif /* !posix_stat_isdir_IS_STUB */
-#ifdef posix_stat_ischr_IS_STUB
-#define len_posix_stat_ischr_IS_STUB +11
-#define str_posix_stat_ischr_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'c', 'h', 'r', '\0',
-#else /* posix_stat_ischr_IS_STUB */
-#define len_posix_stat_ischr_IS_STUB /* nothing */
-#define str_posix_stat_ischr_IS_STUB /* nothing */
-#endif /* !posix_stat_ischr_IS_STUB */
+#ifdef posix_stat_get_uid_IS_STUB
+#define len_posix_stat_get_uid_IS_STUB +12
+#define str_posix_stat_get_uid_IS_STUB 's', 't', 'a', 't', '.', 's', 't', '_', 'u', 'i', 'd', '\0',
+#else /* posix_stat_get_uid_IS_STUB */
+#define len_posix_stat_get_uid_IS_STUB /* nothing */
+#define str_posix_stat_get_uid_IS_STUB /* nothing */
+#endif /* !posix_stat_get_uid_IS_STUB */
 #ifdef posix_stat_isblk_IS_STUB
 #define len_posix_stat_isblk_IS_STUB +11
 #define str_posix_stat_isblk_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'b', 'l', 'k', '\0',
@@ -663,6 +615,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_isblk_IS_STUB /* nothing */
 #define str_posix_stat_isblk_IS_STUB /* nothing */
 #endif /* !posix_stat_isblk_IS_STUB */
+#ifdef posix_stat_ischr_IS_STUB
+#define len_posix_stat_ischr_IS_STUB +11
+#define str_posix_stat_ischr_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'c', 'h', 'r', '\0',
+#else /* posix_stat_ischr_IS_STUB */
+#define len_posix_stat_ischr_IS_STUB /* nothing */
+#define str_posix_stat_ischr_IS_STUB /* nothing */
+#endif /* !posix_stat_ischr_IS_STUB */
 #ifdef posix_stat_isdev_IS_STUB
 #define len_posix_stat_isdev_IS_STUB +11
 #define str_posix_stat_isdev_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'd', 'e', 'v', '\0',
@@ -670,13 +629,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_isdev_IS_STUB /* nothing */
 #define str_posix_stat_isdev_IS_STUB /* nothing */
 #endif /* !posix_stat_isdev_IS_STUB */
-#ifdef posix_stat_isreg_IS_STUB
-#define len_posix_stat_isreg_IS_STUB +11
-#define str_posix_stat_isreg_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'r', 'e', 'g', '\0',
-#else /* posix_stat_isreg_IS_STUB */
-#define len_posix_stat_isreg_IS_STUB /* nothing */
-#define str_posix_stat_isreg_IS_STUB /* nothing */
-#endif /* !posix_stat_isreg_IS_STUB */
+#ifdef posix_stat_isdir_IS_STUB
+#define len_posix_stat_isdir_IS_STUB +11
+#define str_posix_stat_isdir_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'd', 'i', 'r', '\0',
+#else /* posix_stat_isdir_IS_STUB */
+#define len_posix_stat_isdir_IS_STUB /* nothing */
+#define str_posix_stat_isdir_IS_STUB /* nothing */
+#endif /* !posix_stat_isdir_IS_STUB */
 #ifdef posix_stat_isfifo_IS_STUB
 #define len_posix_stat_isfifo_IS_STUB +12
 #define str_posix_stat_isfifo_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'f', 'i', 'f', 'o', '\0',
@@ -691,6 +650,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_islnk_IS_STUB /* nothing */
 #define str_posix_stat_islnk_IS_STUB /* nothing */
 #endif /* !posix_stat_islnk_IS_STUB */
+#ifdef posix_stat_isreg_IS_STUB
+#define len_posix_stat_isreg_IS_STUB +11
+#define str_posix_stat_isreg_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'r', 'e', 'g', '\0',
+#else /* posix_stat_isreg_IS_STUB */
+#define len_posix_stat_isreg_IS_STUB /* nothing */
+#define str_posix_stat_isreg_IS_STUB /* nothing */
+#endif /* !posix_stat_isreg_IS_STUB */
 #ifdef posix_stat_issock_IS_STUB
 #define len_posix_stat_issock_IS_STUB +12
 #define str_posix_stat_issock_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 's', 'o', 'c', 'k', '\0',
@@ -698,6 +664,55 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_stat_issock_IS_STUB /* nothing */
 #define str_posix_stat_issock_IS_STUB /* nothing */
 #endif /* !posix_stat_issock_IS_STUB */
+#ifdef posix_strerror_USE_STUB
+#define len_posix_strerror_USE_STUB +9
+#define str_posix_strerror_USE_STUB 's', 't', 'r', 'e', 'r', 'r', 'o', 'r', '\0',
+#else /* posix_strerror_USE_STUB */
+#define len_posix_strerror_USE_STUB /* nothing */
+#define str_posix_strerror_USE_STUB /* nothing */
+#endif /* !posix_strerror_USE_STUB */
+#ifdef posix_strerrorname_USE_STUB
+#define len_posix_strerrorname_USE_STUB +13
+#define str_posix_strerrorname_USE_STUB 's', 't', 'r', 'e', 'r', 'r', 'o', 'r', 'n', 'a', 'm', 'e', '\0',
+#else /* posix_strerrorname_USE_STUB */
+#define len_posix_strerrorname_USE_STUB /* nothing */
+#define str_posix_strerrorname_USE_STUB /* nothing */
+#endif /* !posix_strerrorname_USE_STUB */
+#ifdef posix_system_USE_STUB
+#define len_posix_system_USE_STUB +7
+#define str_posix_system_USE_STUB 's', 'y', 's', 't', 'e', 'm', '\0',
+#else /* posix_system_USE_STUB */
+#define len_posix_system_USE_STUB /* nothing */
+#define str_posix_system_USE_STUB /* nothing */
+#endif /* !posix_system_USE_STUB */
+#ifdef posix_truncate_USE_STUB
+#define len_posix_truncate_USE_STUB +9
+#define str_posix_truncate_USE_STUB 't', 'r', 'u', 'n', 'c', 'a', 't', 'e', '\0',
+#else /* posix_truncate_USE_STUB */
+#define len_posix_truncate_USE_STUB /* nothing */
+#define str_posix_truncate_USE_STUB /* nothing */
+#endif /* !posix_truncate_USE_STUB */
+#ifdef posix_umask_USE_STUB
+#define len_posix_umask_USE_STUB +6
+#define str_posix_umask_USE_STUB 'u', 'm', 'a', 's', 'k', '\0',
+#else /* posix_umask_USE_STUB */
+#define len_posix_umask_USE_STUB /* nothing */
+#define str_posix_umask_USE_STUB /* nothing */
+#endif /* !posix_umask_USE_STUB */
+#ifdef posix_unsetenv_USE_STUB
+#define len_posix_unsetenv_USE_STUB +9
+#define str_posix_unsetenv_USE_STUB 'u', 'n', 's', 'e', 't', 'e', 'n', 'v', '\0',
+#else /* posix_unsetenv_USE_STUB */
+#define len_posix_unsetenv_USE_STUB /* nothing */
+#define str_posix_unsetenv_USE_STUB /* nothing */
+#endif /* !posix_unsetenv_USE_STUB */
+#ifdef posix_write_USE_STUB
+#define len_posix_write_USE_STUB +6
+#define str_posix_write_USE_STUB 'w', 'r', 'i', 't', 'e', '\0',
+#else /* posix_write_USE_STUB */
+#define len_posix_write_USE_STUB /* nothing */
+#define str_posix_write_USE_STUB /* nothing */
+#endif /* !posix_write_USE_STUB */
 #ifdef stat_class_isexe_IS_STUB
 #define len_stat_class_isexe_IS_STUB +11
 #define str_stat_class_isexe_IS_STUB 's', 't', 'a', 't', '.', 'i', 's', 'e', 'x', 'e', '\0',
@@ -712,72 +727,66 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_stat_class_ishidden_IS_STUB /* nothing */
 #define str_stat_class_ishidden_IS_STUB /* nothing */
 #endif /* !stat_class_ishidden_IS_STUB */
-#ifdef posix_gethostname_USE_STUB
-#define len_posix_gethostname_USE_STUB +12
-#define str_posix_gethostname_USE_STUB 'g', 'e', 't', 'h', 'o', 's', 't', 'n', 'a', 'm', 'e', '\0',
-#else /* posix_gethostname_USE_STUB */
-#define len_posix_gethostname_USE_STUB /* nothing */
-#define str_posix_gethostname_USE_STUB /* nothing */
-#endif /* !posix_gethostname_USE_STUB */
 #define POSIX_STUBS_TOTLEN 0 \
-	len_posix_truncate_USE_STUB \
-	len_posix_ftruncate_USE_STUB \
-	len_posix_pipe_USE_STUB \
-	len_posix_pipe2_USE_STUB \
-	len_posix_strerror_USE_STUB \
-	len_posix_strerrorname_USE_STUB \
-	len_posix_open_USE_STUB \
-	len_posix_creat_USE_STUB \
+	len_posix_access_USE_STUB \
+	len_posix_chdir_USE_STUB \
+	len_posix_clearenv_USE_STUB \
 	len_posix_close_USE_STUB \
-	len_posix_isatty_USE_STUB \
-	len_posix_umask_USE_STUB \
-	len_posix_dup_USE_STUB \
+	len_posix_cpu_count_USE_STUB \
+	len_posix_creat_USE_STUB \
 	len_posix_dup2_USE_STUB \
 	len_posix_dup3_USE_STUB \
+	len_posix_dup_USE_STUB \
+	len_posix_enumenv_USE_STUB \
 	len_posix_errno_USE_STUB \
-	len_posix_fsync_USE_STUB \
+	len_posix_euidaccess_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
-	len_posix_system_USE_STUB \
+	len_posix_fsync_USE_STUB \
+	len_posix_ftruncate_USE_STUB \
+	len_posix_getenv_USE_STUB \
+	len_posix_gethostname_USE_STUB \
 	len_posix_getpid_USE_STUB \
-	len_posix_read_USE_STUB \
+	len_posix_isatty_USE_STUB \
 	len_posix_lseek_USE_STUB \
-	len_posix_write_USE_STUB \
+	len_posix_lstat_USE_STUB \
+	len_posix_open_USE_STUB \
+	len_posix_opendir_USE_STUB \
+	len_posix_pipe2_USE_STUB \
+	len_posix_pipe_USE_STUB \
 	len_posix_pread_USE_STUB \
 	len_posix_pwrite_USE_STUB \
-	len_posix_access_USE_STUB \
-	len_posix_euidaccess_USE_STUB \
-	len_posix_cpu_count_USE_STUB \
-	len_posix_opendir_USE_STUB \
-	len_posix_getenv_USE_STUB \
+	len_posix_read_USE_STUB \
 	len_posix_setenv_USE_STUB \
-	len_posix_unsetenv_USE_STUB \
-	len_posix_clearenv_USE_STUB \
-	len_posix_enumenv_USE_STUB \
 	len_posix_stat_USE_STUB \
-	len_posix_lstat_USE_STUB \
+	len_posix_stat_get_atime_IS_STUB \
+	len_posix_stat_get_birthtime_IS_STUB \
+	len_posix_stat_get_ctime_IS_STUB \
 	len_posix_stat_get_dev_IS_STUB \
+	len_posix_stat_get_gid_IS_STUB \
 	len_posix_stat_get_ino_IS_STUB \
 	len_posix_stat_get_mode_IS_STUB \
+	len_posix_stat_get_mtime_IS_STUB \
 	len_posix_stat_get_nlink_IS_STUB \
-	len_posix_stat_get_uid_IS_STUB \
-	len_posix_stat_get_gid_IS_STUB \
 	len_posix_stat_get_rdev_IS_STUB \
 	len_posix_stat_get_size_IS_STUB \
-	len_posix_stat_get_atime_IS_STUB \
-	len_posix_stat_get_mtime_IS_STUB \
-	len_posix_stat_get_ctime_IS_STUB \
-	len_posix_stat_get_birthtime_IS_STUB \
-	len_posix_stat_isdir_IS_STUB \
-	len_posix_stat_ischr_IS_STUB \
+	len_posix_stat_get_uid_IS_STUB \
 	len_posix_stat_isblk_IS_STUB \
+	len_posix_stat_ischr_IS_STUB \
 	len_posix_stat_isdev_IS_STUB \
-	len_posix_stat_isreg_IS_STUB \
+	len_posix_stat_isdir_IS_STUB \
 	len_posix_stat_isfifo_IS_STUB \
 	len_posix_stat_islnk_IS_STUB \
+	len_posix_stat_isreg_IS_STUB \
 	len_posix_stat_issock_IS_STUB \
+	len_posix_strerror_USE_STUB \
+	len_posix_strerrorname_USE_STUB \
+	len_posix_system_USE_STUB \
+	len_posix_truncate_USE_STUB \
+	len_posix_umask_USE_STUB \
+	len_posix_unsetenv_USE_STUB \
+	len_posix_write_USE_STUB \
 	len_stat_class_isexe_IS_STUB \
 	len_stat_class_ishidden_IS_STUB \
-	len_posix_gethostname_USE_STUB \
 /**/
 #if POSIX_STUBS_TOTLEN != 0
 PRIVATE struct {
@@ -792,64 +801,65 @@ PRIVATE struct {
 	&posix_missing_features.s_utf,
 	DEE_STRING_HASH_UNSET,
 	POSIX_STUBS_TOTLEN - 1, {
-		str_posix_truncate_USE_STUB
-		str_posix_ftruncate_USE_STUB
-		str_posix_pipe_USE_STUB
-		str_posix_pipe2_USE_STUB
-		str_posix_strerror_USE_STUB
-		str_posix_strerrorname_USE_STUB
-		str_posix_open_USE_STUB
-		str_posix_creat_USE_STUB
+		str_posix_access_USE_STUB
+		str_posix_chdir_USE_STUB
+		str_posix_clearenv_USE_STUB
 		str_posix_close_USE_STUB
-		str_posix_isatty_USE_STUB
-		str_posix_umask_USE_STUB
-		str_posix_dup_USE_STUB
+		str_posix_cpu_count_USE_STUB
+		str_posix_creat_USE_STUB
 		str_posix_dup2_USE_STUB
 		str_posix_dup3_USE_STUB
+		str_posix_dup_USE_STUB
+		str_posix_enumenv_USE_STUB
 		str_posix_errno_USE_STUB
-		str_posix_fsync_USE_STUB
+		str_posix_euidaccess_USE_STUB
 		str_posix_fdatasync_USE_STUB
-		str_posix_system_USE_STUB
+		str_posix_fsync_USE_STUB
+		str_posix_ftruncate_USE_STUB
+		str_posix_getenv_USE_STUB
+		str_posix_gethostname_USE_STUB
 		str_posix_getpid_USE_STUB
-		str_posix_read_USE_STUB
+		str_posix_isatty_USE_STUB
 		str_posix_lseek_USE_STUB
-		str_posix_write_USE_STUB
+		str_posix_lstat_USE_STUB
+		str_posix_open_USE_STUB
+		str_posix_opendir_USE_STUB
+		str_posix_pipe2_USE_STUB
+		str_posix_pipe_USE_STUB
 		str_posix_pread_USE_STUB
 		str_posix_pwrite_USE_STUB
-		str_posix_access_USE_STUB
-		str_posix_euidaccess_USE_STUB
-		str_posix_cpu_count_USE_STUB
-		str_posix_opendir_USE_STUB
-		str_posix_getenv_USE_STUB
+		str_posix_read_USE_STUB
 		str_posix_setenv_USE_STUB
-		str_posix_unsetenv_USE_STUB
-		str_posix_clearenv_USE_STUB
-		str_posix_enumenv_USE_STUB
 		str_posix_stat_USE_STUB
-		str_posix_lstat_USE_STUB
+		str_posix_stat_get_atime_IS_STUB
+		str_posix_stat_get_birthtime_IS_STUB
+		str_posix_stat_get_ctime_IS_STUB
 		str_posix_stat_get_dev_IS_STUB
+		str_posix_stat_get_gid_IS_STUB
 		str_posix_stat_get_ino_IS_STUB
 		str_posix_stat_get_mode_IS_STUB
+		str_posix_stat_get_mtime_IS_STUB
 		str_posix_stat_get_nlink_IS_STUB
-		str_posix_stat_get_uid_IS_STUB
-		str_posix_stat_get_gid_IS_STUB
 		str_posix_stat_get_rdev_IS_STUB
 		str_posix_stat_get_size_IS_STUB
-		str_posix_stat_get_atime_IS_STUB
-		str_posix_stat_get_mtime_IS_STUB
-		str_posix_stat_get_ctime_IS_STUB
-		str_posix_stat_get_birthtime_IS_STUB
-		str_posix_stat_isdir_IS_STUB
-		str_posix_stat_ischr_IS_STUB
+		str_posix_stat_get_uid_IS_STUB
 		str_posix_stat_isblk_IS_STUB
+		str_posix_stat_ischr_IS_STUB
 		str_posix_stat_isdev_IS_STUB
-		str_posix_stat_isreg_IS_STUB
+		str_posix_stat_isdir_IS_STUB
 		str_posix_stat_isfifo_IS_STUB
 		str_posix_stat_islnk_IS_STUB
+		str_posix_stat_isreg_IS_STUB
 		str_posix_stat_issock_IS_STUB
+		str_posix_strerror_USE_STUB
+		str_posix_strerrorname_USE_STUB
+		str_posix_system_USE_STUB
+		str_posix_truncate_USE_STUB
+		str_posix_umask_USE_STUB
+		str_posix_unsetenv_USE_STUB
+		str_posix_write_USE_STUB
 		str_stat_class_isexe_IS_STUB
 		str_stat_class_ishidden_IS_STUB
-		str_posix_gethostname_USE_STUB
 	},
 	{ Dee_STRING_WIDTH_1BYTE,
 	  Dee_STRING_UTF_FASCII,
@@ -1399,6 +1409,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_GETHOSTNAME_DEF_DOC("@interrupt\n"
 	                            "@throw SystemError Failed to retrieve the name of the hosting machine for some reason\n"
 	                            "Returns the user-assigned name of the hosting machine"))
+	D(POSIX_CHDIR_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path could not be found\n"
+	                      "@throw NoDirectory The given @path is not a directory\n"
+	                      "@throw FileClosed The given @fp or @fd has been closed or is invalid\n"
+	                      "@throw FileAccessError The current user does not have permissions to enter @path\n"
+	                      "@throw SystemError Failed to change the current working directory for some reason\n"
+	                      "Change the current working directory to @path, which may be "
+	                      /**/ "a path relative to the old current working directory"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
@@ -1412,7 +1430,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS_S(chdir, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(chmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchmod, "(path:?Dstring,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")

@@ -514,7 +514,7 @@ func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
 functest('chdir("..")', unix);
 functest('_chdir("..")', msvc);
 func("wchdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchdir(c, 0755);");
-func("_wchdir", "defined(_WDIRECT_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchdir(c);");
+func("_wchdir", "defined(_WDIRECT_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchdir(c);");
 functest("fchdir(1)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 functest('fchdirat(1, "..", 0)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE) && defined(__USE_KOS)");
 
@@ -4235,7 +4235,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO__wchdir
 #undef CONFIG_HAVE__wchdir
 #elif !defined(CONFIG_HAVE__wchdir) && \
-      (defined(_wchdir) || defined(___wchdir_defined) || defined(_WDIRECT_DEFINED))
+      (defined(_wchdir) || defined(___wchdir_defined) || (defined(_WDIRECT_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wchdir
 #endif
 

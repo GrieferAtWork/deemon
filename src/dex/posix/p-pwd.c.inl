@@ -57,6 +57,23 @@ DECL_BEGIN
 
 
 
+#undef posix_chdir_USE_nt_SetCurrentDirectory
+#undef posix_chdir_USE_chdir
+#undef posix_chdir_USE_wchdir
+/* TODO: posix_chdir_use_setenv_abspath */
+#undef posix_chdir_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_chdir_USE_nt_SetCurrentDirectory
+#elif defined(CONFIG_HAVE_wchdir) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_chdir_USE_wchdir
+#elif defined(CONFIG_HAVE_chdir)
+#define posix_chdir_USE_chdir
+#elif defined(CONFIG_HAVE_wchdir)
+#define posix_chdir_USE_wchdir
+#else /* ... */
+#define posix_chdir_USE_STUB
+#endif /* !... */
+
 
 
 
@@ -254,11 +271,149 @@ err:
 
 #ifdef posix_gethostname_USE_STUB
 #define NEED_posix_err_unsupported
-	return posix_err_unsupported("gethostname");
+	posix_err_unsupported("gethostname");
+	return NULL;
 #endif /* posix_gethostname_USE_STUB */
 }
 
-/* TODO: chdir(path:?Dstring) */
+/*[[[deemon import("_dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
+#define POSIX_CHDIR_DEF_DOC(doc) { "chdir", (DeeObject *)&posix_chdir, MODSYM_FNORMAL, DOC("(path:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_chdir, posix_chdir_f);
+#ifndef POSIX_KWDS_PATH_DEFINED
+#define POSIX_KWDS_PATH_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+#endif /* !POSIX_KWDS_PATH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:chdir", &path))
+		goto err;
+	return posix_chdir_f_impl(path);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
+/*[[[end]]]*/
+{
+#ifdef posix_chdir_USE_nt_SetCurrentDirectory
+#define NEED_nt_SetCurrentDirectory
+	int result;
+again:
+	result = nt_SetCurrentDirectory(path);
+	if unlikely(result != 0) {
+		DWORD dwError;
+		if unlikely(result < 0)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		}
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		if (DeeNTSystem_IsNotDir(dwError))
+			goto do_throw_not_dir;
+		if (dwError == ERROR_ACCESS_DENIED) {
+			DWORD dwAttributes;
+			/* Check if the path is actually a directory. */
+#define NEED_nt_GetFileAttributes
+			result = nt_GetFileAttributes(path, &dwAttributes);
+			if (result < 0)
+				goto err;
+			if (result == 0 && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+do_throw_not_dir:
+#define NEED_err_nt_path_not_dir
+				err_nt_path_not_dir(dwError, path);
+				goto err;
+			}
+		}
+		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
+#define NEED_err_nt_path_not_found
+			err_nt_path_not_found(dwError, path);
+		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
+#define NEED_err_nt_path_no_access
+			err_nt_path_no_access(dwError, path);
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+			                        "Failed to change the current working directory to %r",
+			                        path);
+		}
+		goto err;
+	}
+done:
+	return_none;
+err:
+	return NULL;
+#endif /* posix_chdir_USE_nt_SetCurrentDirectory */
+
+#if defined(posix_chdir_USE_chdir) || defined(posix_chdir_USE_wchdir)
+#ifdef posix_chdir_USE_chdir
+	char *utf8_path;
+	utf8_path = DeeString_AsUtf8(path);
+	if unlikely(!utf8_path)
+		goto err;
+#elif defined(posix_chdir_USE_wchdir)
+	dwchar_t *wide_path;
+	wide_path = DeeString_AsWide(path);
+	if unlikely(!wide_path)
+		goto err;
+#endif /* ... */
+EINTR_LABEL(again)
+#ifdef posix_chdir_USE_chdir
+	if (chdir(utf8_path) != 0)
+#elif defined(posix_chdir_USE_wchdir)
+	if (wchdir(wide_path) != 0)
+#endif /* ... */
+	{
+		int error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+#ifdef EACCES
+		if (error == EACCES) {
+#define NEED_err_unix_path_no_access
+			err_unix_path_no_access(error, path);
+			goto err;
+		}
+#endif /* EACCES */
+#ifdef ENOTDIR
+		if (error == ENOTDIR) {
+#define NEED_err_unix_path_not_dir
+			err_unix_path_not_dir(error, path);
+			goto err;
+		}
+#endif /* ENOTDIR */
+#ifdef ENOENT
+		if (error == ENOENT) {
+#define NEED_err_unix_path_not_found
+			err_unix_path_not_found(error, path);
+			goto err;
+		}
+#endif /* ENOENT */
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to change the current working directory to %r",
+		                          path);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_chdir_USE_chdir || posix_chdir_USE_wchdir */
+
+#ifdef posix_chdir_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)path;
+	posix_err_unsupported("chdir");
+	return NULL;
+#endif /* posix_chdir_USE_STUB */
+}
+
 /* TODO: fchdir(fd:?X2?DFile?Dint) */
 /* TODO: fchdirat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint) */
 

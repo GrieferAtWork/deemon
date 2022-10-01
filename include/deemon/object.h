@@ -1327,7 +1327,7 @@ struct Dee_type_constructor {
 			struct { Dee_funptr_t tp_pad; } tp_pad; /* ... */
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
-			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
+			WUNUSED_T DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -1445,14 +1445,14 @@ struct Dee_type_gc {
 	 * The global variable `x' is never unbound, meaning that
 	 * when deemon is shutting down, the following GC-cycle
 	 * still exists and must be cleaned up before terminating:
-	 *    x -> MyClass -> function(MyClass.operators) -> code -> module
-	 *    ^      ^  ^                                     |       |  |
-	 *    |      |  |                                     |       |  |
-	 *    |      |  +-------------------------------------+       |  |
-	 *    |      |                                                |  |
-	 *    |      +------------------------------------------------+  |
-	 *    |                                                          |
-	 *    +----------------------------------------------------------+
+	 *    x ─> MyClass ─> function(MyClass.operators) ─> code ─> module
+	 *    ^      ^  ^                                     │       │  │
+	 *    │      │  │                                     │       │  │
+	 *    │      │  └─────────────────────────────────────┘       │  │
+	 *    │      │                                                │  │
+	 *    │      └────────────────────────────────────────────────┘  │
+	 *    │                                                          │
+	 *    └──────────────────────────────────────────────────────────┘
 	 *
 	 * This might seem simple at first, but depending on the order with which the GC
 	 * chooses to deal with this cycle determines if the destructor can even function
