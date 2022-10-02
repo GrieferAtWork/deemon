@@ -32,6 +32,7 @@
 #include "p-errno.c.inl"
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
+#include "p-fs.c.inl"
 #include "p-open.c.inl"
 #include "p-opendir.c.inl"
 #include "p-pipe.c.inl"
@@ -48,9 +49,9 @@
 /* Include p-ondemand.c.inl last, since it defined functions on-demand */
 #include "p-ondemand.c.inl"
 
-/* Include fs.c.inl last, since this once #undef's a
+/* Include p-fs-deprecated.c.inl last, since this once #undef's a
  * bunch of stuff that may be needed by other components. */
-#include "p-fs.c.inl"
+#include "p-fs-deprecated.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #include <deemon/error.h>
@@ -147,6 +148,9 @@ local ALL_STUBS = {
 	("posix_chdir_USE_STUB", { "chdir" }),
 	("posix_fchdir_USE_STUB", { "fchdir" }),
 	("posix_fchdirat_USE_STUB", { "fchdirat" }),
+	("posix_unlink_USE_STUB", { "unlink" }),
+	("posix_rmdir_USE_STUB", { "rmdir" }),
+	("posix_remove_USE_STUB", { "remove" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -398,6 +402,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_read_USE_STUB /* nothing */
 #define str_posix_read_USE_STUB /* nothing */
 #endif /* !posix_read_USE_STUB */
+#ifdef posix_remove_USE_STUB
+#define len_posix_remove_USE_STUB +7
+#define str_posix_remove_USE_STUB 'r', 'e', 'm', 'o', 'v', 'e', '\0',
+#else /* posix_remove_USE_STUB */
+#define len_posix_remove_USE_STUB /* nothing */
+#define str_posix_remove_USE_STUB /* nothing */
+#endif /* !posix_remove_USE_STUB */
+#ifdef posix_rmdir_USE_STUB
+#define len_posix_rmdir_USE_STUB +6
+#define str_posix_rmdir_USE_STUB 'r', 'm', 'd', 'i', 'r', '\0',
+#else /* posix_rmdir_USE_STUB */
+#define len_posix_rmdir_USE_STUB /* nothing */
+#define str_posix_rmdir_USE_STUB /* nothing */
+#endif /* !posix_rmdir_USE_STUB */
 #ifdef posix_setenv_USE_STUB
 #define len_posix_setenv_USE_STUB +14
 #define str_posix_setenv_USE_STUB 's', 'e', 't', 'e', 'n', 'v', '\0', 'p', 'u', 't', 'e', 'n', 'v', '\0',
@@ -587,6 +605,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_umask_USE_STUB /* nothing */
 #define str_posix_umask_USE_STUB /* nothing */
 #endif /* !posix_umask_USE_STUB */
+#ifdef posix_unlink_USE_STUB
+#define len_posix_unlink_USE_STUB +7
+#define str_posix_unlink_USE_STUB 'u', 'n', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_unlink_USE_STUB */
+#define len_posix_unlink_USE_STUB /* nothing */
+#define str_posix_unlink_USE_STUB /* nothing */
+#endif /* !posix_unlink_USE_STUB */
 #ifdef posix_unsetenv_USE_STUB
 #define len_posix_unsetenv_USE_STUB +9
 #define str_posix_unsetenv_USE_STUB 'u', 'n', 's', 'e', 't', 'e', 'n', 'v', '\0',
@@ -646,6 +671,8 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_pread_USE_STUB \
 	len_posix_pwrite_USE_STUB \
 	len_posix_read_USE_STUB \
+	len_posix_remove_USE_STUB \
+	len_posix_rmdir_USE_STUB \
 	len_posix_setenv_USE_STUB \
 	len_posix_stat_USE_STUB \
 	len_posix_stat_get_atime_IS_STUB \
@@ -673,6 +700,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_system_USE_STUB \
 	len_posix_truncate_USE_STUB \
 	len_posix_umask_USE_STUB \
+	len_posix_unlink_USE_STUB \
 	len_posix_unsetenv_USE_STUB \
 	len_posix_write_USE_STUB \
 	len_stat_class_isexe_IS_STUB \
@@ -721,6 +749,8 @@ PRIVATE struct {
 		str_posix_pread_USE_STUB
 		str_posix_pwrite_USE_STUB
 		str_posix_read_USE_STUB
+		str_posix_remove_USE_STUB
+		str_posix_rmdir_USE_STUB
 		str_posix_setenv_USE_STUB
 		str_posix_stat_USE_STUB
 		str_posix_stat_get_atime_IS_STUB
@@ -748,6 +778,7 @@ PRIVATE struct {
 		str_posix_system_USE_STUB
 		str_posix_truncate_USE_STUB
 		str_posix_umask_USE_STUB
+		str_posix_unlink_USE_STUB
 		str_posix_unsetenv_USE_STUB
 		str_posix_write_USE_STUB
 		str_stat_class_isexe_IS_STUB
@@ -1324,6 +1355,44 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw ValueError Invalid set of flags specified by @atflags\n"
 	                         "Change the current working directory to @dfd:@path"))
 
+	/* Filesystem */
+	D(POSIX_UNLINK_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path does not exist\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw IsDirectory The given @path is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
+	                       "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
+	                       "@throw FileAccessError The current user does not have permissions to remove the file described by @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                       /*               */ "operations mode, preventing the deletion of existing files\n"
+	                       "@throw SystemError Failed to unlink the given file @path for some reason\n"
+	                       "Remove a non-directory filesystem object named @path"))
+	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
+	                      "@throw FileNotFound The given @path does not exist\n"
+	                      "@throw NoDirectory A part of the given @path is not a directory\n"
+	                      "@throw NoDirectory The given @path isn't a directory and either ?Gunlink or ?Gremove must be used to "
+	                      /*              */ "delete it, or it is a mounting point if such functionality is supported by the host\n"
+	                      "@throw NotEmpty The given directory @path isn't empty empty\n"
+	                      "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
+	                      "@throw FileAccessError The current user does not have permissions to remove the directory described by @path\n"
+	                      "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                      /*               */ "operations mode, preventing the deletion of existing directories\n"
+	                      "@throw SystemError Failed to delete the directory @path for some reason\n"
+	                      "Remove a directory named @path"))
+	D(POSIX_REMOVE_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @path does not exist\n"
+	                       "@throw NoDirectory A part of the given @path is not a directory\n"
+	                       "@throw NotEmpty The given @path is a directory that isn't empty empty\n"
+	                       "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
+	                       "@throw FileAccessError The current user does not have permissions to remove the file or directory described by @path\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                       /*               */ "operations mode, preventing the deletion of existing files or directories\n"
+	                       "@throw SystemError Failed to remove the given file @path for some reason\n"
+	                       "Remove a file or an empty directory name @path"))
+	/* TODO: unlinkat(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0) */
+	/* TODO: rmdirat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0) */
+	/* TODO: removeat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0) */
+
+
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
@@ -1341,9 +1410,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(mkdir, "(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n")
-	DEFINE_LIBFS_ALIAS_S(rmdir, "(path:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(unlink, "(path:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(remove, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(rename, "(existing_path:?Dstring,new_path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(link, "(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(symlink, "(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")

@@ -308,34 +308,6 @@ err:
 }
 
 
-#if (defined(posix_chdir_USE_chdir) || defined(posix_chdir_USE_wchdir) || \
-     defined(posix_fchdir_USE_fchdir))
-INTDEF ATTR_COLD NONNULL((2)) int DCALL
-err_unix_chdir(int errno_value, DeeObject *__restrict path) {
-#ifdef EACCES
-	if (errno_value == EACCES) {
-#define NEED_err_unix_path_no_access
-		return err_unix_path_no_access(errno_value, path);
-	}
-#endif /* EACCES */
-#ifdef ENOTDIR
-	if (errno_value == ENOTDIR) {
-#define NEED_err_unix_path_not_dir
-		return err_unix_path_not_dir(errno_value, path);
-	}
-#endif /* ENOTDIR */
-#ifdef ENOENT
-	if (errno_value == ENOENT) {
-#define NEED_err_unix_path_not_found
-		return err_unix_path_not_found(errno_value, path);
-	}
-#endif /* ENOENT */
-	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
-	                                 "Failed to change the current working directory to %r",
-	                                 path);
-}
-#endif /* ... */
-
 
 /*[[[deemon import("_dexutils").gw("chdir", "path:?Dstring", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
@@ -359,9 +331,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path)
 /*[[[end]]]*/
 {
 #ifdef posix_chdir_USE_nt_SetCurrentDirectory
-#define NEED_nt_SetCurrentDirectory
 	int result;
 again:
+#define NEED_nt_SetCurrentDirectory
 	result = nt_SetCurrentDirectory(path);
 	if unlikely(result != 0) {
 		DWORD dwError;
@@ -409,7 +381,6 @@ do_throw_not_dir:
 		}
 		goto err;
 	}
-done:
 	return_none;
 err:
 	return NULL;
@@ -436,6 +407,7 @@ EINTR_LABEL(again)
 	{
 		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again, err);
+#define NEED_err_unix_chdir
 		err_unix_chdir(error, path);
 		goto err;
 	}
@@ -490,6 +462,7 @@ EINTR_LABEL(again)
 			goto err;
 		}
 #endif /* EBADF */
+#define NEED_err_unix_chdir
 		err_unix_chdir(error, fd);
 		goto err;
 	}

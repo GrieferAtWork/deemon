@@ -26,239 +26,519 @@
 
 DECL_BEGIN
 
-#undef chmod
-#undef lchmod
-#undef chown
-#undef lchown
-#undef mkdir
-#undef rmdir
-#undef unlink
-#undef remove
-#undef rename
-#undef link
-#undef symlink
-#undef readlink
+#undef posix_unlink_USE_nt_DeleteFile
+#undef posix_unlink_USE_unlink
+#undef posix_unlink_USE_wunlink
+#undef posix_unlink_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_unlink_USE_nt_DeleteFile
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_unlink_USE_wunlink
+#elif defined(CONFIG_HAVE_unlink)
+#define posix_unlink_USE_unlink
+#elif defined(CONFIG_HAVE_wunlink)
+#define posix_unlink_USE_wunlink
+#else /* ... */
+#define posix_unlink_USE_STUB
+#endif /* !... */
 
-#define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                \
-	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                              \
-	libposix_getfs_##name##_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {   \
-		return DeeObject_GetAttr(FS_MODULE, (DeeObject *)&libposix_libfs_name_##name); \
-	}                                                                                  \
-	PRIVATE DEFINE_CMETHOD(libposix_getfs_##name, &libposix_getfs_##name##_f);
-#define DEFINE_LIBFS_FORWARD_WRAPPER_S(name) \
-	DEFINE_LIBFS_FORWARD_WRAPPER(name, #name)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(chmod)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(lchown)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(mkdir)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(rmdir)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(unlink)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(remove)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(rename)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(link)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(readlink)
-#undef DEFINE_LIBFS_FORWARD_WRAPPER_S
-#undef DEFINE_LIBFS_FORWARD_WRAPPER
+#undef posix_rmdir_USE_nt_RemoveDirectory
+#undef posix_rmdir_USE_rmdir
+#undef posix_rmdir_USE_wrmdir
+#undef posix_rmdir_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_rmdir_USE_nt_RemoveDirectory
+#elif defined(CONFIG_HAVE_wrmdir) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_rmdir_USE_wrmdir
+#elif defined(CONFIG_HAVE_rmdir)
+#define posix_rmdir_USE_rmdir
+#elif defined(CONFIG_HAVE_wrmdir)
+#define posix_rmdir_USE_wrmdir
+#else /* ... */
+#define posix_rmdir_USE_STUB
+#endif /* !... */
+
+#undef posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory
+#undef posix_remove_USE_remove
+#undef posix_remove_USE_wremove
+#undef posix_remove_USE_wunlink_AND_wrmdir
+#undef posix_remove_USE_wunlink_AND_rmdir
+#undef posix_remove_USE_unlink_AND_wrmdir
+#undef posix_remove_USE_unlink_AND_rmdir
+#undef posix_remove_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory
+#elif defined(CONFIG_HAVE_wremove) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_remove_USE_wremove
+#elif defined(CONFIG_HAVE_remove)
+#define posix_remove_USE_remove
+#elif defined(CONFIG_HAVE_wremove)
+#define posix_remove_USE_wremove
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_HAVE_wrmdir) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_remove_USE_wunlink_AND_wrmdir
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_HAVE_rmdir) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_remove_USE_wunlink_AND_rmdir
+#elif defined(CONFIG_HAVE_unlink) && defined(CONFIG_HAVE_wrmdir) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_remove_USE_unlink_AND_wrmdir
+#elif defined(CONFIG_HAVE_unlink) && defined(CONFIG_HAVE_rmdir)
+#define posix_remove_USE_unlink_AND_rmdir
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_HAVE_wrmdir)
+#define posix_remove_USE_wunlink_AND_wrmdir
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_HAVE_rmdir)
+#define posix_remove_USE_wunlink_AND_rmdir
+#elif defined(CONFIG_HAVE_unlink) && defined(CONFIG_HAVE_wrmdir)
+#define posix_remove_USE_unlink_AND_wrmdir
+#else /* ... */
+#define posix_remove_USE_STUB
+#endif /* !... */
 
 
 
-
-
-/************************************************************************/
-/* fchownat()                                                           */
-/************************************************************************/
-
-/*[[[deemon import("_dexutils").gw("fchownat", "dfd:d,filename:c:char[],owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:?Dint)->?Dint") },
-#define POSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchownat, posix_fchownat_f);
-#ifndef POSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_owner_group_atflags, { K(dfd), K(filename), K(owner), K(group), K(atflags), KEND });
-#endif /* !POSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int dfd;
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	DeeObject *owner;
-	DeeObject *group;
-	int atflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_owner_group_atflags, "doood:fchownat", &dfd, &filename, &owner, &group, &atflags))
+/*[[[deemon import("_dexutils").gw("unlink", "file:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlink_f_impl(DeeObject *file);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_UNLINK_DEF { "unlink", (DeeObject *)&posix_unlink, MODSYM_FNORMAL, DOC("(file:?Dstring)") },
+#define POSIX_UNLINK_DEF_DOC(doc) { "unlink", (DeeObject *)&posix_unlink, MODSYM_FNORMAL, DOC("(file:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_unlink, posix_unlink_f);
+#ifndef POSIX_KWDS_FILE_DEFINED
+#define POSIX_KWDS_FILE_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_file, { K(file), KEND });
+#endif /* !POSIX_KWDS_FILE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_unlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *file;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_file, "o:unlink", &file))
 		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_fchownat_f_impl(dfd, filename_str, owner, group, atflags);
+	return posix_unlink_f_impl(file);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags)
-//[[[end]]]
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlink_f_impl(DeeObject *file)
+/*[[[end]]]*/
 {
-#ifdef CONFIG_HAVE_fchownat
-	uid_t owner_uid;
-	gid_t group_gid;
-	int result;
-	if (DeeInt_Check(owner)) {
-		if (DeeObject_AsUINT(owner, &owner_uid))
-			goto err;
-	} else {
-		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, (DeeObject **)&owner);
-		if unlikely(!owner)
-			goto err;
-		result = DeeObject_AsUINT(owner, &owner_uid);
-		Dee_Decref(owner);
-		if unlikely(result)
-			goto err;
-	}
-	if (DeeInt_Check(group)) {
-		if (DeeObject_AsUINT(group, &group_gid))
-			goto err;
-	} else {
-		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, (DeeObject **)&group);
-		if unlikely(!group)
-			goto err;
-		result = DeeObject_AsUINT(group, &group_gid);
-		Dee_Decref(group);
-		if unlikely(result)
-			goto err;
-	}
-EINTR_LABEL(again)
+#ifdef posix_unlink_USE_nt_DeleteFile
+	int error;
+	DWORD dwError;
+	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
+		goto err;
+again_deletefile:
+#define NEED_nt_DeleteFile
+	error = nt_DeleteFile(file);
+	if likely(error == 0)
+		return_none;
+	if unlikely(error < 0)
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	result = fchownat(dfd, filename, owner_uid, group_gid, atflags);
+	dwError = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
-		HANDLE_ENOSYS(result, err, "fchownat")
-		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%q", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
-		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
-		                          "Failed to change ownership of %d:%q",
-		                          dfd, filename);
-		goto err;
-	}
-	return DeeInt_NewInt(result);
-#else /* CONFIG_HAVE_fchownat */
-#define NEED_libposix_get_dfd_filename 1
-	DREF DeeObject *func;
-	DREF DeeObject *result;
-	DREF DeeObject *args[3];
-	args[0] = libposix_get_dfd_filename(dfd, filename, atflags);
-	if unlikely(!args[0])
-		goto err;
-	func = libposix_getfs_chown_f(0, NULL);
-	if unlikely(!func)
-		result = NULL;
-	else {
-		args[1] = owner;
-		args[2] = group;
-		result = DeeObject_Call(func, 3, args);
-		Dee_Decref(func);
-	}
-	Dee_Decref(args[0]);
-	return result;
-#endif /* !CONFIG_HAVE_fchownat */
-err:
-	return NULL;
-}
-
-
-
-
-
-/************************************************************************/
-/* fchmodat()                                                           */
-/************************************************************************/
-
-/*[[[deemon import("_dexutils").gw("fchmodat", "dfd:d,filename:c:char[],mode:u,atflags:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint") },
-#define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, posix_fchmodat_f);
-#ifndef POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
-#define POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_mode_atflags, { K(dfd), K(filename), K(mode), K(atflags), KEND });
-#endif /* !POSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int dfd;
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	unsigned int mode;
-	int atflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_dfd_filename_mode_atflags, "doud:fchmodat", &dfd, &filename, &mode, &atflags))
-		goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-		goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-		goto err;
-	return posix_fchmodat_f_impl(dfd, filename_str, mode, atflags);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags)
-//[[[end]]]
-{
-#ifdef CONFIG_HAVE_fchmodat
-	int result;
-EINTR_LABEL(again)
-	DBG_ALIGNMENT_DISABLE();
-	result = fchmodat(dfd, filename, mode, atflags);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
-		HANDLE_ENOSYS(result, err, "fchmodat")
-		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%q", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
-		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
-		                          "Failed to change access mode of %d:%q",
-		                          dfd, filename);
-		goto err;
-	}
-	return DeeInt_NewInt(result);
-#else /* CONFIG_HAVE_fchmodat */
-#define NEED_libposix_get_dfd_filename 1
-	DREF DeeObject *func;
-	DREF DeeObject *result;
-	DREF DeeObject *args[2];
-	args[0] = libposix_get_dfd_filename(dfd, filename, atflags);
-	if unlikely(!args[0])
-		goto err;
-	func = libposix_getfs_chmod_f(0, NULL);
-	if unlikely(!func)
-		result = NULL;
-	else {
-		args[1] = DeeInt_NewUInt(mode);
-		if unlikely(!args[1])
-			result = NULL;
-		else {
-			result = DeeObject_Call(func, 2, args);
-			Dee_Decref(args[1]);
+	if (dwError == ERROR_ACCESS_DENIED) {
+		/* Check if we've failed to delete a symbolic
+		 * directory-link (for which RemoveDirectory() must be used) */
+		DWORD attr;
+again_getattr:
+#define NEED_nt_GetFileAttributes
+		dwError = nt_GetFileAttributes(file, &attr);
+		if (dwError < 0)
+			goto err;
+		if (!dwError &&
+		    (attr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
+		    (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) {
+again_rmdir:
+#define NEED_nt_RemoveDirectory
+			dwError = nt_RemoveDirectory(file);
+			if likely(dwError == 0)
+				return_none;
+			if unlikely(dwError < 0)
+				goto err;
+			DBG_ALIGNMENT_DISABLE();
+			dwError = (int)GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
+				if (Dee_CollectMemory(1))
+					goto again_rmdir;
+				goto err;
+			}
+#define NEED_err_nt_rmdir
+			err_nt_rmdir(dwError, file);
+			goto err;
 		}
-		Dee_Decref(func);
+		DBG_ALIGNMENT_DISABLE();
+		dwError = (int)GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_CollectMemory(1))
+				goto again_getattr;
+			goto err;
+		}
+		dwError = ERROR_ACCESS_DENIED;
 	}
-	Dee_Decref(args[0]);
-	return result;
-#endif /* !CONFIG_HAVE_fchmodat */
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again_deletefile;
+		goto err;
+	}
+#define NEED_err_nt_unlink
+	err_nt_unlink(dwError, file);
+err:
+	return NULL;
+#endif /* posix_unlink_USE_nt_DeleteFile */
+
+#if defined(posix_unlink_USE_unlink) || defined(posix_unlink_USE_wunlink)
+#ifdef posix_unlink_USE_unlink
+	char *utf8_file;
+	utf8_file = DeeString_AsUtf8(file);
+	if unlikely(!utf8_file)
+		goto err;
+#elif defined(posix_unlink_USE_wunlink)
+	dwchar_t *wide_file;
+	wide_file = DeeString_AsWide(file);
+	if unlikely(!wide_file)
+		goto err;
+#endif /* ... */
+EINTR_LABEL(again)
+#ifdef posix_unlink_USE_unlink
+	if unlikely(unlink(utf8_file) != 0)
+#elif defined(posix_unlink_USE_wunlink)
+	if unlikely(wunlink(wide_file) != 0)
+#endif /* ... */
+	{
+		int error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+#define NEED_err_unix_unlink
+		err_unix_unlink(error, file);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_unlink_USE_unlink || posix_unlink_USE_wunlink */
+
+#ifdef posix_unlink_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)file;
+	posix_err_unsupported("unlink");
+	return NULL;
+#endif /* posix_unlink_USE_STUB */
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("rmdir", "path:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdir_f_impl(DeeObject *path);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_RMDIR_DEF { "rmdir", (DeeObject *)&posix_rmdir, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
+#define POSIX_RMDIR_DEF_DOC(doc) { "rmdir", (DeeObject *)&posix_rmdir, MODSYM_FNORMAL, DOC("(path:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_rmdir, posix_rmdir_f);
+#ifndef POSIX_KWDS_PATH_DEFINED
+#define POSIX_KWDS_PATH_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+#endif /* !POSIX_KWDS_PATH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_rmdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:rmdir", &path))
+		goto err;
+	return posix_rmdir_f_impl(path);
 err:
 	return NULL;
 }
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdir_f_impl(DeeObject *path)
+/*[[[end]]]*/
+{
+#ifdef posix_rmdir_USE_nt_RemoveDirectory
+	int error;
+	DWORD dwError;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+again:
+#define NEED_nt_RemoveDirectory
+	error = nt_RemoveDirectory(path);
+	if likely(error == 0)
+		return_none;
+	if unlikely(error < 0)
+		goto err;
+	DBG_ALIGNMENT_DISABLE();
+	dwError = (int)GetLastError();
+	DBG_ALIGNMENT_ENABLE();
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again;
+	}
+#define NEED_err_nt_rmdir
+	err_nt_rmdir(dwError, path);
+err:
+	return NULL;
+#endif /* posix_rmdir_USE_nt_RemoveDirectory */
+
+#if defined(posix_rmdir_USE_rmdir) || defined(posix_rmdir_USE_wrmdir)
+#ifdef posix_rmdir_USE_rmdir
+	char *utf8_path;
+	utf8_path = DeeString_AsUtf8(path);
+	if unlikely(!utf8_path)
+		goto err;
+#elif defined(posix_rmdir_USE_wrmdir)
+	dwchar_t *wide_path;
+	wide_path = DeeString_AsWide(path);
+	if unlikely(!wide_path)
+		goto err;
+#endif /* ... */
+EINTR_LABEL(again)
+#ifdef posix_rmdir_USE_rmdir
+	if unlikely(rmdir(utf8_path) != 0)
+#elif defined(posix_rmdir_USE_wrmdir)
+	if unlikely(wrmdir(wide_path) != 0)
+#endif /* ... */
+	{
+		int error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+#define NEED_err_unix_rmdir
+		err_unix_rmdir(error, path);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_rmdir_USE_rmdir || posix_rmdir_USE_wrmdir */
+
+#ifdef posix_rmdir_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)path;
+	posix_err_unsupported("rmdir");
+	return NULL;
+#endif /* posix_rmdir_USE_STUB */
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("remove", "path:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_remove_f_impl(DeeObject *path);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_remove_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_REMOVE_DEF { "remove", (DeeObject *)&posix_remove, MODSYM_FNORMAL, DOC("(path:?Dstring)") },
+#define POSIX_REMOVE_DEF_DOC(doc) { "remove", (DeeObject *)&posix_remove, MODSYM_FNORMAL, DOC("(path:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_remove, posix_remove_f);
+#ifndef POSIX_KWDS_PATH_DEFINED
+#define POSIX_KWDS_PATH_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_path, { K(path), KEND });
+#endif /* !POSIX_KWDS_PATH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_remove_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *path;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_path, "o:remove", &path))
+		goto err;
+	return posix_remove_f_impl(path);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_remove_f_impl(DeeObject *path)
+/*[[[end]]]*/
+{
+#ifdef posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory
+	int error;
+	DWORD dwError;
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+again:
+#define NEED_nt_DeleteFile
+	error = nt_DeleteFile(path);
+	if (error == 0)
+		return_none;
+	if unlikely(error < 0)
+		goto err;
+	DBG_ALIGNMENT_DISABLE();
+	dwError = GetLastError();
+	DBG_ALIGNMENT_ENABLE();
+	/* NOTE: DeleteFile() sets `ERROR_ACCESS_DENIED'
+	 *       if the folder is actually a directory. */
+	if (dwError == ERROR_ACCESS_DENIED) {
+#define NEED_nt_RemoveDirectory
+		error = nt_RemoveDirectory(path);
+		if likely(error == 0)
+			return_none;
+		if unlikely(error < 0)
+			goto err;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		}
+#define NEED_err_nt_rmdir
+		err_nt_rmdir(dwError, path);
+		goto err;
+	}
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again;
+		goto err;
+	}
+#define NEED_err_nt_unlink
+	err_nt_unlink(dwError, path);
+err:
+	return NULL;
+#endif /* posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory */
+
+#if defined(posix_remove_USE_remove) || defined(posix_remove_USE_wremove)
+#ifdef posix_remove_USE_remove
+	char *utf8_path;
+	utf8_path = DeeString_AsUtf8(path);
+	if unlikely(!utf8_path)
+		goto err;
+#elif defined(posix_remove_USE_wremove)
+	dwchar_t *wide_path;
+	wide_path = DeeString_AsWide(path);
+	if unlikely(!wide_path)
+		goto err;
+#endif /* ... */
+EINTR_LABEL(again)
+#ifdef posix_remove_USE_remove
+	if unlikely(remove(utf8_path) != 0)
+#elif defined(posix_remove_USE_wremove)
+	if unlikely(wremove(wide_path) != 0)
+#endif /* ... */
+	{
+		int error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+#define NEED_err_unix_remove
+		err_unix_remove(error, path);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* posix_remove_USE_remove || posix_remove_USE_wremove */
+
+#if (defined(posix_remove_USE_wunlink_AND_wrmdir) || \
+     defined(posix_remove_USE_wunlink_AND_rmdir) ||  \
+     defined(posix_remove_USE_unlink_AND_wrmdir) ||  \
+     defined(posix_remove_USE_unlink_AND_rmdir))
+	int error;
+#if (defined(posix_remove_USE_wunlink_AND_wrmdir) || \
+     defined(posix_remove_USE_wunlink_AND_rmdir) || \
+     defined(posix_remove_USE_unlink_AND_wrmdir))
+#define posix_remove_COMBINATION_NEEDS_WCHAR
+	dwchar_t *wide_path;
+#endif /* wchar */
+#if (defined(posix_remove_USE_wunlink_AND_rmdir) || \
+     defined(posix_remove_USE_unlink_AND_wrmdir) || \
+     defined(posix_remove_USE_unlink_AND_rmdir))
+#define posix_remove_COMBINATION_NEEDS_UTF8
+	char *utf8_path;
+#endif /* utf-8 */
+	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+		goto err;
+#ifdef posix_remove_COMBINATION_NEEDS_WCHAR
+	wide_path = DeeString_AsWide(path);
+	if unlikely(!wide_path)
+		goto err;
+#endif /* posix_remove_COMBINATION_NEEDS_WCHAR */
+#ifdef posix_remove_COMBINATION_NEEDS_UTF8
+	utf8_path = DeeString_AsUtf8(path);
+	if unlikely(!utf8_path)
+		goto err;
+#endif /* posix_remove_COMBINATION_NEEDS_UTF8 */
+
+#if defined(ENOMEM) || defined(EINTR)
+again:
+#endif /* ENOMEM || EINTR */
+	DBG_ALIGNMENT_DISABLE();
+#if defined(posix_remove_USE_wunlink_AND_wrmdir) || defined(posix_remove_USE_wunlink_AND_rmdir)
+	error = wunlink(wide_path);
+#else /* posix_remove_USE_wunlink_AND_wrmdir || posix_remove_USE_wunlink_AND_rmdir */
+	error = unlink(utf8_path);
+#endif /* !posix_remove_USE_wunlink_AND_wrmdir && !posix_remove_USE_wunlink_AND_rmdir */
+	DBG_ALIGNMENT_ENABLE();
+	if (error) {
+		error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		});
+#if defined(EISDIR) || defined(EPERM)
+#if defined(EISDIR) && defined(EPERM)
+		if (error == EISDIR || error == EPERM)
+#elif defined(EISDIR)
+		if (error == EISDIR)
+#else /* ... */
+		if (error == EPERM)
+#endif /* !... */
+		{
+			/* Delete a directory. */
+			DBG_ALIGNMENT_DISABLE();
+#if defined(posix_remove_USE_wunlink_AND_wrmdir) || defined(posix_remove_USE_unlink_AND_wrmdir)
+			error = wrmdir(wide_path);
+#else /* posix_remove_USE_wunlink_AND_wrmdir || posix_remove_USE_unlink_AND_wrmdir */
+			error = rmdir(utf8_path);
+#endif /* !posix_remove_USE_wunlink_AND_wrmdir && !posix_remove_USE_unlink_AND_wrmdir */
+			DBG_ALIGNMENT_ENABLE();
+			if likely(!error)
+				return_none;
+			error = DeeSystem_GetErrno();
+			HANDLE_EINTR(error, again, err);
+			DeeSystem_IF_E1(error, ENOMEM, {
+				if (Dee_CollectMemory(1))
+					goto again;
+				goto err;
+			});
+#define NEED_err_unix_rmdir
+			err_unix_rmdir(error, path);
+		} else {
+			/* Handle errors. */
+#define NEED_err_unix_unlink
+			err_unix_unlink(error, path);
+		}
+#else /* EISDIR || EPERM */
+		/* Delete a directory. */
+		DBG_ALIGNMENT_DISABLE();
+#if defined(posix_remove_USE_wunlink_AND_wrmdir) || defined(posix_remove_USE_unlink_AND_wrmdir)
+		error = wrmdir(wide_path);
+#else /* posix_remove_USE_wunlink_AND_wrmdir || posix_remove_USE_unlink_AND_wrmdir */
+		error = rmdir(utf8_path);
+#endif /* !posix_remove_USE_wunlink_AND_wrmdir && !posix_remove_USE_unlink_AND_wrmdir */
+		DBG_ALIGNMENT_ENABLE();
+		if likely(!error)
+			return_none;
+		error = DeeSystem_GetErrno();
+		HANDLE_EINTR(error, again, err);
+		DeeSystem_IF_E1(error, ENOMEM, {
+			if (Dee_CollectMemory(1))
+				goto again;
+			goto err;
+		});
+#define NEED_err_unix_rmdir
+		err_unix_rmdir(error, path);
+#endif /* !EISDIR && !EPERM */
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+#endif /* [w]unlink() + [w]rmdir() */
+
+#ifdef posix_remove_USE_STUB
+#define NEED_posix_err_unsupported
+	(void)path;
+	posix_err_unsupported("remove");
+	return NULL;
+#endif /* posix_remove_USE_STUB */
+}
+
+
 
 DECL_END
 

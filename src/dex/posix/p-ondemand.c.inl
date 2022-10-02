@@ -25,6 +25,19 @@
 #include "libposix.h"
 
 #ifdef __INTELLISENSE__
+#include "p-stat.c.inl"
+
+#define NEED_err_unix_chdir
+#define NEED_err_unix_remove
+#define NEED_err_unix_unlink
+#define NEED_err_nt_unlink
+#define NEED_err_unix_rmdir
+#define NEED_err_nt_rmdir
+#define NEED_err_unix_remove_unsupported
+#define NEED_err_unix_unlink_unsupported
+#define NEED_err_nt_unlink_unsupported
+#define NEED_err_unix_rmdir_unsupported
+#define NEED_err_nt_rmdir_unsupported
 #define NEED_err_unix_path_not_dir
 #define NEED_err_nt_path_not_dir
 #define NEED_err_unix_path_not_found
@@ -43,7 +56,7 @@
 #define NEED_err_nt_path_exists
 #define NEED_err_unix_path_is_dir
 #define NEED_err_nt_path_is_dir
-#define NEED_err_unix_path_read_only
+#define NEED_err_unix_path_readonly
 #define NEED_err_nt_path_readonly
 #define NEED_err_unix_file_not_found
 #define NEED_err_nt_file_not_found
@@ -78,6 +91,372 @@
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
+
+#ifdef NEED_err_unix_chdir
+#undef NEED_err_unix_chdir
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_unix_chdir(int errno_value, DeeObject *__restrict path) {
+#ifdef EACCES
+	if (errno_value == EACCES) {
+#define NEED_err_unix_path_no_access
+		return err_unix_path_no_access(errno_value, path);
+	}
+#endif /* EACCES */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR) {
+#define NEED_err_unix_path_not_dir
+		return err_unix_path_not_dir(errno_value, path);
+	}
+#endif /* ENOTDIR */
+#ifdef ENOENT
+	if (errno_value == ENOENT) {
+#define NEED_err_unix_path_not_found
+		return err_unix_path_not_found(errno_value, path);
+	}
+#endif /* ENOENT */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to change the current working directory to %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_chdir */
+
+#undef NEED_err_unix_remove
+#ifdef NEED_err_unix_remove
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_remove(int errno_value, DeeObject *__restrict path) {
+#ifdef EACCES
+	if (errno_value == EACCES) {
+#define NEED_err_unix_path_not_writable
+		return err_unix_path_not_writable(errno_value, path);
+	}
+#endif /* EACCES */
+#if defined(EBUSY) || defined(EINVAL)
+#define NEED_err_unix_path_busy
+	DeeSystem_IF_E2(errno_value, EBUSY, EINVAL, {
+		return err_unix_path_busy(errno_value, path);
+	});
+#endif /* EBUSY || EINVAL */
+#ifdef ENOENT
+#define NEED_err_unix_path_not_found
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#endif /* ENOENT */
+#ifdef ENOTEMPTY
+#define NEED_err_unix_path_not_empty
+	if (errno_value == ENOTEMPTY)
+		return err_unix_path_not_empty(errno_value, path);
+#endif /* ENOTEMPTY */
+#ifdef EROFS
+#define NEED_err_unix_path_readonly
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#endif /* EROFS */
+#ifdef EPERM
+	if (errno_value == EPERM) {
+		/* Posix states that this is the return value when the path is a directory,
+		 * but also if the filesystem does not support unlinking files. */
+#ifdef posix_stat_USED_STRUCT_STAT
+		struct posix_stat_USED_STRUCT_STAT st;
+		posix_stat_TCHAR *tpath;
+		tpath = posix_stat_DeeString_AsTChar(path);
+		if unlikely(!tpath)
+			return -1;
+		DBG_ALIGNMENT_DISABLE();
+#ifdef posix_stat_USED_lstat
+		if (posix_stat_USED_lstat(tpath, &st) == 0)
+#else /* posix_stat_USED_lstat */
+		if (posix_stat_USED_stat(tpath, &st) == 0)
+#endif /* !posix_stat_USED_lstat */
+		{
+			DBG_ALIGNMENT_ENABLE();
+#define NEED_err_unix_path_is_dir
+			if (STAT_ISDIR(st.st_mode))
+				return err_unix_path_is_dir(errno_value, path);
+
+			/* Posix also states that the presence of the
+			 * S_ISVTX bit may cause EPERM to be returned. */
+#define NEED_err_unix_path_not_writable
+			if (st.st_mode & STAT_ISVTX)
+				return err_unix_path_not_writable(errno_value, path);
+		}
+		DBG_ALIGNMENT_ENABLE();
+#endif /* posix_stat_USED_STRUCT_STAT */
+#define NEED_err_unix_remove_unsupported
+		return err_unix_remove_unsupported(errno_value, path);
+	}
+#endif /* EPERM */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to remove file or directory %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_remove */
+
+
+#ifdef NEED_err_unix_unlink
+#undef NEED_err_unix_unlink
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_unlink(int errno_value, DeeObject *__restrict path) {
+#ifdef EACCES
+	if (errno_value == EACCES) {
+#define NEED_err_unix_path_not_writable
+		return err_unix_path_not_writable(errno_value, path);
+	}
+#endif /* EACCES */
+#ifdef EBUSY
+	if (errno_value == EBUSY) {
+#define NEED_err_unix_path_busy
+		return err_unix_path_busy(errno_value, path);
+	}
+#endif /* EBUSY */
+#ifdef EISDIR
+	if (errno_value == EISDIR) {
+#define NEED_err_unix_path_is_dir
+		return err_unix_path_is_dir(errno_value, path);
+	}
+#endif /* EISDIR */
+#ifdef ENOTDIR
+	if (errno_value == ENOTDIR) {
+#define NEED_err_unix_path_not_dir
+		return err_unix_path_not_dir(errno_value, path);
+	}
+#endif /* ENOTDIR */
+#ifdef ENOENT
+	if (errno_value == ENOENT) {
+#define NEED_err_unix_path_not_found
+		return err_unix_path_not_found(errno_value, path);
+	}
+#endif /* ENOENT */
+#ifdef EPERM
+	if (errno_value == EPERM) {
+		/* Posix states that this is the return value when the path is a directory,
+		 * but also if the filesystem does not support unlinking files. */
+#ifdef posix_stat_USED_STRUCT_STAT
+		struct posix_stat_USED_STRUCT_STAT st;
+		posix_stat_TCHAR *tpath;
+		tpath = posix_stat_DeeString_AsTChar(path);
+		if unlikely(!tpath)
+			return -1;
+		DBG_ALIGNMENT_DISABLE();
+#ifdef posix_stat_USED_lstat
+		if (posix_stat_USED_lstat(tpath, &st) == 0)
+#else /* posix_stat_USED_lstat */
+		if (posix_stat_USED_stat(tpath, &st) == 0)
+#endif /* !posix_stat_USED_lstat */
+		{
+			DBG_ALIGNMENT_ENABLE();
+#define NEED_err_unix_path_is_dir
+			if (STAT_ISDIR(st.st_mode))
+				return err_unix_path_is_dir(errno_value, path);
+
+			/* Posix also states that the presence of the
+			 * S_ISVTX bit may cause EPERM to be returned. */
+#define NEED_err_unix_path_not_writable
+			if (st.st_mode & STAT_ISVTX)
+				return err_unix_path_not_writable(errno_value, path);
+		}
+		DBG_ALIGNMENT_ENABLE();
+#endif /* posix_stat_USED_STRUCT_STAT */
+#define NEED_err_unix_unlink_unsupported
+		return err_unix_unlink_unsupported(errno_value, path);
+	}
+#endif /* EPERM */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to unlink file %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_unlink */
+
+
+#ifdef NEED_err_nt_unlink
+#undef NEED_err_nt_unlink
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_nt_unlink(DWORD dwError, DeeObject *__restrict path) {
+	if (dwError == ERROR_ACCESS_DENIED) {
+		DWORD dwAttributes;
+		int temp;
+		/* Check if the path is actually a directory. */
+#define NEED_nt_GetFileAttributes
+		temp = nt_GetFileAttributes(path, &dwAttributes);
+		if unlikely(temp < 0)
+			return temp;
+#define NEED_err_nt_path_is_dir
+		if (temp == 0 && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			return err_nt_path_is_dir(dwError, path);
+	}
+#define NEED_err_nt_path_not_writable
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_not_writable(dwError, path);
+#define NEED_err_nt_path_busy
+	if (DeeNTSystem_IsBusy(dwError))
+		return err_nt_path_busy(dwError, path);
+#define NEED_err_nt_path_not_dir
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_path_not_found
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_unlink_unsupported
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_unlink_unsupported(dwError, path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to unlink file %r",
+	                               path);
+}
+#endif /* NEED_err_nt_unlink */
+
+#ifdef NEED_err_unix_rmdir
+#undef NEED_err_unix_rmdir
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
+#ifdef EACCES
+#define NEED_err_unix_path_not_writable
+	if (errno_value == EACCES)
+		return err_unix_path_not_writable(errno_value, path);
+#endif /* EACCES */
+#if defined(EBUSY) || defined(EINVAL)
+#define NEED_err_unix_path_busy
+	DeeSystem_IF_E2(errno_value, EBUSY, EINVAL, {
+		return err_unix_path_busy(errno_value, path);
+	});
+#endif /* EBUSY || EINVAL */
+#ifdef ENOENT
+#define NEED_err_unix_path_not_found
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found(errno_value, path);
+#endif /* ENOENT */
+#ifdef ENOTDIR
+#define NEED_err_unix_path_not_dir
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir(errno_value, path);
+#endif /* ENOTDIR */
+#ifdef ENOTEMPTY
+#define NEED_err_unix_path_not_empty
+	if (errno_value == ENOTEMPTY)
+		return err_unix_path_not_empty(errno_value, path);
+#endif /* ENOTEMPTY */
+#ifdef EROFS
+#define NEED_err_unix_path_readonly
+	if (errno_value == EROFS)
+		return err_unix_path_readonly(errno_value, path);
+#endif /* EROFS */
+#ifdef EPERM
+	if (errno_value == EPERM) {
+		/* Posix states that `EPERM' may be returned because of the sticky bit.
+		 * However in that event, we want to throw an access error, not an
+		 * unsupported-api error. */
+#ifdef posix_stat_USED_STRUCT_STAT
+		struct posix_stat_USED_STRUCT_STAT st;
+		posix_stat_TCHAR *tpath;
+		tpath = posix_stat_DeeString_AsTChar(path);
+		if unlikely(!tpath)
+			return -1;
+		DBG_ALIGNMENT_DISABLE();
+#ifdef posix_stat_USED_lstat
+		if (posix_stat_USED_lstat(tpath, &st) == 0)
+#else /* posix_stat_USED_lstat */
+		if (posix_stat_USED_stat(tpath, &st) == 0)
+#endif /* !posix_stat_USED_lstat */
+		{
+			if (st.st_mode & STAT_ISVTX) {
+				DBG_ALIGNMENT_ENABLE();
+#define NEED_err_unix_path_not_writable
+				return err_unix_path_not_writable(errno_value, path);
+			}
+		}
+		DBG_ALIGNMENT_ENABLE();
+#endif /* posix_stat_USED_STRUCT_STAT */
+#define NEED_err_unix_rmdir_unsupported
+		return err_unix_rmdir_unsupported(errno_value, path);
+	}
+#endif /* EPERM */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to remove directory %r",
+	                                 path);
+}
+#endif /* NEED_err_unix_rmdir */
+
+#ifdef NEED_err_nt_rmdir
+#undef NEED_err_nt_rmdir
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_nt_rmdir(DWORD dwError, DeeObject *__restrict path) {
+#define NEED_err_nt_path_not_empty
+	if (DeeNTSystem_IsNotEmpty(dwError))
+		return err_nt_path_not_empty(dwError, path);
+#define NEED_err_nt_path_not_writable
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_not_writable(dwError, path);
+#define NEED_err_nt_path_busy
+	if (DeeNTSystem_IsBusy(dwError))
+		return err_nt_path_busy(dwError, path);
+#define NEED_err_nt_path_not_found
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found(dwError, path);
+#define NEED_err_nt_path_not_dir
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir(dwError, path);
+#define NEED_err_nt_rmdir_unsupported
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_rmdir_unsupported(dwError, path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to remove directory %r",
+	                               path);
+}
+#endif /* NEED_err_nt_rmdir */
+
+#ifdef NEED_err_unix_remove_unsupported
+#undef NEED_err_unix_remove_unsupported
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the path %r does "
+	                                 "not support removing files or directories",
+	                                 path);
+}
+#endif /* NEED_err_unix_remove_unsupported */
+
+#ifdef NEED_err_unix_unlink_unsupported
+#undef NEED_err_unix_unlink_unsupported
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the path %r "
+	                                 "does not support unlinking files",
+	                                 path);
+}
+#endif /* NEED_err_unix_unlink_unsupported */
+
+#ifdef NEED_err_nt_unlink_unsupported
+#undef NEED_err_nt_unlink_unsupported
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_unlink_unsupported(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the path %r "
+	                               "does not support unlinking files",
+	                               path);
+}
+#endif /* NEED_err_nt_unlink_unsupported */
+
+#ifdef NEED_err_unix_rmdir_unsupported
+#undef NEED_err_unix_rmdir_unsupported
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the path %r does "
+	                                 "not support the removal of directories",
+	                                 path);
+}
+#endif /* NEED_err_unix_rmdir_unsupported */
+
+#ifdef NEED_err_nt_rmdir_unsupported
+#undef NEED_err_nt_rmdir_unsupported
+INTDEF ATTR_COLD NONNULL((2)) int DCALL
+err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the path %r does "
+	                               "not support the removal of directories",
+	                               path);
+}
+#endif /* NEED_err_nt_rmdir_unsupported */
 
 #ifdef NEED_err_unix_path_not_dir
 #undef NEED_err_unix_path_not_dir
@@ -267,15 +646,15 @@ err_nt_path_is_dir(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_path_is_dir */
 
-#ifdef NEED_err_unix_path_read_only
-#undef NEED_err_unix_path_read_only
+#ifdef NEED_err_unix_path_readonly
+#undef NEED_err_unix_path_readonly
 INTERN ATTR_COLD NONNULL((2)) int DCALL
-err_unix_path_read_only(int errno_value, DeeObject *__restrict path) {
+err_unix_path_readonly(int errno_value, DeeObject *__restrict path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, errno_value,
 	                                 "Path %r is apart of a read-only filesystem",
 	                                 path);
 }
-#endif /* NEED_err_unix_path_read_only */
+#endif /* NEED_err_unix_path_readonly */
 
 #ifdef NEED_err_nt_path_readonly
 #undef NEED_err_nt_path_readonly
