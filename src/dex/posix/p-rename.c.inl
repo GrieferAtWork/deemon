@@ -84,39 +84,82 @@ DECL_BEGIN
 #define posix_renameat2_USE_STUB
 #endif /* !... */
 
+#undef posix_link_USE_nt_CreateHardLink
+#undef posix_link_USE_wlink
+#undef posix_link_USE_link
+#undef posix_link_USE_STUB
+#if defined(CONFIG_HOST_WINDOWS)
+#define posix_link_USE_nt_CreateHardLink
+#elif defined(CONFIG_HAVE_wlink) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_link_USE_wlink
+#elif defined(CONFIG_HAVE_link)
+#define posix_link_USE_link
+#elif defined(CONFIG_HAVE_wlink)
+#define posix_link_USE_wlink
+#else /* ... */
+#define posix_link_USE_STUB
+#endif /* !... */
 
-/*[[[deemon import("_dexutils").gw("rename", "oldname:?Dstring,newname:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldname, DeeObject *newname);
+#undef posix_flink_USE_posix_link
+#undef posix_flink_USE_linkat
+#undef posix_flink_USE_STUB
+#if (defined(CONFIG_HAVE_linkat) &&   \
+     defined(CONFIG_HAVE_AT_FDCWD) && \
+     defined(CONFIG_HAVE_AT_EMPTY_PATH))
+#define posix_flink_USE_linkat
+#define posix_flink_USE_posix_link
+#elif !defined(posix_link_USE_STUB)
+#define posix_flink_USE_posix_link
+#else /* ... */
+#define posix_flink_USE_STUB
+#endif /* !... */
+
+#undef posix_linkat_USE_posix_link
+#undef posix_linkat_USE_linkat
+#undef posix_linkat_USE_STUB
+#ifdef CONFIG_HAVE_linkat
+#define posix_linkat_USE_linkat
+#define posix_linkat_USE_posix_link
+#elif !defined(posix_link_USE_STUB) || !defined(posix_flink_USE_STUB)
+#define posix_linkat_USE_posix_link
+#else /* ... */
+#define posix_linkat_USE_STUB
+#endif /* !... */
+
+
+
+/*[[[deemon import("_dexutils").gw("rename", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FNORMAL, DOC("(oldname:?Dstring,newname:?Dstring)") },
-#define POSIX_RENAME_DEF_DOC(doc) { "rename", (DeeObject *)&posix_rename, MODSYM_FNORMAL, DOC("(oldname:?Dstring,newname:?Dstring)\n" doc) },
+#define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
+#define POSIX_RENAME_DEF_DOC(doc) { "rename", (DeeObject *)&posix_rename, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_rename, posix_rename_f);
 #ifndef POSIX_KWDS_OLDNAME_NEWNAME_DEFINED
 #define POSIX_KWDS_OLDNAME_NEWNAME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldname_newname, { K(oldname), K(newname), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath, { K(oldpath), K(newpath), KEND });
 #endif /* !POSIX_KWDS_OLDNAME_NEWNAME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *oldname;
-	DeeObject *newname;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldname_newname, "oo:rename", &oldname, &newname))
+	DeeObject *oldpath;
+	DeeObject *newpath;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldpath_newpath, "oo:rename", &oldpath, &newpath))
 		goto err;
-	return posix_rename_f_impl(oldname, newname);
+	return posix_rename_f_impl(oldpath, newpath);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldname, DeeObject *newname)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_rename_USE_nt_MoveFileEx
 	int error;
 	DWORD dwError;
-	if (DeeObject_AssertTypeExact(oldname, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(oldpath, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(newname, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
 		goto err;
 again:
 #define NEED_nt_MoveFileEx
-	error = nt_MoveFileEx(oldname, newname, MOVEFILE_REPLACE_EXISTING);
+	error = nt_MoveFileEx(oldpath, newpath, MOVEFILE_REPLACE_EXISTING);
 	if likely(error == 0)
 		return_none;
 	if unlikely(error < 0)
@@ -135,7 +178,7 @@ again:
 		goto err;
 	}
 #define NEED_err_nt_rename
-	err_nt_rename(dwError, oldname, newname);
+	err_nt_rename(dwError, oldpath, newpath);
 err:
 	return NULL;
 #endif /* posix_rename_USE_nt_MoveFileEx */
@@ -143,35 +186,35 @@ err:
 #if defined(posix_rename_USE_wrename) || defined(posix_rename_USE_rename)
 	int error;
 #ifdef posix_rename_USE_wrename
-	dwchar_t *wide_oldname, *wide_newname;
+	dwchar_t *wide_oldpath, *wide_newpath;
 #else /* posix_rename_USE_wrename */
-	char *utf8_oldname, *utf8_newname;
+	char *utf8_oldpath, *utf8_newpath;
 #endif /* !posix_rename_USE_wrename */
-	if (DeeObject_AssertTypeExact(oldname, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(oldpath, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(newname, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
 		goto err;
 #ifdef posix_rename_USE_wrename
-	wide_oldname = DeeString_AsWide(oldname);
-	if unlikely(!wide_oldname)
+	wide_oldpath = DeeString_AsWide(oldpath);
+	if unlikely(!wide_oldpath)
 		goto err;
-	wide_newname = DeeString_AsWide(newname);
-	if unlikely(!wide_newname)
+	wide_newpath = DeeString_AsWide(newpath);
+	if unlikely(!wide_newpath)
 		goto err;
 #else /* posix_rename_USE_wrename */
-	utf8_oldname = DeeString_AsUtf8(oldname);
-	if unlikely(!utf8_oldname)
+	utf8_oldpath = DeeString_AsUtf8(oldpath);
+	if unlikely(!utf8_oldpath)
 		goto err;
-	utf8_newname = DeeString_AsUtf8(newname);
-	if unlikely(!utf8_newname)
+	utf8_newpath = DeeString_AsUtf8(newpath);
+	if unlikely(!utf8_newpath)
 		goto err;
 #endif /* !posix_rename_USE_wrename */
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_rename_USE_wrename
-	error = wrename(wide_oldname, wide_newname);
+	error = wrename(wide_oldpath, wide_newpath);
 #else /* posix_rename_USE_wrename */
-	error = rename(utf8_oldname, utf8_newname);
+	error = rename(utf8_oldpath, utf8_newpath);
 #endif /* !posix_rename_USE_wrename */
 	DBG_ALIGNMENT_ENABLE();
 	if likely(error == 0)
@@ -179,14 +222,14 @@ EINTR_LABEL(again)
 	error = DeeSystem_GetErrno();
 	EINTR_HANDLE(error, again, err);
 #define NEED_err_unix_rename
-	err_unix_rename(error, oldname, newname);
+	err_unix_rename(error, oldpath, newpath);
 err:
 	return NULL;
 #endif /* posix_rename_USE_wrename || posix_rename_USE_rename */
 
 #ifdef posix_rename_USE_STUB
-	(void)oldname;
-	(void)newname;
+	(void)oldpath;
+	(void)newpath;
 #define NEED_posix_err_unsupported
 	posix_err_unsupported("rename");
 	return NULL;
@@ -194,34 +237,35 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newname:?Dstring", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newname);
+/*[[[deemon import("_dexutils").gw("frename", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newname:?Dstring)") },
-#define POSIX_FRENAME_DEF_DOC(doc) { "frename", (DeeObject *)&posix_frename, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newname:?Dstring)\n" doc) },
+#define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
+#define POSIX_FRENAME_DEF_DOC(doc) { "frename", (DeeObject *)&posix_frename, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_frename, posix_frename_f);
 #ifndef POSIX_KWDS_OLDFD_NEWNAME_DEFINED
 #define POSIX_KWDS_OLDFD_NEWNAME_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newname, { K(oldfd), K(newname), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath, { K(oldfd), K(newpath), KEND });
 #endif /* !POSIX_KWDS_OLDFD_NEWNAME_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *oldfd;
-	DeeObject *newname;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newname, "oo:frename", &oldfd, &newname))
+	DeeObject *newpath;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newpath, "oo:frename", &oldfd, &newpath))
 		goto err;
-	return posix_frename_f_impl(oldfd, newname);
+	return posix_frename_f_impl(oldfd, newpath);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newname)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, DeeObject *newpath)
 /*[[[end]]]*/
 {
 #ifdef posix_frename_USE_posix_rename
 	DREF DeeObject *result, *oldfd_abspath;
+#define NEED_posix_fd_abspath
 	oldfd_abspath = posix_fd_abspath(oldfd);
 	if unlikely(!oldfd_abspath)
 		goto err;
-	result = posix_rename_f_impl(oldfd_abspath, newname);
+	result = posix_rename_f_impl(oldfd_abspath, newpath);
 	Dee_Decref(oldfd_abspath);
 	return result;
 err:
@@ -230,7 +274,7 @@ err:
 
 #ifdef posix_frename_USE_STUB
 	(void)oldfd;
-	(void)newname;
+	(void)newpath;
 #define NEED_posix_err_unsupported
 	posix_err_unsupported("frename");
 	return NULL;
@@ -239,62 +283,62 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("renameat",
-	"olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,"
-	"newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,"
+	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
+	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddfd, DeeObject *oldname, DeeObject *newdfd, DeeObject *newname, unsigned int atflags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_RENAMEAT_DEF { "renameat", (DeeObject *)&posix_renameat, MODSYM_FNORMAL, DOC("(olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,atflags:?Dint=!0)") },
-#define POSIX_RENAMEAT_DEF_DOC(doc) { "renameat", (DeeObject *)&posix_renameat, MODSYM_FNORMAL, DOC("(olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,atflags:?Dint=!0)\n" doc) },
+#define POSIX_RENAMEAT_DEF { "renameat", (DeeObject *)&posix_renameat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)") },
+#define POSIX_RENAMEAT_DEF_DOC(doc) { "renameat", (DeeObject *)&posix_renameat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_renameat, posix_renameat_f);
 #ifndef POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED
 #define POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_olddfd_oldname_newdfd_newname_atflags, { K(olddfd), K(oldname), K(newdfd), K(newname), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, { K(olddirfd), K(oldpath), K(newdirfd), K(newpath), K(atflags), KEND });
 #endif /* !POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *olddfd;
-	DeeObject *oldname;
-	DeeObject *newdfd;
-	DeeObject *newname;
+	DeeObject *olddirfd;
+	DeeObject *oldpath;
+	DeeObject *newdirfd;
+	DeeObject *newpath;
 	unsigned int atflags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddfd_oldname_newdfd_newname_atflags, "oooo|u:renameat", &olddfd, &oldname, &newdfd, &newname, &atflags))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, "oooo|u:renameat", &olddirfd, &oldpath, &newdirfd, &newpath, &atflags))
 		goto err;
-	return posix_renameat_f_impl(olddfd, oldname, newdfd, newname, atflags);
+	return posix_renameat_f_impl(olddirfd, oldpath, newdirfd, newpath, atflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddfd, DeeObject *oldname, DeeObject *newdfd, DeeObject *newname, unsigned int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_renameat_USE_posix_rename
 	DREF DeeObject *result;
-	DREF DeeObject *abs_oldname;
-	DREF DeeObject *abs_newname;
+	DREF DeeObject *abs_oldpath;
+	DREF DeeObject *abs_newpath;
 #if defined(posix_renameat_USE_renameat2) || defined(posix_renameat_USE_renameat)
-	if ((!DeeString_Check(olddfd) && DeeString_Check(oldname)) &&
-	    (!DeeString_Check(newdfd) && DeeString_Check(newname))
+	if ((!DeeString_Check(olddirfd) && DeeString_Check(oldpath)) &&
+	    (!DeeString_Check(newdirfd) && DeeString_Check(newpath))
 #ifndef posix_renameat_USE_renameat2
 	    && (atflags == 0)
 #endif /* !posix_renameat_USE_renameat2 */
 	    ) {
-		int os_olddfd, os_newdfd;
-		char *utf8_oldname, *utf8_newname;
-		os_olddfd = DeeUnixSystem_GetFD(olddfd);
-		if unlikely(os_olddfd == -1)
+		int os_olddirfd, os_newdirfd;
+		char *utf8_oldpath, *utf8_newpath;
+		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
+		if unlikely(os_olddirfd == -1)
 			goto err;
-		os_newdfd = DeeUnixSystem_GetFD(newdfd);
-		if unlikely(os_newdfd == -1)
+		os_newdirfd = DeeUnixSystem_GetFD(newdirfd);
+		if unlikely(os_newdirfd == -1)
 			goto err;
-		utf8_oldname = DeeString_AsUtf8(oldname);
-		if unlikely(!utf8_oldname)
+		utf8_oldpath = DeeString_AsUtf8(oldpath);
+		if unlikely(!utf8_oldpath)
 			goto err;
-		utf8_newname = DeeString_AsUtf8(newname);
-		if unlikely(!utf8_newname)
+		utf8_newpath = DeeString_AsUtf8(newpath);
+		if unlikely(!utf8_newpath)
 			goto err;
 #ifdef posix_renameat_USE_renameat2
-		if (renameat2(os_olddfd, utf8_oldname, os_newdfd, utf8_newname, atflags) == 0)
+		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, atflags) == 0)
 #else /* posix_renameat_USE_renameat2 */
-		if (renameat(os_olddfd, utf8_oldname, os_newdfd, utf8_newname) == 0)
+		if (renameat(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath) == 0)
 #endif /* !posix_renameat_USE_renameat2 */
 		{
 			return_none;
@@ -303,27 +347,29 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddfd
 	}
 #endif /* posix_renameat_USE_renameat2 || posix_renameat_USE_renameat */
 
-	abs_oldname = posix_dfd_abspath(olddfd, oldname, atflags);
-	if unlikely(!abs_oldname)
+#define NEED_posix_dfd_abspath
+	abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+	if unlikely(!abs_oldpath)
 		goto err;
-	abs_newname = posix_dfd_abspath(newdfd, newname, atflags);
-	if unlikely(!abs_newname)
-		goto err_abs_oldname;
-	result = posix_rename_f_impl(abs_oldname, abs_newname);
-	Dee_Decref(abs_newname);
-	Dee_Decref(abs_oldname);
+#define NEED_posix_dfd_abspath
+	abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags);
+	if unlikely(!abs_newpath)
+		goto err_abs_oldpath;
+	result = posix_rename_f_impl(abs_oldpath, abs_newpath);
+	Dee_Decref(abs_newpath);
+	Dee_Decref(abs_oldpath);
 	return result;
-err_abs_oldname:
-	Dee_Decref(abs_oldname);
+err_abs_oldpath:
+	Dee_Decref(abs_oldpath);
 err:
 	return NULL;
 #endif /* posix_renameat_USE_posix_rename */
 
 #ifdef posix_renameat_USE_STUB
-	(void)olddfd;
-	(void)oldname;
-	(void)newdfd;
-	(void)newname;
+	(void)olddirfd;
+	(void)oldpath;
+	(void)newdirfd;
+	(void)newpath;
 	(void)atflags;
 #define NEED_posix_err_unsupported
 	posix_err_unsupported("renameat");
@@ -333,82 +379,83 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("renameat2",
-	"olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,"
-	"newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,"
+	"olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,"
+	"newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,"
 	"flags:u=0,atflags:u=0", libname: "posix");]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddfd, DeeObject *oldname, DeeObject *newdfd, DeeObject *newname, unsigned int flags, unsigned int atflags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_RENAMEAT2_DEF { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FNORMAL, DOC("(olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)") },
-#define POSIX_RENAMEAT2_DEF_DOC(doc) { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FNORMAL, DOC("(olddfd:?X3?DFile?Dint?Dstring,oldname:?Dstring,newdfd:?X3?DFile?Dint?Dstring,newname:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)\n" doc) },
+#define POSIX_RENAMEAT2_DEF { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)") },
+#define POSIX_RENAMEAT2_DEF_DOC(doc) { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_renameat2, posix_renameat2_f);
 #ifndef POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_FLAGS_ATFLAGS_DEFINED
 #define POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_FLAGS_ATFLAGS_DEFINED
-PRIVATE DEFINE_KWLIST(posix_kwds_olddfd_oldname_newdfd_newname_flags_atflags, { K(olddfd), K(oldname), K(newdfd), K(newname), K(flags), K(atflags), KEND });
+PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags, { K(olddirfd), K(oldpath), K(newdirfd), K(newpath), K(flags), K(atflags), KEND });
 #endif /* !POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_FLAGS_ATFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat2_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *olddfd;
-	DeeObject *oldname;
-	DeeObject *newdfd;
-	DeeObject *newname;
+	DeeObject *olddirfd;
+	DeeObject *oldpath;
+	DeeObject *newdirfd;
+	DeeObject *newpath;
 	unsigned int flags = 0;
 	unsigned int atflags = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddfd_oldname_newdfd_newname_flags_atflags, "oooo|uu:renameat2", &olddfd, &oldname, &newdfd, &newname, &flags, &atflags))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags, "oooo|uu:renameat2", &olddirfd, &oldpath, &newdirfd, &newpath, &flags, &atflags))
 		goto err;
-	return posix_renameat2_f_impl(olddfd, oldname, newdfd, newname, flags, atflags);
+	return posix_renameat2_f_impl(olddirfd, oldpath, newdirfd, newpath, flags, atflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddfd, DeeObject *oldname, DeeObject *newdfd, DeeObject *newname, unsigned int flags, unsigned int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags)
 /*[[[end]]]*/
 {
 #ifdef posix_renameat2_USE_nt_MoveFileEx
-	DREF DeeObject *abs_oldname;
-	DREF DeeObject *abs_newname;
+	DREF DeeObject *abs_oldpath;
+	DREF DeeObject *abs_newpath;
 	if (flags & RENAME_NOREPLACE) {
 		int error;
 		DWORD dwError;
-		abs_oldname = posix_dfd_abspath(olddfd, oldname, atflags);
-		if unlikely(!abs_oldname)
+		abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+		if unlikely(!abs_oldpath)
 			goto err;
-		abs_newname = posix_dfd_abspath(newdfd, newname, atflags);
-		if unlikely(!abs_newname)
-			goto err_abs_oldname;
+#define NEED_posix_dfd_abspath
+		abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags);
+		if unlikely(!abs_newpath)
+			goto err_abs_oldpath;
 again:
 #define NEED_nt_MoveFileEx
-		error = nt_MoveFileEx(abs_oldname, abs_newname, 0);
+		error = nt_MoveFileEx(abs_oldpath, abs_newpath, 0);
 		if likely(error == 0) {
-			Dee_Decref(abs_newname);
-			Dee_Decref(abs_oldname);
+			Dee_Decref(abs_newpath);
+			Dee_Decref(abs_oldpath);
 			return_none;
 		}
 		if unlikely(error < 0)
-			goto err_abs_oldname_abs_newname;
+			goto err_abs_oldpath_abs_newpath;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
-				goto err_abs_oldname_abs_newname;
+				goto err_abs_oldpath_abs_newpath;
 			goto again;
 		}
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again;
-			goto err_abs_oldname_abs_newname;
+			goto err_abs_oldpath_abs_newpath;
 		}
 #define NEED_err_nt_rename
-		err_nt_rename(dwError, abs_oldname, abs_newname);
-		goto err_abs_oldname_abs_newname;
+		err_nt_rename(dwError, abs_oldpath, abs_newpath);
+		goto err_abs_oldpath_abs_newpath;
 	}
 	if (flags != 0) {
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
 	}
-	return posix_renameat_f_impl(olddfd, oldname, newdfd, newname, atflags);
-err_abs_oldname_abs_newname:
-	Dee_Decref(abs_newname);
-err_abs_oldname:
-	Dee_Decref(abs_oldname);
+	return posix_renameat_f_impl(olddirfd, oldpath, newdirfd, newpath, atflags);
+err_abs_oldpath_abs_newpath:
+	Dee_Decref(abs_newpath);
+err_abs_oldpath:
+	Dee_Decref(abs_oldpath);
 err:
 	return NULL;
 #endif /* posix_renameat2_USE_nt_MoveFileEx */
@@ -419,29 +466,29 @@ err:
 #endif /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
 	{
 		int errno_value;
-		int os_olddfd, os_newdfd;
-		char *utf8_oldname, *utf8_newname;
-		DREF DeeObject *abs_oldname;
-		DREF DeeObject *abs_newname;
-		os_olddfd = DeeUnixSystem_GetFD(olddfd);
-		if unlikely(os_olddfd == -1)
+		int os_olddirfd, os_newdirfd;
+		char *utf8_oldpath, *utf8_newpath;
+		DREF DeeObject *abs_oldpath;
+		DREF DeeObject *abs_newpath;
+		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
+		if unlikely(os_olddirfd == -1)
 			goto err;
-		os_newdfd = DeeUnixSystem_GetFD(newdfd);
-		if unlikely(os_newdfd == -1)
+		os_newdirfd = DeeUnixSystem_GetFD(newdirfd);
+		if unlikely(os_newdirfd == -1)
 			goto err;
-		utf8_oldname = DeeString_AsUtf8(oldname);
-		if unlikely(!utf8_oldname)
+		utf8_oldpath = DeeString_AsUtf8(oldpath);
+		if unlikely(!utf8_oldpath)
 			goto err;
-		utf8_newname = DeeString_AsUtf8(newname);
-		if unlikely(!utf8_newname)
+		utf8_newpath = DeeString_AsUtf8(newpath);
+		if unlikely(!utf8_newpath)
 			goto err;
 
 		/* Name the call to `renameat2()' */
 EINTR_ENOMEM_LABEL(again_renameat2)
 #if defined(AT_RENAME_NOREPLACE) || defined(AT_RENAME_EXCHANGE) || defined(AT_RENAME_WHITEOUT)
-		if (renameat2(os_olddfd, utf8_oldname, os_newdfd, utf8_newname, flags | atflags) == 0)
+		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, flags | atflags) == 0)
 #else /* AT_RENAME_NOREPLACE || AT_RENAME_EXCHANGE || AT_RENAME_WHITEOUT */
-		if (renameat2(os_olddfd, utf8_oldname, os_newdfd, utf8_newname, flags) == 0)
+		if (renameat2(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, flags) == 0)
 #endif /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
 		{
 			return_none;
@@ -450,18 +497,20 @@ EINTR_ENOMEM_LABEL(again_renameat2)
 		/* Directly handle rename errors */
 		errno_value = DeeSystem_GetErrno();
 		EINTR_ENOMEM_HANDLE(errno_value, again_renameat2, err);
-		abs_oldname = posix_dfd_abspath(olddfd, oldname, atflags);
-		if unlikely(!abs_oldname)
+#define NEED_posix_dfd_abspath
+		abs_oldpath = posix_dfd_abspath(olddirfd, oldpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+		if unlikely(!abs_oldpath)
 			goto err;
-		abs_newname = posix_dfd_abspath(newdfd, newname, atflags);
-		if unlikely(!abs_newname)
-			goto err_abs_oldname;
-		err_unix_rename(errno_value, abs_oldname, abs_newname);
-		Dee_Decref(abs_newname);
-		Dee_Decref(abs_oldname);
+#define NEED_posix_dfd_abspath
+		abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+		if unlikely(!abs_newpath)
+			goto err_abs_oldpath;
+		err_unix_rename(errno_value, abs_oldpath, abs_newpath);
+		Dee_Decref(abs_newpath);
+		Dee_Decref(abs_oldpath);
 		goto err;
-err_abs_oldname:
-		Dee_Decref(abs_oldname);
+err_abs_oldpath:
+		Dee_Decref(abs_oldpath);
 		goto err;
 	}
 #if !defined(AT_RENAME_NOREPLACE) && !defined(AT_RENAME_EXCHANGE) && !defined(AT_RENAME_WHITEOUT)
@@ -473,7 +522,7 @@ err_abs_oldname:
 
 #ifdef posix_renameat2_USE_posix_renameat
 	if (flags & RENAME_NOREPLACE) {
-		/* Check if `newname' already exists (and if so: fail)
+		/* Check if `newpath' already exists (and if so: fail)
 		 *
 		 * Note that this isn't 100% safe since some other process
 		 * may create the file after we checked for it, but this is
@@ -482,25 +531,27 @@ err_abs_oldname:
 		 * for us) */
 		struct dee_stat st;
 		int status;
-		status = dee_stat_init(&st, newdfd, newname,
+		/* TODO: Use `faccessat(..., F_OK, AT_SYMLINK_NOFOLLOW)' if available */
+		status = dee_stat_init(&st, newdirfd, newpath,
 		                       atflags | AT_SYMLINK_NOFOLLOW | DEE_STAT_F_TRY);
 		if unlikely(status < 0)
 			goto err;
 		if (status == 0) {
 			/* File already exists */
-			DREF DeeObject *abs_newname;
-			abs_newname = posix_dfd_abspath(newdfd, newname, atflags);
-			if unlikely(!abs_newname)
+			DREF DeeObject *abs_newpath;
+#define NEED_posix_dfd_abspath
+			abs_newpath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+			if unlikely(!abs_newpath)
 				goto err;
 #define NEED_err_unix_path_exists
 #ifdef EEXIST
-			err_unix_path_exists(EEXIST, abs_newname);
+			err_unix_path_exists(EEXIST, abs_newpath);
 #elif defined(EINVAL)
-			err_unix_path_exists(EINVAL, abs_newname);
+			err_unix_path_exists(EINVAL, abs_newpath);
 #else /* ... */
-			err_unix_path_exists(1, abs_newname);
+			err_unix_path_exists(1, abs_newpath);
 #endif /* !... */
-			Dee_Decref(abs_newname);
+			Dee_Decref(abs_newpath);
 			goto err;
 		}
 	}
@@ -508,16 +559,16 @@ err_abs_oldname:
 		DeeError_Throwf(&DeeError_ValueError, "Invalid flags argument %#x", flags);
 		goto err;
 	}
-	return posix_renameat_f_impl(olddfd, oldname, newdfd, newname, atflags);
+	return posix_renameat_f_impl(olddirfd, oldpath, newdirfd, newpath, atflags);
 err:
 	return NULL;
 #endif /* posix_renameat2_USE_posix_renameat */
 
 #ifdef posix_renameat2_USE_STUB
-	(void)olddfd;
-	(void)oldname;
-	(void)newdfd;
-	(void)newname;
+	(void)olddirfd;
+	(void)oldpath;
+	(void)newdirfd;
+	(void)newpath;
 	(void)flags;
 	(void)atflags;
 #define NEED_posix_err_unsupported
@@ -526,6 +577,281 @@ err:
 #endif /* posix_renameat2_USE_STUB */
 }
 
+
+
+
+/*[[[deemon import("_dexutils").gw("link", "oldpath:?Dstring,newpath:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_LINK_DEF { "link", (DeeObject *)&posix_link, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
+#define POSIX_LINK_DEF_DOC(doc) { "link", (DeeObject *)&posix_link, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_link, posix_link_f);
+#ifndef POSIX_KWDS_OLDNAME_NEWNAME_DEFINED
+#define POSIX_KWDS_OLDNAME_NEWNAME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath, { K(oldpath), K(newpath), KEND });
+#endif /* !POSIX_KWDS_OLDNAME_NEWNAME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *oldpath;
+	DeeObject *newpath;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldpath_newpath, "oo:link", &oldpath, &newpath))
+		goto err;
+	return posix_link_f_impl(oldpath, newpath);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, DeeObject *newpath)
+/*[[[end]]]*/
+{
+#ifdef posix_link_USE_nt_CreateHardLink
+	int error;
+	DWORD dwError;
+	if (DeeObject_AssertTypeExact(oldpath, &DeeString_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(newpath, &DeeString_Type))
+		goto err;
+again:
+#define NEED_nt_CreateHardLink
+	error = nt_CreateHardLink(oldpath, newpath, NULL);
+	if likely(error == 0)
+		return_none;
+	if unlikely(error < 0)
+		goto err;
+	DBG_ALIGNMENT_DISABLE();
+	dwError = GetLastError();
+	DBG_ALIGNMENT_ENABLE();
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		if (Dee_CollectMemory(1))
+			goto again;
+		goto err;
+	}
+#define NEED_err_nt_link
+	err_nt_link(dwError, oldpath, newpath);
+err:
+	return NULL;
+#endif /* posix_link_USE_nt_CreateHardLink */
+
+#if defined(posix_link_USE_wlink) || defined(posix_link_USE_link)
+#ifdef posix_link_USE_wlink
+	dwchar_t *wide_oldpath, *wide_newpath;
+	wide_oldpath = DeeString_AsWide(oldpath);
+	if unlikely(!wide_oldpath)
+		goto err;
+	wide_newpath = DeeString_AsWide(newpath);
+	if unlikely(!wide_newpath)
+		goto err;
+#else /* posix_link_USE_wlink */
+	char *utf8_oldpath, *utf8_newpath;
+	utf8_oldpath = DeeString_AsUtf8(oldpath);
+	if unlikely(!utf8_oldpath)
+		goto err;
+	utf8_newpath = DeeString_AsUtf8(newpath);
+	if unlikely(!utf8_newpath)
+		goto err;
+#endif /* !posix_link_USE_wlink */
+EINTR_ENOMEM_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+#ifdef posix_link_USE_wlink
+	error = wlink(wide_oldpath, wide_newpath);
+#else /* posix_link_USE_wlink */
+	error = link(utf8_oldpath, utf8_newpath);
+#endif /* !posix_link_USE_wlink */
+	DBG_ALIGNMENT_ENABLE();
+	if likely(error == 0)
+		return_none;
+	error = DeeSystem_GetErrno();
+	EINTR_ENOMEM_HANDLE(error, again, err);
+#define NEED_err_unix_link
+	err_unix_link(error, oldpath, newpath);
+err:
+	return NULL;
+#endif /* posix_link_USE_wlink || posix_link_USE_link */
+
+#ifdef posix_link_USE_STUB
+	(void)oldpath;
+	(void)newpath;
+#define NEED_posix_err_unsupported
+	posix_err_unsupported("link");
+	return NULL;
+#endif /* posix_link_USE_STUB */
+}
+
+
+
+
+/*[[[deemon import("_dexutils").gw("flink", "oldfd:?X2?DFile?Dint,newpath:?Dstring", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_FLINK_DEF { "flink", (DeeObject *)&posix_flink, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
+#define POSIX_FLINK_DEF_DOC(doc) { "flink", (DeeObject *)&posix_flink, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_flink, posix_flink_f);
+#ifndef POSIX_KWDS_OLDFD_NEWNAME_DEFINED
+#define POSIX_KWDS_OLDFD_NEWNAME_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath, { K(oldfd), K(newpath), KEND });
+#endif /* !POSIX_KWDS_OLDFD_NEWNAME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *oldfd;
+	DeeObject *newpath;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newpath, "oo:flink", &oldfd, &newpath))
+		goto err;
+	return posix_flink_f_impl(oldfd, newpath);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, DeeObject *newpath)
+/*[[[end]]]*/
+{
+#ifdef posix_flink_USE_posix_link
+	DREF DeeObject *result;
+	DREF DeeObject *oldfd_abspath;
+#ifdef posix_flink_USE_linkat
+	if (!DeeString_Check(oldfd)) {
+		int os_oldfd;
+		char *utf8_newpath;
+		os_oldfd = DeeUnixSystem_GetFD(oldfd);
+		if unlikely(os_oldfd == -1)
+			goto err;
+		utf8_newpath = DeeString_AsUtf8(newpath);
+		if unlikely(!utf8_newpath)
+			goto err;
+		if (linkat(os_oldfd, "", AT_FDCWD, utf8_newpath, AT_EMPTY_PATH) == 0)
+			return_none;
+		/* Fallthru to fallback path below */
+	}
+#endif /* posix_flink_USE_linkat */
+#define NEED_posix_fd_abspath
+	oldfd_abspath = posix_fd_abspath(oldfd);
+	if unlikely(!oldfd_abspath)
+		goto err;
+	result = posix_link_f_impl(oldfd_abspath, newpath);
+	Dee_Decref(oldfd_abspath);
+	return result;
+err:
+	return NULL;
+#endif /* posix_flink_USE_posix_link */
+
+#ifdef posix_flink_USE_STUB
+	(void)oldfd;
+	(void)newpath;
+#define NEED_posix_err_unsupported
+	posix_err_unsupported("flink");
+	return NULL;
+#endif /* posix_flink_USE_STUB */
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("linkat", "olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:u=0", libname: "posix");]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define POSIX_LINKAT_DEF { "linkat", (DeeObject *)&posix_linkat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)") },
+#define POSIX_LINKAT_DEF_DOC(doc) { "linkat", (DeeObject *)&posix_linkat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_linkat, posix_linkat_f);
+#ifndef POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED
+#define POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, { K(olddirfd), K(oldpath), K(newdirfd), K(newpath), K(atflags), KEND });
+#endif /* !POSIX_KWDS_OLDDFD_OLDNAME_NEWDFD_NEWNAME_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *olddirfd;
+	DeeObject *oldpath;
+	DeeObject *newdirfd;
+	DeeObject *newpath;
+	unsigned int atflags = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, "oooo|u:linkat", &olddirfd, &oldpath, &newdirfd, &newpath, &atflags))
+		goto err;
+	return posix_linkat_f_impl(olddirfd, oldpath, newdirfd, newpath, atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int atflags)
+/*[[[end]]]*/
+{
+#ifdef posix_linkat_USE_posix_link
+	DREF DeeObject *result;
+	DREF DeeObject *newpath_abspath;
+	DREF DeeObject *oldpath_abspath;
+#ifdef posix_linkat_USE_linkat
+	if ((!DeeString_Check(olddirfd) && DeeString_Check(oldpath)) &&
+	    (!DeeString_Check(newdirfd) && DeeString_Check(newpath))) {
+		int errno_value;
+		int os_olddirfd, os_newdirfd;
+		char *utf8_oldpath, *utf8_newpath;
+		DREF DeeObject *abs_oldpath;
+		DREF DeeObject *abs_newpath;
+		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
+		if unlikely(os_olddirfd == -1)
+			goto err;
+		os_newdirfd = DeeUnixSystem_GetFD(newdirfd);
+		if unlikely(os_newdirfd == -1)
+			goto err;
+		utf8_oldpath = DeeString_AsUtf8(oldpath);
+		if unlikely(!utf8_oldpath)
+			goto err;
+		utf8_newpath = DeeString_AsUtf8(newpath);
+		if unlikely(!utf8_newpath)
+			goto err;
+EINTR_ENOMEM_LABEL(again)
+		DBG_ALIGNMENT_DISABLE();
+		error = linkat(os_olddirfd, utf8_oldpath, os_newdirfd, utf8_newpath, atflags);
+		DBG_ALIGNMENT_ENABLE();
+		if likely(error == 0)
+			return_none;
+		error = DeeSystem_GetErrno();
+		EINTR_ENOMEM_HANDLE(error, again, err);
+#define NEED_posix_dfd_abspath
+		newpath_abspath = posix_dfd_abspath(newdirfd, newpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+		if unlikely(!newpath_abspath)
+			goto err;
+#define NEED_posix_dfd_abspath
+		oldpath_abspath = posix_dfd_abspath(olddirfd, oldpath, atflags & POSIX_DFD_ABSPATH_ATFLAGS_MASK);
+		if unlikely(!oldpath_abspath)
+			goto err_newfd_abspath;
+#define NEED_err_unix_link
+		err_unix_link(error, oldpath_abspath, newpath_abspath);
+		Dee_Decref(oldpath_abspath);
+		Dee_Decref(newpath_abspath);
+		goto err;
+	}
+#endif /* posix_linkat_USE_linkat */
+
+#define NEED_posix_dfd_abspath
+	newpath_abspath = posix_dfd_abspath(newdirfd, newpath, atflags & ~AT_EMPTY_PATH);
+	if unlikely(!newpath_abspath)
+		goto err;
+	if (((atflags & AT_EMPTY_PATH) && !(atflags & ~AT_EMPTY_PATH)) &&
+	    DeeString_Check(oldpath) && DeeString_IsEmpty(oldpath) && !DeeString_Check(olddirfd)) {
+		/* Special case: create a hardlink for the file specified by `olddirfd' */
+		result = posix_flink_f_impl(olddirfd, newpath_abspath);
+	} else {
+		oldpath_abspath = posix_dfd_abspath(olddirfd, oldpath, atflags);
+		if unlikely(!oldpath_abspath)
+			goto err_newfd_abspath;
+		result = posix_link_f_impl(oldpath_abspath, newpath_abspath);
+		Dee_Decref(oldpath_abspath);
+	}
+	Dee_Decref(newpath_abspath);
+	return result;
+err_newfd_abspath:
+	Dee_Decref(newpath_abspath);
+err:
+	return NULL;
+#endif /* posix_linkat_USE_posix_link */
+
+#ifdef posix_linkat_USE_STUB
+	(void)olddirfd;
+	(void)oldpath;
+	(void)newdirfd;
+	(void)newpath;
+	(void)atflags;
+#define NEED_posix_err_unsupported
+	posix_err_unsupported("linkat");
+	return NULL;
+#endif /* posix_linkat_USE_STUB */
+}
 
 
 DECL_END

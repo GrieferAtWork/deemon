@@ -35,6 +35,8 @@
 #define NEED_err_nt_rmdir
 #define NEED_err_unix_rename
 #define NEED_err_nt_rename
+#define NEED_err_unix_link
+#define NEED_err_nt_link
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
@@ -42,6 +44,8 @@
 #define NEED_err_nt_rmdir_unsupported
 #define NEED_err_unix_rename_unsupported
 #define NEED_err_nt_rename_unsupported
+#define NEED_err_unix_link_unsupported
+#define NEED_err_nt_link_unsupported
 #define NEED_err_unix_path_not_dir
 #define NEED_err_nt_path_not_dir
 #define NEED_err_unix_path_not_dir2
@@ -235,7 +239,7 @@ nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path) {
 						b0 = ((BYTE *)symlink_text)[0];
 						b1 = ((BYTE *)symlink_text)[1];
 						if ((b0 == 0xff && b1 == 0xfe) || (b0 == 0xfe && b1 == 0xff)) {
-							/* Text is encoded as a little-endian wide-string */
+							/* Text is encoded as a wide-string */
 							Dee_wchar_t const *wcs_start;
 							size_t wcs_length;
 							wcs_start  = (Dee_wchar_t const *)(symlink_text + 2);
@@ -825,6 +829,75 @@ err_nt_rename(DWORD dwError,
 }
 #endif /* NEED_err_nt_rename */
 
+#ifdef NEED_err_unix_link
+#undef NEED_err_unix_link
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_link(int errno_value,
+                DeeObject *existing_path,
+                DeeObject *new_path) {
+#ifdef EACCES
+#define NEED_err_unix_path_readonly2
+	if (errno_value == EACCES)
+		return err_unix_path_readonly2(errno_value, existing_path, new_path);
+#endif /* EACCES */
+#ifdef EEXIST
+#define NEED_err_unix_path_exists
+	if (errno_value == EEXIST)
+		return err_unix_path_exists(errno_value, new_path);
+#endif /* EEXIST */
+#ifdef ENOENT
+#define NEED_err_unix_path_not_found2
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found2(errno_value, existing_path, new_path);
+#endif /* ENOENT */
+#ifdef EPERM
+#define NEED_err_unix_link_unsupported
+	if (errno_value == EPERM)
+		return err_unix_link_unsupported(errno_value, existing_path, new_path);
+#endif /* EPERM */
+#ifdef EROFS
+#define NEED_err_unix_path_readonly2
+	if (errno_value == EROFS)
+		return err_unix_path_readonly2(errno_value, existing_path, new_path);
+#endif /* EROFS */
+#ifdef EXDEV
+#define NEED_err_unix_path_cross_dev2
+	if (errno_value == EXDEV)
+		return err_unix_path_cross_dev2(errno_value, existing_path, new_path);
+#endif /* EXDEV */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to create hard-link for %r at %r",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_link */
+
+#ifdef NEED_err_nt_link
+#undef NEED_err_nt_link
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_link(DWORD dwError,
+              DeeObject *existing_path,
+              DeeObject *new_path) {
+#define NEED_err_nt_path_no_access2
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_no_access2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, new_path);
+#define NEED_err_nt_path_not_found2
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_cross_dev2
+	if (DeeNTSystem_IsXDev(dwError))
+		return err_nt_path_cross_dev2(dwError, existing_path, new_path);
+#define NEED_err_nt_link_unsupported
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_link_unsupported(dwError, existing_path, new_path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to create hard-link for %r at %r",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_link */
+
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
 INTERN ATTR_COLD NONNULL((2)) int DCALL
@@ -901,6 +974,28 @@ err_nt_rename_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *ne
 	                               existing_path, new_path);
 }
 #endif /* NEED_err_nt_rename_unsupported */
+
+#ifdef NEED_err_unix_link_unsupported
+#undef NEED_err_unix_link_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_link_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the paths %r and %r "
+	                                 "does not support creation of hardlinks",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_link_unsupported */
+
+#ifdef NEED_err_nt_link_unsupported
+#undef NEED_err_nt_link_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_link_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the paths %r and %r "
+	                               "does not support creation of hardlinks",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_link_unsupported */
 
 #ifdef NEED_err_unix_path_not_dir
 #undef NEED_err_unix_path_not_dir

@@ -640,6 +640,8 @@ functest('remove("foo.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc
 functest('rename("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 functest('renameat(AT_FDCWD, "foo.txt", AT_FDCWD, "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_ATFILE)");
 functest('renameat2(AT_FDCWD, "foo.txt", AT_FDCWD, "bar.txt", 0)', "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_GNU)");
+functest('link("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_UNISTD_H)");
+functest('linkat(AT_FDCWD, "foo.txt", AT_FDCWD, "bar.txt", 0)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
 func("wunlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func("_wunlink", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func('wrmdir', test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return wrmdir(s);");
@@ -648,6 +650,8 @@ func("wremove", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; r
 func("_wremove", "defined(_WSTDIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
 func("wrename", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return wrename(s, t);");
 func("_wrename", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wrename(s, t);");
+func("wlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return wlink(s, t);");
+func("_wlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wlink(s, t);");
 
 func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'return getenv("PATH") ? 0 : 1;');
 func("setenv", "defined(CONFIG_HAVE_STDLIB_H) && defined(__USE_XOPEN2K)", test: 'return setenv("A", "B", 1);');
@@ -5022,6 +5026,21 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_renameat2
 #endif
 
+#ifdef CONFIG_NO_link
+#undef CONFIG_HAVE_link
+#elif !defined(CONFIG_HAVE_link) && \
+      (defined(link) || defined(__link_defined) || defined(CONFIG_HAVE_UNISTD_H))
+#define CONFIG_HAVE_link
+#endif
+
+#ifdef CONFIG_NO_linkat
+#undef CONFIG_HAVE_linkat
+#elif !defined(CONFIG_HAVE_linkat) && \
+      (defined(linkat) || defined(__linkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_linkat
+#endif
+
 #ifdef CONFIG_NO_wunlink
 #undef CONFIG_HAVE_wunlink
 #elif !defined(CONFIG_HAVE_wunlink) && \
@@ -5079,6 +5098,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(_wrename) || defined(___wrename_defined) || (defined(_WIO_DEFINED) || \
        defined(_MSC_VER)))
 #define CONFIG_HAVE__wrename
+#endif
+
+#ifdef CONFIG_NO_wlink
+#undef CONFIG_HAVE_wlink
+#elif !defined(CONFIG_HAVE_wlink) && \
+      (defined(wlink) || defined(__wlink_defined))
+#define CONFIG_HAVE_wlink
+#endif
+
+#ifdef CONFIG_NO__wlink
+#undef CONFIG_HAVE__wlink
+#elif !defined(CONFIG_HAVE__wlink) && \
+      (defined(_wlink) || defined(___wlink_defined))
+#define CONFIG_HAVE__wlink
 #endif
 
 #ifdef CONFIG_NO_getenv
@@ -8841,11 +8874,25 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* ... */
 #endif /* !CONFIG_HAVE_rename */
 
+#ifndef CONFIG_HAVE_link
+#if defined(CONFIG_HAVE_linkat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_link
+#undef link
+#define link(oldname, newname) linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_link */
+
 #if defined(CONFIG_HAVE__wrename) && !defined(CONFIG_HAVE_wrename)
 #define CONFIG_HAVE_wrename
 #undef wrename
 #define wrename _wrename
 #endif /* wrename = _wrename */
+
+#if defined(CONFIG_HAVE__wlink) && !defined(CONFIG_HAVE_wlink)
+#define CONFIG_HAVE_wlink
+#undef wlink
+#define wlink _wlink
+#endif /* wlink = _wlink */
 
 #if defined(CONFIG_HAVE__wopen) && !defined(CONFIG_HAVE_wopen)
 #define CONFIG_HAVE_wopen

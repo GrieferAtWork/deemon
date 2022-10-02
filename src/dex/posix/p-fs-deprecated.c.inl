@@ -31,7 +31,6 @@ DECL_BEGIN
 #undef chown
 #undef lchown
 #undef mkdir
-#undef link
 #undef symlink
 
 #define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                \
@@ -48,7 +47,6 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(mkdir)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(link)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
 #undef DEFINE_LIBFS_FORWARD_WRAPPER
