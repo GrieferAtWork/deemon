@@ -493,6 +493,11 @@ INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError,
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
 
+/* Read the contents of a symbolic link
+ * @param: path: Only used for error messages */
+INTDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path);
+
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
  * @return: -1: A deemon callback failed and an error was thrown.

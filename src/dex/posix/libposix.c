@@ -36,6 +36,7 @@
 #include "p-open.c.inl"
 #include "p-opendir.c.inl"
 #include "p-pipe.c.inl"
+#include "p-readlink.c.inl"
 #include "p-readwrite.c.inl"
 #include "p-realpath.c.inl"
 #include "p-sched.c.inl"
@@ -151,6 +152,12 @@ local ALL_STUBS = {
 	("posix_unlink_USE_STUB", { "unlink" }),
 	("posix_rmdir_USE_STUB", { "rmdir" }),
 	("posix_remove_USE_STUB", { "remove" }),
+	("posix_unlinkat_USE_STUB", { "unlinkat" }),
+	("posix_rmdirat_USE_STUB", { "rmdirat" }),
+	("posix_removeat_USE_STUB", { "removeat" }),
+	("posix_readlink_USE_STUB", { "readlink" }),
+	("posix_freadlink_USE_STUB", { "freadlink" }),
+	("posix_readlinkat_USE_STUB", { "readlinkat" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -297,6 +304,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_fdatasync_USE_STUB /* nothing */
 #define str_posix_fdatasync_USE_STUB /* nothing */
 #endif /* !posix_fdatasync_USE_STUB */
+#ifdef posix_freadlink_USE_STUB
+#define len_posix_freadlink_USE_STUB +10
+#define str_posix_freadlink_USE_STUB 'f', 'r', 'e', 'a', 'd', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_freadlink_USE_STUB */
+#define len_posix_freadlink_USE_STUB /* nothing */
+#define str_posix_freadlink_USE_STUB /* nothing */
+#endif /* !posix_freadlink_USE_STUB */
 #ifdef posix_fsync_USE_STUB
 #define len_posix_fsync_USE_STUB +6
 #define str_posix_fsync_USE_STUB 'f', 's', 'y', 'n', 'c', '\0',
@@ -402,6 +416,20 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_read_USE_STUB /* nothing */
 #define str_posix_read_USE_STUB /* nothing */
 #endif /* !posix_read_USE_STUB */
+#ifdef posix_readlink_USE_STUB
+#define len_posix_readlink_USE_STUB +9
+#define str_posix_readlink_USE_STUB 'r', 'e', 'a', 'd', 'l', 'i', 'n', 'k', '\0',
+#else /* posix_readlink_USE_STUB */
+#define len_posix_readlink_USE_STUB /* nothing */
+#define str_posix_readlink_USE_STUB /* nothing */
+#endif /* !posix_readlink_USE_STUB */
+#ifdef posix_readlinkat_USE_STUB
+#define len_posix_readlinkat_USE_STUB +11
+#define str_posix_readlinkat_USE_STUB 'r', 'e', 'a', 'd', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#else /* posix_readlinkat_USE_STUB */
+#define len_posix_readlinkat_USE_STUB /* nothing */
+#define str_posix_readlinkat_USE_STUB /* nothing */
+#endif /* !posix_readlinkat_USE_STUB */
 #ifdef posix_remove_USE_STUB
 #define len_posix_remove_USE_STUB +7
 #define str_posix_remove_USE_STUB 'r', 'e', 'm', 'o', 'v', 'e', '\0',
@@ -409,6 +437,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_remove_USE_STUB /* nothing */
 #define str_posix_remove_USE_STUB /* nothing */
 #endif /* !posix_remove_USE_STUB */
+#ifdef posix_removeat_USE_STUB
+#define len_posix_removeat_USE_STUB +9
+#define str_posix_removeat_USE_STUB 'r', 'e', 'm', 'o', 'v', 'e', 'a', 't', '\0',
+#else /* posix_removeat_USE_STUB */
+#define len_posix_removeat_USE_STUB /* nothing */
+#define str_posix_removeat_USE_STUB /* nothing */
+#endif /* !posix_removeat_USE_STUB */
 #ifdef posix_rmdir_USE_STUB
 #define len_posix_rmdir_USE_STUB +6
 #define str_posix_rmdir_USE_STUB 'r', 'm', 'd', 'i', 'r', '\0',
@@ -416,6 +451,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_rmdir_USE_STUB /* nothing */
 #define str_posix_rmdir_USE_STUB /* nothing */
 #endif /* !posix_rmdir_USE_STUB */
+#ifdef posix_rmdirat_USE_STUB
+#define len_posix_rmdirat_USE_STUB +8
+#define str_posix_rmdirat_USE_STUB 'r', 'm', 'd', 'i', 'r', 'a', 't', '\0',
+#else /* posix_rmdirat_USE_STUB */
+#define len_posix_rmdirat_USE_STUB /* nothing */
+#define str_posix_rmdirat_USE_STUB /* nothing */
+#endif /* !posix_rmdirat_USE_STUB */
 #ifdef posix_setenv_USE_STUB
 #define len_posix_setenv_USE_STUB +14
 #define str_posix_setenv_USE_STUB 's', 'e', 't', 'e', 'n', 'v', '\0', 'p', 'u', 't', 'e', 'n', 'v', '\0',
@@ -612,6 +654,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_unlink_USE_STUB /* nothing */
 #define str_posix_unlink_USE_STUB /* nothing */
 #endif /* !posix_unlink_USE_STUB */
+#ifdef posix_unlinkat_USE_STUB
+#define len_posix_unlinkat_USE_STUB +9
+#define str_posix_unlinkat_USE_STUB 'u', 'n', 'l', 'i', 'n', 'k', 'a', 't', '\0',
+#else /* posix_unlinkat_USE_STUB */
+#define len_posix_unlinkat_USE_STUB /* nothing */
+#define str_posix_unlinkat_USE_STUB /* nothing */
+#endif /* !posix_unlinkat_USE_STUB */
 #ifdef posix_unsetenv_USE_STUB
 #define len_posix_unsetenv_USE_STUB +9
 #define str_posix_unsetenv_USE_STUB 'u', 'n', 's', 'e', 't', 'e', 'n', 'v', '\0',
@@ -656,6 +705,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fchdir_USE_STUB \
 	len_posix_fchdirat_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
+	len_posix_freadlink_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
 	len_posix_getenv_USE_STUB \
@@ -671,8 +721,12 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_pread_USE_STUB \
 	len_posix_pwrite_USE_STUB \
 	len_posix_read_USE_STUB \
+	len_posix_readlink_USE_STUB \
+	len_posix_readlinkat_USE_STUB \
 	len_posix_remove_USE_STUB \
+	len_posix_removeat_USE_STUB \
 	len_posix_rmdir_USE_STUB \
+	len_posix_rmdirat_USE_STUB \
 	len_posix_setenv_USE_STUB \
 	len_posix_stat_USE_STUB \
 	len_posix_stat_get_atime_IS_STUB \
@@ -701,6 +755,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_truncate_USE_STUB \
 	len_posix_umask_USE_STUB \
 	len_posix_unlink_USE_STUB \
+	len_posix_unlinkat_USE_STUB \
 	len_posix_unsetenv_USE_STUB \
 	len_posix_write_USE_STUB \
 	len_stat_class_isexe_IS_STUB \
@@ -734,6 +789,7 @@ PRIVATE struct {
 		str_posix_fchdir_USE_STUB
 		str_posix_fchdirat_USE_STUB
 		str_posix_fdatasync_USE_STUB
+		str_posix_freadlink_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
 		str_posix_getenv_USE_STUB
@@ -749,8 +805,12 @@ PRIVATE struct {
 		str_posix_pread_USE_STUB
 		str_posix_pwrite_USE_STUB
 		str_posix_read_USE_STUB
+		str_posix_readlink_USE_STUB
+		str_posix_readlinkat_USE_STUB
 		str_posix_remove_USE_STUB
+		str_posix_removeat_USE_STUB
 		str_posix_rmdir_USE_STUB
+		str_posix_rmdirat_USE_STUB
 		str_posix_setenv_USE_STUB
 		str_posix_stat_USE_STUB
 		str_posix_stat_get_atime_IS_STUB
@@ -779,6 +839,7 @@ PRIVATE struct {
 		str_posix_truncate_USE_STUB
 		str_posix_umask_USE_STUB
 		str_posix_unlink_USE_STUB
+		str_posix_unlinkat_USE_STUB
 		str_posix_unsetenv_USE_STUB
 		str_posix_write_USE_STUB
 		str_stat_class_isexe_IS_STUB
@@ -1396,6 +1457,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw FileAccessError The current user does not have permissions to remove the file described by @dfd:@file\n"
 	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@file is in read-only "
 	                         /*               */ "operations mode, preventing the deletion of existing files\n"
+	                         "@throw FileClosed The given @fd was closed\n"
 	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
 	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
 	                         "Remove a filesystem object named @dfd:@file"))
@@ -1409,6 +1471,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                        "@throw FileAccessError The current user does not have permissions to remove the directory described by @dfd:@path\n"
 	                        "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@path is in read-only "
 	                        /*               */ "operations mode, preventing the deletion of existing directories\n"
+	                        "@throw FileClosed The given @fd was closed\n"
 	                        "@throw SystemError Failed to delete the directory @dfd:@path for some reason\n"
 	                        "Remove a directory named @dfd:@path"))
 	D(POSIX_REMOVEAT_DEF_DOC("@interrupt\n"
@@ -1419,8 +1482,36 @@ PRIVATE struct dex_symbol symbols[] = {
 	                         "@throw FileAccessError The current user does not have permissions to remove the file or directory described by @dfd:@path\n"
 	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@path is in read-only "
 	                         /*               */ "operations mode, preventing the deletion of existing files or directories\n"
+	                         "@throw FileClosed The given @fd was closed\n"
 	                         "@throw SystemError Failed to remove the given file @dfd:@path for some reason\n"
 	                         "Remove a file or an empty directory name @dfd:@path"))
+	D(POSIX_READLINK_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @file does not exist\n"
+	                         "@throw NoDirectory A part of the given @file is not a directory\n"
+	                         "@throw NoLink The given @file does not refer to a symbolic link\n"
+	                         "@throw ValueError The file described by @file is not a symlink\n"
+	                         "@throw UnsupportedAPI The underlying filesystem does not support reading of symbolic links\n"
+	                         "@throw FileAccessError The current user does not have permissions to access @file or one of the containing directories for reading\n"
+	                         "@throw SystemError Failed to read the symbolic link under @file for some reason\n"
+	                         "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+	D(POSIX_FREADLINK_DEF_DOC("@interrupt\n"
+	                          "@throw NoLink The given @fd does not refer to a symbolic link\n"
+	                          "@throw ValueError The file described by @fd is not a symlink\n"
+	                          "@throw UnsupportedAPI The underlying filesystem does not support reading of symbolic links\n"
+	                          "@throw FileAccessError The current user does not have permissions to access @fd or one of the containing directories for reading\n"
+	                          "@throw SystemError Failed to read the symbolic link under @fd for some reason\n"
+	                          "@throw FileClosed The given @fd was closed\n"
+	                          "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+	D(POSIX_READLINKAT_DEF_DOC("@interrupt\n"
+	                           "@throw FileNotFound The given @dfd:@file does not exist\n"
+	                           "@throw NoDirectory A part of the given @dfd:@file is not a directory\n"
+	                           "@throw NoLink The given @dfd:@file does not refer to a symbolic link\n"
+	                           "@throw ValueError The file described by @dfd:@file is not a symlink\n"
+	                           "@throw UnsupportedAPI The underlying filesystem does not support reading of symbolic links\n"
+	                           "@throw FileAccessError The current user does not have permissions to access @dfd:@file or one of the containing directories for reading\n"
+	                           "@throw FileClosed The given @dfd was closed\n"
+	                           "@throw SystemError Failed to read the symbolic link under @dfd:@file for some reason\n"
+	                           "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
@@ -1439,10 +1530,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(mkdir, "(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n")
-	DEFINE_LIBFS_ALIAS_S(rename, "(existing_path:?Dstring,new_path:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(link, "(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(symlink, "(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")
-	DEFINE_LIBFS_ALIAS_S(readlink, "(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
+	DEFINE_LIBFS_ALIAS_S(rename, "(existingPath:?Dstring,newPath:?Dstring)\n")
+	DEFINE_LIBFS_ALIAS_S(link, "(existingPath:?X3?Dstring?DFile?Dint,newPath:?Dstring)\n")
+	DEFINE_LIBFS_ALIAS_S(symlink, "(targetText:?Dstring,link_path:?Dstring,formatTarget=!t)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"

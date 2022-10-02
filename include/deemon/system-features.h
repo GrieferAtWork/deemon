@@ -519,6 +519,7 @@ functest("fchdir(1)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 functest('fchdirat(1, "..", 0)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE) && defined(__USE_KOS)");
 
 func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'char buf[256]; return (int)readlink("foo", buf, 256);');
+func("readlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)", test: 'char buf[256]; return (int)readlinkat(AT_FDCWD, "foo", buf, 256);');
 func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)", test: 'char buf[256]; return (int)freadlinkat(AT_FDCWD, "foo", buf, 256, AT_READLINK_REQSIZE);');
 
 func("stat", "defined(CONFIG_HAVE_SYS_STAT_H)", test: 'struct stat st; return stat("foo", &st);');
@@ -4263,6 +4264,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (defined(readlink) || defined(__readlink_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
        (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
 #define CONFIG_HAVE_readlink
+#endif
+
+#ifdef CONFIG_NO_readlinkat
+#undef CONFIG_HAVE_readlinkat
+#elif !defined(CONFIG_HAVE_readlinkat) && \
+      (defined(readlinkat) || defined(__readlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_readlinkat
 #endif
 
 #ifdef CONFIG_NO_freadlinkat
@@ -8751,6 +8760,20 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define remove(path) unlinkat(AT_FDCWD, path, AT_REMOVEDIR | AT_REMOVEREG)
 #endif /* ... */
 #endif /* !CONFIG_HAVE_remove */
+
+#if !defined(CONFIG_HAVE_readlinkat) && defined(CONFIG_HAVE_freadlinkat)
+#define CONFIG_HAVE_readlinkat
+#undef readlinkat
+#define readlinkat(dfd, path, buf, buflen) freadlinkat(dfd, path, buf, buflen, 0)
+#endif /* !CONFIG_HAVE_readlinkat && CONFIG_HAVE_freadlinkat */
+
+#ifndef CONFIG_HAVE_readlink
+#if defined(CONFIG_HAVE_readlinkat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_readlink
+#undef readlink
+#define readlink(path, buf, buflen) readlinkat(AT_FDCWD, path, buf, buflen)
+#endif /* CONFIG_HAVE_readlinkat && CONFIG_HAVE_AT_FDCWD */
+#endif /* !CONFIG_HAVE_readlink */
 
 #if defined(CONFIG_HAVE__wremove) && !defined(CONFIG_HAVE_wremove)
 #define CONFIG_HAVE_wremove

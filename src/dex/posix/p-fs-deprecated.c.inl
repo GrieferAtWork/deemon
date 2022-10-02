@@ -34,7 +34,6 @@ DECL_BEGIN
 #undef rename
 #undef link
 #undef symlink
-#undef readlink
 
 #define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                \
 	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                    \
@@ -53,7 +52,6 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(mkdir)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(rename)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(link)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(readlink)
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
 #undef DEFINE_LIBFS_FORWARD_WRAPPER
 

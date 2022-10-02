@@ -85,6 +85,7 @@
     <None Include="..\..\src\dex\posix\p-opendir.c.inl" />
     <None Include="..\..\src\dex\posix\p-pipe.c.inl" />
     <None Include="..\..\src\dex\posix\p-pwd.c.inl" />
+    <None Include="..\..\src\dex\posix\p-readlink.c.inl" />
     <None Include="..\..\src\dex\posix\p-readwrite-constants.def" />
     <None Include="..\..\src\dex\posix\p-readwrite.c.inl" />
     <None Include="..\..\src\dex\posix\p-realpath.c.inl" />

@@ -74,6 +74,7 @@
 #define NEED_err_nt_path_cross_dev2
 #define NEED_nt_GetTempPath
 #define NEED_nt_GetComputerName
+#define NEED_nt_FReadLink
 #define NEED_nt_SetCurrentDirectory
 #define NEED_nt_GetFileAttributesEx
 #define NEED_nt_GetFileAttributes
@@ -91,6 +92,246 @@
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
+
+#ifdef NEED_nt_FReadLink
+#undef NEED_nt_FReadLink
+
+#ifndef IO_REPARSE_TAG_LX_SYMLINK
+#define IO_REPARSE_TAG_LX_SYMLINK 0xA000001D
+#endif /* !IO_REPARSE_TAG_LX_SYMLINK */
+
+typedef struct _DEE_REPARSE_DATA_BUFFER {
+	ULONG ReparseTag;
+	USHORT ReparseDataLength;
+	USHORT Reserved;
+	union {
+		struct {
+			USHORT SubstituteNameOffset;
+			USHORT SubstituteNameLength;
+			USHORT PrintNameOffset;
+			USHORT PrintNameLength;
+			ULONG Flags;
+			COMPILER_FLEXIBLE_ARRAY(WCHAR, PathBuffer);
+		} SymbolicLinkReparseBuffer; /* IO_REPARSE_TAG_SYMLINK */
+
+		struct {
+			USHORT SubstituteNameOffset;
+			USHORT SubstituteNameLength;
+			USHORT PrintNameOffset;
+			USHORT PrintNameLength;
+			COMPILER_FLEXIBLE_ARRAY(WCHAR, PathBuffer);
+		} MountPointReparseBuffer; /* IO_REPARSE_TAG_MOUNT_POINT */
+
+		/* BEGIN: Taken from cygwin */
+		struct {
+			DWORD FileType;                            /* Take member name with a grain of salt.  Value is
+			                                            * apparently always 2 for symlinks. */
+			COMPILER_FLEXIBLE_ARRAY(char, PathBuffer); /* POSIX path as given to symlink(2).
+			                                            * Path is not \0 terminated.
+			                                            * Length is ReparseDataLength - sizeof (FileType).
+			                                            * Always UTF-8.
+			                                            * Chars given in incompatible codesets, e. g. umlauts
+			                                            * in ISO-8859-x, are converted to the Unicode
+			                                            * REPLACEMENT CHARACTER 0xfffd == \xef\xbf\bd */
+		} LxSymlinkReparseBuffer; /* IO_REPARSE_TAG_LX_SYMLINK */
+		/* END: Taken from cygwin */
+
+		struct {
+			COMPILER_FLEXIBLE_ARRAY(UCHAR, DataBuffer);
+		} GenericReparseBuffer;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define SymbolicLinkReparseBuffer _dee_aunion.SymbolicLinkReparseBuffer
+#define MountPointReparseBuffer   _dee_aunion.MountPointReparseBuffer
+#define LxSymlinkReparseBuffer    _dee_aunion.LxSymlinkReparseBuffer
+#define GenericReparseBuffer      _dee_aunion.GenericReparseBuffer
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+} DEE_REPARSE_DATA_BUFFER, *DEE_PREPARSE_DATA_BUFFER;
+
+/* Read the contents of a symbolic link
+ * @param: path: Only used for error messages */
+INTDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL
+nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path) {
+#define READLINK_INITIAL_BUFFER 300
+	DEE_PREPARSE_DATA_BUFFER buffer;
+	DREF DeeObject *result;
+	DWORD bufsiz, buflen, dwError;
+	LPWSTR linkstr_begin, linkstr_end;
+	bufsiz = READLINK_INITIAL_BUFFER;
+	buffer = (DEE_PREPARSE_DATA_BUFFER)Dee_Malloc(bufsiz);
+	if unlikely(!buffer)
+		goto err;
+	/* Read symbolic link data. */
+	DBG_ALIGNMENT_DISABLE();
+	while (!DeviceIoControl(hLinkFile, FSCTL_GET_REPARSE_POINT,
+	                        NULL, 0, buffer, bufsiz, &buflen, NULL)) {
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
+			DEE_PREPARSE_DATA_BUFFER new_buffer;
+			bufsiz *= 2;
+			new_buffer = (DEE_PREPARSE_DATA_BUFFER)Dee_Realloc(buffer, bufsiz);
+			if unlikely(!new_buffer)
+				goto err_buffer;
+			DBG_ALIGNMENT_DISABLE();
+			continue;
+		}
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_buffer;
+			DBG_ALIGNMENT_DISABLE();
+			continue;
+		}
+		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
+#define NEED_err_nt_path_no_access
+			err_nt_path_no_access(dwError, path);
+			goto err_buffer;
+		}
+		if (DeeNTSystem_IsNoLink(dwError)) {
+			/* Special handling for cygwin's symbolic links. */
+			BY_HANDLE_FILE_INFORMATION hfInfo;
+			if (GetFileInformationByHandle(hLinkFile, &hfInfo) &&
+			    /* First check: Cygwin's symbolic links always have the SYSTEM flag set. */
+			    (hfInfo.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0 &&
+			    /* Second check: Let's impose a limit on how long a symlink can be.
+			     * The `4 * 65536' used here can also be found within cygwin's source code. */
+			    (hfInfo.nFileSizeHigh == 0 && hfInfo.nFileSizeLow <= 4 * 65536)) {
+				/* Try to load the file into memory. */
+				void *pFileBuffer = buffer;
+				OVERLAPPED oOffsetInfo;
+				DWORD dwBytesRead;
+				static BYTE const cygSymlinkCookie[] = { '!', '<', 's', 'y', 'm', 'l', 'i', 'n', 'k', '>' };
+
+				if (hfInfo.nFileSizeLow > bufsiz) {
+					pFileBuffer = Dee_Realloc(buffer, hfInfo.nFileSizeLow);
+					if unlikely(!pFileBuffer)
+						goto err_buffer;
+					buffer = (DEE_PREPARSE_DATA_BUFFER)pFileBuffer; /* For cleanup... */
+				}
+				bzero(&oOffsetInfo, sizeof(oOffsetInfo));
+				if (ReadFile(hLinkFile, pFileBuffer, hfInfo.nFileSizeLow, &dwBytesRead, &oOffsetInfo) &&
+				    dwBytesRead > sizeof(cygSymlinkCookie) &&
+				    bcmp(pFileBuffer, cygSymlinkCookie, sizeof(cygSymlinkCookie)) == 0) {
+					/* Yes! It is a cygwin symlink! -> Now to decode it. */
+					char const *symlink_text;
+					size_t symlink_size;
+					symlink_text = (char const *)((BYTE *)pFileBuffer + sizeof(cygSymlinkCookie));
+					symlink_size = dwBytesRead - sizeof(cygSymlinkCookie);
+					if (symlink_size > 2) {
+						BYTE b0, b1;
+						b0 = ((BYTE *)symlink_text)[0];
+						b1 = ((BYTE *)symlink_text)[1];
+						if ((b0 == 0xff && b1 == 0xfe) || (b0 == 0xfe && b1 == 0xff)) {
+							/* Text is encoded as a little-endian wide-string */
+							Dee_wchar_t const *wcs_start;
+							size_t wcs_length;
+							wcs_start  = (Dee_wchar_t const *)(symlink_text + 2);
+							wcs_length = (symlink_size - 2) / 2;
+							/* Trim trailing NUL-characters */
+							while (wcs_length && !wcs_start[wcs_length - 1])
+								--wcs_length;
+							result = b0 == 0xff
+							         ? DeeString_NewWideLe(wcs_start, wcs_length, STRING_ERROR_FIGNORE)
+							         : DeeString_NewWideBe(wcs_start, wcs_length, STRING_ERROR_FIGNORE);
+						} else {
+							goto cygwin_symlink_utf8;
+						}
+					} else {
+cygwin_symlink_utf8:
+						/* Trim trailing NUL-characters */
+						while (symlink_size && !symlink_text[symlink_size - 1])
+							--symlink_size;
+						/* Text is encoded as a utf-8 string */
+						result = DeeString_NewUtf8(symlink_text,
+						                           symlink_size,
+						                           STRING_ERROR_FIGNORE);
+					}
+					goto free_buffer_and_return_result;
+				}
+			}
+			DeeNTSystem_ThrowErrorf(&DeeError_NoSymlink, dwError,
+			                        "Path %r is not a symbolic link",
+			                        path);
+			goto err_buffer;
+		}
+		if (DeeNTSystem_IsUnsupportedError(dwError)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+			                        "The filesystem hosting the path %r does "
+			                        "not support reading symbolic links",
+			                        path);
+			goto err_buffer;
+		}
+		DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+		                        "Failed to read symbolic link %r",
+		                        path);
+		goto err_buffer;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	if (buffer->ReparseDataLength > (USHORT)(buflen - offsetof(DEE_REPARSE_DATA_BUFFER, GenericReparseBuffer)))
+		buffer->ReparseDataLength = (USHORT)(buflen - offsetof(DEE_REPARSE_DATA_BUFFER, GenericReparseBuffer));
+	/* Interpret the read data. */
+	switch (buffer->ReparseTag) {
+
+	case IO_REPARSE_TAG_SYMLINK:
+		linkstr_begin = buffer->SymbolicLinkReparseBuffer.PathBuffer;
+		linkstr_end = (linkstr_begin + (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
+		              (buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
+		break;
+
+	case IO_REPARSE_TAG_MOUNT_POINT:
+		linkstr_begin = buffer->MountPointReparseBuffer.PathBuffer;
+		linkstr_end = (linkstr_begin + (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
+		              (buffer->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
+		break;
+
+	case IO_REPARSE_TAG_LX_SYMLINK: {
+		/* I couldn't find any official documentation on the actual format of this symlink type.
+		 * However, cygwin supports it as well, and with one of its newer versions, has also
+		 * started using it as its method of implementing symbolic links... */
+#define OFFSETOF_PATHBUFFER                                                 \
+	(offsetof(DEE_REPARSE_DATA_BUFFER, LxSymlinkReparseBuffer.PathBuffer) - \
+	 offsetof(DEE_REPARSE_DATA_BUFFER, LxSymlinkReparseBuffer))
+		if (buffer->ReparseDataLength <= OFFSETOF_PATHBUFFER)
+			goto bad_link_type;
+		result = DeeString_NewUtf8(buffer->LxSymlinkReparseBuffer.PathBuffer,
+		                           buffer->ReparseDataLength - OFFSETOF_PATHBUFFER,
+		                           STRING_ERROR_FIGNORE);
+		goto free_buffer_and_return_result;
+#undef OFFSETOF_PATHBUFFER
+	}	break;
+
+	default:
+bad_link_type:
+		DeeError_Throwf(&DeeError_UnsupportedAPI,
+		                "Unsupported link type %lu in file %r",
+		                (unsigned long)buffer->ReparseTag, path);
+		goto err_buffer;
+	}
+
+	/* Get rid of that annoying '\??\' prefix */
+	if (linkstr_begin + 4 <= linkstr_end &&
+	    linkstr_begin[0] == '\\' && linkstr_begin[1] == '?' &&
+	    linkstr_begin[2] == '?' && linkstr_begin[3] == '\\')
+		linkstr_begin += 4;
+
+	/* Create the resulting string. */
+	result = DeeString_NewWide(linkstr_begin,
+	                           (size_t)(linkstr_end - linkstr_begin),
+	                           Dee_STRING_ERROR_FREPLAC);
+
+	/* Free our buffer. */
+free_buffer_and_return_result:
+	Dee_Free(buffer);
+	return result;
+err_buffer:
+	Dee_Free(buffer);
+err:
+	return NULL;
+}
+#endif /* NEED_nt_FReadLink */
+
 
 #ifdef NEED_err_unix_chdir
 #undef NEED_err_unix_chdir
@@ -1424,57 +1665,73 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
 			goto err_printer;
 	} else {
+		/* Special handling for `deemon.File' */
+		if (DeeFile_Check(dfd)) {
+			DREF DeeObject *dfd_filename;
+			dfd_filename = DeeFile_Filename(dfd);
+			if unlikely(!dfd_filename)
+				goto err_printer;
+			if (DeeSystem_IsAbs(DeeString_STR(dfd_filename))) {
+				if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
+					goto err_printer;
+				Dee_Decref(dfd_filename);
+				goto got_dfd_path;
+			}
+			Dee_Decref(dfd_filename);
+		}
+
 #ifdef CONFIG_HOST_WINDOWS
-#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-		int error;
-		HANDLE hDfd;
-		if (DeeInt_Check(dfd)) {
-			int dfd_intval;
-			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
-				if (dfd_intval == AT_FDCWD) {
-					/* Caller made an explicit request for the path to be relative! */
-					unicode_printer_fini(&printer);
-					return_reference_(path);
+		{
+			int error;
+			HANDLE hDfd;
+			if (DeeInt_Check(dfd)) {
+				int dfd_intval;
+				if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
+					if (dfd_intval == AT_FDCWD) {
+						/* Caller made an explicit request for the path to be relative! */
+						unicode_printer_fini(&printer);
+						return_reference_(path);
+					}
 				}
 			}
-		}
-		hDfd = DeeNTSystem_GetHandle(dfd);
-		if unlikely(hDfd == INVALID_HANDLE_VALUE)
-			goto err_printer;
-		error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
-		if unlikely(error != 0) {
-			if (error > 0) {
-				DeeNTSystem_ThrowLastErrorf(NULL,
-				                            "Failed to print path of HANDLE %p",
-				                            hDfd);
+			hDfd = DeeNTSystem_GetHandle(dfd);
+			if unlikely(hDfd == INVALID_HANDLE_VALUE)
+				goto err_printer;
+			error = DeeNTSystem_PrintFilenameOfHandle(&printer, hDfd);
+			if unlikely(error != 0) {
+				if (error > 0) {
+					DeeNTSystem_ThrowLastErrorf(NULL,
+					                            "Failed to print path of HANDLE %p",
+					                            hDfd);
+				}
+				goto err_printer;
 			}
-			goto err_printer;
 		}
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_HOST_UNIX
-		int os_dfd;
-		os_dfd = DeeUnixSystem_GetFD(dfd);
-		if unlikely(os_dfd == -1)
-			goto err_printer;
-#ifdef CONFIG_HAVE_PROCFS
-		if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
-			goto err_printer;
-#else /* CONFIG_HAVE_PROCFS */
-#define posix_dfd_abspath_MUST_NORMALIZE_SLASHES
 		{
-			int error;
-			error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
-			if unlikely(error != 0)
+			int os_dfd;
+			os_dfd = DeeUnixSystem_GetFD(dfd);
+			if unlikely(os_dfd == -1)
 				goto err_printer;
-		}
+#ifdef CONFIG_HAVE_PROCFS
+			if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
+				goto err_printer;
+#else /* CONFIG_HAVE_PROCFS */
+			{
+				int error;
+				error = DeeSystem_PrintFilenameOfFD(&printer, os_dfd);
+				if unlikely(error != 0)
+					goto err_printer;
+			}
 #endif /* !CONFIG_HAVE_PROCFS */
+		}
 #endif /* CONFIG_HOST_UNIX */
 	}
 
 	/* Trim trailing slashes. */
-#ifdef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
-#undef posix_dfd_abspath_MUST_NORMALIZE_SLASHES
+got_dfd_path:
 	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
 		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
 		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
@@ -1489,7 +1746,6 @@ posix_dfd_abspath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			unicode_printer_truncate(&printer, newlen);
 		}
 	}
-#endif /* posix_dfd_abspath_MUST_NORMALIZE_SLASHES */
 
 #ifndef DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
@@ -1521,17 +1777,27 @@ err:
 #undef NEED_posix_fd_abspath
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_abspath(DeeObject *__restrict fd) {
+	if (DeeFile_Check(fd)) {
+		DREF DeeObject *result;
+		result = DeeFile_Filename(fd);
+		if (!result || DeeSystem_IsAbs(DeeString_STR(result)))
+			return result;
+		Dee_Decref(result);
+	}
+
+	{
 #ifdef CONFIG_HOST_WINDOWS
-	HANDLE hFd = DeeNTSystem_GetHandle(fd);
-	if unlikely(hFd == INVALID_HANDLE_VALUE)
-		return NULL;
-	return DeeNTSystem_GetFilenameOfHandle(hFd);
+		HANDLE hFd = DeeNTSystem_GetHandle(fd);
+		if unlikely(hFd == INVALID_HANDLE_VALUE)
+			return NULL;
+		return DeeNTSystem_GetFilenameOfHandle(hFd);
 #else /* CONFIG_HOST_WINDOWS */
-	int os_fd = DeeUnixSystem_GetFD(fd);
-	if unlikely(os_fd == -1)
-		return NULL;
-	return DeeSystem_GetFilenameOfFD(os_fd);
+		int os_fd = DeeUnixSystem_GetFD(fd);
+		if unlikely(os_fd == -1)
+			return NULL;
+		return DeeSystem_GetFilenameOfFD(os_fd);
 #endif /* !CONFIG_HOST_WINDOWS */
+	}
 }
 #endif /* NEED_posix_fd_abspath */
 
