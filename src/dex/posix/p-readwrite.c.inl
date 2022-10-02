@@ -213,7 +213,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value == -1) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to read from %d", fd);
@@ -410,7 +410,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "lseek")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -455,7 +455,7 @@ EINTR_LABEL(again)
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -518,7 +518,7 @@ err:
 #ifdef posix_pread_USE_LSEEK_READ
 	dssize_t result;
 	PREAD_OFF_T oldpos, newpos;
-HANDLE_EINTR(again)
+EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
 	oldpos = PREAD_LSEEK(fd, 0, SEEK_CUR);
 	if unlikely(oldpos == (PREAD_OFF_T)-1)
@@ -535,7 +535,7 @@ HANDLE_EINTR(again)
 handle_system_error:
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -713,7 +713,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -758,7 +758,7 @@ EINTR_LABEL(again)
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -822,7 +822,7 @@ err:
 	int error;
 	dssize_t result;
 	PWRITE_OFF_T oldpos, newpos;
-HANDLE_EINTR(again)
+EINTR_HANDLE(again)
 	DBG_ALIGNMENT_DISABLE();
 	oldpos = PWRITE_LSEEK(fd, 0, SEEK_CUR);
 	if unlikely(oldpos == (PWRITE_OFF_T)-1)
@@ -837,7 +837,7 @@ handle_system_error:
 		error = DeeSystem_GetErrno();
 		PWRITE_LSEEK(fd, oldpos, SEEK_SET);
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,

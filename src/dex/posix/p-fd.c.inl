@@ -182,7 +182,7 @@ EINTR_LABEL(again)
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		DeeSystem_IF_E2(error, ENOTTY, EINVAL, return_false);
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 		HANDLE_ENOSYS(error, err, "isatty");
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -295,7 +295,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -360,7 +360,7 @@ EINTR_LABEL(again)
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -538,7 +538,7 @@ handle_system_error_nfd:
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	DBG_ALIGNMENT_ENABLE();
-	HANDLE_EINTR(error, again, err)
+	EINTR_HANDLE(error, again, err)
 	HANDLE_ENOSYS(error, err, "dup3")
 	HANDLE_EBADF(error, err, "Invalid fd %d", oldfd)
 	HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
@@ -610,7 +610,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "close")
 		/* For some reason, msvc somethings returns
 		 * ENOENT... (usually when attached to a debugger) */

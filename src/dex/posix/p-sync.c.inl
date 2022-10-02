@@ -122,7 +122,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fsync")
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -183,7 +183,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fdatasync")
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,

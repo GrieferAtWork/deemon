@@ -490,6 +490,9 @@ constant("AT_DOS_DRIVEMIN");
 constant("AT_DOS_DRIVEMAX");
 functest("AT_FDDRIVE_CWD('C')", check_defined: 1);
 functest("AT_FDDRIVE_ROOT('C')", check_defined: 1);
+constant("RENAME_NOREPLACE");
+constant("RENAME_EXCHANGE");
+constant("RENAME_WHITEOUT");
 
 
 func("setjmp", "defined(CONFIG_HAVE_SETJMP_H) && " + addparen(stdc), test: 'extern jmp_buf env; return setjmp(env);');
@@ -635,6 +638,8 @@ functest('_rmdir("foo")', "defined(CONFIG_HAVE_DIRECT_H)");
 functest('unlinkat(AT_FDCWD, "foo", AT_REMOVEDIR)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
 functest('remove("foo.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 functest('rename("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+functest('renameat(AT_FDCWD, "foo.txt", AT_FDCWD, "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_ATFILE)");
+functest('renameat2(AT_FDCWD, "foo.txt", AT_FDCWD, "bar.txt", 0)', "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_GNU)");
 func("wunlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func("_wunlink", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func('wrmdir', test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return wrmdir(s);");
@@ -4099,6 +4104,27 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_AT_FDDRIVE_ROOT
 #endif
 
+#ifdef CONFIG_NO_RENAME_NOREPLACE
+#undef CONFIG_HAVE_RENAME_NOREPLACE
+#elif !defined(CONFIG_HAVE_RENAME_NOREPLACE) && \
+      (defined(RENAME_NOREPLACE) || defined(__RENAME_NOREPLACE_defined))
+#define CONFIG_HAVE_RENAME_NOREPLACE
+#endif
+
+#ifdef CONFIG_NO_RENAME_EXCHANGE
+#undef CONFIG_HAVE_RENAME_EXCHANGE
+#elif !defined(CONFIG_HAVE_RENAME_EXCHANGE) && \
+      (defined(RENAME_EXCHANGE) || defined(__RENAME_EXCHANGE_defined))
+#define CONFIG_HAVE_RENAME_EXCHANGE
+#endif
+
+#ifdef CONFIG_NO_RENAME_WHITEOUT
+#undef CONFIG_HAVE_RENAME_WHITEOUT
+#elif !defined(CONFIG_HAVE_RENAME_WHITEOUT) && \
+      (defined(RENAME_WHITEOUT) || defined(__RENAME_WHITEOUT_defined))
+#define CONFIG_HAVE_RENAME_WHITEOUT
+#endif
+
 #ifdef CONFIG_NO_setjmp
 #undef CONFIG_HAVE_setjmp
 #elif !defined(CONFIG_HAVE_setjmp) && \
@@ -4978,6 +5004,22 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_rename) && \
       (defined(rename) || defined(__rename_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_rename
+#endif
+
+#ifdef CONFIG_NO_renameat
+#undef CONFIG_HAVE_renameat
+#elif !defined(CONFIG_HAVE_renameat) && \
+      (defined(renameat) || defined(__renameat_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_renameat
+#endif
+
+#ifdef CONFIG_NO_renameat2
+#undef CONFIG_HAVE_renameat2
+#elif !defined(CONFIG_HAVE_renameat2) && \
+      (defined(renameat2) || defined(__renameat2_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(__USE_GNU)))
+#define CONFIG_HAVE_renameat2
 #endif
 
 #ifdef CONFIG_NO_wunlink
@@ -8781,11 +8823,23 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wremove _wremove
 #endif /* wremove = _wremove */
 
-#if defined(CONFIG_HAVE__rename) && !defined(CONFIG_HAVE_rename)
+#if !defined(CONFIG_HAVE_renameat) && defined(CONFIG_HAVE__renameat2)
+#define CONFIG_HAVE_renameat
+#undef renameat
+#define renameat(oldfd, oldname, newfd, newname) renameat2(oldfd, oldname, newfd, newname, 0)
+#endif /* renameat = renameat2 */
+
+#ifndef CONFIG_HAVE_rename
+#ifdef CONFIG_HAVE__rename
 #define CONFIG_HAVE_rename
 #undef rename
 #define rename _rename
-#endif /* rename = _rename */
+#elif defined(CONFIG_HAVE_renameat) && defined(CONFIG_HAVE_AT_FDCWD)
+#define CONFIG_HAVE_rename
+#undef rename
+#define rename(oldname, newname) renameat(AT_FDCWD, oldname, AT_FDCWD, newname)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_rename */
 
 #if defined(CONFIG_HAVE__wrename) && !defined(CONFIG_HAVE_wrename)
 #define CONFIG_HAVE_wrename

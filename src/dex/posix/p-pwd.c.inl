@@ -406,7 +406,7 @@ EINTR_LABEL(again)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 #define NEED_err_unix_chdir
 		err_unix_chdir(error, path);
 		goto err;
@@ -454,7 +454,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd)
 EINTR_LABEL(again)
 	if unlikely(fchdir(os_fd) != 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 #ifdef EBADF
 		if (error == EBADF) {
 #define NEED_err_unix_handle_closed
@@ -531,7 +531,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, D
 EINTR_LABEL(again)
 		if (fchdirat(os_fd, utf8_path, atflags) == 0)
 			return_none;
-		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_fchdirat_USE_fchdirat */

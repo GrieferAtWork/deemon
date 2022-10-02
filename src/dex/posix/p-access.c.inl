@@ -180,7 +180,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "access")
@@ -258,7 +258,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "euidaccess")
@@ -331,7 +331,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "faccessat")

@@ -136,7 +136,7 @@ EINTR_LABEL(again)
 	result = system(command);
 #endif /* !posix_system_USE_WSYSTEM */
 	DBG_ALIGNMENT_ENABLE();
-	HANDLE_EINTR(DeeSystem_GetErrno(), again, err)
+	EINTR_HANDLE(DeeSystem_GetErrno(), again, err)
 	return DeeInt_NewInt(result);
 #ifdef EINTR
 err:
@@ -191,7 +191,7 @@ EINTR_LABEL(again)
 				break;
 			if (error >= 0)
 				continue;
-			HANDLE_EINTR(DeeSystem_GetErrno(), again, err)
+			EINTR_HANDLE(DeeSystem_GetErrno(), again, err)
 		}
 		status = WIFEXITED(status)
 		         ? WEXITSTATUS(status)
@@ -272,7 +272,7 @@ EINTR_LABEL(again)
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
 		if (error != 0) {
-			HANDLE_EINTR(error, again, err)
+			EINTR_HANDLE(error, again, err)
 			HANDLE_ENOSYS(error, err, "getpid")
 			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 			                          "Failed to get pid");

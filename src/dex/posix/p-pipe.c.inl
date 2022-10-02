@@ -97,7 +97,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -292,7 +292,7 @@ handle_system_error_fds:
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	DBG_ALIGNMENT_ENABLE();
-	HANDLE_EINTR(error, again, err)
+	EINTR_HANDLE(error, again, err)
 	HANDLE_ENOSYS(error, err, "pipe2")
 	HANDLE_EINVAL(error, err, "Invalid oflags for pipe2 %#x", oflags)
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,

@@ -96,82 +96,64 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlink_f_impl(DeeObject *file)
 {
 #ifdef posix_readlink_USE_nt_FReadLink
 	DREF DeeObject *result;
-	if (DeeString_Check(file)) {
-		HANDLE hLinkFile;
+	HANDLE hLinkFile;
+	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
+		goto err;
 again_createfile:
-		hLinkFile = DeeNTSystem_CreateFileNoATime(file, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
-		                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                                          NULL, OPEN_EXISTING,
-		                                          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-		                                          NULL);
-		if unlikely(!hLinkFile)
-			goto err;
-		if unlikely(hLinkFile == INVALID_HANDLE_VALUE) {
-			DWORD dwError;
-			DBG_ALIGNMENT_DISABLE();
-			dwError = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsBadAllocError(dwError)) {
-				if (Dee_CollectMemory(1))
-					goto again_createfile;
-				goto err;
-			}
-			if (DeeNTSystem_IsNotDir(dwError)) {
-#define NEED_err_nt_path_not_dir
-				err_nt_path_not_dir(dwError, file);
-				goto err;
-			}
-			if (DeeNTSystem_IsAccessDeniedError(dwError)) {
-				/* Try to open the file one more time, only this
-				 * time _only_ pass the READ_ATTRIBUTES capability. */
-				hLinkFile = DeeNTSystem_CreateFile(file, FILE_READ_ATTRIBUTES,
-				                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-				                                   NULL, OPEN_EXISTING,
-				                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-				                                   NULL);
-				if unlikely(!hLinkFile)
-					goto err;
-				if unlikely(hLinkFile != INVALID_HANDLE_VALUE)
-					goto ok_got_ownds_linkfd;
-#define NEED_err_nt_path_no_access
-				err_nt_path_no_access(dwError, file);
-				goto err;
-			}
-			if (DeeNTSystem_IsFileNotFoundError(dwError)) {
-#define NEED_err_nt_path_not_found
-				err_nt_path_not_found(dwError, file);
-				goto err;
-			}
-			DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-			                        "Failed to read link %r",
-			                        file);
+	hLinkFile = DeeNTSystem_CreateFileNoATime(file, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
+	                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                                          NULL, OPEN_EXISTING,
+	                                          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+	                                          NULL);
+	if unlikely(!hLinkFile)
+		goto err;
+	if unlikely(hLinkFile == INVALID_HANDLE_VALUE) {
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_CollectMemory(1))
+				goto again_createfile;
 			goto err;
 		}
+		if (DeeNTSystem_IsNotDir(dwError)) {
+#define NEED_err_nt_path_not_dir
+			err_nt_path_not_dir(dwError, file);
+			goto err;
+		}
+		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
+			/* Try to open the file one more time, only this
+			 * time _only_ pass the READ_ATTRIBUTES capability. */
+			hLinkFile = DeeNTSystem_CreateFile(file, FILE_READ_ATTRIBUTES,
+			                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+			                                   NULL, OPEN_EXISTING,
+			                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+			                                   NULL);
+			if unlikely(!hLinkFile)
+				goto err;
+			if unlikely(hLinkFile != INVALID_HANDLE_VALUE)
+				goto ok_got_ownds_linkfd;
+#define NEED_err_nt_path_no_access
+			err_nt_path_no_access(dwError, file);
+			goto err;
+		}
+		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
+#define NEED_err_nt_path_not_found
+			err_nt_path_not_found(dwError, file);
+			goto err;
+		}
+		DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+		                        "Failed to read link %r",
+		                        file);
+		goto err;
+	}
 ok_got_ownds_linkfd:
 #define NEED_nt_FReadLink
-		result = nt_FReadLink(hLinkFile, file);
-		DBG_ALIGNMENT_DISABLE();
-		CloseHandle(hLinkFile);
-		DBG_ALIGNMENT_ENABLE();
-	} else {
-		HANDLE hLinkFile;
-		hLinkFile = (HANDLE)DeeNTSystem_GetHandle(file);
-		if (hLinkFile == INVALID_HANDLE_VALUE) {
-			if (!DeeError_Catch(&DeeError_AttributeError) &&
-			    !DeeError_Catch(&DeeError_NotImplemented) &&
-			    !DeeError_Catch(&DeeError_FileClosed))
-				goto err;
-			/* Use the filename of a file. */
-			file = DeeFile_Filename(file);
-			if unlikely(!file)
-				goto err;
-			result = posix_readlink_f_impl(file);
-			Dee_Decref(file);
-		} else {
-#define NEED_nt_FReadLink
-			result = nt_FReadLink(hLinkFile, file);
-		}
-	}
+	result = nt_FReadLink(hLinkFile, file);
+	DBG_ALIGNMENT_DISABLE();
+	CloseHandle(hLinkFile);
+	DBG_ALIGNMENT_ENABLE();
 	return result;
 err:
 	return NULL;
@@ -188,6 +170,8 @@ err:
 	int error;
 	size_t bufsize, new_size;
 	dssize_t req_size;
+	if (DeeObject_AssertTypeExact(file, &DeeString_Type))
+		goto err;
 #ifdef posix_readlink_USE_wreadlink
 	wide_file = DeeString_AsWide(file);
 	if unlikely(!wide_file)
@@ -223,7 +207,7 @@ EINTR_LABEL(again)
 handle_error:
 			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-			HANDLE_EINTR(error, again, err);
+			EINTR_HANDLE(error, again, err);
 #ifdef EACCES
 			if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -434,7 +418,7 @@ EINTR_LABEL(again)
 			req_size = readlinkat(os_dfd, utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 			if unlikely(req_size < 0) {
-				HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+				EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 				goto do_abspath_readlink;
 			}
 			DBG_ALIGNMENT_ENABLE();

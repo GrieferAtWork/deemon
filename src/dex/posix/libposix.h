@@ -54,20 +54,46 @@ DECL_BEGIN
 #define FS_MODULE DEX.d_imports[0]
 
 
-#if defined(EINTR) && !defined(__INTELLISENSE__)
+#ifdef EINTR
 #define EINTR_LABEL(again) \
 	again:
-#define HANDLE_EINTR(error, again, err_label) \
+#define EINTR_HANDLE(error, again, err_label) \
 	if ((error) == EINTR) {                   \
 		if (DeeThread_CheckInterrupt())       \
 			goto err_label;                   \
 		goto again;                           \
 	}
-#else
+#else /* EINTR */
 #define EINTR_LABEL(again)                    /* nothing */
-#define HANDLE_EINTR(error, again, err_label) /* nothing */
-#endif
+#define EINTR_HANDLE(error, again, err_label) /* nothing */
+#endif /* !EINTR */
 
+#ifdef ENOMEM
+#define ENOMEM_LABEL(again) \
+	again:
+#define ENOMEM_HANDLE(error, again, err_label) \
+	if ((error) == ENOMEM) {                   \
+		if (Dee_CollectMemory(1))              \
+			goto again;                        \
+		goto err_label;                        \
+	}
+#else /* ENOMEM */
+#define ENOMEM_LABEL(again)                    /* nothing */
+#define ENOMEM_HANDLE(error, again, err_label) /* nothing */
+#endif /* !ENOMEM */
+
+#if defined(EINTR) || defined(ENOMEM)
+#define EINTR_ENOMEM_LABEL(again) again:
+#else /* EINTR || ENOMEM */
+#define EINTR_ENOMEM_LABEL(again) /* nothing */
+#endif /* !EINTR && !ENOMEM */
+#define EINTR_ENOMEM_HANDLE(error, again, err_label) \
+	EINTR_HANDLE(error, again, err_label)            \
+	ENOMEM_HANDLE(error, again, err_label)
+
+
+
+/* TODO: Remove all of the following (replaced with `err_unix_*') */
 #define HANDLE_ENOENT(error, err_label, ...)                                   \
 	DeeSystem_IF_E1(error, ENOENT, {                                           \
 		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
@@ -392,6 +418,11 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define AT_REMOVEREG 0x20000000
 #endif /* !CONFIG_HAVE_AT_REMOVEREG */
 
+#ifndef CONFIG_HAVE_RENAME_NOREPLACE
+#undef RENAME_NOREPLACE
+#define RENAME_NOREPLACE 0x40000000
+#endif /* !CONFIG_HAVE_RENAME_NOREPLACE */
+
 
 
 /************************************************************************/
@@ -445,37 +476,45 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chdir(int errno_value, DeeObjec
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_rmdir(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_rename(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_remove_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_unlink_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_rmdir_unsupported(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_dir(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_dir2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_found(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_found2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_not_found2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_no_access(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_no_access2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_no_access2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chattr_no_access(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_handle_closed(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_exists(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_is_dir(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_readonly(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_readonly2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_not_found(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_file_not_writable(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_writable(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_busy(int errno_value, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_busy2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_move_to_child(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_path_not_empty(int errno_value, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_unix_chtime_no_access(int errno_value, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_unix_path_cross_dev2(int errno_value, DeeObject *existing_path, DeeObject *new_path);
 
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_rmdir(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_rename(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_unlink_unsupported(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_rename_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_dir(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_not_dir2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_found(DWORD dwError, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_not_found2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_not_found2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_no_access2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_no_access2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chattr_no_access(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_handle_closed(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_exists(DWORD dwError, DeeObject *__restrict path);
@@ -485,9 +524,11 @@ INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_file_not_found(DWORD dwError, Dee
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_file_not_writable(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_writable(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_busy(DWORD dwError, DeeObject *__restrict path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_busy2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_move_to_child(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_path_not_empty(DWORD dwError, DeeObject *__restrict path);
 INTDEF ATTR_COLD NONNULL((2)) int DCALL err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path);
-INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL err_nt_path_cross_dev2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path);
 
 
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
@@ -556,8 +597,9 @@ nt_DeleteFile(DeeObject *__restrict lpFileName);
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-nt_MoveFile(DeeObject *__restrict lpExistingFileName,
-            DeeObject *__restrict lpNewFileName);
+nt_MoveFileEx(DeeObject *__restrict lpExistingFileName,
+              DeeObject *__restrict lpNewFileName,
+              DWORD dwFlags);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the hardlink.

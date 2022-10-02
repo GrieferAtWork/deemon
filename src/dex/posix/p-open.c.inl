@@ -36,6 +36,11 @@ include("p-open-constants.def");
 
 local allDecls = [];
 
+function fgi(name, doc = none) {
+	allDecls.append(name);
+	gi(name, doc: doc);
+}
+
 function fgii(name, doc = none) {
 	allDecls.append(name);
 	gii(name, doc: doc);
@@ -88,19 +93,27 @@ fgii_conf("O_SEARCH");
 fgii_conf("O_TTY_INIT");
 fgii_conf("O_NOLINKS");
 
-fgii("AT_FDCWD",            doc: "Special value used to indicate the *at functions should use the current working directory");
-fgii("AT_SYMLINK_NOFOLLOW", doc: "Do not follow symbolic links");
-fgii("AT_REMOVEDIR",        doc: "Remove directory instead of unlinking file");
-fgii("AT_SYMLINK_FOLLOW",   doc: "Follow symbolic links");
-fgii("AT_NO_AUTOMOUNT",     doc: "Suppress terminal automount traversal");
-fgii("AT_EMPTY_PATH",       doc: "Allow empty relative pathname");
-fgii("AT_EACCESS",          doc: "Test access permitted for effective IDs, not real IDs");
-fgii("AT_REMOVEREG",        doc: "Explicitly allow removing anything that unlink() removes. (Default; Set in addition to #AT_REMOVEDIR to implement #remove semantics)");
-fgii("AT_DOSPATH",          doc: "Interpret $\"\\\" as $\"/\", and ignore casing during path resolution");
-fgii("AT_FDROOT",           doc: "Same as #AT_FDCWD but sets the filesystem root (using this, you can #chroot with #dup2)");
-fgii("AT_THIS_TASK");
-fgii("AT_THIS_MMAN");
-fgii("AT_THIS_STACK");
+fgi      ("AT_FDCWD",            doc: "Special value used to indicate the *at functions should use the current working directory");
+fgi      ("AT_SYMLINK_NOFOLLOW", doc: "Do not follow symbolic links");
+fgi      ("AT_REMOVEDIR",        doc: "Remove directory instead of unlinking file");
+fgii_conf("AT_SYMLINK_FOLLOW",   doc: "Follow symbolic links");
+fgii_conf("AT_NO_AUTOMOUNT",     doc: "Suppress terminal automount traversal");
+fgii_conf("AT_EMPTY_PATH",       doc: "Allow empty relative pathname");
+fgii_conf("AT_EACCESS",          doc: "Test access permitted for effective IDs, not real IDs");
+fgi      ("AT_REMOVEREG",        doc: "Explicitly allow removing anything that unlink() removes. (Default; Set in addition to ?GAT_REMOVEDIR to implement ?Gremove semantics)");
+fgii_conf("AT_DOSPATH",          doc: "Interpret $\"\\\" as $\"/\", and ignore casing during path resolution");
+fgii_conf("AT_FDROOT",           doc: "Same as ?GAT_FDCWD but sets the filesystem root (using this, you can ?Gchroot with ?Gdup2)");
+fgii_conf("AT_THIS_TASK");
+fgii_conf("AT_THIS_PROCESS");
+fgii_conf("AT_PARENT_PROCESS");
+fgii_conf("AT_GROUP_LEADER");
+fgii_conf("AT_SESSION_LEADER");
+fgii_conf("AT_DOS_DRIVEMIN");
+fgii_conf("AT_DOS_DRIVEMAX");
+
+fgii     ("RENAME_NOREPLACE",    doc: "Don't overwrite target");
+fgii_conf("RENAME_EXCHANGE",     doc: "Exchange source and dest");
+fgii_conf("RENAME_WHITEOUT",     doc: "Whiteout source");
 
 File.stdout = orig_stdout;
 print "#define POSIX_OPEN_BASIC_DEFS \\";
@@ -163,8 +176,15 @@ print "/" "**" "/";
 	POSIX_AT_DOSPATH_DEF \
 	POSIX_AT_FDROOT_DEF \
 	POSIX_AT_THIS_TASK_DEF \
-	POSIX_AT_THIS_MMAN_DEF \
-	POSIX_AT_THIS_STACK_DEF \
+	POSIX_AT_THIS_PROCESS_DEF \
+	POSIX_AT_PARENT_PROCESS_DEF \
+	POSIX_AT_GROUP_LEADER_DEF \
+	POSIX_AT_SESSION_LEADER_DEF \
+	POSIX_AT_DOS_DRIVEMIN_DEF \
+	POSIX_AT_DOS_DRIVEMAX_DEF \
+	POSIX_RENAME_NOREPLACE_DEF \
+	POSIX_RENAME_EXCHANGE_DEF \
+	POSIX_RENAME_WHITEOUT_DEF \
 /**/
 //[[[end]]]
 
@@ -332,7 +352,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " OPEN_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File " OPEN_PRINTF_FILENAME " already exists", filename)
 		HANDLE_EACCES(result, err, "Failed to access " OPEN_PRINTF_FILENAME, filename)
@@ -519,7 +539,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " CREAT_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EACCES(result, err, "Failed to access " CREAT_PRINTF_FILENAME, filename)
 		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " CREAT_PRINTF_FILENAME " for writing", filename)

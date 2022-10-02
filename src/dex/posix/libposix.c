@@ -39,6 +39,7 @@
 #include "p-readlink.c.inl"
 #include "p-readwrite.c.inl"
 #include "p-realpath.c.inl"
+#include "p-rename.c.inl"
 #include "p-sched.c.inl"
 #include "p-stat.c.inl"
 #include "p-sync.c.inl"
@@ -158,6 +159,10 @@ local ALL_STUBS = {
 	("posix_readlink_USE_STUB", { "readlink" }),
 	("posix_freadlink_USE_STUB", { "freadlink" }),
 	("posix_readlinkat_USE_STUB", { "readlinkat" }),
+	("posix_rename_USE_STUB", { "rename" }),
+	("posix_frename_USE_STUB", { "frename" }),
+	("posix_renameat_USE_STUB", { "renameat" }),
+	("posix_renameat2_USE_STUB", { "renameat2" }),
 }.sorted();
 for (local test, functions: ALL_STUBS) {
 	functions = "\0".join(functions) + "\0";
@@ -311,6 +316,13 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_freadlink_USE_STUB /* nothing */
 #define str_posix_freadlink_USE_STUB /* nothing */
 #endif /* !posix_freadlink_USE_STUB */
+#ifdef posix_frename_USE_STUB
+#define len_posix_frename_USE_STUB +8
+#define str_posix_frename_USE_STUB 'f', 'r', 'e', 'n', 'a', 'm', 'e', '\0',
+#else /* posix_frename_USE_STUB */
+#define len_posix_frename_USE_STUB /* nothing */
+#define str_posix_frename_USE_STUB /* nothing */
+#endif /* !posix_frename_USE_STUB */
 #ifdef posix_fsync_USE_STUB
 #define len_posix_fsync_USE_STUB +6
 #define str_posix_fsync_USE_STUB 'f', 's', 'y', 'n', 'c', '\0',
@@ -444,6 +456,27 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #define len_posix_removeat_USE_STUB /* nothing */
 #define str_posix_removeat_USE_STUB /* nothing */
 #endif /* !posix_removeat_USE_STUB */
+#ifdef posix_rename_USE_STUB
+#define len_posix_rename_USE_STUB +7
+#define str_posix_rename_USE_STUB 'r', 'e', 'n', 'a', 'm', 'e', '\0',
+#else /* posix_rename_USE_STUB */
+#define len_posix_rename_USE_STUB /* nothing */
+#define str_posix_rename_USE_STUB /* nothing */
+#endif /* !posix_rename_USE_STUB */
+#ifdef posix_renameat2_USE_STUB
+#define len_posix_renameat2_USE_STUB +10
+#define str_posix_renameat2_USE_STUB 'r', 'e', 'n', 'a', 'm', 'e', 'a', 't', '2', '\0',
+#else /* posix_renameat2_USE_STUB */
+#define len_posix_renameat2_USE_STUB /* nothing */
+#define str_posix_renameat2_USE_STUB /* nothing */
+#endif /* !posix_renameat2_USE_STUB */
+#ifdef posix_renameat_USE_STUB
+#define len_posix_renameat_USE_STUB +9
+#define str_posix_renameat_USE_STUB 'r', 'e', 'n', 'a', 'm', 'e', 'a', 't', '\0',
+#else /* posix_renameat_USE_STUB */
+#define len_posix_renameat_USE_STUB /* nothing */
+#define str_posix_renameat_USE_STUB /* nothing */
+#endif /* !posix_renameat_USE_STUB */
 #ifdef posix_rmdir_USE_STUB
 #define len_posix_rmdir_USE_STUB +6
 #define str_posix_rmdir_USE_STUB 'r', 'm', 'd', 'i', 'r', '\0',
@@ -706,6 +739,7 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_fchdirat_USE_STUB \
 	len_posix_fdatasync_USE_STUB \
 	len_posix_freadlink_USE_STUB \
+	len_posix_frename_USE_STUB \
 	len_posix_fsync_USE_STUB \
 	len_posix_ftruncate_USE_STUB \
 	len_posix_getenv_USE_STUB \
@@ -725,6 +759,9 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 	len_posix_readlinkat_USE_STUB \
 	len_posix_remove_USE_STUB \
 	len_posix_removeat_USE_STUB \
+	len_posix_rename_USE_STUB \
+	len_posix_renameat2_USE_STUB \
+	len_posix_renameat_USE_STUB \
 	len_posix_rmdir_USE_STUB \
 	len_posix_rmdirat_USE_STUB \
 	len_posix_setenv_USE_STUB \
@@ -790,6 +827,7 @@ PRIVATE struct {
 		str_posix_fchdirat_USE_STUB
 		str_posix_fdatasync_USE_STUB
 		str_posix_freadlink_USE_STUB
+		str_posix_frename_USE_STUB
 		str_posix_fsync_USE_STUB
 		str_posix_ftruncate_USE_STUB
 		str_posix_getenv_USE_STUB
@@ -809,6 +847,9 @@ PRIVATE struct {
 		str_posix_readlinkat_USE_STUB
 		str_posix_remove_USE_STUB
 		str_posix_removeat_USE_STUB
+		str_posix_rename_USE_STUB
+		str_posix_renameat2_USE_STUB
+		str_posix_renameat_USE_STUB
 		str_posix_rmdir_USE_STUB
 		str_posix_rmdirat_USE_STUB
 		str_posix_setenv_USE_STUB
@@ -1373,7 +1414,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "S_ISLNK", (DeeObject *)&libposix_S_ISLNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 
-	/* stat & frields */
+	/* stat & friends */
 	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },)
 	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },)
 	D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
@@ -1512,6 +1553,80 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "@throw FileClosed The given @dfd was closed\n"
 	                           "@throw SystemError Failed to read the symbolic link under @dfd:@file for some reason\n"
 	                           "Read and return the targetText used to create a symbolic link (see ?Gsymlink)"))
+	D(POSIX_RENAME_DEF_DOC("@interrupt\n"
+	                       "@throw FileNotFound The given @oldname could not be found, or a parent directory of @newname does not exist\n"
+	                       "@throw NotEmpty The given @newname is a non-empty directory\n"
+	                       "@throw IsDirectory The given @newname is an existing directory, but @oldname isn't "
+	                       /*              */ "one (directories can only be replaced by other directories)\n"
+	                       "@throw NoDirectory A part of the given @oldname or @newname is not a directory, "
+	                       /*              */ "or @oldname is a directory, but @newname isn't\n"
+	                       "@throw CrossDevice The given @oldname and @newname are not located on the same device\n"
+	                       "@throw ValueError Attempted to move a directory into itself\n"
+	                       "@throw FileAccessError The current user does not have permissions to access the file "
+	                       /*                  */ "or directory @oldname, or the directory containing @newname\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @oldname or the "
+	                       /*               */ "directory containing the non-existant file @newname is in read-only operations "
+	                       /*               */ "mode, preventing the modification of existing files or directories\n"
+	                       "@throw SystemError Failed to rename the given @oldname for some reason\n"
+	                       "Renames or moves a given @oldname to be referred to as @newname from then on\n"
+	                       "When @newname already exists, it is replaced by @oldname"))
+	D(POSIX_FRENAME_DEF_DOC("@interrupt\n"
+	                        "@throw FileNotFound A parent directory of @newname does not exist\n"
+	                        "@throw NotEmpty The given @newname is a non-empty directory\n"
+	                        "@throw IsDirectory The given @newname is an existing directory, but @oldfd isn't "
+	                        /*              */ "one (directories can only be replaced by other directories)\n"
+	                        "@throw NoDirectory A part of @newname is not a directory, "
+	                        /*              */ "or @oldfd is a directory, but @newname isn't\n"
+	                        "@throw CrossDevice The given @oldfd and @newname are not located on the same device\n"
+	                        "@throw ValueError Attempted to move a directory into itself\n"
+	                        "@throw FileAccessError The current user does not have permissions to access the file "
+	                        /*                  */ "or directory @oldfd, or the directory containing @newname\n"
+	                        "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @oldfd or the "
+	                        /*               */ "directory containing the non-existant file @newname is in read-only operations "
+	                        /*               */ "mode, preventing the modification of existing files or directories\n"
+	                        "@throw FileClosed The given @oldfd has already been closed\n"
+	                        "@throw SystemError Failed to rename the given @oldfd for some reason\n"
+	                        "Renames or moves a given @oldfd to be referred to as @newname from then on\n"
+	                        "When @newname already exists, it is replaced by @oldfd"))
+	D(POSIX_RENAMEAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @olddfd:@oldname could not be found, or a parent directory of @newdfd:@newname does not exist\n"
+	                         "@throw NotEmpty The given @newdfd:@newname is a non-empty directory\n"
+	                         "@throw IsDirectory The given @newdfd:@newname is an existing directory, but @olddfd:@oldname isn't "
+	                         /*              */ "one (directories can only be replaced by other directories)\n"
+	                         "@throw NoDirectory A part of the given @olddfd:@oldname or @newdfd:@newname is not a directory, "
+	                         /*              */ "or @olddfd:@oldname is a directory, but @newdfd:@newname isn't\n"
+	                         "@throw CrossDevice The given @olddfd:@oldname and @newdfd:@newname are not located on the same device\n"
+	                         "@throw ValueError Attempted to move a directory into itself\n"
+	                         "@throw FileAccessError The current user does not have permissions to access the file "
+	                         /*                  */ "or directory @olddfd:@oldname, or the directory containing @newdfd:@newname\n"
+	                         "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @olddfd:@oldname or the "
+	                         /*               */ "directory containing the non-existant file @newdfd:@newname is in read-only operations "
+	                         /*               */ "mode, preventing the modification of existing files or directories\n"
+	                         "@throw FileClosed The given @olddfd or @newdfd has already been closed\n"
+	                         "@throw ValueError Invalid @atflags\n"
+	                         "@throw SystemError Failed to rename the given @olddfd:@oldname for some reason\n"
+	                         "Renames or moves a given @olddfd:@oldname to be referred to as @newdfd:@newname from then on\n"
+	                         "When @newname already exists, it is replaced by @olddfd:@oldname"))
+	D(POSIX_RENAMEAT2_DEF_DOC("@interrupt\n"
+	                          "@throw FileNotFound The given @olddfd:@oldname could not be found, or a parent directory of @newdfd:@newname does not exist\n"
+	                          "@throw NotEmpty The given @newdfd:@newname is a non-empty directory\n"
+	                          "@throw IsDirectory The given @newdfd:@newname is an existing directory, but @olddfd:@oldname isn't "
+	                          /*              */ "one (directories can only be replaced by other directories)\n"
+	                          "@throw NoDirectory A part of the given @olddfd:@oldname or @newdfd:@newname is not a directory, "
+	                          /*              */ "or @olddfd:@oldname is a directory, but @newdfd:@newname isn't\n"
+	                          "@throw CrossDevice The given @olddfd:@oldname and @newdfd:@newname are not located on the same device\n"
+	                          "@throw ValueError Attempted to move a directory into itself\n"
+	                          "@throw FileAccessError The current user does not have permissions to access the file "
+	                          /*                  */ "or directory @olddfd:@oldname, or the directory containing @newdfd:@newname\n"
+	                          "@throw ReadOnlyFile The filesystem or device hosting the given file or directory @olddfd:@oldname or the "
+	                          /*               */ "directory containing the non-existant file @newdfd:@newname is in read-only operations "
+	                          /*               */ "mode, preventing the modification of existing files or directories\n"
+	                          "@throw FileExists @flags include ?GRENAME_NOREPLACE, but @newdfd:@newname already exists\n"
+	                          "@throw FileClosed The given @olddfd or @newdfd has already been closed\n"
+	                          "@throw ValueError Invalid @flags or @atflags\n"
+	                          "@throw SystemError Failed to rename the given @olddfd:@oldname for some reason\n"
+	                          "Renames or moves a given @olddfd:@oldname to be referred to as @newdfd:@newname from then on\n"
+	                          "When @newname already exists, it is replaced by @olddfd:@oldname"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
@@ -1530,9 +1645,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(chown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(lchown, "(path:?Dstring,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S(mkdir, "(path:?Dstring,permissions:?X2?Dstring?Dint=!N)\n")
-	DEFINE_LIBFS_ALIAS_S(rename, "(existingPath:?Dstring,newPath:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(link, "(existingPath:?X3?Dstring?DFile?Dint,newPath:?Dstring)\n")
-	DEFINE_LIBFS_ALIAS_S(symlink, "(targetText:?Dstring,link_path:?Dstring,formatTarget=!t)\n")
+	DEFINE_LIBFS_ALIAS_S(symlink, "(targetText:?Dstring,linkPath:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:User?Dstring?Dint,group:?X3?Efs:Group?Dstring?Dint)\n"
@@ -1573,10 +1687,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ NULL, (DeeObject *)&posix_errno_del, MODSYM_FNORMAL }, )
 	D({ NULL, (DeeObject *)&posix_errno_set, MODSYM_FNORMAL }, )
 	D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to ?Gerrno), "
-	                         "or return ?N if the error doesn't have an associated name"))
+	                         /**/ "or return ?N if the error doesn't have an associated name"))
 	D(POSIX_STRERRORNAME_DEF_DOC("Similar to ?Gstrerror, but instead of returning the message "
-	                             "associated with a given @errnum (which defaults to ?Gerrno), "
-	                             "return the name (e.g. $\"ENOENT\") of the error as a string\n"
+	                             /**/ "associated with a given @errnum (which defaults to ?Gerrno), "
+	                             /**/ "return the name (e.g. $\"ENOENT\") of the error as a string\n"
 	                             "If the given error number is not recognized, return ?N instead"))
 
 	{ NULL }

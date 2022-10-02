@@ -33,13 +33,19 @@
 #define NEED_err_nt_unlink
 #define NEED_err_unix_rmdir
 #define NEED_err_nt_rmdir
+#define NEED_err_unix_rename
+#define NEED_err_nt_rename
 #define NEED_err_unix_remove_unsupported
 #define NEED_err_unix_unlink_unsupported
 #define NEED_err_nt_unlink_unsupported
 #define NEED_err_unix_rmdir_unsupported
 #define NEED_err_nt_rmdir_unsupported
+#define NEED_err_unix_rename_unsupported
+#define NEED_err_nt_rename_unsupported
 #define NEED_err_unix_path_not_dir
 #define NEED_err_nt_path_not_dir
+#define NEED_err_unix_path_not_dir2
+#define NEED_err_nt_path_not_dir2
 #define NEED_err_unix_path_not_found
 #define NEED_err_nt_path_not_found
 #define NEED_err_unix_path_not_found2
@@ -56,6 +62,7 @@
 #define NEED_err_nt_path_exists
 #define NEED_err_unix_path_is_dir
 #define NEED_err_nt_path_is_dir
+#define NEED_err_unix_path_readonly2
 #define NEED_err_unix_path_readonly
 #define NEED_err_nt_path_readonly
 #define NEED_err_unix_file_not_found
@@ -66,6 +73,10 @@
 #define NEED_err_nt_path_not_writable
 #define NEED_err_unix_path_busy
 #define NEED_err_nt_path_busy
+#define NEED_err_unix_path_busy2
+#define NEED_err_nt_path_busy2
+#define NEED_err_unix_move_to_child
+#define NEED_err_nt_move_to_child
 #define NEED_err_unix_path_not_empty
 #define NEED_err_nt_path_not_empty
 #define NEED_err_unix_chtime_no_access
@@ -82,7 +93,7 @@
 #define NEED_nt_CreateDirectory
 #define NEED_nt_RemoveDirectory
 #define NEED_nt_DeleteFile
-#define NEED_nt_MoveFile
+#define NEED_nt_MoveFileEx
 #define NEED_nt_CreateHardLink
 #define NEED_nt_CreateSymbolicLink
 #define NEED_posix_dfd_abspath
@@ -361,8 +372,8 @@ err_unix_chdir(int errno_value, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_unix_chdir */
 
-#undef NEED_err_unix_remove
 #ifdef NEED_err_unix_remove
+#undef NEED_err_unix_remove
 INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_unix_remove(int errno_value, DeeObject *__restrict path) {
 #ifdef EACCES
@@ -397,30 +408,32 @@ err_unix_remove(int errno_value, DeeObject *__restrict path) {
 		/* Posix states that this is the return value when the path is a directory,
 		 * but also if the filesystem does not support unlinking files. */
 #ifdef posix_stat_USED_STRUCT_STAT
-		struct posix_stat_USED_STRUCT_STAT st;
-		posix_stat_TCHAR *tpath;
-		tpath = posix_stat_DeeString_AsTChar(path);
-		if unlikely(!tpath)
-			return -1;
-		DBG_ALIGNMENT_DISABLE();
+		if (DeeString_Check(path)) {
+			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_TCHAR *tpath;
+			tpath = posix_stat_DeeString_AsTChar(path);
+			if unlikely(!tpath)
+				return -1;
+			DBG_ALIGNMENT_DISABLE();
 #ifdef posix_stat_USED_lstat
-		if (posix_stat_USED_lstat(tpath, &st) == 0)
+			if (posix_stat_USED_lstat(tpath, &st) == 0)
 #else /* posix_stat_USED_lstat */
-		if (posix_stat_USED_stat(tpath, &st) == 0)
+			if (posix_stat_USED_stat(tpath, &st) == 0)
 #endif /* !posix_stat_USED_lstat */
-		{
-			DBG_ALIGNMENT_ENABLE();
+			{
+				DBG_ALIGNMENT_ENABLE();
 #define NEED_err_unix_path_is_dir
-			if (STAT_ISDIR(st.st_mode))
-				return err_unix_path_is_dir(errno_value, path);
-
-			/* Posix also states that the presence of the
-			 * S_ISVTX bit may cause EPERM to be returned. */
+				if (STAT_ISDIR(st.st_mode))
+					return err_unix_path_is_dir(errno_value, path);
+	
+				/* Posix also states that the presence of the
+				 * S_ISVTX bit may cause EPERM to be returned. */
 #define NEED_err_unix_path_not_writable
-			if (st.st_mode & STAT_ISVTX)
-				return err_unix_path_not_writable(errno_value, path);
+				if (st.st_mode & STAT_ISVTX)
+					return err_unix_path_not_writable(errno_value, path);
+			}
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 #endif /* posix_stat_USED_STRUCT_STAT */
 #define NEED_err_unix_remove_unsupported
 		return err_unix_remove_unsupported(errno_value, path);
@@ -472,30 +485,32 @@ err_unix_unlink(int errno_value, DeeObject *__restrict path) {
 		/* Posix states that this is the return value when the path is a directory,
 		 * but also if the filesystem does not support unlinking files. */
 #ifdef posix_stat_USED_STRUCT_STAT
-		struct posix_stat_USED_STRUCT_STAT st;
-		posix_stat_TCHAR *tpath;
-		tpath = posix_stat_DeeString_AsTChar(path);
-		if unlikely(!tpath)
-			return -1;
-		DBG_ALIGNMENT_DISABLE();
+		if (DeeString_Check(path)) {
+			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_TCHAR *tpath;
+			tpath = posix_stat_DeeString_AsTChar(path);
+			if unlikely(!tpath)
+				return -1;
+			DBG_ALIGNMENT_DISABLE();
 #ifdef posix_stat_USED_lstat
-		if (posix_stat_USED_lstat(tpath, &st) == 0)
+			if (posix_stat_USED_lstat(tpath, &st) == 0)
 #else /* posix_stat_USED_lstat */
-		if (posix_stat_USED_stat(tpath, &st) == 0)
+			if (posix_stat_USED_stat(tpath, &st) == 0)
 #endif /* !posix_stat_USED_lstat */
-		{
-			DBG_ALIGNMENT_ENABLE();
+			{
+				DBG_ALIGNMENT_ENABLE();
 #define NEED_err_unix_path_is_dir
-			if (STAT_ISDIR(st.st_mode))
-				return err_unix_path_is_dir(errno_value, path);
-
-			/* Posix also states that the presence of the
-			 * S_ISVTX bit may cause EPERM to be returned. */
+				if (STAT_ISDIR(st.st_mode))
+					return err_unix_path_is_dir(errno_value, path);
+	
+				/* Posix also states that the presence of the
+				 * S_ISVTX bit may cause EPERM to be returned. */
 #define NEED_err_unix_path_not_writable
-			if (st.st_mode & STAT_ISVTX)
-				return err_unix_path_not_writable(errno_value, path);
+				if (st.st_mode & STAT_ISVTX)
+					return err_unix_path_not_writable(errno_value, path);
+			}
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 #endif /* posix_stat_USED_STRUCT_STAT */
 #define NEED_err_unix_unlink_unsupported
 		return err_unix_unlink_unsupported(errno_value, path);
@@ -586,25 +601,27 @@ err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 		 * However in that event, we want to throw an access error, not an
 		 * unsupported-api error. */
 #ifdef posix_stat_USED_STRUCT_STAT
-		struct posix_stat_USED_STRUCT_STAT st;
-		posix_stat_TCHAR *tpath;
-		tpath = posix_stat_DeeString_AsTChar(path);
-		if unlikely(!tpath)
-			return -1;
-		DBG_ALIGNMENT_DISABLE();
+		if (DeeString_Check(path)) {
+			struct posix_stat_USED_STRUCT_STAT st;
+			posix_stat_TCHAR *tpath;
+			tpath = posix_stat_DeeString_AsTChar(path);
+			if unlikely(!tpath)
+				return -1;
+			DBG_ALIGNMENT_DISABLE();
 #ifdef posix_stat_USED_lstat
-		if (posix_stat_USED_lstat(tpath, &st) == 0)
+			if (posix_stat_USED_lstat(tpath, &st) == 0)
 #else /* posix_stat_USED_lstat */
-		if (posix_stat_USED_stat(tpath, &st) == 0)
+			if (posix_stat_USED_stat(tpath, &st) == 0)
 #endif /* !posix_stat_USED_lstat */
-		{
-			if (st.st_mode & STAT_ISVTX) {
-				DBG_ALIGNMENT_ENABLE();
+			{
+				if (st.st_mode & STAT_ISVTX) {
+					DBG_ALIGNMENT_ENABLE();
 #define NEED_err_unix_path_not_writable
-				return err_unix_path_not_writable(errno_value, path);
+					return err_unix_path_not_writable(errno_value, path);
+				}
 			}
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 #endif /* posix_stat_USED_STRUCT_STAT */
 #define NEED_err_unix_rmdir_unsupported
 		return err_unix_rmdir_unsupported(errno_value, path);
@@ -643,6 +660,170 @@ err_nt_rmdir(DWORD dwError, DeeObject *__restrict path) {
 	                               path);
 }
 #endif /* NEED_err_nt_rmdir */
+
+#ifdef NEED_err_unix_rename
+#undef NEED_err_unix_rename
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_rename(int errno_value,
+                DeeObject *existing_path,
+                DeeObject *new_path) {
+#ifdef EACCES
+#define NEED_err_unix_path_readonly2
+	if (errno_value == EACCES)
+		return err_unix_path_readonly2(errno_value, existing_path, new_path);
+#endif /* EACCES */
+#ifdef EBUSY
+#define NEED_err_unix_path_busy2
+	if (errno_value == EBUSY)
+		return err_unix_path_busy2(errno_value, existing_path, new_path);
+#endif /* EBUSY */
+#ifdef EINVAL
+#define NEED_err_unix_move_to_child
+	if (errno_value == EINVAL)
+		return err_unix_move_to_child(errno_value, existing_path, new_path);
+#endif /* EINVAL */
+#ifdef ENOENT
+#define NEED_err_unix_path_not_found2
+	if (errno_value == ENOENT)
+		return err_unix_path_not_found2(errno_value, existing_path, new_path);
+#endif /* ENOENT */
+#ifdef EISDIR
+#define NEED_err_unix_path_is_dir
+	if (errno_value == EISDIR)
+		return err_unix_path_is_dir(errno_value, new_path);
+#endif /* EISDIR */
+#if defined(ENOTEMPTY) || defined(EEXIST)
+#define NEED_err_unix_path_not_empty
+	DeeSystem_IF_E2(errno_value, ENOTEMPTY, EEXIST, {
+		return err_unix_path_not_empty(errno_value, new_path);
+	});
+#endif /* ENOTEMPTY || EEXIST */
+#ifdef ENOTDIR
+#define NEED_err_unix_path_not_dir2
+	if (errno_value == ENOTDIR)
+		return err_unix_path_not_dir2(errno_value, existing_path, new_path);
+#endif /* ENOTDIR */
+#ifdef EPERM
+	if (errno_value == EPERM) {
+		/* The same deal concerning the sticky bit. */
+#ifdef posix_stat_USED_STRUCT_STAT
+		if (DeeString_Check(existing_path)) {
+			struct posix_stat_USED_STRUCT_STAT oldst;
+			posix_stat_TCHAR *toldpath;
+			toldpath = posix_stat_DeeString_AsTChar(existing_path);
+			if unlikely(!toldpath)
+				return -1;
+			DBG_ALIGNMENT_DISABLE();
+#ifdef posix_stat_USED_lstat
+			if (posix_stat_USED_lstat(toldpath, &oldst) == 0)
+#else /* posix_stat_USED_lstat */
+			if (posix_stat_USED_stat(toldpath, &oldst) == 0)
+#endif /* !posix_stat_USED_lstat */
+			{
+				if (oldst.st_mode & STAT_ISVTX) {
+					DBG_ALIGNMENT_ENABLE();
+#define NEED_err_unix_path_readonly2
+					return err_unix_path_readonly2(errno_value, existing_path, new_path);
+				}
+			}
+			DBG_ALIGNMENT_ENABLE();
+		}
+		if (DeeString_Check(new_path)) {
+			int stat_error;
+			struct posix_stat_USED_STRUCT_STAT newst;
+			posix_stat_TCHAR *tnewpath, *tnewpath_copy;
+			size_t tnewpath_size, tnewpath_lastsep;
+			tnewpath = posix_stat_DeeString_AsTChar(new_path);
+			if unlikely(!tnewpath)
+				return -1;
+			tnewpath_lastsep = 1;
+			for (tnewpath_size = 0; tnewpath[tnewpath_size]; ++tnewpath_size) {
+				if (DeeSystem_IsSep(tnewpath[tnewpath_size]))
+					tnewpath_lastsep = tnewpath_size + 1;
+			}
+			tnewpath_copy = (posix_stat_TCHAR *)Dee_Malloc((tnewpath_lastsep + 1) *
+			                                               sizeof(posix_stat_TCHAR));
+			if unlikely(!tnewpath_copy)
+				return -1;
+			if (tnewpath_lastsep == 1) {
+				tnewpath_copy[0] = (posix_stat_TCHAR)'.';
+				tnewpath_copy[1] = (posix_stat_TCHAR)'\0';
+			} else {
+				*(posix_stat_TCHAR *)mempcpyc(tnewpath_copy, tnewpath, tnewpath_lastsep,
+				                              sizeof(posix_stat_TCHAR)) = (posix_stat_TCHAR)'\0';
+			}
+			DBG_ALIGNMENT_DISABLE();
+#ifdef posix_stat_USED_lstat
+			stat_error = posix_stat_USED_lstat(tnewpath_copy, &newst);
+#else /* posix_stat_USED_lstat */
+			stat_error = posix_stat_USED_stat(tnewpath_copy, &newst);
+#endif /* !posix_stat_USED_lstat */
+			Dee_Free(tnewpath_copy);
+			if (stat_error == 0) {
+				if (newst.st_mode & STAT_ISVTX) {
+					DBG_ALIGNMENT_ENABLE();
+#define NEED_err_unix_path_readonly2
+					return err_unix_path_readonly2(errno_value, existing_path, new_path);
+				}
+			}
+			DBG_ALIGNMENT_ENABLE();
+		}
+#endif /* posix_stat_USED_STRUCT_STAT */
+#define NEED_err_unix_rename_unsupported
+		return err_unix_rename_unsupported(errno_value, existing_path, new_path);
+	}
+#endif /* EPERM */
+#ifdef EROFS
+#define NEED_err_unix_path_readonly2
+	if (errno_value == EROFS)
+		return err_unix_path_readonly2(errno_value, existing_path, new_path);
+#endif /* EROFS */
+#ifdef EXDEV
+#define NEED_err_unix_path_cross_dev2
+	if (errno_value == EXDEV)
+		return err_unix_path_cross_dev2(errno_value, existing_path, new_path);
+#endif /* EXDEV */
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, errno_value,
+	                                 "Failed to rename %r to %r",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_rename */
+
+#ifdef NEED_err_nt_rename
+#undef NEED_err_nt_rename
+INTERN ATTR_COLD NONNULL((2)) int DCALL
+err_nt_rename(DWORD dwError,
+              DeeObject *existing_path,
+              DeeObject *new_path) {
+#define NEED_err_nt_path_no_access2
+	if (DeeNTSystem_IsAccessDeniedError(dwError))
+		return err_nt_path_no_access2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_busy2
+	if (DeeNTSystem_IsBusy(dwError))
+		return err_nt_path_busy2(dwError, existing_path, new_path);
+#define NEED_err_nt_move_to_child
+	if (dwError == ERROR_SHARING_VIOLATION)
+		return err_nt_move_to_child(dwError, existing_path, new_path);
+#define NEED_err_nt_path_not_found2
+	if (DeeNTSystem_IsFileNotFoundError(dwError))
+		return err_nt_path_not_found2(dwError, existing_path, new_path);
+#define NEED_err_nt_path_exists
+	if (DeeNTSystem_IsNotEmpty(dwError) || DeeNTSystem_IsExists(dwError))
+		return err_nt_path_exists(dwError, new_path);
+#define NEED_err_nt_path_not_dir2
+	if (DeeNTSystem_IsNotDir(dwError))
+		return err_nt_path_not_dir2(dwError, existing_path, new_path);
+#define NEED_err_nt_rename_unsupported
+	if (DeeNTSystem_IsUnsupportedError(dwError))
+		return err_nt_rename_unsupported(dwError, existing_path, new_path);
+#define NEED_err_nt_path_cross_dev2
+	if (DeeNTSystem_IsXDev(dwError))
+		return err_nt_path_cross_dev2(dwError, existing_path, new_path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to rename %r to %r",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_rename */
 
 #ifdef NEED_err_unix_remove_unsupported
 #undef NEED_err_unix_remove_unsupported
@@ -699,6 +880,28 @@ err_nt_rmdir_unsupported(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_rmdir_unsupported */
 
+#ifdef NEED_err_unix_rename_unsupported
+#undef NEED_err_unix_rename_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_rename_unsupported(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_UnsupportedAPI, errno_value,
+	                                 "The filesystem hosting the paths %r and %r "
+	                                 "does not support renaming of files",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_rename_unsupported */
+
+#ifdef NEED_err_nt_rename_unsupported
+#undef NEED_err_nt_rename_unsupported
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_rename_unsupported(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, dwError,
+	                               "The filesystem hosting the paths %r and %r "
+	                               "does not support renaming of files",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_rename_unsupported */
+
 #ifdef NEED_err_unix_path_not_dir
 #undef NEED_err_unix_path_not_dir
 INTERN ATTR_COLD NONNULL((2)) int DCALL
@@ -718,6 +921,26 @@ err_nt_path_not_dir(DWORD dwError, DeeObject *__restrict path) {
 	                               path);
 }
 #endif /* NEED_err_nt_path_not_dir */
+
+#ifdef NEED_err_unix_path_not_dir2
+#undef NEED_err_unix_path_not_dir2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_not_dir2(int error, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_NoDirectory, error,
+	                                 "Some part of the path %r or %r is not a directory",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_not_dir2 */
+
+#ifdef NEED_err_nt_path_not_dir2
+#undef NEED_err_nt_path_not_dir2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_path_not_dir2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_NoDirectory, dwError,
+	                               "Some part of the path %r or %r is not a directory",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_path_not_dir2 */
 
 #ifdef NEED_err_unix_path_not_found
 #undef NEED_err_unix_path_not_found
@@ -743,8 +966,8 @@ err_nt_path_not_found(DWORD dwError, DeeObject *__restrict path) {
 #undef NEED_err_unix_path_not_found2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_unix_path_not_found2(int errno_value,
-                         DeeObject *__restrict existing_path,
-                         DeeObject *__restrict new_path) {
+                         DeeObject *existing_path,
+                         DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
 	                                 "Path %r or %r could not be found",
 	                                 existing_path, new_path);
@@ -755,8 +978,8 @@ err_unix_path_not_found2(int errno_value,
 #undef NEED_err_nt_path_not_found2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_nt_path_not_found2(DWORD dwError,
-                       DeeObject *__restrict existing_path,
-                       DeeObject *__restrict new_path) {
+                       DeeObject *existing_path,
+                       DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
 	                               "Path %r or %r could not be found",
 	                               existing_path, new_path);
@@ -787,8 +1010,8 @@ err_nt_path_no_access(DWORD dwError, DeeObject *__restrict path) {
 #undef NEED_err_unix_path_no_access2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_unix_path_no_access2(int errno_value,
-                         DeeObject *__restrict existing_path,
-                         DeeObject *__restrict new_path) {
+                         DeeObject *existing_path,
+                         DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, errno_value,
 	                                 "Access to %r or %r has not been granted",
 	                                 existing_path, new_path);
@@ -799,8 +1022,8 @@ err_unix_path_no_access2(int errno_value,
 #undef NEED_err_nt_path_no_access2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_nt_path_no_access2(DWORD dwError,
-                       DeeObject *__restrict existing_path,
-                       DeeObject *__restrict new_path) {
+                       DeeObject *existing_path,
+                       DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 	                               "Access to %r or %r has not been granted",
 	                               existing_path, new_path);
@@ -886,6 +1109,18 @@ err_nt_path_is_dir(DWORD dwError, DeeObject *__restrict path) {
 	                               path);
 }
 #endif /* NEED_err_nt_path_is_dir */
+
+#ifdef NEED_err_unix_path_readonly2
+#undef NEED_err_unix_path_readonly2
+INTDEF ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_readonly2(int errno_value,
+                        DeeObject *existing_path,
+                        DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, errno_value,
+	                                 "Path %r or %r could not be found",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_readonly2 */
 
 #ifdef NEED_err_unix_path_readonly
 #undef NEED_err_unix_path_readonly
@@ -987,6 +1222,46 @@ err_nt_path_busy(DWORD dwError, DeeObject *__restrict path) {
 }
 #endif /* NEED_err_nt_path_busy */
 
+#ifdef NEED_err_unix_path_busy2
+#undef NEED_err_unix_path_busy2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_path_busy2(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_BusyFile, errno_value,
+	                                 "Path %r or %r cannot be accessed because it is already in use",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_path_busy2 */
+
+#ifdef NEED_err_nt_path_busy2
+#undef NEED_err_nt_path_busy2
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_path_busy2(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_BusyFile, dwError,
+	                               "Path %r or %r cannot be accessed because it is already in use",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_path_busy2 */
+
+#ifdef NEED_err_unix_move_to_child
+#undef NEED_err_unix_move_to_child
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_unix_move_to_child(int errno_value, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeUnixSystem_ThrowErrorf(&DeeError_ValueError, errno_value,
+	                                 "Cannot rename path %r to %r which is a sub-directory of the old path",
+	                                 existing_path, new_path);
+}
+#endif /* NEED_err_unix_move_to_child */
+
+#ifdef NEED_err_nt_move_to_child
+#undef NEED_err_nt_move_to_child
+INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
+err_nt_move_to_child(DWORD dwError, DeeObject *existing_path, DeeObject *new_path) {
+	return DeeNTSystem_ThrowErrorf(&DeeError_ValueError, dwError,
+	                               "Cannot rename path %r to %r which is a sub-directory of the old path",
+	                               existing_path, new_path);
+}
+#endif /* NEED_err_nt_move_to_child */
+
 #ifdef NEED_err_unix_path_not_empty
 #undef NEED_err_unix_path_not_empty
 INTERN ATTR_COLD NONNULL((2)) int DCALL
@@ -1031,8 +1306,8 @@ err_nt_chtime_no_access(DWORD dwError, DeeObject *__restrict path) {
 #undef NEED_err_unix_path_cross_dev2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_unix_path_cross_dev2(int errno_value,
-                         DeeObject *__restrict existing_path,
-                         DeeObject *__restrict new_path) {
+                         DeeObject *existing_path,
+                         DeeObject *new_path) {
 	return DeeUnixSystem_ThrowErrorf(&DeeError_CrossDeviceLink, errno_value,
 	                                 "Paths %r and %r are not apart of the same filesystem",
 	                                 existing_path, new_path);
@@ -1043,8 +1318,8 @@ err_unix_path_cross_dev2(int errno_value,
 #undef NEED_err_nt_path_cross_dev2
 INTERN ATTR_COLD NONNULL((2, 3)) int DCALL
 err_nt_path_cross_dev2(DWORD dwError,
-                       DeeObject *__restrict existing_path,
-                       DeeObject *__restrict new_path) {
+                       DeeObject *existing_path,
+                       DeeObject *new_path) {
 	return DeeNTSystem_ThrowErrorf(&DeeError_CrossDeviceLink, dwError,
 	                               "Paths %r and %r are not apart of the same filesystem",
 	                               existing_path, new_path);
@@ -1440,15 +1715,16 @@ err:
 }
 #endif /* NEED_nt_DeleteFile */
 
-#ifdef NEED_nt_MoveFile
-#undef NEED_nt_MoveFile
+#ifdef NEED_nt_MoveFileEx
+#undef NEED_nt_MoveFileEx
 /* Work around a problem with long path names.
  * @return:  0: Successfully moved the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-nt_MoveFile(DeeObject *__restrict lpExistingFileName,
-            DeeObject *__restrict lpNewFileName) {
+nt_MoveFileEx(DeeObject *__restrict lpExistingFileName,
+              DeeObject *__restrict lpNewFileName,
+              DWORD dwFlags) {
 	LPWSTR wExistingFileName, wNewFileName;
 	BOOL error;
 	DWORD dwError;
@@ -1459,7 +1735,7 @@ nt_MoveFile(DeeObject *__restrict lpExistingFileName,
 	if unlikely(!wNewFileName)
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	error = MoveFileW(wExistingFileName, wNewFileName);
+	error = MoveFileExW(wExistingFileName, wNewFileName, dwFlags);
 	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		lpExistingFileName = DeeNTSystem_FixUncPath(lpExistingFileName);
@@ -1476,7 +1752,7 @@ nt_MoveFile(DeeObject *__restrict lpExistingFileName,
 			goto err_new;
 		/* Invoke the system call once again. */
 		DBG_ALIGNMENT_DISABLE();
-		error   = MoveFileW(wExistingFileName, wNewFileName);
+		error   = MoveFileExW(wExistingFileName, wNewFileName, dwFlags);
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		Dee_Decref(lpNewFileName);
@@ -1494,7 +1770,7 @@ err_existing:
 err:
 	return -1;
 }
-#endif /* NEED_nt_MoveFile */
+#endif /* NEED_nt_MoveFileEx */
 
 #ifdef NEED_nt_CreateHardLink
 #undef NEED_nt_CreateHardLink

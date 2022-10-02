@@ -31,7 +31,6 @@ DECL_BEGIN
 #undef chown
 #undef lchown
 #undef mkdir
-#undef rename
 #undef link
 #undef symlink
 
@@ -49,7 +48,6 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(lchmod)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(chown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(lchown)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(mkdir)
-DEFINE_LIBFS_FORWARD_WRAPPER_S(rename)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(link)
 DEFINE_LIBFS_FORWARD_WRAPPER_S(symlink)
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
@@ -128,7 +126,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 		HANDLE_ENOSYS(result, err, "fchownat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%q", dfd, filename)
@@ -211,7 +209,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 		HANDLE_ENOSYS(result, err, "fchmodat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%q", dfd, filename)

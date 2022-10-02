@@ -239,7 +239,7 @@ EINTR_LABEL(again)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 #define NEED_err_unix_unlink
 		err_unix_unlink(error, file);
 		goto err;
@@ -330,7 +330,7 @@ EINTR_LABEL(again)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 #define NEED_err_unix_rmdir
 		err_unix_rmdir(error, path);
 		goto err;
@@ -448,7 +448,7 @@ EINTR_LABEL(again)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 #define NEED_err_unix_remove
 		err_unix_remove(error, path);
 		goto err;
@@ -500,7 +500,7 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	if (error) {
 		error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again;
@@ -526,7 +526,7 @@ again:
 			if likely(!error)
 				return_none;
 			error = DeeSystem_GetErrno();
-			HANDLE_EINTR(error, again, err);
+			EINTR_HANDLE(error, again, err);
 			DeeSystem_IF_E1(error, ENOMEM, {
 				if (Dee_CollectMemory(1))
 					goto again;
@@ -551,7 +551,7 @@ again:
 		if likely(!error)
 			return_none;
 		error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err);
+		EINTR_HANDLE(error, again, err);
 		DeeSystem_IF_E1(error, ENOMEM, {
 			if (Dee_CollectMemory(1))
 				goto again;
@@ -613,7 +613,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, D
 EINTR_LABEL(again)
 		if (unlinkat(os_fd, utf8_file, atflags) == 0)
 			return_none;
-		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_unlinkat_USE_unlinkat */
@@ -683,7 +683,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, D
 EINTR_LABEL(again)
 		if (removeat(os_fd, utf8_path, atflags) == 0)
 			return_none;
-		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_removeat_USE_removeat */
@@ -747,7 +747,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, De
 EINTR_LABEL(again)
 		if (rmdirat(os_fd, utf8_path, atflags) == 0)
 			return_none;
-		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
+		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_rmdirat_USE_rmdirat */

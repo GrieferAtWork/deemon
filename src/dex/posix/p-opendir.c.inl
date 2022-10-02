@@ -571,7 +571,7 @@ EINTR_LABEL(again)
 	if unlikely(dir == NULL) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOENT(error, err, "Path %r could not be found", path)
 		HANDLE_ENOTDIR(error, err, "Path %r could not be found", path)
 		HANDLE_EACCES(error, err, "Some part of the path %r is not a directory", path)
@@ -663,7 +663,7 @@ again:
 		rwlock_endwrite(&self->di_lock);
 		if (error == 0)
 			return (DREF DeeDirIteratorObject *)ITER_DONE; /* End of directory. */
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to read entries from directory %r",
 		                          self->di_path);
@@ -903,7 +903,7 @@ again:
 		error = DeeSystem_GetErrno();
 		Dee_Decref(fullname);
 #endif /* !lstatat || !CONFIG_HAVE_dirfd */
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to stat %R in %k",
 		                          diriter_get_d_fullname(self),

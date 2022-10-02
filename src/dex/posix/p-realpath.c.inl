@@ -130,7 +130,7 @@ increase_frealpathat_buflen:
 				int error;
 				error = DeeSystem_GetErrno();
 				DBG_ALIGNMENT_ENABLE();
-				HANDLE_EINTR(error, again_frealpathat, err);
+				EINTR_HANDLE(error, again_frealpathat, err);
 #ifdef ERANGE
 				if (error == ERANGE)
 					goto increase_frealpathat_buflen;
@@ -166,7 +166,7 @@ again_realpath:
 				int error;
 				error = DeeSystem_GetErrno();
 				DBG_ALIGNMENT_ENABLE();
-				HANDLE_EINTR(error, again_realpath, err);
+				EINTR_HANDLE(error, again_realpath, err);
 				/* Make use of one of the alternatives below... */
 #define posix_realpath_NEED_ALTERNATIVE
 			}
@@ -250,7 +250,7 @@ again_open:
 #endif /* !CONFIG_HAVE_wopen64 && !CONFIG_HAVE_wopen */
 			if (fd < 0) {
 				fd = DeeSystem_GetErrno();
-				HANDLE_EINTR(fd, again_open, err)
+				EINTR_HANDLE(fd, again_open, err)
 				DeeUnixSystem_ThrowErrorf(NULL, fd, "Failed to open %r", filename);
 				goto err;
 			}

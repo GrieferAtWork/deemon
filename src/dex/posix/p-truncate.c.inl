@@ -230,7 +230,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		HANDLE_EINTR(result, again, err)
+		EINTR_HANDLE(result, again, err)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " TRUNCATE_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_ENOSYS(result, err, "truncate")
 		HANDLE_EACCES(result, err, "Failed to access " TRUNCATE_PRINTF_FILENAME, filename)
@@ -319,7 +319,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
+		EINTR_HANDLE(error, again, err)
 		HANDLE_ENOSYS(result, err, "ftruncate")
 		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I64d", fd, len)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)

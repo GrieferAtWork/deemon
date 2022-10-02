@@ -89,6 +89,7 @@
     <None Include="..\..\src\dex\posix\p-readwrite-constants.def" />
     <None Include="..\..\src\dex\posix\p-readwrite.c.inl" />
     <None Include="..\..\src\dex\posix\p-realpath.c.inl" />
+    <None Include="..\..\src\dex\posix\p-rename.c.inl" />
     <None Include="..\..\src\dex\posix\p-sched.c.inl" />
     <None Include="..\..\src\dex\posix\p-stat-constants.def" />
     <None Include="..\..\src\dex\posix\p-stat.c.inl" />
