@@ -382,6 +382,16 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define AT_FDCWD (-1)
 #endif /* !CONFIG_HAVE_AT_FDCWD */
 
+#ifndef CONFIG_HAVE_AT_REMOVEDIR
+#undef AT_REMOVEDIR
+#define AT_REMOVEDIR 0x10000000
+#endif /* !CONFIG_HAVE_AT_REMOVEDIR */
+
+#ifndef CONFIG_HAVE_AT_REMOVEREG
+#undef AT_REMOVEREG
+#define AT_REMOVEREG 0x20000000
+#endif /* !CONFIG_HAVE_AT_REMOVEREG */
+
 
 
 /************************************************************************/

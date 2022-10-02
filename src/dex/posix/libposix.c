@@ -1357,15 +1357,15 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Filesystem */
 	D(POSIX_UNLINK_DEF_DOC("@interrupt\n"
-	                       "@throw FileNotFound The given @path does not exist\n"
-	                       "@throw NoDirectory A part of the given @path is not a directory\n"
-	                       "@throw IsDirectory The given @path is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
-	                       "@throw BusyFile The given @path is currently being used and cannot be deleted\n"
-	                       "@throw FileAccessError The current user does not have permissions to remove the file described by @path\n"
-	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @path is in read-only "
+	                       "@throw FileNotFound The given @file does not exist\n"
+	                       "@throw NoDirectory A part of the given @file is not a directory\n"
+	                       "@throw IsDirectory The given @file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
+	                       "@throw BusyFile The given @file is currently being used and cannot be deleted\n"
+	                       "@throw FileAccessError The current user does not have permissions to remove the file described by @file\n"
+	                       "@throw ReadOnlyFile The filesystem or device hosting the directory of @file is in read-only "
 	                       /*               */ "operations mode, preventing the deletion of existing files\n"
-	                       "@throw SystemError Failed to unlink the given file @path for some reason\n"
-	                       "Remove a non-directory filesystem object named @path"))
+	                       "@throw SystemError Failed to unlink the given file @file for some reason\n"
+	                       "Remove a non-directory filesystem object named @file"))
 	D(POSIX_RMDIR_DEF_DOC("@interrupt\n"
 	                      "@throw FileNotFound The given @path does not exist\n"
 	                      "@throw NoDirectory A part of the given @path is not a directory\n"
@@ -1388,10 +1388,39 @@ PRIVATE struct dex_symbol symbols[] = {
 	                       /*               */ "operations mode, preventing the deletion of existing files or directories\n"
 	                       "@throw SystemError Failed to remove the given file @path for some reason\n"
 	                       "Remove a file or an empty directory name @path"))
-	/* TODO: unlinkat(dfd:?X3?DFile?Dint?Dstring,file:?Dstring,atflags=!0) */
-	/* TODO: rmdirat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0) */
-	/* TODO: removeat(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags=!0) */
-
+	D(POSIX_UNLINKAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @dfd:@file does not exist\n"
+	                         "@throw NoDirectory A part of the given @dfd:@file is not a directory\n"
+	                         "@throw IsDirectory The given @dfd:@file is a directory and ?Grmdir or ?Gremove must be used to delete it\n"
+	                         "@throw BusyFile The given @dfd:@file is currently being used and cannot be deleted\n"
+	                         "@throw FileAccessError The current user does not have permissions to remove the file described by @dfd:@file\n"
+	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@file is in read-only "
+	                         /*               */ "operations mode, preventing the deletion of existing files\n"
+	                         "@throw SystemError Failed to unlink the given file @dfd:@file for some reason\n"
+	                         "@param atflags Set of ?GAT_REMOVEDIR, ?GAT_REMOVEREG\n"
+	                         "Remove a filesystem object named @dfd:@file"))
+	D(POSIX_RMDIRAT_DEF_DOC("@interrupt\n"
+	                        "@throw FileNotFound The given @dfd:@path does not exist\n"
+	                        "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                        "@throw NoDirectory The given @dfd:@path isn't a directory and either ?Gunlink or ?Gremove must be used to "
+	                        /*              */ "delete it, or it is a mounting point if such functionality is supported by the host\n"
+	                        "@throw NotEmpty The given directory @dfd:@path isn't empty empty\n"
+	                        "@throw BusyFile The given @dfd:@path is currently being used and cannot be deleted\n"
+	                        "@throw FileAccessError The current user does not have permissions to remove the directory described by @dfd:@path\n"
+	                        "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@path is in read-only "
+	                        /*               */ "operations mode, preventing the deletion of existing directories\n"
+	                        "@throw SystemError Failed to delete the directory @dfd:@path for some reason\n"
+	                        "Remove a directory named @dfd:@path"))
+	D(POSIX_REMOVEAT_DEF_DOC("@interrupt\n"
+	                         "@throw FileNotFound The given @dfd:@path does not exist\n"
+	                         "@throw NoDirectory A part of the given @dfd:@path is not a directory\n"
+	                         "@throw NotEmpty The given @dfd:@path is a directory that isn't empty empty\n"
+	                         "@throw BusyFile The given @dfd:@path is currently being used and cannot be deleted\n"
+	                         "@throw FileAccessError The current user does not have permissions to remove the file or directory described by @dfd:@path\n"
+	                         "@throw ReadOnlyFile The filesystem or device hosting the directory of @dfd:@path is in read-only "
+	                         /*               */ "operations mode, preventing the deletion of existing files or directories\n"
+	                         "@throw SystemError Failed to remove the given file @dfd:@path for some reason\n"
+	                         "Remove a file or an empty directory name @dfd:@path"))
 
 	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \

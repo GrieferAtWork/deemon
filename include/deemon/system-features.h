@@ -628,7 +628,7 @@ func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; wchar_t *
 func("gethostname", unix, test: 'char buf[256]; int x = gethostname(buf, 256); return x == 0;');
 
 functest('unlink("foo.txt")', unix);
-functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
+functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED) || " + addparen(msvc));
 functest('rmdir("foo")', "defined(CONFIG_HAVE_UNISTD_H)");
 functest('_rmdir("foo")', "defined(CONFIG_HAVE_DIRECT_H)");
 functest('unlinkat(AT_FDCWD, "foo", AT_REMOVEDIR)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
@@ -4930,7 +4930,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #ifdef CONFIG_NO__unlink
 #undef CONFIG_HAVE__unlink
 #elif !defined(CONFIG_HAVE__unlink) && \
-      (defined(_unlink) || defined(___unlink_defined) || defined(_CRT_DIRECTORY_DEFINED))
+      (defined(_unlink) || defined(___unlink_defined) || (defined(_CRT_DIRECTORY_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__unlink
 #endif
 
@@ -8695,11 +8696,16 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define chmod _chmod
 #endif /* chmod = _chmod */
 
-#if defined(CONFIG_HAVE__unlink) && !defined(CONFIG_HAVE_unlink)
+#ifndef CONFIG_HAVE_unlink
+#ifdef CONFIG_HAVE__unlink
 #define CONFIG_HAVE_unlink
 #undef unlink
 #define unlink _unlink
-#endif /* unlink = _unlink */
+#elif defined(CONFIG_HAVE_unlinkat) && defined(CONFIG_HAVE_AT_FDCWD)
+#undef unlink
+#define unlink(file) unlinkat(AT_FDCWD, file, 0)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_unlink */
 
 #if defined(CONFIG_HAVE__wunlink) && !defined(CONFIG_HAVE_wunlink)
 #define CONFIG_HAVE_wunlink
@@ -8707,11 +8713,25 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wunlink _wunlink
 #endif /* wunlink = _wunlink */
 
-#if defined(CONFIG_HAVE__rmdir) && !defined(CONFIG_HAVE_rmdir)
+#ifndef CONFIG_HAVE_rmdir
+#ifdef CONFIG_HAVE__rmdir
 #define CONFIG_HAVE_rmdir
 #undef rmdir
 #define rmdir _rmdir
-#endif /* rmdir = _rmdir */
+#elif defined(CONFIG_HAVE_unlinkat) && defined(CONFIG_HAVE_AT_FDCWD) && defined(CONFIG_HAVE_AT_REMOVEDIR)
+#define CONFIG_HAVE_rmdir
+#undef rmdir
+#define rmdir(path) unlinkat(AT_FDCWD, path, AT_REMOVEDIR)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_rmdir */
+
+#ifndef CONFIG_HAVE_rmdirat
+#if defined(CONFIG_HAVE_unlinkat) && defined(CONFIG_HAVE_AT_REMOVEDIR)
+#define CONFIG_HAVE_rmdirat
+#undef rmdirat
+#define rmdirat(dfd, path, atflags) unlinkat(dfd, path, AT_REMOVEDIR | (atflags))
+#endif /* ... */
+#endif /* !CONFIG_HAVE_rmdirat */
 
 #if defined(CONFIG_HAVE__wrmdir) && !defined(CONFIG_HAVE_wrmdir)
 #define CONFIG_HAVE_wrmdir
@@ -8719,11 +8739,18 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wrmdir _wrmdir
 #endif /* wrmdir = _wrmdir */
 
-#if defined(CONFIG_HAVE__remove) && !defined(CONFIG_HAVE_remove)
+#ifndef CONFIG_HAVE_remove
+#ifdef CONFIG_HAVE__remove
 #define CONFIG_HAVE_remove
 #undef remove
 #define remove _remove
-#endif /* remove = _remove */
+#elif (defined(CONFIG_HAVE_unlinkat) && defined(CONFIG_HAVE_AT_FDCWD) && \
+       defined(CONFIG_HAVE_AT_REMOVEDIR) && defined(CONFIG_HAVE_AT_REMOVEREG))
+#define CONFIG_HAVE_remove
+#undef remove
+#define remove(path) unlinkat(AT_FDCWD, path, AT_REMOVEDIR | AT_REMOVEREG)
+#endif /* ... */
+#endif /* !CONFIG_HAVE_remove */
 
 #if defined(CONFIG_HAVE__wremove) && !defined(CONFIG_HAVE_wremove)
 #define CONFIG_HAVE_wremove

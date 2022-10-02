@@ -529,7 +529,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, D
 		if unlikely(!utf8_path)
 			goto err;
 EINTR_LABEL(again)
-		if unlikely(fchdirat(os_fd, utf8_path, atflags) == 0)
+		if (fchdirat(os_fd, utf8_path, atflags) == 0)
 			return_none;
 		HANDLE_EINTR(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
