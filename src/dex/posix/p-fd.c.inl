@@ -63,63 +63,63 @@ print "/" "**" "/";
 
 
 /* Figure out how to implement `isatty()' */
-#undef posix_isatty_USE_ISATTY
+#undef posix_isatty_USE_isatty
 #undef posix_isatty_USE_STUB
 #ifdef CONFIG_HAVE_isatty
-#define posix_isatty_USE_ISATTY
+#define posix_isatty_USE_isatty
 #else /* CONFIG_HAVE_isatty2 */
 #define posix_isatty_USE_STUB
 #endif /* !CONFIG_HAVE_isatty2 */
 
 
 /* Figure out how to implement `umask()' */
-#undef posix_umask_USE_UMASK
+#undef posix_umask_USE_umask
 #undef posix_umask_USE_STUB
 #ifdef CONFIG_HAVE_umask
-#define posix_umask_USE_UMASK
+#define posix_umask_USE_umask
 #else /* CONFIG_HAVE_umask2 */
 #define posix_umask_USE_STUB
 #endif /* !CONFIG_HAVE_umask2 */
 
 
 /* Figure out how to implement `dup()' */
-#undef posix_dup_USE_DUP
+#undef posix_dup_USE_dup
 #undef posix_dup_USE_STUB
 #ifdef CONFIG_HAVE_dup
-#define posix_dup_USE_DUP
+#define posix_dup_USE_dup
 #else /* CONFIG_HAVE_dup2 */
 #define posix_dup_USE_STUB
 #endif /* !CONFIG_HAVE_dup2 */
 
 
 /* Figure out how to implement `dup2()' */
-#undef posix_dup2_USE_DUP2
+#undef posix_dup2_USE_dup2
 #undef posix_dup2_USE_STUB
 #ifdef CONFIG_HAVE_dup2
-#define posix_dup2_USE_DUP2
+#define posix_dup2_USE_dup2
 #else /* CONFIG_HAVE_dup2 */
 #define posix_dup2_USE_STUB
 #endif /* !CONFIG_HAVE_dup2 */
 
 
 /* Figure out how to implement `dup3()' */
-#undef posix_dup3_USE_DUP3
-#undef posix_dup3_USE_DUP2
-#undef posix_dup3_USE_DUP2_FCNTL
-#undef posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#undef posix_dup3_USE_dup3
+#undef posix_dup3_USE_dup2
+#undef posix_dup3_USE_dup2_AND_fcntl
+#undef posix_dup3_USE_dup2_AND_SetHandleInformation
 #undef posix_dup3_USE_STUB
 #if defined(CONFIG_HAVE_dup3)
-#define posix_dup3_USE_DUP3
+#define posix_dup3_USE_dup3
 #elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_dup2_USE_STUB)
-#define posix_dup3_USE_DUP2
+#define posix_dup3_USE_dup2
 #elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_fcntl) &&                \
        (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) &&      \
                                             defined(CONFIG_HAVE_FD_CLOEXEC))) && \
        (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
-#define posix_dup3_USE_DUP2_FCNTL
+#define posix_dup3_USE_dup2_AND_fcntl
 #elif (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_get_osfhandle) && \
        defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC))
-#define posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#define posix_dup3_USE_dup2_AND_SetHandleInformation
 #else /* ... */
 #define posix_dup3_USE_STUB
 #endif /* !... */
@@ -127,10 +127,10 @@ print "/" "**" "/";
 
 
 /* Figure out how to implement `close()' */
-#undef posix_close_USE_CLOSE
+#undef posix_close_USE_close
 #undef posix_close_USE_STUB
 #ifdef CONFIG_HAVE_close
-#define posix_close_USE_CLOSE
+#define posix_close_USE_close
 #else /* CONFIG_HAVE_close */
 #define posix_close_USE_STUB
 #endif /* !CONFIG_HAVE_close */
@@ -168,7 +168,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef posix_isatty_USE_ISATTY
+#ifdef posix_isatty_USE_isatty
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -194,7 +194,7 @@ EINTR_LABEL(again)
 	return_true;
 err:
 	return NULL;
-#endif /* posix_isatty_USE_ISATTY */
+#endif /* posix_isatty_USE_isatty */
 
 #ifdef posix_isatty_USE_STUB
 #define NEED_posix_err_unsupported
@@ -232,7 +232,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 //[[[end]]]
 {
-#ifdef posix_umask_USE_UMASK
+#ifdef posix_umask_USE_umask
 	DREF DeeObject *result;
 	int oldmask;
 	DBG_ALIGNMENT_DISABLE();
@@ -245,7 +245,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 		DBG_ALIGNMENT_ENABLE();
 	}
 	return NULL;
-#endif /* posix_umask_USE_UMASK */
+#endif /* posix_umask_USE_umask */
 
 #ifdef posix_umask_USE_STUB
 #define NEED_posix_err_unsupported
@@ -287,7 +287,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef posix_dup_USE_DUP
+#ifdef posix_dup_USE_dup
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -305,7 +305,7 @@ EINTR_LABEL(again)
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#endif /* posix_dup_USE_DUP */
+#endif /* posix_dup_USE_dup */
 
 #ifdef posix_dup_USE_STUB
 #define NEED_posix_err_unsupported
@@ -352,7 +352,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
 //[[[end]]]
 {
-#ifdef posix_dup2_USE_DUP2
+#ifdef posix_dup2_USE_dup2
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -371,7 +371,7 @@ EINTR_LABEL(again)
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#endif /* posix_dup2_USE_DUP2 */
+#endif /* posix_dup2_USE_dup2 */
 
 #ifdef posix_dup2_USE_STUB
 #define NEED_posix_err_unsupported
@@ -421,22 +421,22 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd,
 //[[[end]]]
 {
 
-#if (defined(posix_dup3_USE_DUP3) ||       \
-     defined(posix_dup3_USE_DUP2_FCNTL) || \
-     defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION))
+#if (defined(posix_dup3_USE_dup3) ||       \
+     defined(posix_dup3_USE_dup2_AND_fcntl) || \
+     defined(posix_dup3_USE_dup2_AND_SetHandleInformation))
 	DREF DeeObject *result;
 	int error;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 
-#ifdef posix_dup3_USE_DUP3
+#ifdef posix_dup3_USE_dup3
 	error = dup3(oldfd, newfd, oflags);
 	if unlikely(error < 0)
 		goto handle_system_error;
-#endif /* posix_dup3_USE_DUP3 */
+#endif /* posix_dup3_USE_dup3 */
 
-#if (defined(posix_dup3_USE_DUP2_FCNTL) || \
-     defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION))
+#if (defined(posix_dup3_USE_dup2_AND_fcntl) || \
+     defined(posix_dup3_USE_dup2_AND_SetHandleInformation))
 	/* Validate the given `oflags' */
 #if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
@@ -453,7 +453,7 @@ EINTR_LABEL(again)
 	if (error < 0)
 		goto handle_system_error;
 
-#ifdef posix_dup3_USE_DUP2_FCNTL
+#ifdef posix_dup3_USE_dup2_AND_fcntl
 	/* Apply O_CLOEXEC */
 #ifdef CONFIG_HAVE_O_CLOEXEC
 	if (oflags & O_CLOEXEC) {
@@ -471,9 +471,9 @@ EINTR_LABEL(again)
 			goto handle_system_error_nfd;
 	}
 #endif /* CONFIG_HAVE_O_NONBLOCK */
-#endif /* posix_dup3_USE_DUP2_FCNTL */
+#endif /* posix_dup3_USE_dup2_AND_fcntl */
 
-#ifdef posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#ifdef posix_dup3_USE_dup2_AND_SetHandleInformation
 #ifdef CONFIG_HAVE_O_CLOEXEC
 	{
 		HANDLE hNewFd;
@@ -513,8 +513,8 @@ again_setinfo:
 		}
 	}
 #endif /* CONFIG_HAVE_O_CLOEXEC */
-#endif /* posix_dup3_USE_DUP2_SETHANDLEINFORMATION */
-#endif /* posix_dup3_USE_DUP2_FCNTL || posix_dup3_USE_DUP2_SETHANDLEINFORMATION */
+#endif /* posix_dup3_USE_dup2_AND_SetHandleInformation */
+#endif /* posix_dup3_USE_dup2_AND_fcntl || posix_dup3_USE_dup2_AND_SetHandleInformation */
 
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewInt(newfd);
@@ -527,14 +527,14 @@ again_setinfo:
 #endif /* CONFIG_HAVE_close */
 	return result;
 
-#ifdef posix_dup3_USE_DUP2_FCNTL
+#ifdef posix_dup3_USE_dup2_AND_fcntl
 handle_system_error_nfd:
 #ifdef CONFIG_HAVE_close
 	error = DeeSystem_GetErrno();
 	close(newfd);
 	DeeSystem_SetErrno(error);
 #endif /* CONFIG_HAVE_close */
-#endif /* posix_dup3_USE_DUP2_FCNTL */
+#endif /* posix_dup3_USE_dup2_AND_fcntl */
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	DBG_ALIGNMENT_ENABLE();
@@ -547,9 +547,9 @@ handle_system_error:
 	                          oldfd, newfd);
 err:
 	return NULL;
-#endif /* posix_dup3_USE_DUP3 || posix_dup3_USE_DUP2_FCNTL */
+#endif /* posix_dup3_USE_dup3 || posix_dup3_USE_dup2_AND_fcntl */
 
-#ifdef posix_dup3_USE_DUP2
+#ifdef posix_dup3_USE_dup2
 	if unlikely(oflags != 0) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid oflags for dup3 %#x",
@@ -557,7 +557,7 @@ err:
 		return NULL;
 	}
 	return posix_dup2_f_impl(oldfd, newfd);
-#endif /* posix_dup3_USE_DUP2 */
+#endif /* posix_dup3_USE_dup2 */
 
 #ifdef posix_dup3_USE_STUB
 #define NEED_posix_err_unsupported
@@ -602,7 +602,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef posix_close_USE_CLOSE
+#ifdef posix_close_USE_close
 	int error;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -626,7 +626,7 @@ EINTR_LABEL(again)
 	return_none;
 err:
 	return NULL;
-#endif /* posix_close_USE_CLOSE */
+#endif /* posix_close_USE_close */
 
 #ifdef posix_close_USE_STUB
 #define NEED_posix_err_unsupported

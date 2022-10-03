@@ -27,36 +27,36 @@
 DECL_BEGIN
 
 /* Figure out how to implement `system()' */
-#undef posix_system_USE_WSYSTEM
-#undef posix_system_USE_SYSTEM
-#undef posix_system_USE_FORK_WEXEC
-#undef posix_system_USE_FORK_EXEC
+#undef posix_system_USE_wsystem
+#undef posix_system_USE_system
+#undef posix_system_USE_fork_AND_wexec
+#undef posix_system_USE_fork_AND_exec
 #undef posix_system_USE_STUB
 #if defined(CONFIG_HAVE_wsystem) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_system_USE_WSYSTEM
+#define posix_system_USE_wsystem
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit) && \
       defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_system_USE_FORK_WEXEC
+#define posix_system_USE_fork_AND_wexec
 #elif defined(CONFIG_HAVE_system)
-#define posix_system_USE_SYSTEM
+#define posix_system_USE_system
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_execv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
-#define posix_system_USE_FORK_EXEC
+#define posix_system_USE_fork_AND_exec
 #elif defined(CONFIG_HAVE_wsystem)
-#define posix_system_USE_WSYSTEM
+#define posix_system_USE_wsystem
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
-#define posix_system_USE_FORK_WEXEC
+#define posix_system_USE_fork_AND_wexec
 #else /* ... */
 #define posix_system_USE_STUB
 #endif /* !... */
 
 /* Figure out how to implement `getpid()' */
-#undef posix_getpid_USE_GETPID
+#undef posix_getpid_USE_getpid
 #undef posix_getpid_USE_STUB
 #ifdef CONFIG_HAVE_getpid
-#define posix_getpid_USE_GETPID
+#define posix_getpid_USE_getpid
 #else /* CONFIG_HAVE_getpid */
 #define posix_getpid_USE_STUB
 #endif /* !CONFIG_HAVE_getpid */
@@ -68,7 +68,7 @@ DECL_BEGIN
 /* system()                                                             */
 /************************************************************************/
 
-#if defined(posix_system_USE_WSYSTEM) || defined(posix_system_USE_FORK_WEXEC) || defined(__DEEMON__)
+#if defined(posix_system_USE_wsystem) || defined(posix_system_USE_fork_AND_wexec) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("system", "command:c:wchar_t[]->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -95,8 +95,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command)
 //[[[end]]]
-#endif /* posix_system_USE_WSYSTEM || posix_system_USE_FORK_WEXEC */
-#if (!defined(posix_system_USE_WSYSTEM) && !defined(posix_system_USE_FORK_WEXEC)) || defined(__DEEMON__)
+#endif /* posix_system_USE_wsystem || posix_system_USE_fork_AND_wexec */
+#if (!defined(posix_system_USE_wsystem) && !defined(posix_system_USE_fork_AND_wexec)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("system", "command:c:char[]->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -123,18 +123,18 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command)
 //[[[end]]]
-#endif /* !posix_system_USE_WSYSTEM && !posix_system_USE_FORK_WEXEC */
+#endif /* !posix_system_USE_wsystem && !posix_system_USE_fork_AND_wexec */
 {
-#if (defined(posix_system_USE_WSYSTEM) || \
-     defined(posix_system_USE_SYSTEM))
+#if (defined(posix_system_USE_wsystem) || \
+     defined(posix_system_USE_system))
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef posix_system_USE_WSYSTEM
+#ifdef posix_system_USE_wsystem
 	result = wsystem(command);
-#else /* posix_system_USE_WSYSTEM */
+#else /* posix_system_USE_wsystem */
 	result = system(command);
-#endif /* !posix_system_USE_WSYSTEM */
+#endif /* !posix_system_USE_wsystem */
 	DBG_ALIGNMENT_ENABLE();
 	EINTR_HANDLE(DeeSystem_GetErrno(), again, err)
 	return DeeInt_NewInt(result);
@@ -142,21 +142,21 @@ EINTR_LABEL(again)
 err:
 	return NULL;
 #endif /* EINTR */
-#endif /* posix_system_USE_WSYSTEM || posix_system_USE_SYSTEM */
+#endif /* posix_system_USE_wsystem || posix_system_USE_system */
 
-#if defined(posix_system_USE_FORK_WEXEC) || defined(posix_system_USE_FORK_EXEC)
+#if defined(posix_system_USE_fork_AND_wexec) || defined(posix_system_USE_fork_AND_exec)
 	int cpid, error;
 	int status;
 EINTR_LABEL(again)
 	cpid = vfork();
 	if (cpid == 0) {
-#ifdef posix_system_USE_FORK_WEXEC
+#ifdef posix_system_USE_fork_AND_wexec
 #define FORKEXEC_CHART dwchar_t
 #define FORKEXEC_EXEC  wexecv
-#else /* posix_system_USE_FORK_WEXEC */
+#else /* posix_system_USE_fork_AND_wexec */
 #define FORKEXEC_CHART char
 #define FORKEXEC_EXEC  execv
-#endif /* !posix_system_USE_FORK_WEXEC */
+#endif /* !posix_system_USE_fork_AND_wexec */
 		FORKEXEC_CHART const *argv[4];
 		PRIVATE FORKEXEC_CHART const dash_c[] = { '-', 'c', 0 };
 		PRIVATE FORKEXEC_CHART const bin_sh[] = { '/', 'b', 'i', 'n', '/', 's', 'h', 0 };
@@ -202,7 +202,7 @@ EINTR_LABEL(again)
 err:
 	return NULL;
 #endif /* EINTR */
-#endif /* posix_system_USE_FORK_WEXEC || posix_system_USE_FORK_EXEC */
+#endif /* posix_system_USE_fork_AND_wexec || posix_system_USE_fork_AND_exec */
 
 #ifdef posix_system_USE_STUB
 #define NEED_posix_err_unsupported
@@ -263,7 +263,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void)
 //[[[end]]]
 {
-#ifdef posix_getpid_USE_GETPID
+#ifdef posix_getpid_USE_getpid
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -282,7 +282,7 @@ EINTR_LABEL(again)
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#endif /* posix_getpid_USE_GETPID */
+#endif /* posix_getpid_USE_getpid */
 
 #ifdef posix_getpid_USE_STUB
 #define NEED_posix_err_unsupported

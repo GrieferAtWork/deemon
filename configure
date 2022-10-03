@@ -716,7 +716,6 @@ fi
 if [ -z "$CONFIG_LIBSOCKET" ]; then
 	case "$TARGET" in
 	*CYGWIN* | *Cygwin* | *cygwin*)
-		# Cygwin includes libdl as part of libc
 		CONFIG_LIBSOCKET="-lWs2_32"
 		;;
 	*)

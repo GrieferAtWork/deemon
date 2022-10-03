@@ -245,7 +245,7 @@ DeeObject_AsFileTime(DeeObject *__restrict lpTime,
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_SETCURRENTDIRECTORY
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
@@ -253,7 +253,7 @@ nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_GETFILEATTRIBUTESEX
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
@@ -263,7 +263,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_GETFILEATTRIBUTES
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
@@ -272,7 +272,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_SETFILEATTRIBUTES
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_SetFileAttributes(DeeObject *__restrict lpFileName,
@@ -281,7 +281,7 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the new directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_CREATEDIRECTORY
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_CreateDirectory(DeeObject *__restrict lpPathName,
@@ -290,7 +290,7 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_REMOVEDIRECTORY
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_RemoveDirectory(DeeObject *__restrict lpPathName);
@@ -298,7 +298,7 @@ nt_RemoveDirectory(DeeObject *__restrict lpPathName);
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_DELETEFILE
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_DeleteFile(DeeObject *__restrict lpFileName);
@@ -306,7 +306,7 @@ nt_DeleteFile(DeeObject *__restrict lpFileName);
 /* Work around a problem with long path names.
  * @return:  0: Successfully moved the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_MOVEFILE
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_MoveFile(DeeObject *__restrict lpExistingFileName,
@@ -315,7 +315,7 @@ nt_MoveFile(DeeObject *__restrict lpExistingFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the hardlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_CREATEHARDLINK
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_CreateHardLink(DeeObject *__restrict lpFileName,
@@ -325,7 +325,7 @@ nt_CreateHardLink(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (See GetLastError()) */
+ * @return:  1: The system call failed (s.a. `GetLastError()') */
 #undef WANT_NT_CREATESYMBOLICLINK
 INTDEF int DCALL
 nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,

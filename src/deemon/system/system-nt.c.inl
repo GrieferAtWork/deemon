@@ -1926,7 +1926,7 @@ PUBLIC ATTR_COLD NONNULL((2)) int
 /* Work around a problem with long path names. (Note: also handles interrupts)
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
- * @return: INVALID_HANDLE_VALUE: The system call failed (See GetLastError()) */
+ * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()') */
 PUBLIC WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
@@ -2130,7 +2130,7 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 
 /* Wrapper for the `GetFinalPathNameByHandle()' system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED int DCALL
@@ -2199,7 +2199,7 @@ err:
 	return -1;
 }
 
-/* @return: 1:  The system call failed (See GetLastError()).
+/* @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED int DCALL
@@ -2208,12 +2208,12 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 	int error;
 	size_t length;
 	length = UNICODE_PRINTER_LENGTH(printer);
-	error = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
+	error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
 	if (error == 0) {
-		size_t newLength;
+		size_t new_length;
 		/* Try to get rid of the \\?\ prefix */
-		newLength = UNICODE_PRINTER_LENGTH(printer);
-		if (newLength >= length + 6 &&
+		new_length = UNICODE_PRINTER_LENGTH(printer);
+		if (new_length >= length + 6 &&
 		    UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
 		    UNICODE_PRINTER_GETCHAR(printer, length + 1) == '\\' &&
 		    UNICODE_PRINTER_GETCHAR(printer, length + 2) == '?' &&
@@ -2231,8 +2231,8 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 				}
 				/* This is a r"\\?\<DRIVE_LETTER(S)>:"-like prefix */
 				unicode_printer_memmove(printer, length, length + 4,
-				                        (newLength - length) - 4);
-				unicode_printer_truncate(printer, newLength - 4);
+				                        (new_length - length) - 4);
+				unicode_printer_truncate(printer, new_length - 4);
 				return 0;
 			}
 not_a_drive_prefix:
@@ -2244,8 +2244,8 @@ not_a_drive_prefix:
 			    UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'C' &&
 			    UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
 				unicode_printer_memmove(printer, length + 2, length + 8,
-				                        (newLength - length) - 6);
-				unicode_printer_truncate(printer, newLength - 6);
+				                        (new_length - length) - 6);
+				unicode_printer_truncate(printer, new_length - 6);
 				return 0;
 			}
 		}
@@ -2273,7 +2273,7 @@ PRIVATE char const name_GetMappedFileNameW[] = "GetMappedFileNameW";
 
 /* Wrapper for the `GetMappedFileName()' system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED int DCALL
@@ -2363,7 +2363,7 @@ err:
 /* Wrapper for the `FormatMessageW()' system call.
  * @return: * :        The formatted message.
  * @return: NULL:      A deemon callback failed and an error was thrown.
- * @return: ITER_DONE: The system call failed (See GetLastError()). */
+ * @return: ITER_DONE: The system call failed (s.a. `GetLastError()'). */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
@@ -2386,7 +2386,7 @@ err:
 	return NULL;
 }
 
-/* @return: 1:  The system call failed (See GetLastError())
+/* @return: 1:  The system call failed (s.a. `GetLastError()')
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL

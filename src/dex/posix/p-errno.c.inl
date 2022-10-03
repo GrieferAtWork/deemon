@@ -470,25 +470,25 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
 
 
 /* Figure out how to implement `posix_strerror()' */
-#undef posix_strerror_USE_STRERRORDESC_NP
-#undef posix_strerror_USE_SYS_ERRLIST
-#undef posix_strerror_USE_STRERROR
+#undef posix_strerror_USE_strerrordesc_np
+#undef posix_strerror_USE_sys_errlist
+#undef posix_strerror_USE_strerror
 #undef posix_strerror_USE_STUB
 #undef posix_strerror_USE_DOCSTRINGS
 #if !defined(CONFIG_HAVE_errno)
-#define posix_strerror_USE_STUB 1
+#define posix_strerror_USE_STUB
 #elif defined(CONFIG_HAVE_strerrordesc_np)
-#define posix_strerror_USE_STRERRORDESC_NP 1
-#define posix_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_strerrordesc_np
+#define posix_strerror_USE_DOCSTRINGS
 #elif defined(CONFIG_HAVE_sys_errlist) && defined(CONFIG_HAVE_sys_nerr)
-#define posix_strerror_USE_SYS_ERRLIST 1
-#define posix_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_sys_errlist
+#define posix_strerror_USE_DOCSTRINGS
 #elif defined(CONFIG_HAVE_strerror)
-#define posix_strerror_USE_STRERROR 1
-#define posix_strerror_USE_DOCSTRINGS 1
-#else
-#define posix_strerror_USE_DOCSTRINGS 1
-#endif
+#define posix_strerror_USE_strerror
+#define posix_strerror_USE_DOCSTRINGS
+#else /* ... */
+#define posix_strerror_USE_DOCSTRINGS
+#endif /* !... */
 
 
 
@@ -514,23 +514,23 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
-#ifdef posix_strerror_USE_STRERRORDESC_NP
+#ifdef posix_strerror_USE_strerrordesc_np
 	{
 		char const *text;
 		text = strerrordesc_np(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerror_USE_STRERRORDESC_NP */
+#endif /* posix_strerror_USE_strerrordesc_np */
 
-#ifdef posix_strerror_USE_SYS_ERRLIST
+#ifdef posix_strerror_USE_sys_errlist
 	if (errnum >= 0 && errnum < sys_nerr) {
 		char const *text;
 		text = (char const *)sys_errlist[errnum];
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerror_USE_SYS_ERRLIST */
+#endif /* posix_strerror_USE_sys_errlist */
 
 #ifdef posix_strerror_USE_DOCSTRINGS
 	/* Search our own symbol table for error code.
@@ -558,14 +558,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 	}
 #endif /* !posix_strerror_USE_DOCSTRINGS */
 
-#ifdef posix_strerror_USE_STRERROR
+#ifdef posix_strerror_USE_strerror
 	{
 		char *text;
 		text = strerror(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerror_USE_STRERROR */
+#endif /* posix_strerror_USE_strerror */
 
 	return_none;
 }
@@ -576,16 +576,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 
 /* Figure out how to implement `posix_strerrorname()' */
 #undef posix_strerrorname_USE_STUB
-#undef posix_strerrorname_USE_STRERRORNAME_NP
+#undef posix_strerrorname_USE_strerrorname_np
 #undef posix_strerrorname_USE_SYMBOLNAMES
 #if !defined(CONFIG_HAVE_errno)
-#define posix_strerrorname_USE_STUB 1
+#define posix_strerrorname_USE_STUB
 #elif defined(CONFIG_HAVE_strerrorname_np)
-#define posix_strerrorname_USE_STRERRORNAME_NP 1
-#define posix_strerrorname_USE_SYMBOLNAMES 1
-#else
-#define posix_strerrorname_USE_SYMBOLNAMES 1
-#endif
+#define posix_strerrorname_USE_strerrorname_np
+#define posix_strerrorname_USE_SYMBOLNAMES
+#else /* ... */
+#define posix_strerrorname_USE_SYMBOLNAMES
+#endif /* !... */
 
 
 
@@ -611,14 +611,14 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
-#ifdef posix_strerrorname_USE_STRERRORNAME_NP
+#ifdef posix_strerrorname_USE_strerrorname_np
 	{
 		char const *text;
 		text = strerrorname_np(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* posix_strerrorname_USE_STRERRORNAME_NP */
+#endif /* posix_strerrorname_USE_strerrorname_np */
 
 #ifdef posix_strerrorname_USE_SYMBOLNAMES
 	/* Search our own symbol table for error code.

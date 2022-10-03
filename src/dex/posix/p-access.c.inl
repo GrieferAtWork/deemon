@@ -60,40 +60,39 @@ print "/" "**" "/";
 	POSIX_X_OK_DEF \
 	POSIX_F_OK_DEF \
 /**/
-//[[[end]]]
+/*[[[end]]]*/
 
 /* Figure out how to implement `access()' */
-#undef posix_access_USE_WACCESS
-#undef posix_access_USE_ACCESS
+#undef posix_access_USE_waccess
+#undef posix_access_USE_access
 #undef posix_access_USE_STUB
 #if defined(CONFIG_HAVE_waccess) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define posix_access_USE_WACCESS
+#define posix_access_USE_waccess
 #elif defined(CONFIG_HAVE_access)
-#define posix_access_USE_ACCESS
+#define posix_access_USE_access
 #elif defined(CONFIG_HAVE_waccess)
-#define posix_access_USE_WACCESS
-#else
+#define posix_access_USE_waccess
+#else /* ... */
 #define posix_access_USE_STUB
-#endif
+#endif /* !... */
 
 /* Figure out how to implement `euidaccess()' */
-#undef posix_euidaccess_USE_EUIDACCESS
+#undef posix_euidaccess_USE_euidaccess
 #undef posix_euidaccess_USE_STUB
 #if defined(CONFIG_HAVE_euidaccess)
-#define posix_euidaccess_USE_EUIDACCESS
+#define posix_euidaccess_USE_euidaccess
 #else /* ... */
 #define posix_euidaccess_USE_STUB
 #endif /* !... */
 
 /* Figure out how to implement `faccessat()' */
-#undef posix_faccessat_USE_FACCESSAT
-#undef posix_faccessat_USE_ACCESS
+#undef posix_faccessat_USE_faccessat
+#undef posix_faccessat_USE_access
 #undef posix_faccessat_USE_STUB
 #if defined(CONFIG_HAVE_faccessat)
-#define posix_faccessat_USE_FACCESSAT
-#elif !defined(posix_access_USE_STUB) && \
-     (!defined(AT_EACCESS) || !defined(posix_euidaccess_USE_STUB))
-#define posix_faccessat_USE_ACCESS
+#define posix_faccessat_USE_faccessat
+#elif (!defined(posix_access_USE_STUB) && (!defined(AT_EACCESS) || !defined(posix_euidaccess_USE_STUB)))
+#define posix_faccessat_USE_access
 #else /* ... */
 #define posix_faccessat_USE_STUB
 #endif /* !... */
@@ -107,7 +106,7 @@ print "/" "**" "/";
 /* access()                                                             */
 /************************************************************************/
 
-#if defined(posix_access_USE_WACCESS) || defined(__DEEMON__)
+#if defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("access", "filename:c:wchar_t[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -134,9 +133,9 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *filename, int how)
-//[[[end]]]
-#endif /* posix_access_USE_WACCESS */
-#if !defined(posix_access_USE_WACCESS) || defined(__DEEMON__)
+/*[[[end]]]*/
+#endif /* posix_access_USE_waccess */
+#if !defined(posix_access_USE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("access", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -163,20 +162,20 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char const *filename, int how)
-//[[[end]]]
-#endif /* !posix_access_USE_WACCESS */
+/*[[[end]]]*/
+#endif /* !posix_access_USE_waccess */
 {
-#if defined(posix_access_USE_WACCESS) || defined(posix_access_USE_ACCESS)
+#if defined(posix_access_USE_waccess) || defined(posix_access_USE_access)
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef posix_access_USE_WACCESS
+#ifdef posix_access_USE_waccess
 #define ACCESS_PRINTF_FILENAME "%lq"
 	result = waccess(filename, how);
-#else /* posix_access_USE_WACCESS */
+#else /* posix_access_USE_waccess */
 #define ACCESS_PRINTF_FILENAME "%q"
 	result = access(filename, how);
-#endif /* !posix_access_USE_WACCESS */
+#endif /* !posix_access_USE_waccess */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
@@ -202,7 +201,7 @@ EINTR_LABEL(again)
 err:
 	return NULL;
 #endif /* EACCES || EINTR */
-#endif /* posix_access_USE_WACCESS || posix_access_USE_ACCESS */
+#endif /* posix_access_USE_waccess || posix_access_USE_access */
 
 #ifdef posix_access_USE_STUB
 #define NEED_posix_err_unsupported
@@ -248,9 +247,9 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_euidaccess_f_impl(/*utf-8*/ char const *filename, int how)
-//[[[end]]]
+/*[[[end]]]*/
 {
-#ifdef posix_euidaccess_USE_EUIDACCESS
+#ifdef posix_euidaccess_USE_euidaccess
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -279,7 +278,7 @@ EINTR_LABEL(again)
 err:
 	return NULL;
 #endif /* EACCES || EINTR */
-#endif /* posix_euidaccess_USE_EUIDACCESS */
+#endif /* posix_euidaccess_USE_euidaccess */
 
 #ifdef posix_euidaccess_USE_STUB
 #define NEED_posix_err_unsupported
@@ -321,9 +320,9 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, /*utf-8*/ char const *filename, int how, int atflags)
-//[[[end]]]
+/*[[[end]]]*/
 {
-#ifdef posix_faccessat_USE_FACCESSAT
+#ifdef posix_faccessat_USE_faccessat
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -353,9 +352,9 @@ EINTR_LABEL(again)
 err:
 	return NULL;
 #endif /* EACCES || EINTR */
-#endif /* posix_faccessat_USE_FACCESSAT */
+#endif /* posix_faccessat_USE_faccessat */
 
-#ifdef posix_faccessat_USE_ACCESS
+#ifdef posix_faccessat_USE_access
 	DREF DeeObject *result;
 	DREF DeeObject *fullname;
 #define NEED_libposix_get_dfd_filename 1
@@ -374,13 +373,13 @@ err:
 	} else
 #endif /* AT_EACCESS */
 	{
-#ifdef posix_access_USE_WACCESS
+#ifdef posix_access_USE_waccess
 		dwchar_t *str_fullname;
 		str_fullname = DeeString_AsWide(fullname);
-#else /* posix_access_USE_WACCESS */
+#else /* posix_access_USE_waccess */
 		char *str_fullname;
 		str_fullname = DeeString_AsUtf8(fullname);
-#endif /* !posix_access_USE_WACCESS */
+#endif /* !posix_access_USE_waccess */
 		if unlikely(!str_fullname)
 			result = NULL;
 		else {
@@ -390,7 +389,7 @@ err:
 	Dee_Decref(fullname);
 err:
 	return NULL;
-#endif /* posix_faccessat_USE_ACCESS */
+#endif /* posix_faccessat_USE_access */
 
 #ifdef posix_faccessat_USE_STUB
 #define NEED_posix_err_unsupported

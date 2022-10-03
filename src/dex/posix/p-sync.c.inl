@@ -27,25 +27,25 @@
 DECL_BEGIN
 
 /* Figure out how to implement `fsync()' */
-#undef posix_fsync_USE_FSYNC
+#undef posix_fsync_USE_fsync
 #undef posix_fsync_USE_STUB
 #ifdef CONFIG_HAVE_fsync
-#define posix_fsync_USE_FSYNC
+#define posix_fsync_USE_fsync
 #else /* ... */
 #define posix_fsync_USE_STUB
 #endif /* !... */
 
 /* Figure out how to implement `fdatasync()' */
-#undef posix_fdatasync_USE_FDATASYNC
-#undef posix_fdatasync_USE_FSYNC
+#undef posix_fdatasync_USE_fdatasync
+#undef posix_fdatasync_USE_fsync
 #undef posix_fdatasync_USE_STUB
 #ifdef CONFIG_HAVE_fdatasync
-#define posix_fdatasync_USE_FDATASYNC
+#define posix_fdatasync_USE_fdatasync
 #elif !defined(posix_fsync_USE_STUB)
-#define posix_fdatasync_USE_FSYNC
-#else
+#define posix_fdatasync_USE_fsync
+#else /* ... */
 #define posix_fdatasync_USE_STUB
-#endif
+#endif /* !... */
 
 
 
@@ -114,7 +114,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef posix_fsync_USE_FSYNC
+#ifdef posix_fsync_USE_fsync
 	int result;
 	EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -132,7 +132,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 	return_none;
 err:
 	return NULL;
-#endif /* posix_fsync_USE_FSYNC */
+#endif /* posix_fsync_USE_fsync */
 
 #ifdef posix_fsync_USE_STUB
 #define NEED_posix_err_unsupported
@@ -175,7 +175,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef posix_fdatasync_USE_FDATASYNC
+#ifdef posix_fdatasync_USE_fdatasync
 	int result;
 	EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -193,11 +193,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 	return_none;
 err:
 	return NULL;
-#endif /* posix_fdatasync_USE_FDATASYNC */
+#endif /* posix_fdatasync_USE_fdatasync */
 
-#ifdef posix_fdatasync_USE_FSYNC
+#ifdef posix_fdatasync_USE_fsync
 	return posix_fsync_f_impl(fd);
-#endif /* !posix_fdatasync_USE_FSYNC */
+#endif /* !posix_fdatasync_USE_fsync */
 
 #ifdef posix_fdatasync_USE_STUB
 #define NEED_posix_err_unsupported

@@ -125,11 +125,11 @@ again_createfile:
 		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 			/* Try to open the file one more time, only this
 			 * time _only_ pass the READ_ATTRIBUTES capability. */
-			hLinkFile = DeeNTSystem_CreateFile(file, FILE_READ_ATTRIBUTES,
-			                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-			                                   NULL, OPEN_EXISTING,
-			                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-			                                   NULL);
+			hLinkFile = DeeNTSystem_CreateFileNoATime(file, FILE_READ_ATTRIBUTES,
+			                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+			                                          NULL, OPEN_EXISTING,
+			                                          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+			                                          NULL);
 			if unlikely(!hLinkFile)
 				goto err;
 			if unlikely(hLinkFile != INVALID_HANDLE_VALUE)

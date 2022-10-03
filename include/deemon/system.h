@@ -67,7 +67,7 @@ struct Dee_unicode_printer;
 #define DeeSystem_ALTSEP   '\\'
 #define DeeSystem_ALTSEP_S "\\"
 #define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
-#define DeeSystem_IsAbs(x) ((x)[0] == '/')
+#define DeeSystem_IsAbs(x) ((x)[0] == '/') /* Absolute paths still require a leading '/'! */
 #define DEE_SYSTEM_IS_ABS_CHECKS_LEADING_SLASHES
 #else /* CONFIG_HOST_WINDOWS */
 #undef DEE_SYSTEM_NOCASE_FS
@@ -203,7 +203,7 @@ DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value);
 /* Work around a problem with long path names. (Note: also handles interrupts)
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
- * @return: INVALID_HANDLE_VALUE: The system call failed (See GetLastError()) */
+ * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()') */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
@@ -232,7 +232,7 @@ DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile);
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_TryGetFilenameOfHandle(/*HANDLE*/ void *hFile);
 
-/* @return: 1:  The system call failed (See GetLastError()).
+/* @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL
@@ -241,7 +241,7 @@ DeeNTSystem_PrintFilenameOfHandle(struct Dee_unicode_printer *__restrict printer
 
 /* Wrapper for the `GetFinalPathNameByHandle()' system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL
@@ -251,7 +251,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict pr
 
 /* Wrapper for the `GetMappedFileName()' system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL
@@ -263,13 +263,13 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 /* Wrapper for the `FormatMessageW()' system call.
  * @return: * :        The formatted message.
  * @return: NULL:      A deemon callback failed and an error was thrown.
- * @return: ITER_DONE: The system call failed (See GetLastError()). */
+ * @return: ITER_DONE: The system call failed (s.a. `GetLastError()'). */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                           /* va_list * */ void *Arguments);
 
-/* @return: 1:  The system call failed (See GetLastError())
+/* @return: 1:  The system call failed (s.a. `GetLastError()')
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL

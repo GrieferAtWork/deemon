@@ -27,31 +27,31 @@
 DECL_BEGIN
 
 /* Figure out how we want to implement `cpu_count()' */
-#undef posix_cpu_count_USE_GETSYSTEMINFO
-#undef posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN
-#undef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU
-#undef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU
-#undef posix_cpu_count_USE_SYSCTL_HW_NCPU
-#undef posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS
-#undef posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN
-#undef posix_cpu_count_USE_PROC_CPUINFO
+#undef posix_cpu_count_USE_GetSystemInfo
+#undef posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN
+#undef posix_cpu_count_USE_sysctl__HW_AVAILCPU__HW_NCPU
+#undef posix_cpu_count_USE_sysctl__HW_AVAILCPU
+#undef posix_cpu_count_USE_sysctl__HW_NCPU
+#undef posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS
+#undef posix_cpu_count_USE_sysconf__SC_NPROC_ONLN
+#undef posix_cpu_count_USE_open_AND_proc_cpuinfo
 #undef posix_cpu_count_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
-#define posix_cpu_count_USE_GETSYSTEMINFO
+#define posix_cpu_count_USE_GetSystemInfo
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROCESSORS_ONLN)
-#define posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN
+#define posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_AVAILCPU) && defined(CONFIG_HAVE_HW_NCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU
+#define posix_cpu_count_USE_sysctl__HW_AVAILCPU__HW_NCPU
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_AVAILCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_AVAILCPU
+#define posix_cpu_count_USE_sysctl__HW_AVAILCPU
 #elif defined(CONFIG_HAVE_sysctl) && defined(CONFIG_HAVE_CTL_HW) && defined(CONFIG_HAVE_HW_NCPU)
-#define posix_cpu_count_USE_SYSCTL_HW_NCPU
+#define posix_cpu_count_USE_sysctl__HW_NCPU
 #elif defined(CONFIG_HAVE_mpctl) && defined(CONFIG_HAVE_MPC_GETNUMSPUS)
-#define posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS
+#define posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROC_ONLN)
-#define posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN
+#define posix_cpu_count_USE_sysconf__SC_NPROC_ONLN
 #elif defined(CONFIG_HAVE_PROCFS)
-#define posix_cpu_count_USE_PROC_CPUINFO
+#define posix_cpu_count_USE_open_AND_proc_cpuinfo
 #else /* ... */
 #define posix_cpu_count_USE_STUB
 #endif /* !... */
@@ -75,21 +75,21 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 	/* Implementation variants taken from here:
 	 * https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine */
 
-#ifdef posix_cpu_count_USE_GETSYSTEMINFO
+#ifdef posix_cpu_count_USE_GetSystemInfo
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
 	return DeeInt_NewU32(sysinfo.dwNumberOfProcessors);
-#endif /* posix_cpu_count_USE_GETSYSTEMINFO */
+#endif /* posix_cpu_count_USE_GetSystemInfo */
 
-#ifdef posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN
+#ifdef posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN
 	int result;
 	result = sysconf(_SC_NPROCESSORS_ONLN);
 	if unlikely(result <= 0)
 		result = 1; /* Shouldn't happen... */
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN */
+#endif /* posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN */
 
-#ifdef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU
+#ifdef posix_cpu_count_USE_sysctl__HW_AVAILCPU__HW_NCPU
 	int mib[4], result = 0;
 	size_t len = sizeof(result);
 	mib[0] = CTL_HW;
@@ -102,9 +102,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 			result = 1;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU */
+#endif /* posix_cpu_count_USE_sysctl__HW_AVAILCPU__HW_NCPU */
 
-#ifdef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU
+#ifdef posix_cpu_count_USE_sysctl__HW_AVAILCPU
 	int mib[4], result = 0;
 	size_t len = sizeof(result);
 	mib[0] = CTL_HW;
@@ -113,9 +113,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 	if (result <= 0)
 		result = 1;
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_SYSCTL_HW_AVAILCPU */
+#endif /* posix_cpu_count_USE_sysctl__HW_AVAILCPU */
 
-#ifdef posix_cpu_count_USE_SYSCTL_HW_NCPU
+#ifdef posix_cpu_count_USE_sysctl__HW_NCPU
 	int mib[4], result = 0;
 	size_t len = sizeof(result);
 	mib[0] = CTL_HW;
@@ -124,25 +124,25 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 	if (result <= 0)
 		result = 1;
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_SYSCTL_HW_NCPU */
+#endif /* posix_cpu_count_USE_sysctl__HW_NCPU */
 
-#ifdef posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS
+#ifdef posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS
 	int result;
 	result = mpctl(MPC_GETNUMSPUS, NULL, NULL);
 	if unlikely(result <= 0)
 		result = 1; /* Shouldn't happen... */
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS */
+#endif /* posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS */
 
-#ifdef posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN
+#ifdef posix_cpu_count_USE_sysconf__SC_NPROC_ONLN
 	int result;
 	result = sysconf(_SC_NPROC_ONLN);
 	if unlikely(result <= 0)
 		result = 1; /* Shouldn't happen... */
 	return DeeInt_NewUInt((unsigned int)result);
-#endif /* posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN */
+#endif /* posix_cpu_count_USE_sysconf__SC_NPROC_ONLN */
 
-#ifdef posix_cpu_count_USE_PROC_CPUINFO
+#ifdef posix_cpu_count_USE_open_AND_proc_cpuinfo
 	unsigned int result = 0;
 	DREF DeeObject *file;
 	file = DeeFile_OpenString("/proc/cpuinfo",
@@ -176,7 +176,7 @@ fallback_fp:
 fallback:
 	DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 	return_reference(&DeeInt_One);
-#endif /* posix_cpu_count_USE_PROC_CPUINFO */
+#endif /* posix_cpu_count_USE_open_AND_proc_cpuinfo */
 
 #ifdef posix_cpu_count_USE_STUB
 	return_reference(&DeeInt_One);

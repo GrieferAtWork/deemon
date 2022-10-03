@@ -87,49 +87,50 @@ typedef union {
 #endif /* CONFIG_HOST_WINDOWS */
 
 /* Figure out how to implement `read()' */
-#undef posix_read_USE_READ
+#undef posix_read_USE_read
 #undef posix_read_USE_STUB
 #ifdef CONFIG_HAVE_read
-#define posix_read_USE_READ
+#define posix_read_USE_read
 #else /* CONFIG_HAVE_read */
 #define posix_read_USE_STUB
 #endif /* !CONFIG_HAVE_read */
 
 /* Figure out how to implement `lseek()' */
-#undef posix_lseek_USE_READ
+#undef posix_lseek_USE_lseek
+#undef posix_lseek_USE_lseek64
 #undef posix_lseek_USE_STUB
 #undef posix_lseek_IS64
 #ifdef CONFIG_HAVE_lseek64
 #define posix_lseek_IS64
-#define posix_lseek_USE_LSEEK64
+#define posix_lseek_USE_lseek64
 #elif defined(CONFIG_HAVE_lseek)
-#define posix_lseek_USE_LSEEK
+#define posix_lseek_USE_lseek
 #else /* CONFIG_HAVE_lseek */
 #define posix_lseek_USE_STUB
 #endif /* !CONFIG_HAVE_lseek */
 
 /* Figure out how to implement `pread()' */
-#undef posix_pread_USE_PREAD64
-#undef posix_pread_USE_READFILE
-#undef posix_pread_USE_PREAD
-#undef posix_pread_USE_LSEEK_READ
+#undef posix_pread_USE_pread64
+#undef posix_pread_USE_ReadFile
+#undef posix_pread_USE_pread
+#undef posix_pread_USE_lseek_AND_read
 #undef posix_pread_USE_STUB
 #undef posix_pread_IS64
 #if defined(CONFIG_HAVE_pread64)
 #define posix_pread_IS64
-#define posix_pread_USE_PREAD64
+#define posix_pread_USE_pread64
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pread_IS64
-#define posix_pread_USE_READFILE
+#define posix_pread_USE_ReadFile
 #elif (defined(CONFIG_HAVE_pread) && \
        (defined(posix_lseek_USE_STUB) || defined(posix_read_USE_STUB) || !defined(posix_lseek_IS64)))
-#define posix_pread_USE_PREAD
+#define posix_pread_USE_pread
 #elif (!defined(posix_read_USE_STUB) && \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
 #define posix_pread_IS64
 #endif /* CONFIG_HAVE_lseek64 */
-#define posix_pread_USE_LSEEK_READ
+#define posix_pread_USE_lseek_AND_read
 #else /* ... */
 #define posix_pread_USE_STUB
 #endif /* !... */
@@ -150,36 +151,36 @@ typedef union {
 
 
 /* Figure out how to implement `write()' */
-#undef posix_write_USE_WRITE
+#undef posix_write_USE_write
 #undef posix_write_USE_STUB
 #ifdef CONFIG_HAVE_write
-#define posix_write_USE_WRITE
+#define posix_write_USE_write
 #else /* CONFIG_HAVE_write */
 #define posix_write_USE_STUB
 #endif /* !CONFIG_HAVE_write */
 
 /* Figure out how to implement `pwrite()' */
-#undef posix_pwrite_USE_PWRITE64
-#undef posix_pwrite_USE_WRITEFILE
-#undef posix_pwrite_USE_PWRITE
-#undef posix_pwrite_USE_LSEEK_WRITE
+#undef posix_pwrite_USE_pwrite64
+#undef posix_pwrite_USE_WriteFile
+#undef posix_pwrite_USE_pwrite
+#undef posix_pwrite_USE_lseek_AND_write
 #undef posix_pwrite_USE_STUB
 #undef posix_pwrite_IS64
 #if defined(CONFIG_HAVE_pwrite64)
 #define posix_pwrite_IS64
-#define posix_pwrite_USE_PWRITE64
+#define posix_pwrite_USE_pwrite64
 #elif defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pwrite_IS64
-#define posix_pwrite_USE_WRITEFILE
+#define posix_pwrite_USE_WriteFile
 #elif (defined(CONFIG_HAVE_pwrite) && \
        (defined(posix_lseek_USE_STUB) || defined(posix_write_USE_STUB) || !defined(posix_lseek_IS64)))
-#define posix_pwrite_USE_PWRITE
+#define posix_pwrite_USE_pwrite
 #elif (!defined(CONFIG_HAVE_write) && \
        (defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)))
 #ifdef CONFIG_HAVE_lseek64
 #define posix_pwrite_IS64
 #endif /* CONFIG_HAVE_lseek64 */
-#define posix_pwrite_USE_LSEEK_WRITE
+#define posix_pwrite_USE_lseek_AND_write
 #else /* ... */
 #define posix_pwrite_USE_STUB
 #endif /* !... */
@@ -205,7 +206,7 @@ typedef union {
 #ifndef posix_read_USE_STUB
 FORCELOCAL WUNUSED dssize_t DCALL
 posix_read_f_impl(int fd, void *buf, size_t count) {
-#ifdef posix_read_USE_READ
+#ifdef posix_read_USE_read
 	dssize_t result_value;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -222,7 +223,7 @@ EINTR_LABEL(again)
 	return result_value;
 err:
 	return -1;
-#endif /* posix_read_USE_READ */
+#endif /* posix_read_USE_read */
 
 #ifdef posix_read_USE_STUB
 #define NEED_posix_err_unsupported
@@ -394,7 +395,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offs
 //[[[end]]]
 #endif /* !posix_lseek_IS64 */
 {
-#if defined(posix_lseek_USE_LSEEK) || defined(posix_lseek_USE_LSEEK64)
+#if defined(posix_lseek_USE_lseek) || defined(posix_lseek_USE_lseek64)
 #ifdef posix_lseek_IS64
 	int64_t result;
 #else /* posix_lseek_IS64 */
@@ -402,11 +403,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offs
 #endif /* posix_lseek_IS64 */
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef posix_lseek_USE_LSEEK64
+#ifdef posix_lseek_USE_lseek64
 	result = lseek64(fd, offset, whence);
-#else /* posix_lseek_USE_LSEEK64 */
+#else /* posix_lseek_USE_lseek64 */
 	result = lseek(fd, offset, whence);
-#endif /* !posix_lseek_USE_LSEEK64 */
+#endif /* !posix_lseek_USE_lseek64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
@@ -420,7 +421,7 @@ EINTR_LABEL(again)
 	return DeeInt_NewS64(result);
 err:
 	return NULL;
-#endif /* posix_lseek_USE_LSEEK || posix_lseek_USE_LSEEK64 */
+#endif /* posix_lseek_USE_lseek || posix_lseek_USE_lseek64 */
 
 #ifdef posix_lseek_USE_STUB
 #define NEED_posix_err_unsupported
@@ -443,15 +444,15 @@ err:
 FORCELOCAL WUNUSED dssize_t DCALL
 posix_pread_f_impl(int fd, void *buf, size_t count, PREAD_OFF_T offset) {
 
-#if defined(posix_pread_USE_PREAD64) || defined(posix_pread_USE_PREAD)
+#if defined(posix_pread_USE_pread64) || defined(posix_pread_USE_pread)
 	dssize_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef posix_pread_USE_PREAD64
+#ifdef posix_pread_USE_pread64
 	result = (dssize_t)pread64(fd, buf, count, offset);
-#else /* posix_pread_USE_PREAD64 */
+#else /* posix_pread_USE_pread64 */
 	result = (dssize_t)pread(fd, buf, count, offset);
-#endif /* !posix_pread_USE_PREAD64 */
+#endif /* !posix_pread_USE_pread64 */
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
@@ -467,9 +468,9 @@ EINTR_LABEL(again)
 	return result;
 err:
 	return -1;
-#endif /* posix_pread_USE_PREAD64 || posix_pread_USE_PREAD */
+#endif /* posix_pread_USE_pread64 || posix_pread_USE_pread */
 
-#ifdef posix_pread_USE_READFILE
+#ifdef posix_pread_USE_ReadFile
 	HANDLE h;
 	DWORD bytes_written;
 	my_OVERLAPPED overlapped;
@@ -513,9 +514,9 @@ again_ReadFile:
 	return (dssize_t)bytes_written;
 err:
 	return -1;
-#endif /* posix_pread_USE_READFILE */
+#endif /* posix_pread_USE_ReadFile */
 
-#ifdef posix_pread_USE_LSEEK_READ
+#ifdef posix_pread_USE_lseek_AND_read
 	dssize_t result;
 	PREAD_OFF_T oldpos, newpos;
 EINTR_HANDLE(again)
@@ -545,7 +546,7 @@ handle_system_error:
 	}
 err:
 	return -1;
-#endif /* posix_pread_USE_LSEEK_READ */
+#endif /* posix_pread_USE_lseek_AND_read */
 
 #ifdef posix_pread_USE_STUB
 #define NEED_posix_err_unsupported
@@ -700,7 +701,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count)
 //[[[end]]]
 {
-#ifdef posix_write_USE_WRITE
+#ifdef posix_write_USE_write
 	DeeBuffer buffer;
 	dssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
@@ -724,7 +725,7 @@ EINTR_LABEL(again)
 	return DeeInt_NewSSize(result_value);
 err:
 	return NULL;
-#endif /* posix_write_USE_WRITE */
+#endif /* posix_write_USE_write */
 
 #ifdef posix_write_USE_STUB
 #define NEED_posix_err_unsupported
@@ -746,15 +747,15 @@ err:
 FORCELOCAL WUNUSED dssize_t DCALL
 posix_pwrite_f_impl(int fd, void const *buf, size_t count, PWRITE_OFF_T offset) {
 
-#if defined(posix_pwrite_USE_PWRITE64) || defined(posix_pwrite_USE_PWRITE)
+#if defined(posix_pwrite_USE_pwrite64) || defined(posix_pwrite_USE_pwrite)
 	dssize_t result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef posix_pwrite_USE_PWRITE64
+#ifdef posix_pwrite_USE_pwrite64
 	result = (dssize_t)pwrite64(fd, buf, count, offset);
-#else /* posix_pwrite_USE_PWRITE64 */
+#else /* posix_pwrite_USE_pwrite64 */
 	result = (dssize_t)pwrite(fd, buf, count, offset);
-#endif /* !posix_pwrite_USE_PWRITE64 */
+#endif /* !posix_pwrite_USE_pwrite64 */
 	if (result == -1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
@@ -770,9 +771,9 @@ EINTR_LABEL(again)
 	return result;
 err:
 	return -1;
-#endif /* posix_pwrite_USE_PWRITE64 || posix_pwrite_USE_PWRITE */
+#endif /* posix_pwrite_USE_pwrite64 || posix_pwrite_USE_pwrite */
 
-#ifdef posix_pwrite_USE_WRITEFILE
+#ifdef posix_pwrite_USE_WriteFile
 	HANDLE h;
 	DWORD bytes_written;
 	my_OVERLAPPED overlapped;
@@ -816,9 +817,9 @@ again_WriteFile:
 	return (dssize_t)bytes_written;
 err:
 	return -1;
-#endif /* posix_pwrite_USE_WRITEFILE */
+#endif /* posix_pwrite_USE_WriteFile */
 
-#ifdef posix_pwrite_USE_LSEEK_WRITE
+#ifdef posix_pwrite_USE_lseek_AND_write
 	int error;
 	dssize_t result;
 	PWRITE_OFF_T oldpos, newpos;
@@ -849,7 +850,7 @@ handle_system_error:
 	return result;
 err:
 	return -1;
-#endif /* posix_pwrite_USE_LSEEK_WRITE */
+#endif /* posix_pwrite_USE_lseek_AND_write */
 
 #ifdef posix_pwrite_USE_STUB
 #define NEED_posix_err_unsupported
