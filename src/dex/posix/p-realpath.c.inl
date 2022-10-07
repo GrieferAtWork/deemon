@@ -45,15 +45,21 @@ DECL_BEGIN
 /* realpath()                                                           */
 /************************************************************************/
 
-#undef posix_realpath_USE_FREALPATHAT
-#undef posix_realpath_USE_REALPATH
+/* TODO: rewrite all of the below for even more portability */
+/* TODO: realpath should use the variant where NULL is passed for the buf-argument (aliasing `canonicalize_file_name()') */
+/* TODO: frealpath -- https://docs.oracle.com/cd/E88353_01/html/E37843/realpath-3c.html#REFMAN3Arealpath-3c */
+/* TODO: canonicalize_file_name -- https://docs.oracle.com/cd/E88353_01/html/E37843/realpath-3c.html#REFMAN3Arealpath-3c */
+/* TODO: Add a second function `resolvepath()' that does the same as `realpath()', but doesn't fail is the
+ *       named file doesn't exist (though it will still try to do its best in order to resolve symlinks, as
+ *       well as remove "." and ".." path elements, though it will NOT make the path absolute (unless it is
+ *       already absolute, or begins with enough ".." references to force the path into becoming absolute)) */
+
 #undef posix_realpath_USE_RESOLVEPATH
+#undef posix_realpath_USE_REALPATH
 #undef posix_realpath_USE_WINDOWS
 #undef posix_realpath_USE_OPEN
 #undef posix_realpath_USE_FALLBACK
-#if defined(CONFIG_HAVE_frealpathat) && defined(AT_FDCWD)
-#define posix_realpath_USE_FREALPATHAT
-#elif defined(CONFIG_HAVE_resolvepath)
+#ifdef CONFIG_HAVE_resolvepath
 #define posix_realpath_USE_RESOLVEPATH
 #elif defined(CONFIG_HAVE_realpath)
 #define posix_realpath_USE_REALPATH
@@ -67,8 +73,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
-#if (defined(posix_realpath_USE_FREALPATHAT) || \
-     defined(posix_realpath_USE_RESOLVEPATH) || \
+#if (defined(posix_realpath_USE_RESOLVEPATH) || \
      defined(posix_realpath_USE_REALPATH))
 #ifndef CONFIG_HAVE_strnlen
 #define strnlen dee_strnlen
@@ -85,8 +90,7 @@ posix_realpath_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:realpath", &filename))
 		goto err;
 	if (DeeString_Check(filename)) {
-#if (defined(posix_realpath_USE_FREALPATHAT) || \
-     defined(posix_realpath_USE_RESOLVEPATH))
+#ifdef posix_realpath_USE_RESOLVEPATH
 		{
 			char *buf;
 			char const *utf8;
@@ -99,12 +103,7 @@ posix_realpath_f(size_t argc, DeeObject *const *argv) {
 				goto err;
 again_frealpathat:
 			DBG_ALIGNMENT_DISABLE();
-#ifdef posix_realpath_USE_FREALPATHAT
-			if (frealpathat(AT_FDCWD, utf8, buf, buflen, 0) != NULL)
-#else /* posix_realpath_USE_FREALPATHAT */
-			if (resolvepath(utf8, buf, buflen) != -1)
-#endif /* !posix_realpath_USE_FREALPATHAT */
-			{
+			if (frealpathat(AT_FDCWD, utf8, buf, buflen, 0) != NULL) {
 				size_t used_buflen;
 				DBG_ALIGNMENT_ENABLE();
 				used_buflen = strnlen(buf, buflen);
@@ -140,7 +139,7 @@ increase_frealpathat_buflen:
 			}
 			DeeString_Free1ByteBuffer((uint8_t *)buf);
 		} /* Scope... */
-#endif /* posix_realpath_USE_FREALPATHAT || posix_realpath_USE_RESOLVEPATH */
+#endif /* posix_realpath_USE_RESOLVEPATH */
 
 #ifdef posix_realpath_USE_REALPATH
 		{

@@ -8888,6 +8888,12 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define wrename _wrename
 #endif /* wrename = _wrename */
 
+#if !defined(CONFIG_HAVE_resolvepath) && defined(CONFIG_HAVE_frealpathat) && defined(AT_FDCWD)
+#define CONFIG_HAVE_resolvepath
+#undef resolvepath
+#define resolvepath(path, buf, buflen) (frealpathat(AT_FDCWD, path, buf, buflen, 0) ? 0 : -1)
+#endif /* resolvepath = frealpathat */
+
 #if defined(CONFIG_HAVE__wlink) && !defined(CONFIG_HAVE_wlink)
 #define CONFIG_HAVE_wlink
 #undef wlink

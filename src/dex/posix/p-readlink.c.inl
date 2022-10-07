@@ -204,7 +204,6 @@ EINTR_LABEL(again)
 		req_size = readlink(utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 		if unlikely(req_size < 0) {
-handle_error:
 			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
 			EINTR_HANDLE(error, again, err);
@@ -231,7 +230,6 @@ handle_error:
 #endif /* ENOENT */
 #ifdef EINVAL
 			if (error == EINVAL) {
-err_no_link:
 				DeeUnixSystem_ThrowErrorf(&DeeError_NoSymlink, error,
 				                          "Path %r is not a symbolic link",
 				                          file);
@@ -348,6 +346,8 @@ err:
 	result = posix_readlink_f_impl(filename);
 	Dee_Decref(filename);
 	return result;
+err:
+	return NULL;
 #endif /* posix_freadlink_USE_posix_readlink */
 
 #ifdef posix_freadlink_USE_STUB
@@ -393,7 +393,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_readlinkat_f_impl(DeeObject *dfd,
 		int os_dfd = DeeUnixSystem_GetFD(dfd);
 		char *utf8_file;
 		char *buffer, *new_buffer;
-		int error;
 		size_t bufsize, new_size;
 		dssize_t req_size;
 		if unlikely(os_dfd == -1)

@@ -611,7 +611,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unlinkat_f_impl(DeeObject *dfd, D
 		if unlikely(!utf8_file)
 			goto err;
 EINTR_LABEL(again)
-		if (unlinkat(os_fd, utf8_file, atflags) == 0)
+		if (unlinkat(os_dfd, utf8_file, atflags) == 0)
 			return_none;
 		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
@@ -681,7 +681,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_removeat_f_impl(DeeObject *dfd, D
 		if unlikely(!utf8_path)
 			goto err;
 EINTR_LABEL(again)
-		if (removeat(os_fd, utf8_path, atflags) == 0)
+		if (removeat(os_dfd, utf8_path, atflags) == 0)
 			return_none;
 		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */
@@ -745,7 +745,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rmdirat_f_impl(DeeObject *dfd, De
 		if unlikely(!utf8_path)
 			goto err;
 EINTR_LABEL(again)
-		if (rmdirat(os_fd, utf8_path, atflags) == 0)
+		if (rmdirat(os_dfd, utf8_path, atflags) == 0)
 			return_none;
 		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
 		/* fallthru to the fallback path below */

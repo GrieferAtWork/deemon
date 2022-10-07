@@ -6203,9 +6203,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_FLUSHFILEBUFFERS_DEF
 	LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF
 	LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC("Convenience wrapper for ?GGetFinalPathNameByHandle that also supports the "
-	                                     "${GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))} workaround "
-	                                     "that is required on Windows XP, and always tries to return a canonically "
-	                                     "correct filename without any $\"\\\\.\\\"-like prefix")
+	                                     /**/ "${GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))} workaround "
+	                                     /**/ "that is required on Windows XP\n"
+	                                     "Note that a similar function is provided by ?Eposix:frealpath")
 	LIBWIN32_WAITFORSINGLEOBJECT_DEF
 	LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF
 	LIBWIN32_SIGNALOBJECTANDWAIT_DEF

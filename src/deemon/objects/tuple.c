@@ -1535,7 +1535,7 @@ tuple_visit(Tuple *__restrict self,
 }
 
 /* Print all elements of the given tuple without any separators in-between
- * elements. This is equivalent to `Tuple.operator str' and is realted to
+ * elements. This is equivalent to `Tuple.operator str' and is related to
  * the change introduced for handling `print("foo", "bar");'-like statements */
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeTuple_Print(DeeObject *__restrict self,
@@ -1570,7 +1570,7 @@ tuple_str(Tuple *__restrict self) {
 	 * but leaves `operator str' unspecified)
 	 * Note that the compiler knows about this and will optimize away
 	 * attempts of printing Tuple sequences at compile-time, reducing
-	 * them to `print' instructions that ever actually create a tuple.
+	 * them to `print' instructions that never actually create a tuple.
 	 * >> print;                         // Prints "\n"
 	 * >> print();                       // Prints "\n"
 	 * >> print("foo", "bar");           // Prints "foobar\n"

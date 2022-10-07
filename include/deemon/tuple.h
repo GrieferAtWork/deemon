@@ -164,7 +164,7 @@ DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Print all elements of the given tuple without any separators in-between
- * elements. This is equivalent to `Tuple.operator str' and is realted to
+ * elements. This is equivalent to `Tuple.operator str' and is related to
  * the change introduced for handling `print("foo", "bar");'-like statements */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeTuple_Print(DeeObject *__restrict self,

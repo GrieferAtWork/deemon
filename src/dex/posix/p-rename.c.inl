@@ -636,6 +636,7 @@ err:
 #endif /* posix_link_USE_nt_CreateHardLink */
 
 #if defined(posix_link_USE_wlink) || defined(posix_link_USE_link)
+	int error;
 #ifdef posix_link_USE_wlink
 	dwchar_t *wide_oldpath, *wide_newpath;
 	wide_oldpath = DeeString_AsWide(oldpath);
@@ -777,11 +778,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd
 #ifdef posix_linkat_USE_linkat
 	if ((!DeeString_Check(olddirfd) && DeeString_Check(oldpath)) &&
 	    (!DeeString_Check(newdirfd) && DeeString_Check(newpath))) {
-		int errno_value;
+		int error;
 		int os_olddirfd, os_newdirfd;
 		char *utf8_oldpath, *utf8_newpath;
-		DREF DeeObject *abs_oldpath;
-		DREF DeeObject *abs_newpath;
 		os_olddirfd = DeeUnixSystem_GetFD(olddirfd);
 		if unlikely(os_olddirfd == -1)
 			goto err;
