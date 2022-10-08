@@ -48,6 +48,26 @@
  * When not supported, `!defined(SPCALL)'
  */
 
+#ifndef __USER_LABEL_PREFIX_STR__
+#ifdef __USER_LABEL_PREFIX__
+#define __USER_LABEL_PREFIX_STR__ PP_STR(__USER_LABEL_PREFIX__)
+#else /* __USER_LABEL_PREFIX__ */
+#define __USER_LABEL_PREFIX_STR__ /* nothing */
+#endif /* !__USER_LABEL_PREFIX__ */
+#endif /* !__USER_LABEL_PREFIX_STR__ */
+
+
+#ifdef __ARCH_STACK_ALIGNMENT
+#ifdef __ARCH_STACK_GROWS_DOWNWARDS
+#define __PRIVATE_SPALIGN(sp) \
+	(void *)((__UINTPTR_TYPE__)(sp) & ~(__ARCH_STACK_ALIGNMENT - 1))
+#else /* __ARCH_STACK_GROWS_DOWNWARDS */
+#define __PRIVATE_SPALIGN(sp) \
+	(void *)(((__UINTPTR_TYPE__)(sp) + __ARCH_STACK_ALIGNMENT - 1) & ~(__ARCH_STACK_ALIGNMENT - 1))
+#endif /* !__ARCH_STACK_GROWS_DOWNWARDS */
+#else /* __ARCH_STACK_ALIGNMENT */
+#define __PRIVATE_SPALIGN(sp) sp
+#endif /* !__ARCH_STACK_ALIGNMENT */
 
 #ifdef __x86_64__
 /************************************************************************/
@@ -62,6 +82,7 @@
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize) - \
 		                                        32;           \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		__asm {                                               \
 			__asm MOV RCX, __spc_arg                          \
 			__asm MOV RSP, __spc_stackend                     \
@@ -70,13 +91,6 @@
 		__builtin_unreachable();                              \
 	}	__WHILE0
 #elif defined(__COMPILER_HAVE_GCC_ASM)
-#ifndef __USER_LABEL_PREFIX_STR__
-#ifdef __USER_LABEL_PREFIX__
-#define __USER_LABEL_PREFIX_STR__ PP_STR(__USER_LABEL_PREFIX__)
-#else /* __USER_LABEL_PREFIX__ */
-#define __USER_LABEL_PREFIX_STR__ /* nothing */
-#endif /* !__USER_LABEL_PREFIX__ */
-#endif /* !__USER_LABEL_PREFIX_STR__ */
 #if !defined(__NO_ATTR_MSABI) && (defined(__NO_ATTR_SYSVABI) || defined(__WINNT__))
 #define SPCALL_CC __ATTR_MSABI
 #define SPCALL_NORETURN(fun, arg, stackaddr, stacksize)       \
@@ -84,6 +98,7 @@
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize) - \
 		                                        32;           \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		__asm__ __volatile__("movq %0, %%rsp\n\t"             \
 		                     "call "                          \
 		                     __USER_LABEL_PREFIX_STR__        \
@@ -100,6 +115,7 @@
 	do {                                                      \
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize);  \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		__asm__ __volatile__("movq %0, %%rsp\n\t"             \
 		                     "call "                          \
 		                     __USER_LABEL_PREFIX_STR__        \
@@ -125,6 +141,7 @@
 		void *__spc_arg      = (arg);                         \
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize);  \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		__asm {                                               \
 			__asm MOV ECX, __spc_arg                          \
 			__asm MOV ESP, __spc_stackend                     \
@@ -132,20 +149,14 @@
 		}                                                     \
 		__builtin_unreachable();                              \
 	}	__WHILE0
-#else /* _MSC_VER */
-#ifndef __USER_LABEL_PREFIX_STR__
-#ifdef __USER_LABEL_PREFIX__
-#define __USER_LABEL_PREFIX_STR__ PP_STR(__USER_LABEL_PREFIX__)
-#else /* __USER_LABEL_PREFIX__ */
-#define __USER_LABEL_PREFIX_STR__ /* nothing */
-#endif /* !__USER_LABEL_PREFIX__ */
-#endif /* !__USER_LABEL_PREFIX_STR__ */
+#elif defined(__COMPILER_HAVE_GCC_ASM)
 #ifndef __NO_ATTR_FASTCALL
 #define SPCALL_CC __ATTR_FASTCALL
 #define SPCALL_NORETURN(fun, arg, stackaddr, stacksize)       \
 	do {                                                      \
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize);  \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		__asm__ __volatile__("movl %0, %%esp\n\t"             \
 		                     "call "                          \
 		                     __USER_LABEL_PREFIX_STR__        \
@@ -163,6 +174,7 @@
 		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
 		                                        (stacksize) - \
 		                                        4;            \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
 		*(void **)__spc_stackend = (arg);                     \
 		__asm__ __volatile__("movl %0, %%esp\n\t"             \
 		                     "call "                          \
@@ -174,7 +186,57 @@
 		__builtin_unreachable();                              \
 	}	__WHILE0
 #endif /* __NO_ATTR_FASTCALL */
-#endif /* !_MSC_VER */
+#endif /* ... */
+
+#elif defined(__aarch64__)
+/************************************************************************/
+/* AARCH64                                                              */
+/************************************************************************/
+
+#if defined(__COMPILER_HAVE_GCC_ASM) && defined(__COMPILER_HAVE_REGISTER_VARS)
+#define SPCALL_CC /* nothing */
+#define SPCALL_NORETURN(fun, arg, stackaddr, stacksize)       \
+	do {                                                      \
+		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
+		                                        (stacksize);  \
+		__register_var(void *, __x0, "x0") = (arg);           \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
+		__asm__ __volatile__("mov sp, %0\n\t"                 \
+		                     "bl "                            \
+		                     __USER_LABEL_PREFIX_STR__        \
+		                     PP_STR(fun)                      \
+		                     :                                \
+		                     : "r" (__spc_stackend)           \
+		                     , "r" (__x0)                     \
+		                     : "memory", "cc");               \
+		__builtin_unreachable();                              \
+	}	__WHILE0
+#endif /* __COMPILER_HAVE_GCC_ASM && __COMPILER_HAVE_REGISTER_VARS */
+
+#elif defined(__arm__)
+/************************************************************************/
+/* ARM                                                                  */
+/************************************************************************/
+
+#if defined(__COMPILER_HAVE_GCC_ASM) && defined(__COMPILER_HAVE_REGISTER_VARS)
+#define SPCALL_CC /* nothing */
+#define SPCALL_NORETURN(fun, arg, stackaddr, stacksize)       \
+	do {                                                      \
+		void *__spc_stackend = (__BYTE_TYPE__ *)(stackaddr) + \
+		                                        (stacksize);  \
+		__register_var(void *, __r0, "r0") = (arg);           \
+		__spc_stackend = __PRIVATE_SPALIGN(__spc_stackend);   \
+		__asm__ __volatile__("mov sp, %0\n\t"                 \
+		                     "bl "                            \
+		                     __USER_LABEL_PREFIX_STR__        \
+		                     PP_STR(fun)                      \
+		                     :                                \
+		                     : "r" (__spc_stackend)           \
+		                     , "r" (__r0)                     \
+		                     : "memory", "cc");               \
+		__builtin_unreachable();                              \
+	}	__WHILE0
+#endif /* __COMPILER_HAVE_GCC_ASM && __COMPILER_HAVE_REGISTER_VARS */
 
 #else /* ARCH... */
 /* ... Unsupported architecture */
