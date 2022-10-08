@@ -642,7 +642,8 @@ LOCAL uint64_t parse_timestamp(void) {
 	return (uint64_t)TimeDateStamp * MICROSECONDS_PER_SECOND;
 }
 #elif defined(BUILD_TIMESTAMP)
-#define parse_timestamp() (UINT64_C(BUILD_TIMESTAMP) * MICROSECONDS_PER_SECOND)
+#define WRAP_UINT64_C(x) UINT64_C(x)
+#define parse_timestamp() (WRAP_UINT64_C(BUILD_TIMESTAMP) * MICROSECONDS_PER_SECOND)
 #else /* ... */
 /* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__'
  * CAUTION (and why we try not to use this variant):

@@ -2199,6 +2199,46 @@ err:
 	return -1;
 }
 
+#if 0
+/* @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (s.a. `GetLastError()').
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+PRIVATE WUNUSED int DCALL
+DeeNTSystem_PrintMappedFileNameWrapper(struct unicode_printer *__restrict printer,
+                                       HANDLE hFile) {
+	/* GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile))); */
+	int result;
+	HANDLE hFileMap;
+	DWORD dwError;
+	LPVOID lpFileMapAddr;
+	DBG_ALIGNMENT_DISABLE();
+	hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	if (hFileMap == NULL)
+		goto os_err;
+	lpFileMapAddr = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+	if unlikely(lpFileMapAddr == NULL)
+		goto os_err_hFileMap;
+	result = DeeNTSystem_PrintMappedFileName(printer, GetCurrentProcess(), lpFileMapAddr);
+	if (result == 1)
+		goto os_err_hFileMap_lpFileMapAddr;
+	UnmapViewOfFile(lpFileMapAddr);
+	CloseHandle(hFileMap);
+	return result;
+os_err_hFileMap_lpFileMapAddr:
+	dwError = GetLastError();
+	UnmapViewOfFile(lpFileMapAddr);
+	SetLastError(dwError);
+os_err_hFileMap:
+	dwError = GetLastError();
+	CloseHandle(hFileMap);
+	SetLastError(dwError);
+os_err:
+	DBG_ALIGNMENT_ENABLE();
+	return 1;
+}
+#endif
+
 /* @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
@@ -2253,14 +2293,59 @@ not_a_drive_prefix:
 	}
 	if (error != 2)
 		return error; /* Error (-1) or System error (1) */
-	/* GetFinalPathNameByHandle() isn't supported (try to emulate it) */
-	/* TODO: GetMappedFileName(MapViewOfFile(CreateFileMapping(fd))); */
 
-	(void)printer;
-	(void)hFile;
-	DERROR_NOTIMPLEMENTED();
-/*err:*/
-	return -1;
+	/* GetFinalPathNameByHandle() isn't supported -- try to emulate it */
+#if 0
+	error = DeeNTSystem_PrintMappedFileNameWrapper(printer, (HANDLE)hFile);
+	if (error == 0) {
+		size_t new_length;
+		new_length = UNICODE_PRINTER_LENGTH(printer);
+		if (new_length >= length + 8 &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 1) == 'D' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 2) == 'e' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 3) == 'v' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 4) == 'i' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 5) == 'c' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'e' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
+			/* Check for r"\Device\Mup\<SERVER>\<SHARE>"-like prefixes. */
+			if (new_length >= length + 12 &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 8) == 'M' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 9) == 'u' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 10) == 'p' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 11) == '\\') {
+				++length; /* Keep the first r'\' */
+				unicode_printer_memmove(printer, length, length + 10,
+				                        (new_length - length) - 10);
+				unicode_printer_truncate(printer, new_length - 10);
+				return 0;
+			}
+			/* TODO: Handle r"\Device\HarddiskVolume{N}\"-like prefixes.
+			 * For this purpose, enumerate `QueryDosDevice()' with strings
+			 * returned by `GetLogicalDriveStringsW()' to find the drive
+			 * that contains the given device:
+			 * Program:
+			 * >> import * from win32;
+			 * >> for (local drive: GetLogicalDriveStrings()) {
+			 * >>     local dosdev = QueryDosDevice(drive.rstrip("\\")).first;
+			 * >>     print repr drive, repr dosdev;
+			 * >> }
+			 * Out:
+			 * >> "C:\\" "\\Device\\HarddiskVolume3"
+			 * >> "D:\\" "\\Device\\HarddiskVolume5"
+			 * >> "E:\\" "\\Device\\HarddiskVolume6"
+			 */
+			
+		}
+		return 0;
+	}
+#endif
+	if (error != 2)
+		return error; /* Error (-1) or System error (1) */
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "No way to print the filename of handle %p",
+	                       hFile);
 }
 
 

@@ -517,7 +517,10 @@ err_abs_oldpath:
 #undef posix_renameat2_USE_posix_renameat
 #define posix_renameat2_USE_posix_renameat
 	/* Fallthru to `posix_renameat2_USE_posix_renameat' */
-#endif /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
+#else /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
+err:
+	return NULL;
+#endif /* AT_RENAME_NOREPLACE || AT_RENAME_EXCHANGE || AT_RENAME_WHITEOUT */
 #endif /* posix_renameat2_USE_renameat2 */
 
 #ifdef posix_renameat2_USE_posix_renameat
