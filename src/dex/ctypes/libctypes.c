@@ -1188,7 +1188,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "memory at @ptr and @oldval are identical\n"
 	      "This is a type-generic operation, with the address-width of the atomic operation "
 	      "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes") },
-	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch, MODSYM_FNORMAL,
+	{ "atomic_cmpxch_val", (DeeObject *)&ctypes_atomic_cmpxch_val, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
 	      "Same as ?Gatomic_cmpxch, except that rather than returning !t or !f indicative of "
 	      "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
