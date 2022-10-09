@@ -782,8 +782,8 @@ type_method_findattr(struct membercache *cache, DeeTypeObject *decl,
                      struct type_method const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);
-#define DeeType_FindMethodAttr(tp_invoker, tp_self, result, rules)      type_method_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, ATTR_IMEMBER, result, rules)
-#define DeeType_FindClassMethodAttr(tp_invoker, tp_self, result, rules) type_method_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, ATTR_CMEMBER, result, rules)
+#define DeeType_FindMethodAttr(tp_invoker, tp_self, result, rules)      type_method_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, Dee_ATTR_IMEMBER, result, rules)
+#define DeeType_FindClassMethodAttr(tp_invoker, tp_self, result, rules) type_method_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, Dee_ATTR_CMEMBER, result, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                struct attribute_info *__restrict result,
@@ -794,8 +794,8 @@ type_getset_findattr(struct membercache *cache, DeeTypeObject *decl,
                      struct type_getset const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);
-#define DeeType_FindGetSetAttr(tp_invoker, tp_self, result, rules)      type_getset_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, ATTR_IMEMBER, result, rules)
-#define DeeType_FindClassGetSetAttr(tp_invoker, tp_self, result, rules) type_getset_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, ATTR_CMEMBER, result, rules)
+#define DeeType_FindGetSetAttr(tp_invoker, tp_self, result, rules)      type_getset_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, Dee_ATTR_IMEMBER, result, rules)
+#define DeeType_FindClassGetSetAttr(tp_invoker, tp_self, result, rules) type_getset_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, Dee_ATTR_CMEMBER, result, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                struct attribute_info *__restrict result,
@@ -806,8 +806,8 @@ type_member_findattr(struct membercache *cache, DeeTypeObject *decl,
                      struct type_member const *chain, uint16_t perm,
                      struct attribute_info *__restrict result,
                      struct attribute_lookup_rules const *__restrict rules);
-#define DeeType_FindMemberAttr(tp_invoker, tp_self, result, rules)      type_member_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, ATTR_IMEMBER, result, rules)
-#define DeeType_FindClassMemberAttr(tp_invoker, tp_self, result, rules) type_member_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, ATTR_CMEMBER, result, rules)
+#define DeeType_FindMemberAttr(tp_invoker, tp_self, result, rules)      type_member_findattr(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, Dee_ATTR_IMEMBER, result, rules)
+#define DeeType_FindClassMemberAttr(tp_invoker, tp_self, result, rules) type_member_findattr(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, Dee_ATTR_CMEMBER, result, rules)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
                                struct attribute_info *__restrict result,

@@ -164,14 +164,14 @@ PRIVATE struct type_member tpconst attr_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("iswrapper", STRUCT_CONST, Attr, a_info.a_perm, ATTR_WRAPPER,
 	                         "Check if the ?. is accessed from the implementing type, which "
 	                         /**/ "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
-	                         /**/ "wrapper (aka. ${?.(string, \"find\").iswrapper == true}) for the instance function, "
+	                         /**/ "wrapper (aka. ${Attribute(string, \"find\").iswrapper == true}) for the instance function, "
 	                         /**/ "member or property that would be bound in ${\"foo\".find} (aka. "
-	                         /**/ "${?.(\"foo\", \"find\").iswrapper == false}))"),
+	                         /**/ "${Attribute(\"foo\", \"find\").iswrapper == false}))"),
 	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, ATTR_IMEMBER,
 	                         "Check if accessing this ?. requires an instance of the declaring object "
 	                         /**/ "?#decl, rather than being an ?. of the declaring object ?#decl itself.\n"
 	                         "Note that practically all attributes, such as member functions, are available as both "
-	                         /**/ "instance and class ?., while in other cases an ?. will evaluate to different "
+	                         /**/ "instance and class attributes, while in other cases an ?. will evaluate to different "
 	                         /**/ "objects depending on being invoked on a class or an instance (such as ?Aisreg?Eposix:stat)"),
 	TYPE_MEMBER_BITFIELD_DOC("isclass", STRUCT_CONST, Attr, a_info.a_perm, ATTR_CMEMBER,
 	                         "Check if access to this ?. must be made though the declaring type ?#decl.\n"
