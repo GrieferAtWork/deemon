@@ -250,15 +250,16 @@ do_integer_scan:
 			data += width;
 			if (ignore_data)
 				goto next_format;
-			result = DeeString_NewSized(spec_data_start, width);
-			break;
+			goto yield_string_from_spec_data_start_until_data;
 
 		case 's':
 			if (is_bytes < 0)
 				is_bytes = DeeBytes_Check(self->si_scanner->ss_data);
 			if (is_bytes) {
-				while (data < data_end && !DeeUni_IsSpace(*data) && width)
-					++data, --width;
+				while (data < data_end && !DeeUni_IsSpace(*data) && width) {
+					++data;
+					--width;
+				}
 			} else {
 				while (data < data_end && width) {
 					uint32_t data_ch;
@@ -273,9 +274,7 @@ do_integer_scan:
 			}
 			if (ignore_data)
 				goto next_format;
-			result = DeeString_NewSized(spec_data_start,
-			                            (size_t)(data - spec_data_start));
-			break;
+			goto yield_string_from_spec_data_start_until_data;
 
 
 		/* Length modifiers (ignored for backwards compatibility) */
@@ -355,9 +354,18 @@ do_integer_scan:
 				++format;
 			if (ignore_data)
 				goto next_format;
+
 			/* Construct a string from all matched data. */
-			result = DeeString_NewSized(spec_data_start,
-			                            (size_t)(data - spec_data_start));
+yield_string_from_spec_data_start_until_data:
+			if (is_bytes) {
+				result = DeeBytes_NewSubView(self->si_scanner->ss_data,
+				                             spec_data_start,
+				                             (size_t)(data - spec_data_start));
+			} else {
+				result = DeeString_NewUtf8(spec_data_start,
+				                           (size_t)(data - spec_data_start),
+				                           STRING_ERROR_FNORMAL);
+			}
 		}	break;
 
 		case 'n':
