@@ -283,10 +283,16 @@
 DECL_BEGIN
 
 PRIVATE DEFINE_STRING(str_void, "void");
+PRIVATE DEFINE_STRING(repr_void, "void()");
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 void_str(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
 	return_reference_((DeeObject *)&str_void);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+void_repr(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
+	return_reference_((DeeObject *)&repr_void);
 }
 
 PRIVATE int DCALL
@@ -358,7 +364,7 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 	/* .st_assign   = */ NULL,
 	/* .st_cast     = */ {
 		/* .st_str  = */ &void_str,
-		/* .st_repr = */ &void_str,
+		/* .st_repr = */ &void_repr,
 		/* .st_bool = */ NULL
 	},
 	/* .st_call     = */ NULL,

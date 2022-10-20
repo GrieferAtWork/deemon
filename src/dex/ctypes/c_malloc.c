@@ -51,7 +51,8 @@ capi_free(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
-	CTYPES_FAULTPROTECT(Dee_Free(ptr.ptr), goto err);
+	CTYPES_FAULTPROTECT(Dee_Free(ptr.ptr),
+	                    goto err);
 	return_none;
 err:
 	return NULL;
@@ -86,15 +87,18 @@ capi_realloc(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
+
 	/* Allocate the resulting pointer _before_ doing the realloc().
 	 * This way, we don't run the chance to cause an exception
 	 * after we've already successfully reallocated the user-pointer. */
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(ptr.ptr = Dee_Realloc(ptr.ptr, new_size), goto err_r);
+	CTYPES_FAULTPROTECT(ptr.ptr = Dee_Realloc(ptr.ptr, new_size),
+	                    goto err_r);
 	if unlikely(!ptr.ptr)
 		goto err_r;
+
 	/* Update the resulting pointer. */
 	((struct pointer_object *)result)->p_ptr.ptr = ptr.ptr;
 	return result;
@@ -112,6 +116,7 @@ capi_calloc(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|" UNPuSIZ ":calloc", &count, &num_bytes))
 		goto err;
 	total = count * num_bytes;
+
 	/* Check for allocation overflow. */
 	if unlikely((total < count || total < num_bytes) &&
 	            count && num_bytes) {
@@ -160,15 +165,16 @@ capi_tryrealloc(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
+
 	/* Allocate the resulting pointer _before_ doing the realloc().
 	 * This way, we don't run the chance to cause an exception
 	 * after we've already successfully reallocated the user-pointer. */
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(
-	ptr.ptr = Dee_TryRealloc(ptr.ptr, new_size),
-	goto err_r);
+	CTYPES_FAULTPROTECT(ptr.ptr = Dee_TryRealloc(ptr.ptr, new_size),
+	                    goto err_r);
+
 	/* Update the resulting pointer. */
 	((struct pointer_object *)result)->p_ptr.ptr = ptr.ptr;
 	return result;
@@ -218,11 +224,13 @@ capi_strdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen),
+	                    goto err);
 	resptr = Dee_Malloc((len + 1) * sizeof(char));
 	if unlikely(!resptr)
 		goto err;
-	CTYPES_FAULTPROTECT(memcpyc(resptr, str.pchar, len, sizeof(char)), goto err_r);
+	CTYPES_FAULTPROTECT(memcpyc(resptr, str.pchar, len, sizeof(char)),
+	                    goto err_r);
 	((char *)resptr)[len] = '\0';
 	result = DeePointer_NewChar(resptr);
 	if unlikely(!result)
@@ -246,7 +254,8 @@ capi_trystrdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AsPointer(str_ob, &DeeCChar_Type, &str))
 		goto err;
-	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen), goto err);
+	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen),
+	                    goto err);
 	resptr = Dee_TryMalloc((len + 1) * sizeof(char));
 	if likely(resptr) {
 		CTYPES_FAULTPROTECT({

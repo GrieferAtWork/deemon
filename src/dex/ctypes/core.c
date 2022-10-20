@@ -39,11 +39,21 @@
 
 DECL_BEGIN
 
-DOC_DEF(ispointer_doc, "->?Dbool\nReturns ?t if @this ?GStructuredType is a ?GPointerType");
-DOC_DEF(islvalue_doc, "->?Dbool\nReturns ?t if @this ?GStructuredType is an ?GLValueType");
-DOC_DEF(isarray_doc, "->?Dbool\nReturns ?t if @this ?GStructuredType is an ?GArrayType");
-DOC_DEF(isfunction_doc, "->?Dbool\nReturns ?t if @this ?GStructuredType is a ?GFunctionType");
-DOC_DEF(isstruct_doc, "->?Dbool\nReturns ?t if @this ?GStructuredType is a ?GStructType");
+DOC_DEF(ispointer_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GStructuredType is a ?GPointerType");
+DOC_DEF(islvalue_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GStructuredType is an ?GLValueType");
+DOC_DEF(isarray_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GStructuredType is an ?GArrayType");
+DOC_DEF(isfunction_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GStructuredType is a ?GFunctionType");
+DOC_DEF(isstruct_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GStructuredType is a ?GStructType");
 
 
 /* Interpret `self' as a pointer and store the result in `*result'
@@ -81,7 +91,7 @@ null_pointer:
 
 	if (DeePointer_Check(self)) {
 		DeeSTypeObject *base;
-		base = ((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig;
+		base = DeeType_AsPointerType(Dee_TYPE(self))->pt_orig;
 		/* A pointer of the same type, or a void-pointer. */
 		if (base == pointer_base ||
 		    base == &DeeCVoid_Type ||
@@ -148,10 +158,10 @@ null_pointer:
 	/* Special handling for lvalue->pointer */
 	if (DeeLValue_Check(self)) {
 		DeeSTypeObject *lv_base;
-		lv_base = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+		lv_base = DeeType_AsLValueType(Dee_TYPE(self))->lt_orig;
 		if (DeePointerType_Check(lv_base)) {
 			DeeSTypeObject *base;
-			base = ((DeePointerTypeObject *)lv_base)->pt_orig;
+			base = DeeSType_AsPointerType(lv_base)->pt_orig;
 			/* A pointer of the same type, or a void-pointer. */
 			if (base == pointer_base ||
 			    base == &DeeCVoid_Type ||
@@ -197,7 +207,7 @@ DeeObject_TryAsGenericPointer(DeeObject *self,
                               union pointer *__restrict result) {
 	if (DeePointer_Check(self)) {
 		DeeSTypeObject *base;
-		base = ((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig;
+		base = DeeType_AsPointerType(Dee_TYPE(self))->pt_orig;
 		result->ptr = ((struct pointer_object *)self)->p_ptr.ptr;
 		*p_pointer_base = base;
 		return 0;
@@ -212,9 +222,9 @@ DeeObject_TryAsGenericPointer(DeeObject *self,
 	/* Special handling for lvalue->pointer */
 	if (DeeLValue_Check(self)) {
 		DeeSTypeObject *lv_base;
-		lv_base = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+		lv_base = DeeType_AsLValueType(Dee_TYPE(self))->lt_orig;
 		if (DeePointerType_Check(lv_base)) {
-			*p_pointer_base = ((DeePointerTypeObject *)lv_base)->pt_orig;
+			*p_pointer_base = DeeSType_AsPointerType(lv_base)->pt_orig;
 			/* Lvalue -> pointer (must deref) */
 			CTYPES_FAULTPROTECT(result->ptr = *(void **)((struct lvalue_object *)self)->l_ptr.ptr,
 			                    goto err);
@@ -258,25 +268,29 @@ stype_dofunc(DeeSTypeObject *self, size_t argc,
              DeeObject *const *argv, ctypes_cc_t cc_flags) {
 	DeeSTypeObject **argv_types;
 	size_t i;
-	ctypes_cc_t cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
-	                               (unsigned int)cc_flags);
+	ctypes_cc_t cc;
+	cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
+	                   (unsigned int)cc_flags);
 	if (argc && DeeString_Check(argv[0])) {
-		--argc, ++argv;
+		--argc;
+		++argv;
 		cc = cc_lookup(DeeString_STR(argv[-1]));
 		if unlikely(cc == CC_INVALID)
 			goto err;
 		cc = (ctypes_cc_t)((unsigned int)cc |
-		            (unsigned int)cc_flags);
+		                   (unsigned int)cc_flags);
 	}
 	argv_types = (DeeSTypeObject **)Dee_Malloc(argc * sizeof(DeeSTypeObject *));
 	if unlikely(!argv_types)
 		goto err;
+
 	/* Translate argument types. */
 	for (i = 0; i < argc; ++i) {
 		argv_types[i] = DeeSType_Get(argv[i]);
 		if unlikely(!argv_types[i])
 			goto err_argv;
 	}
+
 	/* Lookup the associated C-function type while inheriting the argument vector. */
 	return (DREF DeeObject *)DeeSType_CFunction(self, cc, argc, argv_types, true);
 err_argv:
@@ -299,18 +313,18 @@ stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 PRIVATE struct type_method tpconst stype_methods[] = {
 	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_func,
 	  DOC("(types!:?DType)->?Gfunction_type\n"
-	      "(calling_convention:?Dstring,types!:?DType)->?Gfunction_type\n"
-	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
-	      "@param calling_convention The name of the calling convention\n"
+	      "(cc:?Dstring,types!:?DType)->?Gfunction_type\n"
+	      "@throw ValueError The given @cc is unknown, or not supported by the host\n"
+	      "@param cc The name of the calling convention\n"
 	      "Construct a new function prototype, using @types as argument, @this "
-	      "as return type, and @calling_convention as calling convention\n"
+	      /**/ "as return type, and @cc as calling convention\n"
 	      "Note that unlike ?#{op:call}, certain types from the ?Mdeemon core "
-	      "are also accepted as argument types, such as ?Dbool inplace of ?Gbool") },
+	      /**/ "are also accepted as argument types, such as ?Dbool inplace of ?Gbool") },
 	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_vfunc,
 	  DOC("(types!:?DType)->function_type\n"
-	      "(calling_convention:?Dstring,types!:?DType)->function_type\n"
-	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
-	      "@param calling_convention The name of the calling convention\n"
+	      "(cc:?Dstring,types!:?DType)->function_type\n"
+	      "@throw ValueError The given @cc is unknown, or not supported by the host\n"
+	      "@param cc The name of the calling convention\n"
 	      "Same as ?#func, but enable support for varargs") },
 	{ NULL }
 	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns ?f)") },
@@ -335,15 +349,20 @@ stype_alignof(DeeSTypeObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst stype_getsets[] = {
 	{ "ptr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-	  DOC("->?GPointerType\nReturns the pointer type associated with @this ?GStructuredType") },
+	  DOC("->?GPointerType\n"
+	      "Returns the pointer type associated with @this ?GStructuredType") },
 	{ "lvalue", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_LValue, NULL, NULL,
-	  DOC("->?GLValueType\nReturns the l-value type associated with @this ?GStructuredType") },
+	  DOC("->?GLValueType\n"
+	      "Returns the l-value type associated with @this ?GStructuredType") },
 	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_sizeof, NULL, NULL,
-	  DOC("->?Dint\nReturns the size of @this ?GStructuredType in bytes") },
+	  DOC("->?Dint\n"
+	      "Returns the size of @this ?GStructuredType in bytes") },
 	{ "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_alignof, NULL, NULL,
-	  DOC("->?Dint\nReturns the alignment of @this ?GStructuredType in bytes") },
+	  DOC("->?Dint\n"
+	      "Returns the alignment of @this ?GStructuredType in bytes") },
 	{ "pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-	  DOC("->?GPointerType\nAlias for ?#ptr") },
+	  DOC("->?GPointerType\n"
+	      "Alias for ?#ptr") },
 	{ NULL }
 };
 
@@ -393,7 +412,7 @@ stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 			goto create_inst;
 	}
 	/* Special case: `xxx(void)' constructs a function prototype with no arguments. */
-	if (argc == 1 && argv[0] == (DeeObject *)&DeeCVoid_Type)
+	if (argc == 1 && argv[0] == DeeSType_AsObject(&DeeCVoid_Type))
 		argc = 0;
 	/* Use the default calling convention for constructing this function type. */
 	return (DREF DeeObject *)DeeSType_CFunction(self, CC_DEFAULT, argc,
@@ -401,7 +420,7 @@ stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	                                            false);
 create_inst:
 	/* Construct a new instance. */
-	return DeeObject_New((DeeTypeObject *)self, argc, argv);
+	return DeeObject_New(DeeSType_AsType(self), argc, argv);
 }
 
 
@@ -416,7 +435,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 	                         "call(args!)->?Gstructured\n"
 	                         "call(types!:?Gstructured_type)->?Gfunction\n"
 	                         "Construct a new function type using this type as return type, "
-	                         "or construct a new instance of @this ?GStructuredType"),
+	                         /**/ "or construct a new instance of @this ?GStructuredType"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -467,16 +486,16 @@ ptype_fini(DeePointerTypeObject *__restrict self) {
 	if (orig->st_pointer == self)
 		orig->st_pointer = NULL;
 	rwlock_endwrite(&orig->st_cachelock);
-	Dee_Decref((DeeObject *)orig);
+	Dee_Decref(DeeSType_AsType(orig));
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
-	ASSERTF(DeeObject_Check((DeeObject *)self->pt_orig),
+	ASSERTF(DeeObject_Check(DeeSType_AsType(self->pt_orig)),
 	        "Missing base type for %p:%s",
 	        self,
 	        self->pt_base.st_base.tp_name);
-	Dee_Visit((DeeObject *)self->pt_orig);
+	Dee_Visit(DeeSType_AsType(self->pt_orig));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -554,7 +573,8 @@ ltype_repr(DeePointerTypeObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst ltype_getsets[] = {
 	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ltype_sizeof, NULL, NULL,
-	  DOC("->?Dint\nReturns the size of the base of @this ?GLValueType in bytes") },
+	  DOC("->?Dint\n"
+	      "Returns the size of the base of @this ?GLValueType in bytes") },
 	{ NULL }
 };
 
@@ -572,7 +592,7 @@ ltype_fini(DeeLValueTypeObject *__restrict self) {
 	if (orig->st_lvalue == self)
 		orig->st_lvalue = NULL;
 	rwlock_endwrite(&orig->st_cachelock);
-	Dee_Decref((DeeObject *)orig);
+	Dee_Decref(DeeSType_AsType(orig));
 }
 
 
@@ -635,22 +655,25 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	result = DeeGCObject_CALLOC(DeePointerTypeObject);
 	if unlikely(!result)
 		goto done;
+
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '*');
 	if unlikely(!name)
 		goto err_r;
+
 	/* Store a reference to the pointed-to type. */
-	Dee_Incref((DeeObject *)self);
-	Dee_Incref((DeeObject *)&DeePointer_Type);
+	Dee_Incref(DeeSType_AsType(self));
+	Dee_Incref(DeePointerType_AsType(&DeePointer_Type));
+
 	/* Initialize fields. */
-	result->pt_orig                                           = self; /* Inherit reference. */
-	result->pt_base.st_sizeof                                 = sizeof(void *);
-	result->pt_base.st_align                                  = CONFIG_CTYPES_ALIGNOF_POINTER;
-	result->pt_base.st_base.tp_name                           = DeeString_STR(name); /* Inherit reference. */
+	result->pt_orig                 = self; /* Inherit reference. */
+	result->pt_base.st_sizeof       = sizeof(void *);
+	result->pt_base.st_align        = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->pt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
 	result->pt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct pointer_object);
-	result->pt_base.st_base.tp_flags                          = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
-	result->pt_base.st_base.tp_base                           = &DeePointer_Type.pt_base.st_base; /* Inherit reference. */
-	result->pt_size                                           = DeeSType_Sizeof(self);
+	result->pt_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
+	result->pt_base.st_base.tp_base  = DeePointerType_AsType(&DeePointer_Type); /* Inherit reference. */
+	result->pt_size                  = DeeSType_Sizeof(self);
 #ifndef CONFIG_NO_CFUNCTION
 	result->pt_base.st_ffitype = &ffi_type_pointer;
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -664,9 +687,9 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 		result->pt_base.st_seq  = &pointer_seqn;
 	}
 
-	/* Finalize the pointer type. */
-	DeeObject_Init((DeeTypeObject *)result, &DeePointerType_Type);
-	DeeGC_Track((DeeObject *)result);
+	/* Finish the pointer type. */
+	DeeObject_Init(DeePointerType_AsType(result), &DeePointerType_Type);
+	DeeGC_Track((DeeObject *)DeePointerType_AsType(result));
 done:
 	return result;
 err_r:
@@ -681,21 +704,25 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	result = DeeGCObject_CALLOC(DeeLValueTypeObject);
 	if unlikely(!result)
 		goto done;
+
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '&');
 	if unlikely(!name)
 		goto err_r;
+
 	/* Store a reference to the pointed-to type. */
-	Dee_Incref((DeeObject *)self);
-	Dee_Incref((DeeObject *)&DeeLValue_Type);
+	Dee_Incref(DeeSType_AsType(self));
+	Dee_Incref(DeeLValueType_AsType(&DeeLValue_Type));
+
 	/* Initialize fields. */
-	result->lt_orig                                           = self; /* Inherit reference. */
-	result->lt_base.st_sizeof                                 = sizeof(void *);
-	result->lt_base.st_align                                  = CONFIG_CTYPES_ALIGNOF_LVALUE;
-	result->lt_base.st_base.tp_name                           = DeeString_STR(name); /* Inherit reference. */
+	result->lt_orig                 = self; /* Inherit reference. */
+	result->lt_base.st_sizeof       = sizeof(void *);
+	result->lt_base.st_align        = CONFIG_CTYPES_ALIGNOF_LVALUE;
+	result->lt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
 	result->lt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct lvalue_object);
-	result->lt_base.st_base.tp_flags                          = TP_FTRUNCATE | TP_FVARIABLE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
-	result->lt_base.st_base.tp_base                           = &DeeLValue_Type.lt_base.st_base; /* Inherit reference. */
+	result->lt_base.st_base.tp_flags = (TP_FTRUNCATE | TP_FVARIABLE | TP_FINHERITCTOR |
+	                                    TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY);
+	result->lt_base.st_base.tp_base = DeeLValueType_AsType(&DeeLValue_Type); /* Inherit reference. */
 #ifndef CONFIG_NO_CFUNCTION
 	result->lt_base.st_ffitype = &ffi_type_pointer;
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -703,9 +730,10 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	/* Initialize the lvalue-pointer of the resulting l-value type to point
 	 * to itself, thus preventing weird types like l-value-to-l-value. */
 	result->lt_base.st_lvalue = result;
-	/* Finalize the lvalue type. */
-	DeeObject_Init((DeeTypeObject *)result, &DeeLValueType_Type);
-	DeeGC_Track((DeeObject *)result);
+
+	/* Finish the lvalue type. */
+	DeeObject_Init(DeeLValueType_AsType(result), &DeeLValueType_Type);
+	DeeGC_Track((DeeObject *)DeeLValueType_AsType(result));
 done:
 	return result;
 err_r:
@@ -716,10 +744,10 @@ err_r:
 INTERN WUNUSED NONNULL((1)) DREF DeePointerTypeObject *DCALL
 DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	DREF DeePointerTypeObject *result;
-	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
+	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
 	rwlock_read(&self->st_cachelock);
 	result = self->st_pointer;
-	if (result && !Dee_IncrefIfNotZero((DeeObject *)result))
+	if (result && !Dee_IncrefIfNotZero(DeePointerType_AsType(result)))
 		result = NULL;
 	rwlock_endread(&self->st_cachelock);
 	if (!result) {
@@ -729,11 +757,11 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_pointer &&
-			            Dee_IncrefIfNotZero((DeeObject *)self->st_pointer)) {
+			            Dee_IncrefIfNotZero(DeePointerType_AsType(self->st_pointer))) {
 				DREF DeePointerTypeObject *new_result;
 				new_result = self->st_pointer;
 				rwlock_endwrite(&self->st_cachelock);
-				Dee_DecrefDokill((DeeObject *)result);
+				Dee_DecrefDokill(DeePointerType_AsType(result));
 				return new_result;
 			}
 			self->st_pointer = result; /* Weakly referenced. */
@@ -746,10 +774,10 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL
 DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	DREF DeeLValueTypeObject *result;
-	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
+	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
 	rwlock_read(&self->st_cachelock);
 	result = self->st_lvalue;
-	if (result && !Dee_IncrefIfNotZero((DeeObject *)result))
+	if (result && !Dee_IncrefIfNotZero(DeeLValueType_AsType(result)))
 		result = NULL;
 	rwlock_endread(&self->st_cachelock);
 	if (!result) {
@@ -759,11 +787,11 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_lvalue &&
-			            Dee_IncrefIfNotZero((DeeObject *)self->st_lvalue)) {
+			            Dee_IncrefIfNotZero(DeeLValueType_AsType(self->st_lvalue))) {
 				DREF DeeLValueTypeObject *new_result;
 				new_result = self->st_lvalue;
 				rwlock_endwrite(&self->st_cachelock);
-				Dee_DecrefDokill((DeeObject *)result);
+				Dee_DecrefDokill(DeeLValueType_AsType(result));
 				return new_result;
 			}
 			self->st_lvalue = result; /* Weakly referenced. */
@@ -777,7 +805,7 @@ INTERN WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
 DeeSType_Get(DeeObject *__restrict self) {
 	/* Quick check: is it a structured type. */
 	if (DeeSType_Check(self))
-		return (DeeSTypeObject *)self;
+		return DeeType_AsSType((DeeTypeObject *)self);
 
 	/* Map some builtin types to their structured counterparts. */
 	if (DeeNone_Check(self) ||
@@ -799,20 +827,20 @@ DeeSType_Get(DeeObject *__restrict self) {
 INTERN ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name) {
 	struct opinfo const *info;
-	info = Dee_OperatorInfo(Dee_TYPE((DeeObject *)tp), operator_name);
-	ASSERT_OBJECT((DeeTypeObject *)tp);
-	ASSERT(DeeType_Check((DeeObject *)tp));
+	info = Dee_OperatorInfo(Dee_TYPE(DeeSType_AsType(tp)), operator_name);
+	ASSERT_OBJECT(DeeSType_AsType(tp));
+	ASSERT(DeeType_Check(DeeSType_AsType(tp)));
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Operator `%k.__%s__' is not implemented",
-	                       tp, info ? info->oi_sname : "??"
-	                                                   "?");
+	                       tp, info ? info->oi_sname : "??" "?");
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_ctor(DeeObject *__restrict self) {
-	DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
-	while (!DeeSType_Check((DeeObject *)tp_self))
-		tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self);
+	DeeSTypeObject *tp_self = DeeType_AsSType(Dee_TYPE(self));
+	while (!DeeSType_Check(tp_self))
+		tp_self = DeeSType_Base(tp_self);
+
 	/* ZERO-initialize by default. */
 	bzero(DeeStruct_Data(self), DeeSType_Sizeof(tp_self));
 	return 0;
@@ -821,9 +849,10 @@ struct_ctor(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_copy(DeeObject *__restrict self,
             DeeObject *__restrict other) {
-	DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
-	while (!DeeSType_Check((DeeObject *)tp_self))
-		tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self);
+	DeeSTypeObject *tp_self = DeeType_AsSType(Dee_TYPE(self));
+	while (!DeeSType_Check(tp_self))
+		tp_self = DeeSType_Base(tp_self);
+
 	/* Copy memory. */
 	memcpy(DeeStruct_Data(self),
 	       DeeStruct_Data(other),
@@ -835,11 +864,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_init(DeeObject *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *orig_type, *tp_self;
-	orig_type = tp_self = (DeeSTypeObject *)Dee_TYPE(self);
+	orig_type = tp_self = DeeType_AsSType(Dee_TYPE(self));
 	do {
 		if (tp_self->st_init)
 			return (*tp_self->st_init)(orig_type, DeeStruct_Data(self), argc, argv);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_CONSTRUCTOR);
 	return 0;
@@ -847,40 +876,40 @@ struct_init(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_assign(DeeObject *self, DeeObject *some_object) {
-	return DeeStruct_Assign((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_Assign(DeeType_AsSType(Dee_TYPE(self)),
 	                        DeeStruct_Data(self), some_object);
 }
 
 #define DEFINE_UNARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1)) Treturn DCALL                           \
 	struct_xxx(DeeObject *__restrict self) {                             \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),           \
+		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),            \
 		                     DeeStruct_Data(self));                      \
 	}
 #define DEFINE_BINARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1, 2)) Treturn DCALL                         \
 	struct_xxx(DeeObject *self, DeeObject *other) {                       \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),            \
+		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),             \
 		                     DeeStruct_Data(self), other);                \
 	}
 #define DEFINE_TRINARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1, 2, 3)) Treturn DCALL                       \
 	struct_xxx(DeeObject *self, DeeObject *a, DeeObject *b) {              \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),             \
+		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),              \
 		                     DeeStruct_Data(self), a, b);                  \
 	}
 #define DEFINE_UNARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1)) Treturn DCALL                                   \
 	struct_xxx(DeeObject **__restrict pself) {                                   \
 		DeeObject *self = *pself;                                                \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),                   \
+		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),                    \
 		                     DeeStruct_Data(self));                              \
 	}
 #define DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
 	PRIVATE WUNUSED NONNULL((1, 2)) Treturn DCALL                                 \
 	struct_xxx(DeeObject **__restrict pself, DeeObject *other) {                  \
 		DeeObject *self = *pself;                                                 \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),                    \
+		return DeeStruct_Xxx(DeeType_AsSType(Dee_TYPE(self)),                     \
 		                     DeeStruct_Data(self), other);                        \
 	}
 DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_str, DeeStruct_Str)
@@ -889,25 +918,25 @@ DEFINE_UNARY_STRUCT_OPERATOR(int, struct_bool, DeeStruct_Bool)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeStruct_Call((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_Call(DeeType_AsSType(Dee_TYPE(self)),
 	                      DeeStruct_Data(self), argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_int32(DeeObject *__restrict self, int32_t *__restrict result) {
-	return DeeStruct_Int32((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_Int32(DeeType_AsSType(Dee_TYPE(self)),
 	                       DeeStruct_Data(self), result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_int64(DeeObject *__restrict self, int64_t *__restrict result) {
-	return DeeStruct_Int64((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_Int64(DeeType_AsSType(Dee_TYPE(self)),
 	                       DeeStruct_Data(self), result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_double(DeeObject *__restrict self, double *__restrict result) {
-	return DeeStruct_Double((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_Double(DeeType_AsSType(Dee_TYPE(self)),
 	                        DeeStruct_Data(self), result);
 }
 
@@ -958,7 +987,7 @@ DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_delrange, DeeStruct_DelRange)
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 struct_setrange(DeeObject *self, DeeObject *begin,
                 DeeObject *end, DeeObject *value) {
-	return DeeStruct_SetRange((DeeSTypeObject *)Dee_TYPE(self),
+	return DeeStruct_SetRange(DeeType_AsSType(Dee_TYPE(self)),
 	                          DeeStruct_Data(self), begin, end, value);
 }
 
@@ -969,7 +998,7 @@ DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_setattr, DeeStruct_SetAttr)
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 denum_t proc, void *arg) {
-	return DeeStruct_EnumAttr((DeeSTypeObject *)tp_self, proc, arg);
+	return DeeStruct_EnumAttr(DeeType_AsSType(tp_self), proc, arg);
 }
 #undef DEFINE_BINARY_INPLACE_STRUCT_OPERATOR
 #undef DEFINE_UNARY_INPLACE_STRUCT_OPERATOR
@@ -1072,7 +1101,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_ref(DeeObject *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
-	pointer_type = DeeSType_Pointer((DeeSTypeObject *)Dee_TYPE(self));
+	pointer_type = DeeSType_Pointer(DeeType_AsSType(Dee_TYPE(self)));
 	if unlikely(!pointer_type)
 		goto err;
 	result = DeeObject_MALLOC(struct pointer_object);
@@ -1221,7 +1250,7 @@ DeeObject_Ref(DeeObject *__restrict self) {
 		goto done;
 	}
 	/* Lookup the required pointer type. */
-	tp_result = DeeSType_Pointer((DeeSTypeObject *)Dee_TYPE(self));
+	tp_result = DeeSType_Pointer(DeeType_AsSType(Dee_TYPE(self)));
 	if unlikely(!tp_result)
 		goto err;
 	/* Create the new pointer object. */
@@ -1325,7 +1354,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 	do {
 		if (tp_self->st_assign)
 			return (*tp_self->st_assign)(orig_type, self, value);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	if (DeeObject_InstanceOf(value, (DeeTypeObject *)orig_type)) {
 		uint8_t *dst, *src;
@@ -1353,7 +1382,7 @@ DeeStruct_Str(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_cast.st_str)
 			return (*tp_self->st_cast.st_str)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_STR);
 	return NULL;
@@ -1365,7 +1394,7 @@ DeeStruct_Repr(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_cast.st_repr)
 			return (*tp_self->st_cast.st_repr)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_REPR);
 	return NULL;
@@ -1377,7 +1406,7 @@ DeeStruct_Bool(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_cast.st_bool)
 			return (*tp_self->st_cast.st_bool)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_BOOL);
 }
@@ -1390,7 +1419,7 @@ DeeStruct_Call(DeeSTypeObject *tp_self,
 	do {
 		if (tp_self->st_call)
 			return (*tp_self->st_call)(orig_type, self, argc, argv);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_CALL);
 	return NULL;
@@ -1402,7 +1431,7 @@ DeeStruct_Int32(DeeSTypeObject *tp_self, void *self, int32_t *result) {
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int32)
 			return (*tp_self->st_math->st_int32)(orig_type, self, result);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_INT);
 }
@@ -1413,7 +1442,7 @@ DeeStruct_Int64(DeeSTypeObject *tp_self, void *self, int64_t *result) {
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int64)
 			return (*tp_self->st_math->st_int64)(orig_type, self, result);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_INT);
 }
@@ -1424,7 +1453,7 @@ DeeStruct_Double(DeeSTypeObject *tp_self, void *self, double *result) {
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_double)
 			return (*tp_self->st_math->st_double)(orig_type, self, result);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_FLOAT);
 }
@@ -1435,35 +1464,35 @@ DeeStruct_Int(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int)
 			return (*tp_self->st_math->st_int)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_INT);
 	return NULL;
 }
 
-#define DEFINE_UNARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX)   \
-	INTERN WUNUSED NONNULL((1)) Treturn DCALL                                                    \
-	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self) {                                         \
-		DeeSTypeObject *orig_type = tp_self;                                                     \
-		do {                                                                                     \
-			if (tp_self->st_math && tp_self->st_math->st_xxx)                                    \
-				return (*tp_self->st_math->st_xxx)(orig_type, self);                             \
-		} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL && \
-		         DeeSType_Check(tp_self));                                                       \
-		err_unimplemented_operator(orig_type, OPERATOR_XXX);                                     \
-		return error_result;                                                                     \
+#define DEFINE_UNARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX) \
+	INTERN WUNUSED NONNULL((1)) Treturn DCALL                                                  \
+	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self) {                                       \
+		DeeSTypeObject *orig_type = tp_self;                                                   \
+		do {                                                                                   \
+			if (tp_self->st_math && tp_self->st_math->st_xxx)                                  \
+				return (*tp_self->st_math->st_xxx)(orig_type, self);                           \
+		} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&                                 \
+		         DeeSType_Check(tp_self));                                                     \
+		err_unimplemented_operator(orig_type, OPERATOR_XXX);                                   \
+		return error_result;                                                                   \
 	}
-#define DEFINE_BINARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX)  \
-	INTERN WUNUSED NONNULL((1, 3)) Treturn DCALL                                                 \
-	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self, DeeObject *other) {                       \
-		DeeSTypeObject *orig_type = tp_self;                                                     \
-		do {                                                                                     \
-			if (tp_self->st_math && tp_self->st_math->st_xxx)                                    \
-				return (*tp_self->st_math->st_xxx)(orig_type, self, other);                      \
-		} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL && \
-		         DeeSType_Check(tp_self));                                                       \
-		err_unimplemented_operator(orig_type, OPERATOR_XXX);                                     \
-		return error_result;                                                                     \
+#define DEFINE_BINARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX) \
+	INTERN WUNUSED NONNULL((1, 3)) Treturn DCALL                                                \
+	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self, DeeObject *other) {                      \
+		DeeSTypeObject *orig_type = tp_self;                                                    \
+		do {                                                                                    \
+			if (tp_self->st_math && tp_self->st_math->st_xxx)                                   \
+				return (*tp_self->st_math->st_xxx)(orig_type, self, other);                     \
+		} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&                                  \
+		         DeeSType_Check(tp_self));                                                      \
+		err_unimplemented_operator(orig_type, OPERATOR_XXX);                                    \
+		return error_result;                                                                    \
 	}
 DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Inv, st_inv, OPERATOR_INV)
 DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Pos, st_pos, OPERATOR_POS)
@@ -1507,10 +1536,11 @@ DeeStruct_Eq(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_eq)
 			return (*tp_self->st_cmp->st_eq)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(bcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) == 0);
 	err_unimplemented_operator(orig_type, OPERATOR_EQ);
 	return NULL;
@@ -1522,10 +1552,11 @@ DeeStruct_Ne(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_ne)
 			return (*tp_self->st_cmp->st_ne)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(bcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) != 0);
 	err_unimplemented_operator(orig_type, OPERATOR_NE);
 	return NULL;
@@ -1537,10 +1568,11 @@ DeeStruct_Lo(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_lo)
 			return (*tp_self->st_cmp->st_lo)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) < 0);
 	err_unimplemented_operator(orig_type, OPERATOR_LO);
 	return NULL;
@@ -1552,10 +1584,11 @@ DeeStruct_Le(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_le)
 			return (*tp_self->st_cmp->st_le)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) <= 0);
 	err_unimplemented_operator(orig_type, OPERATOR_LE);
 	return NULL;
@@ -1567,10 +1600,11 @@ DeeStruct_Gr(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_gr)
 			return (*tp_self->st_cmp->st_gr)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) > 0);
 	err_unimplemented_operator(orig_type, OPERATOR_GR);
 	return NULL;
@@ -1582,10 +1616,11 @@ DeeStruct_Ge(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_ge)
 			return (*tp_self->st_cmp->st_ge)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Compare object data. */
-	if (orig_type == (DeeSTypeObject *)Dee_TYPE(some_object))
+	if (orig_type == DeeType_AsSType(Dee_TYPE(some_object)))
 		return_bool(memcmp(self, DeeStruct_Data(some_object), DeeSType_Sizeof(orig_type)) >= 0);
 	err_unimplemented_operator(orig_type, OPERATOR_GE);
 	return NULL;
@@ -1597,7 +1632,7 @@ DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_iter_self)
 			return (*tp_self->st_seq->stp_iter_self)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_ITERSELF);
 	return NULL;
@@ -1609,7 +1644,7 @@ DeeStruct_GetSize(DeeSTypeObject *tp_self, void *self) {
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_size)
 			return (*tp_self->st_seq->stp_size)(orig_type, self);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_SIZE);
 	return NULL;
@@ -1622,7 +1657,7 @@ DeeStruct_Contains(DeeSTypeObject *tp_self,
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_contains)
 			return (*tp_self->st_seq->stp_contains)(orig_type, self, some_object);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_CONTAINS);
 	return NULL;
@@ -1635,8 +1670,9 @@ DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_get)
 			return (*tp_self->st_seq->stp_get)(orig_type, self, index);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Fallback: Implement getitem as `ind(add)' --> `foo[2]' same as `*(foo + 2)' */
 	result = DeeStruct_Add(tp_self, self, index);
 	if unlikely(!result)
@@ -1654,8 +1690,9 @@ DeeStruct_DelItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_del)
 			return (*tp_self->st_seq->stp_del)(orig_type, self, index);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Fallback: Do a setitem operation with `none' */
 	return DeeStruct_SetItem(tp_self, self, index, Dee_None);
 }
@@ -1669,8 +1706,9 @@ DeeStruct_SetItem(DeeSTypeObject *tp_self, void *self,
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_set)
 			return (*tp_self->st_seq->stp_set)(orig_type, self, index, value);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
+
 	/* Fallback: Implement setitem as
 	 * `ind(add) := value' --> `foo[2] = value'
 	 *              same as `*(foo + 2) := value' */
@@ -1695,7 +1733,7 @@ DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self,
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_get)
 			return (*tp_self->st_seq->stp_range_get)(orig_type, self, begin, end);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	err_unimplemented_operator(orig_type, OPERATOR_GETRANGE);
 	return NULL;
@@ -1708,7 +1746,7 @@ DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self,
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_del)
 			return (*tp_self->st_seq->stp_range_del)(orig_type, self, begin, end);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_DELRANGE);
 }
@@ -1720,7 +1758,7 @@ DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_set)
 			return (*tp_self->st_seq->stp_range_set)(orig_type, self, begin, end, value);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_SETRANGE);
 }
@@ -1731,10 +1769,8 @@ DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_getattr)
 			return (*tp_self->st_attr->st_getattr)(orig_type, self, name);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
-	/* Special attributes: `sizeof' and `alignof' */
-
 	err_unimplemented_operator(orig_type, OPERATOR_GETATTR);
 	return NULL;
 }
@@ -1745,7 +1781,7 @@ DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_delattr)
 			return (*tp_self->st_attr->st_delattr)(orig_type, self, name);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_DELATTR);
 }
@@ -1757,7 +1793,7 @@ DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_setattr)
 			return (*tp_self->st_attr->st_setattr)(orig_type, self, name, value);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return err_unimplemented_operator(orig_type, OPERATOR_SETATTR);
 }
@@ -1769,7 +1805,7 @@ DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_enumattr)
 			return (*tp_self->st_attr->st_enumattr)(orig_type, proc, arg);
-	} while ((tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self)) != NULL &&
+	} while ((tp_self = DeeSType_Base(tp_self)) != NULL &&
 	         DeeSType_Check(tp_self));
 	return 0;
 }
@@ -1870,9 +1906,9 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	ASSERT(LIST_ISBOUND(self, ft_chain));
 	LIST_REMOVE(self, ft_chain);
 	rwlock_endwrite(&orig->st_cachelock);
-	Dee_Decref((DeeObject *)orig);
+	Dee_Decref(DeeSType_AsType(orig));
 	for (i = 0; i < self->ft_argc; ++i)
-		Dee_Decref((DeeObject *)self->ft_argv[i]);
+		Dee_Decref(DeeSType_AsType(self->ft_argv[i]));
 	Dee_Free(self->ft_argv);
 	Dee_Free(self->ft_ffi_arg_type_v);
 }
@@ -1880,9 +1916,9 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
-	Dee_Visit((DeeTypeObject *)self->ft_orig);
+	Dee_Visit(DeeSType_AsType(self->ft_orig));
 	for (i = 0; i < self->ft_argc; ++i)
-		Dee_Visit((DeeObject *)self->ft_argv[i]);
+		Dee_Visit(DeeSType_AsType(self->ft_argv[i]));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1891,7 +1927,7 @@ ftype_repr(DeeCFunctionTypeObject *__restrict self) {
 	ctypes_cc_t cc;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	bool is_first_arg = true;
-	if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->ft_orig) < 0)
+	if unlikely(unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_orig)) < 0)
 		goto err;
 	if unlikely((self->ft_cc & CC_FVARARGS ? UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
 	                                       : UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
@@ -1913,7 +1949,7 @@ ftype_repr(DeeCFunctionTypeObject *__restrict self) {
 				goto err;
 			is_first_arg = false;
 		}
-		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->ft_argv[i]) < 0)
+		if unlikely(unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_argv[i])) < 0)
 			goto err;
 	}
 	if unlikely(unicode_printer_putascii(&printer, ')'))
@@ -1938,9 +1974,8 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 	return NULL;
 #else /* CONFIG_NO_CFUNCTION */
 	/* Use a read-only shared-reference vector to grant the user access to arguments. */
-	return DeeRefVector_NewReadonly((DeeObject *)self,
-	                                self->ft_argc,
-	                                (DeeObject **)self->ft_argv);
+	return DeeRefVector_NewReadonly((DeeObject *)DeeCFunctionType_AsType(self),
+	                                self->ft_argc, (DeeObject **)self->ft_argv);
 #endif /* !CONFIG_NO_CFUNCTION */
 }
 
@@ -1960,6 +1995,13 @@ PRIVATE struct type_member tpconst ftype_members[] = {
 };
 
 
+
+#ifdef CONFIG_NO_CFUNCTION
+#define CFUNCTION_OPERATOR(x) NULL
+#else /* CONFIG_NO_CFUNCTION */
+#define CFUNCTION_OPERATOR(x) x
+#endif /* !CONFIG_NO_CFUNCTION */
+
 INTERN DeeTypeObject DeeCFunctionType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "FunctionType",
@@ -1978,29 +2020,17 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 				TYPE_FIXED_ALLOCATOR_GC(DeeCFunctionTypeObject)
 			}
 		},
-#ifdef CONFIG_NO_CFUNCTION
-		/* .tp_dtor        = */ NULL,
-#else /* CONFIG_NO_CFUNCTION */
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ftype_fini,
-#endif /* !CONFIG_NO_CFUNCTION */
+		/* .tp_dtor        = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict))&ftype_fini),
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-#ifdef CONFIG_NO_CFUNCTION
-		/* .tp_repr = */ NULL,
-#else /* CONFIG_NO_CFUNCTION */
-		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_repr,
-#endif /* !CONFIG_NO_CFUNCTION */
+		/* .tp_repr = */ CFUNCTION_OPERATOR((DeeObject *(DCALL *)(DeeObject *__restrict))&ftype_repr),
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-#ifdef CONFIG_NO_CFUNCTION
-	/* .tp_visit         = */ NULL,
-#else /* CONFIG_NO_CFUNCTION */
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit,
-#endif /* !CONFIG_NO_CFUNCTION */
+	/* .tp_visit         = */ CFUNCTION_OPERATOR((void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ftype_visit),
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -2017,6 +2047,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+#undef CFUNCTION_OPERATOR
 
 DECL_END
 

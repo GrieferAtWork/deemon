@@ -271,7 +271,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
 	size_t i;
 	char const *cc_name;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if (DeeObject_Print((DeeObject *)return_type,
+	if (DeeObject_Print(DeeSType_AsObject(return_type),
 	                    &ascii_printer_print,
 	                    &printer) < 0)
 		goto err;
@@ -293,7 +293,7 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
 		for (i = 0; i < argc; ++i) {
 			if (i != 0 && ASCII_PRINTER_PRINT(&printer, ", ") < 0)
 				goto err;
-			if (DeeObject_Print((DeeObject *)argv[i],
+			if (DeeObject_Print(DeeSType_AsObject(argv[i]),
 			                    &ascii_printer_print,
 			                    &printer) < 0)
 				goto err;
@@ -343,31 +343,33 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	size_t i;
 	if (inherit_argv) {
 		argv_copy = argv; /* Inherit */
-		for (i = 0; i < argc; ++i)
-			Dee_Incref((DeeObject *)argv_copy[i]);
+		Dee_Increfv((DeeObject **)argv_copy, argc);
 	} else if (!argc) {
 		argv_copy = NULL;
 	} else {
 		argv_copy = (DREF DeeSTypeObject **)Dee_Malloc(argc * sizeof(DREF DeeSTypeObject *));
 		if unlikely(!argv_copy)
 			goto err;
-		for (i = 0; i < argc; ++i) {
-			ASSERT_OBJECT_TYPE((DeeObject *)argv[i], &DeeSType_Type);
-			Dee_Incref((DeeObject *)argv[i]);
-			argv_copy[i] = argv[i];
-		}
+#ifndef NDEBUG
+		for (i = 0; i < argc; ++i)
+			ASSERT_OBJECT_TYPE(DeeSType_AsObject(argv[i]), &DeeSType_Type);
+#endif /* !NDEBUG */
+		Dee_Movrefv((DeeObject **)argv_copy, (DeeObject **)argv, argc);
 	}
 
 	result = DeeGCObject_CALLOC(DeeCFunctionTypeObject);
 	if unlikely(!result)
 		goto err_argv;
+
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)generate_function_name(return_type, calling_convention, argc, argv);
 	if unlikely(!name)
 		goto err_argv_r;
+
 	/* Store a reference to the cfunction-base type. */
-	Dee_Incref((DeeObject *)return_type);
-	Dee_Incref((DeeObject *)&DeeCFunction_Type);
+	Dee_Incref(DeeSType_AsObject(return_type));
+	Dee_Incref(DeeCFunctionType_AsType(&DeeCFunction_Type));
+
 	/* Initialize fields. */
 	result->ft_orig = return_type; /* Inherit reference. */
 	result->ft_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject);
@@ -436,8 +438,8 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 		result->ft_woff_argptr = 0;
 
 	/* Finalize the cfunction type. */
-	DeeObject_Init((DeeTypeObject *)result, &DeeCFunctionType_Type);
-	DeeGC_Track((DeeObject *)result);
+	DeeObject_Init(DeeCFunctionType_AsObject(result), &DeeCFunctionType_Type);
+	DeeGC_Track(DeeCFunctionType_AsObject(result));
 	return result;
 err_argv_r_name_ffi_typev:
 	Dee_Free(result->ft_ffi_arg_type_v);
@@ -446,8 +448,7 @@ err_argv_r_name:
 err_argv_r:
 	DeeGCObject_FREE(result);
 err_argv:
-	while (argc--)
-		Dee_Decref((DeeObject *)argv_copy[argc]);
+	Dee_Decrefv((DREF DeeObject **)argv_copy, argc);
 	Dee_Free(argv_copy);
 err:
 	return NULL;
@@ -470,6 +471,7 @@ again:
 		}
 		return false;
 	}
+
 	/* Do the re-hash. */
 	if (self->st_cfunction.sf_size) {
 		ASSERT(self->st_cfunction.sf_list);
@@ -485,6 +487,7 @@ again:
 			}
 		}
 	}
+
 	/* Delete the old map and install the new. */
 	Dee_Free(self->st_cfunction.sf_list);
 	self->st_cfunction.sf_mask = new_mask;
@@ -555,7 +558,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	dhash_t hash;
 	DREF DeeCFunctionTypeObject *result, *new_result;
 	DREF struct cfunction_type_list *pbucket;
-	ASSERT_OBJECT_TYPE((DeeObject *)return_type, &DeeSType_Type);
+	ASSERT_OBJECT_TYPE(DeeSType_AsObject(return_type), &DeeSType_Type);
 	rwlock_read(&return_type->st_cachelock);
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
@@ -567,7 +570,7 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 		        !cfunction_equals(result, return_type, calling_convention, argc, argv)))
 			result = LIST_NEXT(result, ft_chain);
 		/* Check if we can re-use an existing type. */
-		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
+		if (result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(result))) {
 			rwlock_endread(&return_type->st_cachelock);
 			if (inherit_argv)
 				Dee_Free(argv);
@@ -575,11 +578,13 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 		}
 	}
 	rwlock_endread(&return_type->st_cachelock);
+
 	/* Construct a new cfunction type. */
 	result = cfunctiontype_new(return_type, calling_convention,
 	                           argc, argv, hash, inherit_argv);
 	if unlikely(!result)
 		goto done;
+
 	/* Add the new type to the cache. */
 register_type:
 	rwlock_write(&return_type->st_cachelock);
@@ -591,27 +596,33 @@ register_type:
 		       (new_result->ft_hash != hash ||
 		        !cfunction_equals(new_result, return_type, calling_convention, argc, argv)))
 			new_result = LIST_NEXT(new_result, ft_chain);
+
 		/* Check if we can re-use an existing type. */
-		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
+		if (new_result && Dee_IncrefIfNotZero(DeeCFunctionType_AsObject(new_result))) {
 			rwlock_endread(&return_type->st_cachelock);
-			Dee_Decref((DeeObject *)result);
+			Dee_Decref(DeeCFunctionType_AsObject(result));
 			return new_result;
 		}
 	}
+
 	/* Rehash when there are a lot of items. */
 	if (return_type->st_cfunction.sf_size >= return_type->st_cfunction.sf_mask &&
 	    (!stype_cfunction_rehash(return_type, return_type->st_cfunction.sf_mask ? (return_type->st_cfunction.sf_mask << 1) | 1 : 16 - 1) &&
 	     !return_type->st_cfunction.sf_mask)) {
+
 		/* No space at all! */
 		rwlock_endwrite(&return_type->st_cachelock);
+
 		/* Collect enough memory for a 1-item hash map. */
 		if (Dee_CollectMemory(sizeof(DeeCFunctionTypeObject *)))
 			goto register_type;
+
 		/* Failed to allocate the initial hash-map. */
-		Dee_Decref((DeeObject *)result);
+		Dee_Decref(DeeCFunctionType_AsObject(result));
 		result = NULL;
 		goto done;
 	}
+
 	/* Insert the new cfunction type into the hash-map. */
 	pbucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
 	LIST_INSERT_HEAD(pbucket, result, ft_chain); /* Weak reference. */

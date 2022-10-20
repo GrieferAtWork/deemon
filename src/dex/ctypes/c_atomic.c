@@ -66,16 +66,16 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 	if (!DeeInt_Check(value))
 #endif /* !__OPTIMIZE_SIZE__ */
 	{
-		if (DeeObject_InstanceOf(value, (DeeTypeObject *)ob_ptr_orig)) {
+		if (DeeObject_InstanceOf(value, DeeSType_AsType(ob_ptr_orig))) {
 			/* structured-type-derived-from-<ob_ptr_orig> */
 			memcpy(result, DeeStruct_Data(value), ob_ptr_orig->st_sizeof);
 			return 0;
 		}
 		if (DeeLValue_Check(value)) {
 			DeeSTypeObject *lv_base;
-			lv_base = ((DeeLValueTypeObject *)Dee_TYPE(value))->lt_orig;
-			if (DeeType_IsInherited((DeeTypeObject *)lv_base,
-			                        (DeeTypeObject *)ob_ptr_orig)) {
+			lv_base = DeeType_AsLValueType(Dee_TYPE(value))->lt_orig;
+			if (DeeType_IsInherited(DeeSType_AsType(lv_base),
+			                        DeeSType_AsType(ob_ptr_orig))) {
 				/* Lvalue -> structured-type-derived-from-<ob_ptr_orig> */
 				CTYPES_FAULTPROTECT({
 					union pointer result_ptr;
@@ -112,7 +112,7 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 	}
 	if likely(error != -1)
 		return 0;
-	DeeObject_TypeAssertFailed(value, (DeeTypeObject *)ob_ptr_orig);
+	DeeObject_TypeAssertFailed(value, DeeSType_AsType(ob_ptr_orig));
 err:
 	return -1;
 }

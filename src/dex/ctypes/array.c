@@ -57,12 +57,12 @@ typedef struct {
 
 PRIVATE NONNULL((1)) void DCALL
 aiter_fini(ArrayIterator *__restrict self) {
-	Dee_Decref((DeeObject *)self->ai_type);
+	Dee_Decref(DeeLValueType_AsType(self->ai_type));
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 aiter_visit(ArrayIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit((DeeObject *)self->ai_type);
+	Dee_Visit(DeeLValueType_AsType(self->ai_type));
 }
 
 
@@ -90,7 +90,7 @@ aiter_next(ArrayIterator *__restrict self) {
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, (DeeTypeObject *)self->ai_type);
+	DeeObject_Init(result, DeeLValueType_AsType(self->ai_type));
 	/* Use the item pointer which we've just extracted. */
 	result->l_ptr.ptr = result_pointer.ptr;
 done:
@@ -119,8 +119,8 @@ aiter_getseq(ArrayIterator *__restrict self) {
 	atype = DeeSType_Array(self->ai_type->lt_orig, count);
 	if unlikely(!atype)
 		goto err;
-	ltype = DeeSType_LValue((DeeSTypeObject *)atype);
-	Dee_Decref((DeeObject *)atype);
+	ltype = DeeSType_LValue(DeeArrayType_AsSType(atype));
+	Dee_Decref(DeeArrayType_AsType(atype));
 	if unlikely(!ltype)
 		goto err;
 
@@ -128,11 +128,11 @@ aiter_getseq(ArrayIterator *__restrict self) {
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto err_ltype;
-	DeeObject_InitNoref(result, (DeeTypeObject *)ltype); /* Inherit reference: ltype */
+	DeeObject_InitNoref(result, DeeLValueType_AsType(ltype)); /* Inherit reference: ltype */
 	result->l_ptr.ptr = self->ai_begin.ptr;
 	return result;
 err_ltype:
-	Dee_Decref((DeeObject *)ltype);
+	Dee_Decref(DeeLValueType_AsType(ltype));
 err:
 	return NULL;
 }
@@ -192,10 +192,12 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 PRIVATE WUNUSED DREF ArrayIterator *DCALL
 array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	DREF ArrayIterator *result;
+
 	/* Create a new array iterator. */
 	result = DeeObject_MALLOC(ArrayIterator);
 	if unlikely(!result)
 		goto done;
+
 	/* Construct the l-value version of the array's item type. */
 	result->ai_type = DeeSType_LValue(tp_self->at_orig);
 	if unlikely(!result->ai_type)
@@ -237,7 +239,7 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 			temp = DeeObject_MALLOC(struct lvalue_object);
 			if unlikely(!temp)
 				goto err_lval_type;
-			DeeObject_Init(temp, (DeeTypeObject *)lval_type);
+			DeeObject_Init(temp, DeeLValueType_AsType(lval_type));
 		}
 		temp->l_ptr.ptr = iter.ptr;
 		iter.uint += siz;
@@ -245,7 +247,7 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		if (error != 0) {
 			/* Error, or found. */
 			Dee_Decref(temp);
-			Dee_Decref((DeeObject *)lval_type);
+			Dee_Decref(DeeLValueType_AsType(lval_type));
 			if unlikely(error < 0)
 				goto err;
 			/* Item was found! */
@@ -253,10 +255,10 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		}
 	}
 	Dee_XDecref(temp);
-	Dee_Decref((DeeObject *)lval_type);
+	Dee_Decref(DeeLValueType_AsType(lval_type));
 	return_false;
 err_lval_type:
-	Dee_Decref((DeeObject *)lval_type);
+	Dee_Decref(DeeLValueType_AsType(lval_type));
 err:
 	return NULL;
 }
@@ -268,6 +270,7 @@ array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
+
 	/* Check bounds. */
 	if unlikely(index >= tp_self->at_count) {
 		DeeError_Throwf(&DeeError_IndexError,
@@ -278,16 +281,18 @@ array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	lval_type = DeeSType_LValue(tp_self->at_orig);
 	if unlikely(!lval_type)
 		goto err;
+
 	/* Construct an l-value object to-be returned. */
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto err_lval_type;
-	DeeObject_InitNoref(result, (DeeTypeObject *)lval_type); /* Inherit reference: lval_type */
+	DeeObject_InitNoref(result, DeeLValueType_AsType(lval_type)); /* Inherit reference: lval_type */
+
 	/* Calculate the resulting item address. */
 	result->l_ptr.uint = (uintptr_t)base + index * DeeSType_Sizeof(tp_self->at_orig);
 	return (DREF DeeObject *)result;
 err_lval_type:
-	Dee_Decref((DeeObject *)lval_type);
+	Dee_Decref(DeeLValueType_AsType(lval_type));
 err:
 	return NULL;
 }
@@ -300,6 +305,7 @@ array_set(DeeArrayTypeObject *tp_self, void *base,
 	item = array_get(tp_self, base, index_ob);
 	if unlikely(!item)
 		goto err;
+
 	/* Assign the given value to the item. */
 	result = DeeObject_Assign(item, value);
 	Dee_Decref(item);
@@ -335,25 +341,29 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 	begin = end = 0; /* Empty array. */
 	if unlikely((size_t)end > tp_self->at_count)
 		end = (dssize_t)tp_self->at_count;
+
 	/* Construct a sub-array type. */
 	array_type = DeeSType_Array(tp_self->at_orig,
 	                            (size_t)(end - begin));
 	if unlikely(!array_type)
 		goto err;
+
 	/* Create the associated l-value type. */
-	lval_type = DeeSType_LValue((DeeSTypeObject *)array_type);
-	Dee_Decref((DeeObject *)array_type);
+	lval_type = DeeSType_LValue(DeeArrayType_AsSType(array_type));
+	Dee_Decref(DeeArrayType_AsType(array_type));
 	if unlikely(!lval_type)
 		goto err;
 	result = DeeObject_MALLOC(struct lvalue_object);
 	if unlikely(!result)
 		goto err_lval_type;
-	DeeObject_InitNoref(result, (DeeTypeObject *)lval_type); /* Inherit reference: lval_type */
+	DeeObject_InitNoref(result, DeeLValueType_AsType(lval_type)); /* Inherit reference: lval_type */
+
 	/* Set the base pointer to the start of the requested sub-range. */
-	result->l_ptr.uint = (uintptr_t)base + (size_t)begin * DeeSType_Sizeof(tp_self->at_orig);
+	result->l_ptr.uint = ((uintptr_t)base) +
+	                     ((size_t)begin * DeeSType_Sizeof(tp_self->at_orig));
 	return (DREF DeeObject *)result;
 err_lval_type:
-	Dee_Decref((DeeObject *)lval_type);
+	Dee_Decref(DeeLValueType_AsType(lval_type));
 err:
 	return NULL;
 }
@@ -381,10 +391,11 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 		size_t del_size;
 		if unlikely((size_t)end > tp_self->at_count)
 			end = (dssize_t)tp_self->at_count;
+
 		/* Simply zero out the described memory range. */
 		item_size = DeeSType_Sizeof(tp_self->at_orig);
 		del_size  = (size_t)(end - begin) * item_size;
-		del_begin = (uint8_t *)((uintptr_t)base + (size_t)begin * item_size);
+		del_begin = (uint8_t *)((uintptr_t)base + ((size_t)begin * item_size));
 		CTYPES_FAULTPROTECT(bzero(del_begin, del_size), goto err);
 	}
 	return 0;
@@ -397,6 +408,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob, DeeObject *value) {
 	dssize_t begin, end = SSIZE_MAX;
 	DREF DeeObject *iter, *elem;
+
 	/* When `none' is passed, simply clear out affected memory. */
 	if (DeeNone_Check(value))
 		return array_delrange(tp_self, base, begin_ob, end_ob);
@@ -439,15 +451,18 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 				}
 				goto err_iter;
 			}
+
 			/* Assign this item to the array element. */
 			error = DeeStruct_Assign(tp_self->at_orig, array_iter.ptr, elem);
 			Dee_Decref(elem);
 			if unlikely(error)
 				goto err_iter;
+
 			/* Advance the iterator. */
 			array_iter.uint += item_size;
 		}
 	}
+
 	/* Ensure that the given sequence ends here. */
 	elem = DeeObject_IterNext(iter);
 	if unlikely(elem != ITER_DONE) {
@@ -498,7 +513,7 @@ array_adddiff(DeeArrayTypeObject *tp_self,
 	result = DeeObject_MALLOC(struct pointer_object);
 	if unlikely(!result)
 		goto err_ptr_type;
-	DeeObject_InitNoref(result, (DeeTypeObject *)ptr_type); /* Inherit reference: ptr_type */
+	DeeObject_InitNoref(result, DeePointerType_AsType(ptr_type)); /* Inherit reference: ptr_type */
 
 	/* Calculate the effect address of the `diff's element. */
 	result->p_ptr.ptr = base;
@@ -506,7 +521,7 @@ array_adddiff(DeeArrayTypeObject *tp_self,
 
 	return result;
 err_ptr_type:
-	Dee_Decref((DeeObject *)ptr_type);
+	Dee_Decref(DeePointerType_AsType(ptr_type));
 err:
 	return NULL;
 }
@@ -536,6 +551,7 @@ array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	union pointer iter, end;
 	size_t item_size;
 	struct ascii_printer p = ASCII_PRINTER_INIT;
+
 	/* Print all array elements in a fashion that mimics `sequence.operator repr' */
 	if unlikely(ASCII_PRINTER_PRINT(&p, "{ ") < 0)
 		goto err;
@@ -720,13 +736,16 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 	result = DeeGCObject_CALLOC(DeeArrayTypeObject);
 	if unlikely(!result)
 		goto done;
+
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)DeeString_Newf("%k[%Iu]", item_type, num_items);
 	if unlikely(!name)
 		goto err_r;
+
 	/* Store a reference to the array-base type. */
-	Dee_Incref((DeeObject *)item_type);
-	Dee_Incref((DeeObject *)&DeeArray_Type);
+	Dee_Incref(DeeSType_AsType(item_type));
+	Dee_Incref(DeeArrayType_AsType(&DeeArray_Type));
+
 	/* Initialize fields. */
 	result->at_orig          = item_type;           /* Inherit reference. */
 	result->at_base.st_align = item_type->st_align; /* Re-use item alignment type. */
@@ -736,8 +755,8 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "Array `%k' is too large",
 		                name);
-		Dee_Decref((DeeObject *)&DeeArray_Type);
-		Dee_Decref((DeeObject *)item_type);
+		Dee_Decref(DeeArrayType_AsType(&DeeArray_Type));
+		Dee_Decref(DeeSType_AsType(item_type));
 		Dee_Decref(name);
 		goto err_r;
 	}
@@ -749,8 +768,8 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 	result->at_count                 = num_items;
 
 	/* Finalize the array type. */
-	DeeObject_Init((DeeTypeObject *)result, &DeeArrayType_Type);
-	DeeGC_Track((DeeObject *)result);
+	DeeObject_Init(DeeArrayType_AsType(result), &DeeArrayType_Type);
+	DeeGC_Track((DeeObject *)DeeArrayType_AsType(result));
 done:
 	return result;
 err_r:
@@ -775,6 +794,7 @@ again:
 		}
 		return false;
 	}
+
 	/* Do the re-hash. */
 	if (self->st_array.sa_size) {
 		ASSERT(self->st_array.sa_list);
@@ -790,6 +810,7 @@ again:
 			}
 		}
 	}
+
 	/* Delete the old map and install the new. */
 	Dee_Free(self->st_array.sa_list);
 	self->st_array.sa_mask = new_mask;
@@ -804,7 +825,7 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
                size_t num_items) {
 	DREF DeeArrayTypeObject *result, *new_result;
 	DREF struct array_type_list *pbucket;
-	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
+	ASSERT_OBJECT_TYPE(DeeSType_AsType(self), &DeeSType_Type);
 	rwlock_read(&self->st_cachelock);
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
@@ -812,17 +833,20 @@ DeeSType_Array(DeeSTypeObject *__restrict self,
 		result = LIST_FIRST(&self->st_array.sa_list[num_items & self->st_array.sa_mask]);
 		while (result && result->at_count != num_items)
 			result = LIST_NEXT(result, at_chain);
+
 		/* Check if we can re-use an existing type. */
-		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
+		if (result && Dee_IncrefIfNotZero(DeeArrayType_AsType(result))) {
 			rwlock_endread(&self->st_cachelock);
 			return result;
 		}
 	}
 	rwlock_endread(&self->st_cachelock);
+
 	/* Construct a new array type. */
 	result = arraytype_new(self, num_items);
 	if unlikely(!result)
 		goto done;
+
 	/* Add the new type to the cache. */
 register_type:
 	rwlock_write(&self->st_cachelock);
@@ -832,27 +856,33 @@ register_type:
 		new_result = LIST_FIRST(&self->st_array.sa_list[num_items & self->st_array.sa_mask]);
 		while (new_result && new_result->at_count != num_items)
 			new_result = LIST_NEXT(new_result, at_chain);
+
 		/* Check if we can re-use an existing type. */
-		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
+		if (new_result && Dee_IncrefIfNotZero(DeeArrayType_AsType(new_result))) {
 			rwlock_endread(&self->st_cachelock);
-			Dee_Decref((DeeObject *)result);
+			Dee_Decref(DeeArrayType_AsType(result));
 			return new_result;
 		}
 	}
+
 	/* Rehash when there are a lot of items. */
 	if (self->st_array.sa_size >= self->st_array.sa_mask &&
 	    (!stype_array_rehash(self, self->st_array.sa_mask ? (self->st_array.sa_mask << 1) | 1 : 16 - 1) &&
 	     !self->st_array.sa_mask)) {
+
 		/* No space at all! */
 		rwlock_endwrite(&self->st_cachelock);
+
 		/* Collect enough memory for a 1-item hash map. */
 		if (Dee_CollectMemory(sizeof(DeeArrayTypeObject *)))
 			goto register_type;
+
 		/* Failed to allocate the initial hash-map. */
-		Dee_Decref((DeeObject *)result);
+		Dee_Decref(DeeArrayType_AsType(result));
 		result = NULL;
 		goto done;
 	}
+
 	/* Insert the new array type into the hash-map. */
 	pbucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
 	LIST_INSERT_HEAD(pbucket, result, at_chain); /* Weak reference. */

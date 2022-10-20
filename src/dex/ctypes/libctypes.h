@@ -239,9 +239,23 @@ struct lvalue_type_object {
 /* The type for all structured types (aka. `DeeSTypeObject' objects)
  * (such as C-integer types, or C-style struct/union-declarations). */
 INTDEF DeeTypeObject DeeSType_Type;
-#define DeeSType_Check(ob)  DeeObject_InstanceOf((DeeObject *)(ob), &DeeSType_Type)
-#define DeeSType_Sizeof(x)  ((DeeSTypeObject *)(x))->st_sizeof
-#define DeeSType_Alignof(x) ((DeeSTypeObject *)(x))->st_align
+#define DeeSType_Check(ob)         DeeObject_InstanceOf((DeeObject *)(ob), &DeeSType_Type)
+#define DeeSType_Sizeof(x)         ((DeeSTypeObject *)(x))->st_sizeof
+#define DeeSType_Alignof(x)        ((DeeSTypeObject *)(x))->st_align
+#define DeeSType_Base(x)           ((DeeSTypeObject *)DeeType_Base((DeeTypeObject *)(x)))
+#define DeeSType_AsType(x)         (&(x)->st_base)
+#define DeeSType_AsObject(x)       ((DeeObject *)&(x)->st_base)
+#define DeeType_AsSType(x)         COMPILER_CONTAINER_OF(x, DeeSTypeObject, st_base)
+#define DeeType_AsPointerType(x)   COMPILER_CONTAINER_OF(x, DeePointerTypeObject, pt_base.st_base)
+#define DeeType_AsLValueType(x)    COMPILER_CONTAINER_OF(x, DeeLValueTypeObject, lt_base.st_base)
+#define DeeSType_AsPointerType(x)  COMPILER_CONTAINER_OF(x, DeePointerTypeObject, pt_base)
+#define DeeSType_AsLValueType(x)   COMPILER_CONTAINER_OF(x, DeeLValueTypeObject, lt_base)
+#define DeePointerType_AsObject(x) ((DeeObject *)&(x)->pt_base.st_base)
+#define DeePointerType_AsType(x)   (&(x)->pt_base.st_base)
+#define DeePointerType_AsSType(x)  (&(x)->pt_base)
+#define DeeLValueType_AsObject(x)  ((DeeObject *)&(x)->lt_base.st_base)
+#define DeeLValueType_AsType(x)    (&(x)->lt_base.st_base)
+#define DeeLValueType_AsSType(x)   (&(x)->lt_base)
 
 /* The types for all pointer/l-value types (aka. `DeePointerTypeObject' / `DeeLValueTypeObject' objects)
  * NOTE: These types are derived from `DeeSType_Type' */
@@ -453,9 +467,9 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject 
 
 
 #ifdef __SIZEOF_BOOL__
-#define CONFIG_CTYPES_SIZEOF_BOOL  __SIZEOF_BOOL__
+#define CONFIG_CTYPES_SIZEOF_BOOL __SIZEOF_BOOL__
 #else /* __SIZEOF_BOOL__ */
-#define CONFIG_CTYPES_SIZEOF_BOOL  1
+#define CONFIG_CTYPES_SIZEOF_BOOL 1
 #endif /* !__SIZEOF_BOOL__ */
 
 #ifdef __SIZEOF_WCHAR_T__
@@ -470,9 +484,9 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject 
 #define CONFIG_CTYPES_SIZEOF_CHAR32 4
 
 #ifdef __SIZEOF_CHAR__
-#define CONFIG_CTYPES_SIZEOF_CHAR  __SIZEOF_CHAR__
+#define CONFIG_CTYPES_SIZEOF_CHAR __SIZEOF_CHAR__
 #else /* __SIZEOF_CHAR__ */
-#define CONFIG_CTYPES_SIZEOF_CHAR  1
+#define CONFIG_CTYPES_SIZEOF_CHAR 1
 #endif /* !__SIZEOF_CHAR__ */
 
 #ifdef __SIZEOF_SHORT__
@@ -482,17 +496,17 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject 
 #endif /* !__SIZEOF_SHORT__ */
 
 #ifdef __SIZEOF_INT__
-#define CONFIG_CTYPES_SIZEOF_INT   __SIZEOF_INT__
+#define CONFIG_CTYPES_SIZEOF_INT __SIZEOF_INT__
 #else /* __SIZEOF_INT__ */
-#define CONFIG_CTYPES_SIZEOF_INT   4
+#define CONFIG_CTYPES_SIZEOF_INT 4
 #endif /* !__SIZEOF_INT__ */
 
 #ifdef __SIZEOF_LONG__
-#define CONFIG_CTYPES_SIZEOF_LONG  __SIZEOF_LONG__
+#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_LONG__
 #elif defined(CONFIG_HOST_WINDOWS)
-#define CONFIG_CTYPES_SIZEOF_LONG  4
+#define CONFIG_CTYPES_SIZEOF_LONG 4
 #else /* ... */
-#define CONFIG_CTYPES_SIZEOF_LONG  __SIZEOF_POINTER__
+#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_POINTER__
 #endif /* !... */
 
 #ifdef __SIZEOF_LONG_LONG__
@@ -514,17 +528,17 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject 
 #define CONFIG_CTYPES_CHAR16_UNSIGNED
 #define CONFIG_CTYPES_CHAR32_UNSIGNED
 
-#define CONFIG_CTYPES_ALIGNOF_POINTER __SIZEOF_POINTER__
+#define CONFIG_CTYPES_ALIGNOF_POINTER __ALIGNOF_POINTER__
 #define CONFIG_CTYPES_ALIGNOF_LVALUE  CONFIG_CTYPES_ALIGNOF_POINTER
-#define CONFIG_CTYPES_ALIGNOF_BOOL    CONFIG_CTYPES_SIZEOF_BOOL
-#define CONFIG_CTYPES_ALIGNOF_WCHAR   CONFIG_CTYPES_SIZEOF_WCHAR
-#define CONFIG_CTYPES_ALIGNOF_CHAR16  CONFIG_CTYPES_SIZEOF_CHAR16
-#define CONFIG_CTYPES_ALIGNOF_CHAR32  CONFIG_CTYPES_SIZEOF_CHAR32
-#define CONFIG_CTYPES_ALIGNOF_CHAR    CONFIG_CTYPES_SIZEOF_CHAR
-#define CONFIG_CTYPES_ALIGNOF_SHORT   CONFIG_CTYPES_SIZEOF_SHORT
-#define CONFIG_CTYPES_ALIGNOF_INT     CONFIG_CTYPES_SIZEOF_INT
-#define CONFIG_CTYPES_ALIGNOF_LONG    CONFIG_CTYPES_SIZEOF_LONG
-#define CONFIG_CTYPES_ALIGNOF_LLONG   CONFIG_CTYPES_SIZEOF_LLONG
+#define CONFIG_CTYPES_ALIGNOF_BOOL    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_BOOL)
+#define CONFIG_CTYPES_ALIGNOF_WCHAR   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_WCHAR)
+#define CONFIG_CTYPES_ALIGNOF_CHAR16  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR16)
+#define CONFIG_CTYPES_ALIGNOF_CHAR32  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR32)
+#define CONFIG_CTYPES_ALIGNOF_CHAR    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR)
+#define CONFIG_CTYPES_ALIGNOF_SHORT   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_SHORT)
+#define CONFIG_CTYPES_ALIGNOF_INT     __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_INT)
+#define CONFIG_CTYPES_ALIGNOF_LONG    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LONG)
+#define CONFIG_CTYPES_ALIGNOF_LLONG   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LLONG)
 
 /* Builtin standard C types. */
 INTDEF DeeSTypeObject DeeCVoid_Type;
@@ -740,6 +754,9 @@ struct array_type_object {
 INTDEF DeeTypeObject DeeArrayType_Type;
 #define DeeArrayType_Check(ob) \
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeArrayType_Type) /* `array_type' is final */
+#define DeeArrayType_AsObject(x) ((DeeObject *)&(x)->at_base.st_base)
+#define DeeArrayType_AsType(x)   (&(x)->at_base.st_base)
+#define DeeArrayType_AsSType(x)  (&(x)->at_base)
 
 /* Base classes for all C array types. */
 INTDEF DeeArrayTypeObject DeeArray_Type;
@@ -808,6 +825,10 @@ struct cfunction_type_object {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 #endif /* !CONFIG_NO_CFUNCTION */
 };
+
+#define DeeCFunctionType_AsObject(x) ((DeeObject *)&(x)->ft_base.st_base)
+#define DeeCFunctionType_AsType(x)   (&(x)->ft_base.st_base)
+#define DeeCFunctionType_AsSType(x)  (&(x)->ft_base)
 
 INTDEF DeeTypeObject DeeCFunctionType_Type;
 #define DeeCFunctionType_Check(ob) \
