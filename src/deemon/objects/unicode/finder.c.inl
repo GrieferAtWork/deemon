@@ -676,7 +676,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL  /* TODO: string.contains() */
+		/* .tp_bool = */ NULL  /* TODO: string.casecontains() */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sf_visit,
