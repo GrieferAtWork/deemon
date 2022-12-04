@@ -775,7 +775,7 @@ DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t ar
 		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(mylen + argc);
 		if unlikely(!result)
 			goto err;
-		iter = Dee_Movrefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
+		iter = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
 		memcpyc(iter, argv, argc, sizeof(DREF DeeObject *));
 		Dee_Decref_unlikely(self);
 	}
