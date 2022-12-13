@@ -899,24 +899,24 @@ func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) ==
 func("mempmove", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmove(a, b, 16) == (char *)a + 16;");
 func("mempcpy", "defined(__USE_GNU)", test: "extern void *a; extern void const *b; return mempcpy(a, b, 16) == (char *)a + 16;");
 func("mempset", "defined(__USE_KOS)", test: "extern void *a; return mempset(a, 0, 16) == (char *)a + 16;");
-func("mempcpyw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyw(a, b, 16) == (char *)a + 32;");
-func("mempcpyl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyl(a, b, 16) == (char *)a + 64;");
-func("mempcpyq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempcpyq(a, b, 16) == (char *)a + 128;");
+func("mempcpyw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyw(a, b, 16) == (char *)a + 32;");
+func("mempcpyl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyl(a, b, 16) == (char *)a + 64;");
+func("mempcpyq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempcpyq(a, b, 16) == (char *)a + 128;");
 func("mempcpyc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempcpyc(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmovew", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovew(a, b, 16) == (char *)a + 32;");
-func("mempmovel", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovel(a, b, 16) == (char *)a + 64;");
-func("mempmoveq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveq(a, b, 16) == (char *)a + 128;");
+func("mempmovew", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovew(a, b, 16) == (char *)a + 32;");
+func("mempmovel", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovel(a, b, 16) == (char *)a + 64;");
+func("mempmoveq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveq(a, b, 16) == (char *)a + 128;");
 func("mempmovec", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovec(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmoveupw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupw(a, b, 16) == (char *)a + 32;");
-func("mempmoveupl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupl(a, b, 16) == (char *)a + 64;");
-func("mempmoveupq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmoveupq(a, b, 16) == (char *)a + 128;");
+func("mempmoveupw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupw(a, b, 16) == (char *)a + 32;");
+func("mempmoveupl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupl(a, b, 16) == (char *)a + 64;");
+func("mempmoveupq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmoveupq(a, b, 16) == (char *)a + 128;");
 func("mempmoveupc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmoveupc(a, b, 16, 2) == (char *)a + 32;");
 
-func("mempmovedownw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownw(a, b, 16) == (char *)a + 32;");
-func("mempmovedownl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownl(a, b, 16) == (char *)a + 64;");
-func("mempmovedownq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return mempmovedownq(a, b, 16) == (char *)a + 128;");
+func("mempmovedownw", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownw(a, b, 16) == (char *)a + 32;");
+func("mempmovedownl", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownl(a, b, 16) == (char *)a + 64;");
+func("mempmovedownq", "defined(__USE_STRING_BWLQ)", test: "extern void *a; extern void const *b; return (void *)mempmovedownq(a, b, 16) == (char *)a + 128;");
 func("mempmovedownc", "defined(__USE_KOS)", test: "extern void *a; extern void const *b; return mempmovedownc(a, b, 16, 2) == (char *)a + 32;");
 
 
