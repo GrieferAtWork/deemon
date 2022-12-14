@@ -196,13 +196,13 @@ textjumps_collect(struct textjumps *__restrict self,
                   instruction_t *__restrict instr_start,
                   instruction_t *__restrict instr_end,
                   instruction_t *__restrict start_addr) {
-	instruction_t *temp;
+	instruction_t *iter_start;
 	instruction_t *iter = instr_start;
 fast_continue:
-	for (; iter < instr_end;
-	     iter = DeeAsm_NextInstr(iter)) {
+	for (; iter < instr_end; iter = DeeAsm_NextInstr(iter)) {
 		uint16_t opcode;
 		int32_t offset;
+		iter_start = iter;
 do_switch_on_iter:
 		opcode = *iter;
 do_switch_on_opcode:
@@ -241,9 +241,8 @@ do_switch_on_opcode:
 		case ASM_FOREACH:
 			offset = *(int8_t *)(iter + 1);
 do_relative_jump:
-			temp = iter;
 			iter = DeeAsm_NextInstr(iter);
-			if (textjumps_add(self, (code_addr_t)(temp - start_addr),
+			if (textjumps_add(self, (code_addr_t)(iter_start - start_addr),
 			                  (code_addr_t)(iter - start_addr) + offset))
 				goto err;
 			goto fast_continue;
@@ -826,6 +825,7 @@ get_next_instruction_without_stack:
 					instruction_t *orig_pc;
 					uint16_t opcode;
 					orig_pc = code->co_code + jmp->tj_origin;
+					orig_pc = DeeAsm_SkipPrefix(orig_pc); /* Jump instruction can use prefixes */
 					opcode  = *orig_pc;
 					if (ASM_ISEXTENDED(opcode))
 						opcode = (opcode << 8) | orig_pc[1];

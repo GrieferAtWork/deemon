@@ -1210,13 +1210,13 @@ again:
 	length = intr_len[*pc];
 	if unlikely(!length) {
 		/* Prefix instruction. */
-		if (*pc >= ASM_PREFIXMIN) {
+		if (ASM_ISPREFIX(*pc)) {
 			pc += prefix_length[*pc - ASM_PREFIXMIN];
 			goto again;
 		}
 		/* Extended instruction sets. */
 		if (*pc == ASM_EXTENDED1) {
-			if (pc[1] >= ASM_PREFIXMIN) {
+			if (ASM_ISPREFIX(pc[1])) {
 				pc += prefix_length_f0[pc[1] - ASM_PREFIXMIN];
 				goto again;
 			}
@@ -1228,6 +1228,29 @@ again:
 		}
 	}
 	return (instruction_t *)(pc + length);
+}
+
+
+/* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
+ * The returned pointer points to the first actual instruction byte.
+ * When no prefix is present, simply re-return `pc' */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
+DeeAsm_SkipPrefix(instruction_t const *__restrict pc) {
+	instruction_t inst;
+again:
+	inst = *pc;
+	if (ASM_ISPREFIX(inst)) {
+		pc += prefix_length[inst - ASM_PREFIXMIN];
+		goto again;
+	}
+	if (inst == ASM_EXTENDED1) {
+		inst = pc[1];
+		if (ASM_ISPREFIX(inst)) {
+			pc += prefix_length_f0[inst - ASM_PREFIXMIN];
+			goto again;
+		}
+	}
+	return (instruction_t *)pc;
 }
 
 

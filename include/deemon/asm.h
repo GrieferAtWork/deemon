@@ -1622,6 +1622,12 @@ typedef Dee_instruction_t instruction_t;
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 DeeAsm_NextInstr(instruction_t const *__restrict pc);
 
+/* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
+ * The returned pointer points to the first actual instruction byte.
+ * When no prefix is present, simply re-return `pc' */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
+DeeAsm_SkipPrefix(instruction_t const *__restrict pc);
+
 /* Same as `DeeAsm_NextInstr()', but also keep track of the current stack depth.
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
