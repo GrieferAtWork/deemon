@@ -1,0 +1,3 @@
+[submodule "src/libregex"]
+	path = src/libregex
+	url = https://github.com/GrieferAtWork/kos-libregex.git

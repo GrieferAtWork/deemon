@@ -15,6 +15,12 @@ Deemon is a universally applicable language that has learned much from its past 
 
 Code examples can be found in */util/tut*
 
+**NOTICE**: Deemon uses git submodules (which are required to build deemon), so if you use the *download zip* function, you won't end up with everything that goes into building deemon. So in order to clone deemon in its entirety, you must clone this [git](https://git-scm.com/) through use of:
+
+```sh
+git clone --recursive https://github.com/GrieferAtWork/deemon.git
+```
+
 
 
 ## Building

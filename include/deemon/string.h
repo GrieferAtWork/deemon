@@ -326,6 +326,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define Dee_STRING_UTF_FASCII  0x0001 /* FLAG: The string contains no character outside the ASCII range.
                                        * NOTE: This flag isn't required to be set, even if there are only ASCII characters. */
 #define Dee_STRING_UTF_FINVBYT 0x0002 /* FLAG: The string in `u_data[Dee_STRING_WIDTH_1BYTE]' contains truncated characters (represented as `?') */
+#define Dee_STRING_UTF_FREGEX  0x0004 /* FLAG: The string appears in the regex cache */
 
 
 #ifdef DEE_SOURCE
@@ -351,6 +352,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define STRING_UTF_FNORMAL      Dee_STRING_UTF_FNORMAL
 #define STRING_UTF_FASCII       Dee_STRING_UTF_FASCII
 #define STRING_UTF_FINVBYT      Dee_STRING_UTF_FINVBYT
+#define STRING_UTF_FREGEX       Dee_STRING_UTF_FREGEX
 #endif /* DEE_SOURCE */
 
 struct Dee_string_utf {
@@ -3133,6 +3135,7 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 
 
 
+#if 1 /* TODO: Deprecated regex interface */
 /* Given a regular expression `pattern', check if it
  * matches the string found in `data', returning the
  * number of bytes in `data' that are being matched,
@@ -3218,6 +3221,7 @@ DFUNDEF WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
                  /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  struct Dee_regex_range_ex *__restrict presult, uint16_t flags);
+#endif
 
 DECL_END
 

@@ -3373,7 +3373,7 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 	return result;
 }
 
-PUBLIC NONNULL((1, 2)) uint32_t DCALL
+PUBLIC NONNULL((1)) uint32_t DCALL
 Dee_utf8_readchar_rev(char const **__restrict pend,
                       char const *begin) {
 	uint32_t result;

@@ -549,11 +549,21 @@ err:
 	return NULL;
 }
 
+
+/* Destroy the regex cache associated with `self'.
+ * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FREGEX' was set. */
+INTDEF NONNULL((1)) void DCALL /* From "./unicode/regex.c" */
+DeeString_DestroyRegex(String *__restrict self);
+
 PRIVATE NONNULL((1)) void DCALL
 string_fini(String *__restrict self) {
 	struct string_utf *utf;
 	/* Clean up UTF data. */
 	if ((utf = self->s_data) != NULL) {
+		/* If present */
+		if unlikely(utf->u_flags & STRING_UTF_FREGEX)
+			DeeString_DestroyRegex(self);
+
 		Dee_string_utf_fini(utf, self);
 		Dee_string_utf_free(utf);
 	}

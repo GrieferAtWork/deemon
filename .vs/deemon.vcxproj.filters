@@ -381,6 +381,9 @@
     <ClInclude Include="..\include\deemon\system-sjlj.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\regex.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -752,9 +755,6 @@
     <ClCompile Include="..\src\deemon\objects\frame.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\deemon\objects\unicode\regex.c">
-      <Filter>src\deemon\objects\unicode</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\deemon\objects\object_format.c">
       <Filter>src\deemon\objects</Filter>
     </ClCompile>
@@ -895,6 +895,12 @@
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\seq\byattr.c">
       <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\regex-old.c">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\regex.c">
+      <Filter>src\deemon\objects\unicode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
