@@ -50,7 +50,7 @@ struct Dee_dict_object {
 	size_t                d_mask; /* [lock(d_lock)][> d_size || d_mask == 0] Allocated dictionary size. */
 	size_t                d_size; /* [lock(d_lock)][< d_mask || d_mask == 0] Amount of non-NULL key-item pairs. */
 	size_t                d_used; /* [lock(d_lock)][<= d_size] Amount of key-item pairs actually in use.
-	                               *  HINT: The difference to `d_size' is the number of dummy keys currently in use. */
+	                               * HINT: The difference to `d_size' is the number of dummy keys currently in use. */
 	struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
 	                               * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS

@@ -790,9 +790,9 @@ again_lock:
 	for (;; DeeDict_HashNx(i, perturb)) {
 		struct dict_item *item = DeeDict_HashIt(self, i);
 		if (!item->di_key)
-			break; // Not found
+			break; /* Not found */
 		if (item->di_hash != hash)
-			continue; // Non-matching hash
+			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
 		if (strcmp(DeeString_STR(item->di_key), key) != 0)
@@ -839,9 +839,9 @@ again_lock:
 	for (;; DeeDict_HashNx(i, perturb)) {
 		struct dict_item *item = DeeDict_HashIt(self, i);
 		if (!item->di_key)
-			break; // Not found
+			break; /* Not found */
 		if (item->di_hash != hash)
-			continue; // Non-matching hash
+			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
 		if (!DeeString_EQUALS_BUF(item->di_key, key, keylen))
@@ -1442,11 +1442,15 @@ again:
 		goto again_lock;
 	}
 #endif /* !CONFIG_NO_THREADS */
-	if (first_dummy && self->d_size + 1 < self->d_mask) {
+	if ((first_dummy != NULL) &&
+	    (self->d_size + 1 < self->d_mask ||
+	     first_dummy->di_key != NULL)) {
+		bool wasdummy;
 		ASSERT(first_dummy != empty_dict_items);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
-		if (first_dummy->di_key)
+		wasdummy = first_dummy->di_key != NULL;
+		if (wasdummy)
 			Dee_DecrefNokill(first_dummy->di_key);
 		/* Fill in the target slot. */
 		first_dummy->di_key   = key;
@@ -1455,10 +1459,12 @@ again:
 		Dee_Incref(key);
 		Dee_Incref(value);
 		++self->d_used;
-		++self->d_size;
-		/* Try to keep the Dict vector big at least twice as big as the element count. */
-		if (self->d_size * 2 > self->d_mask)
-			dict_rehash(self, 1);
+		if (!wasdummy) {
+			++self->d_size;
+			/* Try to keep the Dict vector big at least twice as big as the element count. */
+			if (self->d_size * 2 > self->d_mask)
+				dict_rehash(self, 1);
+		}
 		DeeDict_LockEndWrite(self);
 		return 0;
 	}
@@ -1575,12 +1581,16 @@ again:
 		SCHED_YIELD();
 		goto again_lock;
 	}
-#endif
-	if (first_dummy && self->d_size + 1 < self->d_mask) {
+#endif /* !CONFIG_NO_THREADS */
+	if ((first_dummy != NULL) &&
+	    (self->d_size + 1 < self->d_mask ||
+	     first_dummy->di_key != NULL)) {
+		bool wasdummy;
 		ASSERT(first_dummy != empty_dict_items);
 		ASSERT(!first_dummy->di_key ||
 		       first_dummy->di_key == dummy);
-		if (first_dummy->di_key)
+		wasdummy = first_dummy->di_key != NULL;
+		if (wasdummy)
 			Dee_DecrefNokill(first_dummy->di_key);
 		/* Fill in the target slot. */
 		first_dummy->di_key   = key;
@@ -1589,10 +1599,12 @@ again:
 		Dee_Incref(key);
 		Dee_Incref(value);
 		++self->d_used;
-		++self->d_size;
-		/* Try to keep the Dict vector big at least twice as big as the element count. */
-		if (self->d_size * 2 > self->d_mask)
-			dict_rehash(self, 1);
+		if (!wasdummy) {
+			++self->d_size;
+			/* Try to keep the Dict vector big at least twice as big as the element count. */
+			if (self->d_size * 2 > self->d_mask)
+				dict_rehash(self, 1);
+		}
 		DeeDict_LockEndWrite(self);
 		return 0;
 	}
