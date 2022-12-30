@@ -5336,6 +5336,8 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      /**/ "amount of sub-strings and figuring out their lengths, this function takes "
 	      /**/ "the length of sub-strings and figures out their amount") },
 
+	/* TODO: Regex functions */
+
 	{ NULL }
 };
 

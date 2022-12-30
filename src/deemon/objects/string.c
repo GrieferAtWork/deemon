@@ -1494,6 +1494,23 @@ string_hasutf(String *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_hasregex(String *__restrict self) {
+	struct string_utf *utf;
+#ifdef CONFIG_NO_THREADS
+	utf = self->s_data;
+#else /* CONFIG_NO_THREADS */
+	utf = ATOMIC_READ(self->s_data);
+#endif /* !CONFIG_NO_THREADS */
+	if (utf == NULL)
+		return_false;
+#ifdef CONFIG_NO_THREADS
+	return_bool((utf->u_flags & STRING_UTF_FREGEX) != 0);
+#else /* CONFIG_NO_THREADS */
+	return_bool((ATOMIC_READ(utf->u_flags) & STRING_UTF_FREGEX) != 0);
+#endif /* !CONFIG_NO_THREADS */
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getfirst(String *__restrict self) {
 	void *str = DeeString_WSTR(self);
@@ -1673,6 +1690,10 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasutf, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to ?t if @this ?. owns a UTF container") },
+	{ "__hasregex__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasregex, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
 	  DOC("->?.\n"

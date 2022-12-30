@@ -9475,62 +9475,60 @@ do_empty_scan:
 		}
 		goto do_load_3args;
 
-		{
-			size_t end_offset;
-		case 4:
-			if (DeeString_Check(argv[1])) {
-				/* pattern, rules, start, end */
-				if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-					goto err;
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
-					goto err;
-				if (DeeObject_AsSSize(argv[3], (dssize_t *)&end_offset))
-					goto err;
-			} else {
-				if (DeeObject_AssertTypeExact(argv[3], &DeeString_Type))
-					goto err;
-				if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
-					goto err;
-do_load_3args:
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&end_offset))
-					goto err;
-				if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
-					goto err;
-			}
-			if (end_offset >= DeeString_WLEN(self))
-				goto do_start_offset_only;
-			if (result->re_offset >= end_offset)
-				goto do_empty_scan;
-			/* Do a sub-string scan. */
-			result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-			if unlikely(!result->re_dataptr)
+	case 4: {
+		size_t end_offset;
+		if (DeeString_Check(argv[1])) {
+			/* pattern, rules, start, end */
+			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
 				goto err;
-			result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-			if (result->re_dataptr == DeeString_STR(self)) {
-				/* ASCII string. */
-				result->re_dataptr += result->re_offset;
-				result->re_datalen = end_offset - result->re_offset;
-			} else {
-				size_t i;
-				char *iter, *end;
-				/* UTF-8 string (manually adjust). */
-				end = (iter = result->re_dataptr) + result->re_datalen;
-				for (i = 0; i < result->re_offset; ++i) {
-					if (iter >= end)
-						break;
-					utf8_readchar((char const **)&iter, end);
-				}
-				result->re_dataptr = iter;
-				/* Continue scanning until the full sub-string has been indexed. */
-				for (; i < end_offset; ++i) {
-					if (iter >= end)
-						break;
-					utf8_readchar((char const **)&iter, end);
-				}
-				result->re_datalen = (size_t)(iter - result->re_dataptr);
-			}
+			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
+				goto err;
+			if (DeeObject_AsSSize(argv[3], (dssize_t *)&end_offset))
+				goto err;
+		} else {
+			if (DeeObject_AssertTypeExact(argv[3], &DeeString_Type))
+				goto err;
+			if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
+				goto err;
+do_load_3args:
+			if (DeeObject_AsSSize(argv[2], (dssize_t *)&end_offset))
+				goto err;
+			if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
+				goto err;
 		}
-		break;
+		if (end_offset >= DeeString_WLEN(self))
+			goto do_start_offset_only;
+		if (result->re_offset >= end_offset)
+			goto do_empty_scan;
+		/* Do a sub-string scan. */
+		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
+		if unlikely (!result->re_dataptr)
+			goto err;
+		result->re_datalen = WSTR_LENGTH(result->re_dataptr);
+		if (result->re_dataptr == DeeString_STR(self)) {
+			/* ASCII string. */
+			result->re_dataptr += result->re_offset;
+			result->re_datalen = end_offset - result->re_offset;
+		} else {
+			size_t i;
+			char *iter, *end;
+			/* UTF-8 string (manually adjust). */
+			end = (iter = result->re_dataptr) + result->re_datalen;
+			for (i = 0; i < result->re_offset; ++i) {
+				if (iter >= end)
+					break;
+				utf8_readchar((char const **)&iter, end);
+			}
+			result->re_dataptr = iter;
+			/* Continue scanning until the full sub-string has been indexed. */
+			for (; i < end_offset; ++i) {
+				if (iter >= end)
+					break;
+				utf8_readchar((char const **)&iter, end);
+			}
+			result->re_datalen = (size_t)(iter - result->re_dataptr);
+		}
+	}	break;
 
 	default:
 		err_invalid_argc(function_name, argc, 1, 4);
@@ -11600,6 +11598,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "the length of sub-strings and figures out their amount") },
 
 	/* Regex functions. */
+	/* TODO: Completely re-write this regex API from scratch */
 	{ "rematch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematch,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
