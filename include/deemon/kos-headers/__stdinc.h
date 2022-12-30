@@ -54,10 +54,9 @@
      defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) ||              \
      defined(_WIN32_WCE) || defined(WIN32_WCE))
 #define __PE__ 1
-#elif (defined(__linux__) || defined(__linux) || defined(linux) ||         \
-       defined(__unix__) || defined(__unix) || defined(unix) ||            \
-       defined(__KOS__) || defined(__OpenBSD__) || defined(__FreeBSD__) || \
-       defined(__NetBSD__))
+#elif (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix) ||    \
+       defined(__KOS__))
 #define __ELF__ 1
 #elif defined(__TINYC__)
 /* TCC predefines its own redirect macro when targeting ELF, meaning
@@ -137,11 +136,11 @@
  * `-fnon-call-exceptions' is disabled  (NCX --  NonCallExceptions)
  * This applies to a huge  set of functions, including  practically
  * everything from <string.h>, as well as a lot of other functions.
- *     So many as a matter of fact, that it is the default nothrow-mode
- *     used  by   magic  headers   created  by   `generated_header.dee'
+ *     So many as a matter of fact, that it is the default nothrow-
+ *     mode used by magic headers created by `generated_header.dee'
  * Basically, anything that is designed to interact with user-provided
- * memory  buffers applies  for this, as  the user may  have defined a
- * signal handler to throw an  exception upon `SIGSEGV', or the  like.
+ * memory buffers qualifies for this, as  the user may have defined  a
+ * signal handler to throw an exception upon `SIGSEGV', or the like.
  * Or alternatively, has KOS kernel exceptions enabled (s.a. <kos/except-handler.h>) */
 #if (!defined(__NO_NON_CALL_EXCEPTIONS) || \
      (defined(__NON_CALL_EXCEPTIONS) && (__NON_CALL_EXCEPTIONS + 0) != 0) || \
@@ -324,7 +323,7 @@
 #endif /* !... */
 
 #ifndef __DEFINE_PUBLIC_ALIAS
-#ifdef __INTELLISENSE_GCC__
+#if defined(__INTELLISENSE_GCC__) && 0
 #define __DEFINE_PRIVATE_ALIAS(new, old)      static __typeof__(old) new __attribute__((__alias__(#old)))
 #define __DEFINE_PUBLIC_ALIAS(new, old)       __typeof__(old) new __attribute__((__alias__(#old)))
 #define __DEFINE_INTERN_ALIAS(new, old)       __typeof__(old) new __attribute__((__alias__(#old)))
@@ -628,68 +627,68 @@
 #elif !defined(__NO_ASMNAME)
 /* Use GCC family's assembly name extension. */
 #ifdef __COMPILER_ASMNAME_ON_SECOND_DECL
-#define __COMPILER_SREDIRECT(decl,attr,T,name,asmname)                                                                  decl attr T name; decl attr T name __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_SREDIRECT2(decl,attr,Tdecl,name,asmname)                                                             decl attr Tdecl; decl attr Tdecl __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       decl attr Treturn nothrow(cc name) param; decl attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          decl attr void nothrow(cc name) param; decl attr void nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) decl attr Treturn nothrow(cc name) paramf; decl attr Treturn nothrow(cc name) paramf __ASMNAME(__PP_PRIVATE_STR(asmnamef));
-#define __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    decl attr void nothrow(cc name) paramf; decl attr void nothrow(cc name) paramf __ASMNAME(__PP_PRIVATE_STR(asmnamef));
-#define __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      decl attr Treturn nothrow(cc name) param; decl attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         decl attr void nothrow(cc name) param; decl attr void nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_SREDIRECT(decl,attr,T,name,asmname)                                                                  decl attr T name; decl attr T name __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_SREDIRECT2(decl,attr,Tdecl,name,asmname)                                                             decl attr Tdecl; decl attr Tdecl __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       decl attr Treturn nothrow(cc name) param; decl attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          decl attr void nothrow(cc name) param; decl attr void nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) decl attr Treturn nothrow(cc name) paramf; decl attr Treturn nothrow(cc name) paramf __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmnamef));
+#define __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    decl attr void nothrow(cc name) paramf; decl attr void nothrow(cc name) paramf __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmnamef));
+#define __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      decl attr Treturn nothrow(cc name) param; decl attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         decl attr void nothrow(cc name) param; decl attr void nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #else /* __COMPILER_ASMNAME_ON_SECOND_DECL */
-#define __COMPILER_SREDIRECT(decl,attr,T,name,asmname)                                                                  decl attr T name __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_SREDIRECT2(decl,attr,Tdecl,name,asmname)                                                             decl attr Tdecl __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       decl attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          decl attr void nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) decl attr Treturn nothrow(cc name) paramf __ASMNAME(__PP_PRIVATE_STR(asmnamef));
-#define __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    decl attr void nothrow(cc name) paramf __ASMNAME(__PP_PRIVATE_STR(asmnamef));
-#define __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      decl attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         decl attr void nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_SREDIRECT(decl,attr,T,name,asmname)                                                                  decl attr T name __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_SREDIRECT2(decl,attr,Tdecl,name,asmname)                                                             decl attr Tdecl __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       decl attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          decl attr void nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) decl attr Treturn nothrow(cc name) paramf __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmnamef));
+#define __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    decl attr void nothrow(cc name) paramf __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmnamef));
+#define __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      decl attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         decl attr void nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #endif /* !__COMPILER_ASMNAME_ON_SECOND_DECL */
 #ifdef ____PRIVATE_VREDIRECT_UNPACK
 #ifdef __COMPILER_ASMNAME_ON_SECOND_DECL
-#define __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...); decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...); decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...); decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...); decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #else /* __COMPILER_ASMNAME_ON_SECOND_DECL */
-#define __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __ASMNAME(__PP_PRIVATE_STR(asmname));
-#define __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    decl attr Treturn nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       decl attr void nothrow(cc name)(____PRIVATE_VREDIRECT_UNPACK param, ...) __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #endif /* !__COMPILER_ASMNAME_ON_SECOND_DECL */
 #endif /* ____PRIVATE_VREDIRECT_UNPACK */
 #ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #ifdef __NO_EXTERN_INLINE
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)          extern attr Treturn nothrow(cc name) param;
 #ifdef __COMPILER_ASMNAME_ON_SECOND_DECL
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #else /* __COMPILER_ASMNAME_ON_SECOND_DECL */
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #endif /* !__COMPILER_ASMNAME_ON_SECOND_DECL */
 #else /* __NO_EXTERN_INLINE */
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)          __EXTERN_INLINE attr Treturn nothrow(cc name) param __VA_ARGS__
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param __VA_ARGS__
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param __VA_ARGS__
 #endif /* !__NO_EXTERN_INLINE */
 #elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
 #ifdef __NO_EXTERN_INLINE
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,inline_impl...)          extern attr Treturn nothrow(cc name) param;
 #ifdef __COMPILER_ASMNAME_ON_SECOND_DECL
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #else /* __COMPILER_ASMNAME_ON_SECOND_DECL */
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #endif /* !__COMPILER_ASMNAME_ON_SECOND_DECL */
 #else /* __NO_EXTERN_INLINE */
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,inline_impl...)          __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl...) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
 #endif /* !__NO_EXTERN_INLINE */
 #else /* ... */
 #ifdef __NO_EXTERN_INLINE
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,inline_impl)          extern attr Treturn nothrow(cc name) param;
 #ifdef __COMPILER_ASMNAME_ON_SECOND_DECL
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param; extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #else /* __COMPILER_ASMNAME_ON_SECOND_DECL */
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname));
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname));
 #endif /* !__COMPILER_ASMNAME_ON_SECOND_DECL */
 #else /* __NO_EXTERN_INLINE */
 #define __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,inline_impl)          __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
-#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param __ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
+#define __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,inline_impl) extern attr Treturn nothrow(cc name) param __COMPILER_ASMNAME(__PP_PRIVATE_STR(asmname)); __EXTERN_INLINE attr Treturn nothrow(cc name) param inline_impl
 #endif /* !__NO_EXTERN_INLINE */
 #endif /* !... */
 #elif defined(__PRAGMA_REDEFINE_EXTNAME)
