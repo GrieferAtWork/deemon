@@ -451,13 +451,13 @@ struct ast {
 
 #define AST_SWITCH              0x0015 /* A switch statement. */
 #   define AST_FSWITCH_NORMAL   0x0000 /* Normal switch flags (automatically determine mode) */
-#   define AST_FSWITCH_NOJMPTAB 0x0001 /* Never generate a jump table to perform the actual switch.
-                                        * Normally, all cases that could be expressed as constant
-                                        * key-expressions of a Dict, (or even more preferred, indices of a List)
-                                        * are packaged together within a compile-time generated jump table
-                                        * that is stored as a constant/static variable and used using
-                                        * one of the 2 following code patterns (depending on whether or
-                                        * not all of the switch's targets share the same stack-alignment)
+#   define AST_FSWITCH_NOJMPTAB 0x0001 /* Never generate a jump table to perform the actual switch. Normally,
+                                        * all cases that could be expressed as constant key- expressions of a
+                                        * Dict, (or even more preferred, indices of a List) are packaged
+                                        * together within a compile-time generated jump table that is stored
+                                        * as a constant/static variable and used using one of the 2 following
+                                        * code patterns (depending on whether or not all of the switch's
+                                        * targets share the same stack-alignment)
                                         * >>#if IDENTICAL_STACK_DEPTHS
                                         * >>     push     const @{ "foo": 1f.SP, "bar": 2f }
                                         * >>#else
@@ -673,7 +673,7 @@ INTDEF struct ast *FCALL ast_puthere(struct ast *self);
 /* Fill the given AST location with the current source position. */
 INTDEF NONNULL((1)) void FCALL loc_here(struct ast_loc *__restrict info);
 
-/* NOTE: Functions below use `current_scope' to initialize `ast_scope', meaning
+/* NOTE: Functions below use `current_scope' to initialize `a_scope', meaning
  *       that all of them expect the caller to be holding the compiler lock.
  *       Besides that, debug information is initialized to NULL. */
 

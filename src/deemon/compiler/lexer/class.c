@@ -93,7 +93,7 @@ struct class_maker {
 	size_t                     cm_initc;       /* [(!= 0) == (cm_ctor_scope != NULL) == (cm_ctor != NULL)]
 	                                            * Amount of ASTs executed before the actual constructor. */
 	size_t                     cm_inita;       /* [>= cm_initc] Allocated amount of ASTs executed before the actual constructor. */
-	DREF struct ast          **cm_initv;       /* [0..cm_initc|ALLOC(cm_inita)][owned][[*]->ast_scope == cm_ctor_scope]
+	DREF struct ast          **cm_initv;       /* [0..cm_initc|ALLOC(cm_inita)][owned][[*]->a_scope == cm_ctor_scope]
 	                                            * Vector of ASTs executed before the actual constructor.
 	                                            * NOTE: Each of these asts is generated in the context of the `cm_ctor_scope' scope. */
 	size_t                     cm_class_initc; /* Amount of class member initializers. */

@@ -4490,14 +4490,15 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	      /**/ "of a proxy Sequence, this property depends on the underlying "
 	      /**/ "Sequence, rather than what is exposed by the proxy itself") },
 	/* TODO: _YieldFunction should implement `frozen' as a lazy buffer that only
-	 *       enumerates elements as they are needed, and remembers then as part
+	 *       enumerates elements as they are needed, and remembers them as part
 	 *       of a vector of generated elements. */
 	{ "frozen", &DeeTuple_FromSequence, NULL, NULL,
 	  DOC("->?#Frozen\n"
 	      "Returns a copy of @this Sequence, with all of its current elements, as well as "
 	      /**/ "their current order frozen in place, constructing a snapshot of the Sequence's "
-	      /**/ "current contents. - The actual type of Sequence returned is implementation- and "
-	      /**/ "type- specific, and copying itself may either be done immediately, or as copy-on-write") },
+	      /**/ "current contents. - The actual type of Sequence returned is implementation- "
+	      /**/ "and type- specific, and copying itself may either be done immediately, or as "
+	      /**/ "elements of the returned sequence are accessed") },
 	{ NULL }
 };
 

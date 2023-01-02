@@ -15,6 +15,7 @@ EXPORTS
 	_DeeAsm_NextInstr@4=DeeAsm_NextInstr@4
 	_DeeAsm_NextInstrEf@16=DeeAsm_NextInstrEf@16
 	_DeeAsm_NextInstrSp@8=DeeAsm_NextInstrSp@8
+	_DeeAsm_SkipPrefix@4=DeeAsm_SkipPrefix@4
 	_DeeAssert_BadObject@12=DeeAssert_BadObject@12
 	_DeeAssert_BadObjectOpt@12=DeeAssert_BadObjectOpt@12
 	_DeeAssert_BadObjectType@16=DeeAssert_BadObjectType@16
@@ -379,6 +380,7 @@ EXPORTS
 	_DeeModule_UnlockSymbols@4=DeeModule_UnlockSymbols@4
 	_DeeModule_VCallExternf@16=DeeModule_VCallExternf@16
 	_DeeNTSystem_CreateFile@28=DeeNTSystem_CreateFile@28
+	_DeeNTSystem_CreateFileNoATime@28=DeeNTSystem_CreateFileNoATime@28
 	_DeeNTSystem_FixUncPath@4=DeeNTSystem_FixUncPath@4
 	_DeeNTSystem_FormatErrorMessage@4=DeeNTSystem_FormatErrorMessage@4
 	_DeeNTSystem_FormatMessage@20=DeeNTSystem_FormatMessage@20
@@ -647,14 +649,8 @@ EXPORTS
 	_DeeRange_New@12=DeeRange_New@12
 	_DeeRange_NewInt@12=DeeRange_NewInt@12
 	_DeeRefVector_New@16=DeeRefVector_New@16
-	_DeeRegex_Find@24=DeeRegex_Find@24
-	_DeeRegex_FindEx@24=DeeRegex_FindEx@24
-	_DeeRegex_FindPtr@24=DeeRegex_FindPtr@24
-	_DeeRegex_Matches@20=DeeRegex_Matches@20
-	_DeeRegex_MatchesPtr@24=DeeRegex_MatchesPtr@24
-	_DeeRegex_RFind@24=DeeRegex_RFind@24
-	_DeeRegex_RFindEx@24=DeeRegex_RFindEx@24
-	_DeeRegex_RFindPtr@24=DeeRegex_RFindPtr@24
+	_DeeRegex_Match@4=DeeRegex_Match@4
+	_DeeRegex_Search@12=DeeRegex_Search@12
 	_DeeRoDict_FromIterator@4=DeeRoDict_FromIterator@4
 	_DeeRoDict_FromIteratorWithHint@8=DeeRoDict_FromIteratorWithHint@8
 	_DeeRoDict_FromSequence@4=DeeRoDict_FromSequence@4
@@ -720,6 +716,7 @@ EXPORTS
 	_DeeString_FreeWidth@4=DeeString_FreeWidth@4
 	_DeeString_FromBackslashEscaped@12=DeeString_FromBackslashEscaped@12
 	_DeeString_GetChar@8=DeeString_GetChar@8
+	_DeeString_GetRegex@8=DeeString_GetRegex@8
 	_DeeString_HashCase@4=DeeString_HashCase@4
 	_DeeString_Memmove@16=DeeString_Memmove@16
 	_DeeString_New2Byte@8=DeeString_New2Byte@8

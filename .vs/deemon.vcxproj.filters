@@ -896,9 +896,6 @@
     <ClCompile Include="..\src\deemon\objects\seq\byattr.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\deemon\objects\unicode\regex-old.c">
-      <Filter>src\deemon\objects\unicode</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\deemon\objects\unicode\regex.c">
       <Filter>src\deemon\objects\unicode</Filter>
     </ClCompile>
@@ -950,9 +947,6 @@
       <Filter>src\deemon\objects\unicode</Filter>
     </None>
     <None Include="..\src\deemon\objects\unicode\ordinals.c.inl">
-      <Filter>src\deemon\objects\unicode</Filter>
-    </None>
-    <None Include="..\src\deemon\objects\unicode\reproxy.c.inl">
       <Filter>src\deemon\objects\unicode</Filter>
     </None>
     <None Include="..\src\deemon\objects\unicode\bytes_split.c.inl">
@@ -1242,6 +1236,9 @@
       <Filter>src\deemon\objects\unicode</Filter>
     </None>
     <None Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\reproxy.c.inl">
       <Filter>src\deemon\objects\unicode</Filter>
     </None>
   </ItemGroup>

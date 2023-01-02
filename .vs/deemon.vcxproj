@@ -321,7 +321,6 @@
     <ClCompile Include="..\src\deemon\objects\unicode\codec.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\cscanf.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\format.c" />
-    <ClCompile Include="..\src\deemon\objects\unicode\regex-old.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\regex.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\string_functions.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\unicode.c" />

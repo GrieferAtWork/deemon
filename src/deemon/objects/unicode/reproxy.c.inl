@@ -44,64 +44,60 @@ INTDEF DeeTypeObject ReLocateAllIterator_Type;
 INTDEF DeeTypeObject ReSplit_Type;
 INTDEF DeeTypeObject ReSplitIterator_Type;
 
+#define DeeRegexBaseExec_Load(self, result, nmatch, pmatch) \
+	(void)((result)->rx_code     = (self)->rx_code,         \
+	       (result)->rx_inbase   = (self)->rx_inbase,       \
+	       (result)->rx_insize   = (self)->rx_insize,       \
+	       (result)->rx_startoff = (self)->rx_startoff,     \
+	       (result)->rx_endoff   = (self)->rx_endoff,       \
+	       (result)->rx_eflags   = (self)->rx_eflags)
+
+
+
 typedef struct {
 	OBJECT_HEAD
-	DREF String   *re_data;    /* [const][1..1] Data string. */
-	DREF String   *re_pattern; /* [const][1..1] Pattern string. */
-	struct re_args re_args;    /* [const] Regex arguments. */
+	DREF String            *rs_data;    /* [const][1..1] Data string. */
+	struct DeeRegexBaseExec rs_exec;    /* [const] Regex arguments. */
 } ReSequence;
 
 
 typedef struct {
 	OBJECT_HEAD
-	DREF String   *re_data;    /* [const][1..1] Data string. */
-	DREF String   *re_pattern; /* [const][1..1] Pattern string. */
-	struct re_args re_args;    /* Regex arguments.
-	                            * NOTE: Only `re_dataptr' and `re_datalen' are mutable! */
+	DREF String            *rsi_data;    /* [const][1..1] Data string. */
+	struct DeeRegexBaseExec rsi_exec;    /* Regex arguments. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t       re_lock;    /* Lock used during iteration. */
+	rwlock_t                rsi_lock;    /* Lock used during iteration. */
 #endif /* !CONFIG_NO_THREADS */
 } ReSequenceIterator;
 
-STATIC_ASSERT(offsetof(ReSequence, re_data) == offsetof(ReSequenceIterator, re_data));
-STATIC_ASSERT(offsetof(ReSequence, re_pattern) == offsetof(ReSequenceIterator, re_pattern));
-STATIC_ASSERT(offsetof(ReSequence, re_args) == offsetof(ReSequenceIterator, re_args));
+STATIC_ASSERT(offsetof(ReSequence, rs_data) == offsetof(ReSequenceIterator, rsi_data));
+STATIC_ASSERT(offsetof(ReSequence, rs_exec) == offsetof(ReSequenceIterator, rsi_exec));
 
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_ctor(ReSequenceIterator *__restrict self) {
-	self->re_data    = (DREF String *)Dee_EmptyString;
-	self->re_pattern = (DREF String *)Dee_EmptyString;
+	bzero(&self->rsi_exec, sizeof(self->rsi_exec));
+	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!self->rsi_exec.rx_code)
+		return -1;
+	self->rsi_data            = (DREF String *)Dee_EmptyString;
+	self->rsi_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
-	self->re_args.re_dataptr    = DeeString_STR(Dee_EmptyString);
-	self->re_args.re_patternptr = DeeString_STR(Dee_EmptyString);
-	self->re_args.re_datalen    = 0;
-	self->re_args.re_patternlen = 0;
-	self->re_args.re_offset     = 0;
-	self->re_args.re_flags      = Dee_REGEX_FNORMAL;
-	rwlock_init(&self->re_lock);
+	rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 refaiter_copy(ReSequenceIterator *__restrict self,
               ReSequenceIterator *__restrict other) {
-	self->re_data    = other->re_data;
-	self->re_pattern = other->re_pattern;
-	Dee_Incref(self->re_data);
-	Dee_Incref(self->re_pattern);
-	self->re_args.re_patternptr = other->re_args.re_patternptr;
-	self->re_args.re_patternlen = other->re_args.re_patternlen;
-	self->re_args.re_offset     = other->re_args.re_offset;
-	self->re_args.re_flags      = other->re_args.re_flags;
-	rwlock_init(&self->re_lock);
-	rwlock_read(&other->re_lock);
-	COMPILER_READ_BARRIER();
-	self->re_args.re_dataptr = other->re_args.re_dataptr;
-	self->re_args.re_datalen = other->re_args.re_datalen;
-	COMPILER_READ_BARRIER();
-	rwlock_endread(&other->re_lock);
+	rwlock_read(&other->rsi_lock);
+	memcpy(&self->rsi_exec, &other->rsi_exec, sizeof(self->rsi_exec));
+	rwlock_endread(&other->rsi_lock);
+	self->rsi_data = other->rsi_data;
+	Dee_Incref(self->rsi_data);
+	Dee_Incref(self->rsi_exec.rx_pattern);
+	rwlock_init(&self->rsi_lock);
 	return 0;
 }
 
@@ -113,11 +109,11 @@ refaiter_init(ReSequenceIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(reseq, &ReFindAll_Type))
 		goto err;
-	memcpy(&self->re_data, &reseq->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	Dee_Incref(self->re_data);
-	Dee_Incref(self->re_pattern);
-	rwlock_init(&self->re_lock);
+	memcpy(&self->rsi_data, &reseq->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(self->rsi_data);
+	Dee_Incref(self->rsi_exec.rx_pattern);
+	rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -125,119 +121,86 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 refaiter_fini(ReSequenceIterator *__restrict self) {
-	Dee_Decref(self->re_data);
-	Dee_Decref(self->re_pattern);
+	Dee_Decref(self->rsi_data);
+	Dee_Decref(self->rsi_exec.rx_pattern);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 refaiter_visit(ReSequenceIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->re_data);
-	Dee_Visit(self->re_pattern);
+	Dee_Visit(self->rsi_data);
+	Dee_Visit(self->rsi_exec.rx_pattern);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_bool(ReSequenceIterator *__restrict self) {
-	struct regex_range_ptr range;
-	char *dataptr;
-	size_t datalen;
-	rwlock_read(&self->re_lock);
-	dataptr = self->re_args.re_dataptr;
-	datalen = self->re_args.re_datalen;
-	rwlock_endread(&self->re_lock);
-	/* Check if there is at least a single match. */
-	return DeeRegex_FindPtr(dataptr,
-	                        datalen,
-	                        self->re_args.re_patternptr,
-	                        self->re_args.re_patternlen,
-	                        &range,
-	                        self->re_args.re_flags);
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	rwlock_read(&self->rsi_lock);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	rwlock_endread(&self->rsi_lock);
+	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	return result != DEE_RE_STATUS_NOMATCH &&
+	       match_size != 0; /* Prevent infinite loop on epsilon-match */
+err:
+	return -1;
 }
-
-/* Assert binary compatibility between the index-variants
- * of `struct regex_range' and `struct regex_range_ex' */
-STATIC_ASSERT((offsetof(struct regex_range, rr_end) -
-               offsetof(struct regex_range, rr_start)) ==
-              (offsetof(struct regex_range_ex, rr_end) -
-               offsetof(struct regex_range_ex, rr_start)));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_next(ReSequenceIterator *__restrict self) {
-	struct regex_range_ex range;
-	char *dataptr;
-	size_t datalen;
-	int error;
-	size_t offset;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->re_lock);
-	dataptr = self->re_args.re_dataptr;
-	datalen = self->re_args.re_datalen;
-	rwlock_endread(&self->re_lock);
-	if (!datalen)
-		return ITER_DONE;
-	error = DeeRegex_FindEx(dataptr, datalen,
-	                        self->re_args.re_patternptr,
-	                        self->re_args.re_patternlen,
-	                        &range,
-	                        self->re_args.re_flags);
-	if unlikely(error < 0)
+	rwlock_read(&self->rsi_lock);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	rwlock_endread(&self->rsi_lock);
+	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error) {
-		rwlock_write(&self->re_lock);
-		if (dataptr != self->re_args.re_dataptr ||
-		    datalen != self->re_args.re_datalen) {
-			rwlock_endwrite(&self->re_lock);
-			goto again;
-		}
-		self->re_args.re_datalen = 0;
-		rwlock_endwrite(&self->re_lock);
+	if (result == DEE_RE_STATUS_NOMATCH)
 		return ITER_DONE;
-	}
-	ASSERT(range.rr_start < range.rr_end);
-	rwlock_write(&self->re_lock);
-	if (dataptr != self->re_args.re_dataptr ||
-	    datalen != self->re_args.re_datalen) {
-		rwlock_endwrite(&self->re_lock);
+	if (match_size == 0)
+		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
+	rwlock_write(&self->rsi_lock);
+	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
+		rwlock_endwrite(&self->rsi_lock);
 		goto again;
 	}
-	offset = self->re_args.re_offset;
-	self->re_args.re_datalen -= (size_t)(range.rr_end_ptr - self->re_args.re_dataptr);
-	self->re_args.re_dataptr = range.rr_end_ptr;
-	self->re_args.re_offset += range.rr_end;
-	rwlock_endwrite(&self->re_lock);
-	return regex_pack_range(offset,
-	                        (struct regex_range *)&range.rr_start);
+	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	rwlock_endwrite(&self->rsi_lock);
+	match_size = string_bytecnt2charcnt(self->rsi_data, (size_t)match_size, (char const *)exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self->rsi_data, (size_t)result, (char const *)exec.rx_inbase);
+	match_size += result;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_getseq(ReSequenceIterator *__restrict self) {
-	struct re_args args_copy;
-	rwlock_read(&self->re_lock);
-	memcpy(&args_copy, &self->re_args, sizeof(struct re_args));
-	rwlock_endread(&self->re_lock);
-	return string_re_findall(self->re_data,
-	                         self->re_pattern,
-	                         &args_copy);
+	struct DeeRegexBaseExec args_copy;
+	rwlock_read(&self->rsi_lock);
+	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
+	rwlock_endread(&self->rsi_lock);
+	return string_re_findall(self->rsi_data, &args_copy);
 }
 
-#define REITER_GETDATAPTR(x) ATOMIC_READ((x)->re_args.re_dataptr)
+#define REITER_GETDATAPTR(x) ATOMIC_READ((x)->rsi_exec.rx_startoff)
 
-#define DEFINE_REFA_COMPARE(name, op)                                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(ReSequenceIterator *self, ReSequenceIterator *other) {            \
-		char *x, *y;                                                       \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                                      \
-		x = REITER_GETDATAPTR(self);                                       \
-		y = REITER_GETDATAPTR(other);                                      \
-		if (!x)                                                            \
-			x = (char *)(uintptr_t)-1;                                     \
-		if (!y)                                                            \
-			y = (char *)(uintptr_t)-1;                                     \
-		return_bool(x op y);                                               \
-	err:                                                                   \
-		return NULL;                                                       \
+#define DEFINE_REFA_COMPARE(name, op)                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
+	name(ReSequenceIterator *self, ReSequenceIterator *other) { \
+		size_t x, y;                                            \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))   \
+			goto err;                                           \
+		x = REITER_GETDATAPTR(self);                            \
+		y = REITER_GETDATAPTR(other);                           \
+		return_bool(x op y);                                    \
+	err:                                                        \
+		return NULL;                                            \
 	}
 DEFINE_REFA_COMPARE(refa_eq, ==)
 DEFINE_REFA_COMPARE(refa_ne, !=)
@@ -269,8 +232,12 @@ PRIVATE struct type_getset tpconst refaiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst refaiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequenceIterator, re_data), "->?Dstring"),
-	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequenceIterator, re_pattern), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequenceIterator, rsi_data), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequenceIterator, rsi_exec.rx_pattern), "->?Dstring"),
+	TYPE_MEMBER_FIELD("__startoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_startoff)),
+	TYPE_MEMBER_FIELD("__endoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_endoff)),
+	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
+	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
 };
 
@@ -336,11 +303,10 @@ relaiter_init(ReSequenceIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(reseq, &ReLocateAll_Type))
 		goto err;
-	memcpy(&self->re_data, &reseq->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	Dee_Incref(self->re_data);
-	Dee_Incref(self->re_pattern);
-	rwlock_init(&self->re_lock);
+	memcpy(&self->rsi_data, &reseq->rs_data, sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(self->rsi_data);
+	Dee_Incref(self->rsi_exec.rx_pattern);
+	rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -349,13 +315,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_getseq(ReSequenceIterator *__restrict self) {
-	struct re_args args_copy;
-	rwlock_read(&self->re_lock);
-	memcpy(&args_copy, &self->re_args, sizeof(struct re_args));
-	rwlock_endread(&self->re_lock);
-	return string_re_locateall(self->re_data,
-	                           self->re_pattern,
-	                           &args_copy);
+	struct DeeRegexBaseExec args_copy;
+	rwlock_read(&self->rsi_lock);
+	memcpy(&args_copy, &self->rsi_exec, sizeof(struct DeeRegexBaseExec));
+	rwlock_endread(&self->rsi_lock);
+	return string_re_locateall(self->rsi_data, &args_copy);
 }
 
 PRIVATE struct type_getset tpconst relaiter_getsets[] = {
@@ -369,49 +333,29 @@ PRIVATE struct type_getset tpconst relaiter_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_next(ReSequenceIterator *__restrict self) {
-	struct regex_range_ptr range;
-	char *dataptr;
-	size_t datalen;
-	int error;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->re_lock);
-	dataptr = self->re_args.re_dataptr;
-	datalen = self->re_args.re_datalen;
-	rwlock_endread(&self->re_lock);
-	if (!datalen)
-		return ITER_DONE;
-	error = DeeRegex_FindPtr(dataptr, datalen,
-	                         self->re_args.re_patternptr,
-	                         self->re_args.re_patternlen,
-	                         &range,
-	                         self->re_args.re_flags);
-	if unlikely(error < 0)
+	rwlock_read(&self->rsi_lock);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	rwlock_endread(&self->rsi_lock);
+	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error) {
-		rwlock_write(&self->re_lock);
-		if (dataptr != self->re_args.re_dataptr ||
-		    datalen != self->re_args.re_datalen) {
-			rwlock_endwrite(&self->re_lock);
-			goto again;
-		}
-		self->re_args.re_datalen = 0;
-		rwlock_endwrite(&self->re_lock);
+	if (result == DEE_RE_STATUS_NOMATCH)
 		return ITER_DONE;
-	}
-	ASSERT(range.rr_start < range.rr_end);
-	rwlock_write(&self->re_lock);
-	if (dataptr != self->re_args.re_dataptr ||
-	    datalen != self->re_args.re_datalen) {
-		rwlock_endwrite(&self->re_lock);
+	if (match_size == 0)
+		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
+	rwlock_write(&self->rsi_lock);
+	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
+		rwlock_endwrite(&self->rsi_lock);
 		goto again;
 	}
-	self->re_args.re_datalen -= (size_t)(range.rr_end - self->re_args.re_dataptr);
-	self->re_args.re_dataptr = range.rr_end;
-	rwlock_endwrite(&self->re_lock);
-	/* Return the sub-string matched by the range. */
-	return DeeString_NewUtf8(range.rr_start,
-	                         (size_t)(range.rr_end - range.rr_start),
-	                         STRING_ERROR_FIGNORE);
+	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	rwlock_endwrite(&self->rsi_lock);
+	return DeeString_NewUtf8((char const *)exec.rx_inbase + (size_t)result,
+	                         match_size, STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -477,13 +421,13 @@ respiter_init(ReSequenceIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(reseq, &ReSplit_Type))
 		goto err;
-	memcpy(&self->re_data, &reseq->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	if (!self->re_args.re_datalen)
-		self->re_args.re_dataptr = NULL;
-	Dee_Incref(self->re_data);
-	Dee_Incref(self->re_pattern);
-	rwlock_init(&self->re_lock);
+	memcpy(&self->rsi_data, &reseq->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	if (!self->rsi_exec.rx_insize)
+		self->rsi_exec.rx_inbase = NULL;
+	Dee_Incref(self->rsi_data);
+	Dee_Incref(self->rsi_exec.rx_pattern);
+	rwlock_init(&self->rsi_lock);
 	return 0;
 err:
 	return -1;
@@ -491,13 +435,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_getseq(ReSequenceIterator *__restrict self) {
-	struct re_args args_copy;
-	rwlock_read(&self->re_lock);
-	memcpy(&args_copy, self->re_data, sizeof(struct re_args));
-	rwlock_endread(&self->re_lock);
-	return string_re_split(self->re_data,
-	                       self->re_pattern,
-	                       &args_copy);
+	struct DeeRegexBaseExec args_copy;
+	rwlock_read(&self->rsi_lock);
+	memcpy(&args_copy, self->rsi_data, sizeof(struct DeeRegexBaseExec));
+	rwlock_endread(&self->rsi_lock);
+	return string_re_split(self->rsi_data, &args_copy);
 }
 
 PRIVATE struct type_getset tpconst respiter_getsets[] = {
@@ -511,50 +453,32 @@ PRIVATE struct type_getset tpconst respiter_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_next(ReSequenceIterator *__restrict self) {
-	struct regex_range_ptr range;
-	char *dataptr;
-	size_t datalen;
-	int error;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
 again:
-	rwlock_read(&self->re_lock);
-	dataptr = self->re_args.re_dataptr;
-	datalen = self->re_args.re_datalen;
-	rwlock_endread(&self->re_lock);
-	if (!dataptr)
+	rwlock_read(&self->rsi_lock);
+	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
+	rwlock_endread(&self->rsi_lock);
+	if (!exec.rx_inbase)
 		return ITER_DONE;
-	error = DeeRegex_FindPtr(dataptr, datalen,
-	                         self->re_args.re_patternptr,
-	                         self->re_args.re_patternlen,
-	                         &range,
-	                         self->re_args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error) {
-		rwlock_write(&self->re_lock);
-		if (dataptr != self->re_args.re_dataptr ||
-		    datalen != self->re_args.re_datalen) {
-			rwlock_endwrite(&self->re_lock);
-			goto again;
-		}
-		self->re_args.re_dataptr = NULL;
-		rwlock_endwrite(&self->re_lock);
-		/* The last sub-string (aka. all the trailing data) */
-		return DeeString_NewUtf8(dataptr, datalen, STRING_ERROR_FIGNORE);
-	}
-	ASSERT(range.rr_start < range.rr_end);
-	rwlock_write(&self->re_lock);
-	if (dataptr != self->re_args.re_dataptr ||
-	    datalen != self->re_args.re_datalen) {
-		rwlock_endwrite(&self->re_lock);
+	if (result == DEE_RE_STATUS_NOMATCH)
+		return ITER_DONE;
+	if (match_size == 0)
+		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
+	rwlock_write(&self->rsi_lock);
+	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
+		rwlock_endwrite(&self->rsi_lock);
 		goto again;
 	}
-	self->re_args.re_datalen -= (size_t)(range.rr_end - self->re_args.re_dataptr);
-	self->re_args.re_dataptr = range.rr_end;
-	rwlock_endwrite(&self->re_lock);
-	/* Return the sub-string found between this match and the previous one. */
-	return DeeString_NewUtf8(dataptr,
-	                         (size_t)(range.rr_start - dataptr),
-	                         STRING_ERROR_FIGNORE);
+	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	rwlock_endwrite(&self->rsi_lock);
+	return DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
+	                         (size_t)result - exec.rx_startoff,
+	                         STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -562,9 +486,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_bool(ReSequenceIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
-	return self->re_args.re_dataptr != NULL;
+	return self->rsi_exec.rx_inbase != NULL;
 #else /* CONFIG_NO_THREADS */
-	return ATOMIC_READ(self->re_args.re_dataptr) != NULL;
+	return ATOMIC_READ(self->rsi_exec.rx_inbase) != NULL;
 #endif /* !CONFIG_NO_THREADS */
 }
 
@@ -617,50 +541,14 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_ctor(ReSequence *__restrict self) {
-	self->re_data    = (DREF String *)Dee_EmptyString;
-	self->re_pattern = (DREF String *)Dee_EmptyString;
+	bzero(&self->rs_exec, sizeof(self->rs_exec));
+	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!self->rs_exec.rx_code)
+		return -1;
+	self->rs_data            = (DREF String *)Dee_EmptyString;
+	self->rs_exec.rx_pattern = (DREF String *)Dee_EmptyString;
 	Dee_Incref_n(Dee_EmptyString, 2);
-	self->re_args.re_dataptr    = DeeString_STR(Dee_EmptyString);
-	self->re_args.re_patternptr = DeeString_STR(Dee_EmptyString);
-	self->re_args.re_datalen    = 0;
-	self->re_args.re_patternlen = 0;
-	self->re_args.re_offset     = 0;
-	self->re_args.re_flags      = Dee_REGEX_FNORMAL;
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-refa_init(ReSequence *__restrict self,
-          size_t argc, DeeObject *const *argv) {
-	String *rules = NULL;
-	if (DeeArg_Unpack(argc, argv, "oo|o" /*":_ReFindAll"*/,
-	                  &self->re_data, &self->re_pattern, &rules))
-		goto err;
-	if (DeeObject_AssertTypeExact(self->re_data, &DeeString_Type))
-		goto err;
-	if (DeeObject_AssertTypeExact(self->re_pattern, &DeeString_Type))
-		goto err;
-	self->re_args.re_flags = Dee_REGEX_FNORMAL;
-	if (rules) {
-		if (DeeObject_AssertTypeExact(rules, &DeeString_Type))
-			goto err;
-		if (regex_get_rules(DeeString_STR(rules), &self->re_args.re_flags))
-			goto err;
-	}
-	self->re_args.re_dataptr = DeeString_AsUtf8((DeeObject *)self->re_data);
-	if unlikely(!self->re_args.re_dataptr)
-		goto err;
-	self->re_args.re_patternptr = DeeString_AsUtf8((DeeObject *)self->re_pattern);
-	if unlikely(!self->re_args.re_patternptr)
-		goto err;
-	self->re_args.re_datalen    = WSTR_LENGTH(self->re_args.re_dataptr);
-	self->re_args.re_patternlen = WSTR_LENGTH(self->re_args.re_patternptr);
-	Dee_Incref(self->re_data);
-	Dee_Incref(self->re_pattern);
-	self->re_args.re_offset = 0;
-	return 0;
-err:
-	return -1;
 }
 
 #define refa_fini  refaiter_fini
@@ -668,14 +556,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_bool(ReSequence *__restrict self) {
-	struct regex_range_ptr range;
 	/* Check if there is at least a single match. */
-	return DeeRegex_FindPtr(self->re_args.re_dataptr,
-	                        self->re_args.re_datalen,
-	                        self->re_args.re_patternptr,
-	                        self->re_args.re_patternlen,
-	                        &range,
-	                        self->re_args.re_flags);
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
+	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	return result != DEE_RE_STATUS_NOMATCH &&
+	       match_size != 0; /* Prevent infinite loop on epsilon-match */
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
@@ -684,42 +576,36 @@ refa_iter(ReSequence *__restrict self) {
 	result = DeeObject_MALLOC(ReSequenceIterator);
 	if unlikely(!result)
 		goto done;
-	memcpy(&result->re_data, &self->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	Dee_Incref(result->re_data);
-	Dee_Incref(result->re_pattern);
+	memcpy(&result->rsi_data, &self->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(result->rsi_data);
+	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReFindAllIterator_Type);
-	rwlock_init(&result->re_lock);
+	rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 refa_nsi_getsize(ReSequence *__restrict self) {
-	int error;
-	size_t result;
-	struct regex_range_ptr range;
-	char *dataptr;
-	size_t datalen;
-	result  = 0;
-	dataptr = self->re_args.re_dataptr;
-	datalen = self->re_args.re_datalen;
-	for (;;) {
-		error = DeeRegex_FindPtr(dataptr,
-		                         datalen,
-		                         self->re_args.re_patternptr,
-		                         self->re_args.re_patternlen,
-		                         &range,
-		                         self->re_args.re_flags);
-		if unlikely(error < 0)
+	size_t count = 0;
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
+	/* Count the # of matches */
+	while (exec.rx_startoff < exec.rx_endoff) {
+		result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!error)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		++result;
-		datalen -= (size_t)(range.rr_end - dataptr);
-		dataptr = range.rr_end;
+		if (match_size == 0)
+			break; /* Prevent infinite loop on epsilon-match */
+		exec.rx_startoff = (size_t)result + match_size;
+		++count;
 	}
-	return result;
+	return count;
 err:
 	return (size_t)-1;
 }
@@ -779,8 +665,12 @@ PRIVATE struct type_seq refa_seq = {
 };
 
 PRIVATE struct type_member tpconst refa_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequence, re_data), "->?Dstring"),
-	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequence, re_pattern), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(ReSequence, rs_data), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequence, rs_exec.rx_pattern), "->?Dstring"),
+	TYPE_MEMBER_FIELD("__startoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_startoff)),
+	TYPE_MEMBER_FIELD("__endoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_endoff)),
+	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
+	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
 };
 
@@ -803,7 +693,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)&refa_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&refa_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -850,12 +740,12 @@ rela_iter(ReSequence *__restrict self) {
 	result = DeeObject_MALLOC(ReSequenceIterator);
 	if unlikely(!result)
 		goto done;
-	memcpy(&result->re_data, &self->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	Dee_Incref(result->re_data);
-	Dee_Incref(result->re_pattern);
+	memcpy(&result->rsi_data, &self->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	Dee_Incref(result->rsi_data);
+	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReLocateAllIterator_Type);
-	rwlock_init(&result->re_lock);
+	rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -893,7 +783,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)&rela_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rela_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -930,23 +820,14 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 resp_ctor(ReSequence *__restrict self) {
-	int result               = refa_ctor(self);
-	self->re_args.re_dataptr = NULL;
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-resp_init(ReSequence *__restrict self,
-          size_t argc, DeeObject *const *argv) {
-	int result = refa_init(self, argc, argv);
-	if (!self->re_args.re_datalen)
-		self->re_args.re_dataptr = NULL;
+	int result = refa_ctor(self);
+	self->rs_exec.rx_inbase = NULL;
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 resp_bool(ReSequence *__restrict self) {
-	return self->re_args.re_dataptr != NULL;
+	return self->rs_exec.rx_inbase != NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
@@ -955,13 +836,16 @@ resp_iter(ReSequence *__restrict self) {
 	result = DeeObject_MALLOC(ReSequenceIterator);
 	if unlikely(!result)
 		goto done;
-	memcpy(&result->re_data, &self->re_data,
-	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
-	ASSERT(result->re_args.re_datalen ? 1 : result->re_args.re_dataptr == NULL);
-	Dee_Incref(result->re_data);
-	Dee_Incref(result->re_pattern);
+	memcpy(&result->rsi_data, &self->rs_data,
+	       sizeof(ReSequence) - offsetof(ReSequence, rs_data));
+	ASSERT((result->rsi_exec.rx_endoff >
+	        result->rsi_exec.rx_startoff)
+	       ? 1
+	       : result->rsi_exec.rx_inbase == NULL);
+	Dee_Incref(result->rsi_data);
+	Dee_Incref(result->rsi_exec.rx_pattern);
 	DeeObject_Init(result, &ReSplitIterator_Type);
-	rwlock_init(&result->re_lock);
+	rwlock_init(&result->rsi_lock);
 done:
 	return result;
 }
@@ -969,7 +853,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 resp_nsi_getsize(ReSequence *__restrict self) {
 	size_t result;
-	if (!self->re_args.re_dataptr)
+	if (!self->rs_exec.rx_inbase)
 		return 0;
 	result = refa_nsi_getsize(self);
 	if (result != (size_t)-1)
@@ -1051,7 +935,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)&resp_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&resp_init,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(ReSequence)
 			}
 		},
@@ -1085,57 +969,51 @@ INTERN DeeTypeObject ReSplit_Type = {
 
 
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_findall(String *__restrict self,
-                  String *__restrict pattern,
-                  struct re_args const *__restrict args) {
+                  struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->re_data    = self;
-	result->re_pattern = pattern;
-	memcpy(&result->re_args, args, sizeof(struct re_args));
+	result->rs_data = self;
+	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
-	Dee_Incref(pattern);
+	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReFindAll_Type);
 done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_locateall(String *__restrict self,
-                    String *__restrict pattern,
-                    struct re_args const *__restrict args) {
+                    struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->re_data    = self;
-	result->re_pattern = pattern;
-	memcpy(&result->re_args, args, sizeof(struct re_args));
+	result->rs_data = self;
+	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
-	Dee_Incref(pattern);
+	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReLocateAll_Type);
 done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_split(String *__restrict self,
-                String *__restrict pattern,
-                struct re_args const *__restrict args) {
+                struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
 	if unlikely(!result)
 		goto done;
-	result->re_data    = self;
-	result->re_pattern = pattern;
-	memcpy(&result->re_args, args, sizeof(struct re_args));
-	if (!result->re_args.re_datalen)
-		result->re_args.re_dataptr = NULL;
+	result->rs_data    = self;
+	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
+	if (result->rs_exec.rx_startoff >= result->rs_exec.rx_endoff)
+		result->rs_exec.rx_inbase = NULL;
 	Dee_Incref(self);
-	Dee_Incref(pattern);
+	Dee_Incref(result->rs_exec.rx_pattern);
 	DeeObject_Init(result, &ReSplit_Type);
 done:
 	return (DREF DeeObject *)result;

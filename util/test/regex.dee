@@ -1,0 +1,172 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2022 Griefer@Work                                       *
+*                                                                            *
+* This software is provided 'as-is', without any express or implied          *
+* warranty. In no event will the authors be held liable for any damages      *
+* arising from the use of this software.                                     *
+*                                                                            *
+* Permission is granted to anyone to use this software for any purpose,      *
+* including commercial applications, and to alter it and redistribute it     *
+* freely, subject to the following restrictions:                             *
+*                                                                            *
+* 1. The origin of this software must not be misrepresented; you must not    *
+*    claim that you wrote the original software. If you use this software    *
+*    in a product, an acknowledgement (see the following) in the product     *
+*    documentation is required:                                              *
+*    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+* 2. Altered source versions must be plainly marked as such, and must not be *
+*    misrepresented as being the original software.                          *
+* 3. This notice may not be removed or altered from any source distribution. *
+*/
+
+import * from deemon;
+import * from errors;
+
+#define re_match(pattern, input)        (input).rematch(pattern)
+#define re_match_g(pattern, input, ...) (input).rematch(pattern) // TODO: Assert groups
+
+/* Test some regular expressions */
+assert re_match(r"abc", "abc") == 3;
+assert re_match(r"abc", "abcd") == 3;
+assert re_match(r"ab*c", "abc") == 3;
+assert re_match(r"ab+c", "abbbbbc") == 7;
+assert re_match(r"ab?c", "abc") == 3;
+assert re_match(r"ab?c", "ac") == 2;
+assert re_match(r"ab?", "a") == 1;
+assert re_match(r"ab?", "ab") == 2;
+assert re_match_g(r"a(|b)", "a", { REGMATCH(1, 1) }) == 1;
+assert re_match_g(r"a(|b)", "ab", { REGMATCH(1, 2) }) == 2;
+assert re_match_g(r"a(b|)", "a", { REGMATCH(1, 1) }) == 1;
+assert re_match_g(r"a(b|)", "ab", { REGMATCH(1, 2) }) == 2;
+assert re_match(r"ab?c", "abd") is none;
+assert re_match(r"ab+c", "abbbbbd") is none;
+assert re_match(r"abbbbb", "abbbbbd") == 6;
+assert re_match(r"ab+", "abbbbbd") == 6;
+assert re_match(r"a.+", "a") is none;
+assert re_match(r"a.+", "ax") == 2;
+assert re_match_g(r"()", "foobar", { REGMATCH(0, 0) }) == 0;
+assert re_match_g(r"(|f)", "foobar", { REGMATCH(0, 1) }) == 1;
+assert re_match_g(r"(f|)", "foobar", { REGMATCH(0, 1) }) == 1;
+assert re_match_g(r"()*", "foobar", { REGMATCH(0, 0) }) == 0;
+assert re_match_g(r"(|f)*", "foobar", { REGMATCH(0, 1) }) == 1;
+assert re_match_g(r"(f|)*", "foobar", { REGMATCH(0, 1) }) == 1;
+assert re_match_g(r"(f)*", "foobar", { REGMATCH(0, 1) }) == 1;
+assert re_match_g(r"(|f|o)*", "foobar", { REGMATCH(2, 3) }) == 3;
+assert re_match_g(r"(f||o)*", "foobar", { REGMATCH(2, 3) }) == 3;
+assert re_match_g(r"(f|o|)*", "foobar", { REGMATCH(2, 3) }) == 3;
+assert re_match_g(r"(f|o)*", "foobar", { REGMATCH(2, 3) }) == 3;
+assert re_match_g(r"(|f|o|ba)*", "foobar", { REGMATCH(3, 5) }) == 5;
+assert re_match_g(r"(f|o||ba)*", "foobar", { REGMATCH(3, 5) }) == 5;
+assert re_match_g(r"(f||o|ba)*", "foobar", { REGMATCH(3, 5) }) == 5;
+assert re_match_g(r"(f|o|ba|)*", "foobar", { REGMATCH(3, 5) }) == 5;
+assert re_match_g(r"(f|o|ba)*", "foobar", { REGMATCH(3, 5) }) == 5;
+assert re_match_g(r"(|f|o|ba|r)*", "foobar", { REGMATCH(5, 6) }) == 6;
+assert re_match_g(r"(f|o||ba|r)*", "foobar", { REGMATCH(5, 6) }) == 6;
+assert re_match_g(r"(f|o|ba|r|)*", "foobar", { REGMATCH(5, 6) }) == 6;
+assert re_match_g(r"(f|o|ba|r)*", "foobar", { REGMATCH(5, 6) }) == 6;
+assert re_match_g(r"(|f|o|ba|r)*", "foobarfffb", { REGMATCH(8, 9) }) == 9;
+assert re_match_g(r"(f|o||ba|r)*", "foobarfffb", { REGMATCH(8, 9) }) == 9;
+assert re_match_g(r"(f|o|ba|r|)*", "foobarfffb", { REGMATCH(8, 9) }) == 9;
+assert re_match_g(r"(f|o|ba|r)*", "foobarfffb", { REGMATCH(8, 9) }) == 9;
+assert re_match_g(r"(|f|o|ba|r)*", "foobarfffba", { REGMATCH(9, 11) }) == 11;
+assert re_match_g(r"(f|o||ba|r)*", "foobarfffba", { REGMATCH(9, 11) }) == 11;
+assert re_match_g(r"(f|o|ba|r|)*", "foobarfffba", { REGMATCH(9, 11) }) == 11;
+assert re_match_g(r"(f|o|ba|r)*", "foobarfffba", { REGMATCH(9, 11) }) == 11;
+assert re_match_g(r"()?", "foobar", { REGMATCH(0, 0) }) == 0;
+assert re_match(r"x?", "foobar") == 0;
+assert re_match(r"x*", "foobar") == 0;
+assert re_match(r"x+", "foobar") is none;
+assert re_match_g(r"(abc|def)", "abcdefX", { REGMATCH(0, 3) }) == 3;
+assert re_match_g(r"(abc|defX)", "abcdefX", { REGMATCH(0, 3) }) == 3;
+assert re_match_g(r"(abc|defX)*", "abcdefX", { REGMATCH(3, 7) }) == 7;
+assert re_match_g(r"(abc|defX)*", "abcdefXY", { REGMATCH(3, 7) }) == 7;
+assert re_match_g(r"(abc|def)", "abcdefX", { REGMATCH(0, 3) }) == 3;
+assert re_match_g(r"(abc|def)*", "abcdefX", { REGMATCH(3, 6) }) == 6;
+assert re_match_g(r"(abc|def)+", "abcdefX", { REGMATCH(3, 6) }) == 6;
+assert re_match_g(r"(abc|def){1}", "abcabcdefabcX", { REGMATCH(0, 3) }) == 3;
+assert re_match_g(r"(abc|def){1,3}", "abcabcdefabcX", { REGMATCH(6, 9) }) == 9;
+assert re_match_g(r"(abc|def){1,}", "abcabcdefabcX", { REGMATCH(9, 12) }) == 12;
+assert re_match_g(r"(abc|def){1,4}", "abcabcdefabcX", { REGMATCH(9, 12) }) == 12;
+
+/* Make sure that code variables work correctly. */
+assert re_match_g(r"(a|b){4}a", "aaaaaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(a|b){4}a", "babaaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(a|b){4}a", "ababaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(a|b){4}a", "bbbbaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(b|a){4}a", "aaaaaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(b|a){4}a", "babaaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(b|a){4}a", "ababaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match_g(r"(b|a){4}a", "bbbbaaaa", { REGMATCH(3, 4) }) == 5;
+assert re_match(r"(a|b){4}a", "aaaaX") is none;
+assert re_match(r"(a|b){4}a", "babaX") is none;
+assert re_match(r"(a|b){4}a", "ababX") is none;
+assert re_match(r"(a|b){4}a", "bbbbX") is none;
+
+assert re_match(r"\?", "?") == 1;
+
+assert re_match(r"\n", "\rfoo") == 1;
+assert re_match(r"\n", "\nfoo") == 1;
+assert re_match(r"\N", "\rfoo") is none;
+assert re_match(r"\N", "\nfoo") is none;
+
+/* Ensure that character sets work in both ASCII and UTF-8 mode. */
+//TODO:assert re_match(r"[[:hex:]]+", "abcdefABCDEF_") == 12;
+//TODO:assert re_match_syntax(r"[[:hex:]]+", "abcdefABCDEF_", RE_SYNTAX_NO_UTF8) == 12;
+//TODO:assert re_match(r"[[:hex:]]+", "_abcdefABCDEF") is none;
+//TODO:assert re_match_syntax(r"[[:hex:]]+", "_abcdefABCDEF", RE_SYNTAX_NO_UTF8) is none;
+//TODO:assert re_match(r"[[:hex:]ä]+", "äabcdefABCDEF_") == 14;
+assert re_match(r"[^[:lower:]Ä]+", "FOOÄBAR") == 3;
+assert re_match(r"[^[:lower:]]+", "FOOÄBAR") == 7;
+
+//TODO:/* Byte-escapes must work properly (even in utf-8 mode) */
+//TODO:assert re_match(r"\xAB\xCD", "\xAB\xCD\xCD\xEF".bytes()) == 2;
+//TODO:assert re_match(r"\xAB\xCD+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
+//TODO:assert re_match(r"[\xAB\xCD]", "\xAB\xCD\xCD\xEF".bytes()) == 1;
+//TODO:assert re_match(r"[\xAB\xCD]", "\xCD\xAB\xCD\xEF".bytes()) == 1;
+//TODO:assert re_match(r"[\xAB\xCD]+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
+
+/* Unicode-escape must also work (and not get confused for byte-escape) */
+assert re_match(r"\u00AB\u00CD", "«ÍÍï") == 2;
+assert re_match(r"\U000000AB\U000000CD", "«ÍÍï") == 2;
+assert re_match(r"\u00AB\u00CD+", "«ÍÍï") == 3;
+assert re_match(r"\U000000AB\U000000CD+", "«ÍÍï") == 3;
+assert re_match(r"[\u00AB\u00CD]", "«ÍÍï") == 1;
+assert re_match(r"[\U000000AB\U000000CD]", "«ÍÍï") == 1;
+assert re_match(r"[\u00AB\u00CD]", "Í«Íï") == 1;
+assert re_match(r"[\U000000AB\U000000CD]", "Í«Íï") == 1;
+assert re_match(r"[\u00AB\u00CD]+", "«ÍÍï") == 3;
+assert re_match(r"[\U000000AB\U000000CD]+", "«ÍÍï") == 3;
+
+/* Ensure that illegal charsets aren't accepted. */
+assert (try "".rematch(r"[Ä\xC3]") catch (e...) e) is UnicodeError;
+
+/* Ensure that peephole work with this corner-case. */
+assert re_match_g(r"a(foo|[Ff]oo)b", "afoob", { REGMATCH(1, 4) }) == 5;
+assert re_match_g(r"a(foo|[Ff]oo)b", "aFoob", { REGMATCH(1, 4) }) == 5;
+
+/* Ensure that group matching works when combined with rollback. */
+assert re_match_g(r"foo?(o)bar", "foobar", { REGMATCH(2, 3) }) == 6;
+assert re_match_g(r"fo(o?o)bar", "foobar", { REGMATCH(2, 3) }) == 6;
+
+/* Ensure that the regex interpreter prefers larger groups. */
+assert re_match_g(r".*(.*).*", "foobar", { REGMATCH(0, 6) }) == 6;
+
+/* Ensure that collating characters work. */
+assert re_match(r"[[.tab.]]+", "\t\t\tfoo") == 3;
+assert re_match(r"[[.tab.]]+", "\tfoo") == 1;
+assert re_match(r"[[.tab.]]+", "foo") is none;
+assert (try "".rematch(r"[[.BAD COLL NAME.]]") catch (e...) e) is SymbolError;
+
+/* Ensure that unicode brace-escape works */
+assert re_match(r"[\u{1234 ABCD}]+", "\u1234\uABCDxxxxxxxxxxxxxxxxx") == 2;
+assert re_match(r"[\u{7E 7F}]+", "\x7E\x7Fxxxxxxxxxxxxxxxxx") == 2;
+
+
+/* Test some of the more advanced regex functions */
+assert "x".refind(r"[[:lower:]]") == (0, 1);
+assert "x".rerfind(r"[[:lower:]]") == (0, 1);
+assert "x".rereplace(r"[[:lower:]]", r"(&&&)") == "(xxx)";
+assert "foo bar".refind(r"[[:lower:]]") == (0, 1);
+assert "foo bar".rerfind(r"[[:lower:]]") == (6, 7);
+assert "foo bar".rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)";
+

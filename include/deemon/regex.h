@@ -30,7 +30,32 @@ DECL_BEGIN
 /* Regex compile                                                        */
 /************************************************************************/
 
-struct DeeRegexCode; /* Anonymous; is actually libregex's `struct re_code' */
+struct DeeRegexCode {
+	__BYTE_TYPE__ rc_fmap[256]; /* Fast map: take the first byte of input data to match as index:
+	                             * - rc_fmap[input[0]] == 0xff --> input will never match
+	                             * - rc_fmap[input[0]] != 0xff --> Start executing at `PC = rc_code + rc_fmap[input[0]]'
+	                             * Allowed  to be `0x00', even if the regex never accepts input starting with that byte.
+	                             * iow: all 256 possible bytes indicating `0x00' is always valid.
+	                             * The only assumptions that may be made are:
+	                             * -> rc_fmap[X] == 0xff --> `rc_code' always rejects input whose first byte is `X'
+	                             * -> rc_fmap[X] >  0x00 --> `rc_code'  only ever handles a first byte `X' in a branch
+	                             *                           that begins at  this offset (e.g.  "abc|def" can set  the
+	                             *                           fmap offset for "d"  to directly point at  `exact "def"')
+	                             *                           Note that this doesn't guaranty that `rc_code' won't just
+	                             *                           always reject input whose first byte is `X'!
+	                             * -> rc_fmap[X] == 0x00 --> `rc_code' may or may not accept input starting with `X' */
+	size_t        rc_minmatch;  /* The smallest input length that can be matched by `rc_code' (or `0' when `rc_code' can match epsilon)
+	                             * NOTE: Allowed to be less than the *true* minimum-match length of `rc_code'; iow: `0' is always valid
+	                             * -> The only assumption allowed is that input smaller than this will never match. */
+	uint16_t      rc_ngrps;     /* # of groups referenced by code (<= 0x100) */
+	uint16_t      rc_nvars;     /* # of variables referenced by code (<= 0x100) */
+	uint8_t       rc_flags;     /* Regex code flags (set of `RE_CODE_FLAG_*') */
+#define DEE_RE_CODE_FLAG_NORMAL     0x00 /* Normal flags. */
+#define DEE_RE_CODE_FLAG_NEEDGROUPS 0x01 /* Groups are expected to be correct (set if `REOP_GROUP_MATCH*' opcodes are used) */
+#define DEE_RE_CODE_FLAG_OPTGROUPS  0x02 /* The regex code contains optional groups (e.g. "foo(x)?bar" or "foo(|b(a)r)") */
+	__COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, rc_code); /* Code buffer (`REOP_*' instruction stream) */
+};
+
 
 /* Possible flags for `DeeString_GetRegex()' */
 #define DEE_REGEX_COMPILE_NORMAL 0x0000 /* Normal regex compiler flags */

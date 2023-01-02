@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/regex.h>
 #include <deemon/seq.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
@@ -3425,30 +3426,6 @@ err:
 	return NULL;
 }
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_getsubstr_ib(String *__restrict self,
-                    size_t start, size_t end) {
-	DREF String *result;
-	union dcharptr str;
-	size_t len;
-	str.ptr = DeeString_WSTR(self);
-	len     = WSTR_LENGTH(str.ptr);
-	ASSERT(start <= end);
-	ASSERT(start <= len);
-	ASSERT(end <= len);
-	if (start == 0 && end >= len) {
-		result = self;
-		Dee_Incref(result);
-	} else {
-		int width = DeeString_WIDTH(self);
-		result = (DREF String *)DeeString_NewWithWidth(str.cp8 +
-		                                               STRING_MUL_SIZEOF_WIDTH(start, width),
-		                                               end - (size_t)start,
-		                                               width);
-	}
-	return result;
-}
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_getsubstr(String *__restrict self,
@@ -9310,96 +9287,141 @@ err:
 }
 
 
-struct re_args {
-	char    *re_dataptr;                       /* Starting pointer to regex input data (in UTF-8). */
-	size_t   re_datalen;                       /* Number of _bytes_ of regex input data. */
-	char *   re_patternptr;                    /* Starting pointer to regex pattern data (in UTF-8). */
-	size_t   re_patternlen;                    /* Number of _bytes_ of regex pattern data. */
-	uint16_t re_flags;                         /* Regex flags. */
-	uint16_t re_pad[(sizeof(void *) - 2) / 2]; /* ... */
-	size_t   re_offset;                        /* Starting character-offset into the matched string. */
+/* Convert a character-offset into a byte-offset within `self's utf-8 repr */
+PRIVATE WUNUSED NONNULL((1, 3)) size_t DCALL
+string_charcnt2bytecnt(String const *self, size_t charpos, char const *utf8) {
+	char const *iter;
+	size_t num_bytes;
+	if (!self->s_data || (self->s_data->u_flags & STRING_UTF_FASCII))
+		return charpos;
+	iter     = utf8;
+	num_bytes = WSTR_LENGTH(utf8);
+	for (; charpos; --charpos) {
+		uint8_t charlen = utf8_sequence_len[(unsigned char)*iter];
+		if unlikely(charlen > num_bytes) {
+			iter += num_bytes;
+			break;
+		}
+		iter += charlen;
+		num_bytes -= charlen;
+	}
+	return (size_t)(iter - utf8);
+}
+
+/* Convert a character-offset into a byte-offset within `self's utf-8 repr */
+PRIVATE WUNUSED NONNULL((1, 3)) size_t DCALL
+string_bytecnt2charcnt(String const *self, size_t bytepos, char const *utf8) {
+	size_t charpos;
+	if (!self->s_data || (self->s_data->u_flags & STRING_UTF_FASCII))
+		return bytepos;
+	ASSERT(bytepos <= WSTR_LENGTH(utf8));
+	charpos = 0;
+	while (bytepos) {
+		uint8_t charlen = utf8_sequence_len[(unsigned char)*utf8];
+		if unlikely(charlen > bytepos)
+			break;
+		utf8 += charlen;
+		bytepos -= charlen;
+		++charpos;
+	}
+	return charpos;
+}
+
+#define GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPdSIZ UNPdSIZ "o:" name
+PRIVATE struct keyword generic_regex_kwlist[] = { K(pattern), K(start), K(end), K(rules), KEND };
+PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
+generic_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
+                      DeeObject *kw, char const *__restrict fmt,
+                      struct DeeRegexExec *__restrict result) {
+	DeeObject *pattern, *rules = NULL;
+	result->rx_startoff = 0;
+	result->rx_endoff   = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, generic_regex_kwlist, fmt,
+	                    &pattern, &result->rx_startoff, &result->rx_endoff,
+	                    &rules))
+		goto err;
+	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
+		goto err;
+	result->rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!result->rx_code)
+		goto err;
+	result->rx_nmatch = 0;
+	result->rx_pmatch = NULL;
+	(void)rules;           /* TODO: rules */
+	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
+	result->rx_inbase = DeeString_AsUtf8((DeeObject *)self);
+	if unlikely(!result->rx_inbase)
+		goto err;
+	result->rx_insize = WSTR_LENGTH(result->rx_inbase);
+	if (result->rx_endoff >= result->rx_insize) {
+		result->rx_endoff = result->rx_insize;
+	} else {
+		result->rx_endoff = string_charcnt2bytecnt(self, result->rx_endoff, (char const *)result->rx_inbase);
+	}
+	if (result->rx_startoff > 0)
+		result->rx_startoff = string_charcnt2bytecnt(self, result->rx_startoff, (char const *)result->rx_inbase);
+	return 0;
+err:
+	return -1;
+}
+
+
+struct DeeRegexExecWithRange {
+	struct DeeRegexExec rewr_exec;  /* Normal exec args */
+	size_t              rewr_range; /* Max # of search attempts to perform (in bytes) */
 };
 
-struct re_args_ex {
-	char    *re_dataptr;                       /* Starting pointer to regex input data (in UTF-8). */
-	size_t   re_datalen;                       /* Number of _bytes_ of regex input data. */
-	char    *re_patternptr;                    /* Starting pointer to regex pattern data (in UTF-8). */
-	size_t   re_patternlen;                    /* Number of _bytes_ of regex pattern data. */
-	uint16_t re_flags;                         /* Regex flags. */
-	uint16_t re_pad[(sizeof(void *) - 2) / 2]; /* ... */
-	size_t   re_offset;                        /* Starting character-offset into the matched string. */
-	size_t   re_endindex;                      /* Ending character-offset within the matched string. */
-};
-
-#ifndef __NO_builtin_expect
-#define regex_getargs_generic(self, function_name, argc, argv, result) \
-	__builtin_expect(regex_getargs_generic(self, function_name, argc, argv, result), 0)
-#define regex_getargs_generic_ex(self, function_name, argc, argv, result) \
-	__builtin_expect(regex_getargs_generic_ex(self, function_name, argc, argv, result), 0)
-#define regex_get_rules(rules_str, result) \
-	__builtin_expect(regex_get_rules(rules_str, result), 0)
-#endif /* !__NO_builtin_expect */
-
-struct regex_rule_name {
-	char     name[14];
-	uint16_t flag;
-};
-
-PRIVATE struct regex_rule_name const regex_rule_names[] = {
-	{ "dotall",    Dee_REGEX_FDOTALL },
-	{ "multiline", Dee_REGEX_FMULTILINE },
-	{ "nocase",    Dee_REGEX_FNOCASE }
-};
-
-
-PRIVATE int (DCALL regex_get_rules)(char const *__restrict rules_str,
-                                   uint16_t *__restrict result) {
-	if (*rules_str == '.' || *rules_str == '\n' ||
-	    *rules_str == 'l' || *rules_str == 'c') {
-		/* Flag-mode */
-		for (;;) {
-			char ch = *rules_str++;
-			if (!ch)
-				break;
-			if (ch == '.')
-				*result |= Dee_REGEX_FDOTALL;
-			else if (ch == '\n')
-				*result |= Dee_REGEX_FMULTILINE;
-			else if (ch == 'c')
-				*result |= Dee_REGEX_FNOCASE;
-			else {
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Invalid regex rules string flag %:1q",
-				                rules_str - 1);
-				goto err;
-			}
+#define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPdSIZ UNPdSIZ UNPdSIZ "o:" name
+PRIVATE struct keyword search_regex_kwlist[] = { K(pattern), K(start), K(end), K(range), K(rules), KEND };
+PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
+search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
+                     DeeObject *kw, char const *__restrict fmt,
+                     struct DeeRegexExecWithRange *__restrict result) {
+	DeeObject *pattern, *rules = NULL;
+	result->rewr_exec.rx_startoff = 0;
+	result->rewr_exec.rx_endoff   = (size_t)-1;
+	result->rewr_range            = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, search_regex_kwlist, fmt,
+	                    &pattern, &result->rewr_exec.rx_startoff,
+	                    &result->rewr_exec.rx_endoff,
+	                    &rules))
+		goto err;
+	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
+		goto err;
+	result->rewr_exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!result->rewr_exec.rx_code)
+		goto err;
+	result->rewr_exec.rx_nmatch = 0;
+	result->rewr_exec.rx_pmatch = NULL;
+	(void)rules;                     /* TODO: rules */
+	result->rewr_exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
+	result->rewr_exec.rx_inbase = DeeString_AsUtf8((DeeObject *)self);
+	if unlikely(!result->rewr_exec.rx_inbase)
+		goto err;
+	result->rewr_exec.rx_insize = WSTR_LENGTH(result->rewr_exec.rx_inbase);
+	if (result->rewr_exec.rx_endoff >= result->rewr_exec.rx_insize) {
+		result->rewr_exec.rx_endoff = result->rewr_exec.rx_insize;
+	} else {
+		result->rewr_exec.rx_endoff = string_charcnt2bytecnt(self, result->rewr_exec.rx_endoff,
+		                                                     (char const *)result->rewr_exec.rx_inbase);
+	}
+	if (result->rewr_range != (size_t)-1) {
+		if (OVERFLOW_UADD(result->rewr_range, result->rewr_exec.rx_startoff, &result->rewr_range)) {
+			result->rewr_range = (size_t)-1;
+			goto convert_startoff;
+		}
+		result->rewr_range = string_charcnt2bytecnt(self, result->rewr_range,
+		                                            (char const *)result->rewr_exec.rx_inbase);
+		if (result->rewr_exec.rx_startoff > 0) {
+			result->rewr_exec.rx_startoff = string_charcnt2bytecnt(self, result->rewr_exec.rx_startoff,
+			                                                       (char const *)result->rewr_exec.rx_inbase);
+			result->rewr_range -= result->rewr_exec.rx_startoff;
 		}
 	} else {
-		for (;;) {
-			/* Comma-mode */
-			char *name_start = (char *)rules_str;
-			while (*rules_str && *rules_str != ',')
-				++rules_str;
-			if (rules_str > name_start) {
-				size_t rule_length = (size_t)(rules_str - name_start);
-				size_t i;
-				if (rule_length < COMPILER_LENOF(regex_rule_names[0].name)) {
-					for (i = 0; i < COMPILER_LENOF(regex_rule_names); ++i) {
-						if (!asciicaseeq(regex_rule_names[i].name, name_start, rule_length))
-							continue;
-						*result |= regex_rule_names[i].flag;
-						goto got_rule_name;
-					}
-				}
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Invalid regex rules name %$q",
-				                rule_length, name_start);
-				goto err;
-			}
-got_rule_name:
-			if (!*rules_str)
-				break;
-			++rules_str;
+convert_startoff:
+		if (result->rewr_exec.rx_startoff > 0) {
+			result->rewr_exec.rx_startoff = string_charcnt2bytecnt(self, result->rewr_exec.rx_startoff,
+			                                                       (char const *)result->rewr_exec.rx_inbase);
 		}
 	}
 	return 0;
@@ -9408,902 +9430,679 @@ err:
 }
 
 
-PRIVATE int
-(DCALL regex_getargs_generic)(String *__restrict self,
-                              char const *__restrict function_name,
-                              size_t argc, DeeObject *const *argv,
-                              struct re_args *__restrict result) {
-	DeeObject *pattern;
-	result->re_flags  = Dee_REGEX_FNORMAL;
-	result->re_offset = 0;
-	switch (argc) {
-	case 1:
-do_full_data_match:
-		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-		if unlikely(!result->re_dataptr)
-			goto err;
-		result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-		break;
-	case 2:
-		if (DeeString_Check(argv[1])) {
-			/* Rules. */
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			goto do_full_data_match;
-		}
-		/* Start offset. */
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
-			goto err;
-do_start_offset_only:
-		if (result->re_offset >= DeeString_WLEN(self)) {
-do_empty_scan:
-			result->re_offset  = DeeString_WLEN(self);
-			result->re_dataptr = "";
-			result->re_datalen = 0;
-		} else {
-			result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-			if unlikely(!result->re_dataptr)
-				goto err;
-			result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-			if (result->re_dataptr == DeeString_STR(self)) {
-				/* ASCII string. */
-				result->re_dataptr += result->re_offset;
-				result->re_datalen -= result->re_offset;
-			} else {
-				size_t i;
-				char *iter, *end;
-				/* UTF-8 string (manually adjust). */
-				end = (iter = result->re_dataptr) + result->re_datalen;
-				for (i = 0; i < result->re_offset; ++i) {
-					if (iter >= end)
-						break;
-					utf8_readchar((char const **)&iter, end);
-				}
-				result->re_dataptr = iter;
-				result->re_datalen = (size_t)(end - iter);
-			}
-		}
-		break;
-
-	case 3:
-		if (DeeString_Check(argv[1])) {
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
-				goto err;
-			goto do_start_offset_only;
-		}
-		goto do_load_3args;
-
-	case 4: {
-		size_t end_offset;
-		if (DeeString_Check(argv[1])) {
-			/* pattern, rules, start, end */
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
-				goto err;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&end_offset))
-				goto err;
-		} else {
-			if (DeeObject_AssertTypeExact(argv[3], &DeeString_Type))
-				goto err;
-			if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
-				goto err;
-do_load_3args:
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&end_offset))
-				goto err;
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
-				goto err;
-		}
-		if (end_offset >= DeeString_WLEN(self))
-			goto do_start_offset_only;
-		if (result->re_offset >= end_offset)
-			goto do_empty_scan;
-		/* Do a sub-string scan. */
-		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-		if unlikely (!result->re_dataptr)
-			goto err;
-		result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-		if (result->re_dataptr == DeeString_STR(self)) {
-			/* ASCII string. */
-			result->re_dataptr += result->re_offset;
-			result->re_datalen = end_offset - result->re_offset;
-		} else {
-			size_t i;
-			char *iter, *end;
-			/* UTF-8 string (manually adjust). */
-			end = (iter = result->re_dataptr) + result->re_datalen;
-			for (i = 0; i < result->re_offset; ++i) {
-				if (iter >= end)
-					break;
-				utf8_readchar((char const **)&iter, end);
-			}
-			result->re_dataptr = iter;
-			/* Continue scanning until the full sub-string has been indexed. */
-			for (; i < end_offset; ++i) {
-				if (iter >= end)
-					break;
-				utf8_readchar((char const **)&iter, end);
-			}
-			result->re_datalen = (size_t)(iter - result->re_dataptr);
-		}
-	}	break;
-
-	default:
-		err_invalid_argc(function_name, argc, 1, 4);
-		goto err;
-	}
-	pattern = argv[0];
-	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
-		goto err;
-	result->re_patternptr = DeeString_AsUtf8(pattern);
-	if unlikely(!result->re_patternptr)
-		goto err;
-	result->re_patternlen = WSTR_LENGTH(result->re_patternptr);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE int
-(DCALL regex_getargs_generic_ex)(String *__restrict self,
-                                 char const *__restrict function_name,
-                                 size_t argc, DeeObject *const *argv,
-                                 struct re_args_ex *__restrict result) {
-	DeeObject *pattern;
-	result->re_flags    = Dee_REGEX_FNORMAL;
-	result->re_offset   = 0;
-	result->re_endindex = DeeString_WLEN(self);
-	switch (argc) {
-	case 1:
-do_full_data_match:
-		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-		if unlikely(!result->re_dataptr)
-			goto err;
-		result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-		break;
-	case 2:
-		if (DeeString_Check(argv[1])) {
-			/* Rules. */
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			goto do_full_data_match;
-		}
-		/* Start offset. */
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
-			goto err;
-do_start_offset_only:
-		if (result->re_offset >= DeeString_WLEN(self)) {
-do_empty_scan:
-			result->re_offset   = DeeString_WLEN(self);
-			result->re_endindex = result->re_offset;
-			result->re_dataptr  = "";
-			result->re_datalen  = 0;
-		} else {
-			result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-			if unlikely(!result->re_dataptr)
-				goto err;
-			result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-			if (result->re_dataptr == DeeString_STR(self)) {
-				/* ASCII string. */
-				result->re_dataptr += result->re_offset;
-				result->re_datalen -= result->re_offset;
-			} else {
-				size_t i;
-				char *iter, *end;
-				/* UTF-8 string (manually adjust). */
-				end = (iter = result->re_dataptr) + result->re_datalen;
-				for (i = 0; i < result->re_offset; ++i) {
-					if (iter >= end)
-						break;
-					utf8_readchar((char const **)&iter, end);
-				}
-				result->re_dataptr = iter;
-				result->re_datalen = (size_t)(end - iter);
-			}
-		}
-		break;
-
-	case 3:
-		if (DeeString_Check(argv[1])) {
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
-				goto err;
-			goto do_start_offset_only;
-		}
-		goto do_load_3args;
-
-	case 4:
-		if (DeeString_Check(argv[1])) {
-			/* pattern, rules, start, end */
-			if (regex_get_rules(DeeString_STR(argv[1]), &result->re_flags))
-				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_offset))
-				goto err;
-			if (DeeObject_AsSSize(argv[3], (dssize_t *)&result->re_endindex))
-				goto err;
-		} else {
-			if (DeeObject_AssertTypeExact(argv[3], &DeeString_Type))
-				goto err;
-			if (regex_get_rules(DeeString_STR(argv[3]), &result->re_flags))
-				goto err;
-do_load_3args:
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&result->re_offset))
-				goto err;
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)&result->re_endindex))
-				goto err;
-		}
-		if (result->re_endindex >= DeeString_WLEN(self)) {
-			result->re_endindex = DeeString_WLEN(self);
-			goto do_start_offset_only;
-		}
-		if (result->re_offset >= result->re_endindex)
-			goto do_empty_scan;
-		/* Do a sub-string scan. */
-		result->re_dataptr = DeeString_AsUtf8((DeeObject *)self);
-		if unlikely(!result->re_dataptr)
-			goto err;
-		result->re_datalen = WSTR_LENGTH(result->re_dataptr);
-		if (result->re_dataptr == DeeString_STR(self)) {
-			/* ASCII string. */
-			result->re_dataptr += result->re_offset;
-			result->re_datalen = result->re_endindex - result->re_offset;
-		} else {
-			size_t i;
-			char *iter, *end;
-			/* UTF-8 string (manually adjust). */
-			end = (iter = result->re_dataptr) + result->re_datalen;
-			for (i = 0; i < result->re_offset; ++i) {
-				if (iter >= end)
-					break;
-				utf8_readchar((char const **)&iter, end);
-			}
-			result->re_dataptr = iter;
-			/* Continue scanning until the full sub-string has been indexed. */
-			for (; i < result->re_endindex; ++i) {
-				if (iter >= end)
-					break;
-				utf8_readchar((char const **)&iter, end);
-			}
-			result->re_datalen = (size_t)(iter - result->re_dataptr);
-		}
-		break;
-
-	default:
-		err_invalid_argc(function_name, argc, 1, 4);
-		goto err;
-	}
-	pattern = argv[0];
-	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
-		goto err;
-	result->re_patternptr = DeeString_AsUtf8(pattern);
-	if unlikely(!result->re_patternptr)
-		goto err;
-	result->re_patternlen = WSTR_LENGTH(result->re_patternptr);
-	return 0;
-err:
-	return -1;
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rematch(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	size_t result;
-	if (regex_getargs_generic(self, "rematch", argc, argv, &args))
+string_rematch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rematch"), &exec))
 		goto err;
-	result = DeeRegex_Matches(args.re_dataptr,
-	                          args.re_datalen,
-	                          args.re_patternptr,
-	                          args.re_patternlen,
-	                          args.re_flags);
-	if unlikely(result == (size_t)-1)
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rematches(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	size_t result;
-	char const *data_endptr;
-	if (regex_getargs_generic(self, "rematches", argc, argv, &args))
-		goto err;
-	result = DeeRegex_MatchesPtr(args.re_dataptr,
-	                             args.re_datalen,
-	                             args.re_patternptr,
-	                             args.re_patternlen,
-	                             &data_endptr,
-	                             args.re_flags);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return_bool(result != 0 &&
-	            args.re_dataptr +
-	            args.re_datalen ==
-	            data_endptr);
-err:
-	return NULL;
-}
-
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-regex_pack_range(size_t offset,
-                 struct regex_range const *__restrict range) {
-	DREF DeeObject *result, *temp;
-	result = DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		goto err;
-	temp = DeeInt_NewSize(offset + range->rr_start);
-	if unlikely(!temp)
-		goto err_r;
-	DeeTuple_SET(result, 0, temp);
-	temp = DeeInt_NewSize(offset + range->rr_end);
-	if unlikely(!temp)
-		goto err_r_0;
-	DeeTuple_SET(result, 1, temp);
-	return result;
-err_r_0:
-	Dee_Decref_likely(DeeTuple_GET(result, 0));
-err_r:
-	DeeTuple_FreeUninitialized(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_refind(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "refind", argc, argv, &args))
-		goto err;
-	error = DeeRegex_Find(args.re_dataptr,
-	                      args.re_datalen,
-	                      args.re_patternptr,
-	                      args.re_patternlen,
-	                      &result_range,
-	                      args.re_flags);
-	if unlikely(error < 0)
-		goto err;
-	if (!error)
+	if (result == DEE_RE_STATUS_NOMATCH)
 		return_none;
-	return regex_pack_range(args.re_offset, &result_range);
+	result = (Dee_ssize_t)string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rx_inbase);
+	return DeeInt_NewSize((size_t)result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerfind(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "rerfind", argc, argv, &args))
+string_rematches(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rematches"), &exec))
 		goto err;
-	error = DeeRegex_RFind(args.re_dataptr,
-	                       args.re_datalen,
-	                       args.re_patternptr,
-	                       args.re_patternlen,
-	                       &result_range,
-	                       args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error)
+	if (result == DEE_RE_STATUS_NOMATCH)
+		return_false;
+	ASSERT((size_t)result <= exec.rx_endoff);
+	return_bool((size_t)result >= exec.rx_endoff);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_refind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("refind"), &exec))
+		goto err;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	if (result == DEE_RE_STATUS_NOMATCH)
 		return_none;
-	return regex_pack_range(args.re_offset, &result_range);
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += result;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_reindex(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "reindex", argc, argv, &args))
+string_rerfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerfind"), &exec))
 		goto err;
-	error = DeeRegex_Find(args.re_dataptr,
-	                      args.re_datalen,
-	                      args.re_patternptr,
-	                      args.re_patternlen,
-	                      &result_range,
-	                      args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error)
-		goto err_not_found;
-	return regex_pack_range(args.re_offset, &result_range);
-err_not_found:
-	err_index_not_found((DeeObject *)self, argv[0]);
+	if (result == DEE_RE_STATUS_NOMATCH)
+		return_none;
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += result;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerindex(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "rerindex", argc, argv, &args))
+string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("reindex"), &exec))
 		goto err;
-	error = DeeRegex_RFind(args.re_dataptr,
-	                       args.re_datalen,
-	                       args.re_patternptr,
-	                       args.re_patternlen,
-	                       &result_range,
-	                       args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error)
+	if (result == DEE_RE_STATUS_NOMATCH)
 		goto err_not_found;
-	return regex_pack_range(args.re_offset, &result_range);
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += result;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err_not_found:
-	err_index_not_found((DeeObject *)self, argv[0]);
+	err_regex_index_not_found((DeeObject *)self);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF String *DCALL
-string_relocate(String *self,
-                size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "relocate", argc, argv, &args))
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rerindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerindex"), &exec))
 		goto err;
-	error = DeeRegex_Find(args.re_dataptr,
-	                      args.re_datalen,
-	                      args.re_patternptr,
-	                      args.re_patternlen,
-	                      &result_range,
-	                      args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error)
-		return_reference_((String *)Dee_EmptyString);
-	return string_getsubstr_ib(self,
-	                           args.re_offset + result_range.rr_start,
-	                           args.re_offset + result_range.rr_end);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF String *DCALL
-string_rerlocate(String *self,
-                 size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "rerlocate", argc, argv, &args))
-		goto err;
-	error = DeeRegex_RFind(args.re_dataptr,
-	                       args.re_datalen,
-	                       args.re_patternptr,
-	                       args.re_patternlen,
-	                       &result_range,
-	                       args.re_flags);
-	if unlikely(error < 0)
-		goto err;
-	if (!error)
-		return_reference_((String *)Dee_EmptyString);
-	return string_getsubstr_ib(self,
-	                           args.re_offset + result_range.rr_start,
-	                           args.re_offset + result_range.rr_end);
+	if (result == DEE_RE_STATUS_NOMATCH)
+		goto err_not_found;
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += result;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+err_not_found:
+	err_regex_index_not_found((DeeObject *)self);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-regex_pack_partition(String *__restrict self, size_t offset,
-                     struct regex_range const *__restrict range) {
+string_relocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("relocate"), &exec))
+		goto err;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		return_none;
+	return DeeString_NewUtf8((char const *)exec.rewr_exec.rx_inbase + (size_t)result,
+	                         match_size, STRING_ERROR_FSTRICT);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+string_rerlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerlocate"), &exec))
+		goto err;
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		return_none;
+	return DeeString_NewUtf8((char const *)exec.rewr_exec.rx_inbase + (size_t)result,
+	                         match_size, STRING_ERROR_FSTRICT);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
+                                     size_t startoff, size_t endoff) {
 	DREF DeeObject *result;
-	DREF String *temp;
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
-		goto err;
-	if (!range->rr_start && !offset) {
+		goto done;
+	if (startoff < endoff) {
+		DREF DeeObject *str0;
+		str0 = DeeString_NewUtf8(utf8_base + startoff, endoff - startoff, STRING_ERROR_FSTRICT);
+		if unlikely(!str0)
+			goto err_r;
+		DeeTuple_SET(result, 0, str0);
+	} else {
 		DeeTuple_SET(result, 0, Dee_EmptyString);
 		Dee_Incref(Dee_EmptyString);
-		if (range->rr_end != DeeString_WLEN(self))
-			goto allocate_matched_substring;
-		DeeTuple_SET(result, 1, (DeeObject *)self);
-		Dee_Incref(self);
-		DeeTuple_SET(result, 2, Dee_EmptyString);
-		Dee_Incref(Dee_EmptyString);
-		return result;
 	}
-	temp = string_getsubstr_ib(self,
-	                           0,
-	                           offset + range->rr_start);
-	if unlikely(!temp)
-		goto err_r;
-	DeeTuple_SET(result, 0, (DeeObject *)temp); /* Inherit reference. */
-allocate_matched_substring:
-	temp = string_getsubstr_ib(self,
-	                           offset + range->rr_start,
-	                           offset + range->rr_end);
-	if unlikely(!temp)
-		goto err_r_0;
-	DeeTuple_SET(result, 1, (DeeObject *)temp); /* Inherit reference. */
-	if (offset + range->rr_end == 0) {
-		DeeTuple_SET(result, 2, (DeeObject *)self);
-		Dee_Incref(self);
-	} else if (offset + range->rr_end == DeeString_WLEN(self)) {
-		DeeTuple_SET(result, 2, Dee_EmptyString);
-		Dee_Incref(Dee_EmptyString);
-	} else {
-		temp = string_getsubstr(self,
-		                        offset + range->rr_end,
-		                        (size_t)-1);
-		if unlikely(!temp)
-			goto err_r_1;
-		DeeTuple_SET(result, 2, (DeeObject *)temp); /* Inherit reference. */
-	}
+	DeeTuple_SET(result, 1, Dee_EmptyString);
+	DeeTuple_SET(result, 2, Dee_EmptyString);
+	Dee_Incref_n(Dee_EmptyString, 2);
 	return result;
-err_r_1:
-	Dee_Decref_likely(DeeTuple_GET(result, 1));
-err_r_0:
-	Dee_Decref_likely(DeeTuple_GET(result, 0));
+done:
+	return result;
 err_r:
 	DeeTuple_FreeUninitialized(result);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_pack_utf8_partition_found(char const *__restrict utf8_base,
+                                 size_t match_startoff,
+                                 size_t match_endoff,
+                                 size_t str_endoff) {
+	DREF DeeObject *result;
+	DREF DeeObject *str;
+	result = DeeTuple_NewUninitialized(3);
+	if unlikely(!result)
+		goto done;
+	str = DeeString_NewUtf8(utf8_base, match_startoff, STRING_ERROR_FSTRICT);
+	if unlikely(!str)
+		goto err_r_0;
+	DeeTuple_SET(result, 0, str);
+	str = DeeString_NewUtf8(utf8_base + match_startoff, match_endoff - match_startoff, STRING_ERROR_FSTRICT);
+	if unlikely(!str)
+		goto err_r_1;
+	DeeTuple_SET(result, 1, str);
+	str = DeeString_NewUtf8(utf8_base + match_endoff, str_endoff - match_endoff, STRING_ERROR_FSTRICT);
+	if unlikely(!str)
+		goto err_r_2;
+	DeeTuple_SET(result, 2, str);
+	return result;
+done:
+	return result;
+err_r_2:
+	Dee_Decref_likely(DeeTuple_GET(result, 1));
+err_r_1:
+	Dee_Decref_likely(DeeTuple_GET(result, 0));
+err_r_0:
+	DeeTuple_FreeUninitialized(result);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_repartition(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("repartition"), &exec))
+		goto err;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		return string_pack_utf8_partition_not_found((char const *)exec.rewr_exec.rx_inbase,
+		                                            exec.rewr_exec.rx_startoff,
+		                                            exec.rewr_exec.rx_endoff);
+	}
+	result -= exec.rewr_exec.rx_startoff;
+	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
+	exec.rewr_exec.rx_inbase = (char const *)exec.rewr_exec.rx_inbase + exec.rewr_exec.rx_startoff;
+	return string_pack_utf8_partition_found((char const *)exec.rewr_exec.rx_inbase,
+	                                        (size_t)result,
+	                                        (size_t)result + match_size,
+	                                        exec.rewr_exec.rx_endoff);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_repartition(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "repartition", argc, argv, &args))
+string_rerpartition(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerpartition"), &exec))
 		goto err;
-	error = DeeRegex_Find(args.re_dataptr,
-	                      args.re_datalen,
-	                      args.re_patternptr,
-	                      args.re_patternlen,
-	                      &result_range,
-	                      args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (!error)
-		return DeeTuple_Pack(3, self, Dee_EmptyString, Dee_EmptyString);
-	return regex_pack_partition(self, args.re_offset, &result_range);
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		return string_pack_utf8_partition_not_found((char const *)exec.rewr_exec.rx_inbase,
+		                                            exec.rewr_exec.rx_startoff,
+		                                            exec.rewr_exec.rx_endoff);
+	}
+	result -= exec.rewr_exec.rx_startoff;
+	exec.rewr_exec.rx_endoff -= exec.rewr_exec.rx_startoff;
+	exec.rewr_exec.rx_inbase = (char const *)exec.rewr_exec.rx_inbase + exec.rewr_exec.rx_startoff;
+	return string_pack_utf8_partition_found((char const *)exec.rewr_exec.rx_inbase,
+	                                        (size_t)result,
+	                                        (size_t)result + match_size,
+	                                        exec.rewr_exec.rx_endoff);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerpartition(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range result_range;
-	if (regex_getargs_generic(self, "rerpartition", argc, argv, &args))
-		goto err;
-	error = DeeRegex_RFind(args.re_dataptr,
-	                       args.re_datalen,
-	                       args.re_patternptr,
-	                       args.re_patternlen,
-	                       &result_range,
-	                       args.re_flags);
-	if unlikely(error < 0)
-		goto err;
-	if (!error)
-		return DeeTuple_Pack(3, self, Dee_EmptyString, Dee_EmptyString);
-	return regex_pack_partition(self, args.re_offset, &result_range);
-err:
-	return NULL;
-}
-
+PRIVATE struct keyword string_rereplace_kwlist[] = { K(pattern), K(replace), K(max), K(rules), KEND };
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-string_rereplace(String *self, size_t argc, DeeObject *const *argv) {
-	String *find_pattern, *replace;
-	DeeObject *opt1 = NULL, *opt2 = NULL;
-	size_t max_count  = (size_t)-1;
-	uint16_t re_flags = Dee_REGEX_FNORMAL;
-	char *pattern_ptr;
-	size_t pattern_len;
-	char *data_ptr;
-	size_t data_len;
-	if (DeeArg_Unpack(argc, argv, "oo|oo:rereplace", &find_pattern, &replace, &opt1, &opt2))
+string_rereplace(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	DeeObject *pattern, *replace, *rules = NULL;
+	struct DeeRegexMatch groups[9];
+	size_t maxreplace = (size_t)-1;
+	char const *replace_start, *replace_end;
+	struct DeeRegexExec exec;
+	if (DeeArg_UnpackKw(argc, argv, kw, string_rereplace_kwlist,
+	                    "oo|" UNPuSIZ "o:rereplace",
+	                    &pattern, &replace, &maxreplace, &rules))
 		goto err;
-	if (DeeObject_AssertTypeExact(find_pattern, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(replace, &DeeString_Type))
 		goto err;
-	if (opt1) {
-		if (DeeString_Check(opt1)) {
-			if (regex_get_rules(DeeString_STR(opt1), &re_flags))
-				goto err;
-			if (opt2 && DeeObject_AsSize(opt2, &max_count))
-				goto err;
-		} else {
-			if (DeeObject_AsSize(opt1, &max_count))
-				goto err;
-			if (opt2) {
-				if (DeeObject_AssertTypeExact(opt2, &DeeString_Type))
+	replace_start = DeeString_AsUtf8(replace);
+	if unlikely(!replace_start)
+		goto err;
+	replace_end = replace_start + WSTR_LENGTH(replace_start);
+	(void)rules;        /* TODO: rules */
+	exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
+	exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!exec.rx_code)
+		goto err;
+	exec.rx_nmatch = COMPILER_LENOF(groups);
+	exec.rx_pmatch = groups;
+	exec.rx_inbase = DeeString_AsUtf8((DeeObject *)self);
+	if unlikely(!exec.rx_inbase)
+		goto err;
+	exec.rx_insize   = WSTR_LENGTH(exec.rx_inbase);
+	exec.rx_startoff = 0;
+	exec.rx_endoff   = exec.rx_insize;
+	while (exec.rx_startoff < exec.rx_endoff && maxreplace) {
+		char const *replace_iter, *replace_flush;
+		Dee_ssize_t match_offset;
+		size_t match_size;
+		memsetp(groups, (void *)(uintptr_t)(size_t)-1, 2 * 9);
+		match_offset = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		if unlikely(match_offset == DEE_RE_STATUS_ERROR)
+			goto err;
+		if (match_offset == DEE_RE_STATUS_NOMATCH)
+			break;
+		if unlikely(match_size == 0)
+			break; /* Prevent infinite loop when epsilon was matched. */
+		/* Flush until start-of-match. */
+		if unlikely(unicode_printer_printutf8(&printer,
+		                                      (char const *)exec.rx_inbase + exec.rx_startoff,
+		                                      (size_t)match_offset - exec.rx_startoff) < 0)
+			goto err;
+
+		/* Parse and print the replacement string. */
+		for (replace_iter = replace_flush = replace_start;
+		     replace_iter < replace_end;) {
+			struct DeeRegexMatch match;
+			char ch = *replace_iter;
+			switch (ch) {
+
+			case '&':
+				/* Insert full match. */
+				match.rm_so = (size_t)match_offset;
+				match.rm_eo = (size_t)match_offset + match_size;
+do_insert_match:
+				if unlikely(unicode_printer_printutf8(&printer, replace_flush,
+				                                      (size_t)(replace_iter - replace_flush)) < 0)
 					goto err;
-				if (regex_get_rules(DeeString_STR(opt2), &re_flags))
+				if unlikely(unicode_printer_printutf8(&printer,
+				                                      (char const *)exec.rx_inbase + match.rm_so,
+				                                      (size_t)(match.rm_eo - match.rm_so)) < 0)
 					goto err;
+				++replace_iter;
+				if (ch == '\\')
+					++replace_iter;
+				replace_flush = replace_iter;
+				break;
+
+			case '\\':
+				ch = replace_iter[1];
+				if (ch == '&' || ch == '\\') {
+					/* Insert literal '&' or '\' */
+					if unlikely(unicode_printer_printutf8(&printer, replace_flush,
+					                                      (size_t)(replace_iter - replace_flush)) < 0)
+						goto err;
+					++replace_iter;
+					replace_flush = replace_iter;
+					++replace_iter;
+				} else if (ch >= '1' && ch <= '9') {
+					/* Insert matched group N.
+					 * NOTE: When the group was never matched, both of its offsets will be equal
+					 *       here, meaning that the code above will simply print an empty string! */
+					match = groups[ch - '1'];
+					goto do_insert_match;
+				} else {
+					++replace_iter;
+				}
+				break;
+
+			default:
+				++replace_iter;
+				break;
 			}
 		}
+
+		/* Flush remainder of replacement string. */
+		if (replace_flush < replace_end) {
+			if unlikely(unicode_printer_printutf8(&printer, replace_flush,
+			                                      (size_t)(replace_end - replace_flush)) < 0)
+				goto err;
+		}
+
+		/* Keep on scanning after the matched area. */
+		exec.rx_startoff = (size_t)match_offset + match_size;
+		--maxreplace;
 	}
-	pattern_ptr = DeeString_AsUtf8((DeeObject *)find_pattern);
-	if unlikely(!pattern_ptr)
-		goto err;
-	data_ptr = DeeString_AsUtf8((DeeObject *)self);
-	if unlikely(!data_ptr)
-		goto err;
-	pattern_len = WSTR_LENGTH(pattern_ptr);
-	data_len    = WSTR_LENGTH(data_ptr);
-	{
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		char *iter, *end, *flush_start;
-		end = (flush_start = iter = data_ptr) + data_len;
-		while (iter < end) {
-			struct regex_range_ptr range;
-			int error;
-			error = DeeRegex_FindPtr(iter,
-			                         (size_t)(end - iter),
-			                         pattern_ptr,
-			                         pattern_len,
-			                         &range,
-			                         re_flags);
-			if unlikely(error < 0)
-				goto err_printer;
-			if (!error)
-				break;
-			if (flush_start < range.rr_start) {
-				if (unicode_printer_printutf8(&printer, flush_start,
-				                              (size_t)(range.rr_start - flush_start)) < 0)
-					goto err_printer;
-			}
-			if (unicode_printer_printstring(&printer, (DeeObject *)replace) < 0)
-				goto err_printer;
-			flush_start = range.rr_end;
-			if (!max_count--)
-				break;
-			iter = range.rr_end;
-		}
-		/* Flush the remainder. */
-		if (unicode_printer_printutf8(&printer, flush_start,
-		                              (size_t)(end - flush_start)) < 0)
-			goto err_printer;
-		return (DREF String *)unicode_printer_pack(&printer);
-err_printer:
+
+	/* Flush remainder */
+#ifndef __OPTIMIZE_SIZE__
+	if unlikely(exec.rx_startoff == 0) {
 		unicode_printer_fini(&printer);
+		return_reference_(self);
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
+	if unlikely(unicode_printer_printutf8(&printer,
+	                                       (char const *)exec.rx_inbase + exec.rx_startoff,
+	                                       exec.rx_endoff - exec.rx_startoff) < 0)
+		goto err;
+	return (DREF String *)unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+struct DeeRegexBaseExec {
+	DREF String               *rx_pattern;  /* [1..1] Pattern string (only a reference within objects in "./reproxy.c.inl") */
+	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
+	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
+	                                         * When `rx_code' was compiled with `DEE_REGEX_COMPILE_NOUTF8', this data
+	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
+	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
+	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
+	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
+	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
+	unsigned int               rx_eflags;   /* Execution-flags (set of `DEE_RE_EXEC_*') */
+};
+
+/* Functions from "./reproxy.c.inl" */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_re_findall(String *__restrict self,
+                  struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_re_locateall(String *__restrict self,
+                    struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_re_split(String *__restrict self,
+                struct DeeRegexBaseExec const *__restrict exec);
+
+
+#define BASE_REGEX_GETARGS_FMT GENERIC_REGEX_GETARGS_FMT
+#define base_regex_kwlist      generic_regex_kwlist
+PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
+base_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
+                   DeeObject *kw, char const *__restrict fmt,
+                   struct DeeRegexBaseExec *__restrict result) {
+	DeeObject *rules = NULL;
+	result->rx_startoff = 0;
+	result->rx_endoff   = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, base_regex_kwlist, fmt,
+	                    &result->rx_pattern,
+	                    &result->rx_startoff,
+	                    &result->rx_endoff,
+	                    &rules))
+		goto err;
+	if (DeeObject_AssertTypeExact(result->rx_pattern, &DeeString_Type))
+		goto err;
+	result->rx_code = DeeString_GetRegex((DeeObject *)result->rx_pattern,
+	                                     DEE_REGEX_COMPILE_NORMAL);
+	if unlikely(!result->rx_code)
+		goto err;
+	(void)rules;           /* TODO: rules */
+	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
+	result->rx_inbase = DeeString_AsUtf8((DeeObject *)self);
+	if unlikely(!result->rx_inbase)
+		goto err;
+	result->rx_insize = WSTR_LENGTH(result->rx_inbase);
+	if (result->rx_endoff >= result->rx_insize) {
+		result->rx_endoff = result->rx_insize;
+	} else {
+		result->rx_endoff = string_charcnt2bytecnt(self, result->rx_endoff, (char const *)result->rx_inbase);
+	}
+	if (result->rx_startoff > 0)
+		result->rx_startoff = string_charcnt2bytecnt(self, result->rx_startoff, (char const *)result->rx_inbase);
+	return 0;
+err:
+	return -1;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_refindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("refindall"), &exec))
+		goto err;
+	return string_re_findall(self, &exec);
 err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL string_re_findall(String *__restrict self, String *__restrict pattern, struct re_args const *__restrict args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL string_re_locateall(String *__restrict self, String *__restrict pattern, struct re_args const *__restrict args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL string_re_split(String *__restrict self, String *__restrict pattern, struct re_args const *__restrict args);
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_refindall(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	if (regex_getargs_generic(self, "refindall", argc, argv, &args))
+string_relocateall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("relocateall"), &exec))
 		goto err;
-	return string_re_findall(self, (String *)argv[0], &args);
+	return string_re_locateall(self, &exec);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_relocateall(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	if (regex_getargs_generic(self, "relocateall", argc, argv, &args))
+string_resplit(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("resplit"), &exec))
 		goto err;
-	return string_re_locateall(self, (String *)argv[0], &args);
+	return string_re_split(self, &exec);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_resplit(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	if (regex_getargs_generic(self, "resplit", argc, argv, &args))
+string_restartswith(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("restartswith"), &exec))
 		goto err;
-	return string_re_split(self, (String *)argv[0], &args);
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err;
+	return_bool(result != DEE_RE_STATUS_NOMATCH);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_restartswith(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	size_t result;
-	if (regex_getargs_generic(self, "restartswith", argc, argv, &args))
+string_reendswith(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t match_size;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("reendswith"), &exec))
 		goto err;
-	result = DeeRegex_Matches(args.re_dataptr,
-	                          args.re_datalen,
-	                          args.re_patternptr,
-	                          args.re_patternlen,
-	                          args.re_flags);
-	if unlikely(result == (size_t)-1)
+	result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	return_bool_(result != 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_reendswith(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	int error;
-	struct regex_range_ptr range;
-	if (regex_getargs_generic(self, "reendswith", argc, argv, &args))
-		goto err;
-	error = DeeRegex_RFindPtr(args.re_dataptr,
-	                          args.re_datalen,
-	                          args.re_patternptr,
-	                          args.re_patternlen,
-	                          &range,
-	                          args.re_flags);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error &&
-	             range.rr_end == args.re_dataptr +
-	                             args.re_datalen);
+	if unlikely(result == DEE_RE_STATUS_NOMATCH)
+		return_false;
+	ASSERT((size_t)result + match_size <= exec.rx_endoff);
+	return_bool((size_t)result + match_size >= exec.rx_endoff);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_relstrip(String *self,
-                size_t argc, DeeObject *const *argv) {
-	struct re_args args;
-	size_t temp;
-	if (regex_getargs_generic(self, "relstrip", argc, argv, &args))
+string_relstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("relstrip"), &exec))
 		goto err;
 	for (;;) {
-		char *data_end;
-		temp = DeeRegex_MatchesPtr(args.re_dataptr,
-		                           args.re_datalen,
-		                           args.re_patternptr,
-		                           args.re_patternlen,
-		                           (char const **)&data_end,
-		                           args.re_flags);
-		if unlikely(temp == (size_t)-1)
+		Dee_ssize_t result;
+		result = DeeRegex_Match(&exec);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!temp)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		args.re_offset += temp;
-		args.re_datalen -= (size_t)(data_end - args.re_dataptr);
-		args.re_dataptr = data_end;
+		if (result == 0)
+			break; /* Prevent infinite loop when epsilon is matched. */
+		exec.rx_startoff = (size_t)result;
+		if (exec.rx_startoff >= exec.rx_endoff)
+			break;
 	}
-	return string_getsubstr(self, args.re_offset, (size_t)-1);
+
+	/* End-of-matching-area */
+	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                        exec.rx_endoff - exec.rx_startoff,
+	                                        STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_rerstrip(String *self,
-                size_t argc, DeeObject *const *argv) {
-	struct re_args_ex args;
-	int error;
-	struct regex_range_ex range;
-	if (regex_getargs_generic_ex(self, "rerstrip", argc, argv, &args))
+string_rerstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rerstrip"), &exec))
 		goto err;
 	for (;;) {
-		error = DeeRegex_RFindEx(args.re_dataptr,
-		                         args.re_datalen,
-		                         args.re_patternptr,
-		                         args.re_patternlen,
-		                         &range,
-		                         args.re_flags);
-		if unlikely(error < 0)
+		size_t match_size;
+		Dee_ssize_t result;
+		result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!error)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		if (range.rr_end_ptr != args.re_dataptr + args.re_datalen)
+		if (match_size == 0)
+			break; /* Prevent infinite loop when epsilon is matched. */
+		ASSERT((size_t)result + match_size <= exec.rx_endoff);
+		if ((size_t)result + match_size < exec.rx_endoff)
 			break;
-		ASSERT(range.rr_start < range.rr_end);
-		ASSERT(range.rr_start_ptr < range.rr_end_ptr);
-		args.re_datalen  = (size_t)(range.rr_start_ptr - args.re_dataptr);
-		args.re_endindex = args.re_offset + range.rr_start;
+		exec.rx_endoff = (size_t)result;
+		if (exec.rx_startoff >= exec.rx_endoff)
+			break;
 	}
-	return string_getsubstr_ib(self, args.re_offset, args.re_endindex);
+
+	/* End-of-matching-area */
+	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                        exec.rx_endoff - exec.rx_startoff,
+	                                        STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_restrip(String *self,
-               size_t argc, DeeObject *const *argv) {
-	struct re_args_ex args;
-	int error;
-	struct regex_range_ex range;
-	if (regex_getargs_generic_ex(self, "restrip", argc, argv, &args))
+string_restrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("restrip"), &exec))
 		goto err;
+	/* lstrip */
 	for (;;) {
-		char *data_end;
-		size_t temp;
-		temp = DeeRegex_MatchesPtr(args.re_dataptr,
-		                           args.re_datalen,
-		                           args.re_patternptr,
-		                           args.re_patternlen,
-		                           (char const **)&data_end,
-		                           args.re_flags);
-		if unlikely(temp == (size_t)-1)
+		Dee_ssize_t result;
+		result = DeeRegex_Match(&exec);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!temp)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		args.re_offset += temp;
-		args.re_datalen -= (size_t)(data_end - args.re_dataptr);
-		args.re_dataptr = data_end;
+		if (result == 0)
+			break; /* Prevent infinite loop when epsilon is matched. */
+		exec.rx_startoff = (size_t)result;
+		if (exec.rx_startoff >= exec.rx_endoff)
+			break;
 	}
+
+	/* rstrip */
 	for (;;) {
-		error = DeeRegex_RFindEx(args.re_dataptr,
-		                         args.re_datalen,
-		                         args.re_patternptr,
-		                         args.re_patternlen,
-		                         &range,
-		                         args.re_flags);
-		if unlikely(error < 0)
+		size_t match_size;
+		Dee_ssize_t result;
+		result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!error)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		if (range.rr_end_ptr != args.re_dataptr + args.re_datalen)
+		if (match_size == 0)
+			break; /* Prevent infinite loop when epsilon is matched. */
+		ASSERT((size_t)result + match_size <= exec.rx_endoff);
+		if ((size_t)result + match_size < exec.rx_endoff)
 			break;
-		ASSERT(range.rr_start < range.rr_end);
-		ASSERT(range.rr_start_ptr < range.rr_end_ptr);
-		args.re_datalen  = (size_t)(range.rr_start_ptr - args.re_dataptr);
-		args.re_endindex = args.re_offset + range.rr_start;
+		exec.rx_endoff = (size_t)result;
+		if (exec.rx_startoff >= exec.rx_endoff)
+			break;
 	}
-	return string_getsubstr_ib(self, args.re_offset, args.re_endindex);
+
+	/* End-of-matching-area */
+	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                        exec.rx_endoff - exec.rx_startoff,
+	                                        STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_recontains(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args_ex args;
-	int error;
-	struct regex_range_ptr range;
-	if (regex_getargs_generic_ex(self, "recontains", argc, argv, &args))
+string_recontains(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("recontains"), &exec))
 		goto err;
-	error = DeeRegex_FindPtr(args.re_dataptr,
-	                         args.re_datalen,
-	                         args.re_patternptr,
-	                         args.re_patternlen,
-	                         &range,
-	                         args.re_flags);
-	if unlikely(error < 0)
+	result = DeeRegex_Search(&exec, (size_t)-1, NULL);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	return_bool_(error);
+	return_bool(result != DEE_RE_STATUS_NOMATCH);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_recount(String *self, size_t argc, DeeObject *const *argv) {
-	struct re_args_ex args;
-	int error;
-	size_t result;
-	struct regex_range_ptr range;
-	if (regex_getargs_generic_ex(self, "recount", argc, argv, &args))
+string_recount(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t count;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("recount"), &exec))
 		goto err;
-	result = 0;
+	count = 0;
 	for (;;) {
-		error = DeeRegex_FindPtr(args.re_dataptr,
-		                         args.re_datalen,
-		                         args.re_patternptr,
-		                         args.re_patternlen,
-		                         &range,
-		                         args.re_flags);
-		if unlikely(error < 0)
+		Dee_ssize_t result;
+		size_t match_size;
+		result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
-		if (!error)
+		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		++result;
-		args.re_datalen -= (size_t)(range.rr_end - args.re_dataptr);
-		args.re_dataptr = range.rr_end;
+		if unlikely(match_size == 0)
+			break; /* Prevent infinite loop when epsilon is matched. */
+		++count;
+		exec.rx_startoff = (size_t)result + match_size;
+		if (exec.rx_startoff >= exec.rx_endoff)
+			break;
 	}
-	return DeeInt_NewSize(result);
+	return DeeInt_NewSize(count);
 err:
 	return NULL;
 }
@@ -11598,281 +11397,199 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "the length of sub-strings and figures out their amount") },
 
 	/* Regex functions. */
-	/* TODO: Completely re-write this regex API from scratch */
 	{ "rematch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematch,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@return The number of leading characters in ${this.substr(start, end)} "
-	      /*    */ "matched by @pattern, or $0 if @pattern could not be fully matched\n"
-
+	      /*    */ "matched by @pattern, or ?N if @pattern doesn't match\n"
 	      "Check if ${this.substr(start, end)} matches the given regular expression @pattern\n"
-
-	      "When specified, @rules must be a comma-separated and case-insensitive ?. "
-	      /**/ "consisting of a set of the following Name-options, or a tightly packed set of the "
-	      /**/ "following Short-options:\n"
-
-	      "#T{Name|Short|Inline|Description~"
-	      "$\"DOTALL\"" /*   */ "|$\"s\"" /**/ "|$\"s\"" /**/ "|The $\".\" regex meta-character matches anything (including "
-	      /*                                               */ "new-lines, which otherwise wouldn't be matched)&"
-	      "$\"MULTILINE\"" /**/ "|$\"m\"" /**/ "|$\"m\"" /**/ "|Allow $\"^\" to match immediately after a line-feed, "
-	      /*                                               */ "rather than just at the start of the string&"
-	      "$\"NOCASE\"" /*   */ "|$\"i\"" /**/ "|$\"i\"" /**/ "|Ignore casing when matching single characters, as well as "
-	      /*                                               */ "characters in ranges (e.g.: $\"[a-z]\")}\n"
-
-	      "The builtin regular expression API for strings spans across the following functions:\n"
-	      "#T{Function" /*   */ "|Non-regex Variant" /*  */ "|Description~"
-	      "?#rematch" /*     */ "|?#common" /*           */ "|Count how many character at the start of a sub-string match a regex pattern&"
-	      "?#rematches" /*   */ "|?#{compare}${ == 0}" /**/ "|Check that a given sub-string matches the regex pattern exactly&"
-	      "?#refind" /*      */ "|?#find" /*             */ "|Find the first sub-range matched by a regex pattern&"
-	      "?#rerfind" /*     */ "|?#rfind" /*            */ "|Find the last sub-range matched by a regex pattern&"
-	      "?#reindex" /*     */ "|?#index" /*            */ "|Same as ?#refind, but throws an error if not found&"
-	      "?#rerindex" /*    */ "|?#rindex" /*           */ "|Same as ?#rerfind, but throws an error if not found&"
-	      "?#relocate" /*    */ "|-" /*                  */ "|Same as ?#refind, but return the sub-string that was matched, rather than its indices&"
-	      "?#rerlocate" /*   */ "|-" /*                  */ "|Same as ?#rerfind, but return the sub-string that was matched, rather than its indices&"
-	      "?#repartition" /* */ "|?#partition" /*        */ "|Same as ?#relocate, but return a 3-tuple of strings (before_match, match, after_match)&"
-	      "?#rerpartition" /**/ "|?#rpartition" /*       */ "|Same as ?#rerlocate, but return a 3-tuple of strings (before_match, match, after_match)&"
-	      "?#rereplace" /*   */ "|?#replace" /*          */ "|Find and replace all sub-ranges matched by a regex pattern with a different string&"
-	      "?#refindall" /*   */ "|?#findall" /*          */ "|Enumerate all sub-ranges matched by a regex pattern in ascending order&"
-	      "?#relocateall" /* */ "|-" /*                  */ "|Enumerate all sub-strings matched by a regex pattern in ascending order&"
-	      "?#resplit" /*     */ "|?#split" /*            */ "|Enumerate all sub-strings matched by a regex pattern in ascending order&"
-	      "?#restartswith" /**/ "|?#startswith" /*       */ "|Check if @this ?. starts with a regular expression&"
-	      "?#reendswith" /*  */ "|?#endswith" /*         */ "|Check if @this ?. ends with a regular expression&"
-	      "?#recontains" /*  */ "|?#contains" /*         */ "|Check if @this stirng contains a regular expression anywhere&"
-	      "?#recount" /*     */ "|?#count" /*            */ "|Count the number of occurrences of a regular expression&"
-	      "?#restrip" /*     */ "|?#strip" /*            */ "|Strip all leading and trailing regular expression matches&"
-	      "?#relstrip" /*    */ "|?#lstrip" /*           */ "|Strip all leading regular expression matches&"
-	      "?#rerstrip" /*    */ "|?#rstrip" /*           */ "|Strip all trailing regular expression matches}\n"
-	      "Deemon implements support for the following regex matching functions:\n"
-	      "#T{Feature|Description~"
-	      "$r\".\"|Match anything except for newlines. When $\"DOTALL\" is enabled, match anything including newlines&"
-	      "$r\"^\"|Match at the start of the string. When $\"MULTILINE\", also match at the start of lines (${r\"(?<=\\A|\\n)\"})&"
-	      "$r\"$\"|Match at the end of the string. When $\"MULTILINE\", also match at the end of lines (${r\"(?=\\Z|\\n)\"})&"
-	      "$r\"\\A\"|Match only at the start of the string&"
-	      "$r\"\\Z\"|Match only at the end of the string&"
-	      "$r\"(x...#|y...)\"|Match either $r\"x...\" or $r\"y...\" (Note special behavior when repeated)&"
-	      "$r\"(#?...)\"|Regex extension (see below)&"
-	      "$r\"[...]\"|Match any character apart of $r\"...\" (also accept the `a-z' notation, as well as any of the ${r\"\\...\"}) functions below&"
-	      "$r\"\\d\"|Match any character $ch with ${ch.isdigit()}&"
-	      "$r\"\\D\"|Match any character $ch with ${!ch.isdigit()}&"
-	      "$r\"\\s\"|Match any character $ch with ${ch.isspace()}&"
-	      "$r\"\\S\"|Match any character $ch with ${!ch.isspace()}&"
-	      "$r\"\\w\"|Match any character $ch with ${ch.issymstrt() || ch.issymcont()}&"
-	      "$r\"\\W\"|Match any character $ch with ${!ch.issymstrt() && !ch.issymcont()}&"
-	      "$r\"\\n\"|Match any character $ch with ${ch.islf()} (NOTE: deemon-specific extension)&"
-	      "$r\"\\N\"|Match any character $ch with ${!ch.islf()} (NOTE: deemon-specific extension)&"
-	      "$r\"\\a\"|Match the character ${string.chr(0x07)} aka $\"\\a\"&"
-	      "$r\"\\b\"|Match the character ${string.chr(0x08)} aka $\"\\b\"&"
-	      "$r\"\\f\"|Match the character ${string.chr(0x0c)} aka $\"\\f\"&"
-	      "$r\"\\r\"|Match the character ${string.chr(0x0d)} aka $\"\\r\"&"
-	      "$r\"\\t\"|Match the character ${string.chr(0x09)} aka $\"\\t\"&"
-	      "$r\"\\v\"|Match the character ${string.chr(0x0b)} aka $\"\\v\"&"
-	      "$r\"\\e\"|Match the character ${string.chr(0x1b)} aka $\"\\e\"&"
-	      "$r\"\\[...]\"|Match a character via its explicit unicode traits (see below)&"
-	      "$r\"\\...\"|For anything else, match $r\"...\" exactly&"
-	      "$r\"...\"|Match the given character $r\"...\" exactly}\n"
-	      "Deemon implements support for the following regex repetition suffixes:\n"
-	      "#T{Suffix|Min|Max|Greedy~"
-	      "$r\"#*\"|$0|$INF|$true&"
-	      "$r\"#*#?\"|$0|$INF|$false&"
-	      "$r\"#+\"|$1|$INF|$true&"
-	      "$r\"#+#?\"|$1|$INF|$false&"
-	      "$r\"#?\"|$0|$1|$true&"
-	      "$r\"#?#?\"|$0|$1|$false&"
-	      "$r\"{m}\"|$m|$m|$true&"
-	      "$r\"{m}#?\"|$m|$m|$false&"
-	      "$r\"{,n}\"|$0|$n|$true&"
-	      "$r\"{,n}#?\"|$0|$n|$false&"
-	      "$r\"{m,}\"|$m|$INF|$true&"
-	      "$r\"{m,}#?\"|$m|$INF|$false&"
-	      "$r\"{m,n}\"|$m|$n|$true&"
-	      "$r\"{m,n}#?\"|$m|$n|$false}\n"
-	      "Deemon implements support for the following regex extensions (which also include some deemon-specific ones):\n"
-	      "#T{Extension|Description~"
-	      "$r\"(#?<=...)\"|Positive look-behind assertion (Ensure that the current data position is preceded by $r\"...\")&"
-	      "$r\"(#?<!...)\"|Negative look-behind assertion (Ensure that the current data position isn't preceded by $r\"...\")&"
-	      "$r\"(#?=...)\"|Positive look-ahead assertion (Ensure that $r\"...\" follows the current data position)&"
-	      "$r\"(#?!...)\"|Negative look-ahead assertion (Ensure that $r\"...\" doesn't follow the current data position)&"
-	      "$r\"(#?#~ims)\"|Set/delete regex flags (each character corresponding to the `Inline' column above). "
-	      "Each rule may be prefixed by `#~' in order to unset that flag. e.g. $\"(#?i#~m)\" or $\"(#?#~mi#~s)\"&"
-	      "$r\"(#?##...)\"|Comment&"
-	      "$r\"(#?\\d=7)\"|Match any unicode digit-like character with a value equal to $7&"
-	      "$r\"(#?\\d>2)\", $r\"(#?\\d>=3)\"|Match any unicode digit-like character with a value of at least $3&"
-	      "$r\"(#?\\d<7)\", $r\"(#?\\d<=6)\"|Match any unicode digit-like character with a value of at most $6&"
-	      "$r\"(#?\\d>=2<=6)\", $r\"(#?\\d<=6>=2)\", $r\"(#?\\d>1<7)\", $r\"(#?\\d<7>1)\"|Match any unicode digit-like character with a value between $2 and $6}\n"
-	      "As an extension, deemon implements unicode trait-based character matching "
-	      "through $r\"\\[...]\", where $r\"...\" is encoded as follows, where TRAITS "
-	      "is a tightly packed string of characters acting as flags, which are described further below:\n"
-	      "#T{Encoding|Description~"
-	      "$r\"\\[TRAITS]\"|Match characters implementing all of the given TRAITS (see below)&"
-	      "$r\"\\[+TRAITS]\"|Match characters implementing any of the given TRAITS (see below)&"
-	      "$r\"\\[^TRAITS]\"|Match characters implementing none of the given TRAITS (see below)&"
-	      "$r\"\\[WANTED-UNWANTED]\"|Match characters implementing all of WANTED, but none of UNWANTED (see below)}\n"
-	      "#T{Trait-Character|Function|Description~"
-	      "$\"p\"|?#isprint|Is the character printable or SPC&"
-	      "$\"a\"|?#isalpha|Is the character alphabetic&"
-	      "$\"c\"|?#isspace|Is the character a space-character&"
-	      "$\"n\"|?#islf|Is the character a line-feed (Warning: Unlike $r\"\\n\", doesn't match $\"\\r\\n\" as a single line-feed)&"
-	      "$\"l\"|?#islower|Is the character lower-case&"
-	      "$\"u\"|?#isupper|Is the character upper-case&"
-	      "$\"t\"|?#istitle|Is the character title-case&"
-	      "$\"c\"|?#iscntrl|Is the character a control character&"
-	      "$\"d\"|?#isdecimal|Is the character a decimal (e.g. $\"2\" (two))&"
-	      "$\"D\"|?#isdigit|Is the character a digit (e.g. $\"\xc2\xb2\" (square))&"
-	      "$\"0\"|?#issymstrt|Is the character allowed as start of a symbol&"
-	      "$\"1\"|?#issymcont|Is the character allowed as continuation of a symbol}\n"
-	      "#T{Example pattern|Description~"
-	      "${text.relocateall(r\"\\[0]\\[1]*\")}|Locate all unicode-compliant symbol names&"
-	      "${text.relocateall(r\"(#?<!\\[1])\\[d]\\[1]*\")}|Locate all c-compliant integer literal ($\"12\", $\"0x12\" or $\"0x12ul\")&"
-	      "${text.relocateall(r\"(#?<!\\[1])\\[u]\\[l]*(#?!\\[0])\")}|Locate all words starting with an uppcase letter&"
-	      "${text.relocateall(r\'\"(\\.|.)*\"\')}|Locate all c-compliant string constants&"
-	      "${text.relocateall(r\"(#?s)/\\*.*\\*/\")}|Locate all c-like comments}\n"
-	      "In order to improve performance for repetitious data, deemon's regex implementation "
-	      "has a minor quirk when it comes to groups containing $\"|\" to indicate multiple variants "
-	      "in situations where that group is repeated more than once.\n"
-	      "If one of the variants is found to match the data string, instead of restarting from the "
-	      "beginning when checking if the variant matches more than once, the variant already matched "
-	      "(then called the primary variant) is re-tried first. Only if it cannot be used to match "
-	      "another data block will other variants be tried again in ascending order, but skipping the "
-	      "old primary variant. If one of the secondary variants then ends up being a match, it will "
-	      "become the new primary variant, and the process is repeated.\n"
-	      "This design decision was done on purpose in order to more efficiently match repetitious data, "
-	      "however when presented with multiple variants in a repeating context, it will not always be "
-	      "the first variant that gets matched.\n"
-	      "${"
-	      "local data = \"bar,  foobar\";\n"
-	      "/* When faced by multiple variants, deemon will always\n"
-	      " * preferr a variant that matched before the current:\n"
-	      " *  - Available variants: r\",\", r\" f\", r\" \"\n"
-	      " *  - ...\n"
-	      " *  - Try variant ##0\n"
-	      " *    Match: \"bar,  foobar\"\n"
-	      " *               ^ Variant ##0\n"
-	      " *    Remaining data: \"  foobar\"\n"
-	      " *    Set primary variant: ##0\n"
-	      " *  - Try variant ##0\n"
-	      " *    Missmatch (Primary variant)\n"
-	      " *    Search for new primary variant\n"
-	      " *  - Try variant ##1\n"
-	      " *    Missmatch (\"  foobar\".startswith(\" f\") == false)\n"
-	      " *  - Try variant ##2\n"
-	      " *    Match\n"
-	      " *    Set primary variant: ##3\n"
-	      " *    Remaining data: \" foobar\"\n"
-	      " *  - Try variant ##2\n"
-	      " *    Match\n"
-	      " *    Remaining data: \"foobar\"\n"
-	      " *  - Try variant #2\n"
-	      " *    Missmatch (Primary variant)\n"
-	      " *    Search for new primary variant\n"
-	      " *  - ...\n"
-	      " * -\\> At this point, none of the variants continue to match\n"
-	      " *    and the resulting match-range doesn't include the `f'\n"
-	      " *    because variant ##1 (despite having a higher precedence\n"
-	      " *    than variant ##2) was never checked for \" foobar\"\n"
-	      " * -\\> This quirk can only ever be a problem in badly written\n"
-	      " *    expressions that contain multiple variants where a variant\n"
-	      " *    with a lower index starts with the same condition as another\n"
-	      " *    with a greater index\n"
-	      " *    This example should really be written as r\"(,| f?)+\", which\n"
-	      " *    wold never even run into this problem in the first place. */\n"
-	      "print repr data.relocateall(r\"(,| f| )+\"); /* { \",  \" } */\n"
-	      "\\\n"
-	      "/* This regular expression doesn't have the quirk due to the double-parenthesis, \n"
-	      " * which leaves the outer (repeating) group to only have 1 variant, which it will\n"
-	      " * then always execute linearly, meaning that for each repetition, `,' is checked\n"
-	      " * first, followed by ` f', and finally ` '\n"
-	      " *  - ...\n"
-	      " *  - Try variant ##0\n"
-	      " *    - Try variant ##0.1\n"
-	      " *    - Try variant ##0.2\n"
-	      " *    - Try variant ##0.3\n"
-	      " *  - ...\n"
-	      " * -\\> Since The repeating group has only 1 variant, that variant\n"
-	      " *    is always the primary one, and checked as a whole when being\n"
-	      " *    repeated */\n"
-	      "print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */"
-	      "}") },
+	      "When given, @rules specifies extra compilation rules for the regex, though none have been defined, yet\n"
+	      "Note that in deemon, regex patterns are compiled lazily and stored alongside the given @pattern string "
+	      /**/ "itself. As such, regular code that simply hard-codes the regular expressions it uses will execute "
+	      /**/ "slowly only the first time around. However, be careful not to write code where the used patterns "
+	      /**/ "are derived from other objects every time they are used (e.g. sub-strings), or decoded from bytes. "
+	      /**/ "To prevent regex patterns from constantly needing to be re-compiled, make sure to store the pattern "
+	      /**/ "strings with duration that spans across all use instances (constant string literals share their storage "
+	      /**/ "duration with that of the containing surrounding module and are thus the perfect candidate, meaning\n"
+	      /**/ "that hard-coded regex patterns are always optimal).\n"
+	      "Supported Match expressions:"
+	      "#L{"
+	      /**/ "{#C{XY}}Match #CX followed by #CY|"
+	      /**/ "{#C{text}}Match the literal $\"text\"|"
+	      /**/ "{#C{.}}Matches anything|"
+	      /**/ "{#C{[CHARSET]}}Charset matching (see below)|"
+	      /**/ "{#C{[^CHARSET]}}Negated charset matching (see below)|"
+	      /**/ "{#C{\\w}}Alias for #C{[[:symcont:]]}|"
+	      /**/ "{#C{\\W}}Alias for #C{[^[:symcont:]]}|"
+	      /**/ "{#C{\\n}}Alias for #C{[[:lf:]]}|"
+	      /**/ "{#C{\\N}}Alias for #C{[^[:lf:]]}|"
+	      /**/ "{#C{\\s}}Alias for #C{[[:space:]]}|"
+	      /**/ "{#C{\\S}}Alias for #C{[^[:space:]]}|"
+	      /**/ "{#C{\\d}}Alias for #C{[[:digit:]]}|"
+	      /**/ "{#C{\\D}}Alias for #C{[^[:digit:]]}|"
+	      /**/ "{#C{\\0123}}Match the octal-encoded byte #C{0123}|"
+	      /**/ "{#C{\\xAB}}Match the hex-encoded byte #C{0xAB}|"
+	      /**/ "{#C{\\uABCD}}Match the unicode-character #C{U+ABCD}|"
+	      /**/ "{#C{\\U12345678}}Match the unicode-character #C{U+12345678}|"
+	      /**/ "{#C{\\u{1234 5689}}}Match the unicode-characters #C{U+1234}, followed by #C{U+5678}|"
+	      /**/ "{#C{\\1-9}}Back-reference to a preceding group (i.e. #C{( ... )}-pairs). "
+	      /**/ /*      */ "Group indexes start at 1, and get assigned when an open-${(} is encountered in the input). "
+	      /**/ /*      */ "There is no way to create back-references for groups other than the first 9. "
+	      /**/ /*      */ "Character-ranges matched by groups can also be returned explicitly by ?#regmatch. "
+	      /**/ /*      */ "Matches exactly what was previously matched by said group|"
+	      /**/ "{#C{\\x}}Match the literal $\"x\" (but see special escape-sequences above)"
+	      "}\n"
+	      "Supported repetition and group expressions:"
+	      "#L{"
+	      /**/ "{#C{BLANK}} Matches epsilon. Can appear like #C{()} or #C{(|X|Y)}, ...|"
+	      /**/ "{#C{(X)}}The given #CX forms a group that is treated as a unit. "
+	      /**/ /*    */ "Its bounds can be determined explicitly using ?#regmatch|"
+	      /**/ "{#C{X|Y}}Either #CX or #CY is matched|"
+	      /**/ "{#C{X?}}#CX is matched either 0 or 1 times (same as #C{X{0,1}})|"
+	      /**/ "{#C{X*}}#CX is matched any number of times (same as #C{X{0,}})|"
+	      /**/ "{#C{X+}}#CX is matched at least once (same as #C{X{1,}})|"
+	      /**/ "{#C{X{n,m}}}#CX is matched at least #Cn times, and at most #Cm times"
+	      "}\n"
+	      "Supported Charset expressions:"
+	      "#L{"
+	      /**/ "{#CXY}Match either #CX or #CY|"
+	      /**/ "{#Cc}Match the character #Cc|"
+	      /**/ "{#Ca-z}Match any character #Cc such that #C{ORD(c) >= ORD(z) && ORD(c) <= ORD(z)}|"
+	      /**/ "{#C{[:CLASS:]}}Match any character apart of the named #C{CLASS}. Available classes are:|"
+	      /**/ "#T{#C{CLASS}|Trait function~"
+	      /**/ /**/ "#Ccntrl|?#iscntrl (control characters)&"
+	      /**/ /**/ "#Cspace|?#isspace (space characters)&"
+	      /**/ /**/ "#Cupper|?#isupper (upper-case character)&"
+	      /**/ /**/ "#Clower|?#islower (lower-case character)&"
+	      /**/ /**/ "#Calpha|?#isalpha (alphabetical character)&"
+	      /**/ /**/ "#Cdigit|?#isdigit (digit)&"
+	      /**/ /**/ "#Cxdigit|?#isxdigit (hexadecimal-digit)&"
+	      /**/ /**/ "#Calnum|?#isalnum (alphanumeric character)&"
+	      /**/ /**/ "#Cpunct|?#ispunct (punctuation character)&"
+	      /**/ /**/ "#Cgraph|?#isgraph (graphical character)&"
+	      /**/ /**/ "#Cprint|?#isprint (printable character)&"
+	      /**/ /**/ "#Cblank|?#isblank (blank character)&"
+	      /**/ /**/ "#Csymstrt|?#issymstrt (symbol-start character)&"
+	      /**/ /**/ "#Csymcont|?#issymcont (symbol-continuation character)&"
+	      /**/ /**/ "#Ctab|?#istab (tabulator)&"
+	      /**/ /**/ "#Cwhite|?#iswhite (white-space character)&"
+	      /**/ /**/ "#Cempty|?#isempty (empty character)&"
+	      /**/ /**/ "#Clf|?#islf (line-feed)&"
+	      /**/ /**/ "#Chex|?#ishex (hex character)&"
+	      /**/ /**/ "#Ctitle|?#istitle (title-case character)&"
+	      /**/ /**/ "#Cnumeric|?#isnumeric (numerical character)"
+	      /**/ "}|"
+	      /**/ "{#C[=COLLATION=]}Match all characters within the same equivalence group as #CCOLLATION|"
+	      /**/ "{#C[.COLLATION.]}Match the character named by #CCOLLATION|"
+	      /**/ "{#C{\\w}}Alias for #C{[:symcont:]}|"
+	      /**/ "{#C{\\n}}Alias for #C{[:lf:]}|"
+	      /**/ "{#C{\\s}}Alias for #C{[:space:]}|"
+	      /**/ "{#C{\\d}}Alias for #C{[:digit:]}|"
+	      /**/ "{#C{\\0123}}Match the octal-encoded byte #C{0123}|"
+	      /**/ "{#C{\\xAB}}Match the hex-encoded byte #C{0xAB}|"
+	      /**/ "{#C{\\uABCD}}Match the unicode-character #C{U+ABCD}|"
+	      /**/ "{#C{\\U12345678}}Match the unicode-character #C{U+12345678}|"
+	      /**/ "{#C{\\u{1234 5689}}}Match the unicode-characters #C{U+1234} or #C{U+5678}|"
+	      /**/ "{#C{\\x}}Match the literal $\"x\" (but see special escape-sequences above)"
+	      "}\n"
+	      "Supported location-assertion expressions:"
+	      "#L{"
+	      /**/ "{#C{^}}At start-of-input, of following a line-feed character|"
+	      /**/ "{#C{$}}At end-of-input, of preceding a line-feed character|"
+	      /**/ "{#C{\\`}}At start-of-input|"
+	      /**/ "{#C{\\A}}At start-of-input|"
+	      /**/ "{#C{\\'}}At end-of-input|"
+	      /**/ "{#C{\\Z}}At end-of-input|"
+	      /**/ "{#C{\\b}}At a word-boundary (prev/next character differ in #C{[[:symcont:]]}. "
+	      /**/ /*    */ "Out-of-bounds characters are treated as not matching #Csymcont)|"
+	      /**/ "{#C{\\B}}NOT at a word-boundary|"
+	      /**/ "{#C{\\<}}At a start-of-word (prev/next character must match #C{[^[:symcont:]][[:symcont:]]}. "
+	      /**/ /*    */ "Out-of-bounds characters are treated as not matching #Csymcont)|"
+	      /**/ "{#C{\\>}}At a end-of-word (prev/next character must match #C{[[:symcont:]][^[:symcont:]]}. "
+	      /**/ /*    */ "Out-of-bounds characters are treated as not matching #Csymcont)|"
+	      /**/ "{#C{\\_<}}At a start-of-symbol (prev/next character must match #C{[^[:symcont:]][[:symstrt:]]}. "
+	      /**/ /*     */ "Out-of-bounds characters are treated as not matching #Csymcont)|"
+	      /**/ "{#C{\\_>}}At a end-of-symbol (alias for #C{\\>})"
+	      "}"),
+	  TYPE_METHOD_FKWDS },
 	{ "rematches",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematches,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @pattern matches the entirety of the specified range of @this ?.\n"
-	      "This function behaves identical to ${this.rematch(...) == ?#this}") },
+	      "This function behaves identical to ${this.rematch(...) == ?#this}"),
+	  TYPE_METHOD_FKWDS },
 	{ "refind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
-	      "Note that using ?N in an expand expression will result in whatever number of targets are required:\n${"
-	      "/* If the pattern count not be matched, both `start' and `end' will be `none' singleton */\n"
-	      "local start, end = data.refind(r\"\\b\\w\\b\")...;\n"
-	      "/* Since `none' is equal to `0' when casted to `int', calling `substr' with none-arguments\n"
-	      " * is the same as calling `data.substr(0, 0)', meaning that an empty string will be returned\n"
-	      " * when `refind' didn't manage to find anything.\n"
-	      " * Note however that `operator [:]' functions differently, as it interprets `none' as a\n"
-	      " * placeholder for either `0' of `#data', so calling `data[start:end]' would re-produce\n"
-	      " * `data' itself in the event of `refind' having failed. */\n"
-	      "print repr data.substr(start, end);}") },
+	      "Note that using ?N in an expand expression will expand to the all ?N-values"),
+	  TYPE_METHOD_FKWDS },
 	{ "rerfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerfind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Find the last sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists (s.a. #refind)") },
+	      "Find the last sub-string matched by @pattern, and return its start/end indices, "
+	      /**/ "or ?N if no match exists (s.a. #refind)"),
+	  TYPE_METHOD_FKWDS },
 	{ "reindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#refind, but throw an :IndexError when no match can be found") },
+	      "Same as ?#refind, but throw an :IndexError when no match can be found"),
+	  TYPE_METHOD_FKWDS },
 	{ "rerindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#rerfind, but throw an :IndexError when no match can be found") },
+	      "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
+	  TYPE_METHOD_FKWDS },
 	{ "relocate",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocate,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.refind(pattern, start, end, rules)...)}\n"
 	      "In other words: return the first sub-string matched by the "
-	      "given regular expression, or an empty string if not found\n"
-	      "This function has nothing to do with relocations! - it's pronounced R.E. locate") },
+	      /**/ "given regular expression, or ?N if not found\n"
+	      "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
+	  TYPE_METHOD_FKWDS },
 	{ "rerlocate",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerlocate,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.rerfind(pattern, start, end, rules)...)}\n"
 	      "In other words: return the last sub-string matched by the "
-	      "given regular expression, or an empty string if not found") },
+	      /**/ "given regular expression, or ?N if not found"),
+	  TYPE_METHOD_FKWDS },
 	{ "repartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_repartition,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "A hybrid between ?#refind and ?#partition\n${"
@@ -11885,12 +11602,13 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "		this.substr(start, end),\n"
 	      "		this.substr(end, -1)\n"
 	      "	);\n"
-	      "}}") },
+	      "}}"),
+	  TYPE_METHOD_FKWDS },
 	{ "rerpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerpartition,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "A hybrid between ?#rerfind and ?#rpartition\n${"
@@ -11903,40 +11621,48 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "		this.substr(start, end), \n"
 	      "		this.substr(end, -1)\n"
 	      "	);\n"
-	      "}}") },
+	      "}}"),
+	  TYPE_METHOD_FKWDS },
 	{ "rereplace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rereplace,
-	  DOC("(pattern:?.,replace_str:?.,max_count:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
-	      "(pattern:?.,replace_str:?.,rules=!P{},max_count:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	  DOC("(pattern:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
-	      "pattern, with the sub-string matched by it then getting replaced by @replace_str") },
+	      "pattern, with the sub-string matched by it then getting replaced by @replace\n"
+	      "Additionally, @replace may contain sed-like match sequences:\n"
+	      "#L{"
+	      /**/ "{$r\"&\"}Replaced with the entire sub-string matched by @pattern|"
+	      /**/ "{$r\"\\n\"}Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
+	      /**/ /*      */ "@pattern (groups are determined by parenthesis in regex patterns)|"
+	      /**/ "{$r\"\\\\\"}Outputs a literal $r\"\\\" into the returned string|"
+	      /**/ "{$r\"\\&\"}Outputs a literal $r\"&\" into the returned string|"
+	      "}"),
+	  TYPE_METHOD_FKWDS },
 	{ "refindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refindall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
-	      "Note that the matches returned are ordered ascendingly") },
+	      "Note that the matches returned are ordered ascendingly"),
+	  TYPE_METHOD_FKWDS },
 	{ "relocateall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocateall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#relocate, but return a sequence of all matched "
 	      "sub-strings found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly\n"
-	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all") },
+	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
+	  TYPE_METHOD_FKWDS },
 	{ "resplit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_resplit,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
@@ -11944,81 +11670,91 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "express the sections of the ?. around which to perform the split\n"
 
 	      "${"
-	      "local data = \"10 , 20,30 40, 50\";\n"
-	      "for (local x: data.resplit(r\"(\\s*,?)+\\s*\"))\n"
-	      "	print x; /* `10' `20' `30' `40' `50' */"
+	      /**/ "local data = \"10 , 20,30 40, 50\";\n"
+	      /**/ "for (local x: data.resplit(r\"([[:space:]]*,?)+[[:space:]]*\"))\n"
+	      /**/ "	print x; /* `10' `20' `30' `40' `50' */"
 	      "}\n"
 
-	      "If you wish to do the reverse and enumerate matches, rather than the "
+	      "If you wish to do the inverse and enumerate matches, rather than the "
 	      "strings between matches, use ?#relocateall instead, which also behaves "
-	      "as a sequence") },
+	      "as a sequence"),
+	  TYPE_METHOD_FKWDS },
 	{ "restartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restartswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
 	      "${"
-	      "function restartswith(pattern: string) {\n"
-	      "	return this.rematch(pattern: string) != 0;\n"
-	      "}}") },
+	      /**/ "function restartswith(pattern: string) {\n"
+	      /**/ "	return this.rematch(pattern: string) !is none;\n"
+	      /**/ "}"
+	      "}"),
+	  TYPE_METHOD_FKWDS },
 	{ "reendswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reendswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this ?. ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
 	      "${"
-	      "function restartswith(pattern: string) {\n"
-	      "	local rpos = this.rerfind(pattern);\n"
-	      "	return rpos !is none && rpos[1] == ##this;\n"
-	      "}}") },
+	      /**/ "function restartswith(pattern: string) {\n"
+	      /**/ "	local rpos = this.rerfind(pattern);\n"
+	      /**/ "	return rpos !is none && rpos[1] == ##this;\n"
+	      /**/ "}"
+	      "}"),
+	  TYPE_METHOD_FKWDS },
 	{ "restrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)") },
+	      "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
+	  TYPE_METHOD_FKWDS },
 	{ "relstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)") },
+	      "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
+	  TYPE_METHOD_FKWDS },
 	{ "rerstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)") },
+	      "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
+	  TYPE_METHOD_FKWDS },
 	{ "recount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recount,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
-	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}") },
+	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
+	      "Note that if a point is reached where pattern only matches epsilon, counting is stopped"),
+	  TYPE_METHOD_FKWDS },
 	{ "recontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
-	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}") },
+	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
+	  TYPE_METHOD_FKWDS },
+	/* TODO: regmatch(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint
+	 * -> Returns all of the matched group offsets, with the first element of the
+	 *    returned sequence describing the overall match itself. When nothing was
+	 *    matched, returns an empty sequence. */
+
+	/* TODO: case-insensitive regex functions (e.g. "recasematch") */
 
 	/* Deprecated functions. */
 	{ "reverse",
@@ -12258,7 +11994,7 @@ string_mul(String *self, DeeObject *other) {
 		if unlikely(!str)
 			goto err;
 		while (repeat--)
-			dst = (uint16_t *)mempcpyw(dst, src, my_length);
+			dst = mempcpyw(dst, src, my_length);
 		return (DREF String *)DeeString_Pack2ByteBuffer(str);
 	}	break;
 
@@ -12272,7 +12008,7 @@ string_mul(String *self, DeeObject *other) {
 		if unlikely(!str)
 			goto err;
 		while (repeat--)
-			dst = (uint32_t *)mempcpyl(dst, src, my_length);
+			dst = mempcpyl(dst, src, my_length);
 		return (DREF String *)DeeString_Pack4ByteBuffer(str);
 	}	break;
 
@@ -12614,11 +12350,11 @@ PUBLIC void (DCALL Dee_unicode_printer_memmove)(struct unicode_printer *__restri
 DECL_END
 
 #ifndef __INTELLISENSE__
-#include "ordinals.c.inl"
-#include "split.c.inl"
-#include "segments.c.inl"
-#include "reproxy.c.inl"
 #include "finder.c.inl"
+#include "ordinals.c.inl"
+#include "reproxy.c.inl"
+#include "segments.c.inl"
+#include "split.c.inl"
 
 /* Include this last! */
 #include "bytes_functions.c.inl"

@@ -145,9 +145,9 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CHAR_CLASSES              1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CONTEXT_INDEP_ANCHORS     1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CONTEXT_INVALID_OPS       1
-#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NEWLINE               1
-#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NOT_NULL              0
-#define LIBREGEX_CONSTANT__RE_SYNTAX_HAT_LISTS_NOT_NEWLINE     0
+#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NEWLINE               1 /* XXX: Flag? */
+#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NOT_NULL              0 /* XXX: Flag? */
+#define LIBREGEX_CONSTANT__RE_SYNTAX_HAT_LISTS_NOT_NEWLINE     0 /* XXX: Flag? */
 #define LIBREGEX_CONSTANT__RE_SYNTAX_INTERVALS                 1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_LIMITED_OPS               0
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NEWLINE_ALT               0
@@ -170,6 +170,10 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 /* Override libregex types & constants */
 #define RE_REGOFF_UNSET ((re_regoff_t)-1)
 #define re_code DeeRegexCode
+#define RE_CODE_FLAG_NORMAL     DEE_RE_CODE_FLAG_NORMAL
+#define RE_CODE_FLAG_NEEDGROUPS DEE_RE_CODE_FLAG_NEEDGROUPS
+#define RE_CODE_FLAG_OPTGROUPS  DEE_RE_CODE_FLAG_OPTGROUPS
+#define __re_code_defined
 
 #define RE_EXEC_NOTBOL DEE_RE_EXEC_NOTBOL
 #define RE_EXEC_NOTEOL DEE_RE_EXEC_NOTEOL
@@ -854,7 +858,6 @@ DeeString_DestroyRegex(DeeStringObject *__restrict self) {
 		}
 	}
 	memcpy(&old_item, item, sizeof(struct regex_cache_entry));
-	ASSERT(regex_cache_used);
 	if (regex_cache_used <= regex_cache_size / 3)
 		regex_cache_rehash(-1);
 	Dee_atomic_rwlock_endwrite(&regex_cache_lock);
@@ -964,8 +967,7 @@ again_insert_result:
 		ASSERT(first_dummy->rce_str == NULL ||
 		       first_dummy->rce_str == REGEX_CACHE_DUMMY_STR);
 		wasdummy = first_dummy->rce_str != NULL;
-		first_dummy->rce_str = (DeeStringObject *)self;
-		bzero(first_dummy->rce_regex, sizeof(first_dummy->rce_regex));
+		first_dummy->rce_str    = (DeeStringObject *)self;
 		first_dummy->rce_regex  = result;
 		first_dummy->rce_syntax = compile_flags;
 		++regex_cache_used;
