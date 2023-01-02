@@ -231,7 +231,7 @@ contains_only_decimals_dot_colon_or_backslash(/*utf-8*/ char const *text,
 		ch = utf8_readchar((char const **)&text, end);
 		if (!ch && (text >= end))
 			break;
-		if (DeeUni_IsDecimal(ch))
+		if (DeeUni_IsDigit(ch))
 			continue;
 		if (ch == '.')
 			continue;
@@ -1532,7 +1532,7 @@ check_for_list:
 							goto got_space_after_list_start;
 						}
 						/* Only decimal characters (and '.') are allowed in here! */
-						if (!DeeUni_IsDecimal(ch))
+						if (!DeeUni_IsDigit(ch))
 							goto not_a_list;
 						ch = utf8_readchar((char const **)&iter, end);
 						++list_element_indent;
@@ -1752,10 +1752,10 @@ end_of_list:
 							 * mandatory trailing `list_prefix_ch'-character, contains only
 							 * Decimal and '.' characters, and doesn't begin with '.' */
 							item_prefix_start = ch_start;
-							if (!DeeUni_IsDecimal(ch))
+							if (!DeeUni_IsDigit(ch))
 								goto end_of_list;
 							for (;;) {
-								if (DeeUni_IsDecimal(ch)) {
+								if (DeeUni_IsDigit(ch)) {
 continue_scan_order_list_prefix:
 									ch = utf8_readchar((char const **)&iter, end);
 									++nextline_indentation;
@@ -1775,7 +1775,7 @@ again_handle_dot_in_ordered_list_prefix:
 									++nextline_indentation;
 									if (nextline_indentation >= list_element_indent)
 										goto end_of_list; /* Indentation has grown too large... */
-									if (DeeUni_IsDecimal(ch))
+									if (DeeUni_IsDigit(ch))
 										goto continue_scan_order_list_prefix;
 									if (ch == '.')
 										goto again_handle_dot_in_ordered_list_prefix;
@@ -1836,7 +1836,7 @@ err_item_printer:
 			default:
 				/* Ordered lists can be started with any decimal-like character.
 				 * The case only handles ASCII decimals, but unicode may define more than that! */
-				if (DeeUni_IsDecimal(ch))
+				if (DeeUni_IsDigit(ch))
 					goto check_for_list;
 				break;
 			}
@@ -1998,7 +1998,7 @@ check_ordered_list_digit:
 					goto escape_inputonly;
 				if (DeeUni_IsSpace(escaped_ch))
 					goto escape_inputonly;
-				if (DeeUni_IsDecimal(escaped_ch))
+				if (DeeUni_IsDigit(escaped_ch))
 					goto check_ordered_list_digit;
 				/* Fallback: Don't remove anything (including the backslash) */
 				break;

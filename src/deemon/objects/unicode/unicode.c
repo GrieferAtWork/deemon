@@ -2986,7 +2986,7 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 			uint8_t ch             = ((uint8_t *)str)[start + i];
 			struct unitraits *desc = DeeUni_Descriptor(ch);
 			((uint8_t *)result)[i] = (uint8_t)(ch + *(int32_t *)((uintptr_t)desc + kind));
-			kind                   = (desc->ut_flags & UNICODE_FSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind                   = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
 		}
 		break;
 
@@ -2995,7 +2995,7 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 			uint16_t ch             = ((uint16_t *)str)[start + i];
 			struct unitraits *desc  = DeeUni_Descriptor(ch);
 			((uint16_t *)result)[i] = (uint16_t)(ch + *(int32_t *)((uintptr_t)desc + kind));
-			kind                    = (desc->ut_flags & UNICODE_FSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind                    = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
 		}
 		break;
 
@@ -3004,7 +3004,7 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 			uint32_t ch             = ((uint32_t *)str)[start + i];
 			struct unitraits *desc  = DeeUni_Descriptor(ch);
 			((uint32_t *)result)[i] = (uint32_t)(ch + *(int32_t *)((uintptr_t)desc + kind));
-			kind                    = (desc->ut_flags & UNICODE_FSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind                    = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
 		}
 		break;
 	}
@@ -5912,23 +5912,13 @@ parse_hex_integer:
 			count       = 0;
 			digit_value = 0;
 			while (count < max_digits) {
-				struct unitraits *desc;
 				uint32_t ch32;
 				uint8_t val;
 				char const *old_iter = iter;
-				ch32                 = utf8_readchar(&iter, end);
-				if (ch32 >= 'a' && ch32 <= 'f')
-					val = 10 + ((uint8_t)ch32 - 'a');
-				else if (ch32 >= 'A' && ch32 <= 'F')
-					val = 10 + ((uint8_t)ch32 - 'A');
-				else {
-					desc = DeeUni_Descriptor(ch32);
-					if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
-					    desc->ut_digit >= 10) {
-						iter = old_iter;
-						break;
-					}
-					val = desc->ut_digit;
+				ch32 = utf8_readchar(&iter, end);
+				if (!DeeUni_AsDigit(ch32, 16, &val)) {
+					iter = old_iter;
+					break;
 				}
 				digit_value <<= 4;
 				digit_value |= val;
@@ -5989,18 +5979,16 @@ parse_oct_integer:
 				/* Octal-encoded integer. */
 				count = 1;
 				while (count < 3) {
-					struct unitraits *desc;
+					uint8_t digit;
 					uint32_t ch32;
 					char const *old_iter = iter;
-					ch32                 = utf8_readchar(&iter, end);
-					desc                 = DeeUni_Descriptor(ch32);
-					if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
-					    desc->ut_digit >= 8) {
+					ch32 = utf8_readchar(&iter, end);
+					if (!DeeUni_AsDigit(ch32, 7, &digit)) {
 						iter = old_iter;
 						break;
 					}
 					digit_value <<= 3;
-					digit_value |= desc->ut_digit;
+					digit_value |= digit;
 					++count;
 				}
 				if (unicode_printer_putc(printer, digit_value))
@@ -6013,14 +6001,10 @@ parse_oct_integer:
 				--iter;
 				ch32 = utf8_readchar(&iter, end);
 				desc = DeeUni_Descriptor(ch32);
-				if (desc->ut_flags & UNICODE_FLF)
+				if (desc->ut_flags & UNICODE_ISLF)
 					break; /* Escaped line-feed */
-				if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-				    (desc->ut_digit < 8)) {
-					/* Unicode digit character. */
-					digit_value = desc->ut_digit;
-					goto parse_oct_integer;
-				}
+				if (DeeUniTrait_AsDigit(desc, 8, &digit_value))
+					goto parse_oct_integer; /* Unicode digit character. */
 			}
 			/* Fallback: Disregard the character being escaped, and include
 			 *           the following character as part of the next flush. */

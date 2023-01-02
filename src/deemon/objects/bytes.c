@@ -1634,11 +1634,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 			} else if (ch >= 'A' && ch <= 'F') {
 				byte_value = (uint8_t)(10 + (ch - 'A'));
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value = trt->ut_digit;
+				goto err_invalid;
 			}
 			if (iter.cp8 == end.cp8)
 				goto err_unbalanced;
@@ -1651,11 +1647,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 			} else if (ch >= 'A' && ch <= 'F') {
 				byte_value |= (uint8_t)(10 + (ch - 'A'));
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value |= trt->ut_digit;
+				goto err_invalid;
 			}
 			ASSERT(dst < DeeBytes_TERM(result));
 			*dst++ = byte_value;
@@ -1671,7 +1663,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst      = DeeBytes_DATA(result);
 		end.cp16 = iter.cp16 + length;
 		for (;;) {
-			uint8_t byte_value;
+			uint8_t byte_value, nibble;
 			uint16_t ch;
 			for (;;) {
 				if (iter.cp16 == end.cp16)
@@ -1687,30 +1679,27 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 				byte_value = (uint8_t)(10 + (ch - 'a'));
 			} else if (ch >= 'A' && ch <= 'F') {
 				byte_value = (uint8_t)(10 + (ch - 'A'));
+			} else if (DeeUni_AsDigit(ch, 16, &byte_value)) {
+				/* ... */
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value = trt->ut_digit;
+				goto err_invalid;
 			}
 			if (iter.cp16 == end.cp16)
 				goto err_unbalanced;
 			ch = *iter.cp16++;
-			byte_value <<= 4;
 			if (ch >= '0' && ch <= '9') {
-				byte_value |= (uint8_t)(ch - '0');
+				nibble = (uint8_t)(ch - '0');
 			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value |= (uint8_t)(10 + (ch - 'a'));
+				nibble = (uint8_t)(10 + (ch - 'a'));
 			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value |= (uint8_t)(10 + (ch - 'A'));
+				nibble = (uint8_t)(10 + (ch - 'A'));
+			} else if (DeeUni_AsDigit(ch, 16, &nibble)) {
+				/* ... */
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value |= trt->ut_digit;
+				goto err_invalid;
 			}
+			byte_value <<= 4;
+			byte_value |= nibble;
 			ASSERT(dst < DeeBytes_TERM(result));
 			*dst++ = byte_value;
 		}
@@ -1725,7 +1714,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst      = DeeBytes_DATA(result);
 		end.cp32 = iter.cp32 + length;
 		for (;;) {
-			uint8_t byte_value;
+			uint8_t byte_value, nibble;
 			uint32_t ch;
 			for (;;) {
 				if (iter.cp32 == end.cp32)
@@ -1741,30 +1730,27 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 				byte_value = (uint8_t)(10 + (ch - 'a'));
 			} else if (ch >= 'A' && ch <= 'F') {
 				byte_value = (uint8_t)(10 + (ch - 'A'));
+			} else if (DeeUni_AsDigit(ch, 16, &byte_value)) {
+				/* ... */
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value = trt->ut_digit;
+				goto err_invalid;
 			}
 			if (iter.cp32 == end.cp32)
 				goto err_unbalanced;
 			ch = *iter.cp32++;
-			byte_value <<= 4;
 			if (ch >= '0' && ch <= '9') {
-				byte_value |= (uint8_t)(ch - '0');
+				nibble = (uint8_t)(ch - '0');
 			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value |= (uint8_t)(10 + (ch - 'a'));
+				nibble = (uint8_t)(10 + (ch - 'a'));
 			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value |= (uint8_t)(10 + (ch - 'A'));
+				nibble = (uint8_t)(10 + (ch - 'A'));
+			} else if (DeeUni_AsDigit(ch, 16, &nibble)) {
+				/* ... */
 			} else {
-				struct unitraits *trt;
-				trt = DeeUni_Descriptor(ch);
-				if (!(trt->ut_flags & UNICODE_FDECIMAL))
-					goto err_invalid;
-				byte_value |= trt->ut_digit;
+				goto err_invalid;
 			}
+			byte_value <<= 4;
+			byte_value |= nibble;
 			ASSERT(dst < DeeBytes_TERM(result));
 			*dst++ = byte_value;
 		}

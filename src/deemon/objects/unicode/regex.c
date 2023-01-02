@@ -221,6 +221,10 @@ typedef Dee_ssize_t re_sregoff_t;
 #define unicode_readutf8_rev_n Dee_utf8_readchar_rev
 #undef unicode_writeutf8
 #define unicode_writeutf8 Dee_utf8_writechar
+#undef issymcont
+#define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
+
+#ifndef CONFIG_HAVE_UNICODE_H
 #undef UNICODE_UTF8_MAXLEN
 #define UNICODE_UTF8_MAXLEN Dee_UTF8_MAX_MBLEN
 #undef unicode_tolower
@@ -235,57 +239,53 @@ typedef Dee_ssize_t re_sregoff_t;
 #define unicode_issymstrt DeeUni_IsSymStrt
 #undef unicode_issymcont
 #define unicode_issymcont DeeUni_IsSymCont
-#undef issymcont
-#define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
-
 #undef __unicode_descriptor
 #define __unicode_descriptor(c) DeeUni_Descriptor(c)
 #undef __ut_flags
 #define __ut_flags ut_flags
-
-/* TODO: Port KOS's new unicode trait database to deemon (replacing the old, less powerful database) */
 #undef __UNICODE_ISCNTRL
-#define __UNICODE_ISCNTRL Dee_UNICODE_FCNTRL
+#define __UNICODE_ISCNTRL Dee_UNICODE_ISCNTRL
 #undef __UNICODE_ISSPACE
-#define __UNICODE_ISSPACE Dee_UNICODE_FSPACE
+#define __UNICODE_ISSPACE Dee_UNICODE_ISSPACE
 #undef __UNICODE_ISUPPER
-#define __UNICODE_ISUPPER Dee_UNICODE_FUPPER
+#define __UNICODE_ISUPPER Dee_UNICODE_ISUPPER
 #undef __UNICODE_ISLOWER
-#define __UNICODE_ISLOWER Dee_UNICODE_FLOWER
+#define __UNICODE_ISLOWER Dee_UNICODE_ISLOWER
 #undef __UNICODE_ISALPHA
-#define __UNICODE_ISALPHA Dee_UNICODE_FALPHA
+#define __UNICODE_ISALPHA Dee_UNICODE_ISALPHA
 #undef __UNICODE_ISDIGIT
-#define __UNICODE_ISDIGIT Dee_UNICODE_FDECIMAL
+#define __UNICODE_ISDIGIT Dee_UNICODE_ISDIGIT
 #undef __UNICODE_ISXDIGIT
-#define __UNICODE_ISXDIGIT 0 /* TODO */
+#define __UNICODE_ISXDIGIT Dee_UNICODE_ISXDIGIT
 #undef __UNICODE_ISALNUM
-#define __UNICODE_ISALNUM (Dee_UNICODE_FALPHA | Dee_UNICODE_FDECIMAL)
+#define __UNICODE_ISALNUM Dee_UNICODE_ISALNUM
 #undef __UNICODE_ISPUNCT
-#define __UNICODE_ISPUNCT 0 /* TODO */
+#define __UNICODE_ISPUNCT Dee_UNICODE_ISPUNCT
 #undef __UNICODE_ISGRAPH
-#define __UNICODE_ISGRAPH 0 /* TODO */
+#define __UNICODE_ISGRAPH Dee_UNICODE_ISGRAPH
 #undef __UNICODE_ISPRINT
-#define __UNICODE_ISPRINT Dee_UNICODE_FPRINT
+#define __UNICODE_ISPRINT Dee_UNICODE_ISPRINT
 #undef __UNICODE_ISBLANK
-#define __UNICODE_ISBLANK 0 /* TODO */
+#define __UNICODE_ISBLANK Dee_UNICODE_ISBLANK
 #undef __UNICODE_ISSYMSTRT
-#define __UNICODE_ISSYMSTRT Dee_UNICODE_FSYMSTRT
+#define __UNICODE_ISSYMSTRT Dee_UNICODE_ISSYMSTRT
 #undef __UNICODE_ISSYMCONT
-#define __UNICODE_ISSYMCONT Dee_UNICODE_FSYMCONT
+#define __UNICODE_ISSYMCONT Dee_UNICODE_ISSYMCONT
 #undef __UNICODE_ISTAB
-#define __UNICODE_ISTAB 0 /* TODO */
+#define __UNICODE_ISTAB Dee_UNICODE_ISTAB
 #undef __UNICODE_ISWHITE
-#define __UNICODE_ISWHITE 0 /* TODO */
+#define __UNICODE_ISWHITE Dee_UNICODE_ISWHITE
 #undef __UNICODE_ISEMPTY
-#define __UNICODE_ISEMPTY 0 /* TODO */
+#define __UNICODE_ISEMPTY Dee_UNICODE_ISEMPTY
 #undef __UNICODE_ISLF
-#define __UNICODE_ISLF Dee_UNICODE_FLF
+#define __UNICODE_ISLF Dee_UNICODE_ISLF
 #undef __UNICODE_ISHEX
-#define __UNICODE_ISHEX 0 /* TODO */
+#define __UNICODE_ISHEX Dee_UNICODE_ISHEX
 #undef __UNICODE_ISTITLE
-#define __UNICODE_ISTITLE Dee_UNICODE_FTITLE
+#define __UNICODE_ISTITLE Dee_UNICODE_ISTITLE
 #undef __UNICODE_ISNUMERIC
-#define __UNICODE_ISNUMERIC (Dee_UNICODE_FDIGIT | Dee_UNICODE_FDECIMAL)
+#define __UNICODE_ISNUMERIC Dee_UNICODE_ISNUMERIC
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 #undef char32_t
 #define char32_t uint32_t

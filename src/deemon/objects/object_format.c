@@ -88,14 +88,14 @@ object_format_generic(DeeObject *__restrict self,
 	if unlikely(format_str >= format_end)
 		goto err_bad_format_str;
 	ch = *format_str++;
-	if (!DeeUni_IsDecimal(ch))
+	if (!DeeUni_AsDigit(ch, 10, &alignment_width))
 		goto err_bad_format_str;
-	alignment_width = DeeUni_AsDigit(ch);
 	filler_str      = NULL;
 	filler_len      = 0;
 	while (format_str < format_end) {
+		uint8_t digit;
 		ch = *format_str++;
-		if (!DeeUni_IsDecimal(ch)) {
+		if (!DeeUni_AsDigit(ch, 10, &digit)) {
 			if (ch != ':')
 				goto err_bad_format_str;
 			filler_str = format_str;
@@ -106,7 +106,7 @@ object_format_generic(DeeObject *__restrict self,
 			break;
 		}
 		if (OVERFLOW_UMUL(alignment_width, 10, &alignment_width) ||
-		    OVERFLOW_UADD(alignment_width, DeeUni_AsDigit(ch), &alignment_width))
+		    OVERFLOW_UADD(alignment_width, digit, &alignment_width))
 			return err_integer_overflow_i(sizeof(size_t) * 8, true);
 	}
 

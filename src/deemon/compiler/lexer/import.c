@@ -342,8 +342,8 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			uniflag_t flags;
 			ch    = utf8_readchar((char const **)&iter, end);
 			flags = DeeUni_Flags(ch);
-			if (iter == symbol_start ? !(flags & UNICODE_FSYMSTRT)
-			                         : !(flags & UNICODE_FSYMCONT)) {
+			if (iter == symbol_start ? !(flags & UNICODE_ISSYMSTRT)
+			                         : !(flags & UNICODE_ISSYMCONT)) {
 bad_symbol_name:
 				if (is_module) {
 					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL,

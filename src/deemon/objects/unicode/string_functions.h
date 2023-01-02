@@ -396,7 +396,7 @@ DEFINE_MEMCASECHR(dee_memcasechrw, dee_memcaserchrw, uint16_t, dee_foldcmpw)
 DEFINE_MEMCASECHR(dee_memcasechrl, dee_memcaserchrl, uint32_t, dee_foldcmpl)
 #undef DEFINE_MEMCASECHR
 
-#define DEFINE_UNICODE_FOLDREADER_API(name, T)                                      \
+#define DEFINE_UNICODE_ISOLDREADER_API(name, T)                                      \
 	struct name {                                                                   \
 		T const *uf_dataptr;                                                        \
 		size_t uf_datalen;                                                          \
@@ -427,10 +427,10 @@ DEFINE_MEMCASECHR(dee_memcasechrl, dee_memcaserchrl, uint32_t, dee_foldcmpl)
 		               1;                                                           \
 		return self->uf_buf[self->uf_len];                                          \
 	}
-DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderb, uint8_t)
-DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderw, uint16_t)
-DEFINE_UNICODE_FOLDREADER_API(unicode_foldreaderl, uint32_t)
-#undef DEFINE_UNICODE_FOLDREADER_API
+DEFINE_UNICODE_ISOLDREADER_API(unicode_foldreaderb, uint8_t)
+DEFINE_UNICODE_ISOLDREADER_API(unicode_foldreaderw, uint16_t)
+DEFINE_UNICODE_ISOLDREADER_API(unicode_foldreaderl, uint32_t)
+#undef DEFINE_UNICODE_ISOLDREADER_API
 
 #ifdef __INTELLISENSE__
 extern "C++" {
@@ -472,10 +472,10 @@ uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 	 (x).uf_len = (x).uf_idx = 0)
 #define unicode_foldreader_empty(x) \
 	(!(x).uf_datalen && ((x).uf_idx >= (x).uf_len))
-#define DEE_PRIVATE_UNICODE_FOLDREADER_uint8_t  unicode_foldreaderb
-#define DEE_PRIVATE_UNICODE_FOLDREADER_uint16_t unicode_foldreaderw
-#define DEE_PRIVATE_UNICODE_FOLDREADER_uint32_t unicode_foldreaderl
-#define unicode_foldreader(T) struct PP_PRIVATE_CAT2(DEE_PRIVATE_UNICODE_FOLDREADER_, T)
+#define DEE_PRIVATE_UNICODE_ISOLDREADER_uint8_t  unicode_foldreaderb
+#define DEE_PRIVATE_UNICODE_ISOLDREADER_uint16_t unicode_foldreaderw
+#define DEE_PRIVATE_UNICODE_ISOLDREADER_uint32_t unicode_foldreaderl
+#define unicode_foldreader(T) struct PP_PRIVATE_CAT2(DEE_PRIVATE_UNICODE_ISOLDREADER_, T)
 
 
 
@@ -919,32 +919,34 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 				/* Check if both strings have digit sequences in the same places. */    \
 				arec = DeeUni_Descriptor(ca);                                           \
 				brec = DeeUni_Descriptor(cb);                                           \
-				if (!(arec->ut_flags & UNICODE_FDIGIT) &&                               \
-				    !(brec->ut_flags & UNICODE_FDIGIT))                                 \
+				if (!(arec->ut_flags & UNICODE_ISDIGIT) &&                              \
+				    !(brec->ut_flags & UNICODE_ISDIGIT))                                \
 					return (int)ca - (int)cb;                                           \
 				/* Deal with leading zeros. */                                          \
-				if ((arec->ut_flags & UNICODE_FDIGIT) && arec->ut_digit == 0)           \
+				if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)      \
 					return -1;                                                          \
-				if ((brec->ut_flags & UNICODE_FDIGIT) && brec->ut_digit == 0)           \
+				if ((brec->ut_flags & UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)      \
 					return 1;                                                           \
 				/* Compare digits. */                                                   \
-				vala = arec->ut_digit;                                                  \
-				valb = brec->ut_digit;                                                  \
+				vala = arec->ut_digit_idx;                                              \
+				valb = brec->ut_digit_idx;                                              \
 				while (a_size) {                                                        \
-					ca   = *a++, --a_size;                                              \
+					ca = *a++;                                                          \
+					--a_size;                                                           \
 					arec = DeeUni_Descriptor(ca);                                       \
-					if (!(arec->ut_flags & UNICODE_FDIGIT))                             \
+					if (!(arec->ut_flags & UNICODE_ISDIGIT))                            \
 						break;                                                          \
 					vala *= 10;                                                         \
-					vala += arec->ut_digit;                                             \
+					vala += arec->ut_digit_idx;                                         \
 				}                                                                       \
 				while (b_size) {                                                        \
-					cb   = *b++, --b_size;                                              \
+					cb = *b++;                                                          \
+					--b_size;                                                           \
 					brec = DeeUni_Descriptor(cb);                                       \
-					if (!(brec->ut_flags & UNICODE_FDIGIT))                             \
+					if (!(brec->ut_flags & UNICODE_ISDIGIT))                            \
 						break;                                                          \
 					valb *= 10;                                                         \
-					valb += brec->ut_digit;                                             \
+					valb += brec->ut_digit_idx;                                         \
 				}                                                                       \
 				return (Ts)vala - (Ts)valb;                                             \
 			}                                                                           \

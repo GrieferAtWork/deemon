@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C
-#define GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C 1
+#ifndef GUARD_DEEMON_OBJECTS_UNICODE_ISORMAT_C
+#define GUARD_DEEMON_OBJECTS_UNICODE_ISORMAT_C 1
 
 #include <deemon/api.h>
 #include <deemon/alloc.h>
@@ -79,7 +79,7 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 			                                    Dee_HashPtr(fmt_start, len));
 		}
 		fmt_start = key_end;
-	} else if (DeeUni_IsDecimal(ch)) {
+	} else if (DeeUni_IsDigit(ch)) {
 		/* list-style index lookup */
 		DREF DeeObject *key;
 		char *index_end = fmt_start + 1;
@@ -184,7 +184,7 @@ Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
 		result = DeeString_NewSized(fmt_start,
 		                            (size_t)(key_end - fmt_start));
 		fmt_start = key_end;
-	} else if (DeeUni_IsDecimal(ch)) {
+	} else if (DeeUni_IsDigit(ch)) {
 		/* list-style index lookup */
 		char *index_end = fmt_start + 1;
 		ASSERT(!DeeUni_IsSymCont('}'));
@@ -1014,4 +1014,4 @@ DeeBytes_Format(dformatprinter printer,
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_FORMAT_C */
+#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_ISORMAT_C */

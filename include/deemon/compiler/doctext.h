@@ -131,7 +131,7 @@ DECL_BEGIN
  *     0 1 2 3 4 5 6 7 8 9 .  (Only if the character appeared at the beginning of a line, or
  *                             was preceded by only other decimal, \, . or : characters (i.e.
  *                             would have been apart of a possibly already broken ordered list))
- *                             HINT: Any character matching `DeeUni_IsDecimal()' is considered
+ *                             HINT: Any character matching `DeeUni_IsDigit()' is considered
  *
  * Additionally, ' ' (or any other ) can be escaped to force the insertion of an additional
  * or specific space character.

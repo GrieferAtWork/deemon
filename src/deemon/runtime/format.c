@@ -1027,8 +1027,8 @@ default_ctrl:
 encode_oct:
 					if (iter + 1 < end) {
 						struct unitraits *desc = DeeUni_Descriptor(iter[1]);
-						if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-						    (desc->ut_digit < 8))
+						if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+						    (desc->ut_digit_idx < 8))
 							goto encode_hex;
 					}
 					if (ch <= 0x07) {
@@ -1093,8 +1093,8 @@ encode_uni:
 					} else {
 						struct unitraits *desc;
 						desc = DeeUni_Descriptor(next_ch);
-						if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-						    (desc->ut_digit < 10))
+						if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+						    (desc->ut_digit_idx < 10))
 							goto encode_uni;
 					}
 				}
@@ -1155,8 +1155,8 @@ default_ctrl:
 encode_oct:
 					if (i + 1 < textlen) {
 						struct unitraits *desc = DeeUni_Descriptor(text[i + 1]);
-						if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-						    (desc->ut_digit < 8))
+						if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+						    (desc->ut_digit_idx < 8))
 							goto encode_hex;
 					}
 					if (ch <= 0x07) {
@@ -1229,8 +1229,8 @@ encode_hex:
 					    (next_ch >= 'A' && next_ch <= 'F'))
 						goto encode_uni;
 					desc = DeeUni_Descriptor(next_ch);
-					if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-					    (desc->ut_digit < 10))
+					if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+					    (desc->ut_digit_idx < 10))
 						goto encode_uni;
 				}
 				if (ch <= 0xf) {
@@ -1299,8 +1299,8 @@ default_ctrl:
 encode_oct:
 					if (i + 1 < textlen) {
 						struct unitraits *desc = DeeUni_Descriptor(text[i + 1]);
-						if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-						    (desc->ut_digit < 8))
+						if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+						    (desc->ut_digit_idx < 8))
 							goto encode_hex;
 					}
 					if (ch <= 0x07) {
@@ -1428,8 +1428,8 @@ encode_hex:
 					    (next_ch >= 'A' && next_ch <= 'F'))
 						goto encode_uni;
 					desc = DeeUni_Descriptor(next_ch);
-					if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-					    (desc->ut_digit < 10))
+					if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+					    (desc->ut_digit_idx < 10))
 						goto encode_uni;
 				}
 				if (ch <= 0xf) {
@@ -1517,8 +1517,8 @@ encode_oct:
 						char const *new_text   = text;
 						uint32_t next_ch       = utf8_readchar((char const **)&new_text, textend);
 						struct unitraits *desc = DeeUni_Descriptor(next_ch);
-						if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-						    (desc->ut_digit < 8))
+						if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+						    (desc->ut_digit_idx < 8))
 							goto encode_hex;
 					}
 					if (ch <= 0x07) {
@@ -1647,8 +1647,8 @@ encode_hex:
 					    (next_ch >= 'A' && next_ch <= 'F'))
 						goto encode_uni;
 					desc = DeeUni_Descriptor(next_ch);
-					if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-					    (desc->ut_digit < 10))
+					if ((desc->ut_flags & UNICODE_ISDIGIT) &&
+					    (desc->ut_digit_idx < 10))
 						goto encode_uni;
 				}
 				if (ch <= 0xf) {

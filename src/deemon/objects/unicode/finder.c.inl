@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL
-#define GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL 1
+#ifndef GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL
+#define GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL 1
 
 #ifdef __INTELLISENSE__
 #include "string_functions.c"
@@ -736,4 +736,4 @@ done:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL */
+#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL */

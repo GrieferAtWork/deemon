@@ -236,7 +236,7 @@ parse_hex_integer:
 				IF_EVAL(digit_value = 0);
 				while (count < max_digits) {
 					uint32_t ch32;
-					IF_EVAL(uint8_t val);
+					uint8_t val;
 					unsigned char *old_iter;
 					old_iter = text_iter;
 					ch32     = utf8_readchar((char const **)&text_iter, (char const *)self->jl_end);
@@ -244,15 +244,11 @@ parse_hex_integer:
 						IF_EVAL(val = 10 + ((uint8_t)ch32 - 'a'));
 					} else if (ch32 >= 'A' && ch32 <= 'F') {
 						IF_EVAL(val = 10 + ((uint8_t)ch32 - 'A'));
-					} else {
-						struct unitraits const *desc;
-						desc = DeeUni_Descriptor(ch32);
-						if (!(desc->ut_flags & UNICODE_FDECIMAL) || desc->ut_digit >= 10) {
-							text_iter = old_iter;
-							break;
-						}
-						IF_EVAL(val = desc->ut_digit);
+					} else if (!DeeUni_AsDigit(ch32, 10, &val)) {
+						text_iter = old_iter;
+						break;
 					}
+					(void)val;
 					IF_EVAL(digit_value <<= 4);
 					IF_EVAL(digit_value |= val);
 					++count;
@@ -279,18 +275,17 @@ parse_oct_integer:
 					/* Octal-encoded integer. */
 					count = 1;
 					while (count < 3) {
-						struct unitraits const *desc;
 						uint32_t ch32;
+						uint8_t digit;
 						unsigned char *old_iter;
 						old_iter = text_iter;
 						ch32     = utf8_readchar((char const **)&text_iter, (char const *)self->jl_end);
-						desc     = DeeUni_Descriptor(ch32);
-						if (!(desc->ut_flags & UNICODE_FDECIMAL) || desc->ut_digit >= 8) {
+						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 							text_iter = old_iter;
 							break;
 						}
 						IF_EVAL(digit_value <<= 3);
-						IF_EVAL(digit_value |= desc->ut_digit);
+						IF_EVAL(digit_value |= digit);
 						++count;
 					}
 #ifdef JIT_EVAL
@@ -302,15 +297,15 @@ parse_oct_integer:
 				if ((unsigned char)ch >= 0xc0) {
 					uint32_t ch32;
 					struct unitraits const *desc;
+					uint8_t digit;
 					--text_iter;
 					ch32 = utf8_readchar((char const **)&text_iter, (char const *)self->jl_end);
 					desc = DeeUni_Descriptor(ch32);
-					if (desc->ut_flags & UNICODE_FLF)
+					if (desc->ut_flags & UNICODE_ISLF)
 						goto after_escaped_putc; /* Escaped line-feed */
-					if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-					    (desc->ut_digit < 8)) {
+					if (DeeUniTrait_AsDigit(desc, 8, &digit)) {
 						/* Unicode digit character. */
-						IF_EVAL(digit_value = desc->ut_digit);
+						IF_EVAL(digit_value = digit);
 						goto parse_oct_integer;
 					}
 				}

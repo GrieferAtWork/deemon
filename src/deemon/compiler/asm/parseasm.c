@@ -168,10 +168,11 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
 	size -= COMPILER_STRLEN(USERLABEL_PREFIX);
 	label_number = 0;
 	while (size) {
-		if (!DeeUni_IsDecimal(*text))
+		uint8_t digit;
+		if (!DeeUni_AsDigit(*text, 10, &digit))
 			goto not_a_label;
 		label_number *= 10;
-		label_number += DeeUni_AsDigit(*text);
+		label_number += digit;
 		++text, --size;
 	}
 	/* Check if the given label index actually exists. */

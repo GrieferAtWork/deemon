@@ -582,13 +582,13 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *
  *    - :ident
  *    - :{ident}
- *        - `ident' may only contain `UNICODE_FSYMSTRT->UNICODE_FSYMCONT'
+ *        - `ident' may only contain `UNICODE_ISSYMSTRT->UNICODE_ISSYMCONT'
  *          characters, as well as `:' and `.' characters.
  *          If this could lead to ambiguity (e.g.: a reference at the end of a
  *          sentence, meaning that the next text-character is a `.'), `ident'
  *          may be wrapped by {...}, as shown above.
  *        - Reference to `ident' (a symbol name), searched for in the following
- *          places, in order. If the `:' character is not followed by a `UNICODE_FSYMSTRT'
+ *          places, in order. If the `:' character is not followed by a `UNICODE_ISSYMSTRT'
  *          character, no reference should be detected and the `:' should be included
  *          in the documentation text.
  *          e.g.: "Because it inherits from :Sequence a lot of predefined functions are available"
@@ -612,7 +612,7 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *
  *    - @ident
  *    - @{ident}
- *        - `ident' may only contain `UNICODE_FSYMSTRT->UNICODE_FSYMCONT' characters.
+ *        - `ident' may only contain `UNICODE_ISSYMSTRT->UNICODE_ISSYMCONT' characters.
  *        - Used to refer to an argument while inside the documentation text of a function.
  *          `ident' should be the name of the argument in this case.
  *          Additionally, `ident' may be `this' to refer to the self-argument in
@@ -620,7 +620,7 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *
  *    - ?#ident
  *    - ?#{ident}
- *        - `ident' may only contain `UNICODE_FSYMSTRT->UNICODE_FSYMCONT' characters.
+ *        - `ident' may only contain `UNICODE_ISSYMSTRT->UNICODE_ISSYMCONT' characters.
  *        - Used to refer to another attribute `ident' within the
  *          same type (member-doc) / module (module-symbol-doc)
  *

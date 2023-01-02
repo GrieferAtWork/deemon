@@ -2158,16 +2158,16 @@ has_operand:
 					goto err;
 				}
 			} else {
-				if (!DeeUni_IsDecimal(ch)) {
+				uint8_t digit;
+				if (!DeeUni_AsDigit(ch, 10, &opno)) {
 					DeeError_Throwf(&DeeError_CompilerError,
 					                "Expected `[' or a digit after `%%' in user-assembly text");
 					goto err;
 				}
-				opno = DeeUni_AsDigit(ch);
-				ch   = *iter++;
-				while (DeeUni_IsDecimal(ch)) {
+				ch = *iter++;
+				while (DeeUni_AsDigit(ch, 10, &digit)) {
 					opno *= 10;
-					opno += DeeUni_AsDigit(ch);
+					opno += digit;
 					ch = *iter++;
 				}
 				if unlikely(opno > self->af_ast->a_assembly.as_opc) {

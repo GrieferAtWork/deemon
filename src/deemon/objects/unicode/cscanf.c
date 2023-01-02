@@ -140,20 +140,24 @@ next_format:
 		if (format >= format_end)
 			goto out_formatend;
 		ch32 = utf8_readchar_u((char const **)&format);
-		if (ch32 == '*')
-			ignore_data = true,
+		if (ch32 == '*') {
+			ignore_data = true;
 			ch32        = utf8_readchar_u((char const **)&format);
+		}
 		/* Check: is the max field width given. */
-		if (DeeUni_IsDecimal(ch32)) {
-			width = DeeUni_AsDigit(ch32);
-			for (;;) {
-				if (format >= format_end)
-					goto out_formatend;
-				ch32 = utf8_readchar_u((char const **)&format);
-				if (!DeeUni_IsDecimal(ch32))
-					break;
-				width *= 10;
-				width += DeeUni_AsDigit(ch32);
+		{
+			uint8_t digit;
+			if (DeeUni_AsDigit(ch32, 10, &digit)) {
+				width = digit;
+				for (;;) {
+					if (format >= format_end)
+						goto out_formatend;
+					ch32 = utf8_readchar_u((char const **)&format);
+					if (!DeeUni_AsDigit(ch32, 10, &digit))
+						break;
+					width *= 10;
+					width += digit;
+				}
 			}
 		}
 		spec_data_start = data;
@@ -186,7 +190,7 @@ do_integer_scan:
 				prev_data  = data;
 				radix_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
 				                      : utf8_readchar((char const **)&data, data_end);
-				if (DeeUni_IsDecimalX(radix_ch32, 0)) {
+				if (DeeUni_AsDigitVal(radix_ch32) == 0) {
 					--width;
 					if (width && (*data == 'x' || *data == 'X')) {
 						scan_radix = 16;
@@ -207,7 +211,7 @@ do_integer_scan:
 			while (data < data_end && width) {
 				uint32_t data_ch32;
 				char *prev_data;
-				struct unitraits *traits;
+				uint8_t digit;
 				if (scan_radix > 10) {
 					char data_ch = *data;
 					if (((uint8_t)data_ch >= (uint8_t)'a' && (uint8_t)data_ch <= (uint8_t)('a' + (scan_radix - 10))) ||
@@ -220,9 +224,7 @@ do_integer_scan:
 				prev_data = data;
 				data_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
 				                     : utf8_readchar((char const **)&data, data_end);
-				traits = DeeUni_Descriptor(data_ch32);
-				if (!(traits->ut_flags & UNICODE_FDECIMAL) ||
-				    traits->ut_digit >= scan_radix) {
+				if (!DeeUni_AsDigit(data_ch32, scan_radix, &digit)) {
 					data = prev_data;
 					break;
 				}

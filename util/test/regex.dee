@@ -130,9 +130,9 @@ assert re_match(r"\N", "\rfoo") is none;
 assert re_match(r"\N", "\nfoo") is none;
 
 /* Ensure that character sets work in both ASCII and UTF-8 mode. */
-//TODO:assert re_match(r"[[:hex:]]+", "abcdefABCDEF_") == 12;
-//TODO:assert re_match(r"[[:hex:]]+", "_abcdefABCDEF") is none;
-//TODO:assert re_match(r"[[:hex:]ä]+", "äabcdefABCDEF_") == 14;
+assert re_match(r"[[:hex:]]+", "abcdefABCDEF_") == 12;
+assert re_match(r"[[:hex:]]+", "_abcdefABCDEF") is none;
+assert re_match(r"[[:hex:]ä]+", "äabcdefABCDEF_") == 13;
 assert re_match(r"[^[:lower:]Ä]+", "FOOÄBAR") == 3;
 assert re_match(r"[^[:lower:]]+", "FOOÄBAR") == 7;
 

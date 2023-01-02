@@ -360,15 +360,9 @@ parse_hex_integer:
 						val = 10 + ((uint8_t)ch32 - 'a');
 					} else if (ch32 >= 'A' && ch32 <= 'F') {
 						val = 10 + ((uint8_t)ch32 - 'A');
-					} else {
-						struct unitraits const *desc;
-						desc = DeeUni_Descriptor(ch32);
-						if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
-						    desc->ut_digit >= 10) {
-							text_iter = old_iter;
-							break;
-						}
-						val = desc->ut_digit;
+					} else if (!DeeUni_AsDigit(ch32, 16, &val)) {
+						text_iter = old_iter;
+						break;
 					}
 					digit_value <<= 4;
 					digit_value |= val;
@@ -395,19 +389,17 @@ parse_oct_integer:
 					/* Octal-encoded integer. */
 					count = 1;
 					while (count < 3) {
-						struct unitraits const *desc;
 						uint32_t ch32;
+						uint8_t digit;
 						char *old_iter;
 						old_iter = text_iter;
 						ch32     = utf8_readchar((char const **)&text_iter, text_end);
-						desc     = DeeUni_Descriptor(ch32);
-						if (!(desc->ut_flags & UNICODE_FDECIMAL) ||
-						    desc->ut_digit >= 8) {
+						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 							text_iter = old_iter;
 							break;
 						}
 						digit_value <<= 3;
-						digit_value |= desc->ut_digit;
+						digit_value |= digit;
 						++count;
 					}
 					if (unicode_printer_putc(&format_printer, digit_value))
@@ -417,15 +409,15 @@ parse_oct_integer:
 				if ((unsigned char)ch >= 0xc0) {
 					uint32_t ch32;
 					struct unitraits const *desc;
+					uint8_t digit;
 					--text_iter;
 					ch32 = utf8_readchar((char const **)&text_iter, text_end);
 					desc = DeeUni_Descriptor(ch32);
-					if (desc->ut_flags & UNICODE_FLF)
+					if (desc->ut_flags & UNICODE_ISLF)
 						goto after_escaped_putc; /* Escaped line-feed */
-					if ((desc->ut_flags & UNICODE_FDECIMAL) &&
-					    (desc->ut_digit < 8)) {
+					if (DeeUniTrait_AsDigit(desc, 8, &digit)) {
 						/* Unicode digit character. */
-						digit_value = desc->ut_digit;
+						digit_value = digit;
 						goto parse_oct_integer;
 					}
 				}

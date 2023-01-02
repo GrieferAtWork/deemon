@@ -1296,8 +1296,8 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 #else
 #define IS_VALID_MODULE_CHARACTER(ch)                                      \
 	((DeeUni_Flags(ch) &                                                   \
-	  (UNICODE_FALPHA | UNICODE_FLOWER | UNICODE_FUPPER | UNICODE_FTITLE | \
-	   UNICODE_FDECIMAL | UNICODE_FSYMSTRT | UNICODE_FSYMCONT)) ||         \
+	  (UNICODE_ISALPHA | UNICODE_ISLOWER | UNICODE_ISUPPER | UNICODE_ISTITLE | \
+	   UNICODE_ISDIGIT | UNICODE_ISSYMSTRT | UNICODE_ISSYMCONT)) ||         \
 	 ((ch) == '-' || (ch) == '=' || (ch) == ',' || (ch) == '(' ||          \
 	  (ch) == ')' || (ch) == '[' || (ch) == ']' || (ch) == '{' ||          \
 	  (ch) == '}' || (ch) == '<' || (ch) == '>' || (ch) == '+'))

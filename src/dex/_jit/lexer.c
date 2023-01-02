@@ -68,7 +68,7 @@ raw_again:
 				start = iter;
 				ch32 = utf8_readchar((char const **)&iter,
 				                     (char const *)self->jl_end);
-				if (!(DeeUni_Flags(ch32) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
+				if (!(DeeUni_Flags(ch32) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
 					if (ch32 == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
 						continue;
@@ -77,7 +77,7 @@ raw_again:
 					break;
 				}
 			} else {
-				if (!(DeeUni_Flags(ch) & (UNICODE_FSYMCONT | UNICODE_FDECIMAL))) {
+				if (!(DeeUni_Flags(ch) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
 					if (ch == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
 						continue;
@@ -393,12 +393,12 @@ raw_again:
 			ch32 = utf8_readchar((char const **)&iter,
 			                     (char const *)self->jl_end);
 			flags = DeeUni_Flags(ch32);
-			if (flags & UNICODE_FSPACE)
+			if (flags & UNICODE_ISSPACE)
 				goto again;
 		}
 		flags = DeeUni_Flags(ch);
 		/* Skip whitespace. */
-		if (flags & UNICODE_FSPACE) {
+		if (flags & UNICODE_ISSPACE) {
 	case ' ':
 	case '\t':
 	case '\r':
@@ -407,7 +407,7 @@ again:
 			self->jl_tokend = iter;
 			goto raw_again;
 		}
-		if (flags & UNICODE_FSYMSTRT) {
+		if (flags & UNICODE_ISSYMSTRT) {
 scan_keyword:
 	case '_':
 	case '$':
@@ -472,12 +472,12 @@ scan_keyword:
 					start = iter;
 					ch32 = utf8_readchar((char const **)&iter,
 					                     (char const *)self->jl_end);
-					if (!(DeeUni_Flags(ch32) & UNICODE_FSYMCONT)) {
+					if (!(DeeUni_Flags(ch32) & UNICODE_ISSYMCONT)) {
 						iter = start;
 						break;
 					}
 				} else {
-					if (!(DeeUni_Flags(ch) & UNICODE_FSYMCONT)) {
+					if (!(DeeUni_Flags(ch) & UNICODE_ISSYMCONT)) {
 						--iter;
 						break;
 					}

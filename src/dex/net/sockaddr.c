@@ -1138,7 +1138,7 @@ do_gethostbyname:
 		bzero(self, sizeof(SockAddr));
 		/* Quick check: If the host starts with a digit, or with `:',
 		 * then it isn't a special name, but an absolute address. */
-		if (host_length && (!DeeUni_IsDecimal(*host) && *host != ':')) {
+		if (host_length && (!DeeUni_IsDigit(*host) && *host != ':')) {
 			char const *special_name = host;
 			size_t special_size      = host_length;
 			int special_family       = AF_AUTO;
