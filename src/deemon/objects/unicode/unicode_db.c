@@ -128,6 +128,8 @@ PRIVATE uint16_t const unicode_tab2[42];
 #else /* __INTELLISENSE__ */
 #undef __unitraits
 #define __unitraits unitraits
+#undef ATTR_SECTION
+#define ATTR_SECTION(x) /* nothing */
 #include "db/db.dat"
 #endif /* !__INTELLISENSE__ */
 
