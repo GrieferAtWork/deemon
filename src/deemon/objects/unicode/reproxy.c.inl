@@ -84,7 +84,7 @@ STATIC_ASSERT(offsetof(ReSequence, rs_exec) == offsetof(ReSequenceIterator, rsi_
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_ctor(ReSequenceIterator *__restrict self) {
 	bzero(&self->rsi_exec, sizeof(self->rsi_exec));
-	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL);
+	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rsi_exec.rx_code)
 		return -1;
 	self->rsi_data            = (DREF String *)Dee_EmptyString;
@@ -666,7 +666,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_ctor(ReSequence *__restrict self) {
 	bzero(&self->rs_exec, sizeof(self->rs_exec));
-	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL);
+	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rs_exec.rx_code)
 		return -1;
 	self->rs_data            = (DREF String *)Dee_EmptyString;

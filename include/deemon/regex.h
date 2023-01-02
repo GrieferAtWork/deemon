@@ -66,10 +66,16 @@ struct DeeRegexCode {
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
  * @param: compile_flags: Set of `DEE_REGEX_COMPILE_*'
+ * @param: rules:         When non-NULL, a string containing extra rules
+ *                        that are or'd into `compile_flags'. For this purpose,
+ *                        each character from `rules' is parsed as a flag:
+ *                        - (No extra rules have been defined, yet)
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
-DeeString_GetRegex(DeeObject *__restrict self, unsigned int compile_flags);
+DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
+                   unsigned int compile_flags,
+                   DeeObject *rules);
 
 
 

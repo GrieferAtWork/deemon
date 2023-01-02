@@ -9343,12 +9343,11 @@ generic_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
 		goto err;
 	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
 		goto err;
-	result->rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	result->rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL, rules);
 	if unlikely(!result->rx_code)
 		goto err;
 	result->rx_nmatch = 0;
 	result->rx_pmatch = NULL;
-	(void)rules;           /* TODO: rules */
 	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
 	result->rx_inbase = DeeString_AsUtf8((DeeObject *)self);
 	if unlikely(!result->rx_inbase)
@@ -9389,12 +9388,11 @@ search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
 		goto err;
 	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
 		goto err;
-	result->rewr_exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	result->rewr_exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL, rules);
 	if unlikely(!result->rewr_exec.rx_code)
 		goto err;
 	result->rewr_exec.rx_nmatch = 0;
 	result->rewr_exec.rx_pmatch = NULL;
-	(void)rules;                     /* TODO: rules */
 	result->rewr_exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
 	result->rewr_exec.rx_inbase = DeeString_AsUtf8((DeeObject *)self);
 	if unlikely(!result->rewr_exec.rx_inbase)
@@ -9883,9 +9881,8 @@ string_rereplace(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	if unlikely(!replace_start)
 		goto err;
 	replace_end = replace_start + WSTR_LENGTH(replace_start);
-	(void)rules;        /* TODO: rules */
 	exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
-	exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL);
+	exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NORMAL, rules);
 	if unlikely(!exec.rx_code)
 		goto err;
 	exec.rx_nmatch = COMPILER_LENOF(groups);
@@ -10041,10 +10038,9 @@ base_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
 	if (DeeObject_AssertTypeExact(result->rx_pattern, &DeeString_Type))
 		goto err;
 	result->rx_code = DeeString_GetRegex((DeeObject *)result->rx_pattern,
-	                                     DEE_REGEX_COMPILE_NORMAL);
+	                                     DEE_REGEX_COMPILE_NORMAL, rules);
 	if unlikely(!result->rx_code)
 		goto err;
-	(void)rules;           /* TODO: rules */
 	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
 	result->rx_inbase = DeeString_AsUtf8((DeeObject *)self);
 	if unlikely(!result->rx_inbase)
@@ -11863,7 +11859,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
 	      "${"
 	      /**/ "function restartswith(pattern: string) {\n"
-	      /**/ "	return this.rematch(pattern: string) !is none;\n"
+	      /**/ "	return this.rematch(pattern) !is none;\n"
 	      /**/ "}"
 	      "}"),
 	  TYPE_METHOD_FKWDS },
@@ -11913,7 +11909,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
 	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
-	      "Note that if a point is reached where pattern only matches epsilon, counting is stopped"),
+	      "If the pattern starts matching epsilon, counting is stopped"),
 	  TYPE_METHOD_FKWDS },
 	{ "recontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,

@@ -146,7 +146,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CONTEXT_INDEP_ANCHORS     1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CONTEXT_INVALID_OPS       1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NEWLINE               1 /* XXX: Flag? */
-#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NOT_NULL              0 /* XXX: Flag? */
+#define LIBREGEX_CONSTANT__RE_SYNTAX_DOT_NOT_NULL              0
 #define LIBREGEX_CONSTANT__RE_SYNTAX_HAT_LISTS_NOT_NEWLINE     0 /* XXX: Flag? */
 #define LIBREGEX_CONSTANT__RE_SYNTAX_INTERVALS                 1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_LIMITED_OPS               0
@@ -868,13 +868,20 @@ DeeString_DestroyRegex(DeeStringObject *__restrict self) {
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
  * @param: compile_flags: Set of `DEE_REGEX_COMPILE_*'
+ * @param: rules:         When non-NULL, a string containing extra rules
+ *                        that are or'd into `compile_flags'. For this purpose,
+ *                        each character from `rules' is parsed as a flag:
+ *                        - (No extra rules have been defined, yet)
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
-DeeString_GetRegex(DeeObject *__restrict self, unsigned int compile_flags) {
+DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
+                   unsigned int compile_flags,
+                   DeeObject *rules) {
 	struct DeeRegexCode *result;
 	struct regex_cache_entry *first_dummy;
 	dhash_t i, perturb, hash;
+	(void)rules; /* TODO? */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 
 	/* Lookup regex in cache */

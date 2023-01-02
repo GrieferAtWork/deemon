@@ -716,7 +716,7 @@ EXPORTS
 	DeeString_FreeWidth@4=_DeeString_FreeWidth@4
 	DeeString_FromBackslashEscaped@12=_DeeString_FromBackslashEscaped@12
 	DeeString_GetChar@8=_DeeString_GetChar@8
-	DeeString_GetRegex@8=_DeeString_GetRegex@8
+	DeeString_GetRegex@12=_DeeString_GetRegex@12
 	DeeString_HashCase@4=_DeeString_HashCase@4
 	DeeString_Memmove@16=_DeeString_Memmove@16
 	DeeString_New2Byte@8=_DeeString_New2Byte@8
