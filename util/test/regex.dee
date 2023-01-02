@@ -176,3 +176,4 @@ assert "foo bar".refind(r"[[:lower:]]") == (0, 1);
 assert "foo bar".rerfind(r"[[:lower:]]") == (6, 7);
 assert "foo bar".rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)";
 
+assert "10 , 20,30 40, 50".resplit(r"[[:space:],]+") == { "10", "20", "30", "40", "50" };

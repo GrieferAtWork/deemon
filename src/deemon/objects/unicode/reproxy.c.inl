@@ -54,7 +54,9 @@ INTDEF DeeTypeObject ReSplitIterator_Type;
 	       (result)->rx_insize   = (self)->rx_insize,       \
 	       (result)->rx_startoff = (self)->rx_startoff,     \
 	       (result)->rx_endoff   = (self)->rx_endoff,       \
-	       (result)->rx_eflags   = (self)->rx_eflags)
+	       (result)->rx_eflags   = (self)->rx_eflags,       \
+	       (result)->rx_nmatch   = (nmatch),                \
+	       (result)->rx_pmatch   = (pmatch))
 
 
 
@@ -584,16 +586,19 @@ again:
 	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
-		return ITER_DONE;
-	if (match_size == 0)
-		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
 	rwlock_write(&self->rsi_lock);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
 		rwlock_endwrite(&self->rsi_lock);
 		goto again;
 	}
-	self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	if (result == DEE_RE_STATUS_NOMATCH ||
+	    match_size == 0) { /* Prevent infinite loop on epsilon-match */
+		self->rsi_exec.rx_startoff = (size_t)-1;
+		self->rsi_exec.rx_inbase   = NULL;
+		result = exec.rx_endoff;
+	} else {
+		self->rsi_exec.rx_startoff = (size_t)result + match_size;
+	}
 	rwlock_endwrite(&self->rsi_lock);
 	return DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
 	                         (size_t)result - exec.rx_startoff,

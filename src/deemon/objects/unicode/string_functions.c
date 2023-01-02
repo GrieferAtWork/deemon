@@ -11846,7 +11846,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 
 	      "${"
 	      /**/ "local data = \"10 , 20,30 40, 50\";\n"
-	      /**/ "for (local x: data.resplit(r\"([[:space:]]*,?)+[[:space:]]*\"))\n"
+	      /**/ "for (local x: data.resplit(r\"[[:space:],]+\"))\n"
 	      /**/ "	print x; /* `10' `20' `30' `40' `50' */"
 	      "}\n"
 
