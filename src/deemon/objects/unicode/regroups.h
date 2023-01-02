@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGROUPS_H 1
 
 #include <deemon/alloc.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/regex.h>
 
@@ -34,8 +35,12 @@ typedef struct {
 	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rg_groups); /* Array of groups */
 } ReGroups;
 
-#define DeeRegexMatch_ToObject(self) \
-	DeeTuple_Newf(PCKuSIZ PCKuSIZ, (self)->rm_so, (self)->rm_eo)
+#define DeeRegexMatch_ToObject(self)    \
+	((self)->rm_so == (size_t)-1        \
+	 ? (Dee_Incref(Dee_None), Dee_None) \
+	 : DeeTuple_Newf(PCKuSIZ PCKuSIZ,   \
+	                 (self)->rm_so,     \
+	                 (self)->rm_eo))
 
 typedef struct {
 	OBJECT_HEAD

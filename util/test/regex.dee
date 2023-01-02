@@ -22,8 +22,19 @@
 import * from deemon;
 import * from errors;
 
-#define re_match(pattern, input) \
-	(input).rematch(pattern)
+#define re_match_unicode(pattern, input) (input).rematch(pattern)
+function re_match(pattern: string, input: string | Bytes): int {
+	local result = input.rematch(pattern);
+	if (input !is Bytes) {
+		local bytes = input.encode("utf-8");
+		assert bytes is Bytes;
+		local expBytesResult = result is none ? none : #input[:result].encode("utf-8");
+		assert bytes.rematch(pattern) == expBytesResult,
+			f"\npattern: {repr pattern}"
+			f"\ninput:   {repr input}";
+	}
+	return result;
+}
 
 #define REGMATCH(so, eo) { so, eo }
 function re_match_g(pattern: string, input: string, groups: {(int, int)...}): int {
@@ -111,6 +122,7 @@ assert re_match(r"(a|b){4}a", "ababX") is none;
 assert re_match(r"(a|b){4}a", "bbbbX") is none;
 
 assert re_match(r"\?", "?") == 1;
+assert re_match(r"[?]", "?") == 1;
 
 assert re_match(r"\n", "\rfoo") == 1;
 assert re_match(r"\n", "\nfoo") == 1;
@@ -124,24 +136,24 @@ assert re_match(r"\N", "\nfoo") is none;
 assert re_match(r"[^[:lower:]Ä]+", "FOOÄBAR") == 3;
 assert re_match(r"[^[:lower:]]+", "FOOÄBAR") == 7;
 
-//TODO:/* Byte-escapes must work properly */
-//TODO:assert re_match(r"\xAB\xCD", "\xAB\xCD\xCD\xEF".bytes()) == 2;
-//TODO:assert re_match(r"\xAB\xCD+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
-//TODO:assert re_match(r"[\xAB\xCD]", "\xAB\xCD\xCD\xEF".bytes()) == 1;
-//TODO:assert re_match(r"[\xAB\xCD]", "\xCD\xAB\xCD\xEF".bytes()) == 1;
-//TODO:assert re_match(r"[\xAB\xCD]+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
+/* Byte-escapes must work properly */
+assert re_match(r"\xAB\xCD", "\xAB\xCD\xCD\xEF".bytes()) == 2;
+assert re_match(r"\xAB\xCD+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
+assert re_match(r"[\xAB\xCD]", "\xAB\xCD\xCD\xEF".bytes()) == 1;
+assert re_match(r"[\xAB\xCD]", "\xCD\xAB\xCD\xEF".bytes()) == 1;
+assert re_match(r"[\xAB\xCD]+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
 
 /* Unicode-escape must also work (and not get confused for byte-escape) */
-assert re_match(r"\u00AB\u00CD", "«ÍÍï") == 2;
-assert re_match(r"\U000000AB\U000000CD", "«ÍÍï") == 2;
-assert re_match(r"\u00AB\u00CD+", "«ÍÍï") == 3;
-assert re_match(r"\U000000AB\U000000CD+", "«ÍÍï") == 3;
-assert re_match(r"[\u00AB\u00CD]", "«ÍÍï") == 1;
-assert re_match(r"[\U000000AB\U000000CD]", "«ÍÍï") == 1;
-assert re_match(r"[\u00AB\u00CD]", "Í«Íï") == 1;
-assert re_match(r"[\U000000AB\U000000CD]", "Í«Íï") == 1;
-assert re_match(r"[\u00AB\u00CD]+", "«ÍÍï") == 3;
-assert re_match(r"[\U000000AB\U000000CD]+", "«ÍÍï") == 3;
+assert re_match_unicode(r"\u00AB\u00CD", "«ÍÍï") == 2;
+assert re_match_unicode(r"\U000000AB\U000000CD", "«ÍÍï") == 2;
+assert re_match_unicode(r"\u00AB\u00CD+", "«ÍÍï") == 3;
+assert re_match_unicode(r"\U000000AB\U000000CD+", "«ÍÍï") == 3;
+assert re_match_unicode(r"[\u00AB\u00CD]", "«ÍÍï") == 1;
+assert re_match_unicode(r"[\U000000AB\U000000CD]", "«ÍÍï") == 1;
+assert re_match_unicode(r"[\u00AB\u00CD]", "Í«Íï") == 1;
+assert re_match_unicode(r"[\U000000AB\U000000CD]", "Í«Íï") == 1;
+assert re_match_unicode(r"[\u00AB\u00CD]+", "«ÍÍï") == 3;
+assert re_match_unicode(r"[\U000000AB\U000000CD]+", "«ÍÍï") == 3;
 
 /* Ensure that illegal charsets aren't accepted. */
 assert (try "".rematch(r"[Ä\xC3]") catch (e...) e) is UnicodeError;
@@ -164,8 +176,8 @@ assert re_match(r"[[.tab.]]+", "foo") is none;
 assert (try "".rematch(r"[[.BAD COLL NAME.]]") catch (e...) e) is SymbolError;
 
 /* Ensure that unicode brace-escape works */
-assert re_match(r"[\u{1234 ABCD}]+", "\u1234\uABCDxxxxxxxxxxxxxxxxx") == 2;
-assert re_match(r"[\u{7E 7F}]+", "\x7E\x7Fxxxxxxxxxxxxxxxxx") == 2;
+assert re_match_unicode(r"[\u{1234 ABCD}]+", "\u1234\uABCDxxxxxxxxxxxxxxxxx") == 2;
+assert re_match_unicode(r"[\u{7E 7F}]+", "\x7E\x7Fxxxxxxxxxxxxxxxxx") == 2;
 
 
 /* Test some of the more advanced regex functions */

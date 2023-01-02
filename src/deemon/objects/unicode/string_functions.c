@@ -9328,6 +9328,26 @@ string_bytecnt2charcnt(String const *self, size_t bytepos, char const *utf8) {
 	return charpos;
 }
 
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+string_bytecnt2charcnt_v(String const *self, char const *utf8,
+                         struct DeeRegexMatch *__restrict pmatch,
+                         size_t nmatch) {
+	size_t i;
+	for (i = 0; i < nmatch; ++i) {
+		size_t eo;
+		size_t so = pmatch[i].rm_so;
+		/* Check if this group was ever matched. */
+		if (so == (size_t)-1)
+			continue;
+		eo = pmatch[i].rm_eo - so;                        /* eo = MATCH_SIZE_IN_BYTES */
+		eo = string_bytecnt2charcnt(self, eo, utf8 + so); /* eo = MATCH_SIZE_IN_CHARS */
+		so = string_bytecnt2charcnt(self, so, utf8);      /* so = MATCH_START_IN_CHARS */
+		eo += so;                                         /* eo = MATCH_END_IN_CHARS */
+		pmatch[i].rm_so = so;
+		pmatch[i].rm_eo = eo;
+	}
+}
+
 #define GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPdSIZ UNPdSIZ "o:" name
 PRIVATE struct keyword generic_regex_kwlist[] = { K(pattern), K(start), K(end), K(rules), KEND };
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
@@ -9466,6 +9486,9 @@ string_regmatch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		ReGroups_Free(groups);
 		return_empty_seq;
 	}
+	string_bytecnt2charcnt_v(self, (char const *)exec.rx_inbase,
+	                         groups->rg_groups + 1,
+	                         exec.rx_code->rc_ngrps);
 	groups->rg_groups[0].rm_so = 0;
 	groups->rg_groups[0].rm_eo = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rx_inbase);
 	ReGroups_Init(groups, 1 + exec.rx_code->rc_ngrps);
@@ -9554,6 +9577,9 @@ string_regfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		ReGroups_Free(groups);
 		return_empty_seq;
 	}
+	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
+	                         groups->rg_groups + 1,
+	                         exec.rewr_exec.rx_code->rc_ngrps);
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)result;
@@ -9587,6 +9613,9 @@ string_regrfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		ReGroups_Free(groups);
 		return_empty_seq;
 	}
+	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
+	                         groups->rg_groups + 1,
+	                         exec.rewr_exec.rx_code->rc_ngrps);
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)result;
@@ -9662,6 +9691,9 @@ string_regindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
 		goto err_not_found;
+	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
+	                         groups->rg_groups + 1,
+	                         exec.rewr_exec.rx_code->rc_ngrps);
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)result;
@@ -9695,6 +9727,9 @@ string_regrindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
 		goto err_not_found;
+	string_bytecnt2charcnt_v(self, (char const *)exec.rewr_exec.rx_inbase,
+	                         groups->rg_groups + 1,
+	                         exec.rewr_exec.rx_code->rc_ngrps);
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)result;
@@ -11608,17 +11643,19 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "#C{\\S}|Alias for #C{[^[:space:]]}&"
 	      /**/ "#C{\\d}|Alias for #C{[[:digit:]]}&"
 	      /**/ "#C{\\D}|Alias for #C{[^[:digit:]]}&"
-	      /**/ "#C{\\0123}|Match the octal-encoded byte #C{0123}&"
-	      /**/ "#C{\\xAB}|Match the hex-encoded byte #C{0xAB}&"
-	      /**/ "#C{\\uABCD}|Match the unicode-character #C{U+ABCD}&"
-	      /**/ "#C{\\U12345678}|Match the unicode-character #C{U+12345678}&"
-	      /**/ "#C{\\u{1234 5689}}|Match the unicode-characters #C{U+1234}, followed by #C{U+5678}&"
+	      /**/ "#C{\\0123}|Match the octal-encoded byte #C{0123} (only allowed byte-mode; s.a. ?Arematch?DBytes)&"
+	      /**/ "#C{\\xAB}|Match the hex-encoded byte #C{0xAB} (only allowed byte-mode; s.a. ?Arematch?DBytes)&"
+	      /**/ "#C{\\uABCD}|Match the unicode-character #C{U+ABCD} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
+	      /**/ "#C{\\U12345678}|Match the unicode-character #C{U+12345678} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
+	      /**/ "#C{\\u{1234 5689}}|Match the unicode-characters #C{U+1234}, followed by #C{U+5678} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
 	      /**/ "#C{\\1-9}|Back-reference to a preceding group (i.e. #C{( ... )}-pairs). "
 	      /**/ /*      */ "Group indexes start at 1, and get assigned when an open-${(} is encountered in the input). "
 	      /**/ /*      */ "There is no way to create back-references for groups other than the first 9. "
 	      /**/ /*      */ "Character-ranges matched by groups can also be returned explicitly by ?#regmatch. "
 	      /**/ /*      */ "Matches exactly what was previously matched by said group&"
-	      /**/ "#C{\\x}|Match the literal $\"x\" (but see special escape-sequences above)"
+	      /**/ "#C{\\x}|Match the literal $\"x\" (where #Cx is not one of the special escapes above). "
+	      /**/ /*   */ "For the sake of compatibility, it is recommended not to use this, but to instead "
+	      /**/ /*   */ "make use of #C{[x]} for the purpose of escaping potentially special characters."
 	      "}\n"
 	      "Supported repetition and group expressions:"
 	      "#T{Expression|Description~"
@@ -11816,8 +11853,8 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      /**/ "#C{&}|Replaced with the entire sub-string matched by @pattern&"
 	      /**/ "#C{\\n}|Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
 	      /**/ /*   */ "@pattern (groups are determined by parenthesis in regex patterns)&"
-	      /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned string&"
-	      /**/ "#C{\\&}|Outputs a literal $r\"&\" into the returned string"
+	      /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
+	      /**/ "#C{\\&}|Outputs a literal $r\"&\" into the returned ?."
 	      "}"),
 	  TYPE_METHOD_FKWDS },
 	{ "refindall",
