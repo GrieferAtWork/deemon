@@ -230,16 +230,16 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 			check_generic_sequence(x.segments(r));
 		check_generic_sequence(x.splitlines(true));
 		check_generic_sequence(x.splitlines(false));
-		//TODO:if (x is string) {
-		//TODO:	for (local pattern: [
-		//TODO:		r"\|",
-		//TODO:		r"assert?",
-		//TODO:	]) {
-		//TODO:		check_generic_sequence(x.refindall(pattern));
-		//TODO:		check_generic_sequence(x.relocateall(pattern));
-		//TODO:		check_generic_sequence(x.resplit(pattern));
-		//TODO:	}
-		//TODO:}
+		if (x is string) {
+			for (local pattern: [
+				r"\|",
+				r"assert?",
+			]) {
+				check_generic_sequence(x.refindall(pattern));
+				check_generic_sequence(x.relocateall(pattern));
+				check_generic_sequence(x.resplit(pattern));
+			}
+		}
 	}
 
 	assert x is Dict;
