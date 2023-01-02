@@ -39,6 +39,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/overflow.h>
 
+#include "regroups.h"
+
 DECL_BEGIN
 
 #ifdef __INTELLISENSE__
@@ -3425,7 +3427,6 @@ err_elem:
 err:
 	return NULL;
 }
-
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_getsubstr(String *__restrict self,
@@ -9449,6 +9450,35 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regmatch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReGroups *groups;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("regmatch"), &exec))
+		goto err;
+	groups = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
+	if unlikely(!groups)
+		goto err;
+	exec.rx_nmatch = exec.rx_code->rc_ngrps;
+	exec.rx_pmatch = groups->rg_groups + 1;
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(groups);
+		return_empty_seq;
+	}
+	groups->rg_groups[0].rm_so = 0;
+	groups->rg_groups[0].rm_eo = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rx_inbase);
+	ReGroups_Init(groups, 1 + exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)groups;
+err_g:
+	ReGroups_Free(groups);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rematches(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
@@ -9480,7 +9510,7 @@ string_refind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		return_none;
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
-	match_size += result;
+	match_size += (size_t)result;
 	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err:
 	return NULL;
@@ -9500,8 +9530,74 @@ string_rerfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		return_none;
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
-	match_size += result;
+	match_size += (size_t)result;
 	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReGroups *groups;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regfind"), &exec))
+		goto err;
+	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!groups)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(groups);
+		return_empty_seq;
+	}
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += (size_t)result;
+	groups->rg_groups[0].rm_so = (size_t)result;
+	groups->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)groups;
+err_g:
+	ReGroups_Free(groups);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regrfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReGroups *groups;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrfind"), &exec))
+		goto err;
+	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!groups)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReGroups_Free(groups);
+		return_empty_seq;
+	}
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += (size_t)result;
+	groups->rg_groups[0].rm_so = (size_t)result;
+	groups->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)groups;
+err_g:
+	ReGroups_Free(groups);
 err:
 	return NULL;
 }
@@ -9520,7 +9616,7 @@ string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err_not_found;
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
-	match_size += result;
+	match_size += (size_t)result;
 	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err_not_found:
 	err_regex_index_not_found((DeeObject *)self);
@@ -9542,10 +9638,76 @@ string_rerindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err_not_found;
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
 	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
-	match_size += result;
+	match_size += (size_t)result;
 	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
 err_not_found:
 	err_regex_index_not_found((DeeObject *)self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReGroups *groups;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regindex"), &exec))
+		goto err;
+	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!groups)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
+	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		goto err_not_found;
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += (size_t)result;
+	groups->rg_groups[0].rm_so = (size_t)result;
+	groups->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)groups;
+err_not_found:
+	err_regex_index_not_found((DeeObject *)self);
+err_g:
+	ReGroups_Free(groups);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regrindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReGroups *groups;
+	Dee_ssize_t result;
+	size_t match_size;
+	struct DeeRegexExecWithRange exec;
+	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrindex"), &exec))
+		goto err;
+	groups = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
+	if unlikely(!groups)
+		goto err;
+	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
+	exec.rewr_exec.rx_pmatch = groups->rg_groups + 1;
+	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH)
+		goto err_not_found;
+	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)result);
+	result     = string_bytecnt2charcnt(self, (size_t)result, (char const *)exec.rewr_exec.rx_inbase);
+	match_size += (size_t)result;
+	groups->rg_groups[0].rm_so = (size_t)result;
+	groups->rg_groups[0].rm_eo = match_size;
+	ReGroups_Init(groups, 1 + exec.rewr_exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)groups;
+err_not_found:
+	err_regex_index_not_found((DeeObject *)self);
+err_g:
+	ReGroups_Free(groups);
 err:
 	return NULL;
 }
@@ -9851,6 +10013,9 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_findall(String *__restrict self,
                   struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_reg_findall(String *__restrict self,
+                  struct DeeRegexBaseExec const *__restrict exec);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_locateall(String *__restrict self,
                     struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -9905,6 +10070,16 @@ string_refindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("refindall"), &exec))
 		goto err;
 	return string_re_findall(self, &exec);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_regfindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct DeeRegexBaseExec exec;
+	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("regfindall"), &exec))
+		goto err;
+	return string_reg_findall(self, &exec);
 err:
 	return NULL;
 }
@@ -11749,10 +11924,77 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	  TYPE_METHOD_FKWDS },
-	/* TODO: regmatch(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint
-	 * -> Returns all of the matched group offsets, with the first element of the
-	 *    returned sequence describing the overall match itself. When nothing was
-	 *    matched, returns an empty sequence. */
+
+	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
+	{ "regmatch",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regmatch,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	      "Similar to ?#rematch, but rather than only return the number of characters that "
+	      /**/ "were matched by the regular expression as a whole, return a sequence of start-/end-"
+	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	      "When nothing was matched, an empty sequence is returned.\n"
+	      "Example:"
+	      "${"
+	      /**/ "local groups = \"foo bar foobar\".regmatch(r\"fo(o) (bar) fo(o?bar)\");\n"
+	      /**/ "assert groups == {\n"
+	      /**/ "	{0, 14},  /* Whole match */"
+	      /**/ "	{2, 3},   /* \"o\" */"
+	      /**/ "	{4, 7},   /* \"bar\" */"
+	      /**/ "	{10, 14}, /* \"obar\" */"
+	      /**/ "};"
+	      "}\n"
+	      "Note that (if something was matched), this function still only matches at the "
+	      "start of @this ?{.}. If you want to search for @pattern and get the offsets of "
+	      "all of the matched groups, you should use ?#regfind instead."),
+	  TYPE_METHOD_FKWDS },
+	{ "regfind",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regfind,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	      "Similar to ?#refind, but rather than only return the character-range "
+	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	  TYPE_METHOD_FKWDS },
+	{ "regrfind",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrfind,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	      "Similar to ?#rerfind, but rather than only return the character-range "
+	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	  TYPE_METHOD_FKWDS },
+	{ "regfindall",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regfindall,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?T2?Dint?Dint\n"
+	      "Similar to ?#refindall, but rather than only return the character-ranges "
+	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	  TYPE_METHOD_FKWDS },
+	{ "regindex",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regindex,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	      "@throw ValueError The given @pattern is malformed\n"
+	      "@throw IndexError No substring matching the given @pattern could be found\n"
+	      "Same as ?#regfind, but throw an :IndexError when no match can be found"),
+	  TYPE_METHOD_FKWDS },
+	{ "regrindex",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrindex,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	      "@throw ValueError The given @pattern is malformed\n"
+	      "@throw IndexError No substring matching the given @pattern could be found\n"
+	      "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
+	  TYPE_METHOD_FKWDS },
 
 	/* TODO: case-insensitive regex functions (e.g. "recasematch") */
 

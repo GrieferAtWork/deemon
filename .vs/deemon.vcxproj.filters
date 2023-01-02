@@ -384,6 +384,9 @@
     <ClInclude Include="..\include\deemon\regex.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">
@@ -897,6 +900,9 @@
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\unicode\regex.c">
+      <Filter>src\deemon\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\regroups.c">
       <Filter>src\deemon\objects\unicode</Filter>
     </ClCompile>
   </ItemGroup>

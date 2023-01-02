@@ -167,6 +167,7 @@
     <ClInclude Include="..\src\deemon\objects\seq\varkwds.h" />
     <ClInclude Include="..\src\deemon\objects\seq_functions.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\codec.h" />
+    <ClInclude Include="..\src\deemon\objects\unicode\regroups.h" />
     <ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
     <ClInclude Include="..\src\deemon\runtime\builtin.h" />
     <ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
@@ -322,6 +323,7 @@
     <ClCompile Include="..\src\deemon\objects\unicode\cscanf.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\format.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\regex.c" />
+    <ClCompile Include="..\src\deemon\objects\unicode\regroups.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\string_functions.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\unicode.c" />
     <ClCompile Include="..\src\deemon\objects\unicode\unicode_db.c" />

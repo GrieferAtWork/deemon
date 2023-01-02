@@ -22,8 +22,16 @@
 import * from deemon;
 import * from errors;
 
-#define re_match(pattern, input)        (input).rematch(pattern)
-#define re_match_g(pattern, input, ...) (input).rematch(pattern) // TODO: Assert groups
+#define re_match(pattern, input) \
+	(input).rematch(pattern)
+
+#define REGMATCH(so, eo) { so, eo }
+function re_match_g(pattern: string, input: string, groups: {(int, int)...}): int {
+	local result = input.regmatch(pattern);
+	assert result[1:] == groups;
+	return result.first[1];
+}
+
 
 /* Test some regular expressions */
 assert re_match(r"abc", "abc") == 3;
@@ -111,14 +119,12 @@ assert re_match(r"\N", "\nfoo") is none;
 
 /* Ensure that character sets work in both ASCII and UTF-8 mode. */
 //TODO:assert re_match(r"[[:hex:]]+", "abcdefABCDEF_") == 12;
-//TODO:assert re_match_syntax(r"[[:hex:]]+", "abcdefABCDEF_", RE_SYNTAX_NO_UTF8) == 12;
 //TODO:assert re_match(r"[[:hex:]]+", "_abcdefABCDEF") is none;
-//TODO:assert re_match_syntax(r"[[:hex:]]+", "_abcdefABCDEF", RE_SYNTAX_NO_UTF8) is none;
 //TODO:assert re_match(r"[[:hex:]ä]+", "äabcdefABCDEF_") == 14;
 assert re_match(r"[^[:lower:]Ä]+", "FOOÄBAR") == 3;
 assert re_match(r"[^[:lower:]]+", "FOOÄBAR") == 7;
 
-//TODO:/* Byte-escapes must work properly (even in utf-8 mode) */
+//TODO:/* Byte-escapes must work properly */
 //TODO:assert re_match(r"\xAB\xCD", "\xAB\xCD\xCD\xEF".bytes()) == 2;
 //TODO:assert re_match(r"\xAB\xCD+", "\xAB\xCD\xCD\xEF".bytes()) == 3;
 //TODO:assert re_match(r"[\xAB\xCD]", "\xAB\xCD\xCD\xEF".bytes()) == 1;
