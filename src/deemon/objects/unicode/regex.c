@@ -871,7 +871,7 @@ DeeString_DestroyRegex(DeeStringObject *__restrict self) {
  * @param: rules:         When non-NULL, a string containing extra rules
  *                        that are or'd into `compile_flags'. For this purpose,
  *                        each character from `rules' is parsed as a flag:
- *                        - (No extra rules have been defined, yet)
+ *                        - "i": DEE_REGEX_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
@@ -881,8 +881,29 @@ DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
 	struct DeeRegexCode *result;
 	struct regex_cache_entry *first_dummy;
 	dhash_t i, perturb, hash;
-	(void)rules; /* TODO? */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
+
+	/* Parse `rules' (if given) */
+	if (rules != NULL) {
+		char const *iter;
+		DeeObject_AssertTypeExact(rules, &DeeString_Type);
+		iter = DeeString_STR(rules);
+again_rules_iter:
+		switch (*iter++) {
+
+		case 'i':
+			compile_flags |= DEE_REGEX_COMPILE_ICASE;
+			goto again_rules_iter;
+
+		case '\0':
+			break;
+
+		default:
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Invalid regex rules string flag %:1q",
+			                iter - 1);
+		}
+	}
 
 	/* Lookup regex in cache */
 	hash = regex_cache_entry_hashstr(self);

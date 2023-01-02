@@ -69,7 +69,7 @@ struct DeeRegexCode {
  * @param: rules:         When non-NULL, a string containing extra rules
  *                        that are or'd into `compile_flags'. For this purpose,
  *                        each character from `rules' is parsed as a flag:
- *                        - (No extra rules have been defined, yet)
+ *                        - "i": DEE_REGEX_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
