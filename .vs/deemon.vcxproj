@@ -433,6 +433,9 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" 
     <None Include="..\src\deemon\objects\unicode\bytes_functions.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_segments.c.inl" />
     <None Include="..\src\deemon\objects\unicode\bytes_split.c.inl" />
+    <None Include="..\src\deemon\objects\unicode\db\.gitignore" />
+    <None Include="..\src\deemon\objects\unicode\db\ctype.dee" />
+    <None Include="..\src\deemon\objects\unicode\db\db.dat" />
     <None Include="..\src\deemon\objects\unicode\finder.c.inl" />
     <None Include="..\src\deemon\objects\unicode\makedb\makedb.dee" />
     <None Include="..\src\deemon\objects\unicode\ordinals.c.inl" />

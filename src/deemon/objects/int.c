@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2022 Griefer@Work                                       *
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2022 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1377,7 +1377,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				/* All any kind of digit/decimal character. - If the caller doesn't
 				 * want to support any kind of digit, have `int("²")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
-				 * decimals by using `string.isdecimal()'. As far as this check is
+				 * decimals by using `string.isdigit()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */
 				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;

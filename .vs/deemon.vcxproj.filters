@@ -70,6 +70,9 @@
     <Filter Include="scripts\tut\assorted">
       <UniqueIdentifier>{adb38cab-17b1-4224-96d1-ed3d0d604675}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\deemon\objects\unicode\db">
+      <UniqueIdentifier>{49479c7d-b393-4569-8dd8-4c291c6c0243}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\deemon\api.h">
@@ -1246,6 +1249,15 @@
     </None>
     <None Include="..\src\deemon\objects\unicode\reproxy.c.inl">
       <Filter>src\deemon\objects\unicode</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\ctype.dee">
+      <Filter>src\deemon\objects\unicode\db</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\db.dat">
+      <Filter>src\deemon\objects\unicode\db</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\.gitignore">
+      <Filter>src\deemon\objects\unicode\db</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
