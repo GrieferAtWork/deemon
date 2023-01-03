@@ -602,20 +602,16 @@ INTDEF DeeSTypeObject  DeeCLDouble_Type;
 
 
 
-#if (CONFIG_CTYPES_SIZEOF_CHAR == 1 && \
-     CONFIG_CTYPES_ALIGNOF_CHAR == 1)
+#if CONFIG_CTYPES_SIZEOF_CHAR == 1 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT8__
 #define DeeCSChar_Type  DeeCInt8_Type
 #define DeeCUChar_Type  DeeCUInt8_Type
-#elif (CONFIG_CTYPES_SIZEOF_CHAR == 2 && \
-       CONFIG_CTYPES_ALIGNOF_CHAR == 2)
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 2 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT16__
 #define DeeCSChar_Type  DeeCInt16_Type
 #define DeeCUChar_Type  DeeCUInt16_Type
-#elif (CONFIG_CTYPES_SIZEOF_CHAR == 4 && \
-       CONFIG_CTYPES_ALIGNOF_CHAR == 4)
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 4 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT32__
 #define DeeCSChar_Type  DeeCInt32_Type
 #define DeeCUChar_Type  DeeCUInt32_Type
-#elif (CONFIG_CTYPES_SIZEOF_CHAR == 8 && \
-       CONFIG_CTYPES_ALIGNOF_CHAR == 8)
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 8 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT64__
 #define DeeCSChar_Type  DeeCInt64_Type
 #define DeeCUChar_Type  DeeCUInt64_Type
 #else /* ... */
@@ -624,20 +620,16 @@ INTDEF DeeSTypeObject   DeeCSChar_Type;
 INTDEF DeeSTypeObject   DeeCUChar_Type;
 #endif /* !... */
 
-#if (CONFIG_CTYPES_SIZEOF_SHORT == 1 && \
-     CONFIG_CTYPES_ALIGNOF_SHORT == 1)
+#if CONFIG_CTYPES_SIZEOF_SHORT == 1 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT8__
 #define DeeCShort_Type  DeeCInt8_Type
 #define DeeCUShort_Type DeeCUInt8_Type
-#elif (CONFIG_CTYPES_SIZEOF_SHORT == 2 && \
-       CONFIG_CTYPES_ALIGNOF_SHORT == 2)
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 2 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT16__
 #define DeeCShort_Type  DeeCInt16_Type
 #define DeeCUShort_Type DeeCUInt16_Type
-#elif (CONFIG_CTYPES_SIZEOF_SHORT == 4 && \
-       CONFIG_CTYPES_ALIGNOF_SHORT == 4)
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 4 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT32__
 #define DeeCShort_Type  DeeCInt32_Type
 #define DeeCUShort_Type DeeCUInt32_Type
-#elif (CONFIG_CTYPES_SIZEOF_SHORT == 8 && \
-       CONFIG_CTYPES_ALIGNOF_SHORT == 8)
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 8 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT64__
 #define DeeCShort_Type  DeeCInt64_Type
 #define DeeCUShort_Type DeeCUInt64_Type
 #else /* ... */
@@ -646,20 +638,16 @@ INTDEF DeeSTypeObject   DeeCShort_Type;
 INTDEF DeeSTypeObject   DeeCUShort_Type;
 #endif /* !... */
 
-#if (CONFIG_CTYPES_SIZEOF_INT == 1 && \
-     CONFIG_CTYPES_ALIGNOF_INT == 1)
+#if CONFIG_CTYPES_SIZEOF_INT == 1 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT8__
 #define DeeCInt_Type    DeeCInt8_Type
 #define DeeCUInt_Type   DeeCUInt8_Type
-#elif (CONFIG_CTYPES_SIZEOF_INT == 2 && \
-       CONFIG_CTYPES_ALIGNOF_INT == 2)
+#elif CONFIG_CTYPES_SIZEOF_INT == 2 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT16__
 #define DeeCInt_Type    DeeCInt16_Type
 #define DeeCUInt_Type   DeeCUInt16_Type
-#elif (CONFIG_CTYPES_SIZEOF_INT == 4 && \
-       CONFIG_CTYPES_ALIGNOF_INT == 4)
+#elif CONFIG_CTYPES_SIZEOF_INT == 4 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT32__
 #define DeeCInt_Type    DeeCInt32_Type
 #define DeeCUInt_Type   DeeCUInt32_Type
-#elif (CONFIG_CTYPES_SIZEOF_INT == 8 && \
-       CONFIG_CTYPES_ALIGNOF_INT == 8)
+#elif CONFIG_CTYPES_SIZEOF_INT == 8 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT64__
 #define DeeCInt_Type    DeeCInt64_Type
 #define DeeCUInt_Type   DeeCUInt64_Type
 #else /* ... */
@@ -668,20 +656,16 @@ INTDEF DeeSTypeObject   DeeCInt_Type;
 INTDEF DeeSTypeObject   DeeCUInt_Type;
 #endif /* !... */
 
-#if (CONFIG_CTYPES_SIZEOF_LONG == 1 && \
-     CONFIG_CTYPES_ALIGNOF_LONG == 1)
+#if CONFIG_CTYPES_SIZEOF_LONG == 1 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT8__
 #define DeeCLong_Type   DeeCInt8_Type
 #define DeeCULong_Type  DeeCUInt8_Type
-#elif (CONFIG_CTYPES_SIZEOF_LONG == 2 && \
-       CONFIG_CTYPES_ALIGNOF_LONG == 2)
+#elif CONFIG_CTYPES_SIZEOF_LONG == 2 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT16__
 #define DeeCLong_Type   DeeCInt16_Type
 #define DeeCULong_Type  DeeCUInt16_Type
-#elif (CONFIG_CTYPES_SIZEOF_LONG == 4 && \
-       CONFIG_CTYPES_ALIGNOF_LONG == 4)
+#elif CONFIG_CTYPES_SIZEOF_LONG == 4 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT32__
 #define DeeCLong_Type   DeeCInt32_Type
 #define DeeCULong_Type  DeeCUInt32_Type
-#elif (CONFIG_CTYPES_SIZEOF_LONG == 8 && \
-       CONFIG_CTYPES_ALIGNOF_LONG == 8)
+#elif CONFIG_CTYPES_SIZEOF_LONG == 8 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT64__
 #define DeeCLong_Type   DeeCInt64_Type
 #define DeeCULong_Type  DeeCUInt64_Type
 #else /* ... */
@@ -690,20 +674,16 @@ INTDEF DeeSTypeObject   DeeCLong_Type;
 INTDEF DeeSTypeObject   DeeCULong_Type;
 #endif /* !... */
 
-#if (CONFIG_CTYPES_SIZEOF_LLONG == 1 && \
-     CONFIG_CTYPES_ALIGNOF_LLONG == 1)
+#if CONFIG_CTYPES_SIZEOF_LLONG == 1 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT8__
 #define DeeCLLong_Type  DeeCInt8_Type
 #define DeeCULLong_Type DeeCUInt8_Type
-#elif (CONFIG_CTYPES_SIZEOF_LLONG == 2 && \
-       CONFIG_CTYPES_ALIGNOF_LLONG == 2)
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 2 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT16__
 #define DeeCLLong_Type  DeeCInt16_Type
 #define DeeCULLong_Type DeeCUInt16_Type
-#elif (CONFIG_CTYPES_SIZEOF_LLONG == 4 && \
-       CONFIG_CTYPES_ALIGNOF_LLONG == 4)
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 4 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT32__
 #define DeeCLLong_Type  DeeCInt32_Type
 #define DeeCULLong_Type DeeCUInt32_Type
-#elif (CONFIG_CTYPES_SIZEOF_LLONG == 8 && \
-       CONFIG_CTYPES_ALIGNOF_LLONG == 8)
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 8 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT64__
 #define DeeCLLong_Type  DeeCInt64_Type
 #define DeeCULLong_Type DeeCUInt64_Type
 #else /* ... */
