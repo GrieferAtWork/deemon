@@ -36,7 +36,7 @@ for (local l: File.stdin) {
 			local value = l[a:e];
 			value = try
 				(convert(x.partition("=")[0], int(value, 16)) & 0xffffff)
-					.hex()[2:].zfill(6).upper()
+					.tostr(16, 6, "X")
 			catch (...) value;
 			l = l[:a] + value + l[e:];
 		}
