@@ -183,14 +183,36 @@ assert re_match_unicode(r"[\u{7E 7F}]+", "\x7E\x7Fxxxxxxxxxxxxxxxxx") == 2;
 /* Test some of the more advanced regex functions */
 assert "x".refind(r"[[:lower:]]") == (0, 1);
 assert "x".rerfind(r"[[:lower:]]") == (0, 1);
-assert "x".rereplace(r"[[:lower:]]", r"(&&&)") == "(xxx)";
+assert "xyz".rereplace(r"[[:lower:]]", r"(&-&-&)") == "(x-x-x)(y-y-y)(z-z-z)";
+assert "xyz".rereplace(r"[[:lower:]]*", r"(&-&-&)") == "(xyz-xyz-xyz)";
 assert "foo bar".refind(r"[[:lower:]]") == (0, 1);
 assert "foo bar".rerfind(r"[[:lower:]]") == (6, 7);
 assert "foo bar".rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)";
+assert "foo bar".rereplace(r"[[:lower:]]*", r"(&)") == "(foo) (bar)";
+assert "foo bar".rereplace(r"[[:lower:]]+", r"(&)") == "(foo) (bar)";
+assert "foo bar".bytes().rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)".bytes();
+assert "foo bar".bytes().rereplace(r"[[:lower:]]*", r"(&)") == "(foo) (bar)".bytes();
+assert "foo bar".bytes().rereplace(r"[[:lower:]]+", r"(&)") == "(foo) (bar)".bytes();
+assert "foo bar".refindall(r"[[:lower:]]*") == { (0, 3), (4, 7) };
+assert "foo bar".refindall(r"[[:lower:]]+") == { (0, 3), (4, 7) };
+assert "foo bar".bytes().refindall(r"[[:lower:]]*") == { (0, 3), (4, 7) };
+assert "foo bar".bytes().refindall(r"[[:lower:]]+") == { (0, 3), (4, 7) };
 
 assert "10 , 20,30 40, 50".resplit(r"[[:space:],]+") == { "10", "20", "30", "40", "50" };
+assert "10 , 20,30 40, 50".resplit(r"[[:space:],]*") == { "10", "20", "30", "40", "50" };
+assert "10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]+") ==
+	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() };
+assert "10 , 20,30 40, 50".bytes().resplit(r"[[:space:],]*") ==
+	{ "10".bytes(), "20".bytes(), "30".bytes(), "40".bytes(), "50".bytes() };
 
 assert "foo bar foobar".regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)") == {
+	{0, 14},  /* Whole match */
+	{2, 3},   /* "o" */
+	{4, 7},   /* "bar" */
+	none,     /* never matched: "x" */
+	{10, 14}, /* "obar" */
+};
+assert "foo bar foobar".bytes().regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)") == {
 	{0, 14},  /* Whole match */
 	{2, 3},   /* "o" */
 	{4, 7},   /* "bar" */

@@ -9957,13 +9957,11 @@ string_rereplace(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		Dee_ssize_t match_offset;
 		size_t match_size;
 		memsetp(groups, (void *)(uintptr_t)(size_t)-1, 2 * 9);
-		match_offset = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		match_offset = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 		if unlikely(match_offset == DEE_RE_STATUS_ERROR)
 			goto err;
 		if (match_offset == DEE_RE_STATUS_NOMATCH)
 			break;
-		if unlikely(match_size == 0)
-			break; /* Prevent infinite loop when epsilon was matched. */
 		/* Flush until start-of-match. */
 		if unlikely(unicode_printer_printutf8(&printer,
 		                                      (char const *)exec.rx_inbase + exec.rx_startoff,
@@ -10320,13 +10318,11 @@ string_recount(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	for (;;) {
 		Dee_ssize_t result;
 		size_t match_size;
-		result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
 		if (result == DEE_RE_STATUS_NOMATCH)
 			break;
-		if unlikely(match_size == 0)
-			break; /* Prevent infinite loop when epsilon is matched. */
 		++count;
 		exec.rx_startoff = (size_t)result + match_size;
 		if (exec.rx_startoff >= exec.rx_endoff)
@@ -11707,7 +11703,8 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
-	      "pattern, with the sub-string matched by it then getting replaced by @replace\n"
+	      "pattern, with the sub-string matched by it then getting replaced by @replace.\n"
+	      "Locations where @pattern matches epsilon are not replaced\n"
 	      "Additionally, @replace may contain sed-like match sequences:\n"
 	      "#T{Expression|Description~"
 	      /**/ "#C{&}|Replaced with the entire sub-string matched by @pattern&"
@@ -11724,6 +11721,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
+	      "Locations where @pattern matches epsilon are not included in the returned sequence\n"
 	      "Note that the matches returned are ordered ascendingly"),
 	  TYPE_METHOD_FKWDS },
 	{ "relocateall",
@@ -11735,6 +11733,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "Similar to ?#relocate, but return a sequence of all matched "
 	      "sub-strings found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly\n"
+	      "Locations where @pattern matches epsilon are not included in the returned sequence\n"
 	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
 	  TYPE_METHOD_FKWDS },
 	{ "resplit",
@@ -11745,6 +11744,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to ?#split, but use a regular expression in order to "
 	      "express the sections of the ?. around which to perform the split\n"
+	      "Locations where @pattern matches epsilon do not trigger a split\n"
 
 	      "${"
 	      /**/ "local data = \"10 , 20,30 40, 50\";\n"
@@ -11815,7 +11815,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
 	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
-	      "If the pattern starts matching epsilon, counting is stopped"),
+	      "Instances where @pattern matches epsilon are not counted"),
 	  TYPE_METHOD_FKWDS },
 	{ "recontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,

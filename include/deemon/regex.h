@@ -137,6 +137,12 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Search(struct DeeRegexExec const *__restrict exec,
                 size_t search_range, size_t *p_match_size);
 
+/* Similar to `DeeRegex_Search()', but never matches epsilon.
+ * Instead, keep on searching if epsilon happens to be matched. */
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+DeeRegex_SearchNoEpsilon(struct DeeRegexExec const *__restrict exec,
+                         size_t search_range, size_t *p_match_size);
+
 /* Same as `DeeRegex_Search', but perform searching with starting
  * offsets in `[exec->rx_endoff - search_range, exec->rx_endoff)'
  * Too great values for `search_range' are automatically clamped.

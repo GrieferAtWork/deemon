@@ -652,6 +652,7 @@ EXPORTS
 	DeeRefVector_New@16=_DeeRefVector_New@16
 	DeeRegex_Match@4=_DeeRegex_Match@4
 	DeeRegex_Search@12=_DeeRegex_Search@12
+	DeeRegex_SearchNoEpsilon@12=_DeeRegex_SearchNoEpsilon@12
 	DeeRoDict_FromIterator@4=_DeeRoDict_FromIterator@4
 	DeeRoDict_FromIteratorWithHint@8=_DeeRoDict_FromIteratorWithHint@8
 	DeeRoDict_FromSequence@4=_DeeRoDict_FromSequence@4

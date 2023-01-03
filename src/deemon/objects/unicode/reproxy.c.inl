@@ -203,7 +203,7 @@ refaiter_bool(ReSequenceIterator *__restrict self) {
 	rwlock_read(&self->rsi_lock);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	return result != DEE_RE_STATUS_NOMATCH &&
@@ -221,7 +221,7 @@ again:
 	rwlock_read(&self->rsi_lock);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -252,7 +252,7 @@ again:
 	rwlock_read(&self->rsi_lock);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -479,7 +479,7 @@ again:
 	                      self->rsi_exec.rx_code->rc_ngrps,
 	                      groups->rg_groups + 1);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -523,7 +523,7 @@ again:
 	                      self->rsi_exec.rx_code->rc_ngrps,
 	                      groups->rg_groups + 1);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err_g;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -769,7 +769,7 @@ again:
 	rwlock_read(&self->rsi_lock);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -798,7 +798,7 @@ again:
 	rwlock_read(&self->rsi_lock);
 	DeeRegexBaseExec_Load(&self->rsi_exec, &exec, 0, NULL);
 	rwlock_endread(&self->rsi_lock);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	if (result == DEE_RE_STATUS_NOMATCH)
@@ -1011,7 +1011,7 @@ again:
 	rwlock_endread(&self->rsi_lock);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	rwlock_write(&self->rsi_lock);
@@ -1046,7 +1046,7 @@ again:
 	rwlock_endread(&self->rsi_lock);
 	if (!exec.rx_inbase)
 		return ITER_DONE;
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	rwlock_write(&self->rsi_lock);
@@ -1211,7 +1211,7 @@ refa_bool(ReSequence *__restrict self) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
 	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
-	result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 	if unlikely(result == DEE_RE_STATUS_ERROR)
 		goto err;
 	return result != DEE_RE_STATUS_NOMATCH &&
@@ -1262,7 +1262,7 @@ refa_nsi_getsize(ReSequence *__restrict self) {
 	DeeRegexBaseExec_Load(&self->rs_exec, &exec, 0, NULL);
 	/* Count the # of matches */
 	while (exec.rx_startoff < exec.rx_endoff) {
-		result = DeeRegex_Search(&exec, (size_t)-1, &match_size);
+		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 		if unlikely(result == DEE_RE_STATUS_ERROR)
 			goto err;
 		if (result == DEE_RE_STATUS_NOMATCH)
