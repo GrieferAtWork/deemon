@@ -4708,6 +4708,12 @@ err:
 }
 
 
+#ifndef CONFIG_HAVE_memsetp
+#define CONFIG_HAVE_memsetp
+#define memsetp(dst, pointer, num_pointers) \
+	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+DeeSystem_DEFINE_memsetp(dee_memsetp)
+#endif /* !CONFIG_HAVE_memsetp */
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {

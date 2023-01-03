@@ -127,9 +127,9 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define byte_t __BYTE_TYPE__
 
 /* Configure libregex */
+#undef LIBREGEX_WANT_PROTOTYPES
 #define LIBREGEX_NO_RE_CODE_DISASM
 #define LIBREGEX_NO_MALLOC_USABLE_SIZE /* TODO: Support for when this _is_ actually available */
-#define LIBREGEX_WANT_PROTOTYPES
 #define LIBREGEX_NO_SYSTEM_INCLUDES
 #define LIBREGEX_DECL INTDEF
 #define LIBREGEX_DEFINE___CTYPE_C_FLAGS
@@ -186,6 +186,9 @@ typedef Dee_ssize_t re_sregoff_t;
 
 #define __re_exec_defined
 #define re_exec DeeRegexExec
+
+#define re_compiler_yield(self)        re_parser_yield(&(self)->rec_parser)
+#define re_compiler_yieldat(self, pos) re_parser_yieldat(&(self)->rec_parser, pos)
 
 /* Hook functions */
 #undef __libc_bzero
