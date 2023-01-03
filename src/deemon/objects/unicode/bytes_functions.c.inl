@@ -1300,14 +1300,11 @@ bytes_hex(Bytes *self, size_t argc,
 	dst = DeeString_STR(result);
 	for (i = 0; i < end; ++i) {
 		uint8_t byte = data[i];
-		uint8_t nibble;
 #ifndef CONFIG_NO_THREADS
 		COMPILER_READ_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
-		nibble = byte >> 4;
-		*dst++ = nibble >= 10 ? (char)('a' + (nibble - 10)) : (char)('0' + nibble);
-		byte &= 0xf;
-		*dst++ = nibble >= 10 ? (char)('a' + (byte - 10)) : (char)('0' + byte);
+		*dst++ = DeeAscii_ItoaLowerDigit(byte >> 4);
+		*dst++ = DeeAscii_ItoaLowerDigit(byte & 0xf);
 	}
 	ASSERT(dst == DeeString_END(result));
 	return (DREF DeeObject *)result;
@@ -1604,7 +1601,7 @@ DEFINE_ANY_BYTES_TRAIT(isanyascii, DeeBytes_IsAnyAscii)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t ch;
+	uint8_t ch, digit;
 	DeeObject *defl = NULL;
 	if (argc == 0) {
 		if unlikely(DeeBytes_SIZE(self) != 1)
@@ -1621,8 +1618,9 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		}
 		ch = DeeBytes_DATA(self)[index];
 	}
-	if likely(ch >= '0' && ch <= '9')
-		return DeeInt_NewU8((uint8_t)(ch - '0'));
+	digit = DeeUni_AsDigitVal(ch);
+	if likely(digit < 10)
+		return DeeInt_NewU8(digit);
 	if (defl)
 		return_reference_(defl);
 	DeeError_Throwf(&DeeError_ValueError,
@@ -1636,8 +1634,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_asnumeric(Bytes *self, size_t argc, DeeObject *const *argv) {
-	uint8_t ch;
+bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
+	uint8_t ch, digit;
 	DeeObject *defl = NULL;
 	if (argc == 0) {
 		if unlikely(DeeBytes_SIZE(self) != 1)
@@ -1645,7 +1643,7 @@ bytes_asnumeric(Bytes *self, size_t argc, DeeObject *const *argv) {
 		ch = DeeBytes_DATA(self)[0];
 	} else {
 		size_t index;
-		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asnumeric", &index, &defl))
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asxdigit", &index, &defl))
 			goto err;
 		if unlikely(index >= DeeBytes_SIZE(self)) {
 			err_index_out_of_bounds((DeeObject *)self, index,
@@ -1654,12 +1652,13 @@ bytes_asnumeric(Bytes *self, size_t argc, DeeObject *const *argv) {
 		}
 		ch = DeeBytes_DATA(self)[index];
 	}
-	if likely(ch >= '0' && ch <= '9')
-		return DeeInt_NewU8((uint8_t)(ch - '0'));
+	digit = DeeUni_AsDigitVal(ch);
+	if likely(digit != 0xff)
+		return DeeInt_NewU8(digit);
 	if (defl)
 		return_reference_(defl);
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Unicode character %I8C isn't a digit",
+	                "Unicode character %I8C isn't a hex-digit",
 	                ch);
 	goto err;
 err_not_single_char:
@@ -1667,7 +1666,6 @@ err_not_single_char:
 err:
 	return NULL;
 }
-
 
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_lower(Bytes *__restrict self, size_t argc,
@@ -5315,7 +5313,7 @@ INTERN struct type_method tpconst bytes_methods[] = {
 #undef DEFINE_ANY_BYTES_TRAIT_EX
 
 	{ "asnumeric",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asnumeric,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdigit,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The string is longer than a single character\n"
 	      "(index:?Dint)->?Dint\n"
@@ -5336,6 +5334,17 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Returns the digit value of the byte at the specific index") },
+	{ "asxdigit",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asxdigit,
+	  DOC("->?Dint\n"
+	      "@throw ValueError The string is longer than a single character\n"
+	      "(index:?Dint)->?Dint\n"
+	      "@throw ValueError The character at @index isn't numeric\n"
+	      "(index:?Dint,defl:?Dint)->?Dint\n"
+	      "(index:?Dint,defl)->\n"
+	      "@throw IntegerOverflow The given @index is negative or too large\n"
+	      "@throw IndexError The given @index is out of bounds\n"
+	      "Same as ?#asdigit, but also accepts #C{a-f} and #C{A-F}") },
 
 	/* Bytes conversion functions */
 	{ "lower",

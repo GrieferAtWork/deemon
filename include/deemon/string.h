@@ -2268,7 +2268,7 @@ DFUNDEF NONNULL((2)) size_t
 #define _DeeAscii_ToTitle(ch) _DeeAscii_ToUpper(ch)
 
 /* Lookup table for the numerical hex-value of ascii characters.
- * Bytes that can't be used as hex-characters yield `0xff' here. */
+ * Bytes that can't be used as hex-characters yield some value >= 16. */
 DDATDEF uint8_t const _DeeAscii_HexValue[256];
 #define _DeeAscii_GetNumeric8(ch) _DeeAscii_HexValue[(uint8_t)(ch)]
 
@@ -2389,6 +2389,18 @@ LOCAL ATTR_CONST WUNUSED uint8_t DCALL _DeeUni_FastGetDigit8(uint32_t ch) {
 	return traits->ut_digit_idx;
 }
 #endif /* !CONFIG_HAVE_UNICODE_H */
+
+
+DDATDEF char const _DeeAscii_Itoa[101];
+/* >> char DeeAscii_ItoaDigit(bool upper, uint8_t digit); */
+#define DeeAscii_ItoaDigit(upper, digit) \
+	_DeeAscii_Itoa[(digit) + (!!(upper) << 6)]
+#define DeeAscii_ItoaDigits(upper)     (&_DeeAscii_Itoa[(!!(upper) << 6)])
+#define DeeAscii_ItoaLowerDigit(digit) DeeAscii_ItoaDigit(0, digit)
+#define DeeAscii_ItoaUpperDigit(digit) DeeAscii_ItoaDigit(1, digit)
+
+
+
 
 #define DeeUniTrait_AsDigit(traits, radix, presult) \
 	((*(presult) = _DeeUniTrait_FastGetDigit(traits)) < (radix))

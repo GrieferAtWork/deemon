@@ -858,10 +858,11 @@ get_port_name(char const *__restrict port, size_t port_length,
 	if unlikely(!port_length)
 		goto invalid_port;
 	do {
+		uint8_t digit;
 		char ch = *iter++;
-		if unlikely(!(ch >= '0' && ch <= '9'))
+		if unlikely(!DeeUni_AsDigit(ch, 10, &digit))
 			goto invalid_port;
-		new_result = result * 10 + (ch - '0');
+		new_result = result * 10 + digit;
 		if unlikely(new_result < result)
 			goto invalid_port;
 		result = new_result;

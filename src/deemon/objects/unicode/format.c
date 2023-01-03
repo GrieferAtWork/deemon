@@ -95,23 +95,19 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 			dssize_t new_index, index = ch - '0';
 			ch = *index_end;
 			if (ch == '0') {
-				if (ch == 'b' || ch == 'B')
-					radix = 2, ++index_end;
-				else if (ch == 'x' || ch == 'X')
-					radix = 16, ++index_end;
-				else {
+				if (ch == 'b' || ch == 'B') {
+					radix = 2;
+					++index_end;
+				} else if (ch == 'x' || ch == 'X') {
+					radix = 16;
+					++index_end;
+				} else {
 					radix = 8;
 				}
 			}
 			for (;;) {
 				ch = *index_end;
-				if (ch >= '0' && ch <= '9')
-					value = ch - '0';
-				else if (ch >= 'a' && ch <= 'f')
-					value = 10 + (ch - 'a');
-				else if (ch >= 'A' && ch <= 'F')
-					value = 10 + (ch - 'A');
-				else {
+				if (!DeeUni_AsDigit(ch, 16, &value)) {
 					/* Check for symbol characters not recognized in numbers. */
 					if unlikely(DeeUni_IsSymCont(ch))
 						goto do_variable_length_index;

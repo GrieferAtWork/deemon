@@ -930,12 +930,10 @@ prefix_except_prefix:
 			if unlikely(num_bytes > INSTRLEN_MAX)
 				num_bytes = INSTRLEN_MAX;
 			for (i = 0; i < num_bytes; ++i) {
-				uint8_t byte;
+				uint8_t byte = iter[i];
+				bytes[(i * 3) + 0] = DeeAscii_ItoaUpperDigit(byte >> 4);
+				bytes[(i * 3) + 1] = DeeAscii_ItoaUpperDigit(byte & 0xf);
 				bytes[(i * 3) + 2] = ' ';
-				byte               = iter[i] & 0x0f;
-				bytes[(i * 3) + 1] = (char)(byte >= 10 ? 'A' + (byte - 10) : '0' + byte);
-				byte               = iter[i] >> 4;
-				bytes[(i * 3) + 0] = (char)(byte >= 10 ? 'A' + (byte - 10) : '0' + byte);
 			}
 			i = MIN(num_bytes, (size_t)LINE_MAXBYTES);
 			print(bytes, i * 3);

@@ -1634,6 +1634,45 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_asxdigit(String *self, size_t argc, DeeObject *const *argv) {
+	uint32_t ch;
+	DeeObject *defl = NULL;
+	struct unitraits *trt;
+	if (argc == 0) {
+		if unlikely(DeeString_WLEN(self) != 1)
+			goto err_not_single_char;
+		ch = DeeString_GetChar(self, 0);
+	} else {
+		size_t index;
+		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:asxdigit", &index, &defl))
+			goto err;
+		if unlikely(index >= DeeString_WLEN(self)) {
+			err_index_out_of_bounds((DeeObject *)self, index,
+			                        DeeString_WLEN(self));
+			goto err;
+		}
+		ch = DeeString_GetChar(self, index);
+	}
+	trt = DeeUni_Descriptor(ch);
+	if (!(trt->ut_flags & UNICODE_ISXDIGIT))
+		goto err_not_numeric;
+	if likely(trt->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
+		return DeeInt_NewU8(trt->ut_digit_idx);
+	return DeeInt_NewU64(DeeUni_GetNumericIdx64(trt->ut_digit_idx));
+err_not_numeric:
+	if (defl)
+		return_reference_(defl);
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Unicode character %I32C is not a digit",
+	                ch);
+	goto err;
+err_not_single_char:
+	err_expected_single_character_string((DeeObject *)self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_asnumeric(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
@@ -10654,6 +10693,17 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Same as ?#asnumeric, but only succeed if the selected character matches ?#isdigit, rather than ?#isnumeric") },
+	{ "asxdigit",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asxdigit,
+	  DOC("->?Dint\n"
+	      "@throw ValueError The string is longer than a single character\n"
+	      "(index:?Dint)->?Dint\n"
+	      "@throw ValueError The character at @index isn't numeric\n"
+	      "(index:?Dint,defl:?Dint)->?Dint\n"
+	      "(index:?Dint,defl)->\n"
+	      "@throw IntegerOverflow The given @index is negative or too large\n"
+	      "@throw IndexError The given @index is out of bounds\n"
+	      "Same as ?#asdigit, but also accepts #C{a-f} and #C{A-F}") },
 
 	/* String conversion */
 	{ "lower",

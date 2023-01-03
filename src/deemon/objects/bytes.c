@@ -1617,7 +1617,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst     = DeeBytes_DATA(result);
 		end.cp8 = iter.cp8 + length;
 		for (;;) {
-			uint8_t byte_value;
+			uint8_t byte_value, nibble;
 			uint8_t ch;
 			for (;;) {
 				if (iter.cp8 == end.cp8)
@@ -1627,28 +1627,15 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 				++iter.cp8;
 			}
 			ch = *iter.cp8++;
-			if (ch >= '0' && ch <= '9') {
-				byte_value = (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value = (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value = (uint8_t)(10 + (ch - 'A'));
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &byte_value))
 				goto err_invalid;
-			}
 			if (iter.cp8 == end.cp8)
 				goto err_unbalanced;
 			ch = *iter.cp8++;
-			byte_value <<= 4;
-			if (ch >= '0' && ch <= '9') {
-				byte_value |= (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value |= (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value |= (uint8_t)(10 + (ch - 'A'));
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &nibble))
 				goto err_invalid;
-			}
+			byte_value <<= 4;
+			byte_value |= nibble;
 			ASSERT(dst < DeeBytes_TERM(result));
 			*dst++ = byte_value;
 		}

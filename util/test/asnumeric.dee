@@ -41,9 +41,30 @@ assert DO("𝟵".asdigit()) == 9;
 assert DO("𝟿".asdigit()) == 9;
 assert DO("９".asdigit()) == 9;
 
+assert DO("9".asxdigit()) == 9;
+assert DO("𝟗".asxdigit()) == 9;
+assert DO("𝟡".asxdigit()) == 9;
+assert DO("𝟫".asxdigit()) == 9;
+assert DO("𝟵".asxdigit()) == 9;
+assert DO("𝟿".asxdigit()) == 9;
+assert DO("９".asxdigit()) == 9;
+
 assert DO("²".asdigit()) is ValueError;
 assert DO("²".asnumeric()) is int;
 assert DO("²".asnumeric()) == 2;
 assert DO("¼".asdigit()) is ValueError;
 assert DO("¼".asnumeric()) is float;
 assert DO("¼".asnumeric()) == 0.25;
+
+assert DO("A".asdigit()) is ValueError;
+assert DO("F".asdigit()) is ValueError;
+assert DO("A".asxdigit()) == 10;
+assert DO("F".asxdigit()) == 15;
+
+assert DO("9".bytes().asdigit()) == 9;
+assert DO("9".bytes().asxdigit()) == 9;
+assert DO("9".bytes().asnumeric()) == 9;
+assert DO("A".bytes().asdigit()) is ValueError;
+assert DO("F".bytes().asdigit()) is ValueError;
+assert DO("A".bytes().asxdigit()) == 10;
+assert DO("F".bytes().asxdigit()) == 15;

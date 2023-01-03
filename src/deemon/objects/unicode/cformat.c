@@ -81,13 +81,7 @@ union integral {
 };
 
 
-PRIVATE char const decimals[2][17] = {
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x' },
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' },
-};
-
 PRIVATE DEFINE_STRING(str_lpnullrp, "(null)");
-
 
 PRIVATE dssize_t DCALL
 print_repr_precision(DeeObject *__restrict self, size_t length,
@@ -238,8 +232,14 @@ do_prec_spec:
 					goto err_m1;
 			} else if (ch >= '0' && ch <= '9') {
 				precision = ch - '0';
-				while ((ch = *iter, ch >= '0' && ch <= '9'))
-					precision *= 10, precision += ch - '0', ++iter;
+				for (;;) {
+					ch = *iter;
+					if (!(ch >= '0' && ch <= '9'))
+						break;
+					precision *= 10;
+					precision += ch - '0';
+					++iter;
+				}
 			} else {
 				goto invalid_format;
 			}
@@ -414,11 +414,7 @@ do_length_integer:
 				}
 			}
 			/* Now we just need to print this integer. */
-#if F_UPPER == 1
-			dec = decimals[flags & F_UPPER];
-#else /* F_UPPER == 1 */
-			dec = decimals[!!(flags & F_UPPER)];
-#endif /* F_UPPER != 1 */
+			dec     = DeeAscii_ItoaDigits(flags & F_UPPER);
 			bufiter = COMPILER_ENDOF(buffer);
 			is_neg  = false;
 			if (flags & F_SIGNED && intval.int_s64 < 0) {
@@ -433,12 +429,13 @@ do_length_integer:
 			if (flags & F_PREFIX && radix != 10) {
 				if (radix == 16) {
 					++addend;
-					*--bufiter = dec[16]; /* X/x */
+					*--bufiter = dec[33]; /* X/x */
 				} else if (radix == 2) {
 					++addend;
 					*--bufiter = dec[11]; /* B/b */
 				}
-				++addend, *--bufiter = '0';
+				++addend;
+				*--bufiter = '0';
 			}
 			if (is_neg) {
 				++addend;
@@ -706,8 +703,14 @@ err_preprinter:
 			if ((ch >= '0' && ch <= '9') &&
 			    !(flags & F_HASWIDTH)) {
 				width = ch - '0';
-				while ((ch = *iter, ch >= '0' && ch <= '9'))
-					width *= 10, width += ch - '0', ++iter;
+				for (;;) {
+					ch = *iter;
+					if (!(ch >= '0' && ch <= '9'))
+						break;
+					width *= 10;
+					width += ch - '0';
+					++iter;
+				}
 				flags |= F_HASWIDTH;
 				goto next_spec;
 			}

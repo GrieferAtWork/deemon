@@ -1010,12 +1010,8 @@ int_from_nonbinary_string(char *__restrict begin,
 			char ch;
 parse_ch:
 			ch = *begin;
-			if (ch >= '0' && ch <= '9') {
-				dig = ch - '0';
-			} else if (ch >= 'a' && ch <= 'z') {
-				dig = 10 + (ch - 'a');
-			} else if (ch >= 'A' && ch <= 'Z') {
-				dig = 10 + (ch - 'A');
+			if (DeeUni_AsDigit(ch, 16, &dig)) {
+				/* ... */
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
@@ -1361,12 +1357,8 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			char ch;
 			digit dig;
 			ch = *--iter;
-			if (ch >= '0' && ch <= '9') {
-				dig = (digit)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'z') {
-				dig = 10 + (digit)(ch - 'a');
-			} else if (ch >= 'A' && ch <= 'Z') {
-				dig = 10 + (digit)(ch - 'A');
+			if (DeeUni_AsDigit(ch, 16, &dig)) {
+				/* ... */
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
@@ -1738,12 +1730,6 @@ err_pout:
 	goto done_pout;
 }
 
-PRIVATE char const int_digits[2][18] = {
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x', 'q' }, /* Lower */
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X', 'Q' }  /* Upper */
-};
-
-
 /* Print an integer to a given format-printer.
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
@@ -1765,7 +1751,7 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 		size_t bufsize, num_digits;
 		dssize_t result;
 		DeeIntObject *me;
-		char *digit_chars;
+		char const *digit_chars;
 		/* Power-of-2 radices. */
 	case 2:
 		dig_bits = 1;
@@ -1788,11 +1774,7 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 do_print:
 		me         = (DeeIntObject *)self;
 		num_digits = (size_t)me->ob_size;
-#if DEEINT_PRINT_FUPPER == 1
-		digit_chars = (char *)int_digits[radix_and_flags & DEEINT_PRINT_FUPPER];
-#else /* DEEINT_PRINT_FUPPER == 1 */
-		digit_chars = (char *)int_digits[(radix_and_flags & DEEINT_PRINT_FUPPER) ? 1 : 0];
-#endif /* DEEINT_PRINT_FUPPER != 1 */
+		digit_chars = DeeAscii_ItoaDigits(radix_and_flags & DEEINT_PRINT_FUPPER);
 		if ((dssize_t)num_digits <= 0) {
 			if (!num_digits) {
 				bufsize = 4;
@@ -1841,9 +1823,9 @@ do_print_prefix:
 		/* Print the numsys prefix. */
 		if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
 			if (dig_bits == 4)
-				*--iter = digit_chars[16]; /* x */
+				*--iter = digit_chars[33]; /* x */
 			if (dig_bits == 2)
-				*--iter = digit_chars[17]; /* q */
+				*--iter = digit_chars[25]; /* q */
 			if (dig_bits == 1)
 				*--iter = digit_chars[11]; /* b */
 			*--iter = '0';

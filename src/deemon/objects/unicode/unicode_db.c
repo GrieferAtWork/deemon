@@ -552,8 +552,12 @@ PUBLIC_CONST uint8_t const _DeeAscii_HexValue[256] = {
 };
 /* clang-format on */
 
-
 #endif /* !CONFIG_HAVE_UNICODE_H */
+
+PUBLIC_CONST char const _DeeAscii_Itoa[101] =
+"0123456789abcdefghijklmnopqrstuvwxyz\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
 
 DECL_END
 

@@ -157,11 +157,6 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 		result += temp;               \
 	}	__WHILE0
 
-PRIVATE char const decimals[2][17] = {
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x' },
-	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' }
-};
-
 PRIVATE NONNULL((1)) void DCALL
 format_cleanup(char const *__restrict format, va_list args) {
 	int length;
@@ -610,11 +605,7 @@ nextfmt:
 			data.u = va_arg(args, uint64_t);
 		}
 
-#if F_UPPER == 1
-		dec = decimals[flags & F_UPPER];
-#else /* F_UPPER == 1 */
-		dec = decimals[!!(flags & F_UPPER)];
-#endif /* F_UPPER != 1 */
+		dec    = DeeAscii_ItoaDigits(flags & F_UPPER);
 		is_neg = false;
 		if (flags & F_SIGNED && data.i < 0) {
 			is_neg = true;
@@ -627,7 +618,7 @@ nextfmt:
 		} while ((data.u /= numsys) != 0);
 		if (flags & F_PREFIX && numsys != 10) {
 			if (numsys == 16) {
-				*--iter = dec[16]; /* X/x */
+				*--iter = dec[33]; /* X/x */
 			} else if (numsys == 2) {
 				*--iter = dec[11]; /* B/b */
 			}
@@ -985,7 +976,7 @@ DeeFormat_Printf(dformatprinter printer, void *arg,
 
 
 
-#define tooct(c) ('0'+(char)(unsigned char)(c))
+#define tooct(c) ('0' + (char)(unsigned char)(c))
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text, size_t textlen,
@@ -997,7 +988,7 @@ DeeFormat_Quote8(dformatprinter printer, void *arg,
 	uint8_t const *iter, *end, *flush_start;
 	char const *c_hex;
 	end   = (iter = flush_start = text) + textlen;
-	c_hex = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
+	c_hex = DeeAscii_ItoaDigits(flags & FORMAT_QUOTE_FUPPERHEX);
 	encoded_text[0] = '\\';
 	if (!(flags & FORMAT_QUOTE_FPRINTRAW))
 		print("\"", 1);
@@ -1136,7 +1127,7 @@ DeeFormat_Quote16(dformatprinter printer, void *arg,
 	dssize_t result = 0, temp;
 	char const *c_hex;
 	size_t i;
-	c_hex           = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
+	c_hex = DeeAscii_ItoaDigits(flags & FORMAT_QUOTE_FUPPERHEX);
 	encoded_text[0] = '\\';
 	if (!(flags & FORMAT_QUOTE_FPRINTRAW))
 		print("\"", 1);
@@ -1280,7 +1271,7 @@ DeeFormat_Quote32(dformatprinter printer, void *arg,
 	dssize_t result = 0, temp;
 	char const *c_hex;
 	size_t i;
-	c_hex           = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
+	c_hex = DeeAscii_ItoaDigits(flags & FORMAT_QUOTE_FUPPERHEX);
 	encoded_text[0] = '\\';
 	if (!(flags & FORMAT_QUOTE_FPRINTRAW))
 		print("\"", 1);
@@ -1496,7 +1487,7 @@ DeeFormat_Quote(dformatprinter printer, void *arg,
 	dssize_t result = 0, temp;
 	char const *c_hex;
 	char const *textend = text + textlen;
-	c_hex               = decimals[!(flags & FORMAT_QUOTE_FUPPERHEX)];
+	c_hex = DeeAscii_ItoaDigits(flags & FORMAT_QUOTE_FUPPERHEX);
 	encoded_text[0]     = '\\';
 	if (!(flags & FORMAT_QUOTE_FPRINTRAW))
 		print("\"", 1);
