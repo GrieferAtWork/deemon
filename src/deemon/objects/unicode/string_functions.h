@@ -40,7 +40,7 @@
 
 DECL_BEGIN
 
-#define DeeUni_IsSign(x) ((x)=='+' || (x)=='-')
+#define DeeUni_IsSign(x) ((x) == '+' || (x) == '-')
 #define ASCII_SPACE    32 /* ' ' */
 #define ASCII_ZERO     48 /* '0' */
 #define ASCII_CR       13 /* '\r' */
@@ -66,7 +66,7 @@ DECL_BEGIN
 #define memrmemb(haystack, haystack_length, needle, needle_length) \
 	((uint8_t *)memrmem(haystack, haystack_length, needle, needle_length))
 
-/* Suplement non-standard <string.h> functions */
+/* Supplement non-standard <string.h> functions */
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr
 #undef memrchr

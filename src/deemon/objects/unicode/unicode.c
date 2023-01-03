@@ -197,7 +197,8 @@ err:
 }
 
 
-PUBLIC uint16_t *(DCALL DeeString_As2Byte)(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) uint16_t *
+(DCALL DeeString_As2Byte)(DeeObject *__restrict self) {
 	struct string_utf *utf;
 again:
 	utf = ((String *)self)->s_data;
@@ -242,7 +243,8 @@ err:
 	return NULL;
 }
 
-PUBLIC uint32_t *(DCALL DeeString_As4Byte)(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) uint32_t *
+(DCALL DeeString_As4Byte)(DeeObject *__restrict self) {
 	struct string_utf *utf;
 again:
 	utf = ((String *)self)->s_data;
@@ -301,7 +303,7 @@ err:
 
 
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
 DeeString_AsUtf8(DeeObject *__restrict self) {
 	struct string_utf *utf;
 	uint8_t *iter, *end;
@@ -388,7 +390,7 @@ err:
 	return NULL;
 }
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
 DeeString_TryAsUtf8(DeeObject *__restrict self) {
 	struct string_utf *utf;
 	uint8_t *iter, *end;
@@ -481,7 +483,7 @@ err:
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-PUBLIC uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ uint8_t *DCALL
 DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	struct string_utf *utf;
 	void *str;
@@ -586,7 +588,7 @@ err:
 
 
 
-PUBLIC uint16_t *DCALL
+PUBLIC WUNUSED NONNULL((1)) uint16_t *DCALL
 DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -782,7 +784,7 @@ Dee_unicode_printer_printstring(struct unicode_printer *__restrict self,
  *       is done, meaning that this is the preferred method of printing
  *       an object to a unicode printer.
  * NOTE: This optimization is also done when `DeeObject_Print' is used. */
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeString_PrintUtf8(DeeObject *__restrict self,
                     dformatprinter printer,
                     void *arg) {
@@ -895,7 +897,7 @@ err:
 
 /* Print the escape-encoded variant of `self'
  * @param: flags: Set of `FORMAT_QUOTE_F*' (from <deemon/format.h>) */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
                     dformatprinter printer,
                     void *arg, unsigned int flags) {
@@ -917,441 +919,39 @@ DeeString_PrintRepr(DeeObject *__restrict self,
 
 
 
-
-#if 0
-PRIVATE uint16_t *DCALL
-utf8_to_utf16(uint8_t *__restrict str, size_t length) {
-	uint16_t *result, *dst;
-	size_t i;
-	result = DeeString_New2ByteBuffer(length);
-	if unlikely(!result)
-		goto err;
-	dst = result;
-	i   = 0;
-	while (i < length) {
-		uint8_t ch    = str[i];
-		uint8_t chlen = utf8_sequence_len[ch];
-		uint32_t ch32;
-		if ((size_t)chlen > length - i) {
-			*dst++ = '?';
-			++i;
-			continue;
-		}
-		switch (chlen) {
-
-		case 0: /* Just to safely deal with this type of error... */
-			*dst++ = '?';
-			++i;
-			continue;
-
-		case 1:
-			*dst++ = ch;
-			++i;
-			continue;
-
-		case 2:
-			if likely((str[i + 1] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x1f) << 6;
-				ch32 |= (str[i + 1] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 2;
-			break;
-
-		case 3:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x0f) << 12;
-				ch32 |= (str[i + 1] & 0x3f) << 6;
-				ch32 |= (str[i + 2] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 3;
-			break;
-
-		case 4:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x07) << 18;
-				ch32 |= (str[i + 1] & 0x3f) << 12;
-				ch32 |= (str[i + 2] & 0x3f) << 6;
-				ch32 |= (str[i + 3] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 4;
-			break;
-
-		case 5:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x03) << 24;
-				ch32 |= (str[i + 1] & 0x3f) << 18;
-				ch32 |= (str[i + 2] & 0x3f) << 12;
-				ch32 |= (str[i + 3] & 0x3f) << 6;
-				ch32 |= (str[i + 4] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 5;
-			break;
-
-		case 6:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x01) << 30;
-				ch32 |= (str[i + 1] & 0x3f) << 24;
-				ch32 |= (str[i + 2] & 0x3f) << 18;
-				ch32 |= (str[i + 3] & 0x3f) << 12;
-				ch32 |= (str[i + 4] & 0x3f) << 6;
-				ch32 |= (str[i + 5] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 6;
-			break;
-
-		case 7:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80 &&
-			          (str[i + 6] & 0xc0) == 0x80) {
-				ch32 = (str[i + 1] & 0x03 /*0x3f*/) << 30;
-				ch32 |= (str[i + 2] & 0x3f) << 24;
-				ch32 |= (str[i + 3] & 0x3f) << 18;
-				ch32 |= (str[i + 4] & 0x3f) << 12;
-				ch32 |= (str[i + 5] & 0x3f) << 6;
-				ch32 |= (str[i + 6] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 7;
-			break;
-
-		case 8:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80 &&
-			          (str[i + 6] & 0xc0) == 0x80 &&
-			          (str[i + 7] & 0xc0) == 0x80) {
-				/*ch32 = (str[i+1] & 0x3f) << 36;*/
-				ch32 = (str[i + 2] & 0x03 /*0x3f*/) << 30;
-				ch32 |= (str[i + 3] & 0x3f) << 24;
-				ch32 |= (str[i + 4] & 0x3f) << 18;
-				ch32 |= (str[i + 5] & 0x3f) << 12;
-				ch32 |= (str[i + 6] & 0x3f) << 6;
-				ch32 |= (str[i + 7] & 0x3f);
-			} else {
-				ch32 = '?';
-			}
-			i += 8;
-			break;
-
-		default: __builtin_unreachable();
-		}
-		if ((ch32 >= UTF16_HIGH_SURROGATE_MIN && ch32 <= UTF16_HIGH_SURROGATE_MAX) ||
-		    (ch32 >= UTF16_LOW_SURROGATE_MIN && ch32 <= UTF16_LOW_SURROGATE_MAX)) {
-			*dst++ = '?'; /* Invalid utf-16 character (surrogate) */
-		} else if (ch32 <= 0xffff) {
-			*dst++ = (uint16_t)ch32;
-		} else if (ch32 > 0x10ffff) {
-			*dst++ = '?'; /* Invalid utf-16 character (unicode character is too large) */
-		} else {
-			/* Character needs a low, and a high surrogate. */
-			ch32 -= 0x10000;
-			*dst++ = UTF16_HIGH_SURROGATE_MIN + (uint16_t)(ch32 >> 10);
-			*dst++ = UTF16_LOW_SURROGATE_MIN + (uint16_t)(ch32 & 0x3ff);
-		}
-	}
-	*dst = 0;
-	i    = (size_t)(dst - result);
-	if (i != length) {
-		dst = DeeString_TryResize2ByteBuffer(result, i);
-		if likely(dst)
-			result = dst;
-	}
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE uint32_t *DCALL
-utf8_to_utf32(uint8_t *__restrict str, size_t length) {
-	uint32_t *result, *dst;
-	size_t i;
-	result = DeeString_New4ByteBuffer(length);
-	if unlikely(!result)
-		goto err;
-	dst = result;
-	i   = 0;
-	while (i < length) {
-		uint8_t ch    = str[i];
-		uint8_t chlen = utf8_sequence_len[ch];
-		uint32_t ch32;
-		if ((size_t)chlen > length - i) {
-			*dst++ = '?';
-			++i;
-			continue;
-		}
-		switch (chlen) {
-
-		case 0: /* Just to safely deal with this type of error... */
-			*dst++ = '?';
-			++i;
-			continue;
-
-		case 1:
-			*dst++ = ch;
-			++i;
-			break;
-
-		case 2:
-			if likely((str[i + 1] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x1f) << 6;
-				ch32 |= (str[i + 1] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 2;
-			break;
-
-		case 3:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x0f) << 12;
-				ch32 |= (str[i + 1] & 0x3f) << 6;
-				ch32 |= (str[i + 2] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 3;
-			break;
-
-		case 4:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x07) << 18;
-				ch32 |= (str[i + 1] & 0x3f) << 12;
-				ch32 |= (str[i + 2] & 0x3f) << 6;
-				ch32 |= (str[i + 3] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 4;
-			break;
-
-		case 5:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x03) << 24;
-				ch32 |= (str[i + 1] & 0x3f) << 18;
-				ch32 |= (str[i + 2] & 0x3f) << 12;
-				ch32 |= (str[i + 3] & 0x3f) << 6;
-				ch32 |= (str[i + 4] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 5;
-			break;
-
-		case 6:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80) {
-				ch32 = (ch & 0x01) << 30;
-				ch32 |= (str[i + 1] & 0x3f) << 24;
-				ch32 |= (str[i + 2] & 0x3f) << 18;
-				ch32 |= (str[i + 3] & 0x3f) << 12;
-				ch32 |= (str[i + 4] & 0x3f) << 6;
-				ch32 |= (str[i + 5] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 6;
-			break;
-
-		case 7:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80 &&
-			          (str[i + 6] & 0xc0) == 0x80) {
-				ch32 = (str[i + 1] & 0x03 /*0x3f*/) << 30;
-				ch32 |= (str[i + 2] & 0x3f) << 24;
-				ch32 |= (str[i + 3] & 0x3f) << 18;
-				ch32 |= (str[i + 4] & 0x3f) << 12;
-				ch32 |= (str[i + 5] & 0x3f) << 6;
-				ch32 |= (str[i + 6] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 7;
-			break;
-
-		case 8:
-			if likely((str[i + 1] & 0xc0) == 0x80 &&
-			          (str[i + 2] & 0xc0) == 0x80 &&
-			          (str[i + 3] & 0xc0) == 0x80 &&
-			          (str[i + 4] & 0xc0) == 0x80 &&
-			          (str[i + 5] & 0xc0) == 0x80 &&
-			          (str[i + 6] & 0xc0) == 0x80 &&
-			          (str[i + 7] & 0xc0) == 0x80) {
-				/*ch32 = (str[i+1] & 0x3f) << 36;*/
-				ch32 = (str[i + 2] & 0x03 /*0x3f*/) << 30;
-				ch32 |= (str[i + 3] & 0x3f) << 24;
-				ch32 |= (str[i + 4] & 0x3f) << 18;
-				ch32 |= (str[i + 5] & 0x3f) << 12;
-				ch32 |= (str[i + 6] & 0x3f) << 6;
-				ch32 |= (str[i + 7] & 0x3f);
-				*dst++ = ch32;
-			} else {
-				*dst++ = '?';
-			}
-			i += 8;
-			break;
-
-		default: __builtin_unreachable();
-		}
-	}
-	*dst = 0;
-	i    = (size_t)(dst - result);
-	if (i != length) {
-		dst = DeeString_TryResize4ByteBuffer(result, i);
-		if likely(dst)
-			result = dst;
-	}
-	return result;
-err:
-	return NULL;
-}
-#endif
-
-#if defined(CONFIG_HOST_WINDOWS) && 0
-#define mbcs_to_wide(str, length) nt_MultiByteToWideChar(CP_ACP, str, length)
-PRIVATE dwchar_t *DCALL
-nt_MultiByteToWideChar(DWORD codepage, uint8_t *__restrict str, size_t length) {
-	dwchar_t *result, *new_result;
-	size_t result_length;
-	ASSERT(length != 0);
-	result        = DeeString_NewWideBuffer(length);
-	result_length = (size_t)(DWORD)MultiByteToWideChar(codepage,
-	                                                   0,
-	                                                   (LPCCH)str,
-	                                                   (int)(DWORD)length,
-	                                                   (LPWSTR)result,
-	                                                   (int)(DWORD)length);
-	if unlikely(!result_length || result_length > length) {
-		size_t new_length;
-		result_length = (size_t)(DWORD)MultiByteToWideChar(codepage,
-		                                                   0,
-		                                                   (LPCCH)str,
-		                                                   (int)(DWORD)length,
-		                                                   NULL,
-		                                                   0);
-		if unlikely(!result_length) {
-			size_t i;
-fallback:
-			/* Fallback: Simply up-cast the string. */
-			for (i = 0; i < length; ++i)
-				result[i] = (dwchar_t)str[i];
-			result[length] = 0;
-			return result;
-		}
-		new_length = result_length;
-		new_result = DeeString_ResizeWideBuffer(result, new_length);
-		if unlikely(!new_result)
-			goto err_r;
-		result        = new_result;
-		result_length = (size_t)(DWORD)MultiByteToWideChar(codepage,
-		                                                   0,
-		                                                   (LPCCH)str,
-		                                                   (int)(DWORD)length,
-		                                                   (LPWSTR)result,
-		                                                   (int)(DWORD)new_length);
-		if unlikely(!result_length || result_length > new_length) {
-			/* ... What?!? */
-			new_result = DeeString_ResizeWideBuffer(result, length);
-			if unlikely(!new_result)
-				goto err_r;
-			result = new_result;
-			goto fallback;
-		}
-		length = new_length; /* For the comparison below... */
-	}
-	result[result_length] = 0;
-	if unlikely(result_length != length) {
-		new_result = DeeString_TryResizeWideBuffer(result, result_length);
-		if likely(new_result)
-			result = new_result;
-	}
-	return result;
-err_r:
-	DeeString_FreeWideBuffer(result);
-	return NULL;
-}
-#endif
-
-
-
-
-
-LOCAL void DCALL
-char16_to_utf8(uint16_t *__restrict src, size_t src_len,
-               uint8_t *__restrict dst) {
+LOCAL NONNULL((1, 3)) void DCALL
+char16_to_utf8(uint16_t const *__restrict src, size_t src_len,
+               uint8_t *__restrict dst_utf8) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
 		uint16_t ch = src[i];
 		if (ch <= UTF8_1BYTE_MAX) {
-			*dst++ = (uint8_t)ch;
+			*dst_utf8++ = (uint8_t)ch;
 		} else if (ch <= UTF8_2BYTE_MAX) {
-			*dst++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else {
-			*dst++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		}
 	}
 }
 
-LOCAL void DCALL
-char16_to_utf8_fast(uint16_t *__restrict src, size_t src_len,
-                    uint8_t *__restrict dst) {
+LOCAL NONNULL((1, 3)) void DCALL
+char16_to_utf8_fast(uint16_t const *__restrict src, size_t src_len,
+                    uint8_t *__restrict dst_c8) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
 		uint16_t ch = src[i];
 		ASSERT(ch <= UTF8_1BYTE_MAX);
-		*dst++ = (uint8_t)ch;
+		*dst_c8++ = (uint8_t)ch;
 	}
 }
 
-LOCAL void DCALL
-utf16_to_utf8(uint16_t *__restrict src, size_t src_len,
-              uint8_t *__restrict dst) {
+LOCAL NONNULL((1, 3)) void DCALL
+utf16_to_utf8(uint16_t const *__restrict src, size_t src_len,
+              uint8_t *__restrict dst_utf8) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
 		uint32_t ch = src[i];
@@ -1367,26 +967,26 @@ utf16_to_utf8(uint16_t *__restrict src, size_t src_len,
 		}
 		ASSERT(ch <= 0x10FFFF);
 		if (ch <= UTF8_1BYTE_MAX) {
-			*dst++ = (uint8_t)ch;
+			*dst_utf8++ = (uint8_t)ch;
 		} else if (ch <= UTF8_2BYTE_MAX) {
-			*dst++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else if (ch <= UTF8_3BYTE_MAX) {
-			*dst++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else {
-			*dst++ = 0xf0 | (uint8_t)((ch >> 18) /* & 0x07*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xf0 | (uint8_t)((ch >> 18) /* & 0x07*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		}
 	}
 }
 
-LOCAL void DCALL
-utf16_to_utf8_char16(uint16_t *__restrict src, size_t src_len,
-                     uint8_t *__restrict dst,
+LOCAL NONNULL((1, 3, 4)) void DCALL
+utf16_to_utf8_char16(uint16_t const *__restrict src, size_t src_len,
+                     uint8_t *__restrict dst_utf8,
                      uint16_t *__restrict dst_c16) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
@@ -1404,21 +1004,21 @@ utf16_to_utf8_char16(uint16_t *__restrict src, size_t src_len,
 		ASSERT(ch <= 0xFFFF);
 		*dst_c16++ = (uint16_t)ch;
 		if (ch <= UTF8_1BYTE_MAX) {
-			*dst++ = (uint8_t)ch;
+			*dst_utf8++ = (uint8_t)ch;
 		} else if (ch <= UTF8_2BYTE_MAX) {
-			*dst++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else {
-			*dst++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		}
 	}
 }
 
-LOCAL void DCALL
-utf16_to_utf8_char32(uint16_t *__restrict src, size_t src_len,
-                     uint8_t *__restrict dst,
+LOCAL NONNULL((1, 3, 4)) void DCALL
+utf16_to_utf8_char32(uint16_t const *__restrict src, size_t src_len,
+                     uint8_t *__restrict dst_utf8,
                      uint32_t *__restrict dst_c32) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
@@ -1436,25 +1036,25 @@ utf16_to_utf8_char32(uint16_t *__restrict src, size_t src_len,
 		ASSERT(ch <= 0x10FFFF);
 		*dst_c32++ = ch;
 		if (ch <= UTF8_1BYTE_MAX) {
-			*dst++ = (uint8_t)ch;
+			*dst_utf8++ = (uint8_t)ch;
 		} else if (ch <= UTF8_2BYTE_MAX) {
-			*dst++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xc0 | (uint8_t)((ch >> 6) /* & 0x1f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else if (ch <= UTF8_3BYTE_MAX) {
-			*dst++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xe0 | (uint8_t)((ch >> 12) /* & 0x0f*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		} else {
-			*dst++ = 0xf0 | (uint8_t)((ch >> 18) /* & 0x07*/);
-			*dst++ = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
-			*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
+			*dst_utf8++ = 0xf0 | (uint8_t)((ch >> 18) /* & 0x07*/);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 12) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
+			*dst_utf8++ = 0x80 | (uint8_t)((ch)&0x3f);
 		}
 	}
 }
 
-LOCAL void DCALL
-utf32_to_utf8(uint32_t *__restrict src, size_t src_len,
+LOCAL NONNULL((1, 3)) void DCALL
+utf32_to_utf8(uint32_t const *__restrict src, size_t src_len,
               uint8_t *__restrict dst) {
 	size_t i;
 	for (i = 0; i < src_len; ++i) {
@@ -1927,6 +1527,7 @@ continue_at_i:
 			ASSERT(character_count < WSTR_LENGTH(text));
 			utf16_to_utf8_char32(text, length, (uint8_t *)result->s_str, buffer);
 		}	break;
+
 		default: __builtin_unreachable();
 		}
 	}
@@ -1960,15 +1561,15 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	utf8_length  = 0;
 	for (i = 0; i < length; ++i) {
 		uint32_t ch = text[i];
-		if (ch <= UTF8_1BYTE_MAX)
+		if (ch <= UTF8_1BYTE_MAX) {
 			utf8_length += 1;
-		else if (ch <= UTF8_2BYTE_MAX)
+		} else if (ch <= UTF8_2BYTE_MAX) {
 			utf8_length += 2;
-		else if (ch <= UTF8_3BYTE_MAX)
+		} else if (ch <= UTF8_3BYTE_MAX) {
 			utf8_length += 3;
-		else if (ch <= UTF8_4BYTE_MAX)
+		} else if (ch <= UTF8_4BYTE_MAX) {
 			utf8_length += 4;
-		else {
+		} else {
 			/* Not actually a valid unicode character, but could be encoded! */
 			if (error_mode & STRING_ERROR_FREPLAC) {
 				/* Replace with a question mark. */
@@ -1976,11 +1577,11 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 				utf8_length += 1;
 			} else if (error_mode & STRING_ERROR_FIGNORE) {
 				/* Just encode it... */
-				if (ch <= UTF8_5BYTE_MAX)
+				if (ch <= UTF8_5BYTE_MAX) {
 					utf8_length += 5;
-				else if (ch <= UTF8_6BYTE_MAX)
+				} else if (ch <= UTF8_6BYTE_MAX) {
 					utf8_length += 6;
-				else {
+				} else {
 					utf8_length += 7;
 				}
 			} else {
@@ -2038,19 +1639,19 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	utf8_length  = 0;
 	for (i = 0; i < length; ++i) {
 		uint32_t ch = text[i];
-		if (ch <= UTF8_1BYTE_MAX)
+		if (ch <= UTF8_1BYTE_MAX) {
 			utf8_length += 1;
-		else if (ch <= UTF8_2BYTE_MAX)
+		} else if (ch <= UTF8_2BYTE_MAX) {
 			utf8_length += 2;
-		else if (ch <= UTF8_3BYTE_MAX)
+		} else if (ch <= UTF8_3BYTE_MAX) {
 			utf8_length += 3;
-		else if (ch <= UTF8_4BYTE_MAX)
+		} else if (ch <= UTF8_4BYTE_MAX) {
 			utf8_length += 4;
-		else if (ch <= UTF8_5BYTE_MAX)
+		} else if (ch <= UTF8_5BYTE_MAX) {
 			utf8_length += 5;
-		else if (ch <= UTF8_6BYTE_MAX)
+		} else if (ch <= UTF8_6BYTE_MAX) {
 			utf8_length += 6;
-		else {
+		} else {
 			utf8_length += 7;
 		}
 	}
@@ -2087,200 +1688,7 @@ err:
 	return NULL;
 }
 
-#if 0 /* TODO: Expose as a codepage decoder function */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
-                         unsigned int error_mode) {
-#ifdef CONFIG_HOST_WINDOWS
-	size_t length, mbcs_length;
-	DWORD flags;
-	DREF String *result, *new_result;
-#ifndef WC_ERR_INVALID_CHARS
-#define WC_ERR_INVALID_CHARS 0x00000080
-#endif /* !WC_ERR_INVALID_CHARS */
-	static DWORD wincall_flags = WC_ERR_INVALID_CHARS;
-	length = ((size_t *)text)[-1];
-	if unlikely(!length) {
-		Dee_Free((size_t *)text - 1);
-		return_empty_string;
-	}
-	text[length] = 0;
-	/* Convert to a MBSC string. */
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (length + 1) * sizeof(char));
-	if unlikely(!result)
-		goto err;
-restart:
-	flags = 0;
-	if (!(error_mode & (STRING_ERROR_FIGNORE |
-	                    STRING_ERROR_FREPLAC)))
-		flags |= wincall_flags;
-	mbcs_length = (size_t)(DWORD)WideCharToMultiByte(CP_UTF8,
-	                                                 flags,
-	                                                 text,
-	                                                 (int)(DWORD)length,
-	                                                 result->s_str,
-	                                                 (int)(DWORD)length,
-	                                                 NULL,
-	                                                 NULL);
-	if (!mbcs_length) {
-		/* Probably just insufficient buffer memory... */
-		mbcs_length = (size_t)(DWORD)WideCharToMultiByte(CP_UTF8,
-		                                                 flags,
-		                                                 text,
-		                                                 (int)(DWORD)length,
-		                                                 NULL,
-		                                                 0,
-		                                                 NULL,
-		                                                 NULL);
-		if unlikely(!mbcs_length) {
-			DWORD error;
-handle_decode_error:
-			error = GetLastError();
-			if (error == ERROR_INVALID_FLAGS &&
-			    (flags & WC_ERR_INVALID_CHARS)) {
-				wincall_flags = 0;
-				goto restart;
-			}
-			if (error_mode & (STRING_ERROR_FIGNORE | STRING_ERROR_FREPLAC)) {
-				size_t i;
-				mbcs_length = length;
-				for (i = 0; i < length; ++i)
-					result->s_str[i] = (char)((uint16_t)text[i] & 0x7f);
-				goto done;
-			}
-			DeeError_Throwf(&DeeError_UnicodeDecodeError,
-			                "Invalid unicode sequence");
-			goto err_r;
-		}
-		new_result = (DREF String *)DeeObject_Realloc(result, offsetof(String, s_str) +
-		                                                      (mbcs_length + 1) * sizeof(char));
-		if unlikely(!new_result)
-			goto err;
-		result      = new_result;
-		mbcs_length = (size_t)(DWORD)WideCharToMultiByte(CP_UTF8,
-		                                                 flags,
-		                                                 text,
-		                                                 (int)(DWORD)length,
-		                                                 result->s_str,
-		                                                 (int)(DWORD)mbcs_length,
-		                                                 NULL,
-		                                                 NULL);
-		if unlikely(!mbcs_length)
-			goto handle_decode_error;
-	}
-	if unlikely(mbcs_length < length) {
-		new_result = (DREF String *)DeeObject_TryRealloc(result,
-		                                                 offsetof(String, s_str) +
-		                                                 (length + 1) * sizeof(char));
-		if likely(new_result)
-			result = new_result;
-	}
-done:
-	/* Fill in the unicode data of the resulting object. */
-	result->s_data = Dee_string_utf_alloc();
-	if unlikely(!result->s_data)
-		goto err_r;
-	bzero(result->s_data, sizeof(struct string_utf));
-	if (mbcs_length <= length)
-		result->s_data->u_width = STRING_WIDTH_1BYTE;
-	else {
-		result->s_data->u_width = STRING_WIDTH_2BYTE;
-	}
-	result->s_data->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
-	result->s_data->u_flags                    = STRING_UTF_FNORMAL;
-	result->s_data->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data. */
-	result->s_len                              = mbcs_length;
-	result->s_hash                             = DEE_STRING_HASH_UNSET;
-	result->s_str[mbcs_length]                 = '\0';
-	DeeObject_Init(result, &DeeString_Type);
-	Dee_UntrackAlloc((size_t *)text - 1);
-	Dee_string_utf_untrack(result->s_data);
-	return (DREF DeeObject *)result;
-err_r:
-	DeeObject_Free(result);
-err:
-	Dee_Free((size_t *)text - 1);
-	return NULL;
-#else
-#error TODO
-#endif
-}
-#endif
-
-
-
-#if 0
-case STRING_ENCODING_---ASCII: {
-	size_t i, length;
-	uint8_t *str;
-	/* Assert that there are no characters > 127 */
-	str    = (uint8_t *)DeeString_STR(self);
-	length = DeeString_SIZE(self);
-	i      = 0;
-continue_ascii_fast:
-	for (; i < length; ++i) {
-		if (str[i] <= 0x7f)
-			continue;
-		if (encoding & STRING_ERROR_FIGNORE) {
-			--DeeString_SIZE(self);
-			--length;
-			memmovedownc(&str[i],
-			             &str[i + 1],
-			             length - i,
-			             sizeof(char));
-			str[length] = '\0';
-			goto continue_ascii_fast;
-		}
-		if (encoding & STRING_ERROR_FREPLAC) {
-			str[i] = '?';
-			continue;
-		}
-		DeeError_Throwf(&DeeError_UnicodeEncodeError,
-		                "Non-ascii character character U+%.4X",
-		                (unsigned int)str[i]);
-		goto err;
-	}
-	return self;
-}
-#endif
-
-#if 0
-case STRING_ENCODING_-- - MBCS: {
-	struct string_utf *data;
-	if (DeeString_IsEmpty(self))
-		return self;
-	ASSERT(!DeeObject_IsShared(self));
-	ASSERT(!((String *)self)->s_data);
-	data = Dee_string_utf_alloc();
-	if unlikely(!data)
-		goto err;
-	bzero(data, sizeof(struct string_utf));
-#if __SIZEOF_WCHAR_T__ == 2
-	data->u_width                    = STRING_WIDTH_2BYTE;
-	data->u_data[STRING_WIDTH_2BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
-	                                                          DeeString_SIZE(self));
-	if unlikely(!data->u_data[STRING_WIDTH_2BYTE]) {
-		Dee_string_utf_free(data);
-		goto err;
-	}
-#else /* __SIZEOF_WCHAR_T__ == 2 */
-	data->u_width                    = STRING_WIDTH_4BYTE;
-	data->u_data[STRING_WIDTH_4BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
-	                                                          DeeString_SIZE(self));
-	if unlikely(!data->u_data[STRING_WIDTH_4BYTE]) {
-		Dee_string_utf_free(data);
-		goto err;
-	}
-#endif /* __SIZEOF_WCHAR_T__ != 2 */
-	((String *)self)->s_data = data;
-	Dee_string_utf_untrack(data);
-	return self;
-}
-
-#endif
-
-INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
 /* Construct a string from a UTF-8 character sequence. */
@@ -3101,7 +2509,7 @@ err:
 
 
 
-INTERN WUNUSED NONNULL((1)) uint32_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 	uint32_t result;
 	switch (seqlen) {
@@ -3566,6 +2974,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					goto err;
 				self->up_buffer = new_buffer;
 			}	break;
+
 			}
 		}
 	}
@@ -4259,6 +3668,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		while (textlen--)
 			*dst++ = *text++;
 	}	break;
+
 	}
 done:
 	return result;
@@ -4387,6 +3797,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 		while (num_chars--)
 			*dst++ = (uint32_t)(uint8_t)ch;
 	}	break;
+
 	}
 done:
 	return result;
@@ -4525,6 +3936,7 @@ append_2byte:
 		while (textlen--)
 			*dst++ = *text++;
 	}	break;
+
 	}
 done:
 	return result;
@@ -4670,7 +4082,7 @@ append_2byte:
 			*dst++ = (uint16_t)*text++;
 	}	break;
 
-	CASE_WIDTH_4BYTE:
+	CASE_WIDTH_4BYTE: {
 append_4byte:
 		if (self->up_length + textlen > WSTR_LENGTH(string)) {
 			size_t new_alloc;
@@ -4690,7 +4102,8 @@ append_4byte:
 		}
 		memcpyl((uint32_t *)string + self->up_length, text, textlen);
 		self->up_length += textlen;
-		break;
+	}	break;
+
 	}
 done:
 	return result;
@@ -4870,6 +4283,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 				result += temp;
 			}
 		}	break;
+
 		}
 	}
 	return result;
@@ -6146,7 +5560,7 @@ DeeFormat_Print8(dformatprinter printer, void *arg,
 				goto err;
 			result += temp;
 		}
-		/* Convert to a 2-wide multibyte UTF-8 character. */
+		/* Convert to a 2-wide multi-byte UTF-8 character. */
 		utf8_buffer[0] = 0xc0 | ((*iter & 0xc0) >> 6);
 		utf8_buffer[1] = 0x80 | (*iter & 0x3f);
 		temp           = (*printer)(arg, (char *)utf8_buffer, 2);
@@ -6554,36 +5968,6 @@ check_1byte:
 		}
 	}
 }
-
-#define DEE_PRIVATE_WSTR_DECLEN(x)             \
-	(ASSERT(WSTR_LENGTH(x)), --WSTR_LENGTH(x), \
-	 (x)[WSTR_LENGTH(x)] = 0)
-
-PUBLIC NONNULL((1)) void
-(DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self) {
-	struct string_utf *utf;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	ASSERT(!DeeObject_IsShared(self));
-	utf = self->s_data;
-	DEE_PRIVATE_WSTR_DECLEN(self->s_str);
-	if (utf) {
-		if (utf->u_data[STRING_WIDTH_1BYTE] &&
-		    utf->u_data[STRING_WIDTH_1BYTE] != (size_t *)DeeString_STR(self))
-			DEE_PRIVATE_WSTR_DECLEN((uint8_t *)utf->u_data[STRING_WIDTH_1BYTE]);
-		if (utf->u_data[STRING_WIDTH_2BYTE])
-			DEE_PRIVATE_WSTR_DECLEN((uint16_t *)utf->u_data[STRING_WIDTH_2BYTE]);
-		if (utf->u_data[STRING_WIDTH_4BYTE])
-			DEE_PRIVATE_WSTR_DECLEN((uint32_t *)utf->u_data[STRING_WIDTH_4BYTE]);
-		if (utf->u_utf8 &&
-		    utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE] &&
-		    utf->u_utf8 != DeeString_STR(self))
-			DEE_PRIVATE_WSTR_DECLEN(utf->u_utf8);
-		if (utf->u_utf16 &&
-		    (uint16_t *)utf->u_utf16 != (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE])
-			DEE_PRIVATE_WSTR_DECLEN(utf->u_utf16);
-	}
-}
-
 
 DECL_END
 

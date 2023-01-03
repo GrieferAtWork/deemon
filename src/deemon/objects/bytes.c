@@ -1673,31 +1673,13 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 				++iter.cp16;
 			}
 			ch = *iter.cp16++;
-			if (ch >= '0' && ch <= '9') {
-				byte_value = (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value = (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value = (uint8_t)(10 + (ch - 'A'));
-			} else if (DeeUni_AsDigit(ch, 16, &byte_value)) {
-				/* ... */
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &byte_value))
 				goto err_invalid;
-			}
 			if (iter.cp16 == end.cp16)
 				goto err_unbalanced;
 			ch = *iter.cp16++;
-			if (ch >= '0' && ch <= '9') {
-				nibble = (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				nibble = (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				nibble = (uint8_t)(10 + (ch - 'A'));
-			} else if (DeeUni_AsDigit(ch, 16, &nibble)) {
-				/* ... */
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &nibble))
 				goto err_invalid;
-			}
 			byte_value <<= 4;
 			byte_value |= nibble;
 			ASSERT(dst < DeeBytes_TERM(result));
@@ -1724,31 +1706,13 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 				++iter.cp32;
 			}
 			ch = *iter.cp32++;
-			if (ch >= '0' && ch <= '9') {
-				byte_value = (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				byte_value = (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				byte_value = (uint8_t)(10 + (ch - 'A'));
-			} else if (DeeUni_AsDigit(ch, 16, &byte_value)) {
-				/* ... */
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &byte_value))
 				goto err_invalid;
-			}
 			if (iter.cp32 == end.cp32)
 				goto err_unbalanced;
 			ch = *iter.cp32++;
-			if (ch >= '0' && ch <= '9') {
-				nibble = (uint8_t)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				nibble = (uint8_t)(10 + (ch - 'a'));
-			} else if (ch >= 'A' && ch <= 'F') {
-				nibble = (uint8_t)(10 + (ch - 'A'));
-			} else if (DeeUni_AsDigit(ch, 16, &nibble)) {
-				/* ... */
-			} else {
+			if (!DeeUni_AsDigit(ch, 16, &nibble))
 				goto err_invalid;
-			}
 			byte_value <<= 4;
 			byte_value |= nibble;
 			ASSERT(dst < DeeBytes_TERM(result));

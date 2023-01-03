@@ -532,14 +532,8 @@ LOCAL NONNULL((1)) unsigned int
 
 
 #undef __libc_hex2int
-#define __libc_hex2int(ch, p_result)                           \
-	(((ch) >= '0' && (ch) <= '9')                              \
-	 ? (*(p_result) = (unsigned char)((ch) - '0'), 1)          \
-	 : ((ch) >= 'A' && (ch) <= 'F')                            \
-	   ? (*(p_result) = (unsigned char)(10 + (ch) - 'A'), 1)   \
-	   : ((ch) >= 'a' && (ch) <= 'f')                          \
-	     ? (*(p_result) = (unsigned char)(10 + (ch) - 'a'), 1) \
-	     : 0)
+#define __libc_hex2int(ch, p_result) \
+	DeeUni_AsDigit(ch, 16, p_result)
 
 #undef strcmpz /* TODO: Support for when the system defines this function! */
 #define strcmpz dee_strcmpz

@@ -1096,8 +1096,8 @@ map_repr(DeeObject *__restrict self) {
 	if unlikely(!elem)
 		goto err_p_iterator;
 	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-	goto err_p_iterator;
+	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
+		goto err_p_iterator;
 	Dee_Decref(iterator);
 	return unicode_printer_pack(&p);
 err_p_iterator_elem:

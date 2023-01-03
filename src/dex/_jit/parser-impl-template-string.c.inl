@@ -240,11 +240,7 @@ parse_hex_integer:
 					unsigned char *old_iter;
 					old_iter = text_iter;
 					ch32     = utf8_readchar((char const **)&text_iter, (char const *)self->jl_end);
-					if (ch32 >= 'a' && ch32 <= 'f') {
-						IF_EVAL(val = 10 + ((uint8_t)ch32 - 'a'));
-					} else if (ch32 >= 'A' && ch32 <= 'F') {
-						IF_EVAL(val = 10 + ((uint8_t)ch32 - 'A'));
-					} else if (!DeeUni_AsDigit(ch32, 10, &val)) {
+					if (!DeeUni_AsDigit(ch32, 16, &val)) {
 						text_iter = old_iter;
 						break;
 					}

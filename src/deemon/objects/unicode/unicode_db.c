@@ -528,6 +528,31 @@ for (local i: [:256]) {
 //[[[end]]]
 };
 
+/* clang-format off */
+PUBLIC_CONST uint8_t const _DeeAscii_HexValue[256] = {
+	/* ASCII */
+#define FF 0xff
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x00-0x0f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x10-0x1f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x20-0x2f */
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, FF,FF,FF,FF,FF,FF, /* 0x30-0x3f */
+	FF,10,11,12,13,14,15,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x40-0x4f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x50-0x5f */
+	FF,10,11,12,13,14,15,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x60-0x6f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x70-0x7f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x80-0x8f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0x90-0x9f */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0xa0-0xaf */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0xb0-0xbf */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0xc0-0xcf */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0xd0-0xdf */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF, /* 0xe0-0xef */
+	FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF,FF  /* 0xf0-0xff */
+#undef FF
+};
+/* clang-format on */
+
+
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 DECL_END

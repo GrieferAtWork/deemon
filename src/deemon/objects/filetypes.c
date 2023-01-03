@@ -1398,7 +1398,7 @@ err:
 	return false;
 }
 
-INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL

@@ -725,22 +725,23 @@ PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-DFUNDEF /*latin-1*/ uint8_t *DCALL DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
+DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ uint8_t *DCALL
+DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
 #define DeeString_AsLatin1(self, allow_invalid) DeeString_AsBytes(self, allow_invalid)
 
 /* Quickly access the 1, 2 or 4-byte variants of a given string, allowing
  * for the assumption that all characters of the string are guarantied to
  * fit the requested amount of bytes. */
-DFUNDEF uint16_t *(DCALL DeeString_As2Byte)(DeeObject *__restrict self);
-DFUNDEF uint32_t *(DCALL DeeString_As4Byte)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) uint16_t *(DCALL DeeString_As2Byte)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) uint32_t *(DCALL DeeString_As4Byte)(DeeObject *__restrict self);
 #ifdef __INTELLISENSE__
-ATTR_RETNONNULL uint8_t *(DeeString_As1Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t *(DeeString_As1Byte)(DeeObject *__restrict self);
 #endif /* __INTELLISENSE__ */
 
 #ifdef __INTELLISENSE__
-ATTR_RETNONNULL uint8_t *(DeeString_Get1Byte)(DeeObject *__restrict self);
-ATTR_RETNONNULL uint16_t *(DeeString_Get2Byte)(DeeObject *__restrict self);
-ATTR_RETNONNULL uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t *(DeeString_Get1Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint16_t *(DeeString_Get2Byte)(DeeObject *__restrict self);
+ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
 #else /* __INTELLISENSE__ */
 #define DeeString_Get1Byte(self) DeeString_As1Byte(self)
 #define DeeString_Get2Byte(self)                                                  \
@@ -779,12 +780,16 @@ ATTR_RETNONNULL uint32_t *(DeeString_Get4Byte)(DeeObject *__restrict self);
  * using `Dee_WSTR_LENGTH(return)'.
  * @return: * :   A pointer to the UTF-8 variant-string of `self'
  * @return: NULL: An error occurred. */
-DFUNDEF char *DCALL DeeString_AsUtf8(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
+DeeString_AsUtf8(DeeObject *__restrict self);
+
 /* Same as `DeeString_AsUtf8()', but returns NULL without throwing an error. */
-DFUNDEF char *DCALL DeeString_TryAsUtf8(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char *DCALL
+DeeString_TryAsUtf8(DeeObject *__restrict self);
 
 /* Returns the UTF-16 variant of the given string (as a width-string). */
-DFUNDEF uint16_t *DCALL DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) uint16_t *DCALL
+DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode);
 
 /* Returns the UTF-32 variant of the given string (as a width-string). */
 #ifdef __INTELLISENSE__
@@ -2255,13 +2260,17 @@ DFUNDEF NONNULL((2)) size_t
 
 
 
-#define _DeeAscii_IsUpper(ch)     (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISUPPER)
-#define _DeeAscii_IsLower(ch)     (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISLOWER)
-#define _DeeAscii_IsDigit(ch)     (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISDIGIT)
-#define _DeeAscii_ToLower(ch)     (_DeeAscii_IsUpper(ch) ? (uint8_t)(ch)+0x20 : (uint8_t)(ch))
-#define _DeeAscii_ToUpper(ch)     (_DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
-#define _DeeAscii_ToTitle(ch)     _DeeAscii_ToUpper(ch)
-#define _DeeAscii_GetNumeric8(ch) (_DeeAscii_IsDigit(ch) ? ((ch)-0x30) : 0xff)
+#define _DeeAscii_IsUpper(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISUPPER)
+#define _DeeAscii_IsLower(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISLOWER)
+#define _DeeAscii_IsDigit(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISDIGIT)
+#define _DeeAscii_ToLower(ch) (_DeeAscii_IsUpper(ch) ? (uint8_t)(ch) + 0x20 : (uint8_t)(ch))
+#define _DeeAscii_ToUpper(ch) (_DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
+#define _DeeAscii_ToTitle(ch) _DeeAscii_ToUpper(ch)
+
+/* Lookup table for the numerical hex-value of ascii characters.
+ * Bytes that can't be used as hex-characters yield `0xff' here. */
+DDATDEF uint8_t const _DeeAscii_HexValue[256];
+#define _DeeAscii_GetNumeric8(ch) _DeeAscii_HexValue[(uint8_t)(ch)]
 
 LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeAscii_SwapCase(uint8_t ch) {
 	if (ch >= 0x41 && ch <= 0x5a)
@@ -2346,10 +2355,14 @@ LOCAL ATTR_CONST WUNUSED double (DCALL _DeeUni_GetNumericD)(uint32_t ch) {
 
 
 
-#define DeeUni_AsDigit(ch, radix, presult) \
-	((*(presult) = DeeUni_AsDigitVal(ch)) < (radix))
+/* Store the digit-value of `ch' in `*p_result' and check if it belongs to `radix'
+ * @return: true:  Success (`*p_result' contains the decimal value of the digit)
+ * @return: false: Error. Either `ch' isn't a digit, or it can't be used in `radix'.
+ *                 In this case, the contents of `*p_result' are undefined. */
+#define DeeUni_AsDigit(ch, radix, p_result) \
+	((*(p_result) = DeeUni_AsDigitVal(ch)) < (radix))
 
-/* Returns 0xff if `ch' doesn't match any digit */
+/* Returns 0xff if `ch' isn't a digit */
 #ifndef __NO_builtin_choose_expr
 #define DeeUni_AsDigitVal(ch)                        \
 	__builtin_choose_expr(sizeof(ch) == 1,           \

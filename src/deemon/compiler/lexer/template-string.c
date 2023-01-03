@@ -356,11 +356,7 @@ parse_hex_integer:
 					char *old_iter;
 					old_iter = text_iter;
 					ch32     = utf8_readchar((char const **)&text_iter, text_end);
-					if (ch32 >= 'a' && ch32 <= 'f') {
-						val = 10 + ((uint8_t)ch32 - 'a');
-					} else if (ch32 >= 'A' && ch32 <= 'F') {
-						val = 10 + ((uint8_t)ch32 - 'A');
-					} else if (!DeeUni_AsDigit(ch32, 16, &val)) {
+					if (!DeeUni_AsDigit(ch32, 16, &val)) {
 						text_iter = old_iter;
 						break;
 					}

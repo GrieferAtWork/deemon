@@ -140,14 +140,6 @@ DFUNDEF NONNULL((1)) void
 (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
                           size_t dst, size_t src, size_t num_chars);
 
-/* Pop the last character of a string, which must be an ASCII character. */
-#define DeeString_PopbackAscii(self) \
-	DeeString_PopbackAscii((DeeStringObject *)Dee_REQUIRES_OBJECT(self))
-DFUNDEF NONNULL((1)) void
-(DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
-
-
-
 #define DeeString_Foreach(self, ibegin, iend, iter, end, ...) \
 	do {                                                      \
 		void *_str_  = DeeString_WSTR(self);                  \

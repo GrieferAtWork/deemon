@@ -34,7 +34,7 @@
 #ifdef CASEFOLD
 PRIVATE int DCALL
 dee_wildcompare(unicode_foldreader(T) *string,
-                unicode_foldreader(T) * pattern) {
+                unicode_foldreader(T) *pattern) {
 	uint32_t pattern_ch, ch;
 	for (;;) {
 		if (unicode_foldreader_empty(*string)) {
