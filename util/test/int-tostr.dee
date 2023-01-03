@@ -1,0 +1,81 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+local v = 0xff;
+assert v.tostr() == "255";
+assert v.tostr(precision: 1) == "255";
+assert v.tostr(precision: 2) == "255";
+assert v.tostr(precision: 3) == "255";
+assert v.tostr(precision: 4) == "0255";
+assert v.tostr(precision: 10) == "0000000255";
+assert v.tostr(radix: 16) == "ff";
+assert v.tostr(radix: 16, precision: 4) == "00ff";
+assert v.tostr(radix: 16, mode: "#") == "0xff";
+assert v.tostr(radix: 16, mode: "#+") == "+0xff";
+assert v.tostr(radix: 16, mode: "+#") == "+0xff";
+assert v.tostr(radix: 16, precision: 0, mode: "#") == "0xff";
+assert v.tostr(radix: 16, precision: 1, mode: "#") == "0xff";
+assert v.tostr(radix: 16, precision: 2, mode: "#") == "0xff";
+assert v.tostr(radix: 16, precision: 3, mode: "#") == "0x0ff";
+assert v.tostr(radix: 16, precision: 4, mode: "#") == "0x00ff";
+assert v.tostr(radix: 16, precision: 4, mode: "#+") == "+0x00ff";
+assert v.tostr(radix: 16, precision: 4, mode: "+#") == "+0x00ff";
+assert v.tostr(radix: 16, precision: 4, mode: "X") == "00FF";
+assert v.tostr(radix: 16, precision: 4, mode: "+X") == "+00FF";
+assert v.tostr(radix: 16, precision: 4, mode: "+#X") == "+0X00FF";
+
+assert v.bin() == "0b11111111";
+assert v.bin(precision: 0) == "0b11111111";
+assert v.bin(precision: 7) == "0b11111111";
+assert v.bin(precision: 8) == "0b11111111";
+assert v.bin(precision: 9) == "0b011111111";
+assert v.bin(precision: 10) == "0b0011111111";
+assert v.bin(0) == "0b11111111";
+assert v.bin(7) == "0b11111111";
+assert v.bin(8) == "0b11111111";
+assert v.bin(9) == "0b011111111";
+assert v.bin(10) == "0b0011111111";
+
+assert v.hex() == "0xff";
+assert v.hex(precision: 0) == "0xff";
+assert v.hex(precision: 1) == "0xff";
+assert v.hex(precision: 2) == "0xff";
+assert v.hex(precision: 3) == "0x0ff";
+assert v.hex(precision: 4) == "0x00ff";
+assert v.hex(precision: 10) == "0x00000000ff";
+assert v.hex(0) == "0xff";
+assert v.hex(1) == "0xff";
+assert v.hex(2) == "0xff";
+assert v.hex(3) == "0x0ff";
+assert v.hex(4) == "0x00ff";
+assert v.hex(10) == "0x00000000ff";
+
+assert v.oct() == "0377";
+assert v.oct(precision: 0) == "0377";
+assert v.oct(precision: 2) == "0377";
+assert v.oct(precision: 3) == "0377";
+assert v.oct(precision: 4) == "00377";
+assert v.oct(precision: 6) == "0000377";
+assert v.oct(0) == "0377";
+assert v.oct(2) == "0377";
+assert v.oct(3) == "0377";
+assert v.oct(4) == "00377";
+assert v.oct(6) == "0000377";

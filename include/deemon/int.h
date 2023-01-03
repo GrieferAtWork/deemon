@@ -762,10 +762,12 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 /* Print an integer to a given format-printer.
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
- * This list of supported radices may be extended in the future. */
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+ * This list of supported radices may be extended in the future.
+ * @param: precision: The minimum number of digits (excluding numsys/sign
+ *                    prefixes) to print. Padding is done using '0'-chars */
+DFUNDEF WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
-             Dee_formatprinter_t printer, void *arg);
+             size_t precision, Dee_formatprinter_t printer, void *arg);
 #define DEEINT_PRINT(radix, flags) ((radix) << DEEINT_PRINT_RSHIFT | (flags))
 #define DEEINT_PRINT_RSHIFT  16
 #define DEEINT_PRINT_FNORMAL 0x0000

@@ -643,7 +643,7 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
 	if (DeeNone_Check(self))
 		goto eval_none;
 	if (DeeInt_Check(self)) {
-		if (DeeInt_Print(self, DEEINT_PRINT_DEC,
+		if (DeeInt_Print(self, DEEINT_PRINT_DEC, 0,
 		                 &unicode_printer_print,
 		                 printer) < 0)
 			goto err;

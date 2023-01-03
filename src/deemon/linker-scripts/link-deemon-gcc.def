@@ -288,7 +288,7 @@ EXPORTS
 	_DeeInt_NewU64@8=DeeInt_NewU64@8
 	_DeeInt_NewU8@4=DeeInt_NewU8@4
 	_DeeInt_NewUleb@4=DeeInt_NewUleb@4
-	_DeeInt_Print@16=DeeInt_Print@16
+	_DeeInt_Print@20=DeeInt_Print@20
 	_DeeInt_TryAs128@8=DeeInt_TryAs128@8
 	_DeeInt_TryAs16@8=DeeInt_TryAs16@8
 	_DeeInt_TryAs32@8=DeeInt_TryAs32@8

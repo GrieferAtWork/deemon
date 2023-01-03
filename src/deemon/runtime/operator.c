@@ -4716,7 +4716,7 @@ DeeObject_Print(DeeObject *__restrict self,
 	if (typ == &DeeString_Type)
 		return DeeString_PrintUtf8(self, printer, arg);
 	if (typ == &DeeInt_Type)
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
+		return DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg);
 	if (typ == &DeeTuple_Type)
 		return DeeTuple_Print(self, printer, arg);
 	if (typ == &DeeBytes_Type)
@@ -4748,7 +4748,7 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 	if (typ == &DeeString_Type)
 		return DeeString_PrintRepr(self, printer, arg, FORMAT_QUOTE_FNORMAL);
 	if (typ == &DeeInt_Type)
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
+		return DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg);
 	if (typ == &DeeBytes_Type)
 		return DeeBytes_PrintRepr(self, printer, arg);
 	if (typ == &DeeFloat_Type)

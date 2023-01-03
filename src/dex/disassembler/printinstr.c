@@ -730,7 +730,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 				numsys = 10;
 			temp = DeeInt_Print(constval,
 			                    DEEINT_PRINT(numsys, DEEINT_PRINT_FNUMSYS),
-			                    printer, arg);
+			                    0, printer, arg);
 			if unlikely(temp < 0)
 				return temp;
 			result += temp;

@@ -1652,10 +1652,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
-                    dformatprinter printer, void *arg) {
+                    size_t precision, dformatprinter printer, void *arg) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
 	 *                  but has been heavily modified since. */
-	size_t size, buflen, size_a, i, j;
+	size_t size, buflen, size_a, i, j, intlen;
 	dssize_t result;
 	digit *pout, *pin, rem, tenpow;
 	int negative;
@@ -1720,7 +1720,21 @@ err:
 	} else if (flags & DEEINT_PRINT_FSIGN) {
 		*--iter = '+';
 	}
-	result = (*printer)(arg, iter, (buf + buflen) - iter);
+	intlen = (size_t)((buf + buflen) - iter);
+	if (precision > intlen) {
+		Dee_ssize_t temp;
+		result = DeeFormat_Repeat(printer, arg, '0', precision - intlen);
+		if likely(result >= 0) {
+			temp = (*printer)(arg, iter, intlen);
+			if likely(temp >= 0) {
+				result += temp;
+			} else {
+				result = temp;
+			}
+		}
+	} else {
+		result = (*printer)(arg, iter, intlen);
+	}
 	Dee_AFree(buf);
 done_pout:
 	Dee_AFree(pout);
@@ -1734,21 +1748,22 @@ err_pout:
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
  * This list of supported radices may be extended in the future. */
-PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 4)) dssize_t DCALL
 DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
-             dformatprinter printer, void *arg) {
+             size_t precision, dformatprinter printer, void *arg) {
 	ASSERT_OBJECT_TYPE(self, &DeeInt_Type);
 	switch (radix_and_flags >> DEEINT_PRINT_RSHIFT) {
 
 	case 10:
-		return DeeInt_PrintDecimal((DeeIntObject *)self, radix_and_flags, printer, arg);
+		return DeeInt_PrintDecimal((DeeIntObject *)self, radix_and_flags,
+		                           precision, printer, arg);
 
 	{
 		twodigits number;
 		digit *src;
 		uint8_t num_bits, dig_bits, dig_mask, dig;
 		char *buf, *iter;
-		size_t bufsize, num_digits;
+		size_t bufsize, num_digits, intlen;
 		dssize_t result;
 		DeeIntObject *me;
 		char const *digit_chars;
@@ -1820,6 +1835,48 @@ do_print:
 			*--iter = digit_chars[dig];
 		}
 do_print_prefix:
+
+		/* Deal with custom precisions */
+		intlen = (size_t)((buf + bufsize) - iter);
+		if (precision > intlen) {
+			Dee_ssize_t temp;
+			char prefix[3];
+			size_t prefix_len = 0;
+			if (me->ob_size < 0) {
+				prefix[prefix_len++] = '-';
+			} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
+				prefix[prefix_len++] = '+';
+			}
+			if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
+				prefix[prefix_len++] = '0';
+				if (dig_bits == 4)
+					prefix[prefix_len++] = digit_chars[33]; /* x */
+				if (dig_bits == 2)
+					prefix[prefix_len++] = digit_chars[25]; /* q */
+				if (dig_bits == 1)
+					prefix[prefix_len++] = digit_chars[11]; /* b */
+			}
+			result = 0;
+			if (prefix_len) {
+				result = (*printer)(arg, prefix, prefix_len);
+				if unlikely(result < 0)
+					goto done_buf;
+			}
+			temp = DeeFormat_Repeat(printer, arg, '0', precision - intlen);
+			if unlikely(temp < 0) {
+				result = temp;
+				goto done_buf;
+			}
+			result += temp;
+			temp = (*printer)(arg, iter, intlen);
+			if unlikely(temp < 0) {
+				result = temp;
+				goto done_buf;
+			}
+			result += temp;
+			goto done_buf;
+		}
+
 		/* Print the numsys prefix. */
 		if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
 			if (dig_bits == 4)
@@ -1836,7 +1893,9 @@ do_print_prefix:
 		} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
 			*--iter = '+';
 		}
-		result = (*printer)(arg, iter, (size_t)((buf + bufsize) - iter));
+		intlen = (size_t)((buf + bufsize) - iter);
+		result = (*printer)(arg, iter, intlen);
+done_buf:
 		Dee_AFree(buf);
 		return result;
 	}	break;
@@ -2943,65 +3002,49 @@ PRIVATE struct type_cmp int_cmp = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_str(DeeObject *__restrict self) {
+int_tostr_impl(DeeObject *__restrict self, uint32_t flags, size_t precision) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	/* Simply print this integer to the printer, using decimal encoding. */
-	if (DeeInt_Print(self, DEEINT_PRINT_DEC, &unicode_printer_print, &p) < 0)
-		goto err;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	if unlikely(DeeInt_Print(self, flags, precision,
+	                         &unicode_printer_print,
+	                         &printer) < 0)
+		goto err_printer;
 	return unicode_printer_pack(&p);
-err:
+err_printer:
 	unicode_printer_fini(&p);
 	return NULL;
 #else
-	struct ascii_printer p = ASCII_PRINTER_INIT;
-	/* Simply print this integer to the printer, using decimal encoding. */
-	if unlikely(DeeInt_Print(self, DEEINT_PRINT_DEC,
-	                         &ascii_printer_print,
-	                         &p) < 0)
-		goto err;
-	return ascii_printer_pack(&p);
-err:
-	ascii_printer_fini(&p);
-	return NULL;
-#endif
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_tostr_impl(DeeObject *__restrict self, uint32_t flags) {
-#if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(DeeInt_Print(self, flags, &unicode_printer_print, &printer) < 0)
-		goto err_printer;
-	return unicode_printer_pack(&printer);
-err_printer:
-	unicode_printer_fini(&printer);
-#else
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(DeeInt_Print(self, flags,
+	if unlikely(DeeInt_Print(self, flags, precision,
 	                         &ascii_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
 	return ascii_printer_pack(&printer);
 err_printer:
 	ascii_printer_fini(&printer);
-#endif
 	return NULL;
+#endif
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_str(DeeObject *__restrict self) {
+	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	uint32_t flags                  = 10 << DEEINT_PRINT_RSHIFT;
-	char *flags_str                 = NULL;
-	PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
+	PRIVATE struct keyword kwlist[] = { K(radix), K(precision), K(mode), KEND };
+	size_t precision = 0;
+	uint32_t flags_and_radix = 10 << DEEINT_PRINT_RSHIFT;
+	char *flags_str = NULL;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 "s:tostr",
-	                    &((uint16_t *)&flags)[0], &flags_str))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 UNPuSIZ "s:tostr",
+	                    &((uint16_t *)&flags_and_radix)[0], &precision, &flags_str))
 		goto err;
 #else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 "s:tostr",
-	                    &((uint16_t *)&flags)[1], &flags_str))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 UNPuSIZ "s:tostr",
+	                    &((uint16_t *)&flags_and_radix)[1], &precision, &flags_str))
 		goto err;
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 	if (flags_str) {
@@ -3010,13 +3053,13 @@ int_tostr(DeeObject *self, size_t argc,
 			char ch = *iter++;
 			if (!ch)
 				break;
-			if (ch == 'u' || ch == 'X')
-				flags |= DEEINT_PRINT_FUPPER;
-			else if (ch == 'n' || ch == '#')
-				flags |= DEEINT_PRINT_FNUMSYS;
-			else if (ch == 's' || ch == '+')
-				flags |= DEEINT_PRINT_FSIGN;
-			else {
+			if (ch == 'u' || ch == 'X') {
+				flags_and_radix |= DEEINT_PRINT_FUPPER;
+			} else if (ch == 'n' || ch == '#') {
+				flags_and_radix |= DEEINT_PRINT_FNUMSYS;
+			} else if (ch == 's' || ch == '+') {
+				flags_and_radix |= DEEINT_PRINT_FSIGN;
+			} else {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid integer to flags:?Dstring %q",
 				                flags_str);
@@ -3024,34 +3067,42 @@ int_tostr(DeeObject *self, size_t argc,
 			}
 		}
 	}
-	return int_tostr_impl(self, flags);
+	return int_tostr_impl(self, flags_and_radix, precision);
+err:
+	return NULL;
+}
+
+PRIVATE struct keyword precision_kwlist[] = { K(precision), KEND };
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t precision = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	                    "|" UNPuSIZ ":hex", &precision))
+		goto err;
+	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS), precision);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_hex(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":hex"))
+int_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t precision = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	                    "|" UNPuSIZ ":bin", &precision))
 		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS));
+	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS), precision);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_bin(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":bin"))
+int_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t precision = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	                    "|" UNPuSIZ ":oct", &precision))
 		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_oct(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":oct"))
-		goto err;
-	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS));
+	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS), precision);
 err:
 	return NULL;
 }
@@ -3413,7 +3464,9 @@ err:
 PRIVATE struct type_method tpconst int_methods[] = {
 	{ "tostr",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tostr,
-	  DOC("(radix=!10,mode=!P{})->?Dstring\n"
+	  DOC("(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
+	      "@param precision The minimum number of digits (excluding numsys/sign "
+	      /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
 	      "@throw ValueError The given @mode was not recognized\n"
 	      "@throw NotImplemented The given @radix cannot be represented\n"
 	      "Convert @this integer to a string, using @radix as base and a "
@@ -3426,16 +3479,19 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_hex,
-	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(16, \"n\")} (s.a. ?#tostr)") },
+	  DOC("(precision=!0)->?Dstring\n"
+	      "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	  TYPE_METHOD_FKWDS },
 	{ "bin",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bin,
-	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(2, \"n\")} (s.a. ?#tostr)") },
+	  DOC("(precision=!0)->?Dstring\n"
+	      "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	  TYPE_METHOD_FKWDS },
 	{ "oct",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_oct,
-	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(8, \"n\")} (s.a. ?#tostr)") },
+	  DOC("(precision=!0)->?Dstring\n"
+	      "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	  TYPE_METHOD_FKWDS },
 	{ "tobytes",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
 	  DOC("(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
