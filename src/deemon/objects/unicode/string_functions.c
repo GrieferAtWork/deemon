@@ -11830,29 +11830,32 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	{ "regmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regmatch,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
-	      "Similar to ?#rematch, but rather than only return the number of characters that "
-	      /**/ "were matched by the regular expression as a whole, return a sequence of start-/end-"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	      "Similar to ?#rematch, but rather than only return the number of characters that were "
+	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
-	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	      /**/ "start-/end-offsets of each individual group referenced by @pattern. Groups "
+	      /**/ "that didn't get matched (because they might be optional) appear as ?N in the "
+	      /**/ "returned sequence.\n"
 	      "When nothing was matched, an empty sequence is returned.\n"
 	      "Example:\n"
 	      "${"
-	      /**/ "local groups = \"foo bar foobar\".regmatch(r\"fo(o) (bar) fo(o?bar)\");\n"
+	      /**/ "local groups = \"foo bar foobar\".regmatch(r\"fo(o) (b(x)r|bar) fo(o?bar)\");\n"
 	      /**/ "assert groups == {\n"
 	      /**/ "	{0, 14},  /* Whole match */\n"
 	      /**/ "	{2, 3},   /* \"o\" */\n"
 	      /**/ "	{4, 7},   /* \"bar\" */\n"
+	      /**/ "	none,     /* never matched: \"x\" */\n"
 	      /**/ "	{10, 14}, /* \"obar\" */\n"
 	      /**/ "};"
 	      "}\n"
 	      "Note that (if something was matched), this function still only matches at the "
-	      "start of @this ?{.}. If you want to search for @pattern and get the offsets of "
+	      "start of @this ?.. If you want to search for @pattern and get the offsets of "
 	      "all of the matched groups, you should use ?#regfind instead."),
 	  TYPE_METHOD_FKWDS },
 	{ "regfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regfind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "Similar to ?#refind, but rather than only return the character-range "
 	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11861,7 +11864,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regrfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrfind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "Similar to ?#rerfind, but rather than only return the character-range "
 	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11870,7 +11873,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regfindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regfindall,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
 	      "Similar to ?#refindall, but rather than only return the character-ranges "
 	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11879,7 +11882,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
@@ -11889,7 +11892,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regrindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"

@@ -190,10 +190,11 @@ assert "foo bar".rereplace(r"[[:lower:]]", r"(&)") == "(f)(o)(o) (b)(a)(r)";
 
 assert "10 , 20,30 40, 50".resplit(r"[[:space:],]+") == { "10", "20", "30", "40", "50" };
 
-assert "foo bar foobar".regmatch(r"fo(o) (bar) fo(o?bar)") == {
+assert "foo bar foobar".regmatch(r"fo(o) (b(x)r|bar) fo(o?bar)") == {
 	{0, 14},  /* Whole match */
 	{2, 3},   /* "o" */
 	{4, 7},   /* "bar" */
+	none,     /* never matched: "x" */
 	{10, 14}, /* "obar" */
 };
 
