@@ -5983,7 +5983,7 @@ parse_oct_integer:
 					uint32_t ch32;
 					char const *old_iter = iter;
 					ch32 = utf8_readchar(&iter, end);
-					if (!DeeUni_AsDigit(ch32, 7, &digit)) {
+					if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 						iter = old_iter;
 						break;
 					}
