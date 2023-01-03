@@ -895,26 +895,42 @@ err:
 	return -1;
 }
 
-/* Print the escape-encoded variant of `self'
- * @param: flags: Set of `FORMAT_QUOTE_F*' (from <deemon/format.h>) */
+/* Print the escape-encoded variant of `self' */
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
-                    dformatprinter printer,
-                    void *arg, unsigned int flags) {
+                    dformatprinter printer, void *arg) {
+	dssize_t temp, result;
 	void *str;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	str = DeeString_WSTR(self);
+	str    = DeeString_WSTR(self);
+	result = DeeFormat_PRINT(printer, arg, "\"");
+	if unlikely(result < 0)
+		goto done;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
-		return DeeFormat_Quote8(printer, arg, (uint8_t *)str, WSTR_LENGTH(str), flags);
+		temp = DeeFormat_Quote8(printer, arg, (uint8_t *)str, WSTR_LENGTH(str));
+		break;
 
 	CASE_WIDTH_2BYTE:
-		return DeeFormat_Quote16(printer, arg, (uint16_t *)str, WSTR_LENGTH(str), flags);
+		temp = DeeFormat_Quote16(printer, arg, (uint16_t *)str, WSTR_LENGTH(str));
+		break;
 
 	CASE_WIDTH_4BYTE:
-		return DeeFormat_Quote32(printer, arg, (uint32_t *)str, WSTR_LENGTH(str), flags);
+		temp = DeeFormat_Quote32(printer, arg, (uint32_t *)str, WSTR_LENGTH(str));
+		break;
 	}
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	temp = DeeFormat_PRINT(printer, arg, "\"");
+	if unlikely(temp < 0)
+		goto done;
+	result += temp;
+done:
+	return result;
+err:
+	return temp;
 }
 
 

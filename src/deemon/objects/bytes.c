@@ -732,6 +732,12 @@ err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
+#define DO(expr)                          \
+	do {                                  \
+		if unlikely ((temp = (expr)) < 0) \
+			goto err;                     \
+		result += temp;                   \
+	}	__WHILE0
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeBytes_PrintUtf8(DeeObject *__restrict self,
@@ -750,36 +756,19 @@ DeeBytes_PrintUtf8(DeeObject *__restrict self,
 		uint8_t ch = *iter++;
 		if (ch < 0x80)
 			continue;
-		if (flush_start < iter - 1) {
-			temp = (*printer)(arg,
-			                  (char const *)flush_start,
-			                  (size_t)((iter - 1) - flush_start));
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
+		if (flush_start < iter - 1)
+			DO((*printer)(arg, (char const *)flush_start, (size_t)((iter - 1) - flush_start)));
 		escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
 		escape_buf[1] = 0x80 | (ch & 0x3f);
-		temp = (*printer)(arg, (char const *)escape_buf, 2);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
+		DO((*printer)(arg, (char const *)escape_buf, 2));
 		flush_start = iter;
 	}
-	if (flush_start < end) {
-		temp = (*printer)(arg,
-		                  (char const *)flush_start,
-		                  (size_t)(end - flush_start));
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-	}
+	if (flush_start < end)
+		DO((*printer)(arg, (char const *)flush_start, (size_t)(end - flush_start)));
 	return result;
 err:
 	return temp;
 }
-
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_str(Bytes *__restrict self) {
@@ -792,37 +781,19 @@ DeeBytes_PrintRepr(DeeObject *__restrict self,
                    dformatprinter printer,
                    void *arg) {
 	dssize_t temp, result;
-	Bytes *me;
-	me = (Bytes *)self;
-#if 1
-	temp = DeeFormat_Quote8(printer, arg,
-	                        DeeBytes_DATA(me),
-	                        DeeBytes_SIZE(me),
-	                        FORMAT_QUOTE_FNORMAL);
-	if unlikely(temp < 0)
-		goto err;
-	result = temp;
-	temp   = DeeFormat_PRINT(printer, arg, ".bytes()");
-#else
-	temp = DeeFormat_PRINT(printer, arg, "Bytes(");
-	if unlikely(temp < 0)
-		goto err;
-	result = temp;
-	temp = DeeFormat_Quote8(printer, arg,
-	                        DeeBytes_DATA(me),
-	                        DeeBytes_SIZE(me),
-	                        FORMAT_QUOTE_FNORMAL);
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
-	temp = DeeFormat_PRINT(printer, arg, ")");
-#endif
-	if unlikely(temp < 0)
-		goto err;
-	return result + temp;
+	Bytes *me = (Bytes *)self;
+	result = DeeFormat_PRINT(printer, arg, "\"");
+	if unlikely(result < 0)
+		goto done;
+	DO(DeeFormat_QuoteBytes(printer, arg, DeeBytes_DATA(me), DeeBytes_SIZE(me)));
+	DO(DeeFormat_PRINT(printer, arg, "\".bytes()"));
+done:
+	return result;
 err:
 	return temp;
 }
+
+#undef DO
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {

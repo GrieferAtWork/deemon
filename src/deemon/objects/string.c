@@ -517,32 +517,9 @@ DeeString_HashCase(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_repr(DeeObject *__restrict self) {
-	union dcharptr str;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	str.ptr                      = DeeString_WSTR(self);
-	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
-
-	CASE_WIDTH_1BYTE:
-		if unlikely(DeeFormat_Quote8(&ascii_printer_print, &printer,
-		                             str.cp8, WSTR_LENGTH(str.cp8),
-		                             FORMAT_QUOTE_FNORMAL) < 0)
-			goto err;
-		break;
-
-	CASE_WIDTH_2BYTE:
-		if unlikely(DeeFormat_Quote16(&ascii_printer_print, &printer,
-		                              str.cp16, WSTR_LENGTH(str.cp16),
-		                              FORMAT_QUOTE_FNORMAL) < 0)
-			goto err;
-		break;
-
-	CASE_WIDTH_4BYTE:
-		if unlikely(DeeFormat_Quote32(&ascii_printer_print, &printer,
-		                              str.cp32, WSTR_LENGTH(str.cp32),
-		                              FORMAT_QUOTE_FNORMAL) < 0)
-			goto err;
-		break;
-	}
+	if unlikely(DeeString_PrintRepr(self, &ascii_printer_print, &printer) < 0)
+		goto err;
 	return ascii_printer_pack(&printer);
 err:
 	ascii_printer_fini(&printer);

@@ -1,0 +1,71 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+function assertCEscape(data: string) {
+	local bytes = data.bytes();
+	assert data.encode("c-escape").decode("c-escape") == data;
+	assert bytes.encode("c-escape").decode("c-escape") == bytes;
+}
+
+/* Intended behavior now is that "\xAB" in strings simply encodes unicode characters.
+ * This works hand-in-hand with `string.bytes()` returning the string's latin-1 repr
+ * as bytes (such that "\xAB" once again turn into bytes).
+ *
+ * However, when re-encoding strings/bytes as c-escape, strings always ahve to use
+ * "\u00AB", and Bytes always have to use "\xAB". */
+assert "\xAB" == "\u00AB";
+assert "\xAB" == "\U000000AB";
+assert "\xAB" == string.chr(0xAB);
+assert "\xAB".bytes() == Bytes({ 0xAB });
+assert "\u00FF".bytes() == Bytes({ 0xFF });
+assert (try "\u0100".bytes() catch (e...) e) is ValueError;
+
+assert #"\0" "1" == 2;
+assert #"\0" "12" == 3;
+assert #"\0" "123" == 4;
+assert #"\01" == 1;
+assert #"\012" == 1;
+assert #"\0123" == 2;
+
+assert #"\xA" "B" == 2;
+assert #"\xA" "BC" == 3;
+assert #"\xA" "BCD" == 4;
+assert #"\xAB" == 1;
+assert #"\xABC" == 1;
+assert #"\xABCD" == 1;
+
+assertCEscape("\0\1\2\xFD\xFE\xFF");
+assertCEscape("\0\1\2\xFD\xFE\xFF");
+assertCEscape("\xA" "B");
+assertCEscape("".join(for (local o: [:256]) string.chr(o)));
+
+assert "\0\1\2\xFD\xFE\xFF" == r"\0\1\2\xFD\xFE\xFF".decode("c-escape");
+
+/* Ensure that the representation chosen for c-escape is different for bytes.
+ * Note that the casing for hex-chars is implementation-specific and not asserted here. */
+assert "\xFF".        encode("c-escape").replace("f", "F") == r"\u00FF";
+assert "\xFF".bytes().encode("c-escape").replace("f", "F") == r"\xFF";
+assert r"\u00FF" in repr("\xFF"        ).replace("f", "F");
+assert r"\xFF"   in repr("\xFF".bytes()).replace("f", "F");
+

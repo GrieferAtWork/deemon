@@ -196,10 +196,11 @@ EXPORTS
 	DeeFormat_Print8@16=_DeeFormat_Print8@16
 	DeeFormat_PrintArgumentTypesKw@20=_DeeFormat_PrintArgumentTypesKw@20
 	DeeFormat_Putc@12=_DeeFormat_Putc@12
-	DeeFormat_Quote16@20=_DeeFormat_Quote16@20
-	DeeFormat_Quote32@20=_DeeFormat_Quote32@20
-	DeeFormat_Quote8@20=_DeeFormat_Quote8@20
-	DeeFormat_Quote@20=_DeeFormat_Quote@20
+	DeeFormat_Quote16@16=_DeeFormat_Quote16@16
+	DeeFormat_Quote32@16=_DeeFormat_Quote32@16
+	DeeFormat_Quote8@16=_DeeFormat_Quote8@16
+	DeeFormat_Quote@16=_DeeFormat_Quote@16
+	DeeFormat_QuoteBytes@16=_DeeFormat_QuoteBytes@16
 	DeeFormat_Repeat@16=_DeeFormat_Repeat@16
 	DeeFormat_RepeatUtf8@20=_DeeFormat_RepeatUtf8@20
 	DeeFormat_VPrintf@16=_DeeFormat_VPrintf@16
@@ -732,7 +733,7 @@ EXPORTS
 	DeeString_Pack2ByteBuffer@4=_DeeString_Pack2ByteBuffer@4
 	DeeString_PackUtf16Buffer@8=_DeeString_PackUtf16Buffer@8
 	DeeString_PackUtf32Buffer@8=_DeeString_PackUtf32Buffer@8
-	DeeString_PrintRepr@16=_DeeString_PrintRepr@16
+	DeeString_PrintRepr@12=_DeeString_PrintRepr@12
 	DeeString_ResizeBuffer@8=_DeeString_ResizeBuffer@8
 	DeeString_SetChar@12=_DeeString_SetChar@12
 	DeeString_SetUtf8@8=_DeeString_SetUtf8@8

@@ -84,44 +84,36 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
- *       when targeting an `ascii_printer' */
+ *       when targeting an `ascii_printer'
+ * Output:
+ * - ASCII+isprint --> keep
+ * - ASCII+iscntrl --> \r, \n, \b, ...
+ * - ASCII         --> \177
+ * - other         --> \uABCD, \U1234ABCD */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote(/*ascii*/ Dee_formatprinter_t printer, void *arg,
-                /*utf-8*/ char const *__restrict text, size_t textlen,
-                unsigned int flags);
-#define Dee_FORMAT_QUOTE_FNORMAL   0x0000 /* Normal format-quote flags. */
-#define Dee_FORMAT_QUOTE_FFORCEHEX 0x0002 /* Force hex encoding of all control characters without special strings (`"\n"', etc.). */
-#define Dee_FORMAT_QUOTE_FFORCEOCT 0x0004 /* Force octal encoding of all non-ascii characters. */
-#define Dee_FORMAT_QUOTE_FNOCTRL   0x0008 /* Disable special encoding strings such as `"\r"', `"\n"' or `"\e"' */
-#define Dee_FORMAT_QUOTE_FNOASCII  0x0010 /* Disable regular ascii-characters and print everything using special encodings. */
-#define Dee_FORMAT_QUOTE_FUPPERHEX 0x0020 /* Use uppercase characters for hex (e.g.: `"\xAB"'). */
-#define Dee_FORMAT_QUOTE_FPRINTRAW 0x0080 /* Don't surround the quoted text with "..."; */
+                /*utf-8*/ char const *__restrict text, size_t textlen);
 
-#ifdef DEE_SOURCE
-#define FORMAT_QUOTE_FNORMAL   Dee_FORMAT_QUOTE_FNORMAL   /* Normal format-quote flags. */
-#define FORMAT_QUOTE_FFORCEHEX Dee_FORMAT_QUOTE_FFORCEHEX /* Force hex encoding of all control characters without special strings (`"\n"', etc.). */
-#define FORMAT_QUOTE_FFORCEOCT Dee_FORMAT_QUOTE_FFORCEOCT /* Force octal encoding of all non-ascii characters. */
-#define FORMAT_QUOTE_FNOCTRL   Dee_FORMAT_QUOTE_FNOCTRL   /* Disable special encoding strings such as `"\r"', `"\n"' or `"\e"' */
-#define FORMAT_QUOTE_FNOASCII  Dee_FORMAT_QUOTE_FNOASCII  /* Disable regular ascii-characters and print everything using special encodings. */
-#define FORMAT_QUOTE_FUPPERHEX Dee_FORMAT_QUOTE_FUPPERHEX /* Use uppercase characters for hex (e.g.: `"\xAB"'). */
-#define FORMAT_QUOTE_FPRINTRAW Dee_FORMAT_QUOTE_FPRINTRAW /* Don't surround the quoted text with "..."; */
-#endif /* DEE_SOURCE */
+/* Format-quote raw bytes. Output:
+ * - ASCII+isprint --> keep
+ * - ASCII+iscntrl --> \r, \n, \b, ...
+ * - ASCII+[0-7]   --> \0, \1, ... \7
+ * - other         --> \xAB */
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_QuoteBytes(/*ascii*/ Dee_formatprinter_t printer, void *arg,
+                     /*bytes*/ void const *__restrict data, size_t num_bytes);
 
 
+/* Format-quote 8-bit, 16-bit, and 32-bit unicode text: */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote8(/*ascii*/ Dee_formatprinter_t printer, void *arg,
-                 uint8_t const *__restrict text, size_t textlen,
-                 unsigned int flags);
-
-/* Format-quote 16-bit, and 32-bit text. */
+                 /*latin-1*/ uint8_t const *__restrict text, size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote16(/*ascii*/ Dee_formatprinter_t printer, void *arg,
-                  uint16_t const *__restrict text, size_t textlen,
-                  unsigned int flags);
+                  /*utf-16-without-surrogats*/ uint16_t const *__restrict text, size_t textlen);
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote32(/*ascii*/ Dee_formatprinter_t printer, void *arg,
-                  uint32_t const *__restrict text, size_t textlen,
-                  unsigned int flags);
+                  /*utf-32*/ uint32_t const *__restrict text, size_t textlen);
 
 /* Repeat the given `ch' a total of `count' times. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL

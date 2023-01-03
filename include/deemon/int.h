@@ -781,6 +781,9 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 #define DEEINT_PRINT_DEC     DEEINT_PRINT(10, DEEINT_PRINT_FNORMAL)
 #define DEEINT_PRINT_HEX     DEEINT_PRINT(16, DEEINT_PRINT_FNORMAL)
 
+#define DeeInt_PrintRepr(self, printer, arg) \
+	DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg)
+
 
 #define DEE_PRIVATE_NEWINT_1      DeeInt_NewS8
 #define DEE_PRIVATE_NEWINT_2      DeeInt_NewS16

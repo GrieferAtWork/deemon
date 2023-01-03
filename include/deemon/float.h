@@ -108,6 +108,8 @@ DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
                 size_t width, size_t precision, unsigned int flags);
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
+#define DeeFloat_PrintRepr(self, printer, arg) \
+	DeeFloat_Print(DeeFloat_VALUE(self), printer, arg, 0, 0, DEEFLOAT_PRINT_FNORMAL)
 #endif /* CONFIG_HAVE_FPU */
 #define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
 #define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */

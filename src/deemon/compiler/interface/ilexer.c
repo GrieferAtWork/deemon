@@ -2910,11 +2910,8 @@ err:
 PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend_escape)(void *arg, char const *__restrict buf, size_t bufsize) {
 	dssize_t result;
-	result = DeeFormat_Quote(&unicode_printer_print,
-	                         arg, buf, bufsize, FORMAT_QUOTE_FPRINTRAW);
-	return (unlikely(result < 0))
-	       ? -1
-	       : 0;
+	result = DeeFormat_Quote(&unicode_printer_print, arg, buf, bufsize);
+	return unlikely(result < 0) ? -1 : 0;
 }
 
 

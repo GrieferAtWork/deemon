@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_UNICODE_CFORMAT_C 1
 
 #include <deemon/api.h>
+#include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
@@ -82,24 +83,53 @@ union integral {
 
 
 PRIVATE DEFINE_STRING(str_lpnullrp, "(null)");
+PRIVATE char const dquote[] = { '"' };
 
 PRIVATE dssize_t DCALL
 print_repr_precision(DeeObject *__restrict self, size_t length,
                      dformatprinter printer,
                      void *arg, unsigned int flags) {
-	void *str = DeeString_WSTR(self);
-	ASSERT(length <= WSTR_LENGTH(str));
-	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
-
-	CASE_WIDTH_1BYTE:
-		return DeeFormat_Quote8(printer, arg, (uint8_t *)str, length, flags);
-
-	CASE_WIDTH_2BYTE:
-		return DeeFormat_Quote16(printer, arg, (uint16_t *)str, length, flags);
-
-	CASE_WIDTH_4BYTE:
-		return DeeFormat_Quote32(printer, arg, (uint32_t *)str, length, flags);
+	dssize_t temp, result = 0;
+	if (!(flags & F_PREFIX)) {
+		result = (*printer)(arg, dquote, 1);
+		if unlikely(result < 0)
+			goto done;
 	}
+	if (DeeBytes_Check(self)) {
+		temp = DeeFormat_QuoteBytes(printer, arg,
+		                            DeeBytes_DATA(self),
+		                            DeeBytes_SIZE(self));
+	} else {
+		void *str = DeeString_WSTR(self);
+		ASSERT(length <= WSTR_LENGTH(str));
+		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+	
+		CASE_WIDTH_1BYTE:
+			temp = DeeFormat_Quote8(printer, arg, (uint8_t *)str, length);
+			break;
+	
+		CASE_WIDTH_2BYTE:
+			temp = DeeFormat_Quote16(printer, arg, (uint16_t *)str, length);
+			break;
+	
+		CASE_WIDTH_4BYTE:
+			temp = DeeFormat_Quote32(printer, arg, (uint32_t *)str, length);
+			break;
+		}
+	}
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	if (!(flags & F_PREFIX)) {
+		temp = (*printer)(arg, dquote, 1);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+done:
+	return result;
+err:
+	return temp;
 }
 
 
@@ -482,10 +512,15 @@ do_length_integer:
 			GETARG();
 			if (DeeNone_Check(in_arg)) {
 				in_arg = (DeeObject *)&str_lpnullrp;
-			} else if (DeeObject_AssertTypeExact(in_arg, &DeeString_Type)) {
-				goto err_m1;
+				goto do_handle_string_for_percent_s;
+			} else if (DeeBytes_Check(in_arg)) {
+				str_length = DeeBytes_SIZE(in_arg);
+			} else {
+				if (DeeObject_AssertTypeExact(in_arg, &DeeString_Type))
+					goto err_m1;
+do_handle_string_for_percent_s:
+				str_length = DeeString_WLEN(in_arg);
 			}
-			str_length = DeeString_WLEN(in_arg);
 			if (flags & F_HASPREC) {
 				if (str_length > precision) {
 					str_length = precision;
@@ -507,24 +542,17 @@ do_length_integer:
 					result += temp;
 				}
 				if (ch == 'q') {
-					temp = print_repr_precision(in_arg,
-					                            str_length,
-					                            printer,
-					                            arg,
-#if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
-					                            flags & F_PREFIX
-#else /* F_PREFIX == FORMAT_QUOTE_FPRINTRAW */
-					                            flags & F_PREFIX
-					                            ? FORMAT_QUOTE_FPRINTRAW
-					                            : FORMAT_QUOTE_FNORMAL
-#endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
-					                            );
+					temp = print_repr_precision(in_arg, str_length, printer, arg, flags);
 					if unlikely(temp < 0)
 						goto err;
 					result += temp;
 					str_length = (size_t)temp; /* Fir ljust width-strings. */
 				} else {
-					temp = DeeString_PrintUtf8(in_arg, printer, arg);
+					if (DeeBytes_Check(in_arg)) {
+						temp = DeeBytes_PrintUtf8(in_arg, printer, arg);
+					} else {
+						temp = DeeString_PrintUtf8(in_arg, printer, arg);
+					}
 					if unlikely(temp < 0)
 						goto err;
 					result += temp;
@@ -540,18 +568,9 @@ do_length_integer:
 				 * For this case, we must pre-generate the quoted
 				 * string so we can know it's exact length. */
 				struct unicode_printer subprinter = UNICODE_PRINTER_INIT;
-				temp = print_repr_precision(in_arg,
-				                            str_length,
+				temp = print_repr_precision(in_arg, str_length,
 				                            &unicode_printer_print,
-				                            &subprinter,
-#if F_PREFIX == FORMAT_QUOTE_FPRINTRAW
-				                            flags & F_PREFIX
-#else /* F_PREFIX == FORMAT_QUOTE_FPRINTRAW */
-				                            flags & F_PREFIX
-				                            ? FORMAT_QUOTE_FPRINTRAW
-				                            : FORMAT_QUOTE_FNORMAL
-#endif /* F_PREFIX != FORMAT_QUOTE_FPRINTRAW */
-				                            );
+				                            &subprinter, flags);
 				if unlikely(temp < 0) {
 err_subprinter:
 					unicode_printer_fini(&subprinter);
@@ -582,6 +601,12 @@ err_subprinter:
 					goto err_m1;
 				}
 				uch = DeeString_GetChar(in_arg, 0);
+			} else if (DeeBytes_Check(in_arg)) {
+				if (DeeBytes_SIZE(in_arg) != 1) {
+					err_expected_single_character_string(in_arg);
+					goto err_m1;
+				}
+				uch = DeeBytes_DATA(in_arg)[0];
 			} else {
 				if (DeeObject_AsUInt32(in_arg, &uch))
 					goto err_m1;
@@ -606,7 +631,9 @@ err_subprinter:
 		}	break;
 
 		/* Print native objects. */
-		case 'R': ch = 'r'; ATTR_FALLTHROUGH
+		case 'R':
+			ch = 'r';
+			ATTR_FALLTHROUGH
 		case 'k':
 		case 'K':
 		case 'O':
@@ -617,12 +644,8 @@ err_subprinter:
 				struct unicode_printer preprinter = UNICODE_PRINTER_INIT;
 				size_t preprinter_length;
 				temp = ch == 'r'
-				       ? DeeObject_PrintRepr(in_arg,
-				                             &unicode_printer_print,
-				                             &preprinter)
-				       : DeeObject_Print(in_arg,
-				                         &unicode_printer_print,
-				                         &preprinter);
+				       ? DeeObject_PrintRepr(in_arg, &unicode_printer_print, &preprinter)
+				       : DeeObject_Print(in_arg, &unicode_printer_print, &preprinter);
 				if unlikely(temp < 0) {
 err_preprinter:
 					unicode_printer_fini(&preprinter);

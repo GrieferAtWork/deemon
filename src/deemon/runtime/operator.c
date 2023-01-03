@@ -4746,13 +4746,13 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 	DeeTypeObject *typ;
 	typ = Dee_TYPE(self);
 	if (typ == &DeeString_Type)
-		return DeeString_PrintRepr(self, printer, arg, FORMAT_QUOTE_FNORMAL);
+		return DeeString_PrintRepr(self, printer, arg);
 	if (typ == &DeeInt_Type)
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg);
+		return DeeInt_PrintRepr(self, printer, arg);
 	if (typ == &DeeBytes_Type)
 		return DeeBytes_PrintRepr(self, printer, arg);
 	if (typ == &DeeFloat_Type)
-		return DeeFormat_Printf(printer, arg, "%f", DeeFloat_VALUE(self));
+		return DeeFloat_PrintRepr(self, printer, arg);
 	if (typ == &DeeList_Type)
 		return DeeList_PrintRepr(self, printer, arg);
 	if (typ == &DeeError_CompilerError ||

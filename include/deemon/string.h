@@ -838,12 +838,10 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 #define DeeString_PrintUtf8 DeeObject_Print
 #endif /* !CONFIG_BUILDING_DEEMON */
 
-/* Print the escape-encoded variant of `self'
- * @param: flags: Set of `FORMAT_QUOTE_F*' (from <deemon/format.h>) */
+/* Print the escape-encoded variant of `self' */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
-                    Dee_formatprinter_t printer,
-                    void *arg, unsigned int flags);
+                    Dee_formatprinter_t printer, void *arg);
 
 
 /* Construct a string from the given escape-sequence.

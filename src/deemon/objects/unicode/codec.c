@@ -371,8 +371,10 @@ decode_c_escape(DeeObject *__restrict self, unsigned int error_mode) {
 	/* If the string starts and ends with the same quotation mark, remove them. */
 	if (size >= 2 &&
 	    text[0] == text[size - 1] &&
-	    (text[0] == '\"' || text[0] == '\''))
-		++text, size -= 2;
+	    (text[0] == '\"' || text[0] == '\'')) {
+		++text;
+		size -= 2;
+	}
 	return DeeString_FromBackslashEscaped(text, size, error_mode);
 err:
 	return NULL;
@@ -380,54 +382,40 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_c_escape(DeeObject *__restrict self) {
+	dssize_t error;
+	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if (DeeBytes_Check(self)) {
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
-		if unlikely(DeeFormat_Quote(&bytes_printer_print, &printer,
-			                         (char *)DeeBytes_DATA(self),
-			                         DeeBytes_SIZE(self),
-			                         FORMAT_QUOTE_FNORMAL |
-			                         FORMAT_QUOTE_FPRINTRAW) < 0)
-		goto err_bytes_printer;
-		return bytes_printer_pack(&printer);
-err_bytes_printer:
-		bytes_printer_fini(&printer);
-		return NULL;
-	}
-	if (DeeString_Check(self)) {
-		struct ascii_printer printer = ASCII_PRINTER_INIT;
-		void *str                    = DeeString_WSTR(self);
+		error = DeeFormat_QuoteBytes(&ascii_printer_print, &printer,
+		                             (uint8_t const *)DeeBytes_DATA(self),
+		                             DeeBytes_SIZE(self));
+	} else if (DeeString_Check(self)) {
+		void *str = DeeString_WSTR(self);
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
-			if unlikely(DeeFormat_Quote8(&ascii_printer_print, &printer,
-				                          (uint8_t *)str, WSTR_LENGTH(str),
-				                          FORMAT_QUOTE_FNORMAL |
-				                          FORMAT_QUOTE_FPRINTRAW) < 0)
-			goto err_ascii_printer;
+			error = DeeFormat_Quote8(&ascii_printer_print, &printer,
+			                         (uint8_t const *)str, WSTR_LENGTH(str));
 			break;
 
 		CASE_WIDTH_2BYTE:
-			if unlikely(DeeFormat_Quote16(&ascii_printer_print, &printer,
-				                           (uint16_t *)str, WSTR_LENGTH(str),
-				                           FORMAT_QUOTE_FNORMAL |
-				                           FORMAT_QUOTE_FPRINTRAW) < 0)
-			goto err_ascii_printer;
+			error = DeeFormat_Quote16(&ascii_printer_print, &printer,
+			                          (uint16_t const *)str, WSTR_LENGTH(str));
 			break;
 
 		CASE_WIDTH_4BYTE:
-			if unlikely(DeeFormat_Quote32(&ascii_printer_print, &printer,
-				                           (uint32_t *)str, WSTR_LENGTH(str),
-				                           FORMAT_QUOTE_FNORMAL |
-				                           FORMAT_QUOTE_FPRINTRAW) < 0)
-			goto err_ascii_printer;
+			error = DeeFormat_Quote32(&ascii_printer_print, &printer,
+			                          (uint32_t const *)str, WSTR_LENGTH(str));
 			break;
 		}
-		return ascii_printer_pack(&printer);
-err_ascii_printer:
-		ascii_printer_fini(&printer);
-		return NULL;
+	} else {
+		err_expected_string_or_bytes(self);
+		goto err_ascii_printer;
 	}
-	err_expected_string_or_bytes(self);
+	if unlikely(error < 0)
+		goto err_ascii_printer;
+	return ascii_printer_pack(&printer);
+err_ascii_printer:
+	ascii_printer_fini(&printer);
 	return NULL;
 }
 
