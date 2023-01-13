@@ -9575,6 +9575,35 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_rescanf(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubStrings *substrings;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rescanf"), &exec))
+		goto err;
+	substrings = ReSubStrings_Malloc(exec.rx_code->rc_ngrps);
+	if unlikely(!substrings)
+		goto err;
+	exec.rx_nmatch = exec.rx_code->rc_ngrps;
+	exec.rx_pmatch = substrings->rss_groups;
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReSubStrings_Free(substrings);
+		return_empty_seq;
+	}
+	ReSubStrings_Init(substrings, (DeeObject *)self,
+	                  exec.rx_inbase,
+	                  exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)substrings;
+err_g:
+	ReSubStrings_Free(substrings);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_regfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ReGroups *groups;
 	Dee_ssize_t result;
@@ -10063,6 +10092,9 @@ struct DeeRegexBaseExec {
 };
 
 /* Functions from "./reproxy.c.inl" */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_re_scanf(String *__restrict self,
+                struct DeeRegexBaseExec const *__restrict exec);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_re_findall(String *__restrict self,
                   struct DeeRegexBaseExec const *__restrict exec);
@@ -11826,6 +11858,17 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	  TYPE_METHOD_FKWDS },
+	{ "rescanf",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rescanf,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	      "@throw ValueError The given @pattern is malformed\n"
+	      "Similar to ?#regmatch, but rather than return a list of matched offsets, a sequence of "
+	      "matched strings is returned, allowing the user to easily extract matched text in a way "
+	      "that is similar to ?#scanf. Returns an empty sequence when @pattern can't be matched."),
+	  TYPE_METHOD_FKWDS },
 
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	{ "regmatch",
@@ -11855,7 +11898,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regfind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "Similar to ?#refind, but rather than only return the character-range "
 	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11864,7 +11907,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regrfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrfind,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "Similar to ?#rerfind, but rather than only return the character-range "
 	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11882,7 +11925,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
@@ -11892,7 +11935,7 @@ INTERN_CONST struct type_method tpconst string_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "regrindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_regrindex,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	  DOC("(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
 	      "@param range The max number of search attempts to perform\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"

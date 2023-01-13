@@ -1509,7 +1509,7 @@ again:
 		/* Complete a UTF-8 sequence. */
 		uint8_t seqlen = utf8_sequence_len[self->w_printer.up_pend[0]];
 		uint8_t gotlen = (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-		uint8_t missing, full_sequence[UTF8_MAX_MBLEN], *tempptr;
+		uint8_t missing, full_sequence[UTF8_CUR_MBLEN], *tempptr;
 		ASSERT(gotlen < seqlen);
 		missing = seqlen - gotlen;
 		if (missing > bufsize) {

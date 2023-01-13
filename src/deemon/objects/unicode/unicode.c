@@ -2847,6 +2847,7 @@ Dee_utf8_writechar(char *__restrict buffer, uint32_t ch) {
 		*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
 		*dst++ = 0x80 | (uint8_t)((ch)&0x3f);
 	} else {
+		STATIC_ASSERT(UTF8_CUR_MBLEN >= 7);
 		*dst++ = 0xfe;
 		*dst++ = 0x80 | (uint8_t)((ch >> 30) & 0x03 /* & 0x3f*/);
 		*dst++ = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
@@ -4377,7 +4378,7 @@ err:
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
-	char utf8_repr[UTF8_MAX_MBLEN];
+	char utf8_repr[UTF8_CUR_MBLEN];
 	size_t utf8_len;
 	if (printer == &unicode_printer_print) {
 		if (unicode_printer_putc((struct unicode_printer *)arg, ch))
@@ -5636,7 +5637,7 @@ DeeFormat_Print32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen) {
 	dssize_t temp, result = 0;
 	size_t utf8_length;
-	uint8_t utf8_buffer[UTF8_MAX_MBLEN];
+	uint8_t utf8_buffer[UTF8_CUR_MBLEN];
 	if (printer == &unicode_printer_print)
 		return unicode_printer_print32((struct unicode_printer *)arg, text, textlen);
 	while (textlen--) {

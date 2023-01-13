@@ -228,8 +228,8 @@ typedef Dee_ssize_t re_sregoff_t;
 #define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
 
 #ifndef CONFIG_HAVE_UNICODE_H
-#undef UNICODE_UTF8_MAXLEN
-#define UNICODE_UTF8_MAXLEN Dee_UTF8_MAX_MBLEN
+#undef UNICODE_UTF8_CURLEN
+#define UNICODE_UTF8_CURLEN Dee_UTF8_CUR_MBLEN
 #undef unicode_tolower
 #define unicode_tolower DeeUni_ToLower
 #undef unicode_toupper

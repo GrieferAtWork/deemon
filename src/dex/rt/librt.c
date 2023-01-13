@@ -1487,6 +1487,12 @@ librt_get_ReGroups_impl_f(void) {
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubStrings_impl_f(void) {
+	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
+	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "rescanf", 1, argv));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesFindAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
 	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "refindall", 1, argv));
@@ -1508,6 +1514,12 @@ LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesSplit_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
 	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "resplit", 1, argv));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubBytes_impl_f(void) {
+	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
+	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "rescanf", 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1558,6 +1570,26 @@ librt_get_ReGroups_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ReGroupsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ReGroups_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubStrings_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_ReSubStrings_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubStringsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_ReSubStrings_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubBytes_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_ReSubBytes_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ReSubBytesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_ReSubBytes_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1751,6 +1783,10 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReSplit, librt_get_ReSplit_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator, librt_get_ReSplitIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReGroups, librt_get_ReGroups_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReGroupsIterator, librt_get_ReGroupsIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_ReSubStrings, librt_get_ReSubStrings_f);
+PRIVATE DEFINE_CMETHOD(librt_get_ReSubStringsIterator, librt_get_ReSubStringsIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_ReSubBytes, librt_get_ReSubBytes_f);
+PRIVATE DEFINE_CMETHOD(librt_get_ReSubBytesIterator, librt_get_ReSubBytesIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesFindAll, librt_get_ReBytesFindAll_f);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesFindAllIterator, librt_get_ReBytesFindAllIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_RegBytesFindAll, librt_get_RegBytesFindAll_f);
@@ -1987,6 +2023,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "ReSplitIterator", (DeeObject *)&librt_get_ReSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* ReSplitIterator_Type */
 	{ "ReGroups", (DeeObject *)&librt_get_ReGroups, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* ReGroups_Type */
 	{ "ReGroupsIterator", (DeeObject *)&librt_get_ReGroupsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ReGroupsIterator_Type */
+	{ "ReSubStrings", (DeeObject *)&librt_get_ReSubStrings, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* ReSubStrings_Type */
+	{ "ReSubStringsIterator", (DeeObject *)&librt_get_ReSubStringsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* ReSubStringsIterator_Type */
+	{ "ReSubBytes", (DeeObject *)&librt_get_ReSubBytes, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* ReSubBytes_Type */
+	{ "ReSubBytesIterator", (DeeObject *)&librt_get_ReSubBytesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* ReSubBytesIterator_Type */
 	{ "ReBytesFindAll", (DeeObject *)&librt_get_ReBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* ReFindAll_Type */
 	{ "ReBytesFindAllIterator", (DeeObject *)&librt_get_ReBytesFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* ReFindAllIterator_Type */
 	{ "RegBytesFindAll", (DeeObject *)&librt_get_RegBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* RegFindAll_Type */

@@ -4359,6 +4359,37 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF ReSubBytes *subbytes;
+	Dee_ssize_t result;
+	struct DeeRegexExec exec;
+	if unlikely(bytes_generic_regex_getargs(self, argc, argv, kw,
+	                                        BYTES_GENERIC_REGEX_GETARGS_FMT("rescanf"),
+	                                        &exec))
+		goto err;
+	subbytes = ReSubBytes_Malloc(exec.rx_code->rc_ngrps);
+	if unlikely(!subbytes)
+		goto err;
+	exec.rx_nmatch = exec.rx_code->rc_ngrps;
+	exec.rx_pmatch = subbytes->rss_groups;
+	result = DeeRegex_Match(&exec);
+	if unlikely(result == DEE_RE_STATUS_ERROR)
+		goto err_g;
+	if (result == DEE_RE_STATUS_NOMATCH) {
+		ReSubBytes_Free(subbytes);
+		return_empty_seq;
+	}
+	ReSubBytes_Init(subbytes, (DeeObject *)self,
+	                exec.rx_inbase,
+	                exec.rx_code->rc_ngrps);
+	return (DREF DeeObject *)subbytes;
+err_g:
+	ReSubBytes_Free(subbytes);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ReGroups *groups;
 	Dee_ssize_t result;
@@ -6338,6 +6369,17 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
+	  TYPE_METHOD_FKWDS },
+	{ "rescanf",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rescanf,
+	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	      "@param range The max number of search attempts to perform\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	      "@throw ValueError The given @pattern is malformed\n"
+	      "Similar to ?#regfind, but rather than return a list of matched offsets, a sequence of "
+	      "matched strings is returned, allowing the user to easily extract matched text in a way "
+	      "that is similar to ?#scanf. Returns an empty sequence when @pattern can't be matched."),
 	  TYPE_METHOD_FKWDS },
 
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */

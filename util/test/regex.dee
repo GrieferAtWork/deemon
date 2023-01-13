@@ -226,3 +226,13 @@ assert !"FOO".rematch("foo");
 assert "FOO".rematch("foo", rules: "i");
 assert "Ä".rematch("ä", rules: "i");
 assert "ä".rematch("Ä", rules: "i");
+
+/* Assert that the `rescanf()' function works. */
+function assertReScanf(input, pattern, expected) {
+	assert input.rescanf(pattern) == expected;
+	assert input.bytes().rescanf(pattern) == expected.each.bytes();
+}
+
+assertReScanf("#define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });
+assertReScanf(" #define FOO 42", r"#\s*define\s+(\w+)\s+(\w+)", {});
+assertReScanf(" #define FOO 42", r"\s*#\s*define\s+(\w+)\s+(\w+)", { "FOO", "42" });

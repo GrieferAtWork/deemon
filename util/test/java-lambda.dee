@@ -23,10 +23,10 @@ import * from deemon;
 
 function assertJitInvocation(body: string, args: Tuple, result: Object) {
 	assert exec(body)(args...) == result;
-	assert exec("(" + body + ")")(args...) == result;
-	assert exec(body + ";")(args...) == result;
-	assert exec("({" + body + "})")[0](args...) == result;
-	assert exec("({" + body + ";})")(args...) == result;
+	assert exec(f"({body})")(args...) == result;
+	assert exec(f"{body};")(args...) == result;
+	assert exec(f"(\{{body}\})")[0](args...) == result;
+	assert exec(f"(\{{body};\})")(args...) == result;
 }
 
 #define ASSERT_LAMBDA(expr, args, result)               \

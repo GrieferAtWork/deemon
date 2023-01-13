@@ -35,11 +35,11 @@ typedef struct {
 	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rg_groups); /* Array of groups */
 } ReGroups;
 
-#define DeeRegexMatch_ToObject(self)    \
-	((self)->rm_so == (size_t)-1        \
-	 ? (Dee_Incref(Dee_None), Dee_None) \
-	 : DeeTuple_Newf(PCKuSIZ PCKuSIZ,   \
-	                 (self)->rm_so,     \
+#define DeeRegexMatch_AsRangeObject(self) \
+	((self)->rm_so == (size_t)-1          \
+	 ? (Dee_Incref(Dee_None), Dee_None)   \
+	 : DeeTuple_Newf(PCKuSIZ PCKuSIZ,     \
+	                 (self)->rm_so,       \
 	                 (self)->rm_eo))
 
 typedef struct {
@@ -48,7 +48,11 @@ typedef struct {
 	size_t         rgi_index;  /* [lock(ATOMIC)] Index of next not-enumerated group. */
 } ReGroupsIterator;
 
+#ifdef CONFIG_NO_THREADS
+#define ReGroupsIterator_GetIndex(x) (x)->rgi_index
+#else /* CONFIG_NO_THREADS */
 #define ReGroupsIterator_GetIndex(x) ATOMIC_READ((x)->rgi_index)
+#endif /* !CONFIG_NO_THREADS */
 
 INTDEF DeeTypeObject ReGroups_Type;
 INTDEF DeeTypeObject ReGroupsIterator_Type;
@@ -61,6 +65,69 @@ INTDEF DeeTypeObject ReGroupsIterator_Type;
 	(void)(DeeObject_Init(self, &ReGroups_Type), \
 	       (self)->rg_ngroups = (ngroups))
 
+
+
+typedef struct {
+	OBJECT_HEAD
+	size_t                                        rss_ngroups; /* # of groups (may be 0) */
+	DREF DeeObject                               *rss_baseown; /* [1..1][const] Owner of `rss_baseptr' (string or bytes) */
+	__BYTE_TYPE__ const                          *rss_baseptr; /* [1..1][const] Base-pointer. */
+	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rss_groups); /* Array of groups */
+} ReSubStrings;
+
+#define DeeRegexMatch_AsSubString(self, baseobj, baseptr)           \
+	((self)->rm_so == (size_t)-1                                    \
+	 ? (Dee_Incref(Dee_None), Dee_None)                             \
+	 : DeeString_NewUtf8((char const *)((baseptr) + (self)->rm_so), \
+	                     (self)->rm_eo - (self)->rm_so,             \
+	                     Dee_STRING_ERROR_FSTRICT))
+#define DeeRegexMatch_AsSubBytes(self, baseobj, baseptr)        \
+	((self)->rm_so == (size_t)-1                                \
+	 ? (Dee_Incref(Dee_None), Dee_None)                         \
+	 : DeeBytes_NewSubView(baseobj,                             \
+	                       (void *)((baseptr) + (self)->rm_so), \
+	                       (self)->rm_eo - (self)->rm_so))
+
+typedef struct {
+	OBJECT_HEAD
+	DREF ReSubStrings *rssi_strings; /* [1..1][const] Linked groups object. */
+	size_t             rssi_index;   /* [lock(ATOMIC)] Index of next not-enumerated group. */
+} ReSubStringsIterator;
+
+#ifdef CONFIG_NO_THREADS
+#define ReSubStringsIterator_GetIndex(x) (x)->rssi_index
+#else /* CONFIG_NO_THREADS */
+#define ReSubStringsIterator_GetIndex(x) ATOMIC_READ((x)->rssi_index)
+#endif /* !CONFIG_NO_THREADS */
+
+INTDEF DeeTypeObject ReSubStrings_Type;
+INTDEF DeeTypeObject ReSubStringsIterator_Type;
+INTDEF DeeTypeObject ReSubBytes_Type;
+INTDEF DeeTypeObject ReSubBytesIterator_Type;
+
+#define ReSubStrings_Malloc(ngroups)                                       \
+	((ReSubStrings *)DeeObject_Malloc(offsetof(ReSubStrings, rss_groups) + \
+	                                  (ngroups) * sizeof(struct DeeRegexMatch)))
+#define ReSubStrings_Free(self) DeeObject_Free(self)
+#define ReSubStrings_Init(self, baseown, baseptr, ngroups) \
+	(void)(DeeObject_Init(self, &ReSubStrings_Type),       \
+	       (self)->rss_ngroups = (ngroups),                \
+	       (self)->rss_baseown = (baseown),                \
+	       Dee_Incref((self)->rss_baseown),                \
+	       (self)->rss_baseptr = (__BYTE_TYPE__ const *)(baseptr))
+
+
+#define ReSubBytes                  ReSubStrings
+#define ReSubBytesIterator          ReSubStringsIterator
+#define ReSubBytesIterator_GetIndex ReSubStringsIterator_GetIndex
+#define ReSubBytes_Malloc           ReSubStrings_Malloc
+#define ReSubBytes_Free             ReSubStrings_Free
+#define ReSubBytes_Init(self, baseown, baseptr, ngroups) \
+	(void)(DeeObject_Init(self, &ReSubBytes_Type),       \
+	       (self)->rss_ngroups = (ngroups),              \
+	       (self)->rss_baseown = (baseown),              \
+	       Dee_Incref((self)->rss_baseown),              \
+	       (self)->rss_baseptr = (__BYTE_TYPE__ const *)(baseptr))
 
 DECL_END
 
