@@ -162,10 +162,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {
-	{ "sync", &sysfile_class_sync,
-	  DOC("()\n"
-	      "Synchronize all unwritten data with the host operating system") },
-	{ NULL }
+	TYPE_METHOD("sync", &sysfile_class_sync,
+	            "()\n"
+	            "Synchronize all unwritten data with the host operating system"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst sysfile_class_members[] = {

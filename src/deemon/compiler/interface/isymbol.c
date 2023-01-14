@@ -200,76 +200,75 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst symbol_getsets[] = {
-	{ "kind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_getkind,
-	  (int (DCALL *)(DeeObject *__restrict))&symbol_delkind,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&symbol_setkind,
-	  DOC("->?Dstring\n"
-	      "@throw ValueError Attempted to set an invalid symbol type\n"
-	      "@throw TypeError Attempted to set the symbol type to one of "
-	      "${[\"extern\", \"module\", \"cfield\", \"ifield\", \"alias\", \"arg\"]} "
-	      "(use the `set*' member functions instead)\n"
-	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
-	      "get, del (set to $\"none\"), or set the typing of @this symbol\n"
-	      "The symbol's typing affects the assembly generated when the symbol "
-	      "is used in ?AAst?Ert:Compiler branches\n"
-	      "The following symbol types (kinds) exist:\n"
-	      "#T{Name|Get|Del|Set|Write|Ref|Life|Description~"
-	      "$\"none\"|none|-|-|-|no|-|Placeholder type, and used as typing of newly created symbols&"
-	      "$\"global\"|global|global|global|-|no|Same as the module|A global symbol, that is exported from the current module (though only if used)&"
-	      "$\"extern\"|extern|extern|extern|-|no|Same as the module|An external symbol, imported from another module&"
-	      "$\"module\"|module|-|-|local|no|-|A reference to the module object of an import&"
-	      "$\"mymod\"|module|-|-|local|no|-|A special sub-class of $\"module\", referring to one's own module (s.a. ?Amodule?Ert:Compiler)&"
-	      "$\"getset\"|(getter)|(delete)|(setter)|-|no (callbacks: yes)|-|"
-	      "A special symbol class that allows for up to 3 other symbols to be defined, "
-	      "which are then read from, with the retrieved object then being called&"
-	      "$\"ifield\"|member|member|member|-|no (access-descriptors: yes)|Per-instance|A symbol referring to an instance-member&"
-	      "$\"cfield\"|member|member|member|-|no (class-symbol: yes)|Same as the class-symbol|A symbol referring to an class-member&"
-	      "$\"alias\"|ind|ind|ind|-|-|-|An alias referring to a different symbol&"
-	      "$\"arg\"|arg|-|-|local|yes|Duration of invocation|A symbol referring to an argument passed to a function during invocation&"
-	      "$\"local\"|local|local|local|-|yes|Duration of invocation|A symbol that exists local to each invocation of a function&"
-	      "$\"static\"|static|static|static|-|yes|Duration of code|A symbol that exists statically as part of its code (shared between different function instantiations)&"
-	      "$\"except\"|except|-|-|local|yes|Until handled|A symbol referring to the last-thrown exception&"
-	      "$\"myfunc\"|myfunc|-|-|local|yes|-|A symbol referring to the current function, within that function. "
-	      "Used to prevent an unneeded reference loop when a function calls itself.&"
-	      "$\"this\"|arg|-|-|-|yes|-|Access to the hidden this-argument&"
-	      "$\"ambig\"|-|-|-|-|no|-|Illegal access caused by ambiguity, including verbose information about ambiguous declaration locations&"
-	      "$\"fwd\"|-|-|-|-|-|-|Access to another symbol that has yet to be declared. (Usually replaced by an $\"alias\" symbol during final linking)&"
-	      "$\"const\"|const|-|-|-|no|forever|Access to a constant expressions that may be duplicated an undefined amount of times. "
-	      "Should only be used for constant expressions that are also immutable, "
-	      "such as :{tuple}s, :{string}s or :{int}egers, etc.&"
-	      "<ref>|ref|-|-|-|yes|Same as function instance|A symbol that is being accessed as a reference (see `Referenced' below)}\n"
-	      "#L-{"
-	      "Get: The mechanism used to read from the symbol, and check its binding|"
-	      "Del: The mechanism used to delete the symbol|"
-	      "Set: The mechanism used to write to the symbol|"
-	      "Write: A conversion that is applied to the symbol during assembly, if the symbol has been written at any point|"
-	      "Ref: Indicates if the symbol must be accessed by-ref within inner base-scopes. "
-	           "Symbols accessed by-ref can only be read from, but not be deleted, or written to. "
-	           "At runtime, this is done by storing a reference to all symbols used by an inner "
-	           "function, but declared by an outer function, meaning that the act of initializing "
-	           "such a function will invoke the Get operation of the symbol (with the exception of "
-	           "$\"getset\", which will reference the individual callbacks instead)|"
-	      "Life: How long objects stored in this symbol exist for}\n"
-	      "#T{Mechanism|Description~"
-	      "$none|Simply evaluates to ?N whenever accessed&"
-	      "$global|Writable access to a symbol stored within ones own module object, and accessible from other modules&"
-	      "$extern|Similar to $global, however the symbol appears as a $global object of another module&"
-	      "$module|Read-only access to ones own, or an imported module object&"
-	      "${foo}|Read from another symbol ${foo}, then invoke the result to emulate symbol operations&"
-	      "$member|A class- or instance-symbol, similar to an attribute, but stripped of being a virtual access&"
-	      "$ind|Seamless forwarding of an access to another symbol&"
-	      "$arg|Read-only access to a argument passed to a function&"
-	      "$local|Writable access to objects stored as part of a function getting executed&"
-	      "$static|Writable access to objects stored alongside code being executed&"
-	      "$except|Read-only access to the last thrown exception&"
-	      "$myfunc|Read-only access to the function currently being executed&"
-	      "$const|Access to a constant expression}") },
-	{ "name",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&symbol_name, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the name of @this symbol") },
-	{ NULL }
+	TYPE_GETSET("kind", &symbol_getkind, &symbol_delkind, &symbol_setkind,
+	            "->?Dstring\n"
+	            "@throw ValueError Attempted to set an invalid symbol type\n"
+	            "@throw TypeError Attempted to set the symbol type to one of "
+	            /*            */ "${[\"extern\", \"module\", \"cfield\", \"ifield\", \"alias\", \"arg\"]} "
+	            /*            */ "(use the `set*' member functions instead)\n"
+	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            "Get, del (set to $\"none\"), or set the typing of @this symbol\n"
+	            "The symbol's typing affects the assembly generated when the symbol "
+	            /**/ "is used in ?AAst?Ert:Compiler branches\n"
+	            "The following symbol types (kinds) exist:\n"
+	            "#T{Name|Get|Del|Set|Write|Ref|Life|Description~"
+	            /**/ "$\"none\"|none|-|-|-|no|-|Placeholder type, and used as typing of newly created symbols&"
+	            /**/ "$\"global\"|global|global|global|-|no|Same as the module|A global symbol, that is exported from the current module (though only if used)&"
+	            /**/ "$\"extern\"|extern|extern|extern|-|no|Same as the module|An external symbol, imported from another module&"
+	            /**/ "$\"module\"|module|-|-|local|no|-|A reference to the module object of an import&"
+	            /**/ "$\"mymod\"|module|-|-|local|no|-|A special sub-class of $\"module\", referring to one's own module (s.a. ?Amodule?Ert:Compiler)&"
+	            /**/ "$\"getset\"|(getter)|(delete)|(setter)|-|no (callbacks: yes)|-|"
+	            /**/ /**/ "A special symbol class that allows for up to 3 other symbols to be defined, "
+	            /**/ /**/ "which are then read from, with the retrieved object then being called&"
+	            /**/ "$\"ifield\"|member|member|member|-|no (access-descriptors: yes)|Per-instance|A symbol referring to an instance-member&"
+	            /**/ "$\"cfield\"|member|member|member|-|no (class-symbol: yes)|Same as the class-symbol|A symbol referring to an class-member&"
+	            /**/ "$\"alias\"|ind|ind|ind|-|-|-|An alias referring to a different symbol&"
+	            /**/ "$\"arg\"|arg|-|-|local|yes|Duration of invocation|A symbol referring to an argument passed to a function during invocation&"
+	            /**/ "$\"local\"|local|local|local|-|yes|Duration of invocation|A symbol that exists local to each invocation of a function&"
+	            /**/ "$\"static\"|static|static|static|-|yes|Duration of code|A symbol that exists statically as part of its code (shared between different function instantiations)&"
+	            /**/ "$\"except\"|except|-|-|local|yes|Until handled|A symbol referring to the last-thrown exception&"
+	            /**/ "$\"myfunc\"|myfunc|-|-|local|yes|-|A symbol referring to the current function, within that function. "
+	            /**/ /*                              */ "Used to prevent an unneeded reference loop when a function calls itself.&"
+	            /**/ "$\"this\"|arg|-|-|-|yes|-|Access to the hidden this-argument&"
+	            /**/ "$\"ambig\"|-|-|-|-|no|-|Illegal access caused by ambiguity, including verbose information about ambiguous declaration locations&"
+	            /**/ "$\"fwd\"|-|-|-|-|-|-|Access to another symbol that has yet to be declared. (Usually replaced by an $\"alias\" symbol during final linking)&"
+	            /**/ "$\"const\"|const|-|-|-|no|forever|Access to a constant expressions that may be duplicated an undefined amount of times. "
+	            /**/ "Should only be used for constant expressions that are also immutable, "
+	            /**/ "such as :{tuple}s, :{string}s or :{int}egers, etc.&"
+	            /**/ "<ref>|ref|-|-|-|yes|Same as function instance|A symbol that is being accessed as a reference (see `Referenced' below)"
+	            "}\n"
+	            "#L-{"
+	            /**/ "Get: The mechanism used to read from the symbol, and check its binding|"
+	            /**/ "Del: The mechanism used to delete the symbol|"
+	            /**/ "Set: The mechanism used to write to the symbol|"
+	            /**/ "Write: A conversion that is applied to the symbol during assembly, if the symbol has been written at any point|"
+	            /**/ "Ref: Indicates if the symbol must be accessed by-ref within inner base-scopes. "
+	            /**/ /**/ "Symbols accessed by-ref can only be read from, but not be deleted, or written to. "
+	            /**/ /**/ "At runtime, this is done by storing a reference to all symbols used by an inner "
+	            /**/ /**/ "function, but declared by an outer function, meaning that the act of initializing "
+	            /**/ /**/ "such a function will invoke the Get operation of the symbol (with the exception of "
+	            /**/ /**/ "$\"getset\", which will reference the individual callbacks instead)|"
+	            /**/ "Life: How long objects stored in this symbol exist for"
+	            "}\n"
+	            "#T{Mechanism|Description~"
+	            /**/ "$none|Simply evaluates to ?N whenever accessed&"
+	            /**/ "$global|Writable access to a symbol stored within ones own module object, and accessible from other modules&"
+	            /**/ "$extern|Similar to $global, however the symbol appears as a $global object of another module&"
+	            /**/ "$module|Read-only access to ones own, or an imported module object&"
+	            /**/ "$foo|Read from another symbol $foo, then invoke the result to emulate symbol operations&"
+	            /**/ "$member|A class- or instance-symbol, similar to an attribute, but stripped of being a virtual access&"
+	            /**/ "$ind|Seamless forwarding of an access to another symbol&"
+	            /**/ "$arg|Read-only access to a argument passed to a function&"
+	            /**/ "$local|Writable access to objects stored as part of a function getting executed&"
+	            /**/ "$static|Writable access to objects stored alongside code being executed&"
+	            /**/ "$except|Read-only access to the last thrown exception&"
+	            /**/ "$myfunc|Read-only access to the function currently being executed&"
+	            /**/ "$const|Access to a constant expression"
+	            "}"),
+	TYPE_GETTER(STR_name, &symbol_name,
+	            "->?Dstring\n"
+	            "Returns the name of @this symbol"),
+	TYPE_GETSET_END
 };
 
 
@@ -365,21 +364,21 @@ err:
 
 
 PRIVATE struct type_method tpconst symbol_methods[] = {
-	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_getalias,
-	  DOC("->?.\n"
-	      "Either re-returns @this symbol, or unwinds it to return "
-	      "the effective symbol that is being aliased by it") },
-	{ "setalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_setalias,
-	  DOC("(other:?.)->?.\n"
-	      "@throw ReferenceError Either @other is the same symbol as @this, or "
-	      "it is another alias eventually leading to @this\n"
-	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
-	      "Change @this symbol to be an alias for @other, and re-return @this") },
-	{ "setnone", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_setnone,
-	  DOC("->?.\n"
-	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
-	      "Change @this symbol to a none-symbol") },
-	{ NULL }
+	TYPE_METHOD("getalias", &symbol_getalias,
+	            "->?.\n"
+	            "Either re-returns @this symbol, or unwinds it to return "
+	            /**/ "the effective symbol that is being aliased by it"),
+	TYPE_METHOD("setalias", &symbol_setalias,
+	            "(other:?.)->?.\n"
+	            "@throw ReferenceError Either @other is the same symbol as @this, or "
+	            /*                 */ "it is another alias eventually leading to @this\n"
+	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            "Change @this symbol to be an alias for @other, and re-return @this"),
+	TYPE_METHOD("setnone", &symbol_setnone,
+	            "->?.\n"
+	            "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
+	            "Change @this symbol to a none-symbol"),
+	TYPE_METHOD_END
 };
 
 
@@ -416,15 +415,17 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 	/* .tp_name     = */ "_Symbol",
 	/* .tp_doc      = */ DOC("Inspect and modify attributes, typing, and linkage of a symbol\n"
 	                         "\n"
+
 	                         "str->\n"
 	                         "Returns the name of the symbol (same as #name)\n"
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns a human-readable representation of the symbol\n"
 	                         "\n"
+
 	                         "bool->\n"
-	                         "Returns ?t if #kind isn't $\"none\"\n"
-	                         "\n"),
+	                         "Returns ?t if #kind isn't $\"none\""),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

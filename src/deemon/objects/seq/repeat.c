@@ -140,83 +140,70 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-#define DEFINE_REPEATITER_CMP(name, check_diffnum, if_sameiter, compare_iter)       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
-	name(RepeatIterator *self, RepeatIterator *other) {                             \
-		DREF DeeObject *my_iter, *ot_iter;                                          \
-		DREF DeeObject *result;                                                     \
-		if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type)) \
-			return NULL;                                                            \
-		check_diffnum;                                                              \
-		rwlock_read(&self->ri_lock);                                                \
-		my_iter = self->ri_iter;                                                    \
-		Dee_Incref(my_iter);                                                        \
-		rwlock_endread(&self->ri_lock);                                             \
-		rwlock_read(&other->ri_lock);                                               \
-		ot_iter = other->ri_iter;                                                   \
-		Dee_Incref(ot_iter);                                                        \
-		rwlock_endread(&other->ri_lock);                                            \
-		if (my_iter == ot_iter)                                                     \
-			result = if_sameiter, Dee_Incref(if_sameiter);                          \
-		else {                                                                      \
-			result = compare_iter(my_iter, ot_iter);                                \
-		}                                                                           \
-		Dee_Decref(ot_iter);                                                        \
-		Dee_Decref(my_iter);                                                        \
-		return result;                                                              \
+#define DEFINE_REPEATITER_CMP(name, check_diffnum, if_sameiter, compare_iter) \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
+	name(RepeatIterator *self, RepeatIterator *other) {                       \
+		DREF DeeObject *my_iter, *ot_iter;                                    \
+		DREF DeeObject *result;                                               \
+		if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type))        \
+			return NULL;                                                      \
+		check_diffnum;                                                        \
+		rwlock_read(&self->ri_lock);                                          \
+		my_iter = self->ri_iter;                                              \
+		Dee_Incref(my_iter);                                                  \
+		rwlock_endread(&self->ri_lock);                                       \
+		rwlock_read(&other->ri_lock);                                         \
+		ot_iter = other->ri_iter;                                             \
+		Dee_Incref(ot_iter);                                                  \
+		rwlock_endread(&other->ri_lock);                                      \
+		if (my_iter == ot_iter) {                                             \
+			result = if_sameiter;                                             \
+			Dee_Incref(if_sameiter);                                          \
+		} else {                                                              \
+			result = compare_iter(my_iter, ot_iter);                          \
+		}                                                                     \
+		Dee_Decref(ot_iter);                                                  \
+		Dee_Decref(my_iter);                                                  \
+		return result;                                                        \
 	}
 
-DEFINE_REPEATITER_CMP(
-repeatiter_eq,
-{
+DEFINE_REPEATITER_CMP(repeatiter_eq, {
 	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
 		return_false;
-},
-Dee_True, DeeObject_CompareEqObject)
+}, Dee_True, DeeObject_CompareEqObject)
 
-DEFINE_REPEATITER_CMP(
-repeatiter_ne,
-{
+DEFINE_REPEATITER_CMP(repeatiter_ne, {
 	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
 		return_true;
-},
-Dee_False, DeeObject_CompareNeObject)
+}, Dee_False, DeeObject_CompareNeObject)
 
-DEFINE_REPEATITER_CMP(
-repeatiter_lo, {
+DEFINE_REPEATITER_CMP(repeatiter_lo, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len < my_len);
-},
-Dee_False, DeeObject_CompareLoObject)
+}, Dee_False, DeeObject_CompareLoObject)
 
-DEFINE_REPEATITER_CMP(
-repeatiter_le, {
+DEFINE_REPEATITER_CMP(repeatiter_le, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len < my_len);
-},
-Dee_True, DeeObject_CompareLeObject)
+}, Dee_True, DeeObject_CompareLeObject)
 
-DEFINE_REPEATITER_CMP(
-repeatiter_gr, {
+DEFINE_REPEATITER_CMP(repeatiter_gr, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len > my_len);
-},
-Dee_False, DeeObject_CompareGrObject)
+}, Dee_False, DeeObject_CompareGrObject)
 
-DEFINE_REPEATITER_CMP(
-repeatiter_ge, {
+DEFINE_REPEATITER_CMP(repeatiter_ge, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len > my_len);
-},
-Dee_True, DeeObject_CompareGeObject)
+}, Dee_True, DeeObject_CompareGeObject)
 #undef DEFINE_REPEATITER_CMP
 
 
@@ -321,15 +308,9 @@ err:
 
 
 PRIVATE struct type_getset tpconst repeatiter_getsets[] = {
-	{ "__iter__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_iter, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_set_iter,
-	  DOC("->?DIterator") },
-	{ "__num__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_num, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_set_num,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETSET("__iter__", &repeatiter_get_iter, NULL, &repeatiter_set_iter, "->?DIterator"),
+	TYPE_GETSET("__num__", &repeatiter_get_num, NULL, &repeatiter_set_num, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst repeatiter_members[] = {
@@ -956,7 +937,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqItemRepeat", &self->ri_obj, &self->ri_num))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqItemRepeat",
+	                  &self->ri_obj, &self->ri_num))
 		goto err;
 	if unlikely(!self->ri_num)
 		self->ri_obj = Dee_None;

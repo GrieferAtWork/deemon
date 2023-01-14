@@ -420,11 +420,11 @@ node_visit(XMLNodeObject *__restrict self,
 
 
 PRIVATE struct type_getset tpconst node_getsets[] = {
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_method tpconst node_methods[] = {
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject XMLNodeObject_Type = {

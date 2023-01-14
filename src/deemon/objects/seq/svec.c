@@ -951,10 +951,8 @@ rvec_get_writable(RefVector *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst rvec_getsets[] = {
-	{ "__writable__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_get_writable,
-	  NULL, NULL, DOC("->?Dbool") },
-	{ NULL }
+	TYPE_GETTER("__writable__", &rvec_get_writable, "->?Dbool"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

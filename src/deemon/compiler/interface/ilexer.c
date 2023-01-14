@@ -666,122 +666,115 @@ done:
 
 
 PRIVATE struct type_getset tpconst keyword_getsets[] = {
-	{ "id",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_id, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the ID of @this keyword") },
-	{ "name",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_str, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the name of @this keyword. Same as ?#{op:str}") },
-	{ "hash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_hash, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the hash of @this keyword") },
-	{ "macrofile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_macrofile, NULL, NULL,
-	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
-	      "Returns the macro definitions file, or ?N if "
-	      "@this keyword isn't being used as a user-defined macro") },
-	{ "oldmacrofile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_oldmacrofile, NULL, NULL,
-	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
-	      "Returns the latest old macro file, that is the first macro "
-	      "file definition that is preserved when ${##pragma push_macro(\"foo\")} is used") },
-	{ "defmacrofile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_defmacrofile, NULL, NULL,
-	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
-	      "Returns the default definition of a user-overwritten macro") },
-	{ "cachedfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_cachedfile, NULL, NULL,
-	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
-	      "Returns a file that has been cached under this keyword") },
-	{ "counter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_counter,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_counter,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_counter,
-	  DOC("->?Dint\n"
-	      "Get, del (set to $0), or set counter that is used to implement the builtin "
-	      "${__TPP_COUNTER} macro, which can be used to generate unique numbers, based "
-	      "on keywords, which are used as keys to access those numbers.\n"
-	      "When this field is set, the written value is what ${__TPP_COUNTER} will expand "
-	      "to, the next time it is invoked with @this keyword.\n"
-	      "Note however, that reading this field will _not_ modify the counter, unlike "
-	      "accessing it though ${__TPP_COUNTER}, which will increment it once every time") },
-	{ "hasattribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasattribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasattribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasattribute,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-attribute flag of @this keyword\n"
-	      "The has-attribute flag can then be queried via the ${__has_attribute()} builtin macro") },
-	{ "hasbuiltin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasbuiltin,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasbuiltin,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasbuiltin,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-builtin flag of @this keyword\n"
-	      "The has-builtin flag can then be queried via the ${__has_builtin()} builtin macro") },
-	{ "hascppattribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hascppattribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hascppattribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hascppattribute,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-cpp_attribute flag of @this keyword\n"
-	      "The has-cpp_attribute flag can then be queried via the ${__has_cpp_attribute()} builtin macro") },
-	{ "hasdeclspecattribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasdeclspecattribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasdeclspecattribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasdeclspecattribute,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-declspec_attribute flag of @this keyword\n"
-	      "The has-declspec_attribute flag can then be queried via the ${__has_declspec_attribute()} builtin macro") },
-	{ "hasextension",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasextension,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasextension,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasextension,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-extension flag of @this keyword\n"
-	      "The has-extension flag can then be queried via the ${__has_extension()} builtin macro") },
-	{ "hasfeature",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasfeature,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasfeature,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasfeature,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-feature flag of @this keyword\n"
-	      "The has-feature flag can then be queried via the ${__has_feature()} builtin macro") },
-	{ "isdeprecated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_isdeprecated,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_isdeprecated,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_isdeprecated,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the is-deprecated flag of @this keyword\n"
-	      "The is-deprecated flag can then be queried via the ${__is_deprecated()} builtin macro") },
-	{ "ispoisoned",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_ispoisoned,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_ispoisoned,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_ispoisoned,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the is-poisoned flag of @this keyword\n"
-	      "The is-poisoned flag can then be queried via the ${__is_poisoned()} builtin macro") },
-	{ "hastppbuiltin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hastppbuiltin,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hastppbuiltin,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hastppbuiltin,
-	  DOC("->?Dbool\n"
-	      "Get, del (set to ?f), or set the has-tpp_builtin flag of @this keyword\n"
-	      "The has-tpp_builtin flag can then be queried via the ${__has_tpp_builtin()} builtin macro") },
-	{ "uservalue",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_uservalue,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_uservalue,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_uservalue,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow Attempted to write a negative value, or one that is too large\n"
-	      "get, del (set to $0), or set a custom user-value which can be stored within "
-	      "keyword descriptors. This value must be an unsigned integer that fits into "
-	      "a single pointer, as used by the host") },
+	TYPE_GETTER(STR_id, &keyword_id,
+	            "->?Dint\n"
+	            "Returns the ID of @this keyword"),
+	TYPE_GETTER(STR_name, &keyword_str,
+	            "->?Dstring\n"
+	            "Returns the name of @this keyword. Same as ?#{op:str}"),
+	TYPE_GETTER("hash", &keyword_hash,
+	            "->?Dint\n"
+	            "Returns the hash of @this keyword"),
+	TYPE_GETTER("macrofile", &keyword_macrofile,
+	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "Returns the macro definitions file, or ?N if "
+	            "@this keyword isn't being used as a user-defined macro"),
+	TYPE_GETTER("oldmacrofile", &keyword_oldmacrofile,
+	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "Returns the latest old macro file, that is the first macro "
+	            "file definition that is preserved when ${##pragma push_macro(\"foo\")} is used"),
+	TYPE_GETTER("defmacrofile", &keyword_defmacrofile,
+	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "Returns the default definition of a user-overwritten macro"),
+	TYPE_GETTER("cachedfile", &keyword_cachedfile,
+	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "Returns a file that has been cached under this keyword"),
+	TYPE_GETSET("counter",
+	            &keyword_get_counter,
+	            &keyword_del_counter,
+	            &keyword_set_counter,
+	            "->?Dint\n"
+	            "Get, del (set to $0), or set counter that is used to implement the builtin "
+	            "${__TPP_COUNTER} macro, which can be used to generate unique numbers, based "
+	            "on keywords, which are used as keys to access those numbers.\n"
+	            "When this field is set, the written value is what ${__TPP_COUNTER} will expand "
+	            "to, the next time it is invoked with @this keyword.\n"
+	            "Note however, that reading this field will _not_ modify the counter, unlike "
+	            "accessing it though ${__TPP_COUNTER}, which will increment it once every time"),
+	TYPE_GETSET("hasattribute",
+	            &keyword_get_hasattribute,
+	            &keyword_del_hasattribute,
+	            &keyword_set_hasattribute,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-attribute flag of @this keyword\n"
+	            "The has-attribute flag can then be queried via the ${__has_attribute()} builtin macro"),
+	TYPE_GETSET("hasbuiltin",
+	            &keyword_get_hasbuiltin,
+	            &keyword_del_hasbuiltin,
+	            &keyword_set_hasbuiltin,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-builtin flag of @this keyword\n"
+	            "The has-builtin flag can then be queried via the ${__has_builtin()} builtin macro"),
+	TYPE_GETSET("hascppattribute",
+	            &keyword_get_hascppattribute,
+	            &keyword_del_hascppattribute,
+	            &keyword_set_hascppattribute,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-cpp_attribute flag of @this keyword\n"
+	            "The has-cpp_attribute flag can then be queried via the ${__has_cpp_attribute()} builtin macro"),
+	TYPE_GETSET("hasdeclspecattribute",
+	            &keyword_get_hasdeclspecattribute,
+	            &keyword_del_hasdeclspecattribute,
+	            &keyword_set_hasdeclspecattribute,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-declspec_attribute flag of @this keyword\n"
+	            "The has-declspec_attribute flag can then be queried via the ${__has_declspec_attribute()} builtin macro"),
+	TYPE_GETSET("hasextension",
+	            &keyword_get_hasextension,
+	            &keyword_del_hasextension,
+	            &keyword_set_hasextension,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-extension flag of @this keyword\n"
+	            "The has-extension flag can then be queried via the ${__has_extension()} builtin macro"),
+	TYPE_GETSET("hasfeature",
+	            &keyword_get_hasfeature,
+	            &keyword_del_hasfeature,
+	            &keyword_set_hasfeature,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-feature flag of @this keyword\n"
+	            "The has-feature flag can then be queried via the ${__has_feature()} builtin macro"),
+	TYPE_GETSET("isdeprecated",
+	            &keyword_get_isdeprecated,
+	            &keyword_del_isdeprecated,
+	            &keyword_set_isdeprecated,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the is-deprecated flag of @this keyword\n"
+	            "The is-deprecated flag can then be queried via the ${__is_deprecated()} builtin macro"),
+	TYPE_GETSET("ispoisoned",
+	            &keyword_get_ispoisoned,
+	            &keyword_del_ispoisoned,
+	            &keyword_set_ispoisoned,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the is-poisoned flag of @this keyword\n"
+	            "The is-poisoned flag can then be queried via the ${__is_poisoned()} builtin macro"),
+	TYPE_GETSET("hastppbuiltin",
+	            &keyword_get_hastppbuiltin,
+	            &keyword_del_hastppbuiltin,
+	            &keyword_set_hastppbuiltin,
+	            "->?Dbool\n"
+	            "Get, del (set to ?f), or set the has-tpp_builtin flag of @this keyword\n"
+	            "The has-tpp_builtin flag can then be queried via the ${__has_tpp_builtin()} builtin macro"),
+	TYPE_GETSET("uservalue",
+	            &keyword_get_uservalue,
+	            &keyword_del_uservalue,
+	            &keyword_set_uservalue,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow Attempted to write a negative value, or one that is too large\n"
+	            "Get, del (set to $0), or set a custom user-value which can be stored within "
+	            /**/ "keyword descriptors. This value must be an unsigned integer that fits into "
+	            /**/ "a single pointer, as used by the host"),
 	/* TODO: Access to keyword assertions (`kr_asserts')? */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 
@@ -1464,399 +1457,384 @@ err:
 
 
 PRIVATE struct type_getset tpconst lexer_getsets[] = {
-	{ "keywords",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_keywords, NULL, NULL,
-	  DOC("->?#Keywords\n"
-	      "Returns a descriptor for recognized keywords, as well as their associated bindings") },
-	{ "extensions",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_extensions, NULL, NULL,
-	  DOC("->?#Extensions\n"
-	      "Returns a descriptor for currently enabled compiler extensions") },
-	{ "warnings",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_warnings, NULL, NULL,
-	  DOC("->?#Warnings\n"
-	      "Returns a descriptor for the current compiler warning state") },
-	{ "syspaths",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_syspaths, NULL, NULL,
-	  DOC("->?#SysPaths\n"
-	      "Returns a sequence representing the system include paths currently being used") },
-	{ "ifdef",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_ifdef, NULL, NULL,
-	  DOC("->?#Ifdef\n"
-	      "Returns a descriptor for the active list of ifdef-blocks") },
-	{ "token",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_token, NULL, NULL,
-	  DOC("->?#Token\n"
-	      "Returns a descriptor for the currently active token") },
-	{ "file",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
-	  DOC("->?X2?#File?N\n"
-	      "Returns the currently active file, or ?N if no file is currently active. Same as ?Aid?#token") },
-	{ "textfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textfile, NULL, NULL,
-	  DOC("->?X2?#File?N\n"
-	      "Same as ?#File, but return the first non-macro file") },
-	{ "basefile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_basefile, NULL, NULL,
-	  DOC("->?X2?#File?N\n"
-	      "Similar to ?#File, but return the base-file (that is the first included file) instead") },
-	{ "textposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textposition, NULL, NULL,
-	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Returns a tuple (file, line, column) for the text-position of the current token\n"
-	      "In the event that the current file is the result of an expanded macro, the source "
-	      "location of the macro invocation site is returned\n"
-	      "In the event that no text file is currently loaded, ?N is returned instead") },
-	{ "textendposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textendposition, NULL, NULL,
-	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Same as ?#textposition, however when the current file isn't the result of an expanded macro, "
-	      "the returned values refer to the end of the current token, rather than its beginning\n"
-	      "In the event that no text file is currently loaded, ?N is returned instead") },
-	{ "tokenposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Similar to ?#textposition, however in the event of the current token originating "
-	      "from a macro, return the source position of that token within the macro, rather "
-	      "than the source position of the macro being invoked\n"
-	      "Same as ?Aposition?#token") },
-	{ "tokenendposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Same as ?#tokenposition, however return the end position of the current token\n"
-	      "Same as ?Aendposition?#token") },
-	{ "atstartofline",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if the current token is located at the "
-	      "start of a line, optionally prefixed by whitespace") },
-	{ "flags",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_flags,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_flags,
-	  DOC("->?Dint\n"
-	      "Get or set the current general purpose lexer configuration as a whole\n"
-	      "The individual bits in the returned integer are prone to getting changed, "
-	      "and it is therefor recommended to set the lexer configuration using the "
-	      "individual properties instead") },
-	{ "wantcomments",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantcomments,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wantcomments,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantcomments,
-	  DOC("->?Dbool\n"
-	      "Configure if comment tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "wantspace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantspace,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wantspace,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantspace,
-	  DOC("->?Dbool\n"
-	      "Configure if space-tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "wantlf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantlf,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wantlf,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantlf,
-	  DOC("->?Dbool\n"
-	      "Configure if line-feed-tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "noseek_on_eob",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noseek_on_eob,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_noseek_on_eob,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_noseek_on_eob,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't seek the next chunk (s.a. ?#File.nextchunk) "
-	      "when the current one ends. Instead, indicate EOF by setting the "
-	      "current ?Aid?#token to $0\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nopop_on_eof",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nopop_on_eof,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nopop_on_eof,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nopop_on_eof,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't automatically pop the current ?#File when it signals "
-	      "eof in order to continue parsing older files, but instead propagate the "
-	      "EOF by setting the current ?Aid?#token to $0\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "keepmacrospace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_keepmacrospace,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_keepmacrospace,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_keepmacrospace,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't strip whitespace surrounding the text of macros, but "
-	      "keep that whitespace as part of the macro's definition, re-propagating "
-	      "it every time that macro is expanded\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nonblocking",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nonblocking,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nonblocking,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nonblocking,
-	  DOC("->?Dbool\n"
-	      "When ?t, operate in non-blocking mode when loading new chunks from "
-	      "files, which essentically means that whenever ?#File.nextchunk is called, "
-	      "the $nonblocking argument is set to this value\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "terminatestringlf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_terminatestringlf,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_terminatestringlf,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_terminatestringlf,
-	  DOC("->?Dbool\n"
-	      "When ?t, regular strings are terminated by line-feeds, which will also "
-	      "cause a warning/error to be emit, alongside the incomplete token still "
-	      "packaged as a complete string\n"
-	      "Note that this also affects ?#File.nextchunk, in that incomplete strings "
-	      "near the end of the input stream can also be terminted by line-feeds\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nodirectives",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nodirectives,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nodirectives,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nodirectives,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't process preprocessor directives, but rather "
-	      "re-emit the ${##...} sequences as regular token sequences\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nomacros",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nomacros,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nomacros,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nomacros,
-	  DOC("->?Dbool\n"
-	      "When ?t, do not expand user-defined macros. Note however that "
-	      "builtin macros are still expanded, unless ?#nobuiltinmacros is also "
-	      "set to ?t\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nobuiltinmacros",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nobuiltinmacros,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nobuiltinmacros,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nobuiltinmacros,
-	  DOC("->?Dbool\n"
-	      "When ?t, do not expand builtin macros. Note however that "
-	      "user-defined macros are still expanded, unless ?#nomacros is also "
-	      "set to ?t\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "asmcomments",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_asmcomments,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_asmcomments,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_asmcomments,
-	  DOC("->?Dbool\n"
-	      "When ?t, unknown preprocessor directives (or all directives when "
-	      "#nodirectives is true) are instead emit as comment tokens.\n"
-	      "Note however that the requirement of directives having to be located "
-	      "at the start of a line, only (and optionally) preceded by whitespace "
-	      "still holds, meaning that assembly-like comments are only recognized "
-	      "when they are found at the start of a line, too\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "directives_noown_lf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_directives_noown_lf,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_directives_noown_lf,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_directives_noown_lf,
-	  DOC("->?Dbool\n"
-	      "When ?t, the line-feeds used to terminate a preprocessor directive "
-	      "will be re-emit as a regular token (when ?#wantlf is ?t). Otherwise, "
-	      "that token will be considered to be apart of the directive and not be "
-	      "emit to the caller of ?#next or ?#nextpp\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "comments_noown_lf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_comments_noown_lf,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_comments_noown_lf,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_comments_noown_lf,
-	  DOC("->?Dbool\n"
-	      "When ?t, the line-feeds used to terminate line-comments "
-	      "will be re-emit as a regular token (when ?#wantlf is ?t). Otherwise, "
-	      "that token will be considered to be apart of the comment and not be "
-	      "emit to the caller of ?#next, ?#nextpp or ?#nextraw\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "printmessagelocation",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_printmessagelocation,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_printmessagelocation,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_printmessagelocation,
-	  DOC("->?Dbool\n"
-	      "When ?t, print the source location before "
-	      "the message in ${##pragma message} directives\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "printmessagenolf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_printmessagenolf,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_printmessagenolf,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_printmessagenolf,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't append a trailing line-feed after "
-	      "messages printed using ${##pragma message}\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "parseincludestring",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_parseincludestring,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_parseincludestring,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_parseincludestring,
-	  DOC("->?Dbool\n"
-	      "Parse strings are include-strings, which has the same behavior as parsing "
-	      "all strings as though they were raw string literals, meaning that a "
-	      "backslash-escape sequences are not recognized\n"
-	      "The intended use for this is to parse the string of an ${##include} directive\n"
-	      "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
-	      "won't not recognize escape sequences for non-raw string literals, either\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nolegacyguards",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nolegacyguards,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nolegacyguards,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nolegacyguards,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't automatically try to detect legacy-style ${##include} guards, "
-	      "that is an ${##include} guard created by surrounding an entire source file with "
-	      "a single ${##ifndef} block\n"
-	      "This flag does not, however, affect the functionality of ${##pragma once}\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "werror",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_werror,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_werror,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_werror,
-	  DOC("->?Dbool\n"
-	      "When ?t, turn all warnings into errors\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "wsystemheaders",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wsystemheaders,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wsystemheaders,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wsystemheaders,
-	  DOC("->?Dbool\n"
-	      "When ?t, ignore ?#File.issystemheader, and still produce "
-	      "warnings in files marked as system headers\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nodeprecated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nodeprecated,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nodeprecated,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nodeprecated,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't emit warnings for keywords marked as ?#Keyword.isdeprecated or ?#Keyword.ispoisoned\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "msvcmessages",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_msvcmessages,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_msvcmessages,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_msvcmessages,
-	  DOC("->?Dbool\n"
-	      "When ?t, the file+line+column in warning and error messages is printed "
-	      "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "nowarnings",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nowarnings,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nowarnings,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nowarnings,
-	  DOC("->?Dbool\n"
-	      "When ?t, the file+line+column in warning and error messages is printed "
-	      "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "noencoding",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noencoding,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_noencoding,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_noencoding,
-	  DOC("->?Dbool\n"
-	      "When ?t, don't decode input text prior to processing it\n"
-	      "This essentically means that whenever ?#File.nextchunk is called, "
-	      "the $binary is set to this value") },
-	{ "reemitunknownpragma",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_reemitunknownpragma,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_reemitunknownpragma,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_reemitunknownpragma,
-	  DOC("->?Dbool\n"
-	      "When ?t, unknown pragma directives are re-emit, rather than consumed\n"
-	      "Note: This field is preserved by ?#flags") },
+	TYPE_GETTER("keywords", &lexer_get_keywords,
+	            "->?#Keywords\n"
+	            "Returns a descriptor for recognized keywords, as well as their associated bindings"),
+	TYPE_GETTER("extensions", &lexer_get_extensions,
+	            "->?#Extensions\n"
+	            "Returns a descriptor for currently enabled compiler extensions"),
+	TYPE_GETTER("warnings", &lexer_get_warnings,
+	            "->?#Warnings\n"
+	            "Returns a descriptor for the current compiler warning state"),
+	TYPE_GETTER("syspaths", &lexer_get_syspaths,
+	            "->?#SysPaths\n"
+	            "Returns a sequence representing the system include paths currently being used"),
+	TYPE_GETTER("ifdef", &lexer_get_ifdef,
+	            "->?#Ifdef\n"
+	            "Returns a descriptor for the active list of ifdef-blocks"),
+	TYPE_GETTER("token", &lexer_get_token,
+	            "->?#Token\n"
+	            "Returns a descriptor for the currently active token"),
+	TYPE_GETTER("file", &lexer_get_file,
+	            "->?X2?#File?N\n"
+	            "Returns the currently active file, or ?N if no file is currently active. Same as ?Aid?#token"),
+	TYPE_GETTER("textfile", &lexer_get_textfile,
+	            "->?X2?#File?N\n"
+	            "Same as ?#File, but return the first non-macro file"),
+	TYPE_GETTER("basefile", &lexer_get_basefile,
+	            "->?X2?#File?N\n"
+	            "Similar to ?#File, but return the base-file (that is the first included file) instead"),
+	TYPE_GETTER("textposition", &lexer_get_textposition,
+	            "->?X2?T3?#File?Dint?Dint?N\n"
+	            "Returns a tuple (file, line, column) for the text-position of the current token\n"
+	            "In the event that the current file is the result of an expanded macro, the source "
+	            /**/ "location of the macro invocation site is returned\n"
+	            "In the event that no text file is currently loaded, ?N is returned instead"),
+	TYPE_GETTER("textendposition", &lexer_get_textendposition,
+	            "->?X2?T3?#File?Dint?Dint?N\n"
+	            "Same as ?#textposition, however when the current file isn't the result of an expanded macro, "
+	            /**/ "the returned values refer to the end of the current token, rather than its beginning\n"
+	            "In the event that no text file is currently loaded, ?N is returned instead"),
+	TYPE_GETTER("tokenposition", &lexer_get_tokenposition,
+	            "->?X2?T3?#File?Dint?Dint?N\n"
+	            "Similar to ?#textposition, however in the event of the current token originating "
+	            /**/ "from a macro, return the source position of that token within the macro, rather "
+	            /**/ "than the source position of the macro being invoked\n"
+	            "Same as ?Aposition?#token"),
+	TYPE_GETTER("tokenendposition", &lexer_get_tokenendposition,
+	            "->?X2?T3?#File?Dint?Dint?N\n"
+	            "Same as ?#tokenposition, however return the end position of the current token\n"
+	            "Same as ?Aendposition?#token"),
+	TYPE_GETTER("atstartofline", &lexer_get_atstartofline,
+	            "->?Dbool\n"
+	            "Returns ?t if the current token is located at the "
+	            /**/ "start of a line, optionally prefixed by whitespace"),
+	TYPE_GETSET(STR_flags, &lexer_get_flags, NULL, &lexer_set_flags,
+	            "->?Dint\n"
+	            "Get or set the current general purpose lexer configuration as a whole\n"
+	            "The individual bits in the returned integer are prone to getting changed, "
+	            /**/ "and it is therefor recommended to set the lexer configuration using the "
+	            /**/ "individual properties instead"),
+	TYPE_GETSET("wantcomments",
+	            &lexer_get_wantcomments,
+	            &lexer_del_wantcomments,
+	            &lexer_set_wantcomments,
+	            "->?Dbool\n"
+	            "Configure if comment tokens should, or shouldn't be emit\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("wantspace",
+	            &lexer_get_wantspace,
+	            &lexer_del_wantspace,
+	            &lexer_set_wantspace,
+	            "->?Dbool\n"
+	            "Configure if space-tokens should, or shouldn't be emit\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("wantlf",
+	            &lexer_get_wantlf,
+	            &lexer_del_wantlf,
+	            &lexer_set_wantlf,
+	            "->?Dbool\n"
+	            "Configure if line-feed-tokens should, or shouldn't be emit\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("noseek_on_eob",
+	            &lexer_get_noseek_on_eob,
+	            &lexer_del_noseek_on_eob,
+	            &lexer_set_noseek_on_eob,
+	            "->?Dbool\n"
+	            "When ?t, don't seek the next chunk (s.a. ?#File.nextchunk) "
+	            /**/ "when the current one ends. Instead, indicate EOF by setting the "
+	            /**/ "current ?Aid?#token to $0\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nopop_on_eof",
+	            &lexer_get_nopop_on_eof,
+	            &lexer_del_nopop_on_eof,
+	            &lexer_set_nopop_on_eof,
+	            "->?Dbool\n"
+	            "When ?t, don't automatically pop the current ?#File when it signals "
+	            /**/ "eof in order to continue parsing older files, but instead propagate the "
+	            /**/ "EOF by setting the current ?Aid?#token to $0\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("keepmacrospace",
+	            &lexer_get_keepmacrospace,
+	            &lexer_del_keepmacrospace,
+	            &lexer_set_keepmacrospace,
+	            "->?Dbool\n"
+	            "When ?t, don't strip whitespace surrounding the text of macros, but "
+	            /**/ "keep that whitespace as part of the macro's definition, re-propagating "
+	            /**/ "it every time that macro is expanded\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nonblocking",
+	            &lexer_get_nonblocking,
+	            &lexer_del_nonblocking,
+	            &lexer_set_nonblocking,
+	            "->?Dbool\n"
+	            "When ?t, operate in non-blocking mode when loading new chunks from "
+	            /**/ "files, which essentically means that whenever ?#File.nextchunk is called, "
+	            /**/ "the $nonblocking argument is set to this value\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("terminatestringlf",
+	            &lexer_get_terminatestringlf,
+	            &lexer_del_terminatestringlf,
+	            &lexer_set_terminatestringlf,
+	            "->?Dbool\n"
+	            "When ?t, regular strings are terminated by line-feeds, which will also "
+	            /**/ "cause a warning/error to be emit, alongside the incomplete token still "
+	            /**/ "packaged as a complete string\n"
+	            "Note that this also affects ?#File.nextchunk, in that incomplete strings "
+	            /**/ "near the end of the input stream can also be terminted by line-feeds\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nodirectives",
+	            &lexer_get_nodirectives,
+	            &lexer_del_nodirectives,
+	            &lexer_set_nodirectives,
+	            "->?Dbool\n"
+	            "When ?t, don't process preprocessor directives, but rather "
+	            /**/ "re-emit the ${##...} sequences as regular token sequences\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nomacros",
+	            &lexer_get_nomacros,
+	            &lexer_del_nomacros,
+	            &lexer_set_nomacros,
+	            "->?Dbool\n"
+	            "When ?t, do not expand user-defined macros. Note however that "
+	            /**/ "builtin macros are still expanded, unless ?#nobuiltinmacros is also "
+	            /**/ "set to ?t\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nobuiltinmacros",
+	            &lexer_get_nobuiltinmacros,
+	            &lexer_del_nobuiltinmacros,
+	            &lexer_set_nobuiltinmacros,
+	            "->?Dbool\n"
+	            "When ?t, do not expand builtin macros. Note however that "
+	            /**/ "user-defined macros are still expanded, unless ?#nomacros is also "
+	            /**/ "set to ?t\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("asmcomments",
+	            &lexer_get_asmcomments,
+	            &lexer_del_asmcomments,
+	            &lexer_set_asmcomments,
+	            "->?Dbool\n"
+	            "When ?t, unknown preprocessor directives (or all directives when "
+	            /**/ "#nodirectives is true) are instead emit as comment tokens.\n"
+	            "Note however that the requirement of directives having to be located "
+	            /**/ "at the start of a line, only (and optionally) preceded by whitespace "
+	            /**/ "still holds, meaning that assembly-like comments are only recognized "
+	            /**/ "when they are found at the start of a line, too\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("directives_noown_lf",
+	            &lexer_get_directives_noown_lf,
+	            &lexer_del_directives_noown_lf,
+	            &lexer_set_directives_noown_lf,
+	            "->?Dbool\n"
+	            "When ?t, the line-feeds used to terminate a preprocessor directive "
+	            /**/ "will be re-emit as a regular token (when ?#wantlf is ?t). Otherwise, "
+	            /**/ "that token will be considered to be apart of the directive and not be "
+	            /**/ "emit to the caller of ?#next or ?#nextpp\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("comments_noown_lf",
+	            &lexer_get_comments_noown_lf,
+	            &lexer_del_comments_noown_lf,
+	            &lexer_set_comments_noown_lf,
+	            "->?Dbool\n"
+	            "When ?t, the line-feeds used to terminate line-comments "
+	            /**/ "will be re-emit as a regular token (when ?#wantlf is ?t). Otherwise, "
+	            /**/ "that token will be considered to be apart of the comment and not be "
+	            /**/ "emit to the caller of ?#next, ?#nextpp or ?#nextraw\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("printmessagelocation",
+	            &lexer_get_printmessagelocation,
+	            &lexer_del_printmessagelocation,
+	            &lexer_set_printmessagelocation,
+	            "->?Dbool\n"
+	            "When ?t, print the source location before "
+	            /**/ "the message in ${##pragma message} directives\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("printmessagenolf",
+	            &lexer_get_printmessagenolf,
+	            &lexer_del_printmessagenolf,
+	            &lexer_set_printmessagenolf,
+	            "->?Dbool\n"
+	            "When ?t, don't append a trailing line-feed after "
+	            /**/ "messages printed using ${##pragma message}\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("parseincludestring",
+	            &lexer_get_parseincludestring,
+	            &lexer_del_parseincludestring,
+	            &lexer_set_parseincludestring,
+	            "->?Dbool\n"
+	            "Parse strings are include-strings, which has the same behavior as parsing "
+	            /**/ "all strings as though they were raw string literals, meaning that a "
+	            /**/ "backslash-escape sequences are not recognized\n"
+	            "The intended use for this is to parse the string of an ${##include} directive\n"
+	            "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
+	            /**/ "won't not recognize escape sequences for non-raw string literals, either\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nolegacyguards",
+	            &lexer_get_nolegacyguards,
+	            &lexer_del_nolegacyguards,
+	            &lexer_set_nolegacyguards,
+	            "->?Dbool\n"
+	            "When ?t, don't automatically try to detect legacy-style ${##include} guards, "
+	            /**/ "that is an ${##include} guard created by surrounding an entire source file with "
+	            /**/ "a single ${##ifndef} block\n"
+	            "This flag does not, however, affect the functionality of ${##pragma once}\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("werror",
+	            &lexer_get_werror,
+	            &lexer_del_werror,
+	            &lexer_set_werror,
+	            "->?Dbool\n"
+	            "When ?t, turn all warnings into errors\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("wsystemheaders",
+	            &lexer_get_wsystemheaders,
+	            &lexer_del_wsystemheaders,
+	            &lexer_set_wsystemheaders,
+	            "->?Dbool\n"
+	            "When ?t, ignore ?#File.issystemheader, and still produce "
+	            /**/ "warnings in files marked as system headers\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nodeprecated",
+	            &lexer_get_nodeprecated,
+	            &lexer_del_nodeprecated,
+	            &lexer_set_nodeprecated,
+	            "->?Dbool\n"
+	            "When ?t, don't emit warnings for keywords marked as "
+	            /**/ "?#Keyword.isdeprecated or ?#Keyword.ispoisoned\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("msvcmessages",
+	            &lexer_get_msvcmessages,
+	            &lexer_del_msvcmessages,
+	            &lexer_set_msvcmessages,
+	            "->?Dbool\n"
+	            "When ?t, the file+line+column in warning and error messages is printed "
+	            /**/ "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("nowarnings",
+	            &lexer_get_nowarnings,
+	            &lexer_del_nowarnings,
+	            &lexer_set_nowarnings,
+	            "->?Dbool\n"
+	            "When ?t, the file+line+column in warning and error messages is printed "
+	            /**/ "as $\"file(line, column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("noencoding",
+	            &lexer_get_noencoding,
+	            &lexer_del_noencoding,
+	            &lexer_set_noencoding,
+	            "->?Dbool\n"
+	            "When ?t, don't decode input text prior to processing it\n"
+	            "This essentically means that whenever ?#File.nextchunk is called, "
+	            /**/ "the $binary is set to this value"),
+	TYPE_GETSET("reemitunknownpragma",
+	            &lexer_get_reemitunknownpragma,
+	            &lexer_del_reemitunknownpragma,
+	            &lexer_set_reemitunknownpragma,
+	            "->?Dbool\n"
+	            "When ?t, unknown pragma directives are re-emit, rather than consumed\n"
+	            "Note: This field is preserved by ?#flags"),
 #if 0
-	{ "charunsigned",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_charunsigned,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_charunsigned,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_charunsigned,
-	  DOC("->?Dbool\n"
-	      "When ?t, characters are undefined when they appear in constant expressions") },
+	TYPE_GETSET("charunsigned",
+	            &lexer_get_charunsigned,
+	            &lexer_del_charunsigned,
+	            &lexer_set_charunsigned,
+	            "->?Dbool\n"
+	            "When ?t, characters are undefined when they appear in constant expressions"),
 #endif
 
-	{ "eofonparen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eofonparen,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eofonparen,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eofonparen,
-	  DOC("->?Dbool\n"
-	      "When ?t, end-of-file is signalled when a matching right-parenthesis "
-	      "token is $\")\" is countered (s.a. ?#eofparen)\n"
-	      "Note: This field is preserved by ?#flags") },
-	{ "eofparen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eofparen,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eofparen,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eofparen,
-	  DOC("->?Dint\n"
-	      "Used in conjunction with ?#{eofonparen}: The amount of unmatched $\")\" tokens "
-	      "to let through before the next $\")\" token will result in EOF being indicated "
-	      "by setting ?Aid?#token to $0") },
-	{ "eobfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eobfile,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eobfile,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eobfile,
-	  DOC("->?#File\n"
-	      "When bound, prevent seek-on-end-of-block (that is performing a call to "
-	      "#File.nextchunk) when the current is equal to ?#eobfile\n"
-	      "This is essentially the same as setting ?#noseek_on_eob to ?t, however "
-	      "rather than affecting all files, it only affect a specific file") },
-	{ "eoffile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eoffile,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eoffile,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eoffile,
-	  DOC("->?#File\n"
-	      "When bound, prevent pop-on-end-of-file (that is popping the current "
-	      "file, as done by ?#popfile) when the current is equal to ?#eoffile\n"
-	      "This is essentially the same as setting ?#nopop_on_eof to ?t, however "
-	      "rather than affecting all files, it only affect a specific file") },
-	{ "macrolimit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_macrolimit,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_macrolimit,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_macrolimit,
-	  DOC("->?Dint\n"
-	      "The max number of times that a recursive macro (s.a. ?#File.allowselfexpansion) "
-	      "is allowed to appear on the macro stack, before an error is emit, and further "
-	      "expansion is prevented (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_MREC) ", "
-	                                                                                  "which is also restored when deleting this property)") },
-	{ "includelimit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_includelimit,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_includelimit,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_includelimit,
-	  DOC("->?Dint\n"
-	      "The max number of files that can be included recursively before it is "
-	      "determined that an include recursion has occurred, causing the latest "
-	      "inclusion to fail, and an error to be emit (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_INCL) ", which is also restored when deleting this property)") },
-	{ "warningcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_warningcount,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_warningcount,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_warningcount,
-	  DOC("->?Dint\n"
-	      "The total number of warnings that have already been emit "
-	      "(including those which have been dismissed)") },
-	{ "errorcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_errorcount,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_errorcount,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_errorcount,
-	  DOC("->?Dint\n"
-	      "The total number of errors that have already been emit\n"
-	      "When non-zero, later compilation steps should throw a "
-	      "compiler error, rather than proceeding with compilation\n"
-	      "When this value exceeds ?#maxerrors, a :CompilerError is "
-	      "thrown immediately") },
-	{ "maxerrors",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_maxerrors,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_maxerrors,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_maxerrors,
-	  DOC("->?Dint\n"
-	      "The max number of errors which may occurr before compilation is "
-	      "halted immediately, by setting the lexer to an error-state, and "
-	      "throwing a :CompilerError") },
-	{ "tabsize",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tabsize,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_tabsize,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_tabsize,
-	  DOC("->?Dint\n"
-	      "The size of tabs (or rather their alignment multiple), as used "
-	      "when calculating column offsets for source positions") },
-	{ "counter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tabsize,
-	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_tabsize,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_tabsize,
-	  DOC("->?Dint\n"
-	      "The counter value returned and incremented by the "
-	      "$__COUNTER__ builtin macro") },
-	{ NULL }
-};
+	TYPE_GETSET("eofonparen",
+	            &lexer_get_eofonparen,
+	            &lexer_del_eofonparen,
+	            &lexer_set_eofonparen,
+	            "->?Dbool\n"
+	            "When ?t, end-of-file is signalled when a matching right-parenthesis "
+	            /**/ "token is $\")\" is countered (s.a. ?#eofparen)\n"
+	            "Note: This field is preserved by ?#flags"),
+	TYPE_GETSET("eofparen",
+	            &lexer_get_eofparen,
+	            &lexer_del_eofparen,
+	            &lexer_set_eofparen,
+	            "->?Dint\n"
+	            "Used in conjunction with ?#{eofonparen}: The amount of unmatched $\")\" tokens "
+	            /**/ "to let through before the next $\")\" token will result in EOF being indicated "
+	            /**/ "by setting ?Aid?#token to $0"),
+	TYPE_GETSET("eobfile",
+	            &lexer_get_eobfile,
+	            &lexer_del_eobfile,
+	            &lexer_set_eobfile,
+	            "->?#File\n"
+	            "When bound, prevent seek-on-end-of-block (that is performing a call to "
+	            /**/ "#File.nextchunk) when the current is equal to ?#eobfile\n"
+	            "This is essentially the same as setting ?#noseek_on_eob to ?t, however "
+	            /**/ "rather than affecting all files, it only affect a specific file"),
+	TYPE_GETSET("eoffile",
+	            &lexer_get_eoffile,
+	            &lexer_del_eoffile,
+	            &lexer_set_eoffile,
+	            "->?#File\n"
+	            "When bound, prevent pop-on-end-of-file (that is popping the current "
+	            /**/ "file, as done by ?#popfile) when the current is equal to ?#eoffile\n"
+	            "This is essentially the same as setting ?#nopop_on_eof to ?t, however "
+	            /**/ "rather than affecting all files, it only affect a specific file"),
+	TYPE_GETSET("macrolimit",
+	            &lexer_get_macrolimit,
+	            &lexer_del_macrolimit,
+	            &lexer_set_macrolimit,
+	            "->?Dint\n"
+	            "The max number of times that a recursive macro (s.a. ?#File.allowselfexpansion) "
+	            /**/ "is allowed to appear on the macro stack, before an error is emit, and further "
+	            /**/ "expansion is prevented (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_MREC) ", "
+	            /**/ "which is also restored when deleting this property)"),
+	TYPE_GETSET("includelimit",
+	            &lexer_get_includelimit,
+	            &lexer_del_includelimit,
+	            &lexer_set_includelimit,
+	            "->?Dint\n"
+	            "The max number of files that can be included recursively before it is "
+	            /**/ "determined that an include recursion has occurred, causing the latest "
+	            /**/ "inclusion to fail, and an error to be emit (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_INCL)
+	            /**/ ", which is also restored when deleting this property)"),
+	TYPE_GETSET("warningcount",
+	            &lexer_get_warningcount,
+	            &lexer_del_warningcount,
+	            &lexer_set_warningcount,
+	            "->?Dint\n"
+	            "The total number of warnings that have already been emit "
+	            /**/ "(including those which have been dismissed)"),
+	TYPE_GETSET("errorcount",
+	            &lexer_get_errorcount,
+	            &lexer_del_errorcount,
+	            &lexer_set_errorcount,
+	            "->?Dint\n"
+	            "The total number of errors that have already been emit\n"
+	            "When non-zero, later compilation steps should throw a "
+	            /**/ "compiler error, rather than proceeding with compilation\n"
+	            "When this value exceeds ?#maxerrors, a :CompilerError is "
+	            /**/ "thrown immediately"),
+	TYPE_GETSET("maxerrors",
+	            &lexer_get_maxerrors,
+	            &lexer_del_maxerrors,
+	            &lexer_set_maxerrors,
+	            "->?Dint\n"
+	            "The max number of errors which may occurr before compilation is "
+	            /**/ "halted immediately, by setting the lexer to an error-state, and "
+	            /**/ "throwing a :CompilerError"),
+	TYPE_GETSET("tabsize",
+	            &lexer_get_tabsize,
+	            &lexer_del_tabsize,
+	            &lexer_set_tabsize,
+	            "->?Dint\n"
+	            "The size of tabs (or rather their alignment multiple), as used "
+	            /**/ "when calculating column offsets for source positions"),
+	TYPE_GETSET("counter",
+	            &lexer_get_tabsize,
+	            &lexer_del_tabsize,
+	            &lexer_set_tabsize,
+	            "->?Dint\n"
+	            "The counter value returned and incremented by the "
+	            /**/ "$__COUNTER__ builtin macro"),
+	TYPE_GETSET_END
+ };
 
 
 PRIVATE struct type_member tpconst lexer_class_members[] = {
@@ -2298,100 +2276,77 @@ err:
 
 
 PRIVATE struct type_method tpconst lexer_methods[] = {
-	{ "include",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_include,
-	  DOC("(stream:?DFile,filename:?Dstring=!N)\n"
-	      "(filename:?Dstring,filename:?Dstring=!N)\n"
-	      "Include a new file, pushing its contents onto the ${##include}-stack\n"
-	      "Note that when including a file with the current token being $0 (as indicate of EOF), "
-	      "you must call one of the ?#next-functions in order to load the first token of the newly "
-	      "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
-	      "will think that no input data is available, causing compiler error to be produced:\n${"
-	      "import Compiler from rt;\n"
-	      "import File from deemon;\n"
-	      "local com = Compiler();\n"
-	      "com.lexer.include(File.open(\"input.dee\"));\n"
-	      "com.lexer.next(); /* Don't forget to always load the first token */\n"
-	      "local ast = com.parser.parse_allstmt();\n"
-	      "print ast;}\n"
-	      "Hint: In order to tokenize source code from a string, use :File.Reader") },
-	{ "nextraw",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextraw,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id (no macros, or preprocessor directives are processed)") },
-	{ "nextpp",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextpp,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id (no macros are processed)") },
-	{ "next",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_next,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id") },
-	{ "nextraw_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextraw_nb,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros, or preprocessor directives are processed)") },
-	{ "nextpp_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextpp_nb,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros are processed)") },
-	{ "next_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_next_nb,
-	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking)") },
-	{ "seterr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_seterr,
-	  DOC("->?Dbool\n"
-	      "Switch the lexer into an error state") },
-	{ "unseterr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_unseterr,
-	  DOC("->?Dbool\n"
-	      "Restore the lexer after it was set to an error state") },
-	{ "popfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_popfile,
-	  DOC("->?Dbool\n"
-	      "Pop the last-?#{include}d file and switch back to the file before then (s.a. ?#File)") },
-	{ "getkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwd,
-	  DOC_GET(lexer_getkwd_doc),
-	  TYPE_METHOD_FKWDS },
-	{ "getxkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getxkwd,
-	  DOC_GET(lexer_getxkwd_doc),
-	  TYPE_METHOD_FKWDS },
-	{ "getkwdid",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwdid,
-	  DOC_GET(lexer_getkwdid_doc) },
-	{ "undef",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_undef,
-	  DOC("(name:?Dstring)->?Dbool\n"
-	      "Delete a user-defined macro definition for a macro @name, returning ?t "
-	      "if such a definition existed and got deleted, or ?f if no such definition "
-	      "existed, and therefor didn't get deleted, either") },
-	{ "define",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_define,
-	  DOC("(name:?Dstring,value:?Dstring,builtin=!f)\n"
-	      "@param builtin When ?t define the macro as builtin, meaning the "
-	      "definition set by @value is restored when resetting macros\n"
-	      "Define a new keyword-like macro @name to expand to @value"),
-	  TYPE_METHOD_FKWDS },
-	{ "addassert",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_addassert,
-	  DOC("(predicate:?Dstring,answer:?Dstring)\n"
-	      "Define an assertion @answer for a given @predicate, such that "
-	      "${##if #predicate(answer)} evaluates to ?t when encountered "
-	      "within a preprcessor expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "delassert",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_delassert,
-	  DOC("(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
-	      "@return Returns ?t when at least 1 answer got deleted for the given @predicate\n"
-	      "Delete an assertion @answer, or all assertions made for a given "
-	      "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
-	      "to ?t when encountered within a preprcessor expression"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_METHOD("include", &lexer_include,
+	            "(stream:?DFile,filename:?Dstring=!N)\n"
+	            "(filename:?Dstring,filename:?Dstring=!N)\n"
+	            "Include a new file, pushing its contents onto the ${##include}-stack\n"
+	            "Note that when including a file with the current token being $0 (as indicate of EOF), "
+	            /**/ "you must call one of the ?#next-functions in order to load the first token of the newly "
+	            /**/ "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
+	            /**/ "will think that no input data is available, causing compiler error to be produced:\n"
+	            "${"
+	            /**/ "import Compiler from rt;\n"
+	            /**/ "import File from deemon;\n"
+	            /**/ "local com = Compiler();\n"
+	            /**/ "com.lexer.include(File.open(\"input.dee\"));\n"
+	            /**/ "com.lexer.next(); /* Don't forget to always load the first token */\n"
+	            /**/ "local ast = com.parser.parse_allstmt();\n"
+	            /**/ "print ast;"
+	            "}\n"
+	            "Hint: In order to tokenize source code from a string, use ?AReader?DFile"),
+	TYPE_METHOD("nextraw", &lexer_nextraw,
+	            "->?Dint\n"
+	            "Load the next token and return its id (no macros, or preprocessor directives are processed)"),
+	TYPE_METHOD("nextpp", &lexer_nextpp,
+	            "->?Dint\n"
+	            "Load the next token and return its id (no macros are processed)"),
+	TYPE_METHOD(STR_next, &lexer_next,
+	            "->?Dint\n"
+	            "Load the next token and return its id"),
+	TYPE_METHOD("nextraw_nb", &lexer_nextraw_nb,
+	            "->?Dint\n"
+	            "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros, or preprocessor directives are processed)"),
+	TYPE_METHOD("nextpp_nb", &lexer_nextpp_nb,
+	            "->?Dint\n"
+	            "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros are processed)"),
+	TYPE_METHOD("next_nb", &lexer_next_nb,
+	            "->?Dint\n"
+	            "Load the next token and return its id while trying not to block (s.a. ?#nonblocking)"),
+	TYPE_METHOD("seterr", &lexer_seterr,
+	            "->?Dbool\n"
+	            "Switch the lexer into an error state"),
+	TYPE_METHOD("unseterr", &lexer_unseterr,
+	            "->?Dbool\n"
+	            "Restore the lexer after it was set to an error state"),
+	TYPE_METHOD("popfile", &lexer_popfile,
+	            "->?Dbool\n"
+	            "Pop the last-?#{include}d file and switch back to the file before then (s.a. ?#File)"),
+	TYPE_KWMETHOD("getkwd", &lexer_getkwd, DOC_GET(lexer_getkwd_doc)),
+	TYPE_KWMETHOD("getxkwd", &lexer_getxkwd, DOC_GET(lexer_getxkwd_doc)),
+	TYPE_METHOD("getkwdid", &lexer_getkwdid, DOC_GET(lexer_getkwdid_doc)),
+	TYPE_METHOD("undef", &lexer_undef,
+	            "(name:?Dstring)->?Dbool\n"
+	            "Delete a user-defined macro definition for a macro @name, returning ?t "
+	            "if such a definition existed and got deleted, or ?f if no such definition "
+	            "existed, and therefor didn't get deleted, either"),
+	TYPE_KWMETHOD("define", &lexer_define,
+	              "(name:?Dstring,value:?Dstring,builtin=!f)\n"
+	              "@param builtin When ?t define the macro as builtin, meaning the "
+	              "definition set by @value is restored when resetting macros\n"
+	              "Define a new keyword-like macro @name to expand to @value"),
+	TYPE_KWMETHOD("addassert", &lexer_addassert,
+	              "(predicate:?Dstring,answer:?Dstring)\n"
+	              "Define an assertion @answer for a given @predicate, such that "
+	              "${##if #predicate(answer)} evaluates to ?t when encountered "
+	              "within a preprocessor expression"),
+	TYPE_KWMETHOD("delassert", &lexer_delassert,
+	              "(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
+	              "@return Returns ?t when at least 1 answer got deleted for the given @predicate\n"
+	              "Delete an assertion @answer, or all assertions made for a given "
+	              "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
+	              "to ?t when encountered within a preprocessor expression"),
 	/* TODO */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 
@@ -2485,18 +2440,10 @@ PRIVATE struct type_seq lexer_keywords_seq = {
 
 
 PRIVATE struct type_method tpconst lexer_keywords_methods[] = {
-	{ "getkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwd,
-	  DOC_GET(lexer_getkwd_doc),
-	  TYPE_METHOD_FKWDS },
-	{ "getxkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getxkwd,
-	  DOC_GET(lexer_getxkwd_doc),
-	  TYPE_METHOD_FKWDS },
-	{ "getkwdid",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwdid,
-	  DOC_GET(lexer_getkwdid_doc) },
-	{ NULL }
+	TYPE_KWMETHOD("getkwd", &lexer_getkwd, DOC_GET(lexer_getkwd_doc)),
+	TYPE_KWMETHOD("getxkwd", &lexer_getxkwd, DOC_GET(lexer_getxkwd_doc)),
+	TYPE_METHOD("getkwdid", &lexer_getkwdid, DOC_GET(lexer_getkwdid_doc)),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
@@ -2716,25 +2663,21 @@ err:
 }
 
 PRIVATE struct type_method tpconst lexer_syspaths_methods[] = {
-	{ "push",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_push,
-	  DOC("()\n"
-	      "Push (remember) the current state of system include paths\n"
-	      "This is the same as using ${##pragma TPP include_path(push)}") },
-	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_pop,
-	  DOC("->?Dbool\n"
-	      "Pop (restore) a previously pushed system include path state\n"
-	      "This is the same as using ${##pragma TPP include_path(pop)}") },
-	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_insert,
-	  DOC("(path:?Dstring)->?Dbool\n"
-	      "Append the given @path at the end of the list of system include paths") },
-	{ DeeString_STR(&str_remove),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_remove,
-	  DOC("(path:?Dstring)->?Dbool\n"
-	      "Remove the given @path from the list of system include paths") },
-	{ NULL }
+	TYPE_METHOD(STR_push, &lexer_syspaths_push,
+	            "()\n"
+	            "Push (remember) the current state of system include paths\n"
+	            "This is the same as using ${##pragma TPP include_path(push)}"),
+	TYPE_METHOD(STR_pop, &lexer_syspaths_pop,
+	            "->?Dbool\n"
+	            "Pop (restore) a previously pushed system include path state\n"
+	            "This is the same as using ${##pragma TPP include_path(pop)}"),
+	TYPE_METHOD(STR_insert, &lexer_syspaths_insert,
+	            "(path:?Dstring)->?Dbool\n"
+	            "Append the given @path at the end of the list of system include paths"),
+	TYPE_METHOD(STR_remove, &lexer_syspaths_remove,
+	            "(path:?Dstring)->?Dbool\n"
+	            "Remove the given @path from the list of system include paths"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2887,9 +2830,7 @@ PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend)(void *arg, char const *__restrict buf, size_t bufsize) {
 	dssize_t result;
 	result = unicode_printer_print((struct unicode_printer *)arg, buf, bufsize);
-	return (unlikely(result < 0))
-	       ? -1
-	       : 0;
+	return unlikely(result < 0) ? -1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3058,57 +2999,42 @@ token_setkeyword(DeeCompilerWrapperObject *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst lexer_token_getsets[] = {
-	{ "text",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_text, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the textual representation of the current token\n"
-	      "Escaped linefeeds have been removed within the returned string") },
-	{ "rawtext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_rawtext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the raw textual representation of the current token\n"
-	      "Escaped linefeeds found in the original source are included in the returned string") },
-	{ "id",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_id,
-	  (int (DCALL *)(DeeObject *__restrict))&token_delid,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&token_setid,
-	  DOC("->?Dint\n"
-	      "Get, del (set to $0), or set the id (kind) of the current token") },
-	{ "num",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_num,
-	  (int (DCALL *)(DeeObject *__restrict))&token_delnum,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&token_setnum,
-	  DOC("->?Dint\n"
-	      "Get, del (set to $0), or set the current token number\n"
-	      "The current token number is incremented by at least $1 every "
-	      "time one of :lexer.next, :lexer.nextpp or :lexer.nextraw are called") },
-	{ "keyword",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&token_keyword,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&token_setkeyword,
-	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	      "Returns the keyword associated with the current token, or "
-	      ":none if the current token doesn't have an associated keyword\n"
-	      "When setting this field, both the token's ?#Keyword, as well "
-	      "as its ?#id field are set to the given value") },
-	{ "file",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
-	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
-	      "Returns the currently active file, or ?N if no file is currently active") },
-	{ "position",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
-	  DOC("->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
-	      "Return the exact source position of @this token within a macro definition, or text source") },
-	{ "endposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
-	  DOC("->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
-	      "Same as ?#position, however return the end position of the current token") },
-	{ "atstartofline",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if the current token is located at the "
-	      "start of a line, optionally prefixed by whitespace") },
-	{ NULL }
+	TYPE_GETTER("text", &token_text,
+	            "->?Dstring\n"
+	            "Returns the textual representation of the current token\n"
+	            "Escaped linefeeds have been removed within the returned string"),
+	TYPE_GETTER("rawtext", &token_rawtext,
+	            "->?Dstring\n"
+	            "Returns the raw textual representation of the current token\n"
+	            "Escaped linefeeds found in the original source are included in the returned string"),
+	TYPE_GETSET(STR_id, &token_id, &token_delid, &token_setid,
+	            "->?Dint\n"
+	            "Get, del (set to $0), or set the id (kind) of the current token"),
+	TYPE_GETSET("num", &token_num, &token_delnum, &token_setnum,
+	            "->?Dint\n"
+	            "Get, del (set to $0), or set the current token number\n"
+	            "The current token number is incremented by at least $1 every "
+	            "time one of :lexer.next, :lexer.nextpp or :lexer.nextraw are called"),
+	TYPE_GETSET("keyword", &token_keyword, NULL, &token_setkeyword,
+	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "Returns the keyword associated with the current token, or "
+	            ":none if the current token doesn't have an associated keyword\n"
+	            "When setting this field, both the token's ?#Keyword, as well "
+	            "as its ?#id field are set to the given value"),
+	TYPE_GETTER("file", &lexer_get_file,
+	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "Returns the currently active file, or ?N if no file is currently active"),
+	TYPE_GETTER("position", &lexer_get_tokenposition,
+	            "->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
+	            "Return the exact source position of @this token within a macro definition, or text source"),
+	TYPE_GETTER("endposition", &lexer_get_tokenendposition,
+	            "->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
+	            "Same as ?#position, however return the end position of the current token"),
+	TYPE_GETTER("atstartofline", &lexer_get_atstartofline,
+	            "->?Dbool\n"
+	            "Returns ?t if the current token is located at the "
+	            "start of a line, optionally prefixed by whitespace"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3162,20 +3088,18 @@ done2:
 }
 
 PRIVATE struct type_method tpconst lexer_token_methods[] = {
-	{ "decodestring",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_token_decodestring,
-	  DOC("->?Dstring\n"
-	      "@throw ValueError The current token isn't a string\n"
-	      "@throw UnicodeDecodeError The string contains an invalid escape-character\n"
-	      "Decode the current token (which must be a string-token) as a string") },
-	{ "decodeinteger",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_token_decodeinteger,
-	  DOC("(warnchar=!t)->?Dint\n"
-	      "@throw ValueError The current token isn't an integer, or character\n"
-	      "@throw ValueError The current token contains an invalid digit\n"
-	      "Decode the current token (which must be an integer or character) as an :int object\n"
-	      "When @warnchar is ?t, emit a warning when a character is used as an integer") },
-	{ NULL }
+	TYPE_METHOD("decodestring", &lexer_token_decodestring,
+	            "->?Dstring\n"
+	            "@throw ValueError The current token isn't a string\n"
+	            "@throw UnicodeDecodeError The string contains an invalid escape-character\n"
+	            "Decode the current token (which must be a string-token) as a string"),
+	TYPE_METHOD("decodeinteger", &lexer_token_decodeinteger,
+	            "(warnchar=!t)->?Dint\n"
+	            "@throw ValueError The current token isn't an integer, or character\n"
+	            "@throw ValueError The current token contains an invalid digit\n"
+	            "Decode the current token (which must be an integer or character) as an :int object\n"
+	            "When @warnchar is ?t, emit a warning when a character is used as an integer"),
+	TYPE_METHOD_END
 };
 
 
@@ -4418,237 +4342,214 @@ file_functionmacroexpansions(DeeCompilerItemObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst file_getsets[] = {
-	{ "istext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_istext, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is a text-file (as opposed "
-	      "to the result of macro expansion (s.a. ?#ismacro), or some other kind of file)") },
-	{ "ismacro",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_ismacro, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is a macro-file (as opposed "
-	      "to a text-file (s.a. ?#istext), or some other kind of file)") },
-	{ "isexpanded",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isexpand, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is an expanded function-like macro-file, "
-	      "or the result of injecting custom text into the token stream\n"
-	      "Note that functions and getsets related to ?#ismacro cannot be used "
-	      "when ?#isexpanded is ?t, and that ?#ismacro will return ?f when "
-	      "this field evaluates to ?t") },
-	{ "origin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_origin, NULL, NULL,
-	  DOC("->?X2?.?N\n"
-	      "Returns the originating location of @this File, "
-	      "or ?N if @this File is the base-file") },
-	{ "alltext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_alltext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the currently loaded text data of @this File") },
-	{ "nexttext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_nexttext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns sub-portion of text that will be used when reading from the file continues") },
-	{ "position",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_position, NULL, NULL,
-	  DOC("->?T2?Dint?Dint\n"
-	      "Returns the current position (as a pair of integer `line, column', both of which "
-	      "are zero-based, meaning you'll probably have to add ${+1} to get line numbers as "
-	      "they would be used in a text editor)\n"
-	      "In the event that @this File is a macro, the positions returned refer to the "
-	      "macro declaration position") },
-	{ DeeString_STR(&str_filename),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_filename,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delfilename,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setfilename,
-	  DOC("->?Dstring\n"
-	      "@throw ValueError Attempted to delete, or set the filename of a non-text file\n"
-	      "Returns the filename of a text file, or the filename of the file containing the "
-	      "definition of the @this macro\n"
-	      "In the event that a ${##line} directive was used to override the filename, the "
-	      "overwritten name is returned. If this isn't intended, use ?#realfilename instead\n"
-	      "In text-files, this field may be written to override the current file name, while "
-	      "deleting it will restore ?#realfilename as the used filename") },
-	{ "realfilename",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_realfilename, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the real filename of a text file, or the real filename of the file "
-	      "containing the definition of the @this macro\n"
-	      "This is the original, real filename, whereas the name returned by ?#Filename "
-	      "is the one which may have been overwritten by a ${##line} directive") },
-	{ "name",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_name, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the name of @this File, that is the filename, or in the event of @this "
-	      "file being a macro, the name of that macro") },
-	{ "lineoffset",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_lineoffset,
-	  (int (DCALL *)(DeeObject *__restrict))&file_dellineoffset,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setlineoffset,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, del(set to zero), or set the line-offset within @this "
-	      "text file, as can also be set by the ?#line directive") },
-	{ "stream",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_stream, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Returns the file stream from which data is read into @this File") },
-	{ "guard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getguard,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delguard,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setguard,
-	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, delete, or set a keyword that is checked for being defined "
-	      "before allowing @this File to be included by ${##include} again\n"
-	      "In the event of the keyword having an associated macro that is also "
-	      "defined, the file will not be included, but simply be skipped.\n"
-	      "Setting ?N is the same as deleting the guard, and ?N is returned if no guard is set") },
-	{ "newguard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getnewguard,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delnewguard,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setnewguard,
-	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
-	      "already been set) once @this File is popped from the ${##include}-stack, and "
-	      "?#disallowguard is ?f") },
-	{ "includecount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_includecount, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Return the number of times that @this File exists within the ${##include}-stack") },
-	{ "readcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_readcount, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Returns the number of bytes already read from the underlying source stream") },
-	{ "disallowguard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getdisallowguard,
-	  (int (DCALL *)(DeeObject *__restrict))&file_deldisallowguard,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setdisallowguard,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, del (set to false), or set @this File's disallow-guard property.\n"
-	      "When set to ?f, ?#newguard will be applied as ?#guard when the file is "
-	      "popped, allowing the lexer to remember a potential file guard.\n"
-	      "This flag is set to ?t automatically when an outer-most ${##ifndef}-block "
-	      "ends, following which more non-whitespace text is encountered, thus "
-	      "preventing the creation of a guard for the file") },
-	{ "issystemheader",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getissystemheader,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delissystemheader,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setissystemheader,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, del (set to false), or set if @this File is considered a system header\n"
-	      "When ?t, all non-error warnings are suppressed\n"
-	      "This flag is usually set by a ${##pragma GCC system_header} directive") },
-	{ "nonblocking",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getnonblocking,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delnonblocking,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setnonblocking,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
-	      "Get, del (set to false), or set if the underlying stream allows "
-	      "for non-blocking I/O, and should be performed in non-blocking mode "
-	      "when ?#nextchunk is called with $nonblocking set to ?t and when "
-	      "no incomplete string, or comment exists at the end of currently "
-	      "loaded text") },
-	{ "isfunctionmacro",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isfunctionmacro, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is a function-like macro-file\n"
-	      "Note that in this case, ?#ismacro will also return ?t") },
-	{ "iskeywordmacro",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_iskeywordmacro, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is a keyword-like macro-file\n"
-	      "Note that in this case, ?#ismacro will also return ?t") },
-	{ "definitionsfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsfile, NULL, NULL,
-	  DOC("->?X2?.?N\n"
-	      "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
-	      "Returns the file that was used to define @this macro, or return ?N if "
-	      "the macro was defined through other means, such as via the commandline") },
-	{ "definitionsposition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsposition, NULL, NULL,
-	  DOC("->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
-	      "Return the (line, column) pair of the definition location of @this macro file\n"
-	      "Macros not defined through files will return ${(0, 0)}") },
-	{ "previousdefinition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_previousdefinition, NULL, NULL,
-	  DOC("->?X2?.?N\n"
-	      "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
-	      "Return the previous definition of pushed macro (as created by ${##pragma push_macro(\"foo\")})\n"
-	      "If the macro hasn't been pushed, or is the oldest variant, ?N is returned") },
-	{ "pushcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_pushcount, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
-	      "The amount of times ${##pragma push_macro(\"foo\")} was repeated without actually "
-	      "providing a new definition of the macro. Used to handle recursive use of that pragma") },
-	{ "keywordexpandorigin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_keywordexpandorigin, NULL, NULL,
-	  DOC("->?.\n"
-	      "@throw ValueError @this File isn't a keyword-like macro file (?#iskeywordmacro is ?f)\n"
-	      "The originating file of a keyword-like macro") },
-	{ "isvariadicmacro",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isvariadicmacro, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this File is a function-like macro-file (s.a. "
-	      "?#isfunctionmacro) taking a variable number of arguments") },
-	{ "allowselfexpansion",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getallowselfexpansion,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delallowselfexpansion,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setallowselfexpansion,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "Get, del (set to ?f), or set if @this function-like macro is allowed to expand to itself\n"
-	      "This flag is set for newly defined macros when the $\"macro-recursion\" extension is enabled, "
-	      "and is cleared when that extension is disabled (default)\n"
-	      "When set, the macro's body may contain another reference to the function itself, which is then "
-	      "expanded again, so-long as the arguments passed differ from all expansions that are already "
-	      "apart of the current macro-expansion (${##include}) stack.") },
-	{ "keepargumentspace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getkeepargumentspace,
-	  (int (DCALL *)(DeeObject *__restrict))&file_delkeepargumentspace,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setkeepargumentspace,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "Get, del (set to ?f), or set if whitespace surrounding arguments passed "
-	      "to @this function-like macro should be kept, or trimmed.\n"
-	      "This flag is set for newly defined macros when the $\"macro-argument-whitespace\" extension "
-	      "is enabled, and is cleared when that extension is disabled (default)\n"
-	      ">#pragma extension(\"-fno-macro-argument-whitespace\")\n"
-	      ">#define STR1(x) #x\n"
-	      ">#pragma extension(\"-fmacro-argument-whitespace\")\n"
-	      ">#define STR2(x) #x\n"
-	      ">print STR1(  foo  ); /* \"foo\" */\n"
-	      ">print STR2(  foo  ); /* \"  foo  \" */") },
-	{ "functionmacrovariant",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getfunctionmacrovariant,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setfunctionmacrovariant,
-	  DOC("->?Dstring\n"
-	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "@throw ValueError Attempted to set a value not apart of ${(\"(\", \"[\", \"{\", \"<\")}\n"
-	      "Get or set the type of parenthesis used to start the argument list of @this function-like macro") },
-	{ "functionmacroargc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroargc, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "Return the number of (non-variadic) argument taken by @this function-like macro") },
-	{ "functionmacroexpansions",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroexpansions, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
-	      "Return the number of times that @this function-like macro is being expanded\n"
-	      "Note that normally only function-like macros with ?#allowselfexpansion set to ?t "
-	      "can ever be expanded more than once at the same time") },
-	{ NULL }
+	TYPE_GETTER("istext", &file_istext,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is a text-file (as opposed to the result "
+	            /**/ "of macro expansion (s.a. ?#ismacro), or some other kind of file)"),
+	TYPE_GETTER("ismacro", &file_ismacro,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is a macro-file (as opposed to "
+	            /**/ "a text-file (s.a. ?#istext), or some other kind of file)"),
+	TYPE_GETTER("isexpanded", &file_isexpand,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is an expanded function-like macro-file, "
+	            /**/ "or the result of injecting custom text into the token stream\n"
+	            "Note that functions and getsets related to ?#ismacro cannot be used "
+	            /**/ "when ?#isexpanded is ?t, and that ?#ismacro will return ?f when "
+	            /**/ "this field evaluates to ?t"),
+	TYPE_GETTER("origin", &file_origin,
+	            "->?X2?.?N\n"
+	            "Returns the originating location of @this File, "
+	            /**/ "or ?N if @this File is the base-file"),
+	TYPE_GETTER("alltext", &file_alltext,
+	            "->?Dstring\n"
+	            "Returns the currently loaded text data of @this File"),
+	TYPE_GETTER("nexttext", &file_nexttext,
+	            "->?Dstring\n"
+	            "Returns sub-portion of text that will be used when reading from the file continues"),
+	TYPE_GETTER("position", &file_position,
+	            "->?T2?Dint?Dint\n"
+	            "Returns the current position (as a pair of integer `line, column', both of which "
+	            /**/ "are zero-based, meaning you'll probably have to add ${+1} to get line numbers as "
+	            /**/ "they would be used in a text editor)\n"
+	            "In the event that @this File is a macro, the positions returned refer to the "
+	            /**/ "macro declaration position"),
+	TYPE_GETSET(STR_filename,
+	            &file_filename,
+	            &file_delfilename,
+	            &file_setfilename,
+	            "->?Dstring\n"
+	            "@throw ValueError Attempted to delete, or set the filename of a non-text file\n"
+	            "Returns the filename of a text file, or the filename of the file containing the "
+	            /**/ "definition of the @this macro\n"
+	            "In the event that a ${##line} directive was used to override the filename, the "
+	            /**/ "overwritten name is returned. If this isn't intended, use ?#realfilename instead\n"
+	            "In text-files, this field may be written to override the current file name, while "
+	            /**/ "deleting it will restore ?#realfilename as the used filename"),
+	TYPE_GETTER("realfilename", &file_realfilename,
+	            "->?Dstring\n"
+	            "Returns the real filename of a text file, or the real filename of the file "
+	            /**/ "containing the definition of the @this macro\n"
+	            "This is the original, real filename, whereas the name returned by ?#Filename "
+	            /**/ "is the one which may have been overwritten by a ${##line} directive"),
+	TYPE_GETTER(STR_name, &file_name,
+	            "->?Dstring\n"
+	            "Returns the name of @this File, that is the filename, or in the event of @this "
+	            /**/ "file being a macro, the name of that macro"),
+	TYPE_GETSET("lineoffset",
+	            &file_lineoffset,
+	            &file_dellineoffset,
+	            &file_setlineoffset,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, del(set to zero), or set the line-offset within @this "
+	            /**/ "text file, as can also be set by the ?#line directive"),
+	TYPE_GETTER("stream", &file_stream,
+	            "->?DFile\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Returns the file stream from which data is read into @this File"),
+	TYPE_GETSET("guard",
+	            &file_getguard,
+	            &file_delguard,
+	            &file_setguard,
+	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, delete, or set a keyword that is checked for being defined "
+	            /**/ "before allowing @this File to be included by ${##include} again\n"
+	            "In the event of the keyword having an associated macro that is also "
+	            /**/ "defined, the file will not be included, but simply be skipped.\n"
+	            "Setting ?N is the same as deleting the guard, and ?N is returned if no guard is set"),
+	TYPE_GETSET("newguard",
+	            &file_getnewguard,
+	            &file_delnewguard,
+	            &file_setnewguard,
+	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
+	            /**/ "already been set) once @this File is popped from the ${##include}-stack, and "
+	            /**/ "?#disallowguard is ?f"),
+	TYPE_GETTER("includecount", &file_includecount,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Return the number of times that @this File exists within the ${##include}-stack"),
+	TYPE_GETTER("readcount", &file_readcount,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Returns the number of bytes already read from the underlying source stream"),
+	TYPE_GETSET("disallowguard",
+	            &file_getdisallowguard,
+	            &file_deldisallowguard,
+	            &file_setdisallowguard,
+	            "->?Dbool\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, del (set to false), or set @this File's disallow-guard property.\n"
+	            "When set to ?f, ?#newguard will be applied as ?#guard when the file is "
+	            /**/ "popped, allowing the lexer to remember a potential file guard.\n"
+	            "This flag is set to ?t automatically when an outer-most ${##ifndef}-block "
+	            /**/ "ends, following which more non-whitespace text is encountered, thus "
+	            /**/ "preventing the creation of a guard for the file"),
+	TYPE_GETSET("issystemheader",
+	            &file_getissystemheader,
+	            &file_delissystemheader,
+	            &file_setissystemheader,
+	            "->?Dbool\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, del (set to false), or set if @this File is considered a system header\n"
+	            "When ?t, all non-error warnings are suppressed\n"
+	            "This flag is usually set by a ${##pragma GCC system_header} directive"),
+	TYPE_GETSET("nonblocking",
+	            &file_getnonblocking,
+	            &file_delnonblocking,
+	            &file_setnonblocking,
+	            "->?Dbool\n"
+	            "@throw ValueError @this File isn't a text file (?#istext is ?f)\n"
+	            "Get, del (set to false), or set if the underlying stream allows "
+	            /**/ "for non-blocking I/O, and should be performed in non-blocking mode "
+	            /**/ "when ?#nextchunk is called with $nonblocking set to ?t and when "
+	            /**/ "no incomplete string, or comment exists at the end of currently "
+	            /**/ "loaded text"),
+	TYPE_GETTER("isfunctionmacro", &file_isfunctionmacro,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is a function-like macro-file\n"
+	            "Note that in this case, ?#ismacro will also return ?t"),
+	TYPE_GETTER("iskeywordmacro", &file_iskeywordmacro,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is a keyword-like macro-file\n"
+	            "Note that in this case, ?#ismacro will also return ?t"),
+	TYPE_GETTER("definitionsfile", &file_definitionsfile,
+	            "->?X2?.?N\n"
+	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "Returns the file that was used to define @this macro, or return ?N if "
+	            /**/ "the macro was defined through other means, such as via the commandline"),
+	TYPE_GETTER("definitionsposition", &file_definitionsposition,
+	            "->?X2?T2?Dint?Dint?N\n"
+	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "Return the (line, column) pair of the definition location of @this macro file\n"
+	            "Macros not defined through files will return ${(0, 0)}"),
+	TYPE_GETTER("previousdefinition", &file_previousdefinition,
+	            "->?X2?.?N\n"
+	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "Return the previous definition of pushed macro (as created by ${##pragma push_macro(\"foo\")})\n"
+	            "If the macro hasn't been pushed, or is the oldest variant, ?N is returned"),
+	TYPE_GETTER("pushcount", &file_pushcount,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a macro file (?#ismacro is ?f)\n"
+	            "The amount of times ${##pragma push_macro(\"foo\")} was repeated without actually "
+	            /**/ "providing a new definition of the macro. Used to handle recursive use of that pragma"),
+	TYPE_GETTER("keywordexpandorigin", &file_keywordexpandorigin,
+	            "->?.\n"
+	            "@throw ValueError @this File isn't a keyword-like macro file (?#iskeywordmacro is ?f)\n"
+	            "The originating file of a keyword-like macro"),
+	TYPE_GETTER("isvariadicmacro", &file_isvariadicmacro,
+	            "->?Dbool\n"
+	            "Returns ?t if @this File is a function-like macro-file (s.a. "
+	            /**/ "?#isfunctionmacro) taking a variable number of arguments"),
+	TYPE_GETSET("allowselfexpansion",
+	            &file_getallowselfexpansion,
+	            &file_delallowselfexpansion,
+	            &file_setallowselfexpansion,
+	            "->?Dbool\n"
+	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "Get, del (set to ?f), or set if @this function-like macro is allowed to expand to itself\n"
+	            "This flag is set for newly defined macros when the $\"macro-recursion\" extension is enabled, "
+	            /**/ "and is cleared when that extension is disabled (default)\n"
+	            "When set, the macro's body may contain another reference to the function itself, which is then "
+	            /**/ "expanded again, so-long as the arguments passed differ from all expansions that are already "
+	            /**/ "apart of the current macro-expansion (${##include}) stack."),
+	TYPE_GETSET("keepargumentspace",
+	            &file_getkeepargumentspace,
+	            &file_delkeepargumentspace,
+	            &file_setkeepargumentspace,
+	            "->?Dbool\n"
+	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "Get, del (set to ?f), or set if whitespace surrounding arguments passed "
+	            /**/ "to @this function-like macro should be kept, or trimmed.\n"
+	            "This flag is set for newly defined macros when the $\"macro-argument-whitespace\" extension "
+	            /**/ "is enabled, and is cleared when that extension is disabled (default)\n"
+	            "${"
+	            /**/ "#pragma extension(\"-fno-macro-argument-whitespace\")\n"
+	            /**/ "#define STR1(x) #x\n"
+	            /**/ "#pragma extension(\"-fmacro-argument-whitespace\")\n"
+	            /**/ "#define STR2(x) #x\n"
+	            /**/ "print STR1(  foo  ); /* \"foo\" */\n"
+	            /**/ "print STR2(  foo  ); /* \"  foo  \" */"
+	            "}"),
+	TYPE_GETSET("functionmacrovariant", &file_getfunctionmacrovariant, NULL, &file_setfunctionmacrovariant,
+	            "->?Dstring\n"
+	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "@throw ValueError Attempted to set a value not apart of ${(\"(\", \"[\", \"{\", \"<\")}\n"
+	            "Get or set the type of parenthesis used to start the argument list of @this function-like macro"),
+	TYPE_GETTER("functionmacroargc", &file_functionmacroargc,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "Return the number of (non-variadic) argument taken by @this function-like macro"),
+	TYPE_GETTER("functionmacroexpansions", &file_functionmacroexpansions,
+	            "->?Dint\n"
+	            "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is ?f)\n"
+	            "Return the number of times that @this function-like macro is being expanded\n"
+	            "Note that normally only function-like macros with ?#allowselfexpansion set to ?t "
+	            /**/ "can ever be expanded more than once at the same time"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4683,18 +4584,16 @@ done:
 }
 
 PRIVATE struct type_method tpconst file_methods[] = {
-	{ "nextchunk",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_nextchunk,
-	  DOC("(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
-	      "@return Returns ?t if data was read, or ?f if the EOF of the input stream has been reached\n"
-	      "Try to load the next, or @extend the current chunk of loaded data, by reading a "
-	      "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "
-	      "but read data as-is, without decoding it. When @nonblocking is ?t, and the "
-	      "?#nonblocking is ?t as well, try to read data without blocking when waiting for "
-	      "new data, thus potentially returning ?f, even when the actual end-of-file hasn't "
-	      "been reached, yet"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("nextchunk", &file_nextchunk,
+	              "(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
+	              "@return Returns ?t if data was read, or ?f if the EOF of the input stream has been reached\n"
+	              "Try to load the next, or @extend the current chunk of loaded data, by reading a "
+	              "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "
+	              "but read data as-is, without decoding it. When @nonblocking is ?t, and the "
+	              "?#nonblocking is ?t as well, try to read data without blocking when waiting for "
+	              "new data, thus potentially returning ?f, even when the actual end-of-file hasn't "
+	              "been reached, yet"),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeCompilerFile_Type = {

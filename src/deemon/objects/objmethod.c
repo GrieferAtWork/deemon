@@ -356,22 +356,12 @@ DOC_DEF(objmethod_get_module_doc,
         "The module implementing the function that is being bound, or ?N if unknown");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
-	{ "__func__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_func, NULL, NULL,
-	  DOC_GET(objmethod_get_func_doc) },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_name, NULL, NULL,
-	  DOC_GET(objmethod_get_name_doc) },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_doc, NULL, NULL,
-	  DOC_GET(objmethod_get_doc_doc) },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_type, NULL, NULL,
-	  DOC_GET(objmethod_get_type_doc) },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&objmethod_get_module, NULL, NULL,
-	  DOC_GET(objmethod_get_module_doc) },
-	{ NULL }
+	TYPE_GETTER(STR___func__, &objmethod_get_func, DOC_GET(objmethod_get_func_doc)),
+	TYPE_GETTER(STR___name__, &objmethod_get_name, DOC_GET(objmethod_get_name_doc)),
+	TYPE_GETTER(STR___doc__, &objmethod_get_doc, DOC_GET(objmethod_get_doc_doc)),
+	TYPE_GETTER(STR___type__, &objmethod_get_type, DOC_GET(objmethod_get_type_doc)),
+	TYPE_GETTER(STR___module__, &objmethod_get_module, DOC_GET(objmethod_get_module_doc)),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst objmethod_members[] = {
@@ -616,10 +606,8 @@ dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
-	{ "__docstr__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getdocstr, NULL, NULL,
-	  DOC("->?Dstring") },
-	{ NULL }
+	TYPE_GETTER(STR___docstr__, &dockwdsiter_getdocstr, "->?Dstring"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst dockwdsiter_members[] = {
@@ -872,25 +860,13 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
-	{ "__func__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_func, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_func_doc) },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_name, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_name_doc) },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_doc, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_doc_doc) },
-	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_kwds, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_kwds_doc) },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_type, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_type_doc) },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&kwobjmethod_get_module, NULL, NULL,
-	  DOC_GET(kwobjmethod_get_module_doc) },
-	{ NULL }
+	TYPE_GETTER(STR___func__, &kwobjmethod_get_func, DOC_GET(kwobjmethod_get_func_doc)),
+	TYPE_GETTER(STR___name__, &kwobjmethod_get_name, DOC_GET(kwobjmethod_get_name_doc)),
+	TYPE_GETTER(STR___doc__, &kwobjmethod_get_doc, DOC_GET(kwobjmethod_get_doc_doc)),
+	TYPE_GETTER(STR___kwds__, &kwobjmethod_get_kwds, DOC_GET(kwobjmethod_get_kwds_doc)),
+	TYPE_GETTER(STR___type__, &kwobjmethod_get_type, DOC_GET(kwobjmethod_get_type_doc)),
+	TYPE_GETTER(STR___module__, &kwobjmethod_get_module, DOC_GET(kwobjmethod_get_module_doc)),
+	TYPE_GETSET_END
 };
 #define kwobjmethod_members objmethod_members
 #define kwobjmethod_str     objmethod_str
@@ -1150,22 +1126,17 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
-	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwclsmethod_get_kwds, NULL, NULL,
-	  DOC_GET(objmethod_get_kwds_doc) },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The name of @this method, or ?N if unknown") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of @this method, or ?N if unknown") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this method, or ?N if unknown") },
-	{ NULL }
+	TYPE_GETTER(STR___kwds__, &kwclsmethod_get_kwds, DOC_GET(objmethod_get_kwds_doc)),
+	TYPE_GETTER(STR___name__, &clsmethod_get_name,
+	            "->?X2?Dstring?N\n"
+	            "The name of @this method, or ?N if unknown"),
+	TYPE_GETTER(STR___doc__, &clsmethod_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "The documentation string of @this method, or ?N if unknown"),
+	TYPE_GETTER(STR___module__, &clsmethod_get_module,
+	            "->?X2?DModule?N\n"
+	            "The module implementing @this method, or ?N if unknown"),
+	TYPE_GETSET_END
 };
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
 
@@ -1513,29 +1484,12 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
-	  DOC("(thisarg)->"),
-	  TYPE_METHOD_FKWDS },
-	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_delete,
-	  DOC("(thisarg)"),
-	  TYPE_METHOD_FKWDS },
-	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_set,
-	  DOC("(thisarg,value)"),
-	  TYPE_METHOD_FKWDS },
-	{ "getter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
-	  DOC("(thisarg)->\n"
-	      "Alias for ?#get"),
-	  TYPE_METHOD_FKWDS },
-	{ "setter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_set,
-	  DOC("(thisarg,value)\n"
-	      "Alias for ?#set"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD(STR_get, &clsproperty_get, "(thisarg)->"),
+	TYPE_KWMETHOD(STR_delete, &clsproperty_delete, "(thisarg)"),
+	TYPE_KWMETHOD(STR_set, &clsproperty_set, "(thisarg,value)"),
+	TYPE_KWMETHOD(STR_getter, &clsproperty_get, "(thisarg)->\nAlias for ?#get"),
+	TYPE_KWMETHOD(STR_setter, &clsproperty_set, "(thisarg,value)\nAlias for ?#set"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1603,31 +1557,25 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
-	{ "canget",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this property has a getter callback") },
-	{ "candel",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_candel, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this property has a delete callback") },
-	{ "canset",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canset, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this property has a setter callback") },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The name of @this property, or ?N if unknown") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of @this property, or ?N if unknown") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this property, or ?N if unknown") },
-	{ NULL }
+	TYPE_GETTER("canget", &clsproperty_canget,
+	            "->?Dbool\n"
+	            "Returns ?t if @this property has a getter callback"),
+	TYPE_GETTER("candel", &clsproperty_candel,
+	            "->?Dbool\n"
+	            "Returns ?t if @this property has a delete callback"),
+	TYPE_GETTER("canset", &clsproperty_canset,
+	            "->?Dbool\n"
+	            "Returns ?t if @this property has a setter callback"),
+	TYPE_GETTER(STR___name__, &clsproperty_get_name,
+	            "->?X2?Dstring?N\n"
+	            "The name of @this property, or ?N if unknown"),
+	TYPE_GETTER(STR___doc__, &clsproperty_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "The documentation string of @this property, or ?N if unknown"),
+	TYPE_GETTER(STR___module__, &clsproperty_get_module,
+	            "->?X2?DModule?N\n"
+	            "The module implementing @this property, or ?N if unknown"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst clsproperty_members[] = {
@@ -1781,19 +1729,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsmember_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_get,
-	  DOC("(thisarg)->"),
-	  TYPE_METHOD_FKWDS },
-	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_delete,
-	  DOC("(thisarg)"),
-	  TYPE_METHOD_FKWDS },
-	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_set,
-	  DOC("(thisarg,value)"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD(STR_get, &clsmember_get, "(thisarg)->"),
+	TYPE_KWMETHOD(STR_delete, &clsmember_delete, "(thisarg)"),
+	TYPE_KWMETHOD(STR_set, &clsmember_set, "(thisarg,value)"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -1865,17 +1804,16 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
-	{ "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Alias for #canset") },
-	{ "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this member can be modified") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmember_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this member, or ?N if unknown") },
-	{ NULL }
+	TYPE_GETTER("candel", &clsmember_canset,
+	            "->?Dbool\n"
+	            "Alias for #canset"),
+	TYPE_GETTER("canset", &clsmember_canset,
+	            "->?Dbool\n"
+	            "Returns ?t if @this member can be modified"),
+	TYPE_GETTER(STR___module__, &clsmember_get_module,
+	            "->?X2?DModule?N\n"
+	            "The module implementing @this member, or ?N if unknown"),
+	TYPE_GETSET_END
 };
 
 PUBLIC DeeTypeObject DeeClsMember_Type = {
@@ -2165,51 +2103,49 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
 #define cmethod_getsets (kwcmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
-	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_get_kwds, NULL, NULL,
-	  DOC_GET(objmethod_get_kwds_doc) },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "Returns the module defining @this method, or ?N if that module could not be determined") },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
-	  DOC("->?X2?DType?N\n"
-	      "Returns the type as part of which @this method was declared, or ?N "
-	      /**/ "if @this method was declared as part of a module, or if the type could "
-	      /**/ "not be located") },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this method, or ?N if unknown") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this method, or ?N if unknown") },
-	{ NULL }
+	TYPE_GETTER(STR___kwds__, &kwcmethod_get_kwds, DOC_GET(objmethod_get_kwds_doc)),
+	TYPE_GETTER(STR___module__, &cmethod_get_module,
+	            "->?X2?DModule?N\n"
+	            "Returns the module defining @this method, or ?N if that module could not be determined"),
+	TYPE_GETTER(STR___type__, &cmethod_get_type,
+	            "->?X2?DType?N\n"
+	            "Returns the type as part of which @this method was declared, or ?N "
+	            /**/ "if @this method was declared as part of a module, or if the type could "
+	            /**/ "not be located"),
+	TYPE_GETTER(STR___name__, &cmethod_get_name,
+	            "->?X2?Dstring?N\n"
+	            "Returns the name of @this method, or ?N if unknown"),
+	TYPE_GETTER(STR___doc__, &cmethod_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "Returns the documentation string of @this method, or ?N if unknown"),
+	TYPE_GETSET_END
 };
 
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_str(DeeCMethodObject *__restrict self) {
+	char const *name = Dee_TYPE(self)->tp_name + 1;
 	DREF DeeModuleObject *module;
 	DREF DeeObject *result;
-	char const *name = Dee_TYPE(self)->tp_name + 1;
-	module           = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (module) {
 		struct module_symbol *symbol;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
 		symbol = cmethod_getmodsym(module, self->cm_func);
 		if (symbol) {
-			result = DeeString_Newf("<%s %k.%s at %p>", name, module, symbol->ss_name, *(void **)&self->cm_func);
+			result = DeeString_Newf("<%s %k.%s at %p>",
+			                        name, module, symbol->ss_name,
+			                        *(void **)&self->cm_func);
 			Dee_Decref(module);
 			return result;
 		}
 		member = cmethod_gettypefield(module, &type, self->cm_func);
 		if (member) {
-			result = DeeString_Newf("<%s %k.%k.%s at %p>", name, module, type, member->m_name, *(void **)&self->cm_func);
+			result = DeeString_Newf("<%s %k.%k.%s at %p>",
+			                        name, module, type, member->m_name,
+			                        *(void **)&self->cm_func);
 			Dee_Decref(type);
 			Dee_Decref(module);
 			return result;

@@ -232,14 +232,14 @@ ob_weakref_hash(WeakRef *__restrict self) {
 	return Dee_HashPointer(LAZY_GETOBJ(self));
 }
 
-#define DEFINE_WEAKREF_CMP(name, op)                                         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                    \
-	name(WeakRef *self, WeakRef *other) {                                    \
-		if (DeeNone_Check(other))                                            \
-			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL);          \
-		if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type)) \
-			return NULL;                                                     \
-		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));                \
+#define DEFINE_WEAKREF_CMP(name, op)                                \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
+	name(WeakRef *self, WeakRef *other) {                           \
+		if (DeeNone_Check(other))                                   \
+			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL); \
+		if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))     \
+			return NULL;                                            \
+		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));       \
 	}
 DEFINE_WEAKREF_CMP(ob_weakref_eq, ==)
 DEFINE_WEAKREF_CMP(ob_weakref_ne, !=)
@@ -328,33 +328,29 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst ob_weakref_methods[] = {
-	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_lock,
-	  DOC("->\n"
-	      "(def)->\n"
-	      "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
-	      "Lock the weak reference and return the pointed-to object") },
+	TYPE_METHOD("lock", &ob_weakref_lock,
+	            "->\n"
+	            "(def)->\n"
+	            "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
+	            "Lock the weak reference and return the pointed-to object"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_try_lock,
-	  DOC("()\n"
-	      "->\n"
-	      "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})") },
+	TYPE_METHOD("try_lock", &ob_weakref_try_lock,
+	            "()\n"
+	            "->\n"
+	            "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	{ "value",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ob_weakref_get,
-	  (int (DCALL *)(DeeObject *__restrict))&ob_weakref_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_set,
-	  DOC("@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
-	      "@throw ValueError Attempted to set an object that does not support weak referencing\n"
-	      "Access to the referenced object") },
-	{ "alive",
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&ob_weakref_alive, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Alias for ?#{op:bool}") },
-	{ NULL }
+	TYPE_GETSET(STR_value, &ob_weakref_get, &ob_weakref_del, &ob_weakref_set,
+	            "@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
+	            "@throw ValueError Attempted to set an object that does not support weak referencing\n"
+	            "Access to the referenced object"),
+	TYPE_GETTER("alive", &ob_weakref_alive,
+	            "->?Dbool\n"
+	            "Alias for ?#{op:bool}"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst ob_weakref_members[] = {
@@ -373,12 +369,12 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_WeakRef),
 	/* .tp_doc      = */ DOC("A weak reference to another object implementing WeakRef functionality\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct an unbound weak reference\n"
-
 	                         "\n"
+
 	                         "(obj,callback?:?DCallable)\n"
 	                         "@throw TypeError The given object @obj does not implement weak referencing support\n"
 	                         "Construct a weak reference bound to @obj, that will be notified once said "
@@ -395,13 +391,13 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         /**/ "being destroyed, so-as to prevent a possible infinite loop caused by the "
 	                         /**/ "object being revived when accessed (@callback is only invoked once the bound "
 	                         /**/ "object has passed the point of no return and can no longer be revived)\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns true if the weak reference is currently bound. Note however that this information "
 	                         /**/ "is volatile and may not longer be up-to-date by the time the operator returns\n"
-
 	                         "\n"
+
 	                         "==(other:?X2?.?N)->\n"
 	                         "!=(other:?X2?.?N)->\n"
 	                         "<(other:?X2?.?N)->\n"
@@ -411,13 +407,13 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         "When compared with ?N, test for the pointed-to object being bound. "
 	                         /**/ "Otherwise, compare the pointed-to object of @this weak reference "
 	                         /**/ "to that of @other\n"
-
 	                         "\n"
+
 	                         ":=(other:?X2?.?O)->\n"
 	                         "@throw TypeError The given @other does not implement weak referencing support\n"
 	                         "Assign the value of @other to @this WeakRef object\n"
-
 	                         "\n"
+
 	                         "move:=->\n"
 	                         "Override @this weak reference with the value referenced by @other, "
 	                         /**/ "while atomically clearing the weak reference from @other\n"),

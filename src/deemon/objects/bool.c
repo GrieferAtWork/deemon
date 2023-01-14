@@ -338,20 +338,10 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_ge   = */ &bool_ge
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bool_gettrue(DeeObject *__restrict UNUSED(self)) {
-	return_true;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bool_getfalse(DeeObject *__restrict UNUSED(self)) {
-	return_false;
-}
-
-PRIVATE struct type_getset tpconst bool_class_getsets[] = {
-	{ DeeString_STR(&str_true), &bool_gettrue, NULL, NULL, DOC("->?Dbool") },
-	{ DeeString_STR(&str_false), &bool_getfalse, NULL, NULL, DOC("->?Dbool") },
-	{ NULL }
+PRIVATE struct type_member tpconst bool_class_members[] = {
+	TYPE_MEMBER_CONST("true", Dee_True),
+	TYPE_MEMBER_CONST("false", Dee_False),
+	TYPE_MEMBER_END
 };
 
 PUBLIC DeeTypeObject DeeBool_Type = {
@@ -359,8 +349,8 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_bool),
 	/* .tp_doc      = */ DOC("()\n"
 	                         "Return the $false singleton\n"
-
 	                         "\n"
+
 	                         "(ob)\n"
 	                         "Convert the given @ob into a boolean"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FTRUNCATE | TP_FNAMEOBJECT,
@@ -399,8 +389,8 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ bool_class_getsets,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ bool_class_members
 };
 
 PUBLIC DeeBoolObject Dee_FalseTrue[2] = {

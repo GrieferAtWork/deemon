@@ -159,12 +159,8 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst stringordinalsiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:StringOrdinals") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &stringordinalsiter_seq, "->?Ert:StringOrdinals"),
+	TYPE_GETSET_END
 };
 
 

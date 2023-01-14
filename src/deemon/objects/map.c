@@ -83,17 +83,10 @@ DOC_DEF(map_byhash_doc,
         /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
 
 INTDEF struct type_method tpconst map_methods[];
-INTERN struct type_method tpconst map_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_get,
-	  DOC_GET(map_get_doc) },
-
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-
-	{ NULL }
+INTERN_TPCONST struct type_method tpconst map_methods[] = {
+	TYPE_METHOD(STR_get, &map_get, DOC_GET(map_get_doc)),
+	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 
@@ -657,22 +650,15 @@ err:
 DOC_REF(seq_byhash_doc);
 
 INTDEF struct type_method tpconst proxykeys_methods[];
-INTERN struct type_method tpconst proxykeys_methods[] = {
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxykeys_byhash,
-	  DOC_GET(seq_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+INTERN_TPCONST struct type_method tpconst proxykeys_methods[] = {
+	TYPE_KWMETHOD("byhash", &proxykeys_byhash, DOC_GET(seq_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 INTDEF struct type_method tpconst proxyitems_methods[];
-INTERN struct type_method tpconst proxyitems_methods[] = {
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxyitems_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-
-	{ NULL }
+INTERN_TPCONST struct type_method tpconst proxyitems_methods[] = {
+	TYPE_KWMETHOD("byhash", &proxyitems_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 
@@ -1323,54 +1309,44 @@ err:
 }
 
 PRIVATE struct type_getset tpconst map_getsets[] = {
-	{ "keys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_keys, NULL, NULL,
-	  DOC("->?#Keys\n"
-	      "Returns a ?DSequence that can be enumerated to view only the keys of @this Mapping") },
-	{ "values",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_values, NULL, NULL,
-	  DOC("->?#Values\n"
-	      "Returns a ?DSequence that can be enumerated to view only the values of @this Mapping") },
-	{ "items",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_items, NULL, NULL,
-	  DOC("->?#Items\n"
-	      "Returns a ?DSequence that can be enumerated to view the key-item "
-	      /**/ "pairs as 2-element sequences, the same way they could be viewed "
-	      /**/ "if @this Mapping itself was being iterated\n"
-	      "Note however that the returned ?DSequence is pure, meaning that it "
-	      /**/ "implements a index-based getitem and getrange operators, the same "
-	      /**/ "way one would expect of any regular object implementing the sequence "
-	      /**/ "protocol") },
-	{ "iterkeys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterkeys, NULL, NULL,
-	  DOC("->?AIterator?#Keys\n"
-	      "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}") },
-	{ "itervalues",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_itervalues, NULL, NULL,
-	  DOC("->?AIterator?#Values\n"
-	      "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}") },
-	{ "iteritems",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iteritems, NULL, NULL,
-	  DOC("->?AIterator?#Items\n"
-	      "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}") },
-	{ DeeString_STR(&str_first),
-	  &DeeMap_GetFirst, &DeeMap_DelFirst, NULL },
-	{ DeeString_STR(&str_last),
-	  &DeeMap_GetLast, &DeeMap_DelLast, NULL },
-	{ "byattr",
-	  &MapByAttr_New, NULL, NULL,
-	  DOC("->?Ert:MappingByAttr\n"
-	      "Construct a wrapper for @this mapping that behaves like a generic class object, "
-	      /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
-	      /**/ "(during all of $get, $del and $set).\n"
-	      "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
-	      /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
-	      "This attribute only makes sense if @this mapping behaves like ${{string: Object}}.") },
-	{ "frozen",
-	  &DeeRoDict_FromSequence, NULL, NULL,
-	  DOC("->?DMapping\n"
-	      "Returns a read-only (frozen) copy of @this Mapping") },
-	{ NULL }
+	TYPE_GETTER("keys", &map_keys,
+	            "->?#Keys\n"
+	            "Returns a ?DSequence that can be enumerated to view only the keys of @this Mapping"),
+	TYPE_GETTER("values", &map_values,
+	            "->?#Values\n"
+	            "Returns a ?DSequence that can be enumerated to view only the values of @this Mapping"),
+	TYPE_GETTER("items", &map_items,
+	            "->?#Items\n"
+	            "Returns a ?DSequence that can be enumerated to view the key-item "
+	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
+	            /**/ "if @this Mapping itself was being iterated\n"
+	            "Note however that the returned ?DSequence is pure, meaning that it "
+	            /**/ "implements a index-based getitem and getrange operators, the same "
+	            /**/ "way one would expect of any regular object implementing the sequence "
+	            /**/ "protocol"),
+	TYPE_GETTER("iterkeys", &map_iterkeys,
+	            "->?AIterator?#Keys\n"
+	            "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}"),
+	TYPE_GETTER("itervalues", &map_itervalues,
+	            "->?AIterator?#Values\n"
+	            "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}"),
+	TYPE_GETTER("iteritems", &map_iteritems,
+	            "->?AIterator?#Items\n"
+	            "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}"),
+	TYPE_GETSET_NODOC(STR_first, &DeeMap_GetFirst, &DeeMap_DelFirst, NULL),
+	TYPE_GETSET_NODOC(STR_last, &DeeMap_GetLast, &DeeMap_DelLast, NULL),
+	TYPE_GETTER("byattr", &MapByAttr_New,
+	            "->?Ert:MappingByAttr\n"
+	            "Construct a wrapper for @this mapping that behaves like a generic class object, "
+	            /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
+	            /**/ "(during all of $get, $del and $set).\n"
+	            "Note that the returned object doesn't implement the ?DSequence- or ?DMapping "
+	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
+	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
+	TYPE_GETTER("frozen", &DeeRoDict_FromSequence,
+	            "->?DMapping\n"
+	            "Returns a read-only (frozen) copy of @this Mapping"),
+	TYPE_GETSET_END
 };
 
 
@@ -1426,20 +1402,14 @@ err:
 
 
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
-	{ DeeString_STR(&str_Iterator),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iterator_get,
-	  NULL,
-	  NULL,
-	  DOC("->?DType\n"
-	      "Returns the iterator class used by instances of @this Mapping type\n"
-	      "This member must be overwritten by sub-classes of ?DMapping") },
-	{ "Frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_frozen_get,
-	  NULL,
-	  NULL,
-	  DOC("->?DType\n"
-	      "Returns the type of sequence returned by the #i:frozen property") },
-	{ NULL }
+	TYPE_GETTER(STR_Iterator, &map_iterator_get,
+	            "->?DType\n"
+	            "Returns the iterator class used by instances of @this Mapping type\n"
+	            "This member must be overwritten by sub-classes of ?DMapping"),
+	TYPE_GETTER("Frozen", &map_frozen_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the #i:frozen property"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst map_class_members[] = {
@@ -1470,21 +1440,22 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	                         "An object derived from this class must implement ${operator iter}, "
 	                         /**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
 	                         /**/ "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "A no-op default constructor that is implicitly called by sub-classes\n"
 	                         "When invoked manually, a general-purpose, empty Mapping is returned\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns the representation of all sequence elements, "
 	                         /**/ "using abstract mapping syntax\n"
 	                         "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
-
 	                         "\n"
+
 	                         "[:]->!D\n"
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating key-value pairs as 2-elements sequences"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */

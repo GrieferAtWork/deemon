@@ -228,33 +228,28 @@ err:
 
 
 PRIVATE struct type_method tpconst sema_methods[] = {
-	{ "post",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_post,
-	  DOC("(count=!1)\n"
-	      "Post @count tickets to the semaphore") },
-	{ "wait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_wait,
-	  DOC("()\n"
-	      "Wait for the semaphore to become ready and acquire a ticket") },
-	{ "trywait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_trywait,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "@return true: A ticket was acquired\n"
-	      "@return false: No ticket was available\n"
-	      "Check if unused tickets are available and acquire one") },
-	{ "timedwait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_timedwait,
-	  DOC("(timeout_microseconds:?Dint)->?Dbool\n"
-	      "@interrupt\n"
-	      "@return true: A ticket was acquired\n"
-	      "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
-	      "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it") },
-	{ "fileno",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_fileno,
-	  DOC("->?Dint\n"
-	      "Non-portable windows extension to retrive the file descriptor number (HANDLE) of the semaphore") },
-	{ NULL }
+	TYPE_METHOD("post", &sema_post,
+	            "(count=!1)\n"
+	            "Post @count tickets to the semaphore"),
+	TYPE_METHOD("wait", &sema_wait,
+	            "()\n"
+	            "Wait for the semaphore to become ready and acquire a ticket"),
+	TYPE_METHOD("trywait", &sema_trywait,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "@return true: A ticket was acquired\n"
+	            "@return false: No ticket was available\n"
+	            "Check if unused tickets are available and acquire one"),
+	TYPE_METHOD("timedwait", &sema_timedwait,
+	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "@interrupt\n"
+	            "@return true: A ticket was acquired\n"
+	            "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
+	            "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it"),
+	TYPE_METHOD("fileno", &sema_fileno,
+	            "->?Dint\n"
+	            "Non-portable windows extension to retrive the file descriptor number (HANDLE) of the semaphore"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -489,22 +484,22 @@ err:
 }
 
 PRIVATE struct type_method tpconst mutex_methods[] = {
-	{ "acquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_acquire,
-	  DOC("()\n"
-	      "Wait for the mutex to becomes available and recursive acquires an exclusive lock") },
-	{ "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_tryacquire,
-	  DOC("->?Dbool\n"
-	      "Try to recursive acquire an exclusive lock but fail and "
-	      "return ?f if this is not possible without blocking") },
-	{ "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_timedacquire,
-	  DOC("(timeout_microseconds:?Dint)->?Dbool\n"
-	      "Try to recursive acquire an exclusive lock but fail and "
-	      "return ?f if the given @timeout_microseconds has passed") },
-	{ "release", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_release,
-	  DOC("()\n"
-	      "@throw RuntimeError The calling thread has not acquired the mutex\n"
-	      "Recursively release a lock to @this mutex") },
-	{ NULL }
+	TYPE_METHOD("acquire", &mutex_acquire,
+	            "()\n"
+	            "Wait for the mutex to becomes available and recursive acquires an exclusive lock"),
+	TYPE_METHOD("tryacquire", &mutex_tryacquire,
+	            "->?Dbool\n"
+	            "Try to recursive acquire an exclusive lock but fail and "
+	            "return ?f if this is not possible without blocking"),
+	TYPE_METHOD("timedacquire", &mutex_timedacquire,
+	            "(timeout_microseconds:?Dint)->?Dbool\n"
+	            "Try to recursive acquire an exclusive lock but fail and "
+	            "return ?f if the given @timeout_microseconds has passed"),
+	TYPE_METHOD("release", &mutex_release,
+	            "()\n"
+	            "@throw RuntimeError The calling thread has not acquired the mutex\n"
+	            "Recursively release a lock to @this mutex"),
+	TYPE_METHOD_END
 };
 
 

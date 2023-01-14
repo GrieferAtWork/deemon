@@ -217,202 +217,132 @@ done:
 
 
 PRIVATE struct type_method tpconst parser_methods[] = {
-	{ "parse_unaryhead",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_unaryhead,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a unary head-expression, that is a unary expression without any tail- or binary suffix"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_unary",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_unary,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a whole unary expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_prod",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_prod,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a product expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_sum",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_sum,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a sum expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_shift",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_shift,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a shift expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_cmp",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_cmp,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a compare expression (non-equal)"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_cmpeq",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_cmpeq,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a compare expression (equal)"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_and",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_and,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a bit-wise and expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_xor",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_xor,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a bit-wise xor expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_or",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_or,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a bit-wise or expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_as",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_as,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse an as expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_land",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_land,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a logical and expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_lor",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_lor,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a logical or expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_cond",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_cond,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse a conditional expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_assign",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_assign,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Parse an assignment (not store), or inplace expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_expr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_assign,
-	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Alias for ?#parse_assign"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_unarytail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_unarytail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a unary expression (which includes attribute lookups, and call operations)"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_prodtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_prodtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a product expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_sumtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_sumtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a sum expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_shifttail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_shifttail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a shift expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_cmptail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_cmptail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a cmp expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_cmpeqtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_cmpeqtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a cmpeq expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_andtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_andtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a and expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_xortail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_xortail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a xor expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_ortail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_ortail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a or expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_astail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_astail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a as expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_landtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_landtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a land expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_lortail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_lortail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a lor expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_condtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_condtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a cond expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_assigntail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_assigntail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a assign expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_exprtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_exprtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a expr expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_maptail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_maptail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a generic mapping expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_seqtail",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_seqtail,
-	  DOC("(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
-	      "Parse the tail of a generic sequence expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_stmt",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_stmt,
-	  DOC("(bool nonblocking=false)->?AAst?Ert:Compiler\n"
-	      "Parse a statement or ?#parse_comma expression"),
-	  TYPE_METHOD_FKWDS },
-	{ "parse_allstmt",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_allstmt,
-	  DOC("(end=!P{})->?AAst?Ert:Compiler\n"
-	      "(end=!0)->?AAst?Ert:Compiler\n"
-	      "Parse statements (?#parse_stmt) and pack them togerther into "
-	      "a multiple/keep-last branch, until the input file ends, or "
-	      "a token equal to @end (s.a. :Compiler.lexer.token.op:eq) is "
-	      "encountered at the start of a statement"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("parse_unaryhead", &parser_parse_unaryhead,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a unary head-expression, that is a unary expression without any tail- or binary suffix"),
+	TYPE_KWMETHOD("parse_unary", &parser_parse_unary,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a whole unary expression"),
+	TYPE_KWMETHOD("parse_prod", &parser_parse_prod,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a product expression"),
+	TYPE_KWMETHOD("parse_sum", &parser_parse_sum,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a sum expression"),
+	TYPE_KWMETHOD("parse_shift", &parser_parse_shift,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a shift expression"),
+	TYPE_KWMETHOD("parse_cmp", &parser_parse_cmp,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a compare expression (non-equal)"),
+	TYPE_KWMETHOD("parse_cmpeq", &parser_parse_cmpeq,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a compare expression (equal)"),
+	TYPE_KWMETHOD("parse_and", &parser_parse_and,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a bit-wise and expression"),
+	TYPE_KWMETHOD("parse_xor", &parser_parse_xor,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a bit-wise xor expression"),
+	TYPE_KWMETHOD("parse_or", &parser_parse_or,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a bit-wise or expression"),
+	TYPE_KWMETHOD("parse_as", &parser_parse_as,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse an as expression"),
+	TYPE_KWMETHOD("parse_land", &parser_parse_land,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a logical and expression"),
+	TYPE_KWMETHOD("parse_lor", &parser_parse_lor,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a logical or expression"),
+	TYPE_KWMETHOD("parse_cond", &parser_parse_cond,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse a conditional expression"),
+	TYPE_KWMETHOD("parse_assign", &parser_parse_assign,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Parse an assignment (not store), or inplace expression"),
+	TYPE_KWMETHOD("parse_expr", &parser_parse_assign,
+	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "Alias for ?#parse_assign"),
+	TYPE_KWMETHOD("parse_unarytail", &parser_parse_unarytail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a unary expression (which includes attribute lookups, and call operations)"),
+	TYPE_KWMETHOD("parse_prodtail", &parser_parse_prodtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a product expression"),
+	TYPE_KWMETHOD("parse_sumtail", &parser_parse_sumtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a sum expression"),
+	TYPE_KWMETHOD("parse_shifttail", &parser_parse_shifttail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a shift expression"),
+	TYPE_KWMETHOD("parse_cmptail", &parser_parse_cmptail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a cmp expression"),
+	TYPE_KWMETHOD("parse_cmpeqtail", &parser_parse_cmpeqtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a cmpeq expression"),
+	TYPE_KWMETHOD("parse_andtail", &parser_parse_andtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a and expression"),
+	TYPE_KWMETHOD("parse_xortail", &parser_parse_xortail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a xor expression"),
+	TYPE_KWMETHOD("parse_ortail", &parser_parse_ortail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a or expression"),
+	TYPE_KWMETHOD("parse_astail", &parser_parse_astail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a as expression"),
+	TYPE_KWMETHOD("parse_landtail", &parser_parse_landtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a land expression"),
+	TYPE_KWMETHOD("parse_lortail", &parser_parse_lortail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a lor expression"),
+	TYPE_KWMETHOD("parse_condtail", &parser_parse_condtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a cond expression"),
+	TYPE_KWMETHOD("parse_assigntail", &parser_parse_assigntail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a assign expression"),
+	TYPE_KWMETHOD("parse_exprtail", &parser_parse_exprtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a expr expression"),
+	TYPE_KWMETHOD("parse_maptail", &parser_parse_maptail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a generic mapping expression"),
+	TYPE_KWMETHOD("parse_seqtail", &parser_parse_seqtail,
+	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "Parse the tail of a generic sequence expression"),
+	TYPE_KWMETHOD("parse_stmt", &parser_parse_stmt,
+	              "(bool nonblocking=false)->?AAst?Ert:Compiler\n"
+	              "Parse a statement or ?#parse_comma expression"),
+	TYPE_KWMETHOD("parse_allstmt", &parser_parse_allstmt,
+	              "(end=!P{})->?AAst?Ert:Compiler\n"
+	              "(end=!0)->?AAst?Ert:Compiler\n"
+	              "Parse statements (?#parse_stmt) and pack them togerther into "
+	              "a multiple/keep-last branch, until the input file ends, or "
+	              "a token equal to @end (s.a. :Compiler.lexer.token.op:eq) is "
+	              "encountered at the start of a statement"),
+	TYPE_METHOD_END
 };
 
 
@@ -445,15 +375,13 @@ err:
 }
 
 PRIVATE struct type_getset tpconst parser_getsets[] = {
-	{ "allowlfstatements",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&parser_getlfstmt, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&parser_setlfstmt,
-	  DOC("->?Dbool\n"
-	      "Get or set if line-feeds should be recognized as statement terminators "
-	      "(you must also enable line-feed token created in :Compiler.lexer.wantlf)\n"
-	      "When enabled, most statements can be termined by line-feeds, in addition to "
-	      "semicolon tokens.") },
-	{ NULL }
+	TYPE_GETSET("allowlfstatements", &parser_getlfstmt, NULL, &parser_setlfstmt,
+	            "->?Dbool\n"
+	            "Get or set if line-feeds should be recognized as statement terminators "
+	            /**/ "(you must also enable line-feed token created in :Compiler.lexer.wantlf)\n"
+	            "When enabled, most statements can be termined by line-feeds, in addition to "
+	            /**/ "semicolon tokens."),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst parser_class_members[] = {
@@ -466,7 +394,7 @@ INTERN DeeTypeObject DeeCompilerParser_Type = {
 	/* .tp_name     = */ "_Parser",
 	/* .tp_doc      = */ DOC("Parse data from the input token stream (:Compiler.lexer) of the associated ?#compiler\n"
 	                         "For more information on what exactly is parsed by individual `parse_*' functions, see the "
-	                         "following table, or consult the `/lib/LANGUAGE.txt' file within the deemon source tree\n"
+	                         /**/ "following table, or consult the `/lib/LANGUAGE.txt' file within the deemon source tree\n"
 	                         "#T{Function|Example|Description~"
 	                         "?#parse_unaryhead|${[foo].bar}, ${[42] + 7}, ${[(10 + 20)]}, ${[[]{ return 42; }]}|Parse the head of a unary expression, including unary prefix operators, and the unary operand itself&"
 	                         "?#parse_unary|${[foo.bar]}, ${[getitems(a, b, c)]}|Parse a whole unary expression&"
@@ -504,10 +432,10 @@ INTERN DeeTypeObject DeeCompilerParser_Type = {
 	                         "Note the processed portion of an expression is written in []-brackets\n"
 	                         "In order to explain what tail parsers do, look at this example:\n"
 	                         "${"
-	                         "/* input: \"a.foo + 14 * 7 ? x : y-7\" */\n"
-	                         "x = parser.parse_unaryhead();  /* x = `a' */\n"
-	                         "x = parser.parse_unarytail(x); /* x = `a' + `.foo' (same as an initial call to `parse_unary') */\n"
-	                         "x = parser.parse_exprtail(x);  /* x = `a.foo' + `+ 14 * 7 ? x : y-7' (same as an initial call to `parse_expr') */"
+	                         /**/ "/* input: \"a.foo + 14 * 7 ? x : y-7\" */\n"
+	                         /**/ "x = parser.parse_unaryhead();  /* x = `a' */\n"
+	                         /**/ "x = parser.parse_unarytail(x); /* x = `a' + `.foo' (same as an initial call to `parse_unary') */\n"
+	                         /**/ "x = parser.parse_exprtail(x);  /* x = `a.foo' + `+ 14 * 7 ? x : y-7' (same as an initial call to `parse_expr') */"
 	                         "}\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

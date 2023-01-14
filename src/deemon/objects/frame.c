@@ -596,55 +596,45 @@ err:
 }
 
 PRIVATE struct type_getset tpconst frame_getsets[] = {
-	{ "location",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
-	  DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
-	      "Returns a sequence of tuples describing the Frame location, "
-	      /**/ "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
-	      "Rarely ever does the location consist of more than a single "
-	      /**/ "location tuple, however if a function call has been inlined "
-	      /**/ "as a call from another location, the compiler will generate DDI "
-	      /**/ "instrumentation to ensure consistent debug information for both "
-	      /**/ "the inlined function, as well as the call-site") },
-	{ "file",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The filename of this Frame's source file, or ?N when indeterminate") },
-	{ "line",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "The 0-based line number within this Frame's source file, or ?N when indeterminate") },
-	{ "col",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "The 0-based column offset within this Frame's source file, or ?N when indeterminate") },
-	{ "name",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The name of this Frame's function, or ?N when indeterminate") },
-	{ "func",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
-	  DOC("->?X2?DFunction?N\n"
-	      "Returns the function that is referenced by @this Frame, or ?N if not available") },
-	{ "__code__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
-	  DOC("->?Ert:Code\n"
-	      "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
-	      "The code object that is being executed") },
-	{ "__pc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getpc, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&frame_setpc,
-	  DOC("->?Dint\n"
-	      "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
-	      "@throw ValueError Attempted to set PC within a read-only Frame\n"
-	      "The current program counter") },
-	{ "__sp__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getsp_obj, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
-	      "@throw ValueError The stack depth was undefined and could not be determined\n"
-	      "Get the current stack depth (same as ${##this.__stack__})\n"
-	      "To modify this value, use ?#__stack__ to append/pop objects") },
+	TYPE_GETTER("location", &frame_getlocation,
+	            "->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
+	            "Returns a sequence of tuples describing the Frame location, "
+	            /**/ "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
+	            "Rarely ever does the location consist of more than a single "
+	            /**/ "location tuple, however if a function call has been inlined "
+	            /**/ "as a call from another location, the compiler will generate DDI "
+	            /**/ "instrumentation to ensure consistent debug information for both "
+	            /**/ "the inlined function, as well as the call-site"),
+	TYPE_GETTER("file", &frame_getfile,
+	            "->?X2?Dstring?N\n"
+	            "The filename of this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER("line", &frame_getline,
+	            "->?X2?Dint?N\n"
+	            "The 0-based line number within this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER("col", &frame_getcol,
+	            "->?X2?Dint?N\n"
+	            "The 0-based column offset within this Frame's source file, or ?N when indeterminate"),
+	TYPE_GETTER(STR_name, &frame_getname,
+	            "->?X2?Dstring?N\n"
+	            "The name of this Frame's function, or ?N when indeterminate"),
+	TYPE_GETTER("func", &frame_getfunc,
+	            "->?X2?DFunction?N\n"
+	            "Returns the function that is referenced by @this Frame, or ?N if not available"),
+	TYPE_GETTER(STR___code__, &frame_getcode,
+	            "->?Ert:Code\n"
+	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
+	            "The code object that is being executed"),
+	TYPE_GETSET("__pc__", &frame_getpc, NULL, &frame_setpc,
+	            "->?Dint\n"
+	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
+	            "@throw ValueError Attempted to set PC within a read-only Frame\n"
+	            "The current program counter"),
+	TYPE_GETTER("__sp__", &frame_getsp_obj,
+	            "->?Dint\n"
+	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
+	            "@throw ValueError The stack depth was undefined and could not be determined\n"
+	            "Get the current stack depth (same as ${##this.__stack__})\n"
+	            "To modify this value, use ?#__stack__ to append/pop objects"),
 	/* TODO: __stack__ (read-write, custom, modifiable & resizable, sequence-like object)
 	 * TODO: __args__ (readonly, custom, sequence-like object for accessing arguments)
 	 *                 -> reading is the same as it would for the `push arg ...' instruction
@@ -674,7 +664,7 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	 *                    Resolution name order here is (from most->least visible):
 	 *                    LOCALS/STACK (DDI) -> ARGUMENTS -> STATIC/CONST -> REF -> `return' + `this'
 	 */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst frame_members[] = {

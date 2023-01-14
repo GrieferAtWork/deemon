@@ -64,8 +64,8 @@ PRIVATE struct type_member tpconst pipe_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst pipe_class_methods[] = {
-	{ S_Pipe_function_new_name, &pipe_class_new, S_Pipe_function_new_doc },
-	{ NULL }
+	TYPE_METHOD(S_Pipe_function_new_name, &pipe_class_new, S_Pipe_function_new_doc),
+	TYPE_METHOD_END
 };
 
 INTERN DeeFileTypeObject DeePipe_Type = {

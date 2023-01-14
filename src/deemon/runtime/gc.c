@@ -1667,29 +1667,29 @@ err:
 
 
 PRIVATE struct type_method tpconst gcenum_methods[] = {
-	{ "collect", &gcenum_collect,
-	  DOC("(max=!-1)->?Dint\n"
-	      "Try to collect at least @max GC objects and return the actual number collected\n"
-	      "Note that more than @max objects may be collected if sufficiently large reference cycles exist") },
-	{ "referred", &gcenum_referred,
-	  DOC("(start)->?Dset\n"
-	      "Returns a set of objects that are immediately referred to by @start") },
-	{ "referredgc", &gcenum_referredgc,
-	  DOC("(start)->?Dset\n"
-	      "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)") },
-	{ "reachable", &gcenum_reachable,
-	  DOC("(start)->?Dset\n"
-	      "Returns a set of objects that are reachable from @start") },
-	{ "reachablegc", &gcenum_reachablegc,
-	  DOC("(start)->?Dset\n"
-	      "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)") },
-	{ "referring", &gcenum_referring,
-	  DOC("(to)->?Dset\n"
-	      "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to") },
-	{ "isreferring", &gcenum_isreferring,
-	  DOC("(from,to)->?Dbool\n"
-	      "Returns ?t if @to is referred to by @from, or ?f otherwise") },
-	{ NULL }
+	TYPE_METHOD("collect", &gcenum_collect,
+	            "(max=!-1)->?Dint\n"
+	            "Try to collect at least @max GC objects and return the actual number collected\n"
+	            "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
+	TYPE_METHOD("referred", &gcenum_referred,
+	            "(start)->?Dset\n"
+	            "Returns a set of objects that are immediately referred to by @start"),
+	TYPE_METHOD("referredgc", &gcenum_referredgc,
+	            "(start)->?Dset\n"
+	            "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
+	TYPE_METHOD("reachable", &gcenum_reachable,
+	            "(start)->?Dset\n"
+	            "Returns a set of objects that are reachable from @start"),
+	TYPE_METHOD("reachablegc", &gcenum_reachablegc,
+	            "(start)->?Dset\n"
+	            "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
+	TYPE_METHOD("referring", &gcenum_referring,
+	            "(to)->?Dset\n"
+	            "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
+	TYPE_METHOD("isreferring", &gcenum_isreferring,
+	            "(from,to)->?Dbool\n"
+	            "Returns ?t if @to is referred to by @from, or ?f otherwise"),
+	TYPE_METHOD_END
 };
 
 PRIVATE DeeTypeObject GCEnum_Type = {

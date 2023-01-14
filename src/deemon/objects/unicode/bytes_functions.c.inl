@@ -5144,108 +5144,94 @@ err:
 
 
 INTDEF struct type_method tpconst bytes_methods[];
-INTERN struct type_method tpconst bytes_methods[] = {
-	{ "decode",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_decode,
-	  DOC("(codec:?Dstring,errors=!Pstrict)->?X2?Dstring?O\n"
-	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
-	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Same as ?Adecode?Dstring, but instead use the data of @this ?. object as characters to decode"),
-	  TYPE_METHOD_FKWDS },
-	{ "encode",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_encode,
-	  DOC("(codec:?Dstring,errors=!Pstrict)->?X3?.?Dstring?O\n"
-	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
-	      "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
-	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
-	      "Same as ?Aencode?Dstring, but instead use the data of @this ?. object as characters to decode"),
-	  TYPE_METHOD_FKWDS },
-	{ "bytes",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Same as ?#substr (here for ABI compatibility with ?Abytes?Dstring)"),
-	  TYPE_METHOD_FKWDS },
-	{ "ord",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_ord,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The length of @this ?. object is not equal to $1\n"
-	      "Same as ${this[0]}\n"
+INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
+	TYPE_KWMETHOD("decode", &string_decode,
+	              "(codec:?Dstring,errors=!Pstrict)->?X2?Dstring?O\n"
+	              "@throw ValueError The given @codec or @errors wasn't recognized\n"
+	              "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
+	              "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
+	              "Same as ?Adecode?Dstring, but instead use the data of @this ?. object as characters to decode"),
+	TYPE_KWMETHOD("encode", &string_encode,
+	              "(codec:?Dstring,errors=!Pstrict)->?X3?.?Dstring?O\n"
+	              "@throw ValueError The given @codec or @errors wasn't recognized\n"
+	              "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
+	              "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
+	              "Same as ?Aencode?Dstring, but instead use the data of @this ?. object as characters to decode"),
+	TYPE_KWMETHOD(STR_bytes, &bytes_substr,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Same as ?#substr (here for ABI compatibility with ?Abytes?Dstring)"),
+	TYPE_METHOD("ord", &bytes_ord,
+	            "->?Dint\n"
+	            "@throw ValueError The length of @this ?. object is not equal to $1\n"
+	            "Same as ${this[0]}\n"
 
-	      "\n"
-	      "(index:?Dint)->?Dint\n"
-	      "@throw IntegerOverflow The given @index is lower than $0\n"
-	      "@throw IndexError The given @index is greater than ${##this}\n"
-	      "Same as ${this[index]}") },
+	            "\n"
+	            "(index:?Dint)->?Dint\n"
+	            "@throw IntegerOverflow The given @index is lower than $0\n"
+	            "@throw IndexError The given @index is greater than ${##this}\n"
+	            "Same as ${this[index]}"),
 
 	/* Bytes-specific functions. */
-	{ "resized",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_resized,
-	  DOC("(new_size:?Dint,filler?:?Dint)->?.\n"
-	      "Return a new writable ?. object with a length of @new_size, and its "
-	      /**/ "first ${(##this, new_size) < ...} bytes initialized from ${this.substr(0, new_size)}, "
-	      /**/ "with the remainder then either left uninitialized, or initialized to @filler\n"
-	      "Note that because a ?. object cannot be resized in-line, code using this function "
-	      /**/ "must make use of the returned ?. object:\n"
-	      "${"
-	      "local x = \"foobar\";\n"
-	      "local y = x.bytes();\n"
-	      "print repr y; /* \"foobar\" */\n"
-	      "y = y.resized(16, \"?\".ord());\n"
-	      "print repr y; /* \"foobar??" "??" "??" "??" "??\" */"
-	      "}") },
-	{ "reverse",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reverse,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#reversed, but modifications are performed "
-	      /**/ "in-line, before @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "makereadonly",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makereadonly,
-	  DOC("->?.\n"
-	      "The inverse of ?#makewritable, either re-returning @this ?. object if it "
-	      /**/ "already is read-only, or construct a view for the data contained within @this "
-	      /**/ "?. object, but making that view read-only") },
-	{ "makewritable",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makewritable,
-	  DOC("->?.\n"
-	      "Either re-return @this ?. object is it already ?#iswritable, or create a "
-	      /**/ "copy (s.a. ?#{op:copy}) and return it:\n"
-	      "${"
-	      "function makewritable() {\n"
-	      "	if (this.iswritable)\n"
-	      "		return this;\n"
-	      "	return copy this;\n"
-	      "}}") },
-	{ "hex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_hex,
-	  DOC("(start=!0,end=!-1)->?Dstring\n"
-	      "Returns a hex-encoded string for the bytes contained within "
-	      /**/ "${this.substr(start, end)}, that is a string containing 2 characters "
-	      /**/ "for each encoded byte, both of which are lower-case hexadecimal digits\n"
-	      "The returned string is formatted such that ?#fromhex can be used to decode "
-	      /**/ "it into another ?. object"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_METHOD("resized", &bytes_resized,
+	            "(new_size:?Dint,filler?:?Dint)->?.\n"
+	            "Return a new writable ?. object with a length of @new_size, and its "
+	            /**/ "first ${(##this, new_size) < ...} bytes initialized from ${this.substr(0, new_size)}, "
+	            /**/ "with the remainder then either left uninitialized, or initialized to @filler\n"
+	            "Note that because a ?. object cannot be resized in-line, code using this function "
+	            /**/ "must make use of the returned ?. object:\n"
+	            "${"
+	            "local x = \"foobar\";\n"
+	            "local y = x.bytes();\n"
+	            "print repr y; /* \"foobar\" */\n"
+	            "y = y.resized(16, \"?\".ord());\n"
+	            "print repr y; /* \"foobar??"
+	            "??"
+	            "??"
+	            "??"
+	            "??\" */"
+	            "}"),
+	TYPE_KWMETHOD("reverse", &bytes_reverse,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#reversed, but modifications are performed "
+	              /**/ "in-line, before @this ?. object is re-returned"),
+	TYPE_METHOD("makereadonly", &bytes_makereadonly,
+	            "->?.\n"
+	            "The inverse of ?#makewritable, either re-returning @this ?. object if it "
+	            /**/ "already is read-only, or construct a view for the data contained within @this "
+	            /**/ "?. object, but making that view read-only"),
+	TYPE_METHOD("makewritable", &bytes_makewritable,
+	            "->?.\n"
+	            "Either re-return @this ?. object is it already ?#iswritable, or create a "
+	            /**/ "copy (s.a. ?#{op:copy}) and return it:\n"
+	            "${"
+	            "function makewritable() {\n"
+	            "	if (this.iswritable)\n"
+	            "		return this;\n"
+	            "	return copy this;\n"
+	            "}}"),
+	TYPE_KWMETHOD("hex", &bytes_hex,
+	              "(start=!0,end=!-1)->?Dstring\n"
+	              "Returns a hex-encoded string for the bytes contained within "
+	              /**/ "${this.substr(start, end)}, that is a string containing 2 characters "
+	              /**/ "for each encoded byte, both of which are lower-case hexadecimal digits\n"
+	              "The returned string is formatted such that ?#fromhex can be used to decode "
+	              /**/ "it into another ?. object"),
 
 	/* Bytes formatting / scanning. */
-	{ DeeString_STR(&str_format),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_format,
-	  DOC("(args:?S?O)->?.") },
-	{ "scanf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_scanf,
-	  DOC("(format:?Dstring)->?S?O") },
+	TYPE_METHOD(STR_format, &bytes_format,
+	            "(args:?S?O)->?."),
+	TYPE_METHOD("scanf", &bytes_scanf,
+	            "(format:?Dstring)->?S?O"),
 
-	/* String/Character traits */
+/* String/Character traits */
 #define DEFINE_BYTES_TRAIT_EX(name, func, doc)                                  \
-	{ name,                                                                      \
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&func, \
-	  DOC("->?Dbool\n"                                                           \
-	      "(index:?Dint)->?Dbool\n"                                              \
-	      "(start:?Dint,end:?Dint)->?Dbool\n"                                    \
-	      "@throw IndexError The given @index is larger than ${##this}\n"        \
-	      "@throw IntegerOverflow The given @index is negative or too large\n"   \
-	      doc) }
+	TYPE_METHOD(name, &func,                                                    \
+	            "->?Dbool\n"                                                    \
+	            "(index:?Dint)->?Dbool\n"                                       \
+	            "(start:?Dint,end:?Dint)->?Dbool\n"                             \
+	            "@throw IndexError The given @index is larger than ${##this}\n" \
+	            "@throw IntegerOverflow The given @index is negative or too large\n" doc)
 #define DEFINE_BYTES_TRAIT(name, func, are_xxx) \
 	DEFINE_BYTES_TRAIT_EX(name, func, "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} " are_xxx)
 	DEFINE_BYTES_TRAIT("iscntrl", bytes_iscntrl, "are control characters"),
@@ -5270,40 +5256,36 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	DEFINE_BYTES_TRAIT("issymcont", bytes_issymcont, "can be used to continue a symbol name"),
 	DEFINE_BYTES_TRAIT("isspacexlf", bytes_iscempty, "are space-characters, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#iscempty)"),
 	DEFINE_BYTES_TRAIT("isascii", bytes_isascii, "are ascii-characters, that is have an ordinal value ${<= 0x7f}"),
-	{ "istitle",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_istitle,
-	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${?#this}\n"
-	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns ?t if the character at ${this[index]} has title-casing\n"
+	TYPE_METHOD("istitle",
+	            &bytes_istitle,
+	            "(index:?Dint)->?Dbool\n"
+	            "@throw IndexError The given @index is larger than ${?#this}\n"
+	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "Returns ?t if the character at ${this[index]} has title-casing\n"
+	            "\n"
 
-	      "\n"
-	      "->?Dbool\n"
-	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns ?t if $this, or the sub-bytes ${this.substr(start, end)} "
-	      /**/ "follows title-casing, meaning that space is followed by title-case, "
-	      /**/ "with all remaining characters not being title-case") },
-	{ "issymbol",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymbol,
-	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${?#this}\n"
-	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns ?t if the character at ${this[index]} can be used "
-	      /**/ "to start a symbol name. Same as ${this.issymstrt(index)}\n"
+	            "->?Dbool\n"
+	            "(start:?Dint,end:?Dint)->?Dbool\n"
+	            "Returns ?t if $this, or the sub-bytes ${this.substr(start, end)} "
+	            /**/ "follows title-casing, meaning that space is followed by title-case, "
+	            /**/ "with all remaining characters not being title-case"),
+	TYPE_METHOD("issymbol",
+	            &bytes_issymbol,
+	            "(index:?Dint)->?Dbool\n"
+	            "@throw IndexError The given @index is larger than ${?#this}\n"
+	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "Returns ?t if the character at ${this[index]} can be used "
+	            /**/ "to start a symbol name. Same as ${this.issymstrt(index)}\n"
+	            "\n"
 
-	      "\n"
-	      "->?Dbool\n"
-	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns ?t if $this, or the sub-bytes ${this.substr(start, end)} "
-	      /**/ "is a valid symbol name") },
+	            "->?Dbool\n"
+	            "(start:?Dint,end:?Dint)->?Dbool\n"
+	            "Returns ?t if $this, or the sub-bytes ${this.substr(start, end)} "
+	            /**/ "is a valid symbol name"),
 #undef DEFINE_BYTES_TRAIT
 
-#define DEFINE_ANY_BYTES_TRAIT_EX(name, func, doc)                               \
-	{ name,                                                                      \
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&func, \
-	  DOC("(start=!0,end=!-1)->?Dbool\n"                                         \
-	      doc),                                                                  \
-	  TYPE_METHOD_FKWDS }
+#define DEFINE_ANY_BYTES_TRAIT_EX(name, func, doc) \
+	TYPE_KWMETHOD(name, &func, "(start=!0,end=!-1)->?Dbool\n" doc)
 #define DEFINE_ANY_BYTES_TRAIT(name, func, is_xxx) \
 	DEFINE_ANY_BYTES_TRAIT_EX(name, func, "Returns ?t if any character in ${this.substr(start, end)} " is_xxx)
 	DEFINE_ANY_BYTES_TRAIT("isanycntrl", bytes_isanycntrl, "is a control character"),
@@ -5328,1135 +5310,914 @@ INTERN struct type_method tpconst bytes_methods[] = {
 	DEFINE_ANY_BYTES_TRAIT("isanysymstrt", bytes_isanysymstrt, "can be used to start a symbol name"),
 	DEFINE_ANY_BYTES_TRAIT("isanysymcont", bytes_isanysymcont, "can be used to continue a symbol name"),
 	DEFINE_ANY_BYTES_TRAIT("isanyspacexlf", bytes_isanycempty, "is a space character, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#isanycempty)"),
-	{ "isanyascii",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyascii,
-	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns ?t if any character in ${this.substr(start, end)} is "
-	      /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_KWMETHOD("isanyascii", &bytes_isanyascii,
+	              "(start=!0,end=!-1)->?Dbool\n"
+	              "Returns ?t if any character in ${this.substr(start, end)} is "
+	              /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
 #undef DEFINE_ANY_BYTES_TRAIT
 #undef DEFINE_ANY_BYTES_TRAIT_EX
 
-	{ "asnumeric",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdigit,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The string is longer than a single character\n"
-	      "(index:?Dint)->?Dint\n"
-	      "@throw ValueError The character at @index isn't numeric\n"
-	      "(index:?Dint,defl:?Dint)->?Dint\n"
-	      "(index:?Dint,defl)->\n"
-	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "@throw IndexError The given @index is out of bounds\n"
-	      "Alias for ?#asdigit") },
-	{ "asdigit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdigit,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The string is longer than a single character\n"
-	      "(index:?Dint)->?Dint\n"
-	      "@throw ValueError The character at @index isn't numeric\n"
-	      "(index:?Dint,defl:?Dint)->?Dint\n"
-	      "(index:?Dint,defl)->\n"
-	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "@throw IndexError The given @index is out of bounds\n"
-	      "Returns the digit value of the byte at the specific index") },
-	{ "asxdigit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asxdigit,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The string is longer than a single character\n"
-	      "(index:?Dint)->?Dint\n"
-	      "@throw ValueError The character at @index isn't numeric\n"
-	      "(index:?Dint,defl:?Dint)->?Dint\n"
-	      "(index:?Dint,defl)->\n"
-	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "@throw IndexError The given @index is out of bounds\n"
-	      "Same as ?#asdigit, but also accepts #C{a-f} and #C{A-F}") },
+	TYPE_METHOD("asnumeric", &bytes_asdigit,
+	            "->?Dint\n"
+	            "@throw ValueError The string is longer than a single character\n"
+	            "(index:?Dint)->?Dint\n"
+	            "@throw ValueError The character at @index isn't numeric\n"
+	            "(index:?Dint,defl:?Dint)->?Dint\n"
+	            "(index:?Dint,defl)->\n"
+	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "@throw IndexError The given @index is out of bounds\n"
+	            "Alias for ?#asdigit"),
+	TYPE_METHOD("asdigit", &bytes_asdigit,
+	            "->?Dint\n"
+	            "@throw ValueError The string is longer than a single character\n"
+	            "(index:?Dint)->?Dint\n"
+	            "@throw ValueError The character at @index isn't numeric\n"
+	            "(index:?Dint,defl:?Dint)->?Dint\n"
+	            "(index:?Dint,defl)->\n"
+	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "@throw IndexError The given @index is out of bounds\n"
+	            "Returns the digit value of the byte at the specific index"),
+	TYPE_METHOD("asxdigit", &bytes_asxdigit,
+	            "->?Dint\n"
+	            "@throw ValueError The string is longer than a single character\n"
+	            "(index:?Dint)->?Dint\n"
+	            "@throw ValueError The character at @index isn't numeric\n"
+	            "(index:?Dint,defl:?Dint)->?Dint\n"
+	            "(index:?Dint,defl)->\n"
+	            "@throw IntegerOverflow The given @index is negative or too large\n"
+	            "@throw IndexError The given @index is out of bounds\n"
+	            "Same as ?#asdigit, but also accepts #C{a-f} and #C{A-F}"),
 
 	/* Bytes conversion functions */
-	{ "lower",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lower,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this ?. object converted to lower-case (when interpreted as ASCII)"),
-	  TYPE_METHOD_FKWDS },
-	{ "upper",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_upper,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this ?. object converted to upper-case (when interpreted as ASCII)"),
-	  TYPE_METHOD_FKWDS },
-	{ "title",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_title,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this ?. object converted to title-casing (when interpreted as ASCII)"),
-	  TYPE_METHOD_FKWDS },
-	{ "capitalize",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_capitalize,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this ?. object with each word capitalized (when interpreted as ASCII)"),
-	  TYPE_METHOD_FKWDS },
-	{ "swapcase",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_swapcase,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Returns a writable copy of @this ?. object with the casing of each "
-	      /**/ "character that has two different casings swapped (when interpreted as ASCII)"),
-	  TYPE_METHOD_FKWDS },
-	{ "casefold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lower,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Alias for ?#{lower}. This function exists to match ?Acasefold?Dstring in "
-	      /**/ "order to improve binary compatibility between ?. and ?Dstring objects"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_KWMETHOD("lower", &bytes_lower,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Returns a writable copy of @this ?. object converted to lower-case (when interpreted as ASCII)"),
+	TYPE_KWMETHOD("upper", &bytes_upper,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Returns a writable copy of @this ?. object converted to upper-case (when interpreted as ASCII)"),
+	TYPE_KWMETHOD("title", &bytes_title,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Returns a writable copy of @this ?. object converted to title-casing (when interpreted as ASCII)"),
+	TYPE_KWMETHOD("capitalize", &bytes_capitalize,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Returns a writable copy of @this ?. object with each word capitalized (when interpreted as ASCII)"),
+	TYPE_KWMETHOD("swapcase", &bytes_swapcase,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Returns a writable copy of @this ?. object with the casing of each "
+	              /**/ "character that has two different casings swapped (when interpreted as ASCII)"),
+	TYPE_KWMETHOD("casefold", &bytes_lower,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Alias for ?#{lower}. This function exists to match ?Acasefold?Dstring in "
+	              /**/ "order to improve binary compatibility between ?. and ?Dstring objects"),
 
 	/* Inplace variants of bytes conversion functions */
-	{ "tolower",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#lower, but character modifications are performed in-place, and @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "toupper",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toupper,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#upper, but character modifications are performed in-place, and @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "totitle",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_totitle,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#title, but character modifications are performed in-place, and @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "tocapitalize",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tocapitalize,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#capitalize, but character modifications are performed in-place, and @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "toswapcase",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toswapcase,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#swapcase, but character modifications are performed in-place, and @this ?. object is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "tocasefold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Alias for ?#tolower, here to coincide with ?#casefold existing as an alias for ?#lower"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_KWMETHOD("tolower", &bytes_tolower,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#lower, but character modifications are performed in-place, and @this ?. object is re-returned"),
+	TYPE_KWMETHOD("toupper", &bytes_toupper,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#upper, but character modifications are performed in-place, and @this ?. object is re-returned"),
+	TYPE_KWMETHOD("totitle", &bytes_totitle,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#title, but character modifications are performed in-place, and @this ?. object is re-returned"),
+	TYPE_KWMETHOD("tocapitalize", &bytes_tocapitalize,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#capitalize, but character modifications are performed in-place, and @this ?. object is re-returned"),
+	TYPE_KWMETHOD("toswapcase", &bytes_toswapcase,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#swapcase, but character modifications are performed in-place, and @this ?. object is re-returned"),
+	TYPE_KWMETHOD("tocasefold", &bytes_tolower,
+	              "(start=!0,end=!-1)->?.\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Alias for ?#tolower, here to coincide with ?#casefold existing as an alias for ?#lower"),
 
 	/* Case-sensitive query functions */
-	{ DeeString_STR(&str_replace),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_replace,
-	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "Find up to @max occurrences of @find and replace each with @replace, then return the resulting data as a writable ?. object"),
-	  TYPE_METHOD_FKWDS },
-	{ "toreplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toreplace,
-	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#replace, but the ?. object is modified in-place, and @this is re-returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "find",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_find,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index, or ${-1} if no such position exists"),
-	  TYPE_METHOD_FKWDS },
-	{ "rfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfind,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index, or ${-1} if no such position exists"),
-	  TYPE_METHOD_FKWDS },
-	{ "index",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_index,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index"),
-	  TYPE_METHOD_FKWDS },
-	{ "rindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindex,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index"),
-	  TYPE_METHOD_FKWDS },
-	{ "findany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
-	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index, or ${-1} if no such position exists"),
-	  TYPE_METHOD_FKWDS },
-	{ "rfindany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
-	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index, or ${-1} if no such position exists"),
-	  TYPE_METHOD_FKWDS },
-	{ "indexany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index"),
-	  TYPE_METHOD_FKWDS },
-	{ "rindexany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return its starting index"),
-	  TYPE_METHOD_FKWDS },
-	{ "findall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findall,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
-	      "Find all instances of @needle within ${this.substr(start, end)}, "
-	      /**/ "and return their starting indices as a sequence"),
-	  TYPE_METHOD_FKWDS },
-	{ "count",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_count,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Count the number of instances of @needle that exists within ${this.substr(start, end)}, "
-	      /**/ "and return now many were found"),
-	  TYPE_METHOD_FKWDS },
-	{ "contains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_contains_f,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Check if @needle can be found within ${this.substr(start, end)}, and return a boolean indicative of that"),
-	  TYPE_METHOD_FKWDS },
-	{ "substr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Similar to ${this[start:end]}, and semantically equialent to ?Asubstr?Dstring\n"
-	      "This function can be used to view a sub-set of bytes from @this ?. object\n"
-	      "Modifications then made to the returned ?. object will affect the same memory already described by @this ?. object"),
-	  TYPE_METHOD_FKWDS },
-	{ "strip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_strip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all leading and trailing whitespace-characters, or "
-	      /**/ "characters apart of @mask, and return a sub-view of @this ?. object") },
-	{ "lstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lstrip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all leading whitespace-characters, or characters "
-	      /**/ "apart of @mask, and return a sub-view of @this ?. object") },
-	{ "rstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rstrip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all trailing whitespace-characters, or characters "
-	      /**/ "apart of @mask, and return a sub-view of @this ?. object") },
-	{ "sstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all leading and trailing instances of @other from @this string\n"
-	      "${"
-	      "local result = this;\n"
-	      "while (result.startswith(other))\n"
-	      "	result = result[##other:];\n"
-	      "while (result.endswith(other))\n"
-	      "	result = result[:##result - ##other];"
-	      "}") },
-	{ "lsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lsstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all leading instances of @other from @this string\n"
-	      "${"
-	      "local result = this;\n"
-	      "while (result.startswith(other))\n"
-	      "	result = result[##other:];"
-	      "}") },
-	{ "rsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rsstrip,
-	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all trailing instances of @other from @this string\n"
-	      "${"
-	      "local result = this;\n"
-	      "while (result.endswith(other))\n"
-	      "	result = result[:##result - ##other];"
-	      "}") },
-	{ "striplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_striplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
-	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
-	      "aka: strip all leading and trailing whitespace\n"
-	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.strip())}") },
-	{ "lstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lstriplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all whitspace, or @mask characters at the start, and after linefeeds\n"
-	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
-	      "aka: strip all leading whitespace\n"
-	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.lstrip())}") },
-	{ "rstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rstriplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Strip all whitspace, or @mask characters at the end, and before linefeeds\n"
-	      "Note that for this purpose, linefeed characters don't count as whitespace\n"
-	      "aka: strip all trailing whitespace\n"
-	      "Similar to ${\"\".bytes().join(this.splitlines(true).each.rstrip())}") },
-	{ "sstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
-	      /**/ "than bytes apart of its $mask character.") },
-	{ "lsstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lsstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
-	      /**/ "than bytes apart of its $mask character.") },
-	{ "rsstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rsstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
-	      /**/ "than bytes apart of its $mask character.") },
-	{ "startswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_startswith,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return ?t if the sub-string ${this.substr(start, end)} starts with @other"),
-	  TYPE_METHOD_FKWDS },
-	{ "endswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_endswith,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return ?t if the sub-string ${this.substr(start, end)} ends with @other"),
-	  TYPE_METHOD_FKWDS },
-	{ "partition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_parition,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
-	      /**/ "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	      "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "rpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rparition,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
-	      "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
-	      "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "compare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_compare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Compare the sub-string ${left = this.substr(my_start, my_end)} with ${right = other.substr(other_start, other_end)}, "
-	      /**/ "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
-	{ "vercompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_vercompare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Performs a version-string comparison. This is similar to ?#compare, but rather than "
-	      /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
-	      /**/ "being compared are compared as a whole, solving the common problem seen in applications "
-	      /**/ "such as file navigators showing a file order of $\"foo1.txt\", $\"foo10.txt\", "
-	      /**/ "$\"foo11.txt\", $\"foo2.txt\", etc...\n"
-	      "This function is a portable implementation of the GNU function "
-	      /**/ "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
-	      /**/ "for which you may follow the link for further details") },
-	{ "wildcompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wildcompare,
-	  DOC("(pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	      "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
-	      /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
-	      /**/ "if ${left > right}, or ${== 0} if they are equal\n"
-	      "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
-	      /**/ "be matched with any single character from @this, and $\"*\" to be matched to "
-	      /**/ "any number of characters") },
-	{ "fuzzycompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fuzzycompare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
-	      "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
-	      "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
-	      /**/ "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
-	      /**/ "the score is to $0, the more alike they are\n"
-	      "The intended use of this function is for auto-completion, as well as warning "
-	      /**/ "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
-	      "Note that there is another version ?#casefuzzycompare that also ignores casing") },
-	{ "wmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wmatch,
-	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, and ?f in all pattern cases") },
+	TYPE_KWMETHOD(STR_replace, &bytes_replace,
+	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	              "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
+	              "Find up to @max occurrences of @find and replace each with @replace, then return the resulting data as a writable ?. object"),
+	TYPE_KWMETHOD("toreplace", &bytes_toreplace,
+	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	              "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
+	              "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#replace, but the ?. object is modified in-place, and @this is re-returned"),
+	TYPE_KWMETHOD("find", &bytes_find,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index, or ${-1} if no such position exists"),
+	TYPE_KWMETHOD("rfind", &bytes_rfind,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index, or ${-1} if no such position exists"),
+	TYPE_KWMETHOD("index", &bytes_index,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index"),
+	TYPE_KWMETHOD("rindex", &bytes_rindex,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index"),
+	TYPE_KWMETHOD("findany", &bytes_findany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	              "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index, or ${-1} if no such position exists"),
+	TYPE_KWMETHOD("rfindany", &bytes_rfindany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	              "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index, or ${-1} if no such position exists"),
+	TYPE_KWMETHOD("indexany", &bytes_indexany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index"),
+	TYPE_KWMETHOD("rindexany", &bytes_rindexany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return its starting index"),
+	TYPE_KWMETHOD("findall", &bytes_findall,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
+	              "Find all instances of @needle within ${this.substr(start, end)}, "
+	              /**/ "and return their starting indices as a sequence"),
+	TYPE_KWMETHOD("count", &bytes_count,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "Count the number of instances of @needle that exists within ${this.substr(start, end)}, "
+	              /**/ "and return now many were found"),
+	TYPE_KWMETHOD("contains", &bytes_contains_f,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Check if @needle can be found within ${this.substr(start, end)}, and return a boolean indicative of that"),
+	TYPE_KWMETHOD("substr", &bytes_substr,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Similar to ${this[start:end]}, and semantically equialent to ?Asubstr?Dstring\n"
+	              "This function can be used to view a sub-set of bytes from @this ?. object\n"
+	              "Modifications then made to the returned ?. object will affect the same memory already described by @this ?. object"),
+	TYPE_METHOD("strip", &bytes_strip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all leading and trailing whitespace-characters, or "
+	            /**/ "characters apart of @mask, and return a sub-view of @this ?. object"),
+	TYPE_METHOD("lstrip", &bytes_lstrip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all leading whitespace-characters, or characters "
+	            /**/ "apart of @mask, and return a sub-view of @this ?. object"),
+	TYPE_METHOD("rstrip", &bytes_rstrip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all trailing whitespace-characters, or characters "
+	            /**/ "apart of @mask, and return a sub-view of @this ?. object"),
+	TYPE_METHOD("sstrip", &bytes_sstrip,
+	            "(other:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all leading and trailing instances of @other from @this string\n"
+	            "${"
+	            /**/ "local result = this;\n"
+	            /**/ "while (result.startswith(other))\n"
+	            /**/ "	result = result[##other:];\n"
+	            /**/ "while (result.endswith(other))\n"
+	            /**/ "	result = result[:##result - ##other];"
+	            "}"),
+	TYPE_METHOD("lsstrip", &bytes_lsstrip,
+	            "(other:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all leading instances of @other from @this string\n"
+	            "${"
+	            /**/ "local result = this;\n"
+	            /**/ "while (result.startswith(other))\n"
+	            /**/ "	result = result[##other:];"
+	            "}"),
+	TYPE_METHOD("rsstrip", &bytes_rsstrip,
+	            "(other:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all trailing instances of @other from @this string\n"
+	            "${"
+	            /**/ "local result = this;\n"
+	            /**/ "while (result.endswith(other))\n"
+	            /**/ "	result = result[:##result - ##other];"
+	            "}"),
+	TYPE_METHOD("striplines", &bytes_striplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all whitspace, or @mask characters at the start, end, and before/after linefeeds\n"
+	            "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	            "aka: strip all leading and trailing whitespace\n"
+	            "Similar to ${\"\".bytes().join(this.splitlines(true).each.strip())}"),
+	TYPE_METHOD("lstriplines", &bytes_lstriplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all whitspace, or @mask characters at the start, and after linefeeds\n"
+	            "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	            "aka: strip all leading whitespace\n"
+	            "Similar to ${\"\".bytes().join(this.splitlines(true).each.lstrip())}"),
+	TYPE_METHOD("rstriplines", &bytes_rstriplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Strip all whitspace, or @mask characters at the end, and before linefeeds\n"
+	            "Note that for this purpose, linefeed characters don't count as whitespace\n"
+	            "aka: strip all trailing whitespace\n"
+	            "Similar to ${\"\".bytes().join(this.splitlines(true).each.rstrip())}"),
+	TYPE_METHOD("sstriplines", &bytes_sstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#striplines, but sequence for complete sequences of #needle, rather "
+	            /**/ "than bytes apart of its $mask character."),
+	TYPE_METHOD("lsstriplines", &bytes_lsstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#lstriplines, but sequence for complete sequences of #needle, rather "
+	            /**/ "than bytes apart of its $mask character."),
+	TYPE_METHOD("rsstriplines", &bytes_rsstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#rstriplines, but sequence for complete sequences of #needle, rather "
+	            /**/ "than bytes apart of its $mask character."),
+	TYPE_KWMETHOD("startswith", &bytes_startswith,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Return ?t if the sub-string ${this.substr(start, end)} starts with @other"),
+	TYPE_KWMETHOD("endswith", &bytes_endswith,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Return ?t if the sub-string ${this.substr(start, end)} ends with @other"),
+	TYPE_KWMETHOD("partition", &bytes_parition,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "Search for the first instance of @needle within ${this.substr(start, end)} and "
+	              /**/ "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
+	              "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
+	TYPE_KWMETHOD("rpartition", &bytes_rparition,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "Search for the last instance of @needle within ${this.substr(start, end)} and "
+	              "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
+	              "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
+	TYPE_METHOD("compare", &bytes_compare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Compare the sub-string ${left = this.substr(my_start, my_end)} with ${right = other.substr(other_start, other_end)}, "
+	            /**/ "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal"),
+	TYPE_METHOD("vercompare", &bytes_vercompare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Performs a version-string comparison. This is similar to ?#compare, but rather than "
+	            /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
+	            /**/ "being compared are compared as a whole, solving the common problem seen in applications "
+	            /**/ "such as file navigators showing a file order of $\"foo1.txt\", $\"foo10.txt\", "
+	            /**/ "$\"foo11.txt\", $\"foo2.txt\", etc...\n"
+	            "This function is a portable implementation of the GNU function "
+	            /**/ "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
+	            /**/ "for which you may follow the link for further details"),
+	TYPE_METHOD("wildcompare", &bytes_wildcompare,
+	            "(pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	            "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
+	            /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
+	            /**/ "if ${left > right}, or ${== 0} if they are equal\n"
+	            "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
+	            /**/ "be matched with any single character from @this, and $\"*\" to be matched to "
+	            /**/ "any number of characters"),
+	TYPE_METHOD("fuzzycompare", &bytes_fuzzycompare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
+	            "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
+	            "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
+	            /**/ "strings that are perfectly identical, any two differing strings always have a score ${> 0}, and the closer "
+	            /**/ "the score is to $0, the more alike they are\n"
+	            "The intended use of this function is for auto-completion, as well as warning "
+	            /**/ "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
+	            "Note that there is another version ?#casefuzzycompare that also ignores casing"),
+	TYPE_METHOD("wmatch", &bytes_wmatch,
+	            "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, and ?f in all pattern cases"),
 
 	/* Case-insensitive query functions */
-	{ "casereplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casereplace,
-	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "Same as ?#replace, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "tocasereplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tocasereplace,
-	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
-	      "@throw BufferError @this ?. object is not writable\n"
-	      "Same as ?#toreplace, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "casefind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefind,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as ?#find, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, ?N is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "caserfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfind,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as ?#rfind, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, ?N is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "caseindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindex,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Same as ?#index, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
-	  TYPE_METHOD_FKWDS },
-	{ "caserindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindex,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Same as ?#rindex, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
-	  TYPE_METHOD_FKWDS },
-	{ "casefindany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as ?#findany, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, ?N is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "caserfindany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfindany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
-	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as ?#rfindany, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, ?N is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "caseindexany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Same as ?#indexany, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
-	  TYPE_METHOD_FKWDS },
-	{ "caserindexany",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexany,
-	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
-	      "Same as ?#rindexany, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
-	  TYPE_METHOD_FKWDS },
-	{ "casefindall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindall,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
-	      "Same as ?#findall, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
-	  TYPE_METHOD_FKWDS },
-	{ "casecount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecount,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Same as ?#count, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "casecontains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecontains_f,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as ?#contains, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "casestrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestrip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#strip, however ascii-casing is ignored during character comparisons") },
-	{ "caselstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselstrip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#lstrip, however ascii-casing is ignored during character comparisons") },
-	{ "caserstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserstrip,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#rstrip, however ascii-casing is ignored during character comparisons") },
-	{ "casesstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesstrip,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#sstrip, however ascii-casing is ignored during character comparisons") },
-	{ "caselsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselsstrip,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons") },
-	{ "casersstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casersstrip,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons") },
-	{ "casestriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestriplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#striplines, however ascii-casing is ignored during character comparisons") },
-	{ "caselstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselstriplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#lstriplines, however ascii-casing is ignored during character comparisons") },
-	{ "caserstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserstriplines,
-	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#rstriplines, however ascii-casing is ignored during character comparisons") },
-	{ "casesstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#sstriplines, however ascii-casing is ignored during character comparisons") },
-	{ "caselsstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselsstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#lsstriplines, however ascii-casing is ignored during character comparisons") },
-	{ "casersstriplines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casersstriplines,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as ?#rsstriplines, however ascii-casing is ignored during character comparisons") },
-	{ "casestartswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestartswith,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as ?#startswith, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "caseendswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseendswith,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as ?#endswith, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "casepartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseparition,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as ?#partition, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "caserpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserparition,
-	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as ?#rpartition, however ascii-casing is ignored during character comparisons"),
-	  TYPE_METHOD_FKWDS },
-	{ "casecompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecompare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#compare, however ascii-casing is ignored during character comparisons") },
-	{ "casevercompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casevercompare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#vercompare, however ascii-casing is ignored during character comparisons") },
-	{ "casewildcompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casewildcompare,
-	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#wildcompare, however ascii-casing is ignored during character comparisons") },
-	{ "casefuzzycompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefuzzycompare,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#fuzzycompare, however ascii-casing is ignored during character comparisons") },
-	{ "casewmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casewmatch,
-	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as ?#casewmatch, however ascii-casing is ignored during character comparisons") },
+	TYPE_KWMETHOD("casereplace", &bytes_casereplace,
+	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	              "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
+	              "Same as ?#replace, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("tocasereplace", &bytes_tocasereplace,
+	              "(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
+	              "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
+	              "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
+	              "@throw BufferError @this ?. object is not writable\n"
+	              "Same as ?#toreplace, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("casefind", &bytes_casefind,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Same as ?#find, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	              "If no match if found, ?N is returned"),
+	TYPE_KWMETHOD("caserfind", &bytes_caserfind,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Same as ?#rfind, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	              "If no match if found, ?N is returned"),
+	TYPE_KWMETHOD("caseindex", &bytes_caseindex,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Same as ?#index, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	TYPE_KWMETHOD("caserindex", &bytes_caserindex,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Same as ?#rindex, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	TYPE_KWMETHOD("casefindany", &bytes_casefindany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Same as ?#findany, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	              "If no match if found, ?N is returned"),
+	TYPE_KWMETHOD("caserfindany", &bytes_caserfindany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	              "Same as ?#rfindany, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	              "If no match if found, ?N is returned"),
+	TYPE_KWMETHOD("caseindexany", &bytes_caseindexany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Same as ?#indexany, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	TYPE_KWMETHOD("caserindexany", &bytes_caserindexany,
+	              "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	              "Same as ?#rindexany, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	TYPE_KWMETHOD("casefindall", &bytes_casefindall,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
+	              "Same as ?#findall, however ascii-casing is ignored during character comparisons\n"
+	              "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	TYPE_KWMETHOD("casecount", &bytes_casecount,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "Same as ?#count, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("casecontains", &bytes_casecontains_f,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Same as ?#contains, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casestrip", &bytes_casestrip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#strip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caselstrip", &bytes_caselstrip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#lstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caserstrip", &bytes_caserstrip,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#rstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casesstrip", &bytes_casesstrip,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#sstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caselsstrip", &bytes_caselsstrip,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casersstrip", &bytes_casersstrip,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casestriplines", &bytes_casestriplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#striplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caselstriplines", &bytes_caselstriplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#lstriplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caserstriplines", &bytes_caserstriplines,
+	            "(mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#rstriplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casesstriplines", &bytes_casesstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#sstriplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("caselsstriplines", &bytes_caselsstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#lsstriplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casersstriplines", &bytes_casersstriplines,
+	            "(needle:?X3?.?Dstring?Dint)->?.\n"
+	            "Same as ?#rsstriplines, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("casestartswith", &bytes_casestartswith,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Same as ?#startswith, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("caseendswith", &bytes_caseendswith,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	              "Same as ?#endswith, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("casepartition", &bytes_caseparition,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "Same as ?#partition, however ascii-casing is ignored during character comparisons"),
+	TYPE_KWMETHOD("caserpartition", &bytes_caserparition,
+	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "Same as ?#rpartition, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casecompare", &bytes_casecompare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#compare, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casevercompare", &bytes_casevercompare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#vercompare, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casewildcompare", &bytes_casewildcompare,
+	            "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#wildcompare, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casefuzzycompare", &bytes_casefuzzycompare,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#fuzzycompare, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casewmatch", &bytes_casewmatch,
+	            "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	            "Same as ?#casewmatch, however ascii-casing is ignored during character comparisons"),
 
 	/* Bytes alignment functions. */
-	{ "center",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_center,
-	  DOC("(width:?Dint,filler:?X3?.?Dstring?Dint=!P{ })->?.\n"
-	      "Use a writable copy of @this ?. object as result, then evenly "
-	      /**/ "insert @filler at the front and back to pad its length to @width bytes") },
-	{ "ljust",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_ljust,
-	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use a writable copy of @this ?. object as result, then "
-	      /**/ "insert @filler at the back to pad its length to @width bytes") },
-	{ "rjust",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rjust,
-	  DOC("(width:?Dint,filler=!P{ })->?.\n"
-	      "Use a writable copy of @this ?. object as result, then "
-	      /**/ "insert @filler at the front to pad its length to @width bytes") },
-	{ "zfill",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_zfill,
-	  DOC("(width:?Dint,filler=!P{0})->?.\n"
-	      "Skip leading ${\'+\'} and ${\'-\'} ascii-characters, then insert @filler "
-	      /**/ "to pad the resulting string to a length of @width bytes") },
-	{ "reversed",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reversed,
-	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Return a copy of the sub-string ${this.substr(start, end)} with its byte order reversed"),
-	  TYPE_METHOD_FKWDS },
-	{ "expandtabs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_expandtabs,
-	  DOC("(tabwidth=!8)->?.\n"
-	      "Expand tab characters with whitespace offset from the "
-	      /**/ "start of their respective line at multiples of @tabwidth\n"
-	      "Note that in the event of no tabs being found, @this ?. object may be re-returned") },
-	{ "unifylines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_unifylines,
-	  DOC("(replacement:?X3?.?Dstring?Dint=!P{\\\n})->?.\n"
-	      "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
-	      "found in @this ?. object to make exclusive use of @replacement\n"
-	      "Note that in the event of no line-feeds differing from @replacement being found, "
-	      /**/ "@this ?. object may be re-returned") },
+	TYPE_METHOD("center", &bytes_center,
+	            "(width:?Dint,filler:?X3?.?Dstring?Dint=!PTYPE_METHOD(})->?.\n"
+	            "Use a writable copy of @this ?. object as result, then evenly "
+	            /**/ "insert @filler at the front and back to pad its length to @width bytes"),
+	TYPE_METHOD("ljust", &bytes_ljust,
+	            "(width:?Dint,filler=!PTYPE_METHOD(})->?.\n"
+	            "Use a writable copy of @this ?. object as result, then "
+	            /**/ "insert @filler at the back to pad its length to @width bytes"),
+	TYPE_METHOD("rjust", &bytes_rjust,
+	            "(width:?Dint,filler=!PTYPE_METHOD(})->?.\n"
+	            "Use a writable copy of @this ?. object as result, then "
+	            /**/ "insert @filler at the front to pad its length to @width bytes"),
+	TYPE_METHOD("zfill", &bytes_zfill,
+	            "(width:?Dint,filler=!P{0})->?.\n"
+	            "Skip leading ${\'+\'} and ${\'-\'} ascii-characters, then insert @filler "
+	            /**/ "to pad the resulting string to a length of @width bytes"),
+	TYPE_KWMETHOD("reversed", &bytes_reversed,
+	              "(start=!0,end=!-1)->?.\n"
+	              "Return a copy of the sub-string ${this.substr(start, end)} with its byte order reversed"),
+	TYPE_METHOD("expandtabs", &bytes_expandtabs,
+	            "(tabwidth=!8)->?.\n"
+	            "Expand tab characters with whitespace offset from the "
+	            /**/ "start of their respective line at multiples of @tabwidth\n"
+	            "Note that in the event of no tabs being found, @this ?. object may be re-returned"),
+	TYPE_METHOD("unifylines", &bytes_unifylines,
+	            "(replacement:?X3?.?Dstring?Dint=!P{\\\n})->?.\n"
+	            "Unify all ascii-linefeed character sequences ($\"\\n\", $\"\\r\" and $\"\\r\\n\") "
+	            "found in @this ?. object to make exclusive use of @replacement\n"
+	            "Note that in the event of no line-feeds differing from @replacement being found, "
+	            /**/ "@this ?. object may be re-returned"),
 
 	/* Bytes splitter functions. */
-	{ "join",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_join,
-	  DOC("(seq:?S?O)->?.\n"
-	      "Iterate @seq and convert all items into string, inserting @this "
-	      /**/ "?. object before each string's ?Abytes?Dstring representation element, "
-	      /**/ "starting only with the second. ?. objects contained in @seq are not "
-	      /**/ "converted to and from strings, but inserted directly") },
-	{ "split",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_split,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
-	      "Split @this ?. object at each instance of @sep, "
-	      /**/ "returning a sequence of the resulting parts\n"
-	      "The returned bytes objects are views of @this byte object, meaning they "
-	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      /**/ "memory") },
-	{ "casesplit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesplit,
-	  DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
-	      "Same as ?#split, however ascii-casing is ignored during character comparisons\n"
-	      "The returned bytes objects are views of @this byte object, meaning they "
-	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      /**/ "memory") },
-	{ "splitlines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_splitlines,
-	  DOC("(keepends=!f)->?S?.\n"
-	      "Split @this ?. object at each linefeed, returning a sequence of all contained lines\n"
-	      "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
-	      "When @keepends is ?t, items found in the returned sequence will still have their "
-	      /**/ "original, trailing line-feed appended\n"
-	      "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
-	      "The returned bytes objects are views of @this byte object, meaning they "
-	      /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
-	      /**/ "memory") },
+	TYPE_METHOD("join", &bytes_join,
+	            "(seq:?S?O)->?.\n"
+	            "Iterate @seq and convert all items into string, inserting @this "
+	            /**/ "?. object before each string's ?Abytes?Dstring representation element, "
+	            /**/ "starting only with the second. ?. objects contained in @seq are not "
+	            /**/ "converted to and from strings, but inserted directly"),
+	TYPE_METHOD("split", &bytes_split,
+	            "(needle:?X3?.?Dstring?Dint)->?S?.\n"
+	            "Split @this ?. object at each instance of @sep, "
+	            /**/ "returning a sequence of the resulting parts\n"
+	            "The returned bytes objects are views of @this byte object, meaning they "
+	            /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	            /**/ "memory"),
+	TYPE_METHOD("casesplit", &bytes_casesplit,
+	            "(needle:?X3?.?Dstring?Dint)->?S?.\n"
+	            "Same as ?#split, however ascii-casing is ignored during character comparisons\n"
+	            "The returned bytes objects are views of @this byte object, meaning they "
+	            /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	            /**/ "memory"),
+	TYPE_METHOD("splitlines", &bytes_splitlines,
+	            "(keepends=!f)->?S?.\n"
+	            "Split @this ?. object at each linefeed, returning a sequence of all contained lines\n"
+	            "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
+	            "When @keepends is ?t, items found in the returned sequence will still have their "
+	            /**/ "original, trailing line-feed appended\n"
+	            "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
+	            "The returned bytes objects are views of @this byte object, meaning they "
+	            /**/ "have the same ?#iswritable characteristics as @this, and refer to the same "
+	            /**/ "memory"),
 
 	/* String indentation. */
-	{ "indent",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indent,
-	  DOC("(filler:?X3?.?Dstring?Dint=!P{\t})->?.\n"
-	      "Using @this ?. object as result, insert @filler at the front, as well as after "
-	      /**/ "every ascii-linefeed with the exception of one that may be located at its end\n"
-	      "The intended use is for generating strings from structured data, such as HTML:\n"
-	      "${"
-	      "text = \"<html>\n{}\n</html>\".format({\n"
-	      "	get_html_bytes().strip().indent()\n"
-	      "});"
-	      "}") },
-	{ "dedent",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_dedent,
-	  DOC("(max_chars=!1,mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Using @this string as result, remove up to @max_chars whitespace "
-	      /**/ "(s.a. ?#isspace) characters, or if given characters apart of @mask "
-	      /**/ "from the front, as well as following any linefeed") },
+	TYPE_METHOD("indent", &bytes_indent,
+	            "(filler:?X3?.?Dstring?Dint=!P{\t})->?.\n"
+	            "Using @this ?. object as result, insert @filler at the front, as well as after "
+	            /**/ "every ascii-linefeed with the exception of one that may be located at its end\n"
+	            "The intended use is for generating strings from structured data, such as HTML:\n"
+	            "${"
+	            "text = \"<html>\n{}\n</html>\".format({\n"
+	            "	get_html_bytes().strip().indent()\n"
+	            "});"
+	            "}"),
+	TYPE_METHOD("dedent", &bytes_dedent,
+	            "(max_chars=!1,mask?:?X3?.?Dstring?Dint)->?.\n"
+	            "Using @this string as result, remove up to @max_chars whitespace "
+	            /**/ "(s.a. ?#isspace) characters, or if given characters apart of @mask "
+	            /**/ "from the front, as well as following any linefeed"),
 
 	/* Common-character search functions. */
-	{ "common",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_common,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Returns the number of common leading bytes shared between @this and @other, "
-	      /**/ "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true") },
-	{ "rcommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rcommon,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Returns the number of common trailing bytes shared between @this and @other") },
-	{ "casecommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecommon,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#common, however ascii-casing is ignored during character comparisons") },
-	{ "casercommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casercommon,
-	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as ?#rcommon, however ascii-casing is ignored during character comparisons") },
+	TYPE_METHOD("common", &bytes_common,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Returns the number of common leading bytes shared between @this and @other, "
+	            /**/ "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true"),
+	TYPE_METHOD("rcommon", &bytes_rcommon,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Returns the number of common trailing bytes shared between @this and @other"),
+	TYPE_METHOD("casecommon", &bytes_casecommon,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#common, however ascii-casing is ignored during character comparisons"),
+	TYPE_METHOD("casercommon", &bytes_casercommon,
+	            "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	            "Same as ?#rcommon, however ascii-casing is ignored during character comparisons"),
 
 	/* Find match character sequences */
-	{ "findmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Similar to ?#find, but do a recursive search for the "
-	      /**/ "first @close that doesn't have a match @{open}\n"
-	      "For more information, see :string.findmatch") },
-	{ "indexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
-	      "Same as ?#findmatch, but throw an :IndexError instead of "
-	      /**/ "returning ${-1} if no @close without a matching @open exists") },
-	{ "casefindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as ?#findmatch, however casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
-	      "If no match if found, ?N is returned") },
-	{ "caseindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
-	      "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}") },
-	{ "rfindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
-	      /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
-	      "${"
-	      "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
-	      "lcol = s.find(\")\");\n"
-	      "print lcol; /* 19 */\n"
-	      "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
-	      "print repr s[mtch:lcol+1]; /* \"(bar(), baz(42), 7)\" */"
-	      "}\n"
-	      "If no @open without a matching @close exists, ${-1} is returned") },
-	{ "rindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
-	      "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a matching @close exists") },
-	{ "caserfindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfindmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
-	      "If no match if found, ?N is returned") },
-	{ "caserindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
-	      "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}") },
+	TYPE_METHOD("findmatch", &bytes_findmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	            "Similar to ?#find, but do a recursive search for the "
+	            /**/ "first @close that doesn't have a match @{open}\n"
+	            "For more information, see :string.findmatch"),
+	TYPE_METHOD("indexmatch", &bytes_indexmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	            "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
+	            "Same as ?#findmatch, but throw an :IndexError instead of "
+	            /**/ "returning ${-1} if no @close without a matching @open exists"),
+	TYPE_METHOD("casefindmatch", &bytes_casefindmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	            "Same as ?#findmatch, however casing is ignored during character comparisons\n"
+	            "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
+	            "If no match if found, ?N is returned"),
+	TYPE_METHOD("caseindexmatch", &bytes_caseindexmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	            "@throw IndexError No instance of @close without a matching @open exists within ${this.substr(start, end)}\n"
+	            "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
+	            "Upon success, the second returned integer is equal to ${return[0] + ?#close}"),
+	TYPE_METHOD("rfindmatch", &bytes_rfindmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	            "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
+	            /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
+	            "${"
+	            "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
+	            "lcol = s.find(\")\");\n"
+	            "print lcol; /* 19 */\n"
+	            "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
+	            "print repr s[mtch:lcol+1]; /* \"(bar(), baz(42), 7)\" */"
+	            "}\n"
+	            "If no @open without a matching @close exists, ${-1} is returned"),
+	TYPE_METHOD("rindexmatch", &bytes_rindexmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	            "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
+	            "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a matching @close exists"),
+	TYPE_METHOD("caserfindmatch", &bytes_caserfindmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	            "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
+	            "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
+	            "If no match if found, ?N is returned"),
+	TYPE_METHOD("caserindexmatch", &bytes_caserindexmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	            "@throw IndexError No instance of @open without a matching @close exists within ${this.substr(start, end)}\n"
+	            "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
+	            "Upon success, the second returned integer is equal to ${return[0] + ?#open}"),
 
 	/* Using the find-match functionality, also provide a partitioning version */
-	{ "partitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_partitionmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
-	      /**/ "the matched string portion, the first being the substring prior to the match, "
-	      /**/ "the second being the matched string itself (including the @open and @close strings), "
-	      /**/ "and the third being the substring after the match\n"
-	      "For more information see ?Apartitionmatch?Dstring") },
-	{ "rpartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rpartitionmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
-	      /**/ "the matched string portion, the first being the substring prior to the match, "
-	      /**/ "the second being the matched string itself (including the @open and @close strings), "
-	      /**/ "and the third being the substring after the match.\n"
-	      "For more information see ?Arpartitionmatch?Dstring") },
-	{ "casepartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casepartitionmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as ?#partitionmatch, however casing is ignored during character comparisons") },
-	{ "caserpartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserpartitionmatch,
-	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as ?#rpartitionmatch, however casing is ignored during character comparisons") },
+	TYPE_METHOD("partitionmatch", &bytes_partitionmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	            "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
+	            /**/ "the matched string portion, the first being the substring prior to the match, "
+	            /**/ "the second being the matched string itself (including the @open and @close strings), "
+	            /**/ "and the third being the substring after the match\n"
+	            "For more information see ?Apartitionmatch?Dstring"),
+	TYPE_METHOD("rpartitionmatch", &bytes_rpartitionmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	            "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
+	            /**/ "the matched string portion, the first being the substring prior to the match, "
+	            /**/ "the second being the matched string itself (including the @open and @close strings), "
+	            /**/ "and the third being the substring after the match.\n"
+	            "For more information see ?Arpartitionmatch?Dstring"),
+	TYPE_METHOD("casepartitionmatch", &bytes_casepartitionmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	            "Same as ?#partitionmatch, however casing is ignored during character comparisons"),
+	TYPE_METHOD("caserpartitionmatch", &bytes_caserpartitionmatch,
+	            "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	            "Same as ?#rpartitionmatch, however casing is ignored during character comparisons"),
 
-	{ "segments",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_segments,
-	  DOC("(substring_length:?Dint)->?S?.\n"
-	      "Split @this ?. object into segments, each exactly @substring_length characters long, with the "
-	      /**/ "last segment containing the remaining characters and having a length of between "
-	      /**/ "$1 and @substring_length characters.\n"
-	      "This function is similar to ?#distribute, but instead of being given the "
-	      /**/ "length of sub-strings and figuring out their amount, this function takes "
-	      /**/ "the amount of sub-strings and figures out their lengths") },
-	{ "distribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_distribute,
-	  DOC("(substring_count:?Dint)->?S?.\n"
-	      "Split @this ?. object into @substring_count similarly sized sub-strings, each with a "
-	      /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
-	      /**/ "sub-string containing all remaining characters.\n"
-	      "This function is similar to ?#segments, but instead of being given the "
-	      /**/ "amount of sub-strings and figuring out their lengths, this function takes "
-	      /**/ "the length of sub-strings and figures out their amount") },
+	TYPE_METHOD("segments", &bytes_segments,
+	            "(substring_length:?Dint)->?S?.\n"
+	            "Split @this ?. object into segments, each exactly @substring_length characters long, with the "
+	            /**/ "last segment containing the remaining characters and having a length of between "
+	            /**/ "$1 and @substring_length characters.\n"
+	            "This function is similar to ?#distribute, but instead of being given the "
+	            /**/ "length of sub-strings and figuring out their amount, this function takes "
+	            /**/ "the amount of sub-strings and figures out their lengths"),
+	TYPE_METHOD("distribute", &bytes_distribute,
+	            "(substring_count:?Dint)->?S?.\n"
+	            "Split @this ?. object into @substring_count similarly sized sub-strings, each with a "
+	            /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+	            /**/ "sub-string containing all remaining characters.\n"
+	            "This function is similar to ?#segments, but instead of being given the "
+	            /**/ "amount of sub-strings and figuring out their lengths, this function takes "
+	            /**/ "the length of sub-strings and figures out their amount"),
 
 	/* Regex functions. */
-	{ "rematch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rematch,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "@return The number of leading bytes in ${this.substr(start, end)} "
-	      /*    */ "matched by @pattern, or ?N if @pattern doesn't match\n"
-	      "Check if ${this.substr(start, end)} matches the given regular expression @pattern\n"
-	      "This function behaves similar to ${this.encode(\"ascii\").rematch(pattern)}, "
-	      "except that the given pattern may match non-ASCII bytes with #C{\\xAB} or #C{\\0377} "
-	      "escape sequences. Furthermore, unicode character escape sequences cannot be used in "
-	      "@pattern. For more information, see ?Arematch?Dstring"),
-	  TYPE_METHOD_FKWDS },
-	{ "rematches",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rematches,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @pattern matches the entirety of the specified range of @this ?.\n"
-	      "This function behaves identical to ${this.rematch(...) == ?#this}"),
-	  TYPE_METHOD_FKWDS },
-	{ "refind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_refind,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
-	      "Note that using ?N in an expand expression will expand to the all ?N-values"),
-	  TYPE_METHOD_FKWDS },
-	{ "rerfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rerfind,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Find the last sub-string matched by @pattern, and return its start/end indices, "
-	      /**/ "or ?N if no match exists (s.a. #refind)"),
-	  TYPE_METHOD_FKWDS },
-	{ "reindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reindex,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#refind, but throw an :IndexError when no match can be found"),
-	  TYPE_METHOD_FKWDS },
-	{ "rerindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rerindex,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
-	  TYPE_METHOD_FKWDS },
-	{ "relocate",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_relocate,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Same as ${this.substr(this.refind(pattern, start, end, rules)...)}\n"
-	      "In other words: return the first sub-string matched by the "
-	      /**/ "given regular expression, or ?N if not found\n"
-	      "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
-	  TYPE_METHOD_FKWDS },
-	{ "rerlocate",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rerlocate,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Same as ${this.substr(this.rerfind(pattern, start, end, rules)...)}\n"
-	      "In other words: return the last sub-string matched by the "
-	      /**/ "given regular expression, or ?N if not found"),
-	  TYPE_METHOD_FKWDS },
-	{ "repartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_repartition,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "A hybrid between ?#refind and ?#partition\n${"
-	      "function repartition(pattern: string, start: int, end: int, rules: string) {\n"
-	      "	local start, end = this.refind(pattern, start, end, rules)...;\n"
-	      "	if (start is none)\n"
-	      "		return (this, \"\".bytes(), \"\".bytes());\n"
-	      "	return (\n"
-	      "		this.substr(0, start),\n"
-	      "		this.substr(start, end),\n"
-	      "		this.substr(end, -1)\n"
-	      "	);\n"
-	      "}}"),
-	  TYPE_METHOD_FKWDS },
-	{ "rerpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rerpartition,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "A hybrid between ?#rerfind and ?#rpartition\n${"
-	      "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
-	      "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
-	      "	if (start is none)\n"
-	      "		return (this, \"\".bytes(), \"\".bytes());\n"
-	      "	return (\n"
-	      "		this.substr(0, start),\n"
-	      "		this.substr(start, end), \n"
-	      "		this.substr(end, -1)\n"
-	      "	);\n"
-	      "}}"),
-	  TYPE_METHOD_FKWDS },
-	{ "rereplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rereplace,
-	  DOC("(pattern:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
-	      "pattern, with the sub-string matched by it then getting replaced by @replace\n"
-	      "Locations where @pattern matches epsilon are not replaced\n"
-	      "Additionally, @replace may contain sed-like match sequences:\n"
-	      "#T{Expression|Description~"
-	      /**/ "#C{&}|Replaced with the entire sub-string matched by @pattern&"
-	      /**/ "#C{\\n}|Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
-	      /**/ /*   */ "@pattern (groups are determined by parenthesis in regex patterns)&"
-	      /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
-	      /**/ "#C{\\&}|Outputs a literal $r\"&\" into the returned ?."
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "refindall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_refindall,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
-	      "Locations where @pattern matches epsilon are not included in the returned sequence\n"
-	      "Note that the matches returned are ordered ascendingly"),
-	  TYPE_METHOD_FKWDS },
-	{ "relocateall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_relocateall,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#relocate, but return a sequence of all matched "
-	      "sub-strings found within ${this.substr(start, end)}\n"
-	      "Note that the matches returned are ordered ascendingly\n"
-	      "Locations where @pattern matches epsilon are not included in the returned sequence\n"
-	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
-	  TYPE_METHOD_FKWDS },
-	{ "resplit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_resplit,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#split, but use a regular expression in order to "
-	      "express the sections of the ?. around which to perform the split\n"
-	      "Locations where @pattern matches epsilon do not trigger a split\n"
+	TYPE_KWMETHOD("rematch", &bytes_rematch,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "@return The number of leading bytes in ${this.substr(start, end)} "
+	              /*    */ "matched by @pattern, or ?N if @pattern doesn't match\n"
+	              "Check if ${this.substr(start, end)} matches the given regular expression @pattern\n"
+	              "This function behaves similar to ${this.encode(\"ascii\").rematch(pattern)}, "
+	              "except that the given pattern may match non-ASCII bytes with #C{\\xAB} or #C{\\0377} "
+	              "escape sequences. Furthermore, unicode character escape sequences cannot be used in "
+	              "@pattern. For more information, see ?Arematch?Dstring"),
+	TYPE_KWMETHOD("rematches", &bytes_rematches,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Check if @pattern matches the entirety of the specified range of @this ?.\n"
+	              "This function behaves identical to ${this.rematch(...) == ?#this}"),
+	TYPE_KWMETHOD("refind", &bytes_refind,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
+	              "Note that using ?N in an expand expression will expand to the all ?N-values"),
+	TYPE_KWMETHOD("rerfind", &bytes_rerfind,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Find the last sub-string matched by @pattern, and return its start/end indices, "
+	              /**/ "or ?N if no match exists (s.a. #refind)"),
+	TYPE_KWMETHOD("reindex", &bytes_reindex,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "Same as ?#refind, but throw an :IndexError when no match can be found"),
+	TYPE_KWMETHOD("rerindex", &bytes_rerindex,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
+	TYPE_KWMETHOD("relocate", &bytes_relocate,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Same as ${this.substr(this.refind(pattern, start, end, rules)...)}\n"
+	              "In other words: return the first sub-string matched by the "
+	              /**/ "given regular expression, or ?N if not found\n"
+	              "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
+	TYPE_KWMETHOD("rerlocate", &bytes_rerlocate,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Same as ${this.substr(this.rerfind(pattern, start, end, rules)...)}\n"
+	              "In other words: return the last sub-string matched by the "
+	              /**/ "given regular expression, or ?N if not found"),
+	TYPE_KWMETHOD("repartition", &bytes_repartition,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "A hybrid between ?#refind and ?#partition\n${"
+	              "function repartition(pattern: string, start: int, end: int, rules: string) {\n"
+	              "	local start, end = this.refind(pattern, start, end, rules)...;\n"
+	              "	if (start is none)\n"
+	              "		return (this, \"\".bytes(), \"\".bytes());\n"
+	              "	return (\n"
+	              "		this.substr(0, start),\n"
+	              "		this.substr(start, end),\n"
+	              "		this.substr(end, -1)\n"
+	              "	);\n"
+	              "}}"),
+	TYPE_KWMETHOD("rerpartition", &bytes_rerpartition,
+	              "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "A hybrid between ?#rerfind and ?#rpartition\n${"
+	              "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
+	              "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
+	              "	if (start is none)\n"
+	              "		return (this, \"\".bytes(), \"\".bytes());\n"
+	              "	return (\n"
+	              "		this.substr(0, start),\n"
+	              "		this.substr(start, end), \n"
+	              "		this.substr(end, -1)\n"
+	              "	);\n"
+	              "}}"),
+	TYPE_KWMETHOD("rereplace", &bytes_rereplace,
+	              "(pattern:?Dstring,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Similar to ?#replace, however the ?. to search for is implemented as a regular expression "
+	              "pattern, with the sub-string matched by it then getting replaced by @replace\n"
+	              "Locations where @pattern matches epsilon are not replaced\n"
+	              "Additionally, @replace may contain sed-like match sequences:\n"
+	              "#T{Expression|Description~"
+	              /**/ "#C{&}|Replaced with the entire sub-string matched by @pattern&"
+	              /**/ "#C{\\n}|Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
+	              /**/ /*   */ "@pattern (groups are determined by parenthesis in regex patterns)&"
+	              /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
+	              /**/ "#C{\\&}|Outputs a literal $r\"&\" into the returned ?."
+	              "}"),
+	TYPE_KWMETHOD("refindall", &bytes_refindall,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
+	              "Locations where @pattern matches epsilon are not included in the returned sequence\n"
+	              "Note that the matches returned are ordered ascendingly"),
+	TYPE_KWMETHOD("relocateall", &bytes_relocateall,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Similar to ?#relocate, but return a sequence of all matched "
+	              "sub-strings found within ${this.substr(start, end)}\n"
+	              "Note that the matches returned are ordered ascendingly\n"
+	              "Locations where @pattern matches epsilon are not included in the returned sequence\n"
+	              "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
+	TYPE_KWMETHOD("resplit", &bytes_resplit,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Similar to ?#split, but use a regular expression in order to "
+	              "express the sections of the ?. around which to perform the split\n"
+	              "Locations where @pattern matches epsilon do not trigger a split\n"
 
-	      "${"
-	      /**/ "local data = \"10 , 20,30 40, 50\".bytes();\n"
-	      /**/ "for (local x: data.resplit(r\"[[:space:],]+\"))\n"
-	      /**/ "	print x; /* `10' `20' `30' `40' `50' */"
-	      "}\n"
+	              "${"
+	              /**/ "local data = \"10 , 20,30 40, 50\".bytes();\n"
+	              /**/ "for (local x: data.resplit(r\"[[:space:],]+\"))\n"
+	              /**/ "	print x; /* `10' `20' `30' `40' `50' */"
+	              "}\n"
 
-	      "If you wish to do the inverse and enumerate matches, rather than the "
-	      "strings between matches, use ?#relocateall instead, which also behaves "
-	      "as a sequence"),
-	  TYPE_METHOD_FKWDS },
-	{ "restartswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_restartswith,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
-	      "${"
-	      /**/ "function restartswith(pattern: string) {\n"
-	      /**/ "	return this.rematch(pattern) !is none;\n"
-	      /**/ "}"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "reendswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reendswith,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this ?. ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
-	      "${"
-	      /**/ "function restartswith(pattern: string) {\n"
-	      /**/ "	local rpos = this.rerfind(pattern);\n"
-	      /**/ "	return rpos !is none && rpos[1] == ##this;\n"
-	      /**/ "}"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "restrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_restrip,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
-	  TYPE_METHOD_FKWDS },
-	{ "relstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_relstrip,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
-	  TYPE_METHOD_FKWDS },
-	{ "rerstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rerstrip,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
-	  TYPE_METHOD_FKWDS },
-	{ "recount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_recount,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dint\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
-	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
-	      "Instances where @pattern matches epsilon are not counted"),
-	  TYPE_METHOD_FKWDS },
-	{ "recontains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_recontains,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
-	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
-	  TYPE_METHOD_FKWDS },
-	{ "rescanf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rescanf,
-	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to ?#regfind, but rather than return a list of matched offsets, a sequence of "
-	      "matched strings is returned, allowing the user to easily extract matched text in a way "
-	      "that is similar to ?#scanf. Returns an empty sequence when @pattern can't be matched."),
-	  TYPE_METHOD_FKWDS },
+	              "If you wish to do the inverse and enumerate matches, rather than the "
+	              "strings between matches, use ?#relocateall instead, which also behaves "
+	              "as a sequence"),
+	TYPE_KWMETHOD("restartswith", &bytes_restartswith,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Check if @this ?. starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
+	              "${"
+	              /**/ "function restartswith(pattern: string) {\n"
+	              /**/ "	return this.rematch(pattern) !is none;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("reendswith", &bytes_reendswith,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Check if @this ?. ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
+	              "${"
+	              /**/ "function restartswith(pattern: string) {\n"
+	              /**/ "	local rpos = this.rerfind(pattern);\n"
+	              /**/ "	return rpos !is none && rpos[1] == ##this;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("restrip", &bytes_restrip,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
+	TYPE_KWMETHOD("relstrip", &bytes_relstrip,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
+	TYPE_KWMETHOD("rerstrip", &bytes_rerstrip,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
+	TYPE_KWMETHOD("recount", &bytes_recount,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dint\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
+	              "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}\n"
+	              "Instances where @pattern matches epsilon are not counted"),
+	TYPE_KWMETHOD("recontains", &bytes_recontains,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
+	              "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
+	TYPE_KWMETHOD("rescanf", &bytes_rescanf,
+	              "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "Similar to ?#regfind, but rather than return a list of matched offsets, a sequence of "
+	              "matched strings is returned, allowing the user to easily extract matched text in a way "
+	              "that is similar to ?#scanf. Returns an empty sequence when @pattern can't be matched."),
 
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
-	{ "regmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regmatch,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	      "Similar to ?#rematch, but rather than only return the number of characters that were "
-	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
-	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
-	      /**/ "start-/end-offsets of each individual group referenced by @pattern. Groups "
-	      /**/ "that didn't get matched (because they might be optional) appear as ?N in the "
-	      /**/ "returned sequence.\n"
-	      "When nothing was matched, an empty sequence is returned.\n"
-	      "Example:\n"
-	      "${"
-	      /**/ "local groups = \"foo bar foobar\".bytes().regmatch(r\"fo(o) (b(x)r|bar) fo(o?bar)\");\n"
-	      /**/ "assert groups == {\n"
-	      /**/ "	{0, 14},  /* Whole match */\n"
-	      /**/ "	{2, 3},   /* \"o\" */\n"
-	      /**/ "	{4, 7},   /* \"bar\" */\n"
-	      /**/ "	none,     /* never matched: \"x\" */\n"
-	      /**/ "	{10, 14}, /* \"obar\" */\n"
-	      /**/ "};"
-	      "}\n"
-	      "Note that (if something was matched), this function still only matches at the "
-	      "start of @this ?.. If you want to search for @pattern and get the offsets of "
-	      "all of the matched groups, you should use ?#regfind instead."),
-	  TYPE_METHOD_FKWDS },
-	{ "regfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regfind,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	      "Similar to ?#refind, but rather than only return the character-range "
-	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
-	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
-	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
-	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
-	  TYPE_METHOD_FKWDS },
-	{ "regrfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regrfind,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	      "Similar to ?#rerfind, but rather than only return the character-range "
-	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
-	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
-	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
-	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
-	  TYPE_METHOD_FKWDS },
-	{ "regfindall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regfindall,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
-	      "Similar to ?#refindall, but rather than only return the character-ranges "
-	      /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
-	      /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
-	      /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
-	      "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
-	  TYPE_METHOD_FKWDS },
-	{ "regindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regindex,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#regfind, but throw an :IndexError when no match can be found"),
-	  TYPE_METHOD_FKWDS },
-	{ "regrindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_regrindex,
-	  DOC("(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
-	      "@param range The max number of search attempts to perform\n"
-	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
-	      "@throw ValueError The given @pattern is malformed\n"
-	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_KWMETHOD("regmatch", &bytes_regmatch,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	              "Similar to ?#rematch, but rather than only return the number of characters that were "
+	              /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	              /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	              /**/ "start-/end-offsets of each individual group referenced by @pattern. Groups "
+	              /**/ "that didn't get matched (because they might be optional) appear as ?N in the "
+	              /**/ "returned sequence.\n"
+	              "When nothing was matched, an empty sequence is returned.\n"
+	              "Example:\n"
+	              "${"
+	              /**/ "local groups = \"foo bar foobar\".bytes().regmatch(r\"fo(o) (b(x)r|bar) fo(o?bar)\");\n"
+	              /**/ "assert groups == {\n"
+	              /**/ "	{0, 14},  /* Whole match */\n"
+	              /**/ "	{2, 3},   /* \"o\" */\n"
+	              /**/ "	{4, 7},   /* \"bar\" */\n"
+	              /**/ "	none,     /* never matched: \"x\" */\n"
+	              /**/ "	{10, 14}, /* \"obar\" */\n"
+	              /**/ "};"
+	              "}\n"
+	              "Note that (if something was matched), this function still only matches at the "
+	              "start of @this ?.. If you want to search for @pattern and get the offsets of "
+	              "all of the matched groups, you should use ?#regfind instead."),
+	TYPE_KWMETHOD("regfind", &bytes_regfind,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	              "Similar to ?#refind, but rather than only return the character-range "
+	              /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	              /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	              /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	              "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	TYPE_KWMETHOD("regrfind", &bytes_regrfind,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	              "Similar to ?#rerfind, but rather than only return the character-range "
+	              /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	              /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	              /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	              "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	TYPE_KWMETHOD("regfindall", &bytes_regfindall,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
+	              "Similar to ?#refindall, but rather than only return the character-ranges "
+	              /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
+	              /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	              /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
+	              "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
+	TYPE_KWMETHOD("regindex", &bytes_regindex,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "Same as ?#regfind, but throw an :IndexError when no match can be found"),
+	TYPE_KWMETHOD("regrindex", &bytes_regrindex,
+	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	              "@param pattern The regular expression pattern (s.a. ?#rematch)\n"
+	              "@param range The max number of search attempts to perform\n"
+	              "@param rules The regular expression rules (s.a. ?#rematch)\n"
+	              "@throw ValueError The given @pattern is malformed\n"
+	              "@throw IndexError No substring matching the given @pattern could be found\n"
+	              "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
 
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 

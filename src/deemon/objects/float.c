@@ -462,15 +462,15 @@ PRIVATE struct type_member tpconst float_class_members[] = {
 #else /* !float_HAVE_VARIABLE */
 PRIVATE struct type_getset tpconst float_class_getsets[] = {
 #ifdef float_rounds_IS_VARIABLE
-	{ "rounds", &float_rounds, NULL, NULL, DOC("->?Dint\nRounding mode") },
+	TYPE_GETTER("rounds", &float_rounds, "->?Dint\nRounding mode"),
 #endif /* float_rounds_IS_VARIABLE */
 #ifdef float_inf_IS_VARIABLE
-	{ "inf", &float_inf, NULL, NULL, DOC("->?.\nPositive infinity") },
+	TYPE_GETTER("inf", &float_inf, "->?.\nPositive infinity"),
 #endif /* float_inf_IS_VARIABLE */
 #ifdef float_nan_IS_VARIABLE
-	{ "nan", &float_nan, NULL, NULL, DOC("->?.\nNot-a-number") },
+	TYPE_GETTER("nan", &float_nan, "->?.\nNot-a-number"),
 #endif /* float_nan_IS_VARIABLE */
-	{ NULL }
+	TYPE_GETSET_END
 };
 #endif /* float_HAVE_VARIABLE */
 
@@ -608,33 +608,33 @@ float_get_isnormal(Float *__restrict self) {
 
 PRIVATE struct type_getset tpconst float_getsets[] = {
 #ifdef HAVE_float_get_abs
-	{ "abs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_abs, NULL, NULL, "->?." },
+	TYPE_GETTER("abs", &float_get_abs, "->?."),
 #endif /* HAVE_float_get_abs */
 #ifdef HAVE_float_get_trunc
-	{ "trunc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_trunc, NULL, NULL, "->?." },
+	TYPE_GETTER("trunc", &float_get_trunc, "->?."),
 #endif /* HAVE_float_get_trunc */
 #ifdef HAVE_float_get_floor
-	{ "floor", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_floor, NULL, NULL, "->?." },
+	TYPE_GETTER("floor", &float_get_floor, "->?."),
 #endif /* HAVE_float_get_floor */
 #ifdef HAVE_float_get_ceil
-	{ "ceil", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_ceil, NULL, NULL, "->?." },
+	TYPE_GETTER("ceil", &float_get_ceil, "->?."),
 #endif /* HAVE_float_get_ceil */
 #ifdef HAVE_float_get_round
-	{ "round", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_round, NULL, NULL, "->?." },
+	TYPE_GETTER("round", &float_get_round, "->?."),
 #endif /* HAVE_float_get_round */
 #ifdef HAVE_float_get_isnan
-	{ "isnan", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_isnan, NULL, NULL, "->?Dbool" },
+	TYPE_GETTER("isnan", &float_get_isnan, "->?Dbool"),
 #endif /* HAVE_float_get_isnan */
 #ifdef HAVE_float_get_isinf
-	{ "isinf", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_isinf, NULL, NULL, "->?Dbool" },
+	TYPE_GETTER("isinf", &float_get_isinf, "->?Dbool"),
 #endif /* HAVE_float_get_isinf */
 #ifdef HAVE_float_get_isfinite
-	{ "isfinite", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_isfinite, NULL, NULL, "->?Dbool" },
+	TYPE_GETTER("isfinite", &float_get_isfinite, "->?Dbool"),
 #endif /* HAVE_float_get_isfinite */
 #ifdef HAVE_float_get_isnormal
-	{ "isnormal", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_get_isnormal, NULL, NULL, "->?Dbool" },
+	TYPE_GETTER("isnormal", &float_get_isnormal, "->?Dbool"),
 #endif /* HAVE_float_get_isnormal */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 
@@ -740,41 +740,27 @@ err:
 
 PRIVATE struct type_method tpconst float_methods[] = {
 #ifdef HAVE_float_nextafter
-	{ "nextafter",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_nextafter,
-	  DOC("(y:?.)->?.") },
+	TYPE_METHOD("nextafter", &float_nextafter, "(y:?.)->?."),
 #endif /* HAVE_float_nextafter */
 #ifdef HAVE_float_isgreater
-	{ "isgreater",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_isgreater,
-	  DOC("(y:?.)->?Dbool") },
+	TYPE_METHOD("isgreater", &float_isgreater, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isgreater */
 #ifdef HAVE_float_isgreaterequal
-	{ "isgreaterequal",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_isgreaterequal,
-	  DOC("(y:?.)->?Dbool") },
+	TYPE_METHOD("isgreaterequal", &float_isgreaterequal, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isgreaterequal */
 #ifdef HAVE_float_isless
-	{ "isless",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_isless,
-	  DOC("(y:?.)->?Dbool") },
+	TYPE_METHOD("isless", &float_isless, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isless */
 #ifdef HAVE_float_islessequal
-	{ "islessequal",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_islessequal,
-	  DOC("(y:?.)->?Dbool") },
+	TYPE_METHOD("islessequal", &float_islessequal, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_islessequal */
 #ifdef HAVE_float_islessgreater
-	{ "islessgreater",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_islessgreater,
-	  DOC("(y:?.)->?Dbool") },
+	TYPE_METHOD("islessgreater", &float_islessgreater, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_islessgreater */
 #ifdef HAVE_float_isunordered
-	{ "isunordered",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&float_isunordered,
-	  DOC("(y:?X2?.?Dint)->?Dbool") },
+	TYPE_METHOD("isunordered", &float_isunordered, "(y:?X2?.?Dint)->?Dbool"),
 #endif /* HAVE_float_isunordered */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 #endif /* CONFIG_HAVE_FPU */

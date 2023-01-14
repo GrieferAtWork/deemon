@@ -88,7 +88,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			--dst;
 			ASSERT(src != NULL);
 			ASSERT(src != CODE_FRAME_NOT_EXECUTING);
-			/* Do a shallow memcopy of the execution frame. */
+			/* Do a shallow memcpy of the execution frame. */
 			memcpy(dst, src, sizeof(struct code_frame));
 			/* Create references and duplicate local variables. */
 			ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
@@ -715,11 +715,11 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
-	{ "current", &traceback_current, NULL, NULL,
-	  DOC("->?.\n"
-	      "@throw RuntimeError No exception was being handled\n"
-	      "Returns the traceback associated with the current exception") },
-	{ NULL }
+	TYPE_GETSET("current", &traceback_current, NULL, NULL,
+	                "->?.\n"
+	                "@throw RuntimeError No exception was being handled\n"
+	                "Returns the traceback associated with the current exception"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst traceback_class_members[] = {
@@ -750,10 +750,8 @@ traceback_sizeof(DeeTracebackObject *self) {
 }
 
 PRIVATE struct type_getset tpconst traceback_getsets[] = {
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&traceback_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETSET(STR___sizeof__, &traceback_sizeof, NULL, NULL, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PUBLIC DeeTypeObject DeeTraceback_Type = {

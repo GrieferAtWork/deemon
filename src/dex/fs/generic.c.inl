@@ -176,25 +176,25 @@ stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	{ S_Stat_getset_st_dev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
-	{ S_Stat_getset_st_ino_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
-	{ S_Stat_getset_st_mode_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
-	{ S_Stat_getset_st_nlink_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_nlink_doc },
-	{ S_Stat_getset_st_uid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_uid_doc },
-	{ S_Stat_getset_st_gid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_gid_doc },
-	{ S_Stat_getset_st_rdev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_rdev_doc },
-	{ S_Stat_getset_st_size_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_size_doc },
-	{ S_Stat_getset_st_atime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_atime_doc },
-	{ S_Stat_getset_st_mtime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mtime_doc },
-	{ S_Stat_getset_st_ctime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ctime_doc },
-	{ S_Stat_getset_isdir_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isdir_doc },
-	{ S_Stat_getset_ischr_name, &stat_getxxx, NULL, NULL, S_Stat_getset_ischr_doc },
-	{ S_Stat_getset_isblk_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isblk_doc },
-	{ S_Stat_getset_isreg_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isreg_doc },
-	{ S_Stat_getset_isfifo_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isfifo_doc },
-	{ S_Stat_getset_islnk_name, &stat_getxxx, NULL, NULL, S_Stat_getset_islnk_doc },
-	{ S_Stat_getset_issock_name, &stat_getxxx, NULL, NULL, S_Stat_getset_issock_doc },
-	{ NULL }
+	TYPE_GETTER(S_Stat_getset_st_dev_name, &stat_getxxx, S_Stat_getset_st_dev_doc),
+	TYPE_GETTER(S_Stat_getset_st_ino_name, &stat_getxxx, S_Stat_getset_st_ino_doc),
+	TYPE_GETTER(S_Stat_getset_st_mode_name, &stat_getxxx, S_Stat_getset_st_mode_doc),
+	TYPE_GETTER(S_Stat_getset_st_nlink_name, &stat_getxxx, S_Stat_getset_st_nlink_doc),
+	TYPE_GETTER(S_Stat_getset_st_uid_name, &stat_getxxx, S_Stat_getset_st_uid_doc),
+	TYPE_GETTER(S_Stat_getset_st_gid_name, &stat_getxxx, S_Stat_getset_st_gid_doc),
+	TYPE_GETTER(S_Stat_getset_st_rdev_name, &stat_getxxx, S_Stat_getset_st_rdev_doc),
+	TYPE_GETTER(S_Stat_getset_st_size_name, &stat_getxxx, S_Stat_getset_st_size_doc),
+	TYPE_GETTER(S_Stat_getset_st_atime_name, &stat_getxxx, S_Stat_getset_st_atime_doc),
+	TYPE_GETTER(S_Stat_getset_st_mtime_name, &stat_getxxx, S_Stat_getset_st_mtime_doc),
+	TYPE_GETTER(S_Stat_getset_st_ctime_name, &stat_getxxx, S_Stat_getset_st_ctime_doc),
+	TYPE_GETTER(S_Stat_getset_isdir_name, &stat_getxxx, S_Stat_getset_isdir_doc),
+	TYPE_GETTER(S_Stat_getset_ischr_name, &stat_getxxx, S_Stat_getset_ischr_doc),
+	TYPE_GETTER(S_Stat_getset_isblk_name, &stat_getxxx, S_Stat_getset_isblk_doc),
+	TYPE_GETTER(S_Stat_getset_isreg_name, &stat_getxxx, S_Stat_getset_isreg_doc),
+	TYPE_GETTER(S_Stat_getset_isfifo_name, &stat_getxxx, S_Stat_getset_isfifo_doc),
+	TYPE_GETTER(S_Stat_getset_islnk_name, &stat_getxxx, S_Stat_getset_islnk_doc),
+	TYPE_GETTER(S_Stat_getset_issock_name, &stat_getxxx, S_Stat_getset_issock_doc),
+	TYPE_GETSET_END
 };
 
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
@@ -220,17 +220,17 @@ DEFINE_STATIC_QUERY(stat_class_isexe, S_Stat_class_function_isexe_name, return_f
 
 
 PRIVATE struct type_method tpconst stat_class_methods[] = {
-	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
-	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
-	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
-	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
-	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
-	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
-	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
-	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
-	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
-	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
-	{ NULL }
+	TYPE_METHOD(S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc),
+	TYPE_METHOD(S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc),
+	TYPE_METHOD(S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc),
+	TYPE_METHOD(S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc),
+	TYPE_METHOD(S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc),
+	TYPE_METHOD(S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc),
+	TYPE_METHOD(S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc),
+	TYPE_METHOD(S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc),
+	TYPE_METHOD(S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc),
+	TYPE_METHOD(S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeStat_Type = {
@@ -326,7 +326,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
 
 #ifndef __INTELLISENSE__
 #include "generic-dir.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

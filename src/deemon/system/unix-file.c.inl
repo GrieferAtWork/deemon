@@ -130,23 +130,18 @@ done:
 }
 
 /* Fix names of aliasing flags. */
-#if !defined(O_CLOEXEC) && defined(_O_NOINHERIT)
-#define O_CLOEXEC  _O_NOINHERIT
-#endif
-
-
-#if !defined(O_CREAT)
+#ifndef O_CREAT
 #error "Missing system support for `O_CREAT'"
-#endif
-#if !defined(O_EXCL)
+#endif /* !O_CREAT */
+#ifndef O_EXCL
 #error "Missing system support for `O_EXCL'"
-#endif
-#if !defined(O_TRUNC)
+#endif /* !O_EXCL */
+#ifndef O_TRUNC
 #error "Missing system support for `O_TRUNC'"
-#endif
-#if !defined(O_APPEND)
+#endif /* !O_TRUNC */
+#ifndef O_APPEND
 #error "Missing system support for `O_APPEND'"
-#endif
+#endif /* !O_APPEND */
 
 #define PRIVATE_SHARED_FLAGS_0   0
 #define PRIVATE_NOSUPP_FLAGS_0   0
@@ -155,120 +150,119 @@ done:
 #if OPEN_FCREAT == O_CREAT
 #define PRIVATE_NOSHAR_FLAGS_1   PRIVATE_NOSHAR_FLAGS_0
 #define PRIVATE_SHARED_FLAGS_1   PRIVATE_SHARED_FLAGS_0 | OPEN_FCREAT
-#else
+#else /* OPEN_FCREAT == O_CREAT */
 #define PRIVATE_NOSHAR_FLAGS_1   PRIVATE_NOSHAR_FLAGS_0 | OPEN_FCREAT
 #define PRIVATE_SHARED_FLAGS_1   PRIVATE_SHARED_FLAGS_0
-#endif
+#endif /* OPEN_FCREAT != O_CREAT */
 #if OPEN_FEXCL == O_EXCL
 #define PRIVATE_NOSHAR_FLAGS_2   PRIVATE_NOSHAR_FLAGS_1
 #define PRIVATE_SHARED_FLAGS_2   PRIVATE_SHARED_FLAGS_1 | OPEN_FEXCL
-#else
+#else /* OPEN_FEXCL == O_EXCL */
 #define PRIVATE_NOSHAR_FLAGS_2   PRIVATE_NOSHAR_FLAGS_1 | OPEN_FEXCL
 #define PRIVATE_SHARED_FLAGS_2   PRIVATE_SHARED_FLAGS_1
-#endif
+#endif /* OPEN_FEXCL != O_EXCL */
 #if OPEN_FTRUNC == O_TRUNC
 #define PRIVATE_NOSHAR_FLAGS_3   PRIVATE_NOSHAR_FLAGS_2
 #define PRIVATE_SHARED_FLAGS_3   PRIVATE_SHARED_FLAGS_2 | OPEN_FTRUNC
-#else
+#else /* OPEN_FTRUNC == O_TRUNC */
 #define PRIVATE_NOSHAR_FLAGS_3   PRIVATE_NOSHAR_FLAGS_2 | OPEN_FTRUNC
 #define PRIVATE_SHARED_FLAGS_3   PRIVATE_SHARED_FLAGS_2
-#endif
+#endif /* OPEN_FTRUNC != O_TRUNC */
 #if OPEN_FAPPEND == O_APPEND
 #define PRIVATE_NOSHAR_FLAGS_4   PRIVATE_NOSHAR_FLAGS_3
 #define PRIVATE_SHARED_FLAGS_4   PRIVATE_SHARED_FLAGS_3 | OPEN_FAPPEND
-#else
+#else /* OPEN_FAPPEND == O_APPEND */
 #define PRIVATE_NOSHAR_FLAGS_4   PRIVATE_NOSHAR_FLAGS_3 | OPEN_FAPPEND
 #define PRIVATE_SHARED_FLAGS_4   PRIVATE_SHARED_FLAGS_3
-#endif
+#endif /* OPEN_FAPPEND != O_APPEND */
 
 /* Optional flags. */
 #define PRIVATE_NOSUPP_FLAGS_4   PRIVATE_NOSUPP_FLAGS_0
 #ifndef O_NONBLOCK
-#define PRIVATE_NOSUPP_FLAGS_5   PRIVATE_NOSUPP_FLAGS_4|OPEN_FNONBLOCK
+#define PRIVATE_NOSUPP_FLAGS_5   PRIVATE_NOSUPP_FLAGS_4 | OPEN_FNONBLOCK
 #define PRIVATE_SHARED_FLAGS_5   PRIVATE_SHARED_FLAGS_4
 #define PRIVATE_NOSHAR_FLAGS_5   PRIVATE_NOSHAR_FLAGS_4
-#else
+#else /* !O_NONBLOCK */
 #define PRIVATE_NOSUPP_FLAGS_5   PRIVATE_NOSUPP_FLAGS_4
 #if OPEN_FNONBLOCK == O_NONBLOCK
 #define PRIVATE_NOSHAR_FLAGS_5   PRIVATE_NOSHAR_FLAGS_4
-#define PRIVATE_SHARED_FLAGS_5   PRIVATE_SHARED_FLAGS_4|OPEN_FNONBLOCK
-#else
-#define PRIVATE_NOSHAR_FLAGS_5   PRIVATE_NOSHAR_FLAGS_4|OPEN_FNONBLOCK
+#define PRIVATE_SHARED_FLAGS_5   PRIVATE_SHARED_FLAGS_4 | OPEN_FNONBLOCK
+#else /* OPEN_FNONBLOCK == O_NONBLOCK */
+#define PRIVATE_NOSHAR_FLAGS_5   PRIVATE_NOSHAR_FLAGS_4 | OPEN_FNONBLOCK
 #define PRIVATE_SHARED_FLAGS_5   PRIVATE_SHARED_FLAGS_4
-#endif
-#endif
+#endif /* OPEN_FNONBLOCK != O_NONBLOCK */
+#endif /* O_NONBLOCK */
 #ifndef O_SYNC
-#define PRIVATE_NOSUPP_FLAGS_6   PRIVATE_NOSUPP_FLAGS_5|OPEN_FSYNC
+#define PRIVATE_NOSUPP_FLAGS_6   PRIVATE_NOSUPP_FLAGS_5 | OPEN_FSYNC
 #define PRIVATE_SHARED_FLAGS_6   PRIVATE_SHARED_FLAGS_5
 #define PRIVATE_NOSHAR_FLAGS_6   PRIVATE_NOSHAR_FLAGS_5
-#else
+#else /* O_SYNC */
 #define PRIVATE_NOSUPP_FLAGS_6   PRIVATE_NOSUPP_FLAGS_5
 #if OPEN_FSYNC == O_SYNC
 #define PRIVATE_NOSHAR_FLAGS_6   PRIVATE_NOSHAR_FLAGS_5
-#define PRIVATE_SHARED_FLAGS_6   PRIVATE_SHARED_FLAGS_5|OPEN_FSYNC
-#else
-#define PRIVATE_NOSHAR_FLAGS_6   PRIVATE_NOSHAR_FLAGS_5|OPEN_FSYNC
+#define PRIVATE_SHARED_FLAGS_6   PRIVATE_SHARED_FLAGS_5 | OPEN_FSYNC
+#else /* OPEN_FSYNC == O_SYNC */
+#define PRIVATE_NOSHAR_FLAGS_6   PRIVATE_NOSHAR_FLAGS_5 | OPEN_FSYNC
 #define PRIVATE_SHARED_FLAGS_6   PRIVATE_SHARED_FLAGS_5
-#endif
-#endif
+#endif /* OPEN_FSYNC != O_SYNC */
+#endif /* !O_SYNC */
 #ifndef O_DIRECT
-#define PRIVATE_NOSUPP_FLAGS_7   PRIVATE_NOSUPP_FLAGS_6|OPEN_FDIRECT
+#define PRIVATE_NOSUPP_FLAGS_7   PRIVATE_NOSUPP_FLAGS_6 | OPEN_FDIRECT
 #define PRIVATE_SHARED_FLAGS_7   PRIVATE_SHARED_FLAGS_6
 #define PRIVATE_NOSHAR_FLAGS_7   PRIVATE_NOSHAR_FLAGS_6
-#else
+#else /* O_DIRECT */
 #define PRIVATE_NOSUPP_FLAGS_7   PRIVATE_NOSUPP_FLAGS_6
 #if OPEN_FDIRECT == O_DIRECT
 #define PRIVATE_NOSHAR_FLAGS_7   PRIVATE_NOSHAR_FLAGS_6
-#define PRIVATE_SHARED_FLAGS_7   PRIVATE_SHARED_FLAGS_6|OPEN_FDIRECT
-#else
-#define PRIVATE_NOSHAR_FLAGS_7   PRIVATE_NOSHAR_FLAGS_6|OPEN_FDIRECT
+#define PRIVATE_SHARED_FLAGS_7   PRIVATE_SHARED_FLAGS_6 | OPEN_FDIRECT
+#else /* OPEN_FDIRECT == O_DIRECT */
+#define PRIVATE_NOSHAR_FLAGS_7   PRIVATE_NOSHAR_FLAGS_6 | OPEN_FDIRECT
 #define PRIVATE_SHARED_FLAGS_7   PRIVATE_SHARED_FLAGS_6
-#endif
-#endif
+#endif /* OPEN_FDIRECT != O_DIRECT */
+#endif /* !O_DIRECT */
 #ifndef O_NOFOLLOW
-#define PRIVATE_NOSUPP_FLAGS_8   PRIVATE_NOSUPP_FLAGS_7|OPEN_FNOFOLLOW
+#define PRIVATE_NOSUPP_FLAGS_8   PRIVATE_NOSUPP_FLAGS_7 | OPEN_FNOFOLLOW
 #define PRIVATE_SHARED_FLAGS_8   PRIVATE_SHARED_FLAGS_7
 #define PRIVATE_NOSHAR_FLAGS_8   PRIVATE_NOSHAR_FLAGS_7
-#else
+#else /* O_NOFOLLOW */
 #define PRIVATE_NOSUPP_FLAGS_8   PRIVATE_NOSUPP_FLAGS_7
 #if OPEN_FNOFOLLOW == O_NOFOLLOW
 #define PRIVATE_NOSHAR_FLAGS_8   PRIVATE_NOSHAR_FLAGS_7
-#define PRIVATE_SHARED_FLAGS_8   PRIVATE_SHARED_FLAGS_7|OPEN_FNOFOLLOW
-#else
-#define PRIVATE_NOSHAR_FLAGS_8   PRIVATE_NOSHAR_FLAGS_7|OPEN_FNOFOLLOW
+#define PRIVATE_SHARED_FLAGS_8   PRIVATE_SHARED_FLAGS_7 | OPEN_FNOFOLLOW
+#else /* OPEN_FNOFOLLOW == O_NOFOLLOW */
+#define PRIVATE_NOSHAR_FLAGS_8   PRIVATE_NOSHAR_FLAGS_7 | OPEN_FNOFOLLOW
 #define PRIVATE_SHARED_FLAGS_8   PRIVATE_SHARED_FLAGS_7
-#endif
-#endif
+#endif /* OPEN_FNOFOLLOW != O_NOFOLLOW */
+#endif /* !O_NOFOLLOW */
 #ifndef O_NOATIME
-#define PRIVATE_NOSUPP_FLAGS_9   PRIVATE_NOSUPP_FLAGS_8|OPEN_FNOATIME
+#define PRIVATE_NOSUPP_FLAGS_9   PRIVATE_NOSUPP_FLAGS_8 | OPEN_FNOATIME
 #define PRIVATE_SHARED_FLAGS_9   PRIVATE_SHARED_FLAGS_8
 #define PRIVATE_NOSHAR_FLAGS_9   PRIVATE_NOSHAR_FLAGS_8
-#else
+#else /* O_NOATIME */
 #define PRIVATE_NOSUPP_FLAGS_9   PRIVATE_NOSUPP_FLAGS_8
 #if OPEN_FNOATIME == O_NOATIME
 #define PRIVATE_NOSHAR_FLAGS_9   PRIVATE_NOSHAR_FLAGS_8
-#define PRIVATE_SHARED_FLAGS_9   PRIVATE_SHARED_FLAGS_8|OPEN_FNOATIME
-#else
-#define PRIVATE_NOSHAR_FLAGS_9   PRIVATE_NOSHAR_FLAGS_8|OPEN_FNOATIME
+#define PRIVATE_SHARED_FLAGS_9   PRIVATE_SHARED_FLAGS_8 | OPEN_FNOATIME
+#else /* OPEN_FNOATIME == O_NOATIME */
+#define PRIVATE_NOSHAR_FLAGS_9   PRIVATE_NOSHAR_FLAGS_8 | OPEN_FNOATIME
 #define PRIVATE_SHARED_FLAGS_9   PRIVATE_SHARED_FLAGS_8
-#endif
-#endif
+#endif /* OPEN_FNOATIME != O_NOATIME */
+#endif /* !O_NOATIME */
 
 #ifndef O_CLOEXEC
-#define PRIVATE_NOSUPP_FLAGS_A   PRIVATE_NOSUPP_FLAGS_9|OPEN_FCLOEXEC
+#define PRIVATE_NOSUPP_FLAGS_A   PRIVATE_NOSUPP_FLAGS_9 | OPEN_FCLOEXEC
 #define PRIVATE_SHARED_FLAGS_A   PRIVATE_SHARED_FLAGS_9
 #define PRIVATE_NOSHAR_FLAGS_A   PRIVATE_NOSHAR_FLAGS_9
-#else
+#else /* O_CLOEXEC */
 #define PRIVATE_NOSUPP_FLAGS_A   PRIVATE_NOSUPP_FLAGS_9
 #if OPEN_FCLOEXEC == O_CLOEXEC
 #define PRIVATE_NOSHAR_FLAGS_A   PRIVATE_NOSHAR_FLAGS_9
-#define PRIVATE_SHARED_FLAGS_A   PRIVATE_SHARED_FLAGS_9|OPEN_FCLOEXEC
-#else
-#define PRIVATE_NOSHAR_FLAGS_A   PRIVATE_NOSHAR_FLAGS_9|OPEN_FCLOEXEC
+#define PRIVATE_SHARED_FLAGS_A   PRIVATE_SHARED_FLAGS_9 | OPEN_FCLOEXEC
+#else /* OPEN_FCLOEXEC == O_CLOEXEC */
+#define PRIVATE_NOSHAR_FLAGS_A   PRIVATE_NOSHAR_FLAGS_9 | OPEN_FCLOEXEC
 #define PRIVATE_SHARED_FLAGS_A   PRIVATE_SHARED_FLAGS_9
-#endif
-#endif
-
+#endif /* OPEN_FCLOEXEC != O_CLOEXEC */
+#endif /* !O_CLOEXEC */
 
 #define NOSUPP_FLAGS   (PRIVATE_NOSUPP_FLAGS_A) /* Unsupported options. */
 #define SHARED_FLAGS   (PRIVATE_SHARED_FLAGS_A) /* Options with which we share bits. */
@@ -293,11 +287,9 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	int fd, used_oflags;
 	char *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
-#if O_RDONLY == OPEN_FRDONLY && \
-    O_WRONLY == OPEN_FWRONLY && \
-    O_RDWR == OPEN_FRDWR
+#if O_RDONLY == OPEN_FRDONLY && O_WRONLY == OPEN_FWRONLY && O_RDWR == OPEN_FRDWR
 	used_oflags = oflags & (SHARED_FLAGS | O_RDONLY | O_WRONLY | O_RDWR);
-#else
+#else /* O_RDONLY == OPEN_FRDONLY && O_WRONLY == OPEN_FWRONLY && O_RDWR == OPEN_FRDWR */
 	{
 		PRIVATE int const accmode_flags[4] = {
 			/* [OPEN_FRDONLY] = */ O_RDONLY,
@@ -310,7 +302,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 		used_oflags |= oflags & SHARED_FLAGS;
 #endif
 	}
-#endif
+#endif /* O_RDONLY != OPEN_FRDONLY || O_WRONLY != OPEN_FWRONLY || O_RDWR != OPEN_FRDWR */
 
 	/* Copy bits that we don't share. */
 #if NOSHAR_FLAGS & OPEN_FCREAT
@@ -781,10 +773,10 @@ is_an_std_file:
 #endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_FILE */
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
-	{ STR_fileno, (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_fileno, NULL, NULL, DOC("->?Dint") },
-	{ DeeString_STR(&str_isatty), (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL, DOC("->?Dbool") },
-	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
-	{ NULL }
+	TYPE_GETTER(STR_fileno, &sysfile_fileno, "->?Dint"),
+	TYPE_GETTER(STR_isatty, &sysfile_isatty, "->?Dbool"),
+	TYPE_GETTER(STR_filename, &DeeSystemFile_Filename, "->?Dstring"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -886,10 +878,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {
-	{ "sync", &sysfile_class_sync,
-	  DOC("()\n"
-	      "Synchronize all unwritten data with the host operating system") },
-	{ NULL }
+	TYPE_METHOD("sync", &sysfile_class_sync,
+	            "()\n"
+	            "Synchronize all unwritten data with the host operating system"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst sysfile_class_members[] = {
@@ -903,10 +895,10 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_name     = */ "_SystemFile",
 		/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,inherit=!f,duplicate=!f)\n"
 		                         "Construct a new SystemFile wrapper for @fd. When @inherit is "
-		                         "?t, the given @fd is inherited (and automatically closed "
-		                         "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
-		                         "is ?t, the given @fd is duplicated, and the duplicated copy "
-		                         "will be stored inside (in this case, @inherit is ignored)"),
+		                         /**/ "?t, the given @fd is inherited (and automatically closed "
+		                         /**/ "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
+		                         /**/ "is ?t, the given @fd is duplicated, and the duplicated copy "
+		                         /**/ "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS,

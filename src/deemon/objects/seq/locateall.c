@@ -174,14 +174,14 @@ err:
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                          \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
-	name(LocatorIterator *self, LocatorIterator *other) {                            \
+#define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)             \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
+	name(LocatorIterator *self, LocatorIterator *other) {               \
 		if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type)) \
-			goto err;                                                                \
-		return compare_object(self->li_iter, other->li_iter);                        \
-	err:                                                                             \
-		return NULL;                                                                 \
+			goto err;                                                   \
+		return compare_object(self->li_iter, other->li_iter);           \
+	err:                                                                \
+		return NULL;                                                    \
 	}
 DEFINE_FILTERITERATOR_COMPARE(locatoriter_eq, DeeObject_CompareEqObject)
 DEFINE_FILTERITERATOR_COMPARE(locatoriter_ne, DeeObject_CompareNeObject)
@@ -218,12 +218,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst locatoriter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locatoriter_seq_get,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:SeqLocator") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &locatoriter_seq_get, "->?Ert:SeqLocator"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst locatoriter_members[] = {

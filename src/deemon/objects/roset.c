@@ -254,7 +254,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict self) {
 		goto err;
 	/* TODO: Use the fast-sequence interface directly! */
 	length_hint = DeeFastSeq_GetSize(self);
-	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
+	result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
 	         ? DeeRoSet_FromIteratorWithHint(self, length_hint)
 	         : DeeRoSet_FromIterator(self);
 	Dee_Decref(self);
@@ -568,15 +568,13 @@ roset_sizeof(Set *self) {
 
 PRIVATE struct type_method tpconst roset_methods[] = {
 	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSequence */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
-	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER(STR___sizeof__, &roset_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst roset_members[] = {

@@ -340,7 +340,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	if unlikely(!self)
 		goto err;
 	length_hint = DeeFastSeq_GetSize(self);
-	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
+	result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
 	         ? DeeRoDict_FromIteratorWithHint(self, length_hint)
 	         : DeeRoDict_FromIterator(self);
 	Dee_Decref(self);
@@ -955,22 +955,15 @@ DOC_REF(map_get_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst rodict_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_get,
-	  DOC_GET(map_get_doc) },
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_METHOD(STR_get, &rodict_get, DOC_GET(map_get_doc)),
+	TYPE_KWMETHOD("byhash", &rodict_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rodict_getsets[] = {
-	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &DeeObject_NewRef, DOC("->?.")),
+	TYPE_GETTER(STR___sizeof__, &rodict_sizeof, DOC("->?Dint")),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst rodict_members[] = {

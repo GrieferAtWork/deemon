@@ -643,4 +643,5 @@
 
 #define tpconst     const
 #define Dee_tpconst const
+#define INTERN_TPCONST
 

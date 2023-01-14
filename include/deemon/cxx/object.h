@@ -2902,12 +2902,12 @@ public:
 #ifndef __OPTIMIZE_SIZE__
 	//bool bool_() const DEE_CXX_NOTHROW { return DeeBool_IsTrue(this->ptr()); }
 	WUNUSED operator bool() const {
-		return (likely(DeeBool_Check(this->ptr())))
+		return likely(DeeBool_Check(this->ptr()))
 		       ? DeeBool_IsTrue(this->ptr())
 		       : Object::operator bool();
 	}
 	WUNUSED bool operator!() const {
-		return (likely(DeeBool_Check(this->ptr())))
+		return likely(DeeBool_Check(this->ptr()))
 		       ? !DeeBool_IsTrue(this->ptr())
 		       : Object::operator!();
 	}

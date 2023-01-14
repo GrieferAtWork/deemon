@@ -326,21 +326,13 @@ PRIVATE struct type_cmp refaiter_cmp = {
 
 
 PRIVATE struct type_getset tpconst refaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReFindAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &refaiter_getseq, "->?Ert:ReFindAll"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst rebfaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebfaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReBytesFindAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &rebfaiter_getseq, "->?Ert:ReBytesFindAll"),
+	TYPE_GETSET_END
 };
 
 #define rebfaiter_members refaiter_members
@@ -567,21 +559,13 @@ regbfaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst regfaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regfaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:RegFindAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &regfaiter_getseq, "->?Ert:RegFindAll"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst regbfaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regbfaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:RegBytesFindAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &regbfaiter_getseq, "->?Ert:RegBytesFindAll"),
+	TYPE_GETSET_END
 };
 
 INTERN DeeTypeObject RegFindAllIterator_Type = {
@@ -743,21 +727,13 @@ reblaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst relaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReLocateAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &relaiter_getseq, "->?Ert:ReLocateAll"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst reblaiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&reblaiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReBytesLocateAll") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &reblaiter_getseq, "->?Ert:ReBytesLocateAll"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -983,21 +959,13 @@ rebspiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst respiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReSplit") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &respiter_getseq, "->?Ert:ReSplit"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst rebspiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebspiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:ReBytesSplit") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &rebspiter_getseq, "->?Ert:ReBytesSplit"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -144,7 +144,7 @@ ast_parse_try(bool is_statement) {
 		 * meaning that the following check will succeed most of the time. */
 		handler = catchv;
 		if likely(catchc == catcha) {
-			size_t new_catcha = (unlikely(catcha))
+			size_t new_catcha = unlikely(catcha)
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 do_realloc_catchv:
@@ -289,8 +289,8 @@ end_catch_handler:
 	result = merge;
 	/* Warn if we didn't parse any handlers. */
 	if unlikely(unlikely(!catchc) &&
-		         WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
-	goto err_r;
+	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
+		goto err_r;
 	return result;
 err_try_flags:
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -341,7 +341,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 		 * meaning that the following check will succeed most of the time. */
 		handler = catchv;
 		if likely(catchc == catcha) {
-			size_t new_catcha = (unlikely(catcha))
+			size_t new_catcha = unlikely(catcha)
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 do_realloc_catchv:
@@ -482,8 +482,8 @@ end_catch_handler:
 	result = merge;
 	/* Warn if we didn't parse any handlers. */
 	if unlikely(unlikely(!catchc) &&
-		         WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
-	goto err_r;
+	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
+		goto err_r;
 	if (pwas_expression)
 		*pwas_expression = was_expression;
 	return result;

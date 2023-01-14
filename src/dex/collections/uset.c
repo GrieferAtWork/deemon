@@ -763,14 +763,11 @@ uset_sizeof(USet *self) {
 }
 
 PRIVATE struct type_getset tpconst uset_getsets[] = {
-	{ "frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoSet_FromUSet, NULL, NULL,
-	  DOC("->?AFrozen?.\n"
-	      "Returns a read-only (frozen) copy of @this set") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &URoSet_FromUSet,
+	            "->?AFrozen?.\n"
+	            "Returns a read-only (frozen) copy of @this set"),
+	TYPE_GETTER("__sizeof__", &uset_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst uset_members[] = {
@@ -1213,47 +1210,38 @@ PRIVATE struct type_seq uset_seq = {
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
-	{ "pop",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_pop,
-	  DOC("->\n"
-	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it") },
-	{ "clear",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_doclear,
-	  DOC("()\n"
-	      "Clear all items from the set") },
-	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_pop,
-	  DOC("->\n"
-	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it (alias for ?#pop)") },
-	{ "unify",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_unify,
-	  DOC("(ob)->\n"
-	      "Insert @ob into the set if it wasn't inserted before, "
-	      "and re-return it, or the pre-existing instance") },
-	{ "insert",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_insert,
-	  DOC("(ob)->?Dbool\n"
-	      "Returns ?t if the object wasn't apart of the set before") },
-	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_update,
-	  DOC("(items:?S?O)->?Dint\n"
-	      "Insert all items from @items into @this set, and return the number of inserted items") },
-	{ "remove",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_remove,
-	  DOC("(ob)->?Dbool\n"
-	      "Returns ?t if the object was removed from the set") },
+	TYPE_METHOD("pop", &uset_pop,
+	            "->\n"
+	            "@throw ValueError The set is empty\n"
+	            "Pop a random item from the set and return it"),
+	TYPE_METHOD("clear", &uset_doclear,
+	            "()\n"
+	            "Clear all items from the set"),
+	TYPE_METHOD("popitem", &uset_pop,
+	            "->\n"
+	            "@throw ValueError The set is empty\n"
+	            "Pop a random item from the set and return it (alias for ?#pop)"),
+	TYPE_METHOD("unify", &uset_unify,
+	            "(ob)->\n"
+	            "Insert @ob into the set if it wasn't inserted before, "
+	            "and re-return it, or the pre-existing instance"),
+	TYPE_METHOD("insert", &uset_insert,
+	            "(ob)->?Dbool\n"
+	            "Returns ?t if the object wasn't apart of the set before"),
+	TYPE_METHOD("update", &uset_update,
+	            "(items:?S?O)->?Dint\n"
+	            "Insert all items from @items into @this set, and return the number of inserted items"),
+	TYPE_METHOD("remove", &uset_remove,
+	            "(ob)->?Dbool\n"
+	            "Returns ?t if the object was removed from the set"),
 	/* Alternative function names. */
-	{ "add",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_insert,
-	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for ?#insert") },
-	{ "discard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_remove,
-	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for ?#remove") },
-	{ NULL }
+	TYPE_METHOD("add", &uset_insert,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#insert"),
+	TYPE_METHOD("discard", &uset_remove,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#remove"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_gc tpconst uset_gc = {
@@ -1266,36 +1254,36 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_name     = */ "UniqueSet",
 	/* .tp_doc      = */ DOC("A mutable set-like container that uses @?Aid?O "
 	                         "and ${x === y} to detect/prevent duplicates\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Create an empty set\n"
-
 	                         "\n"
+
 	                         "(items:?S?O)\n"
 	                         "Create a new set populated with elements from @items\n"
-
 	                         "\n"
+
 	                         "copy->\n"
 	                         "Returns a shallow copy of @this set\n"
-
 	                         "\n"
+
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of @this set\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this set is non-empty\n"
-
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of @this set\n"
-
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the number of items apart of @this set\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
 	                         "in @this set, following a random order"),
@@ -1972,13 +1960,11 @@ uroset_sizeof(URoSet *self) {
 }
 
 PRIVATE struct type_getset tpconst uroset_getsets[] = {
-	{ "frozen", &DeeObject_NewRef, NULL, NULL,
-	  DOC("->?AFrozen?.\n"
-	      "Simply re-return @this object") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &DeeObject_NewRef,
+	            "->?AFrozen?.\n"
+	            "Simply re-return @this object"),
+	TYPE_GETTER("__sizeof__", &uroset_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst uroset_members[] = {

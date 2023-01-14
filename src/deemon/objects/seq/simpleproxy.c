@@ -859,24 +859,18 @@ classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst idsiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&idsiter_getseq, NULL, NULL,
-	  DOC("->?Ert:SeqIds") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &idsiter_getseq, "->?Ert:SeqIds"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst typesiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typesiter_getseq, NULL, NULL,
-	  DOC("->?Ert:SeqTypes") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &typesiter_getseq, "->?Ert:SeqTypes"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst classesiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&classesiter_getseq, NULL, NULL,
-	  DOC("->?Ert:SeqClasses") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &classesiter_getseq, "->?Ert:SeqClasses"),
+	TYPE_GETSET_END
 };
 
 

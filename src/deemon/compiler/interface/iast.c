@@ -5070,468 +5070,361 @@ err:
 
 
 PRIVATE struct type_getset tpconst ast_getsets[] = {
-	{ "scope",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getscope,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setscope,
-	  DOC("->?AScope?Ert:Compiler\n"
-	      "@throw ValueError Attempted to set a scope associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a scope not apart of the same base-scope (s.a. :Compiler.scope.base)\n"
-	      "@throw ReferenceError Attempted to set the scope of a branch containing symbols that would no longer be reachable\n"
-	      "Get or set the scope with which this branch is associated") },
-	{ "kind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getkind, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Get the name of the ast kind (same as the `make*' methods of :Compiler)") },
-	{ "typeid",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettypeid, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Get the internal type-id of ast") },
-	{ DeeString_STR(&str_constexpr),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconstexpr,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconstexpr,
-	  DOC("->\n"
-	      "@throw TypeError ?#kind isn't $\"constexpr\"\n"
-	      "Get or set the constant expression value of a $\"constexpr\" (s.a. ?#kind) ast") },
-	{ DeeString_STR(&str_sym),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getsym,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setsym,
-	  DOC("->?ASymbol?Ert:Compiler\n"
-	      "@throw TypeError ?#kind isn't $\"sym\", $\"unbind\" or $\"bound\"\n"
-	      "@throw ValueError Attempted to set a :Compiler.symbol associated with a different compiler\n"
-	      "Get or set the symbol associated with a symbol-related AST") },
-	{ DeeString_STR(&str_multiple),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delmultiple,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setmultiple,
-	  DOC("->?S?.\n"
-	      "@throw TypeError ?#kind isn't $\"multiple\"\n"
-	      "@throw ValueError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the sequence of sub-branches associated with @this multi-branch ast") },
-	{ "multiple_typing",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getmultiple_typing,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setmultiple_typing,
-	  DOC("->?DType\n"
-	      "@throw TypeError ?#kind isn't $\"multiple\"\n"
-	      "@throw TypeError Attempted to set a typing that is neither ?N, nor one of the type listed in :Compiler.makemultiple\n"
-	      "Get or set the typing of a @ multi-branch ast") },
-	{ "returnast",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getreturnast,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delreturnast,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setreturnast,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"return\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No return expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the ast describing the expression returned by @this branch\n"
-	      "Additionally, you may assign ?N to delete the throw expression and have the branch return ?N") },
-	{ "yieldast",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getyieldast,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setyieldast,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"yield\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the ast describing the expression yielded by @this branch") },
-	{ "throwast",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getthrowast,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delthrowast,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setthrowast,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"throw\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No throw expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the ast describing the expression thrown by @this branch\n"
-	      "Additionally, you may assign ?N to delete the throw expression and turn the branch into a re-throw") },
-	{ "tryguard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryguard,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_settryguard,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"try\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No throw expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the ast guarded by the ?#tryhandlers of @this try-branch") },
-	{ "tryhandlers",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryhandlers,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_settryhandlers,
-	  DOC("->?S?T3?Dstring?.?.\n"
-	      "@throw TypeError ?#kind isn't $\"try\"\n"
-	      "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
-	      "@throw ValueError One of the flags-strings contains an unknown flag\n"
-	      "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
-	      "Get or set the ast guarded by the ?#tryhandlers of @this try-branch (s.a. :Compiler.maketry)") },
-	{ "loopflags",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopflags,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopflags,
-	  DOC("->?Dstring\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw ValueError Attempted to set an invalid flags string\n"
-	      "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with ?#loopnext being unbound\n"
-	      "Get or set the flags controlling how a loop is evaluated\n"
-	      "When enabling/disabling $\"foreach\" mode, ?#loopcond becomes ?#loopelem and "
-	      "?#loopnext becomes ?#loopiter, though regardless of foreach-mode, ?#loopcond and "
-	      "?#loopelem can be addressed as ?#loopelemcond, and ?#loopnext and ?#loopiter as ?#loopiternext") },
-	{ "loopisforeach",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisforeach,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopisforeach,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with ?#loopnext being unbound\n"
-	      "Get or set if @this ast is a foreach-loop, controlling the $\"foreach\" flag of ?#loopflags") },
-	{ "loopispostcond",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopispostcond,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopispostcond,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "Get or set if ?#loopcond is evaluated after ?#looploop or before, controlling the $\"postcond\" flag of ?#loopflags") },
-	{ "loopisunlikely",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopisunlikely,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopisunlikely,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "Get or set if ?#looploop is unlikely to be executed, controlling the $\"unlikely\" flag of ?#loopflags") },
-	{ "loopcond",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopcond,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopcond,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopcond,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError ?#loopflags contains $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No condition expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign ?N to delete the condition, causing it to always be true") },
-	{ "loopnext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopnext,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopnext,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopnext,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError ?#loopflags contains $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No advance expression expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign ?N to delete the expression") },
-	{ "looploop",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getlooploop,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_dellooploop,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setlooploop,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No loop block expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign ?N to delete the block") },
-	{ "loopelem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelem,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopelem,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopelem,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No loop element has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
-	      "Additionally, you may assign ?N to delete the element, causing its value to be discarded immediately") },
-	{ "loopiter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiter, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopiter,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the foreach iterator expression of @this loop (${foreach (loopelem: loopiter) looploop})") },
-	{ "loopelemcond",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelemcond,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopelemcond,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopelemcond,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No condition or element expression has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Alias for accessing either the condition of a regular loop (#loopcond), or the element of foreach-loop (#loopelem)") },
-	{ "loopiternext",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiternext,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopiternext,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopiternext,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"loop\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No loop advance expression has been bound\n"
-	      "@throw AttributeError Attempted to unbind or assign ?N to ?#loopiter\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Alias for accessing either the advance expression of a regular loop (#loopnext), or the iterator of foreach-loop (#loopiter)") },
-	{ "loopctlisbreak",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopctlisbreak, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopctlisbreak,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"loopctl\"\n"
-	      "Get or set if @this loop control branch behaves as a $break, or as a $continue") },
-	{ "conditionalcond",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalcond, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalcond,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the condition used to determine the the path taken by a conditional branch") },
-	{ "conditionaltt",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionaltt,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delconditionaltt,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionaltt,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No true-branch has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?t\n"
-	      "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
-	      "the value resulting from the conditiona branch as result of the true-branch") },
-	{ "conditionalff",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalff,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_delconditionalff,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalff,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute No false-branch has been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?f\n"
-	      "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
-	      "the value resulting from the conditiona branch as result of the false-branch") },
-	{ "conditionalflags",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalflags,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalflags,
-	  DOC("->?Dstring\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "@throw ValueError Attempted to set an invalid set of flags\n"
-	      "Get or set the flags used for evaluating @this conditional branch (s.a. :Compiler.makeconditional)") },
-	{ "conditionalisbool",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisbool,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalisbool,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "Control the $\"bool\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)") },
-	{ "conditionalislikely",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalislikely,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalislikely,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "Control the $\"likely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)") },
-	{ "conditionalisunlikely",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalisunlikely,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setconditionalisunlikely,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"conditional\"\n"
-	      "Control the $\"unlikely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)") },
-	{ "boolast",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolast,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setboolast,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"bool\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the ast describing the expression turned into a boolean by @this branch") },
-	{ "boolisnegated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getboolisnegated,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setboolisnegated,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"bool\"\n"
-	      "Get or set if the boolean value of ?#boolast should be negated") },
-	{ "expandast",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getexpandast,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setexpandast,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"expand\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the ast being expanded by @this one") },
-	{ "functioncode",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getfunctioncode,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setfunctioncode,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"function\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError ${this.scope} is not reachable from ${VALUE.scope}\n"
-	      "@throw ReferenceError ${this.scope.base} is identical to ${VALUE.scope.base}\n"
-	      "Get or set the code bound to the function of @this ast") },
-	{ "operatorfuncname",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncname,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorfuncname,
-	  DOC("->?X2?Dstring?Dint\n"
-	      "@throw TypeError ?#kind isn't $\"operatorfunc\"\n"
-	      "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
-	      "Get or set the name of the operator that is loaded as a function by this branch") },
-	{ "operatorfuncbinding",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorfuncbinding,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatorfuncbinding,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorfuncbinding,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operatorfunc\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute The operator function hasn't been bound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the binding of the operator function loaded by this branch\n"
-	      "Additionally, you may assign ?N to unbind the binding, causing the operator "
-	      "to be loaded as an unbound function") },
-	{ "operatorname",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorname,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorname,
-	  DOC("->?X2?Dstring?Dint\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
-	      "Get or set the name of the operator executed by @this ast") },
-	{ "operatora",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatora,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatora,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the first operand used for invoking ?#operatorname") },
-	{ "operatorb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorb,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatorb,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorb,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute The second operand has been unbound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the second operand used for invoking ?#operatorname\n"
-	      "Additionally, you may assign ?N to unbind the operand") },
-	{ "operatorc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorc,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatorc,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorc,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute The third operand has been unbound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the second third used for invoking ?#operatorname\n"
-	      "Additionally, you may assign ?N to unbind the operand") },
-	{ "operatord",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatord,
-	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatord,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatord,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw UnboundAttribute The fourth operand has been unbound\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the second fourth used for invoking ?#operatorname\n"
-	      "Additionally, you may assign ?N to unbind the operand") },
-	{ "operatorflags",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorflags,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorflags,
-	  DOC("->?Dstring\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw ValueError Attempted to set invalid flags\n"
-	      "Get or set the flags used to describe special behavior for executing an operator (s.a. :Compiler.makeoperator)") },
-	{ "operatorispost",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorispost,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorispost,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "Get or set the $\"post\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)") },
-	{ "operatorisvarargs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisvarargs,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorisvarargs,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "Get or set the $\"varargs\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)") },
-	{ "operatorismaybeprefix",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorismaybeprefix,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorismaybeprefix,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "Get or set the $\"maybeprefix\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)") },
-	{ "operatorisdontoptimize",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorisdontoptimize,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setoperatorisdontoptimize,
-	  DOC("->?Dbool\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "Get or set the $\"dontoptimize\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)") },
-	{ "actionname",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionname,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactionname,
-	  DOC("->?Dstring\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw ValueError Attempted to set an invalid action\n"
-	      "@throw ValueError Attempted to set an action taking a different number of operands than "
-	      "the old. To work around this restriction, use ?#setaction instead\n"
-	      "Get or set the name of the action performed by @this ast") },
-	{ "actiona",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactiona,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactiona,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw AttributeError The currently set action takes $0 arguments\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the first operand used by the action performed by @this ast") },
-	{ "actionb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionb,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactionb,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw AttributeError The currently set action takes $0, or $1 argument\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the second operand used by the action performed by @this ast") },
-	{ "actionc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getactionc,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setactionc,
-	  DOC("->?.\n"
-	      "@throw TypeError ?#kind isn't $\"operator\"\n"
-	      "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
-	      "@throw AttributeError The currently set action takes $0, $1 or $2 arguments\n"
-	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get or set the third operand used by the action performed by @this ast") },
+	TYPE_GETSET("scope", &ast_getscope, NULL, &ast_setscope,
+	            "->?AScope?Ert:Compiler\n"
+	            "@throw ValueError Attempted to set a scope associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a scope not apart of the same base-scope (s.a. :Compiler.scope.base)\n"
+	            "@throw ReferenceError Attempted to set the scope of a branch containing symbols that would no longer be reachable\n"
+	            "Get or set the scope with which this branch is associated"),
+	TYPE_GETTER("kind", &ast_getkind,
+	            "->?Dstring\n"
+	            "Get the name of the ast kind (same as the `make*' methods of :Compiler)"),
+	TYPE_GETTER("typeid", &ast_gettypeid,
+	            "->?Dint\n"
+	            "Get the internal type-id of ast"),
+	TYPE_GETSET(STR_constexpr, &ast_getconstexpr, NULL, &ast_setconstexpr,
+	            "->\n"
+	            "@throw TypeError ?#kind isn't $\"constexpr\"\n"
+	            "Get or set the constant expression value of a $\"constexpr\" (s.a. ?#kind) ast"),
+	TYPE_GETSET(STR_sym, &ast_getsym, NULL, &ast_setsym,
+	            "->?ASymbol?Ert:Compiler\n"
+	            "@throw TypeError ?#kind isn't $\"sym\", $\"unbind\" or $\"bound\"\n"
+	            "@throw ValueError Attempted to set a :Compiler.symbol associated with a different compiler\n"
+	            "Get or set the symbol associated with a symbol-related AST"),
+	TYPE_GETSET(STR_multiple,
+	            &ast_getmultiple,
+	            &ast_delmultiple,
+	            &ast_setmultiple,
+	            "->?S?.\n"
+	            "@throw TypeError ?#kind isn't $\"multiple\"\n"
+	            "@throw ValueError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the sequence of sub-branches associated with @this multi-branch ast"),
+	TYPE_GETSET("multiple_typing", &ast_getmultiple_typing, NULL, &ast_setmultiple_typing,
+	            "->?DType\n"
+	            "@throw TypeError ?#kind isn't $\"multiple\"\n"
+	            "@throw TypeError Attempted to set a typing that is neither ?N, nor one of the type listed in :Compiler.makemultiple\n"
+	            "Get or set the typing of a @ multi-branch ast"),
+	TYPE_GETSET("returnast",
+	            &ast_getreturnast,
+	            &ast_delreturnast,
+	            &ast_setreturnast,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"return\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No return expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the ast describing the expression returned by @this branch\n"
+	            "Additionally, you may assign ?N to delete the throw expression and have the branch return ?N"),
+	TYPE_GETSET("yieldast", &ast_getyieldast, NULL, &ast_setyieldast,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"yield\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the ast describing the expression yielded by @this branch"),
+	TYPE_GETSET("throwast",
+	            &ast_getthrowast,
+	            &ast_delthrowast,
+	            &ast_setthrowast,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"throw\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No throw expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the ast describing the expression thrown by @this branch\n"
+	            "Additionally, you may assign ?N to delete the throw expression and turn the branch into a re-throw"),
+	TYPE_GETSET("tryguard", &ast_gettryguard, NULL, &ast_settryguard,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"try\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No throw expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the ast guarded by the ?#tryhandlers of @this try-branch"),
+	TYPE_GETSET("tryhandlers", &ast_gettryhandlers, NULL, &ast_settryhandlers,
+	            "->?S?T3?Dstring?.?.\n"
+	            "@throw TypeError ?#kind isn't $\"try\"\n"
+	            "@throw ValueError The compiler of one of the given branches or @scope doesn't match @this\n"
+	            "@throw ValueError One of the flags-strings contains an unknown flag\n"
+	            "@throw ReferenceError One of the given branch is not part of the basescope of the effective @scope\n"
+	            "Get or set the ast guarded by the ?#tryhandlers of @this try-branch (s.a. :Compiler.maketry)"),
+	TYPE_GETSET("loopflags", &ast_getloopflags, NULL, &ast_setloopflags,
+	            "->?Dstring\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw ValueError Attempted to set an invalid flags string\n"
+	            "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with ?#loopnext being unbound\n"
+	            "Get or set the flags controlling how a loop is evaluated\n"
+	            "When enabling/disabling $\"foreach\" mode, ?#loopcond becomes ?#loopelem and "
+	            /**/ "?#loopnext becomes ?#loopiter, though regardless of foreach-mode, ?#loopcond and "
+	            /**/ "?#loopelem can be addressed as ?#loopelemcond, and ?#loopnext and ?#loopiter as ?#loopiternext"),
+	TYPE_GETSET("loopisforeach", &ast_getloopisforeach, NULL, &ast_setloopisforeach,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw UnboundAttribute Attempted to enable $\"foreach\" mode with ?#loopnext being unbound\n"
+	            "Get or set if @this ast is a foreach-loop, controlling the $\"foreach\" flag of ?#loopflags"),
+	TYPE_GETSET("loopispostcond", &ast_getloopispostcond, NULL, &ast_setloopispostcond,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "Get or set if ?#loopcond is evaluated after ?#looploop or before, controlling the $\"postcond\" flag of ?#loopflags"),
+	TYPE_GETSET("loopisunlikely",
+	            &ast_getloopisunlikely,
+	            NULL,
+	            &ast_setloopisunlikely,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "Get or set if ?#looploop is unlikely to be executed, controlling the $\"unlikely\" flag of ?#loopflags"),
+	TYPE_GETSET("loopcond",
+	            &ast_getloopcond,
+	            &ast_delloopcond,
+	            &ast_setloopcond,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError ?#loopflags contains $\"foreach\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No condition expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
+	            "Additionally, you may assign ?N to delete the condition, causing it to always be true"),
+	TYPE_GETSET("loopnext",
+	            &ast_getloopnext,
+	            &ast_delloopnext,
+	            &ast_setloopnext,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError ?#loopflags contains $\"foreach\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No advance expression expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
+	            "Additionally, you may assign ?N to delete the expression"),
+	TYPE_GETSET("looploop",
+	            &ast_getlooploop,
+	            &ast_dellooploop,
+	            &ast_setlooploop,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No loop block expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
+	            "Additionally, you may assign ?N to delete the block"),
+	TYPE_GETSET("loopelem",
+	            &ast_getloopelem,
+	            &ast_delloopelem,
+	            &ast_setloopelem,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No loop element has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
+	            "Additionally, you may assign ?N to delete the element, causing its value to be discarded immediately"),
+	TYPE_GETSET("loopiter", &ast_getloopiter, NULL, &ast_setloopiter,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError ?#loopflags doesn't contain $\"foreach\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the foreach iterator expression of @this loop (${foreach (loopelem: loopiter) looploop})"),
+	TYPE_GETSET("loopelemcond",
+	            &ast_getloopelemcond,
+	            &ast_delloopelemcond,
+	            &ast_setloopelemcond,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No condition or element expression has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Alias for accessing either the condition of a regular loop (#loopcond), or the element of foreach-loop (#loopelem)"),
+	TYPE_GETSET("loopiternext",
+	            &ast_getloopiternext,
+	            &ast_delloopiternext,
+	            &ast_setloopiternext,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"loop\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No loop advance expression has been bound\n"
+	            "@throw AttributeError Attempted to unbind or assign ?N to ?#loopiter\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Alias for accessing either the advance expression of a regular loop (#loopnext), or the iterator of foreach-loop (#loopiter)"),
+	TYPE_GETSET("loopctlisbreak", &ast_getloopctlisbreak, NULL, &ast_setloopctlisbreak,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"loopctl\"\n"
+	            "Get or set if @this loop control branch behaves as a $break, or as a $continue"),
+	TYPE_GETSET("conditionalcond", &ast_getconditionalcond, NULL, &ast_setconditionalcond,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the condition used to determine the the path taken by a conditional branch"),
+	TYPE_GETSET("conditionaltt",
+	            &ast_getconditionaltt,
+	            &ast_delconditionaltt,
+	            &ast_setconditionaltt,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No true-branch has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the branch taken when ?#conditionalcond evaluates to ?t\n"
+	            "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
+	            /**/ "the value resulting from the conditiona branch as result of the true-branch"),
+	TYPE_GETSET("conditionalff",
+	            &ast_getconditionalff,
+	            &ast_delconditionalff,
+	            &ast_setconditionalff,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute No false-branch has been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the branch taken when ?#conditionalcond evaluates to ?f\n"
+	            "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
+	            /**/ "the value resulting from the conditiona branch as result of the false-branch"),
+	TYPE_GETSET("conditionalflags", &ast_getconditionalflags, NULL, &ast_setconditionalflags,
+	            "->?Dstring\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "@throw ValueError Attempted to set an invalid set of flags\n"
+	            "Get or set the flags used for evaluating @this conditional branch (s.a. :Compiler.makeconditional)"),
+	TYPE_GETSET("conditionalisbool", &ast_getconditionalisbool, NULL, &ast_setconditionalisbool,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "Control the $\"bool\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	TYPE_GETSET("conditionalislikely", &ast_getconditionalislikely, NULL, &ast_setconditionalislikely,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "Control the $\"likely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	TYPE_GETSET("conditionalisunlikely", &ast_getconditionalisunlikely, NULL, &ast_setconditionalisunlikely,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"conditional\"\n"
+	            "Control the $\"unlikely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	TYPE_GETSET("boolast", &ast_getboolast, NULL, &ast_setboolast,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"bool\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the ast describing the expression turned into a boolean by @this branch"),
+	TYPE_GETSET("boolisnegated", &ast_getboolisnegated, NULL, &ast_setboolisnegated,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"bool\"\n"
+	            "Get or set if the boolean value of ?#boolast should be negated"),
+	TYPE_GETSET("expandast", &ast_getexpandast, NULL, &ast_setexpandast,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"expand\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the ast being expanded by @this one"),
+	TYPE_GETSET("functioncode", &ast_getfunctioncode, NULL, &ast_setfunctioncode,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"function\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError ${this.scope} is not reachable from ${VALUE.scope}\n"
+	            "@throw ReferenceError ${this.scope.base} is identical to ${VALUE.scope.base}\n"
+	            "Get or set the code bound to the function of @this ast"),
+	TYPE_GETSET("operatorfuncname", &ast_getoperatorfuncname, NULL, &ast_setoperatorfuncname,
+	            "->?X2?Dstring?Dint\n"
+	            "@throw TypeError ?#kind isn't $\"operatorfunc\"\n"
+	            "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
+	            "Get or set the name of the operator that is loaded as a function by this branch"),
+	TYPE_GETSET("operatorfuncbinding",
+	            &ast_getoperatorfuncbinding,
+	            &ast_deloperatorfuncbinding,
+	            &ast_setoperatorfuncbinding,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operatorfunc\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute The operator function hasn't been bound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the binding of the operator function loaded by this branch\n"
+	            "Additionally, you may assign ?N to unbind the binding, causing the operator "
+	            /**/ "to be loaded as an unbound function"),
+	TYPE_GETSET("operatorname", &ast_getoperatorname, NULL, &ast_setoperatorname,
+	            "->?X2?Dstring?Dint\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw ValueError Attempted to set a name not recognized as a valid operator\n"
+	            "Get or set the name of the operator executed by @this ast"),
+	TYPE_GETSET("operatora", &ast_getoperatora, NULL, &ast_setoperatora,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the first operand used for invoking ?#operatorname"),
+	TYPE_GETSET("operatorb", &ast_getoperatorb, &ast_deloperatorb, &ast_setoperatorb,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute The second operand has been unbound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the second operand used for invoking ?#operatorname\n"
+	            "Additionally, you may assign ?N to unbind the operand"),
+	TYPE_GETSET("operatorc", &ast_getoperatorc, &ast_deloperatorc, &ast_setoperatorc,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute The third operand has been unbound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the second third used for invoking ?#operatorname\n"
+	            "Additionally, you may assign ?N to unbind the operand"),
+	TYPE_GETSET("operatord", &ast_getoperatord, &ast_deloperatord, &ast_setoperatord,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw UnboundAttribute The fourth operand has been unbound\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get, del or set the second fourth used for invoking ?#operatorname\n"
+	            "Additionally, you may assign ?N to unbind the operand"),
+	TYPE_GETSET("operatorflags", &ast_getoperatorflags, NULL, &ast_setoperatorflags,
+	            "->?Dstring\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw ValueError Attempted to set invalid flags\n"
+	            "Get or set the flags used to describe special behavior for executing an operator (s.a. :Compiler.makeoperator)"),
+	TYPE_GETSET("operatorispost", &ast_getoperatorispost, NULL, &ast_setoperatorispost,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "Get or set the $\"post\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	TYPE_GETSET("operatorisvarargs", &ast_getoperatorisvarargs, NULL, &ast_setoperatorisvarargs,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "Get or set the $\"varargs\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	TYPE_GETSET("operatorismaybeprefix", &ast_getoperatorismaybeprefix, NULL, &ast_setoperatorismaybeprefix,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "Get or set the $\"maybeprefix\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	TYPE_GETSET("operatorisdontoptimize", &ast_getoperatorisdontoptimize, NULL, &ast_setoperatorisdontoptimize,
+	            "->?Dbool\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "Get or set the $\"dontoptimize\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	TYPE_GETSET("actionname", &ast_getactionname, NULL, &ast_setactionname,
+	            "->?Dstring\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw ValueError Attempted to set an invalid action\n"
+	            "@throw ValueError Attempted to set an action taking a different number of operands than "
+	            "the old. To work around this restriction, use ?#setaction instead\n"
+	            "Get or set the name of the action performed by @this ast"),
+	TYPE_GETSET("actiona", &ast_getactiona, NULL, &ast_setactiona,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw AttributeError The currently set action takes $0 arguments\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the first operand used by the action performed by @this ast"),
+	TYPE_GETSET("actionb", &ast_getactionb, NULL, &ast_setactionb,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw AttributeError The currently set action takes $0, or $1 argument\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the second operand used by the action performed by @this ast"),
+	TYPE_GETSET("actionc", &ast_getactionc, NULL, &ast_setactionc,
+	            "->?.\n"
+	            "@throw TypeError ?#kind isn't $\"operator\"\n"
+	            "@throw TypeError Attempted to set an ?AAst?Ert:Compiler associated with a different compiler\n"
+	            "@throw AttributeError The currently set action takes $0, $1 or $2 arguments\n"
+	            "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
+	            "Get or set the third operand used by the action performed by @this ast"),
 
 	/* TODO: Access to all the different ast fields. */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 

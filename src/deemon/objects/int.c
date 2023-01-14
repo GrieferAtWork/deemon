@@ -3293,16 +3293,14 @@ err:
 }
 
 PRIVATE struct type_method tpconst int_class_methods[] = {
-	{ "frombytes",
-	  (dobjmethod_t)&int_frombytes,
-	  DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
-	      "@param byteorder The byteorder encoding used by the returned bytes. "
-	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	      "or ?N (for host-endian)\n"
-	      "@throw ValueError The given @byteorder string isn't recognized\n"
-	      "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to construct an integer"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("frombytes", &int_frombytes,
+	              "(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
+	              "@param byteorder The byteorder encoding used by the returned bytes. "
+	              "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+	              "or ?N (for host-endian)\n"
+	              "@throw ValueError The given @byteorder string isn't recognized\n"
+	              "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to construct an integer"),
+	TYPE_METHOD_END
 };
 
 
@@ -3462,97 +3460,76 @@ err:
 
 
 PRIVATE struct type_method tpconst int_methods[] = {
-	{ "tostr",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tostr,
-	  DOC("(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
-	      "@param precision The minimum number of digits (excluding numsys/sign "
-	      /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
-	      "@throw ValueError The given @mode was not recognized\n"
-	      "@throw NotImplemented The given @radix cannot be represented\n"
-	      "Convert @this integer to a string, using @radix as base and a "
-	      /**/ "character-options set @mode for which the following control "
-	      /**/ "characters are recognized\n"
-	      "#T{Option|Description~"
-	      "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
-	      "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
-	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
-	  TYPE_METHOD_FKWDS },
-	{ "hex",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_hex,
-	  DOC("(precision=!0)->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
-	  TYPE_METHOD_FKWDS },
-	{ "bin",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bin,
-	  DOC("(precision=!0)->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
-	  TYPE_METHOD_FKWDS },
-	{ "oct",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_oct,
-	  DOC("(precision=!0)->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
-	  TYPE_METHOD_FKWDS },
-	{ "tobytes",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
-	  DOC("(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
-	      "@param byteorder The byteorder encoding used by the returned bytes. "
-	      /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	      /*            */ "or ?N (for host-endian)\n"
-	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
-	      "@throw ValueError The given @byteorder string isn't recognized\n"
-	      "Returns the data of @this integer as a @length bytes long "
-	      /**/ "writable Bytes object that is disjunct from @this integer.\n"
-	      "When @signed is ?f, throw an :IntegerOverflow if @this "
-	      /**/ "integer is negative. Otherwise use two's complement to encode "
-	      /**/ "negative integers"),
-	  TYPE_METHOD_FKWDS },
-	{ "bitcount",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bitcount,
-	  DOC("(signed=!f)->?.\n"
-	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
-	      "Return the number of bits needed to represent @this integer in base-2"),
-	  TYPE_METHOD_FKWDS },
-	{ "__forcecopy__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_forcecopy,
-	  DOC("->?.\n"
-	      "Internal function to force the creation of a copy of @this "
-	      /**/ "integer without performing aliasing for known constants.\n"
-	      "This function is implementation-specific and used by tests "
-	      /**/ "in order to ensure that inplace-optimization of certain "
-	      /**/ "operators functions correctly") },
-	{ "divmod",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_divmod_f,
-	  DOC("(y:?.)->?T2?.?.\n"
-	      "Devide+modulo. Returns a tuple ${(this / y, this % y)}") },
-	{ "nextafter",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_nextafter,
-	  DOC("(y:?.)->?.\n"
-	      "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}") },
-	{ "isgreater",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isgreater,
-	  DOC("(y:?.)->?Dbool\n"
-	      "Same as ${this > y}") },
-	{ "isgreaterequal",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isgreaterequal,
-	  DOC("(y:?.)->?Dbool\n"
-	      "Same as ${this >= y}") },
-	{ "isless",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isless,
-	  DOC("(y:?.)->?Dbool\n"
-	      "Same as ${this < y}") },
-	{ "islessequal",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_islessequal,
-	  DOC("(y:?.)->?Dbool\n"
-	      "Same as ${this <= y}") },
-	{ "islessgreater",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_islessgreater,
-	  DOC("(y:?.)->?Dbool\n"
-	      "Same as ${this != y}") },
-	{ "isunordered",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_isunordered,
-	  DOC("(y:?X2?.?Dfloat)->?Dbool\n"
-	      "Same as ${y is float && y.isnan}") },
-	{ NULL }
+	TYPE_KWMETHOD("tostr", &int_tostr,
+	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
+	              "@param precision The minimum number of digits (excluding numsys/sign "
+	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.\n"
+	              "@throw ValueError The given @mode was not recognized\n"
+	              "@throw NotImplemented The given @radix cannot be represented\n"
+	              "Convert @this integer to a string, using @radix as base and a "
+	              /**/ "character-options set @mode for which the following control "
+	              /**/ "characters are recognized\n"
+	              "#T{Option|Description~"
+	              "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
+	              "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
+	              "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
+	TYPE_KWMETHOD("hex", &int_hex,
+	              "(precision=!0)->?Dstring\n"
+	              "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	TYPE_KWMETHOD("bin", &int_bin,
+	              "(precision=!0)->?Dstring\n"
+	              "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	TYPE_KWMETHOD("oct", &int_oct,
+	              "(precision=!0)->?Dstring\n"
+	              "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"n\")} (s.a. ?#tostr)"),
+	TYPE_KWMETHOD("tobytes", &int_tobytes,
+	              "(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
+	              "@param byteorder The byteorder encoding used by the returned bytes. "
+	              /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+	              /*            */ "or ?N (for host-endian)\n"
+	              "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
+	              "@throw ValueError The given @byteorder string isn't recognized\n"
+	              "Returns the data of @this integer as a @length bytes long "
+	              /**/ "writable Bytes object that is disjunct from @this integer.\n"
+	              "When @signed is ?f, throw an :IntegerOverflow if @this "
+	              /**/ "integer is negative. Otherwise use two's complement to encode "
+	              /**/ "negative integers"),
+	TYPE_KWMETHOD("bitcount", &int_bitcount,
+	              "(signed=!f)->?.\n"
+	              "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
+	              "Return the number of bits needed to represent @this integer in base-2"),
+	TYPE_METHOD("__forcecopy__", &int_forcecopy,
+	            "->?.\n"
+	            "Internal function to force the creation of a copy of @this "
+	            /**/ "integer without performing aliasing for known constants.\n"
+	            "This function is implementation-specific and used by tests "
+	            /**/ "in order to ensure that inplace-optimization of certain "
+	            /**/ "operators functions correctly"),
+	TYPE_METHOD("divmod", &int_divmod_f,
+	            "(y:?.)->?T2?.?.\n"
+	            "Devide+modulo. Returns a tuple ${(this / y, this % y)}"),
+	TYPE_METHOD("nextafter", &int_nextafter,
+	            "(y:?.)->?.\n"
+	            "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
+	TYPE_METHOD("isgreater", &int_isgreater,
+	            "(y:?.)->?Dbool\n"
+	            "Same as ${this > y}"),
+	TYPE_METHOD("isgreaterequal", &int_isgreaterequal,
+	            "(y:?.)->?Dbool\n"
+	            "Same as ${this >= y}"),
+	TYPE_METHOD("isless", &int_isless,
+	            "(y:?.)->?Dbool\n"
+	            "Same as ${this < y}"),
+	TYPE_METHOD("islessequal", &int_islessequal,
+	            "(y:?.)->?Dbool\n"
+	            "Same as ${this <= y}"),
+	TYPE_METHOD("islessgreater", &int_islessgreater,
+	            "(y:?.)->?Dbool\n"
+	            "Same as ${this != y}"),
+	TYPE_METHOD("isunordered", &int_isunordered,
+	            "(y:?X2?.?Dfloat)->?Dbool\n"
+	            "Same as ${y is float && y.isnan}"),
+	TYPE_METHOD_END
 };
 
 
@@ -3681,50 +3658,50 @@ err_neg_or_zero:
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	{ STR___sizeof__, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_sizeof, NULL, NULL, DOC("->?.") },
-	{ "abs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_abs, NULL, NULL, DOC("->?.") },
-	{ "trunc", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ "floor", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ "ceil", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ "round", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ "isnan", &int_return_false, NULL, NULL, DOC("->?Dbool\nAlways returns !f") },
-	{ "isinf", &int_return_false, NULL, NULL, DOC("->?Dbool\nAlways returns !f") },
-	{ "isfinite", &int_return_true, NULL, NULL, DOC("->?Dbool\nAlways returns !t") },
-	{ "isnormal", &int_return_nonzero, NULL, NULL, DOC("->?Dbool\nSame as {this != 0}") },
+	TYPE_GETTER(STR___sizeof__, &int_sizeof, "->?."),
+	TYPE_GETTER("abs", &int_get_abs, "->?."),
+	TYPE_GETTER("trunc", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER("floor", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER("ceil", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER("round", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER("isnan", &int_return_false, "->?Dbool\nAlways returns !f"),
+	TYPE_GETTER("isinf", &int_return_false, "->?Dbool\nAlways returns !f"),
+	TYPE_GETTER("isfinite", &int_return_true, "->?Dbool\nAlways returns !t"),
+	TYPE_GETTER("isnormal", &int_return_nonzero, "->?Dbool\nSame as {this != 0}"),
 
 	/* Binary property helper functions */
-	{ "popcount", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_popcount, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow When ${this < 0}\n"
-	      "Return the number of 1-bits in this integer") },
-	{ "ffs", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_ffs, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow When ${this < 0}\n"
-	      "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}") },
-	{ "partity", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_partity, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow When ${this < 0}\n"
-	      "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}") },
-	{ "ctz", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_ctz, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow When ${this < 0}\n"
-	      "CountTrailingZeros: return the number of trailing zero-bits:\n"
-	      "${"
-	      /**/ "local n = this.ctz;\n"
-	      /**/ "assert this == (this >> n) << n;"
-	      "}") },
-	{ "msb", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_msb, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw IntegerOverflow When ${this <= 0}\n"
-	      "MostSignificantBit: return the index of the most significant 1-bit:\n"
-	      "${"
-	      /**/ "assert (this >> this.msb) == 1;"
-	      "}") },
+	TYPE_GETTER("popcount", &int_get_popcount,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "Return the number of 1-bits in this integer"),
+	TYPE_GETTER("ffs", &int_get_ffs,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER("partity", &int_get_partity,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
+	TYPE_GETTER("ctz", &int_get_ctz,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this < 0}\n"
+	            "CountTrailingZeros: return the number of trailing zero-bits:\n"
+	            "${"
+	            /**/ "local n = this.ctz;\n"
+	            /**/ "assert this == (this >> n) << n;"
+	            "}"),
+	TYPE_GETTER("msb", &int_get_msb,
+	            "->?Dint\n"
+	            "@throw IntegerOverflow When ${this <= 0}\n"
+	            "MostSignificantBit: return the index of the most significant 1-bit:\n"
+	            "${"
+	            /**/ "assert (this >> this.msb) == 1;"
+	            "}"),
 
-	{ DeeString_STR(&str_int), &DeeObject_NewRef, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Always re-return @this") },
-	{ NULL }
+	TYPE_GETTER(STR_int, &DeeObject_NewRef,
+	            "->?Dint\n"
+	            "Always re-return @this"),
+	TYPE_GETSET_END
 };
 
 
@@ -3752,7 +3729,7 @@ PRIVATE struct type_member tpconst int_class_members[] = {
 	                      /**/ "with the default implementation of function such as :Sequence.insert's index-argument "
 	                      /**/ "potentially not being able to correctly determine if a negative or positive number was given\n"
 	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),
-	{ NULL }
+	TYPE_MEMBER_END
 };
 
 
@@ -3763,17 +3740,17 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         /**/ "with whole numbers of an arbitrary precision\n"
 	                         "Note that integers themself are immutable, and that "
 	                         /**/ "inplace operators will change the pointed-object object\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Returns the integer constant $0\n"
-
 	                         "\n"
+
 	                         "(ob)\n"
 	                         "@throw NotImplemented The given @ob does not implement ${operator int}\n"
 	                         "Converts @ob into an integer\n"
-
 	                         "\n"
+
 	                         "(s:?Dstring,radix=!0)\n"
 	                         "(s:?DBytes,radix=!0)\n"
 	                         "@throw ValueError The given string @s is not a valid integer\n"
@@ -3781,17 +3758,17 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "Convert the given :string or :Bytes object @s into an integer\n"
 	                         "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
 	                         /**/ "Otherwise, use @radix as it is provided\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "repr->\n"
 	                         "Returns @this integer as a decimal-encoded string. Same as ${this.tostr()}\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this integer is non-zero\n"
-
 	                         "\n"
+
 	                         "==->\n"
 	                         "!=->\n"
 	                         "<->\n"
@@ -3799,67 +3776,67 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         ">->\n"
 	                         ">=->\n"
 	                         "Compare @this integer with @other and return the result\n"
-
 	                         "\n"
+
 	                         "int->\n"
 	                         "pos->\n"
 	                         "Re-return @this integer\n"
-
 	                         "\n"
+
 	                         "inv->\n"
 	                         "Return the result of ${-(this + 1)}. This matches the mathematical "
 	                         /**/ "equivalent of a bit-wise inversion in 2'th complement arithmetic\n"
-
 	                         "\n"
+
 	                         "neg->\n"
 	                         "Return @this integer with its sign prefix inverted\n"
-
 	                         "\n"
+
 	                         "add->\n"
 	                         "Return the result of the addition between @this and @other\n"
-
 	                         "\n"
+
 	                         "sub->\n"
 	                         "Return the result of subtracting @other from @this\n"
-
 	                         "\n"
+
 	                         "*->\n"
 	                         "Multiply @this by @other and return the result\n"
-
 	                         "\n"
+
 	                         "/->\n"
 	                         "@throw DivideByZero The given @other is $0\n"
 	                         "Divide @this by @other and return the truncated result\n"
-
 	                         "\n"
+
 	                         "%->\n"
 	                         "@throw DivideByZero The given @other is $0\n"
 	                         "Divide @this by @other and return the remainder\n"
-
 	                         "\n"
+
 	                         "<<(count:?.)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this left a total of @count times\n"
-
 	                         "\n"
+
 	                         ">>(count:?.)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this right a total of @count times. "
 	                         /**/ "All bits that fall off of the end are discarded\n"
-
 	                         "\n"
+
 	                         "&->\n"
 	                         "Return the result of a bit-wise and between @this and @other\n"
-
 	                         "\n"
+
 	                         "|->\n"
 	                         "Return the result of a bit-wise or between @this and @other\n"
-
 	                         "\n"
+
 	                         "^->\n"
 	                         "Return the result of a bit-wise exclusive-or between @this and @other\n"
-
 	                         "\n"
+
 	                         "**->\n"
 	                         "Return @this by the power of @other"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,

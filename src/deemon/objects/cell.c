@@ -306,10 +306,10 @@ PRIVATE struct type_cmp cell_cmp = {
 
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
-	{ "value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
-	  DOC("@throw UnboundAttribute Attempted to read from an empty Cell\n"
-	      "Read/write access to the underlying, contained ?O") },
-	{ NULL }
+	TYPE_GETSET(STR_value, &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
+	            "@throw UnboundAttribute Attempted to read from an empty Cell\n"
+	            "Read/write access to the underlying, contained ?O"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -453,88 +453,78 @@ err:
 
 
 PRIVATE struct type_method tpconst cell_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_get,
-	  DOC("->\n"
-	      "@throw ValueError @this Cell is empty\n"
-	      "Returns the contained value of the Cell\n"
+	TYPE_METHOD(STR_get, &cell_get,
+	            "->\n"
+	            "@throw ValueError @this Cell is empty\n"
+	            "Returns the contained value of the Cell\n"
+	            "\n"
 
-	      "\n"
-	      "(def)->\n"
-	      "Returns the contained value of the Cell or @def when it is empty") },
-	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_delete,
-	  DOC("->?Dbool\n"
-	      "Delete the value stored in @this Cell, returning ?t if "
-	      /**/ "the Cell wasn't empty before, or ?f if it already was") },
-	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_pop,
-	  DOC("->\n"
-	      "@throw ValueError The Cell was empty\n"
+	            "(def)->\n"
+	            "Returns the contained value of the Cell or @def when it is empty"),
+	TYPE_METHOD(STR_delete, &cell_delete,
+	            "->?Dbool\n"
+	            "Delete the value stored in @this Cell, returning ?t if "
+	            /**/ "the Cell wasn't empty before, or ?f if it already was"),
+	TYPE_METHOD(STR_pop, &cell_pop,
+	            "->\n"
+	            "@throw ValueError The Cell was empty\n"
 
-	      "\n"
-	      "(def)->\n"
-	      "Pop and return the previously contained object, @def, or throw a :ValueError") },
-	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_set,
-	  DOC("(value)->?Dbool\n"
-	      "Set (override) @this Cell's value, returning ?t if a previous value "
-	      /**/ "has been overwritten, or ?f if no value had been set before") },
-	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
-	  DOC("(value)->\n"
-	      "@throw ValueError @this Cell is empty\n"
-	      "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
+	            "\n"
+	            "(def)->\n"
+	            "Pop and return the previously contained object, @def, or throw a :ValueError"),
+	TYPE_METHOD(STR_set, &cell_set,
+	            "(value)->?Dbool\n"
+	            "Set (override) @this Cell's value, returning ?t if a previous value "
+	            /**/ "has been overwritten, or ?f if no value had been set before"),
+	TYPE_METHOD(STR_xch, &cell_xch,
+	            "(value)->\n"
+	            "@throw ValueError @this Cell is empty\n"
+	            "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
 
-	      "\n"
-	      "(value,def)->\n"
-	      "Returns the contained value of the Cell or @def when it is empty") },
-	{ "cmpdel",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpdel,
-	  DOC("(old_value)->?Dbool\n"
-	      "Atomically check if the stored object's id matches @{old_value}. If this is "
-	      /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f") },
-	{ "cmpxch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpxch,
-	  DOC("(old_value,new_value)->\n"
-	      "@throw ValueError @this Cell is empty\n"
+	            "\n"
+	            "(value,def)->\n"
+	            "Returns the contained value of the Cell or @def when it is empty"),
+	TYPE_METHOD("cmpdel", &cell_cmpdel,
+	            "(old_value)->?Dbool\n"
+	            "Atomically check if the stored object's id matches @{old_value}. If this is "
+	            /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f"),
+	TYPE_METHOD("cmpxch", &cell_cmpxch,
+	            "(old_value,new_value)->\n"
+	            "@throw ValueError @this Cell is empty\n"
+	            "\n"
 
-	      "\n"
-	      "(old_value,new_value,def)->\n"
-	      "Do an id-compare of the stored object against @old_value and overwrite "
-	      /**/ "that object with @new_value when they match. Otherwise, don't modify the "
-	      /**/ "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
-	      "This is equivalent to the atomic execution of the following:\n"
-	      "${"
-	      /**/ "local result = this.value;\n"
-	      /**/ "if (this && result === old_value)\n"
-	      /**/ "	this.value = new_value;\n"
-	      /**/ "return result;"
-	      "}\n"
+	            "(old_value,new_value,def)->\n"
+	            "Do an id-compare of the stored object against @old_value and overwrite "
+	            /**/ "that object with @new_value when they match. Otherwise, don't modify the "
+	            /**/ "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
+	            "This is equivalent to the atomic execution of the following:\n"
+	            "${"
+	            /**/ "local result = this.value;\n"
+	            /**/ "if (this && result === old_value)\n"
+	            /**/ "	this.value = new_value;\n"
+	            /**/ "return result;"
+	            "}\n"
+	            "\n"
 
-	      "\n"
-	      "(new_value)->?Dbool\n"
-	      "Return ?t and atomically set @new_value as stored object only "
-	      /**/ "if no object had been set before. Otherwise, return ?f") },
-	{ "cmpset",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpset,
-	  DOC("(old_value)->?Dbool\n"
-	      "(old_value,new_value)->?Dbool\n"
-	      "Atomically check if the stored value equals @old_value and return ?t "
-	      /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
-	      "When @new_value is omit, the function behaves identical to ?#cmpdel") },
+	            "(new_value)->?Dbool\n"
+	            "Return ?t and atomically set @new_value as stored object only "
+	            /**/ "if no object had been set before. Otherwise, return ?f"),
+	TYPE_METHOD("cmpset", &cell_cmpset,
+	            "(old_value)->?Dbool\n"
+	            "(old_value,new_value)->?Dbool\n"
+	            "Atomically check if the stored value equals @old_value and return ?t "
+	            /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
+	            "When @new_value is omit, the function behaves identical to ?#cmpdel"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "del",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_delete,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#delete") },
-	{ "exchange",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
-	  DOC("(value)->\n"
-	      "(value,def)->\n"
-	      "Deprecated alias for ?#xch") },
+	TYPE_METHOD(STR_del, &cell_delete,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#delete"),
+	TYPE_METHOD(STR_exchange, &cell_xch,
+	            "(value)->\n"
+	            "(value,def)->\n"
+	            "Deprecated alias for ?#xch"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_gc tpconst cell_gc = {
@@ -545,12 +535,12 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Cell),
 	/* .tp_doc      = */ DOC("A 1-layer indirection allowing for referral to another object\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Create a new, empty Cell\n"
-
 	                         "\n"
+
 	                         "(obj)\n"
 	                         "Create a new Cell containing @obj"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,

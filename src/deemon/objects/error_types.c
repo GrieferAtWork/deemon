@@ -236,7 +236,7 @@ err:
 	return -1;
 }
 
-PRIVATE char const error_init_fmt[]        = "|oo:Error";
+PRIVATE char const error_init_fmt[] = "|oo:Error";
 PRIVATE struct keyword error_init_kwlist[] = { K(message), K(inner), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -345,6 +345,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	/* .tp_name     = */ DeeString_STR(&str_Error),
 	/* .tp_doc      = */ DOC("Base class for all errors thrown by the runtime\n"
 	                         "\n"
+
 	                         "(message?:?Dstring,inner?:?X2?DError?O)\n"
 	                         "Create a new error object with the given @message and @inner error"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
@@ -977,24 +978,21 @@ err:
 }
 
 PRIVATE struct type_getset tpconst systemerror_getsets[] = {
-	{ "strerrorname",
-	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerrorname, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "The name of the associated ?#errno (s.a. ?Eposix:strerrorname)\n"
-	      "Returns ?N if ?#errno doesn't have a known name") },
-	{ "strerror",
-	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerror, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated ?#errno (s.a. ?Eposix:strerror)\n"
-	      "Returns ?N if ?#errno doesn't have a description") },
+	TYPE_GETTER("strerrorname", &systemerror_getstrerrorname,
+	            "->?Dstring\n"
+	            "The name of the associated ?#errno (s.a. ?Eposix:strerrorname)\n"
+	            "Returns ?N if ?#errno doesn't have a known name"),
+	TYPE_GETTER("strerror", &systemerror_getstrerror,
+	            "->?X2?Dstring?N\n"
+	            "A description of the associated ?#errno (s.a. ?Eposix:strerror)\n"
+	            "Returns ?N if ?#errno doesn't have a description"),
 #ifdef CONFIG_HOST_WINDOWS
-	{ "nterrmsg_np",
-	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getnterrmsg_np, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
-	      "Returns ?N if no message description is available") },
+	TYPE_GETTER("nterrmsg_np", &systemerror_getnterrmsg_np,
+	            "->?X2?Dstring?N\n"
+	            "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
+	            "Returns ?N if no message description is available"),
 #endif /* CONFIG_HOST_WINDOWS */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst systemerror_members[] = {
@@ -1263,37 +1261,37 @@ err:
 }
 
 PRIVATE struct type_method tpconst appexit_class_methods[] = {
-	{ "exit", &appexit_class_exit,
-	  DOC("()\n"
-	      "(exitcode:?Dint,invoke_atexit=!t)\n"
-	      "Terminate execution of deemon after invoking ?#atexit callbacks when @invoke_atexit is ?Dtrue\n"
-	      "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
-	      "functions are not provided by the host, an :AppExit error is thrown instead\n"
-	      "When no @exitcode is given, the host's default default value of #CEXIT_FAILURE, or $1 is used\n"
-	      "This function never returns normally") },
-	{ "atexit", &appexit_class_atexit,
-	  DOC("(callback:?DCallable,args=!T0)\n"
-	      "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
-	      "@throw NotImplemented Deemon was built without support for ?#atexit\n"
-	      "Register a given @callback to be executed before deemon terminates") },
-	{ NULL }
+	TYPE_METHOD("exit", &appexit_class_exit,
+	            "()\n"
+	            "(exitcode:?Dint,invoke_atexit=!t)\n"
+	            "Terminate execution of deemon after invoking ?#atexit callbacks when @invoke_atexit is ?Dtrue\n"
+	            "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
+	            /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
+	            "When no @exitcode is given, the host's default default value of #CEXIT_FAILURE, or $1 is used\n"
+	            "This function never returns normally"),
+	TYPE_METHOD("atexit", &appexit_class_atexit,
+	            "(callback:?DCallable,args=!T0)\n"
+	            "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
+	            "@throw NotImplemented Deemon was built without support for ?#atexit\n"
+	            "Register a given @callback to be executed before deemon terminates"),
+	TYPE_METHOD_END
 };
 
 PUBLIC DeeTypeObject DeeError_AppExit = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "AppExit",
 	/* .tp_doc      = */ DOC("An AppExit object is a special kind of interrupt that "
-	                         "is not derived from ?O, and has no base class at "
-	                         "all. It's purpose is to allow user-code to throw an "
-	                         "instance of it and have the stack unwind itself, alongside "
-	                         "all existing objects being destroyed normally before deemon "
-	                         "will be terminated with the given exitcode\n"
-
+	                         /**/ "is not derived from ?O, and has no base class at "
+	                         /**/ "all. It's purpose is to allow user-code to throw an "
+	                         /**/ "instance of it and have the stack unwind itself, alongside "
+	                         /**/ "all existing objects being destroyed normally before deemon "
+	                         /**/ "will be terminated with the given exitcode\n"
 	                         "\n"
+
 	                         "()\n"
 	                         "(exitcode:?Dint)\n"
 	                         "Construct a new AppExit object using the given @exitcode "
-	                         "or the host's default value for #CEXIT_FAILURE, or $1"),
+	                         /**/ "or the host's default value for #CEXIT_FAILURE, or $1"),
 	/* .tp_flags    = */ TP_FFINAL|TP_FINTERRUPT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -1172,21 +1172,21 @@ err:
 }
 
 PRIVATE struct type_getset tpconst user_class_getsets[] = {
-	{ S_User_class_getset_name_name, &default_user_get_name, NULL, NULL, S_User_class_getset_name_doc },
-	{ S_User_class_getset_home_name, &default_user_get_home, NULL, NULL, S_User_class_getset_home_doc },
-	{ "domain_np", &default_user_get_domain, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Alias for :gethostname") },
-	{ "profilesdir_np", &user_get_profiles_dir, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the windows profiles directory containing all user profiles (Usually ${r\"C:\\Users\"})") },
-	{ "defaultuserhome_np", &user_get_defaulthome, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the home folder of the default profile (Usually ${r\"C:\\Users\\Default\"})") },
-	{ "allusershome_np", &user_get_allusershome, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the home folder of all profiles (Usually ${r\"C:\\ProgramData\"})") },
-	{ NULL }
+	TYPE_GETTER(S_User_class_getset_name_name, &default_user_get_name, S_User_class_getset_name_doc),
+	TYPE_GETTER(S_User_class_getset_home_name, &default_user_get_home, S_User_class_getset_home_doc),
+	TYPE_GETTER("domain_np", &default_user_get_domain,
+	            "->?Dstring\n"
+	            "Alias for :gethostname"),
+	TYPE_GETTER("profilesdir_np", &user_get_profiles_dir,
+	            "->?Dstring\n"
+	            "Returns the windows profiles directory containing all user profiles (Usually ${r\"C:\\Users\"})"),
+	TYPE_GETTER("defaultuserhome_np", &user_get_defaulthome,
+	            "->?Dstring\n"
+	            "Returns the home folder of the default profile (Usually ${r\"C:\\Users\\Default\"})"),
+	TYPE_GETTER("allusershome_np", &user_get_allusershome,
+	            "->?Dstring\n"
+	            "Returns the home folder of all profiles (Usually ${r\"C:\\ProgramData\"})"),
+	TYPE_GETSET_END
 };
 
 
@@ -1312,13 +1312,13 @@ err:
 }
 
 PRIVATE struct type_getset tpconst user_getsets[] = {
-	{ S_User_getset_name_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, S_User_getset_name_doc },
-	{ S_User_getset_home_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, S_User_getset_home_doc },
-	{ "domain_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_domain, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "@throw SystemError Failed to retrieve the domain\n"
-	      "Returns the windows-specific name of the domain associated with @this user") },
-	{ NULL }
+	TYPE_GETTER(S_User_getset_name_name, &user_get_name, S_User_getset_name_doc),
+	TYPE_GETTER(S_User_getset_home_name, &user_get_home, S_User_getset_home_doc),
+	TYPE_GETTER("domain_np", &user_get_domain,
+	            "->?Dstring\n"
+	            "@throw SystemError Failed to retrieve the domain\n"
+	            "Returns the windows-specific name of the domain associated with @this user"),
+	TYPE_GETSET_END
 };
 
 INTERN DeeTypeObject DeeUser_Type = {
@@ -1975,36 +1975,36 @@ err:
 }
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	{ S_Stat_getset_st_dev_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, S_Stat_getset_st_dev_doc },
-	{ S_Stat_getset_st_ino_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, S_Stat_getset_st_ino_doc },
-	{ S_Stat_getset_st_mode_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, S_Stat_getset_st_mode_doc },
-	{ S_Stat_getset_st_nlink_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, S_Stat_getset_st_nlink_doc },
-	{ S_Stat_getset_st_uid_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_uid, NULL, NULL, S_Stat_getset_st_uid_doc },
-	{ S_Stat_getset_st_gid_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_gid, NULL, NULL, S_Stat_getset_st_gid_doc },
-	{ S_Stat_getset_st_rdev_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, S_Stat_getset_st_rdev_doc },
-	{ S_Stat_getset_st_size_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
-	{ S_Stat_getset_st_atime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, S_Stat_getset_st_atime_doc },
-	{ S_Stat_getset_st_mtime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, S_Stat_getset_st_mtime_doc },
-	{ S_Stat_getset_st_ctime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, S_Stat_getset_st_ctime_doc },
-	{ S_Stat_getset_isdir_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isdir, NULL, NULL, S_Stat_getset_isdir_doc },
-	{ S_Stat_getset_ischr_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_ischr, NULL, NULL, S_Stat_getset_ischr_doc },
-	{ S_Stat_getset_isblk_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isblk, NULL, NULL, S_Stat_getset_isblk_doc },
-	{ S_Stat_getset_isreg_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isreg, NULL, NULL, S_Stat_getset_isreg_doc },
-	{ S_Stat_getset_isfifo_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isfifo, NULL, NULL, S_Stat_getset_isfifo_doc },
-	{ S_Stat_getset_islnk_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_islnk, NULL, NULL, S_Stat_getset_islnk_doc },
-	{ S_Stat_getset_issock_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_issock, NULL, NULL, S_Stat_getset_issock_doc },
+	TYPE_GETTER(S_Stat_getset_st_dev_name, &stat_get_dev, S_Stat_getset_st_dev_doc),
+	TYPE_GETTER(S_Stat_getset_st_ino_name, &stat_get_ino, S_Stat_getset_st_ino_doc),
+	TYPE_GETTER(S_Stat_getset_st_mode_name, &stat_get_mode, S_Stat_getset_st_mode_doc),
+	TYPE_GETTER(S_Stat_getset_st_nlink_name, &stat_get_nlink, S_Stat_getset_st_nlink_doc),
+	TYPE_GETTER(S_Stat_getset_st_uid_name, &stat_get_uid, S_Stat_getset_st_uid_doc),
+	TYPE_GETTER(S_Stat_getset_st_gid_name, &stat_get_gid, S_Stat_getset_st_gid_doc),
+	TYPE_GETTER(S_Stat_getset_st_rdev_name, &stat_get_rdev, S_Stat_getset_st_rdev_doc),
+	TYPE_GETTER(S_Stat_getset_st_size_name, &stat_get_size, S_Stat_getset_st_size_doc),
+	TYPE_GETTER(S_Stat_getset_st_atime_name, &stat_get_atime, S_Stat_getset_st_atime_doc),
+	TYPE_GETTER(S_Stat_getset_st_mtime_name, &stat_get_mtime, S_Stat_getset_st_mtime_doc),
+	TYPE_GETTER(S_Stat_getset_st_ctime_name, &stat_get_ctime, S_Stat_getset_st_ctime_doc),
+	TYPE_GETTER(S_Stat_getset_isdir_name, &stat_isdir, S_Stat_getset_isdir_doc),
+	TYPE_GETTER(S_Stat_getset_ischr_name, &stat_ischr, S_Stat_getset_ischr_doc),
+	TYPE_GETTER(S_Stat_getset_isblk_name, &stat_isblk, S_Stat_getset_isblk_doc),
+	TYPE_GETTER(S_Stat_getset_isreg_name, &stat_isreg, S_Stat_getset_isreg_doc),
+	TYPE_GETTER(S_Stat_getset_isfifo_name, &stat_isfifo, S_Stat_getset_isfifo_doc),
+	TYPE_GETTER(S_Stat_getset_islnk_name, &stat_islnk, S_Stat_getset_islnk_doc),
+	TYPE_GETTER(S_Stat_getset_issock_name, &stat_issock, S_Stat_getset_issock_doc),
 
 	/* Non-portable NT extensions. */
-	{ "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
-	      "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
-	{ "nttype_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnttype_np, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid NT-type information\n"
-	      "Non-portable windows extension for retrieving the NT type of this stat-file, that "
-	      "type being one of the `FILE_TYPE_*' constants found in windows system headers") },
-	{ NULL }
+	TYPE_GETTER("ntattr_np", &stat_getntattr_np,
+	            "->?Dint\n"
+	            "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
+	            "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
+	TYPE_GETTER("nttype_np", &stat_getnttype_np,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid NT-type information\n"
+	            "Non-portable windows extension for retrieving the NT type of this stat-file, that "
+	            "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2367,17 +2367,17 @@ err:
 }
 
 PRIVATE struct type_method tpconst stat_class_methods[] = {
-	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
-	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
-	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
-	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
-	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
-	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
-	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
-	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
-	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
-	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
-	{ NULL }
+	TYPE_METHOD(S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc),
+	TYPE_METHOD(S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc),
+	TYPE_METHOD(S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc),
+	TYPE_METHOD(S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc),
+	TYPE_METHOD(S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc),
+	TYPE_METHOD(S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc),
+	TYPE_METHOD(S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc),
+	TYPE_METHOD(S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc),
+	TYPE_METHOD(S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc),
+	TYPE_METHOD(S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeStat_Type = {

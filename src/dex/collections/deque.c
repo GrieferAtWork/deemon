@@ -1395,85 +1395,80 @@ deq_sizeof(Deque *self) {
 
 
 PRIVATE struct type_method tpconst deq_methods[] = {
-	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_insert,
-	  DOC("(index:?Dint,ob)\n"
-	      "@throw IntegerOverflow @index is negative or too large\n"
-	      "Insert the given object @ob at @index"),
-	  TYPE_METHOD_FKWDS },
-	{ "erase", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_erase,
-	  DOC("(index:?Dint,num_items=!1)->?Dint\n"
-	      "@throw IntegerOverflow @index is negative or too large\n"
-	      "@return The actual number of erased items\n"
-	      "Erase up to @num_items objects from @this deque, starting at @index"),
-	  TYPE_METHOD_FKWDS },
-	{ "pop", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pop,
-	  DOC("(index=!-1)->\n"
-	      "@throw IntegerOverflow @index is negative or too large\n"
-	      "@return The item that got removed\n"
-	      "Pop (erase) the item located at @index and return it"),
-	  TYPE_METHOD_FKWDS },
-	{ "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pushfront,
-	  DOC("(ob)\n"
-	      "Insert the given object @ob at the front of @this deque") },
-	{ "pushback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pushback,
-	  DOC("(ob)\n"
-	      "Insert the given object @ob at the back of @this deque") },
-	{ "popfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_popfront,
-	  DOC("->\n"
-	      "@throw ValueError @this deque is empty\n"
-	      "Pop and return an item from the front of @this deque") },
-	{ "popback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_popback,
-	  DOC("->\n"
-	      "@throw ValueError @this deque is empty\n"
-	      "Pop and return an item from the back of @this deque") },
-	{ "llrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_llrot,
-	  DOC("(num_items:?Dint)\n"
-	      "@throw IndexError @this deque contain less than @num_items items\n"
-	      "Rotate the first @num_items items left by 1:\n"
-	      "${"
-	      "import deque from collections;\n"
-	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      "x.llrot(3);\n"
-	      "print repr x; /* { 20, 30, 10, 40, 50 } */"
-	      "}") },
-	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_lrrot,
-	  DOC("(num_items:?Dint)\n"
-	      "@throw IndexError @this deque contain less than @num_items items\n"
-	      "Rotate the first @num_items items right by 1:\n"
-	      "${"
-	      "import deque from collections;\n"
-	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      "x.lrrot(3);\n"
-	      "print repr x; /* { 30, 10, 20, 40, 50 } */"
-	      "}") },
-	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rlrot,
-	  DOC("(num_items:?Dint)\n"
-	      "@throw IndexError @this deque contain less than @num_items items\n"
-	      "Rotate the last @num_items items left by 1:\n"
-	      "${"
-	      "import deque from collections;\n"
-	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      "x.rlrot(3);\n"
-	      "print repr x; /* { 10, 20, 40, 50, 30 } */"
-	      "}") },
-	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rrrot,
-	  DOC("(num_items:?Dint)\n"
-	      "@throw IndexError @this deque contain less than @num_items items\n"
-	      "Rotate the last @num_items items right by 1:\n"
-	      "${"
-	      "import deque from collections;\n"
-	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      "x.rrrot(3);\n"
-	      "print repr x; /* { 10, 20, 50, 30, 40 } */"
-	      "}") },
-	{ NULL }
+	TYPE_KWMETHOD("insert", &deq_insert,
+	              "(index:?Dint,ob)\n"
+	              "@throw IntegerOverflow @index is negative or too large\n"
+	              "Insert the given object @ob at @index"),
+	TYPE_KWMETHOD("erase", &deq_erase,
+	              "(index:?Dint,num_items=!1)->?Dint\n"
+	              "@throw IntegerOverflow @index is negative or too large\n"
+	              "@return The actual number of erased items\n"
+	              "Erase up to @num_items objects from @this deque, starting at @index"),
+	TYPE_KWMETHOD("pop", &deq_pop,
+	              "(index=!-1)->\n"
+	              "@throw IntegerOverflow @index is negative or too large\n"
+	              "@return The item that got removed\n"
+	              "Pop (erase) the item located at @index and return it"),
+	TYPE_METHOD("pushfront", &deq_pushfront,
+	            "(ob)\n"
+	            "Insert the given object @ob at the front of @this deque"),
+	TYPE_METHOD("pushback", &deq_pushback,
+	            "(ob)\n"
+	            "Insert the given object @ob at the back of @this deque"),
+	TYPE_METHOD("popfront", &deq_popfront,
+	            "->\n"
+	            "@throw ValueError @this deque is empty\n"
+	            "Pop and return an item from the front of @this deque"),
+	TYPE_METHOD("popback", &deq_popback,
+	            "->\n"
+	            "@throw ValueError @this deque is empty\n"
+	            "Pop and return an item from the back of @this deque"),
+	TYPE_METHOD("llrot", &deq_llrot,
+	            "(num_items:?Dint)\n"
+	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "Rotate the first @num_items items left by 1:\n"
+	            "${"
+	            /**/ "import deque from collections;\n"
+	            /**/ "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	            /**/ "x.llrot(3);\n"
+	            /**/ "print repr x; /* { 20, 30, 10, 40, 50 } */"
+	            "}"),
+	TYPE_METHOD("lrrot", &deq_lrrot,
+	            "(num_items:?Dint)\n"
+	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "Rotate the first @num_items items right by 1:\n"
+	            "${"
+	            /**/ "import deque from collections;\n"
+	            /**/ "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	            /**/ "x.lrrot(3);\n"
+	            /**/ "print repr x; /* { 30, 10, 20, 40, 50 } */"
+	            "}"),
+	TYPE_METHOD("rlrot", &deq_rlrot,
+	            "(num_items:?Dint)\n"
+	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "Rotate the last @num_items items left by 1:\n"
+	            "${"
+	            /**/ "import deque from collections;\n"
+	            /**/ "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	            /**/ "x.rlrot(3);\n"
+	            /**/ "print repr x; /* { 10, 20, 40, 50, 30 } */"
+	            "}"),
+	TYPE_METHOD("rrrot", &deq_rrrot,
+	            "(num_items:?Dint)\n"
+	            "@throw IndexError @this deque contain less than @num_items items\n"
+	            "Rotate the last @num_items items right by 1:\n"
+	            "${"
+	            /**/ "import deque from collections;\n"
+	            /**/ "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	            /**/ "x.rrrot(3);\n"
+	            /**/ "print repr x; /* { 10, 20, 50, 30, 40 } */"
+	            "}"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst deq_getsets[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("__sizeof__", &deq_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst deq_class_members[] = {
@@ -1486,22 +1481,22 @@ INTERN DeeTypeObject Deque_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "Deque",
 	/* .tp_doc      = */ DOC("A double-ended queue that allows for O(1) insertion and removal at the front "
-	                         "and back, while still providing a decently fast index-based item lookup, "
-	                         "as well as fast iteration both in forward, as well as in reverse\n"
+	                         /**/ "and back, while still providing a decently fast index-based item lookup, "
+	                         /**/ "as well as fast iteration both in forward, as well as in reverse\n"
 	                         "A Deque in its purest form (with a ?#bucketsize of $1) is really nothing "
-	                         "but a doubly-linked list. However instead of every node only ever containing "
-	                         "a single item, each is a pre-allocated vector of up to ?#bucketsize objects, "
-	                         "meaning that an index-based lookup takes at most O(floor((n / bucketsize) / 2).\n"
+	                         /**/ "but a doubly-linked list. However instead of every node only ever containing "
+	                         /**/ "a single item, each is a pre-allocated vector of up to ?#bucketsize objects, "
+	                         /**/ "meaning that an index-based lookup takes at most O(floor((n / bucketsize) / 2).\n"
 	                         "The second division by 2 is done because indices closer to the end of the Deque "
-	                         "are searched for from its end, rather than its start\n"
+	                         /**/ "are searched for from its end, rather than its start\n"
 	                         "However, inserting or erasure anywhere else is quite expensive, "
-	                         "as doing so requires items to be moved around a lot\n"
-
+	                         /**/ "as doing so requires items to be moved around a lot\n"
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct an empty Deque\n"
-
 	                         "\n"
+
 	                         "(seq:?S?O)\n"
 	                         "(seq:?S?O,bucketsize:?Dint)\n"
 	                         "Construct a Deque pre-initialized with items from "
@@ -1509,50 +1504,50 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "When @bucketsize is omitted, an implementation-specific "
 	                         "default value is used, which may also depend on other "
 	                         "environmental factors selected to maximize performance\n"
-
 	                         "\n"
+
 	                         "copy->\n"
 	                         "Returns a shallow copy of all elements of @this Deque\n"
-
 	                         "\n"
+
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of all elements of @this Deque\n"
-
 	                         "\n"
+
 	                         ":=(other:?S?O)->\n"
 	                         "Assign all the elements from @other to @this Deque\n"
-
 	                         "\n"
+
 	                         "move:=->\n"
 	                         "Move all the elements from @other into @this Deque, clearing @other in the process\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this Deque is non-empty. ?f otherwise\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the elements of @this Deque in ascending order\n"
-
 	                         "\n"
+
 	                         "[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Returns the @index'th item of @this Deque\n"
-
 	                         "\n"
+
 	                         "[]=->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Set the @index'th item of @this Deque to @item\n"
-
 	                         "\n"
+
 	                         "del[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Same as ${this.pop(index)} for positive values for @index\n"
-
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of this Deque, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
@@ -1630,7 +1625,7 @@ deqiter_getindex(DequeIteratorObject *__restrict self) {
 	size_t result;
 	atomic_rwlock_read(&self->di_lock);
 	Deque_LockRead(self->di_deq);
-	result = (unlikely(self->di_ver != self->di_deq->d_version))
+	result = unlikely(self->di_ver != self->di_deq->d_version)
 	         ? (size_t)-1
 	         : DequeIterator_GetIndex(&self->di_iter, self->di_deq);
 	Deque_LockEndRead(self->di_deq);
@@ -1765,15 +1760,12 @@ err:
 }
 
 PRIVATE struct type_getset tpconst deqiter_getsets[] = {
-	{ "index",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deqiter_getindex_ob,
-	  NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&deqiter_setindex_ob,
-	  DOC("->?X2?Dint?N\n"
-	      "Get/set the index of @this iterator within its associated ?GDeque\n"
-	      "When ?N, the iterator has been invalidated, possibly due to the "
-	      "deque having changed") },
-	{ NULL }
+	TYPE_GETSET("index", &deqiter_getindex_ob, NULL, &deqiter_setindex_ob,
+	            "->?X2?Dint?N\n"
+	            "Get/set the index of @this iterator within its associated ?GDeque\n"
+	            "When ?N, the iterator has been invalidated, possibly due to the "
+	            "deque having changed"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst deqiter_members[] = {

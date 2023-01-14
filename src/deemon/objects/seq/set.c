@@ -369,7 +369,7 @@ suiter_lo(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	rwlock_endread(&other->sui_lock);
 	if (my_2nd != ot_2nd) {
-		result = my_2nd ? Dee_False : Dee_True;
+		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
 	} else {
 		result = DeeObject_CompareLoObject(my_iter, ot_iter);
@@ -397,7 +397,7 @@ suiter_le(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	rwlock_endread(&other->sui_lock);
 	if (my_2nd != ot_2nd) {
-		result = my_2nd ? Dee_False : Dee_True;
+		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
 	} else {
 		result = DeeObject_CompareLeObject(my_iter, ot_iter);
@@ -425,7 +425,7 @@ suiter_gr(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	rwlock_endread(&other->sui_lock);
 	if (my_2nd != ot_2nd) {
-		result = my_2nd ? Dee_True : Dee_False;
+		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
 	} else {
 		result = DeeObject_CompareGrObject(my_iter, ot_iter);
@@ -453,7 +453,7 @@ suiter_ge(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	rwlock_endread(&other->sui_lock);
 	if (my_2nd != ot_2nd) {
-		result = my_2nd ? Dee_True : Dee_False;
+		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
 	} else {
 		result = DeeObject_CompareGeObject(my_iter, ot_iter);
@@ -481,15 +481,9 @@ PRIVATE struct type_member tpconst suiter_members[] = {
 };
 
 PRIVATE struct type_getset tpconst suiter_getsets[] = {
-	{ "__iter__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_iter, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&suiter_set_iter,
-	  DOC("->?DIterator") },
-	{ "__in2nd__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_in2nd, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&suiter_set_in2nd,
-	  DOC("->?Dbool") },
-	{ NULL }
+	TYPE_GETSET("__iter__", &suiter_get_iter, NULL, &suiter_set_iter, "->?DIterator"),
+	TYPE_GETSET("__in2nd__", &suiter_get_in2nd, NULL, &suiter_set_in2nd, "->?Dbool"),
+	TYPE_GETSET_END
 };
 
 INTERN DeeTypeObject SetUnionIterator_Type = {
@@ -1054,14 +1048,14 @@ done:
 	return result;
 }
 
-#define DEFINE_SIITER_COMPARE(name, func)                                  \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(SetIntersectionIterator *self, SetIntersectionIterator *other) {  \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                                      \
-		return func(self->sii_iter, other->sii_iter);                      \
-	err:                                                                   \
-		return NULL;                                                       \
+#define DEFINE_SIITER_COMPARE(name, func)                                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
+	name(SetIntersectionIterator *self, SetIntersectionIterator *other) { \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))             \
+			goto err;                                                     \
+		return func(self->sii_iter, other->sii_iter);                     \
+	err:                                                                  \
+		return NULL;                                                      \
 	}
 DEFINE_SIITER_COMPARE(siiter_eq, DeeObject_CompareEqObject)
 DEFINE_SIITER_COMPARE(siiter_ne, DeeObject_CompareNeObject)

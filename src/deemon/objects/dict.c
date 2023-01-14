@@ -1366,9 +1366,7 @@ dict_delitem(Dict *self, DeeObject *key) {
 	DREF DeeObject *pop_item;
 	pop_item = dict_popitem(self, key, NULL);
 	Dee_XDecref(pop_item);
-	return (likely(pop_item))
-	       ? 0
-	       : -1;
+	return likely(pop_item) ? 0 : -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1992,67 +1990,53 @@ DOC_REF(map_get_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_get,
-	  DOC_GET(map_get_doc) },
-	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_pop,
-	  DOC("(key)->\n"
-	      "(key,def)->\n"
-	      "@throw KeyError No @def was given and @key was not found\n"
-	      "Delete @key from @this and return its previously assigned "
-	      /**/ "value or @def when @key had no item associated") },
-	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_doclear,
-	  DOC("()\n"
-	      "Clear all values from @this ?.") },
-	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_popsomething,
-	  DOC("->?T2?O?O\n"
-	      "@return A random pair key-value pair that has been removed\n"
-	      "@throw ValueError @this ?. was empty") },
-	{ "setdefault",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setdefault,
-	  DOC("(key,def=!N)->\n"
-	      "@return The object currently assigned to @key\n"
-	      "Lookup @key in @this ?. and return its value if found. "
-	      /**/ "Otherwise, assign @def to @key and return it instead") },
-	{ "setold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setold,
-	  DOC("(key,value)->?Dbool\n"
-	      "@return Indicative of @value having been assigned to @key\n"
-	      "Assign @value to @key, only succeeding when @key already existed to begin with") },
-	{ "setnew",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setnew,
-	  DOC("(key,value)->?Dbool\n"
-	      "@return Indicative of @value having been assigned to @key\n"
-	      "Assign @value to @key, only succeeding when @key didn't exist before") },
-	{ "setold_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setold_ex,
-	  DOC("(key,value)->?T2?Dbool?O\n"
-	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
-	      "Same as #setold but also return the previously assigned object") },
-	{ "setnew_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setnew_ex,
-	  DOC("(key,value)->?T2?Dbool?O\n"
-	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
-	      "Same as #setnew but return the previously assigned object on failure") },
-	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
-	  DOC("(items:?S?T2?O?O)\n"
-	      "Iterate @items and unpack each element into 2 others, using them as "
-	      /**/ "key and value to insert into @this ?.") },
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
+	TYPE_METHOD(STR_get, &dict_get, DOC_GET(map_get_doc)),
+	TYPE_METHOD(STR_pop, &dict_pop,
+	            "(key)->\n"
+	            "(key,def)->\n"
+	            "@throw KeyError No @def was given and @key was not found\n"
+	            "Delete @key from @this and return its previously assigned "
+	            /**/ "value or @def when @key had no item associated"),
+	TYPE_METHOD(STR_clear, &dict_doclear,
+	            "()\n"
+	            "Clear all values from @this ?."),
+	TYPE_METHOD("popitem", &dict_popsomething,
+	            "->?T2?O?O\n"
+	            "@return A random pair key-value pair that has been removed\n"
+	            "@throw ValueError @this ?. was empty"),
+	TYPE_METHOD("setdefault", &dict_setdefault,
+	            "(key,def=!N)->\n"
+	            "@return The object currently assigned to @key\n"
+	            "Lookup @key in @this ?. and return its value if found. "
+	            /**/ "Otherwise, assign @def to @key and return it instead"),
+	TYPE_METHOD("setold", &dict_setold,
+	            "(key,value)->?Dbool\n"
+	            "@return Indicative of @value having been assigned to @key\n"
+	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
+	TYPE_METHOD("setnew", &dict_setnew,
+	            "(key,value)->?Dbool\n"
+	            "@return Indicative of @value having been assigned to @key\n"
+	            "Assign @value to @key, only succeeding when @key didn't exist before"),
+	TYPE_METHOD("setold_ex", &dict_setold_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "Same as #setold but also return the previously assigned object"),
+	TYPE_METHOD("setnew_ex", &dict_setnew_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "Same as #setnew but return the previously assigned object on failure"),
+	TYPE_METHOD("update", &dict_update,
+	            "(items:?S?T2?O?O)\n"
+	            "Iterate @items and unpack each element into 2 others, using them as "
+	            /**/ "key and value to insert into @this ?."),
+	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
-	{ "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
-	  DOC("(items:?S?T2?O?O)\n"
-	      "A deprecated alias for ?#update") },
+	TYPE_METHOD("insert_all", &dict_update,
+	            "(items:?S?T2?O?O)\n"
+	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -2062,35 +2046,29 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL set_set_maxloadfactor(DeeObject *__rest
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTDEF struct type_getset tpconst dict_getsets[];
-INTERN struct type_getset tpconst dict_getsets[] = {
-	{ "keys",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys, NULL, NULL,
-	  DOC("->?AKeys?.\n"
-	      "@return A proxy sequence for viewing the keys of @this ?.") },
-	{ "values",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values, NULL, NULL,
-	  DOC("->?AValues?.\n"
-	      "@return A proxy sequence for viewing the values of @this ?.") },
-	{ "items",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items, NULL, NULL,
-	  DOC("->?AItems?.\n"
-	      "@return A proxy sequence for viewing the key-value pairs of @this ?.") },
-	{ "frozen",
-	  &DeeRoDict_FromSequence, NULL, NULL,
-	  DOC("->?Ert:RoDict\n"
-	      "Returns a read-only (frozen) copy of @this ?.") },
+INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
+	TYPE_GETTER("keys", &dict_keys,
+	            "->?AKeys?.\n"
+	            "@return A proxy sequence for viewing the keys of @this ?."),
+	TYPE_GETTER("values", &dict_values,
+	            "->?AValues?.\n"
+	            "@return A proxy sequence for viewing the values of @this ?."),
+	TYPE_GETTER("items", &dict_items,
+	            "->?AItems?.\n"
+	            "@return A proxy sequence for viewing the key-value pairs of @this ?."),
+	TYPE_GETTER("frozen", &DeeRoDict_FromSequence,
+	            "->?Ert:RoDict\n"
+	            "Returns a read-only (frozen) copy of @this ?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "max_load_factor",
-	  &set_get_maxloadfactor,
-	  &set_del_maxloadfactor,
-	  &set_set_maxloadfactor,
-	  DOC("->?Dfloat\n"
-	      "Deprecated. Always returns ${1.0}, with del/set being ignored") },
+	TYPE_GETSET("max_load_factor",
+	            &set_get_maxloadfactor,
+	            &set_del_maxloadfactor,
+	            &set_set_maxloadfactor,
+	            "->?Dfloat\n"
+	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER(STR___sizeof__, &dict_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 
@@ -2114,12 +2092,12 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Dict),
 	/* .tp_doc      = */ DOC("The builtin mapping object for translating keys to items\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Create a new, empty ?.\n"
-
 	                         "\n"
+
 	                         "(items:?S?T2?O?O)\n"
 	                         "Create a new ?., using key-items pairs extracted from @items.\n"
 	                         "Iterate @items and unpack each element into 2 others, using them "

@@ -1173,13 +1173,13 @@ nope:
 
 
 PRIVATE struct type_method tpconst process_methods[] = {
-	{ S_Process_function_start_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_start, S_Process_function_start_doc },
-	{ S_Process_function_join_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_join, S_Process_function_join_doc },
-	{ S_Process_function_tryjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_tryjoin, S_Process_function_tryjoin_doc },
-	{ S_Process_function_timedjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_timedjoin, S_Process_function_timedjoin_doc },
-	{ S_Process_function_detach_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_detach, S_Process_function_detach_doc },
-	{ S_Process_function_terminate_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_terminate, S_Process_function_terminate_doc },
-	{ NULL }
+	TYPE_METHOD(S_Process_function_start_name, &process_start, S_Process_function_start_doc),
+	TYPE_METHOD(S_Process_function_join_name, &process_join, S_Process_function_join_doc),
+	TYPE_METHOD(S_Process_function_tryjoin_name, &process_tryjoin, S_Process_function_tryjoin_doc),
+	TYPE_METHOD(S_Process_function_timedjoin_name, &process_timedjoin, S_Process_function_timedjoin_doc),
+	TYPE_METHOD(S_Process_function_detach_name, &process_detach, S_Process_function_detach_doc),
+	TYPE_METHOD(S_Process_function_terminate_name, &process_terminate, S_Process_function_terminate_doc),
+	TYPE_METHOD_END
 };
 
 
@@ -2100,57 +2100,21 @@ err:
 
 
 PRIVATE struct type_getset tpconst process_getsets[] = {
-	{ S_Process_getset_stdin_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdin,
-	  S_Process_getset_stdin_doc },
-	{ S_Process_getset_stdout_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdout,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdout,
-	  S_Process_getset_stdout_doc },
-	{ S_Process_getset_stderr_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_stderr,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stderr,
-	  S_Process_getset_stderr_doc },
-	{ S_Process_getset_pwd_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_pwd,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_pwd,
-	  S_Process_getset_pwd_doc },
-	{ S_Process_getset_exe_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_exe,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_exe,
-	  S_Process_getset_exe_doc },
-	{ S_Process_getset_cmdline_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  S_Process_getset_cmdline_doc },
-	{ S_Process_getset_argv_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_argv,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_argv,
-	  S_Process_getset_argv_doc },
-	{ S_Process_getset_cmd_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  S_Process_getset_cmd_doc },
-	{ S_Process_getset_environ_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_environ,
-	  (int (DCALL *)(DeeObject *__restrict))&process_del_environ,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_environ,
-	  S_Process_getset_environ_doc },
-	{ S_Process_getset_hasterminated_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasterminated, NULL, NULL, S_Process_getset_hasterminated_doc },
-	{ S_Process_getset_id_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_id, NULL, NULL, S_Process_getset_id_doc },
-	{ S_Process_getset_threads_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL, S_Process_getset_threads_doc },
-	{ S_Process_getset_files_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files, NULL, NULL, S_Process_getset_files_doc },
-	{ S_Process_getset_memory_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_memory, NULL, NULL, S_Process_getset_memory_doc },
-	{ NULL }
+	TYPE_GETSET(S_Process_getset_stdin_name, &process_get_stdin, &process_del_stdin, &process_set_stdin, S_Process_getset_stdin_doc),
+	TYPE_GETSET(S_Process_getset_stdout_name, &process_get_stdout, &process_del_stdout, &process_set_stdout, S_Process_getset_stdout_doc),
+	TYPE_GETSET(S_Process_getset_stderr_name, &process_get_stderr, &process_del_stderr, &process_set_stderr, S_Process_getset_stderr_doc),
+	TYPE_GETSET(S_Process_getset_pwd_name, &process_get_pwd, &process_del_pwd, &process_set_pwd, S_Process_getset_pwd_doc),
+	TYPE_GETSET(S_Process_getset_exe_name, &process_get_exe, &process_del_exe, &process_set_exe, S_Process_getset_exe_doc),
+	TYPE_GETSET(S_Process_getset_cmdline_name, &process_get_cmdline, &process_del_cmdline, &process_set_cmdline, S_Process_getset_cmdline_doc),
+	TYPE_GETSET(S_Process_getset_argv_name, &process_get_argv, &process_del_cmdline, &process_set_argv, S_Process_getset_argv_doc),
+	TYPE_GETSET(S_Process_getset_cmd_name, &process_get_cmdline, &process_del_cmdline, &process_set_cmdline, S_Process_getset_cmd_doc),
+	TYPE_GETSET(S_Process_getset_environ_name, &process_get_environ, &process_del_environ, &process_set_environ, S_Process_getset_environ_doc),
+	TYPE_GETTER(S_Process_getset_hasterminated_name, &process_hasterminated, S_Process_getset_hasterminated_doc),
+	TYPE_GETTER(S_Process_getset_id_name, &process_id, S_Process_getset_id_doc),
+	TYPE_GETTER(S_Process_getset_threads_name, &process_get_threads, S_Process_getset_threads_doc),
+	TYPE_GETTER(S_Process_getset_files_name, &process_get_files, S_Process_getset_files_doc),
+	TYPE_GETTER(S_Process_getset_memory_name, &process_get_memory, S_Process_getset_memory_doc),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst process_members[] = {
@@ -2178,8 +2142,8 @@ err:
 }
 
 PRIVATE struct type_method tpconst process_class_methods[] = {
-	{ S_Process_class_function_self_name, &process_class_self, S_Process_class_function_self_doc },
-	{ NULL }
+	TYPE_METHOD(S_Process_class_function_self_name, &process_class_self, S_Process_class_function_self_doc),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst process_class_members[] = {

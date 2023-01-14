@@ -5196,7 +5196,7 @@ do_pack_dict:
 #endif /* !EXEC_SAFE */
 					imm_val = READ_imm8();
 					ASSERT_USAGE(-0, +imm_val);
-					va_size = (likely(frame->cf_argc > code->co_argc_max))
+					va_size = likely(frame->cf_argc > code->co_argc_max)
 					          ? frame->cf_argc - code->co_argc_max
 					          : 0;
 					if (imm_val != va_size) {

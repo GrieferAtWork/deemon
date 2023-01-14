@@ -52,9 +52,9 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 
-typedef DeeAttributeObject        Attr;
-typedef DeeEnumAttrObject         EnumAttr;
-typedef DeeEnumAttrIteratorObject EnumAttrIter;
+typedef DeeAttributeObject /*       */ Attr;
+typedef DeeEnumAttrObject /*        */ EnumAttr;
+typedef DeeEnumAttrIteratorObject /**/ EnumAttrIter;
 
 
 PRIVATE NONNULL((1)) void DCALL
@@ -313,30 +313,31 @@ attr_repr(Attr *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst attr_getsets[] = {
-	{ "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_name, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "The name of this ?.") },
-	{ "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of this ?., or ?N when no documentation is present") },
-	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_getflags, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Return a set of characters descripting the flags of @this ?.:\n"
-	      "#T{Character|Mnemonic|Field|Flag description~"
-	      "$\"g\"|get|?#canget|The ?. has a way of being read from&"
-	      "$\"d\"|del|?#candel|The ?. has a way of being deleted&"
-	      "$\"s\"|set|?#canset|The ?. has a way of being written to&"
-	      "$\"f\"|function|?#cancall|The ?. is intended to be called as a function&"
-	      "$\"i\"|instance|?#isinstance|The ?. requires an instance of the declaring object&"
-	      "$\"c\"|class|?#isclass|The ?. is accessed though the declaring type ?#decl&"
-	      "$\"h\"|hidden|?#isprivate|The ?. is considered to be private&"
-	      "$\"p\"|property|?#isproperty|The ?. is property-like&"
-	      "$\"w\"|wrapper|?#iswrapper|The ?. is provided by the type as a class member that wraps around an instance member}") },
-	{ NULL }
+	TYPE_GETTER(STR_name, &attr_get_name,
+	            "->?Dstring\n"
+	            "The name of this ?."),
+	TYPE_GETTER(STR_doc, &attr_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "The documentation string of this ?., or ?N when no documentation is present"),
+	TYPE_GETTER(STR_flags, &attr_getflags,
+	            "->?Dstring\n"
+	            "Return a set of characters descripting the flags of @this ?.:\n"
+	            "#T{Character|Mnemonic|Field|Flag description~"
+	            /**/ "$\"g\"|get|?#canget|The ?. has a way of being read from&"
+	            /**/ "$\"d\"|del|?#candel|The ?. has a way of being deleted&"
+	            /**/ "$\"s\"|set|?#canset|The ?. has a way of being written to&"
+	            /**/ "$\"f\"|function|?#cancall|The ?. is intended to be called as a function&"
+	            /**/ "$\"i\"|instance|?#isinstance|The ?. requires an instance of the declaring object&"
+	            /**/ "$\"c\"|class|?#isclass|The ?. is accessed though the declaring type ?#decl&"
+	            /**/ "$\"h\"|hidden|?#isprivate|The ?. is considered to be private&"
+	            /**/ "$\"p\"|property|?#isproperty|The ?. is property-like&"
+	            /**/ "$\"w\"|wrapper|?#iswrapper|The ?. is provided by the type as a class member that wraps around an instance member"
+	            "}"),
+	TYPE_GETSET_END
 };
 
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 string_to_attrflags(char const *__restrict str,
                     uint16_t *__restrict presult) {
 	while (*str) {
@@ -571,39 +572,37 @@ err:
 }
 
 PRIVATE struct type_method tpconst attr_class_methods[] = {
-	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_exists,
-	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?Dbool\n"
-	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-	      "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
-	      /**/ "the given arguments exists, returning ?t/?f indicative of this\n"
-	      "${"
-	      /**/ "static function exists(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
-	      /**/ "	import Error from deemon;\n"
-	      /**/ "	try {\n"
-	      /**/ "		attribute(ob, name, flagmask, flagval, decl);\n"
-	      /**/ "	} catch (Error.AttributeError) {\n"
-	      /**/ "		return false;\n"
-	      /**/ "	}\n"
-	      /**/ "	return true;\n"
-	      /**/ "}"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
-	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?X2?.?N\n"
-	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-	      "Same as ?#{op:constructor}, but return ?N if the attribute doesn't exist\n"
-	      "${"
-	      /**/ "static function lookup(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
-	      /**/ "	import Error from deemon;\n"
-	      /**/ "	try {\n"
-	      /**/ "		return attribute(ob, name, flagmask, flagval, decl);\n"
-	      /**/ "	} catch (Error.AttributeError) {\n"
-	      /**/ "		return none;\n"
-	      /**/ "	}\n"
-	      /**/ "}"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("exists", &attribute_exists,
+	              "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?Dbool\n"
+	              "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+	              "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
+	              /**/ "the given arguments exists, returning ?t/?f indicative of this\n"
+	              "${"
+	              /**/ "static function exists(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
+	              /**/ "	import Error from deemon;\n"
+	              /**/ "	try {\n"
+	              /**/ "		attribute(ob, name, flagmask, flagval, decl);\n"
+	              /**/ "	} catch (Error.AttributeError) {\n"
+	              /**/ "		return false;\n"
+	              /**/ "	}\n"
+	              /**/ "	return true;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("lookup", &attribute_lookup,
+	              "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)->?X2?.?N\n"
+	              "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
+	              "Same as ?#{op:constructor}, but return ?N if the attribute doesn't exist\n"
+	              "${"
+	              /**/ "static function lookup(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
+	              /**/ "	import Error from deemon;\n"
+	              /**/ "	try {\n"
+	              /**/ "		return attribute(ob, name, flagmask, flagval, decl);\n"
+	              /**/ "	} catch (Error.AttributeError) {\n"
+	              /**/ "		return none;\n"
+	              /**/ "	}\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_METHOD_END
 };
 
 
@@ -613,8 +612,8 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Attribute),
 	/* .tp_doc      = */ DOC("The descriptor object for abstract object attributes\n"
-
 	                         "\n"
+
 	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!Aflagmask,decl?)\n"
 	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. ?#flags)\n"
 	                         "@param flagval Set of attribute flags required when searching for matches (s.a. ?#flags) "
@@ -923,12 +922,12 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
 	/* .tp_doc      = */ DOC("(tp:?DType)\n"
 	                         "Enumerate attributes of the ?DType @tp and its bases\n"
-
 	                         "\n"
+
 	                         "(ob)\n"
 	                         "Same as ${enumattr(type(ob), ob)}\n"
-
 	                         "\n"
+
 	                         "(tp:?DType,ob)\n"
 	                         "Create a new sequence for enumerating the ?D{Attribute}s of a given object.\n"
 	                         "When @tp is given, only enumerate objects implemented by @tp or "

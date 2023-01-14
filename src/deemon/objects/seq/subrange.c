@@ -91,12 +91,12 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
 
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 
-#define DEFINE_COMPARE(name, op)                                                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
-	name(SubRangeIterator *self, SubRangeIterator *other) {                           \
+#define DEFINE_COMPARE(name, op)                                         \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
+	name(SubRangeIterator *self, SubRangeIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqSubRangeIterator_Type)) \
-			return NULL;                                                              \
-		return_bool(READ_SIZE(other) op READ_SIZE(self));                             \
+			return NULL;                                                 \
+		return_bool(READ_SIZE(other) op READ_SIZE(self));                \
 	}
 DEFINE_COMPARE(subrangeiterator_eq, ==)
 DEFINE_COMPARE(subrangeiterator_ne, !=)
@@ -136,11 +136,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst subrangeiterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangeiterator_seq_get,
-	  NULL, NULL,
-	  DOC("->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &subrangeiterator_seq_get, "->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst subrangeiterator_members[] = {

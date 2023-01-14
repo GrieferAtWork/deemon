@@ -160,21 +160,21 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 }
 
 
-#define DEFINE_BSI_COMPARE(name, op)                                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(BytesSplitIterator *self, BytesSplitIterator *other) {            \
-		uint8_t *x, *y;                                                    \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                                      \
-		x = READ_BSI_ITER(self);                                           \
-		y = READ_BSI_ITER(other);                                          \
-		if (!x)                                                            \
-			x = (uint8_t *)(uintptr_t)-1;                                  \
-		if (!y)                                                            \
-			y = (uint8_t *)(uintptr_t)-1;                                  \
-		return_bool(x op y);                                               \
-	err:                                                                   \
-		return NULL;                                                       \
+#define DEFINE_BSI_COMPARE(name, op)                            \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
+	name(BytesSplitIterator *self, BytesSplitIterator *other) { \
+		uint8_t *x, *y;                                         \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))   \
+			goto err;                                           \
+		x = READ_BSI_ITER(self);                                \
+		y = READ_BSI_ITER(other);                               \
+		if (!x)                                                 \
+			x = (uint8_t *)(uintptr_t)-1;                       \
+		if (!y)                                                 \
+			y = (uint8_t *)(uintptr_t)-1;                       \
+		return_bool(x op y);                                    \
+	err:                                                        \
+		return NULL;                                            \
 	}
 DEFINE_BSI_COMPARE(bsi_eq, ==)
 DEFINE_BSI_COMPARE(bsi_ne, !=)
@@ -567,9 +567,8 @@ bs_getsep(BytesSplit *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst bs_getsets[] = {
-	{ "__sep__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_getsep, NULL, NULL,
-	  DOC("->?DBytes") },
-	{ NULL }
+	TYPE_GETTER("__sep__", &bs_getsep, "->?DBytes"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst bs_members[] = {
@@ -954,8 +953,8 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst blsi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blsi_getseq },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &blsi_getseq, "->?Ert:BytesLineSplit"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst blsi_members[] = {

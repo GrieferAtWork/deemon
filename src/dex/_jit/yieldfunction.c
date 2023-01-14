@@ -246,28 +246,23 @@ jy_gettext(JITYieldFunction *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst jy_getsets[] = {
-	{ "__name__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getname, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Alias for ?A__name__?GFunction though ?#__func__") },
-	{ "__doc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getdoc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Alias for ?A__doc__?GFunction though ?#__func__") },
-	{ "__kwds__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getkwds, NULL, NULL,
-	  DOC("->?S?Dstring\n"
-	      "Alias for ?A__kwds__?GFunction though ?#__func__") },
-	{ "__text__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_gettext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Alias for ?A__text__?GFunction though ?#__func__") },
-	{ "__args__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getargs, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Returns a sequence representing the positional arguments passed to the function") },
+	TYPE_GETTER("__name__", &jy_getname,
+	            "->?X2?Dstring?N\n"
+	            "Alias for ?A__name__?GFunction though ?#__func__"),
+	TYPE_GETTER("__doc__", &jy_getdoc,
+	            "->?X2?Dstring?N\n"
+	            "Alias for ?A__doc__?GFunction though ?#__func__"),
+	TYPE_GETTER("__kwds__", &jy_getkwds,
+	            "->?S?Dstring\n"
+	            "Alias for ?A__kwds__?GFunction though ?#__func__"),
+	TYPE_GETTER("__text__", &jy_gettext,
+	            "->?Dstring\n"
+	            "Alias for ?A__text__?GFunction though ?#__func__"),
+	TYPE_GETTER("__args__", &jy_getargs,
+	            "->?S?O\n"
+	            "Returns a sequence representing the positional arguments passed to the function"),
 	/* TODO: __refs__ */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst jy_members[] = {
@@ -1892,32 +1887,26 @@ ji_gettext(JITYieldFunctionIterator *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst ji_getsets[] = {
-	{ "__func__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getfunc, NULL, NULL,
-	  DOC("->?GFunction\n"
-	      "The JIT function that is being executed") },
-	{ "__args__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getargs, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Returns a sequence representing the positional arguments passed to the function") },
-	{ "__name__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getname, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Alias for ?A__name__?GFunction though ?#__func__") },
-	{ "__doc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getdoc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Alias for ?A__doc__?GFunction though ?#__func__") },
-	{ "__kwds__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getkwds, NULL, NULL,
-	  DOC("->?S?Dstring\n"
-	      "Alias for ?A__kwds__?GFunction though ?#__func__") },
-	{ "__text__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_gettext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Alias for ?A__text__?GFunction though ?#__func__") },
+	TYPE_GETTER("__func__", &ji_getfunc,
+	            "->?GFunction\n"
+	            "The JIT function that is being executed"),
+	TYPE_GETTER("__args__", &ji_getargs,
+	            "->?S?O\n"
+	            "Returns a sequence representing the positional arguments passed to the function"),
+	TYPE_GETTER("__name__", &ji_getname,
+	            "->?X2?Dstring?N\n"
+	            "Alias for ?A__name__?GFunction though ?#__func__"),
+	TYPE_GETTER("__doc__", &ji_getdoc,
+	            "->?X2?Dstring?N\n"
+	            "Alias for ?A__doc__?GFunction though ?#__func__"),
+	TYPE_GETTER("__kwds__", &ji_getkwds,
+	            "->?S?Dstring\n"
+	            "Alias for ?A__kwds__?GFunction though ?#__func__"),
+	TYPE_GETTER("__text__", &ji_gettext,
+	            "->?Dstring\n"
+	            "Alias for ?A__text__?GFunction though ?#__func__"),
 	/* TODO: __refs__ */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst ji_members[] = {

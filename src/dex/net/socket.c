@@ -2424,243 +2424,226 @@ socket_wasclosed(Socket *__restrict self) {
 
 
 PRIVATE struct type_method tpconst socket_methods[] = {
-	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_close,
-	  DOC("(shutdown_mode:?Dint)\n"
-	      "(shutdown_mode=!Prw)\n"
-	      "@interrupt\n"
-	      "@throw ValueError Invalid shutdown mode\n"
-	      "@throw NetError Failed to shutdown @this socket\n"
-	      "@throw FileClosed @this socket has already been closed\n"
-	      "Closes the socket's file descriptor. When @shutdown_socket is a non-empty :string, "
-	      "?#shutdown will automatically be invoked on @this socket if it hasn't before\n"
-	      "Note that in the event that ?#shutdown has already been called, ") },
-	{ "shutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_shutdown,
-	  DOC("(how:?Dint)\n"
-	      "(how=!Prw)\n"
-	      "@interrupt\n"
-	      "@throw ValueError Invalid shutdown mode\n"
-	      "@throw NetError Failed to shutdown @this socket\n"
-	      "@throw FileClosed @this socket has already been closed\n"
-	      "Shuts down @this socket either for reading, for writing or for both") },
-	{ "bind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_bind,
-	  DOC("(args!)\n"
-	      "@interrupt\n"
-	      "@throw NetError.AddrInUse The address specified for binding is already in use\n"
-	      "@throw NetError.NoSupport The protocol of @this socket does not support binding\n"
-	      "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
-	      "@throw NetError.IsConnected @this socket has already been bound is is already connected\n"
-	      "@throw NetError @this socket has already been bound and its address family does not allow rebinding\n"
-	      "@throw NetError Failed to bind @this socket for some unknown reason\n"
-	      "@throw FileClosed @this socket has already been closed\n"
-	      "Binds @this socket to a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr") },
-	{ "connect",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_connect,
-	  DOC("(args!)\n"
-	      "@interrupt\n"
-	      "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
-	      "@throw NetError.NoSupport @this socket is currently listening and cannot be connected\n"
-	      "@throw NetError.NoSupport The specified address family is not supported\n"
-	      "@throw NetError.NoSupport @this socket uses an incompatible prototype to the specified address\n"
-	      "@throw NetError.IsConnected @this socket is already connected or has been bound\n"
-	      "@throw NetError.ConnectReset The target reset the connection before it could be completed\n"
-	      "@throw NetError.ConnectReset.TimedOut Timed out while attempting to establish a connection\n"
-	      "@throw NetError.ConnectRefused The target isn't listening to connections or refused to connect\n"
-	      "@throw NetError.NetUnreachable No route to the network of the given address can be established\n"
-	      "@throw NetError.NetUnreachable.HostUnreachable The host of the target address cannot be reached\n"
-	      "@throw NetError Failed to connect @this socket for some unknown reason\n"
-	      "@throw FileClosed @this socket has already been closed\n"
-	      "Connect @this socket with a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr") },
-	{ "listen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_listen,
-	  DOC("(max_backlog=!-1)\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
-	      "@throw NetError.NoSupport The protocol of @this socket does not allow listening\n"
-	      "@throw NetError.IsConnected The socket is already connected\n"
-	      "@throw NetError Failed to start listening for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param max_backlog The max number of connections to queue before ?#accept must be called to acknowledge them. "
-	      "When negative, use a default backlog that can be configured with the environment variable "
-	      "${(int from deemon)((environ from fs)[\"DEEMON_MAXBACKLOG\"])}\n"
-	      "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
-	      "Note that calling this function may require the user to whitelist deemon in their firewall") },
-	{ "accept",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_accept,
-	  DOC("(timeout_microseconds=!-1)->?Gsocket\n"
-	      "(timeout_microseconds=!-1)->?N\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
-	      "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
-	      "@throw NetError Failed to start accept a connection for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning ?N. "
-	      "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
-	      "@return A new socket object describing the connection to the new client, or ?N when @timeout_microseconds has passed\n"
-	      "Accept new incoming connections on a listening socket") },
-	{ "tryaccept",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_tryaccept,
-	  DOC("->?Gsocket\n"
-	      "->?N\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
-	      "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
-	      "@throw NetError Failed to start accept a connection for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "Same as calling ?#accept with a timeout_microseconds argument of ${0}") },
-	{ "recv",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recv,
-	  DOC("(flags:?Dstring)->?DBytes\n"
-	      "(max_size=!-1,flags=!P{})->?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?DBytes\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotConnected @this socket is not connected\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
-	      "@throw NetError Failed to receive data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. The integer value expects the same "
-	      "values as the host system library whereas the string version can be used "
-	      "to independently encode flags as $\",\" or $\"|\" separated case-insensitive "
-	      "names with an optional $\"MSG\" and/or $\"_\" prefix. (e.g. $\"OOB|PEEK\")\n"
-	      "Receive data from a connection-oriented socket that has been connected\n"
-	      "Note that passing ${-1} for @max_size, will cause the function to try and receive "
-	      "all incoming data, potentially invoking the recv system call multiple times. "
-	      "In this situation, @timeout_microseconds is used as the initial timeout for the first "
-	      "chunk, with all following then read with a timeout of $0 (aka. try-read)\n"
-	      "When @timeout_microseconds expires before any data is received, an empty string is returned\n"
-	      "Some protocols may also cause this function to return an empty string to indicate a graceful "
-	      "termination of the connection") },
-	{ "recvinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvinto,
-	  DOC("(dst:?DBytes,flags=!P{})->?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotConnected @this socket is not connected\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
-	      "@throw NetError Failed to receive data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "Same as #recv, but received data is written into the given buffer @dst") },
-	{ "recvfrom",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrom,
-	  DOC("(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
-	      "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
-	      "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?DBytes\n"
-	      "@interrupt\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
-	      "@throw NetError Failed to receive data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "Same as ?#recv, but uses the recvfrom system call to read data, also returning "
-	      "the socket address from which the data originates as the first of 2 :Tuple "
-	      "arguments, the second being the text regularly returned ?#recv\n"
-	      "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
-	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
-	      "as any other integer value to specify how long to wait before returning ${(none, \"\")}") },
-	{ "recvfrominto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrominto,
-	  DOC("(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
-	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
-	      "@interrupt\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
-	      "@throw NetError Failed to receive data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "Same as ?#recvfrom, buf read received data into the given buffer @dst") },
-	{ "send",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_send,
-	  DOC("(data:?DBytes,flags=!P{})->?Dint\n"
-	      "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	      "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotConnected @this socket is not connected\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
-	      "@throw NetError.MessageSize The socket is not connection-mode and no peer address is set\n"
-	      "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
-	      "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
-	      "@throw NetError Failed to send data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "@return The total number of bytes that was sent\n"
-	      "Send @data over the network to the peer of a connected socket") },
-	{ "sendto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_sendto,
-	  DOC("(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
-	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-	      "(target:?O,data:?DBytes,flags=!P{})->?Dint\n"
-	      "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
-	      "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
-	      "@interrupt\n"
-	      "@throw NetError.NotConnected @this socket is not connected\n"
-	      "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
-	      "@throw NetError.ConnectReset The peer has reset the connection\n"
-	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
-	      "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
-	      "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
-	      "@throw NetError Failed to send data for some reason\n"
-	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "@param target A tuple consisting of arguments which can be used to construct a ?Gsockaddr object, or a single argument used for "
-	      "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af, target...) : sockaddr(this.sock_af, target)}.\n"
-	      "@return The total number of bytes that was sent\n"
-	      "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected.") },
-	{ "wasshutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasshutdown,
-	  DOC("(how:?Dint)->?Dbool\n"
-	      "(how=!?rw)->?Dbool\n"
-	      "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
-	      "See ?#shutdown for possible values that may be passed to @how") },
-	{ "fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_fileno,
-	  DOC("->?Dint\n"
-	      "Returns the underlying file descriptor/handle associated @this socket") },
-	{ NULL }
+	TYPE_METHOD("close", &socket_close,
+	            "(shutdown_mode:?Dint)\n"
+	            "(shutdown_mode=!Prw)\n"
+	            "@interrupt\n"
+	            "@throw ValueError Invalid shutdown mode\n"
+	            "@throw NetError Failed to shutdown @this socket\n"
+	            "@throw FileClosed @this socket has already been closed\n"
+	            "Closes the socket's file descriptor. When @shutdown_socket is a non-empty :string, "
+	            "?#shutdown will automatically be invoked on @this socket if it hasn't before\n"
+	            "Note that in the event that ?#shutdown has already been called, "),
+	TYPE_METHOD("shutdown", &socket_shutdown,
+	            "(how:?Dint)\n"
+	            "(how=!Prw)\n"
+	            "@interrupt\n"
+	            "@throw ValueError Invalid shutdown mode\n"
+	            "@throw NetError Failed to shutdown @this socket\n"
+	            "@throw FileClosed @this socket has already been closed\n"
+	            "Shuts down @this socket either for reading, for writing or for both"),
+	TYPE_METHOD("bind", &socket_bind,
+	            "(args!)\n"
+	            "@interrupt\n"
+	            "@throw NetError.AddrInUse The address specified for binding is already in use\n"
+	            "@throw NetError.NoSupport The protocol of @this socket does not support binding\n"
+	            "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
+	            "@throw NetError.IsConnected @this socket has already been bound is is already connected\n"
+	            "@throw NetError @this socket has already been bound and its address family does not allow rebinding\n"
+	            "@throw NetError Failed to bind @this socket for some unknown reason\n"
+	            "@throw FileClosed @this socket has already been closed\n"
+	            "Binds @this socket to a given address.\n"
+	            "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr"),
+	TYPE_METHOD("connect", &socket_connect,
+	            "(args!)\n"
+	            "@interrupt\n"
+	            "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
+	            "@throw NetError.NoSupport @this socket is currently listening and cannot be connected\n"
+	            "@throw NetError.NoSupport The specified address family is not supported\n"
+	            "@throw NetError.NoSupport @this socket uses an incompatible prototype to the specified address\n"
+	            "@throw NetError.IsConnected @this socket is already connected or has been bound\n"
+	            "@throw NetError.ConnectReset The target reset the connection before it could be completed\n"
+	            "@throw NetError.ConnectReset.TimedOut Timed out while attempting to establish a connection\n"
+	            "@throw NetError.ConnectRefused The target isn't listening to connections or refused to connect\n"
+	            "@throw NetError.NetUnreachable No route to the network of the given address can be established\n"
+	            "@throw NetError.NetUnreachable.HostUnreachable The host of the target address cannot be reached\n"
+	            "@throw NetError Failed to connect @this socket for some unknown reason\n"
+	            "@throw FileClosed @this socket has already been closed\n"
+	            "Connect @this socket with a given address.\n"
+	            "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr"),
+	TYPE_METHOD("listen", &socket_listen,
+	            "(max_backlog=!-1)\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
+	            "@throw NetError.NoSupport The protocol of @this socket does not allow listening\n"
+	            "@throw NetError.IsConnected The socket is already connected\n"
+	            "@throw NetError Failed to start listening for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param max_backlog The max number of connections to queue before ?#accept must be called to acknowledge them. "
+	            "When negative, use a default backlog that can be configured with the environment variable "
+	            "${(int from deemon)((environ from fs)[\"DEEMON_MAXBACKLOG\"])}\n"
+	            "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
+	            "Note that calling this function may require the user to whitelist deemon in their firewall"),
+	TYPE_METHOD("accept", &socket_accept,
+	            "(timeout_microseconds=!-1)->?Gsocket\n"
+	            "(timeout_microseconds=!-1)->?N\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
+	            "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
+	            "@throw NetError Failed to start accept a connection for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning ?N. "
+	            "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
+	            "@return A new socket object describing the connection to the new client, or ?N when @timeout_microseconds has passed\n"
+	            "Accept new incoming connections on a listening socket"),
+	TYPE_METHOD("tryaccept", &socket_tryaccept,
+	            "->?Gsocket\n"
+	            "->?N\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotBound.NotListening @this socket is not listening for incoming connections\n"
+	            "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
+	            "@throw NetError Failed to start accept a connection for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "Same as calling ?#accept with a timeout_microseconds argument of ${0}"),
+	TYPE_METHOD("recv", &socket_recv,
+	            "(flags:?Dstring)->?DBytes\n"
+	            "(max_size=!-1,flags=!P{})->?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?DBytes\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotConnected @this socket is not connected\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
+	            "@throw NetError Failed to receive data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. The integer value expects the same "
+	            "values as the host system library whereas the string version can be used "
+	            "to independently encode flags as $\",\" or $\"|\" separated case-insensitive "
+	            "names with an optional $\"MSG\" and/or $\"_\" prefix. (e.g. $\"OOB|PEEK\")\n"
+	            "Receive data from a connection-oriented socket that has been connected\n"
+	            "Note that passing ${-1} for @max_size, will cause the function to try and receive "
+	            "all incoming data, potentially invoking the recv system call multiple times. "
+	            "In this situation, @timeout_microseconds is used as the initial timeout for the first "
+	            "chunk, with all following then read with a timeout of $0 (aka. try-read)\n"
+	            "When @timeout_microseconds expires before any data is received, an empty string is returned\n"
+	            "Some protocols may also cause this function to return an empty string to indicate a graceful "
+	            "termination of the connection"),
+	TYPE_METHOD("recvinto", &socket_recvinto,
+	            "(dst:?DBytes,flags=!P{})->?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotConnected @this socket is not connected\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
+	            "@throw NetError Failed to receive data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	            "Same as #recv, but received data is written into the given buffer @dst"),
+	TYPE_METHOD("recvfrom", &socket_recvfrom,
+	            "(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
+	            "(max_size=!-1,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?DBytes\n"
+	            "@interrupt\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError Failed to receive data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	            "Same as ?#recv, but uses the recvfrom system call to read data, also returning "
+	            "the socket address from which the data originates as the first of 2 :Tuple "
+	            "arguments, the second being the text regularly returned ?#recv\n"
+	            "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
+	            "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
+	            "as any other integer value to specify how long to wait before returning ${(none, \"\")}"),
+	TYPE_METHOD("recvfrominto", &socket_recvfrominto,
+	            "(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
+	            "(dst:?DBytes,timeout_microseconds=!-1,flags=!0)->?T2?Gsockaddr?Dint\n"
+	            "@interrupt\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError Failed to receive data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	            "Same as ?#recvfrom, buf read received data into the given buffer @dst"),
+	TYPE_METHOD("send", &socket_send,
+	            "(data:?DBytes,flags=!P{})->?Dint\n"
+	            "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+	            "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotConnected @this socket is not connected\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.MessageSize The socket is not connection-mode and no peer address is set\n"
+	            "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
+	            "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
+	            "@throw NetError Failed to send data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	            "@return The total number of bytes that was sent\n"
+	            "Send @data over the network to the peer of a connected socket"),
+	TYPE_METHOD("sendto", &socket_sendto,
+	            "(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
+	            "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+	            "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "(target:?O,data:?DBytes,flags=!P{})->?Dint\n"
+	            "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
+	            "(target:?O,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
+	            "@interrupt\n"
+	            "@throw NetError.NotConnected @this socket is not connected\n"
+	            "@throw NetError.NoSupport The specified @flags are not supported by @this socket\n"
+	            "@throw NetError.ConnectReset The peer has reset the connection\n"
+	            "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
+	            "@throw NetError.NotBound The socket is not connection-mode and no peer address is set\n"
+	            "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
+	            "@throw NetError Failed to send data for some reason\n"
+	            "@throw FileClosed @this socket has already been closed or was shut down\n"
+	            "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	            "@param target A tuple consisting of arguments which can be used to construct a ?Gsockaddr object, or a single argument used for "
+	            "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af, target...) : sockaddr(this.sock_af, target)}.\n"
+	            "@return The total number of bytes that was sent\n"
+	            "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected."),
+	TYPE_METHOD("wasshutdown", &socket_wasshutdown,
+	            "(how:?Dint)->?Dbool\n"
+	            "(how=!?rw)->?Dbool\n"
+	            "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
+	            "See ?#shutdown for possible values that may be passed to @how"),
+	TYPE_METHOD("fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
+	            &socket_fileno,
+	            "->?Dint\n"
+	            "Returns the underlying file descriptor/handle associated @this socket"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst socket_getsets[] = {
-	{ "sockname",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_sockname_get, NULL, NULL,
-	  DOC("->?Gsockaddr\n"
-	      "@throw FileClosed @this socket has been closed\n"
-	      "@throw NetError.NotConnected @this socket is neither connected, nor bound\n"
-	      "Returns the socket name (local address) of @this socket") },
-	{ "peeraddr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_peeraddr_get, NULL, NULL,
-	  DOC("->?Gsockaddr\n"
-	      "@interrupt\n"
-	      "@throw FileClosed @this socket has been closed\n"
-	      "@throw NetError.NotConnected @this socket is not connected\n"
-	      "@throw NetError.NoSupport @this socket's protocol does not allow for peer addresses\n"
-	      "@throw NetError Failed to query the peer address for some unknown reason\n"
-	      "Returns the peer (remote) address of @this socket") },
-	{ "wasclosed",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_wasclosed, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this socket has been ?#{close}ed") },
-	{ NULL }
+	TYPE_GETTER("sockname", &socket_sockname_get,
+	            "->?Gsockaddr\n"
+	            "@throw FileClosed @this socket has been closed\n"
+	            "@throw NetError.NotConnected @this socket is neither connected, nor bound\n"
+	            "Returns the socket name (local address) of @this socket"),
+	TYPE_GETTER("peeraddr", &socket_peeraddr_get,
+	            "->?Gsockaddr\n"
+	            "@interrupt\n"
+	            "@throw FileClosed @this socket has been closed\n"
+	            "@throw NetError.NotConnected @this socket is not connected\n"
+	            "@throw NetError.NoSupport @this socket's protocol does not allow for peer addresses\n"
+	            "@throw NetError Failed to query the peer address for some unknown reason\n"
+	            "Returns the peer (remote) address of @this socket"),
+	TYPE_GETTER("wasclosed", &socket_wasclosed,
+	            "->?Dbool\n"
+	            "Returns ?t if @this socket has been ?#{close}ed"),
+	TYPE_GETSET_END
 };
 
 
@@ -2797,16 +2780,16 @@ INTERN DeeTypeObject DeeSocket_Type = {
 	                         "@param proto The protocol to use for the socket, or ?N or $0 to use the default\n"
 	                         "@param type The socket type, or none to use $\"SOCK_STREAM\"\n"
 	                         "@param af The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").\n"
-	                         "          NOTE: When possible, deemon will automatically configure $\"AF_INET6\" sockets to be "
-	                                         "able to accept clients in dualstack mode (that is: allowing connections made using both IPv4 and IPv6)\n"
-	                         "                To simplify this further, you may use ?#tcp to easily create an IPv6-ready server or client\n"
+	                         /*     */ "NOTE: When possible, deemon will automatically configure $\"AF_INET6\" sockets to be "
+	                         /*           */ "able to accept clients in dualstack mode (that is: allowing connections made using both IPv4 and IPv6)."
+	                         /*           */ "To simplify this further, you may use ?#tcp to easily create an IPv6-ready server or client\n"
 	                         "@throw NetError.NoSupport The given protocol @proto cannot be used with the given address family @af\n"
 	                         "@throw NetError.NoSupport The given socket type @type cannot be used with protocol @proto\n"
 	                         "@throw NetError Failed to create a new socket descriptor\n"
 	                         "@throw ValueError $\"AF_AUTO\" cannot be used as address family in the socket constructor\n"
 	                         "Constructs and allocates a new socket descriptor that has yet to be ?#bound or be ?#{connect}ed\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t indicative of the socket not having been closed (s.a. ?#wasclosed)"),
 	/* .tp_flags    = */ TP_FNORMAL,

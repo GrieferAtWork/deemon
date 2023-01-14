@@ -592,8 +592,8 @@ INTERN DeeTypeObject DictItemsIterator_Type =
 INIT_PROXY_ITERATOR_TYPE("_DictItemsIterator",
                          DOC("()\n"
                              "(dictitems:?Ert:DictItems)\n"
-
                              "\n"
+
                              "next->?T2?O?O"),
                          &dictiterator_next_item);
 #undef INIT_PROXY_ITERATOR_TYPE
@@ -833,19 +833,13 @@ err:
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_keys_methods[] = {
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_keys_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("byhash", &dict_keys_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method tpconst dict_items_methods[] = {
-	{ "byhash",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_items_byhash,
-	  DOC_GET(map_byhash_doc),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_KWMETHOD("byhash", &dict_items_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_END
 };
 
 

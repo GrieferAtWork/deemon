@@ -197,12 +197,8 @@ err:
 
 
 PRIVATE struct type_getset tpconst filteriterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:SeqFilter") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &filteriterator_seq_get, "->?Ert:SeqFilter"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst filteriterator_members[] = {

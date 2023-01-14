@@ -732,25 +732,25 @@ stat_issock(DeeStatObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	{ "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, S_Stat_getset_st_dev_doc },
-	{ "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, S_Stat_getset_st_ino_doc },
-	{ "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, S_Stat_getset_st_mode_doc },
-	{ "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, S_Stat_getset_st_nlink_doc },
+	TYPE_GETTER(S_Stat_getset_st_dev_name, &stat_get_dev, S_Stat_getset_st_dev_doc),
+	TYPE_GETTER(S_Stat_getset_st_ino_name, &stat_get_ino, S_Stat_getset_st_ino_doc),
+	TYPE_GETTER(S_Stat_getset_st_mode_name, &stat_get_mode, S_Stat_getset_st_mode_doc),
+	TYPE_GETTER(S_Stat_getset_st_nlink_name, &stat_get_nlink, S_Stat_getset_st_nlink_doc),
 	/* >> property st_uid -> user;
 	 * >> property st_gid -> group; */
-	{ "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, S_Stat_getset_st_rdev_doc },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
-	{ "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, S_Stat_getset_st_atime_doc },
-	{ "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, S_Stat_getset_st_mtime_doc },
-	{ "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, S_Stat_getset_st_ctime_doc },
-	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isdir, NULL, NULL, S_Stat_getset_isdir_doc },
-	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_ischr, NULL, NULL, S_Stat_getset_ischr_doc },
-	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isblk, NULL, NULL, S_Stat_getset_isblk_doc },
-	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isreg, NULL, NULL, S_Stat_getset_isreg_doc },
-	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isfifo, NULL, NULL, S_Stat_getset_isfifo_doc },
-	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_islnk, NULL, NULL, S_Stat_getset_islnk_doc },
-	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_issock, NULL, NULL, S_Stat_getset_issock_doc },
-	{ NULL }
+	TYPE_GETTER(S_Stat_getset_st_rdev_name, &stat_get_rdev, S_Stat_getset_st_rdev_doc),
+	TYPE_GETTER(S_Stat_getset_st_size_name, &stat_get_size, S_Stat_getset_st_size_doc),
+	TYPE_GETTER(S_Stat_getset_st_atime_name, &stat_get_atime, S_Stat_getset_st_atime_doc),
+	TYPE_GETTER(S_Stat_getset_st_mtime_name, &stat_get_mtime, S_Stat_getset_st_mtime_doc),
+	TYPE_GETTER(S_Stat_getset_st_ctime_name, &stat_get_ctime, S_Stat_getset_st_ctime_doc),
+	TYPE_GETTER(S_Stat_getset_isdir_name, &stat_isdir, S_Stat_getset_isdir_doc),
+	TYPE_GETTER(S_Stat_getset_ischr_name, &stat_ischr, S_Stat_getset_ischr_doc),
+	TYPE_GETTER(S_Stat_getset_isblk_name, &stat_isblk, S_Stat_getset_isblk_doc),
+	TYPE_GETTER(S_Stat_getset_isreg_name, &stat_isreg, S_Stat_getset_isreg_doc),
+	TYPE_GETTER(S_Stat_getset_isfifo_name, &stat_isfifo, S_Stat_getset_isfifo_doc),
+	TYPE_GETTER(S_Stat_getset_islnk_name, &stat_islnk, S_Stat_getset_islnk_doc),
+	TYPE_GETTER(S_Stat_getset_issock_name, &stat_issock, S_Stat_getset_issock_doc),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -930,17 +930,17 @@ err:
 }
 
 PRIVATE struct type_method tpconst stat_class_methods[] = {
-	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
-	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
-	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
-	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
-	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
-	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
-	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
-	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
-	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
-	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
-	{ NULL }
+	TYPE_METHOD(S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc),
+	TYPE_METHOD(S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc),
+	TYPE_METHOD(S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc),
+	TYPE_METHOD(S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc),
+	TYPE_METHOD(S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc),
+	TYPE_METHOD(S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc),
+	TYPE_METHOD(S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc),
+	TYPE_METHOD(S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc),
+	TYPE_METHOD(S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc),
+	TYPE_METHOD(S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeStat_Type = {

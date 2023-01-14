@@ -951,8 +951,8 @@ PRIVATE struct type_seq pst_seq = {
 };
 
 PRIVATE struct type_getset tpconst pst_class_getsets[] = {
-	{ "Iterator", &pst_Iterator_get, NULL, NULL },
-	{ NULL }
+	TYPE_GETTER_NODOC("Iterator", &pst_Iterator_get),
+	TYPE_GETSET_END
 };
 
 

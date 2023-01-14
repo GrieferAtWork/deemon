@@ -165,25 +165,24 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst scope_getsets[] = {
-	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getbase, NULL, NULL,
-	  DOC("->?ABaseScope?Ert:Compiler\n"
-	      "Returns the nearest base-scope that @this scope is apart of") },
-	{ "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
-	  DOC("->?X2?AScope?Ert:Compiler?N\n"
-	      "Returns a the parent of @this scope, or ?N if @this scope is the root-scope") },
-	{ "isclassscope",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this scope is a class-scope\n"
-	      "Class scopes are somewhat special, in that they prolong the full linkage of "
-	      "symbol lookup going beyond their range, up to the point where the scope is "
-	      "removed from the scope-stack\n"
-	      "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
-	      "to be used like any other general-purpose symbol, but only be fully linked once "
-	      "it is known if the surrounding class defines a symbol of the same name, thus "
-	      "allowing member functions that havn't actually been declared, to already be used "
-	      "ahead of time") },
-	{ NULL }
+	TYPE_GETTER("base", &scope_getbase,
+	            "->?ABaseScope?Ert:Compiler\n"
+	            "Returns the nearest base-scope that @this scope is apart of"),
+	TYPE_GETTER("prev", &scope_getprev,
+	            "->?X2?AScope?Ert:Compiler?N\n"
+	            "Returns a the parent of @this scope, or ?N if @this scope is the root-scope"),
+	TYPE_GETTER("isclassscope", &scope_get_isclassscope,
+	            "->?Dbool\n"
+	            "Check if @this scope is a class-scope\n"
+	            "Class scopes are somewhat special, in that they prolong the full linkage of "
+	            /**/ "symbol lookup going beyond their range, up to the point where the scope is "
+	            /**/ "removed from the scope-stack\n"
+	            "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
+	            /**/ "to be used like any other general-purpose symbol, but only be fully linked once "
+	            /**/ "it is known if the surrounding class defines a symbol of the same name, thus "
+	            /**/ "allowing member functions that havn't actually been declared, to already be used "
+	            /**/ "ahead of time"),
+	TYPE_GETSET_END
 };
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -191,9 +190,7 @@ print_scope_repr(DeeScopeObject *__restrict self,
                  struct unicode_printer *__restrict printer) {
 	dssize_t error;
 	error = unicode_printer_printf(printer, "<scope at %p>", self);
-	return (unlikely(error < 0))
-	       ? -1
-	       : 0;
+	return unlikely(error < 0) ? -1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -382,26 +379,25 @@ done:
 }
 
 PRIVATE struct type_method tpconst scope_methods[] = {
-	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newanon,
-	  DOC("->?ASymbol?Ert:Compiler\n"
-	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
-	      "The symbol isn't given a name (when queried it will have an empty name), and "
-	      /**/ "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
-	      "The symbol can however be used to hold values just like any other symbol, "
-	      /**/ "meaning that this is the type of symbol that should be used to hold hidden "
-	      /**/ "values, as used by $with-statements\n"
-	      "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)") },
-	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newlocal,
-	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
-	      "@param loc The declaration position of the symbol, omitted to use the current "
-	      /*      */ "token position, or ?N when not available\n"
-	      "@throw ValueError @requirenew is ?t, and another symbol @name already exists\n"
-	      "Lookup, or create a new local symbol named @name\n"
-	      "If another symbol with that same name already exists, either return that "
-	      /**/ "symbol when @requirenew is ?f, or throw a :ValueError otherwise\n"
-	      "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_METHOD("newanon", &scope_newanon,
+	            "->?ASymbol?Ert:Compiler\n"
+	            "Construct a new anonymous symbol, and add it as part of @this scope\n"
+	            "The symbol isn't given a name (when queried it will have an empty name), and "
+	            /**/ "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
+	            "The symbol can however be used to hold values just like any other symbol, "
+	            /**/ "meaning that this is the type of symbol that should be used to hold hidden "
+	            /**/ "values, as used by $with-statements\n"
+	            "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
+	TYPE_KWMETHOD("newlocal", &scope_newlocal,
+	              "(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
+	              "@param loc The declaration position of the symbol, omitted to use the current "
+	              /*      */ "token position, or ?N when not available\n"
+	              "@throw ValueError @requirenew is ?t, and another symbol @name already exists\n"
+	              "Lookup, or create a new local symbol named @name\n"
+	              "If another symbol with that same name already exists, either return that "
+	              /**/ "symbol when @requirenew is ?f, or throw a :ValueError otherwise\n"
+	              "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
+	TYPE_METHOD_END
 };
 
 
@@ -410,27 +406,34 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	/* .tp_name     = */ "_Scope",
 	/* .tp_doc      = */ DOC("Access the symbols declared within a scope during ast parsing\n"
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all symbols within @this scope\n"
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the number of symbols found within @this scope\n"
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this scope is non-empty\n"
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns a unique, human-readable representation of @this scope\n"
 	                         "\n"
+
 	                         "contains(name:?Dstring)->?Dbool\n"
 	                         "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
 	                         "Returns ?t if @this scope contains a given symbol @sym, "
 	                         /**/ "or some symbol with a name matching the given @name\n"
 	                         "\n"
+
 	                         "[](string name)->symbol\n"
 	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
 	                         "Returns the symbol associated with @name\n"
 	                         "\n"
+
 	                         "del[](string name)->\n"
 	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"
 	                         "Delete the symbol associated with @name, adding it to the set of deleted symbols"),

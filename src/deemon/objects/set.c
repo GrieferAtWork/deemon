@@ -125,15 +125,13 @@ PRIVATE struct type_seq invset_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 invset_iterator_get(DeeTypeObject *__restrict self) {
-	err_unknown_attribute(self,
-	                      DeeString_STR(&str_Iterator),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 
 PRIVATE struct type_getset tpconst invset_class_getsets[] = {
-	{ DeeString_STR(&str_Iterator), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterator_get, NULL, NULL },
-	{ NULL }
+	TYPE_GETTER_NODOC(STR_Iterator, &invset_iterator_get),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst invset_members[] = {
@@ -236,7 +234,7 @@ DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
 		                       DeeInverseSet_SET(lhs));
 	} else {
 		dssize_t result = set_issubset_impl(lhs, rhs);
-		return (unlikely(result == -2))
+		return unlikely(result == -2)
 		       ? -1
 		       : result < 0
 		         ? 0
@@ -570,41 +568,41 @@ PRIVATE struct type_math set_math = {
 };
 
 INTDEF struct type_method tpconst set_methods[];
-INTERN struct type_method tpconst set_methods[] = {
-	{ "difference", &set_difference,
-	  DOC("(to:?.)->?.\n"
-	      "Same as ${this.operator - (to)}") },
-	{ "intersection", &set_intersection,
-	  DOC("(with_:?.)->?.\n"
-	      "Same as ${this.operator & (with_)}") },
-	{ "isdisjoint", &set_isdisjoint,
-	  DOC("(with_:?.)->?Dbool\n"
-	      "Returns ?t if ${##(this & with_) == 0}\n"
-	      "In other words: If @this and @with_ have no items in common") },
-	{ "union", &set_union,
-	  DOC("(with_:?.)->?.\n"
-	      "Same as ${this.operator | (with_)}") },
-	{ "symmetric_difference", &set_symmetric_difference,
-	  DOC("(with_:?.)->?.\n"
-	      "Same as ${this.operator ^ (with_)}") },
-	{ "issubset", &set_issubset,
-	  DOC("(of:?.)->?Dbool\n"
-	      "Same as ${this.operator <= (of)}") },
-	{ "issuperset", &set_issuperset,
-	  DOC("(of:?.)->?Dbool\n"
-	      "Same as ${this.operator >= (of)}") },
-	{ NULL }
+INTERN_TPCONST struct type_method tpconst set_methods[] = {
+	TYPE_METHOD("difference", &set_difference,
+	            "(to:?.)->?.\n"
+	            "Same as ${this.operator - (to)}"),
+	TYPE_METHOD("intersection", &set_intersection,
+	            "(with_:?.)->?.\n"
+	            "Same as ${this.operator & (with_)}"),
+	TYPE_METHOD("isdisjoint", &set_isdisjoint,
+	            "(with_:?.)->?Dbool\n"
+	            "Returns ?t if ${##(this & with_) == 0}\n"
+	            "In other words: If @this and @with_ have no items in common"),
+	TYPE_METHOD("union", &set_union,
+	            "(with_:?.)->?.\n"
+	            "Same as ${this.operator | (with_)}"),
+	TYPE_METHOD("symmetric_difference", &set_symmetric_difference,
+	            "(with_:?.)->?.\n"
+	            "Same as ${this.operator ^ (with_)}"),
+	TYPE_METHOD("issubset", &set_issubset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${this.operator <= (of)}"),
+	TYPE_METHOD("issuperset", &set_issuperset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${this.operator >= (of)}"),
+	TYPE_METHOD_END
 };
 
 INTDEF struct type_getset tpconst set_getsets[];
-INTERN struct type_getset tpconst set_getsets[] = {
-	{ "frozen", &DeeRoSet_FromSequence, NULL, NULL,
-	  DOC("->?#Frozen\n"
-	      "Returns a copy of @this ?., with all of its current elements frozen in place, "
-	      /**/ "constructing a snapshot of the set's current contents. - The actual type of "
-	      /**/ "set returned is implementation- and type- specific, and copying itself may "
-	      /**/ "either be done immediately, or as copy-on-write") },
-	{ NULL }
+INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
+	TYPE_GETTER("frozen", &DeeRoSet_FromSequence,
+	            "->?#Frozen\n"
+	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
+	            /**/ "constructing a snapshot of the set's current contents. - The actual type of "
+	            /**/ "set returned is implementation- and type- specific, and copying itself may "
+	            /**/ "either be done immediately, or as copy-on-write"),
+	TYPE_GETSET_END
 };
 
 
@@ -659,20 +657,14 @@ err:
 
 
 PRIVATE struct type_getset tpconst set_class_getsets[] = {
-	{ DeeString_STR(&str_Iterator),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_iterator_get,
-	  NULL,
-	  NULL,
-	  DOC("->?DType\n"
-	      "Returns the iterator class used by instances of @this ?. type\n"
-	      "This member must be overwritten by sub-classes of ?.") },
-	{ "Frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&set_frozen_get,
-	  NULL,
-	  NULL,
-	  DOC("->?DType\n"
-	      "Returns the type of sequence returned by the ?#frozen property") },
-	{ NULL }
+	TYPE_GETTER(STR_Iterator, &set_iterator_get,
+	            "->?DType\n"
+	            "Returns the iterator class used by instances of @this ?. type\n"
+	            "This member must be overwritten by sub-classes of ?."),
+	TYPE_GETTER("Frozen", &set_frozen_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the ?#frozen property"),
+	TYPE_GETSET_END
 };
 
 
@@ -936,75 +928,75 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	                         /**/ "that wishes to implement the Object-Set protocol\n"
 	                         "An object derived from this class must implement "
 	                         /**/ "${operator contains}, and preferrably ${operator iter}\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "A no-op default constructor that is implicitly called by sub-classes\n"
 	                         "When invoked manually, a general-purpose, empty ?. is returned\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns the representation of all sequence elements, "
 	                         /**/ "using abstract sequence syntax\n"
 	                         "e.g.: ${{ \"foo\", \"bar\", \"baz\" }}\n"
-
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t indicative of @item being apart of @this ?.\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this ?. is non-empty\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items apart of @this ?.\n"
 	                         "Note that some set types do not implement this functionality, most "
 	                         /**/ "notably symbolically inversed sets\n"
-
 	                         "\n"
+
 	                         "sub->\n"
 	                         "Returns a ?. of all objects from @this, excluding those also found in @other\n"
-
 	                         "\n"
+
 	                         "&->\n"
 	                         "Returns the intersection of @this and @other\n"
-
 	                         "\n"
+
 	                         "|->\n"
 	                         "add->\n"
 	                         "Returns the union of @this and @other\n"
-
 	                         "\n"
+
 	                         "^->\n"
 	                         "Returns a ?. containing objects only found in either "
 	                         /**/ "@this or @other, but not those found in both\n"
-
 	                         "\n"
+
 	                         "<=->\n"
 	                         "Returns ?t if all items found in @this ?. can also be found in @other\n"
-
 	                         "\n"
+
 	                         "==->\n"
 	                         "Returns ?t if @this ?. contains the same items as @other, and not any more than that\n"
-
 	                         "\n"
+
 	                         "!=->\n"
 	                         "Returns ?t if @this contains different, or less items than @other\n"
-
 	                         "\n"
+
 	                         "<->\n"
 	                         "The result of ${this <= other && this != other}\n"
-
 	                         "\n"
+
 	                         ">=->\n"
 	                         "Returns ?t if all items found in @other can also be found in @this ?.\n"
-
 	                         "\n"
+
 	                         ">->\n"
 	                         "The result of ${this >= other && this != other}\n"
-
 	                         "\n"
+
 	                         "~->\n"
 	                         "Returns a symbolic ?. that behaves as though it contained "
 	                         /**/ "any feasible object that isn't already apart of @this ?.\n"

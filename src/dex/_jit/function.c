@@ -1196,42 +1196,34 @@ err_r:
 }
 
 PRIVATE struct type_getset tpconst jf_getsets[] = {
-	{ "__name__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getname, NULL, NULL,
-	  DOC("->?X2?Dstring?N") },
-	{ "__doc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getdoc, NULL, NULL,
-	  DOC("->?N\nAlways returns ?N (doc strings aren't processed in JIT code)") },
-	{ "__kwds__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getkwds, NULL, NULL,
-	  DOC("->?S?Dstring") },
-	{ "__text__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_gettext, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Returns the source text executed by @this function") },
+	TYPE_GETTER("__name__", &jf_getname,
+	            "->?X2?Dstring?N"),
+	TYPE_GETTER("__doc__", &jf_getdoc,
+	            "->?N\nAlways returns ?N (doc strings aren't processed in JIT code)"),
+	TYPE_GETTER("__kwds__", &jf_getkwds,
+	            "->?S?Dstring"),
+	TYPE_GETTER("__text__", &jf_gettext,
+	            "->?Dstring\n"
+	            "Returns the source text executed by @this function"),
 	/* TODO: __default__ */
-	{ "__refs__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getrefs, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Returns a sequence of all of the references used by @this function") },
-	{ "__refsbyname__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getrefsbyname, NULL, NULL,
-	  DOC("->?S?T2?Dstring?O\n"
-	      "Similar to ?#__refs__, but return a mapping from symbol name to object") },
+	TYPE_GETTER("__refs__", &jf_getrefs,
+	            "->?S?O\n"
+	            "Returns a sequence of all of the references used by @this function"),
+	TYPE_GETTER("__refsbyname__", &jf_getrefsbyname,
+	            "->?S?T2?Dstring?O\n"
+	            "Similar to ?#__refs__, but return a mapping from symbol name to object"),
 	/* TODO: __type__ */
 	/* TODO: __operator__ */
 	/* TODO: __operatorname__ */
 	/* TODO: __property__ */
 	/* etc... */
-	{ "hasvarargs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_hasvarargs, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this function accepts variable arguments as overflow") },
-	{ "hasvarkwds",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_hasvarkwds, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this function accepts variable keyword arguments as overflow") },
-	{ NULL }
+	TYPE_GETTER("hasvarargs", &jf_hasvarargs,
+	            "->?Dbool\n"
+	            "Check if @this function accepts variable arguments as overflow"),
+	TYPE_GETTER("hasvarkwds", &jf_hasvarkwds,
+	            "->?Dbool\n"
+	            "Check if @this function accepts variable keyword arguments as overflow"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst jf_members[] = {

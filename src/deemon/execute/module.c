@@ -1345,48 +1345,44 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
-	{ "__exports__", &DeeModule_ViewExports, NULL, NULL,
-	  DOC("->?S?T2?Dstring?O\n"
-	      "Returns a modifiable mapping-like object containing @this "
-	      "Module's global variables accessible by name (and enumerable)\n"
-	      "Note that only existing exports can be modified, however no new symbols can be added:\n"
-	      "${"
-	      "import util;\n"
-	      "print util.min;                /* function */\n"
-	      "print util.__exports__[\"min\"]; /* function */\n"
-	      "del util.min;\n"
-	      "assert \"min\" !in util.__exports__;\n"
-	      "util.__exports__[\"min\"] = 42;\n"
-	      "print util.min;                /* 42 */"
-	      "}") },
-	{ "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_imports, NULL, NULL,
-	  DOC("->?S?DModule\n"
-	      "Returns an immutable sequence of all other modules imported by this one") },
-	{ "__globals__", &DeeModule_ViewGlobals, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Similar to ?#__exports__, however global variables are addressed using their "
-	      "internal index. Using this, anonymous global variables (such as property callbacks) "
-	      "can be accessed and modified") },
-	{ "__code__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_code, NULL, NULL,
-	  DOC("->?Ert:Code\n"
-	      "@throw ValueError The Module hasn't been fully loaded\n"
-	      "Returns the code object for the Module's root initializer") },
-	{ "__path__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "@throw ValueError The Module hasn't been fully loaded\n"
-	      "Returns the absolute filesystem path of the Module's source file, or ?N "
-	      "if the Module wasn't created from a file accessible via the filesystem") },
-	{ "__isglobal__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_isglobal, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})") },
-	{ "__haspath__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_haspath, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Module has a path found within the filesystem") },
-	{ NULL }
+	TYPE_GETTER(STR___exports__, &DeeModule_ViewExports,
+	            "->?S?T2?Dstring?O\n"
+	            "Returns a modifiable mapping-like object containing @this "
+	            "Module's global variables accessible by name (and enumerable)\n"
+	            "Note that only existing exports can be modified, however no new symbols can be added:\n"
+	            "${"
+	            "import util;\n"
+	            "print util.min;                /* function */\n"
+	            "print util.__exports__[\"min\"]; /* function */\n"
+	            "del util.min;\n"
+	            "assert \"min\" !in util.__exports__;\n"
+	            "util.__exports__[\"min\"] = 42;\n"
+	            "print util.min;                /* 42 */"
+	            "}"),
+	TYPE_GETTER(STR___imports__, &module_get_imports,
+	            "->?S?DModule\n"
+	            "Returns an immutable sequence of all other modules imported by this one"),
+	TYPE_GETTER(STR___globals__, &DeeModule_ViewGlobals,
+	            "->?S?O\n"
+	            "Similar to ?#__exports__, however global variables are addressed using their "
+	            "internal index. Using this, anonymous global variables (such as property callbacks) "
+	            "can be accessed and modified"),
+	TYPE_GETTER(STR___code__, &module_get_code,
+	            "->?Ert:Code\n"
+	            "@throw ValueError The Module hasn't been fully loaded\n"
+	            "Returns the code object for the Module's root initializer"),
+	TYPE_GETTER(STR___path__, &module_get_path,
+	            "->?X2?Dstring?N\n"
+	            "@throw ValueError The Module hasn't been fully loaded\n"
+	            "Returns the absolute filesystem path of the Module's source file, or ?N "
+	            "if the Module wasn't created from a file accessible via the filesystem"),
+	TYPE_GETTER("__isglobal__", &module_get_isglobal,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})"),
+	TYPE_GETTER("__haspath__", &module_get_haspath,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Module has a path found within the filesystem"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1409,17 +1405,17 @@ module_class_setpath(DeeObject *UNUSED(self),
 }
 
 PRIVATE struct type_getset tpconst module_class_getsets[] = {
-	{ "path", &module_class_getpath, NULL, &module_class_setpath,
-	  DOC("->?DList\n"
-	      "A list of strings describing the search path for system libraries") },
-	{ "home", &module_class_gethome, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "The deemon home path (usually the path where the deemon executable resides)") },
+	TYPE_GETSET("path", &module_class_getpath, NULL, &module_class_setpath,
+	            "->?DList\n"
+	            "A list of strings describing the search path for system libraries"),
+	TYPE_GETTER("home", &module_class_gethome,
+	            "->?Dstring\n"
+	            "The deemon home path (usually the path where the deemon executable resides)"),
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
-	{ "search_path", &module_class_getpath, NULL, &module_class_setpath,
-	  DOC("->?DList\n"
-	      "Deprecated alias for ?#path") },
-	{ NULL }
+	TYPE_GETSET("search_path", &module_class_getpath, NULL, &module_class_setpath,
+	            "->?DList\n"
+	            "Deprecated alias for ?#path"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1441,10 +1437,10 @@ err:
 
 PRIVATE struct type_method tpconst module_class_methods[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
-	{ "open", &module_class_open,
-	  DOC("(name:?Dstring)->?DModule\n"
-	      "Deprecated alias for :import") },
-	{ NULL }
+	TYPE_METHOD("open", &module_class_open,
+	            "(name:?Dstring)->?DModule\n"
+	            "Deprecated alias for :import"),
+	TYPE_METHOD_END
 };
 
 

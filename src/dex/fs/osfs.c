@@ -1951,9 +1951,7 @@ PRIVATE BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName) {
 		return FALSE;
 	error = GetLastError();
 	SetLastError(0);
-	return (unlikely(error == ERROR_NOT_ALL_ASSIGNED))
-	       ? 0
-	       : 1;
+	return unlikely(error == ERROR_NOT_ALL_ASSIGNED) ? 0 : 1;
 fail:
 	return FALSE;
 }

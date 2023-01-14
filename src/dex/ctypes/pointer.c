@@ -264,13 +264,10 @@ pointer_del_deref(struct pointer_object *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst pointer_getsets[] = {
-	{ "ind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pointer_get_deref,
-	  (int (DCALL *)(DeeObject *__restrict))&pointer_del_deref,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&pointer_set_deref,
-	  DOC("->?GLValue\n"
-	      "Get/clear/set the dereferenced memory location of @this pointer") },
-	{ NULL }
+	TYPE_GETSET("ind", &pointer_get_deref, &pointer_del_deref, &pointer_set_deref,
+	            "->?GLValue\n"
+	            "Get/clear/set the dereferenced memory location of @this pointer"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst pointer_members[] = {
@@ -295,10 +292,10 @@ err:
 
 PRIVATE struct type_method tpconst pointer_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
-	{ "__deref__", &struct_deref_func,
-	  DOC("->?GLValue\n"
-	      "Deprecated alias for ?#ind") },
-	{ NULL }
+	TYPE_METHOD("__deref__", &struct_deref_func,
+	            "->?GLValue\n"
+	            "Deprecated alias for ?#ind"),
+	TYPE_METHOD_END
 };
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
@@ -599,16 +596,16 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst lvalue_getsets[] = {
-	{ "ref", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_ref, NULL, NULL,
-	  DOC("->?Gpointer\n"
-	      "Returns a pointer for the object referred to by @this ?GLValue") },
-	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_sizeof, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the size of the structured objected pointed to by @this ?GLValue") },
-	{ "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_alignof, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the alignment of the structured objected pointed to by @this ?GLValue") },
-	{ NULL }
+	TYPE_GETTER("ref", &lvalue_ref,
+	            "->?Gpointer\n"
+	            "Returns a pointer for the object referred to by @this ?GLValue"),
+	TYPE_GETTER("sizeof", &lvalue_sizeof,
+	            "->?Dint\n"
+	            "Returns the size of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETTER("alignof", &lvalue_alignof,
+	            "->?Dint\n"
+	            "Returns the alignment of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETSET_END
 };
 
 

@@ -55,16 +55,24 @@
 #ifndef Dee_tpconst
 #if (defined(__PIC__) || defined(__PIE__) || \
      defined(__pic__) || defined(__pie__))
+#undef Dee_tpconst_IS_const
 #define Dee_tpconst /* nothing */
 #elif defined(CONFIG_BUILDING_DEEMON)
+#define Dee_tpconst_IS_const
 #define Dee_tpconst const
 #else /* ... */
+#define Dee_tpconst_IS_const
 #define Dee_tpconst const
 #endif /* !... */
 #endif /* !Dee_tpconst */
 
 #ifdef DEE_SOURCE
 #define tpconst Dee_tpconst
+#ifdef Dee_tpconst_IS_const
+#define INTERN_TPCONST INTERN_CONST
+#else /* Dee_tpconst_IS_const */
+#define INTERN_TPCONST INTERN
+#endif /* !Dee_tpconst_IS_const */
 #endif /* DEE_SOURCE */
 
 DECL_BEGIN
@@ -1689,6 +1697,41 @@ typedef Dee_delmethod_t   ddelmethod_t;
 typedef Dee_setmethod_t   dsetmethod_t;
 #endif /* DEE_SOURCE */
 
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
+/* Highlight usage errors in IDE */
+extern "C++" {
+namespace __intern {
+Dee_objmethod_t _Dee_RequiresObjMethod(decltype(nullptr));
+Dee_kwobjmethod_t _Dee_RequiresKwObjMethod(decltype(nullptr));
+Dee_objmethod_t _Dee_RequiresKwObjMethod_(decltype(nullptr));
+Dee_getmethod_t _Dee_RequiresGetMethod(decltype(nullptr));
+Dee_delmethod_t _Dee_RequiresDelMethod(decltype(nullptr));
+Dee_setmethod_t _Dee_RequiresSetMethod(decltype(nullptr));
+template<class _TReturn, class _TSelf> Dee_objmethod_t _Dee_RequiresObjMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *));
+template<class _TReturn, class _TSelf> Dee_kwobjmethod_t _Dee_RequiresKwObjMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
+template<class _TReturn, class _TSelf> Dee_objmethod_t _Dee_RequiresKwObjMethod_(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *, size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
+template<class _TReturn, class _TSelf> Dee_getmethod_t _Dee_RequiresGetMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(_TSelf *__restrict));
+template<class _TSelf> Dee_delmethod_t _Dee_RequiresDelMethod(WUNUSED_T NONNULL_T((1)) int (DCALL *_meth)(_TSelf *__restrict));
+template<class _TSelf, class _TArg> Dee_setmethod_t _Dee_RequiresSetMethod(WUNUSED_T NONNULL_T((1, 2)) int (DCALL *_meth)(_TSelf *, _TArg *));
+} /* namespace __intern */
+} /* extern "C++" */
+#define Dee_REQUIRES_OBJMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresObjMethod(meth)))(meth))
+#define Dee_REQUIRES_KWOBJMETHOD(meth)  ((decltype(::__intern::_Dee_RequiresKwObjMethod(meth)))(meth))
+#define Dee_REQUIRES_KWOBJMETHOD_(meth) ((decltype(::__intern::_Dee_RequiresKwObjMethod_(meth)))(meth))
+#define Dee_REQUIRES_GETMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresGetMethod(meth)))(meth))
+#define Dee_REQUIRES_DELMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresDelMethod(meth)))(meth))
+#define Dee_REQUIRES_SETMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresSetMethod(meth)))(meth))
+#else /* __INTELLISENSE__ && __cplusplus */
+#define Dee_REQUIRES_OBJMETHOD(meth)    ((Dee_objmethod_t)(meth))
+#define Dee_REQUIRES_KWOBJMETHOD(meth)  ((Dee_kwobjmethod_t)(meth))
+#define Dee_REQUIRES_KWOBJMETHOD_(meth) ((Dee_objmethod_t)(meth))
+#define Dee_REQUIRES_GETMETHOD(meth)    ((Dee_getmethod_t)(meth))
+#define Dee_REQUIRES_DELMETHOD(meth)    ((Dee_delmethod_t)(meth))
+#define Dee_REQUIRES_SETMETHOD(meth)    ((Dee_setmethod_t)(meth))
+#endif /* !__INTELLISENSE__ || !__cplusplus */
+
+
+
 #define Dee_TYPE_METHOD_FNORMAL 0x0000 /* Normal type method flags. */
 #define Dee_TYPE_METHOD_FKWDS   0x0001 /* `m_func' takes a keywords argument.
                                         * When set, `m_func' is actually a `dkwobjmethod_t' */
@@ -1704,6 +1747,23 @@ struct Dee_type_method {
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*'). */
 };
+#define Dee_TYPE_METHOD(name, func, doc) \
+	{ name, Dee_REQUIRES_OBJMETHOD(func), DOC(doc), Dee_TYPE_METHOD_FNORMAL }
+#define Dee_TYPE_METHOD_NODOC(name, func) \
+	{ name, Dee_REQUIRES_OBJMETHOD(func), NULL, Dee_TYPE_METHOD_FNORMAL }
+#define Dee_TYPE_KWMETHOD(name, func, doc) \
+	{ name, Dee_REQUIRES_KWOBJMETHOD_(func), DOC(doc), Dee_TYPE_METHOD_FKWDS }
+#define Dee_TYPE_KWMETHOD_NODOC(name, func) \
+	{ name, Dee_REQUIRES_KWOBJMETHOD_(func), NULL, Dee_TYPE_METHOD_FKWDS }
+#define Dee_TYPE_METHOD_END \
+	{ NULL, NULL, NULL, 0 }
+#ifdef DEE_SOURCE
+#define TYPE_METHOD         Dee_TYPE_METHOD
+#define TYPE_METHOD_NODOC   Dee_TYPE_METHOD_NODOC
+#define TYPE_KWMETHOD       Dee_TYPE_KWMETHOD
+#define TYPE_KWMETHOD_NODOC Dee_TYPE_KWMETHOD_NODOC
+#define TYPE_METHOD_END     Dee_TYPE_METHOD_END
+#endif /* DEE_SOURCE */
 
 struct Dee_type_getset {
 	char const           *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
@@ -1713,6 +1773,23 @@ struct Dee_type_getset {
 	Dee_setmethod_t       gs_set;  /* [0..1] Setter callback. */
 	/*utf-8*/ char const *gs_doc;  /* [0..1] Documentation string. */
 };
+#define Dee_TYPE_GETSET(name, get, del, set, doc) \
+	{ name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), DOC(doc) }
+#define Dee_TYPE_GETSET_NODOC(name, get, del, set) \
+	{ name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL }
+#define Dee_TYPE_GETTER(name, get, doc) \
+	{ name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, DOC(doc) }
+#define Dee_TYPE_GETTER_NODOC(name, get) \
+	{ name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL }
+#define Dee_TYPE_GETSET_END \
+	{ NULL, NULL, NULL, NULL, NULL }
+#ifdef DEE_SOURCE
+#define TYPE_GETSET       Dee_TYPE_GETSET
+#define TYPE_GETTER       Dee_TYPE_GETTER
+#define TYPE_GETSET_NODOC Dee_TYPE_GETSET_NODOC
+#define TYPE_GETTER_NODOC Dee_TYPE_GETTER_NODOC
+#define TYPE_GETSET_END   Dee_TYPE_GETSET_END
+#endif /* DEE_SOURCE */
 
 
 

@@ -1117,17 +1117,13 @@ fl_sizeof(FixedList *self) {
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
-	{ "clear",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_clear_meth,
-	  DOC("()") },
-	{ NULL }
+	TYPE_METHOD("clear", &fl_clear_meth, "()"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst fl_getsets[] = {
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("__sizeof__", &fl_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst fl_class_members[] = {
@@ -1142,51 +1138,64 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_doc      = */ DOC("A mutable, but fixed-length sequence type, functioning as "
 	                         "a sort-of hybrid between :deemon.List and :deemon.tuple\n"
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct a fixed list that is empty\n"
 	                         "\n"
+
 	                         "(size:?Dint,init?)\n"
 	                         "Create an pre-sized list of @size elements, all initialized "
 	                         "as @init, or as unbound when no @init is given\n"
 	                         "\n"
+
 	                         "(seq:?S?O)\n"
 	                         "Construct a FixedList from items taken from the given @seq\n"
 	                         "\n"
+
 	                         "copy->\n"
 	                         "Returns a shallow copy of @this FixedList\n"
 	                         "\n"
+
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of @this FixedList\n"
 	                         "\n"
+
 	                         ":=(other:?S?O)->\n"
 	                         "@throw UnpackError @other has a different length than @this\n"
 	                         "Assign all the elements from @other to @this FixedList\n"
 	                         "\n"
+
 	                         "move:=->\n"
 	                         "@throw UnpackError @other has a different length than @this\n"
 	                         "Move all the elements from @other into @this FixedList, changing all of them to unbound in @other\n"
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this FixedList is non-empty. ?f otherwise\n"
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the elements of @this FixedList in ascending order\n"
 	                         "\n"
+
 	                         "[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Returns the @index'th item of @this FixedList\n"
 	                         "\n"
+
 	                         "[]=->\n"
 	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Set the @index'th item of @this FixedList to @item\n"
 	                         "\n"
+
 	                         "del[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this FixedList\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Mark the @index'th element of @this FixedList as unbound\n"
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of @this FixedList, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
@@ -1235,7 +1244,7 @@ INTERN DeeTypeObject FixedList_Type = {
 
 
 #ifdef CONFIG_NO_THREADS
-#define FLI_GETITER(x)             ((x)->li_iter)
+#define FLI_GETITER(x) ((x)->li_iter)
 #else /* CONFIG_NO_THREADS */
 #define FLI_GETITER(x)  ATOMIC_READ((x)->li_iter)
 #endif /* !CONFIG_NO_THREADS */
@@ -1244,9 +1253,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_ctor(FixedListIterator *__restrict self) {
 	self->li_iter = 0;
 	self->li_list = fl_ctor();
-	return (likely(self->li_list))
-	       ? 0
-	       : -1;
+	return likely(self->li_list) ? 0 : -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

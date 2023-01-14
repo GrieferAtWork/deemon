@@ -1750,22 +1750,16 @@ sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst sockaddr_getsets[] = {
 #ifdef AF_INET
-	{ "inet_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_host, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET\": The host address in host endian") },
-	{ "inet_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_port, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET\": The port number in host endian") },
+	TYPE_GETTER("inet_host", &sockaddr_inet_host, "->?Dint\nFor $\"AF_INET\": The host address in host endian"),
+	TYPE_GETTER("inet_port", &sockaddr_inet_port, "->?Dint\nFor $\"AF_INET\": The port number in host endian"),
 #endif /* AF_INET */
 #ifdef AF_INET6
-	{ "inet6_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_port, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET6\": The port number in host endian") },
-	{ "inet6_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_host, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET6\": The host address") },
-	{ "inet6_flowinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_flowinfo, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier") },
-	{ "inet6_scope_id", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_scope_id, NULL, NULL,
-	  DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 scope id") },
+	TYPE_GETTER("inet6_port", &sockaddr_inet6_port, "->?Dint\nFor $\"AF_INET6\": The port number in host endian"),
+	TYPE_GETTER("inet6_host", &sockaddr_inet6_host, "->?Dint\nFor $\"AF_INET6\": The host address"),
+	TYPE_GETTER("inet6_flowinfo", &sockaddr_inet6_flowinfo, "->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier"),
+	TYPE_GETTER("inet6_scope_id", &sockaddr_inet6_scope_id, "->?Dint\nFor $\"AF_INET6\": The IPv6 scope id"),
 #endif /* AF_INET6 */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -1813,11 +1807,13 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "Create a new socket address. @args is documented below and depends on @family\n"
 	                     "Note that many functions from :socket also accept @args as arguments to various functions\n"
 	                     "\n"
+
 	                     "(args!,other:?Dsockaddr)\n"
 	                     "@throw ValueError The @other socket uses a ?#family incompatible to the previously specified family\n"
 	                     "@param other The @other socket address that should be duplicated\n"
 	                     "Always accepted is another socket address that is duplicated\n"
 	                     "\n"
+
 	                     "(args!,host_and_port:?Dstring)\n"
 	                     "(args!,host:?Dstring,port:?Dstring)\n"
 	                     "(args!,host:?Dstring,port:?Dint)\n"
@@ -1864,6 +1860,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #endif /* AF_INET6 */
 #endif /* AF_INET || AF_INET6 */
 	                     "\n"
+
 #ifdef AF_INET
 	                     "(family=!PAF_INET,host_and_port:?T2?Dint?Dint)\n"
 	                     "(family=!PAF_AUTO,host_and_port:?T2?Dint?Dint)\n"
@@ -1876,16 +1873,19 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "Create an IPv4 address by combining the 4 single-byte integers @a, @b, @c and @d alongside @port\n"
 	                     "\n"
 #endif /* AF_INET */
+
 #ifdef AF_UNIX
 	                     "(family=!PAF_UNIX,path:?Dstring)\n"
 	                     "@throw ValueError The given @path is too long\n"
 	                     "Create a unix-pipe socket address using the given @path\n"
 	                     "\n"
 #endif /* AF_UNIX */
+
 #ifdef AF_NETLINK
 	                     "(family=!PAF_NETLINK,pid:?Dint,groups:?Dint)\n"
 	                     "\n"
 #endif /* AF_NETLINK */
+
 	                     "str->\n"
 	                     "@throw \n"
 	                     "Generates and returns a string representation of @this sockaddr\n"

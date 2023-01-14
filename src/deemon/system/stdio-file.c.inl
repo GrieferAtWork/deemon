@@ -156,8 +156,8 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst debug_file_getsets[] = {
-	{ DeeString_STR(&str_isatty), &debugfile_isatty, NULL, NULL, DOC("->?Dbool") },
-	{ NULL }
+	TYPE_GETTER(STR_isatty, &debugfile_isatty, "->?Dbool"),
+	TYPE_GETSET_END
 };
 
 PRIVATE DeeFileTypeObject DebugFile_Type = {
@@ -769,7 +769,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 	result = ((SystemFile *)self)->sf_filename;
 	if unlikely(!result) {
-		err_cant_access_attribute(Dee_TYPE(self), "filename",
+		err_cant_access_attribute(Dee_TYPE(self), STR_filename,
 		                          ATTR_ACCESS_GET);
 	}
 	return NULL;
@@ -976,15 +976,13 @@ err:
 }
 
 PRIVATE struct type_method tpconst sysfile_methods[] = {
-	{ "flush",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_flush,
-	  DOC("()\n"
-	      "An alias for #sync used for compatibility with ?ABuffer?DFile") },
-	{ "setbuf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_setbuf,
-	  DOC("(string mode,size=!0)\n"
-	      "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile") },
-	{ NULL }
+	TYPE_METHOD("flush", &sysfile_flush,
+	            "()\n"
+	            "An alias for #sync used for compatibility with ?ABuffer?DFile"),
+	TYPE_METHOD("setbuf", &sysfile_setbuf,
+	            "(string mode,size=!0)\n"
+	            "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF SystemFile *DCALL
@@ -993,14 +991,12 @@ sysfile_getfile(SystemFile *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL,
-	  DOC("->?Dbool") },
-	{ "file",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sysfile_getfile, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "Returns @this File, indicating the self-buffering "
-	      "behavior of system files on this host") },
+	TYPE_GETTER(STR_isatty, &sysfile_isatty, "->?Dbool"),
+	TYPE_GETTER("file", &sysfile_getfile,
+	            "->?DFile\n"
+	            "Returns @this File, indicating the self-buffering "
+	            "behavior of system files on this host"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst sysfile_members[] = {
@@ -1042,10 +1038,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {
-	{ "sync", &sysfile_class_sync,
-	  DOC("()\n"
-	      "Synchronize all unwritten data with the host operating system") },
-	{ NULL }
+	TYPE_METHOD("sync", &sysfile_class_sync,
+	            "()\n"
+	            "Synchronize all unwritten data with the host operating system"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst sysfile_class_members[] = {

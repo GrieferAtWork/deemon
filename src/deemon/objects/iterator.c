@@ -763,9 +763,9 @@ iterator_revert(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if unlikely(count == 0)
 		goto done;
-	error = (unlikely(count < 0))
+	error = unlikely(count < 0)
 	        ? iterator_do_advance(self, (size_t)-count, NULL, argv[0])
-	        : (likely(count > 0))
+	        : likely(count > 0)
 	          ? iterator_do_revert(self, (size_t)count, argv[0], NULL)
 	          : 0;
 	if unlikely(error < 0)
@@ -784,9 +784,9 @@ iterator_advance(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if unlikely(count == 0)
 		goto done;
-	error = (unlikely(count < 0))
+	error = unlikely(count < 0)
 	        ? iterator_do_revert(self, (size_t)-count, NULL, argv[0])
-	        : (likely(count > 0))
+	        : likely(count > 0)
 	          ? iterator_do_advance(self, (size_t)count, argv[0], NULL)
 	          : 0;
 	if unlikely(error < 0)
@@ -819,314 +819,307 @@ err:
 
 
 PRIVATE struct type_method tpconst iterator_methods[] = {
-	{ "next",
-	  &iterator_next,
-	  DOC("(defl?)->\n"
-	      "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
-	      "Same as ${this.operator next()}\n"
-	      "When given, @defl is returned when the Iterator has been "
-	      /**/ "exhaused, rather than throwing a :StopIteration error") },
-	{ DeeString_STR(&str_peek),
-	  &iterator_peek,
-	  DOC("(defl?)->\n"
-	      "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
-	      "Peek the next upcoming object, but don't advance to it\n"
+	TYPE_METHOD(STR_next, &iterator_next,
+	            "(defl?)->\n"
+	            "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
+	            "Same as ${this.operator next()}\n"
+	            "When given, @defl is returned when the Iterator has been "
+	            /**/ "exhaused, rather than throwing a :StopIteration error"),
+	TYPE_METHOD(STR_peek, &iterator_peek,
+	            "(defl?)->\n"
+	            "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
+	            "Peek the next upcoming object, but don't advance to it\n"
+	            "${"
+	            /**/ "function peek(defl?) {\n"
+	            /**/ "	local c = copy this;\n"
+	            /**/ "	try {\n"
+	            /**/ "		return c.operator next();\n"
+	            /**/ "	} catch (StopIteration) {\n"
+	            /**/ "		if (defl is bound)\n"
+	            /**/ "			return defl;\n"
+	            /**/ "		throw;\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}\n"),
+	TYPE_METHOD(STR_prev, &iterator_prev,
+	            "->?Dbool\n"
+	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Rewind @this Iterator to the previous item, returning ?f if "
+	            /**/ "@this Iterator had already been positioned at the start of its sequence, "
+	            /**/ "or ?t otherwise\n"
 
-	      "${"
-	      /**/ "function peek(defl?) {\n"
-	      /**/ "	local c = copy this;\n"
-	      /**/ "	try {\n"
-	      /**/ "		return c.operator next();\n"
-	      /**/ "	} catch (StopIteration) {\n"
-	      /**/ "		if (defl is bound)\n"
-	      /**/ "			return defl;\n"
-	      /**/ "		throw;\n"
-	      /**/ "	}\n"
-	      /**/ "}"
-	      "}\n") },
-	{ DeeString_STR(&str_prev),
-	  &iterator_prev,
-	  DOC("->?Dbool\n"
-	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Rewind @this Iterator to the previous item, returning ?f if "
-	      /**/ "@this Iterator had already been positioned at the start of its sequence, "
-	      /**/ "or ?t otherwise\n"
+	            "${"
+	            /**/ "function prev(): bool {\n"
+	            /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
+	            /**/ "			local i = this.index;\n"
+	            /**/ "			if (!i)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this.index = i - 1;\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			--this;\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this -= 1;\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this += -1;\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this.operator move := (this - 1);\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this.operator move := (this + (-1));\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this.revert(1);\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
+	            /**/ "			if (!this.hasprev)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			this.advance(-1);\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"rewind\")) {\n"
+	            /**/ "			local c = copy this;\n"
+	            /**/ "			c.rewind();\n"
+	            /**/ "			if (c == this)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			for (;;) {\n"
+	            /**/ "				local d = copy c;\n"
+	            /**/ "				try d.operator next();\n"
+	            /**/ "				catch (StopIteration) {\n"
+	            /**/ "					return false;\n"
+	            /**/ "				}\n"
+	            /**/ "				if (d >= this)\n"
+	            /**/ "					break;\n"
+	            /**/ "				c = d;\n"
+	            /**/ "			}\n"
+	            /**/ "			this.operator move := (c);\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"seq\")) {\n"
+	            /**/ "			local c = this.seq.operator iter();\n"
+	            /**/ "			if (c == this)\n"
+	            /**/ "				return false;\n"
+	            /**/ "			for (;;) {\n"
+	            /**/ "				local d = copy c;\n"
+	            /**/ "				try d.operator next();\n"
+	            /**/ "				catch (Signal.StopIteration) {\n"
+	            /**/ "					return false;\n"
+	            /**/ "				}\n"
+	            /**/ "				if (d >= this)\n"
+	            /**/ "					break;\n"
+	            /**/ "				c = d;\n"
+	            /**/ "			}\n"
+	            /**/ "			this.operator move := (c);\n"
+	            /**/ "			return true;\n"
+	            /**/ "		}\n"
+	            /**/ "	}\n"
+	            /**/ "	throw NotImplemented(\"...\");\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_METHOD(STR_rewind, &iterator_rewind,
+	            "()\n"
+	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Rewind @this Iterator to the start of its sequence\n"
 
-	      "${"
-	      /**/ "function prev(): bool {\n"
-	      /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
-	      /**/ "			local i = this.index;\n"
-	      /**/ "			if (!i)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this.index = i - 1;\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			--this;\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this -= 1;\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this += -1;\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this.operator move := (this - 1);\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this.operator move := (this + (-1));\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this.revert(1);\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
-	      /**/ "			if (!this.hasprev)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			this.advance(-1);\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"rewind\")) {\n"
-	      /**/ "			local c = copy this;\n"
-	      /**/ "			c.rewind();\n"
-	      /**/ "			if (c == this)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			for (;;) {\n"
-	      /**/ "				local d = copy c;\n"
-	      /**/ "				try d.operator next();\n"
-	      /**/ "				catch (StopIteration) {\n"
-	      /**/ "					return false;\n"
-	      /**/ "				}\n"
-	      /**/ "				if (d >= this)\n"
-	      /**/ "					break;\n"
-	      /**/ "				c = d;\n"
-	      /**/ "			}\n"
-	      /**/ "			this.operator move := (c);\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"seq\")) {\n"
-	      /**/ "			local c = this.seq.operator iter();\n"
-	      /**/ "			if (c == this)\n"
-	      /**/ "				return false;\n"
-	      /**/ "			for (;;) {\n"
-	      /**/ "				local d = copy c;\n"
-	      /**/ "				try d.operator next();\n"
-	      /**/ "				catch (Signal.StopIteration) {\n"
-	      /**/ "					return false;\n"
-	      /**/ "				}\n"
-	      /**/ "				if (d >= this)\n"
-	      /**/ "					break;\n"
-	      /**/ "				c = d;\n"
-	      /**/ "			}\n"
-	      /**/ "			this.operator move := (c);\n"
-	      /**/ "			return true;\n"
-	      /**/ "		}\n"
-	      /**/ "	}\n"
-	      /**/ "	throw NotImplemented(\"...\");\n"
-	      /**/ "}"
-	      "}") },
-	{ DeeString_STR(&str_rewind),
-	  &iterator_rewind,
-	  DOC("()\n"
-	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Rewind @this Iterator to the start of its sequence\n"
-
-	      "${"
-	      /**/ "function rewind() {\n"
-	      /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
-	      /**/ "			this.index = 0;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"seq\")) {\n"
-	      /**/ "			this.operator move := (this.seq.operator iter());\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"prev\")) {\n"
-	      /**/ "			while (this.prev())\n"
-	      /**/ "				;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this -= int.SIZE_MAX;\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this += -int.SIZE_MAX;\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				--this;\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this.revert(int.SIZE_MAX);\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this.advance(-int.SIZE_MAX);\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this.operator move := (this - int.SIZE_MAX);\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				this.operator move := (this + (-int.SIZE_MAX));\n"
-	      /**/ "			} while (this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "	}\n"
-	      /**/ "	throw NotImplemented(\"...\");\n"
-	      /**/ "}"
-	      "}\n") },
-	{ DeeString_STR(&str_revert),
-	  &iterator_revert,
-	  DOC("(step:?Dint)\n"
-	      "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Revert @this Iterator by @step items\n"
-	      "${"
-	      /**/ "function revert(step: int) {\n"
-	      /**/ "	step = (int)step;\n"
-	      /**/ "	if (step == 0)\n"
-	      /**/ "		return;\n"
-	      /**/ "	if (step < 0)\n"
-	      /**/ "		return iterator.advance(this, -step);\n"
-	      /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
-	      /**/ "			this -= step;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
-	      /**/ "			this += -step;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
-	      /**/ "			this.advance(-step);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
-	      /**/ "			local new_index = this.index - step;\n"
-	      /**/ "			if (new_index < 0)\n"
-	      /**/ "				new_index = type(new_index)();\n"
-	      /**/ "			this.index = new_index;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
-	      /**/ "			this.operator move := (this - step);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
-	      /**/ "			this.operator move := (this + (-step));\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				--this;\n"
-	      /**/ "			} while (--step && this.hasprev);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"seq\") || tp.hasprivateattribute(\"prev\")) {\n"
-	      /**/ "			while (this.prev() && --step)\n"
-	      /**/ "				;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "	}\n"
-	      /**/ "	throw NotImplemented(\"...\");\n"
-	      /**/ "}"
-	      "}\n") },
-	{ DeeString_STR(&str_advance),
-	  &iterator_advance,
-	  DOC("(step:?Dint)\n"
-	      "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Revert @this Iterator by @step items\n"
-	      "${"
-	      /**/ "function advance(step: int) {\n"
-	      /**/ "	step = (int)step;\n"
-	      /**/ "	if (step == 0)\n"
-	      /**/ "		return;\n"
-	      /**/ "	if (step < 0)\n"
-	      /**/ "		return iterator.revert(this, -step);\n"
-	      /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
-	      /**/ "			this += step;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
-	      /**/ "			this -= -step;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
-	      /**/ "			this.revert(-step);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
-	      /**/ "			local new_index = this.index + step;\n"
-	      /**/ "			if (new_index < 0)\n"
-	      /**/ "				new_index = type(new_index)();\n"
-	      /**/ "			this.index = new_index;\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
-	      /**/ "			this.operator move := (this + step);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
-	      /**/ "			this.operator move := (this - -(step));\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivateoperator(\"inc\")) {\n"
-	      /**/ "			do {\n"
-	      /**/ "				++this;\n"
-	      /**/ "			}while (--step && this.hasnext);\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "		if (tp.hasprivatoperator(\"next\")) {\n"
-	      /**/ "			while (--step) {\n"
-	      /**/ "				try {\n"
-	      /**/ "					this.operator next();\n"
-	      /**/ "				} catch (StopIteration) {\n"
-	      /**/ "					break;\n"
-	      /**/ "				}\n"
-	      /**/ "			}\n"
-	      /**/ "			return;\n"
-	      /**/ "		}\n"
-	      /**/ "	}\n"
-	      /**/ "	return;\n"
-	      /**/ "}"
-	      "}\n") },
-	{ NULL }
+	            "${"
+	            /**/ "function rewind() {\n"
+	            /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
+	            /**/ "			this.index = 0;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"seq\")) {\n"
+	            /**/ "			this.operator move := (this.seq.operator iter());\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"prev\")) {\n"
+	            /**/ "			while (this.prev())\n"
+	            /**/ "				;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this -= int.SIZE_MAX;\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this += -int.SIZE_MAX;\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				--this;\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this.revert(int.SIZE_MAX);\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this.advance(-int.SIZE_MAX);\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this.operator move := (this - int.SIZE_MAX);\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				this.operator move := (this + (-int.SIZE_MAX));\n"
+	            /**/ "			} while (this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "	}\n"
+	            /**/ "	throw NotImplemented(\"...\");\n"
+	            /**/ "}"
+	            "}\n"),
+	TYPE_METHOD(STR_revert, &iterator_revert,
+	            "(step:?Dint)\n"
+	            "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Revert @this Iterator by @step items\n"
+	            "${"
+	            /**/ "function revert(step: int) {\n"
+	            /**/ "	step = (int)step;\n"
+	            /**/ "	if (step == 0)\n"
+	            /**/ "		return;\n"
+	            /**/ "	if (step < 0)\n"
+	            /**/ "		return iterator.advance(this, -step);\n"
+	            /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
+	            /**/ "			this -= step;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
+	            /**/ "			this += -step;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"advance\")) {\n"
+	            /**/ "			this.advance(-step);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
+	            /**/ "			local new_index = this.index - step;\n"
+	            /**/ "			if (new_index < 0)\n"
+	            /**/ "				new_index = type(new_index)();\n"
+	            /**/ "			this.index = new_index;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
+	            /**/ "			this.operator move := (this - step);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
+	            /**/ "			this.operator move := (this + (-step));\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"dec\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				--this;\n"
+	            /**/ "			} while (--step && this.hasprev);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"seq\") || tp.hasprivateattribute(\"prev\")) {\n"
+	            /**/ "			while (this.prev() && --step)\n"
+	            /**/ "				;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "	}\n"
+	            /**/ "	throw NotImplemented(\"...\");\n"
+	            /**/ "}"
+	            "}\n"),
+	TYPE_METHOD(STR_advance, &iterator_advance,
+	            "(step:?Dint)\n"
+	            "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Revert @this Iterator by @step items\n"
+	            "${"
+	            /**/ "function advance(step: int) {\n"
+	            /**/ "	step = (int)step;\n"
+	            /**/ "	if (step == 0)\n"
+	            /**/ "		return;\n"
+	            /**/ "	if (step < 0)\n"
+	            /**/ "		return iterator.revert(this, -step);\n"
+	            /**/ "	for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "		if (tp.hasprivateoperator(\"iadd\")) {\n"
+	            /**/ "			this += step;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"isub\")) {\n"
+	            /**/ "			this -= -step;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"revert\")) {\n"
+	            /**/ "			this.revert(-step);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateattribute(\"index\")) {\n"
+	            /**/ "			local new_index = this.index + step;\n"
+	            /**/ "			if (new_index < 0)\n"
+	            /**/ "				new_index = type(new_index)();\n"
+	            /**/ "			this.index = new_index;\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"add\")) {\n"
+	            /**/ "			this.operator move := (this + step);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"sub\")) {\n"
+	            /**/ "			this.operator move := (this - -(step));\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivateoperator(\"inc\")) {\n"
+	            /**/ "			do {\n"
+	            /**/ "				++this;\n"
+	            /**/ "			}while (--step && this.hasnext);\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "		if (tp.hasprivatoperator(\"next\")) {\n"
+	            /**/ "			while (--step) {\n"
+	            /**/ "				try {\n"
+	            /**/ "					this.operator next();\n"
+	            /**/ "				} catch (StopIteration) {\n"
+	            /**/ "					break;\n"
+	            /**/ "				}\n"
+	            /**/ "			}\n"
+	            /**/ "			return;\n"
+	            /**/ "		}\n"
+	            /**/ "	}\n"
+	            /**/ "	return;\n"
+	            /**/ "}"
+	            "}\n"),
+	TYPE_METHOD_END
 };
 
 
@@ -2073,152 +2066,141 @@ err:
 
 
 PRIVATE struct type_getset tpconst iterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  &DeeIterator_GetSeq, NULL, NULL,
-	  DOC("->?DSequence\n"
-	      "Returns the underlying sequence that is being iterated\n"
-	      "Since use of this member isn't all too common, sub-classes are allowed "
-	      /**/ "to (and sometimes do) not return the exact original sequence, but rather "
-	      /**/ "a sequence that is syntactically equivalent (i.e. contains the same items)\n"
-	      "Because of this you should not expect their ids to equal, or even their "
-	      /**/ "types for that matter. Only expect the contained items, as well as their "
-	      /**/ "order to be identical") },
-	{ "future",
-	  &IteratorFuture_For, NULL, NULL,
-	  DOC("->?DSequence\n"
-	      "Returns an abstract sequence proxy that always refers to the items that are "
-	      /**/ "still left to be yielded by @this Iterator. Note that for this to function "
-	      /**/ "properly, the Iterator must be copyable.\n"
-	      "Also note that as soon as more items are iterated from @this Iterator, those "
-	      /**/ "items will disappear from its future sequence immediately.\n"
-	      "In the end, this property will simply return a proxy-type derived from :Sequence, "
-	      /**/ "who's ${operator iter} is set up to return a copy of the pointed-to Iterator.\n"
+	TYPE_GETTER(STR_seq, &DeeIterator_GetSeq,
+	            "->?DSequence\n"
+	            "Returns the underlying sequence that is being iterated\n"
+	            "Since use of this member isn't all too common, sub-classes are allowed "
+	            /**/ "to (and sometimes do) not return the exact original sequence, but rather "
+	            /**/ "a sequence that is syntactically equivalent (i.e. contains the same items)\n"
+	            "Because of this you should not expect their ids to equal, or even their "
+	            /**/ "types for that matter. Only expect the contained items, as well as their "
+	            /**/ "order to be identical"),
+	TYPE_GETTER("future", &IteratorFuture_For,
+	            "->?DSequence\n"
+	            "Returns an abstract sequence proxy that always refers to the items that are "
+	            /**/ "still left to be yielded by @this Iterator. Note that for this to function "
+	            /**/ "properly, the Iterator must be copyable.\n"
+	            "Also note that as soon as more items are iterated from @this Iterator, those "
+	            /**/ "items will disappear from its future sequence immediately.\n"
+	            "In the end, this property will simply return a proxy-type derived from :Sequence, "
+	            /**/ "who's ${operator iter} is set up to return a copy of the pointed-to Iterator.\n"
+	            "${"
+	            /**/ "local x = [10, 20, 30];\n"
+	            /**/ "local it = x.operator iter();\n"
+	            /**/ "print repr it.future;     /* { 10, 20, 30 } */\n"
+	            /**/ "print it.operator next(); /* 10 */\n"
+	            /**/ "print repr it.future;     /* { 20, 30 } */"
+	            "}"),
+	TYPE_GETTER("pending", &IteratorPending_For,
+	            "->?DSequence\n"
+	            "Very similar to ?#future, however the when invoking ${operator iter} on "
+	            /**/ "the returned sequence, rather than having it return a copy of @this Iterator, "
+	            /**/ "re-return the exact same Iterator, allowing the use of this member for iterators "
+	            /**/ "that don't implement a way of being copied\n"
 
-	      "${"
-	      /**/ "local x = [10, 20, 30];\n"
-	      /**/ "local it = x.operator iter();\n"
-	      /**/ "print repr it.future;     /* { 10, 20, 30 } */\n"
-	      /**/ "print it.operator next(); /* 10 */\n"
-	      /**/ "print repr it.future;     /* { 20, 30 } */"
-	      "}") },
-	{ "pending",
-	  &IteratorPending_For, NULL, NULL,
-	  DOC("->?DSequence\n"
-	      "Very similar to ?#future, however the when invoking ${operator iter} on "
-	      /**/ "the returned sequence, rather than having it return a copy of @this Iterator, "
-	      /**/ "re-return the exact same Iterator, allowing the use of this member for iterators "
-	      /**/ "that don't implement a way of being copied\n"
-
-	      "${"
-	      /**/ "local x = [10, 20, 30];\n"
-	      /**/ "local it = x.operator iter();\n"
-	      /**/ "print it.operator next(); /* 10 */\n"
-	      /**/ "print repr it.pending;    /* { 20, 30 } */\n"
-	      /**/ "/* ERROR: Signal.StopIteration.\n"
-	      /**/ " *        The `repr' used the same Iterator,\n"
-	      /**/ " *        which consumed all remaining items */\n"
-	      /**/ "print it.operator next();"
-	      "}") },
-	{ "isbidirectional",
-	  &iterator_get_isbidirectional, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this Iterator can be used as bi-directional\n"
-	      "In order for this to be possible, a sub-class of :Iterator must implement at least "
-	      /**/ "one of the following members, at which point the entire bi-directional Iterator "
-	      /**/ "function set becomes available. Also note that for full support, an Iterator should "
-	      /**/ "also implement ?#seq, ?#{op:assign}, ?#{op:copy} and ?#{op:eq} or ?#{op:ne}\n"
-	      "#T{Function|Prototype|Description~"
-	      "?#{op:dec}|${operator -- (): Iterator}|Decrement the Iterator by one&"
-	      "?#{op:isub}|${operator -= (step: int): Iterator}|Revert the Iterator by $step&"
-	      "?#{op:sub}|${operator - (step: int): Iterator}|Create a new iterator reverted by $step&"
-	      "?#{op:iadd}|${operator += (step: int): Iterator}|Advance the Iterator by $step (which may be negative)&"
-	      "?#{op:add}|${operator + (step: int): Iterator}|Create a new iterator advanced by $step (which may be negative)&"
-	      "?#revert|${function revert(step: int)}|Revert the Iterator by $step (same as ?#{op:isub})&"
-	      "?#advance|${function advance(step: int)}|Advance the Iterator by $step (which may be negative) (same as ?#{op:iadd})&"
-	      "?#index|${property index: int = { get(); set(); }}|Get/set the exact index of the Iterator within its sequence&"
-	      "?#prev|${function prev(): bool}|Decrement the Iterator's position, returning ?f if the Iterator had already been fully unwound and ?t otherwise&"
-	      "?#rewind|${function rewind()}|Rewind the Iterator fully}\n"
-	      "The minimum requirement for access to the entire feature-set is provision of ?#index and ?#{op:next}, "
-	      /**/ "at which point all functions will have become unlocked\n"
-	      "Hint: If a sub-class wishes to implement any of the above functions, without being considered "
-	      /**/ "to be bi-directional, it should override this property and have it evaluate to ?f") },
-	{ DeeString_STR(&str_hasprev),
-	  &iterator_get_hasprev, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Returns ?t if @this Iterator has a predecessor\n"
-
-	      "${"
-	      /**/ "property hasprev: bool = {\n"
-	      /**/ "	get(): bool {\n"
-	      /**/ "		for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "			if (tp.hasprivateattribute(\"index\"))\n"
-	      /**/ "				return this.index != 0;\n"
-	      /**/ "			if (tp.hasprivateattribute(\"prev\")) {\n"
-	      /**/ "				local c = copy this;\n"
-	      /**/ "				return c.prev();\n"
-	      /**/ "			}\n"
-	      /**/ "			if (tp.hasprivateattribute(\"rewind\")) {\n"
-	      /**/ "				local c = copy this;\n"
-	      /**/ "				c.rewind();\n"
-	      /**/ "				return this != c;\n"
-	      /**/ "			}\n"
-	      /**/ "			if (tp.hasprivateattribute(\"seq\")) {\n"
-	      /**/ "				local c = this.seq.operator iter();\n"
-	      /**/ "				return this != c;\n"
-	      /**/ "			}\n"
-	      /**/ "		}\n"
-	      /**/ "		throw NotImplemented(\"...\");\n"
-	      /**/ "	}\n"
-	      /**/ "}"
-	      "}") },
-	{ DeeString_STR(&str_hasnext),
-	  &iterator_get_hasnext, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Iterator has a successor (alias for ?#{op:bool})") },
-	{ DeeString_STR(&str_index),
-	  &iterator_get_index, NULL,
-	  &iterator_set_index,
-	  DOC("->?Dint\n"
-	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Get/set the current sequence index of @this Iterator\n"
-	      "Note however that depending on the type of sequence, certain indices "
-	      /**/ "may not have values bound to them. When invoked, ?#{op:next} usually skips "
-	      /**/ "ahead to the first bound index, meaning that ?#{op:next} does not necessarily "
-	      /**/ "increment the index counter linearly\n"
-
-	      "${"
-	      /**/ "property index: int = {\n"
-	      /**/ "	get(): int {\n"
-	      /**/ "		local result = 0;\n"
-	      /**/ "		local c;\n"
-	      /**/ "		for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
-	      /**/ "			if (tp.hasprivateattribute(\"rewind\")) {\n"
-	      /**/ "				c = copy this;\n"
-	      /**/ "				c.rewind();\n"
-	      /**/ "				goto got_rewound_iter;\n"
-	      /**/ "			}\n"
-	      /**/ "			if (tp.hasprivateattribute(\"seq\")) {\n"
-	      /**/ "				c = this.seq.operator iter();\n"
-	      /**/ "				goto got_rewound_iter;\n"
-	      /**/ "			}\n"
-	      /**/ "		}\n"
-	      /**/ "		throw NotImplemented(\"...\");\n"
-	      /**/ "got_rewound_iter:\n"
-	      /**/ "		while (c < this) {\n"
-	      /**/ "			++c;\n"
-	      /**/ "			++result;\n"
-	      /**/ "		}\n"
-	      /**/ "		return result;\n"
-	      /**/ "	}\n"
-	      /**/ "	set(index: int) {\n"
-	      /**/ "		index = (int)index;\n"
-	      /**/ "		this.rewind();\n"
-	      /**/ "		this.advance(index);\n"
-	      /**/ "	}\n"
-	      /**/ "}"
-	      "}") },
-	{ NULL }
+	            "${"
+	            /**/ "local x = [10, 20, 30];\n"
+	            /**/ "local it = x.operator iter();\n"
+	            /**/ "print it.operator next(); /* 10 */\n"
+	            /**/ "print repr it.pending;    /* { 20, 30 } */\n"
+	            /**/ "/* ERROR: Signal.StopIteration.\n"
+	            /**/ " *        The `repr' used the same Iterator,\n"
+	            /**/ " *        which consumed all remaining items */\n"
+	            /**/ "print it.operator next();"
+	            "}"),
+	TYPE_GETTER("isbidirectional", &iterator_get_isbidirectional,
+	            "->?Dbool\n"
+	            "Check if @this Iterator can be used as bi-directional\n"
+	            "In order for this to be possible, a sub-class of :Iterator must implement at least "
+	            /**/ "one of the following members, at which point the entire bi-directional Iterator "
+	            /**/ "function set becomes available. Also note that for full support, an Iterator should "
+	            /**/ "also implement ?#seq, ?#{op:assign}, ?#{op:copy} and ?#{op:eq} or ?#{op:ne}\n"
+	            "#T{Function|Prototype|Description~"
+	            "?#{op:dec}|${operator -- (): Iterator}|Decrement the Iterator by one&"
+	            "?#{op:isub}|${operator -= (step: int): Iterator}|Revert the Iterator by $step&"
+	            "?#{op:sub}|${operator - (step: int): Iterator}|Create a new iterator reverted by $step&"
+	            "?#{op:iadd}|${operator += (step: int): Iterator}|Advance the Iterator by $step (which may be negative)&"
+	            "?#{op:add}|${operator + (step: int): Iterator}|Create a new iterator advanced by $step (which may be negative)&"
+	            "?#revert|${function revert(step: int)}|Revert the Iterator by $step (same as ?#{op:isub})&"
+	            "?#advance|${function advance(step: int)}|Advance the Iterator by $step (which may be negative) (same as ?#{op:iadd})&"
+	            "?#index|${property index: int = { get(); set(); }}|Get/set the exact index of the Iterator within its sequence&"
+	            "?#prev|${function prev(): bool}|Decrement the Iterator's position, returning ?f if the Iterator had already been fully unwound and ?t otherwise&"
+	            "?#rewind|${function rewind()}|Rewind the Iterator fully}\n"
+	            "The minimum requirement for access to the entire feature-set is provision of ?#index and ?#{op:next}, "
+	            /**/ "at which point all functions will have become unlocked\n"
+	            "Hint: If a sub-class wishes to implement any of the above functions, without being considered "
+	            /**/ "to be bi-directional, it should override this property and have it evaluate to ?f"),
+	TYPE_GETTER(STR_hasprev, &iterator_get_hasprev,
+	            "->?Dbool\n"
+	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Returns ?t if @this Iterator has a predecessor\n"
+	            "${"
+	            /**/ "property hasprev: bool = {\n"
+	            /**/ "	get(): bool {\n"
+	            /**/ "		for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "			if (tp.hasprivateattribute(\"index\"))\n"
+	            /**/ "				return this.index != 0;\n"
+	            /**/ "			if (tp.hasprivateattribute(\"prev\")) {\n"
+	            /**/ "				local c = copy this;\n"
+	            /**/ "				return c.prev();\n"
+	            /**/ "			}\n"
+	            /**/ "			if (tp.hasprivateattribute(\"rewind\")) {\n"
+	            /**/ "				local c = copy this;\n"
+	            /**/ "				c.rewind();\n"
+	            /**/ "				return this != c;\n"
+	            /**/ "			}\n"
+	            /**/ "			if (tp.hasprivateattribute(\"seq\")) {\n"
+	            /**/ "				local c = this.seq.operator iter();\n"
+	            /**/ "				return this != c;\n"
+	            /**/ "			}\n"
+	            /**/ "		}\n"
+	            /**/ "		throw NotImplemented(\"...\");\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_GETTER(STR_hasnext, &iterator_get_hasnext,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Iterator has a successor (alias for ?#{op:bool})"),
+	TYPE_GETSET(STR_index, &iterator_get_index, NULL, &iterator_set_index,
+	            "->?Dint\n"
+	            "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
+	            "Get/set the current sequence index of @this Iterator\n"
+	            "Note however that depending on the type of sequence, certain indices "
+	            /**/ "may not have values bound to them. When invoked, ?#{op:next} usually skips "
+	            /**/ "ahead to the first bound index, meaning that ?#{op:next} does not necessarily "
+	            /**/ "increment the index counter linearly\n"
+	            "${"
+	            /**/ "property index: int = {\n"
+	            /**/ "	get(): int {\n"
+	            /**/ "		local result = 0;\n"
+	            /**/ "		local c;\n"
+	            /**/ "		for (local tp = type(this); tp !is none && tp !== iterator; tp = tp.__base__) {\n"
+	            /**/ "			if (tp.hasprivateattribute(\"rewind\")) {\n"
+	            /**/ "				c = copy this;\n"
+	            /**/ "				c.rewind();\n"
+	            /**/ "				goto got_rewound_iter;\n"
+	            /**/ "			}\n"
+	            /**/ "			if (tp.hasprivateattribute(\"seq\")) {\n"
+	            /**/ "				c = this.seq.operator iter();\n"
+	            /**/ "				goto got_rewound_iter;\n"
+	            /**/ "			}\n"
+	            /**/ "		}\n"
+	            /**/ "		throw NotImplemented(\"...\");\n"
+	            /**/ "got_rewound_iter:\n"
+	            /**/ "		while (c < this) {\n"
+	            /**/ "			++c;\n"
+	            /**/ "			++result;\n"
+	            /**/ "		}\n"
+	            /**/ "		return result;\n"
+	            /**/ "	}\n"
+	            /**/ "	set(index: int) {\n"
+	            /**/ "		index = (int)index;\n"
+	            /**/ "		this.rewind();\n"
+	            /**/ "		this.advance(index);\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_GETSET_END
 };
 
 PRIVATE int DCALL
@@ -2240,9 +2222,11 @@ iterator_inplace_add(DeeObject **__restrict pself,
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
-	if unlikely((unlikely(count < 0) ? iterator_do_revert(*pself, (size_t)-count, NULL, countob)
-		                              : (count > 0) ? iterator_do_advance(*pself, (size_t)count, countob, NULL) : 0) < 0)
-	goto err;
+	if unlikely((unlikely(count < 0)
+	             ? iterator_do_revert(*pself, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_advance(*pself, (size_t)count, countob, NULL)
+	                           : 0) < 0)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -2255,9 +2239,11 @@ iterator_inplace_sub(DeeObject **__restrict pself,
 	/* Increment the Iterator by `(int)count' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
-	if unlikely((unlikely(count < 0) ? iterator_do_advance(*pself, (size_t)-count, NULL, countob)
-		                              : (count > 0) ? iterator_do_revert(*pself, (size_t)count, countob, NULL) : 0) < 0)
-	goto err;
+	if unlikely((unlikely(count < 0)
+	             ? iterator_do_advance(*pself, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_revert(*pself, (size_t)count, countob, NULL)
+	                           : 0) < 0)
+		goto err;
 	return 0;
 err:
 	return -1;
@@ -2274,9 +2260,11 @@ iterator_add(DeeObject *self,
 	result = DeeObject_Copy(self);
 	if unlikely(!result)
 		goto err;
-	if unlikely((unlikely(count < 0) ? iterator_do_revert(result, (size_t)-count, NULL, countob)
-		                              : (count > 0) ? iterator_do_advance(result, (size_t)count, countob, NULL) : 0) < 0)
-	goto err_r;
+	if unlikely((unlikely(count < 0)
+	             ? iterator_do_revert(result, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_advance(result, (size_t)count, countob, NULL)
+	                           : 0) < 0)
+		goto err_r;
 	return result;
 err_r:
 	Dee_Decref(result);
@@ -2295,8 +2283,10 @@ iterator_sub(DeeObject *self,
 	result = DeeObject_Copy(self);
 	if unlikely(!result)
 		goto err;
-	if unlikely((unlikely(count < 0) ? iterator_do_advance(result, (size_t)-count, NULL, countob)
-	                                 : (count > 0) ? iterator_do_revert(result, (size_t)count, countob, NULL) : 0) < 0)
+	if unlikely((unlikely(count < 0)
+	             ? iterator_do_advance(result, (size_t)-count, NULL, countob)
+	             : (count > 0) ? iterator_do_revert(result, (size_t)count, countob, NULL)
+	                           : 0) < 0)
 		goto err_r;
 	return result;
 err_r:
@@ -2435,24 +2425,20 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         /**/ "as a member or property $seq which yields the underlying sequence being "
 	                         /**/ "iterated. Note that all builtin iterator types implement the $seq member, "
 	                         /**/ "and unless there is a good reason not to, most also implement a copy-constructor\n"
-
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Default-construct an Iterator object\n"
-
-
 	                         "\n"
+
 	                         "next->\n"
 	                         "Default-implemented to always indicate iterator exhaustion\n"
 	                         "This function must be overwritten by sub-classes\n"
-
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Copies @this Iterator and enumerate all remaining elements, constructing "
 	                         /**/ "a representation of all of them using abstract sequence syntax\n"
-
 	                         "${"
 	                         /**/ "operator repr() {\n"
 	                         /**/ "	File.Writer tempfp;\n"
@@ -2464,9 +2450,8 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         /**/ "	return tempfp.string;\n"
 	                         /**/ "}"
 	                         "}\n"
-
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?f if @this Iterator has been exhausted, or ?t otherwise.\n"
 	                         "${"
@@ -2480,32 +2465,28 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         /**/ "	);\n"
 	                         /**/ "}"
 	                         "}\n"
-
-
 	                         "\n"
+
 	                         "+(step:?Dint)->\n"
 	                         "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
 	                         "@throw IntegerOverflow @step is too large\n"
 	                         "Copies @this Iterator and advance it by yielding @step items from it before returning it\n"
 	                         "If the Iterator becomes exhausted before then, stop and return that exhausted iterator\n"
-
-
 	                         "\n"
+
 	                         "+=(step:?Dint)->\n"
 	                         "@throw NotImplemented @step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
 	                         "@throw IntegerOverflow @step is too large\n"
 	                         "Advance @this Iterator by yielding @step items\n"
 	                         "If @this Iterator becomes exhausted before then, stop prematurely\n"
-
-
 	                         "\n"
+
 	                         "++->\n"
 	                         "Advance @this Iterator by one. No-op if the Iterator has been exhausted\n"
 	                         "Note this is very similar to ?#{op:next}, however in the case of generator-like "
 	                         /**/ "iterators, doing this may be faster since no generator value has to be created\n"
-
-
 	                         "\n"
+
 	                         "call(defl?)->\n"
 	                         "Calling an operator as a function will invoke ${operator next}, and return "
 	                         /**/ "that value, allowing iterators to be used as function-like producers\n"
@@ -2520,31 +2501,27 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         /**/ "	}\n"
 	                         /**/ "}"
 	                         "}\n"
-
-
 	                         "\n"
+
 	                         "-(step:?Dint)->\n"
 	                         "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
 	                         "@throw IntegerOverflow @step is too large\n"
 	                         "Copies @this Iterator and reverts it by @step before returning it\n"
 	                         "If the Iterator reaches its starting position before then, stop prematurely\n"
-
-
 	                         "\n"
+
 	                         "--->\n"
 	                         "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
 	                         "Decrement @this operator by one. No-op if the Iterator is already at its starting position\n"
-
-
 	                         "\n"
+
 	                         "-=(step:?Dint)->\n"
 	                         "@throw NotImplemented @step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
 	                         "@throw IntegerOverflow @step is too large\n"
 	                         "Revert @this Iterator by @step items\n"
 	                         "If @this Iterator reaches its starting position before then, stop prematurely\n"
-
-
 	                         "\n"
+
 	                         "<->\n"
 	                         "<=->\n"
 	                         "==->\n"
@@ -2625,9 +2602,7 @@ done:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_ctor(IteratorFuture *__restrict self) {
 	self->if_iter = DeeObject_IterSelf(Dee_EmptySeq);
-	return (likely(self->if_iter))
-	       ? 0
-	       : -1;
+	return likely(self->if_iter) ? 0 : -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

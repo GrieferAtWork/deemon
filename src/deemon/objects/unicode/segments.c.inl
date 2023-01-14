@@ -154,21 +154,17 @@ ssegiter_getseq(StringSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ssegiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssegiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:StringSegments") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &ssegiter_getseq, "->?Ert:StringSegments"),
+	TYPE_GETSET_END
 };
 
 
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(StringSegmentsIterator *self, StringSegmentsIterator *other) {    \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                                   \
-		return_bool(READ_PTR(self) op READ_PTR(other));                    \
+#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
+	name(StringSegmentsIterator *self, StringSegmentsIterator *other) { \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))           \
+			return NULL;                                                \
+		return_bool(READ_PTR(self) op READ_PTR(other));                 \
 	}
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_eq, ==)
 DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_ne, !=)

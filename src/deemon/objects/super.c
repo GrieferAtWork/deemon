@@ -691,15 +691,15 @@ err:
 }
 
 PRIVATE struct type_method tpconst super_class_methods[] = {
-	{ "typeof", &super_typeof,
-	  DOC("(ob:?.)->?DType\n"
-	      "@throw TypeError @ob is not a super-object\n"
-	      "@return the type of a given super-view @ob") },
-	{ "selfof", &super_selfof,
-	  DOC("(ob:?.)->\n"
-	      "@throw TypeError @ob is not a super-object\n"
-	      "@return the object of a given super-view @ob") },
-	{ NULL }
+	TYPE_METHOD("typeof", &super_typeof,
+	            "(ob:?.)->?DType\n"
+	            "@throw TypeError @ob is not a super-object\n"
+	            "@return the type of a given super-view @ob"),
+	TYPE_METHOD("selfof", &super_selfof,
+	            "(ob:?.)->\n"
+	            "@throw TypeError @ob is not a super-object\n"
+	            "@return the object of a given super-view @ob"),
+	TYPE_METHOD_END
 };
 
 

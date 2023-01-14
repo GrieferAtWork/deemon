@@ -185,43 +185,43 @@ done:
 }
 
 
-#define DEFINE_CATITERATOR_COMPARE(name, if_equal, if_diffseq, compare_object)      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
-	name(CatIterator *self, CatIterator *other) {                                   \
-		DREF DeeObject *result;                                                     \
-		DREF DeeObject *my_curr, *ot_curr;                                          \
-		DREF DeeObject **my_pseq, **ot_pseq;                                        \
-		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))              \
-			return NULL;                                                            \
-		if (self == other)                                                          \
-			if_equal;                                                               \
-		for (;;) {                                                                  \
-			atomic_rwlock_read(&self->c_lock);                                      \
-			if (!atomic_rwlock_tryread(&other->c_lock)) {                           \
-				atomic_rwlock_endread(&self->c_lock);                               \
-				atomic_rwlock_read(&other->c_lock);                                 \
-				if (!atomic_rwlock_tryread(&self->c_lock))                          \
-					continue;                                                       \
-			}                                                                       \
-			break;                                                                  \
-		}                                                                           \
-		my_pseq = (DREF DeeObject **)self->c_pseq;                                  \
-		ot_pseq = (DREF DeeObject **)other->c_pseq;                                 \
-		if (my_pseq != ot_pseq) {                                                   \
-			atomic_rwlock_endread(&other->c_lock);                                  \
-			atomic_rwlock_endread(&self->c_lock);                                   \
-			if_diffseq;                                                             \
-		}                                                                           \
-		my_curr = self->c_curr;                                                     \
-		Dee_Incref(my_curr);                                                        \
-		ot_curr = other->c_curr;                                                    \
-		Dee_Incref(ot_curr);                                                        \
-		atomic_rwlock_endread(&other->c_lock);                                      \
-		atomic_rwlock_endread(&self->c_lock);                                       \
-		result = compare_object(my_curr, ot_curr);                                  \
-		Dee_Decref(ot_curr);                                                        \
-		Dee_Decref(my_curr);                                                        \
-		return result;                                                              \
+#define DEFINE_CATITERATOR_COMPARE(name, if_equal, if_diffseq, compare_object) \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
+	name(CatIterator *self, CatIterator *other) {                              \
+		DREF DeeObject *result;                                                \
+		DREF DeeObject *my_curr, *ot_curr;                                     \
+		DREF DeeObject **my_pseq, **ot_pseq;                                   \
+		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))         \
+			return NULL;                                                       \
+		if (self == other)                                                     \
+			if_equal;                                                          \
+		for (;;) {                                                             \
+			atomic_rwlock_read(&self->c_lock);                                 \
+			if (!atomic_rwlock_tryread(&other->c_lock)) {                      \
+				atomic_rwlock_endread(&self->c_lock);                          \
+				atomic_rwlock_read(&other->c_lock);                            \
+				if (!atomic_rwlock_tryread(&self->c_lock))                     \
+					continue;                                                  \
+			}                                                                  \
+			break;                                                             \
+		}                                                                      \
+		my_pseq = (DREF DeeObject **)self->c_pseq;                             \
+		ot_pseq = (DREF DeeObject **)other->c_pseq;                            \
+		if (my_pseq != ot_pseq) {                                              \
+			atomic_rwlock_endread(&other->c_lock);                             \
+			atomic_rwlock_endread(&self->c_lock);                              \
+			if_diffseq;                                                        \
+		}                                                                      \
+		my_curr = self->c_curr;                                                \
+		Dee_Incref(my_curr);                                                   \
+		ot_curr = other->c_curr;                                               \
+		Dee_Incref(ot_curr);                                                   \
+		atomic_rwlock_endread(&other->c_lock);                                 \
+		atomic_rwlock_endread(&self->c_lock);                                  \
+		result = compare_object(my_curr, ot_curr);                             \
+		Dee_Decref(ot_curr);                                                   \
+		Dee_Decref(my_curr);                                                   \
+		return result;                                                         \
 	}
 DEFINE_CATITERATOR_COMPARE(catiterator_eq, return_true, return_false, DeeObject_CompareEqObject)
 DEFINE_CATITERATOR_COMPARE(catiterator_ne, return_false, return_true, DeeObject_CompareNeObject)
@@ -347,14 +347,9 @@ catiterator_curr_set(CatIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst catiterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
-	  DOC("->?Ert:SeqConcat") },
-	{ "__curr__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_curr_set,
-	  DOC("->?DIterator") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &catiterator_seq_get, "->?Ert:SeqConcat"),
+	TYPE_GETSET("__curr__", &catiterator_curr_get, NULL, &catiterator_curr_set, "->?DIterator"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst catiterator_members[] = {
@@ -444,12 +439,8 @@ cat_getsequences(Cat *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst cat_getsets[] = {
-	{ "__sequences__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences,
-	  NULL,
-	  NULL,
-	  DOC("->?S?DSequence") },
-	{ NULL }
+	TYPE_GETTER("__sequences__", &cat_getsequences, "->?S?DSequence"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst cat_class_members[] = {

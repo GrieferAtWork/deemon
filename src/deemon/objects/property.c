@@ -360,35 +360,28 @@ property_get_module(Property *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst property_getsets[] = {
-	{ "canget",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canget, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Property has a getter callback") },
-	{ "candel",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_candel, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Property has a delete callback") },
-	{ "canset",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_canset, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Property has a setter callback") },
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this Property, or ?N if unknown") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this Property, or ?N if unknown") },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_type, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the type implementing @this Property, or ?N if unknown") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "Returns the module within which @this Property is declared, or ?N if unknown") },
-	{ NULL }
+	TYPE_GETTER("canget", &property_canget,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Property has a getter callback"),
+	TYPE_GETTER("candel", &property_candel,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Property has a delete callback"),
+	TYPE_GETTER("canset", &property_canset,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Property has a setter callback"),
+	TYPE_GETTER(STR___name__, &property_get_name,
+	            "->?X2?Dstring?N\n"
+	            "Returns the name of @this Property, or ?N if unknown"),
+	TYPE_GETTER(STR___doc__, &property_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "Returns the documentation string of @this Property, or ?N if unknown"),
+	TYPE_GETTER(STR___type__, &property_get_type,
+	            "->?X2?Dstring?N\n"
+	            "Returns the type implementing @this Property, or ?N if unknown"),
+	TYPE_GETTER(STR___module__, &property_get_module,
+	            "->?X2?DModule?N\n"
+	            "Returns the module within which @this Property is declared, or ?N if unknown"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -405,8 +398,8 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Property),
 	/* .tp_doc      = */ DOC("(getter:?DCallable=!N,delete:?DCallable=!N,setter:?DCallable=!N)\n"
-
 	                         "\n"
+
 	                         "call(args!)->\n"
 	                         "Same as ${this.get(args...)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,

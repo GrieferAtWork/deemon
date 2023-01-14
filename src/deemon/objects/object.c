@@ -1410,6 +1410,149 @@ PRIVATE char const meth_delattr[]    = "o:__delattr__";
 PRIVATE char const meth_setattr[]    = "oo:__setattr__";
 PRIVATE char const meth_enumattr[]   = ":__enumattr__";
 
+#ifndef STR___copy__
+#define STR___copy__       (meth_copy + 1)
+#endif /* !STR___copy__ */
+#ifndef STR___deepcopy__
+#define STR___deepcopy__   (meth_deepcopy + 1)
+#endif /* !STR___deepcopy__ */
+#ifndef STR___assign__
+#define STR___assign__     (meth_assign + 2)
+#endif /* !STR___assign__ */
+#ifndef STR___moveassign__
+#define STR___moveassign__ (meth_moveassign + 2)
+#endif /* !STR___moveassign__ */
+#ifndef STR___str__
+#define STR___str__        (meth_str + 1)
+#endif /* !STR___str__ */
+#ifndef STR___repr__
+#define STR___repr__       (meth_repr + 1)
+#endif /* !STR___repr__ */
+#ifndef STR___bool__
+#define STR___bool__       (meth_bool + 1)
+#endif /* !STR___bool__ */
+#ifndef STR___call__
+#define STR___call__       (meth_call + 2)
+#endif /* !STR___call__ */
+#ifndef STR___thiscall__
+#define STR___thiscall__   (meth_thiscall + 4)
+#endif /* !STR___thiscall__ */
+#ifndef STR___hash__
+#define STR___hash__       (meth_hash + 1)
+#endif /* !STR___hash__ */
+#ifndef STR___int__
+#define STR___int__        (meth_int + 1)
+#endif /* !STR___int__ */
+#ifndef STR___inv__
+#define STR___inv__        (meth_inv + 1)
+#endif /* !STR___inv__ */
+#ifndef STR___pos__
+#define STR___pos__        (meth_pos + 1)
+#endif /* !STR___pos__ */
+#ifndef STR___neg__
+#define STR___neg__        (meth_neg + 1)
+#endif /* !STR___neg__ */
+#ifndef STR___add__
+#define STR___add__        (meth_add + 2)
+#endif /* !STR___add__ */
+#ifndef STR___sub__
+#define STR___sub__        (meth_sub + 2)
+#endif /* !STR___sub__ */
+#ifndef STR___mul__
+#define STR___mul__        (meth_mul + 2)
+#endif /* !STR___mul__ */
+#ifndef STR___div__
+#define STR___div__        (meth_div + 2)
+#endif /* !STR___div__ */
+#ifndef STR___mod__
+#define STR___mod__        (meth_mod + 2)
+#endif /* !STR___mod__ */
+#ifndef STR___shl__
+#define STR___shl__        (meth_shl + 2)
+#endif /* !STR___shl__ */
+#ifndef STR___shr__
+#define STR___shr__        (meth_shr + 2)
+#endif /* !STR___shr__ */
+#ifndef STR___and__
+#define STR___and__        (meth_and + 2)
+#endif /* !STR___and__ */
+#ifndef STR___or__
+#define STR___or__         (meth_or + 2)
+#endif /* !STR___or__ */
+#ifndef STR___xor__
+#define STR___xor__        (meth_xor + 2)
+#endif /* !STR___xor__ */
+#ifndef STR___pow__
+#define STR___pow__        (meth_pow + 2)
+#endif /* !STR___pow__ */
+#ifndef STR___eq__
+#define STR___eq__         (meth_eq + 2)
+#endif /* !STR___eq__ */
+#ifndef STR___ne__
+#define STR___ne__         (meth_ne + 2)
+#endif /* !STR___ne__ */
+#ifndef STR___lo__
+#define STR___lo__         (meth_lo + 2)
+#endif /* !STR___lo__ */
+#ifndef STR___le__
+#define STR___le__         (meth_le + 2)
+#endif /* !STR___le__ */
+#ifndef STR___gr__
+#define STR___gr__         (meth_gr + 2)
+#endif /* !STR___gr__ */
+#ifndef STR___ge__
+#define STR___ge__         (meth_ge + 2)
+#endif /* !STR___ge__ */
+#ifndef STR___size__
+#define STR___size__       (meth_size + 1)
+#endif /* !STR___size__ */
+#ifndef STR___contains__
+#define STR___contains__   (meth_contains + 2)
+#endif /* !STR___contains__ */
+#ifndef STR___getitem__
+#define STR___getitem__    (meth_getitem + 2)
+#endif /* !STR___getitem__ */
+#ifndef STR___delitem__
+#define STR___delitem__    (meth_delitem + 2)
+#endif /* !STR___delitem__ */
+#ifndef STR___setitem__
+#define STR___setitem__    (meth_setitem + 3)
+#endif /* !STR___setitem__ */
+#ifndef STR___getrange__
+#define STR___getrange__   (meth_getrange + 3)
+#endif /* !STR___getrange__ */
+#ifndef STR___delrange__
+#define STR___delrange__   (meth_delrange + 3)
+#endif /* !STR___delrange__ */
+#ifndef STR___setrange__
+#define STR___setrange__   (meth_setrange + 4)
+#endif /* !STR___setrange__ */
+#ifndef STR___iterself__
+#define STR___iterself__   (meth_iterself + 1)
+#endif /* !STR___iterself__ */
+#ifndef STR___iternext__
+#define STR___iternext__   (meth_iternext + 1)
+#endif /* !STR___iternext__ */
+#ifndef STR___getattr__
+#define STR___getattr__    (meth_getattr + 2)
+#endif /* !STR___getattr__ */
+#ifndef STR___callattr__
+#define STR___callattr__   (meth_callattr)
+#endif /* !STR___callattr__ */
+#ifndef STR___hasattr__
+#define STR___hasattr__    (meth_hasattr + 2)
+#endif /* !STR___hasattr__ */
+#ifndef STR___delattr__
+#define STR___delattr__    (meth_delattr + 2)
+#endif /* !STR___delattr__ */
+#ifndef STR___setattr__
+#define STR___setattr__    (meth_setattr + 3)
+#endif /* !STR___setattr__ */
+#ifndef STR___enumattr__
+#define STR___enumattr__   (meth_enumattr + 1)
+#endif /* !STR___enumattr__ */
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_sizeof(DeeObject *self) {
 	DeeTypeObject *type;
@@ -2160,83 +2303,82 @@ DEFINE_DEPRECATED_INPLACE_BINARY(ipow, DeeObject_InplacePow)
 
 PRIVATE struct type_method tpconst object_methods[] = {
 	/* Operator invocation functions. */
-	{ meth_copy+1,       &object_copy, DOC("->\n@return A copy of @this object") },
-	{ meth_deepcopy+1,   &object_deepcopy, DOC("->\n@return A deep copy of @this object") },
-	{ meth_assign+2,     &object_assign, DOC("(other)->@this\nAssigns @other to @this and") },
-	{ meth_moveassign+2, &object_moveassign, DOC("(other)->@this\nMove-assign @other to @this and") },
-	{ meth_str+1,        &object_dostr, DOC("->?Dstring\n@return @this converted to a ?Dstring") },
-	{ meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return The ?Dstring representation of @this") },
-	{ meth_bool+1,       &object_bool, DOC("->?Dbool\n@return The ?Dbool value of @this") },
-	{ meth_call+2,       &object_call, DOC("(args:?DTuple)->\nCall @this using the given @args ?DTuple") },
-	{ meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args ?DTuple") },
-	{ meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
-	{ meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
-	{ meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
-	{ meth_pos+1,        &object_pos, DOC("->\n@return The result of ${this.operator + ()}") },
-	{ meth_neg+1,        &object_neg, DOC("->\n@return The result of ${this.operator - ()}") },
-	{ meth_add+2,        &object_add, DOC("(other)->\n@return The result of ${this.operator + (other)}") },
-	{ meth_sub+2,        &object_sub, DOC("(other)->\n@return The result of ${this.operator - (other)}") },
-	{ meth_mul+2,        &object_mul, DOC("(other)->\n@return The result of ${this.operator * (other)}") },
-	{ meth_div+2,        &object_div, DOC("(other)->\n@return The result of ${this.operator / (other)}") },
-	{ meth_mod+2,        &object_mod, DOC("(other)->\n@return The result of ${this.operator % (other)}") },
-	{ meth_shl+2,        &object_shl, DOC("(other)->\n@return The result of ${this.operator << (other)}") },
-	{ meth_shr+2,        &object_shr, DOC("(other)->\n@return The result of ${this.operator >> (other)}") },
-	{ meth_and+2,        &object_and, DOC("(other)->\n@return The result of ${this.operator & (other)}") },
-	{ meth_or+2,         &object_or, DOC("(other)->\n@return The result of ${this.operator | (other)}") },
-	{ meth_xor+2,        &object_xor, DOC("(other)->\n@return The result of ${this.operator ^ (other)}") },
-	{ meth_pow+2,        &object_pow, DOC("(other)->\n@return The result of ${this.operator ** (other)}") },
-	{ meth_eq+2,         &object_eq, DOC("(other)->\n@return The result of ${this.operator == (other)}") },
-	{ meth_ne+2,         &object_ne, DOC("(other)->\n@return The result of ${this.operator != (other)}") },
-	{ meth_lo+2,         &object_lo, DOC("(other)->\n@return The result of ${this.operator < (other)}") },
-	{ meth_le+2,         &object_le, DOC("(other)->\n@return The result of ${this.operator <= (other)}") },
-	{ meth_gr+2,         &object_gr, DOC("(other)->\n@return The result of ${this.operator > (other)}") },
-	{ meth_ge+2,         &object_ge, DOC("(other)->\n@return The result of ${this.operator >= (other)}") },
-	{ meth_size+1,       &object_size, DOC("->\n@return The result of ${this.operator ## ()}") },
-	{ meth_contains+2,   &object_contains, DOC("(item)->\n@return The result of ${this.operator contains (item)}") },
-	{ meth_getitem+2,    &object_getitem, DOC("(index)->\n@return The result of ${this.operator [] (index)}") },
-	{ meth_delitem+2,    &object_delitem, DOC("(index)\nInvokes ${this.operator del[] (index)}") },
-	{ meth_setitem+3,    &object_setitem, DOC("(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index, value)}") },
-	{ meth_getrange+3,   &object_getrange, DOC("(start,end)->\n@return The result of ${this.operator [:] (start, end)}") },
-	{ meth_delrange+3,   &object_delrange, DOC("(start,end)\nInvokes ${this.operator del[:] (start, end)}") },
-	{ meth_setrange+4,   &object_setrange, DOC("(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start, end, value)}") },
-	{ meth_iterself+1,   &object_iterself, DOC("->\n@return The result of ${this.operator iter()}") },
-	{ meth_iternext+1,   &object_iternext, DOC("->\n@return The result of ${this.operator next()}") },
-	{ meth_getattr+2,    &object_getattr, DOC("(name:?Dstring)->\n@return The result of ${this.operator . (name)}") },
-	{ meth_callattr,     &object_callattr, DOC("(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}") },
-	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning !t or !f indicative of this") },
-	{ meth_delattr+2,    &object_delattr, DOC("(name:?Dstring)\nInvokes ${this.operator del . (name)}") },
-	{ meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}") },
-	{ meth_enumattr+1,   &object_enumattr, DOC("()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}") },
-	{ DeeString_STR(&str___format__), &object_format_method,
-	  DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. ?Aformat?Dstring)") },
+	TYPE_METHOD(STR___copy__,       &object_copy, "->\n@return A copy of @this object"),
+	TYPE_METHOD(STR___deepcopy__,   &object_deepcopy, "->\n@return A deep copy of @this object"),
+	TYPE_METHOD(STR___assign__,     &object_assign, "(other)->@this\nAssigns @other to @this and"),
+	TYPE_METHOD(STR___moveassign__, &object_moveassign, "(other)->@this\nMove-assign @other to @this and"),
+	TYPE_METHOD(STR___str__,        &object_dostr, "->?Dstring\n@return @this converted to a ?Dstring"),
+	TYPE_METHOD(STR___repr__,       &object_dorepr, "->?Dstring\n@return The ?Dstring representation of @this"),
+	TYPE_METHOD(STR___bool__,       &object_bool, "->?Dbool\n@return The ?Dbool value of @this"),
+	TYPE_METHOD(STR___call__,       &object_call, "(args:?DTuple)->\nCall @this using the given @args ?DTuple"),
+	TYPE_METHOD(STR___thiscall__,   &object_thiscall, "(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args ?DTuple"),
+	TYPE_METHOD(STR___hash__,       &object_hash, "->?Dint\n@return The hash-value of @this"),
+	TYPE_METHOD(STR___int__,        &object_int, "->?Dint\n@return The integer-value of @this"),
+	TYPE_METHOD(STR___inv__,        &object_inv, "->\n@return The result of ${this.operator ~ ()}"),
+	TYPE_METHOD(STR___pos__,        &object_pos, "->\n@return The result of ${this.operator + ()}"),
+	TYPE_METHOD(STR___neg__,        &object_neg, "->\n@return The result of ${this.operator - ()}"),
+	TYPE_METHOD(STR___add__,        &object_add, "(other)->\n@return The result of ${this.operator + (other)}"),
+	TYPE_METHOD(STR___sub__,        &object_sub, "(other)->\n@return The result of ${this.operator - (other)}"),
+	TYPE_METHOD(STR___mul__,        &object_mul, "(other)->\n@return The result of ${this.operator * (other)}"),
+	TYPE_METHOD(STR___div__,        &object_div, "(other)->\n@return The result of ${this.operator / (other)}"),
+	TYPE_METHOD(STR___mod__,        &object_mod, "(other)->\n@return The result of ${this.operator % (other)}"),
+	TYPE_METHOD(STR___shl__,        &object_shl, "(other)->\n@return The result of ${this.operator << (other)}"),
+	TYPE_METHOD(STR___shr__,        &object_shr, "(other)->\n@return The result of ${this.operator >> (other)}"),
+	TYPE_METHOD(STR___and__,        &object_and, "(other)->\n@return The result of ${this.operator & (other)}"),
+	TYPE_METHOD(STR___or__,         &object_or, "(other)->\n@return The result of ${this.operator | (other)}"),
+	TYPE_METHOD(STR___xor__,        &object_xor, "(other)->\n@return The result of ${this.operator ^ (other)}"),
+	TYPE_METHOD(STR___pow__,        &object_pow, "(other)->\n@return The result of ${this.operator ** (other)}"),
+	TYPE_METHOD(STR___eq__,         &object_eq, "(other)->\n@return The result of ${this.operator == (other)}"),
+	TYPE_METHOD(STR___ne__,         &object_ne, "(other)->\n@return The result of ${this.operator != (other)}"),
+	TYPE_METHOD(STR___lo__,         &object_lo, "(other)->\n@return The result of ${this.operator < (other)}"),
+	TYPE_METHOD(STR___le__,         &object_le, "(other)->\n@return The result of ${this.operator <= (other)}"),
+	TYPE_METHOD(STR___gr__,         &object_gr, "(other)->\n@return The result of ${this.operator > (other)}"),
+	TYPE_METHOD(STR___ge__,         &object_ge, "(other)->\n@return The result of ${this.operator >= (other)}"),
+	TYPE_METHOD(STR___size__,       &object_size, "->\n@return The result of ${this.operator ## ()}"),
+	TYPE_METHOD(STR___contains__,   &object_contains, "(item)->\n@return The result of ${this.operator contains (item)}"),
+	TYPE_METHOD(STR___getitem__,    &object_getitem, "(index)->\n@return The result of ${this.operator [] (index)}"),
+	TYPE_METHOD(STR___delitem__,    &object_delitem, "(index)\nInvokes ${this.operator del[] (index)}"),
+	TYPE_METHOD(STR___setitem__,    &object_setitem, "(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index, value)}"),
+	TYPE_METHOD(STR___getrange__,   &object_getrange, "(start,end)->\n@return The result of ${this.operator [:] (start, end)}"),
+	TYPE_METHOD(STR___delrange__,   &object_delrange, "(start,end)\nInvokes ${this.operator del[:] (start, end)}"),
+	TYPE_METHOD(STR___setrange__,   &object_setrange, "(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start, end, value)}"),
+	TYPE_METHOD(STR___iterself__,   &object_iterself, "->\n@return The result of ${this.operator iter()}"),
+	TYPE_METHOD(STR___iternext__,   &object_iternext, "->\n@return The result of ${this.operator next()}"),
+	TYPE_METHOD(STR___getattr__,    &object_getattr, "(name:?Dstring)->\n@return The result of ${this.operator . (name)}"),
+	TYPE_METHOD(STR___callattr__,   &object_callattr, "(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}"),
+	TYPE_METHOD(STR___hasattr__,    &object_hasattr, "(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning !t or !f indicative of this"),
+	TYPE_METHOD(STR___delattr__,    &object_delattr, "(name:?Dstring)\nInvokes ${this.operator del . (name)}"),
+	TYPE_METHOD(STR___setattr__,    &object_setattr, "(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}"),
+	TYPE_METHOD(STR___enumattr__,   &object_enumattr, "()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}"),
+	TYPE_METHOD(STR___format__, &object_format_method, "(format:?Dstring)->?Dstring\nFormat @this object. (s.a. ?Aformat?Dstring)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Aliases for backwards compatibility with deemon < v200 */
-	{ "__iterself__",    &object_iterself, DOC("->\nDeprecated alias for ?#__iter__") },
-	{ "__iternext__",    &object_iternext, DOC("->\nDeprecated alias for ?#__next__") },
+	TYPE_METHOD("__iterself__",    &object_iterself, "->\nDeprecated alias for ?#__iter__"),
+	TYPE_METHOD("__iternext__",    &object_iternext, "->\nDeprecated alias for ?#__next__"),
 	/* Deprecated function for backwards compatibility with deemon < v200 */
-	{ "__move__",        &object_copy, DOC("->\nDeprecated alias for ?#__copy__") },
-	{ "__lt__",          &object_lo, DOC("(other)->\nDeprecated alias for ?#__lo__") },
-	{ "__gt__",          &object_gr, DOC("(other)->\nDeprecated alias for ?#__gr__") },
-	{ "__not__",         &object_not, DOC("->?Dbool\nDeprecated alias for ${!this}") },
-	{ "__is__",          &object_is, DOC("(tp:?DType)->?Dbool\n(tp:?N)->?Dbool\nDeprecated alias for ${this is tp}") },
-	{ "__deepequals__",  &object_eq, DOC("(other)->\nDeprecated alias for ?#__eq__") },
-	{ "__inc__",         &object_inc, DOC("->\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}") },
-	{ "__dec__",         &object_dec, DOC("->\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}") },
-	{ "__incpost__",     &object_incpost, DOC("->\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}") },
-	{ "__decpost__",     &object_decpost, DOC("->\nDeprecated alias for ${({ local res = copy this; local temp = this; --temp; if (temp !== this) this := temp; res; })}") },
-	{ "__iadd__",        &object_iadd, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp += other; if (temp !== this) this := temp; this; })}") },
-	{ "__isub__",        &object_isub, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp -= other; if (temp !== this) this := temp; this; })}") },
-	{ "__imul__",        &object_imul, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp *= other; if (temp !== this) this := temp; this; })}") },
-	{ "__idiv__",        &object_idiv, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp /= other; if (temp !== this) this := temp; this; })}") },
-	{ "__imod__",        &object_imod, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp %= other; if (temp !== this) this := temp; this; })}") },
-	{ "__ishl__",        &object_ishl, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp <<= other; if (temp !== this) this := temp; this; })}") },
-	{ "__ishr__",        &object_ishr, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp >>= other; if (temp !== this) this := temp; this; })}") },
-	{ "__iand__",        &object_iand, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp &= other; if (temp !== this) this := temp; this; })}") },
-	{ "__ior__",         &object_ior,  DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp |= other; if (temp !== this) this := temp; this; })}") },
-	{ "__ixor__",        &object_ixor, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp ^= other; if (temp !== this) this := temp; this; })}") },
-	{ "__ipow__",        &object_ipow, DOC("(other)->\nDeprecated alias for ${({ local temp = this; temp **= other; if (temp !== this) this := temp; this; })}") },
+	TYPE_METHOD("__move__",        &object_copy, "->\nDeprecated alias for ?#__copy__"),
+	TYPE_METHOD("__lt__",          &object_lo, "(other)->\nDeprecated alias for ?#__lo__"),
+	TYPE_METHOD("__gt__",          &object_gr, "(other)->\nDeprecated alias for ?#__gr__"),
+	TYPE_METHOD("__not__",         &object_not, "->?Dbool\nDeprecated alias for ${!this}"),
+	TYPE_METHOD("__is__",          &object_is, "(tp:?DType)->?Dbool\n(tp:?N)->?Dbool\nDeprecated alias for ${this is tp}"),
+	TYPE_METHOD("__deepequals__",  &object_eq, "(other)->\nDeprecated alias for ?#__eq__"),
+	TYPE_METHOD("__inc__",         &object_inc, "->\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__dec__",         &object_dec, "->\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__incpost__",     &object_incpost, "->\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}"),
+	TYPE_METHOD("__decpost__",     &object_decpost, "->\nDeprecated alias for ${({ local res = copy this; local temp = this; --temp; if (temp !== this) this := temp; res; })}"),
+	TYPE_METHOD("__iadd__",        &object_iadd, "(other)->\nDeprecated alias for ${({ local temp = this; temp += other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__isub__",        &object_isub, "(other)->\nDeprecated alias for ${({ local temp = this; temp -= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__imul__",        &object_imul, "(other)->\nDeprecated alias for ${({ local temp = this; temp *= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__idiv__",        &object_idiv, "(other)->\nDeprecated alias for ${({ local temp = this; temp /= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__imod__",        &object_imod, "(other)->\nDeprecated alias for ${({ local temp = this; temp %= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__ishl__",        &object_ishl, "(other)->\nDeprecated alias for ${({ local temp = this; temp <<= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__ishr__",        &object_ishr, "(other)->\nDeprecated alias for ${({ local temp = this; temp >>= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__iand__",        &object_iand, "(other)->\nDeprecated alias for ${({ local temp = this; temp &= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__ior__",         &object_ior,  "(other)->\nDeprecated alias for ${({ local temp = this; temp |= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__ixor__",        &object_ixor, "(other)->\nDeprecated alias for ${({ local temp = this; temp ^= other; if (temp !== this) this := temp; this; })}"),
+	TYPE_METHOD("__ipow__",        &object_ipow, "(other)->\nDeprecated alias for ${({ local temp = this; temp **= other; if (temp !== this) this := temp; this; })}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 
@@ -2264,42 +2406,33 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_get_itable(DeeObject 
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
-#ifndef CONFIG_LANGUAGE_NO_ASM
-	{ DeeString_STR(&str_this),
-	  &DeeObject_NewRef, NULL, NULL,
-	  DOC("Always re-return @this object") },
-#else /* CONFIG_LANGUAGE_NO_ASM */
-	{ "this",
-	  &DeeObject_NewRef, NULL, NULL,
-	  DOC("Always re-return @this object") },
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
-	{ DeeString_STR(&str_class),
-	  &object_class_get, NULL, NULL,
-	  DOC("->?DType\n"
-	      "Returns the class of @this Type, which is usually identical to "
-	      /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
-	      /**/ "returned, rather than the actual Type") },
-	{ "super", &DeeSuper_Of, NULL, NULL,
-	  DOC("->?Dsuper\n"
-	      "Returns a view for the super-instance of @this object") },
-	{ "__itable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instance_get_itable, NULL, NULL,
-	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
-	      "Returns an indexable sequence describing the instance object "
-	      /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
-	      "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	      /**/ "is ?f), an empty sequence is returned\n"
-	      "The class-attribute table can be accessed through ?A__ctable__?DType") },
+	TYPE_GETTER(STR_this, &DeeObject_NewRef, "Always re-return @this object"),
+	TYPE_GETTER(STR_class, &object_class_get,
+	            "->?DType\n"
+	            "Returns the class of @this Type, which is usually identical to "
+	            /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
+	            /**/ "returned, rather than the actual Type"),
+	TYPE_GETTER(STR_super, &DeeSuper_Of,
+	            "->?Dsuper\n"
+	            "Returns a view for the super-instance of @this object"),
+	TYPE_GETTER(STR___itable__, &instance_get_itable,
+	            "->?AObjectTable?Ert:ClassDescriptor\n"
+	            "Returns an indexable sequence describing the instance object "
+	            /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
+	            "For non-user-defined classes (aka. when ${this.class.__isclass__} "
+	            /**/ "is ?f), an empty sequence is returned\n"
+	            "The class-attribute table can be accessed through ?A__ctable__?DType"),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
-	{ "id", &object_id_get, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns a unique id identifying @this specific object instance") },
+	TYPE_GETTER(STR_id, &object_id_get,
+	            "->?Dint\n"
+	            "Returns a unique id identifying @this specific object instance"),
 
 	/* Utility function: Return the size of a given object (in bytes) */
-	{ STR___sizeof__, &object_sizeof, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Return the size of @this object in bytes") },
-	{ NULL }
+	TYPE_GETTER(STR___sizeof__, &object_sizeof,
+	            "->?Dint\n"
+	            "Return the size of @this object in bytes"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst object_members[] = {
@@ -2317,12 +2450,12 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Object),
 	/* .tp_doc      = */ DOC("The base class of all regular objects\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct a new object (no-op constructor)\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "Returns the name of the object's Type\n"
 	                         "${"
@@ -3088,12 +3221,12 @@ PRIVATE char const meth_boundinstanceattr[] = "o|b:boundinstanceattr";
 PRIVATE char const meth_delinstanceattr[]   = "o:delinstanceattr";
 PRIVATE char const meth_setinstanceattr[]   = "oo:setinstanceattr";
 
-#define name_getinstanceattr   (meth_getinstanceattr + 2)
-#define name_callinstanceattr  (meth_callinstanceattr + 0)
-#define name_hasinstanceattr   (meth_hasinstanceattr + 2)
-#define name_boundinstanceattr (meth_boundinstanceattr + 4)
-#define name_delinstanceattr   (meth_delinstanceattr + 2)
-#define name_setinstanceattr   (meth_setinstanceattr + 3)
+#define STR_getinstanceattr   (meth_getinstanceattr + 2)
+#define STR_callinstanceattr  (meth_callinstanceattr + 0)
+#define STR_hasinstanceattr   (meth_hasinstanceattr + 2)
+#define STR_boundinstanceattr (meth_boundinstanceattr + 4)
+#define STR_delinstanceattr   (meth_delinstanceattr + 2)
+#define STR_setinstanceattr   (meth_setinstanceattr + 3)
 
 PRIVATE struct keyword getattr_kwdlist[]   = { K(name), KEND };
 PRIVATE struct keyword setattr_kwdlist[]   = { K(name), K(value), KEND };
@@ -3539,259 +3672,231 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst type_methods[] = {
-	{ "baseof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_baseof,
-	  DOC("(other:?DType)->?Dbool\n"
-	      "Returns ?t if @this Type is equal to, or a base of @other\n"
-	      "If @other isn't a Type, ?f is returned\n"
-	      "Using baseof, the behavior of ${x is y} can be approximated as:\n"
-	      "${"
-	      "print y.baseof(type(x)); // print x is y;"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom,
-	  DOC("(other:?DType)->?Dbool\n"
-	      "Returns ?t if @this Type is equal to, or has been derived from @other\n"
-	      "If @other isn't a Type, ?f is returned"),
-	  TYPE_METHOD_FKWDS },
-	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
-	  DOC("(fields!!)->\n"
-	      "Allocate a new instance of @this Type and initialize members in accordance to @fields\n"
-	      "${"
-	      "class MyClass {\n"
-	      "	member foo;\n"
-	      "	this = del; /* Delete the regular constructor. */\n"
-	      "}\n"
-	      "local x = MyClass.newinstance(foo: 42);\n"
-	      "print x.foo;\n"
-	      "}"
+	TYPE_KWMETHOD("baseof", &type_baseof,
+	              "(other:?DType)->?Dbool\n"
+	              "Returns ?t if @this Type is equal to, or a base of @other\n"
+	              "If @other isn't a Type, ?f is returned\n"
+	              "Using baseof, the behavior of ${x is y} can be approximated as:\n"
+	              "${"
+	              /**/ "print y.baseof(type(x)); // print x is y;"
+	              "}"),
+	TYPE_KWMETHOD("derivedfrom", &type_derivedfrom,
+	              "(other:?DType)->?Dbool\n"
+	              "Returns ?t if @this Type is equal to, or has been derived from @other\n"
+	              "If @other isn't a Type, ?f is returned"),
+	TYPE_KWMETHOD("newinstance", &type_newinstance,
+	              "(fields!!)->\n"
+	              "Allocate a new instance of @this Type and initialize members in accordance to @fields\n"
+	              "${"
+	              /**/ "class MyClass {\n"
+	              /**/ "	member foo;\n"
+	              /**/ "	this = del; /* Delete the regular constructor. */\n"
+	              /**/ "}\n"
+	              /**/ "local x = MyClass.newinstance(foo: 42);\n"
+	              /**/ "print x.foo;\n"
+	              "}"
+	              "\n"
 
-	      "\n"
-	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type, ({(string,Object)...},)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type, ({(string,Object)...}, none)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type, ({(string,Object)...}, Tuple)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type, ({(string,Object)...}, Tuple, none)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type, ({(string,Object)...}, Tuple, Mapping)...} */
-	      "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
-	      "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
-	      /*            */ "has a mandatory constructor that can't be invoked without any arguments. "
-	      /*            */ "Note that a user-defined class never has a mandatory constructor, with this "
-	      /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty\n"
-
-	      "A extended way of constructing and initializing a Type, that involves providing explicit "
-	      /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
-	      /**/ "mappings to-be used for construction of one of the Type's sub-classes (allowing to provide "
-	      /**/ "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
-
-	      "${"
-	      /**/ "import List from deemon;\n"
-	      /**/ "class MyList: List {\n"
-	      /**/ "	this = del; /* Delete the regular constructor. */\n"
-	      /**/ "	member mylist_member;\n"
-	      /**/ "	appendmember() {\n"
-	      /**/ "		this.append(mylist_member);\n"
-	      /**/ "	}\n"
-	      /**/ "}\n"
-	      /**/ "local x = MyList.newinstance({\n"
-	      /**/ "	MyList: ({ \"mylist_member\" : \"abc\" }, none),\n"
-	      /**/ "	List:   ({ }, pack([10, 20, 30])),\n"
-	      /**/ "});\n"
-	      /**/ "print repr x;          /* [10, 20, 30] */\n"
-	      /**/ "print x.mylist_member; /* \"abc\" */\n"
-	      /**/ "x.appendmember();\n"
-	      /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasattribute,
-	  DOC("(name:?Dstring)->?Dbool\n"
-	      "Returns ?t if this type, or one of its sub-classes defines an "
-	      /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
-	      /**/ "Otherwise, return ?f\n"
-
-	      "${"
-	      /**/ "function hasattribute(name: string): bool {\n"
-	      /**/ "	import attribute from deemon;\n"
-	      /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
-	      /**/ "}"
-	      "}\n"
-
-	      "Note that this function only searches instance-attributes, meaning that class/static "
-	      /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something like ?Afind?Dstring is\n"
-	      "Note that this function is quite similar to #hasinstanceattr, however unlike "
-	      /**/ "that function, this function will stop searching the base-classes of @this Type "
-	      /**/ "when one of that types implements one of the attribute operators."),
-	  TYPE_METHOD_FKWDS },
-	{ "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateattribute,
-	  DOC("(name:?Dstring)->?Dbool\n"
-	      "Similar to #hasattribute, but only looks at attributes declared by "
-	      /**/ "@this Type, excluding any defined by a sub-class.\n"
-	      "${"
-	      /**/ "function hasprivateattribute(name: string): bool {\n"
-	      /**/ "	import attribute from deemon;\n"
-	      /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
-	      /**/ "}"
-	      "}"),
-	  TYPE_METHOD_FKWDS },
-	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasoperator,
-	  DOC("(name:?Dint)->?Dbool\n"
-	      "(name:?Dstring)->?Dbool\n"
-	      "Returns ?t if instances of @this Type implement an operator @name, "
-	      /**/ "or ?f if not, or if @name is not recognized as an operator "
-	      /**/ "available for the Type-Type that is ${type this}\n"
-	      "Note that this function also looks at the operators of "
-	      /**/ "base-classes, as well as that a user-defined class that has "
-	      /**/ "explicitly deleted an operator will cause this function to "
-	      /**/ "return true, indicative of that operator being implemented "
-	      /**/ "to cause an error to be thrown when invoked.\n"
-	      "The given @name is the so-called real operator name, "
-	      /**/ "as listed under Name in the following table:\n"
-	      "#T{Name|Symbolical name|Prototype~"
-	      "$\"constructor\"|$\"this\"|${this(args..., **kwds)}&"
-	      "$\"copy\"|$\"copy\"|${copy()}&"
-	      "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
-	      "$\"destructor\"|$\"#~this\"|${##~this()}&"
-	      "$\"assign\"|$\":=\"|${operator := (other)}&"
-	      "$\"str\"|$\"str\"|${operator str(): string}&"
-	      "$\"repr\"|$\"repr\"|${operator repr(): string}&"
-	      "$\"bool\"|$\"bool\"|${operator bool(): bool}&"
-	      "$\"call\"|$\"()\"|${operator ()(args!): Object}&"
-	      "$\"next\"|$\"next\"|${operator next(): Object}&"
-	      "$\"int\"|$\"int\"|${operator int(): int}&"
-	      "$\"float\"|$\"float\"|${operator float(): float}&"
-	      "$\"inv\"|$\"#~\"|${operator #~ (): Object}&"
-	      "$\"pos\"|$\"+\"|${operator + (): Object}&"
-	      "$\"neg\"|$\"-\"|${operator - (): Object}&"
-	      "$\"add\"|$\"+\"|${operator + (other): Object}&"
-	      "$\"sub\"|$\"-\"|${operator - (other): Object}&"
-	      "$\"mul\"|$\"*\"|${operator * (other): Object}&"
-	      "$\"div\"|$\"/\"|${operator / (other): Object}&"
-	      "$\"mod\"|$\"%\"|${operator % (other): Object}&"
-	      "$\"shl\"|$\"<<\"|${operator << (other): Object}&"
-	      "$\"shr\"|$\">>\"|${operator >> (other): Object}&"
-	      "$\"and\"|$\"#&\"|${operator #& (other): Object}&"
-	      "$\"or\"|$\"#|\"|${operator #| (other): Object}&"
-	      "$\"xor\"|$\"^\"|${operator ^ (other): Object}&"
-	      "$\"pow\"|$\"**\"|${operator ** (other): Object}&"
-	      "$\"inc\"|$\"++\"|${operator ++ (): Object}&"
-	      "$\"dec\"|$\"--\"|${operator -- (): Object}&"
-	      "$\"iadd\"|$\"+=\"|${operator += (other): Object}&"
-	      "$\"isub\"|$\"-=\"|${operator -= (other): Object}&"
-	      "$\"imul\"|$\"*=\"|${operator *= (other): Object}&"
-	      "$\"idiv\"|$\"/=\"|${operator /= (other): Object}&"
-	      "$\"imod\"|$\"%=\"|${operator %= (other): Object}&"
-	      "$\"ishl\"|$\"<<=\"|${operator <<= (other): Object}&"
-	      "$\"ishr\"|$\">>=\"|${operator >>= (other): Object}&"
-	      "$\"iand\"|$\"#&=\"|${operator #&= (other): Object}&"
-	      "$\"ior\"|$\"#|=\"|${operator #|= (other): Object}&"
-	      "$\"ixor\"|$\"^=\"|${operator ^= (other): Object}&"
-	      "$\"ipow\"|$\"**=\"|${operator **= (other): Object}&"
-	      "$\"hash\"|$\"hash\"|${operator hash(): int}&"
-	      "$\"eq\"|$\"==\"|${operator == (other): Object}&"
-	      "$\"ne\"|$\"!=\"|${operator != (other): Object}&"
-	      "$\"lo\"|$\"<\"|${operator < (other): Object}&"
-	      "$\"le\"|$\"<=\"|${operator <= (other): Object}&"
-	      "$\"gr\"|$\">\"|${operator > (other): Object}&"
-	      "$\"ge\"|$\">=\"|${operator >= (other): Object}&"
-	      "$\"iter\"|$\"iter\"|${operator iter(): Object}&"
-	      "$\"size\"|$\"##\"|${operator ## (): Object}&"
-	      "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
-	      "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
-	      "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"
-	      "$\"setitem\"|$\"[]=\"|${operator []= (index, value): none}&"
-	      "$\"getrange\"|$\"[:]\"|${operator [:] (start, end): Object}&"
-	      "$\"delrange\"|$\"del[:]\"|${operator del[:] (start, end): none}&"
-	      "$\"setrange\"|$\"[:]=\"|${operator [:]= (start, end, value): none}&"
-	      "$\"getattr\"|$\".\"|${operator . (name: string): Object}&"
-	      "$\"delattr\"|$\"del.\"|${operator del. (name: string): none}&"
-	      "$\"setattr\"|$\".=\"|${operator .= (name: string, value): none}&"
-	      "$\"enumattr\"|$\"enumattr\"|${operator enumattr(): {attribute...}}&"
-	      "$\"enter\"|$\"enter\"|${operator enter(): none}&"
-	      "$\"leave\"|$\"leave\"|${operator leave(): none}}"),
-	  TYPE_METHOD_FKWDS },
-	{ "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateoperator,
-	  DOC("(name:?Dint)->?Dbool\n"
-	      "(name:?Dstring)->?Dbool\n"
-	      "Returns ?t if instances of @this Type implement an operator @name, "
-	      /**/ "or ?f if not, or if @name is not recognized as an operator provided "
-	      /**/ "available for the Type-Type that is ${type this}\n"
-	      "Note that this function intentionally don't look at operators of "
-	      /**/ "base-classes (which is instead done by #hasoperator), meaning that "
-	      /**/ "inherited operators are not included, with the exception of explicitly "
-	      /**/ "inherited constructors\n"
-	      "For a list of operator names, see #hasoperator"),
-	  TYPE_METHOD_FKWDS },
-	{ name_getinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_getinstanceattr,
-	  DOC("(name:?Dstring)->\n"
-	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
-	      "Normally, such attributes can also be accessed using regular attribute lookup, "
-	      /**/ "however in ambiguous cases where both the Type, as well as instances implement "
-	      /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
-	      /**/ "attribute lookup on the Type (as in ${posix.stat.isdir}) will always return the Type-attribute, "
-	      /**/ "rather than a wrapper around the instance attribute.\n"
-	      "In such cases, this function may be used to explicitly lookup the instance variant:\n"
-
-	      "${"
-	      /**/ "import stat from posix;\n"
-	      /**/ "local statIsRegFunction = stat.getinstanceattr(\"isdir\");\n"
-	      /**/ "local myStatInstance = stat(\".\");\n"
-	      /**/ "// Same as `myStatInstance.isdir()' -- true\n"
-	      /**/ "print repr statIsRegFunction(myStatInstance);"
-	      "}\n"
-
-	      "Note that one minor exception exists to the default lookup rule, and it relates to how "
-	      /**/ "attributes of ?DType itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
-	      "In this case, access is always made as an instance-bound, meaning that for this purpose, "
-	      /**/ "?DType is considered an instance of ?DType (typetype), rather than the type of ?DType (typetype) "
-	      /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
-	      /**/ "return a class method object taking 2 arguments, rather than the intended single argument)\n"
-	      "Also note that the `*instanceattr' functions will not check for types that have overwritten "
-	      /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
-	      /**/ "if those attributes would normally have been overshadowed by attribute callbacks"),
-	  TYPE_METHOD_FKWDS },
-	{ name_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
-	  DOC("(name:?Dstring,args!)->\n"
-	      "s.a. ?#getinstanceattr"),
-	  TYPE_METHOD_FKWDS },
-	{ name_hasinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasinstanceattr,
-	  DOC("(name:?Dstring)->?Dbool\n"
-	      "s.a. ?#getinstanceattr"),
-	  TYPE_METHOD_FKWDS },
-	{ name_boundinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_boundinstanceattr,
-	  DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
-	      "s.a. ?#getinstanceattr"),
-	  TYPE_METHOD_FKWDS },
-	{ name_delinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_delinstanceattr,
-	  DOC("(name:?Dstring)\n"
-	      "s.a. ?#getinstanceattr"),
-	  TYPE_METHOD_FKWDS },
-	{ name_setinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_setinstanceattr,
-	  DOC("(name:?Dstring,value)->\n"
-	      "s.a. ?#getinstanceattr"),
-	  TYPE_METHOD_FKWDS },
+	              "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type, ({(string,Object)...},)...} */
+	              "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type, ({(string,Object)...}, none)...} */
+	              "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type, ({(string,Object)...}, Tuple)...} */
+	              "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type, ({(string,Object)...}, Tuple, none)...} */
+	              "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type, ({(string,Object)...}, Tuple, Mapping)...} */
+	              "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type, (none, Tuple)...} */
+	              "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type, (none, Tuple, none)...} */
+	              "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type, (none, Tuple, Mapping)...} */
+	              "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
+	              /*            */ "has a mandatory constructor that can't be invoked without any arguments. "
+	              /*            */ "Note that a user-defined class never has a mandatory constructor, with this "
+	              /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty\n"
+	              "A extended way of constructing and initializing a Type, that involves providing explicit "
+	              /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
+	              /**/ "mappings to-be used for construction of one of the Type's sub-classes (allowing to provide "
+	              /**/ "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
+	              "${"
+	              /**/ "import List from deemon;\n"
+	              /**/ "class MyList: List {\n"
+	              /**/ "	this = del; /* Delete the regular constructor. */\n"
+	              /**/ "	member mylist_member;\n"
+	              /**/ "	appendmember() {\n"
+	              /**/ "		this.append(mylist_member);\n"
+	              /**/ "	}\n"
+	              /**/ "}\n"
+	              /**/ "local x = MyList.newinstance({\n"
+	              /**/ "	MyList: ({ \"mylist_member\" : \"abc\" }, none),\n"
+	              /**/ "	List:   ({ }, pack([10, 20, 30])),\n"
+	              /**/ "});\n"
+	              /**/ "print repr x;          /* [10, 20, 30] */\n"
+	              /**/ "print x.mylist_member; /* \"abc\" */\n"
+	              /**/ "x.appendmember();\n"
+	              /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
+	              "}"),
+	TYPE_KWMETHOD("hasattribute", &type_hasattribute,
+	              "(name:?Dstring)->?Dbool\n"
+	              "Returns ?t if this type, or one of its sub-classes defines an "
+	              /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
+	              /**/ "Otherwise, return ?f\n"
+	              "${"
+	              /**/ "function hasattribute(name: string): bool {\n"
+	              /**/ "	import attribute from deemon;\n"
+	              /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
+	              /**/ "}"
+	              "}\n"
+	              "Note that this function only searches instance-attributes, meaning that class/static "
+	              /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something like ?Afind?Dstring is\n"
+	              "Note that this function is quite similar to #hasinstanceattr, however unlike "
+	              /**/ "that function, this function will stop searching the base-classes of @this Type "
+	              /**/ "when one of that types implements one of the attribute operators."),
+	TYPE_KWMETHOD("hasprivateattribute", &type_hasprivateattribute,
+	              "(name:?Dstring)->?Dbool\n"
+	              "Similar to #hasattribute, but only looks at attributes declared by "
+	              /**/ "@this Type, excluding any defined by a sub-class.\n"
+	              "${"
+	              /**/ "function hasprivateattribute(name: string): bool {\n"
+	              /**/ "	import attribute from deemon;\n"
+	              /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("hasoperator", &type_hasoperator,
+	              "(name:?Dint)->?Dbool\n"
+	              "(name:?Dstring)->?Dbool\n"
+	              "Returns ?t if instances of @this Type implement an operator @name, "
+	              /**/ "or ?f if not, or if @name is not recognized as an operator "
+	              /**/ "available for the Type-Type that is ${type this}\n"
+	              "Note that this function also looks at the operators of "
+	              /**/ "base-classes, as well as that a user-defined class that has "
+	              /**/ "explicitly deleted an operator will cause this function to "
+	              /**/ "return true, indicative of that operator being implemented "
+	              /**/ "to cause an error to be thrown when invoked.\n"
+	              "The given @name is the so-called real operator name, "
+	              /**/ "as listed under Name in the following table:\n"
+	              "#T{Name|Symbolical name|Prototype~"
+	              /**/ "$\"constructor\"|$\"this\"|${this(args..., **kwds)}&"
+	              /**/ "$\"copy\"|$\"copy\"|${copy()}&"
+	              /**/ "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
+	              /**/ "$\"destructor\"|$\"#~this\"|${##~this()}&"
+	              /**/ "$\"assign\"|$\":=\"|${operator := (other)}&"
+	              /**/ "$\"str\"|$\"str\"|${operator str(): string}&"
+	              /**/ "$\"repr\"|$\"repr\"|${operator repr(): string}&"
+	              /**/ "$\"bool\"|$\"bool\"|${operator bool(): bool}&"
+	              /**/ "$\"call\"|$\"()\"|${operator ()(args!): Object}&"
+	              /**/ "$\"next\"|$\"next\"|${operator next(): Object}&"
+	              /**/ "$\"int\"|$\"int\"|${operator int(): int}&"
+	              /**/ "$\"float\"|$\"float\"|${operator float(): float}&"
+	              /**/ "$\"inv\"|$\"#~\"|${operator #~ (): Object}&"
+	              /**/ "$\"pos\"|$\"+\"|${operator + (): Object}&"
+	              /**/ "$\"neg\"|$\"-\"|${operator - (): Object}&"
+	              /**/ "$\"add\"|$\"+\"|${operator + (other): Object}&"
+	              /**/ "$\"sub\"|$\"-\"|${operator - (other): Object}&"
+	              /**/ "$\"mul\"|$\"*\"|${operator * (other): Object}&"
+	              /**/ "$\"div\"|$\"/\"|${operator / (other): Object}&"
+	              /**/ "$\"mod\"|$\"%\"|${operator % (other): Object}&"
+	              /**/ "$\"shl\"|$\"<<\"|${operator << (other): Object}&"
+	              /**/ "$\"shr\"|$\">>\"|${operator >> (other): Object}&"
+	              /**/ "$\"and\"|$\"#&\"|${operator #& (other): Object}&"
+	              /**/ "$\"or\"|$\"#|\"|${operator #| (other): Object}&"
+	              /**/ "$\"xor\"|$\"^\"|${operator ^ (other): Object}&"
+	              /**/ "$\"pow\"|$\"**\"|${operator ** (other): Object}&"
+	              /**/ "$\"inc\"|$\"++\"|${operator ++ (): Object}&"
+	              /**/ "$\"dec\"|$\"--\"|${operator -- (): Object}&"
+	              /**/ "$\"iadd\"|$\"+=\"|${operator += (other): Object}&"
+	              /**/ "$\"isub\"|$\"-=\"|${operator -= (other): Object}&"
+	              /**/ "$\"imul\"|$\"*=\"|${operator *= (other): Object}&"
+	              /**/ "$\"idiv\"|$\"/=\"|${operator /= (other): Object}&"
+	              /**/ "$\"imod\"|$\"%=\"|${operator %= (other): Object}&"
+	              /**/ "$\"ishl\"|$\"<<=\"|${operator <<= (other): Object}&"
+	              /**/ "$\"ishr\"|$\">>=\"|${operator >>= (other): Object}&"
+	              /**/ "$\"iand\"|$\"#&=\"|${operator #&= (other): Object}&"
+	              /**/ "$\"ior\"|$\"#|=\"|${operator #|= (other): Object}&"
+	              /**/ "$\"ixor\"|$\"^=\"|${operator ^= (other): Object}&"
+	              /**/ "$\"ipow\"|$\"**=\"|${operator **= (other): Object}&"
+	              /**/ "$\"hash\"|$\"hash\"|${operator hash(): int}&"
+	              /**/ "$\"eq\"|$\"==\"|${operator == (other): Object}&"
+	              /**/ "$\"ne\"|$\"!=\"|${operator != (other): Object}&"
+	              /**/ "$\"lo\"|$\"<\"|${operator < (other): Object}&"
+	              /**/ "$\"le\"|$\"<=\"|${operator <= (other): Object}&"
+	              /**/ "$\"gr\"|$\">\"|${operator > (other): Object}&"
+	              /**/ "$\"ge\"|$\">=\"|${operator >= (other): Object}&"
+	              /**/ "$\"iter\"|$\"iter\"|${operator iter(): Object}&"
+	              /**/ "$\"size\"|$\"##\"|${operator ## (): Object}&"
+	              /**/ "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
+	              /**/ "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
+	              /**/ "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"
+	              /**/ "$\"setitem\"|$\"[]=\"|${operator []= (index, value): none}&"
+	              /**/ "$\"getrange\"|$\"[:]\"|${operator [:] (start, end): Object}&"
+	              /**/ "$\"delrange\"|$\"del[:]\"|${operator del[:] (start, end): none}&"
+	              /**/ "$\"setrange\"|$\"[:]=\"|${operator [:]= (start, end, value): none}&"
+	              /**/ "$\"getattr\"|$\".\"|${operator . (name: string): Object}&"
+	              /**/ "$\"delattr\"|$\"del.\"|${operator del. (name: string): none}&"
+	              /**/ "$\"setattr\"|$\".=\"|${operator .= (name: string, value): none}&"
+	              /**/ "$\"enumattr\"|$\"enumattr\"|${operator enumattr(): {attribute...}}&"
+	              /**/ "$\"enter\"|$\"enter\"|${operator enter(): none}&"
+	              /**/ "$\"leave\"|$\"leave\"|${operator leave(): none}"
+	              "}"),
+	TYPE_KWMETHOD("hasprivateoperator", &type_hasprivateoperator,
+	              "(name:?Dint)->?Dbool\n"
+	              "(name:?Dstring)->?Dbool\n"
+	              "Returns ?t if instances of @this Type implement an operator @name, "
+	              /**/ "or ?f if not, or if @name is not recognized as an operator provided "
+	              /**/ "available for the Type-Type that is ${type this}\n"
+	              "Note that this function intentionally don't look at operators of "
+	              /**/ "base-classes (which is instead done by #hasoperator), meaning that "
+	              /**/ "inherited operators are not included, with the exception of explicitly "
+	              /**/ "inherited constructors\n"
+	              "For a list of operator names, see #hasoperator"),
+	TYPE_KWMETHOD(STR_getinstanceattr, &type_getinstanceattr,
+	              "(name:?Dstring)->\n"
+	              "Lookup an attribute @name that is implemented by instances of @this Type\n"
+	              "Normally, such attributes can also be accessed using regular attribute lookup, "
+	              /**/ "however in ambiguous cases where both the Type, as well as instances implement "
+	              /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
+	              /**/ "attribute lookup on the Type (as in ${posix.stat.isdir}) will always return the Type-attribute, "
+	              /**/ "rather than a wrapper around the instance attribute.\n"
+	              "In such cases, this function may be used to explicitly lookup the instance variant:\n"
+	              "${"
+	              /**/ "import stat from posix;\n"
+	              /**/ "local statIsRegFunction = stat.getinstanceattr(\"isdir\");\n"
+	              /**/ "local myStatInstance = stat(\".\");\n"
+	              /**/ "// Same as `myStatInstance.isdir()' -- true\n"
+	              /**/ "print repr statIsRegFunction(myStatInstance);"
+	              "}\n"
+	              "Note that one minor exception exists to the default lookup rule, and it relates to how "
+	              /**/ "attributes of ?DType itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
+	              "In this case, access is always made as an instance-bound, meaning that for this purpose, "
+	              /**/ "?DType is considered an instance of ?DType (typetype), rather than the type of ?DType (typetype) "
+	              /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
+	              /**/ "return a class method object taking 2 arguments, rather than the intended single argument)\n"
+	              "Also note that the `*instanceattr' functions will not check for types that have overwritten "
+	              /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
+	              /**/ "if those attributes would normally have been overshadowed by attribute callbacks"),
+	TYPE_KWMETHOD(STR_callinstanceattr, &type_callinstanceattr, "(name:?Dstring,args!)->\ns.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD(STR_hasinstanceattr, &type_hasinstanceattr, "(name:?Dstring)->?Dbool\ns.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD(STR_boundinstanceattr, &type_boundinstanceattr, "(name:?Dstring,allow_missing=!t)->?Dbool\ns.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD(STR_delinstanceattr, &type_delinstanceattr, "(name:?Dstring)\ns.a. ?#getinstanceattr"),
+	TYPE_KWMETHOD(STR_setinstanceattr, &type_setinstanceattr, "(name:?Dstring,value)->\ns.a. ?#getinstanceattr"),
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	{ "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for ?#derivedfrom"), TYPE_METHOD_FKWDS },
-	{ "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-	{ "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for ?#__isvariable__") },
-	{ "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for ?#__iscustom__") },
-	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for ?#__isgc__") },
-	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_final, DOC("->?Dbool\nDeprecated alias for ?#isfinal") },
-	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_class, DOC("->?Dbool\nDeprecated alias for ?#__isclass__") },
-	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns ?t)") },
-	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns ?f)") },
-	{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
-	{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
-	{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
-	{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
-	{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
-	{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
-	{ "is_file", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type(File from deemon)}") },
-	{ "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
+	TYPE_KWMETHOD("same_or_derived_from", &type_derivedfrom, "(other:?DType)->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD("derived_from", &type_derivedfrom_not_same, "(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_METHOD("is_vartype", &type_is_vartype, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
+	TYPE_METHOD("is_heaptype", &type_is_heaptype, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
+	TYPE_METHOD("is_gctype", &type_is_gctype, "->?Dbool\nDeprecated alias for ?#__isgc__"),
+	TYPE_METHOD("is_final", &type_is_final, "->?Dbool\nDeprecated alias for ?#isfinal"),
+	TYPE_METHOD("is_class", &type_is_class, "->?Dbool\nDeprecated alias for ?#__isclass__"),
+	TYPE_METHOD("is_complete", &type_is_complete, "->?Dbool\nDeprecated (always returns ?t)"),
+	TYPE_METHOD("is_classtype", &type_is_classtype, "->?Dbool\nDeprecated (always returns ?f)"),
+	TYPE_METHOD("is_pointer", &type_is_pointer, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_lvalue", &type_is_lvalue, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_structured", &type_is_structured, "->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_struct", &type_is_struct, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_file", &type_is_filetype, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
+	TYPE_METHOD("is_super_base", &type_is_superbase, "->?Dbool\nDeprecated alias for ${this.__base__ !is bound}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 
@@ -4035,76 +4140,75 @@ PRIVATE struct type_member tpconst type_members[] = {
 };
 
 PRIVATE struct type_getset tpconst type_getsets[] = {
-	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this Type implements the buffer interface\n"
-	      "The most prominent Type to which this applies is ?DBytes, however other types also support this") },
+	TYPE_GETTER("isbuffer", &type_isbuffer,
+	            "->?Dbool\n"
+	            "Returns ?t if @this Type implements the buffer interface\n"
+	            "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
 	/* TODO: __bases__->?S?DType  Sequence of all of this type's bases, starting with the immediate ?#__base__,
 	 *                            followed by its base, and so on. */
 	/* TODO: __mro__->?S?DType    Method Resolution Order. Same as ?#__bases__, but preceded by @this
 	 *                            Type\n${{ this, __bases__... }}  */
-	{ "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
-	  DOC("->?Ert:ClassDescriptor\n"
-	      "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"
-	      "Returns the internal class-descriptor descriptor for a user-defined class") },
-	{ "__issingleton__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_issingleton, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this Type describes a singleton object, requiring that @this type not be "
-	      /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
-	      /**/ "of the special internal types used to represent implementation-specific wrapper "
-	      /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
-	      /**/ "class descriptors or DDI information providers") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "Return the module used to define @this Type, or ?N if the module cannot "
-	      /**/ "be determined, which may be the case if the Type doesn't have any defining "
-	      /**/ "features such as operators, or class/instance member functions") },
-	{ "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
-	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
-	      "Returns an indexable sequence describing the class object table, "
-	      /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
-	      "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
-	      "The instance-attribute table can be accessed through ?A__itable__?DObject") },
-	{ "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
-	  DOC("->?S?X2?Dstring?Dint\n"
-	      "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
-	      "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
-	      "${"
-	      /**/ "function hasprivateoperator(name: string | int): bool {\n"
-	      /**/ "	return name in this.__operators__;\n"
-	      /**/ "}"
-	      "}\n"
-	      "Also note that this set doesn't differentiate between overwritten and deleted operators, "
-	      /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
-	      /**/ ":NotImplemented exception\n"
-	      "Additionally, this set also includes automatically generated operators for user-classes, "
-	      /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
-	      /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
-	      /**/ "define any of them\n"
-	      "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
-	      /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is ?t), and only use ?#__operators__ "
-	      /**/ "for all other types that this doesn't apply to") },
-	{ "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
-	  DOC("->?S?Dint\n"
-	      "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
-	      "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
-	      /**/ "operator ids to their user-friendly name, as described in ?#hasoperator") },
-	{ "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
-	      /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)") },
+	TYPE_GETTER(STR___class__, &type_get_classdesc,
+	            "->?Ert:ClassDescriptor\n"
+	            "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"
+	            "Returns the internal class-descriptor descriptor for a user-defined class"),
+	TYPE_GETTER("__issingleton__", &type_issingleton,
+	            "->?Dbool\n"
+	            "Check if @this Type describes a singleton object, requiring that @this type not be "
+	            /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
+	            /**/ "of the special internal types used to represent implementation-specific wrapper "
+	            /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
+	            /**/ "class descriptors or DDI information providers"),
+	TYPE_GETTER(STR___module__, &type_get_module,
+	            "->?X2?DModule?N\n"
+	            "Return the module used to define @this Type, or ?N if the module cannot "
+	            /**/ "be determined, which may be the case if the Type doesn't have any defining "
+	            /**/ "features such as operators, or class/instance member functions"),
+	TYPE_GETTER(STR___ctable__, &type_get_ctable,
+	            "->?AObjectTable?Ert:ClassDescriptor\n"
+	            "Returns an indexable sequence describing the class object table, "
+	            /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
+	            "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
+	            "The instance-attribute table can be accessed through ?A__itable__?DObject"),
+	TYPE_GETTER(STR___operators__, &type_get_operators,
+	            "->?S?X2?Dstring?Dint\n"
+	            "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
+	            "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
+	            "${"
+	            /**/ "function hasprivateoperator(name: string | int): bool {\n"
+	            /**/ "	return name in this.__operators__;\n"
+	            /**/ "}"
+	            "}\n"
+	            "Also note that this set doesn't differentiate between overwritten and deleted operators, "
+	            /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
+	            /**/ ":NotImplemented exception\n"
+	            "Additionally, this set also includes automatically generated operators for user-classes, "
+	            /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
+	            /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
+	            /**/ "define any of them\n"
+	            "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
+	            /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is ?t), and only use ?#__operators__ "
+	            /**/ "for all other types that this doesn't apply to"),
+	TYPE_GETTER("__operatorids__", &type_get_operatorids,
+	            "->?S?Dint\n"
+	            "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
+	            "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
+	            /**/ "operator ids to their user-friendly name, as described in ?#hasoperator"),
+	TYPE_GETTER("__instancesize__", &type_get_instancesize,
+	            "->?X2?Dint?N\n"
+	            "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
+	            /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "Deprecated alias for ?#__instancesize__") },
+	TYPE_GETTER("__instance_size__", &type_get_instancesize,
+	            "->?X2?Dint?N\n"
+	            "Deprecated alias for ?#__instancesize__"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") },
-	{ "__isvarargconstructible__", &type_isvarargconstructible, NULL, NULL, DOC("->?Dbool") },
-	{ "__isconstructible__", &type_isconstructible, NULL, NULL, DOC("->?Dbool") },
-	{ "__iscopyable__", &type_iscopyable, NULL, NULL, DOC("->?Dbool") },
-	{ "__gcpriority__", &type_gcpriority, NULL, NULL, DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("__istypetype__", &type_istypetype, "->?Dbool"),
+	TYPE_GETTER("__isvarargconstructible__", &type_isvarargconstructible, "->?Dbool"),
+	TYPE_GETTER("__isconstructible__", &type_isconstructible, "->?Dbool"),
+	TYPE_GETTER("__iscopyable__", &type_iscopyable, "->?Dbool"),
+	TYPE_GETTER("__gcpriority__", &type_gcpriority, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 

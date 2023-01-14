@@ -1599,38 +1599,34 @@ err:
 }
 
 PRIVATE struct type_method tpconst buffer_methods[] = {
-	{ DeeString_STR(&str_size),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_size,
-	  DOC("->?Dint\n"
-	      "Forward to the $size function of the file being buffered") },
-	{ "flush",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_flush,
-	  DOC("()\n"
-	      "Similar to ?#sync, but never synchronize the underlying file, regardless "
-	      /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf") },
-	{ "setbuf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_setbuf,
-	  DOC("(mode:?Dstring,size=!0)\n"
-	      "@throw ValueError The given @mode is malformed, or not recognized\n"
-	      "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
-	      "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
-	      /**/ "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
-	      /**/ "the buffer to keep its buffer size implementation-defined, as well as allow it to "
-	      /**/ "dynamically change said size if doing so is deemed useful\n"
-	      "The given @mode must case-insensitively equal to one of the following:\n"
-	      "#T{Mode|Description~"
-	      "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others&"
-	      "$\"full\"|Use full buffering, only synchronizing the buffer when it becomes full&"
-	      "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written&"
-	      "$\"none\"|Use no buffering at all when @size is ${0}, or use a fixed-length buffer of @size bytes. "
-	      /*     */ "Note that even when the no buffer is allocated, the runtime guaranties "
-	      /*     */ "that ?#ungetc can be used to return and re-read at least 1 byte&"
-	      "$\"keep\"|Keep using the old buffering model, but allow the buffer size to be changed}\n"
-	      "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
-	      "#T{Prefix|Description~"
-	      "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke ?#sync on @this buffer's ?#file whenever the buffer is synced}"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	TYPE_METHOD(STR_size, &buffer_size,
+	            "->?Dint\n"
+	            "Forward to the $size function of the file being buffered"),
+	TYPE_METHOD("flush", &buffer_flush,
+	            "()\n"
+	            "Similar to ?#sync, but never synchronize the underlying file, regardless "
+	            /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf"),
+	TYPE_KWMETHOD("setbuf", &buffer_setbuf,
+	              "(mode:?Dstring,size=!0)\n"
+	              "@throw ValueError The given @mode is malformed, or not recognized\n"
+	              "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
+	              "When non-zero, @size dictates the initial buffer size, or a fixed buffer size when "
+	              /**/ "the buffering mode is set to $\"none\", otherwise a buffer size of $0 allows "
+	              /**/ "the buffer to keep its buffer size implementation-defined, as well as allow it to "
+	              /**/ "dynamically change said size if doing so is deemed useful\n"
+	              "The given @mode must case-insensitively equal to one of the following:\n"
+	              "#T{Mode|Description~"
+	              "$\"auto\"|Automatically determine buffering, using line-buffering for TTY files, and full buffering for all others&"
+	              "$\"full\"|Use full buffering, only synchronizing the buffer when it becomes full&"
+	              "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written&"
+	              "$\"none\"|Use no buffering at all when @size is ${0}, or use a fixed-length buffer of @size bytes. "
+	              /*     */ "Note that even when the no buffer is allocated, the runtime guaranties "
+	              /*     */ "that ?#ungetc can be used to return and re-read at least 1 byte&"
+	              "$\"keep\"|Keep using the old buffering model, but allow the buffer size to be changed}\n"
+	              "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
+	              "#T{Prefix|Description~"
+	              "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke ?#sync on @this buffer's ?#file whenever the buffer is synced}"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1673,30 +1669,26 @@ err_closed_unlock:
 
 PRIVATE struct type_getset tpconst buffer_getsets[] = {
 #ifdef DeeSysFD_GETSET
-	{ DeeString_STR(&str_getsysfd),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&buffer_getsysfd, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw AttributeError The file being buffered does not implement a member function $" DeeSysFD_GETSET "\n"
-	      "Forward to the $" DeeSysFD_GETSET " getset of the file being buffered") },
+	TYPE_GETTER(STR_getsysfd, &buffer_getsysfd,
+	            "->?Dint\n"
+	            "@throw AttributeError The file being buffered does not implement a member function $" DeeSysFD_GETSET "\n"
+	            "Forward to the $" DeeSysFD_GETSET " getset of the file being buffered"),
 #endif /* DeeSysFD_GETSET */
-	{ "file",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_getfile, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "Returns the file that is being buffered") },
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&buffer_isatty, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Forward to the $isatty property of the file being buffered\n"
-	      "Note that in order to implement auto-buffering, file buffers are allowed to "
-	      /**/ "cache the return value of ${this.file.isatty}, furthermore allowing this "
-	      /**/ "property to simply return that cached value, in other words meaning that "
-	      /**/ "any side-effects caused by the underlying $isatty may not come into effect "
-	      /**/ "following repeated calls") },
-	{ "filename",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_filename, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "Forward the filename attribute of the file being buffered") },
-	{ NULL }
+	TYPE_GETTER("file", &buffer_getfile,
+	            "->?DFile\n"
+	            "Returns the file that is being buffered"),
+	TYPE_GETTER(STR_isatty, &buffer_isatty,
+	            "->?Dbool\n"
+	            "Forward to the $isatty property of the file being buffered\n"
+	            "Note that in order to implement auto-buffering, file buffers are allowed to "
+	            /**/ "cache the return value of ${this.file.isatty}, furthermore allowing this "
+	            /**/ "property to simply return that cached value, in other words meaning that "
+	            /**/ "any side-effects caused by the underlying $isatty may not come into effect "
+	            /**/ "following repeated calls"),
+	TYPE_GETTER(STR_filename, &buffer_filename,
+	            "->?Dstring\n"
+	            "Forward the filename attribute of the file being buffered"),
+	TYPE_GETSET_END
 };
 
 
@@ -1720,12 +1712,12 @@ err:
 }
 
 PRIVATE struct type_method tpconst buffer_class_methods[] = {
-	{ "sync", &buffer_class_sync,
-	  DOC("()\n"
-	      "Flush all buffers that are connected to TTY file descriptors\n"
-	      "This function is automatically called at the same time as :AppExit.atexit, "
-	      /**/ "as well as prior to any read operation on any other TTY buffer that might block") },
-	{ NULL }
+	TYPE_METHOD("sync", &buffer_class_sync,
+	            "()\n"
+	            "Flush all buffers that are connected to TTY file descriptors\n"
+	            "This function is automatically called at the same time as :AppExit.atexit, "
+	            /**/ "as well as prior to any read operation on any other TTY buffer that might block"),
+	TYPE_METHOD_END
 };
 
 PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {

@@ -682,11 +682,9 @@ PRIVATE struct type_member tpconst smap_class_members[] = {
 DOC_REF(map_get_doc);
 
 PRIVATE struct type_method tpconst smap_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&smap_get,
-	  DOC_GET(map_get_doc) },
+	TYPE_METHOD(STR_get, &smap_get, DOC_GET(map_get_doc)),
 	/* TODO: _SharedMap.byhash(template:?O)->?DSequence */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject SharedMap_Type = {

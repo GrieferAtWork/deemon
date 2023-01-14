@@ -150,12 +150,8 @@ bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst bsegiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsegiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:BytesSegments") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &bsegiter_getseq, "->?Ert:BytesSegments"),
+	TYPE_GETSET_END
 };
 
 #define bsegiter_cmp ssegiter_cmp

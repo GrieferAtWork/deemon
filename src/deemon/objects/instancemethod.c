@@ -151,7 +151,7 @@ im_eq(InstanceMethod *self,
 		goto err;
 	temp = DeeObject_CompareEq(self->im_func, other->im_func);
 	if (temp <= 0)
-		return (unlikely(temp < 0))
+		return unlikely(temp < 0)
 		       ? NULL
 		       : (Dee_Incref(Dee_False), Dee_False);
 	temp = DeeObject_CompareEq(self->im_this, other->im_this);
@@ -321,32 +321,27 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst im_getsets[] = {
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The name of the function being bound, or ?N if unknown") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of the function being bound, or ?N if unknown") },
-	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_kwds, NULL, NULL,
-	  DOC("->?S?Dstring\n"
-	      "Returns a sequence of keyword argument names accepted by @this function\n"
-	      "If @this function doesn't accept keyword arguments, an empty sequence is returned") },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
-	  DOC("->?X2?DType?N\n"
-	      "The type implementing the function that is being bound, or ?N if unknown") },
-	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
-	  DOC("->?X2?DModule?N\n"
-	      "The type within which the bound function was defined "
-	      "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
-	      "If something other than a user-level function was set for ?#__func__, "
-	      /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
-	      /**/ "then forwarded") },
-	{ NULL }
+	TYPE_GETTER(STR___name__, &instancemethod_get_name,
+	            "->?X2?Dstring?N\n"
+	            "The name of the function being bound, or ?N if unknown"),
+	TYPE_GETTER(STR___doc__, &instancemethod_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "The documentation string of the function being bound, or ?N if unknown"),
+	TYPE_GETTER(STR___kwds__, &instancemethod_get_kwds,
+	            "->?S?Dstring\n"
+	            "Returns a sequence of keyword argument names accepted by @this function\n"
+	            "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
+	TYPE_GETTER(STR___type__, &instancemethod_get_type,
+	            "->?X2?DType?N\n"
+	            "The type implementing the function that is being bound, or ?N if unknown"),
+	TYPE_GETTER(STR___module__, &instancemethod_get_module,
+	            "->?X2?DModule?N\n"
+	            "The type within which the bound function was defined "
+	            "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
+	            "If something other than a user-level function was set for ?#__func__, "
+	            /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
+	            /**/ "then forwarded"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst im_members[] = {

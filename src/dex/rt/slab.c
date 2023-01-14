@@ -467,10 +467,7 @@ PRIVATE struct type_member tpconst si_members[] = {
 };
 
 PRIVATE struct type_getset tpconst si_getsets[] = {
-#define DEFINE_FIELD(name, doc)                                                     \
-	{ #name,                                                                        \
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_##name, NULL, NULL, \
-	  DOC("->?Dint\n" doc) }
+#define DEFINE_FIELD(name, doc) TYPE_GETTER(#name, &si_get_##name, "->?Dint\n" doc)
 	DEFINE_FIELD(slabsize, "Total size of the slab (in bytes)"),
 	DEFINE_FIELD(itemsize, "Slab item size (in bytes)"),
 	DEFINE_FIELD(items_per_page, "Number of items per page"),
@@ -487,10 +484,10 @@ PRIVATE struct type_getset tpconst si_getsets[] = {
 	DEFINE_FIELD(usedpages, "Number of pages which are currently being used (@cur_fullpages + @cur_freepages)"),
 	DEFINE_FIELD(tailpages, "Number of pages which haven't been allocated, yet"),
 #undef DEFINE_FIELD
-	{ "__index__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_index, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Index of @this slab within ?GSlabStat") },
-	{ NULL }
+	TYPE_GETTER("__index__", &si_get_index,
+	            "->?Dint\n"
+	            "Index of @this slab within ?GSlabStat"),
+	TYPE_GETSET_END
 };
 
 #define DEFINE_SI_COMPARE(name, memcmp, op)                                           \

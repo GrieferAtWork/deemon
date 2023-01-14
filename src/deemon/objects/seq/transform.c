@@ -89,10 +89,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst transiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL,
-	  DOC("->?Ert:SeqTransformation") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &transiter_seq_get, "->?Ert:SeqTransformation"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst transiter_members[] = {
@@ -101,22 +99,22 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_COMPARE(name, base, opname)                                                  \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
-	name(TransformationIterator *self, TransformationIterator *other) {                     \
-		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type)) \
-			goto err;                                                                       \
-		if (self->ti_func != other->ti_func) {                                              \
-			int temp = DeeObject_CompareEq(self->ti_func, other->ti_func);                  \
-			if (temp <= 0) {                                                                \
-				if (temp == 0)                                                              \
-					err_unimplemented_operator(&SeqTransformationIterator_Type, opname);    \
-				goto err;                                                                   \
-			}                                                                               \
-		}                                                                                   \
-		return base((DeeObject *)self, (DeeObject *)other);                                 \
-	err:                                                                                    \
-		return NULL;                                                                        \
+#define DEFINE_COMPARE(name, base, opname)                                               \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                \
+	name(TransformationIterator *self, TransformationIterator *other) {                  \
+		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))           \
+			goto err;                                                                    \
+		if (self->ti_func != other->ti_func) {                                           \
+			int temp = DeeObject_CompareEq(self->ti_func, other->ti_func);               \
+			if (temp <= 0) {                                                             \
+				if (temp == 0)                                                           \
+					err_unimplemented_operator(&SeqTransformationIterator_Type, opname); \
+				goto err;                                                                \
+			}                                                                            \
+		}                                                                                \
+		return base((DeeObject *)self, (DeeObject *)other);                              \
+	err:                                                                                 \
+		return NULL;                                                                     \
 	}
 DEFINE_COMPARE(transiter_eq, DeeObject_CompareEqObject, OPERATOR_EQ)
 DEFINE_COMPARE(transiter_ne, DeeObject_CompareNeObject, OPERATOR_NE)

@@ -995,57 +995,48 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * Properties matching these names can be found in a variety of other
 	 * types, including `function', `objmethod', etc.
 	 */
-	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this code object, or ?N if unknown (s.a. :Function.__name__)") },
-	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
-	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this code object, or ?N if unknown (s.a. :Function.__doc__)") },
-	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
-	  DOC("->?X2?DType?N\n"
-	      "Try to determine if @this code object is defined as part of a user-defined class, "
-	      "and if it is, return that class type, or ?N if that class couldn't be found, "
-	      "or if @this code object is defined as stand-alone (s.a. :Function.__type__)") },
-	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_kwds, NULL, NULL,
-	  DOC("->?S?Dstring\n"
-	      "Returns a sequence of keyword argument names accepted by @this code object\n"
-	      "If @this code doesn't accept keyword arguments, an empty sequence is returned") },
-	{ "__operator__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operator, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "Try to determine if @this code object is defined as part of a user-defined class, "
-	      "and if so, if it is used to define an operator callback. If that is the case, "
-	      "return the internal ID of the operator that @this code object provides, or ?N "
-	      "if that class couldn't be found, @this code object is defined as stand-alone, or "
-	      "defined as a class- or instance-method (s.a. :Function.__operator__)") },
-	{ "__operatorname__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
-	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Same as ?#__operator__, but instead try to return the unambiguous name of the "
-	      "operator, though still return its ID if the operator isn't recognized as being "
-	      "part of the standard (s.a. :Function.__operatorname__)") },
-	{ "__property__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
-	  DOC("->?X2?Dint?N\n"
-	      "Returns an integer describing the kind if @this code is part of a property or getset, "
-	      "or returns ?N if the function's property could not be found, or if the function isn't "
-	      "declared as a property callback (s.a. :Function.__property__)") },
-	{ "__default__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Access to the default values of arguments") },
+	TYPE_GETTER(STR___name__, &code_get_name,
+	            "->?X2?Dstring?N\n"
+	            "Returns the name of @this code object, or ?N if unknown (s.a. :Function.__name__)"),
+	TYPE_GETTER(STR___doc__, &code_get_doc,
+	            "->?X2?Dstring?N\n"
+	            "Returns the documentation string of @this code object, or ?N if unknown (s.a. :Function.__doc__)"),
+	TYPE_GETTER(STR___type__, &code_get_type,
+	            "->?X2?DType?N\n"
+	            "Try to determine if @this code object is defined as part of a user-defined class, "
+	            /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
+	            /**/ "or if @this code object is defined as stand-alone (s.a. :Function.__type__)"),
+	TYPE_GETTER(STR___kwds__, &code_get_kwds,
+	            "->?S?Dstring\n"
+	            "Returns a sequence of keyword argument names accepted by @this code object\n"
+	            "If @this code doesn't accept keyword arguments, an empty sequence is returned"),
+	TYPE_GETTER(STR___operator__, &code_get_operator,
+	            "->?X2?Dint?N\n"
+	            "Try to determine if @this code object is defined as part of a user-defined class, "
+	            /**/ "and if so, if it is used to define an operator callback. If that is the case, "
+	            /**/ "return the internal ID of the operator that @this code object provides, or ?N "
+	            /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
+	            /**/ "defined as a class- or instance-method (s.a. :Function.__operator__)"),
+	TYPE_GETTER(STR___operatorname__, &code_get_operatorname,
+	            "->?X3?Dstring?Dint?N\n"
+	            "Same as ?#__operator__, but instead try to return the unambiguous name of the "
+	            /**/ "operator, though still return its ID if the operator isn't recognized as being "
+	            /**/ "part of the standard (s.a. :Function.__operatorname__)"),
+	TYPE_GETTER(STR___property__, &code_get_property,
+	            "->?X2?Dint?N\n"
+	            "Returns an integer describing the kind if @this code is part of a property or getset, "
+	            /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
+	            /**/ "declared as a property callback (s.a. :Function.__property__)"),
+	TYPE_GETTER(STR___default__, &code_getdefault,
+	            "->?S?O\n"
+	            "Access to the default values of arguments"),
 	/* Code-specific RTTI fields don't have leading/trailing underscores,
 	 * because they don't need to match the ABI also provided by numerous
 	 * other types (such as `Function', `ObjMethod', etc.) */
-	{ "statics",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
-	  DOC("->?S?O\n"
-	      "Access to the static values of @this code object") },
-	{ NULL }
+	TYPE_GETTER("statics", &code_getstatic,
+	            "->?S?O\n"
+	            "Access to the static values of @this code object"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_gc tpconst code_gc = {
@@ -1862,30 +1853,32 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_doc      = */ DOC("()\n"
 	                         "Return a singleton, stub code object that always returns ?N\n"
 	                         "\n"
-	                         "(text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,"
-	                         "except:?S?X3?T4?Dint?Dint?Dint?Dint"
-	                                     "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
-	                                     "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
-	                                     "=!N,"
-	                         "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
-	                         "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N)\n"
+	                         "("
+	                         /**/ "text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,"
+	                         /**/ "except:?S?X3?T4?Dint?Dint?Dint?Dint"
+	                         /**/ /*       */ "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
+	                         /**/ /*       */ "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
+	                         /**/ /*       */ "=!N,"
+	                         /**/ "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
+	                         /**/ "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N"
+	                         ")\n"
 	                         "@throw IntegerOverflow One of the specified arguments exceeds its associated implementation limit "
-	                                                "(the usual limit is $0xffff for most arguments, and $0xffffffff for @text)\n"
+	                         /*                  */ "(the usual limit is $0xffff for most arguments, and $0xffffffff for @text)\n"
 	                         "@throw ValueError The given @flags, or the flags associated with a given @except are invalid\n"
 	                         "@param text The bytecode that should be executed by the code\n"
 	                         "@param module The module to-be used as the declaring module\n"
 	                         "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
 	                         "@param except A sequence of ${(startpc#: :int, endpc#: :int, entrypc#: :int, entrysp#: :int, flags#: :string #| :int = \"\", mask#: :Type = none)}-"
-	                                       ":{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
+	                         /*         */ ":{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
 	                         "@param nlocal The number of local variables to-be allocated for every frame\n"
 	                         "@param nstack The amount of stack space to be allocated for every frame\n"
 	                         "@param argc The max number of dedicated arguments taken by the function (must be >= ${##defaults} and == ${##keywords} if those are given). "
-	                                     "Alternatively, you may omit this parameter, or pass 0 and provide @keywords in order to use ${##keywords} instead\n"
+	                         /*       */ "Alternatively, you may omit this parameter, or pass 0 and provide @keywords in order to use ${##keywords} instead\n"
 	                         "@param keywords A sequence of strings describing the names of positional arguments (the length must be equal to ${##keywords})\n"
 	                         "@param defaults An indexable sequence describing the values to-be used for argument default values "
-	                                         "Unbound items of this sequence translate to the corresponding argument being optional\n"
+	                         /*           */ "Unbound items of this sequence translate to the corresponding argument being optional\n"
 	                         "@param flags A comma-separated string of $\"yielding\", $\"copyable\", $\"lenient\", $\"varargs\", "
-	                                      "$\"varkwds\", $\"thiscall\", $\"heapframe\", $\"finally\", $\"constructor\"\n"
+	                         /*        */ "$\"varkwds\", $\"thiscall\", $\"heapframe\", $\"finally\", $\"constructor\"\n"
 	                         "@param ddi The debug information descriptor that should be used for providing assembly meta-information\n"
 	                         "Construct a new code object from the given arguments\n"
 	                         "Note that the returned code object always has the assembly tag enabled"),

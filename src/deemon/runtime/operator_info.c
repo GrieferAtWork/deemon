@@ -43,6 +43,7 @@
 
 #include "../objects/gc_inspect.h"
 #include "runtime_error.h"
+#include "strings.h"
 
 DECL_BEGIN
 
@@ -1561,15 +1562,15 @@ STATIC_ASSERT(offsetof(TypeOperatorsIterator, to_type) ==
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 to_str(TypeOperators *__restrict self) {
 	return DeeString_Newf("Operator %ss for %k",
-	                      self->to_name ? "name" : "id",
+	                      self->to_name ? STR_name : STR_id,
 	                      self->to_type);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 to_repr(TypeOperators *__restrict self) {
-	return DeeString_Newf("%k.__operator%ss__",
+	return DeeString_Newf("%r.__operator%ss__",
 	                      self->to_type,
-	                      self->to_name ? "" : "id");
+	                      self->to_name ? "" : STR_id);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF TypeOperatorsIterator *DCALL

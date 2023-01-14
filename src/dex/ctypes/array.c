@@ -138,8 +138,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst aiter_getsets[] = {
-	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&aiter_getseq },
-	{ NULL }
+	TYPE_GETTER_NODOC("seq", &aiter_getseq),
+	TYPE_GETSET_END
 };
 
 

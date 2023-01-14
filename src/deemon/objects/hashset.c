@@ -1229,7 +1229,7 @@ iter_exhausted:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_ctor(SetIterator *__restrict self) {
-	self->si_set = (DeeHashSetObject *)DeeHashSet_New();
+	self->si_set = (Set *)DeeHashSet_New();
 	if unlikely(!self->si_set)
 		goto err;
 	self->si_next = self->si_set->s_elem;
@@ -1818,55 +1818,45 @@ hashset_sizeof(Set *self) {
 
 
 PRIVATE struct type_method tpconst set_methods[] = {
-	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
-	  DOC("->\n"
-	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it") },
-	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_doclear,
-	  DOC("()\n"
-	      "Clear all items from the set") },
-	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
-	  DOC("->\n"
-	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it (alias for ?#pop)") },
-	{ "unify",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_unify,
-	  DOC("(ob)->\n"
-	      "Insert @ob into the set if it wasn't inserted before, "
-	      /**/ "and re-return it, or the pre-existing instance") },
-	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
-	  DOC("(ob)->?Dbool\n"
-	      "Returns ?t if the object wasn't apart of the set before") },
-	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
-	  DOC("(items:?S?O)->?Dint\n"
-	      "Insert all items from @items into @this set, and return the number of inserted items") },
-	{ DeeString_STR(&str_remove),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
-	  DOC("(ob)->?Dbool\n"
-	      "Returns ?t if the object was removed from the set") },
+	TYPE_METHOD(STR_pop, &set_pop,
+	            "->\n"
+	            "@throw ValueError The set is empty\n"
+	            "Pop a random item from the set and return it"),
+	TYPE_METHOD(STR_clear, &set_doclear,
+	            "()\n"
+	            "Clear all items from the set"),
+	TYPE_METHOD("popitem", &set_pop,
+	            "->\n"
+	            "@throw ValueError The set is empty\n"
+	            "Pop a random item from the set and return it (alias for ?#pop)"),
+	TYPE_METHOD("unify", &set_unify,
+	            "(ob)->\n"
+	            "Insert @ob into the set if it wasn't inserted before, "
+	            /**/ "and re-return it, or the pre-existing instance"),
+	TYPE_METHOD(STR_insert, &set_insert,
+	            "(ob)->?Dbool\n"
+	            "Returns ?t if the object wasn't apart of the set before"),
+	TYPE_METHOD("update", &set_update,
+	            "(items:?S?O)->?Dint\n"
+	            "Insert all items from @items into @this set, and return the number of inserted items"),
+	TYPE_METHOD(STR_remove, &set_remove,
+	            "(ob)->?Dbool\n"
+	            "Returns ?t if the object was removed from the set"),
 	/* TODO: HashSet.byhash(template:?O)->?DSequence */
 	/* Alternative function names. */
-	{ "add",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
-	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for ?#insert") },
-	{ "discard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
-	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for ?#remove") },
+	TYPE_METHOD("add", &set_insert,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#insert"),
+	TYPE_METHOD("discard", &set_remove,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#remove"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
-	{ "insert_all",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
-	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for ?#update") },
+	TYPE_METHOD("insert_all", &set_update,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 
@@ -1889,25 +1879,20 @@ set_set_maxloadfactor(DeeObject *UNUSED(self),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTDEF struct type_getset tpconst hashset_getsets[];
-INTERN struct type_getset tpconst hashset_getsets[] = {
-	{ "frozen",
-	  &DeeRoSet_FromSequence,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:RoSet\n"
-	      "Returns a read-only (frozen) copy of @this HashSet") },
+INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
+	TYPE_GETTER("frozen", &DeeRoSet_FromSequence,
+	            "->?Ert:RoSet\n"
+	            "Returns a read-only (frozen) copy of @this HashSet"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "max_load_factor",
-	  &set_get_maxloadfactor,
-	  &set_del_maxloadfactor,
-	  &set_set_maxloadfactor,
-	  DOC("->?Dfloat\n"
-	      "Deprecated. Always returns ${1.0}, with del/set being ignored") },
+	TYPE_GETSET("max_load_factor",
+	            &set_get_maxloadfactor,
+	            &set_del_maxloadfactor,
+	            &set_set_maxloadfactor,
+	            "->?Dfloat\n"
+	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&hashset_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER(STR___sizeof__, &hashset_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst set_class_members[] = {
@@ -1924,36 +1909,36 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_HashSet),
 	/* .tp_doc      = */ DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Create an empty HashSet\n"
-
 	                         "\n"
+
 	                         "(items:?S?O)\n"
 	                         "Create a new HashSet populated with elements from @items\n"
-
 	                         "\n"
+
 	                         "copy->\n"
 	                         "Returns a shallow copy of @this HashSet\n"
-
 	                         "\n"
+
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of @this HashSet\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this HashSet is non-empty\n"
-
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of @this HashSet\n"
-
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the number of items apart of @this HashSet\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
 	                         /**/ "in @this HashSet, following a random order"),

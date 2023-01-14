@@ -212,7 +212,7 @@ again:
 			goto err_ni;
 	}
 	/* Check if the end has been reached */
-	temp = (likely(!self->ri_range->r_rev))
+	temp = likely(!self->ri_range->r_rev)
 	       ? DeeObject_CompareLo(new_index, self->ri_end)
 	       : DeeObject_CompareGr(new_index, self->ri_end);
 	if (temp <= 0) {
@@ -287,7 +287,7 @@ ri_bool(RangeIterator *__restrict self) {
 	DREF DeeObject *ni;
 	ni = ri_get_next_index(self);
 	/* Check if the end has been reached */
-	result = (likely(!self->ri_range->r_rev))
+	result = likely(!self->ri_range->r_rev)
 	         ? DeeObject_CompareLo(ni, self->ri_end)
 	         : DeeObject_CompareGr(ni, self->ri_end);
 	Dee_Decref(ni);
@@ -338,11 +338,8 @@ ri_index_set(RangeIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst ri_getsets[] = {
-	{ "index",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ri_index_get,
-	  (int (DCALL *)(DeeObject *__restrict))&ri_index_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&ri_index_set },
-	{ NULL }
+	TYPE_GETSET_NODOC("index", &ri_index_get, &ri_index_del, &ri_index_set),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst ri_members[] = {
@@ -354,49 +351,49 @@ PRIVATE struct type_member tpconst ri_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_RANGEITERATOR_COMPARE(name, compare_object)                         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
-	name(RangeIterator *self, RangeIterator *other) {                              \
-		DREF DeeObject *my_index, *ot_index, *result;                              \
+#define DEFINE_RANGEITERATOR_COMPARE(name, compare_object)            \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
+	name(RangeIterator *self, RangeIterator *other) {                 \
+		DREF DeeObject *my_index, *ot_index, *result;                 \
 		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
-			goto err;                                                              \
-		my_index = ri_get_next_index(self);                                        \
-		if unlikely(!my_index)                                                     \
-			goto err;                                                              \
-		ot_index = ri_get_next_index(other);                                       \
-		if unlikely(!my_index)                                                     \
-			goto err_myi;                                                          \
-		result = compare_object(my_index, ot_index);                               \
-		Dee_Decref(ot_index);                                                      \
-		Dee_Decref(my_index);                                                      \
-		return result;                                                             \
-	err_myi:                                                                       \
-		Dee_Decref(my_index);                                                      \
-	err:                                                                           \
-		return NULL;                                                               \
+			goto err;                                                 \
+		my_index = ri_get_next_index(self);                           \
+		if unlikely(!my_index)                                        \
+			goto err;                                                 \
+		ot_index = ri_get_next_index(other);                          \
+		if unlikely(!my_index)                                        \
+			goto err_myi;                                             \
+		result = compare_object(my_index, ot_index);                  \
+		Dee_Decref(ot_index);                                         \
+		Dee_Decref(my_index);                                         \
+		return result;                                                \
+	err_myi:                                                          \
+		Dee_Decref(my_index);                                         \
+	err:                                                              \
+		return NULL;                                                  \
 	}
-#define DEFINE_RANGEITERATOR_COMPARE_R(name, compare_object)                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
-	name(RangeIterator *self, RangeIterator *other) {                              \
-		DREF DeeObject *my_index, *ot_index, *result;                              \
+#define DEFINE_RANGEITERATOR_COMPARE_R(name, compare_object)          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
+	name(RangeIterator *self, RangeIterator *other) {                 \
+		DREF DeeObject *my_index, *ot_index, *result;                 \
 		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
-			goto err;                                                              \
-		my_index = ri_get_next_index(self);                                        \
-		if unlikely(!my_index)                                                     \
-			goto err;                                                              \
-		ot_index = ri_get_next_index(other);                                       \
-		if unlikely(!my_index)                                                     \
-			goto err_myi;                                                          \
-		result = (unlikely(self->ri_range->r_rev))                                 \
-		         ? compare_object(my_index, ot_index)                              \
-		         : compare_object(ot_index, my_index);                             \
-		Dee_Decref(ot_index);                                                      \
-		Dee_Decref(my_index);                                                      \
-		return result;                                                             \
-	err_myi:                                                                       \
-		Dee_Decref(my_index);                                                      \
-	err:                                                                           \
-		return NULL;                                                               \
+			goto err;                                                 \
+		my_index = ri_get_next_index(self);                           \
+		if unlikely(!my_index)                                        \
+			goto err;                                                 \
+		ot_index = ri_get_next_index(other);                          \
+		if unlikely(!my_index)                                        \
+			goto err_myi;                                             \
+		result = unlikely(self->ri_range->r_rev)                      \
+		         ? compare_object(my_index, ot_index)                 \
+		         : compare_object(ot_index, my_index);                \
+		Dee_Decref(ot_index);                                         \
+		Dee_Decref(my_index);                                         \
+		return result;                                                \
+	err_myi:                                                          \
+		Dee_Decref(my_index);                                         \
+	err:                                                              \
+		return NULL;                                                  \
 	}
 DEFINE_RANGEITERATOR_COMPARE(ri_eq, DeeObject_CompareEqObject)
 DEFINE_RANGEITERATOR_COMPARE(ri_ne, DeeObject_CompareNeObject)
@@ -583,7 +580,7 @@ range_bool(Range *__restrict self) {
 	 * >>     return self->r_start > self->r_end;
 	 * >> }
 	 */
-	return (likely(!self->r_rev))
+	return likely(!self->r_rev)
 	       ? DeeObject_CompareLo(self->r_start, self->r_end)
 	       : DeeObject_CompareGr(self->r_start, self->r_end);
 }
@@ -614,7 +611,7 @@ range_size(Range *__restrict self) {
 		if unlikely(!temp)
 			goto err_r;
 		Dee_Decref(result);
-		error = (likely(!self->r_rev))
+		error = likely(!self->r_rev)
 		        ? DeeObject_Dec(&temp)
 		        : DeeObject_Inc(&temp);
 		if unlikely(error)

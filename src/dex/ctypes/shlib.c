@@ -326,10 +326,10 @@ err:
 
 
 PRIVATE struct type_method tpconst shlib_methods[] = {
-	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&shlib_base,
-	  DOC("->?Aptr?Gvoid\n"
-	      "Returns the base address of the shared library") },
-	{ NULL }
+	TYPE_METHOD("base", &shlib_base,
+	            "->?Aptr?Gvoid\n"
+	            "Returns the base address of the shared library"),
+	TYPE_METHOD_END
 };
 
 INTERN DeeTypeObject DeeShlib_Type = {

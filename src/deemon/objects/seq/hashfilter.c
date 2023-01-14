@@ -178,8 +178,10 @@ filteriterator_hash(HashFilterIterator *__restrict self) {
 	err:                                                                   \
 		return NULL;                                                       \
 	}
-DEFINE_FILTERITERATOR_COMPARE(filteriterator_eq, DeeObject_CompareEqObject, if (self->fi_hash != other->fi_hash) return_false;)
-DEFINE_FILTERITERATOR_COMPARE(filteriterator_ne, DeeObject_CompareNeObject, if (self->fi_hash != other->fi_hash) return_true;)
+DEFINE_FILTERITERATOR_COMPARE(filteriterator_eq, DeeObject_CompareEqObject,
+                              if (self->fi_hash != other->fi_hash) return_false;)
+DEFINE_FILTERITERATOR_COMPARE(filteriterator_ne, DeeObject_CompareNeObject,
+                              if (self->fi_hash != other->fi_hash) return_true;)
 DEFINE_FILTERITERATOR_COMPARE(filteriterator_lo, DeeObject_CompareLoObject, )
 DEFINE_FILTERITERATOR_COMPARE(filteriterator_le, DeeObject_CompareLeObject, )
 DEFINE_FILTERITERATOR_COMPARE(filteriterator_gr, DeeObject_CompareGrObject, )
@@ -223,21 +225,13 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_filteriterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:SeqHashFilter") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &filteriterator_seq_get, "->?Ert:SeqHashFilter"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst map_filteriterator_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filteriterator_seq_get,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:MappingHashFilter") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &filteriterator_seq_get, "->?Ert:MappingHashFilter"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst filteriterator_members[] = {

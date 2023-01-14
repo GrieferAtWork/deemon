@@ -1452,66 +1452,67 @@ err:
 
 
 PRIVATE struct type_method tpconst file_class_methods[] = {
-	{ "open",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_class_open,
-	  DOC("(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
-	      "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
-	      "@interrupt\n"
-	      "@throw FileExists The passed @oflags contains both $\"creat\" and "
-	      /*             */ "$\"excl\", but the given @path already existed\n"
-	      "@throw FileNotFound The given @path could not be found\n"
-	      "@throw FileAccessError The current user does not have permissions to "
-	      /*                  */ "access the given @path in the requested manner\n"
-	      "@throw ReadOnlyFile Write-access, or create-file was requested, but the "
-	      /*               */ "filesystem hosting @path is mounted as read-only\n"
-	      "@throw UnsupportedAPI Filesystem access has been disabled, or $\"creat\" was passed and the "
-	      /*                 */ "filesystem hosting @path does not support the creation of new files\n"
-	      "@throw FSError Failed to open the given @path for some reason\n"
-	      "@param mode The unix-like permissions to be set for newly created files\n"
+	TYPE_KWMETHOD("open", &file_class_open,
+	              "(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
+	              "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
+	              "@interrupt\n"
+	              "@throw FileExists The passed @oflags contains both $\"creat\" and "
+	              /*             */ "$\"excl\", but the given @path already existed\n"
+	              "@throw FileNotFound The given @path could not be found\n"
+	              "@throw FileAccessError The current user does not have permissions to "
+	              /*                  */ "access the given @path in the requested manner\n"
+	              "@throw ReadOnlyFile Write-access, or create-file was requested, but the "
+	              /*               */ "filesystem hosting @path is mounted as read-only\n"
+	              "@throw UnsupportedAPI Filesystem access has been disabled, or $\"creat\" was passed and the "
+	              /*                 */ "filesystem hosting @path does not support the creation of new files\n"
+	              "@throw FSError Failed to open the given @path for some reason\n"
+	              "@param mode The unix-like permissions to be set for newly created files\n"
 
-	      "Consults the filesystem to open or create a given @path, using the given @oflags\n"
+	              "Consults the filesystem to open or create a given @path, using the given @oflags\n"
 
-	      "Mode is implemented as a comma-separated list of open options that include "
-	      /**/ "those described by the C standard, allowing the basic $\"r\", $\"w\", $\"a\" "
-	      /**/ "as well as each followed by an additional $\"+\", also supporting the "
-	      /**/ "$\"b\" and $\"x\" modifiers, as well as the suggested $\"t\" flag\n"
+	              "Mode is implemented as a comma-separated list of open options that include "
+	              /**/ "those described by the C standard, allowing the basic $\"r\", $\"w\", $\"a\" "
+	              /**/ "as well as each followed by an additional $\"+\", also supporting the "
+	              /**/ "$\"b\" and $\"x\" modifiers, as well as the suggested $\"t\" flag\n"
 
-	      "In addition to this, any of the comma-separated options can be one of the following "
-	      /**/ "strings to better fine-tune the exact open-behavior, if supported by the host:\n"
+	              "In addition to this, any of the comma-separated options can be one of the following "
+	              /**/ "strings to better fine-tune the exact open-behavior, if supported by the host:\n"
 
-	      "#T{Flag String|Description~"
-	      /**/ "$\"rdonly\", $\"R\"|Open for read-only (default)&"
-	      /**/ "$\"wronly\", $\"W\"|Open for write access only&"
-	      /**/ "$\"rdwr\", $\"RW\"|Open for both reading and writing&"
-	      /**/ "$\"creat\", $\"C\"|Create the file if it doesn't exist already&"
-	      /**/ "$\"excl\", $\"X\"|When used with $\"creat\", fail if the file already exists&"
-	      /**/ "$\"trunc\", $\"T\"|Truncate an existing file to a length of $0 before opening it&"
-	      /**/ "$\"append\", $\"A\"|Write operations always append data to the end of the file}\n"
+	              "#T{Flag String|Description~"
+	              /**/ "$\"rdonly\", $\"R\"|Open for read-only (default)&"
+	              /**/ "$\"wronly\", $\"W\"|Open for write access only&"
+	              /**/ "$\"rdwr\", $\"RW\"|Open for both reading and writing&"
+	              /**/ "$\"creat\", $\"C\"|Create the file if it doesn't exist already&"
+	              /**/ "$\"excl\", $\"X\"|When used with $\"creat\", fail if the file already exists&"
+	              /**/ "$\"trunc\", $\"T\"|Truncate an existing file to a length of $0 before opening it&"
+	              /**/ "$\"append\", $\"A\"|Write operations always append data to the end of the file"
+	              "}\n"
 
-	      "Additionally, the following flags are accepted, but ignored if the host doesn't support them:\n"
-	      "#T{Flag String|Description~"
-	      /**/ "$\"nonblock\", $\"NB\"|Don't block when attempting to read/write&"
-	      /**/ "$\"sync\", $\"S\"|Write operations block until all data has been written to disk&"
-	      /**/ "$\"direct\", $\"D\"|Bypass system buffers and directly pass data to the kernel when writing&"
-	      /**/ "$\"nofollow\", $\"NF\"|Do not follow symbolic links&"
-	      /**/ "$\"noatime\", $\"NA\"|Do not update access times&"
-	      /**/ "$\"cloexec\", $\"CE\"|Do not inherit the file in child processes&"
-	      /**/ "$\"xread\", $\"XR\"|Request exclusive read access&"
-	      /**/ "$\"xwrite\", $\"XW\"|Request exclusive write access&"
-	      /**/ "$\"hidden\", $\"H\"|Set a host-specific hidden-file flag when creating a new file (if the host uses a flag to track this attribute)}\n"
+	              "Additionally, the following flags are accepted, but ignored if the host doesn't support them:\n"
+	              "#T{Flag String|Description~"
+	              /**/ "$\"nonblock\", $\"NB\"|Don't block when attempting to read/write&"
+	              /**/ "$\"sync\", $\"S\"|Write operations block until all data has been written to disk&"
+	              /**/ "$\"direct\", $\"D\"|Bypass system buffers and directly pass data to the kernel when writing&"
+	              /**/ "$\"nofollow\", $\"NF\"|Do not follow symbolic links&"
+	              /**/ "$\"noatime\", $\"NA\"|Do not update access times&"
+	              /**/ "$\"cloexec\", $\"CE\"|Do not inherit the file in child processes&"
+	              /**/ "$\"xread\", $\"XR\"|Request exclusive read access&"
+	              /**/ "$\"xwrite\", $\"XW\"|Request exclusive write access&"
+	              /**/ "$\"hidden\", $\"H\"|Set a host-specific hidden-file flag when creating a new file (if the host uses a flag to track this attribute)"
+	              "}\n"
 
-	      "The following flags may be passed to modify buffering behavior:\n"
-	      "#T{Flag String|Description~"
-	      /**/ "$\"binary\"|Open the file in binary mode (default, unless an STD-C modifier is used, in which case it that must contain the $\"b\" flag)&"
-	      /**/ "$\"text\"|Open the file in text mode (default if an STD-C modifier was used)&"
-	      /**/ "$\"nobuf\"|Do not wrap the returned file in a buffer (Also implied when $\"direct\" is passed)}\n"
+	              "The following flags may be passed to modify buffering behavior:\n"
+	              "#T{Flag String|Description~"
+	              /**/ "$\"binary\"|Open the file in binary mode (default, unless an STD-C modifier is used, in which case it that must contain the $\"b\" flag)&"
+	              /**/ "$\"text\"|Open the file in text mode (default if an STD-C modifier was used)&"
+	              /**/ "$\"nobuf\"|Do not wrap the returned file in a buffer (Also implied when $\"direct\" is passed)"
+	              "}\n"
 
-	      "Not that unlike in many other places, case is NOT ignored for these options\n"
+	              "Not that unlike in many other places, case is NOT ignored for these options\n"
 
-	      "In addition to the string-based options for @oflags, an integer bit-set may be "
-	      /**/ "passed consisting of `OPEN_F*' flags that can be found in deemon's system headers"),
-	  TYPE_METHOD_FKWDS },
-	{ NULL }
+	              "In addition to the string-based options for @oflags, an integer bit-set may be "
+	              /**/ "passed consisting of `OPEN_F*' flags that can be found in deemon's system headers"),
+	TYPE_METHOD_END
 };
 
 
@@ -1769,61 +1770,60 @@ file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst file_class_getsets[] = {
-	{ "stdin",
-	  &file_class_get_stdin,
-	  &file_class_del_stdin,
-	  &file_class_set_stdin,
-	  DOC("->?DFile\n"
-	      "The standard input stream") },
-	{ "stdout",
-	  &file_class_get_stdout,
-	  &file_class_del_stdout,
-	  &file_class_set_stdout,
-	  DOC("->?DFile\n"
-	      "The standard output stream\n"
-	      "This is also what $print statements will write to when used "
-	      /**/ "without an explicit file target:\n"
-	      "${"
-	      /**/ "print \"foo\";\n"
-	      /**/ "// Same as:\n"
-	      /**/ "import File from deemon;\n"
-	      /**/ "print File.stdout: \"foo\";"
-	      "}") },
-	{ "stderr",
-	  &file_class_get_stderr,
-	  &file_class_del_stderr,
-	  &file_class_set_stderr,
-	  DOC("->?DFile\n"
-	      "The standard error stream") },
-	{ "default_stdin",
-	  &file_class_default_stdin, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "The default standard input stream") },
-	{ "default_stdout",
-	  &file_class_default_stdout, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "The default standard output stream") },
-	{ "default_stderr",
-	  &file_class_default_stderr, NULL, NULL,
-	  DOC("->?DFile\n"
-	      "The default standard error stream") },
-	{ "stddbg",
+	TYPE_GETSET("stdin",
+	            &file_class_get_stdin,
+	            &file_class_del_stdin,
+	            &file_class_set_stdin,
+	            "->?DFile\n"
+	            "The standard input stream"),
+	TYPE_GETSET("stdout",
+	            &file_class_get_stdout,
+	            &file_class_del_stdout,
+	            &file_class_set_stdout,
+	            "->?DFile\n"
+	            "The standard output stream\n"
+	            "This is also what $print statements will write to when used "
+	            /**/ "without an explicit file target:\n"
+	            "${"
+	            /**/ "print \"foo\";\n"
+	            /**/ "// Same as:\n"
+	            /**/ "import File from deemon;\n"
+	            /**/ "print File.stdout: \"foo\";"
+	            "}"),
+	TYPE_GETSET("stderr",
+	            &file_class_get_stderr,
+	            &file_class_del_stderr,
+	            &file_class_set_stderr,
+	            "->?DFile\n"
+	            "The standard error stream"),
+	TYPE_GETTER("default_stdin",
+	            &file_class_default_stdin,
+	            "->?DFile\n"
+	            "The default standard input stream"),
+	TYPE_GETTER("default_stdout",
+	            &file_class_default_stdout,
+	            "->?DFile\n"
+	            "The default standard output stream"),
+	TYPE_GETTER("default_stderr",
+	            &file_class_default_stderr,
+	            "->?DFile\n"
+	            "The default standard error stream"),
 #if DEE_STDDBG == DEE_STDERR
-	  &file_class_default_stderr,
+#define LINKED_P_file_class_stddbg &file_class_default_stderr
 #else /* DEE_STDDBG == DEE_STDERR */
-	  &file_class_stddbg,
+#define LINKED_P_file_class_stddbg &file_class_stddbg
 #endif /* DEE_STDDBG != DEE_STDERR */
-	  NULL, NULL,
-	  DOC("->?DFile\n"
-	      "A standard stream that usually simply aliases the "
-	      /**/ "default #stderr, but should be used for debug-output\n"
+	TYPE_GETTER("stddbg",
+	            LINKED_P_file_class_stddbg,
+	            "->?DFile\n"
+	            "A standard stream that usually simply aliases the "
+	            /**/ "default #stderr, but should be used for debug-output\n"
 
-	      "Note that unlike the other streams, this one can't be redirected") },
-	{ DeeString_STR(&str_Joined),
-	  &file_class_getjoined, NULL, NULL,
-	  DOC("->?DType\n"
-	      "Deprecated alias for ?Efiles:Joined") },
-	{ NULL }
+	            "Note that unlike the other streams, this one can't be redirected"),
+	TYPE_GETTER(STR_Joined, &file_class_getjoined,
+	            "->?DType\n"
+	            "Deprecated alias for ?Efiles:Joined"),
+	TYPE_GETSET_END
 };
 
 
@@ -2341,169 +2341,148 @@ err:
 
 
 PRIVATE struct type_method tpconst file_methods[] = {
-	{ "read",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_read,
-	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
-	      "Read and return at most @maxbytes of data from the file stream. "
-	      /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
-	      /**/ "read-callback returns $0, rather than until it returns something other than the "
-	      /**/ "internal buffer size used when reading data."),
-	  TYPE_METHOD_FKWDS },
-	{ "readinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readinto,
-	  DOC("(dst:?DBytes,readall=!f)->?Dint\n"
-	      "Read data into the given buffer @dst and return the number of bytes read. "
-	      /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
-	      /**/ "read-callback returns $0, rather than until it returns something other than the "
-	      /**/ "requested read size."),
-	  TYPE_METHOD_FKWDS },
-	{ "write",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
-	  DOC("(data:?DBytes,writeall=!t)->?Dint\n"
-	      "Write @data to the file stream and return the actual number of bytes written. "
-	      /**/ "When @writeall is ?t, keep writing data until the write-callback "
-	      /**/ "returns $0 or until all data has been written, rather than invoke "
-	      /**/ "the write-callback only a single time."),
-	  TYPE_METHOD_FKWDS },
-	{ "pread",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
-	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
-	      "Similar to ?#read, but read data from a given file-offset "
-	      /**/ "@pos, rather than from the current file position"),
-	  TYPE_METHOD_FKWDS },
-	{ "preadinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_preadinto,
-	  DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
-	      "Similar to ?#readinto, but read data from a given file-offset "
-	      /**/ "@pos, rather than from the current file position"),
-	  TYPE_METHOD_FKWDS },
-	{ "pwrite",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
-	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
-	      "Similar to ?#write, but write data to a given file-offset "
-	      /**/ "@pos, rather than at the current file position"),
-	  TYPE_METHOD_FKWDS },
-	{ "seek",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
-	  DOC("(off:?Dint,whence=!PSET)->?Dint\n"
-	      "(off:?Dint,whence:?Dint)->?Dint\n"
-	      "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
+	TYPE_KWMETHOD("read", &file_read,
+	              "(maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "Read and return at most @maxbytes of data from the file stream. "
+	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
+	              /**/ "read-callback returns $0, rather than until it returns something other than the "
+	              /**/ "internal buffer size used when reading data."),
+	TYPE_KWMETHOD("readinto", &file_readinto,
+	              "(dst:?DBytes,readall=!f)->?Dint\n"
+	              "Read data into the given buffer @dst and return the number of bytes read. "
+	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
+	              /**/ "read-callback returns $0, rather than until it returns something other than the "
+	              /**/ "requested read size."),
+	TYPE_KWMETHOD("write", &file_write,
+	              "(data:?DBytes,writeall=!t)->?Dint\n"
+	              "Write @data to the file stream and return the actual number of bytes written. "
+	              /**/ "When @writeall is ?t, keep writing data until the write-callback "
+	              /**/ "returns $0 or until all data has been written, rather than invoke "
+	              /**/ "the write-callback only a single time."),
+	TYPE_KWMETHOD("pread", &file_pread,
+	              "(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "Similar to ?#read, but read data from a given file-offset "
+	              /**/ "@pos, rather than from the current file position"),
+	TYPE_KWMETHOD("preadinto", &file_preadinto,
+	              "(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
+	              "Similar to ?#readinto, but read data from a given file-offset "
+	              /**/ "@pos, rather than from the current file position"),
+	TYPE_KWMETHOD("pwrite", &file_pwrite,
+	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
+	              "Similar to ?#write, but write data to a given file-offset "
+	              /**/ "@pos, rather than at the current file position"),
+	TYPE_KWMETHOD("seek", &file_seek,
+	              "(off:?Dint,whence=!PSET)->?Dint\n"
+	              "(off:?Dint,whence:?Dint)->?Dint\n"
+	              "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
 
-	      "Change the current file pointer according to @off and @whence "
-	      /**/ "before returning its absolute offset within the file.\n"
+	              "Change the current file pointer according to @off and @whence "
+	              /**/ "before returning its absolute offset within the file.\n"
 
-	      "When a string is given for @whence, it may be one of the following "
-	      /**/ "case-insensitive values, optionally prefixed with $\"SEEK_\"\n"
+	              "When a string is given for @whence, it may be one of the following "
+	              /**/ "case-insensitive values, optionally prefixed with $\"SEEK_\"\n"
 
-	      "#T{Whence-name|Description~"
-	      /**/ "$\"SET\"|Set the file pointer to an absolute in-file position&"
-	      /**/ "$\"CUR\"|Adjust the file pointer relative to its previous position&"
-	      /**/ "$\"END\"|Set the file pointer relative to the end of the stream}"),
-	  TYPE_METHOD_FKWDS },
-	{ "tell",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_tell,
-	  DOC("->?Dint\n"
-	      "Same as calling ?#seek as ${this.seek(0, \"CUR\")}") },
-	{ "rewind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_rewind,
-	  DOC("()\n"
-	      "Same as calling ?#seek as ${this.seek(0, \"SET\")}") },
-	{ "trunc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_trunc,
-	  DOC("->?Dint\n"
-	      "(size:?Dint)->?Dint\n"
-	      "Truncate the file to a new length of @size bytes. "
-	      /**/ "When no argument is given, the file's length is truncated "
-	      /**/ "to its current position (?#tell), rather than the one given") },
-	{ "sync",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_sync,
-	  DOC("()\n"
-	      "Flush buffers and synchronize disk activity of the file") },
-	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_close,
-	  DOC("()\n"
-	      "Close the file") },
-	{ "getc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_getc,
-	  DOC("->?Dint\n"
-	      "Read and return a single character (byte) from then file, "
-	      /**/ "or return ${-1} if the file's end has been reached") },
-	{ "ungetc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_ungetc,
-	  DOC("(ch:?Dint)->?Dbool\n"
-	      "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
-	      /**/ "If the file's start has already been reached, ?f is returned and the character "
-	      /**/ "will not be re-read from this file") },
-	{ "putc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_putc,
-	  DOC("(byte:?Dint)->?Dbool\n"
-	      "Append a single @byte at the end of @this File, returning ?t on "
-	      /**/ "success, or ?f if the file has entered an end-of-file state") },
-	{ DeeString_STR(&str_size), &file_size,
-	  DOC("->?Dint\n"
-	      "Returns the size (in bytes) of the file stream") },
-	{ "readline",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readline,
-	  DOC("(keeplf:?Dbool)->?DBytes\n"
-	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
-	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
-	      "When @keeplf is ?f, strip the trailing linefeed from the returned Bytes object") },
+	              "#T{Whence-name|Description~"
+	              /**/ "$\"SET\"|Set the file pointer to an absolute in-file position&"
+	              /**/ "$\"CUR\"|Adjust the file pointer relative to its previous position&"
+	              /**/ "$\"END\"|Set the file pointer relative to the end of the stream}"),
+	TYPE_METHOD("tell",
+	            &file_tell,
+	            "->?Dint\n"
+	            "Same as calling ?#seek as ${this.seek(0, \"CUR\")}"),
+	TYPE_METHOD("rewind", &file_rewind,
+	            "()\n"
+	            "Same as calling ?#seek as ${this.seek(0, \"SET\")}"),
+	TYPE_METHOD("trunc", &file_trunc,
+	            "->?Dint\n"
+	            "(size:?Dint)->?Dint\n"
+	            "Truncate the file to a new length of @size bytes. "
+	            /**/ "When no argument is given, the file's length is truncated "
+	            /**/ "to its current position (?#tell), rather than the one given"),
+	TYPE_METHOD("sync",
+	            &file_sync,
+	            "()\n"
+	            "Flush buffers and synchronize disk activity of the file"),
+	TYPE_METHOD("close",
+	            &file_close,
+	            "()\n"
+	            "Close the file"),
+	TYPE_METHOD("getc",
+	            &file_getc,
+	            "->?Dint\n"
+	            "Read and return a single character (byte) from then file, "
+	            /**/ "or return ${-1} if the file's end has been reached"),
+	TYPE_METHOD("ungetc",
+	            &file_ungetc,
+	            "(ch:?Dint)->?Dbool\n"
+	            "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
+	            /**/ "If the file's start has already been reached, ?f is returned and the character "
+	            /**/ "will not be re-read from this file"),
+	TYPE_METHOD("putc",
+	            &file_putc,
+	            "(byte:?Dint)->?Dbool\n"
+	            "Append a single @byte at the end of @this File, returning ?t on "
+	            /**/ "success, or ?f if the file has entered an end-of-file state"),
+	TYPE_METHOD(STR_size, &file_size,
+	            "->?Dint\n"
+	            "Returns the size (in bytes) of the file stream"),
+	TYPE_METHOD("readline",
+	            &file_readline,
+	            "(keeplf:?Dbool)->?DBytes\n"
+	            "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
+	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
+	            "When @keeplf is ?f, strip the trailing linefeed from the returned Bytes object"),
 
 	/* Deprecated functions. */
-	{ "readall", &file_readall,
-	  DOC("(maxbytes=!-1)->?DBytes\n"
-	      "Deprecated alias for ${this.read(maxbytes, true)}") },
-	{ "readat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
-	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
-	      "Deprecated alias for ?#pread"),
-	  TYPE_METHOD_FKWDS },
-	{ "writeat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
-	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
-	      "Deprecated alias for ?#pwrite"),
-	  TYPE_METHOD_FKWDS },
-	{ "readallat", &file_readallat,
-	  DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
-	      "Deprecated alias for ${this.pread(pos, maxbytes, true)}") },
-	{ "setpos",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
-	  DOC("(pos:?Dint)->?Dint\n"
-	      "Deprecated alias for ?#seek"),
-	  TYPE_METHOD_FKWDS },
-	{ "flush", &file_sync,
-	  DOC("()\n"
-	      "Deprecated alias for ?#sync") },
-	{ "puts",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
-	  DOC("(data:?DBytes)->?Dint\n"
-	      "Deprecated alias for ?#write"),
-	  TYPE_METHOD_FKWDS },
+	TYPE_METHOD("readall", &file_readall,
+	            "(maxbytes=!-1)->?DBytes\n"
+	            "Deprecated alias for ${this.read(maxbytes, true)}"),
+	TYPE_KWMETHOD("readat",
+	              &file_pread,
+	              "(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "Deprecated alias for ?#pread"),
+	TYPE_KWMETHOD("writeat",
+	              &file_pwrite,
+	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
+	              "Deprecated alias for ?#pwrite"),
+	TYPE_METHOD("readallat", &file_readallat,
+	            "(pos:?Dint,maxbytes=!-1)->?DBytes\n"
+	            "Deprecated alias for ${this.pread(pos, maxbytes, true)}"),
+	TYPE_KWMETHOD("setpos",
+	              &file_seek,
+	              "(pos:?Dint)->?Dint\n"
+	              "Deprecated alias for ?#seek"),
+	TYPE_METHOD("flush", &file_sync,
+	            "()\n"
+	            "Deprecated alias for ?#sync"),
+	TYPE_KWMETHOD("puts",
+	              &file_write,
+	              "(data:?DBytes)->?Dint\n"
+	              "Deprecated alias for ?#write"),
 
 	/* mmap support */
-	{ "mmap",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_mmap,
-	  DOC("(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytse\n"
-	      "@param minbytes The  min number of bytes (excluding @nulbytes) that should be mapped "
-	      /*           */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
-	      /*           */ "this number of bytes has been reached, nul bytes are mapped for its remainder.\n"
-	      "@param maxbytes The max number of bytes (excluding @nulbytes) that should be mapped starting "
-	      /*           */ "at @offset. If the file is smaller than this, or indicates EOF before this "
-	      /*           */ "number of bytes has been reached, simply stop there.\n"
-	      "@param offset Starting offset of mapping (absolute), or ${-1} to map the entire file\n"
-	      "@param nulbytes When non-zero, append this many trailing ${0x00}-bytes at the end of the map\n"
-	      "@param readall When !t, use ?#readall, rather than ?#read\n"
-	      "@param mustmmap When !t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
-	      "@param mapshared When !t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
-	      "Map the contents of the file into memory. If $mmap isn't supported by the this file, "
-	      /**/ "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
-	      "The returned ?DBytes object is always writable, though changes "
-	      /**/ "are only reflected within files when @mapshared is !t.\n"
-	      "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
-	      /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
-	  TYPE_METHOD_FKWDS },
+	TYPE_KWMETHOD("mmap",
+	              &file_mmap,
+	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytse\n"
+	              "@param minbytes The  min number of bytes (excluding @nulbytes) that should be mapped "
+	              /*           */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
+	              /*           */ "this number of bytes has been reached, nul bytes are mapped for its remainder.\n"
+	              "@param maxbytes The max number of bytes (excluding @nulbytes) that should be mapped starting "
+	              /*           */ "at @offset. If the file is smaller than this, or indicates EOF before this "
+	              /*           */ "number of bytes has been reached, simply stop there.\n"
+	              "@param offset Starting offset of mapping (absolute), or ${-1} to map the entire file\n"
+	              "@param nulbytes When non-zero, append this many trailing ${0x00}-bytes at the end of the map\n"
+	              "@param readall When !t, use ?#readall, rather than ?#read\n"
+	              "@param mustmmap When !t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap\n"
+	              "@param mapshared When !t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)\n"
+	              "Map the contents of the file into memory. If $mmap isn't supported by the this file, "
+	              /**/ "and @mustmmap is !f, allow the use of ?#read and ?#readall for loading file data.\n"
+	              "The returned ?DBytes object is always writable, though changes "
+	              /**/ "are only reflected within files when @mapshared is !t.\n"
+	              "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
+	              /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use."),
 
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_with file_with = {
@@ -2550,17 +2529,14 @@ err:
 }
 
 PRIVATE struct type_getset tpconst file_getsets[] = {
-	{ "pos",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_pos_get,
-	  (int (DCALL *)(DeeObject *__restrict))&file_pos_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&file_pos_set,
-	  DOC("->?Dint\n"
-	      "Control the current file position") },
+	TYPE_GETSET("pos", &file_pos_get, &file_pos_del, &file_pos_set,
+	            "->?Dint\n"
+	            "Control the current file position"),
 
 	/* Maintain at least a tiny bit of compatibility to the iterator interface... */
-	{ DeeString_STR(&str_seq), &DeeObject_NewRef },
+	TYPE_GETTER(STR_seq, &DeeObject_NewRef, "->?DFile"),
 
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 
@@ -2680,12 +2656,12 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ /**/ "((uint8_t from ctypes)ch)}). Returns ?t if the byte was successfully "
 		                         /**/ /**/ "written, or ?f if EOF was reached"
 		                         "}\n"
-
 		                         "\n"
+
 		                         "()\n"
 		                         "Default-construct the File base-class\n"
-
 		                         "\n"
+
 		                         "iter->?.\n"
 		                         "Returns an iterator that allows for line-wise processing of "
 		                         /**/ "file data, making use of the the ?#readline member function\n"
@@ -2698,24 +2674,24 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "${Sequence.find(File.open(\"foo.txt\"), \"find this line\")}\n"
 		                         "Note that because isn't derived from ?DSequence, the returned "
 		                         /**/ "iterator also isn't required to be derived from :Iterator\n"
-
 		                         "\n"
+
 		                         "next->?DBytes\n"
 		                         "Alias for ?#readline, allowing for line-wise reading of lines\n"
 		                         "Note that the trailing linefeed is always included in this\n"
-
 		                         "\n"
+
 		                         "<<(ob)->\n"
 		                         "@return Always re-returns @this File\n"
 		                         "Same as ${print this: ob,;}\n"
-
 		                         "\n"
+
 		                         ">>(buf:?DBytes)->\n"
 		                         "@throw FSError Failed to fill the entirety of @buf\n"
 		                         "@return Always re-returns @this File\n"
 		                         "Same as ${this.readinto(buf, true)}\n"
-
 		                         "\n"
+
 		                         "leave->\n"
 		                         "Invokes ${this.operator close()}\n"
 		                         "Note that due to this operators presence, an "

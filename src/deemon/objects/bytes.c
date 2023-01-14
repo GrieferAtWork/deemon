@@ -1490,38 +1490,27 @@ bytes_sizeof(Bytes *self) {
 
 
 PRIVATE struct type_getset tpconst bytes_getsets[] = {
-	{ "isreadonly",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this ?. object cannot be written to") },
-	{ "iswritable",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)") },
-	{ "ismutable",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Alias for ?#iswritable, overriding ?Aismutable?DSequence") },
-	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
-	  (int (DCALL *)(DeeObject *__restrict))&bytes_delfirst,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&bytes_setfirst,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this ?. object is empty\n"
-	      "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
-	      "Access the first byte of @this ?. object") },
-	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getlast,
-	  (int (DCALL *)(DeeObject *__restrict))&bytes_dellast,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&bytes_setlast,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this ?. object is empty\n"
-	      "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
-	      "Access the last byte of @this ?. object") },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("isreadonly", &bytes_isreadonly,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if @this ?. object cannot be written to"),
+	TYPE_GETTER("iswritable", &bytes_iswritable,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
+	TYPE_GETTER("ismutable", &bytes_iswritable,
+	            "->?Dbool\n"
+	            "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
+	TYPE_GETSET(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst,
+	            "->?Dint\n"
+	            "@throw ValueError @this ?. object is empty\n"
+	            "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
+	            "Access the first byte of @this ?. object"),
+	TYPE_GETSET(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast,
+	            "->?Dint\n"
+	            "@throw ValueError @this ?. object is empty\n"
+	            "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
+	            "Access the last byte of @this ?. object"),
+	TYPE_GETTER(STR___sizeof__, &bytes_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst bytes_members[] = {
@@ -1704,30 +1693,30 @@ err:
 
 
 PRIVATE struct type_method tpconst bytes_class_methods[] = {
-	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromseq,
-	  DOC("(seq:?S?Dint)->?.\n"
-	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
-	      /*                 */ "least one item that cannot be converted into an integer\n"
-	      "@throw IntegerOverflow At least one of the integers found in @seq is lower "
-	      /*                  */ "than $0, or greater than $0xff\n"
-	      "Convert the items of the given sequence @seq into integers, "
-	      /**/ "and construct a writable ?. object from their values\n"
-	      "Passing ?N for @seq will return an empty ?. object") },
-	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromhex,
-	  DOC("(hex_string:?Dstring)->?.\n"
-	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
-	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
-	      "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
-	      /**/ "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
-	      "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
-	      /**/ "the resulting ?. object.\n"
-	      "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
-	      /**/ "is the same as calling this functions, while ${Bytes.encode(\"hex\")} is the same as calling ?#hex\n"
-	      "${"
-	      /**/ "local data = \"DEAD BEEF\".decode(\"hex\");\n"
-	      /**/ "print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */"
-	      "}") },
-	{ NULL }
+	TYPE_METHOD("fromseq", &bytes_fromseq,
+	            "(seq:?S?Dint)->?.\n"
+	            "@throw NotImplemented The given @seq cannot be iterated, or contains at "
+	            /*                 */ "least one item that cannot be converted into an integer\n"
+	            "@throw IntegerOverflow At least one of the integers found in @seq is lower "
+	            /*                  */ "than $0, or greater than $0xff\n"
+	            "Convert the items of the given sequence @seq into integers, "
+	            /**/ "and construct a writable ?. object from their values\n"
+	            "Passing ?N for @seq will return an empty ?. object"),
+	TYPE_METHOD("fromhex", &bytes_fromhex,
+	            "(hex_string:?Dstring)->?.\n"
+	            "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
+	            "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
+	            "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
+	            /**/ "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
+	            "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
+	            /**/ "the resulting ?. object.\n"
+	            "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
+	            /**/ "is the same as calling this functions, while ${Bytes.encode(\"hex\")} is the same as calling ?#hex\n"
+	            "${"
+	            /**/ "local data = \"DEAD BEEF\".decode(\"hex\");\n"
+	            /**/ "print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */"
+	            "}"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst bytes_class_members[] = {
@@ -1759,12 +1748,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         /**/ "through use of ?Areadinto?DFile)\n"
 	                         "A ?. object implements the sequence interface as a ${{int...}}-like sequence, "
 	                         /**/ "with each integer being a value between $0 and $0xff\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct an empty ?. object\n"
-
 	                         "\n"
+
 	                         "(ob:?O,start=!0,end=!-1)\n"
 	                         "(ob:?O,mode=!Pr,start=!0,end=!-1)\n"
 	                         "@throw NotImplemented The given @ob does not implement the buffer protocol\n"
@@ -1779,16 +1768,16 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "Additionally, a ?. object can be made writable by creating a copy (a.s. ?#{op:copy}), "
 	                         /**/ "or by using ?#makewritable, which will not create a new ?. object, but re-return "
 	                         /**/ "the same object, if it was already writable\n"
-
 	                         "\n"
+
 	                         "(num_bytes:?Dint)\n"
 	                         "(num_bytes:?Dint,init:?Dint)\n"
 	                         "@throw IntegerOverflow The given @init is negative, or greater than $0xff\n"
 	                         "Construct a writable, self-contained ?. object for a total "
 	                         /**/ "of @num_bytes bytes of memory, pre-initialized to @init, or left "
 	                         /**/ "undefined when @init isn't specified\n"
-
 	                         "\n"
+
 	                         "(items:?S?Dint)\n"
 	                         "For compatibility with other sequence types, as well as the expectation "
 	                         /**/ "of a sequence-like object implementing a sequence-cast-constructor, ?. "
@@ -1799,8 +1788,8 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         /**/ "preferred over this one. In situations where this might cause ambiguity, "
 	                         /**/ "it is recommended that the ?#fromseq class method be used to construct the "
 	                         /**/ "?. object instead.\n"
-
 	                         "\n"
+
 	                         "copy->\n"
 	                         "Returns a writable copy of @this ?. object, containing "
 	                         /**/ "a copy of all data as a kind of snapshot\n"
@@ -1813,56 +1802,56 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         /**/ "y[0] = 42;  /* Only allowed because the `copy' */\n"
 	                         /**/ "print y;    /* *oobar */"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "Returns a string variant of @this ?. object, interpreting each byte as "
 	                         /**/ "a unicode character from the range U+0000-U+00FF. This is identical "
 	                         /**/ "to encoding the ?. object as a latin-1 (or iso-8859-1) string\n"
 	                         "This is identical to ${this.encode(\"latin-1\")}\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns the representation of @this ?. object in the form "
 	                         /**/ "of ${\"{!r}.bytes()\".format({ this.encode(\"latin-1\") })}\n"
-
 	                         "\n"
+
 	                         "contains(needle:?X3?.?Dstring?Dint)->\n"
 	                         "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	                         "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	                         "Check if @needle appears within @this ?. object\n"
-
 	                         "\n"
+
 	                         ":=(data:?X3?.?Dstring?S?Dint)->\n"
 	                         "@throw BufferError @this ?. object is not writable\n"
 	                         "@throw UnpackError The length of the given @data does not equal ${##this}\n"
 	                         "Assign the contents of @data to @this ?. object\n"
 	                         "You may pass ?N for @data to clear all bytes of @this buffer\n"
-
 	                         "\n"
+
 	                         "[](index:?Dint)->?Dint\n"
 	                         "Returns the byte found at @index as an integer between $0 and $0xff\n"
-
 	                         "\n"
+
 	                         "[]=(index:?Dint,value:?Dint)->\n"
 	                         "@throw BufferError @this ?. object is not writable\n"
 	                         "@throw IndexError The given @index is negative, or greater than the length of @this \n"
 	                         "@throw IntegerOverflow @value is negative or greater than $0xff\n"
 	                         "Taking the integer value of @value, assign that value to the byte found at @index\n"
-
 	                         "\n"
+
 	                         "del[]->\n"
 	                         "@throw BufferError @this ?. object is not writable\n"
 	                         "@throw IndexError The given @index is negative, or greater than the length of @this \n"
 	                         "Same as ${this[index] = 0}, assigning a zero-byte at the given @index\n"
-
 	                         "\n"
+
 	                         "[:]->?.\n"
 	                         "Returns another ?. view for viewing a sub-range of bytes\n"
 	                         "Modifications then made to the returned ?. object will affect the "
 	                         /**/ "same memory already described by @this ?. object\n"
-
 	                         "\n"
+
 	                         "[:]=(start:?Dint,end:?Dint,data:?X3?.?Dstring?S?Dint)->\n"
 	                         "@throw BufferError @this ?. object is not writable\n"
 	                         "@throw IntegerOverflow One of the integers extracted from @data is negative, or greater than $0xff\n"
@@ -1871,16 +1860,16 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         /*              */ "If any, and how many bytes of @this ?. object were already modified is undefined\n"
 	                         "Assign values to a given range of bytes\n"
 	                         "You may pass ?N to fill the entire range with zero-bytes\n"
-
 	                         "\n"
+
 	                         "del[:]->\n"
 	                         "Same as ${this[start:end] = none}, assigning zero-bytes within the given range\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Allows for iteration of the individual bytes as integers between $0 and $0xff\n"
-
 	                         "\n"
+
 	                         "<(other:?X2?.?Dstring)->\n"
 	                         "<=(other:?X2?.?Dstring)->\n"
 	                         "==(other:?X2?.?Dstring)->\n"
@@ -1889,27 +1878,27 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         ">=(other:?X2?.?Dstring)->\n"
 	                         "@throw ValueError The given @other is a string containing characters ${> 0xff}\n"
 	                         "Perform a lexicographical comparison between @this and @other, and return the result\n"
-
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the number of bytes represented by @this ?. object\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this ?. object is non-empty\n"
-
 	                         "\n"
+
 	                         "add->\n"
 	                         "Construct a new writable ?. object that at is the concatenation of @this and @other\n"
 	                         "+(other:?X3?.?Dstring?O)->\n"
 	                         "Return a new writable ?. object that is the concatenation of @this and ${str(other).bytes()}\n"
-
 	                         "\n"
+
 	                         "*(times:?Dint)->\n"
 	                         "@throw IntegerOverflow @times is negative, or too large\n"
 	                         "Returns @this ?. object repeated @times number of times\n"
-
 	                         "\n"
+
 	                         "%(args:?DTuple)->\n"
 	                         "%(arg:?O)->\n"
 	                         "@throw UnicodeEncodeError Attempted to print a unicode character ${> 0xff}\n"

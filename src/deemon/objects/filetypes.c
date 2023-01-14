@@ -635,11 +635,9 @@ err:
 }
 
 PRIVATE struct type_getset tpconst reader_getsets[] = {
-	{ "owner", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&reader_getowner,
-	  (int (DCALL *)(DeeObject *__restrict))&reader_close,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&reader_setowner,
-	  DOC("Assign the object from which data is being read") },
-	{ NULL }
+	TYPE_GETSET("owner", &reader_getowner, &reader_close, &reader_setowner,
+	            "Assign the object from which data is being read"),
+	TYPE_GETSET_END
 };
 
 
@@ -1003,16 +1001,11 @@ writer_sizeof(Writer *self) {
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
-	{ DeeString_STR(&str_string),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeFileWriter_GetString,
-	  (int (DCALL *)(DeeObject *__restrict))&writer_delstring,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&writer_setstring,
-	  DOC("->?Dstring\n"
-	      "Get/set the currently written text string") },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&writer_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETSET(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring,
+	            "->?Dstring\n"
+	            "Get/set the currently written text string"),
+	TYPE_GETTER(STR___sizeof__, &writer_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
@@ -1055,23 +1048,19 @@ err:
 }
 
 PRIVATE struct type_method tpconst writer_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
-	  DOC("->?Dstring\n"
-	      "Synchronize and retrieve all data that has already been written") },
-	{ "pack",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
-	  DOC("->?Dstring\n"
-	      "Deprecated alias for reading from ?#string") },
-	{ DeeString_STR(&str_size),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_size,
-	  DOC("->?Dint\n"
-	      "Return the total amount of written bytes") },
-	{ "allocated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_allocated,
-	  DOC("->?Dint\n"
-	      "Returns the currently allocated buffer size (in bytes)") },
-	{ NULL }
+	TYPE_METHOD(STR_get, &writer_get,
+	            "->?Dstring\n"
+	            "Synchronize and retrieve all data that has already been written"),
+	TYPE_METHOD("pack", &writer_get,
+	            "->?Dstring\n"
+	            "Deprecated alias for reading from ?#string"),
+	TYPE_METHOD(STR_size, &writer_size,
+	            "->?Dint\n"
+	            "Return the total amount of written bytes"),
+	TYPE_METHOD("allocated", &writer_allocated,
+	            "->?Dint\n"
+	            "Returns the currently allocated buffer size (in bytes)"),
+	TYPE_METHOD_END
 };
 
 #define UNICODE_PRINTER_INITIAL_BUFSIZE 64
@@ -1753,19 +1742,17 @@ PRIVATE struct type_buffer mapfile_buffer = {
 };
 
 PRIVATE struct type_method tpconst mapfile_methods[] = {
-	{ "bytes",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mapfile_bytes,
-	  DOC("->?DBytes\n"
-	      "Same as ${Bytes(this)}") },
-	{ NULL }
+	TYPE_METHOD(STR_bytes, &mapfile_bytes,
+	            "->?DBytes\n"
+	            "Same as ${Bytes(this)}"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst mapfile_getsets[] = {
-	{ "ismmap",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapfile_get_ismmap, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns !t if @this file map uses mmap to implement its buffer") },
-	{ NULL }
+	TYPE_GETTER("ismmap", &mapfile_get_ismmap,
+	            "->?Dbool\n"
+	            "Returns !t if @this file map uses mmap to implement its buffer"),
+	TYPE_GETSET_END
 };
 
 

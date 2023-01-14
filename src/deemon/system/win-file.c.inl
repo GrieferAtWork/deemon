@@ -131,8 +131,8 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst debug_file_getsets[] = {
-	{ DeeString_STR(&str_isatty), &debugfile_isatty, NULL, NULL, DOC("->?Dbool") },
-	{ NULL }
+	TYPE_GETTER(STR_isatty, &debugfile_isatty, "->?Dbool"),
+	TYPE_GETSET_END
 };
 
 
@@ -1119,10 +1119,10 @@ err:
 #endif /* !DeeSysFD_GETSET || !DeeSysFD_IS_HANDLE */
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
-	{ STR_osfhandle, (DREF DeeObject * (DCALL *)(DeeObject *))&sysfile_osfhandle, NULL, NULL, DOC("->?Dint") },
-	{ DeeString_STR(&str_isatty), (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL, DOC("->?Dbool") },
-	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
-	{ NULL }
+	TYPE_GETTER(STR_osfhandle, &sysfile_osfhandle, "->?Dint"),
+	TYPE_GETTER(STR_isatty, &sysfile_isatty, "->?Dbool"),
+	TYPE_GETTER(STR_filename, &DeeSystemFile_Filename, "->?Dstring"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1216,10 +1216,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst sysfile_class_methods[] = {
-	{ "sync", &sysfile_class_sync,
-	  DOC("()\n"
-	      "Synchronize all unwritten data with the host operating system") },
-	{ NULL }
+	TYPE_METHOD("sync", &sysfile_class_sync,
+	            "()\n"
+	            "Synchronize all unwritten data with the host operating system"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst sysfile_class_members[] = {
@@ -1233,10 +1233,10 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_name     = */ "_SystemFile",
 		/* .tp_doc      = */ DOC("(handle:?X3?Dint?DFile?Ewin32:HANDLE,inherit=!f,duplicate=!f)\n"
 		                         "Construct a new SystemFile wrapper for @handle. When @inherit is "
-		                         "?t, the given @handle is inherited (and automatically closed "
-		                         "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
-		                         "is ?t, the given @handle is duplicated, and the duplicated copy "
-		                         "will be stored inside (in this case, @inherit is ignored)"),
+		                         /**/ "?t, the given @handle is inherited (and automatically closed "
+		                         /**/ "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
+		                         /**/ "is ?t, the given @handle is duplicated, and the duplicated copy "
+		                         /**/ "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS,

@@ -852,7 +852,7 @@ udict_delitem(UDict *self, DeeObject *key) {
 	DREF DeeObject *pop_item;
 	pop_item = udict_popitem(self, key, NULL);
 	Dee_XDecref(pop_item);
-	return (likely(pop_item)) ? 0 : -1;
+	return likely(pop_item) ? 0 : -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1304,14 +1304,11 @@ err:
 
 
 PRIVATE struct type_getset tpconst udict_getsets[] = {
-	{ "frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&URoDict_FromUDict, NULL, NULL,
-	  DOC("->?AFrozen?.\n"
-	      "Returns a read-only (frozen) copy of @this dict") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &URoDict_FromUDict,
+	            "->?AFrozen?.\n"
+	            "Returns a read-only (frozen) copy of @this dict"),
+	TYPE_GETTER("__sizeof__", &udict_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst udict_members[] = {
@@ -1327,56 +1324,46 @@ PRIVATE struct type_member tpconst udict_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst udict_methods[] = {
-	{ "get",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_get,
-	  DOC_GET("(key,def=!N)->\n"
-	          "@return The value associated with @key or @def when @key has no value associated") },
-	{ "pop",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_pop,
-	  DOC("(key)->\n"
-	      "(key,def)->\n"
-	      "@throw KeyError No @def was given and @key was not found\n"
-	      "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
-	{ "clear",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_clearfun,
-	  DOC("()\n"
-	      "Clear all values from @this :Dict") },
-	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_popsomething,
-	  DOC("->?T2?O?O\n"
-	      "@return A random pair key-value pair that has been removed\n"
-	      "@throw ValueError @this :Dict was empty") },
-	{ "setdefault",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_setdefault,
-	  DOC("(key,def=!N)->\n"
-	      "@return The object currently assigned to @key\n"
-	      "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
-	{ "setold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_setold,
-	  DOC("(key,value)->?Dbool\n"
-	      "@return Indicative of @value having been assigned to @key\n"
-	      "Assign @value to @key, only succeeding when @key already existed to begin with") },
-	{ "setnew",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_setnew,
-	  DOC("(key,value)->?Dbool\n"
-	      "@return Indicative of @value having been assigned to @key\n"
-	      "Assign @value to @key, only succeeding when @key didn't exist before") },
-	{ "setold_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_setold_ex,
-	  DOC("(key,value)->?T2?Dbool?O\n"
-	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
-	      "Same as #setold but also return the previously assigned object") },
-	{ "setnew_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_setnew_ex,
-	  DOC("(key,value)->?T2?Dbool?O\n"
-	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
-	      "Same as #setnew but return the previously assigned object on failure") },
-	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&udict_update,
-	  DOC("(items:?S?T2?O?O)\n"
-	      "Iterate @items and unpack each element into 2 others, using them as "
-	      "key and value to insert into @this Dict") },
-	{ NULL }
+	TYPE_METHOD("get", &udict_get,
+	            "(key,def=!N)->\n"
+	            "@return The value associated with @key or @def when @key has no value associated"),
+	TYPE_METHOD("pop", &udict_pop,
+	            "(key)->\n"
+	            "(key,def)->\n"
+	            "@throw KeyError No @def was given and @key was not found\n"
+	            "Delete @key from @this and return its previously assigned value or @def when @key had no item associated"),
+	TYPE_METHOD("clear", &udict_clearfun,
+	            "()\n"
+	            "Clear all values from @this :Dict"),
+	TYPE_METHOD("popitem", &udict_popsomething,
+	            "->?T2?O?O\n"
+	            "@return A random pair key-value pair that has been removed\n"
+	            "@throw ValueError @this :Dict was empty"),
+	TYPE_METHOD("setdefault", &udict_setdefault,
+	            "(key,def=!N)->\n"
+	            "@return The object currently assigned to @key\n"
+	            "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead"),
+	TYPE_METHOD("setold", &udict_setold,
+	            "(key,value)->?Dbool\n"
+	            "@return Indicative of @value having been assigned to @key\n"
+	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
+	TYPE_METHOD("setnew", &udict_setnew,
+	            "(key,value)->?Dbool\n"
+	            "@return Indicative of @value having been assigned to @key\n"
+	            "Assign @value to @key, only succeeding when @key didn't exist before"),
+	TYPE_METHOD("setold_ex", &udict_setold_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "Same as #setold but also return the previously assigned object"),
+	TYPE_METHOD("setnew_ex", &udict_setnew_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
+	            "Same as #setnew but return the previously assigned object on failure"),
+	TYPE_METHOD("update", &udict_update,
+	            "(items:?S?T2?O?O)\n"
+	            "Iterate @items and unpack each element into 2 others, using them as "
+	            "key and value to insert into @this Dict"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_gc tpconst udict_gc = {
@@ -1417,7 +1404,7 @@ INTERN DeeTypeObject UDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "UniqueDict",
 	/* .tp_doc      = */ DOC("A mutable mapping-like container that uses @?Aid?O "
-	                         "and ${x === y} to detect/prevent duplicates\n"),
+	                         /**/ "and ${x === y} to detect/prevent duplicates\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(UDict),
 	/* .tp_features = */ TF_NONE,
@@ -2063,19 +2050,16 @@ urodict_sizeof(URoDict *self) {
 
 
 PRIVATE struct type_method tpconst urodict_methods[] = {
-	{ "get",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&urodict_get,
-	  DOC_GET("(key,def=!N)->\n"
-	          "@return The value associated with @key or @def when @key has no value associated") },
-	{ NULL }
+	TYPE_METHOD("get", &urodict_get,
+	            "(key,def=!N)->\n"
+	            "@return The value associated with @key or @def when @key has no value associated"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst urodict_getsets[] = {
-	{ "frozen", &DeeObject_NewRef, NULL, NULL, DOC("->?.") },
-	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER("__sizeof__", &urodict_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst urodict_members[] = {

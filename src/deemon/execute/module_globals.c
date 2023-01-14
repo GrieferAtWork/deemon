@@ -234,8 +234,8 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst mei_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mei_getseq },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &mei_getseq, "->?Ert:ModuleExports"),
+	TYPE_GETSET_END
 };
 
 #undef READ_INDEX
@@ -519,10 +519,8 @@ PRIVATE struct type_seq me_seq = {
 DOC_REF(map_get_doc);
 
 PRIVATE struct type_method tpconst me_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&me_get_f,
-	  DOC_GET(map_get_doc) },
-	{ NULL }
+	TYPE_METHOD(STR_get, &me_get_f, DOC_GET(map_get_doc)),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst me_members[] = {
@@ -703,8 +701,8 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst mgi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_getseq },
-	{ NULL }
+	TYPE_GETTER_NODOC(STR_seq, &mgi_getseq),
+	TYPE_GETSET_END
 };
 #undef READ_INDEX
 

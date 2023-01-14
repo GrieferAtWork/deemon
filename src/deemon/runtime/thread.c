@@ -2999,102 +2999,101 @@ err:
 
 
 PRIVATE struct type_method tpconst thread_methods[] = {
-	{ "start", &thread_start,
-	  DOC("->?Dbool\n"
-	      "@throw SystemError Failed to start @this thread for some reason\n"
-	      "@return true: The :thread is now running\n"
-	      "@return false: The :thread had already been started\n"
-	      "Starts @this thread") },
-	{ "detach", &thread_detach,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this thread was never started\n"
-	      "@throw SystemError Failed to detach @this thread for some reason\n"
-	      "@return true: The :thread has been detached\n"
-	      "@return false: The :thread was already detached\n"
-	      "Detaches @this thread") },
-	{ "join", &thread_join,
-	  DOC("->\n"
-	      "@interrupt\n"
-	      "@throw ValueError @this thread was never started\n"
-	      "@throw SystemError Failed to join @this thread for some reason\n"
-	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "@return The return value of @this thread\n"
-	      "Joins @this thread and returns the return value of its main function\n"
-	      "In the event") },
-	{ "tryjoin", &thread_tryjoin,
-	  DOC("->?T2?Dbool?O\n"
-	      "@throw ValueError @this thread was never started\n"
-	      "@throw SystemError Failed to join @this thread for some reason\n"
-	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "Same as ?#join, but don't check for interrupts and fail immediately") },
-	{ "timedjoin", &thread_timedjoin,
-	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
-	      "@throw ValueError @this thread was never started\n"
-	      "@throw SystemError Failed to join @this thread for some reason\n"
-	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds") },
-	{ "interrupt", &thread_interrupt,
-	  DOC("->?Dbool\n"
-	      "(signal)->?Dbool\n"
-	      "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
-	      "@return true: The interrupt was delivered\n"
-	      "@return false: The :thread has already terminated and can no longer process interrupts\n"
-	      "Throws the given @signal or an instance of :Interrupt within @this thread, "
-	      "or schedule the given @async_func to be called asynchronously using @async_args\n"
-	      "Calling the function with no arguments is identical to:\n"
-	      "${"
-	      "import Signal from deemon;\n"
-	      "this.interrupt(Signal.Interrupt());"
-	      "}\n"
-	      "Calling the function with a single arguments is identical to:\n"
-	      "${"
-	      "this.interrupt([](signal) {\n"
-	      "	throw signal;\n"
-	      "}, (signal,));"
-	      "}\n"
-	      "Note that interrupts delivered by this function are processed at random points during "
-	      "execution of the thread, with the only guaranty that is made being that they will always "
-	      "be handled sooner or later, no matter what the associated thread may be doing, even if "
-	      "what it is doing is executing an infinite loop ${for (;;) { }}\n"
-	      "Though it should be noted that a thread that terminated due to an unhandled "
-	      "exception may not get a chance to execute all remaining interrupts before stopping\n"
-	      "Also note that remaining interrupts may still be executing once ?#terminated already "
-	      "returns ?t, as indicative of the thread no longer being able to receive new interrupts. "
-	      "However to truly ensure that all interrupts have been processed, you must ?#join @this thread\n"
-	      "User-code may also check for interrupts explicitly by calling ?#check_interrupt") },
+	TYPE_METHOD("start", &thread_start,
+	            "->?Dbool\n"
+	            "@throw SystemError Failed to start @this thread for some reason\n"
+	            "@return true: The :thread is now running\n"
+	            "@return false: The :thread had already been started\n"
+	            "Starts @this thread"),
+	TYPE_METHOD("detach", &thread_detach,
+	            "->?Dbool\n"
+	            "@throw ValueError @this thread was never started\n"
+	            "@throw SystemError Failed to detach @this thread for some reason\n"
+	            "@return true: The :thread has been detached\n"
+	            "@return false: The :thread was already detached\n"
+	            "Detaches @this thread"),
+	TYPE_METHOD("join", &thread_join,
+	            "->\n"
+	            "@interrupt\n"
+	            "@throw ValueError @this thread was never started\n"
+	            "@throw SystemError Failed to join @this thread for some reason\n"
+	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
+	            "@return The return value of @this thread\n"
+	            "Joins @this thread and returns the return value of its main function"),
+	TYPE_METHOD("tryjoin", &thread_tryjoin,
+	            "->?T2?Dbool?O\n"
+	            "@throw ValueError @this thread was never started\n"
+	            "@throw SystemError Failed to join @this thread for some reason\n"
+	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
+	            "Same as ?#join, but don't check for interrupts and fail immediately"),
+	TYPE_METHOD("timedjoin", &thread_timedjoin,
+	            "(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
+	            "@throw ValueError @this thread was never started\n"
+	            "@throw SystemError Failed to join @this thread for some reason\n"
+	            "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
+	            "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds"),
+	TYPE_METHOD("interrupt", &thread_interrupt,
+	            "->?Dbool\n"
+	            "(signal)->?Dbool\n"
+	            "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
+	            "@return true: The interrupt was delivered\n"
+	            "@return false: The :thread has already terminated and can no longer process interrupts\n"
+	            "Throws the given @signal or an instance of :Interrupt within @this thread, "
+	            "or schedule the given @async_func to be called asynchronously using @async_args\n"
+	            "Calling the function with no arguments is identical to:\n"
+	            "${"
+	            /**/ "import Signal from deemon;\n"
+	            /**/ "this.interrupt(Signal.Interrupt());"
+	            "}\n"
+	            "Calling the function with a single arguments is identical to:\n"
+	            "${"
+	            /**/ "this.interrupt([](signal) {\n"
+	            /**/ "	throw signal;\n"
+	            /**/ "}, (signal,));"
+	            "}\n"
+	            "Note that interrupts delivered by this function are processed at random points during "
+	            /**/ "execution of the thread, with the only guaranty that is made being that they will always "
+	            /**/ "be handled sooner or later, no matter what the associated thread may be doing, even if "
+	            /**/ "what it is doing is executing an infinite loop ${for (;;) { }}\n"
+	            "Though it should be noted that a thread that terminated due to an unhandled "
+	            /**/ "exception may not get a chance to execute all remaining interrupts before stopping\n"
+	            "Also note that remaining interrupts may still be executing once ?#terminated already "
+	            /**/ "returns ?t, as indicative of the thread no longer being able to receive new interrupts. "
+	            "However to truly ensure that all interrupts have been processed, you must ?#join @this thread\n"
+	            "User-code may also check for interrupts explicitly by calling ?#check_interrupt"),
 
-	{ "started", &thread_started,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#hasstarted") },
-	{ "detached", &thread_detached,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#wasdetached") },
-	{ "terminated", &thread_terminated,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#hasterminated") },
-	{ "interrupted", &thread_interrupted,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#wasinterrupted") },
-	{ "crashed", &thread_crashed,
-	  DOC("->?Dbool\n"
-	      "Deprecated alias for ?#hascrashed") },
+	/* Old, deprecated status-testing functions (replaced by getsets) */
+	TYPE_METHOD("started", &thread_started,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#hasstarted"),
+	TYPE_METHOD("detached", &thread_detached,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#wasdetached"),
+	TYPE_METHOD("terminated", &thread_terminated,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#hasterminated"),
+	TYPE_METHOD("interrupted", &thread_interrupted,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#wasinterrupted"),
+	TYPE_METHOD("crashed", &thread_crashed,
+	            "->?Dbool\n"
+	            "Deprecated alias for ?#hascrashed"),
 
 	/* Old, deprecated function names for backwards compatibility */
-	{ "try_join", &thread_tryjoin,
-	  DOC("->?T2?Dbool?O\n"
-	      "Old, deprecated name for ?#tryjoin") },
-	{ "timed_join", &thread_timedjoin,
-	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
-	      "Old, deprecated name for ?#timedjoin") },
-	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_error,
-	  DOC("->?X2?O?N\n"
-	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
-	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_traceback,
-	  DOC("->?X2?DTraceback?N\n"
-	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
-	{ NULL }
+	TYPE_METHOD("try_join", &thread_tryjoin,
+	            "->?T2?Dbool?O\n"
+	            "Old, deprecated name for ?#tryjoin"),
+	TYPE_METHOD("timed_join", &thread_timedjoin,
+	            "(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
+	            "Old, deprecated name for ?#timedjoin"),
+	TYPE_METHOD("crash_error", &thread_crash_error,
+	            "->?X2?O?N\n"
+	            "Deprecated function that does the same as ${this.crashinfo.first()[0]}"),
+	TYPE_METHOD("crash_traceback", &thread_crash_traceback,
+	            "->?X2?DTraceback?N\n"
+	            "Deprecated function that does the same as ${this.crashinfo.first()[1]}"),
+	TYPE_METHOD_END
 };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
@@ -3198,14 +3197,13 @@ err:
 }
 
 PRIVATE struct type_getset tpconst thread_class_getsets[] = {
-	{ "current",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_current_get, NULL, NULL,
-	  DOC("->?.\n"
-	      "Returns a thread descriptor for the calling thread") },
+	TYPE_GETTER("current", &thread_current_get,
+	            "->?.\n"
+	            "Returns a thread descriptor for the calling thread"),
 	/* TODO: enumerate -> {thread...} 
 	 * >> Returns a proxy sequence for enumerating all
 	 *    deemon-threads; s.a. `add_running_thread()' */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst thread_class_members[] = {
@@ -3214,34 +3212,33 @@ PRIVATE struct type_member tpconst thread_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst thread_class_methods[] = {
-	{ "self", &thread_self,
-	  DOC("->?.\n"
-	      "Deprecated alias for ?#current") },
-	{ "selfid", &thread_selfid,
-	  DOC("->?Dint\n"
-	      "@throw SystemError The system does not provide a way to query thread ids\n"
-	      "Deprecated alias for ${Thread.current.id}") },
-	{ "check_interrupt", &thread_check_interrupt,
-	  DOC("()\n"
-	      "@interrupt\n"
-	      "Checks for interrupts in the calling thread") },
-	{ DeeString_STR(&str_yield),
-	  &thread_yield,
-	  /* TODO: Must make this one deprecated, and add a new one with a different name!
-	   *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
-	   *       causes a compiler warning! */
-	  DOC("()\n"
-	      "Willingly preempt execution to another thread or process") },
-	{ "sleep", &thread_sleep,
-	  DOC("(timeout_in_microseconds:?Dint)\n"
-	      "@interrupt\n"
-	      "Suspending execution for a total of @timeout_in_microseconds") },
-	{ "exit", &thread_exit,
-	  DOC("(result=!N)\n"
-	      "@throw ThreadExit Always thrown to exit the current thread\n"
-	      "Throw a :ThreadExit error object in order to terminate execution "
-	      "within the current thread. This function does not return normally") },
-	{ NULL }
+	TYPE_METHOD("self", &thread_self,
+	            "->?.\n"
+	            "Deprecated alias for ?#current"),
+	TYPE_METHOD("selfid", &thread_selfid,
+	            "->?Dint\n"
+	            "@throw SystemError The system does not provide a way to query thread ids\n"
+	            "Deprecated alias for ${Thread.current.id}"),
+	TYPE_METHOD("check_interrupt", &thread_check_interrupt,
+	            "()\n"
+	            "@interrupt\n"
+	            "Checks for interrupts in the calling thread"),
+	/* TODO: Must make this one deprecated, and add a new one with a different name!
+	 *       `yield' is a reserved identifer, and `import thread from deemon; thread.yield();'
+	 *       causes a compiler warning! */
+	TYPE_METHOD(STR_yield, &thread_yield,
+	            "()\n"
+	            "Willingly preempt execution to another thread or process"),
+	TYPE_METHOD("sleep", &thread_sleep,
+	            "(timeout_in_microseconds:?Dint)\n"
+	            "@interrupt\n"
+	            "Suspending execution for a total of @timeout_in_microseconds"),
+	TYPE_METHOD("exit", &thread_exit,
+	            "(result=!N)\n"
+	            "@throw ThreadExit Always thrown to exit the current thread\n"
+	            "Throw a :ThreadExit error object in order to terminate execution "
+	            /**/ "within the current thread. This function does not return normally"),
+	TYPE_METHOD_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3518,76 +3515,64 @@ thread_hascrashed(DeeObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst thread_getsets[] = {
-	{ "callback",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
-	  (int (DCALL *)(DeeObject *__restrict))&thread_callback_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&thread_callback_set,
-	  DOC("->?DCallable\n"
-	      "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
-	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
-	      "member function, write-access to this field is denied in sub-classes of :thread and only granted "
-	      "to exact instances\n"
-	      "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started.\n"
-	      "The callback that will be executed when the thread is started\n"
-	      "In the event that no callback has been set, or that the callback has been deleted, "
-	      "the getter will attempt to return the instance attribute $run which can be "
-	      "overwritten by sub-classes to provide an automatic and implicit thread-callback") },
-	{ "callargs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
-	  (int (DCALL *)(DeeObject *__restrict))&thread_callargs_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&thread_callargs_set,
-	  DOC("->?DTuple\n"
-	      "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
-	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
-	      "member function, write-access to this field is denied in sub-classes of :thread and only granted "
-	      "to exact instances\n"
-	      "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started\n"
-	      "The callback arguments that are passed to ?#callback when the thread is started\n"
-	      "Deleting this member or setting ?N is the same as setting an empty tuple") },
-	{ "result",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_result_get, NULL, NULL,
-	  DOC("@throw ValueError @this thread has not terminated yet\n"
-	      "Return the result value of @this thread once it has terminated\n"
-	      "This is similar to what is returned by ?#join, but in the event that "
-	      "the thread terminated because it crashed, ?N is returned rather "
-	      "than all the errors that caused the thread to crash being encapsulated and propagated") },
-	{ "crashinfo",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
-	  DOC("->?S?T2?O?DTraceback\n"
-	      "@throw ValueEror @this thread hasn't terminated yet\n"
-	      "Returns a sequence of 2-element tuples describing the errors that were "
-	      "active when the thread crashed (s.a. ?#hascrashed), or an empty sequence when "
-	      "the thread didn't crash\n"
-	      "The first element of each tuple is the error that was ${throw}n, and the "
-	      "second element is the accompanying traceback, or ?N when not known.\n"
-	      "This function replaces the deprecated ?#crash_error and ?#crash_traceback "
-	      "functions that did something similar prior to deemon 200\n"
-	      "When iterated, elements of the returned sequence identify errors that "
-	      "caused the crash from most to least recently thrown") },
-	{ "traceback",
-	  &DeeThread_Trace, NULL, NULL,
-	  DOC("->?DTraceback\n"
-	      "Generate a traceback for the thread's current execution position") },
-	{ "id",
-	  &thread_id, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The thread hasn't been started yet\n"
-	      "@throw SystemError The system does not provide a way to query thread ids\n"
-	      "Returns an operating-system specific id of @this thread") },
+	TYPE_GETSET("callback", &thread_callback_get, &thread_callback_del, &thread_callback_set,
+	            "->?DCallable\n"
+	            "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
+	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
+	            /*                 */ "member function, write-access to this field is denied in sub-classes of :thread and only granted "
+	            /*                 */ "to exact instances\n"
+	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started.\n"
+	            "The callback that will be executed when the thread is started\n"
+	            "In the event that no callback has been set, or that the callback has been deleted, "
+	            /**/ "the getter will attempt to return the instance attribute $run which can be "
+	            /**/ "overwritten by sub-classes to provide an automatic and implicit thread-callback"),
+	TYPE_GETSET("callargs", &thread_callargs_get, &thread_callargs_del, &thread_callargs_set,
+	            "->?DTuple\n"
+	            "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
+	            /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
+	            /*                 */ "member function, write-access to this field is denied in sub-classes of :thread and only granted "
+	            /*                 */ "to exact instances\n"
+	            "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started\n"
+	            "The callback arguments that are passed to ?#callback when the thread is started\n"
+	            "Deleting this member or setting ?N is the same as setting an empty tuple"),
+	TYPE_GETTER("result", &thread_result_get,
+	            "@throw ValueError @this thread has not terminated yet\n"
+	            "Return the result value of @this thread once it has terminated\n"
+	            "This is similar to what is returned by ?#join, but in the event that "
+	            /**/ "the thread terminated because it crashed, ?N is returned rather "
+	            /**/ "than all the errors that caused the thread to crash being encapsulated and propagated"),
+	TYPE_GETTER("crashinfo", &thread_crashinfo,
+	            "->?S?T2?O?DTraceback\n"
+	            "@throw ValueEror @this thread hasn't terminated yet\n"
+	            "Returns a sequence of 2-element tuples describing the errors that were "
+	            /**/ "active when the thread crashed (s.a. ?#hascrashed), or an empty sequence when "
+	            /**/ "the thread didn't crash\n"
+	            "The first element of each tuple is the error that was ${throw}n, and the "
+	            /**/ "second element is the accompanying traceback, or ?N when not known.\n"
+	            "This function replaces the deprecated ?#crash_error and ?#crash_traceback "
+	            /**/ "functions that did something similar prior to deemon 200\n"
+	            "When iterated, elements of the returned sequence identify errors that "
+	            /**/ "caused the crash from most to least recently thrown"),
+	TYPE_GETTER("traceback", &DeeThread_Trace,
+	            "->?DTraceback\n"
+	            "Generate a traceback for the thread's current execution position"),
+	TYPE_GETTER(STR_id, &thread_id,
+	            "->?Dint\n"
+	            "@throw ValueError The thread hasn't been started yet\n"
+	            "@throw SystemError The system does not provide a way to query thread ids\n"
+	            "Returns an operating-system specific id of @this thread"),
 #ifndef CONFIG_NO_THREADS
-	{ "isrunning",
-	  &thread_isrunning, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)") },
-	{ "hascrashed",
-	  &thread_hascrashed, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if @this thread has crashed, that "
-	      "is having ?#hasterminated while errors were still active\n"
-	      "When ?t, attempting to ?#join @this thread will cause all of the "
-	      "errors to be rethrown in the calling thread as a :ThreadCrash error") },
+	TYPE_GETTER("isrunning", &thread_isrunning,
+	            "->?Dbool\n"
+	            "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)"),
+	TYPE_GETTER("hascrashed", &thread_hascrashed,
+	            "->?Dbool\n"
+	            "Returns ?t if @this thread has crashed, that "
+	            "is having ?#hasterminated while errors were still active\n"
+	            "When ?t, attempting to ?#join @this thread will cause all of the "
+	            /**/ "errors to be rethrown in the calling thread as a :ThreadCrash error"),
 #endif /* !CONFIG_NO_THREADS */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst thread_members[] = {
@@ -3891,6 +3876,7 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_Thread),
 	/* .tp_doc      = */ DOC("The core object type for enabling parallel computation\n"
 	                         "\n"
+
 	                         "()\n"
 	                         "(name:?Dstring)\n"
 	                         "(main:?DCallable,args:?DTuple=!N)\n"
@@ -3899,21 +3885,22 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 	                         "When no @main callable has been provided, invoke a $run "
 	                         "member which must be implemented by a sub-class:\n"
 	                         "${"
-	                         "import Thread, Callable from deemon;\n"
-	                         "class MyWorker: Thread {\n"
-	                         "	private member m_jobs: {Callable...};\n"
-	                         "\\\n"
-	                         "	this(jobs: {Callable...})\n"
-	                         "		: m_jobs = jobs\n"
-	                         "	{}\n"
-	                         "\\\n"
-	                         "	@@Thread entry point\n"
-	                         "	function run() {\n"
-	                         "		for (local j: m_jobs)\n"
-	                         "			j();\n"
-	                         "		return 42;\n"
-	                         "	}\n"
-	                         "}}"),
+	                         /**/ "import Thread, Callable from deemon;\n"
+	                         /**/ "class MyWorker: Thread {\n"
+	                         /**/ "	private member m_jobs: {Callable...};\n"
+	                         /**/ "\\\n"
+	                         /**/ "	this(jobs: {Callable...})\n"
+	                         /**/ "		: m_jobs = jobs\n"
+	                         /**/ "	{}\n"
+	                         /**/ "\\\n"
+	                         /**/ "	@@Thread entry point\n"
+	                         /**/ "	function run() {\n"
+	                         /**/ "		for (local j: m_jobs)\n"
+	                         /**/ "			j();\n"
+	                         /**/ "		return 42;\n"
+	                         /**/ "	}\n"
+	                         /**/ "}"
+	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -1514,12 +1514,11 @@ done:
 }
 
 PRIVATE struct type_method tpconst tuple_class_methods[] = {
-	{ "unpack",
-	  &tuple_unpack,
-	  DOC("(num:?Dint,seq:?S?O)->?.\n"
-	      "@throw UnpackError The given @seq doesn't contain exactly @num elements\n"
-	      "Unpack the given sequence @seq into a Tuple consisting of @num elements") },
-	{ NULL }
+	TYPE_METHOD("unpack", &tuple_unpack,
+	            "(num:?Dint,seq:?S?O)->?.\n"
+	            "@throw UnpackError The given @seq doesn't contain exactly @num elements\n"
+	            "Unpack the given sequence @seq into a Tuple consisting of @num elements"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst tuple_class_members[] = {
@@ -1657,14 +1656,10 @@ err_empty:
 
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
-	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_first, NULL, NULL },
-	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_last, NULL, NULL },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
-	{ NULL }
+	TYPE_GETTER_NODOC(STR_first, &tuple_first),
+	TYPE_GETTER_NODOC(STR_last, &tuple_last),
+	TYPE_GETTER(STR___sizeof__, &tuple_sizeof, "->?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1909,16 +1904,16 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         /**/ "immutable sequence of objects. Tuples are fast, low-level ?DSequence-like objects "
 	                         /**/ "that are written as ${(elem1, elem2, etc)}, with the exception of single-element "
 	                         /**/ "tuples being written as ${(single_element,)}\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Construct an empty ?.\n"
-
 	                         "\n"
+
 	                         "(items:?S?O)\n"
 	                         "Construct a new ?. that is pre-initializes with the elements from @items\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "Returns the concatenation of all of @this ?.'s elements converted to strings:\n"
 	                         "${"
@@ -1926,8 +1921,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         /**/ "	return \"\".join(this);\n"
 	                         /**/ "}"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns a representation of @this ?.:\n"
 	                         "${"
@@ -1937,25 +1932,25 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         /**/ "	return \"(\" + \", \".join(for (local x: this) repr x) + \")\";\n"
 	                         /**/ "}"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this ?. is non-empty\n"
-
 	                         "\n"
+
 	                         "+->\n"
 	                         "+(other:?S?O)->\n"
 	                         "@throw NotImplemented The given @other isn't iterable\n"
 	                         "Returns a new ?. consisting of the elements from @this, followed by "
 	                         /**/ "those from @other, which may be another ?., or a generic sequence\n"
-
 	                         "\n"
+
 	                         "*(count:?Dint)->\n"
 	                         "@throw IntegerOverflow The given @count is negative, or too large\n"
 	                         "Return a new ?. consisting of the elements from @this, repeated @count times\n"
 	                         "When @count is $0, an empty ?. is returned. When @count is $1, @this ?. is re-returned\n"
-
 	                         "\n"
+
 	                         "==->\n"
 	                         "!=->\n"
 	                         "<->\n"
@@ -1964,26 +1959,26 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         ">=->\n"
 	                         "Perform a lexicographical comparison between the elements of @this "
 	                         /**/ "?. and the given @other sequence\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the elements of @this ?.\n"
-
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the number of elements contained inside of @this ?.\n"
-
 	                         "\n"
+
 	                         "contains->\n"
 	                         "Returns ?t if @elem is apart of @this ?., or @false otherwise\n"
-
 	                         "\n"
+
 	                         "[]->\n"
 	                         "@throw IntegerOverflow The given @index is negative, or too large\n"
 	                         "@throw IndexError The given @index is out of bounds\n"
 	                         "Returns the @index'th item of @this ?.\n"
-
 	                         "\n"
+
 	                         "[:]->?.\n"
 	                         "Returns a new ?. for the given subrange, following the usual rules for "
 	                         /**/ "negative @start or @end values, as well as ?N being passed for "

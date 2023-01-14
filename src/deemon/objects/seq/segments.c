@@ -167,12 +167,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst segiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq,
-	  NULL,
-	  NULL,
-	  DOC("->?Ert:SeqSegments") },
-	{ NULL }
+	TYPE_GETTER(STR_seq, &segiter_getseq, "->?Ert:SeqSegments"),
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst segiter_members[] = {

@@ -1440,15 +1440,15 @@ err:
 }
 
 PRIVATE struct type_method tpconst string_class_methods[] = {
-	{ "chr", &string_class_chr,
-	  DOC("(ch:?Dint)->?.\n"
-	      "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
-	      "@return A single-character string matching the unicode-character @ch") },
-	{ "fromseq", &string_class_fromseq,
-	  DOC("(ordinals:?S?Dint)->?.\n"
-	      "@throw IntegerOverflow One of the ordinals is negative, or greater than $0xffffffff\n"
-	      "Construct a new string object from a sequence of ordinal values") },
-	{ NULL }
+	TYPE_METHOD("chr", &string_class_chr,
+	            "(ch:?Dint)->?.\n"
+	            "@throw IntegerOverflow @ch is negative or greater than the greatest unicode-character\n"
+	            "@return A single-character string matching the unicode-character @ch"),
+	TYPE_METHOD("fromseq", &string_class_fromseq,
+	            "(ordinals:?S?Dint)->?.\n"
+	            "@throw IntegerOverflow One of the ordinals is negative, or greater than $0xffffffff\n"
+	            "Construct a new string object from a sequence of ordinal values"),
+	TYPE_METHOD_END
 };
 
 INTDEF struct type_method tpconst string_methods[];
@@ -1654,88 +1654,68 @@ err_too_large:
 
 
 PRIVATE struct type_getset tpconst string_getsets[] = {
-	{ "ordinals",
-	  &DeeString_Ordinals, NULL, NULL,
-	  DOC("->?S?Dint\n"
-	      "Returns a proxy view for the characters of @this ?. as a sequence of "
-	      /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)") },
-	{ "__hashed__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this ?. has been hashed") },
-	{ "__hasutf__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasutf, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this ?. owns a UTF container") },
-	{ "__hasregex__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasregex, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past") },
-	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
-	  DOC("->?.\n"
-	      "@throw ValueError @this ?. is empty\n"
-	      "Returns the first character of @this ?.") },
-	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
-	  DOC("->?.\n"
-	      "@throw ValueError @this ?. is empty\n"
-	      "Returns the last character of @this ?.") },
-	{ STR___sizeof__,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeof, NULL, NULL,
-	  DOC("->?Dint") },
+	TYPE_GETTER("ordinals", &DeeString_Ordinals,
+	            "->?S?Dint\n"
+	            "Returns a proxy view for the characters of @this ?. as a sequence of "
+	            /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)"),
+	TYPE_GETTER("__hashed__", &string_hashed,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if @this ?. has been hashed"),
+	TYPE_GETTER("__hasutf__", &string_hasutf,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if @this ?. owns a UTF container"),
+	TYPE_GETTER("__hasregex__", &string_hasregex,
+	            "->?Dbool\n"
+	            "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
+	TYPE_GETTER(STR_first, &string_getfirst,
+	            "->?.\n"
+	            "@throw ValueError @this ?. is empty\n"
+	            "Returns the first character of @this ?."),
+	TYPE_GETTER(STR_last, &string_getlast,
+	            "->?.\n"
+	            "@throw ValueError @this ?. is empty\n"
+	            "Returns the last character of @this ?."),
+	TYPE_GETTER(STR___sizeof__, &string_sizeof, "->?Dint"),
 
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
-	{ "__str_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "Internal function to view the bytes of ${DeeString_STR()}") },
-	{ "__str_bytes_isutf8__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes_isutf8, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Value of ${DeeString_STR_ISUTF8()}") },
-	{ "__str_bytes_islatin1__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_bytes_islatin1, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Value of ${DeeString_STR_ISLATIN1()}") },
-	{ "__str_width__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_str_width, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}") },
-	{ "__wstr_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_wstr_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "Internal function to view the bytes of ${DeeString_WSTR()}") },
-	{ "__utf8_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf8_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "Internal function to view the bytes of ${DeeString_AsUtf8()}") },
-	{ "__utf16_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf16_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals that can't be encoded as utf-16\n"
-	      "Internal function to view the bytes of ${DeeString_AsUtf16()}") },
-	{ "__utf32_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_utf32_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "Internal function to view the bytes of ${DeeString_AsUtf32()}") },
-	{ "__1byte_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_1byte_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xff\n"
-	      "Internal function to view the bytes of ${DeeString_As1Byte()}") },
-	{ "__2byte_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_2byte_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xffff\n"
-	      "Internal function to view the bytes of ${DeeString_As2Byte()}") },
-	{ "__4byte_bytes__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_audit_4byte_bytes, NULL, NULL,
-	  DOC("->?DBytes\n"
-	      "Internal function to view the bytes of ${DeeString_As4Byte()}") },
+	TYPE_GETTER("__str_bytes__", &string_audit_str_bytes,
+	            "->?DBytes\n"
+	            "Internal function to view the bytes of ${DeeString_STR()}"),
+	TYPE_GETTER("__str_bytes_isutf8__", &string_audit_str_bytes_isutf8,
+	            "->?Dbool\n"
+	            "Value of ${DeeString_STR_ISUTF8()}"),
+	TYPE_GETTER("__str_bytes_islatin1__", &string_audit_str_bytes_islatin1,
+	            "->?Dbool\n"
+	            "Value of ${DeeString_STR_ISLATIN1()}"),
+	TYPE_GETTER("__str_width__", &string_audit_str_width,
+	            "->?Dint\n"
+	            "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}"),
+	TYPE_GETTER("__wstr_bytes__", &string_audit_wstr_bytes,
+	            "->?DBytes\n"
+	            "Internal function to view the bytes of ${DeeString_WSTR()}"),
+	TYPE_GETTER("__utf8_bytes__", &string_audit_utf8_bytes,
+	            "->?DBytes\n"
+	            "Internal function to view the bytes of ${DeeString_AsUtf8()}"),
+	TYPE_GETTER("__utf16_bytes__", &string_audit_utf16_bytes,
+	            "->?DBytes\n"
+	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals that can't be encoded as utf-16\n"
+	            "Internal function to view the bytes of ${DeeString_AsUtf16()}"),
+	TYPE_GETTER("__utf32_bytes__", &string_audit_utf32_bytes,
+	            "->?DBytes\n"
+	            "Internal function to view the bytes of ${DeeString_AsUtf32()}"),
+	TYPE_GETTER("__1byte_bytes__", &string_audit_1byte_bytes,
+	            "->?DBytes\n"
+	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xff\n"
+	            "Internal function to view the bytes of ${DeeString_As1Byte()}"),
+	TYPE_GETTER("__2byte_bytes__", &string_audit_2byte_bytes,
+	            "->?DBytes\n"
+	            "@throw UnicodeEncodeError @this ?Dstring contains ordinals greater than $0xffff\n"
+	            "Internal function to view the bytes of ${DeeString_As2Byte()}"),
+	TYPE_GETTER("__4byte_bytes__", &string_audit_4byte_bytes,
+	            "->?DBytes\n"
+	            "Internal function to view the bytes of ${DeeString_As4Byte()}"),
 #endif /* CONFIG_HAVE_STRING_AUDITING_INTERNALS */
-
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 
@@ -1764,20 +1744,20 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_string),
 	/* .tp_doc      = */ DOC("An encoding-neutral, immutable sequence of characters\n"
-
 	                         "\n"
+
 	                         "()\n"
 	                         "Returns an empty string $\"\"\n"
-
 	                         "\n"
+
 	                         "(ob)\n"
 	                         "Same as ${str ob}, returning the string representation of @ob\n"
-
 	                         "\n"
+
 	                         "str->\n"
 	                         "Simply re-return @this ?.\n"
-
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Returns @this ?. as a C-style escaped string\n"
 	                         "${"
@@ -1785,8 +1765,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         /**/ "	return \"\\\"{}\\\"\".format({ this.encode(\"c-escape\") });\n"
 	                         /**/ "}"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this ?. is non-empty\n"
 	                         "${"
@@ -1794,8 +1774,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         /**/ "	return ##this != 0;\n"
 	                         /**/ "}"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "+(other:?X3?.?DBytes?O)->\n"
 	                         "Return a new string that is the concatenation of @this and ${str other}\n"
 	                         "${"
@@ -1803,13 +1783,13 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         /**/ "	return \"{}{}\".format({ this, other });\n"
 	                         /**/ "}"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "*(times:?Dint)->\n"
 	                         "@throw IntegerOverflow @times is negative, or too large\n"
 	                         "Returns @this ?. repeated @times number of times\n"
-
 	                         "\n"
+
 	                         "%(args:?DTuple)->\n"
 	                         "%(arg:?O)->\n"
 	                         "Using @this ?. as a printf-style format string, use a tuple found "
@@ -1820,8 +1800,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         /**/ "local x = 42;\n"
 	                         /**/ "print \"x = %d\" % x; /* \"x = 42\" */"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "<(other:?X2?.?DBytes)->\n"
 	                         "<=(other:?X2?.?DBytes)->\n"
 	                         "==(other:?X2?.?DBytes)->\n"
@@ -1830,25 +1810,25 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         ">=(other:?X2?.?DBytes)->\n"
 	                         "Perform a lexicographical comparison between @this ?. "
 	                         /**/ "and @other, and return the result\n"
-
 	                         "\n"
+
 	                         "iter->\n"
 	                         "Return a string iterator that can be used to enumerate each of "
 	                         /**/ "the string's characters individually\n"
-
 	                         "\n"
+
 	                         "#->\n"
 	                         "Returns the length of @this ?. in characters\n"
-
 	                         "\n"
+
 	                         "contains(substr:?X2?.?DBytes)->\n"
 	                         "Returns ?t if @substr is apart of @this ?.\n"
 	                         "${"
 	                         /**/ ">print \"foo\" in \"bar\";    /* false */\n"
 	                         /**/ ">print \"foo\" in \"foobar\"; /* true */"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "[]->?.\n"
 	                         "@throw IntegerOverflow @index is negative\n"
 	                         "@throw IndexError @index is greater than ${##this}\n"
@@ -1857,8 +1837,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         /**/ "print \"foo\"[0]; /* \"f\" */\n"
 	                         /**/ "print \"foo\"[1]; /* \"o\" */"
 	                         "}\n"
-
 	                         "\n"
+
 	                         "[:]->?.\n"
 	                         "Return a sub-string of @this, that starts at @start and ends at @end\n"
 	                         "If @end is greater than ${##this}, it is truncated to that value\n"

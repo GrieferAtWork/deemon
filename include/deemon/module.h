@@ -151,14 +151,17 @@ typedef struct Dee_module_path_object DeeModulePathObject;
 
 #define Dee_MODSYM_FNORMAL         0x0000 /* Normal symbol flags. */
 #define Dee_MODSYM_FREADONLY       0x0001 /* Don't allow write-access to this symbol.
-                                           * When set, attempting to write/delete to this symbol will cause
-                                           * a compiler-error (except for the first assignment when the symbol
+                                           *
+                                           * When set, attempting to write/delete to this symbol will cause a
+                                           * compiler-error (except for the first assignment when the symbol
                                            * is part of the calling module), or attempting to write/delete at
                                            * runtime and a non-NULL value has already been assigned.
-                                           * When this flag and `MODSYM_FCONSTEXPR' are both set, then the compiler
-                                           * is allowed (but not required) to initialize the module, then propagate
-                                           * this symbol's actual value as a compile-time constant expression, should
-                                           * that value be one of the following (and for a sequence, containing only such):
+                                           *
+                                           * When this flag and `MODSYM_FCONSTEXPR' are both set, then the
+                                           * compiler is allowed (but not required) to initialize the module,
+                                           * then propagate this symbol's actual value as a compile-time
+                                           * constant expression, should that value be one of the following
+                                           * (and for a sequence, containing only such):
                                            *   - DeeInt_Type
                                            *   - DeeString_Type
                                            *   - DeeNone_Type
@@ -170,43 +173,48 @@ typedef struct Dee_module_path_object DeeModulePathObject;
                                            *   - DeeDict_Type
                                            *   - DeeRoDict_Type
                                            *   - DeeRoSet_Type
-                                           * NOTE: All white-listed types encode _exact_ matches
-                                           *      (aka. `DeeObject_InstanceOfExact()', rather than `DeeObject_InstanceOf()')
+                                           * NOTE: All white-listed types encode _exact_ matches (aka.
+                                           *       `DeeObject_InstanceOfExact()', rather than `DeeObject_InstanceOf()')
                                            * NOTE: Some more additions are made for few more special objects
                                            *       that are not documented here, but the idea should be clear:
                                            *       Nothing that may produce side-effects in an obvious fashion,
                                            *       and nothing that is too complex, or wouldn't make sense.
                                            * WARNING: Despite all of these rules, the basic initialization that
                                            *          leads to some specific value being assigned still remains
-                                           *          in the hands of user, meaning that it is the job of a module
-                                           *          to make sure that exported constants be always assigned the
-                                           *          same values.
-                                           * WARNING: This flag cannot be enforced when user-code assembly is used
-                                           *          to modify the value of an external/global symbol, meaning that
-                                           *          you must still always assume that any module member no longer
-                                           *          contains the proper value. */
+                                           *          in the hands of user, meaning that it is the job of a
+                                           *          module to make sure that exported constants be always
+                                           *          assigned the same values.
+                                           * WARNING: This flag cannot be enforced when user-code assembly is
+                                           *          used to modify the value of an external/global symbol,
+                                           *          meaning that you must still always assume that any
+                                           *          module member no longer contains the proper value. */
 #define Dee_MODSYM_FCONSTEXPR      0x0002 /* May be combined with `MODSYM_FREADONLY' to allow the compiler to
                                            * propagate this symbol as a constant expression at compile-time,
                                            * so-long as its runtime-value matches the criteria detailed above.
-                                           * NOTE: Regardless of this flag, the compiler mustn't propagate
-                                           *       the assigned value when `MODSYM_FPROPERTY' it set. */
+                                           * NOTE: Regardless of this flag, the compiler mustn't propagate the
+                                           *       assigned value when `MODSYM_FPROPERTY' it set. */
 #define Dee_MODSYM_FALIAS          0x0004 /* This symbol is aliasing another.
-                                           * This flag is handled by `DeeModule_GlobalName()', which will
-                                           * try to continue searching for another member with the same index,
-                                           * but without this flag set.
+                                           *
+                                           * This flag is handled by `DeeModule_GlobalName()', which will try
+                                           * to continue searching for another member with the same index, but
+                                           * without this flag set.
+                                           *
                                            * Should such a member not exist, return one of the aliases already
                                            * encountered at random. */
 #define Dee_MODSYM_FHIDDEN         0x0008 /* Don't enumerate this symbol in export listings or documentations.
                                            * The only way to access it is to know that it exists and call it by
                                            * name (or take apart the source binary to learn what may be there).
+                                           *
                                            * This flag is used by some hidden (and implementation-specific)
                                            * helper functions found in the `deemon' module which the compiler
-                                           * is allowed to generate helper class to for stuff that doesn't
-                                           * deserve its own opcode due to how rare its occurrence is... */
+                                           * is allowed to generate helper calls to for stuff that doesn't
+                                           * deserve its own opcode due to how rarely its used... */
 #define Dee_MODSYM_FPROPERTY       0x0010 /* The symbol is a property. */
-#define Dee_MODSYM_FEXTERN         0x0020 /* Refers to an global variable slot for a different module (would allow for forwarding/aliasing)
-                                           * Using this, we could easily implement something along the lines of
-                                           * `global import foo = bar from baz;' vs. `local import foo = bar from baz;'
+#define Dee_MODSYM_FEXTERN         0x0020 /* Refers to an global variable slot for a different module
+                                           * (allowing for forwarding/aliasing). Using this, one can
+                                           * implement something along the lines of:
+                                           * -     `global import foo = bar from baz;'
+                                           * - vs. `local import foo = bar from baz;'
                                            * (Default visibility would be `local') */
 #define Dee_MODSYM_FMASK           0x003f /* Mask of known MODSYM_F* flags (those that are allowed by DEC files). */
 #define Dee_MODSYM_FNAMEOBJ        0x4000 /* The symbol's name is actually a reference to a string object's `s_str' */
@@ -285,7 +293,7 @@ struct Dee_module_object {
 #ifdef CONFIG_HOST_WINDOWS
 	Dee_hash_t                     mo_pathhash; /* The case-insensitive hash for `mo_path' */
 #endif /* CONFIG_HOST_WINDOWS */
-	LIST_ENTRY(Dee_module_object ) mo_globlink; /* [0..1][lock(INTERN(modules_glob_lock))] Link into global module hash-table.*/
+	LIST_ENTRY(Dee_module_object)  mo_globlink; /* [0..1][lock(INTERN(modules_glob_lock))] Link into global module hash-table.*/
 	uint16_t                       mo_importc;  /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of other modules imported by this one. */
 	uint16_t                       mo_globalc;  /* [lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)] The total number of global symbols slots provided by this module. */
 	uint16_t                       mo_flags;    /* [const] Module flags (Set of `MODULE_F*') */

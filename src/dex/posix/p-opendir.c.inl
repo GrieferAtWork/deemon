@@ -1101,32 +1101,30 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst diriter_getsets[] = {
-	{ "seq", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_getseq, NULL, NULL,
-	  DOC("->?GDIR") },
-	{ "pathstr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_getpathstr, NULL, NULL,
-	  DOC("->?Dstring") },
-	{ "d_name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_name, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "The name of the current file") },
-	{ "d_fullname", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_fullname, NULL, NULL,
-	  DOC("->?Dstring\n"
-	      "The full (absolute) filename of the current file") },
-	{ "d_type", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_type, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "The type of the current file (one of ${DT_*})") },
-	{ "d_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_ino, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "The inode number of the current file") },
-	{ "d_namlen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_namlen, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Length of ?#d_name (in characters)") },
-	{ "d_reclen", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_reclen, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Size of the directory record (in bytes)") },
+	TYPE_GETTER("seq", &diriter_getseq, "->?GDIR"),
+	TYPE_GETTER("pathstr", &diriter_getpathstr, "->?Dstring"),
+	TYPE_GETTER("d_name", &diriter_get_d_name,
+	            "->?Dstring\n"
+	            "The name of the current file"),
+	TYPE_GETTER("d_fullname", &diriter_get_d_fullname,
+	            "->?Dstring\n"
+	            "The full (absolute) filename of the current file"),
+	TYPE_GETTER("d_type", &diriter_get_d_type,
+	            "->?Dint\n"
+	            "The type of the current file (one of ${DT_*})"),
+	TYPE_GETTER("d_ino", &diriter_get_d_ino,
+	            "->?Dint\n"
+	            "The inode number of the current file"),
+	TYPE_GETTER("d_namlen", &diriter_get_d_namlen,
+	            "->?Dint\n"
+	            "Length of ?#d_name (in characters)"),
+	TYPE_GETTER("d_reclen", &diriter_get_d_reclen,
+	            "->?Dint\n"
+	            "Size of the directory record (in bytes)"),
 #ifdef HAVE_diriter_get_d_off
-	{ "d_off", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diriter_get_d_off, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Offset of the next directory entry (non-portable!)") },
+	TYPE_GETTER("d_off", &diriter_get_d_off,
+	            "->?Dint\n"
+	            "Offset of the next directory entry (non-portable!)"),
 #endif /* HAVE_diriter_get_d_off */
 
 	/* TODO: Additional (stat-like) fields (to take advantage of info that windows gives us):
@@ -1144,7 +1142,7 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	 *  - d_ctime: Time
 	 *  - d_birthtime: Time
 	 */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst diriter_members[] = {

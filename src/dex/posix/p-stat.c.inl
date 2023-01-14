@@ -2348,210 +2348,210 @@ err:
 
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	{ "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid device information\n"
-	      "Return the device number of the storage device on which the stat-file is located") },
-	{ "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid inode information\n"
-	      "Returns the inode number or file-id of the stat-file") },
-	{ "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns a bitset describing the access permissions and mode of the stat-file. "
-	      "For more information, see ?GS_IFMT") },
-	{ "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the number of existing hard-links to this stat-file") },
-	{ "st_uid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_uid, NULL, NULL,
-	  DOC("->?Guser\n"
-	      "Returns a descriptor for the user owning this file") },
-	{ "st_gid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_gid, NULL, NULL,
-	  DOC("->?Ggroup\n"
-	      "Returns a descriptor for the group owning this file") },
-	{ "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid r-dev information\n"
-	      "Returns the device ID of the character/block device described by this stat-file") },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid size information\n"
-	      "Returns the size of the stat-file in bytes") },
-	{ "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL,
-	  DOC("->?Etime:Time\n"
-	      "@throw ValueError @this stat-file does not contain valid time information\n"
-	      "Return the last-accessed time of the stat-file") },
-	{ "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL,
-	  DOC("->?Etime:Time\n"
-	      "@throw ValueError @this stat-file does not contain valid time information\n"
-	      "Return the last-modified (file content only) time of the stat-file") },
-	{ "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL,
-	  DOC("->?Etime:Time\n"
-	      "@throw ValueError @this stat-file does not contain valid time information\n"
-	      "Return the lsat-changed (file content & file attributes) time of the stat-file") },
-	{ "st_birthtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_birthtime, NULL, NULL,
-	  DOC("->?Etime:Time\n"
-	      "@throw ValueError @this stat-file does not contain valid time information\n"
-	      "Return the creation (birth) time of the stat-file") },
-	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isdir, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a directory") },
-	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_ischr, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a character-device") },
-	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isblk, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a block-device") },
-	{ "isdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isdev, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a character- or block-device") },
-	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isreg, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a regular file") },
-	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isfifo, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a pipe") },
-	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_islnk, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a symbolic link") },
-	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_issock, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "Check if @this stat-file refers to a socket") },
+	TYPE_GETTER("st_dev", &stat_get_dev,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid device information\n"
+	            "Return the device number of the storage device on which the stat-file is located"),
+	TYPE_GETTER("st_ino", &stat_get_ino,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid inode information\n"
+	            "Returns the inode number or file-id of the stat-file"),
+	TYPE_GETTER("st_mode", &stat_get_mode,
+	            "->?Dint\n"
+	            "Returns a bitset describing the access permissions and mode of the stat-file. "
+	            "For more information, see ?GS_IFMT"),
+	TYPE_GETTER("st_nlink", &stat_get_nlink,
+	            "->?Dint\n"
+	            "Returns the number of existing hard-links to this stat-file"),
+	TYPE_GETTER("st_uid", &stat_get_uid,
+	            "->?Guser\n"
+	            "Returns a descriptor for the user owning this file"),
+	TYPE_GETTER("st_gid", &stat_get_gid,
+	            "->?Ggroup\n"
+	            "Returns a descriptor for the group owning this file"),
+	TYPE_GETTER("st_rdev", &stat_get_rdev,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid r-dev information\n"
+	            "Returns the device ID of the character/block device described by this stat-file"),
+	TYPE_GETTER("st_size", &stat_get_size,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid size information\n"
+	            "Returns the size of the stat-file in bytes"),
+	TYPE_GETTER("st_atime", &stat_get_atime,
+	            "->?Etime:Time\n"
+	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "Return the last-accessed time of the stat-file"),
+	TYPE_GETTER("st_mtime", &stat_get_mtime,
+	            "->?Etime:Time\n"
+	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "Return the last-modified (file content only) time of the stat-file"),
+	TYPE_GETTER("st_ctime", &stat_get_ctime,
+	            "->?Etime:Time\n"
+	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "Return the lsat-changed (file content & file attributes) time of the stat-file"),
+	TYPE_GETTER("st_birthtime", &stat_get_birthtime,
+	            "->?Etime:Time\n"
+	            "@throw ValueError @this stat-file does not contain valid time information\n"
+	            "Return the creation (birth) time of the stat-file"),
+	TYPE_GETTER("isdir", &stat_isdir,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a directory"),
+	TYPE_GETTER("ischr", &stat_ischr,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a character-device"),
+	TYPE_GETTER("isblk", &stat_isblk,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a block-device"),
+	TYPE_GETTER("isdev", &stat_isdev,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a character- or block-device"),
+	TYPE_GETTER("isreg", &stat_isreg,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a regular file"),
+	TYPE_GETTER("isfifo", &stat_isfifo,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a pipe"),
+	TYPE_GETTER("islnk", &stat_islnk,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a symbolic link"),
+	TYPE_GETTER("issock", &stat_issock,
+	            "->?Dbool\n"
+	            "@interrupt\n"
+	            "Check if @this stat-file refers to a socket"),
 
 	/* Non-portable NT extensions. */
 #ifdef HAVE_stat_getntattr_np
-	{ "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
-	      /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
+	TYPE_GETTER("ntattr_np", &stat_getntattr_np,
+	            "->?Dint\n"
+	            "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
+	            /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getntattr_np */
 #ifdef HAVE_stat_getnttype_np
-	{ "nttype_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnttype_np, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@throw ValueError @this stat-file does not contain valid NT-type information\n"
-	      "Non-portable windows extension for retrieving the NT type of this stat-file, that "
-	      /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers") },
+	TYPE_GETTER("nttype_np", &stat_getnttype_np,
+	            "->?Dint\n"
+	            "@throw ValueError @this stat-file does not contain valid NT-type information\n"
+	            "Non-portable windows extension for retrieving the NT type of this stat-file, that "
+	            /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getnttype_np */
-	{ NULL }
+	TYPE_GETSET_END
 };
 
 
 PRIVATE struct type_method tpconst stat_class_methods[] = {
-	{ "exists", &stat_class_exists,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the referred file exists, or if the given "
-	      /**/ "file described can be used with ?Gstat") },
-	{ "isdir", &stat_class_isdir,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing directory") },
-	{ "ischr", &stat_class_ischr,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing character-device") },
-	{ "isblk", &stat_class_isblk,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing block-device") },
-	{ "isdev", &stat_class_isdev,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing character- or block-device") },
-	{ "isreg", &stat_class_isreg,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing regular file") },
-	{ "isfifo", &stat_class_isfifo,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing pipe") },
-	{ "islnk", &stat_class_islnk,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing symbolic link") },
-	{ "issock", &stat_class_issock,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an existing socket") },
-	{ "ishidden", &stat_class_ishidden,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of "
-	      /**/ "?Gstat, check if the passed parameters refer to a hidden file. "
-	      /**/ "If the filesystem encodes the hidden-attribute as part of the "
-	      /**/ "filename, this function always returns ?f if the path-string "
-	      /**/ "of the file described by the passed arguments cannot be determined") },
-	{ "isexe", &stat_class_isexe,
-	  DOC("(st:?.)->?Dbool\n"
-	      "(path:?Dstring,atflags=!0)\n"
-	      "(fp:?DFile)\n"
-	      "(fd:?Dint)\n"
-	      "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
-	      "@interrupt\n"
-	      "Taking the same arguments as the constructor of ?Gstat, "
-	      /**/ "check if the passed parameters refer to an executable file. "
-	      /**/ "If the filesystem encodes the executable-attribute as part of the "
-	      /**/ "filename, this function always returns ?f if the path-string "
-	      /**/ "of the file described by the passed arguments cannot be determined") },
-	{ NULL }
+	TYPE_METHOD("exists", &stat_class_exists,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the referred file exists, or if the given "
+	            /**/ "file described can be used with ?Gstat"),
+	TYPE_METHOD("isdir", &stat_class_isdir,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing directory"),
+	TYPE_METHOD("ischr", &stat_class_ischr,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing character-device"),
+	TYPE_METHOD("isblk", &stat_class_isblk,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing block-device"),
+	TYPE_METHOD("isdev", &stat_class_isdev,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing character- or block-device"),
+	TYPE_METHOD("isreg", &stat_class_isreg,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing regular file"),
+	TYPE_METHOD("isfifo", &stat_class_isfifo,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing pipe"),
+	TYPE_METHOD("islnk", &stat_class_islnk,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing symbolic link"),
+	TYPE_METHOD("issock", &stat_class_issock,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an existing socket"),
+	TYPE_METHOD("ishidden", &stat_class_ishidden,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of "
+	            /**/ "?Gstat, check if the passed parameters refer to a hidden file. "
+	            /**/ "If the filesystem encodes the hidden-attribute as part of the "
+	            /**/ "filename, this function always returns ?f if the path-string "
+	            /**/ "of the file described by the passed arguments cannot be determined"),
+	TYPE_METHOD("isexe", &stat_class_isexe,
+	            "(st:?.)->?Dbool\n"
+	            "(path:?Dstring,atflags=!0)\n"
+	            "(fp:?DFile)\n"
+	            "(fd:?Dint)\n"
+	            "(dfd:?X2?DFile?Dint,path:?Dstring,atflags=!0)\n"
+	            "@interrupt\n"
+	            "Taking the same arguments as the constructor of ?Gstat, "
+	            /**/ "check if the passed parameters refer to an executable file. "
+	            /**/ "If the filesystem encodes the executable-attribute as part of the "
+	            /**/ "filename, this function always returns ?f if the path-string "
+	            /**/ "of the file described by the passed arguments cannot be determined"),
+	TYPE_METHOD_END
 };
 
 

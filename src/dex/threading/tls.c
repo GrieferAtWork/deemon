@@ -487,10 +487,10 @@ tls_getvalue(Tls *__restrict self) {
 	} else if (!self->t_factory) {
 		err_tls_unbound();
 		goto err;
-	} else if (DeeNone_Check(self->t_factory))
-		Dee_None->ob_refcnt += 2,
+	} else if (DeeNone_Check(self->t_factory)) {
+		Dee_None->ob_refcnt += 2;
 		result = self->t_value = Dee_None; /* Save and return `none'. */
-	else {
+	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
 		if unlikely(!result)
@@ -638,15 +638,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
-	{ "value", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getvalue,
-	  (int (DCALL *)(DeeObject *__restrict))&tls_delvalue,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&tls_setvalue,
-	  DOC("@throw AttributeError The Tls variable isn't bound, or has already been unbound\n"
-	      "Read/write access to the object assigned to this Tls variable slot in the calling thread\n"
-	      "If a factory has been defined, it will be invoked upon first access, unless that access is setting the Tls value.\n"
-	      "If no factory has been defined, the Tls is initialized as unbound and any attempt "
-	      "to read or delete it will cause an :AttributeError to be thrown") },
-	{ NULL }
+	TYPE_GETSET("value", &tls_getvalue, &tls_delvalue, &tls_setvalue,
+	            "@throw AttributeError The Tls variable isn't bound, or has already been unbound\n"
+	            "Read/write access to the object assigned to this Tls variable slot in the calling thread\n"
+	            "If a factory has been defined, it will be invoked upon first access, unless that access is setting the Tls value.\n"
+	            "If no factory has been defined, the Tls is initialized as unbound and any attempt "
+	            /**/ "to read or delete it will cause an :AttributeError to be thrown"),
+	TYPE_GETSET_END
 };
 
 
@@ -704,37 +702,31 @@ err:
 }
 
 PRIVATE struct type_method tpconst tls_methods[] = {
-	{ "get",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_get,
-	  DOC("->\n"
-	      "@throw UnboundAttribute The Tls variable isn't bound\n"
-	      "Return the stored object. Same as ${this.item}") },
-	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_delete,
-	  DOC("->?Dbool\n"
-	      "Unbind the Tls variable slot, returning ?f if "
-	      "it had already been unbound and ?t otherwise") },
-	{ "set",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_set,
-	  DOC("(ob)\n"
-	      "Set the Tls variable. Same as ${this.item = ob}") },
-	{ "xch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
-	  DOC("(ob)->\n"
-	      "@throw AttributeError The Tls variable had already been unbound\n"
-	      "Exchange the stored Tls value with @ob and return the old value") },
-	{ "pop",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_pop,
-	  DOC("->\n"
-	      "@throw AttributeError The Tls variable had already been unbound\n"
-	      "Unbind the stored Tls object and return the previously stored object") },
+	TYPE_METHOD("get", &tls_get,
+	            "->\n"
+	            "@throw UnboundAttribute The Tls variable isn't bound\n"
+	            "Return the stored object. Same as ${this.item}"),
+	TYPE_METHOD("delete", &tls_delete,
+	            "->?Dbool\n"
+	            "Unbind the Tls variable slot, returning ?f if "
+	            "it had already been unbound and ?t otherwise"),
+	TYPE_METHOD("set", &tls_set,
+	            "(ob)\n"
+	            "Set the Tls variable. Same as ${this.item = ob}"),
+	TYPE_METHOD("xch", &tls_xch,
+	            "(ob)->\n"
+	            "@throw AttributeError The Tls variable had already been unbound\n"
+	            "Exchange the stored Tls value with @ob and return the old value"),
+	TYPE_METHOD("pop", &tls_pop,
+	            "->\n"
+	            "@throw AttributeError The Tls variable had already been unbound\n"
+	            "Unbind the stored Tls object and return the previously stored object"),
 
 	/* Deprecated functions. */
-	{ "exchange",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
-	  DOC("(ob)->\n"
-	      "Deprecated alias for ?#xch") },
-	{ NULL }
+	TYPE_METHOD("exchange", &tls_xch,
+	            "(ob)->\n"
+	            "Deprecated alias for ?#xch"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_cmp tls_cmp = {
@@ -753,12 +745,12 @@ INTERN DeeTypeObject DeeTls_Type = {
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(factory:?DCallable)\n"
 	                         "Construct a new tls descriptor using an optional @factory that "
-	                         "is used to construct the default values of per-thread variables\n"
+	                         /**/ "is used to construct the default values of per-thread variables\n"
 	                         "You may pass ?N for @factory to pre-initialize the Tls value to ?N\n"
 	                         "When given, @factory is invoked as ${factory()} upon first access on a "
-	                         "per-thread basis, using its return value as initial value for the Tls\n"
-
+	                         /**/ "per-thread basis, using its return value as initial value for the Tls\n"
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if the Tls variable has been bound in the calling thread"),
 	/* .tp_flags    = */ TP_FNORMAL,

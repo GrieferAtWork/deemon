@@ -1392,20 +1392,20 @@ time_isdst(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE struct type_method tpconst time_methods[] = {
-	{ "as", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_as,
-	  DOC("(string repr)->time\n"
-	      "@throw ValueError The given @repr is not a known string representation\n"
-	      "Re-return @this time object using a given representation\n"
-	      "Views of all available representation can also be generated "
-	      "using properties of the same names, meaning that this function "
-	      "could also be implemented using ?Eoperators:getattr") },
-	{ "format", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_doformat,
-	  DOC("(format:?Dstring)->?Dstring\n"
-	      "Format @this time object using a given strftime-style @format string") },
-	{ "__format__", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_doformat,
-	  DOC("(format:?Dstring)->?Dstring\n"
-	      "Internal alias for ?#format") },
-	{ NULL }
+	TYPE_METHOD("as", &time_as,
+	            "(string repr)->time\n"
+	            "@throw ValueError The given @repr is not a known string representation\n"
+	            "Re-return @this time object using a given representation\n"
+	            "Views of all available representation can also be generated "
+	            "using properties of the same names, meaning that this function "
+	            "could also be implemented using ?Eoperators:getattr"),
+	TYPE_METHOD("format", &time_doformat,
+	            "(format:?Dstring)->?Dstring\n"
+	            "Format @this time object using a given strftime-style @format string"),
+	TYPE_METHOD("__format__", &time_doformat,
+	            "(format:?Dstring)->?Dstring\n"
+	            "Internal alias for ?#format"),
+	TYPE_METHOD_END
 };
 
 
@@ -1431,21 +1431,21 @@ err:
 #define object_as_time_half DeeObject_AsInt32
 #endif /* !HAVE_128BIT_TIME */
 
-#define DEFINE_TIME_AS(name, repr)                                         \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                     \
-	time_getas_##name(DeeObject *__restrict self) {                        \
-		return (DREF DeeObject *)time_asrepr((DeeTimeObject *)self, repr); \
-	}                                                                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                              \
-	time_setas_##name(DeeObject *self, DREF DeeObject *value) {            \
-		dtime_t tval;                                                      \
-		if (object_as_time(value, &tval))                                  \
-			return -1;                                                     \
-		return time_setint((DeeTimeObject *)self, repr, tval);             \
-	}                                                                      \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                                 \
-	time_delas_##name(DeeObject *__restrict self) {                        \
-		return time_setint((DeeTimeObject *)self, repr, 0);                \
+#define DEFINE_TIME_AS(name, repr)                                  \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL              \
+	time_getas_##name(DeeTimeObject *__restrict self) {             \
+		return (DREF DeeObject *)time_asrepr(self, repr);           \
+	}                                                               \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                       \
+	time_setas_##name(DeeTimeObject *self, DREF DeeObject *value) { \
+		dtime_t tval;                                               \
+		if (object_as_time(value, &tval))                           \
+			return -1;                                              \
+		return time_setint(self, repr, tval);                       \
+	}                                                               \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                          \
+	time_delas_##name(DeeTimeObject *__restrict self) {             \
+		return time_setint(self, repr, 0);                          \
 	}
 DEFINE_TIME_AS(mic, TIME_REPR_MIC)
 DEFINE_TIME_AS(mil, TIME_REPR_MIL)
@@ -1645,122 +1645,106 @@ time_del_time_t(DeeTimeObject *__restrict self) {
 	return time_set_time_t(self, Dee_None);
 }
 
-DOC_DEF(docof_timeas, "->?GTime\n"
-                      "@throw ValueError The given value cannot be negative, or is too large to fit the view\n"
-                      "Get/Set this specific representation of time, potentially clamped to the limits of the next-greater view\n"
-                      "Note that these representations are always zero-based, meaning "
-                      "that January is $0, the 2nd day of the month is $1, etc.");
+DOC_DEF(docof_timeas,
+        "->?GTime\n"
+        "@throw ValueError The given value cannot be negative, or is too large to fit the view\n"
+        "Get/Set this specific representation of time, potentially clamped to the limits of the next-greater view\n"
+        "Note that these representations are always zero-based, meaning "
+        "that January is $0, the 2nd day of the month is $1, etc.");
+
 PRIVATE struct type_getset tpconst time_getsets[] = {
-	{ "intval", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_intval, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "Returns the integer value of the selected time representation\n"
-	      "This differs from the regular int-operator which always return the time in microseconds:\n"
-	      "${"
-	      "import * from time;\n"
-	      "local x = days(2);\n"
-	      "print x;        // 2 days\n"
-	      "print int(x);   // 2*24*60*60*1000*1000\n"
-	      "print x.intval; // 2"
-	      "}") },
-	{ "isdst", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_isdst, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns ?t if DaylightSavingsTime is in active at @this time\n"
-	      "Note that this implementation does not perform any special "
-	      "handling no matter if daylight savings is active or not") },
-	{ "timepart",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
-	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&time_timepart_set,
-	  DOC("->?GTime\n"
-	      "Read/write the time portion of @this time object, that is everything below the "
-	      "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
-	      "When setting, the passed objected is interpreted as an integer describing the "
-	      "number of microsecond since the day began") },
-	{ "datepart",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_datepart_get,
-	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&time_datepart_set,
-	  DOC("->?GTime\n"
-	      "@throw ValueError Attempted to assign a time value with a non-zero ?#timepart\n"
-	      "Read/write the date portion of @this time object, that is everything "
-	      "above the day-threshold, including ?#mday, ?#month and ?#year\n"
-	      "When setting, the passed objected is interpreted as an integer "
-	      "describing the number of microsecond since 1.1.0000") },
-	{ timestr_mic, &time_getas_mic, &time_delas_mic, &time_setas_mic, DOC_GET(docof_timeas) },
-	{ timestr_mil, &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC_GET(docof_timeas) },
-	{ timestr_sec, &time_getas_sec, &time_delas_sec, &time_setas_sec, DOC_GET(docof_timeas) },
-	{ timestr_min, &time_getas_min, &time_delas_min, &time_setas_min, DOC_GET(docof_timeas) },
-	{ timestr_hor, &time_getas_hor, &time_delas_hor, &time_setas_hor, DOC_GET(docof_timeas) },
-	{ timestr_wday, &time_getas_wday, &time_delas_wday, &time_setas_wday, DOC_GET(docof_timeas) },
-	{ timestr_mwek, &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC_GET(docof_timeas) },
-	{ timestr_mon, &time_getas_mon, &time_delas_mon, &time_setas_mon, DOC_GET(docof_timeas) },
-	{ timestr_yer, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas) },
-	{ timestr_dec, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
-	{ timestr_cen, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
-	{ timestr_mll, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-	{ timestr_mday, &time_getas_mday, &time_delas_mday, &time_setas_mday, DOC_GET(docof_timeas) },
-	{ timestr_yday, &time_getas_yday, &time_delas_yday, &time_setas_yday, DOC_GET(docof_timeas) },
-	{ timestr_ywek, &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC_GET(docof_timeas) },
-	{ timestr_mics, &time_getas_mics, &time_delas_mics, &time_setas_mics, DOC_GET(docof_timeas) },
-	{ timestr_mils, &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC_GET(docof_timeas) },
-	{ timestr_secs, &time_getas_secs, &time_delas_secs, &time_setas_secs, DOC_GET(docof_timeas) },
-	{ timestr_mins, &time_getas_mins, &time_delas_mins, &time_setas_mins, DOC_GET(docof_timeas) },
-	{ timestr_hors, &time_getas_hors, &time_delas_hors, &time_setas_hors, DOC_GET(docof_timeas) },
-	{ timestr_days, &time_getas_days, &time_delas_days, &time_setas_days, DOC_GET(docof_timeas) },
-	{ timestr_weks, &time_getas_weks, &time_delas_weks, &time_setas_weks, DOC_GET(docof_timeas) },
-	{ timestr_mons, &time_getas_mons, &time_delas_mons, &time_setas_mons, DOC_GET(docof_timeas) },
-	{ timestr_yers, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas) },
-	{ timestr_decs, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
-	{ timestr_cens, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
-	{ timestr_mlls, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-	{ timestr_microsecond, &time_getas_mic, &time_delas_mic, &time_setas_mic, DOC_GET(docof_timeas) },
-	{ timestr_millisecond, &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC_GET(docof_timeas) },
-	{ timestr_second, &time_getas_sec, &time_delas_sec, &time_setas_sec, DOC_GET(docof_timeas) },
-	{ timestr_minute, &time_getas_min, &time_delas_min, &time_setas_min, DOC_GET(docof_timeas) },
-	{ timestr_hour, &time_getas_hor, &time_delas_hor, &time_setas_hor, DOC_GET(docof_timeas) },
-	{ timestr_weekday, &time_getas_wday, &time_delas_wday, &time_setas_wday, DOC_GET(docof_timeas) },
-	{ timestr_monthweek, &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC_GET(docof_timeas) },
-	{ timestr_month, &time_getas_mon, &time_delas_mon, &time_setas_mon, DOC_GET(docof_timeas) },
-	{ timestr_year, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas) },
-	{ timestr_decade, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
-	{ timestr_century, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
-	{ timestr_millennium, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-	{ timestr_monthday, &time_getas_mday, &time_delas_mday, &time_setas_mday, DOC_GET(docof_timeas) },
-	{ timestr_yearday, &time_getas_yday, &time_delas_yday, &time_setas_yday, DOC_GET(docof_timeas) },
-	{ timestr_yearweek, &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC_GET(docof_timeas) },
-	{ timestr_microseconds, &time_getas_mics, &time_delas_mics, &time_setas_mics, DOC_GET(docof_timeas) },
-	{ timestr_milliseconds, &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC_GET(docof_timeas) },
-	{ timestr_seconds, &time_getas_secs, &time_delas_secs, &time_setas_secs, DOC_GET(docof_timeas) },
-	{ timestr_minutes, &time_getas_mins, &time_delas_mins, &time_setas_mins, DOC_GET(docof_timeas) },
-	{ timestr_hours, &time_getas_hors, &time_delas_hors, &time_setas_hors, DOC_GET(docof_timeas) },
-	//{ timestr_days, &time_getas_days, &time_delas_days, &time_setas_days, DOC_GET(docof_timeas) },
-	{ timestr_weeks, &time_getas_weks, &time_delas_weks, &time_setas_weks, DOC_GET(docof_timeas) },
-	{ timestr_months, &time_getas_mons, &time_delas_mons, &time_setas_mons, DOC_GET(docof_timeas) },
-	{ timestr_years, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas) },
-	{ timestr_decades, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
-	{ timestr_centuries, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
-	{ timestr_millenia, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-	{ "mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC("->?GTime\nMiddle-way alias for ?#monthweek") },
-	{ "yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC("->?GTime\nMiddle-way alias for ?#yearweek") },
+	TYPE_GETTER("intval", &time_intval,
+	            "->?Dint\n"
+	            "Returns the integer value of the selected time representation\n"
+	            "This differs from the regular int-operator which always return the time in microseconds:\n"
+	            "${"
+	            "import * from time;\n"
+	            "local x = days(2);\n"
+	            "print x;        // 2 days\n"
+	            "print int(x);   // 2*24*60*60*1000*1000\n"
+	            "print x.intval; // 2"
+	            "}"),
+	TYPE_GETTER("isdst", &time_isdst,
+	            "->?Dbool\n"
+	            "Returns ?t if DaylightSavingsTime is in active at @this time\n"
+	            "Note that this implementation does not perform any special "
+	            "handling no matter if daylight savings is active or not"),
+	TYPE_GETSET("timepart", &time_timepart_get, &time_timepart_del, &time_timepart_set,
+	            "->?GTime\n"
+	            "Read/write the time portion of @this time object, that is everything below the "
+	            "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
+	            "When setting, the passed objected is interpreted as an integer describing the "
+	            "number of microsecond since the day began"),
+	TYPE_GETSET("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set,
+	            "->?GTime\n"
+	            "@throw ValueError Attempted to assign a time value with a non-zero ?#timepart\n"
+	            "Read/write the date portion of @this time object, that is everything "
+	            "above the day-threshold, including ?#mday, ?#month and ?#year\n"
+	            "When setting, the passed objected is interpreted as an integer "
+	            "describing the number of microsecond since 1.1.0000"),
+	TYPE_GETSET(timestr_mic, &time_getas_mic, &time_delas_mic, &time_setas_mic, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mil, &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_sec, &time_getas_sec, &time_delas_sec, &time_setas_sec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_min, &time_getas_min, &time_delas_min, &time_setas_min, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_hor, &time_getas_hor, &time_delas_hor, &time_setas_hor, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_wday, &time_getas_wday, &time_delas_wday, &time_setas_wday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mwek, &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mon, &time_getas_mon, &time_delas_mon, &time_setas_mon, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_yer, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_dec, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_cen, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mll, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mday, &time_getas_mday, &time_delas_mday, &time_setas_mday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_yday, &time_getas_yday, &time_delas_yday, &time_setas_yday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_ywek, &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mics, &time_getas_mics, &time_delas_mics, &time_setas_mics, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mils, &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_secs, &time_getas_secs, &time_delas_secs, &time_setas_secs, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mins, &time_getas_mins, &time_delas_mins, &time_setas_mins, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_hors, &time_getas_hors, &time_delas_hors, &time_setas_hors, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_days, &time_getas_days, &time_delas_days, &time_setas_days, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_weks, &time_getas_weks, &time_delas_weks, &time_setas_weks, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mons, &time_getas_mons, &time_delas_mons, &time_setas_mons, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_yers, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_decs, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_cens, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_mlls, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_microsecond, &time_getas_mic, &time_delas_mic, &time_setas_mic, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_millisecond, &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_second, &time_getas_sec, &time_delas_sec, &time_setas_sec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_minute, &time_getas_min, &time_delas_min, &time_setas_min, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_hour, &time_getas_hor, &time_delas_hor, &time_setas_hor, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_weekday, &time_getas_wday, &time_delas_wday, &time_setas_wday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_monthweek, &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_month, &time_getas_mon, &time_delas_mon, &time_setas_mon, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_year, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_decade, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_century, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_millennium, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_monthday, &time_getas_mday, &time_delas_mday, &time_setas_mday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_yearday, &time_getas_yday, &time_delas_yday, &time_setas_yday, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_yearweek, &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_microseconds, &time_getas_mics, &time_delas_mics, &time_setas_mics, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_milliseconds, &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_seconds, &time_getas_secs, &time_delas_secs, &time_setas_secs, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_minutes, &time_getas_mins, &time_delas_mins, &time_setas_mins, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_hours, &time_getas_hors, &time_delas_hors, &time_setas_hors, DOC_GET(docof_timeas)),
+	/*TYPE_GETSET(timestr_days, &time_getas_days, &time_delas_days, &time_setas_days, DOC_GET(docof_timeas)),*/
+	TYPE_GETSET(timestr_weeks, &time_getas_weks, &time_delas_weks, &time_setas_weks, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_months, &time_getas_mons, &time_delas_mons, &time_setas_mons, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_years, &time_getas_yer, &time_delas_yer, &time_setas_yer, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_decades, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_centuries, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas)),
+	TYPE_GETSET(timestr_millenia, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas)),
+	TYPE_GETSET("mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, "->?GTime\nMiddle-way alias for ?#monthweek"),
+	TYPE_GETSET("yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, "->?GTime\nMiddle-way alias for ?#yearweek"),
 	/* Deprecated names/functions. */
-	{ "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?GTime\nDeprecated alias for ?#mic / ?#millisecond") },
-	{ "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for ?#mics / ?#milliseconds") },
-	{ "time",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
-	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&time_timepart_set,
-	  DOC("->?GTime\nDeprecated alias for ?#timepart") },
-	{ "part",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_datepart_get,
-	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&time_datepart_set,
-	  DOC("->?GTime\nDeprecated alias for ?#datepart") },
-	{ "time_t",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_get_time_t,
-	  (int (DCALL *)(DeeObject *__restrict))&time_del_time_t,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&time_set_time_t,
-	  DOC("->?Dint\nDeprecated") },
-	{ NULL }
+	TYPE_GETSET("msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, "->?GTime\nDeprecated alias for ?#mic / ?#millisecond"),
+	TYPE_GETSET("mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, "->?GTime\nDeprecated alias for ?#mics / ?#milliseconds"),
+	TYPE_GETSET("time", &time_timepart_get, &time_timepart_del, &time_timepart_set, "->?GTime\nDeprecated alias for ?#timepart"),
+	TYPE_GETSET("part", &time_datepart_get, &time_datepart_del, &time_datepart_set, "->?GTime\nDeprecated alias for ?#datepart"),
+	TYPE_GETSET("time_t", &time_get_time_t, &time_del_time_t, &time_set_time_t, "->?Dint\nDeprecated"),
+	TYPE_GETSET_END
 };
 
 
@@ -2295,30 +2279,28 @@ err:
 PRIVATE struct type_method tpconst time_class_methods[] = {
 	/* For backwards compatibility with the old deemon (which
 	 * did everything as part of the `time' builtin type) */
-	{ "now", &time_class_now,
-	  DOC("->?.\n"
-	      "Deprecated. Use ?Gnow instead") },
-	{ "tick", &time_class_tick,
-	  DOC("->?.\n"
-	      "Deprecated. Use ?Gtick instead") },
-	{ "freq", &time_class_freq,
-	  DOC("->?Dint\n"
-	      "Deprecated. Always returns $1000000") },
-	{ "time", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_maketime,
-	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?.\n"
-	      "Deprecated. Use ?Gmaketime instead"),
-	  TYPE_METHOD_FKWDS },
-	{ "date", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_makedate,
-	  DOC("(year=!0,month=!0,day=!0)->?.\n"
-	      "Deprecated. Use ?Gmakedate instead"),
-	  TYPE_METHOD_FKWDS },
-	{ "from_time_t", &time_class_from_time_t,
-	  DOC("(time_t_value:?Dint)->?.\n"
-	      "Deprecated") },
+	TYPE_METHOD("now", &time_class_now,
+	            "->?.\n"
+	            "Deprecated. Use ?Gnow instead"),
+	TYPE_METHOD("tick", &time_class_tick,
+	            "->?.\n"
+	            "Deprecated. Use ?Gtick instead"),
+	TYPE_METHOD("freq", &time_class_freq,
+	            "->?Dint\n"
+	            "Deprecated. Always returns $1000000"),
+	TYPE_KWMETHOD("time", &time_class_maketime,
+	              "(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?.\n"
+	              "Deprecated. Use ?Gmaketime instead"),
+	TYPE_KWMETHOD("date", &time_class_makedate,
+	              "(year=!0,month=!0,day=!0)->?.\n"
+	              "Deprecated. Use ?Gmakedate instead"),
+	TYPE_METHOD("from_time_t", &time_class_from_time_t,
+	            "(time_t_value:?Dint)->?.\n"
+	            "Deprecated"),
 #define ADD_INTERVAL_CALLBACK(name, func) \
-	{ name, &time_class_##func,           \
-	  DOC("(value:?Dint)->?.\n"           \
-		  "Deprecated. Use ?G" #func " instead") }
+	TYPE_METHOD(name, &time_class_##func, \
+	            "(value:?Dint)->?.\n"     \
+	            "Deprecated. Use ?G" #func " instead")
 	ADD_INTERVAL_CALLBACK("mseconds", milliseconds),
 	ADD_INTERVAL_CALLBACK(timestr_seconds, seconds),
 	ADD_INTERVAL_CALLBACK(timestr_minutes, minutes),
@@ -2328,7 +2310,7 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	ADD_INTERVAL_CALLBACK(timestr_months, months),
 	ADD_INTERVAL_CALLBACK(timestr_years, years),
 #undef ADD_INTERVAL_CALLBACK
-	{ NULL }
+	TYPE_METHOD_END
 };
 
 
@@ -2445,7 +2427,7 @@ time_str(DeeTimeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_repr(DeeTimeObject *__restrict self) {
-	return DeeString_Newf("time(" DUTIME_HALF_PRINTF ", %u, %u, %u, %u, %u, %u, %u)%s%s",
+	return DeeString_Newf("Time(" DUTIME_HALF_PRINTF ", %u, %u, %u, %u, %u, %u, %u)%s%s",
 	                      (dtime_half_t)time_getint(self, TIME_REPR_YER),
 	                      (unsigned int)time_getint(self, TIME_REPR_MON),
 	                      (unsigned int)time_getint(self, TIME_REPR_MDAY),
@@ -2518,19 +2500,19 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_doc      = */ DOC("(year=!0,month=!0,day=!0,hour=!0,minute=!0,"
 	                          "second=!0,millisecond=!0,microsecond=!0)\n"
 	                          "Construct a new time object from the given arguments.\n"
-
 	                          "\n"
+
 	                          "str->\n"
 	                          "Returns value of @this time object when it was constructed to "
 	                          "represent an explicit view (such as through use of ?Gdays, "
 	                          "or through a sub-view such as ?#days), or return the time "
 	                          "represented in a human-readable fashion\n"
-
 	                          "\n"
+
 	                          "repr->\n"
 	                          "Returns a string representation of the components of @this time object\n"
-
 	                          "\n"
+
 	                          "int->\n"
 	                          "Returns the value of @this time object as an offset from 1.1.0000 in microseconds\n"
 	                          "This operator allows time objects to be passed to system functions that take integer "
@@ -2585,7 +2567,7 @@ PRIVATE DEFINE_KWCMETHOD(libtime_makedate, &f_libtime_makedate);
 PRIVATE DEFINE_CMETHOD(libtime_makeanon, &f_libtime_makeanon);
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "Time", (DeeObject *)&DeeTime_Type },
+	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FNORMAL },
 	{ "now", (DeeObject *)&libtime_now, MODSYM_FNORMAL,
 	  DOC("->?GTime\n"
 	      "Returns the current time with as much precision as possible") },
