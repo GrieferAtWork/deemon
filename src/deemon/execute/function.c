@@ -480,7 +480,7 @@ function_get_operatorname(Function *__restrict self) {
 		Dee_XDecref(info.fi_type);
 		return_none;
 	}
-	op = Dee_OperatorInfo(info.fi_type, info.fi_opname);
+	op = Dee_OperatorInfo(Dee_TYPE(info.fi_type), info.fi_opname);
 	Dee_XDecref(info.fi_type);
 	if (!op)
 		return DeeInt_NewU16(info.fi_opname);
@@ -669,25 +669,12 @@ function_visit(Function *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 function_str(Function *__restrict self) {
-	char *name = DeeCode_NAME(self->fo_code);
-	if (name)
-		return (DREF DeeStringObject *)DeeString_New(name);
-	return_reference_(&str_Function);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_repr(Function *__restrict self) {
 	uint16_t i;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-#if 0
-	if (UNICODE_PRINTER_PRINT(&printer, "Function(code") < 0)
-		goto err;
-#else
-	if (UNICODE_PRINTER_PRINT(&printer, "Function(") < 0)
+	if (UNICODE_PRINTER_PRINT(&printer, "<Function(") < 0)
 		goto err;
 	if (unicode_printer_printobjectrepr(&printer, (DeeObject *)self->fo_code) < 0)
 		goto err;
-#endif
 	if (self->fo_code->co_refc) {
 		if (UNICODE_PRINTER_PRINT(&printer, ", { ") < 0)
 			goto err;
@@ -700,12 +687,20 @@ function_repr(Function *__restrict self) {
 		if (UNICODE_PRINTER_PRINT(&printer, " }") < 0)
 			goto err;
 	}
-	if (unicode_printer_putascii(&printer, ')'))
+	if (unicode_printer_putascii(&printer, '>'))
 		goto err;
-	return unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+function_repr(Function *__restrict self) {
+	char *name = DeeCode_NAME(self->fo_code);
+	if (name)
+		return (DREF DeeStringObject *)DeeString_New(name);
+	return function_str(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL

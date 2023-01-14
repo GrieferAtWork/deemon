@@ -367,6 +367,45 @@ err:
 
 INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+get_call_repr(DeeObject *func, DeeObject *args) {
+	DREF DeeObject *args_iter, *arg;
+	struct unicode_printer printer;
+	bool is_first;
+	unicode_printer_init(&printer);
+	if unlikely(unicode_printer_printobjectrepr(&printer, func) < 0)
+		goto err_printer;
+	if unlikely(unicode_printer_putascii(&printer, '(') != 0)
+		goto err_printer;
+	args_iter = DeeObject_IterSelf(args);
+	if unlikely(!args_iter)
+		goto err_printer;
+	is_first = true;
+	while (ITER_ISOK(arg = DeeObject_IterNext(args_iter))) {
+		if (!is_first) {
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
+				goto err_printer_args_iter_arg;
+		}
+		if unlikely(unicode_printer_printobjectrepr(&printer, arg) < 0)
+			goto err_printer_args_iter_arg;
+		Dee_Decref(arg);
+		is_first = false;
+	}
+	if unlikely(!arg)
+		goto err_printer_args_iter;
+	Dee_Decref(args_iter);
+	if unlikely(unicode_printer_putascii(&printer, ')') != 0)
+		goto err_printer;
+	return unicode_printer_pack(&printer);
+err_printer_args_iter_arg:
+	Dee_Decref(arg);
+err_printer_args_iter:
+	Dee_Decref_likely(args_iter);
+err_printer:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(uint16_t operator_name,
@@ -374,7 +413,7 @@ get_expression_repr(uint16_t operator_name,
 	struct opinfo const *info;
 	struct unicode_printer printer;
 	size_t i;
-	info = Dee_OperatorInfo(argc ? Dee_TYPE(argv[0]) : NULL,
+	info = Dee_OperatorInfo(argc ? Dee_TYPE(Dee_TYPE(argv[0])) : NULL,
 	                        operator_name);
 	if (!info)
 		goto fallback;
@@ -395,6 +434,8 @@ get_expression_repr(uint16_t operator_name,
 			return DeeString_Newf("del %r[%r]", argv[0], argv[1]);
 		} else if (operator_name == OPERATOR_CONTAINS) {
 			return DeeString_Newf("%r in %r", argv[1], argv[0]);
+		} else if (operator_name == OPERATOR_CALL) {
+			return get_call_repr(argv[0], argv[1]);
 		} else {
 			/* Generic binary operator. */
 			return DeeString_Newf("%r %s %r", argv[0], info->oi_uname, argv[1]);

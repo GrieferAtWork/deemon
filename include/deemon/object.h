@@ -1659,21 +1659,20 @@ struct Dee_type_buffer {
 
 
 
-/* WARNING: The `argv' vector should actually be written as `DeeObject *const *__restrict argv',
- *          however since it appears in as many places as it does, doing so would really just
- *          be unnecessary work. However because of this you must remember never to modify an
- *          argument vector!
- *          For example: If your function is called from the interpreted, `argv' often points
- *          into the associated frame's stack, meaning that modifications could bring along
- *          deadly consequences!
- *          Even in user-code itself, where it might seem as though you are able to write to
- *          argument variables, in actuality, the compiler will notice and copy the argument
- *          in a local variable at the beginning of the function, meaning you'll actually just
- *          be modifying a local variable.
+/* WARNING: The `argv' vector should actually be written as `DeeObject *const *argv',
+ *          however since it appears in as many places as it does, doing so would really
+ *          just be unnecessary work. However because of this you must remember never
+ *          to modify an argument vector!
+ * For example: If your function is called from the interpreter, `argv' often points
+ * into the associated frame's stack, meaning that modifications could bring along
+ * deadly consequences!
+ * Even in user-code itself, where it might seem as though you are able to write to
+ * argument variables, in actuality, the compiler will notice and copy the argument
+ * in a local variable at the beginning of the function, meaning you'll actually just
+ * be modifying a local variable.
  * @param: self:  The obj-part of the objmethod.
  * @param: argc:  The number of arguments passed.
- * @param: argv:  [1..1][const][0..argc] Actually this would have
- *                to be written as `DeeObject *const *__restrict'
+ * @param: argv:  [1..1][const][0..argc] Arguments.
  * @return: * :   The function return value.
  * @return: NULL: An error occurred. */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_objmethod_t)(DeeObject *self, size_t argc, DeeObject *const *argv);
@@ -1986,7 +1985,7 @@ struct Dee_type_member {
 #define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
 	offsetof(struct_type, field) + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
+#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask)     \
 	offsetof(struct_type, field) + (sizeof(((struct_type *)0)->field) - \
 	                                (1 + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)))
 #else /* __BYTE_ORDER__ == ... */
@@ -2134,9 +2133,9 @@ struct Dee_membercache {
 /* Operator types (values for `oi_type') */
 #define OPTYPE_SPECIAL        0xfff  /* VALUE: A special operator that cannot be invoked directly (e.g.: `__constructor__'). */
 #define OPTYPE_UNARY          0x001  /* `...(DeeObject *__restrict self);' */
-#define OPTYPE_BINARY         0x002  /* `...(DeeObject *__restrict self, DeeObject *__restrict other);' */
-#define OPTYPE_TRINARY        0x003  /* `...(DeeObject *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b);' */
-#define OPTYPE_QUAD           0x004  /* `...(DeeObject *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b, DeeObject *__restrict c);' */
+#define OPTYPE_BINARY         0x002  /* `...(DeeObject *self, DeeObject *other);' */
+#define OPTYPE_TRINARY        0x003  /* `...(DeeObject *self, DeeObject *a, DeeObject *b);' */
+#define OPTYPE_QUAD           0x004  /* `...(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c);' */
 #define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DeeObject **__restrict pself'. */
 #define OPTYPE_VARIABLE       0x080  /* FLAG: User-code can invoke the operator with a variable number of arguments passed through the last operand. */
 #define OPTYPE_ROBJECT        0x000  /* FLAG: The operator returns `DREF DeeObject *'. */
@@ -2147,10 +2146,10 @@ struct Dee_membercache {
 #if __SIZEOF_INT__ >= 8
 #   define OPTYPE_RINT        OPTYPE_RINT64
 #   define OPTYPE_RUINT       OPTYPE_RUINT64
-#else /* __SIZEOF_POINTER__ >= 8 */
+#else /* __SIZEOF_INT__ >= 8 */
 #   define OPTYPE_RINT        OPTYPE_RINT32
 #   define OPTYPE_RUINT       OPTYPE_RUINT32
-#endif /* __SIZEOF_POINTER__ < 8 */
+#endif /* __SIZEOF_INT__ < 8 */
 #if __SIZEOF_POINTER__ >= 8
 #   define OPTYPE_RINTPTR     OPTYPE_RINT64
 #   define OPTYPE_RUINTPTR    OPTYPE_RUINT64
@@ -2416,8 +2415,8 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Inherit different groups of operators from base-classes, returning `true'
- * if operators were inherited from some base class (even if those same operators
+/* Inherit different groups of operators from base-classes, returning `true' if
+ * operators were inherited from some base class (even if those same operators
  * had already been inherited previously), and `false' if no base-class provides
  * any of the specified operators (though note that inheriting constructors
  * requires that all base classes carry the `Dee_TP_FINHERITCTOR' flag; else,

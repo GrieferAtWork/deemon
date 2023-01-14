@@ -925,7 +925,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		Dee_XDecref(info.fi_type);
 		return_none;
 	}
-	op = Dee_OperatorInfo(info.fi_type, info.fi_opname);
+	op = Dee_OperatorInfo(Dee_TYPE(info.fi_type), info.fi_opname);
 	Dee_XDecref(info.fi_type);
 	if (!op)
 		return DeeInt_NewU16(info.fi_opname);

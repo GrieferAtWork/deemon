@@ -82,7 +82,7 @@ INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_SHL]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_shl),            "<<",           "shl",         "tp_shl" },
 	/* [OPERATOR_SHR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_shr),            ">>",           "shr",         "tp_shr" },
 	/* [OPERATOR_AND]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_and),            "&",            "and",         "tp_and" },
-	/* [OPERATOR_OR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_or),             " | ",            "or",          "tp_or" },
+	/* [OPERATOR_OR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_or),             "|",            "or",          "tp_or" },
 	/* [OPERATOR_XOR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_xor),            "^",            "xor",         "tp_xor" },
 	/* [OPERATOR_POW]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_pow),            "**",           "pow",         "tp_pow" },
 	/* [OPERATOR_INC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_inc),            "++",           "inc",         "tp_inc" },
@@ -95,7 +95,7 @@ INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_INPLACE_SHL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_shl),    "<<=",          "ishl",        "tp_inplace_shl" },
 	/* [OPERATOR_INPLACE_SHR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_shr),    ">>=",          "ishr",        "tp_inplace_shr" },
 	/* [OPERATOR_INPLACE_AND]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_and),    "&=",           "iand",        "tp_inplace_and" },
-	/* [OPERATOR_INPLACE_OR]   = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_or),     " | =",           "ior",         "tp_inplace_or" },
+	/* [OPERATOR_INPLACE_OR]   = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_or),     "|=",           "ior",         "tp_inplace_or" },
 	/* [OPERATOR_INPLACE_XOR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_xor),    "^=",           "ixor",        "tp_inplace_xor" },
 	/* [OPERATOR_INPLACE_POW]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_pow),    "**=",          "ipow",        "tp_inplace_pow" },
 	/* [OPERATOR_HASH]         = */ { OPTYPE_RUINTPTR | OPTYPE_UNARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_hash),            "hash",         "hash",        "tp_hash" },
@@ -649,8 +649,7 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 	}
 
 	case OPERATOR_CALL: {
-		DeeObject *kw;
-		kw = NULL;
+		DeeObject *kw = NULL;
 		if (DeeArg_Unpack(argc, argv, "o|o:__call__", &other, &kw))
 			goto err;
 		if (DeeObject_AssertTypeExact(other, &DeeTuple_Type))
@@ -696,10 +695,12 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 		if (DeeArg_Unpack(argc, argv, ":__inv__"))
 			goto err;
 		return DeeObject_Inv(self);
+
 	case OPERATOR_POS:
 		if (DeeArg_Unpack(argc, argv, ":__pos__"))
 			goto err;
 		return DeeObject_Pos(self);
+
 	case OPERATOR_NEG:
 		if (DeeArg_Unpack(argc, argv, ":__neg__"))
 			goto err;
@@ -1028,10 +1029,8 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 	}
 
 	case OPERATOR_GETBUF: {
-		bool writable;
-		size_t start, end;
-		writable = false;
-		start = 0, end = (size_t)-1;
+		bool writable = false;
+		size_t start = 0, end = (size_t)-1;
 		if (DeeArg_Unpack(argc, argv, "|b" UNPuSIZ UNPuSIZ ":__getbuf__", &writable, &start, &end))
 			goto err;
 		return DeeObject_Bytes(self,
@@ -1485,7 +1484,7 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
 	}
-	info = Dee_OperatorInfo(self, name);
+	info = Dee_OperatorInfo(Dee_TYPE(self), name);
 	if (info) {
 		do {
 			if (DeeType_GetOpPointer(self, info) != NULL)
@@ -1507,10 +1506,19 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
 		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
 	}
-	info = Dee_OperatorInfo(self, name);
-	return (info != NULL &&
-	        (my_ptr = DeeType_GetOpPointer(self, info)) != NULL &&
-	        (!self->tp_base || my_ptr != DeeType_GetOpPointer(self->tp_base, info)));
+	info = Dee_OperatorInfo(Dee_TYPE(self), name);
+	if (info == NULL)
+		return false; /* No such operator */
+	my_ptr = DeeType_GetOpPointer(self, info);
+	if (my_ptr == NULL)
+		return false; /* Operator not implemented */
+	if (self->tp_base == NULL)
+		return true; /* No base --> operator is private */
+	if (my_ptr != DeeType_GetOpPointer(self->tp_base, info))
+		return true; /* Base has different impl -> operator is private */
+
+	/* Base has same impl -> operator was inherited */
+	return false;
 }
 
 

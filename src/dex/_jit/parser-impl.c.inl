@@ -137,9 +137,9 @@ PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 	DeeTypeObject *typetype;
 	struct opinfo const *info;
-	if (!base)
+	if (!base) {
 		typetype = NULL;
-	else {
+	} else {
 		typetype = Dee_TYPE(base);
 		if (typetype == &DeeSuper_Type)
 			typetype = DeeSuper_TYPE(base);
