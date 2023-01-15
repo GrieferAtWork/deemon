@@ -369,14 +369,14 @@ scfi_bool(StringFindIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst sfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
 	                      offsetof(StringFindIterator, sfi_find),
 	                      "->?Ert:StringFind"),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst scfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
 	                      offsetof(StringFindIterator, sfi_find),
 	                      "->?Ert:StringCaseFind"),
 	TYPE_MEMBER_END
@@ -602,7 +602,7 @@ PRIVATE struct type_member tpconst sf_members[] = {
 };
 
 PRIVATE struct type_member tpconst sf_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringFindIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringFindIterator_Type),
 	TYPE_MEMBER_END
 };
 

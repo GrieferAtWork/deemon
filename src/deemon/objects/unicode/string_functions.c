@@ -10427,7 +10427,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in big-endian&"
 	              "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Encode @this ?. as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
 	              "If the given @codec is not apart of this list, a call is made to ?Ecodecs:encode"),
-	TYPE_METHOD(STR_bytes, &string_bytes,
+	TYPE_METHOD("bytes", &string_bytes,
 	            "(allow_invalid=!f)->?DBytes\n"
 	            "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
 	            "@throw ValueError @allow_invalid is ?f, and @this ?. contains characters above $0xff\n"
@@ -10766,7 +10766,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "(needle:?.,start=!0,end=!-1)->?Dint\n"
 	              "Find the last instance of @needle within ${this.substr(start, end)}, "
 	              "and return its starting index, or ${-1} if no such position exists"),
-	TYPE_KWMETHOD("index", &string_index,
+	TYPE_KWMETHOD(STR_index, &string_index,
 	              "(needle:?.,start=!0,end=!-1)->?Dint\n"
 	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	              "Find the first instance of @needle within ${this.substr(start, end)}, "

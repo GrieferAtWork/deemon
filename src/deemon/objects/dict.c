@@ -651,7 +651,7 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -713,7 +713,7 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
 			result = item->di_value;
 			Dee_Incref(result);
 			DeeDict_LockEndRead(self);
@@ -766,7 +766,7 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen)) {
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
 			DeeDict_LockEndRead(self);
 			return true;
 		}
@@ -844,7 +844,7 @@ again_lock:
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue; /* NOTE: This also captures `dummy' */
-		if (!DeeString_EQUALS_BUF(item->di_key, key, keylen))
+		if (!DeeString_EqualsBuf(item->di_key, key, keylen))
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {
@@ -998,7 +998,7 @@ again:
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (!DeeString_EQUALS_BUF(item->di_key, key, keylen))
+		if (!DeeString_EqualsBuf(item->di_key, key, keylen))
 			continue;
 #ifndef CONFIG_NO_THREADS
 		if (!DeeDict_LockUpgrade(me)) {
@@ -2067,7 +2067,7 @@ INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 	            "->?Dfloat\n"
 	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER(STR___sizeof__, &dict_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &dict_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2075,7 +2075,7 @@ INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 
 INTDEF DeeTypeObject DictIterator_Type;
 PRIVATE struct type_member tpconst dict_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DictIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DictIterator_Type),
 	TYPE_MEMBER_CONST("Proxy", &DeeDictProxy_Type),
 	TYPE_MEMBER_CONST("Keys", &DeeDictKeys_Type),
 	TYPE_MEMBER_CONST("Items", &DeeDictItems_Type),

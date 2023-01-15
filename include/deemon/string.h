@@ -605,31 +605,33 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  * >> local b = string.fromseq({ 0xc4, 0x80 });
  * >> assert a.__str_bytes__ == b.__str_bytes__; // Same str-bytes, but different strings!
  */
-#define DeeString_EQUALS_STR(lhs, rhs)             \
-	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs) && \
-	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs),  \
+#define DeeString_EqualsSTR(lhs, rhs_STR)              \
+	(DeeString_SIZE(lhs) == DeeString_SIZE(rhs_STR) && \
+	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs_STR),  \
 	      DeeString_SIZE(lhs) * sizeof(char)) == 0)
-#define DeeString_STARTSWITH_STR(lhs, rhs)         \
-	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs) && \
-	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs),  \
-	      DeeString_SIZE(rhs) * sizeof(char)) == 0)
-#define DeeString_ENDSWITH_STR(lhs, rhs)            \
-	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs) &&  \
-	 bcmp(DeeString_END(lhs) - DeeString_SIZE(rhs), \
-	      DeeString_STR(rhs), DeeString_SIZE(rhs) * sizeof(char)) == 0)
+#define DeeString_EqualsCStr(lhs, rhs_CStr) \
+	(bcmp(DeeString_STR(lhs), rhs_CStr, (DeeString_SIZE(lhs) + 1) * sizeof(char)) == 0)
+#define DeeString_StartsWithSTR(lhs, rhs_STR)          \
+	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs_STR) && \
+	 bcmp(DeeString_STR(lhs), DeeString_STR(rhs_STR),  \
+	      DeeString_SIZE(rhs_STR) * sizeof(char)) == 0)
+#define DeeString_EndsWithSTR(lhs, rhs_STR)             \
+	(DeeString_SIZE(lhs) >= DeeString_SIZE(rhs_STR) &&  \
+	 bcmp(DeeString_END(lhs) - DeeString_SIZE(rhs_STR), \
+	      DeeString_STR(rhs_STR), DeeString_SIZE(rhs_STR) * sizeof(char)) == 0)
 
 /* FIXME: These macros don't account for `DeeString_STR_ISUTF8()' */
-#define DeeString_EQUALS_BUF(lhs, rhs_base, rhs_size) \
-	(DeeString_SIZE(lhs) == (rhs_size) &&             \
-	 bcmp(DeeString_STR(lhs), rhs_base,               \
+#define DeeString_EqualsBuf(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) == (rhs_size) &&            \
+	 bcmp(DeeString_STR(lhs), rhs_base,              \
 	      DeeString_SIZE(lhs) * sizeof(char)) == 0)
-#define DeeString_STARTSWITH_BUF(lhs, rhs_base, rhs_size) \
-	(DeeString_SIZE(lhs) >= (rhs_size) &&                 \
-	 bcmp(DeeString_STR(lhs), rhs_base,                   \
+#define DeeString_StartsWithBuf(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) >= (rhs_size) &&                \
+	 bcmp(DeeString_STR(lhs), rhs_base,                  \
 	      (rhs_size) * sizeof(char)) == 0)
-#define DeeString_ENDSWITH_BUF(lhs, rhs_base, rhs_size) \
-	(DeeString_SIZE(lhs) >= (rhs_size) &&               \
-	 bcmp(DeeString_END(lhs) - (rhs_size),              \
+#define DeeString_EndsWithBuf(lhs, rhs_base, rhs_size) \
+	(DeeString_SIZE(lhs) >= (rhs_size) &&              \
+	 bcmp(DeeString_END(lhs) - (rhs_size),             \
 	      rhs_base, (rhs_size) * sizeof(char)) == 0)
 
 

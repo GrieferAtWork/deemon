@@ -1004,7 +1004,7 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 	TYPE_GETSET(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring,
 	            "->?Dstring\n"
 	            "Get/set the currently written text string"),
-	TYPE_GETTER(STR___sizeof__, &writer_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &writer_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1742,7 +1742,7 @@ PRIVATE struct type_buffer mapfile_buffer = {
 };
 
 PRIVATE struct type_method tpconst mapfile_methods[] = {
-	TYPE_METHOD(STR_bytes, &mapfile_bytes,
+	TYPE_METHOD("bytes", &mapfile_bytes,
 	            "->?DBytes\n"
 	            "Same as ${Bytes(this)}"),
 	TYPE_METHOD_END

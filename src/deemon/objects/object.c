@@ -2412,10 +2412,10 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            "Returns the class of @this Type, which is usually identical to "
 	            /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
 	            /**/ "returned, rather than the actual Type"),
-	TYPE_GETTER(STR_super, &DeeSuper_Of,
+	TYPE_GETTER("super", &DeeSuper_Of,
 	            "->?Dsuper\n"
 	            "Returns a view for the super-instance of @this object"),
-	TYPE_GETTER(STR___itable__, &instance_get_itable,
+	TYPE_GETTER("__itable__", &instance_get_itable,
 	            "->?AObjectTable?Ert:ClassDescriptor\n"
 	            "Returns an indexable sequence describing the instance object "
 	            /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
@@ -2424,12 +2424,12 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            "The class-attribute table can be accessed through ?A__ctable__?DType"),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
-	TYPE_GETTER(STR_id, &object_id_get,
+	TYPE_GETTER("id", &object_id_get,
 	            "->?Dint\n"
 	            "Returns a unique id identifying @this specific object instance"),
 
 	/* Utility function: Return the size of a given object (in bytes) */
-	TYPE_GETTER(STR___sizeof__, &object_sizeof,
+	TYPE_GETTER("__sizeof__", &object_sizeof,
 	            "->?Dint\n"
 	            "Return the size of @this object in bytes"),
 	TYPE_GETSET_END
@@ -2440,7 +2440,7 @@ PRIVATE struct type_member tpconst object_members[] = {
 	                      "->?DType\nThe type of @this object (same as ${type this})"),
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
 	                      "->?Dint\nThe number of references currently existing for @this object"),
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
 	                      "->?DType\nAlias for ?#type"),
 	TYPE_MEMBER_END
 };
@@ -4118,8 +4118,8 @@ type_gcpriority(DeeObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst type_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base), "->?X2?DType?N"),
 	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FFINAL),
 	TYPE_MEMBER_BITFIELD("isinterrupt", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINTERRUPT),
@@ -4148,7 +4148,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	 *                            followed by its base, and so on. */
 	/* TODO: __mro__->?S?DType    Method Resolution Order. Same as ?#__bases__, but preceded by @this
 	 *                            Type\n${{ this, __bases__... }}  */
-	TYPE_GETTER(STR___class__, &type_get_classdesc,
+	TYPE_GETTER("__class__", &type_get_classdesc,
 	            "->?Ert:ClassDescriptor\n"
 	            "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"
 	            "Returns the internal class-descriptor descriptor for a user-defined class"),
@@ -4164,13 +4164,13 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	            "Return the module used to define @this Type, or ?N if the module cannot "
 	            /**/ "be determined, which may be the case if the Type doesn't have any defining "
 	            /**/ "features such as operators, or class/instance member functions"),
-	TYPE_GETTER(STR___ctable__, &type_get_ctable,
+	TYPE_GETTER("__ctable__", &type_get_ctable,
 	            "->?AObjectTable?Ert:ClassDescriptor\n"
 	            "Returns an indexable sequence describing the class object table, "
 	            /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
 	            "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
 	            "The instance-attribute table can be accessed through ?A__itable__?DObject"),
-	TYPE_GETTER(STR___operators__, &type_get_operators,
+	TYPE_GETTER("__operators__", &type_get_operators,
 	            "->?S?X2?Dstring?Dint\n"
 	            "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
 	            "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"

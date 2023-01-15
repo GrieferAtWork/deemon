@@ -33,6 +33,7 @@
 #include <deemon/thread.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 
 DECL_BEGIN
@@ -476,7 +477,7 @@ PRIVATE struct type_cmp suiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst suiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetUnionIterator, sui_union), "->?Ert:SetUnion"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetUnionIterator, sui_union), "->?Ert:SetUnion"),
 	TYPE_MEMBER_END
 };
 
@@ -630,7 +631,7 @@ PRIVATE struct type_seq su_seq = {
 };
 
 PRIVATE struct type_member tpconst su_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SetUnionIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SetUnionIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -769,7 +770,7 @@ done:
 }
 
 PRIVATE struct type_member tpconst ssditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
 	                      offsetof(SetSymmetricDifferenceIterator, ssd_set),
 	                      "->?Ert:SetSymmetricDifference"),
 	TYPE_MEMBER_END
@@ -884,7 +885,7 @@ PRIVATE struct type_seq ssd_seq = {
 };
 
 PRIVATE struct type_member tpconst ssd_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SetSymmetricDifferenceIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SetSymmetricDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1076,7 +1077,7 @@ PRIVATE struct type_cmp siiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst siiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_other), "->?Dset"),
 	TYPE_MEMBER_END
@@ -1194,7 +1195,7 @@ PRIVATE struct type_seq si_seq = {
 };
 
 PRIVATE struct type_member tpconst si_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SetIntersectionIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SetIntersectionIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1281,7 +1282,7 @@ done:
 }
 
 PRIVATE struct type_member tpconst sditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_other), "->?Dset"),
 	TYPE_MEMBER_END
@@ -1398,7 +1399,7 @@ PRIVATE struct type_seq sd_seq = {
 };
 
 PRIVATE struct type_member tpconst sd_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SetDifferenceIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SetDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };
 

@@ -834,7 +834,7 @@ again:
 		}
 		if (item->si_hash != hash)
 			continue; /* Non-matching hash */
-		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+		if (!DeeString_EqualsBuf(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		existing_key = item->si_key;
 		Dee_Incref(existing_key);
@@ -927,7 +927,7 @@ again:
 		}
 		if (item->si_hash != hash)
 			continue; /* Non-matching hash */
-		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+		if (!DeeString_EqualsBuf(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		DeeHashSet_LockEndRead(me);
 		Dee_XDecref(new_item);
@@ -1010,7 +1010,7 @@ again_lock:
 			continue; /* Non-matching hash */
 		if (!DeeString_Check(old_item))
 			continue; /* Not-a-string. */
-		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+		if (!DeeString_EqualsBuf(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		/* Found it! */
 #ifndef CONFIG_NO_THREADS
@@ -1111,7 +1111,7 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 			continue; /* Not-a-string. */
 		if (DeeString_SIZE(item->si_key) != search_item_length)
 			continue; /* Not-a-string. */
-		if (!DeeString_EQUALS_BUF(item->si_key, search_item, search_item_length))
+		if (!DeeString_EqualsBuf(item->si_key, search_item, search_item_length))
 			continue; /* Differing strings. */
 		DeeHashSet_LockEndRead(me);
 		return true;
@@ -1308,7 +1308,7 @@ DEFINE_ITERATOR_COMPARE(setiterator_ge, >=)
 #undef DEFINE_ITERATOR_COMPARE
 
 PRIVATE struct type_member tpconst setiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?DHashSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?DHashSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1891,12 +1891,12 @@ INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
 	            "->?Dfloat\n"
 	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER(STR___sizeof__, &hashset_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &hashset_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst set_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &HashSetIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &HashSetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
 	TYPE_MEMBER_END
 };

@@ -3556,7 +3556,7 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	TYPE_GETTER("traceback", &DeeThread_Trace,
 	            "->?DTraceback\n"
 	            "Generate a traceback for the thread's current execution position"),
-	TYPE_GETTER(STR_id, &thread_id,
+	TYPE_GETTER("id", &thread_id,
 	            "->?Dint\n"
 	            "@throw ValueError The thread hasn't been started yet\n"
 	            "@throw SystemError The system does not provide a way to query thread ids\n"

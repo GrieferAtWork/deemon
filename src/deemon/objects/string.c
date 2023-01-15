@@ -1017,7 +1017,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst stringiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(StringIterator, si_string), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(StringIterator, si_string), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__width__", STRUCT_CONST | STRUCT_INT, offsetof(StringIterator, si_width)),
 	TYPE_MEMBER_END
 };
@@ -1386,7 +1386,7 @@ PRIVATE struct type_seq string_seq = {
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1675,7 +1675,7 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	            "->?.\n"
 	            "@throw ValueError @this ?. is empty\n"
 	            "Returns the last character of @this ?."),
-	TYPE_GETTER(STR___sizeof__, &string_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &string_sizeof, "->?Dint"),
 
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
 	TYPE_GETTER("__str_bytes__", &string_audit_str_bytes,

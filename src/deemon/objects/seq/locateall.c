@@ -385,7 +385,7 @@ PRIVATE struct type_member tpconst locator_members[] = {
 };
 
 PRIVATE struct type_member tpconst locator_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqLocatorIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqLocatorIterator_Type),
 	TYPE_MEMBER_END
 };
 

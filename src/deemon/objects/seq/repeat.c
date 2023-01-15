@@ -37,6 +37,7 @@
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 
 DECL_BEGIN
@@ -314,7 +315,7 @@ PRIVATE struct type_getset tpconst repeatiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst repeatiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RepeatIterator, ri_rep), "->?Ert:SeqRepeat"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatIterator, ri_rep), "->?Ert:SeqRepeat"),
 	TYPE_MEMBER_END
 };
 
@@ -612,7 +613,7 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 };
 
 PRIVATE struct type_member tpconst repeat_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqRepeatIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -853,7 +854,7 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst repeatitemiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqItemRepeat"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqItemRepeat"),
 	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T, offsetof(RepeatItemIterator, rii_num)),
 	TYPE_MEMBER_END
@@ -1168,7 +1169,7 @@ PRIVATE struct type_member tpconst repeatitem_members[] = {
 };
 
 PRIVATE struct type_member tpconst repeatitem_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqItemRepeatIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqItemRepeatIterator_Type),
 	TYPE_MEMBER_END
 };
 

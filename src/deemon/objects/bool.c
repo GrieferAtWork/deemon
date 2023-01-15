@@ -339,8 +339,8 @@ PRIVATE struct type_cmp bool_cmp = {
 };
 
 PRIVATE struct type_member tpconst bool_class_members[] = {
-	TYPE_MEMBER_CONST("true", Dee_True),
-	TYPE_MEMBER_CONST("false", Dee_False),
+	TYPE_MEMBER_CONST(STR_true, Dee_True),
+	TYPE_MEMBER_CONST(STR_false, Dee_False),
 	TYPE_MEMBER_END
 };
 

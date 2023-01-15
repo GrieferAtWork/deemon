@@ -1794,44 +1794,44 @@ struct Dee_type_getset {
 
 
 /* Member type codes. */
-#define Dee_STRUCT_NONE        0x0000 /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
-#define Dee_STRUCT_OBJECT      0x8001 /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
-#define Dee_STRUCT_WOBJECT     0x0003 /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
-#define Dee_STRUCT_OBJECT_OPT  0x8005 /* `[0..1] DREF DeeObject *' (return `none' if NULL) */
-#define Dee_STRUCT_WOBJECT_OPT 0x0007 /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
-#define Dee_STRUCT_CSTR        0x8010 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
-#define Dee_STRUCT_CSTR_OPT    0x8011 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
-#define Dee_STRUCT_CSTR_EMPTY  0x8012 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
-#define Dee_STRUCT_STRING      0x8013 /* `char[*]' (utf-8) (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_CHAR        0x0014 /* `unsigned char' (latin-1) (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_BOOL8       0x0020 /* `uint8_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL16      0x0021 /* `uint16_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL32      0x0022 /* `uint32_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL64      0x0023 /* `uint64_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT0    0x0030 /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT1    0x0031 /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT2    0x0032 /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT3    0x0033 /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT4    0x0034 /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT5    0x0035 /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT6    0x0036 /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT7    0x0037 /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_NONE        0x0001 /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
+#define Dee_STRUCT_OBJECT      0x8003 /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
+#define Dee_STRUCT_WOBJECT     0x0007 /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
+#define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *' (return `none' if NULL) */
+#define Dee_STRUCT_WOBJECT_OPT 0x000f /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
+#define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
+#define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
+#define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
+#define Dee_STRUCT_STRING      0x8027 /* `char[*]' (utf-8) (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_CHAR        0x0029 /* `unsigned char' (latin-1) (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_BOOL8       0x0041 /* `uint8_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL16      0x0043 /* `uint16_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL32      0x0045 /* `uint32_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL64      0x0047 /* `uint64_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT0    0x0061 /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT1    0x0063 /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT2    0x0065 /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT3    0x0067 /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT4    0x0069 /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT5    0x006b /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT6    0x006d /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT7    0x006f /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
 #define Dee_STRUCT_BOOLBIT(mask)                                                   \
 	((mask) == 0x80 ? Dee_STRUCT_BOOLBIT7 : (mask) == 0x40 ? Dee_STRUCT_BOOLBIT6 : \
 	 (mask) == 0x20 ? Dee_STRUCT_BOOLBIT5 : (mask) == 0x10 ? Dee_STRUCT_BOOLBIT4 : \
 	 (mask) == 0x08 ? Dee_STRUCT_BOOLBIT3 : (mask) == 0x04 ? Dee_STRUCT_BOOLBIT2 : \
 	 (mask) == 0x02 ? Dee_STRUCT_BOOLBIT1 : Dee_STRUCT_BOOLBIT0)
 #define Dee_STRUCT_BOOLBITMASK(type) (1 << ((type) - Dee_STRUCT_BOOLBIT0))
-#define Dee_STRUCT_FLOAT       0x0040 /* `float' */
-#define Dee_STRUCT_DOUBLE      0x0041 /* `double' */
-#define Dee_STRUCT_LDOUBLE     0x0042 /* `long double' */
+#define Dee_STRUCT_FLOAT       0x0081 /* `float' */
+#define Dee_STRUCT_DOUBLE      0x0083 /* `double' */
+#define Dee_STRUCT_LDOUBLE     0x0085 /* `long double' */
 #define Dee_STRUCT_VOID        Dee_STRUCT_NONE /* `void' */
-#define Dee_STRUCT_INT8        0x0800 /* `int8_t' */
-#define Dee_STRUCT_INT16       0x0801 /* `int16_t' */
-#define Dee_STRUCT_INT32       0x0802 /* `int32_t' */
-#define Dee_STRUCT_INT64       0x0803 /* `int64_t' */
-#define Dee_STRUCT_INT128      0x0804 /* `Dee_int128_t' */
-#define Dee_STRUCT_UNSIGNED    0x0008 /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
+#define Dee_STRUCT_INT8        0x1001 /* `int8_t' */
+#define Dee_STRUCT_INT16       0x1003 /* `int16_t' */
+#define Dee_STRUCT_INT32       0x1005 /* `int32_t' */
+#define Dee_STRUCT_INT64       0x1007 /* `int64_t' */
+#define Dee_STRUCT_INT128      0x1009 /* `Dee_int128_t' */
+#define Dee_STRUCT_UNSIGNED    0x0010 /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
 #define Dee_STRUCT_ATOMIC      0x4000 /* FLAG: Atomic read/write access (Use with `STRUCT_INT*'). */
 #define Dee_STRUCT_CONST       0x8000 /* FLAG: Read-only field. */
 
@@ -1916,21 +1916,12 @@ struct Dee_type_member {
 	union {
 		DeeObject        *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
 		struct {
-			/* TODO: Use bit0=0 to indicate that m_const is used, and bit0=1 for offset-based!
-			 *       We can always assume an alignment of at least 2 bytes for `m_const', so
-			 *       this can always be done safely.
-			 * NOTE: Do still include a CONFIG option to use the m_name[-1]-method, though.
-			 *       Just in case there is some platform where pointers aren't at least 2-byte
-			 *       aligned... */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
-			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#if __SIZEOF_POINTER__ > 4
-			uint16_t      m_pad[(__SIZEOF_POINTER__ - 2) / 2]; /* ... */
-#endif /* __SIZEOF_POINTER__ > 4 */
-			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
-			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
 #endif /* !... */
 		}                 m_field;
 	}
@@ -1943,54 +1934,54 @@ struct Dee_type_member {
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 };
 
-#define Dee_TYPE_MEMBER_ISCONST(x) ((x)->m_name[-1] == '!')
-#define Dee_TYPE_MEMBER_ISFIELD(x) ((x)->m_name[-1] != '!')
+#define Dee_TYPE_MEMBER_ISCONST(x) (((x)->m_field.m_type & 1) == 0)
+#define Dee_TYPE_MEMBER_ISFIELD(x) (((x)->m_field.m_type & 1) != 0)
 #define Dee_TYPE_MEMBER_END \
 	{ NULL }
 #define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
-	{ ("\0" name) + 1, { (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }, DOC(doc) }
+	{ name, { (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }, DOC(doc) }
 #define Dee_TYPE_MEMBER_CONST_DOC(name, value, doc) \
-	{ ("!" name) + 1, { (DeeObject *)Dee_REQUIRES_OBJECT(value) }, DOC(doc) }
+	{ name, { (DeeObject *)Dee_REQUIRES_OBJECT(value) }, DOC(doc) }
 #define Dee_TYPE_MEMBER_FIELD(name, type, offset) Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, NULL)
 #define Dee_TYPE_MEMBER_CONST(name, value) Dee_TYPE_MEMBER_CONST_DOC(name, value, NULL)
 
 #ifdef UINT64_C
-#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, err)                                               \
-	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                                      \
-	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000) ||                             \
-	  (mask) == UINT64_C(0x0100000000) || (mask) == UINT64_C(0x010000000000) ||                     \
-	  (mask) == UINT64_C(0x01000000000000) || (mask) == UINT64_C(0x0100000000000000))               \
-	 ? Dee_STRUCT_BOOLBIT0                                                                          \
-	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                                    \
-	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000) ||                           \
-	    (mask) == UINT64_C(0x0200000000) || (mask) == UINT64_C(0x020000000000) ||                   \
-	    (mask) == UINT64_C(0x02000000000000) || (mask) == UINT64_C(0x0200000000000000))             \
-	   ? Dee_STRUCT_BOOLBIT1                                                                        \
-	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                                  \
-	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000) ||                         \
-	      (mask) == UINT64_C(0x0400000000) || (mask) == UINT64_C(0x040000000000) ||                 \
-	      (mask) == UINT64_C(0x04000000000000) || (mask) == UINT64_C(0x0400000000000000))           \
-	     ? Dee_STRUCT_BOOLBIT2                                                                      \
-	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||                                \
-	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000) ||                       \
-	        (mask) == UINT64_C(0x0800000000) || (mask) == UINT64_C(0x080000000000) ||               \
-	        (mask) == UINT64_C(0x08000000000000) || (mask) == UINT64_C(0x0800000000000000))         \
-	       ? Dee_STRUCT_BOOLBIT3                                                                    \
-	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||                              \
-	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000) ||                     \
-	          (mask) == UINT64_C(0x1000000000) || (mask) == UINT64_C(0x100000000000) ||             \
-	          (mask) == UINT64_C(0x10000000000000) || (mask) == UINT64_C(0x1000000000000000))       \
-	         ? Dee_STRUCT_BOOLBIT4                                                                  \
-	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||                            \
-	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000) ||                   \
-	            (mask) == UINT64_C(0x2000000000) || (mask) == UINT64_C(0x200000000000) ||           \
-	            (mask) == UINT64_C(0x20000000000000) || (mask) == UINT64_C(0x2000000000000000))     \
-	           ? Dee_STRUCT_BOOLBIT5                                                                \
-	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||                          \
-	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000) ||                 \
-	              (mask) == UINT64_C(0x4000000000) || (mask) == UINT64_C(0x400000000000) ||         \
-	              (mask) == UINT64_C(0x40000000000000) || (mask) == UINT64_C(0x4000000000000000))   \
-	             ? Dee_STRUCT_BOOLBIT6                                                              \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, err)                                             \
+	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                                    \
+	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000) ||                           \
+	  (mask) == UINT64_C(0x0100000000) || (mask) == UINT64_C(0x010000000000) ||                   \
+	  (mask) == UINT64_C(0x01000000000000) || (mask) == UINT64_C(0x0100000000000000))             \
+	 ? Dee_STRUCT_BOOLBIT0                                                                        \
+	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                                  \
+	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000) ||                         \
+	    (mask) == UINT64_C(0x0200000000) || (mask) == UINT64_C(0x020000000000) ||                 \
+	    (mask) == UINT64_C(0x02000000000000) || (mask) == UINT64_C(0x0200000000000000))           \
+	   ? Dee_STRUCT_BOOLBIT1                                                                      \
+	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                                \
+	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000) ||                       \
+	      (mask) == UINT64_C(0x0400000000) || (mask) == UINT64_C(0x040000000000) ||               \
+	      (mask) == UINT64_C(0x04000000000000) || (mask) == UINT64_C(0x0400000000000000))         \
+	     ? Dee_STRUCT_BOOLBIT2                                                                    \
+	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||                              \
+	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000) ||                     \
+	        (mask) == UINT64_C(0x0800000000) || (mask) == UINT64_C(0x080000000000) ||             \
+	        (mask) == UINT64_C(0x08000000000000) || (mask) == UINT64_C(0x0800000000000000))       \
+	       ? Dee_STRUCT_BOOLBIT3                                                                  \
+	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||                            \
+	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000) ||                   \
+	          (mask) == UINT64_C(0x1000000000) || (mask) == UINT64_C(0x100000000000) ||           \
+	          (mask) == UINT64_C(0x10000000000000) || (mask) == UINT64_C(0x1000000000000000))     \
+	         ? Dee_STRUCT_BOOLBIT4                                                                \
+	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||                          \
+	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000) ||                 \
+	            (mask) == UINT64_C(0x2000000000) || (mask) == UINT64_C(0x200000000000) ||         \
+	            (mask) == UINT64_C(0x20000000000000) || (mask) == UINT64_C(0x2000000000000000))   \
+	           ? Dee_STRUCT_BOOLBIT5                                                              \
+	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||                        \
+	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000) ||               \
+	              (mask) == UINT64_C(0x4000000000) || (mask) == UINT64_C(0x400000000000) ||       \
+	              (mask) == UINT64_C(0x40000000000000) || (mask) == UINT64_C(0x4000000000000000)) \
+	             ? Dee_STRUCT_BOOLBIT6                                                            \
 	             : err)
 #ifdef __INTELLISENSE__
 #define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask, err)                                       \

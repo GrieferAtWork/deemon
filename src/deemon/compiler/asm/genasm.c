@@ -508,7 +508,7 @@ get_module_symbol(DeeModuleObject *__restrict module,
 			break; /* Not found */
 		if (item->ss_hash != hash)
 			continue; /* Non-matching hash */
-		if (!MODULE_SYMBOL_EQUALS(item, DeeString_STR(name), DeeString_SIZE(name)))
+		if (!DeeString_EqualsCStr(name, item->ss_name))
 			continue; /* Differing strings. */
 		return item;  /* Found it! */
 	}

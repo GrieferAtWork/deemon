@@ -518,19 +518,19 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	TYPE_GETTER(STR___module__, &function_get_module,
 	            "->?DModule\n"
 	            "Return the module as part of which @this function's code was originally written"),
-	TYPE_GETTER(STR___operator__, &function_get_operator,
+	TYPE_GETTER("__operator__", &function_get_operator,
 	            "->?X2?Dint?N\n"
 	            "Try to determine if @this function is defined as part of a user-defined class, "
 	            /**/ "and if so, if it is used to define an operator callback. If that is the case, "
 	            /**/ "return the internal ID of the operator that @this function provides, or ?N "
 	            /**/ "if that class couldn't be found, @this function is defined as stand-alone, or "
 	            /**/ "defined as a class- or instance-method"),
-	TYPE_GETTER(STR___operatorname__, &function_get_operatorname,
+	TYPE_GETTER("__operatorname__", &function_get_operatorname,
 	            "->?X3?Dstring?Dint?N\n"
 	            "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	            /**/ "operator, though still return its ID if the operator isn't recognized as being "
 	            /**/ "part of the standard"),
-	TYPE_GETTER(STR___property__, &function_get_property,
+	TYPE_GETTER("__property__", &function_get_property,
 	            "->?X2?Dint?N\n"
 	            "Returns an integer describing the kind if @this function is part of a property or getset, "
 	            /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
@@ -540,7 +540,7 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	            /**/ "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
 	            /**/ "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
 	            "}"),
-	TYPE_GETTER(STR___refs__, &function_get_refs,
+	TYPE_GETTER("__refs__", &function_get_refs,
 	            "->?S?O\n"
 	            "Returns a sequence of all of the references used by @this function"),
 	TYPE_GETTER(STR___kwds__, &function_get_kwds,
@@ -1012,7 +1012,7 @@ PRIVATE struct type_seq yf_seq = {
 };
 
 PRIVATE struct type_member tpconst yf_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeYieldFunctionIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeYieldFunctionIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1142,7 +1142,7 @@ yf_get_kwds(YFunction *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst yf_getsets[] = {
-	TYPE_GETTER(STR___code__, &yf_get_code,
+	TYPE_GETTER("__code__", &yf_get_code,
 	            "->?Ert:Code\n"
 	            "Alias for :Function.__code__ though ?#__func__"),
 	TYPE_GETTER(STR___name__, &yf_get_name,
@@ -1157,16 +1157,16 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	TYPE_GETTER(STR___module__, &yf_get_module,
 	            "->?DModule\n"
 	            "Alias for :Function.__module__ though ?#__func__"),
-	TYPE_GETTER(STR___operator__, &yf_get_operator,
+	TYPE_GETTER("__operator__", &yf_get_operator,
 	            "->?X2?Dint?N\n"
 	            "Alias for :Function.__operator__ though ?#__func__"),
-	TYPE_GETTER(STR___operatorname__, &yf_get_operatorname,
+	TYPE_GETTER("__operatorname__", &yf_get_operatorname,
 	            "->?X3?Dstring?Dint?N\n"
 	            "Alias for :Function.__operatorname__ though ?#__func__"),
-	TYPE_GETTER(STR___property__, &yf_get_property,
+	TYPE_GETTER("__property__", &yf_get_property,
 	            "->?X2?Dint?N\n"
 	            "Alias for :Function.__property__ though ?#__func__"),
-	TYPE_GETTER(STR___refs__, &yf_get_refs,
+	TYPE_GETTER("__refs__", &yf_get_refs,
 	            "->?S?O\n"
 	            "Alias for :Function.__refs__ though ?#__func__"),
 	TYPE_GETTER(STR___kwds__, &yf_get_kwds,
@@ -1689,7 +1689,7 @@ yfi_getthis(YFIterator *__restrict self) {
 	Dee_XIncref(result);
 	recursive_rwlock_endread(&self->yi_lock);
 	if unlikely(!result)
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___this__);
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__this__");
 	return result;
 }
 
@@ -1709,7 +1709,7 @@ yfi_getfunc(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___func__);
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__func__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func;
@@ -1724,7 +1724,7 @@ yfi_getcode(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___code__);
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__code__");
 		return NULL;
 	}
 	result = self->yi_func->yf_func->fo_code;
@@ -1740,7 +1740,7 @@ yfi_getrefs(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___refs__);
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__refs__");
 		return NULL;
 	}
 	func = self->yi_func->yf_func;
@@ -1775,7 +1775,7 @@ yfi_getargs(YFIterator *__restrict self) {
 	recursive_rwlock_write(&self->yi_lock);
 	if unlikely(!self->yi_func) {
 		recursive_rwlock_endwrite(&self->yi_lock);
-		err_unbound_attribute(&DeeYieldFunctionIterator_Type, STR___args__);
+		err_unbound_attribute(&DeeYieldFunctionIterator_Type, "__args__");
 		return NULL;
 	}
 	result = (DeeObject *)self->yi_func->yf_args;
@@ -1860,7 +1860,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getoperator(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
-	func = yfi_get_func_reference(self, STR___operator__);
+	func = yfi_get_func_reference(self, "__operator__");
 	if unlikely(!func)
 		goto err;
 	result = yf_get_operator(func);
@@ -1874,7 +1874,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getoperatorname(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
-	func = yfi_get_func_reference(self, STR___operatorname__);
+	func = yfi_get_func_reference(self, "__operatorname__");
 	if unlikely(!func)
 		goto err;
 	result = yf_get_operatorname(func);
@@ -1888,7 +1888,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_getproperty(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
-	func = yfi_get_func_reference(self, STR___property__);
+	func = yfi_get_func_reference(self, "__property__");
 	if unlikely(!func)
 		goto err;
 	result = yf_get_property(func);
@@ -1905,27 +1905,27 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	            "->?S?O\n"
 	            "Alias for ?#__yfunc__"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER(STR___frame__, &yfi_getframe,
+	TYPE_GETTER("__frame__", &yfi_getframe,
 	            "->?Dframe\n"
 	            "The execution stack-frame representing the current state of the iterator"),
-	TYPE_GETTER(STR___this__, &yfi_getthis,
+	TYPE_GETTER("__this__", &yfi_getthis,
 	            "@throw UnboundAttribute No $this-argument available\n"
 	            "The $this-argument used during execution"),
 #ifndef CONFIG_NO_THREADS
-	TYPE_GETTER(STR___yfunc__, &yfi_getyfunc,
+	TYPE_GETTER("__yfunc__", &yfi_getyfunc,
 	            "->?Ert:YieldFunction\n"
 	            "The underlying yield-function, describing the ?DFunction and arguments that are being executed"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER(STR___func__, &yfi_getfunc,
+	TYPE_GETTER("__func__", &yfi_getfunc,
 	            "->?Dfunction\n"
 	            "The function that is being executed"),
-	TYPE_GETTER(STR___code__, &yfi_getcode,
+	TYPE_GETTER("__code__", &yfi_getcode,
 	            "->?Ert:Code\n"
 	            "The code object that is being executed"),
-	TYPE_GETTER(STR___refs__, &yfi_getrefs,
+	TYPE_GETTER("__refs__", &yfi_getrefs,
 	            "->?S?O\n"
 	            "Returns a sequence of all of the references used by the function"),
-	TYPE_GETTER(STR___args__, &yfi_getargs,
+	TYPE_GETTER("__args__", &yfi_getargs,
 	            "->?S?O\n"
 	            "Returns a sequence representing the positional arguments passed to the function"),
 	TYPE_GETTER(STR___name__, &yfi_getname,
@@ -1943,13 +1943,13 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	TYPE_GETTER(STR___module__, &yfi_getmodule,
 	            "->?DModule\n"
 	            "Alias for ?A__module__?DFunction though ?#__func__"),
-	TYPE_GETTER(STR___operator__, &yfi_getoperator,
+	TYPE_GETTER("__operator__", &yfi_getoperator,
 	            "->?X2?Dint?N\n"
 	            "Alias for ?A__operator__?DFunction though ?#__func__"),
-	TYPE_GETTER(STR___operatorname__, &yfi_getoperatorname,
+	TYPE_GETTER("__operatorname__", &yfi_getoperatorname,
 	            "->?X3?Dstring?Dint?N\n"
 	            "Alias for ?A__operatorname__?DFunction though ?#__func__"),
-	TYPE_GETTER(STR___property__, &yfi_getproperty,
+	TYPE_GETTER("__property__", &yfi_getproperty,
 	            "->?X2?Dint?N\n"
 	            "Alias for ?A__property__?DFunction though ?#__func__"),
 	TYPE_GETSET_END
@@ -1957,7 +1957,7 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 
 #ifdef CONFIG_NO_THREADS
 PRIVATE struct type_member tpconst yfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
 	                      "Alias for ?#__yfunc__"),
 	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YFIterator, yi_func),

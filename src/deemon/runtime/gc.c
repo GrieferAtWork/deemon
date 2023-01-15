@@ -1465,7 +1465,7 @@ gciter_next(GCIter *__restrict self) {
 
 
 PRIVATE struct type_member tpconst gciter_members[] = {
-	TYPE_MEMBER_CONST("seq", &DeeGCEnumTracked_Singleton),
+	TYPE_MEMBER_CONST(STR_seq, &DeeGCEnumTracked_Singleton),
 	TYPE_MEMBER_END
 };
 
@@ -1583,7 +1583,7 @@ PRIVATE struct type_seq gcenum_seq = {
 };
 
 PRIVATE struct type_member tpconst gcenum_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &GCIter_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type),
 	TYPE_MEMBER_END
 };
 

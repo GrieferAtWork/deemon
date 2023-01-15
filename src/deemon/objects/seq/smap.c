@@ -212,7 +212,7 @@ INTDEF struct type_cmp sveciter_cmp;
 #define smapiter_cmp sveciter_cmp
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SharedMapIterator, sm_seq), "->?Ert:SharedMap"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, sm_seq), "->?Ert:SharedMap"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedMapIterator, sm_index)),
 	TYPE_MEMBER_END
 };
@@ -675,7 +675,7 @@ PRIVATE struct type_seq smap_seq = {
 };
 
 PRIVATE struct type_member tpconst smap_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SharedMapIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SharedMapIterator_Type),
 	TYPE_MEMBER_END
 };
 

@@ -3658,7 +3658,7 @@ err_neg_or_zero:
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	TYPE_GETTER(STR___sizeof__, &int_sizeof, "->?."),
+	TYPE_GETTER("__sizeof__", &int_sizeof, "->?."),
 	TYPE_GETTER("abs", &int_get_abs, "->?."),
 	TYPE_GETTER("trunc", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("floor", &DeeObject_NewRef, "->?."),

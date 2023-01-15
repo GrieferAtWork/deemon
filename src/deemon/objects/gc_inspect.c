@@ -34,6 +34,8 @@
 
 #include <hybrid/atomic.h>
 
+#include "../runtime/strings.h"
+
 DECL_BEGIN
 
 /* GC inspection provides things such as sequences implemented using the `tp_visit'
@@ -145,7 +147,7 @@ gcsetiterator_bool(GCSetIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst gcset_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(GCSetIterator, gsi_set), "->?Ert:GCSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(GCSetIterator, gsi_set), "->?Ert:GCSet"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(GCSetIterator, gsi_index)),
 	TYPE_MEMBER_END
 };
@@ -317,7 +319,7 @@ PRIVATE struct type_seq gcset_seq = {
 };
 
 PRIVATE struct type_member tpconst gcset_class_members[] = {
-    TYPE_MEMBER_CONST("Iterator", &DeeGCSetIterator_Type),
+    TYPE_MEMBER_CONST(STR_Iterator, &DeeGCSetIterator_Type),
     TYPE_MEMBER_END
 };
 

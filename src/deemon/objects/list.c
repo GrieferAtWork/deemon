@@ -3088,7 +3088,7 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETTER("frozen", &list_get_frozen,
 	            "->?DTuple\n"
 	            "Return a copy of the contents of @this List as an immutable sequence"),
-	TYPE_GETTER(STR___sizeof__, &list_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &list_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -3380,7 +3380,7 @@ PRIVATE struct type_math list_math = {
 };
 
 PRIVATE struct type_member tpconst list_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeListIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeListIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeTuple_Type),
 	TYPE_MEMBER_END
 };
@@ -4150,8 +4150,8 @@ PRIVATE struct type_cmp li_cmp = {
 };
 
 PRIVATE struct type_member tpconst li_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(ListIterator, li_list), "->?DList"),
-	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(ListIterator, li_index)),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(ListIterator, li_list), "->?DList"),
+	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(ListIterator, li_index)),
 	TYPE_MEMBER_END
 };
 

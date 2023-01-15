@@ -253,7 +253,7 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 
 
 PRIVATE struct type_member tpconst seg_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqSegmentsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_END
 };
 

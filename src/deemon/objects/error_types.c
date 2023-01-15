@@ -507,7 +507,7 @@ INIT_CUSTOM_ERROR("ThreadCrash", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_E
 
 /* BEGIN::NoMemory */
 PRIVATE struct type_member tpconst nomemory_members[] = {
-	TYPE_MEMBER_FIELD("size", STRUCT_SIZE_T, offsetof(DeeNoMemoryErrorObject, nm_allocsize)),
+	TYPE_MEMBER_FIELD(STR_size, STRUCT_SIZE_T, offsetof(DeeNoMemoryErrorObject, nm_allocsize)),
 	TYPE_MEMBER_END
 };
 

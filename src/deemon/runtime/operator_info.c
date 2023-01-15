@@ -1562,7 +1562,7 @@ STATIC_ASSERT(offsetof(TypeOperatorsIterator, to_type) ==
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 to_str(TypeOperators *__restrict self) {
 	return DeeString_Newf("Operator %ss for %k",
-	                      self->to_name ? STR_name : STR_id,
+	                      self->to_name ? "name" : "id",
 	                      self->to_type);
 }
 
@@ -1570,7 +1570,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 to_repr(TypeOperators *__restrict self) {
 	return DeeString_Newf("%r.__operator%ss__",
 	                      self->to_type,
-	                      self->to_name ? "" : STR_id);
+	                      self->to_name ? "" : "id");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF TypeOperatorsIterator *DCALL
@@ -1613,7 +1613,7 @@ PRIVATE struct type_seq to_seq = {
 };
 
 PRIVATE struct type_member tpconst to_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &TypeOperatorsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &TypeOperatorsIterator_Type),
 	TYPE_MEMBER_END
 };
 

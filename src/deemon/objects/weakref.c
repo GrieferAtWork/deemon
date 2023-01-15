@@ -343,7 +343,7 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	TYPE_GETSET(STR_value, &ob_weakref_get, &ob_weakref_del, &ob_weakref_set,
+	TYPE_GETSET("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set,
 	            "@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
 	            "@throw ValueError Attempted to set an object that does not support weak referencing\n"
 	            "Access to the referenced object"),

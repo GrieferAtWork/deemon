@@ -89,7 +89,7 @@ kwds_find_index(DeeKwdsObject *__restrict self,
 			break;
 		if (entry->ke_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(entry->ke_name, name))
+		if (DeeString_EqualsSTR(entry->ke_name, name))
 			return entry->ke_index;
 	}
 	return (size_t)-1;

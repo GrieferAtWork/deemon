@@ -1845,7 +1845,7 @@ PRIVATE DEFINE_UINT32(file_SEEK_END, SEEK_END);
 
 
 PRIVATE struct type_member tpconst file_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", (DeeObject *)&DeeFile_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, (DeeObject *)&DeeFile_Type),
 	TYPE_MEMBER_CONST("Reader", (DeeObject *)&DeeFileReader_Type),
 	TYPE_MEMBER_CONST("Writer", (DeeObject *)&DeeFileWriter_Type),
 	TYPE_MEMBER_CONST("Buffer", (DeeObject *)&DeeFileBuffer_Type),
@@ -2390,7 +2390,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            &file_tell,
 	            "->?Dint\n"
 	            "Same as calling ?#seek as ${this.seek(0, \"CUR\")}"),
-	TYPE_METHOD("rewind", &file_rewind,
+	TYPE_METHOD(STR_rewind, &file_rewind,
 	            "()\n"
 	            "Same as calling ?#seek as ${this.seek(0, \"SET\")}"),
 	TYPE_METHOD("trunc", &file_trunc,

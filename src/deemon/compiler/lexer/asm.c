@@ -550,13 +550,11 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 			++name, --size;
 		while (size && name[size - 1] == '_')
 			--size;
-		if (size == COMPILER_STRLEN("volatile") &&
-		    bcmpc(name, "volatile", size, sizeof(char)) == 0) {
+		if (size == 8 && bcmpc(name, "volatile", 8, sizeof(char)) == 0) {
 			ast_flags |= AST_FASSEMBLY_VOLATILE;
 			goto yield_prefix;
 		}
-		if (size == 4 && bcmpc(name, DeeString_STR(&str_goto),
-		                       size, sizeof(char)) == 0) {
+		if (size == 4 && bcmpc(name, STR_goto, 4, sizeof(char)) == 0) {
 			is_asm_goto = true;
 			goto yield_prefix;
 		}

@@ -265,7 +265,7 @@ PRIVATE struct type_getset tpconst symbol_getsets[] = {
 	            /**/ "$myfunc|Read-only access to the function currently being executed&"
 	            /**/ "$const|Access to a constant expression"
 	            "}"),
-	TYPE_GETTER(STR_name, &symbol_name,
+	TYPE_GETTER("name", &symbol_name,
 	            "->?Dstring\n"
 	            "Returns the name of @this symbol"),
 	TYPE_GETSET_END

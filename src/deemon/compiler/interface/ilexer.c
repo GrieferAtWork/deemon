@@ -666,10 +666,10 @@ done:
 
 
 PRIVATE struct type_getset tpconst keyword_getsets[] = {
-	TYPE_GETTER(STR_id, &keyword_id,
+	TYPE_GETTER("id", &keyword_id,
 	            "->?Dint\n"
 	            "Returns the ID of @this keyword"),
-	TYPE_GETTER(STR_name, &keyword_str,
+	TYPE_GETTER("name", &keyword_str,
 	            "->?Dstring\n"
 	            "Returns the name of @this keyword. Same as ?#{op:str}"),
 	TYPE_GETTER("hash", &keyword_hash,
@@ -1509,7 +1509,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "->?Dbool\n"
 	            "Returns ?t if the current token is located at the "
 	            /**/ "start of a line, optionally prefixed by whitespace"),
-	TYPE_GETSET(STR_flags, &lexer_get_flags, NULL, &lexer_set_flags,
+	TYPE_GETSET("flags", &lexer_get_flags, NULL, &lexer_set_flags,
 	            "->?Dint\n"
 	            "Get or set the current general purpose lexer configuration as a whole\n"
 	            "The individual bits in the returned integer are prone to getting changed, "
@@ -1845,7 +1845,7 @@ PRIVATE struct type_member tpconst lexer_class_members[] = {
 	TYPE_MEMBER_CONST("SysPaths", &DeeCompilerLexerSyspaths_Type),
 	TYPE_MEMBER_CONST("Ifdef", &DeeCompilerLexerIfdef_Type),
 	TYPE_MEMBER_CONST("Token", &DeeCompilerLexerToken_Type),
-	TYPE_MEMBER_CONST("File", &DeeCompilerFile_Type),
+	TYPE_MEMBER_CONST(STR_File, &DeeCompilerFile_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2300,7 +2300,7 @@ PRIVATE struct type_method tpconst lexer_methods[] = {
 	TYPE_METHOD("nextpp", &lexer_nextpp,
 	            "->?Dint\n"
 	            "Load the next token and return its id (no macros are processed)"),
-	TYPE_METHOD(STR_next, &lexer_next,
+	TYPE_METHOD("next", &lexer_next,
 	            "->?Dint\n"
 	            "Load the next token and return its id"),
 	TYPE_METHOD("nextraw_nb", &lexer_nextraw_nb,
@@ -2663,7 +2663,7 @@ err:
 }
 
 PRIVATE struct type_method tpconst lexer_syspaths_methods[] = {
-	TYPE_METHOD(STR_push, &lexer_syspaths_push,
+	TYPE_METHOD("push", &lexer_syspaths_push,
 	            "()\n"
 	            "Push (remember) the current state of system include paths\n"
 	            "This is the same as using ${##pragma TPP include_path(push)}"),
@@ -3007,7 +3007,7 @@ PRIVATE struct type_getset tpconst lexer_token_getsets[] = {
 	            "->?Dstring\n"
 	            "Returns the raw textual representation of the current token\n"
 	            "Escaped linefeeds found in the original source are included in the returned string"),
-	TYPE_GETSET(STR_id, &token_id, &token_delid, &token_setid,
+	TYPE_GETSET("id", &token_id, &token_delid, &token_setid,
 	            "->?Dint\n"
 	            "Get, del (set to $0), or set the id (kind) of the current token"),
 	TYPE_GETSET("num", &token_num, &token_delnum, &token_setnum,
@@ -4392,7 +4392,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            /**/ "containing the definition of the @this macro\n"
 	            "This is the original, real filename, whereas the name returned by ?#Filename "
 	            /**/ "is the one which may have been overwritten by a ${##line} directive"),
-	TYPE_GETTER(STR_name, &file_name,
+	TYPE_GETTER("name", &file_name,
 	            "->?Dstring\n"
 	            "Returns the name of @this File, that is the filename, or in the event of @this "
 	            /**/ "file being a macro, the name of that macro"),
@@ -4588,11 +4588,11 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              "(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
 	              "@return Returns ?t if data was read, or ?f if the EOF of the input stream has been reached\n"
 	              "Try to load the next, or @extend the current chunk of loaded data, by reading a "
-	              "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "
-	              "but read data as-is, without decoding it. When @nonblocking is ?t, and the "
-	              "?#nonblocking is ?t as well, try to read data without blocking when waiting for "
-	              "new data, thus potentially returning ?f, even when the actual end-of-file hasn't "
-	              "been reached, yet"),
+	              /**/ "new chunk from ?#stream. When @binary is ?t, don't try to decode unicode data, "
+	              /**/ "but read data as-is, without decoding it. When @nonblocking is ?t, and the "
+	              /**/ "?#nonblocking is ?t as well, try to read data without blocking when waiting for "
+	              /**/ "new data, thus potentially returning ?f, even when the actual end-of-file hasn't "
+	              /**/ "been reached, yet"),
 	TYPE_METHOD_END
 };
 

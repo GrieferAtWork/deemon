@@ -306,7 +306,7 @@ PRIVATE struct type_cmp cell_cmp = {
 
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
-	TYPE_GETSET(STR_value, &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
+	TYPE_GETSET("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set,
 	            "@throw UnboundAttribute Attempted to read from an empty Cell\n"
 	            "Read/write access to the underlying, contained ?O"),
 	TYPE_GETSET_END
@@ -461,7 +461,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 
 	            "(def)->\n"
 	            "Returns the contained value of the Cell or @def when it is empty"),
-	TYPE_METHOD(STR_delete, &cell_delete,
+	TYPE_METHOD("delete", &cell_delete,
 	            "->?Dbool\n"
 	            "Delete the value stored in @this Cell, returning ?t if "
 	            /**/ "the Cell wasn't empty before, or ?f if it already was"),
@@ -516,10 +516,10 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	            /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
 	            "When @new_value is omit, the function behaves identical to ?#cmpdel"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD(STR_del, &cell_delete,
+	TYPE_METHOD("del", &cell_delete,
 	            "->?Dbool\n"
 	            "Deprecated alias for ?#delete"),
-	TYPE_METHOD(STR_exchange, &cell_xch,
+	TYPE_METHOD("exchange", &cell_xch,
 	            "(value)->\n"
 	            "(value,def)->\n"
 	            "Deprecated alias for ?#xch"),

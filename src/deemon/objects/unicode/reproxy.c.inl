@@ -339,8 +339,8 @@ PRIVATE struct type_getset tpconst rebfaiter_getsets[] = {
 PRIVATE struct type_member tpconst refaiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__input__", STRUCT_OBJECT, offsetof(ReSequenceIterator, rsi_data), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequenceIterator, rsi_exec.rx_pattern), "->?Dstring"),
-	TYPE_MEMBER_FIELD("__startoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_startoff)),
-	TYPE_MEMBER_FIELD("__endoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_endoff)),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_startoff)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_endoff)),
 	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
 	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
@@ -1318,20 +1318,20 @@ PRIVATE struct type_seq rebfa_seq = {
 PRIVATE struct type_member tpconst refa_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__input__", STRUCT_OBJECT, offsetof(ReSequence, rs_data), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequence, rs_exec.rx_pattern), "->?Dstring"),
-	TYPE_MEMBER_FIELD("__startoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_startoff)),
-	TYPE_MEMBER_FIELD("__endoff__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_endoff)),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_startoff)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_endoff)),
 	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
 	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst refa_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReFindAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rebfa_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReBytesFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReBytesFindAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1501,12 +1501,12 @@ PRIVATE struct type_seq regbfa_seq = {
 };
 
 PRIVATE struct type_member tpconst regfa_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &RegFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &RegFindAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst regbfa_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &RegBytesFindAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &RegBytesFindAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1676,12 +1676,12 @@ PRIVATE struct type_seq rebla_seq = {
 };
 
 PRIVATE struct type_member tpconst rela_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReLocateAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rebla_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReBytesLocateAllIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReBytesLocateAllIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1926,12 +1926,12 @@ PRIVATE struct type_seq rebsp_seq = {
 };
 
 PRIVATE struct type_member tpconst resp_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rebsp_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReBytesSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReBytesSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 

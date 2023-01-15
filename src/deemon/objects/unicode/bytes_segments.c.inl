@@ -340,12 +340,12 @@ PRIVATE struct type_seq bseg_seq = {
 
 PRIVATE struct type_member tpconst bseg_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSegments, b_str), "->?DBytes"),
-	TYPE_MEMBER_FIELD("__siz__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(BytesSegments, b_siz)),
+	TYPE_MEMBER_FIELD("__len__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(BytesSegments, b_siz)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst bseg_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesSegmentsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesSegmentsIterator_Type),
 	TYPE_MEMBER_END
 };
 

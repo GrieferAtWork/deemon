@@ -186,7 +186,7 @@ PRIVATE struct type_cmp rosetiterator_cmp = {
 
 
 PRIVATE struct type_member tpconst roset_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?Ert:RoSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIterator, si_set), "->?Ert:RoSet"),
 	TYPE_MEMBER_END
 };
 
@@ -573,7 +573,7 @@ PRIVATE struct type_method tpconst roset_methods[] = {
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
 	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER(STR___sizeof__, &roset_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &roset_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -584,7 +584,7 @@ PRIVATE struct type_member tpconst roset_members[] = {
 };
 
 PRIVATE struct type_member tpconst roset_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &RoSetIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &RoSetIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoSet_Type),
 	TYPE_MEMBER_END
 };

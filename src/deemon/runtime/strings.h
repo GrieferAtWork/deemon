@@ -670,6 +670,7 @@ for (local line: lines) {
 #endif /* !STR_getsysfd */
 #endif /* DeeSysFD_GETSET */
 
+
 #ifndef STR_except
 #define STR_except "except"
 #endif /* !STR_except */
@@ -682,113 +683,6 @@ for (local line: lines) {
 #ifndef STR_this_function
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
-
-/* Misc. string literals that might get turned into objects at one point (but aren't, yet) */
-#ifndef STR___docstr__
-#define STR___docstr__ "__docstr__"
-#endif /* !STR___docstr__ */
-#ifndef STR___func__
-#define STR___func__ "__func__"
-#endif /* !STR___func__ */
-#ifndef STR___yfunc__
-#define STR___yfunc__ "__yfunc__"
-#endif /* !STR___yfunc__ */
-#ifndef STR___class__
-#define STR___class__ "__class__"
-#endif /* !STR___class__ */
-#ifndef STR___ctable__
-#define STR___ctable__ "__ctable__"
-#endif /* !STR___ctable__ */
-#ifndef STR___itable__
-#define STR___itable__ "__itable__"
-#endif /* !STR___itable__ */
-#ifndef STR___sizeof__
-#define STR___sizeof__ "__sizeof__"
-#endif /* !STR___sizeof__ */
-#ifndef STR___operator__
-#define STR___operator__ "__operator__"
-#endif /* !STR___operator__ */
-#ifndef STR___operatorname__
-#define STR___operatorname__ "__operatorname__"
-#endif /* !STR___operatorname__ */
-#ifndef STR___operators__
-#define STR___operators__ "__operators__"
-#endif /* !STR___operators__ */
-#ifndef STR___property__
-#define STR___property__ "__property__"
-#endif /* !STR___property__ */
-#ifndef STR___default__
-#define STR___default__ "__default__"
-#endif /* !STR___default__ */
-#ifndef STR___this__
-#define STR___this__ "__this__"
-#endif /* !STR___this__ */
-#ifndef STR___frame__
-#define STR___frame__ "__frame__"
-#endif /* !STR___frame__ */
-#ifndef STR___args__
-#define STR___args__ "__args__"
-#endif /* !STR___args__ */
-#ifndef STR___refs__
-#define STR___refs__ "__refs__"
-#endif /* !STR___refs__ */
-#ifndef STR___code__
-#define STR___code__ "__code__"
-#endif /* !STR___code__ */
-#ifndef STR___imports__
-#define STR___imports__ "__imports__"
-#endif /* !STR___imports__ */
-#ifndef STR___exports__
-#define STR___exports__ "__exports__"
-#endif /* !STR___exports__ */
-#ifndef STR___globals__
-#define STR___globals__ "__globals__"
-#endif /* !STR___globals__ */
-#ifndef STR___path__
-#define STR___path__ "__path__"
-#endif /* !STR___path__ */
-#ifndef STR_value
-#define STR_value "value"
-#endif /* !STR_value */
-#ifndef STR_push
-#define STR_push "push"
-#endif /* !STR_push */
-#ifndef STR_del
-#define STR_del "del"
-#endif /* !STR_del */
-#ifndef STR_delete
-#define STR_delete "delete"
-#endif /* !STR_delete */
-#ifndef STR_getter
-#define STR_getter "getter"
-#endif /* !STR_getter */
-#ifndef STR_setter
-#define STR_setter "setter"
-#endif /* !STR_setter */
-#ifndef STR_exchange
-#define STR_exchange "exchange"
-#endif /* !STR_exchange */
-#ifndef STR_name
-#define STR_name "name"
-#endif /* !STR_name */
-#ifndef STR_doc
-#define STR_doc "doc"
-#endif /* !STR_doc */
-#ifndef STR_flags
-#define STR_flags "flags"
-#endif /* !STR_flags */
-#ifndef STR_bytes
-#define STR_bytes "bytes"
-#endif /* !STR_bytes */
-#ifndef STR_next
-#define STR_next "next"
-#endif /* !STR_next */
-#ifndef STR_super
-#define STR_super "super"
-#endif /* !STR_super */
-#ifndef STR_id
-#define STR_id "id"
-#endif /* !STR_id */
 
 #ifndef ONLY_LISTING
 DECL_END

@@ -283,7 +283,7 @@ bsci_next(BytesSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst bsi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesSplit"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesSplit"),
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
@@ -292,7 +292,7 @@ PRIVATE struct type_member tpconst bsi_members[] = {
 #define bcsi_members bsi_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst bcsi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
@@ -579,12 +579,12 @@ PRIVATE struct type_member tpconst bs_members[] = {
 };
 
 PRIVATE struct type_member tpconst bs_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst bcs_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesCaseSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesCaseSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1099,7 +1099,7 @@ PRIVATE struct type_member tpconst bls_members[] = {
 };
 
 PRIVATE struct type_member tpconst bls_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesLineSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesLineSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 

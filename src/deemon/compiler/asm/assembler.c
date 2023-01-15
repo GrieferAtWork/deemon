@@ -2584,9 +2584,7 @@ asm_newconst_string(char const *__restrict str, size_t len) {
 			DeeObject *ob = current_assembler.a_constv[result];
 			if (!DeeString_Check(ob))
 				continue;
-			if (DeeString_SIZE(ob) != len)
-				continue;
-			if (bcmpc(DeeString_STR(ob), str, len, sizeof(char)) != 0)
+			if (!DeeString_EqualsBuf(ob, str, len))
 				continue;
 			return result; /* Found it! */
 		}

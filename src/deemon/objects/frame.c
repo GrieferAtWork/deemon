@@ -614,13 +614,13 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	TYPE_GETTER("col", &frame_getcol,
 	            "->?X2?Dint?N\n"
 	            "The 0-based column offset within this Frame's source file, or ?N when indeterminate"),
-	TYPE_GETTER(STR_name, &frame_getname,
+	TYPE_GETTER("name", &frame_getname,
 	            "->?X2?Dstring?N\n"
 	            "The name of this Frame's function, or ?N when indeterminate"),
 	TYPE_GETTER("func", &frame_getfunc,
 	            "->?X2?DFunction?N\n"
 	            "Returns the function that is referenced by @this Frame, or ?N if not available"),
-	TYPE_GETTER(STR___code__, &frame_getcode,
+	TYPE_GETTER("__code__", &frame_getcode,
 	            "->?Ert:Code\n"
 	            "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
 	            "The code object that is being executed"),

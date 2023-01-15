@@ -158,7 +158,7 @@ warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
 	if (attr_flags & CLASS_ATTRIBUTE_FGETSET) {
 		category_name = "property";
 	} else if (attr_flags & CLASS_ATTRIBUTE_FMETHOD) {
-		category_name = "function";
+		category_name = STR_function;
 	} else {
 		category_name = "member";
 	}

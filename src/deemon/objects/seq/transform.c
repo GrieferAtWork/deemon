@@ -283,7 +283,7 @@ PRIVATE struct type_member tpconst trans_members[] = {
 };
 
 PRIVATE struct type_member tpconst trans_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqTransformationIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqTransformationIterator_Type),
 	TYPE_MEMBER_END
 };
 

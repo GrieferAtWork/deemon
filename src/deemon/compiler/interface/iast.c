@@ -1731,7 +1731,7 @@ ast_getconditionalflags(Ast *__restrict self) {
 		bool is_first                  = true;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FCOND_BOOL) {
-			if unlikely(unicode_printer_print(&printer, DeeString_STR(&str_bool), 4) < 0)
+			if unlikely(unicode_printer_print(&printer, STR_bool, 4) < 0)
 				goto err_printer;
 			is_first = false;
 		}
@@ -2920,10 +2920,10 @@ ast_setactionc(Ast *__restrict self,
 }
 
 
-#define PRINT(str) print(str, COMPILER_STRLEN(str))
-#define PRINT_TRUE() print(DeeString_STR(&str_true), 4)
-#define PRINT_FALSE() print(DeeString_STR(&str_false), 5)
-#define PRINT_NONE() print(DeeString_STR(&str_none), 4)
+#define PRINT(str)    print(str, COMPILER_STRLEN(str))
+#define PRINT_TRUE()  print(STR_true, 4)
+#define PRINT_FALSE() print(STR_false, 5)
+#define PRINT_NONE()  print(STR_none, 4)
 
 #define DO(x)                \
 	do {                     \
@@ -3077,7 +3077,7 @@ print_symbol(struct symbol *__restrict sym,
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 			if (sym->s_extern.e_module == &deemon_module &&
 			    sym->s_extern.e_symbol->ss_index == id_import) {
-				print(DeeString_STR(&str_import), 6);
+				print(STR_import, 6);
 			} else {
 				PRINT("(");
 				DO((*printer)(arg, sym->s_extern.e_symbol->ss_name,
@@ -3332,7 +3332,7 @@ force_scope:
 	case AST_RETURN:
 		if (!is_scope && is_expression)
 			goto force_scope;
-		print(DeeString_STR(&str_return), 6);
+		print(STR_return, 6);
 		if (self->a_return) {
 			PRINT(" ");
 			DO(print_ast_code(self->a_return, printer, arg, true, self->a_scope, indent));
@@ -3349,7 +3349,7 @@ force_scope:
 	case AST_THROW:
 		if (!is_scope && is_expression)
 			goto force_scope;
-		print(DeeString_STR(&str_throw), 5);
+		print(STR_throw, 5);
 		if (self->a_throw) {
 			PRINT(" ");
 			DO(print_ast_code(self->a_throw, printer, arg, true, self->a_scope, indent));
@@ -4419,11 +4419,7 @@ class_member_in_class:
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 			if (op->co_name == OPERATOR_CONSTRUCTOR &&
 			    member && member->cm_ast->a_type == AST_FUNCTION) {
-#ifndef CONFIG_LANGUAGE_NO_ASM
-				print(DeeString_STR(&str_this), 4);
-#else /* !CONFIG_LANGUAGE_NO_ASM */
-				PRINT("this");
-#endif /* CONFIG_LANGUAGE_NO_ASM */
+				print(STR_this, 4);
 			} else if (op->co_name == OPERATOR_DESTRUCTOR &&
 			           member && member->cm_ast->a_type == AST_FUNCTION) {
 				PRINT("~this");
@@ -4722,17 +4718,17 @@ print_ast_repr(struct ast *__restrict self,
 		size_t i;
 		typing = NULL;
 		if (self->a_flag == AST_FMULTIPLE_TUPLE) {
-			typing = DeeString_STR(&str_Tuple);
+			typing = STR_Tuple;
 		} else if (self->a_flag == AST_FMULTIPLE_LIST) {
-			typing = DeeString_STR(&str_List);
+			typing = STR_List;
 		} else if (self->a_flag == AST_FMULTIPLE_HASHSET) {
-			typing = DeeString_STR(&str_Set);
+			typing = STR_Set;
 		} else if (self->a_flag == AST_FMULTIPLE_DICT) {
-			typing = DeeString_STR(&str_Dict);
+			typing = STR_Dict;
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC) {
-			typing = DeeString_STR(&str_Sequence);
+			typing = STR_Sequence;
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-			typing = DeeString_STR(&str_Mapping);
+			typing = STR_Mapping;
 		}
 		printf("makemultiple(branches: { ");
 		for (i = 0; i < self->a_multiple.m_astc; ++i) {
@@ -4884,7 +4880,7 @@ print_single_expr:
 		first_flag = true;
 		PRINT(", flags: \"");
 		if (self->a_flag & AST_FCOND_BOOL) {
-			print(DeeString_STR(&str_bool), 4);
+			print(STR_bool, 4);
 			first_flag = false;
 		}
 		if (self->a_flag & AST_FCOND_LIKELY) {

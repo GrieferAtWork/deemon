@@ -38,6 +38,7 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
+#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
@@ -272,7 +273,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst comiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqCombinations"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqCombinations"),
 	TYPE_MEMBER_END
 };
 
@@ -557,7 +558,7 @@ PRIVATE struct type_seq com_seq = {
 };
 
 PRIVATE struct type_member tpconst com_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqCombinationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqCombinationsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -697,7 +698,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst rcomiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqRepeatCombinations"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqRepeatCombinations"),
 	TYPE_MEMBER_END
 };
 
@@ -813,7 +814,7 @@ PRIVATE struct type_seq rcom_seq = {
 };
 
 PRIVATE struct type_member tpconst rcom_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqRepeatCombinationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatCombinationsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -938,7 +939,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst pmutiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqPermutations"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqPermutations"),
 	TYPE_MEMBER_END
 };
 
@@ -1058,7 +1059,7 @@ PRIVATE struct type_seq pmut_seq = {
 };
 
 PRIVATE struct type_member tpconst pmut_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqPermutationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqPermutationsIterator_Type),
 	TYPE_MEMBER_END
 };
 

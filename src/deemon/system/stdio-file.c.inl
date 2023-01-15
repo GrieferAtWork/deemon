@@ -1000,7 +1000,7 @@ PRIVATE struct type_getset tpconst sysfile_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst sysfile_members[] = {
-	TYPE_MEMBER_FIELD_DOC("filename", STRUCT_OBJECT, offsetof(SystemFile, sf_filename), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC(STR_filename, STRUCT_OBJECT, offsetof(SystemFile, sf_filename), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 

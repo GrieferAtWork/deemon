@@ -254,7 +254,7 @@ uasm_parse_directive(void) {
 		goto do_handle_ddi;
 
 	/* Exception handler control opcodes. */
-	if (NAMEISKWD_S(6, DeeString_STR(&str_except)))
+	if (NAMEISKWD_S(6, STR_except))
 		goto do_handle_except;
 
 	/* Manual relocation opcodes. */
@@ -272,7 +272,7 @@ uasm_parse_directive(void) {
 		goto do_handle_word;
 	if (NAMEISKWD("2byte"))
 		goto do_handle_word;
-	if (NAMEISKWD_S(3, DeeString_STR(&str_int)))
+	if (NAMEISKWD_S(3, STR_int))
 		goto do_handle_dword;
 	if (NAMEISKWD("long"))
 		goto do_handle_dword;
@@ -309,31 +309,31 @@ do_handle_code:
 		name = uasm_parse_symnam();
 		if unlikely(!name)
 			goto err;
-		if (NAMEISKWD("yielding"))
+		if (NAMEISKWD("yielding")) {
 			current_basescope->bs_flags |= CODE_FYIELDING;
-		else if (NAMEISKWD("copyable"))
+		} else if (NAMEISKWD("copyable")) {
 			current_basescope->bs_flags |= CODE_FCOPYABLE;
-		else if (NAMEISKWD_S(8, DeeString_STR(&str_assembly)))
+		} else if (NAMEISKWD_S(8, STR_assembly)) {
 			current_basescope->bs_flags |= CODE_FASSEMBLY;
-		else if (NAMEISKWD("lenient"))
+		} else if (NAMEISKWD("lenient")) {
 			current_basescope->bs_flags |= CODE_FLENIENT;
-		else if (NAMEISKWD("varargs"))
+		} else if (NAMEISKWD("varargs")) {
 			current_basescope->bs_flags |= CODE_FVARARGS;
-		else if (NAMEISKWD("varkwds"))
+		} else if (NAMEISKWD("varkwds")) {
 			current_basescope->bs_flags |= CODE_FVARKWDS;
-		else if (NAMEISKWD("thiscall"))
+		} else if (NAMEISKWD("thiscall")) {
 			current_basescope->bs_flags |= CODE_FTHISCALL;
-		else if (NAMEISKWD("heapframe"))
+		} else if (NAMEISKWD("heapframe")) {
 			current_basescope->bs_flags |= CODE_FHEAPFRAME;
-		else if (NAMEISKWD("finally"))
+		} else if (NAMEISKWD("finally")) {
 			current_basescope->bs_flags |= CODE_FFINALLY;
-		else if (NAMEISKWD("constructor"))
+		} else if (NAMEISKWD("constructor")) {
 			current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
 #if 0
-		else if (NAMEISKWD("no_assembly"))
+		} else if (NAMEISKWD("no_assembly")) {
 			current_basescope->bs_flags &= ~CODE_FASSEMBLY;
 #endif
-		else {
+		} else {
 			if (WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name))
 				goto err;
 		}
@@ -579,7 +579,8 @@ do_emit_memory:
 check_invalid_stack_and_adjust:
 					if (current_assembler.a_userasm.ua_flags & USER_ASM_FSTKINV) {
 						DeeError_Throwf(&DeeError_CompilerError,
-						                "Cannot use relative SP addressing while the stack is in an undefined state");
+						                "Cannot use relative SP addressing while "
+						                "the stack is in an undefined state");
 						goto err;
 					}
 					/* Adjust the immediate value to force it to

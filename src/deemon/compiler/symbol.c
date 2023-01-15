@@ -40,6 +40,8 @@
 
 #include <stdint.h>
 
+#include "../runtime/strings.h"
+
 DECL_BEGIN
 
 #ifndef NDEBUG
@@ -972,7 +974,7 @@ INTERN WUNUSED int (DCALL classscope_push)(void) {
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	this_sym->s_type  = SYMBOL_TYPE_THIS;
 	this_sym->s_scope = &new_scope->cs_scope;
-	this_sym->s_name  = TPPLexer_LookupKeyword("this", 4, 0);
+	this_sym->s_name  = TPPLexer_LookupKeyword(STR_this, 4, 0);
 	ASSERT(this_sym->s_name);
 	new_scope->cs_scope.s_class = new_scope;
 	new_scope->cs_scope.s_prev  = current_scope; /* Inherit reference */

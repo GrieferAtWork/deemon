@@ -2947,7 +2947,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 			break; /* Entry not found. */
 		if (MTIME_ENTRY_HASH(item) != hash)
 			continue; /* Differing hashes. */
-		if (!DeeString_EQUALS_STR(item->me_file, path))
+		if (!DeeString_EqualsSTR(item->me_file, path))
 			continue; /* Differing strings. */
 		/* Found it! */
 		*presult = item->me_mtim;
@@ -3029,7 +3029,7 @@ again:
 		}
 		if (MTIME_ENTRY_HASH(item) != hash)
 			continue; /* Non-matching hash */
-		if (!DeeString_EQUALS_STR(item->me_file, path))
+		if (!DeeString_EqualsSTR(item->me_file, path))
 			continue; /* Differing strings. */
 		/* The item already exists. (Can happen due to race conditions) */
 		goto done;

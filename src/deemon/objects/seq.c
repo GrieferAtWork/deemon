@@ -454,7 +454,7 @@ PRIVATE struct type_getset tpconst seqiterator_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst seqiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqIterator, si_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqIterator, si_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__size__", STRUCT_OBJECT, offsetof(SeqIterator, si_size), "->?X2?DInt?O"),
 	TYPE_MEMBER_END
 };
@@ -1058,9 +1058,7 @@ seq_iterator_get(DeeTypeObject *__restrict self) {
 	if (found == (1 | 2))
 		return_reference_(&DeeGenericIterator_Type);
 fail:
-	err_unknown_attribute(self,
-	                      DeeString_STR(&str_Iterator),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -1799,7 +1797,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *elem, *key;
 	size_t result, start, end;
-	if (get_sequence_find_args_kw("index", argc, argv, kw, &elem, &key, &start, &end))
+	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
 	if (!key) {
 		result = DeeSeq_Find(self, start, end, elem, NULL);
@@ -2088,7 +2086,7 @@ seq_remove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	DeeObject *elem, *key;
 	int result;
 	size_t start, end;
-	if (get_sequence_find_args_kw(DeeString_STR(&str_remove), argc, argv,
+	if (get_sequence_find_args_kw(STR_remove, argc, argv,
 	                              kw, &elem, &key, &start, &end))
 		goto err;
 	result = DeeSeq_Remove(self, start, end, elem, key);
@@ -2104,7 +2102,7 @@ seq_rremove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	DeeObject *elem, *key;
 	int result;
 	size_t start, end;
-	if (get_sequence_find_args_kw(DeeString_STR(&str_rremove), argc, argv,
+	if (get_sequence_find_args_kw(STR_rremove, argc, argv,
 	                              kw, &elem, &key, &start, &end))
 		goto err;
 	result = DeeSeq_RRemove(self, start, end, elem, key);
@@ -2120,7 +2118,7 @@ seq_removeall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	DeeObject *elem, *key;
 	size_t result;
 	size_t start, end;
-	if (get_sequence_find_args_kw(DeeString_STR(&str_removeall), argc, argv,
+	if (get_sequence_find_args_kw(STR_removeall, argc, argv,
 	                              kw, &elem, &key, &start, &end))
 		goto err;
 	result = DeeSeq_RemoveAll(self, start, end, elem, key);
@@ -2963,7 +2961,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("index", &seq_index,
+	TYPE_KWMETHOD(STR_index, &seq_index,
 	              "(elem,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
 	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"

@@ -148,7 +148,7 @@ PRIVATE struct type_cmp bytesiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst bytesiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 
@@ -649,10 +649,7 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 		}
 	} else if (!argc) {
 err_args:
-		err_invalid_argc(DeeString_STR(&str_Bytes),
-		                 argc,
-		                 1,
-		                 4);
+		err_invalid_argc(STR_Bytes, argc, 1, 4);
 		goto err;
 	} else {
 		DeeTypeObject *tp_iter;
@@ -1509,7 +1506,7 @@ PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	            "@throw ValueError @this ?. object is empty\n"
 	            "@throw BufferError Attempted to modify the byte when @this ?. object is not writable\n"
 	            "Access the last byte of @this ?. object"),
-	TYPE_GETTER(STR___sizeof__, &bytes_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &bytes_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1720,7 +1717,7 @@ PRIVATE struct type_method tpconst bytes_class_methods[] = {
 };
 
 PRIVATE struct type_member tpconst bytes_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesIterator_Type),
 	TYPE_MEMBER_END
 };
 

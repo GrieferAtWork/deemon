@@ -1084,22 +1084,20 @@ parse_conditional_flags(char const *__restrict flags,
 		}
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
-#define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmp(flags, x, sizeof(x) - sizeof(char)) == 0)
 #define IS_FLAG_S(len, s) (flag_length == (len) && bcmpc(flags, s, len, sizeof(char)) == 0)
-			if (IS_FLAG_S(4, DeeString_STR(&str_bool)))
+			if (IS_FLAG_S(4, STR_bool)) {
 				*presult |= AST_FCOND_BOOL;
-			else if (IS_FLAG("likely"))
+			} else if (IS_FLAG_S(6, "likely")) {
 				*presult |= AST_FCOND_LIKELY;
-			else if (IS_FLAG("unlikely"))
+			} else if (IS_FLAG_S(8, "unlikely")) {
 				*presult |= AST_FCOND_UNLIKELY;
-			else {
+			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown conditional flag %$q",
 				                       flag_length,
 				                       flags);
 			}
 #undef IS_FLAG_S
-#undef IS_FLAG
 		}
 		flags = next_flag;
 	}
@@ -1121,7 +1119,8 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	PRIVATE struct keyword kwlist[] = { K(cond), K(tt), K(ff), K(flags), K(scope), K(loc), KEND };
 	COMPILER_BEGIN(self);
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooooo:makeconditional", &cond, &tt, &ff, &flags_str, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooooo:makeconditional",
+	                    &cond, &tt, &ff, &flags_str, &scope, &loc))
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;

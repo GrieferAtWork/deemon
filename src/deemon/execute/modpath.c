@@ -1240,10 +1240,8 @@ DeeModule_DoGet(char const *__restrict name,
                 size_t size, dhash_t hash) {
 	DREF DeeModuleObject *result = NULL;
 	/* Check if the caller requested the builtin deemon module. */
-	if (size == DeeString_SIZE(&str_deemon) &&
-	    hash == DeeString_Hash((DeeObject *)&str_deemon) &&
-	    bcmp(name, DeeString_STR(&str_deemon),
-	         DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
+	if (size == 6 && hash == DeeString_Hash((DeeObject *)&str_deemon) &&
+	    bcmpc(name, STR_deemon, 6, sizeof(char)) == 0) {
 		/* Yes, they did. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);
@@ -1325,7 +1323,7 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	size_t i, len;
 	dhash_t hash;
 	Dee_DPRINTF("[RT] Searching for %s%k in %$q as %$q\n",
-	            module_global_name ? "global module " : "module",
+	            module_global_name ? "global module " : STR_module,
 	            module_global_name ? module_global_name : Dee_EmptyString,
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
@@ -2137,10 +2135,9 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	ASSERT_OBJECT_TYPE_EXACT(module_name, &DeeString_Type);
 	/* First off: Check if this is a request for the builtin `deemon' module.
 	 * NOTE: This check is always done in case-sensitive mode! */
-	if (DeeString_SIZE(module_name) == DeeString_SIZE(&str_deemon) &&
+	if (DeeString_SIZE(module_name) == 6 &&
 	    DeeString_Hash(module_name) == DeeString_Hash((DeeObject *)&str_deemon) &&
-	    bcmp(DeeString_STR(module_name), DeeString_STR(&str_deemon),
-	         DeeString_SIZE(&str_deemon) * sizeof(char)) == 0) {
+	    bcmpc(DeeString_STR(module_name), STR_deemon, 6, sizeof(char)) == 0) {
 		/* Yes, it is. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);
@@ -2215,9 +2212,8 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 	size_t i;
 	/* First off: Check if this is a request for the builtin `deemon' module.
 	 * NOTE: This check is always done in case-sensitive mode! */
-	if (module_namesize == DeeString_SIZE(&str_deemon) &&
-	    bcmp(module_name, DeeString_STR(&str_deemon),
-	         module_namesize * sizeof(char)) == 0) {
+	if (module_namesize == 6 &&
+	    bcmpc(module_name, STR_deemon, module_namesize, sizeof(char)) == 0) {
 		/* Yes, it is. */
 		result = DeeModule_GetDeemon();
 		Dee_Incref(result);

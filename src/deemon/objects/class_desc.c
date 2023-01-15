@@ -406,7 +406,7 @@ PRIVATE struct type_seq cot_seq = {
 };
 
 PRIVATE struct type_member tpconst cot_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ClassOperatorTableIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ClassOperatorTableIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -699,7 +699,7 @@ PRIVATE struct type_getset tpconst cati_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst cat_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ClassAttributeTableIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ClassAttributeTableIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -822,8 +822,8 @@ err:
 
 
 PRIVATE struct type_getset tpconst ca_getsets[] = {
-	TYPE_GETTER(STR_name, &ca_getname, "->?Dstring"),
-	TYPE_GETTER(STR_doc, &ca_getdoc, "->?X2?Dstring?N"),
+	TYPE_GETTER("name", &ca_getname, "->?Dstring"),
+	TYPE_GETTER("doc", &ca_getdoc, "->?X2?Dstring?N"),
 	TYPE_GETTER("addr", &ca_getaddr,
 	            "->?Dint\n"
 	            "Index into the class/instance object table, where @this attribute is stored\n"
@@ -875,7 +875,7 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	            "During enumeration of attributes, all attributes where this is ?t "
 	            "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
 	            "are enumated by ?Aiattr?Ert:ClassDescriptor"),
-	TYPE_GETTER(STR_flags, &ca_getflags,
+	TYPE_GETTER("flags", &ca_getflags,
 	            "->?Dstring\n"
 	            "Returns a comma-separated string describing the flags of @this class attribute\n"
 	            "#T{Flag|Property~"
@@ -1120,9 +1120,9 @@ class_attribute_eq(struct class_attribute *__restrict lhs,
 		goto nope;
 	if (lhs->ca_hash != rhs->ca_hash)
 		goto nope;
-	if (!DeeString_EQUALS_STR(lhs->ca_name, rhs->ca_name))
+	if (!DeeString_EqualsSTR(lhs->ca_name, rhs->ca_name))
 		goto nope;
-	if (lhs->ca_doc && !DeeString_EQUALS_STR(lhs->ca_doc, rhs->ca_doc))
+	if (lhs->ca_doc && !DeeString_EqualsSTR(lhs->ca_doc, rhs->ca_doc))
 		goto nope;
 	return true;
 nope:
@@ -1150,7 +1150,7 @@ cd_eq(ClassDescriptor *self,
 	if (self->cd_name) {
 		if (!other->cd_name)
 			goto nope;
-		if (!DeeString_EQUALS_STR(self->cd_name, other->cd_name))
+		if (!DeeString_EqualsSTR(self->cd_name, other->cd_name))
 			goto nope;
 	} else {
 		if (other->cd_name)
@@ -1159,7 +1159,7 @@ cd_eq(ClassDescriptor *self,
 	if (self->cd_doc) {
 		if (!other->cd_doc)
 			goto nope;
-		if (!DeeString_EQUALS_STR(self->cd_doc, other->cd_doc))
+		if (!DeeString_EqualsSTR(self->cd_doc, other->cd_doc))
 			goto nope;
 	} else {
 		if (other->cd_doc)
@@ -1293,7 +1293,7 @@ PRIVATE struct type_method tpconst cd_methods[] = {
 #endif
 
 PRIVATE struct type_getset tpconst cd_getsets[] = {
-	TYPE_GETTER(STR_flags, &cd_getflags,
+	TYPE_GETTER("flags", &cd_getflags,
 	            "->?Dstring\n"
 	            "Return a comma-separated string of flags used to describe the combination of properties described by "
 	            "?#isfinal, ?#isinterrupt, ?#hassuperconstructor, ?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
@@ -1318,7 +1318,7 @@ PRIVATE struct type_getset tpconst cd_getsets[] = {
 	TYPE_GETTER("cattr", &cd_cattr,
 	            "->?#AttributeTable\n"
 	            "Enumerate user-defined class ($static) attributes as a mapping-like ?Dstring-?#Attribute sequence"),
-	TYPE_GETTER(STR___sizeof__, &cd_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &cd_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1351,8 +1351,8 @@ PRIVATE struct type_member tpconst cd_members[] = {
 #endif /* CLASS_TP_FAUTOINIT */
 	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FTRUNCATE),
 	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FMOVEANY),
-	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_name), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_doc), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_name), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_doc), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__csize__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(ClassDescriptor, cd_cmemb_size), "Size of the class object table"),
 	TYPE_MEMBER_FIELD_DOC("__isize__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(ClassDescriptor, cd_imemb_size), "Size of the instance object table"),
 	TYPE_MEMBER_END
@@ -1360,7 +1360,7 @@ PRIVATE struct type_member tpconst cd_members[] = {
 
 INTDEF DeeTypeObject ObjectTable_Type;
 PRIVATE struct type_member tpconst cd_class_members[] = {
-	TYPE_MEMBER_CONST("Attribute", &ClassAttribute_Type),
+	TYPE_MEMBER_CONST(STR_Attribute, &ClassAttribute_Type),
 	TYPE_MEMBER_CONST("AttributeTable", &ClassAttributeTable_Type),
 	TYPE_MEMBER_CONST("OperatorTable", &ClassOperatorTable_Type),
 	TYPE_MEMBER_CONST("ObjectTable", &ObjectTable_Type),
@@ -1474,7 +1474,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid flag %$q for %s-attribute %r",
 			                flag_len, pos,
-			                is_class_attribute ? "class" : "instance",
+			                is_class_attribute ? STR_class : "instance",
 			                self->ca_name);
 			goto err_addr_flags_doc;
 got_flag:
@@ -1488,7 +1488,7 @@ got_flag:
 		if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid flags for %s-attribute %r (0x%.4I16x)",
-			                is_class_attribute ? "class" : "instance",
+			                is_class_attribute ? STR_class : "instance",
 			                self->ca_name, self->ca_flag);
 			goto err_addr_flags_doc;
 		}
@@ -1612,7 +1612,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 				break;
 			if (ent->ca_hash != hash)
 				continue;
-			if (!DeeString_EQUALS_STR(ent->ca_name, data[0]))
+			if (!DeeString_EqualsSTR(ent->ca_name, data[0]))
 				continue;
 			/* Duplicate attribute. */
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1841,7 +1841,7 @@ got_flag:
 					break;
 				if (ent->ca_hash != hash)
 					continue;
-				if (!DeeString_EQUALS_STR(ent->ca_name, data[0]))
+				if (!DeeString_EqualsSTR(ent->ca_name, data[0]))
 					continue;
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Duplicate class attribute %r",
@@ -2291,7 +2291,7 @@ ot_isitable(ObjectTable *__restrict self) {
 
 PRIVATE struct type_getset tpconst ot_getsets[] = {
 	TYPE_GETTER(STR___type__, &ot_gettype, "->?DType\nThe type describing @this object table"),
-	TYPE_GETTER(STR___class__, &ot_getclass, "->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}"),
+	TYPE_GETTER("__class__", &ot_getclass, "->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}"),
 	TYPE_GETTER("__isctable__", &ot_isctable, "->?Dbool\nEvaluates to ?t if @this is a class object table"),
 	TYPE_GETTER("__isitable__", &ot_isitable, "->?Dbool\nEvaluates to ?t if @this is an instance object table"),
 	TYPE_GETSET_END
@@ -2535,7 +2535,7 @@ PRIVATE struct type_method tpconst instancemember_methods[] = {
 	TYPE_KWMETHOD(STR_get, &instancemember_get,
 	              "(thisarg)->\n"
 	              "Return the @thisarg's value of @this member"),
-	TYPE_KWMETHOD(STR_delete, &instancemember_delete,
+	TYPE_KWMETHOD("delete", &instancemember_delete,
 	              "(thisarg)\n"
 	              "Delete @thisarg's value of @this member"),
 	TYPE_KWMETHOD(STR_set, &instancemember_set,
@@ -2623,7 +2623,7 @@ PRIVATE struct type_getset tpconst instancemember_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst instancemember_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
 	TYPE_MEMBER_END
 };
 
@@ -4175,7 +4175,7 @@ DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(result->ca_name, name))
+		if (DeeString_EqualsSTR(result->ca_name, name))
 			return result;
 	}
 	return NULL;
@@ -4214,7 +4214,7 @@ DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_EQUALS_BUF(result->ca_name, name, attrlen))
+		if (DeeString_EqualsBuf(result->ca_name, name, attrlen))
 			return result;
 	}
 	return NULL;
@@ -4233,7 +4233,7 @@ DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(result->ca_name, name))
+		if (DeeString_EqualsSTR(result->ca_name, name))
 			return result;
 	}
 	return NULL;
@@ -4271,7 +4271,7 @@ DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObj
 			break;
 		if (result->ca_hash != hash)
 			continue;
-		if (DeeString_EQUALS_BUF(result->ca_name, name, attrlen))
+		if (DeeString_EqualsBuf(result->ca_name, name, attrlen))
 			return result;
 	}
 	return NULL;

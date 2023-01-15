@@ -5157,7 +5157,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	              "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
 	              "Same as ?Aencode?Dstring, but instead use the data of @this ?. object as characters to decode"),
-	TYPE_KWMETHOD(STR_bytes, &bytes_substr,
+	TYPE_KWMETHOD("bytes", &bytes_substr,
 	              "(start=!0,end=!-1)->?.\n"
 	              "Same as ?#substr (here for ABI compatibility with ?Abytes?Dstring)"),
 	TYPE_METHOD("ord", &bytes_ord,
@@ -5421,7 +5421,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	              /**/ "and return its starting index, or ${-1} if no such position exists"),
-	TYPE_KWMETHOD("index", &bytes_index,
+	TYPE_KWMETHOD(STR_index, &bytes_index,
 	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	              "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	              "Find the first instance of @needle that exists within ${this.substr(start, end)}, "

@@ -1333,7 +1333,7 @@ module_get_imports(DeeModuleObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst module_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
 	                      "->?Dstring\n"
 	                      "The name of @this Module"),
 	TYPE_MEMBER_END
@@ -1345,7 +1345,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
-	TYPE_GETTER(STR___exports__, &DeeModule_ViewExports,
+	TYPE_GETTER("__exports__", &DeeModule_ViewExports,
 	            "->?S?T2?Dstring?O\n"
 	            "Returns a modifiable mapping-like object containing @this "
 	            "Module's global variables accessible by name (and enumerable)\n"
@@ -1359,19 +1359,19 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	            "util.__exports__[\"min\"] = 42;\n"
 	            "print util.min;                /* 42 */"
 	            "}"),
-	TYPE_GETTER(STR___imports__, &module_get_imports,
+	TYPE_GETTER("__imports__", &module_get_imports,
 	            "->?S?DModule\n"
 	            "Returns an immutable sequence of all other modules imported by this one"),
-	TYPE_GETTER(STR___globals__, &DeeModule_ViewGlobals,
+	TYPE_GETTER("__globals__", &DeeModule_ViewGlobals,
 	            "->?S?O\n"
 	            "Similar to ?#__exports__, however global variables are addressed using their "
 	            "internal index. Using this, anonymous global variables (such as property callbacks) "
 	            "can be accessed and modified"),
-	TYPE_GETTER(STR___code__, &module_get_code,
+	TYPE_GETTER("__code__", &module_get_code,
 	            "->?Ert:Code\n"
 	            "@throw ValueError The Module hasn't been fully loaded\n"
 	            "Returns the code object for the Module's root initializer"),
-	TYPE_GETTER(STR___path__, &module_get_path,
+	TYPE_GETTER("__path__", &module_get_path,
 	            "->?X2?Dstring?N\n"
 	            "@throw ValueError The Module hasn't been fully loaded\n"
 	            "Returns the absolute filesystem path of the Module's source file, or ?N "

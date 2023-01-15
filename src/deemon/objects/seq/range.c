@@ -38,6 +38,7 @@
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 
 DECL_BEGIN
@@ -338,16 +339,16 @@ ri_index_set(RangeIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst ri_getsets[] = {
-	TYPE_GETSET_NODOC("index", &ri_index_get, &ri_index_del, &ri_index_set),
+	TYPE_GETSET_NODOC(STR_index, &ri_index_get, &ri_index_del, &ri_index_set),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst ri_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RangeIterator, ri_range), "->?Ert:SeqRange"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RangeIterator, ri_range), "->?Ert:SeqRange"),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
-	/* TODO: `__first__' is writeable when `ri_lock' is held! */
-	TYPE_MEMBER_FIELD("__first__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
+	/* TODO: `__start__' is writeable when `ri_lock' is held! */
+	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
 	TYPE_MEMBER_END
 };
 
@@ -937,7 +938,7 @@ PRIVATE struct type_member tpconst range_members[] = {
 };
 
 PRIVATE struct type_member tpconst range_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqRangeIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqRangeIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1174,7 +1175,7 @@ iri_next(IntRangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst iri_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(IntRangeIterator, iri_range), "->?Ert:SeqIntRange"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(IntRangeIterator, iri_range), "->?Ert:SeqIntRange"),
 	/* We allow write-access to these members because doing so doesn't
 	 * actually harm anything, although fiddling with this stuff may
 	 * break some weak expectations but should never crash anything! */
@@ -1468,7 +1469,7 @@ PRIVATE struct type_member tpconst intrange_members[] = {
 };
 
 PRIVATE struct type_member tpconst intrange_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqIntRangeIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqIntRangeIterator_Type),
 	TYPE_MEMBER_END
 };
 

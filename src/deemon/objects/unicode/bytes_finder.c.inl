@@ -222,7 +222,7 @@ bcfi_bool(BytesFindIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst bfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesFind"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesFind"),
 	TYPE_MEMBER_END
 };
 
@@ -230,7 +230,7 @@ PRIVATE struct type_member tpconst bfi_members[] = {
 #define bcfi_members bfi_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst bcfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesCaseFind"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesCaseFind"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */
@@ -462,12 +462,12 @@ PRIVATE struct type_member tpconst bf_members[] = {
 };
 
 PRIVATE struct type_member tpconst bf_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesFindIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesFindIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst bcf_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BytesCaseFindIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BytesCaseFindIterator_Type),
 	TYPE_MEMBER_END
 };
 

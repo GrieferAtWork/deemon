@@ -37,6 +37,7 @@
 #include <deemon/object.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -168,7 +169,7 @@ PRIVATE struct type_getset tpconst scope_getsets[] = {
 	TYPE_GETTER("base", &scope_getbase,
 	            "->?ABaseScope?Ert:Compiler\n"
 	            "Returns the nearest base-scope that @this scope is apart of"),
-	TYPE_GETTER("prev", &scope_getprev,
+	TYPE_GETTER(STR_prev, &scope_getprev,
 	            "->?X2?AScope?Ert:Compiler?N\n"
 	            "Returns a the parent of @this scope, or ?N if @this scope is the root-scope"),
 	TYPE_GETTER("isclassscope", &scope_get_isclassscope,

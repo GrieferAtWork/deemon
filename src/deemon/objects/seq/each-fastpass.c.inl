@@ -354,7 +354,7 @@ PRIVATE struct type_member tpconst F(members)[] = {
 };
 
 PRIVATE struct type_member tpconst F(class_members)[] = {
-	TYPE_MEMBER_CONST("Iterator", &ITERATOR_TYPE_OBJECT),
+	TYPE_MEMBER_CONST(STR_Iterator, &ITERATOR_TYPE_OBJECT),
 	TYPE_MEMBER_END
 };
 
@@ -708,11 +708,11 @@ err:
 #ifndef CONFIG_NO_DOC
 PRIVATE struct type_member tpconst Fi(members)[] = {
 #ifdef DEFINE_GETATTR
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachGetAttr"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachGetAttr"),
 #elif defined(DEFINE_CALLATTR)
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttr"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttr"),
 #elif defined(DEFINE_CALLATTRKW)
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttrKw"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttrKw"),
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */

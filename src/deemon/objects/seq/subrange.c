@@ -143,7 +143,7 @@ PRIVATE struct type_getset tpconst subrangeiterator_getsets[] = {
 PRIVATE struct type_member tpconst subrangeiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SubRangeIterator, sr_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T, offsetof(SubRangeIterator, sr_start)),
-	TYPE_MEMBER_FIELD("__size__", STRUCT_SIZE_T, offsetof(SubRangeIterator, sr_size)),
+	TYPE_MEMBER_FIELD("__len__", STRUCT_SIZE_T, offsetof(SubRangeIterator, sr_size)),
 	TYPE_MEMBER_END
 };
 
@@ -305,13 +305,13 @@ err:
 PRIVATE struct type_member tpconst subrange_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SubRange, sr_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SubRange, sr_start)),
-	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SubRange, sr_size)),
+	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SubRange, sr_size)),
 	TYPE_MEMBER_END
 };
 
 
 PRIVATE struct type_member tpconst subrange_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqSubRangeIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqSubRangeIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -758,7 +758,7 @@ PRIVATE struct type_member tpconst subrangen_members[] = {
 
 
 PRIVATE struct type_member tpconst subrangen_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeIterator_Type),
 	TYPE_MEMBER_END
 };
 

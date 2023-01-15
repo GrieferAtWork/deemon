@@ -306,7 +306,7 @@ PRIVATE struct type_member tpconst stringordinals_members[] = {
 };
 
 PRIVATE struct type_member tpconst stringordinals_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringOrdinalsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringOrdinalsIterator_Type),
 	TYPE_MEMBER_END
 };
 

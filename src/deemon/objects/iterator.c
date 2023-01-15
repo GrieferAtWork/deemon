@@ -819,7 +819,7 @@ err:
 
 
 PRIVATE struct type_method tpconst iterator_methods[] = {
-	TYPE_METHOD(STR_next, &iterator_next,
+	TYPE_METHOD("next", &iterator_next,
 	            "(defl?)->\n"
 	            "@throw StopIteration @this Iterator has been exhausted, and no @defl was given\n"
 	            "Same as ${this.operator next()}\n"
@@ -1944,9 +1944,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 			return result;
 	}
 /*err_noseq:*/
-	err_unknown_attribute(Dee_TYPE(self),
-	                      DeeString_STR(&str_seq),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(Dee_TYPE(self), STR_seq, ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -2673,7 +2671,7 @@ PRIVATE struct type_member tpconst if_class_members[] = {
 	 * should always be derived from that type.
 	 * -> The only time this isn't correct is when the user manually constructs
 	 *    instances of this type... */
-	TYPE_MEMBER_CONST("Iterator", &DeeIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeIterator_Type),
 	TYPE_MEMBER_END
 };
 

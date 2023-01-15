@@ -338,7 +338,7 @@ struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *a
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(field->sf_name, name))
+		if (DeeString_EqualsSTR(field->sf_name, name))
 			return DeeInt_NewSize(field->sf_offset);
 	}
 	DeeError_Throwf(&DeeError_AttributeError,
@@ -365,7 +365,7 @@ struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(field->sf_name, name)) {
+		if (DeeString_EqualsSTR(field->sf_name, name)) {
 			return DeeInt_NewSize(field->sf_offset +
 			                      DeeSType_Sizeof(field->sf_type->lt_orig));
 		}
@@ -394,7 +394,7 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (DeeString_EQUALS_STR(field->sf_name, name))
+		if (DeeString_EqualsSTR(field->sf_name, name))
 			return_reference((DeeObject *)field->sf_type->lt_orig);
 	}
 	DeeError_Throwf(&DeeError_AttributeError,
@@ -502,7 +502,7 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (!DeeString_EQUALS_STR(field->sf_name, name))
+		if (!DeeString_EqualsSTR(field->sf_name, name))
 			continue;
 		/* Found it! (return an l-value to the field in question) */
 		result = DeeObject_MALLOC(struct lvalue_object);
@@ -532,7 +532,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (!DeeString_EQUALS_STR(field->sf_name, name))
+		if (!DeeString_EqualsSTR(field->sf_name, name))
 			continue;
 		/* Found it! (clear out the memory of this object) */
 		dst  = (uint8_t *)((uintptr_t)self + field->sf_offset);
@@ -557,7 +557,7 @@ struct_setattr(DeeStructTypeObject *__restrict tp_self,
 			break;
 		if (field->sf_hash != hash)
 			continue;
-		if (!DeeString_EQUALS_STR(field->sf_name, name))
+		if (!DeeString_EqualsSTR(field->sf_name, name))
 			continue;
 		/* Found it! (Assign the value to this field) */
 		return DeeStruct_Assign(field->sf_type->lt_orig,

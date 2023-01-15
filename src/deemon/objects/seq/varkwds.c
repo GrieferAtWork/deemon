@@ -41,6 +41,7 @@
 #include <hybrid/atomic.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -199,7 +200,7 @@ PRIVATE struct type_cmp blvi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blvi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BlackListVarkwdsIterator, ki_map), "->?Ert:BlackListVarkwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BlackListVarkwdsIterator, ki_map), "->?Ert:BlackListVarkwds"),
 	TYPE_MEMBER_END
 };
 
@@ -459,7 +460,7 @@ again:
 			break;
 		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_EQUALS_BUF(str, name, namesize))
+		if (DeeString_EqualsBuf(str, name, namesize))
 			return true; /* It is! */
 	}
 
@@ -818,7 +819,7 @@ PRIVATE struct type_seq blv_seq = {
 };
 
 PRIVATE struct type_member tpconst blv_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BlackListVarkwdsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BlackListVarkwdsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1191,7 +1192,7 @@ PRIVATE struct type_cmp blmi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blmi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BlackListMappingIterator, mi_map), "->?Ert:BlackListMapping"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BlackListMappingIterator, mi_map), "->?Ert:BlackListMapping"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(BlackListMappingIterator, mi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -1257,7 +1258,7 @@ again:
 			break;
 		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_EQUALS_STR(str, name))
+		if (DeeString_EqualsSTR(str, name))
 			return true; /* It is! */
 	}
 
@@ -1367,7 +1368,7 @@ again:
 			break;
 		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_EQUALS_BUF(str, name, namesize))
+		if (DeeString_EqualsBuf(str, name, namesize))
 			return true; /* It is! */
 	}
 
@@ -1668,7 +1669,7 @@ PRIVATE struct type_seq blm_seq = {
 };
 
 PRIVATE struct type_member tpconst blm_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &BlackListMappingIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &BlackListMappingIterator_Type),
 	TYPE_MEMBER_END
 };
 

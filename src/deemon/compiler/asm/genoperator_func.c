@@ -132,7 +132,7 @@ generic_operator:
 		temp = bind_module_symbol(operators_module,
 		                          &opmod_id,
 		                          &opsym_id,
-		                          DeeString_STR(&str_operator));
+		                          STR_operator);
 		if unlikely(temp != 0) {
 			if unlikely(temp < 0)
 				goto err;

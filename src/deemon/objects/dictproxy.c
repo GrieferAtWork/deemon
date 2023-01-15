@@ -35,6 +35,7 @@
 
 #include <hybrid/atomic.h>
 
+#include "../runtime/strings.h"
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN
@@ -328,7 +329,7 @@ PRIVATE struct type_cmp dictiterator_cmp = {
 
 
 PRIVATE struct type_member tpconst dict_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
 
@@ -406,7 +407,7 @@ typedef struct {
 } DictProxyIterator;
 
 PRIVATE struct type_member tpconst proxy_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictProxyIterator, dpi_proxy), "->?Ert:DictProxy"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DictProxyIterator, dpi_proxy), "->?Ert:DictProxy"),
 	TYPE_MEMBER_END
 };
 
@@ -730,22 +731,22 @@ PRIVATE struct type_member tpconst proxy_members[] = {
 };
 
 PRIVATE struct type_member tpconst proxy_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DictProxyIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DictProxyIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst dict_keys_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DictKeysIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DictKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst dict_items_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DictItemsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DictItemsIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst dict_values_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DictValuesIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DictValuesIterator_Type),
 	TYPE_MEMBER_END
 };
 

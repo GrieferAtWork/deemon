@@ -32,6 +32,7 @@
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
+#include "../../runtime/strings.h"
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
@@ -1214,7 +1215,7 @@ PRIVATE struct type_seq seo_seq = {
 #define seo_members se_members /* TODO: Access to operator name & arguments */
 
 PRIVATE struct type_member tpconst seo_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqEachOperatorIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqEachOperatorIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1456,7 +1457,7 @@ PRIVATE struct type_cmp sewi_cmp = {
 };
 
 PRIVATE struct type_member tpconst seoi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachOperator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachOperator"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };

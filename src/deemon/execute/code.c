@@ -953,7 +953,7 @@ PRIVATE struct type_member tpconst code_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__ddi__", STRUCT_OBJECT, offsetof(DeeCodeObject, co_ddi),
 	                      "->?Ert:Ddi\n"
 	                      "The DDI (DeemonDebugInformation) data block"),
-	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT, offsetof(DeeCodeObject, co_module),
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(DeeCodeObject, co_module),
 	                      "->?DModule"),
 	TYPE_MEMBER_FIELD_DOC("__argc_min__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_min),
 	                      "Min amount of arguments required to execute @this code"),
@@ -1010,24 +1010,24 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	            "->?S?Dstring\n"
 	            "Returns a sequence of keyword argument names accepted by @this code object\n"
 	            "If @this code doesn't accept keyword arguments, an empty sequence is returned"),
-	TYPE_GETTER(STR___operator__, &code_get_operator,
+	TYPE_GETTER("__operator__", &code_get_operator,
 	            "->?X2?Dint?N\n"
 	            "Try to determine if @this code object is defined as part of a user-defined class, "
 	            /**/ "and if so, if it is used to define an operator callback. If that is the case, "
 	            /**/ "return the internal ID of the operator that @this code object provides, or ?N "
 	            /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
 	            /**/ "defined as a class- or instance-method (s.a. :Function.__operator__)"),
-	TYPE_GETTER(STR___operatorname__, &code_get_operatorname,
+	TYPE_GETTER("__operatorname__", &code_get_operatorname,
 	            "->?X3?Dstring?Dint?N\n"
 	            "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	            /**/ "operator, though still return its ID if the operator isn't recognized as being "
 	            /**/ "part of the standard (s.a. :Function.__operatorname__)"),
-	TYPE_GETTER(STR___property__, &code_get_property,
+	TYPE_GETTER("__property__", &code_get_property,
 	            "->?X2?Dint?N\n"
 	            "Returns an integer describing the kind if @this code is part of a property or getset, "
 	            /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
 	            /**/ "declared as a property callback (s.a. :Function.__property__)"),
-	TYPE_GETTER(STR___default__, &code_getdefault,
+	TYPE_GETTER("__default__", &code_getdefault,
 	            "->?S?O\n"
 	            "Access to the default values of arguments"),
 	/* Code-specific RTTI fields don't have leading/trailing underscores,
@@ -1131,7 +1131,7 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		if (!other->co_keywords)
 			goto nope;
 		for (i = 0; i < self->co_argc_max; ++i) {
-			if (!DeeString_EQUALS_STR(self->co_keywords[i],
+			if (!DeeString_EqualsSTR(self->co_keywords[i],
 			                          other->co_keywords[i]))
 				goto nope;
 		}

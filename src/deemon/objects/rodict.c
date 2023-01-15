@@ -271,7 +271,7 @@ PRIVATE struct type_cmp rodictiterator_cmp = {
 
 
 PRIVATE struct type_member tpconst rodict_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?Ert:RoDict"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?Ert:RoDict"),
 	TYPE_MEMBER_END
 };
 
@@ -690,7 +690,7 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+		if (DeeString_EqualsBuf(item->di_key, key, keylen))
 			return_reference_(item->di_value); /* Found it! */
 	}
 	err_unknown_key_str(self, key);
@@ -738,7 +738,7 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+		if (DeeString_EqualsBuf(item->di_key, key, keylen))
 			return_reference_(item->di_value); /* Found it! */
 	}
 	return_reference_(def);
@@ -783,7 +783,7 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 			continue;
 		if (!DeeString_Check(item->di_key))
 			continue;
-		if (DeeString_EQUALS_BUF(item->di_key, key, keylen))
+		if (DeeString_EqualsBuf(item->di_key, key, keylen))
 			return true; /* Found it! */
 	}
 	return false;
@@ -962,7 +962,7 @@ PRIVATE struct type_method tpconst rodict_methods[] = {
 
 PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	TYPE_GETTER("frozen", &DeeObject_NewRef, DOC("->?.")),
-	TYPE_GETTER(STR___sizeof__, &rodict_sizeof, DOC("->?Dint")),
+	TYPE_GETTER("__sizeof__", &rodict_sizeof, DOC("->?Dint")),
 	TYPE_GETSET_END
 };
 
@@ -974,7 +974,7 @@ PRIVATE struct type_member tpconst rodict_members[] = {
 
 
 PRIVATE struct type_member tpconst rodict_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &RoDictIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &RoDictIterator_Type),
 	TYPE_MEMBER_CONST("Frozen", &DeeRoDict_Type),
 	TYPE_MEMBER_END
 };

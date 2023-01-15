@@ -1018,8 +1018,8 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst tuple_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
-	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
+	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
 	TYPE_MEMBER_END
 };
 
@@ -1522,7 +1522,7 @@ PRIVATE struct type_method tpconst tuple_class_methods[] = {
 };
 
 PRIVATE struct type_member tpconst tuple_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeTupleIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeTupleIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1658,7 +1658,7 @@ err_empty:
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETTER_NODOC(STR_first, &tuple_first),
 	TYPE_GETTER_NODOC(STR_last, &tuple_last),
-	TYPE_GETTER(STR___sizeof__, &tuple_sizeof, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &tuple_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 

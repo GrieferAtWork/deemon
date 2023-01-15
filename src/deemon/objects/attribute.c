@@ -119,7 +119,7 @@ attr_eq(Attr *self, Attr *other) {
 		DeeStringObject *ot_name = COMPILER_CONTAINER_OF(other->a_name, DeeStringObject, s_str);
 		if (DeeString_Hash((DeeObject *)my_name) != DeeString_Hash((DeeObject *)ot_name))
 			goto nope;
-		if (!DeeString_EQUALS_STR(my_name, ot_name))
+		if (!DeeString_EqualsSTR(my_name, ot_name))
 			goto nope;
 	} else {
 		if (strcmp(self->a_name, other->a_name) != 0)
@@ -313,13 +313,13 @@ attr_repr(Attr *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst attr_getsets[] = {
-	TYPE_GETTER(STR_name, &attr_get_name,
+	TYPE_GETTER("name", &attr_get_name,
 	            "->?Dstring\n"
 	            "The name of this ?."),
-	TYPE_GETTER(STR_doc, &attr_get_doc,
+	TYPE_GETTER("doc", &attr_get_doc,
 	            "->?X2?Dstring?N\n"
 	            "The documentation string of this ?., or ?N when no documentation is present"),
-	TYPE_GETTER(STR_flags, &attr_getflags,
+	TYPE_GETTER("flags", &attr_getflags,
 	            "->?Dstring\n"
 	            "Return a set of characters descripting the flags of @this ?.:\n"
 	            "#T{Character|Mnemonic|Field|Flag description~"
@@ -912,7 +912,7 @@ PRIVATE struct type_seq enumattr_seq = {
 };
 
 PRIVATE struct type_member tpconst enumattr_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeEnumAttrIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeEnumAttrIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1203,7 +1203,7 @@ done:
 
 
 PRIVATE struct type_member tpconst enumattriter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
 	TYPE_MEMBER_END
 };
 

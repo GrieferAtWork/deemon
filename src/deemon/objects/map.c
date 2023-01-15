@@ -172,7 +172,7 @@ proxy_iterator_visit(MapProxyIterator *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE struct type_member tpconst proxy_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(MapProxyIterator, mpi_map), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapProxyIterator, mpi_map), "->?DMapping"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapProxyIterator, mpi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -532,22 +532,22 @@ PRIVATE struct type_seq proxyitems_seq = {
 };
 
 PRIVATE struct type_member tpconst proxykeys_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeMappingKeysIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst proxyvalues_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeMappingValuesIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingValuesIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst proxyitems_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeMappingItemsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingItemsIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst proxy_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeMappingProxyIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingProxyIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1355,9 +1355,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeMapping_Type)
 		return_reference_(&DeeIterator_Type);
-	err_unknown_attribute(self,
-	                      DeeString_STR(&str_Iterator),
-	                      ATTR_ACCESS_GET);
+	err_unknown_attribute(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 

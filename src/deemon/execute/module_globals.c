@@ -524,12 +524,12 @@ PRIVATE struct type_method tpconst me_methods[] = {
 };
 
 PRIVATE struct type_member tpconst me_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst me_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ModuleExportsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ModuleExportsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -870,7 +870,7 @@ PRIVATE struct type_seq mg_seq = {
 };
 
 PRIVATE struct type_member tpconst mg_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ModuleGlobalsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ModuleGlobalsIterator_Type),
 	TYPE_MEMBER_END
 };
 

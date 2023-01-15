@@ -220,7 +220,7 @@ PRIVATE struct type_member tpconst property_members[] = {
 	TYPE_MEMBER_FIELD_DOC("get", STRUCT_OBJECT, offsetof(Property, p_get),
 	                      "->?DCallable\n"
 	                      "Alias for ?#getter"),
-	TYPE_MEMBER_FIELD_DOC("set", STRUCT_OBJECT, offsetof(Property, p_set),
+	TYPE_MEMBER_FIELD_DOC(STR_set, STRUCT_OBJECT, offsetof(Property, p_set),
 	                      "->?DCallable\n"
 	                      "Alias for ?#setter"),
 	TYPE_MEMBER_END
@@ -388,7 +388,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
-	err_unbound_attribute(&DeeProperty_Type, DeeString_STR(&str_get));
+	err_unbound_attribute(&DeeProperty_Type, STR_get);
 	return NULL;
 }
 

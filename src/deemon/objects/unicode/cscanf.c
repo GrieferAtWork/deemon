@@ -37,6 +37,7 @@
 #include <hybrid/atomic.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -540,13 +541,13 @@ ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_scanner);
 }
 
-#define DEFINE_SPLITITER_CMP(name, op)                                               \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                    \
-	name(StringScanIterator *__restrict self,                                        \
-	     StringScanIterator *__restrict other) {                                     \
-		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type)) \
-			return NULL;                                                             \
-		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other));          \
+#define DEFINE_SPLITITER_CMP(name, op)                                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
+	name(StringScanIterator *__restrict self,                               \
+	     StringScanIterator *__restrict other) {                            \
+		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))     \
+			return NULL;                                                    \
+		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other)); \
 	}
 DEFINE_SPLITITER_CMP(ssi_eq, ==)
 DEFINE_SPLITITER_CMP(ssi_ne, !=)
@@ -567,7 +568,7 @@ PRIVATE struct type_cmp ssi_cmp = {
 };
 
 PRIVATE struct type_member tpconst ssi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
 	                      offsetof(StringScanIterator, si_scanner),
 	                      "->?Ert:StringScan"),
 	TYPE_MEMBER_END
@@ -697,12 +698,12 @@ PRIVATE struct type_seq ss_seq = {
 
 PRIVATE struct type_member tpconst ss_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringScanner, ss_data), "->?X2?Dstring?DBytes"),
-	TYPE_MEMBER_FIELD_DOC("__format__", STRUCT_OBJECT, offsetof(StringScanner, ss_format), "->?X2?Dstring?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR___format__, STRUCT_OBJECT, offsetof(StringScanner, ss_format), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst ss_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringScanIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringScanIterator_Type),
 	TYPE_MEMBER_END
 };
 

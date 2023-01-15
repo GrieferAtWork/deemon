@@ -356,7 +356,7 @@ DOC_DEF(objmethod_get_module_doc,
         "The module implementing the function that is being bound, or ?N if unknown");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
-	TYPE_GETTER(STR___func__, &objmethod_get_func, DOC_GET(objmethod_get_func_doc)),
+	TYPE_GETTER("__func__", &objmethod_get_func, DOC_GET(objmethod_get_func_doc)),
 	TYPE_GETTER(STR___name__, &objmethod_get_name, DOC_GET(objmethod_get_name_doc)),
 	TYPE_GETTER(STR___doc__, &objmethod_get_doc, DOC_GET(objmethod_get_doc_doc)),
 	TYPE_GETTER(STR___type__, &objmethod_get_type, DOC_GET(objmethod_get_type_doc)),
@@ -368,7 +368,7 @@ PRIVATE struct type_member tpconst objmethod_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(DeeObjMethodObject, om_this),
 	                      "The object to which @this object-method is bound"),
 #define OBJMETHOD_MEMBERS_INDEXOF_KWDS 1
-	TYPE_MEMBER_CONST_DOC("__kwds__", Dee_EmptySeq, objmethod_get_kwds_doc), /* NOTE: _MUST_ always come last! */
+	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, objmethod_get_kwds_doc), /* NOTE: _MUST_ always come last! */
 	TYPE_MEMBER_END
 };
 
@@ -606,12 +606,12 @@ dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
-	TYPE_GETTER(STR___docstr__, &dockwdsiter_getdocstr, "->?Dstring"),
+	TYPE_GETTER("__docstr__", &dockwdsiter_getdocstr, "->?Dstring"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst dockwdsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
 	TYPE_MEMBER_END
 };
 
@@ -700,7 +700,7 @@ PRIVATE struct type_member tpconst dockwds_members[] = {
 };
 
 PRIVATE struct type_member tpconst dockwds_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DocKwdsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DocKwdsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -860,7 +860,7 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
-	TYPE_GETTER(STR___func__, &kwobjmethod_get_func, DOC_GET(kwobjmethod_get_func_doc)),
+	TYPE_GETTER("__func__", &kwobjmethod_get_func, DOC_GET(kwobjmethod_get_func_doc)),
 	TYPE_GETTER(STR___name__, &kwobjmethod_get_name, DOC_GET(kwobjmethod_get_name_doc)),
 	TYPE_GETTER(STR___doc__, &kwobjmethod_get_doc, DOC_GET(kwobjmethod_get_doc_doc)),
 	TYPE_GETTER(STR___kwds__, &kwobjmethod_get_kwds, DOC_GET(kwobjmethod_get_kwds_doc)),
@@ -1142,9 +1142,9 @@ PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 
 
 PRIVATE struct type_member tpconst kwclsmethod_members[] = {
-	TYPE_MEMBER_CONST_DOC("__kwds__", Dee_EmptySeq, clsmethod_get_kwds_doc),
+	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, clsmethod_get_kwds_doc),
 #define clsmethod_members (kwclsmethod_members + 1)
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsMethodObject, cm_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMethodObject, cm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this method"),
 	TYPE_MEMBER_END
@@ -1396,9 +1396,7 @@ clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if (!self->cp_get) {
-		err_cant_access_attribute(&DeeClsProperty_Type,
-		                          DeeString_STR(&str_get),
-		                          ATTR_ACCESS_GET);
+		err_cant_access_attribute(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
@@ -1418,9 +1416,7 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
 	DeeObject *thisarg;
 	if unlikely(!self->cp_get) {
-		err_cant_access_attribute(&DeeClsProperty_Type,
-		                          DeeString_STR(&str_get),
-		                          ATTR_ACCESS_GET);
+		err_cant_access_attribute(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
@@ -1464,9 +1460,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                 DeeObject *kw) {
 	DeeObject *thisarg, *value;
 	if unlikely(!self->cp_set) {
-		err_cant_access_attribute(&DeeClsProperty_Type,
-		                          DeeString_STR(&str_set),
-		                          ATTR_ACCESS_GET);
+		err_cant_access_attribute(&DeeClsProperty_Type, STR_set, ATTR_ACCESS_GET);
 		goto err;
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))
@@ -1485,10 +1479,10 @@ err:
 
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
 	TYPE_KWMETHOD(STR_get, &clsproperty_get, "(thisarg)->"),
-	TYPE_KWMETHOD(STR_delete, &clsproperty_delete, "(thisarg)"),
+	TYPE_KWMETHOD("delete", &clsproperty_delete, "(thisarg)"),
 	TYPE_KWMETHOD(STR_set, &clsproperty_set, "(thisarg,value)"),
-	TYPE_KWMETHOD(STR_getter, &clsproperty_get, "(thisarg)->\nAlias for ?#get"),
-	TYPE_KWMETHOD(STR_setter, &clsproperty_set, "(thisarg,value)\nAlias for ?#set"),
+	TYPE_KWMETHOD("getter", &clsproperty_get, "(thisarg)->\nAlias for ?#get"),
+	TYPE_KWMETHOD("setter", &clsproperty_set, "(thisarg,value)\nAlias for ?#set"),
 	TYPE_METHOD_END
 };
 
@@ -1579,7 +1573,7 @@ PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst clsproperty_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsPropertyObject, cp_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsPropertyObject, cp_type),
 	                      "->?DType\n"
 	                      "The type implementing @this property"),
 	TYPE_MEMBER_END
@@ -1730,7 +1724,7 @@ err:
 
 PRIVATE struct type_method tpconst clsmember_methods[] = {
 	TYPE_KWMETHOD(STR_get, &clsmember_get, "(thisarg)->"),
-	TYPE_KWMETHOD(STR_delete, &clsmember_delete, "(thisarg)"),
+	TYPE_KWMETHOD("delete", &clsmember_delete, "(thisarg)"),
 	TYPE_KWMETHOD(STR_set, &clsmember_set, "(thisarg,value)"),
 	TYPE_METHOD_END
 };
@@ -1775,12 +1769,12 @@ PRIVATE struct type_cmp clsmember_cmp = {
 };
 
 PRIVATE struct type_member tpconst clsmember_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(DeeClsMemberObject, cm_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMemberObject, cm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this member"),
-	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_CONST | STRUCT_CSTR, offsetof(DeeClsMemberObject, cm_memb.m_name),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR, offsetof(DeeClsMemberObject, cm_memb.m_name),
 	                      "The name of @this member"),
-	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeClsMemberObject, cm_memb.m_doc),
+	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeClsMemberObject, cm_memb.m_doc),
 	                      "->?X2?Dstring?N\n"
 	                      "The documentation string of @this member, or ?N if unknown"),
 	TYPE_MEMBER_CONST_DOC("canget", Dee_True, "Always evaluates to ?t"),

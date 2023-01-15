@@ -34,6 +34,7 @@
 #include <hybrid/atomic.h>
 
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 /* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
 
@@ -262,7 +263,7 @@ again:
 }
 
 PRIVATE struct type_member tpconst rgiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(ReGroupsIterator, rgi_groups), "->?Ert:ReGroups"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(ReGroupsIterator, rgi_groups), "->?Ert:ReGroups"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReGroupsIterator, rgi_index)),
 	TYPE_MEMBER_END
 };
@@ -272,13 +273,13 @@ PRIVATE struct type_member tpconst rgiter_members[] = {
 #define rsbiter_members rgiter_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst rssiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(ReSubStringsIterator, rssi_strings), "->?Ert:ReSubStrings"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(ReSubStringsIterator, rssi_strings), "->?Ert:ReSubStrings"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSubStringsIterator, rssi_index)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rsbiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(ReSubStringsIterator, rssi_strings), "->?Ert:ReSubBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(ReSubStringsIterator, rssi_strings), "->?Ert:ReSubBytes"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSubStringsIterator, rssi_index)),
 	TYPE_MEMBER_END
 };
@@ -692,17 +693,17 @@ PRIVATE struct type_seq rsb_seq = {
 };
 
 PRIVATE struct type_member tpconst rg_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReGroupsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReGroupsIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rss_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReSubStringsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReSubStringsIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rsb_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &ReSubBytesIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &ReSubBytesIterator_Type),
 	TYPE_MEMBER_END
 };
 

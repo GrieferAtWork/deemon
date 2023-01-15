@@ -302,7 +302,7 @@ traceiter_next(TraceIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst traceiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(TraceIterator, ti_trace), "->?DTraceback"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(TraceIterator, ti_trace), "->?DTraceback"),
 	TYPE_MEMBER_END
 };
 
@@ -723,7 +723,7 @@ PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst traceback_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeTracebackIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeTracebackIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -750,7 +750,7 @@ traceback_sizeof(DeeTracebackObject *self) {
 }
 
 PRIVATE struct type_getset tpconst traceback_getsets[] = {
-	TYPE_GETSET(STR___sizeof__, &traceback_sizeof, NULL, NULL, "->?Dint"),
+	TYPE_GETSET("__sizeof__", &traceback_sizeof, NULL, NULL, "->?Dint"),
 	TYPE_GETSET_END
 };
 

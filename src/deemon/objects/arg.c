@@ -261,7 +261,7 @@ PRIVATE struct type_cmp kwdsiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst kwdsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(KwdsIterator, ki_map), "->?Ert:Kwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(KwdsIterator, ki_map), "->?Ert:Kwds"),
 	TYPE_MEMBER_END
 };
 
@@ -430,7 +430,7 @@ kwds_findstr_len(Kwds *__restrict self,
 			break;
 		if (entry->ke_hash != hash)
 			continue;
-		if (DeeString_EQUALS_BUF(entry->ke_name, name, namesize))
+		if (DeeString_EqualsBuf(entry->ke_name, name, namesize))
 			return entry->ke_index;
 	}
 	return (size_t)-1;
@@ -605,7 +605,7 @@ PRIVATE struct type_seq kwds_seq = {
 };
 
 PRIVATE struct type_member tpconst kwds_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeKwdsIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeKwdsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1128,12 +1128,12 @@ PRIVATE struct type_seq kmap_seq = {
 
 
 PRIVATE struct type_member tpconst kmap_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__kwds__", STRUCT_OBJECT, offsetof(KwdsMapping, kmo_kwds), "->?Ert:Kwds"),
+	TYPE_MEMBER_FIELD_DOC(STR___kwds__, STRUCT_OBJECT, offsetof(KwdsMapping, kmo_kwds), "->?Ert:Kwds"),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst kmap_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &DeeKwdsMappingIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DeeKwdsMappingIterator_Type),
 	TYPE_MEMBER_END
 };
 

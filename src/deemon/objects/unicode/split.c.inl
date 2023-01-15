@@ -233,7 +233,7 @@ PRIVATE struct type_cmp splititer_cmp = {
 
 
 PRIVATE struct type_member tpconst splititer_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(StringSplitIterator, s_split), "->?Ert:StringSplit"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(StringSplitIterator, s_split), "->?Ert:StringSplit"),
 	TYPE_MEMBER_END
 };
 
@@ -506,12 +506,12 @@ PRIVATE struct type_member tpconst split_members[] = {
 };
 
 PRIVATE struct type_member tpconst split_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst casesplit_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringCaseSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringCaseSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -939,7 +939,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 };
 
 PRIVATE struct type_member tpconst linesplit_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &StringLineSplitIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &StringLineSplitIterator_Type),
 	TYPE_MEMBER_END
 };
 

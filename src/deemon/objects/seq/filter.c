@@ -291,7 +291,7 @@ PRIVATE struct type_member tpconst filter_members[] = {
 };
 
 PRIVATE struct type_member tpconst filter_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SeqFilterIterator_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqFilterIterator_Type),
 	TYPE_MEMBER_END
 };
 
