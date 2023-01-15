@@ -565,7 +565,7 @@ DeeBytes_NewView(DeeObject *owner, void *base,
 	result->b_buffer.bb_size = num_bytes;
 #ifndef __INTELLISENSE__
 	result->b_buffer.bb_put = NULL;
-#endif
+#endif /* !__INTELLISENSE__ */
 	Dee_Incref(owner);
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
@@ -729,11 +729,11 @@ err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
-#define DO(expr)                          \
-	do {                                  \
-		if unlikely ((temp = (expr)) < 0) \
-			goto err;                     \
-		result += temp;                   \
+#define DO(expr)                         \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
 	}	__WHILE0
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1147,13 +1147,13 @@ bytes_mod(Bytes *self, DeeObject *args) {
 	/* Use a different printer for format-copy-characters, thus allowing
 	 * us to not need to both encoding the bytes from `self' as UTF-8. */
 	if unlikely(DeeString_CFormat(&bytes_printer_print,
-		                           (dformatprinter)&bytes_printer_append,
-		                           &printer,
-		                           (char const *)DeeBytes_DATA(self),
-		                           DeeBytes_SIZE(self),
-		                           argc,
-		                           argv) < 0)
-	goto err;
+	                              (dformatprinter)&bytes_printer_append,
+	                              &printer,
+	                              (char const *)DeeBytes_DATA(self),
+	                              DeeBytes_SIZE(self),
+	                              argc,
+	                              argv) < 0)
+		goto err;
 	return (DREF Bytes *)bytes_printer_pack(&printer);
 err:
 	bytes_printer_fini(&printer);

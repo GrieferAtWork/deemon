@@ -237,15 +237,8 @@ struct Dee_type_nii {
 #define Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL 0x0000 /* uni-directional iterator */
 #define Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL  0x0001 /* bi-directional iterator */
 #define Dee_TYPE_ITERX_FNORMAL              0x0000 /* Normal iterator flags. */
-#if __SIZEOF_POINTER__ == 4
-	uint16_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
-	uint16_t                nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
-#elif __SIZEOF_POINTER__ == 8
-	uint32_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
-	uint32_t                nii_flags; /* Iterator class (Set of `TYPE_ITERX_F*') */
-#else /* __SIZEOF_POINTER__ == ... */
-#error "Unsupported __SIZEOF_POINTER__"
-#endif /* __SIZEOF_POINTER__ != ... */
+	__UINTPTR_HALF_TYPE__   nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
+	__UINTPTR_HALF_TYPE__   nii_flags; /* Iterator flags (Set of `TYPE_ITERX_F*') */
 	union {
 		Dee_funptr_t       _nii_class_functions[10];
 
@@ -348,15 +341,8 @@ struct Dee_type_nsi {
 #define Dee_TYPE_SEQX_FNORMAL    0x0000 /* Normal sequence flags. */
 #define Dee_TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
 #define Dee_TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
-#if __SIZEOF_POINTER__ == 4
-	uint16_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
-	uint16_t                nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
-#elif __SIZEOF_POINTER__ == 8
-	uint32_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
-	uint32_t                nsi_flags; /* Sequence class (Set of `TYPE_SEQX_F*') */
-#else /* __SIZEOF_POINTER__ == ... */
-#error "Unsupported __SIZEOF_POINTER__"
-#endif /* __SIZEOF_POINTER__ != ... */
+	__UINTPTR_HALF_TYPE__   nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
+	__UINTPTR_HALF_TYPE__   nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
 	union {
 		Dee_funptr_t       _nsi_class_functions[22];
 

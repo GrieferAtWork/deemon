@@ -1938,12 +1938,22 @@ struct Dee_type_member {
 #define Dee_TYPE_MEMBER_ISFIELD(x) (((x)->m_field.m_type & 1) != 0)
 #define Dee_TYPE_MEMBER_END \
 	{ NULL }
+#if __SIZEOF_POINTER__ == 4
 #define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
 	{ name, { (DeeObject *)(uintptr_t)((uint32_t)(type) | ((uint32_t)(offset) << 16)) }, DOC(doc) }
+#elif __SIZEOF_POINTER__ == 8
+#define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
+	{ name, { (DeeObject *)(uintptr_t)((uint64_t)(type) | ((uint64_t)(offset) << 32)) }, DOC(doc) }
+#else /* __SIZEOF_POINTER__ == ... */
+#define Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, doc) \
+	{ name, { (DeeObject *)(uintptr_t)((uintptr_t)(type) | ((uintptr_t)(offset) << (__SIZEOF_POINTER__ * 8))) }, DOC(doc) }
+#endif /* __SIZEOF_POINTER__ != ... */
 #define Dee_TYPE_MEMBER_CONST_DOC(name, value, doc) \
 	{ name, { (DeeObject *)Dee_REQUIRES_OBJECT(value) }, DOC(doc) }
-#define Dee_TYPE_MEMBER_FIELD(name, type, offset) Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, NULL)
-#define Dee_TYPE_MEMBER_CONST(name, value) Dee_TYPE_MEMBER_CONST_DOC(name, value, NULL)
+#define Dee_TYPE_MEMBER_FIELD(name, type, offset) \
+	Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, NULL)
+#define Dee_TYPE_MEMBER_CONST(name, value) \
+	Dee_TYPE_MEMBER_CONST_DOC(name, value, NULL)
 
 #ifdef UINT64_C
 #define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, err)                                             \

@@ -598,9 +598,9 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
-	unsigned int other_value;
+	__SHIFT_TYPE__ other_value;
 	CTYPES_FAULTPROTECT(value = GET(self), goto err);
-	if (DeeObject_AsUInt(some_object, &other_value))
+	if (DeeObject_AsUINT(some_object, &other_value))
 		goto err;
 	return NEW_INTEGER(value << other_value);
 err:
@@ -611,9 +611,9 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
-	unsigned int other_value;
+	__SHIFT_TYPE__ other_value;
 	CTYPES_FAULTPROTECT(value = GET(self), goto err);
-	if (DeeObject_AsUInt(some_object, &other_value))
+	if (DeeObject_AsUINT(some_object, &other_value))
 		goto err;
 	return NEW_INTEGER(value >> other_value);
 err:
@@ -743,8 +743,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
-	unsigned int other_value;
-	if (DeeObject_AsUInt(some_object, &other_value))
+	__SHIFT_TYPE__ other_value;
+	if (DeeObject_AsUINT(some_object, &other_value))
 		goto err;
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) << other_value)), goto err);
 	return 0;
@@ -755,8 +755,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
-	unsigned int other_value;
-	if (DeeObject_AsUInt(some_object, &other_value))
+	__SHIFT_TYPE__ other_value;
+	if (DeeObject_AsUINT(some_object, &other_value))
 		goto err;
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) >> other_value)), goto err);
 	return 0;
@@ -767,8 +767,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
-	unsigned int other_value;
-	if (DeeObject_AsUInt(some_object, &other_value))
+	T other_value;
+	if (OBJECT_AS_T(some_object, &other_value))
 		goto err;
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) & other_value)), goto err);
 	return 0;
@@ -779,8 +779,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                   DeeObject *__restrict some_object) {
-	unsigned int other_value;
-	if (DeeObject_AsUInt(some_object, &other_value))
+	T other_value;
+	if (OBJECT_AS_T(some_object, &other_value))
 		goto err;
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) | other_value)), goto err);
 	return 0;
@@ -791,8 +791,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 F(int_inplace_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
                    DeeObject *__restrict some_object) {
-	unsigned int other_value;
-	if (DeeObject_AsUInt(some_object, &other_value))
+	T other_value;
+	if (OBJECT_AS_T(some_object, &other_value))
 		goto err;
 	CTYPES_FAULTPROTECT(SET(self, (T)(GET(self) ^ other_value)), goto err);
 	return 0;

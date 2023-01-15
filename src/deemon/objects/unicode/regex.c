@@ -789,7 +789,7 @@ PRIVATE Dee_atomic_rwlock_t regex_cache_lock = DEE_ATOMIC_RWLOCK_INIT;
 #define regex_cache_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define regex_cache_hashit(i)           (regex_cache_base + ((i) & regex_cache_mask))
 
-PRIVATE NONNULL((1)) bool DCALL regex_cache_rehash(int sizedir) {
+PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 	struct regex_cache_entry *new_vector, *iter, *end;
 	size_t new_mask = regex_cache_mask;
 	if (sizedir > 0) {

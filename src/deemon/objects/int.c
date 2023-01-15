@@ -1650,7 +1650,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) dssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
                     size_t precision, dformatprinter printer, void *arg) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,

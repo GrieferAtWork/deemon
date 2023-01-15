@@ -114,7 +114,7 @@ PRIVATE recursive_rwlock_t gc_lock = RECURSIVE_RWLOCK_INIT;
 #define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct gc_head **)UINT32_C(0xcccccccc))
 #elif __SIZEOF_POINTER__ == 8
 #define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct gc_head **)UINT32_C(0xcccccccccccccccc))
-#endif
+#endif /* __SIZEOF_POINTER__ == ... */
 #endif /* !NDEBUG */
 
 

@@ -1,0 +1,42 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from rt.hash;
+
+/* Calculate deemon core hash values for a bunch of different value-ranges. */
+local data1 = Bytes([:256]);
+local hash1 = data1.operator hash();
+assert str(data1).operator hash() == hash1;
+local data2 = string.fromseq([0xff00:0xffff]);
+local hash2 = data2.operator hash();
+local data4 = string.fromseq([0xffffff00:0xffffffff]);
+local hash4 = data4.operator hash();
+
+/* Assert that rt.hash's re-implementation matches the deemon core. */
+if (int.SIZE_MAX > 0xffffffff) {
+	assert hash64(data1) == hash1;
+	assert hash64(data2) == hash2;
+	assert hash64(data4) == hash4;
+} else {
+	assert hash32(data1) == hash1;
+	assert hash32(data2) == hash2;
+	assert hash32(data4) == hash4;
+}

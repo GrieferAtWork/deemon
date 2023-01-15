@@ -1,0 +1,169 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from ctypes;
+import int from deemon;
+
+/* Re-implementation of deemon's internal hash function for 32-bit targets
+ * This Hash function is based on code from here:
+ * https://en.wikipedia.org/wiki/MurmurHash
+ * It was referenced as pretty good here:
+ * http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed
+ */
+
+#define ROT32(x, y) ((x << y) | (x >> (32 - y)))
+#define c1 0xcc9e2d51
+#define c2 0x1b873593
+#define r1 15
+#define r2 13
+#define m  5
+#define n  0xe6546b64
+
+local final ESEL = htole16(0x1234) == 0x1234
+	? (l, b) -> l
+	: (l, b) -> b;
+
+local function packByte(x: int): int {
+	while (x > 0xff) {
+		x = (x & 0xff) ^ (x >> 8);
+	}
+	return x;
+}
+
+function hash32(data: string | Bytes | {int...}): int {
+	if (data is string)
+		data = data.ordinals;
+	local n_words = #data;
+	local nblocks = n_words >> 2;
+	local hash = (uint32_t)0;
+	for (local i: [:nblocks]) {
+		local k = (uint32_t)(
+			(packByte(data[i * 4 + 0]) << ESEL(0, 24)) |
+			(packByte(data[i * 4 + 1]) << ESEL(8, 16)) |
+			(packByte(data[i * 4 + 2]) << ESEL(16, 8)) |
+			(packByte(data[i * 4 + 3]) << ESEL(24, 0))
+		);
+		k *= c1;
+		k = ROT32(k, r1);
+		k *= c2;
+		hash ^= k;
+		hash = ROT32(hash, r2) * m + n;
+	}
+	local tail = nblocks << 2;
+	local k1   = (uint32_t)0;
+	switch (n_words & 3) {
+	case 3:
+		k1 ^= packByte(data[tail + 2]) << 16;
+		/* fallthru */
+	case 2:
+		k1 ^= packByte(data[tail + 1]) << 8;
+		/* fallthru */
+	case 1:
+		k1 ^= packByte(data[tail + 0]);
+		k1 *= c1;
+		k1 = ROT32(k1, r1);
+		k1 *= c2;
+		hash ^= k1;
+		break;
+	default: break;
+	}
+	hash ^= n_words;
+	hash ^= (hash >> 16);
+	hash *= 0x85ebca6b;
+	hash ^= (hash >> 13);
+	hash *= 0xc2b2ae35;
+	hash ^= (hash >> 16);
+	return (int)hash;
+}
+
+#undef ROT32
+#undef c1
+#undef c2
+#undef r1
+#undef r2
+#undef m
+#undef n
+
+
+
+#define m    0xc6a4a7935bd1e995
+#define r    47
+//#define seed 0xe17a1465
+
+function hash64(data: string | Bytes | {int...}): int {
+	if (data is string)
+		data = data.ordinals;
+	local n_words = #data;
+#ifdef seed
+	local h = (uint64_t)seed ^ (n_words * m);
+#else /* seed */
+	local h = (uint64_t)0;
+#endif /* !seed */
+	local nblocks = n_words >> 3;
+	for (local i: [:nblocks]) {
+		local k = (uint64_t)(
+			(packByte(data[i * 8 + 0]) << ESEL(0, 56)) |
+			(packByte(data[i * 8 + 1]) << ESEL(8, 48)) |
+			(packByte(data[i * 8 + 2]) << ESEL(16, 40)) |
+			(packByte(data[i * 8 + 3]) << ESEL(24, 32)) |
+			(packByte(data[i * 8 + 4]) << ESEL(32, 24)) |
+			(packByte(data[i * 8 + 5]) << ESEL(40, 16)) |
+			(packByte(data[i * 8 + 6]) << ESEL(48, 8)) |
+			(packByte(data[i * 8 + 7]) << ESEL(56, 0))
+		);
+		k *= m;
+		k ^= k >> r;
+		k *= m;
+		h ^= k;
+		h *= m;
+	}
+	local tail = nblocks << 3;
+	switch (n_words & 7) {
+	case 7:
+		h ^= packByte(data[tail + 6]) << 48;
+		/* fallthru */
+	case 6:
+		h ^= packByte(data[tail + 5]) << 40;
+		/* fallthru */
+	case 5:
+		h ^= packByte(data[tail + 4]) << 32;
+		/* fallthru */
+	case 4:
+		h ^= packByte(data[tail + 3]) << 24;
+		/* fallthru */
+	case 3:
+		h ^= packByte(data[tail + 2]) << 16;
+		/* fallthru */
+	case 2:
+		h ^= packByte(data[tail + 1]) << 8;
+		/* fallthru */
+	case 1:
+		h ^= packByte(data[tail + 0]);
+		h *= m;
+		break;
+	default: break;
+	}
+	h ^= h >> r;
+	h *= m;
+	h ^= h >> r;
+	return (int)h;
+}
+

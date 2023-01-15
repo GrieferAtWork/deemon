@@ -20,13 +20,12 @@
 #ifndef GUARD_DEEMON_RUNTIME_STRINGS_H
 #define GUARD_DEEMON_RUNTIME_STRINGS_H 1
 
-#ifndef ONLY_LISTING
 #include <deemon/api.h>
 #include <deemon/file.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+
 DECL_BEGIN
-#endif /* !ONLY_LISTING */
 
 #ifndef STRING2
 #define STRING2(name, str) INTDEF DeeStringObject name;
@@ -684,8 +683,6 @@ for (local line: lines) {
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
 
-#ifndef ONLY_LISTING
 DECL_END
-#endif /* !ONLY_LISTING */
 
 #endif /* !GUARD_DEEMON_RUNTIME_STRINGS_H */
