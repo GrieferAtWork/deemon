@@ -300,14 +300,16 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
 	DREF DeeObject *flags_str, *result;
 	flags_str = attr_getflags(self);
-	result = DeeString_Newf("Attribute(%r, %q, %r, %r, %r)",
+	if unlikely(!flags_str)
+		goto err;
+	result = DeeString_Newf("Attribute(%r, %q, %r)",
 	                        self->a_info.a_decl,
 	                        self->a_name,
-	                        flags_str,
-	                        flags_str,
-	                        self->a_info.a_decl);
+	                        flags_str);
 	Dee_Decref(flags_str);
 	return result;
+err:
+	return NULL;
 }
 
 
