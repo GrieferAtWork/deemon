@@ -151,8 +151,9 @@ struct Dee_file_object {
 #define DeeSysFD_IS_INT 1
 #endif /* !... */
 
-#define DeeSysFD_HANDLE_GETSET  "osfhandle_np"
-#define DeeSysFD_INT_GETSET     "fileno_np"
+/* WARNING: These strings are hard-coded a second time in "runtime/strings.h" */
+#define DeeSysFD_HANDLE_GETSET "osfhandle_np"
+#define DeeSysFD_INT_GETSET    "fileno_np"
 
 #ifdef DeeSysFD_IS_HANDLE
 #define DeeSysFD_Close(x) CloseHandle(x)

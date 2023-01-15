@@ -17,15 +17,32 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_STRINGS_C
-#define GUARD_DEEMON_RUNTIME_STRINGS_C 1
 
-#include <deemon/api.h>
-#include <deemon/object.h>
-#include <deemon/string.h>
+import * from deemon;
+import .hash as rtHash;
 
-#define DEF_STRING(name, str, hash32, hash64) \
-	INTERN DEFINE_STRING_EX(name, str, hash32, hash64);
-#include "strings.h"
+function DEFINE_STRING(name: string, value: string): File {
+	local hash32 = rtHash.hash32(value);
+	local hash64 = rtHash.hash64(value);
+	if (int.SIZE_MAX > 0xffffffff) {
+		assert value.operator hash() == hash64;
+	} else {
+		assert value.operator hash() == hash32;
+	}
+	return File.stdout
+		<< "DEFINE_STRING_EX(" << name
+		<< ", " << repr(value)
+		<< ", " << hash32.hex()
+		<< ", " << hash64.hex()
+		<< ");\n";
+}
 
-#endif /* !GUARD_DEEMON_RUNTIME_STRINGS_C */
+function PRIVATE_DEFINE_STRING(name: string, value: string): File {
+	File.stdout << "PRIVATE ";
+	return DEFINE_STRING(name, value);
+}
+
+function INTERN_DEFINE_STRING(name: string, value: string): File {
+	File.stdout << "INTERN ";
+	return DEFINE_STRING(name, value);
+}

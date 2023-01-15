@@ -81,8 +81,9 @@ union integral {
 #endif /* !__INTELLISENSE__ */
 };
 
-
-PRIVATE DEFINE_STRING(str_lpnullrp, "(null)");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_lpnullrp", "(null)");]]]*/
+PRIVATE DEFINE_STRING_EX(str_lpnullrp, "(null)", 0xdd7bf393, 0x1c8ee691eeb242a5);
+/*[[[end]]]*/
 PRIVATE char const dquote[] = { '"' };
 
 PRIVATE dssize_t DCALL

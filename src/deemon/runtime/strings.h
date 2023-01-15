@@ -27,655 +27,547 @@
 
 DECL_BEGIN
 
-#ifndef STRING2
-#define STRING2(name, str) INTDEF DeeStringObject name;
-#endif /* !STRING2 */
-#ifndef STRING
-#define STRING(str) STRING2(str_##str, #str)
-#endif /* !STRING */
+#ifndef DEF_STRING
+#define DEF_STRING(name, str, hash32, hash64) INTDEF DeeStringObject name;
+#endif /* !DEF_STRING */
 
 /*[[[begin]]]*/
-STRING(Signal)
-STRING(Error)
-
-STRING(Attribute)
-STRING(Bytes)
-STRING(Callable)
-STRING(Cell)
-STRING(Dict)
-STRING(File)
-STRING(Frame)
-STRING(Function)
-STRING(HashSet)
-STRING(InstanceMethod)
-STRING(Iterator)
-STRING(Joined)
-STRING(List)
-STRING(Mapping)
-STRING(Module)
-STRING(Numeric)
-STRING(Object)
-STRING(Property)
-STRING(Sequence)
-STRING(Set)
-STRING(Super)
-STRING(Thread)
-STRING(Traceback)
-STRING(Tuple)
-STRING(Type)
-STRING(WeakRef)
-STRING(WeakRefAble)
-
-STRING(bool)
-STRING(string)
-STRING(int)
-STRING(float)
-
-STRING(none)
-STRING(true)
-STRING(false)
-STRING(deemon)
-STRING(seq)
-STRING(operators)
-STRING(files)
-STRING(_jit)
-STRING(codecs)
-STRING(__encode)
-STRING(__decode)
-STRING(strict)
-STRING(replace)
-STRING(ignore)
-STRING(fs)
-STRING2(str_environ, "environ")
-STRING(get)
-STRING(set)
-STRING(enumattr)
-STRING(gc)
-STRING(import)
-STRING(exec)
-STRING(isatty)
-STRING(pop)
-STRING(remove)
-STRING(rremove)
-STRING(removeall)
-STRING(removeif)
-STRING(erase)
-STRING(insert)
-STRING(clear)
-STRING(append)
-STRING(extend)
-STRING(insertall)
-STRING(xch)
-STRING(resize)
-STRING(pushfront)
-STRING(pushback)
-STRING(popfront)
-STRING(popback)
-
-STRING(revert)
-STRING(advance)
-STRING(index)
-STRING(prev)
-STRING(hasprev)
-STRING(hasnext)
-STRING(rewind)
-STRING(peek)
-
-
-STRING(format)
-STRING(__format__)
-STRING(__name__)
-STRING(__doc__)
-STRING(__type__)
-STRING(__kwds__)
-STRING(__module__)
-STRING(first)
-STRING(last)
-
-#ifdef DeeSysFD_GETSET
-STRING2(str_getsysfd, DeeSysFD_GETSET)
-#endif /* DeeSysFD_GETSET */
-
-STRING(size)
-STRING(filename)
-#ifndef CONFIG_NO_THREADS
-STRING(run)
-#endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_LANGUAGE_NO_ASM
-STRING(except)
-STRING(this)
-STRING(this_module)
-STRING(this_function)
-STRING2(str_cell_empty, "cell empty")
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
-STRING2(str_tab, "\t")
-
-STRING(__pooad)
-STRING(__neosb)
-STRING(__giosi)
-STRING(__grosr)
-STRING(__gaosa)
-
-STRING(d200)
-
-STRING2(str_nomemory, "allocation failed")
-STRING2(str_dots, "...")
-
-
-/* Strings used for internal AST branches */
-STRING(constexpr)
-STRING(sym)
-STRING(unbind)
-STRING(bound)
-STRING(multiple)
-STRING(return)
-STRING(yield)
-STRING(throw)
-STRING(try)
-STRING(loop)
-STRING(loopctl)
-STRING(conditional)
-/*STRING(bool)*/
-STRING(expand)
-STRING(function)
-STRING(operatorfunc)
-STRING(operator)
-STRING(action)
-STRING(class)
-STRING(label)
-STRING(goto)
-STRING(switch)
-STRING(assembly)
-
-/* Strings used for internal symbol classes */
-/*STRING(none)*/
-STRING(global)
-STRING(extern)
-STRING(module)
-STRING(mymod)
-STRING(getset)
-STRING(ifield)
-STRING(cfield)
-STRING(alias)
-STRING(arg)
-STRING(local)
-STRING(stack)
-STRING(static)
-/*STRING(except)*/
-STRING(myfunc)
-/*STRING(this)*/
-STRING(ambig)
-STRING(fwd)
-STRING(const)
-/*[[[end]]]*/
-
-#undef STRING2
-#undef STRING
-
 /*[[[deemon
 import * from deemon;
-local lines = File.open(__FILE__).read()
-	.partition("/" "*[[[begin]]]*" "/").last
-	.partition("/" "*[[[end]]]*" "/").first
-	.strip()
-	.splitlines();
-for (local line: lines) {
-	line = line.strip();
-	if (line.startswith("#")) {
-		print(line);
-	} else {
-		local name;
-		try {
-			name = line.rescanf(r"STRING\((\w+)\)")...;
-		} catch (...) {
-			continue;
-		}
-		print("#ifndef STR_", name);
-		print("#define STR_", name, " DeeString_STR(&str_", name, ")");
-		print("#endif /" "* !STR_", name, " *" "/");
+import rt.hash as rtHash;
+function defString(name, value?) {
+	if (value !is bound) {
+		value = name;
+		name = f"str_{name}";
 	}
+	print("DEF_STRING(", name, ", ", repr value, ", ",
+	      rtHash.hash32(value).hex(), ", ",
+	      rtHash.hash64(value).hex(), ")");
+	print("#define STR_", name.lsstrip("str_"), " DeeString_STR(&", name, ")");
 }
+
+local STRINGS = {
+	"Signal",
+	"Error",
+
+	"Attribute",
+	"Bytes",
+	"Callable",
+	"Cell",
+	"Dict",
+	"File",
+	"Frame",
+	"Function",
+	"HashSet",
+	"InstanceMethod",
+	"Iterator",
+	"Joined",
+	"List",
+	"Mapping",
+	"Module",
+	"Numeric",
+	"Object",
+	"Property",
+	"Sequence",
+	"Set",
+	"Super",
+	"Thread",
+	"Traceback",
+	"Tuple",
+	"Type",
+	"WeakRef",
+	"WeakRefAble",
+
+	"bool",
+	"string",
+	"int",
+	"float",
+
+	"none",
+	"true",
+	"false",
+	"deemon",
+	"seq",
+	"operators",
+	"files",
+	"_jit",
+	"codecs",
+	"__encode",
+	"__decode",
+	"strict",
+	"replace",
+	"ignore",
+	"fs",
+	"environ",
+	"get",
+	"set",
+	"enumattr",
+	"gc",
+	"import",
+	"exec",
+	"isatty",
+	"pop",
+	"remove",
+	"rremove",
+	"removeall",
+	"removeif",
+	"erase",
+	"insert",
+	"clear",
+	"append",
+	"extend",
+	"insertall",
+	"xch",
+	"resize",
+	"pushfront",
+	"pushback",
+	"popfront",
+	"popback",
+
+	"revert",
+	"advance",
+	"index",
+	"prev",
+	"hasprev",
+	"hasnext",
+	"rewind",
+	"peek",
+
+	"format",
+	"__format__",
+	"__name__",
+	"__doc__",
+	"__type__",
+	"__kwds__",
+	"__module__",
+	"first",
+	"last",
+
+	"size",
+	"filename",
+	("str_tab", "\t"),
+
+	// Misc strings needed for builtins
+	"hasattr",
+	"hasitem",
+	"boundattr",
+	"bounditem",
+	"compare",
+	"__pooad",
+	"__neosb",
+	"__giosi",
+	"__grosr",
+	"__gaosa",
+	"__roloc",
+	"__assert",
+	"__badcall",
+
+	"d200",
+
+	("str_nomemory", "allocation failed"),
+	("str_dots", "..."),
+
+	// Strings used for internal AST branches
+	"constexpr",
+	"sym",
+	"unbind",
+	"bound",
+	"multiple",
+	"return",
+	"yield",
+	"throw",
+	"try",
+	"loop",
+	"loopctl",
+	"conditional",
+	"bool",
+	"expand",
+	"function",
+	"operatorfunc",
+	"operator",
+	"action",
+	"class",
+	"label",
+	"goto",
+	"switch",
+	"assembly",
+
+	// Strings used for internal symbol classes
+	"none",
+	"global",
+	"extern",
+	"module",
+	"mymod",
+	"getset",
+	"ifield",
+	"cfield",
+	"alias",
+	"arg",
+	"local",
+	"stack",
+	"static",
+	"except",
+	"myfunc",
+	"this",
+	"ambig",
+	"fwd",
+	"const",
+};
+
+local geneartedStrings = HashSet();
+for (local s: STRINGS) {
+	if (s is string)
+		s = { f"str_{s}", s };
+	if (s.last in geneartedStrings)
+		continue;
+	geneartedStrings.insert(s.last);
+	defString(s...);
+}
+
+print("#ifdef DeeSysFD_IS_HANDLE");
+defString("str_getsysfd", "osfhandle_np");
+print("#elif defined(DeeSysFD_IS_INT)");
+defString("str_getsysfd", "fileno_np");
+print("#endif /" "* ... *" "/");
+print;
+
+print("#ifndef CONFIG_NO_THREADS");
+defString("run");
+print("#endif /" "* !CONFIG_NO_THREADS *" "/");
+print;
+
+print("#ifndef CONFIG_LANGUAGE_NO_ASM");
+defString("this_module");
+defString("this_function");
+defString("str_cell_empty", "cell empty");
+print("#endif /" "* !CONFIG_LANGUAGE_NO_ASM *" "/");
 ]]]*/
-#ifndef STR_Signal
+DEF_STRING(str_Signal, "Signal", 0x9b300d86, 0x966027ef8153891b)
 #define STR_Signal DeeString_STR(&str_Signal)
-#endif /* !STR_Signal */
-#ifndef STR_Error
+DEF_STRING(str_Error, "Error", 0xa9956e41, 0xf32cf15e8c80bfdb)
 #define STR_Error DeeString_STR(&str_Error)
-#endif /* !STR_Error */
-#ifndef STR_Attribute
+DEF_STRING(str_Attribute, "Attribute", 0xa08b731, 0x2e763a5308721ff3)
 #define STR_Attribute DeeString_STR(&str_Attribute)
-#endif /* !STR_Attribute */
-#ifndef STR_Bytes
+DEF_STRING(str_Bytes, "Bytes", 0xa7a9ebde, 0xe8f459d5fa21062)
 #define STR_Bytes DeeString_STR(&str_Bytes)
-#endif /* !STR_Bytes */
-#ifndef STR_Callable
+DEF_STRING(str_Callable, "Callable", 0xeb0130c3, 0xa323908e8099518d)
 #define STR_Callable DeeString_STR(&str_Callable)
-#endif /* !STR_Callable */
-#ifndef STR_Cell
+DEF_STRING(str_Cell, "Cell", 0x152b23f5, 0xee2fd6b5878a788c)
 #define STR_Cell DeeString_STR(&str_Cell)
-#endif /* !STR_Cell */
-#ifndef STR_Dict
+DEF_STRING(str_Dict, "Dict", 0xb2f1a21, 0x848e5b9886ecb76)
 #define STR_Dict DeeString_STR(&str_Dict)
-#endif /* !STR_Dict */
-#ifndef STR_File
+DEF_STRING(str_File, "File", 0x5209cbaf, 0xd32410b9199632d1)
 #define STR_File DeeString_STR(&str_File)
-#endif /* !STR_File */
-#ifndef STR_Frame
+DEF_STRING(str_Frame, "Frame", 0x162dc154, 0xe232866e91505426)
 #define STR_Frame DeeString_STR(&str_Frame)
-#endif /* !STR_Frame */
-#ifndef STR_Function
+DEF_STRING(str_Function, "Function", 0x3614abe4, 0xacccb3e026a8a35a)
 #define STR_Function DeeString_STR(&str_Function)
-#endif /* !STR_Function */
-#ifndef STR_HashSet
+DEF_STRING(str_HashSet, "HashSet", 0x19f6e15e, 0xbe7c97fdd78092a1)
 #define STR_HashSet DeeString_STR(&str_HashSet)
-#endif /* !STR_HashSet */
-#ifndef STR_InstanceMethod
+DEF_STRING(str_InstanceMethod, "InstanceMethod", 0xa7929fea, 0x6aaa126ce9665d53)
 #define STR_InstanceMethod DeeString_STR(&str_InstanceMethod)
-#endif /* !STR_InstanceMethod */
-#ifndef STR_Iterator
+DEF_STRING(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebfff)
 #define STR_Iterator DeeString_STR(&str_Iterator)
-#endif /* !STR_Iterator */
-#ifndef STR_Joined
+DEF_STRING(str_Joined, "Joined", 0x18f2ed, 0x97e484d348a54ca4)
 #define STR_Joined DeeString_STR(&str_Joined)
-#endif /* !STR_Joined */
-#ifndef STR_List
+DEF_STRING(str_List, "List", 0xab47f22, 0xfd145407ab974fb5)
 #define STR_List DeeString_STR(&str_List)
-#endif /* !STR_List */
-#ifndef STR_Mapping
+DEF_STRING(str_Mapping, "Mapping", 0x3465ead6, 0xacacbeb01821219a)
 #define STR_Mapping DeeString_STR(&str_Mapping)
-#endif /* !STR_Mapping */
-#ifndef STR_Module
+DEF_STRING(str_Module, "Module", 0x5d2db7f4, 0x75bd883e9fa8a946)
 #define STR_Module DeeString_STR(&str_Module)
-#endif /* !STR_Module */
-#ifndef STR_Numeric
+DEF_STRING(str_Numeric, "Numeric", 0x634f8f67, 0x768d9e160bb13cf)
 #define STR_Numeric DeeString_STR(&str_Numeric)
-#endif /* !STR_Numeric */
-#ifndef STR_Object
+DEF_STRING(str_Object, "Object", 0xfa8141c1, 0x6769a374488a3c81)
 #define STR_Object DeeString_STR(&str_Object)
-#endif /* !STR_Object */
-#ifndef STR_Property
+DEF_STRING(str_Property, "Property", 0xd4f3688b, 0x1cf12720947fcc55)
 #define STR_Property DeeString_STR(&str_Property)
-#endif /* !STR_Property */
-#ifndef STR_Sequence
+DEF_STRING(str_Sequence, "Sequence", 0xe5937b14, 0xd04bba0a4444f063)
 #define STR_Sequence DeeString_STR(&str_Sequence)
-#endif /* !STR_Sequence */
-#ifndef STR_Set
+DEF_STRING(str_Set, "Set", 0xf18ec750, 0xe64a97dec556c73c)
 #define STR_Set DeeString_STR(&str_Set)
-#endif /* !STR_Set */
-#ifndef STR_Super
+DEF_STRING(str_Super, "Super", 0xa0d5169e, 0x62d0e5c69f132edf)
 #define STR_Super DeeString_STR(&str_Super)
-#endif /* !STR_Super */
-#ifndef STR_Thread
+DEF_STRING(str_Thread, "Thread", 0x81f0afeb, 0xa13eeae86b00fdd)
 #define STR_Thread DeeString_STR(&str_Thread)
-#endif /* !STR_Thread */
-#ifndef STR_Traceback
+DEF_STRING(str_Traceback, "Traceback", 0x65f6383d, 0xa37936341573a7ab)
 #define STR_Traceback DeeString_STR(&str_Traceback)
-#endif /* !STR_Traceback */
-#ifndef STR_Tuple
+DEF_STRING(str_Tuple, "Tuple", 0xf10ca66f, 0x5075ee57ac96f2a1)
 #define STR_Tuple DeeString_STR(&str_Tuple)
-#endif /* !STR_Tuple */
-#ifndef STR_Type
+DEF_STRING(str_Type, "Type", 0x746585e5, 0x6e282d042ac80ffb)
 #define STR_Type DeeString_STR(&str_Type)
-#endif /* !STR_Type */
-#ifndef STR_WeakRef
+DEF_STRING(str_WeakRef, "WeakRef", 0x1968c00b, 0x412a8970996e9e0c)
 #define STR_WeakRef DeeString_STR(&str_WeakRef)
-#endif /* !STR_WeakRef */
-#ifndef STR_WeakRefAble
+DEF_STRING(str_WeakRefAble, "WeakRefAble", 0x3b8e11b6, 0x22c298dff7d3200f)
 #define STR_WeakRefAble DeeString_STR(&str_WeakRefAble)
-#endif /* !STR_WeakRefAble */
-#ifndef STR_bool
+DEF_STRING(str_bool, "bool", 0x8fd0d24a, 0x78e45f7b558db28e)
 #define STR_bool DeeString_STR(&str_bool)
-#endif /* !STR_bool */
-#ifndef STR_string
+DEF_STRING(str_string, "string", 0xad217aab, 0xa027864469ad4382)
 #define STR_string DeeString_STR(&str_string)
-#endif /* !STR_string */
-#ifndef STR_int
+DEF_STRING(str_int, "int", 0xce831ddf, 0xb7ad4ebe928a1ef0)
 #define STR_int DeeString_STR(&str_int)
-#endif /* !STR_int */
-#ifndef STR_float
+DEF_STRING(str_float, "float", 0x95fb9fe8, 0x19ab2ca7919bffe4)
 #define STR_float DeeString_STR(&str_float)
-#endif /* !STR_float */
-#ifndef STR_none
+DEF_STRING(str_none, "none", 0xde6dda00, 0xaf534e37b60e6020)
 #define STR_none DeeString_STR(&str_none)
-#endif /* !STR_none */
-#ifndef STR_true
+DEF_STRING(str_true, "true", 0x34edcf72, 0xbd1e3bcd102bfbc4)
 #define STR_true DeeString_STR(&str_true)
-#endif /* !STR_true */
-#ifndef STR_false
+DEF_STRING(str_false, "false", 0xd5619e17, 0x83cada938c98c156)
 #define STR_false DeeString_STR(&str_false)
-#endif /* !STR_false */
-#ifndef STR_deemon
+DEF_STRING(str_deemon, "deemon", 0x4579666d, 0xeb3bb684d0ec756)
 #define STR_deemon DeeString_STR(&str_deemon)
-#endif /* !STR_deemon */
-#ifndef STR_seq
+DEF_STRING(str_seq, "seq", 0x232af2b7, 0x80a0b0950a5a5251)
 #define STR_seq DeeString_STR(&str_seq)
-#endif /* !STR_seq */
-#ifndef STR_operators
+DEF_STRING(str_operators, "operators", 0xd4b6b76c, 0xc8d5b5ae0eb7316e)
 #define STR_operators DeeString_STR(&str_operators)
-#endif /* !STR_operators */
-#ifndef STR_files
+DEF_STRING(str_files, "files", 0x908e29de, 0x41e984160894009c)
 #define STR_files DeeString_STR(&str_files)
-#endif /* !STR_files */
-#ifndef STR__jit
+DEF_STRING(str__jit, "_jit", 0x6f3e4261, 0xbcf5fb303015dc89)
 #define STR__jit DeeString_STR(&str__jit)
-#endif /* !STR__jit */
-#ifndef STR_codecs
+DEF_STRING(str_codecs, "codecs", 0x341958d7, 0x51cf434bd995d8ac)
 #define STR_codecs DeeString_STR(&str_codecs)
-#endif /* !STR_codecs */
-#ifndef STR___encode
+DEF_STRING(str___encode, "__encode", 0xe31efed3, 0xf1bfd986648273b9)
 #define STR___encode DeeString_STR(&str___encode)
-#endif /* !STR___encode */
-#ifndef STR___decode
+DEF_STRING(str___decode, "__decode", 0x1c21cb81, 0x55817bd8d69ec3f5)
 #define STR___decode DeeString_STR(&str___decode)
-#endif /* !STR___decode */
-#ifndef STR_strict
+DEF_STRING(str_strict, "strict", 0xc77e2a15, 0xffd127a282d4a0f0)
 #define STR_strict DeeString_STR(&str_strict)
-#endif /* !STR_strict */
-#ifndef STR_replace
+DEF_STRING(str_replace, "replace", 0x54b94882, 0x2d4ba4f8cfd63bc6)
 #define STR_replace DeeString_STR(&str_replace)
-#endif /* !STR_replace */
-#ifndef STR_ignore
+DEF_STRING(str_ignore, "ignore", 0xbd41ea58, 0xd951d03dedff60d2)
 #define STR_ignore DeeString_STR(&str_ignore)
-#endif /* !STR_ignore */
-#ifndef STR_fs
+DEF_STRING(str_fs, "fs", 0xfbfe39e8, 0x18c3ce9b4f235ce6)
 #define STR_fs DeeString_STR(&str_fs)
-#endif /* !STR_fs */
-#ifndef STR_get
+DEF_STRING(str_environ, "environ", 0xd8ecb380, 0x8d2a0a9c2432f221)
+#define STR_environ DeeString_STR(&str_environ)
+DEF_STRING(str_get, "get", 0x3b6d35a2, 0x7c8e1568eac4979f)
 #define STR_get DeeString_STR(&str_get)
-#endif /* !STR_get */
-#ifndef STR_set
+DEF_STRING(str_set, "set", 0x5ecc6fe8, 0xe706aa03fdbe04fa)
 #define STR_set DeeString_STR(&str_set)
-#endif /* !STR_set */
-#ifndef STR_enumattr
+DEF_STRING(str_enumattr, "enumattr", 0x767e1f86, 0x6b627a9d4ba17e37)
 #define STR_enumattr DeeString_STR(&str_enumattr)
-#endif /* !STR_enumattr */
-#ifndef STR_gc
+DEF_STRING(str_gc, "gc", 0x73e7fc4c, 0x5369f38dbb7cb94e)
 #define STR_gc DeeString_STR(&str_gc)
-#endif /* !STR_gc */
-#ifndef STR_import
+DEF_STRING(str_import, "import", 0x1a3f5a1f, 0x5a525def3865fbed)
 #define STR_import DeeString_STR(&str_import)
-#endif /* !STR_import */
-#ifndef STR_exec
+DEF_STRING(str_exec, "exec", 0x6b42be28, 0x2efd876517f0e883)
 #define STR_exec DeeString_STR(&str_exec)
-#endif /* !STR_exec */
-#ifndef STR_isatty
+DEF_STRING(str_isatty, "isatty", 0xab82818e, 0x66fe4c97c9502a99)
 #define STR_isatty DeeString_STR(&str_isatty)
-#endif /* !STR_isatty */
-#ifndef STR_pop
+DEF_STRING(str_pop, "pop", 0x960361ff, 0x666fb01461b0a0eb)
 #define STR_pop DeeString_STR(&str_pop)
-#endif /* !STR_pop */
-#ifndef STR_remove
+DEF_STRING(str_remove, "remove", 0x3d2727dd, 0xe9f313a03e2051a)
 #define STR_remove DeeString_STR(&str_remove)
-#endif /* !STR_remove */
-#ifndef STR_rremove
+DEF_STRING(str_rremove, "rremove", 0x37ef1152, 0x199975a7908f6d6)
 #define STR_rremove DeeString_STR(&str_rremove)
-#endif /* !STR_rremove */
-#ifndef STR_removeall
+DEF_STRING(str_removeall, "removeall", 0x902407ed, 0x97879af70abc9349)
 #define STR_removeall DeeString_STR(&str_removeall)
-#endif /* !STR_removeall */
-#ifndef STR_removeif
+DEF_STRING(str_removeif, "removeif", 0x156aa732, 0x96ad85f728d8a11e)
 #define STR_removeif DeeString_STR(&str_removeif)
-#endif /* !STR_removeif */
-#ifndef STR_erase
+DEF_STRING(str_erase, "erase", 0x6f5916cf, 0x65f9c8b6514af4e5)
 #define STR_erase DeeString_STR(&str_erase)
-#endif /* !STR_erase */
-#ifndef STR_insert
+DEF_STRING(str_insert, "insert", 0x71d74a66, 0x5e168c86241590d7)
 #define STR_insert DeeString_STR(&str_insert)
-#endif /* !STR_insert */
-#ifndef STR_clear
+DEF_STRING(str_clear, "clear", 0x7857faae, 0x22a34b6f82b3b83c)
 #define STR_clear DeeString_STR(&str_clear)
-#endif /* !STR_clear */
-#ifndef STR_append
+DEF_STRING(str_append, "append", 0x5f19594f, 0x8c2b7c1aba65d5ee)
 #define STR_append DeeString_STR(&str_append)
-#endif /* !STR_append */
-#ifndef STR_extend
+DEF_STRING(str_extend, "extend", 0x960b75e7, 0xba076858e3adb055)
 #define STR_extend DeeString_STR(&str_extend)
-#endif /* !STR_extend */
-#ifndef STR_insertall
+DEF_STRING(str_insertall, "insertall", 0xbf9bc3a9, 0x4f85971d093a27f2)
 #define STR_insertall DeeString_STR(&str_insertall)
-#endif /* !STR_insertall */
-#ifndef STR_xch
+DEF_STRING(str_xch, "xch", 0x818ce38a, 0x6bb37305be1b0321)
 #define STR_xch DeeString_STR(&str_xch)
-#endif /* !STR_xch */
-#ifndef STR_resize
+DEF_STRING(str_resize, "resize", 0x36fcb308, 0x573f3d2e97212b34)
 #define STR_resize DeeString_STR(&str_resize)
-#endif /* !STR_resize */
-#ifndef STR_pushfront
+DEF_STRING(str_pushfront, "pushfront", 0xc682cfdf, 0x5933eb9a387ff882)
 #define STR_pushfront DeeString_STR(&str_pushfront)
-#endif /* !STR_pushfront */
-#ifndef STR_pushback
+DEF_STRING(str_pushback, "pushback", 0xad1e1509, 0x4cfafd84a12923bd)
 #define STR_pushback DeeString_STR(&str_pushback)
-#endif /* !STR_pushback */
-#ifndef STR_popfront
+DEF_STRING(str_popfront, "popfront", 0x46523911, 0x22a469cc52318bba)
 #define STR_popfront DeeString_STR(&str_popfront)
-#endif /* !STR_popfront */
-#ifndef STR_popback
+DEF_STRING(str_popback, "popback", 0xd84577aa, 0xb77f74a49a9cc289)
 #define STR_popback DeeString_STR(&str_popback)
-#endif /* !STR_popback */
-#ifndef STR_revert
+DEF_STRING(str_revert, "revert", 0x98ca826, 0x626b4fca0d39dcf2)
 #define STR_revert DeeString_STR(&str_revert)
-#endif /* !STR_revert */
-#ifndef STR_advance
+DEF_STRING(str_advance, "advance", 0xdd1157a0, 0x8667ad2c6ab8d35d)
 #define STR_advance DeeString_STR(&str_advance)
-#endif /* !STR_advance */
-#ifndef STR_index
+DEF_STRING(str_index, "index", 0x77f34f0, 0x440d5888c0ff3081)
 #define STR_index DeeString_STR(&str_index)
-#endif /* !STR_index */
-#ifndef STR_prev
+DEF_STRING(str_prev, "prev", 0xeb31683d, 0x7487ec947044729e)
 #define STR_prev DeeString_STR(&str_prev)
-#endif /* !STR_prev */
-#ifndef STR_hasprev
+DEF_STRING(str_hasprev, "hasprev", 0xe7e8f3c, 0x17b364986c9ecd3b)
 #define STR_hasprev DeeString_STR(&str_hasprev)
-#endif /* !STR_hasprev */
-#ifndef STR_hasnext
+DEF_STRING(str_hasnext, "hasnext", 0xae2186a8, 0x19d7bd95854b765f)
 #define STR_hasnext DeeString_STR(&str_hasnext)
-#endif /* !STR_hasnext */
-#ifndef STR_rewind
+DEF_STRING(str_rewind, "rewind", 0x2ab1b235, 0xa35b8bb3941ca25f)
 #define STR_rewind DeeString_STR(&str_rewind)
-#endif /* !STR_rewind */
-#ifndef STR_peek
+DEF_STRING(str_peek, "peek", 0xb2ae48a2, 0xcc667a4d924a91f8)
 #define STR_peek DeeString_STR(&str_peek)
-#endif /* !STR_peek */
-#ifndef STR_format
+DEF_STRING(str_format, "format", 0x9ddde74c, 0xc575d5e219281e76)
 #define STR_format DeeString_STR(&str_format)
-#endif /* !STR_format */
-#ifndef STR___format__
+DEF_STRING(str___format__, "__format__", 0xb59a1ae2, 0xdf14ed3788cde344)
 #define STR___format__ DeeString_STR(&str___format__)
-#endif /* !STR___format__ */
-#ifndef STR___name__
+DEF_STRING(str___name__, "__name__", 0x27a6cbdf, 0x9004f0806b170f3f)
 #define STR___name__ DeeString_STR(&str___name__)
-#endif /* !STR___name__ */
-#ifndef STR___doc__
+DEF_STRING(str___doc__, "__doc__", 0xd5eefba, 0x9e1c0e198ad451ff)
 #define STR___doc__ DeeString_STR(&str___doc__)
-#endif /* !STR___doc__ */
-#ifndef STR___type__
+DEF_STRING(str___type__, "__type__", 0xc25dc337, 0xd3fa545616840a4e)
 #define STR___type__ DeeString_STR(&str___type__)
-#endif /* !STR___type__ */
-#ifndef STR___kwds__
+DEF_STRING(str___kwds__, "__kwds__", 0xd3926a14, 0xa90825b224a7262b)
 #define STR___kwds__ DeeString_STR(&str___kwds__)
-#endif /* !STR___kwds__ */
-#ifndef STR___module__
+DEF_STRING(str___module__, "__module__", 0x3bea6c9f, 0x183a20d7d6c28dbb)
 #define STR___module__ DeeString_STR(&str___module__)
-#endif /* !STR___module__ */
-#ifndef STR_first
+DEF_STRING(str_first, "first", 0xa9f0e818, 0x9d12a485470a29a7)
 #define STR_first DeeString_STR(&str_first)
-#endif /* !STR_first */
-#ifndef STR_last
+DEF_STRING(str_last, "last", 0x185a4f9a, 0x760894ca6d41e4dc)
 #define STR_last DeeString_STR(&str_last)
-#endif /* !STR_last */
-#ifdef DeeSysFD_GETSET
-#endif /* DeeSysFD_GETSET */
-#ifndef STR_size
+DEF_STRING(str_size, "size", 0xed8917fa, 0x3fe8023bdf261c0f)
 #define STR_size DeeString_STR(&str_size)
-#endif /* !STR_size */
-#ifndef STR_filename
+DEF_STRING(str_filename, "filename", 0x199d68d3, 0x4a5d0431e1a3caed)
 #define STR_filename DeeString_STR(&str_filename)
-#endif /* !STR_filename */
-#ifndef CONFIG_NO_THREADS
-#ifndef STR_run
-#define STR_run DeeString_STR(&str_run)
-#endif /* !STR_run */
-#endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_LANGUAGE_NO_ASM
-#ifndef STR_except
-#define STR_except DeeString_STR(&str_except)
-#endif /* !STR_except */
-#ifndef STR_this
-#define STR_this DeeString_STR(&str_this)
-#endif /* !STR_this */
-#ifndef STR_this_module
-#define STR_this_module DeeString_STR(&str_this_module)
-#endif /* !STR_this_module */
-#ifndef STR_this_function
-#define STR_this_function DeeString_STR(&str_this_function)
-#endif /* !STR_this_function */
-#endif /* !CONFIG_LANGUAGE_NO_ASM */
-#ifndef STR___pooad
+DEF_STRING(str_tab, "\t", 0xe99b2213, 0x510da8cb03a6ba5d)
+#define STR_tab DeeString_STR(&str_tab)
+DEF_STRING(str_hasattr, "hasattr", 0xa37d5291, 0xad2ec658de4b00d3)
+#define STR_hasattr DeeString_STR(&str_hasattr)
+DEF_STRING(str_hasitem, "hasitem", 0xfd5ab4fe, 0x754610f6171d3ff9)
+#define STR_hasitem DeeString_STR(&str_hasitem)
+DEF_STRING(str_boundattr, "boundattr", 0xbe67bf95, 0x64616add8dce0b74)
+#define STR_boundattr DeeString_STR(&str_boundattr)
+DEF_STRING(str_bounditem, "bounditem", 0xbe8d5e6f, 0x95383275aec67fa5)
+#define STR_bounditem DeeString_STR(&str_bounditem)
+DEF_STRING(str_compare, "compare", 0x84b4e5c0, 0x9165e5178389f3e4)
+#define STR_compare DeeString_STR(&str_compare)
+DEF_STRING(str___pooad, "__pooad", 0x38ba68c9, 0xd5562c36880fcfa0)
 #define STR___pooad DeeString_STR(&str___pooad)
-#endif /* !STR___pooad */
-#ifndef STR___neosb
+DEF_STRING(str___neosb, "__neosb", 0x3a5bef0, 0x18de2c5f371aa921)
 #define STR___neosb DeeString_STR(&str___neosb)
-#endif /* !STR___neosb */
-#ifndef STR___giosi
+DEF_STRING(str___giosi, "__giosi", 0x30dd03a8, 0x347263f7fbfcea2b)
 #define STR___giosi DeeString_STR(&str___giosi)
-#endif /* !STR___giosi */
-#ifndef STR___grosr
+DEF_STRING(str___grosr, "__grosr", 0xee715568, 0x4b4bdaef29d9b42b)
 #define STR___grosr DeeString_STR(&str___grosr)
-#endif /* !STR___grosr */
-#ifndef STR___gaosa
+DEF_STRING(str___gaosa, "__gaosa", 0xbdd31637, 0x31b6aef35b2a1f6)
 #define STR___gaosa DeeString_STR(&str___gaosa)
-#endif /* !STR___gaosa */
-#ifndef STR_d200
+DEF_STRING(str___roloc, "__roloc", 0xf4874267, 0xa00f637868f0b44e)
+#define STR___roloc DeeString_STR(&str___roloc)
+DEF_STRING(str___assert, "__assert", 0xd4715fbd, 0xdf7c220c44eeb5a4)
+#define STR___assert DeeString_STR(&str___assert)
+DEF_STRING(str___badcall, "__badcall", 0x9795b98b, 0xc9e3cd8eadb2ee72)
+#define STR___badcall DeeString_STR(&str___badcall)
+DEF_STRING(str_d200, "d200", 0xc82f1c9b, 0xdb2a210c2a9ae115)
 #define STR_d200 DeeString_STR(&str_d200)
-#endif /* !STR_d200 */
-#ifndef STR_constexpr
+DEF_STRING(str_nomemory, "allocation failed", 0xbef65010, 0x6315c4e658da5e37)
+#define STR_nomemory DeeString_STR(&str_nomemory)
+DEF_STRING(str_dots, "...", 0x1a086252, 0xf5eff0465042ef13)
+#define STR_dots DeeString_STR(&str_dots)
+DEF_STRING(str_constexpr, "constexpr", 0x58c650ca, 0xf0a0c2270200c1f0)
 #define STR_constexpr DeeString_STR(&str_constexpr)
-#endif /* !STR_constexpr */
-#ifndef STR_sym
+DEF_STRING(str_sym, "sym", 0x17fd993c, 0x1c0e6e19c328844b)
 #define STR_sym DeeString_STR(&str_sym)
-#endif /* !STR_sym */
-#ifndef STR_unbind
+DEF_STRING(str_unbind, "unbind", 0x5a30901a, 0xa4d534ebcf828a7a)
 #define STR_unbind DeeString_STR(&str_unbind)
-#endif /* !STR_unbind */
-#ifndef STR_bound
+DEF_STRING(str_bound, "bound", 0x5d3fd85e, 0x9200603171c0f3b0)
 #define STR_bound DeeString_STR(&str_bound)
-#endif /* !STR_bound */
-#ifndef STR_multiple
+DEF_STRING(str_multiple, "multiple", 0x298dfbdb, 0x28f61f03af08a3ca)
 #define STR_multiple DeeString_STR(&str_multiple)
-#endif /* !STR_multiple */
-#ifndef STR_return
+DEF_STRING(str_return, "return", 0x553dfc89, 0x2a644c3d30df4872)
 #define STR_return DeeString_STR(&str_return)
-#endif /* !STR_return */
-#ifndef STR_yield
+DEF_STRING(str_yield, "yield", 0x96c58e93, 0x17e5134b02b40024)
 #define STR_yield DeeString_STR(&str_yield)
-#endif /* !STR_yield */
-#ifndef STR_throw
+DEF_STRING(str_throw, "throw", 0x17f397c6, 0x1267633ecc33c2c)
 #define STR_throw DeeString_STR(&str_throw)
-#endif /* !STR_throw */
-#ifndef STR_try
+DEF_STRING(str_try, "try", 0xb3e4fc45, 0xeb7c790414e244ab)
 #define STR_try DeeString_STR(&str_try)
-#endif /* !STR_try */
-#ifndef STR_loop
+DEF_STRING(str_loop, "loop", 0xe44e70af, 0xadc137e48b7293ee)
 #define STR_loop DeeString_STR(&str_loop)
-#endif /* !STR_loop */
-#ifndef STR_loopctl
+DEF_STRING(str_loopctl, "loopctl", 0xa389d8bc, 0x2d55b845bc0a547d)
 #define STR_loopctl DeeString_STR(&str_loopctl)
-#endif /* !STR_loopctl */
-#ifndef STR_conditional
+DEF_STRING(str_conditional, "conditional", 0x4445d225, 0xb0965c593399d415)
 #define STR_conditional DeeString_STR(&str_conditional)
-#endif /* !STR_conditional */
-#ifndef STR_expand
+DEF_STRING(str_expand, "expand", 0x7708077c, 0x793fc0a371216076)
 #define STR_expand DeeString_STR(&str_expand)
-#endif /* !STR_expand */
-#ifndef STR_function
+DEF_STRING(str_function, "function", 0x3d75dc7a, 0xf36d912a52403931)
 #define STR_function DeeString_STR(&str_function)
-#endif /* !STR_function */
-#ifndef STR_operatorfunc
+DEF_STRING(str_operatorfunc, "operatorfunc", 0x4c528db6, 0x4cdc8fe9282f4a88)
 #define STR_operatorfunc DeeString_STR(&str_operatorfunc)
-#endif /* !STR_operatorfunc */
-#ifndef STR_operator
+DEF_STRING(str_operator, "operator", 0xa5f184dd, 0x970564e28323bb4)
 #define STR_operator DeeString_STR(&str_operator)
-#endif /* !STR_operator */
-#ifndef STR_action
+DEF_STRING(str_action, "action", 0x3679cc25, 0x4cca7f022ef68151)
 #define STR_action DeeString_STR(&str_action)
-#endif /* !STR_action */
-#ifndef STR_class
+DEF_STRING(str_class, "class", 0xf769f29e, 0xc5397fe5c82dbd12)
 #define STR_class DeeString_STR(&str_class)
-#endif /* !STR_class */
-#ifndef STR_label
+DEF_STRING(str_label, "label", 0x8c7dd24d, 0x10ab80c11491baad)
 #define STR_label DeeString_STR(&str_label)
-#endif /* !STR_label */
-#ifndef STR_goto
+DEF_STRING(str_goto, "goto", 0x6e4777d3, 0x75d33f290274060e)
 #define STR_goto DeeString_STR(&str_goto)
-#endif /* !STR_goto */
-#ifndef STR_switch
+DEF_STRING(str_switch, "switch", 0xfb63ec5e, 0x70bce0e305461cce)
 #define STR_switch DeeString_STR(&str_switch)
-#endif /* !STR_switch */
-#ifndef STR_assembly
+DEF_STRING(str_assembly, "assembly", 0x88542c16, 0x9d1c909a08c788a3)
 #define STR_assembly DeeString_STR(&str_assembly)
-#endif /* !STR_assembly */
-#ifndef STR_global
+DEF_STRING(str_global, "global", 0x42ebe077, 0x4b19ecd5b61b5296)
 #define STR_global DeeString_STR(&str_global)
-#endif /* !STR_global */
-#ifndef STR_extern
+DEF_STRING(str_extern, "extern", 0xc801935e, 0x8b47f0a1d76ecba3)
 #define STR_extern DeeString_STR(&str_extern)
-#endif /* !STR_extern */
-#ifndef STR_module
+DEF_STRING(str_module, "module", 0xae3684a4, 0xbb78a82535e5801e)
 #define STR_module DeeString_STR(&str_module)
-#endif /* !STR_module */
-#ifndef STR_mymod
+DEF_STRING(str_mymod, "mymod", 0x85c64d4c, 0xf4aa94c3b47cfe72)
 #define STR_mymod DeeString_STR(&str_mymod)
-#endif /* !STR_mymod */
-#ifndef STR_getset
+DEF_STRING(str_getset, "getset", 0x4be0a05b, 0xd5b87464b9cb7503)
 #define STR_getset DeeString_STR(&str_getset)
-#endif /* !STR_getset */
-#ifndef STR_ifield
+DEF_STRING(str_ifield, "ifield", 0xce5e0d5c, 0x86dab707bb32c291)
 #define STR_ifield DeeString_STR(&str_ifield)
-#endif /* !STR_ifield */
-#ifndef STR_cfield
+DEF_STRING(str_cfield, "cfield", 0x12ffac49, 0xb7298fd50b333835)
 #define STR_cfield DeeString_STR(&str_cfield)
-#endif /* !STR_cfield */
-#ifndef STR_alias
+DEF_STRING(str_alias, "alias", 0xca8b8108, 0x5826aeb387c6da71)
 #define STR_alias DeeString_STR(&str_alias)
-#endif /* !STR_alias */
-#ifndef STR_arg
+DEF_STRING(str_arg, "arg", 0xd22385c4, 0x72e1ee0d651e56d8)
 #define STR_arg DeeString_STR(&str_arg)
-#endif /* !STR_arg */
-#ifndef STR_local
+DEF_STRING(str_local, "local", 0x1d3dfa1, 0x3ede3ae259b4a7d2)
 #define STR_local DeeString_STR(&str_local)
-#endif /* !STR_local */
-#ifndef STR_stack
+DEF_STRING(str_stack, "stack", 0x30b318, 0xd084e637b870262b)
 #define STR_stack DeeString_STR(&str_stack)
-#endif /* !STR_stack */
-#ifndef STR_static
+DEF_STRING(str_static, "static", 0x6758a24b, 0x9f5751e5f08d205d)
 #define STR_static DeeString_STR(&str_static)
-#endif /* !STR_static */
-#ifndef STR_myfunc
+DEF_STRING(str_except, "except", 0x8aae072b, 0xac70487e4861a6f3)
+#define STR_except DeeString_STR(&str_except)
+DEF_STRING(str_myfunc, "myfunc", 0x67667409, 0x45b51811d7de12b2)
 #define STR_myfunc DeeString_STR(&str_myfunc)
-#endif /* !STR_myfunc */
-#ifndef STR_ambig
+DEF_STRING(str_this, "this", 0x142984e, 0x19d213c79c35abf3)
+#define STR_this DeeString_STR(&str_this)
+DEF_STRING(str_ambig, "ambig", 0x963ab94d, 0x62fe7ee447f767bd)
 #define STR_ambig DeeString_STR(&str_ambig)
-#endif /* !STR_ambig */
-#ifndef STR_fwd
+DEF_STRING(str_fwd, "fwd", 0x4d05936a, 0x468b9d355ef7e041)
 #define STR_fwd DeeString_STR(&str_fwd)
-#endif /* !STR_fwd */
-#ifndef STR_const
+DEF_STRING(str_const, "const", 0x95daec48, 0x2e9cb1cd0ec552da)
 #define STR_const DeeString_STR(&str_const)
-#endif /* !STR_const */
-/*[[[end]]]*/
-#ifdef DeeSysFD_GETSET
-#ifndef STR_getsysfd
+#ifdef DeeSysFD_IS_HANDLE
+DEF_STRING(str_getsysfd, "osfhandle_np", 0x75b169b6, 0x74235841d2ace4f0)
 #define STR_getsysfd DeeString_STR(&str_getsysfd)
-#endif /* !STR_getsysfd */
-#endif /* DeeSysFD_GETSET */
+#elif defined(DeeSysFD_IS_INT)
+DEF_STRING(str_getsysfd, "fileno_np", 0xe3e546ab, 0x38c7dbc48e44183)
+#define STR_getsysfd DeeString_STR(&str_getsysfd)
+#endif /* ... */
 
+#ifndef CONFIG_NO_THREADS
+DEF_STRING(str_run, "run", 0xf1764c48, 0x7b92c951b5e510e3)
+#define STR_run DeeString_STR(&str_run)
+#endif /* !CONFIG_NO_THREADS */
 
-#ifndef STR_except
-#define STR_except "except"
-#endif /* !STR_except */
-#ifndef STR_this
-#define STR_this "this"
-#endif /* !STR_this */
+#ifndef CONFIG_LANGUAGE_NO_ASM
+DEF_STRING(str_this_module, "this_module", 0x34998e44, 0x473e02aa4d7eba45)
+#define STR_this_module DeeString_STR(&str_this_module)
+DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
+#define STR_this_function DeeString_STR(&str_this_function)
+DEF_STRING(str_cell_empty, "cell empty", 0x5df2baea, 0x87d3182524393808)
+#define STR_cell_empty DeeString_STR(&str_cell_empty)
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+/*[[[end]]]*/
+
+#undef DEF_STRING
+
+#ifndef STR_run
+#define STR_run "run"
+#endif /* !STR_run */
 #ifndef STR_this_module
 #define STR_this_module "this_module"
 #endif /* !STR_this_module */

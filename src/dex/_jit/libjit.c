@@ -280,9 +280,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *             - `deemon.Error.SystemError'
 	 *             - `deemon.Error.AppExit'
 	 *             - `deemon.Signal.Interrupt'
-	 *         - `deemon.import' and its alias `deemon.import_' will cause the value
-	 *            of the expression `globals.get("__import__", restricted_import)' to
-	 *            be returned instead.
+	 *         - `deemon.import' will cause the value of the expression
+	 *            `globals.get("__import__", restricted_import)' to be
+	 *            returned instead.
 	 *       Note that other ways of loading modules, such as `string.decode()'
 	 *       are not restricted, as them becoming unsafe would already require
 	 *       either a bug in their implementation, or pre-existing write-access
@@ -378,7 +378,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *         - `deemon.enumattr'   (There is no reason for code to do this)
 	 *                                NOTE: This also includes `operator enumattr()'!
 	 *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
-	 *         - `deemon.import' and `deemon.import_'
+	 *         - `deemon.import'
 	 *         - `deemon.Error.SystemError'
 	 *         - `deemon.Error.AppExit'
 	 *         - `deemon.Signal.Interrupt'

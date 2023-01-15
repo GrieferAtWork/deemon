@@ -644,4 +644,9 @@
 #define tpconst     const
 #define Dee_tpconst const
 #define INTERN_TPCONST
+#define DEF_STRING(n,a,b,c) DeeStringObject n = {};
+#define DEFINE_STRING_EX(n,a,b,c) DeeStringObject n = {}
+#define Dee_DEFINE_STRING_EX(n,a,b,c) DeeStringObject n = {}
+#define DEFINE_STRING(n,a) DeeStringObject n = {}
+#define Dee_DEFINE_STRING(n,a) DeeStringObject n = {}
 

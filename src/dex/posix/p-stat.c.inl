@@ -2205,8 +2205,13 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const
 #endif /* !CONFIG_HAVE_memcasecmp */
 #endif /* !MEMCASEEQ */
 
-PRIVATE DEFINE_STRING(str_PATHEXT, "PATHEXT");
-PRIVATE DEFINE_STRING(str_PATHEXT_default, ".COM;.EXE;.BAT;.CMD");
+/*[[[deemon
+(PRIVATE_DEFINE_STRING from rt.gen)("str_PATHEXT", "PATHEXT");
+(PRIVATE_DEFINE_STRING from rt.gen)("str_PATHEXT_default", ".COM;.EXE;.BAT;.CMD");
+]]]*/
+PRIVATE DEFINE_STRING_EX(str_PATHEXT, "PATHEXT", 0xe011e8eb, 0x16a0c5286fc39b1b);
+PRIVATE DEFINE_STRING_EX(str_PATHEXT_default, ".COM;.EXE;.BAT;.CMD", 0x4fb60429, 0xd467178bef4dfb48);
+/*[[[end]]]*/
 
 /* @return:  1: yes
  * @return:  0: no
@@ -2575,7 +2580,10 @@ posix_dex_fini(DeeDexObject *__restrict self) {
 	Dee_XDecref(dee_time_module);
 }
 
-PRIVATE DEFINE_STRING(str_makeanon, "makeanon");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_makeanon", "makeanon");]]]*/
+PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
+/*[[[end]]]*/
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 default_DeeTime_New(uint64_t microseconds) {
 	DeeObject *time_module = get_time_module();

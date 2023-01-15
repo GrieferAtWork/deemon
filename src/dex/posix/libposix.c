@@ -909,7 +909,10 @@ pst_Iterator_get(DeeObject *__restrict UNUSED(self)) {
 	return DeeModule_GetExtern("rt", "StringSplitIterator");
 }
 
-PRIVATE DEFINE_STRING(str_nul, "\0");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_nul", "\0");]]]*/
+PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
+/*[[[end]]]*/
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pst_iter_self(DeeObject *__restrict UNUSED(self)) {
 	DeeObject *argv[] = { (DeeObject *)&str_nul };

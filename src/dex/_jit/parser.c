@@ -195,7 +195,9 @@ yes:
 	return true;
 }
 
-PRIVATE DEFINE_STRING(str_operators, "operators");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_operators", "operators");]]]*/
+PRIVATE DEFINE_STRING_EX(str_operators, "operators", 0xd4b6b76c, 0xc8d5b5ae0eb7316e);
+/*[[[end]]]*/
 
 
 INTERN WUNUSED DREF DeeObject *FCALL

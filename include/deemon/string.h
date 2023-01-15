@@ -28,13 +28,14 @@
 #include "alloc.h"
 #endif /* !__INTELLISENSE__ */
 
-#include <hybrid/typecore.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
+#include <hybrid/typecore.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
@@ -488,6 +489,25 @@ struct Dee_string_object {
 		  { (size_t *)name.s_str },                               \
 		  name.s_str }                                            \
 	}
+#define Dee_DEFINE_STRING_EX(name, str, hash32, hash64)           \
+	struct {                                                      \
+		Dee_OBJECT_HEAD                                           \
+		struct Dee_string_utf *s_data;                            \
+		Dee_hash_t             s_hash;                            \
+		size_t                 s_len;                             \
+		char                   s_str[sizeof(str) / sizeof(char)]; \
+		struct Dee_string_utf  s_utf;                             \
+	} name = {                                                    \
+		Dee_OBJECT_HEAD_INIT(&DeeString_Type),                    \
+		&name.s_utf,                                              \
+		_Dee_HashSelect(UINT32_C(hash32), UINT64_C(hash64)),      \
+		(sizeof(str) / sizeof(char)) - 1,                         \
+		str,                                                      \
+		{ Dee_STRING_WIDTH_1BYTE,                                 \
+		  Dee_STRING_UTF_FASCII,                                  \
+		  { (size_t *)name.s_str },                               \
+		  name.s_str }                                            \
+	}
 
 struct Dee_empty_string_struct {
 	Dee_OBJECT_HEAD
@@ -504,6 +524,7 @@ DDATDEF struct Dee_empty_string_struct DeeString_Empty;
 
 #ifdef DEE_SOURCE
 #define DEFINE_STRING       Dee_DEFINE_STRING
+#define DEFINE_STRING_EX    Dee_DEFINE_STRING_EX
 #define return_empty_string Dee_return_empty_string
 #endif /* DEE_SOURCE */
 

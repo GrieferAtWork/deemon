@@ -110,10 +110,18 @@ DECL_BEGIN
 
 
 #ifndef posix_getenv_USE_STUB
-PRIVATE DEFINE_STRING(posix_tmpdir_0, "TMPDIR");
-PRIVATE DEFINE_STRING(posix_tmpdir_1, "TMP");
-PRIVATE DEFINE_STRING(posix_tmpdir_2, "TEMP");
-PRIVATE DEFINE_STRING(posix_tmpdir_3, "TEMPDIR");
+/*[[[deemon
+import PRIVATE_DEFINE_STRING from rt.gen;
+PRIVATE_DEFINE_STRING("posix_tmpdir_0", "TMPDIR");
+PRIVATE_DEFINE_STRING("posix_tmpdir_1", "TMP");
+PRIVATE_DEFINE_STRING("posix_tmpdir_2", "TEMP");
+PRIVATE_DEFINE_STRING("posix_tmpdir_3", "TEMPDIR");
+]]]*/
+PRIVATE DEFINE_STRING_EX(posix_tmpdir_0, "TMPDIR", 0xb180f71d, 0x712d0adb9f9c3cf6);
+PRIVATE DEFINE_STRING_EX(posix_tmpdir_1, "TMP", 0x22c9bd9f, 0x4937abfbb3440315);
+PRIVATE DEFINE_STRING_EX(posix_tmpdir_2, "TEMP", 0x3e83d711, 0x481e7bd833183107);
+PRIVATE DEFINE_STRING_EX(posix_tmpdir_3, "TEMPDIR", 0x728deb7f, 0x4b0984866be1d645);
+/*[[[end]]]*/
 PRIVATE DeeStringObject *posix_tmpdir_varnames[] = {
 	(DeeStringObject *)&posix_tmpdir_0,
 	(DeeStringObject *)&posix_tmpdir_1,

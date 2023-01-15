@@ -2494,7 +2494,9 @@ err:
 }
 
 
-PRIVATE DEFINE_STRING(str_nul, "\0");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_nul", "\0");]]]*/
+PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
+/*[[[end]]]*/
 
 /* Split a given `str' at each instance of a NUL-character,
  * returning the sequence of resulting strings. */

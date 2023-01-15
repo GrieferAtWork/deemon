@@ -194,8 +194,13 @@ ob_weakref_moveassign(WeakRef *__restrict self,
 	return 0;
 }
 
-PRIVATE DEFINE_STRING(empty_weakref, "empty WeakRef");
-PRIVATE DEFINE_STRING(empty_weakref_repr, "WeakRef()");
+/*[[[deemon
+(PRIVATE_DEFINE_STRING from rt.gen)("empty_weakref", "empty WeakRef");
+(PRIVATE_DEFINE_STRING from rt.gen)("empty_weakref_repr", "WeakRef()");
+]]]*/
+PRIVATE DEFINE_STRING_EX(empty_weakref, "empty WeakRef", 0x21b9fba5, 0x271729924e7f107d);
+PRIVATE DEFINE_STRING_EX(empty_weakref_repr, "WeakRef()", 0x7f35b6fd, 0xa52703d4c6e4c57e);
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_str(WeakRef *__restrict self) {

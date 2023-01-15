@@ -158,6 +158,14 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
 #define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
 #endif /* !__INTELLISENSE__ */
 
+#if __SIZEOF_POINTER__ <= 4
+#define _Dee_HashSelect(hash32, hash64) hash32
+#else /* __SIZEOF_POINTER__ <= 4 */
+#define _Dee_HashSelect(hash32, hash64) hash64
+#endif /* __SIZEOF_POINTER__ > 4 */
+
+
+
 /* Hash a utf-8 encoded string.
  * You can think of these as hashing the ordinal values of the given string,
  * thus allowing this hashing function to return the same value for a string

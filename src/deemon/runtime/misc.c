@@ -93,7 +93,7 @@ DECL_BEGIN
 
 
 
-#if __SIZEOF_POINTER__ == 4
+#if _Dee_HashSelect(1, 2) == 1
 // This Hash function is based on code from here:
 // https://en.wikipedia.org/wiki/MurmurHash
 // It was referenced as pretty good here:
@@ -538,7 +538,7 @@ done:
 #undef m
 #undef n
 
-#else /* __SIZEOF_POINTER__ == 4 */
+#elif _Dee_HashSelect(1, 2) == 2
 
 #define m    0xc6a4a7935bd1e995ull
 #define r    47
@@ -1062,14 +1062,17 @@ done:
 #undef r
 #undef m
 
-#endif /* __SIZEOF_POINTER__ != 4 */
+#else /* ... */
+#error "Unable to determine desired hash algorithm"
+#endif /* !... */
+
+
 
 #if 0
 #define HEAP_CHECK()  Dee_CHECKMEMORY()
 #else
 #define HEAP_CHECK()  (void)0
 #endif
-
 
 #if 0
 #define BEGIN_ALLOC() (DBG_ALIGNMENT_DISABLE(), DeeMem_ClearCaches((size_t)-1))

@@ -140,8 +140,9 @@ err:
 }
 
 
-
-PRIVATE DEFINE_STRING(str_makeanon, "makeanon");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_makeanon", "makeanon");]]]*/
+PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
+/*[[[end]]]*/
 PRIVATE WUNUSED DREF DeeObject *DCALL default_DeeTime_New(uint64_t microseconds) {
 	return DeeObject_CallAttrf(TIME_MODULE,
 	                           (DeeObject *)&str_makeanon,
@@ -538,25 +539,50 @@ INTERN DEFINE_STRING(libfs_altsep, DeeSystem_ALTSEP_S);
 INTERN DEFINE_STRING(libfs_delim, DeeSystem_DELIM_S);
 
 
+/*[[[deemon
+import INTERN_DEFINE_STRING from rt.gen;
+print("#ifdef CONFIG_HOST_WINDOWS");
+INTERN_DEFINE_STRING("libfs_DEV_NULL", "NUL");
+INTERN_DEFINE_STRING("libfs_DEV_TTY", "CON");
+print("#ifdef CONFIG_WANT_WINDOWS_STD_FILES");
+INTERN_DEFINE_STRING("libfs_DEV_STDIN", "stdIN$");
+INTERN_DEFINE_STRING("libfs_DEV_STDOUT", "stdOUT$");
+INTERN_DEFINE_STRING("libfs_DEV_STDERR", "stdERR$");
+print("#else /" "* CONFIG_WANT_WINDOWS_STD_FILES *" "/");
+print("/" "* Not ~really~ the same, but (might be) good enough... *" "/");
+INTERN_DEFINE_STRING("libfs_DEV_STDIN", "conIN$");
+INTERN_DEFINE_STRING("libfs_DEV_STDOUT", "conOUT$");
+print("#define libfs_DEV_STDERR libfs_DEV_STDOUT");
+print("#endif /" "* !CONFIG_WANT_WINDOWS_STD_FILES *" "/");
+print("#else /" "* CONFIG_HOST_WINDOWS *" "/");
+INTERN_DEFINE_STRING("libfs_DEV_NULL", "/dev/null");
+INTERN_DEFINE_STRING("libfs_DEV_TTY", "/dev/tty");
+INTERN_DEFINE_STRING("libfs_DEV_STDIN", "/dev/stdin");
+INTERN_DEFINE_STRING("libfs_DEV_STDOUT", "/dev/stdout");
+INTERN_DEFINE_STRING("libfs_DEV_STDERR", "/dev/stderr");
+print("#endif /" "* !CONFIG_HOST_WINDOWS *" "/");
+]]]*/
 #ifdef CONFIG_HOST_WINDOWS
-INTERN DEFINE_STRING(libfs_DEV_NULL, "NUL");
-INTERN DEFINE_STRING(libfs_DEV_TTY, "CON");
+INTERN DEFINE_STRING_EX(libfs_DEV_NULL, "NUL", 0x297be5d1, 0x3d8f7ae6aa67df1c);
+INTERN DEFINE_STRING_EX(libfs_DEV_TTY, "CON", 0xb110e83f, 0xa73f81bd9988039c);
 #ifdef CONFIG_WANT_WINDOWS_STD_FILES
-INTERN DEFINE_STRING(libfs_DEV_STDIN, "stdIN$");
-INTERN DEFINE_STRING(libfs_DEV_STDOUT, "stdOUT$");
-INTERN DEFINE_STRING(libfs_DEV_STDERR, "stdERR$");
+INTERN DEFINE_STRING_EX(libfs_DEV_STDIN, "stdIN$", 0x4466c44e, 0xe6dfc5c009c7236d);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDOUT, "stdOUT$", 0x83344df4, 0xd67542b6f922acbf);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDERR, "stdERR$", 0xb338bb23, 0x8ed956ddcad49d39);
 #else /* CONFIG_WANT_WINDOWS_STD_FILES */
-INTERN DEFINE_STRING(libfs_DEV_STDIN, "conIN$");   /* Not ~really~ the same, but (might be) good enough... */
-INTERN DEFINE_STRING(libfs_DEV_STDOUT, "conOUT$"); /* ... */
-#define libfs_DEV_STDERR libfs_DEV_STDOUT /* ... */
+/* Not ~really~ the same, but (might be) good enough... */
+INTERN DEFINE_STRING_EX(libfs_DEV_STDIN, "conIN$", 0x8a109c76, 0x4cd9aca36f923d90);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDOUT, "conOUT$", 0x99f68777, 0xd154664875fe4613);
+#define libfs_DEV_STDERR libfs_DEV_STDOUT
 #endif /* !CONFIG_WANT_WINDOWS_STD_FILES */
 #else /* CONFIG_HOST_WINDOWS */
-INTERN DEFINE_STRING(libfs_DEV_NULL, "/dev/null");
-INTERN DEFINE_STRING(libfs_DEV_TTY, "/dev/tty");
-INTERN DEFINE_STRING(libfs_DEV_STDIN, "/dev/stdin");
-INTERN DEFINE_STRING(libfs_DEV_STDOUT, "/dev/stdout");
-INTERN DEFINE_STRING(libfs_DEV_STDERR, "/dev/stderr");
+INTERN DEFINE_STRING_EX(libfs_DEV_NULL, "/dev/null", 0xd132f8f7, 0x6d8429be54d7865c);
+INTERN DEFINE_STRING_EX(libfs_DEV_TTY, "/dev/tty", 0x8e50730a, 0xc9b684e28c6b31f8);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDIN, "/dev/stdin", 0x61dde285, 0xa2ebb4f0610cae9c);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDOUT, "/dev/stdout", 0xe4a13278, 0x86a4a6cab4dca74);
+INTERN DEFINE_STRING_EX(libfs_DEV_STDERR, "/dev/stderr", 0xd46ef3cd, 0x8848ed6b2b366081);
 #endif /* !CONFIG_HOST_WINDOWS */
+/*[[[end]]]*/
 
 
 

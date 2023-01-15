@@ -129,10 +129,11 @@ PRIVATE DEFINE_CMETHOD(librt_setstacklimit, librt_setstacklimit_f);
 PRIVATE DEFINE_KWCMETHOD(librt_makeclass, librt_makeclass_f);
 
 #if 1
-#define STR_ITERATOR COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name, DeeStringObject, s_str)
+#define str_Iterator (*COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name, DeeStringObject, s_str))
 #else
-#define STR_ITERATOR &str_Iterator
-PRIVATE DEFINE_STRING(str_Iterator, "Iterator");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_Iterator", "Iterator");]]]*/
+PRIVATE DEFINE_STRING_EX(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebfff);
+/*[[[end]]]*/
 #endif
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -151,7 +152,7 @@ get_iterator_of(DREF DeeObject *ob) {
 	DREF DeeObject *result = NULL;
 	if likely(ob) {
 		result = DeeObject_GetAttr((DeeObject *)ob,
-		                           (DeeObject *)STR_ITERATOR);
+		                           (DeeObject *)&str_Iterator);
 		Dee_Decref_unlikely(ob);
 	}
 	return result;
@@ -212,25 +213,25 @@ librt_get_ObjectTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_RoDictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeRoDict_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_RoSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeRoSet_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_KwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeKwds_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_KwdsMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeKwdsMapping_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 
@@ -279,67 +280,67 @@ librt_get_IteratorFuture_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_StringIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeString_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_BytesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeBytes_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ListIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeList_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_TupleIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeTuple_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_HashSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeHashSet_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDict_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DictProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictProxy_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DictKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictKeys_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DictItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictItems_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DictValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictValues_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeTraceback_Type,
-	                         (DeeObject *)STR_ITERATOR);
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -427,10 +428,10 @@ LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BlackListVarkwds_impl_f(void) {
 	/* `type(varkwds_func(iterator: none))' */
 	DeeObject *argv[]                         = { Dee_None };
-	dhash_t h                                 = DeeString_Hash((DeeObject *)STR_ITERATOR);
-	varkwds_invoke_kwds.kw_map[h & 1].ke_name = STR_ITERATOR;
+	dhash_t h                                 = DeeString_Hash((DeeObject *)&str_Iterator);
+	varkwds_invoke_kwds.kw_map[h & 1].ke_name = &str_Iterator;
 	varkwds_invoke_kwds.kw_map[h & 1].ke_hash = h;
-	varkwds_keywords[0]                       = (DeeStringObject *)STR_ITERATOR;
+	varkwds_keywords[0]                       = (DeeStringObject *)&str_Iterator;
 	return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
 	                                    COMPILER_LENOF(argv),
 	                                    argv,
@@ -440,7 +441,7 @@ librt_get_BlackListVarkwds_impl_f(void) {
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BlackListMapping_impl_f(void) {
 	/* `type(varkwds_func(**none))' */
-	varkwds_keywords[0] = (DeeStringObject *)STR_ITERATOR;
+	varkwds_keywords[0] = (DeeStringObject *)&str_Iterator;
 	return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
 	                                    0,
 	                                    NULL,
@@ -473,7 +474,7 @@ librt_get_BlackListMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUS
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_DocKwds_impl_f(void) {
 	/* To implement this, we need to get access to an instance of it,
-	 * which we are doing via `type((import_ from deemon).__kwds__)'.
+	 * which we are doing via `type(("import" from deemon).__kwds__)'.
 	 * Because the `import()' function is known to implement keyword
 	 * support, we can use it as a reference point for a C-level function
 	 * with a non-empty keyword list, without having to create such an
@@ -622,7 +623,7 @@ librt_get_sequence_mutation_type(char const *__restrict name) {
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 librt_get_string_mutation_type(char const *__restrict name) {
 	DeeObject *argv[] = { &DeeInt_One };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, name, 1, argv));
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, name, 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -918,7 +919,7 @@ librt_get_SeqEachGetAttr_stub_instance(void) {
 	result = librt_get_SeqEach_stub_instance();
 	if likely(result) {
 		DREF DeeObject *temp;
-		temp = DeeObject_GetAttr(result, (DeeObject *)STR_ITERATOR);
+		temp = DeeObject_GetAttr(result, (DeeObject *)&str_Iterator);
 		Dee_Decref(result);
 		result = temp;
 	}
@@ -931,7 +932,7 @@ librt_get_SeqEachCallAttr_stub_instance(void) {
 	result = librt_get_SeqEach_stub_instance();
 	if likely(result) {
 		DREF DeeObject *temp;
-		temp = DeeObject_CallAttr(result, (DeeObject *)STR_ITERATOR, 0, NULL);
+		temp = DeeObject_CallAttr(result, (DeeObject *)&str_Iterator, 0, NULL);
 		Dee_Decref(result);
 		result = temp;
 	}
@@ -944,7 +945,7 @@ librt_get_SeqEachCallAttrKw_stub_instance(void) {
 	result = librt_get_SeqEach_stub_instance();
 	if likely(result) {
 		DREF DeeObject *temp;
-		temp = DeeObject_CallAttrKw(result, (DeeObject *)STR_ITERATOR,
+		temp = DeeObject_CallAttrKw(result, (DeeObject *)&str_Iterator,
 		                            0,
 		                            NULL,
 		                            Dee_EmptyMapping);
@@ -1335,42 +1336,42 @@ librt_get_StringSegments_impl_f(void) {
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringFind_impl_f(void) {
-	DeeObject *argv[] = { (DeeObject *)STR_ITERATOR };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "findall", 1, argv));
+	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "findall", 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringCaseFind_impl_f(void) {
-	DeeObject *argv[] = { (DeeObject *)STR_ITERATOR };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "casefindall", 1, argv));
+	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "casefindall", 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringSplit_impl_f(void) {
-	DeeObject *argv[] = { (DeeObject *)STR_ITERATOR };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "split", 1, argv));
+	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "split", 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringCaseSplit_impl_f(void) {
-	DeeObject *argv[] = { (DeeObject *)STR_ITERATOR };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "casesplit", 1, argv));
+	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "casesplit", 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringLineSplit_impl_f(void) {
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "splitlines", 0, NULL));
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "splitlines", 0, NULL));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringScan_impl_f(void) {
-	DeeObject *argv[] = { (DeeObject *)STR_ITERATOR };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)STR_ITERATOR, "scanf", 1, argv));
+	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
+	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "scanf", 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringOrdinals_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)STR_ITERATOR, "ordinals"));
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&str_Iterator, "ordinals"));
 }
 
 

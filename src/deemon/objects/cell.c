@@ -241,7 +241,9 @@ DeeCell_Set(DeeObject *self, DeeObject *value) {
 }
 
 
-PRIVATE DEFINE_STRING(empty_cell_repr, "<>");
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("empty_cell_repr", "Cell()");]]]*/
+PRIVATE DEFINE_STRING_EX(empty_cell_repr, "Cell()", 0x96abe6c, 0x2370159788821e2);
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 cell_str(Cell *__restrict self) {
@@ -258,7 +260,7 @@ cell_repr(Cell *__restrict self) {
 	item = DeeCell_TryGet((DeeObject *)self);
 	if (!item)
 		return_reference_((DeeStringObject *)&empty_cell_repr);
-	return (DREF DeeStringObject *)DeeString_Newf("<%R>", item);
+	return (DREF DeeStringObject *)DeeString_Newf("Cell(%R)", item);
 }
 
 #ifdef CONFIG_NO_THREADS
