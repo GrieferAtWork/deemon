@@ -1128,7 +1128,8 @@ enumattr_start(void *arg) {
 		self->ei_bufpos = new_pos;
 		if (DeeSystem_SetJmp(self->ei_continue) == 0)
 			DeeSystem_LongJmp(self->ei_break, BRKSIG_YIELD);
-		ASSERT(self->ei_bufpos == self->ei_buffer);
+		ASSERT(self->ei_bufpos == self->ei_buffer ||
+		       self->ei_bufpos == (DREF Attr **)ITER_DONE);
 	}
 	/* Mark the buffer as exhausted. */
 	self->ei_bufpos = (DREF Attr **)ITER_DONE;
