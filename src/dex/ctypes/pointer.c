@@ -104,7 +104,7 @@ pointer_repr(DeePointerTypeObject *tp_self,
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
 	                    return NULL);
-	return DeeString_Newf("(%k)0x%p", tp_self, value.ptr);
+	return DeeString_Newf("(%r)0x%p", tp_self, value.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

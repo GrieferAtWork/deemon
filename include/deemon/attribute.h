@@ -140,8 +140,8 @@ struct Dee_enumattr_iterator_object {
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeAttributeObject  *ei_buffer[CONFIG_LONGJMP_ENUMATTR_CLUSTER]; /* [?..1][*][lock(ei_lock)] Attribute cluster buffer. */
 	DREF DeeAttributeObject **ei_bufpos;           /* [0..1][in(ei_buffer)][lock(ei_lock)] Pointer to the next unused (in-enum) or full (outside-enum) item.
-	                                                *  NOTE: Initially, this pointer is set to NULL.
-	                                                *  NOTE: To indicate exhaustion, this pointer to set to ITER_DONE. */
+	                                                * NOTE: Initially, this pointer is set to NULL.
+	                                                * NOTE: To indicate exhaustion, this pointer to set to ITER_DONE. */
 	DeeSystem_JmpBuf          ei_break;            /* [lock(ei_lock)] Jump buffer to jump into to break execution (and yield more items). */
 	DeeSystem_JmpBuf          ei_continue;         /* [lock(ei_lock)] Jump buffer to jump into to continue execution (and collect more items). */
 	uintptr_t                 ei_stack[512 + 256]; /* A small 3/6K-stack used when running the `tp_enumattr' operator. */

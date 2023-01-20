@@ -1936,19 +1936,17 @@ ftype_repr(DeeCFunctionTypeObject *__restrict self) {
 	if (cc != CC_DEFAULT) {
 		char const *cc_name = cc_getname(cc);
 		if (cc_name) {
-			if unlikely(unicode_printer_printf(&printer,
-			                                   self->ft_argc ? "%q," : "%q",
-			                                   cc_name) < 0)
+			if unlikely(unicode_printer_printf(&printer, "%q", cc_name) < 0)
 				goto err;
 			is_first_arg = false;
 		}
 	}
 	for (i = 0; i < self->ft_argc; ++i) {
-		if (is_first_arg) {
+		if (!is_first_arg) {
 			if unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
 				goto err;
-			is_first_arg = false;
 		}
+		is_first_arg = false;
 		if unlikely(unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_argv[i])) < 0)
 			goto err;
 	}
