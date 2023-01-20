@@ -1935,7 +1935,7 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout) {
 		goto err;
 	error = DeeSocket_Accept(self, timeout,
 	                         &result->s_socket,
-	                         &result->s_peeraddr);
+	                         &result->s_sockaddr);
 	if unlikely(error < 0)
 		goto err_r;
 	if (error > 0) {
@@ -1944,8 +1944,8 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout) {
 	}
 	/* Fill in the remaining members of the new socket. */
 	atomic_rwlock_init(&result->s_lock);
-	result->s_sockaddr.sa.sa_family = result->s_peeraddr.sa.sa_family;
-	result->s_state                 = (SOCKET_FOPENED | SOCKET_FHASPEERADDR | SOCKET_FCONNECTED);
+	result->s_peeraddr.sa.sa_family = result->s_sockaddr.sa.sa_family;
+	result->s_state                 = (SOCKET_FOPENED | SOCKET_FHASSOCKADDR | SOCKET_FCONNECTED);
 	result->s_type                  = self->s_type;
 	result->s_proto                 = self->s_proto;
 	DeeObject_Init(result, &DeeSocket_Type);

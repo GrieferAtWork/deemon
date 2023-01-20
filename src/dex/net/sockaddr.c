@@ -823,7 +823,7 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 
 #ifdef AF_INET6
 	case AF_INET6:
-		result = sock_gethostbyaddr(&self->sa_inet.sin_addr, 4, family, flags);
+		result = sock_gethostbyaddr(&self->sa_inet6.sin6_addr, 16, family, flags);
 		if (!(flags & SOCKADDR_STR_FNOPORT))
 			return DeeString_Newf("[%K]:%I16u", result, NTOH16(self->sa_inet6.sin6_port));
 		break;
