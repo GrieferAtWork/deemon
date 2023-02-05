@@ -3950,7 +3950,7 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		size_t namelen;
 		DWORD dwError;
 		namelen  = strlen(name);
-		namebuf = (char *)Dee_AMalloc((3 + namelen + 1) * sizeof(char));
+		namebuf = (char *)Dee_AMallocc(3 + namelen + 1, sizeof(char));
 		if unlikely(!namebuf)
 			goto done;
 		namebuf[0] = 'K';
@@ -4021,10 +4021,10 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f_impl(HAND
 	                    (HANDLE hProcess, HMODULE * lphModule,
 	                     DWORD cb, LPDWORD lpcbNeeded, DWORD dwFilterFlag))
 	cbAllocModules = 64;
-	phModules = (HMODULE *)Dee_TryMalloc(cbAllocModules * sizeof(HMODULE));
+	phModules = (HMODULE *)Dee_TryMallocc(cbAllocModules, sizeof(HMODULE));
 	if unlikely(!phModules) {
 		cbAllocModules = 1;
-		phModules = (HMODULE *)Dee_Malloc(cbAllocModules * sizeof(HMODULE));
+		phModules = (HMODULE *)Dee_Mallocc(cbAllocModules, sizeof(HMODULE));
 		if unlikely(!phModules)
 			goto err;
 	}
@@ -4053,7 +4053,7 @@ again:
 	cbNeededModules /= sizeof(HMODULE);
 	if (cbNeededModules > cbAllocModules) {
 		HMODULE *phNewModules;
-		phNewModules = (HMODULE *)Dee_Realloc(phModules, cbNeededModules * sizeof(HMODULE));
+		phNewModules = (HMODULE *)Dee_Reallocc(phModules, cbNeededModules, sizeof(HMODULE));
 		if unlikely(!phNewModules)
 			goto err_modules;
 		phModules      = phNewModules;
@@ -4117,10 +4117,10 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f_impl(void)
 	LOAD_PSAPI_FUNCTION(err, BOOL, WINAPI, EnumProcesses,
 	                    (DWORD *lpidProcess, DWORD cb, LPDWORD lpcbNeeded))
 	cbAllocProcesses = 128;
-	pidProcesses = (DWORD *)Dee_TryMalloc(cbAllocProcesses * sizeof(DWORD));
+	pidProcesses = (DWORD *)Dee_TryMallocc(cbAllocProcesses, sizeof(DWORD));
 	if unlikely(!pidProcesses) {
 		cbAllocProcesses = 1;
-		pidProcesses = (DWORD *)Dee_Malloc(cbAllocProcesses * sizeof(DWORD));
+		pidProcesses = (DWORD *)Dee_Mallocc(cbAllocProcesses, sizeof(DWORD));
 		if unlikely(!pidProcesses)
 			goto err;
 	}
@@ -4146,7 +4146,7 @@ again:
 	if (cbNeededProcesses >= cbAllocProcesses) {
 		DWORD *pidNewProcesses;
 		cbNeededProcesses = cbAllocProcesses * 2;
-		pidNewProcesses = (DWORD *)Dee_Realloc(pidProcesses, cbNeededProcesses * sizeof(DWORD));
+		pidNewProcesses = (DWORD *)Dee_Reallocc(pidProcesses, cbNeededProcesses, sizeof(DWORD));
 		if unlikely(!pidNewProcesses)
 			goto err_modules;
 		pidProcesses     = pidNewProcesses;

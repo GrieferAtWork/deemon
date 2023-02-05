@@ -745,8 +745,8 @@ err_unix_rename(int errno_value,
 				if (DeeSystem_IsSep(tnewpath[tnewpath_size]))
 					tnewpath_lastsep = tnewpath_size + 1;
 			}
-			tnewpath_copy = (posix_stat_TCHAR *)Dee_Malloc((tnewpath_lastsep + 1) *
-			                                               sizeof(posix_stat_TCHAR));
+			tnewpath_copy = (posix_stat_TCHAR *)Dee_Mallocc(tnewpath_lastsep + 1,
+			                                                sizeof(posix_stat_TCHAR));
 			if unlikely(!tnewpath_copy)
 				return -1;
 			if (tnewpath_lastsep == 1) {

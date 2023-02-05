@@ -159,7 +159,7 @@ again:
 	if ((tls_nexti & 7) == 0) {
 		/* Must allocate more bitset memory. */
 		uint8_t *new_bitset;
-		new_bitset = (uint8_t *)Dee_TryRealloc(tls_inuse, ((tls_nexti / 8) + 1) * sizeof(uint8_t));
+		new_bitset = (uint8_t *)Dee_TryReallocc(tls_inuse, (tls_nexti / 8) + 1, sizeof(uint8_t));
 		/* The the realloc failed, return `(size_t)-1'. */
 		if unlikely(!new_bitset) {
 			atomic_lock_release(&tls_reglock);

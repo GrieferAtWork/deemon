@@ -174,16 +174,18 @@ rehash_class_attributes(DeeClassDescriptorObject *__restrict self) {
 	new_mask = (self->cd_cattr_mask << 1) | 1;
 	if (new_mask <= 1)
 		new_mask = 7;
-	new_table = (struct class_attribute *)Dee_Calloc((new_mask + 1) *
-	                                                 sizeof(struct class_attribute));
+	new_table = (struct class_attribute *)Dee_Callocc(new_mask + 1,
+	                                                  sizeof(struct class_attribute));
 	if unlikely(!new_table)
 		goto err;
+
 	/* Rehash all of the old attributes. */
 	for (i = 0; i <= self->cd_cattr_mask; ++i) {
 		struct class_attribute *old_attr, *new_attr;
 		old_attr = &self->cd_cattr_list[i];
 		if (!old_attr->ca_name)
 			continue;
+
 		/* Relocate this attribute. */
 		j = perturb = old_attr->ca_hash & new_mask;
 		for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
@@ -194,6 +196,7 @@ rehash_class_attributes(DeeClassDescriptorObject *__restrict self) {
 		memcpy(new_attr, old_attr, sizeof(struct class_attribute));
 		relocate_attribute(old_attr, new_attr);
 	}
+
 	/* Install the new table and mask. */
 	if (self->cd_cattr_list != empty_class_attributes)
 		Dee_Free(self->cd_cattr_list);
@@ -209,19 +212,23 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	size_t new_mask, i, j, perturb;
 	DREF DeeClassDescriptorObject *new_descr;
 	new_mask = (self->cd_iattr_mask << 1) | 1;
-	/* The instance-attribute table is pre-initialized
-	 * to a mask of `7', so this would never trigger. */
-	/*if (new_mask <= 1) new_mask = 7;*/
+#if 0 /* The instance-attribute table is pre-initialized
+       * to a mask of `7', so this would never trigger. */
+	if (new_mask <= 1)
+		new_mask = 7;
+#endif
 	new_descr = (DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 	                                                         (new_mask + 1) * sizeof(struct class_attribute));
 	if unlikely(!new_descr)
 		goto err;
+
 	/* Rehash all of the old attributes. */
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
 		struct class_attribute *old_attr, *new_attr;
 		old_attr = &self->cd_iattr_list[i];
 		if (!old_attr->ca_name)
 			continue;
+
 		/* Relocate this attribute. */
 		j = perturb = old_attr->ca_hash & new_mask;
 		for (;; DeeClassDescriptor_IATTRNEXT(j, perturb)) {
@@ -232,10 +239,13 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 		memcpy(new_attr, old_attr, sizeof(struct class_attribute));
 		relocate_attribute(old_attr, new_attr);
 	}
+
 	/* Copy the entire header from the old descriptor (thus stealing all of its data) */
 	memcpy(new_descr, self, offsetof(DeeClassDescriptorObject, cd_iattr_list));
+
 	/* Remember the (now) larger mask. */
 	new_descr->cd_iattr_mask = new_mask;
+
 	/* Free the old descriptor. */
 	DeeObject_Free(self);
 	return new_descr;
@@ -250,20 +260,23 @@ rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
 	new_mask = (self->cd_clsop_mask << 1) | 1;
 	if (new_mask <= 1)
 		new_mask = 3;
-	new_table = (struct class_operator *)Dee_Malloc((new_mask + 1) *
-	                                                sizeof(struct class_operator));
+	new_table = (struct class_operator *)Dee_Mallocc(new_mask + 1,
+	                                                 sizeof(struct class_operator));
 	if unlikely(!new_table)
 		goto err;
+
 	/* Fill the new table with all unused entries. */
 	memset(new_table, 0xff,
 	       (new_mask + 1) *
 	       sizeof(struct class_operator));
+
 	/* Rehash all pre-existing bindings. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		struct class_operator *op, *new_op;
 		op = &self->cd_clsop_list[i];
 		if (op->co_name == (uint16_t)-1)
 			continue; /* Unused entry. */
+
 		/* Insert the entry into the new table. */
 		j = perturb = op->co_name & new_mask;
 		for (;; DeeClassDescriptor_CLSOPNEXT(j, perturb)) {
@@ -273,6 +286,7 @@ rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
 		}
 		memcpy(new_op, op, sizeof(struct class_operator));
 	}
+
 	/* Install the new table and mask. */
 	if (self->cd_clsop_list != empty_class_operators)
 		Dee_Free(self->cd_clsop_list);
@@ -297,11 +311,13 @@ class_maker_newcattr(struct class_maker *__restrict self,
 		goto err;
 	hash = DeeString_Hash((DeeObject *)name);
 	i = perturb = hash & desc->cd_cattr_mask;
+
 	/* Search for a pre-existing matching attribute, or create a new one. */
 	for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
 		result = &desc->cd_cattr_list[i & desc->cd_cattr_mask];
 		if (!result->ca_name)
 			break; /* Unused entry. */
+
 		/* Make sure that the member doesn't already exist! */
 		if (result->ca_hash != hash)
 			continue;
@@ -313,6 +329,7 @@ class_maker_newcattr(struct class_maker *__restrict self,
 		          DeeString_SIZE(name),
 		          sizeof(char)) != 0)
 			continue;
+
 		/* Duplicate name */
 		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
 		           DeeString_SIZE(name),
@@ -347,11 +364,13 @@ class_maker_newiattr(struct class_maker *__restrict self,
 	}
 	hash = DeeString_Hash((DeeObject *)name);
 	i = perturb = hash & desc->cd_iattr_mask;
+
 	/* Search for a pre-existing matching attribute, or create a new one. */
 	for (;; DeeClassDescriptor_IATTRNEXT(i, perturb)) {
 		result = &desc->cd_iattr_list[i & desc->cd_iattr_mask];
 		if (!result->ca_name)
 			break; /* Unused entry. */
+
 		/* Make sure that the member doesn't already exist! */
 		if (result->ca_hash != hash)
 			continue;
@@ -363,6 +382,7 @@ class_maker_newiattr(struct class_maker *__restrict self,
 		          DeeString_SIZE(name),
 		          sizeof(char)) != 0)
 			continue;
+
 		/* Duplicate name */
 		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
 		           DeeString_SIZE(name),
@@ -395,6 +415,7 @@ class_maker_bindoperator(struct class_maker *__restrict self,
 	    unlikely(rehash_operator_bindings(desc)))
 		goto err;
 	i = perturb = name & desc->cd_clsop_mask;
+
 	/* Search for a pre-existing matching attribute, or create a new one. */
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		result = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
@@ -429,6 +450,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 class_maker_push_methscope(struct class_maker *__restrict self) {
 	if (basescope_push())
 		goto err;
+
 	/* Set the appropriate flags to turn this one into a class-scope. */
 	current_basescope->bs_flags |= CODE_FTHISCALL;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
@@ -449,9 +471,11 @@ class_maker_push_ctorscope(struct class_maker *__restrict self) {
 		basescope_push_ob(self->cm_ctor_scope);
 		return 0;
 	}
+
 	/* Must create a new constructor-scope. */
 	if unlikely(class_maker_push_methscope(self))
 		goto err;
+
 	/* Now just set the constructor-flag in the scope. */
 	current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
 	self->cm_ctor_scope = current_basescope;
@@ -499,6 +523,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 	                                                      name->k_size);
 	if unlikely(!name_str)
 		goto err;
+
 	/* Add a new member entry to the specified table. */
 	if (is_class_member) {
 		attr = class_maker_newcattr(self, name_str, loc);
@@ -565,6 +590,7 @@ class_maker_addmember(struct class_maker *__restrict self,
 		/* Save the starting VTABLE address of this member. */
 		attr->ca_addr = (uint16_t)addr;
 	}
+
 	/* Make sure that no local symbol exists with the given name.
 	 * >> This is the compile-time portion of addressing symbols. */
 	result = get_local_symbol(name);
@@ -584,20 +610,25 @@ class_maker_addmember(struct class_maker *__restrict self,
 		if unlikely(!result)
 			goto err;
 	}
-#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+
 	/* Steal declaration information. */
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (decl && result->s_decltype.da_type == DAST_NONE) {
 		decl_ast_move(&result->s_decltype, decl);
 		decl->da_type = DAST_NONE;
 	}
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
 	/* Initialize that symbol to be a member symbol. */
 	result->s_type         = SYMBOL_TYPE_CATTR;
 	result->s_attr.a_class = self->cm_classsym;
 	result->s_attr.a_attr  = attr;
-	result->s_attr.a_this  = is_class_member
-	                        ? NULL
-	                        : (symbol_incref(self->cm_thissym), self->cm_thissym);
+	if (is_class_member) {
+		result->s_attr.a_this = NULL;
+	} else {
+		symbol_incref(self->cm_thissym);
+		result->s_attr.a_this = self->cm_thissym;
+	}
 	symbol_incref(self->cm_classsym);
 	if (result->s_attr.a_this)
 		SYMBOL_INC_NREAD(result->s_attr.a_this);
@@ -615,8 +646,9 @@ priv_alloc_class_member(struct class_maker *__restrict self) {
 		if unlikely(!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		new_vector = (struct class_member *)Dee_TryRealloc(self->cm_class_initv, new_alloc *
-		                                                                         sizeof(struct class_member));
+		new_vector = (struct class_member *)Dee_TryReallocc(self->cm_class_initv,
+		                                                    new_alloc,
+		                                                    sizeof(struct class_member));
 		if unlikely(!new_vector) {
 			if (new_alloc != self->cm_class_initc + 1) {
 				new_alloc = self->cm_class_initc + 1;
@@ -640,8 +672,9 @@ priv_reserve_instance_init(struct class_maker *__restrict self) {
 		if unlikely(!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv, new_alloc *
-		                                                                sizeof(DREF struct ast *));
+		new_vector = (DREF struct ast **)Dee_TryReallocc(self->cm_initv,
+		                                                 new_alloc,
+		                                                 sizeof(DREF struct ast *));
 		if unlikely(!new_vector) {
 			if (new_alloc != self->cm_inita + 1) {
 				new_alloc = self->cm_initc + 1;
@@ -678,6 +711,7 @@ class_maker_addinit(struct class_maker *__restrict self,
 	if (sym->s_attr.a_this != NULL &&
 	    !(entry->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
 		DREF struct ast *symbol_ast;
+
 		/* Run the given AST during construction of instances. */
 		/* Handle instance member initializers. */
 		ASSERTF(self->cm_ctor_scope, "Without the ctor-scope allocated, this AST "
@@ -690,6 +724,7 @@ class_maker_addinit(struct class_maker *__restrict self,
 		/* Check if we need to allocate more memory for the initializer vector. */
 		if unlikely(priv_reserve_instance_init(self))
 			goto err;
+
 		/* Create a new AST to store to the given symbol. */
 		symbol_ast = ast_sym(sym);
 		if unlikely(!symbol_ast)
@@ -700,20 +735,24 @@ class_maker_addinit(struct class_maker *__restrict self,
 		ast_decref(symbol_ast);
 		if unlikely(!initializer)
 			goto err;
+
 		/* Override the store-ast's scope with our constructor scope. */
 		Dee_Incref((DeeObject *)self->cm_ctor_scope);
 		Dee_Decref(initializer->a_scope);
 		initializer->a_scope = (DREF DeeScopeObject *)self->cm_ctor_scope;
+
 		/* Place the store-ast in the initialization vector. */
 		self->cm_initv[self->cm_initc++] = initializer;
 		goto done;
 	}
+
 	/* Run the given AST during creation of the class. */
 	ASSERTF(self->cm_ctor_scope != initializer->a_scope->s_base,
 	        "Class member initializers must not be part of the CTOR scope");
 	member = priv_alloc_class_member(self);
 	if unlikely(!member)
 		goto err;
+
 	/* Add a class member initializer for the slot pointed to by the symbol's entry. */
 	member->cm_index = entry->ca_addr;
 	member->cm_ast   = initializer;
@@ -728,12 +767,14 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_addanon(struct class_maker *__restrict self, uint16_t addr,
                     struct ast *__restrict initializer) {
 	struct class_member *member;
+
 	/* Run the given AST during creation of the class. */
 	ASSERTF(self->cm_ctor_scope != initializer->a_scope->s_base,
 	        "Class member initializers must not be part of the CTOR scope");
 	member = priv_alloc_class_member(self);
 	if unlikely(!member)
 		goto err;
+
 	/* Add a class member initializer for the given address. */
 	member->cm_index = addr;
 	member->cm_ast   = initializer;
@@ -750,6 +791,7 @@ class_maker_addoperator(struct class_maker *__restrict self,
                         struct ast *__restrict callback) {
 	struct class_member *member;
 	uint16_t addr;
+
 	/* Allocate a new class member address for the operator. */
 	addr = self->cm_desc->cd_cmemb_size;
 	if unlikely(addr == UINT16_MAX) {
@@ -758,9 +800,11 @@ class_maker_addoperator(struct class_maker *__restrict self,
 		goto err;
 	}
 	++self->cm_desc->cd_cmemb_size;
+
 	/* Bind the specified operator to the given address. */
 	if unlikely(class_maker_bindoperator(self, operator_name, addr, &callback->a_ddi))
 		goto err;
+
 	/* Allocate an initializer for the operator-bound class member. */
 	member = priv_alloc_class_member(self);
 	if unlikely(!member)
@@ -786,6 +830,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 		}
 		++self->cm_desc->cd_cmemb_size;
 	}
+
 	/* Operators are deleted by binding them to a class member
 	 * lacking an associated attribute, while always being unbound. */
 	return class_maker_bindoperator(self, operator_name,
@@ -801,6 +846,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 class_maker_fini(struct class_maker *__restrict self) {
 	size_t i;
+
 	/* May be `NULL' following an init-failure. */
 	Dee_XDecref_unlikely(self->cm_desc);
 	ast_xdecref_unlikely(self->cm_base);
@@ -819,12 +865,14 @@ class_maker_fini(struct class_maker *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DCALL
 class_maker_pack(struct class_maker *__restrict self) {
 	DREF struct ast *result;
+
 	/* If required, create a class member initializer for the constructor. */
 	if (self->cm_initc || self->cm_ctor) {
 		DREF struct ast *constructor_text;
 		DREF struct ast *constructor_function  = NULL;
 		DREF struct ast *constructor_anno      = NULL;
 		DREF struct ast **constructor_anno_ptr = NULL;
+
 		/* Add the actual constructor when it was defined. */
 		if (self->cm_ctor) {
 			if unlikely(priv_reserve_instance_init(self))
@@ -855,19 +903,22 @@ class_maker_pack(struct class_maker *__restrict self) {
 		}
 		if (self->cm_initc != self->cm_inita) {
 			DREF struct ast **new_vector;
-			new_vector = (DREF struct ast **)Dee_TryRealloc(self->cm_initv, self->cm_initc *
-			                                                                sizeof(DREF struct ast *));
+			new_vector = (DREF struct ast **)Dee_TryReallocc(self->cm_initv,
+			                                                 self->cm_initc,
+			                                                 sizeof(DREF struct ast *));
 			if likely(new_vector) {
 				self->cm_initv = new_vector;
 				self->cm_inita = self->cm_initc;
 			}
 		}
+
 		/* Pack everything together in a multi-branch AST. */
 		constructor_text = ast_multiple(AST_FMULTIPLE_KEEPLAST,
 		                                self->cm_initc,
 		                                self->cm_initv);
 		if unlikely(!constructor_text)
 			goto err;
+
 		/* Set the correct scope for the constructor text. */
 		Dee_Incref((DeeObject *)self->cm_ctor_scope);
 		Dee_Decref(constructor_text->a_scope);
@@ -877,14 +928,14 @@ class_maker_pack(struct class_maker *__restrict self) {
 			ASSERT(constructor_function->a_function.f_scope == self->cm_ctor_scope);
 			ast_decref(constructor_function->a_function.f_code);
 			constructor_function->a_function.f_code = constructor_text; /* Inherit */
-			self->cm_ctor                           = NULL;
+			self->cm_ctor = NULL;
 		} else {
-			constructor_function = ast_function(constructor_text,
-			                                    self->cm_ctor_scope);
+			constructor_function = ast_function(constructor_text, self->cm_ctor_scope);
 			ast_decref(constructor_text);
 			if unlikely(!constructor_function)
 				goto err;
 		}
+
 		/* The constructor has inherited this vector. */
 		self->cm_inita = 0;
 		self->cm_initc = 0;
@@ -894,6 +945,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 			*constructor_anno_ptr = constructor_function; /* Inherit reference. */
 			constructor_function  = constructor_anno;     /* Inherit reference. */
 		}
+
 		/* Add the constructor as an operator to the class initializer list. */
 		if unlikely(class_maker_addoperator(self,
 		                                    OPERATOR_CONSTRUCTOR,
@@ -903,6 +955,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 		}
 		ast_decref(constructor_function);
 	}
+
 	/* Set the constructor-inherited flag for the resulting descriptor. */
 	if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER)
 		self->cm_desc->cd_flags |= TP_FINHERITCTOR;
@@ -915,9 +968,9 @@ class_maker_pack(struct class_maker *__restrict self) {
 	 * way, truncate the class operator table. */
 	if (self->cm_class_initc != self->cm_class_inita) {
 		struct class_member *new_vector;
-		new_vector = (struct class_member *)Dee_TryRealloc(self->cm_class_initv,
-		                                                   self->cm_class_initc *
-		                                                   sizeof(struct class_member));
+		new_vector = (struct class_member *)Dee_TryReallocc(self->cm_class_initv,
+		                                                    self->cm_class_initc,
+		                                                    sizeof(struct class_member));
 		if likely(new_vector) {
 			self->cm_class_initv = new_vector;
 			self->cm_class_inita = self->cm_class_initc;
@@ -1050,16 +1103,18 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 			basescope_pop(); /* Pop the constructor scope. */
 			if unlikely(basescope_push())
 				goto err_flags; /* Create a new base-scope for super-args. */
+
 			/* Now we must mirror argument symbols from the constructor scope in this new one. */
 			if unlikely(copy_argument_symbols(self->cm_ctor_scope))
 				goto err_flags;
+
 			/* Now we need to parse the argument list that's going to be provided as super-args. */
 			superargs = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &superkwds);
 			if unlikely(!superargs)
 				goto err_flags;
 			if (superkwds) {
 				DREF struct ast **pair;
-				pair = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+				pair = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!pair) {
 err_flags_superargs_superkwds:
 					Dee_Free(pair);
@@ -1082,17 +1137,20 @@ err_flags_superargs_superkwds:
 			if unlikely(!merge)
 				goto err_flags;
 			ASSERT(current_scope == (DeeScopeObject *)current_basescope);
+
 			/* Pop the super-args scope. (create the function in the class-scope context) */
 			basescope_pop();
 			superargs = ast_setddi(ast_function(merge, (DeeBaseScopeObject *)merge->a_scope), &loc);
 			ast_decref(merge);
 			if unlikely(!superargs)
 				goto err_flags;
+
 			/* All right! now just register the super-args callback as a new class operator. */
 			temp = class_maker_addoperator(self, CLASS_OPERATOR_SUPERARGS, superargs);
 			ast_decref(superargs);
 			if unlikely(temp)
 				goto err_flags;
+
 			/* And we're done. - Just a little bit more cleanup to be done. */
 			if unlikely(class_maker_push_ctorscope(self))
 				goto err_flags;
@@ -1105,10 +1163,12 @@ done_superargs:
 		} else {
 			struct symbol *init_symbol;
 			DREF struct ast *initializer_ast, *store_ast, *symbol_ast;
+
 			/* Lookup the initializer symbol. */
 			init_symbol = lookup_symbol(LOOKUP_SYM_NORMAL, initializer_name, &loc);
 			if unlikely(!init_symbol)
 				goto err;
+
 			/* Member initializer (c++ style). */
 			if (tok == '=' || tok == KWD_pack) {
 				if unlikely(yield() < 0)
@@ -1135,6 +1195,7 @@ done_superargs:
 					goto err;
 				}
 			}
+
 			/* Create a new branch to write to this symbol. */
 			symbol_ast = ast_setddi(ast_sym(init_symbol), &loc);
 			if unlikely(!symbol_ast)
@@ -1148,6 +1209,7 @@ done_superargs:
 				ast_decref(store_ast);
 				goto err;
 			}
+
 			/* Add a new pre-construction initializer. */
 			self->cm_initv[self->cm_initc++] = store_ast; /* Inherit reference. */
 		}
@@ -1167,10 +1229,9 @@ err:
 	return -1;
 }
 
-#define CLASS_PROPERTY_CALLBACK_COUNT 3
-STATIC_ASSERT(CLASS_GETSET_GET < CLASS_PROPERTY_CALLBACK_COUNT);
-STATIC_ASSERT(CLASS_GETSET_DEL < CLASS_PROPERTY_CALLBACK_COUNT);
-STATIC_ASSERT(CLASS_GETSET_SET < CLASS_PROPERTY_CALLBACK_COUNT);
+STATIC_ASSERT(CLASS_GETSET_GET < CLASS_GETSET_COUNT);
+STATIC_ASSERT(CLASS_GETSET_DEL < CLASS_GETSET_COUNT);
+STATIC_ASSERT(CLASS_GETSET_SET < CLASS_GETSET_COUNT);
 
 #define MAX_CALLBACK_NAME_LENGTH 8
 struct callback_name {
@@ -1203,7 +1264,7 @@ PRIVATE struct callback_name const callback_names[] = {
 
 /* Parse the contents of a property declaration. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
+parse_property(DREF struct ast *callbacks[CLASS_GETSET_COUNT],
                struct class_maker *__restrict maker, bool is_class_property) {
 	uint16_t callback_id;
 	struct ast_loc loc;
@@ -1213,13 +1274,15 @@ parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
 	struct decl_ast decl;
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	bool has_name_prefix, need_semi;
-	for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
+	for (callback_id = 0; callback_id < CLASS_GETSET_COUNT; ++callback_id)
 		callbacks[callback_id] = NULL;
+
 	/* Parse the property declaration. */
 next_callback:
 	has_name_prefix = false;
 next:
 	loc_here(&loc);
+
 	/* Remain compatible with the old deemon (which
 	 * accepted/ignored a lot of weird stuff here). */
 	switch (tok) {
@@ -1285,6 +1348,7 @@ next:
 					if (bcmpc(callback_names[i].cn_name, name, size, sizeof(char)) != 0)
 						continue;
 					callback_id = callback_names[i].cn_id;
+
 					/* Warn if the callback name has been marked as deprecated. */
 					if (callback_names[i].cn_depr) {
 warn_deprecated_yield:
@@ -1312,8 +1376,9 @@ warn_deprecated_yield:
 			goto err;
 		goto done;
 	}
-got_callback_id:
+
 	/* Warn if the callback had already bee defined. */
+got_callback_id:
 	if (callbacks[callback_id]) {
 		if (WARN(W_PROPERTY_CALLBACK_ALREADY_DEFINED))
 			goto err;
@@ -1346,14 +1411,17 @@ got_callback_id:
 	}
 	if unlikely(!ast_setddi(callback, &loc))
 		goto err_anno;
+
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	/* TODO: Make use of declaration information! */
 	decl_ast_fini(&decl);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
+
 	callback = ast_annotations_apply(&annotations, callback);
 	if unlikely(!callback)
 		goto err;
 	callbacks[callback_id] = callback; /* Inherit */
+
 	/* Parse a semicolon if one is required. */
 	if (need_semi) {
 		if unlikely(likely(is_semicolon())
@@ -1367,7 +1435,7 @@ done:
 err_anno:
 	ast_annotations_free(&annotations);
 err:
-	for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
+	for (callback_id = 0; callback_id < CLASS_GETSET_COUNT; ++callback_id)
 		ast_xdecref(callbacks[callback_id]);
 	return -1;
 }
@@ -1383,11 +1451,12 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-
 	class_maker_init(&maker);
+
 	/* Inherit the documentation string printer. */
 	memcpy(&maker.cm_doc, &current_tags.at_doc, sizeof(struct unicode_printer));
 	unicode_printer_init(&current_tags.at_doc);
+
 	/* Allocate the initial descriptor for the class. */
 	maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
 	                                                                  (7 + 1) * sizeof(struct class_attribute));
@@ -1479,7 +1548,8 @@ do_parse_class_base_after_yield:
 					goto err;
 				goto use_object_base;
 			}
-			/* Back the reference to OldUserClass into a symbol. */
+
+			/* Pack the reference to OldUserClass into a symbol. */
 			base_symbol = new_unnamed_symbol();
 			if unlikely(!base_symbol) {
 				Dee_Decref(d200_module);
@@ -1488,6 +1558,7 @@ do_parse_class_base_after_yield:
 			base_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 			base_symbol->s_extern.e_module = d200_module; /* Inherit reference. */
 			base_symbol->s_extern.e_symbol = oldbase_sym;
+
 			/* Create a symbol-ast for the base expression. */
 			maker.cm_base = ast_sym(base_symbol);
 		} else {
@@ -1510,6 +1581,7 @@ use_object_base:
 		TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 	if (skip('{', W_EXPECTED_LBRACE_AFTER_CLASS))
 		goto err;
+
 	/* Create the symbol to assign the class to. */
 	if (create_symbol) {
 		maker.cm_classsym = lookup_symbol(symbol_mode, name, NULL);
@@ -1566,6 +1638,7 @@ next_member:
 		member_flags          = default_member_flags;
 		is_class_member       = false;
 		modifiers_encountered = false;
+
 		/* Reset member tags. */
 		if unlikely(ast_tags_clear())
 			goto err;
@@ -1651,6 +1724,7 @@ set_visibility:
 					goto err;
 				goto define_constructor;
 			}
+
 			/* Warn about `class' being used to declare static members being deprecated */
 			if (WARN(W_DEPRECATED_USING_CLASS_FOR_STATIC))
 				goto err;
@@ -1696,16 +1770,19 @@ set_visibility:
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err;
+
 			/* Parse an operator name, also accepting
 			 * class-specific and file-specific operator names. */
 			temp = ast_parse_operator_name(P_OPERATOR_FCLASS);
 			if unlikely(temp < 0)
 				goto err;
 			operator_name = (uint16_t)temp;
-define_operator:
+
 			/* Special case: The constructor operator. */
+define_operator:
 			if (operator_name == OPERATOR_CONSTRUCTOR)
 				goto define_constructor;
+
 			/* Warn if declaring an attribute operator with non-final, public members. */
 			if (!(maker.cm_features & CLASS_MAKER_FEAT_FATTROPS) &&
 			    (operator_name == OPERATOR_GETATTR || operator_name == OPERATOR_DELATTR ||
@@ -1737,6 +1814,7 @@ define_operator:
 							goto err;
 						did_warn_any = true;
 					}
+
 					/* Make sure that we always emit at least 1 warning.
 					 * But note that at this point, `did_warn_any' should _always_ already be true! */
 					if unlikely(!did_warn_any) {
@@ -1756,6 +1834,7 @@ define_operator:
 				     operator_name <= AST_OPERATOR_MAX) &&
 				    WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
 					goto err_anno;
+
 				/* Operator callback assignment. */
 				if unlikely(yield() < 0)
 					goto err_anno;
@@ -1800,9 +1879,11 @@ define_operator:
 				ASSERT(operator_name_kwd != NULL);
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;
+
 				/* Parse a new function in its own member-method scope. */
 				current_basescope->bs_name = operator_name_kwd;
 				operator_name              = OPERATOR_ITERSELF;
+
 				/* Inner function scope (yes: `operator for' is a function within a function....)
 				 * WRAP: `AST_FUNCTION(AST_RETURN(AST_OPERATOR(OPERATOR_ITERSELF,
 				 *                                AST_OPERATOR(OPERATOR_CALL,
@@ -1832,7 +1913,7 @@ err_yield_function:
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					goto err_operator_ast_ddi;
 				}
-				argv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+				argv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 				if unlikely(!argv) {
 err_yield_function_temp:
 					ast_decref(tempast);
@@ -1864,6 +1945,7 @@ err_yield_function_temp:
 				ast_decref(operator_ast);
 				if unlikely(!tempast)
 					goto err_operator_ast_ddi;
+
 				/* And finally: the surrounding function. */
 				operator_ast = ast_setddi(ast_function(tempast, current_basescope), &loc);
 				ast_decref(tempast);
@@ -1962,11 +2044,13 @@ set_operator_ast:
 				if (WARNAT(&loc, W_PRIVATE_OPERATOR_IS_PUBLIC, info ? info->oi_sname : "?"))
 					goto err;
 			}
+
 			/* Add the new operator to the class. */
 			error = class_maker_addoperator(&maker, operator_name, operator_ast);
 			ast_decref(operator_ast);
 			if unlikely(error)
 				goto err;
+
 			/* Parse a trailing ';' if required to. */
 			if (need_semi) {
 yield_semi_after_operator:
@@ -2062,10 +2146,12 @@ define_constructor:
 									goto err;
 								maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
 							}
+
 							/* Warn about instance member initializers being used,
 							 * as well as set a flag that will warn about future
 							 * use of instance member initializers. */
 							maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FDELETED;
+
 							/* Warn about, and delete all member initializers. */
 							while (maker.cm_initc) {
 								DREF struct ast *init;
@@ -2127,10 +2213,12 @@ define_constructor:
 							goto err;
 						maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
 					}
+
 					/* Parse an expression that is invoked at the end of the constructor. */
 					ast_annotations_get(&annotations);
 					if unlikely(class_maker_push_ctorscope(&maker))
 						goto err_anno;
+
 					/* Compile the actual constructor in a sub-scope so any local
 					 * variables that it may define will not interfere with the
 					 * lookup rules in member initializers that may still follow. */
@@ -2148,7 +2236,7 @@ define_constructor:
 							if unlikely(!dots)
 								goto err_ctor_expr;
 							Dee_Free(current_basescope->bs_argv);
-							current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+							current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 							if unlikely(!current_basescope->bs_argv)
 								goto err_ctor_expr;
 							dots->s_type  = SYMBOL_TYPE_ARG;
@@ -2159,6 +2247,7 @@ define_constructor:
 							current_basescope->bs_varargs = dots;
 							current_basescope->bs_flags |= CODE_FVARARGS;
 						}
+
 						/* Wrap the constructor expression in a call-branch (so-as to invoke it when the time comes) */
 						if (current_basescope->bs_varargs) {
 							call_args = ast_setddi(ast_sym(current_basescope->bs_varargs), &loc);
@@ -2194,9 +2283,11 @@ err_ctor_expr:
 					maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
 				}
 				ast_annotations_get(&annotations);
+
 				/* Explicitly push the constructor-scope when parsing the constructor. */
 				if unlikely(class_maker_push_ctorscope(&maker))
 					goto err_anno;
+
 				/* NOTE: We do the function processing manually so we can
 				 *       correctly handle super-initializer statements. */
 				if (tok == '(') {
@@ -2254,6 +2345,7 @@ err_ctor_expr:
 				 * lookup rules in member initializers that may still follow. */
 				if (scope_push())
 					goto err_anno;
+
 				/* NOTE: Don't parse a second argument list here. */
 				maker.cm_ctor = ast_setddi(ast_parse_function_noscope_noargs(&need_semi), &loc);
 				scope_pop();
@@ -2267,6 +2359,7 @@ err_ctor_expr:
 				/* With the constructor parsed and saved, simply check for a ';' */
 				goto check_need_semi;
 			}
+
 			/* Automatic member:
 			 * >> class Foo {
 			 * >>     field_member   [= initializer];
@@ -2292,6 +2385,7 @@ err_ctor_expr:
 					if (WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, member_name))
 						goto err_decl;
 				}
+
 				/* Uninitialized instance/class member. */
 				if (!class_maker_addmember(&maker,
 				                           member_name,
@@ -2318,7 +2412,7 @@ err_ctor_expr:
 				if unlikely(yield() < 0)
 					goto err_decl;
 				if (tok == '{') {
-					DREF struct ast *prop_callbacks[CLASS_PROPERTY_CALLBACK_COUNT];
+					DREF struct ast *prop_callbacks[CLASS_GETSET_COUNT];
 					uint16_t i, prop_addr;
 					if (member_class != MEMBER_CLASS_AUTO &&
 					    member_class != MEMBER_CLASS_GETSET &&
@@ -2326,11 +2420,14 @@ err_ctor_expr:
 						goto err_decl;
 					if unlikely(yield() < 0)
 						goto err_decl;
+
 					/* Properties are always allocated in class memory and have the FPROPERTY flag set. */
 					member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FGETSET);
+
 					/* Set the method flag to invoke property callbacks as this-call functions. */
 					if (!is_class_member)
 						member_flags |= CLASS_ATTRIBUTE_FMETHOD;
+
 					/* Define the property symbol. */
 					member_symbol = class_maker_addmember(&maker,
 					                                      member_name,
@@ -2348,11 +2445,13 @@ err_ctor_expr:
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					if unlikely(!member_symbol)
 						goto err;
+
 					/* Parse the property declaration. */
 					if unlikely(parse_property(prop_callbacks, &maker, is_class_member))
 						goto err;
 					if (skip('}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
 						goto err_property;
+
 					/* Keep track of VTABLE slots used by the property and its callbacks. */
 					if (!prop_callbacks[CLASS_GETSET_DEL] &&
 					    !prop_callbacks[CLASS_GETSET_SET]) {
@@ -2361,8 +2460,9 @@ err_ctor_expr:
 						member_symbol->s_attr.a_attr->ca_flag |= CLASS_ATTRIBUTE_FREADONLY;
 						*pusage_counter += 1;
 					} else {
-						*pusage_counter += CLASS_PROPERTY_CALLBACK_COUNT;
+						*pusage_counter += CLASS_GETSET_COUNT;
 					}
+
 					/* Load the base address of the property. */
 					prop_addr = member_symbol->s_attr.a_attr->ca_addr;
 					for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i) {
@@ -2372,11 +2472,13 @@ err_ctor_expr:
 						member_flags &= (CLASS_ATTRIBUTE_FVISIBILITY |
 						                 CLASS_ATTRIBUTE_FCLASSMEM |
 						                 CLASS_ATTRIBUTE_FMETHOD);
+
 						/* Add an initializer for the address. */
 						error = class_maker_addanon(&maker,
 						                            prop_addr + i,
 						                            prop_callbacks[i]);
 					}
+
 					/* Clear out property callbacks. */
 					for (i = 0; i < COMPILER_LENOF(prop_callbacks); ++i)
 						ast_xdecref(prop_callbacks[i]);
@@ -2406,6 +2508,7 @@ err_property:
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(!member_symbol)
 					goto err;
+
 				/* Member assignment. (part of the initialization) */
 				if (SYM_ISCLASSMEMBER(member_symbol)) {
 					/* Class member. */
@@ -2419,11 +2522,13 @@ err_property:
 				}
 				if unlikely(!init_ast)
 					goto err;
+
 				/* Add an initializer for this symbol. */
 				error = class_maker_addinit(&maker, member_symbol, init_ast, &loc);
 				ast_decref(init_ast);
 				if unlikely(error)
 					goto err;
+
 				/* Increment the usage-counter to consume the member slot. */
 				++*pusage_counter;
 				if unlikely(likely(is_semicolon())
@@ -2436,6 +2541,7 @@ err_property:
 			    member_class != MEMBER_CLASS_METHOD &&
 			    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
 				goto err_decl;
+
 			/* Everything else is parsed as a member function.
 			 * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
 			member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FREADONLY);
@@ -2449,6 +2555,7 @@ err_property:
 					decl_ast_fini(&decl);
 					decl.da_type = DAST_NONE;
 				}
+
 				/* Must load the argument list of the following function
 				 * now, so we can include declaration information. */
 				member_symbol = class_maker_addmember(&maker,
@@ -2481,6 +2588,7 @@ err_property:
 				} else {
 					if unlikely(class_maker_push_methscope(&maker))
 						goto err;
+
 					/* Parse a new function in its own member-method scope. */
 					AST_TAGS_BACKUP_PRINTERS(temp);
 					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
@@ -2495,12 +2603,14 @@ err_property:
 				}
 				if unlikely(!init_ast)
 					goto err_anno;
+
 				/* Remember declaration information within the function member */
 				if (member_symbol->s_decltype.da_type == DAST_NONE) {
 					decl_ast_move(&member_symbol->s_decltype, &decl);
 				} else {
 					decl_ast_fini(&decl);
 				}
+
 				/* Generate the documentation string for the function member. */
 				if (!member_symbol->s_attr.a_attr->ca_doc) {
 					member_symbol->s_attr.a_attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(&member_symbol->s_decltype);
@@ -2534,6 +2644,7 @@ err_property:
 			init_ast = ast_annotations_apply(&annotations, init_ast);
 			if unlikely(!init_ast)
 				goto err;
+
 			/* Add the given AST as an initialization branch to the class. */
 			error = class_maker_addinit(&maker, member_symbol, init_ast, &loc);
 			ast_decref(init_ast);

@@ -7119,10 +7119,11 @@ stack_fault:
 		ASSERT(new_size != 0);
 		/* Allocate/Re-allocate the stack on the heap. */
 		if (frame->cf_stacksz) {
-			new_stack = (DeeObject **)Dee_Realloc(frame->cf_stack,
-			                                      (size_t)new_size * sizeof(DeeObject *));
+			new_stack = (DeeObject **)Dee_Reallocc(frame->cf_stack,
+			                                       (size_t)new_size,
+			                                       sizeof(DeeObject *));
 		} else {
-			new_stack = (DeeObject **)Dee_Malloc((size_t)new_size * sizeof(DeeObject *));
+			new_stack = (DeeObject **)Dee_Mallocc((size_t)new_size, sizeof(DeeObject *));
 		}
 		if unlikely(!new_stack)
 			HANDLE_EXCEPT();

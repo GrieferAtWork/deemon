@@ -294,7 +294,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 	default: {
 		DeeObject **temp;
 		/* Default case: Do an actual merge-sort. */
-		temp = (DeeObject **)Dee_TryMalloc(objc * sizeof(DeeObject *));
+		temp = (DeeObject **)Dee_TryMallocc(objc, sizeof(DeeObject *));
 		if unlikely(!temp) {
 			/* Use a fallback sorting function */
 			result = key

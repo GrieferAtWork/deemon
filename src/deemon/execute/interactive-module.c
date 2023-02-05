@@ -452,8 +452,8 @@ do_exec_code:
 		size_t i;
 		instruction_t *text;
 		assembler_init();
-		current_assembler.a_constv = (DREF DeeObject **)Dee_Malloc(current_assembler.a_consta *
-		                                                           sizeof(DREF DeeObject *));
+		current_assembler.a_constv = (DREF DeeObject **)Dee_Mallocc(current_assembler.a_consta,
+		                                                            sizeof(DREF DeeObject *));
 		if unlikely(!current_assembler.a_constv)
 			goto done_assembler_fini;
 
@@ -580,9 +580,9 @@ done_assembler_fini:
 		if (current_assembler.a_localc > old_co_localc) {
 			DREF DeeObject **new_localv;
 			uint16_t req_localc = current_assembler.a_localc;
-			new_localv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_frame,
-			                                            req_localc *
-			                                            sizeof(DREF DeeObject *));
+			new_localv = (DREF DeeObject **)Dee_Reallocc(self->im_frame.cf_frame,
+			                                             req_localc,
+			                                             sizeof(DREF DeeObject *));
 			if unlikely(!new_localv)
 				goto err_result;
 			bzeroc(new_localv + old_co_localc,
@@ -596,9 +596,9 @@ done_assembler_fini:
 		if (current_assembler.a_stackmax > self->im_frame.cf_stacksz) {
 			DREF DeeObject **new_stackv;
 			uint16_t req_stacksz = current_assembler.a_stackmax;
-			new_stackv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_stack,
-			                                            req_stacksz *
-			                                            sizeof(DREF DeeObject *));
+			new_stackv = (DREF DeeObject **)Dee_Reallocc(self->im_frame.cf_stack,
+			                                             req_stacksz,
+			                                             sizeof(DREF DeeObject *));
 			if unlikely(!new_stackv)
 				goto err_result;
 			/* Install the new stack. */
@@ -631,9 +631,9 @@ gencode_failed:
 					current_code->co_exceptv = old_co_exceptv;
 				} else if (is_reusing_code_object) {
 					struct except_handler *full_exceptv;
-					full_exceptv = (struct except_handler *)Dee_Realloc(old_co_exceptv,
-					                                                    (current_code->co_exceptc + old_co_exceptc) *
-					                                                    sizeof(struct except_handler));
+					full_exceptv = (struct except_handler *)Dee_Reallocc(old_co_exceptv,
+					                                                     current_code->co_exceptc + old_co_exceptc,
+					                                                     sizeof(struct except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
 					memcpyc(full_exceptv + old_co_exceptc,
@@ -646,9 +646,9 @@ gencode_failed:
 				} else {
 					struct except_handler *full_exceptv;
 					uint16_t i;
-					full_exceptv = (struct except_handler *)Dee_Realloc(current_code->co_exceptv,
-					                                                    (current_code->co_exceptc + old_co_exceptc) *
-					                                                    sizeof(struct except_handler));
+					full_exceptv = (struct except_handler *)Dee_Reallocc(current_code->co_exceptv,
+					                                                     current_code->co_exceptc + old_co_exceptc,
+					                                                     sizeof(struct except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
 					memmoveupc(full_exceptv + old_co_exceptc,
@@ -866,8 +866,8 @@ module_rehash_globals(DeeModuleObject *__restrict self) {
 	size_t i, new_mask = (self->mo_bucketm << 1) | 1;
 	struct module_symbol *new_vec;
 	ASSERT(!(new_mask & (new_mask + 1)));
-	new_vec = (struct module_symbol *)Dee_Calloc((new_mask + 1) *
-	                                             sizeof(struct module_symbol));
+	new_vec = (struct module_symbol *)Dee_Callocc(new_mask + 1,
+	                                              sizeof(struct module_symbol));
 	if unlikely(!new_vec)
 		goto err;
 	for (i = 0; i <= self->mo_bucketm; ++i) {
@@ -905,9 +905,9 @@ module_import_symbol(DeeModuleObject *self,
 	if (self->mo_globalc / 2 >= self->mo_bucketm &&
 	    module_rehash_globals(self))
 		goto err;
-	new_globalv = (DREF DeeObject **)Dee_Realloc(self->mo_globalv,
-	                                             (self->mo_globalc + 1) *
-	                                             sizeof(DREF DeeObject *));
+	new_globalv = (DREF DeeObject **)Dee_Reallocc(self->mo_globalv,
+	                                              self->mo_globalc + 1,
+	                                              sizeof(DREF DeeObject *));
 	if unlikely(!new_globalv)
 		goto err;
 	self->mo_globalv = new_globalv;
@@ -1093,8 +1093,8 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_globalv = NULL;
 	self->im_module.mo_flags   = MODULE_FLOADING | MODULE_FINITIALIZING;
 	self->im_module.mo_bucketm = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
-	self->im_module.mo_bucketv = (struct module_symbol *)Dee_Calloc((INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1) *
-	                                                                sizeof(struct module_symbol));
+	self->im_module.mo_bucketv = (struct module_symbol *)Dee_Callocc(INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1,
+	                                                                 sizeof(struct module_symbol));
 	if unlikely(!self->im_module.mo_bucketv)
 		goto err_name;
 
@@ -1191,7 +1191,7 @@ imod_init(InteractiveModule *__restrict self,
 		dots->s_next                        = root_scope->rs_scope.bs_scope.s_del;
 		root_scope->rs_scope.bs_scope.s_del = dots;
 
-		root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+		root_scope->rs_scope.bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 		if unlikely(!root_scope->rs_scope.bs_argv) {
 			sym_free(dots);
 			goto err_compiler;

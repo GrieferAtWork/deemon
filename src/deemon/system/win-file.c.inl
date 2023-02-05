@@ -660,7 +660,7 @@ again:
 			DBG_ALIGNMENT_ENABLE();
 			if unlikely(!num_widechars)
 				goto fallback;
-			tempbuf = (LPWSTR)Dee_Malloc(num_widechars * sizeof(WCHAR));
+			tempbuf = (LPWSTR)Dee_Mallocc(num_widechars, sizeof(WCHAR));
 			if unlikely(!tempbuf)
 				goto err;
 			DBG_ALIGNMENT_DISABLE();

@@ -2622,7 +2622,7 @@ lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	utf8 = DeeString_AsUtf8(path);
 	if unlikely(!utf8)
 		goto err;
-	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
+	copy = (char *)Dee_Mallocc(WSTR_LENGTH(path), sizeof(char));
 	if unlikely(!copy)
 		goto err;
 	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
@@ -2649,7 +2649,7 @@ lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	utf8 = DeeString_AsUtf8(path);
 	if unlikely(!utf8)
 		goto err;
-	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
+	copy = (char *)Dee_Mallocc(WSTR_LENGTH(path), sizeof(char));
 	if unlikely(!copy)
 		goto err;
 	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));

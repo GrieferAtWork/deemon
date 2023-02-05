@@ -232,7 +232,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 				    (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FMETHOD))
 					continue;
 				if (result->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (addr >= result->ca_addr + 3)
+					if (addr >= result->ca_addr + CLASS_GETSET_COUNT)
 						continue;
 					if (pgetset_index)
 						*pgetset_index = (uint16_t)(addr - result->ca_addr);

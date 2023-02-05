@@ -947,8 +947,8 @@ display_help_single(dformatprinter printer, void *arg,
 		char *buf, *dst;
 		int result;
 		prefix_length = strlen(prefix);
-		buf = (char *)Dee_AMalloc((prefix_length + 3) * sizeof(char) +
-		                          sizeof(option->co_shortnam));
+		buf = (char *)Dee_AMallocc(prefix_length + 3 + COMPILER_LENOF(option->co_shortnam),
+		                           sizeof(char));
 		if unlikely(!buf)
 			goto err;
 		dst    = (char *)mempcpyc(buf, prefix, prefix_length, sizeof(char));
@@ -988,8 +988,8 @@ display_help_query(dformatprinter printer, void *arg,
 				char *buf, *dst;
 				size_t prefix_length = strlen(prefix);
 				int result;
-				buf = (char *)Dee_AMalloc((prefix_length + 3) * sizeof(char) +
-				                          sizeof(group->co_shortnam));
+				buf = (char *)Dee_AMallocc(prefix_length + 3 + COMPILER_LENOF(group->co_shortnam),
+				                           sizeof(char));
 				if unlikely(!buf)
 					goto err;
 				dst    = (char *)mempcpyc(buf, prefix, prefix_length, sizeof(char));
@@ -1598,7 +1598,7 @@ LOCAL void DCALL emitpp_putline(void) {
 		emitpp_lastfilename = filename_text;
 		emitpp_writeout(" \"", 2);
 		quote_size   = TPP_SizeofEscape(filename_text, filename_size);
-		quote_buffer = (char *)Dee_TryMalloc(quote_size * sizeof(char));
+		quote_buffer = (char *)Dee_TryMallocc(quote_size, sizeof(char));
 		if (quote_buffer) {
 			TPP_Escape(quote_buffer, filename_text, filename_size);
 			emitpp_writeout(quote_buffer, quote_size * sizeof(char));
@@ -2603,7 +2603,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 				/* Re-use the given filename as buffer. */
 				buffer = filename;
 			} else {
-				buffer = (char *)Dee_AMalloc((req_bufsize + 1) * sizeof(char));
+				buffer = (char *)Dee_AMallocc(req_bufsize + 1, sizeof(char));
 				if unlikely(!buffer)
 					goto err;
 			}

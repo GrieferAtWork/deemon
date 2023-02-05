@@ -71,8 +71,8 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 DFUNDEF size_t DCALL DeeGC_Collect(size_t max_objects);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Return `true' if there any GC objects with a
- * non-zero reference counter are being tracked.
+/* Return `true' if any GC objects with a non-zero reference
+ * counter is being tracked.
  * NOTE: In addition, this function does not return `true' when
  *       all that's left are dex objects (which are destroyed
  *       at a later point during deemon shutdown, than the point
@@ -94,6 +94,32 @@ DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryMalloc)(size_t n_bytes);
 DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
 DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF WUNUSED void *(DCALL DeeDbgGCObject_Realloc)(void *p, size_t n_bytes, char const *file, int line);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line);
+DFUNDEF WUNUSED void *(DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line);
+DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
+
+#ifndef NDEBUG
+#define DeeGCObject_Malloc(n_bytes)          DeeDbgGCObject_Malloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Calloc(n_bytes)          DeeDbgGCObject_Calloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Realloc(ptr, n_bytes)    DeeDbgGCObject_Realloc(ptr, n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryMalloc(n_bytes)       DeeDbgGCObject_TryMalloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryCalloc(n_bytes)       DeeDbgGCObject_TryCalloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryRealloc(ptr, n_bytes) DeeDbgGCObject_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Free(ptr)                DeeDbgGCObject_Free(ptr, __FILE__, __LINE__)
+#else /* !NDEBUG */
+#define DeeDbgGCObject_Malloc(n_bytes, file, line)          DeeGCObject_Malloc(n_bytes)
+#define DeeDbgGCObject_Calloc(n_bytes, file, line)          DeeGCObject_Calloc(n_bytes)
+#define DeeDbgGCObject_Realloc(ptr, n_bytes, file, line)    DeeGCObject_Realloc(ptr, n_bytes)
+#define DeeDbgGCObject_TryMalloc(n_bytes, file, line)       DeeGCObject_TryMalloc(n_bytes)
+#define DeeDbgGCObject_TryCalloc(n_bytes, file, line)       DeeGCObject_TryCalloc(n_bytes)
+#define DeeDbgGCObject_TryRealloc(ptr, n_bytes, file, line) DeeGCObject_TryRealloc(ptr, n_bytes)
+#define DeeDbgGCObject_Free(ptr, file, line)                DeeGCObject_Free(ptr)
+#endif /* NDEBUG */
+
 
 /* Allocate fixed-size, gc-object-purposed slab memory.
  * NOTE: This memory must be freed by one of:
@@ -153,7 +179,7 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 
 /* An generic sequence singleton that can be
  * iterated to yield all tracked GC objects.
- * This object also offsets a hand full of member functions
+ * This object also offers a hand full of member functions
  * that user-space an invoke to trigger various GC-related
  * functionality:
  *   - collect(int max = -1) -> int;

@@ -195,7 +195,7 @@ notify_rehash(int sizedir) {
 	}
 	ASSERT(notify_size < new_mask);
 	ASSERT(notify_used <= notify_size);
-	new_vector = (struct notify_entry *)Dee_TryCalloc((new_mask + 1) * sizeof(struct notify_entry));
+	new_vector = (struct notify_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct notify_entry));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((notify_list == empty_notifications) == (notify_mask == 0));

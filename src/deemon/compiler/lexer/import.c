@@ -925,10 +925,10 @@ parse_module_import_list:
 			goto err;
 	} else if (tok == ',') {
 		item_a = 4;
-		item_v = (struct import_item *)Dee_TryMalloc(4 * sizeof(struct import_item));
+		item_v = (struct import_item *)Dee_TryMallocc(4, sizeof(struct import_item));
 		if unlikely(!item_v) {
 			item_a = 2;
-			item_v = (struct import_item *)Dee_Malloc(2 * sizeof(struct import_item));
+			item_v = (struct import_item *)Dee_Mallocc(2, sizeof(struct import_item));
 			if unlikely(!item_v)
 				goto err_item;
 		}
@@ -960,14 +960,12 @@ import_parse_list:
 					size_t new_item_a = item_a * 2;
 					if unlikely(!new_item_a)
 						new_item_a = 2;
-					new_item_v = (struct import_item *)Dee_TryRealloc(item_v,
-					                                                  new_item_a *
-					                                                  sizeof(struct import_item));
+					new_item_v = (struct import_item *)Dee_TryReallocc(item_v, new_item_a,
+					                                                   sizeof(struct import_item));
 					if unlikely(!new_item_v) {
 						new_item_a = item_c + 1;
-						new_item_v = (struct import_item *)Dee_Realloc(item_v,
-						                                               new_item_a *
-						                                               sizeof(struct import_item));
+						new_item_v = (struct import_item *)Dee_Reallocc(item_v, new_item_a,
+						                                                sizeof(struct import_item));
 						if unlikely(!new_item_v)
 							goto err_item_v;
 					}

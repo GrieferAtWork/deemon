@@ -994,7 +994,7 @@ do_create_class:
 					 * >> print pack get_items()...; // Convert to tuple. */
 					DREF struct ast **exprv;
 					ast_setddi(result, &loc);
-					exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+					exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 					if unlikely(!exprv)
 						goto err_r_flags;
 					exprv[0] = result; /* Inherit */
@@ -1071,7 +1071,7 @@ do_create_class:
 					goto err_r_flags;
 				if (tok == ')') {
 					/* single-element tuple expression, where the single element is a sequence. */
-					tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+					tuple_branchv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 					if unlikely(!tuple_branchv)
 						goto err_r_flags;
 					tuple_branchv[0] = result; /* Inherit reference. */
@@ -1092,7 +1092,7 @@ do_create_class:
 					       (merge->a_type == AST_CONSTEXPR &&
 					        merge->a_constexpr == Dee_EmptyTuple));
 					if (merge->a_constexpr == Dee_EmptyTuple) {
-						tuple_branchv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+						tuple_branchv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 						if unlikely(!tuple_branchv)
 							goto err_flags_merge_r;
 						Dee_DecrefNokill(merge->a_constexpr);
@@ -1100,9 +1100,9 @@ do_create_class:
 						merge->a_flag            = AST_FMULTIPLE_TUPLE;
 						merge->a_multiple.m_astc = 1;
 					} else {
-						tuple_branchv = (struct ast **)Dee_Realloc(merge->a_multiple.m_astv,
-						                                           (merge->a_multiple.m_astc + 1) *
-						                                           sizeof(DREF struct ast *));
+						tuple_branchv = (struct ast **)Dee_Reallocc(merge->a_multiple.m_astv,
+						                                            merge->a_multiple.m_astc + 1,
+						                                            sizeof(DREF struct ast *));
 						if unlikely(!tuple_branchv)
 							goto err_flags_merge_r;
 						memmoveupc(tuple_branchv + 1,
@@ -1192,7 +1192,7 @@ err_restore_pos:
 					 * >> print (get_items()...); // Convert to tuple. */
 					DREF struct ast **exprv;
 					ast_setddi(result, &loc);
-					exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+					exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 					if unlikely(!exprv)
 						goto err_r_flags;
 					exprv[0] = result; /* Inherit */
@@ -1792,7 +1792,7 @@ do_range:
 				goto err_r;
 			/* Use the brace AST in a single-argument call to `result' */
 			DREF struct ast **elemv;
-			elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+			elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 			if unlikely(!elemv) {
 err_other:
 				ast_decref(other);

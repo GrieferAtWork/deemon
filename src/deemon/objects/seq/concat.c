@@ -592,14 +592,14 @@ cat_nsi_rfind(Cat *__restrict self,
 			temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min), start, end, keyed_search_item, key);
 			goto check_final_temp_from_first;
 		}
-		seq_lengths = (size_t *)Dee_AMalloc((seq_max - seq_min) * sizeof(size_t));
+		seq_lengths = (size_t *)Dee_AMallocc(seq_max - seq_min, sizeof(size_t));
 		if unlikely(!seq_lengths)
 			goto err;
 		seq_lengths[0]   = temp; /* Remember the length of the first sequence. */
 		i                = seq_min + 1;
 		effective_length = temp;
 	} else {
-		seq_lengths = (size_t *)Dee_AMalloc(seq_max * sizeof(size_t));
+		seq_lengths = (size_t *)Dee_AMallocc(seq_max, sizeof(size_t));
 		if unlikely(!seq_lengths)
 			goto err;
 		i                = seq_min;

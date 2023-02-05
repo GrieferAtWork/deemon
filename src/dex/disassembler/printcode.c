@@ -124,12 +124,12 @@ textjumps_add(struct textjumps *__restrict self,
 		size_t newalloc = self->tj_alc * 2;
 		if (!newalloc)
 			newalloc = 4;
-		newvec = (struct textjump *)Dee_TryRealloc(self->tj_vec, newalloc *
-		                                                         sizeof(struct textjump));
+		newvec = (struct textjump *)Dee_TryReallocc(self->tj_vec, newalloc,
+		                                            sizeof(struct textjump));
 		if unlikely(!newvec) {
 			newalloc = self->tj_cnt + 1;
-			newvec = (struct textjump *)Dee_Realloc(self->tj_vec, newalloc *
-			                                                      sizeof(struct textjump));
+			newvec = (struct textjump *)Dee_Reallocc(self->tj_vec, newalloc,
+			                                           sizeof(struct textjump));
 			if unlikely(!newvec)
 				goto err;
 		}
@@ -359,9 +359,9 @@ textjumps_print(dformatprinter printer, void *arg,
 		return 0;
 	line_length = self->tj_max ? self->tj_max * 2 - 1 : 0;
 #if DIRECTIVE_DEDENT_WIDTH == 0
-	lines = (unsigned char *)Dee_AMalloc((line_length + 4) * sizeof(unsigned char));
+	lines = (unsigned char *)Dee_AMallocc(line_length + 4, sizeof(unsigned char));
 #else /* DIRECTIVE_DEDENT_WIDTH == 0 */
-	lines = (unsigned char *)Dee_AMalloc((line_length + 3) * sizeof(unsigned char));
+	lines = (unsigned char *)Dee_AMallocc(line_length + 3, sizeof(unsigned char));
 #endif /* DIRECTIVE_DEDENT_WIDTH != 0 */
 	if unlikely(!lines)
 		goto err;
@@ -1090,7 +1090,7 @@ prefix_except_prefix:
 			if likely(temp >= 0) {
 				char *inner_prefix;
 				result += temp;
-				inner_prefix = (char *)Dee_Malloc((prefix_len + 5) * sizeof(char));
+				inner_prefix = (char *)Dee_Mallocc(prefix_len + 5, sizeof(char));
 				if unlikely(!inner_prefix)
 					temp = -1;
 				else {

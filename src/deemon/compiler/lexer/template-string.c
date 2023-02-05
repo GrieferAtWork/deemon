@@ -56,7 +56,7 @@ add_call_sequence(struct ast *__restrict base, size_t argc,
 	args_sequence = ast_multiple(AST_FMULTIPLE_GENERIC, argc, argv);
 	if unlikely(!args_sequence)
 		goto err;
-	args_argv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+	args_argv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 	if unlikely(!args_argv)
 		goto err_args_sequence;
 	args_argv[0] = args_sequence; /* Inherit reference */
@@ -259,14 +259,12 @@ err_old_flags:
 			if (format_argc >= format_arga) {
 				size_t new_format_arga = (format_arga << 1) | 1;
 				DREF struct ast **new_format_argv;
-				new_format_argv = (DREF struct ast **)Dee_TryRealloc(format_argv,
-				                                                     new_format_arga *
-				                                                     sizeof(DREF struct ast *));
+				new_format_argv = (DREF struct ast **)Dee_TryReallocc(format_argv, new_format_arga,
+				                                                      sizeof(DREF struct ast *));
 				if (!new_format_argv) {
 					new_format_arga = format_arga + 1;
-					new_format_argv = (DREF struct ast **)Dee_Realloc(format_argv,
-					                                                  new_format_arga *
-					                                                  sizeof(DREF struct ast *));
+					new_format_argv = (DREF struct ast **)Dee_Reallocc(format_argv, new_format_arga,
+					                                                   sizeof(DREF struct ast *));
 					if unlikely(!new_format_argv) {
 err_expr_ast:
 						ast_decref_likely(expr_ast);
@@ -471,9 +469,9 @@ after_escaped_putc:
 		ASSERT(format_arga >= format_argc);
 		if (format_arga > format_argc) {
 			DREF struct ast **new_format_argv;
-			new_format_argv = (DREF struct ast **)Dee_TryRealloc(format_argv,
-			                                                     format_argc *
-			                                                     sizeof(DREF struct ast *));
+			new_format_argv = (DREF struct ast **)Dee_TryReallocc(format_argv,
+			                                                      format_argc,
+			                                                      sizeof(DREF struct ast *));
 			if likely(new_format_argv)
 				format_argv = new_format_argv;
 		}

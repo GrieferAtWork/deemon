@@ -417,9 +417,9 @@ symbol_addambig(struct symbol *__restrict self,
                 struct ast_loc *loc) {
 	struct ast_loc *new_vec;
 	ASSERT(self->s_type == SYMBOL_TYPE_AMBIG);
-	new_vec = (struct ast_loc *)Dee_TryRealloc(self->s_ambig.a_declv,
-	                                           (self->s_ambig.a_declc + 1) *
-	                                           sizeof(struct ast_loc));
+	new_vec = (struct ast_loc *)Dee_TryReallocc(self->s_ambig.a_declv,
+	                                            self->s_ambig.a_declc + 1,
+	                                            sizeof(struct ast_loc));
 	if unlikely(!new_vec)
 		return;
 	self->s_ambig.a_declv = new_vec;
@@ -1066,7 +1066,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	/* Copy default arguments. */
 	count = other->bs_argc_max - other->bs_argc_min;
 	if (count) {
-		current_basescope->bs_default = (DREF DeeObject **)Dee_Malloc(count * sizeof(DREF DeeObject *));
+		current_basescope->bs_default = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 		if unlikely(!current_basescope->bs_default)
 			goto err;
 		for (i = 0; i < count; ++i) {
@@ -1076,7 +1076,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	}
 	count = other->bs_argc;
 	if (count) {
-		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(count * sizeof(struct symbol *));
+		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(count, sizeof(struct symbol *));
 		if unlikely(!current_basescope->bs_argv)
 			goto err;
 		/* Copy the actual argument symbols. */
@@ -1182,7 +1182,7 @@ rehash_scope(DeeScopeObject *__restrict iter) {
 		new_size = 1;
 	new_size *= 2;
 rehash_realloc:
-	new_map = (struct symbol **)Dee_TryCalloc(new_size * sizeof(struct symbol *));
+	new_map = (struct symbol **)Dee_TryCallocc(new_size, sizeof(struct symbol *));
 	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;
@@ -1761,7 +1761,7 @@ PRIVATE WUNUSED int DCALL rehash_labels(void) {
 		new_size = 1;
 	new_size *= 2;
 rehash_realloc:
-	new_map = (struct text_label **)Dee_TryCalloc(new_size * sizeof(struct text_label *));
+	new_map = (struct text_label **)Dee_TryCallocc(new_size, sizeof(struct text_label *));
 	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;

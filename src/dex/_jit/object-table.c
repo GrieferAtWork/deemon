@@ -107,8 +107,8 @@ JITObjectTable_TryRehash(JITObjectTable *__restrict self,
 	struct jit_object_entry *new_table;
 	ASSERT(new_mask >= self->ot_used);
 	ASSERT(new_mask != 0);
-	new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
-	                                                     sizeof(struct jit_object_entry));
+	new_table = (struct jit_object_entry *)Dee_TryCallocc(new_mask + 1,
+	                                                      sizeof(struct jit_object_entry));
 	if unlikely(!new_table)
 		return false;
 	if (self->ot_list != jit_empty_object_list) {

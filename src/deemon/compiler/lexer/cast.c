@@ -169,7 +169,7 @@ not_a_cast:
 						merge->a_multiple.m_astv[0] = result; /* Inherit reference. */
 					} else {
 						DREF struct ast *other;
-						exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+						exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 						if unlikely(!exprv)
 							goto err_merge_r;
 						exprv[0] = result; /* Inherit */
@@ -214,7 +214,7 @@ do_a_cast:
 		if unlikely(!result)
 			goto err;
 		/* Use the parsed branch in a single-argument call-operator invocation. */
-		exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+		exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 		if unlikely(!exprv)
 			goto err_r;
 		exprv[0] = result; /* Inherit */

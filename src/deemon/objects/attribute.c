@@ -721,8 +721,8 @@ save_attr(DeeObject *__restrict declarator,
 		if (!new_alloc)
 			new_alloc = 8;
 do_realloc:
-		new_vector = (DREF Attr **)Dee_TryRealloc(self->al_v, new_alloc *
-		                                                      sizeof(DREF Attr *));
+		new_vector = (DREF Attr **)Dee_TryReallocc(self->al_v, new_alloc,
+		                                           sizeof(DREF Attr *));
 		if unlikely(!new_vector) {
 			if (new_alloc != self->al_c + 1) {
 				new_alloc = self->al_c + 1;
@@ -804,8 +804,8 @@ enumattr_init(EnumAttr *__restrict self,
 		/* Truncate the collection vector. */
 		if (list.al_c != list.al_a) {
 			DREF Attr **new_vector;
-			new_vector = (DREF Attr **)Dee_TryRealloc(list.al_v,
-			                                          list.al_c * sizeof(DREF Attr *));
+			new_vector = (DREF Attr **)Dee_TryReallocc(list.al_v, list.al_c,
+			                                           sizeof(DREF Attr *));
 			if likely(new_vector)
 				list.al_v = new_vector;
 		}

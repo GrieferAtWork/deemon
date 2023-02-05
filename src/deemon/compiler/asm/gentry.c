@@ -516,8 +516,8 @@ handle_mask_ast:
 					catch_mask_v = NULL;
 					else {
 						size_t catch_mask_i;
-						catch_mask_v = (DREF DeeTypeObject **)Dee_Calloc(catch_mask_c *
-						                                                 sizeof(DREF DeeTypeObject *));
+						catch_mask_v = (DREF DeeTypeObject **)Dee_Callocc(catch_mask_c,
+						                                                  sizeof(DREF DeeTypeObject *));
 						if unlikely(!catch_mask_v) {
 							catch_mask_c = 0;
 							goto err_hand_frame;
@@ -565,8 +565,8 @@ handle_mask_ast:
 					catch_mask_v = NULL;
 					else {
 						size_t catch_mask_i;
-						catch_mask_v = (DREF DeeTypeObject **)Dee_Calloc(catch_mask_c *
-						                                                 sizeof(DREF DeeTypeObject *));
+						catch_mask_v = (DREF DeeTypeObject **)Dee_Callocc(catch_mask_c,
+						                                                  sizeof(DREF DeeTypeObject *));
 						if unlikely(!catch_mask_v) {
 							catch_mask_c = 0;
 							goto err_hand_frame;

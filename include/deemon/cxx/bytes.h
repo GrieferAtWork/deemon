@@ -315,20 +315,20 @@ public: /* API functions */
 	DEFINE_STRING_TRANSFORMATION(casefold)
 	DEFINE_STRING_TRANSFORMATION(reversed)
 #undef DEFINE_STRING_TRANSFORMATION
-	WUNUSED deemon::int_ asnumber() const {
-		return inherit(DeeObject_CallAttrString(this->ptr(), "asnumber", 0, NULL));
+	WUNUSED deemon::int_ asnumeric() const {
+		return inherit(DeeObject_CallAttrString(this->ptr(), "asnumeric", 0, NULL));
 	}
-	WUNUSED deemon::int_ asnumber(size_t index) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ, index));
+	WUNUSED deemon::int_ asnumeric(size_t index) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", DEE_PCKuSIZ, index));
 	}
-	WUNUSED deemon::int_ asnumber(size_t index, int defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ "d", index, defl));
+	WUNUSED deemon::int_ asnumeric(size_t index, int defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", DEE_PCKuSIZ "d", index, defl));
 	}
-	WUNUSED deemon::int_ asnumber(DeeObject *__restrict index) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "o", index));
+	WUNUSED deemon::int_ asnumeric(DeeObject *__restrict index) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", "o", index));
 	}
-	WUNUSED deemon::int_ asnumber(DeeObject *__restrict index, int defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "od", index, defl));
+	WUNUSED deemon::int_ asnumeric(DeeObject *__restrict index, int defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", "od", index, defl));
 	}
 	WUNUSED deemon::int_ asdigit() const {
 		return inherit(DeeObject_CallAttrString(this->ptr(), "asdigit", 0, NULL));
@@ -345,26 +345,26 @@ public: /* API functions */
 	WUNUSED deemon::int_ asdigit(DeeObject *__restrict index, int defl) const {
 		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "od", index, defl));
 	}
-	WUNUSED deemon::int_ asdecimal() const {
-		return inherit(DeeObject_CallAttrString(this->ptr(), "asdecimal", 0, NULL));
+	WUNUSED deemon::int_ asxdigit() const {
+		return inherit(DeeObject_CallAttrString(this->ptr(), "asxdigit", 0, NULL));
 	}
-	WUNUSED deemon::int_ asdecimal(size_t index) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ, index));
+	WUNUSED deemon::int_ asxdigit(size_t index) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", DEE_PCKuSIZ, index));
 	}
-	WUNUSED deemon::int_ asdecimal(size_t index, int defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ "d", index, defl));
+	WUNUSED deemon::int_ asxdigit(size_t index, int defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", DEE_PCKuSIZ "d", index, defl));
 	}
-	WUNUSED deemon::int_ asdecimal(DeeObject *__restrict index) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "o", index));
+	WUNUSED deemon::int_ asxdigit(DeeObject *__restrict index) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", "o", index));
 	}
-	WUNUSED deemon::int_ asdecimal(DeeObject *__restrict index, int defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "od", index, defl));
+	WUNUSED deemon::int_ asxdigit(DeeObject *__restrict index, int defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", "od", index, defl));
 	}
-	WUNUSED Object asnumber(size_t index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ "o", index, defl));
+	WUNUSED Object asnumeric(size_t index, DeeObject *defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", DEE_PCKuSIZ "o", index, defl));
 	}
-	WUNUSED Object asnumber(DeeObject *index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "oo", index, defl));
+	WUNUSED Object asnumeric(DeeObject *index, DeeObject *defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumeric", "oo", index, defl));
 	}
 	WUNUSED Object asdigit(size_t index, DeeObject *defl) const {
 		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", DEE_PCKuSIZ "o", index, defl));
@@ -372,11 +372,11 @@ public: /* API functions */
 	WUNUSED Object asdigit(DeeObject *index, DeeObject *defl) const {
 		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "oo", index, defl));
 	}
-	WUNUSED Object asdecimal(size_t index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ "o", index, defl));
+	WUNUSED Object asxdigit(size_t index, DeeObject *defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", DEE_PCKuSIZ "o", index, defl));
 	}
-	WUNUSED Object asdecimal(DeeObject *index, DeeObject *defl) const {
-		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "oo", index, defl));
+	WUNUSED Object asxdigit(DeeObject *index, DeeObject *defl) const {
+		return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", "oo", index, defl));
 	}
 #define DEFINE_REPLACE_FUNCTION(name)                                                                                          \
 	WUNUSED Bytes(name)(DeeObject * find, DeeObject * repl) const {                                                            \

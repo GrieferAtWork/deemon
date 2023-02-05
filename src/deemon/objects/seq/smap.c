@@ -798,8 +798,8 @@ done_decref_vector:
 		me->sm_vector = NULL;
 	} else {
 		ASSERT(me->sm_length == me->sm_length);
-		vector = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
-		                                          sizeof(DREF DeeObject *));
+		vector = (DREF DeeObject **)Dee_TryMallocc(me->sm_length * 2,
+		                                           sizeof(DREF DeeObject *));
 		if unlikely(!vector)
 			goto err_cannot_inherit;
 		/* Simply copy all the elements, transferring

@@ -89,9 +89,8 @@ operand_list_add(struct operand_list *__restrict self,
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		result = (struct asm_operand *)Dee_TryRealloc(self->ol_v,
-		                                              new_alloc *
-		                                              sizeof(struct asm_operand));
+		result = (struct asm_operand *)Dee_TryReallocc(self->ol_v, new_alloc,
+		                                               sizeof(struct asm_operand));
 		if unlikely(!result) {
 			if (new_alloc != self->ol_c + 1) {
 				new_alloc = self->ol_c + 1;
@@ -342,8 +341,9 @@ alloc_again:
 		size_t min_alloc = self->sp_length + bufsize;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		string = (struct TPPString *)Dee_TryRealloc(string, offsetof(struct TPPString, s_text) +
-		                                                    (alloc_size + 1) * sizeof(char));
+		string = (struct TPPString *)Dee_TryRealloc(string,
+		                                            offsetof(struct TPPString, s_text) +
+		                                            (alloc_size + 1) * sizeof(char));
 		if unlikely(!string) {
 			string = self->sp_string;
 			if (alloc_size != min_alloc) {

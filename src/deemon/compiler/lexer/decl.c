@@ -64,8 +64,8 @@ decl_ast_copy(struct decl_ast *__restrict self,
 	case DAST_TUPLE: {
 		size_t i;
 		struct decl_ast *new_vec;
-		new_vec = (struct decl_ast *)Dee_Malloc(self->da_alt.a_altc *
-		                                        sizeof(struct decl_ast));
+		new_vec = (struct decl_ast *)Dee_Mallocc(self->da_alt.a_altc,
+		                                         sizeof(struct decl_ast));
 		if unlikely(!new_vec)
 			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
@@ -104,7 +104,7 @@ copy_inner:
 
 	case DAST_WITH: {
 		struct decl_ast *inner;
-		inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+		inner = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!inner)
 			goto err;
 		if unlikely(decl_ast_copy(&inner[0], &self->da_with.w_cell[0])) {
@@ -1076,7 +1076,7 @@ err_type_expr:
 			break;
 		}
 		elema = 2, elemc = 1;
-		elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+		elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!elemv)
 			goto err_r_flags;
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
@@ -1096,14 +1096,12 @@ err_type_expr:
 				if (elemc >= elema) {
 					struct decl_ast *new_elemv;
 					elema *= 2;
-					new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv,
-					                                              elema *
-					                                              sizeof(struct decl_ast));
+					new_elemv = (struct decl_ast *)Dee_TryReallocc(elemv, elema,
+					                                               sizeof(struct decl_ast));
 					if unlikely(!new_elemv) {
 						elema     = elemc + 1;
-						new_elemv = (struct decl_ast *)Dee_Realloc(elemv,
-						                                           elema *
-						                                           sizeof(struct decl_ast));
+						new_elemv = (struct decl_ast *)Dee_Reallocc(elemv, elema,
+						                                            sizeof(struct decl_ast));
 						if unlikely(!new_elemv)
 							goto err_elemv;
 					}
@@ -1112,9 +1110,8 @@ err_type_expr:
 			}
 		if (elema != elemc) {
 			struct decl_ast *new_elemv;
-			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv,
-			                                              elemc *
-			                                              sizeof(struct decl_ast));
+			new_elemv = (struct decl_ast *)Dee_TryReallocc(elemv, elemc,
+			                                               sizeof(struct decl_ast));
 			if likely(new_elemv)
 				elemv = new_elemv;
 		}
@@ -1156,7 +1153,7 @@ err_seq:
 		if (tok == ':') {
 			/* Special case: `{x: y}' is an alias for `{(x, y)...}', as it best represents a mapping */
 			struct decl_ast *elemv;
-			elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+			elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 			if unlikely(!elemv) {
 err_seq_0:
 				decl_ast_fini(decl_seq);
@@ -1379,7 +1376,7 @@ decl_ast_parse_alt(struct decl_ast *__restrict self) {
 		goto err;
 	if (tok == '|') {
 		elema = 2, elemc = 1;
-		elemv = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+		elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!elemv)
 			goto err_r;
 		decl_ast_move(&elemv[0], self);
@@ -1406,12 +1403,12 @@ after_inc_elemc:
 			if (elemc >= elema) {
 				struct decl_ast *new_elemv;
 				elema *= 2;
-				new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elema *
-				                                                     sizeof(struct decl_ast));
+				new_elemv = (struct decl_ast *)Dee_TryReallocc(elemv, elema,
+				                                               sizeof(struct decl_ast));
 				if unlikely(!new_elemv) {
 					elema     = elemc + 1;
-					new_elemv = (struct decl_ast *)Dee_Realloc(elemv, elema *
-					                                                  sizeof(struct decl_ast));
+					new_elemv = (struct decl_ast *)Dee_Reallocc(elemv, elema,
+					                                            sizeof(struct decl_ast));
 					if unlikely(!new_elemv)
 						goto err_elemv;
 				}
@@ -1420,8 +1417,8 @@ after_inc_elemc:
 		}
 		if (elema != elemc) {
 			struct decl_ast *new_elemv;
-			new_elemv = (struct decl_ast *)Dee_TryRealloc(elemv, elemc *
-			                                                     sizeof(struct decl_ast));
+			new_elemv = (struct decl_ast *)Dee_TryReallocc(elemv, elemc,
+			                                               sizeof(struct decl_ast));
 			if likely(new_elemv)
 				elemv = new_elemv;
 		}
@@ -1476,7 +1473,7 @@ decl_ast_parse(struct decl_ast *__restrict self) {
 		struct decl_ast *inner;
 		if unlikely(yield() < 0)
 			goto err;
-		inner = (struct decl_ast *)Dee_Malloc(2 * sizeof(struct decl_ast));
+		inner = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!inner)
 			goto err_r;
 		result = decl_ast_parse_alt(&inner[1]);

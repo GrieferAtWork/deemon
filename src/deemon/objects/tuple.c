@@ -108,7 +108,7 @@ tuplecache_clear(size_t max_clear) {
 			iter->c_head = elem->co_next;
 			ASSERT(iter->c_count);
 			--iter->c_count;
-			result += (offsetof(DeeTupleObject, t_elem) +
+			result += (offsetof(Tuple, t_elem) +
 			           ((size_t)(iter - cache + 1) * sizeof(DeeObject *)));
 			DeeObject_Free(elem);
 		}
@@ -134,7 +134,7 @@ tuplecache_clear(size_t UNUSED(max_clear)) {
 /* Create new tuple objects. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_NewUninitialized(size_t n) {
-	DREF DeeTupleObject *result;
+	DREF Tuple *result;
 	if unlikely(!n)
 		return_empty_tuple;
 #if CONFIG_TUPLE_CACHE_MAXCOUNT
@@ -148,7 +148,7 @@ DeeTuple_NewUninitialized(size_t n) {
 #endif /* !CONFIG_NO_THREADS */
 			{
 				ASSERT(c->c_head != NULL);
-				result    = (DREF DeeTupleObject *)c->c_head;
+				result    = (DREF Tuple *)c->c_head;
 				c->c_head = ((struct cached_object *)result)->co_next;
 				--c->c_count;
 				ASSERT((c->c_count == 0) == (c->c_head == NULL));
@@ -160,8 +160,8 @@ DeeTuple_NewUninitialized(size_t n) {
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
-	result = (DREF DeeTupleObject *)DeeObject_Malloc(offsetof(DeeTupleObject, t_elem) +
-	                                                 (n * sizeof(DeeObject *)));
+	result = (DREF Tuple *)DeeObject_Malloc(offsetof(Tuple, t_elem) +
+	                                        (n * sizeof(DeeObject *)));
 	if unlikely(!result)
 		goto done;
 	result->t_size = n;
@@ -178,7 +178,7 @@ done:
  * doesn't throw an exception when returning `NULL' */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n) {
-	DREF DeeTupleObject *result;
+	DREF Tuple *result;
 	if unlikely(!n)
 		return_empty_tuple;
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
@@ -192,7 +192,7 @@ DeeTuple_TryNewUninitialized(size_t n) {
 #endif /* !CONFIG_NO_THREADS */
 			{
 				ASSERT(c->c_head != NULL);
-				result    = (DREF DeeTupleObject *)c->c_head;
+				result    = (DREF Tuple *)c->c_head;
 				c->c_head = ((struct cached_object *)result)->co_next;
 				--c->c_count;
 				ASSERT((c->c_count == 0) == (c->c_head == NULL));
@@ -204,8 +204,8 @@ DeeTuple_TryNewUninitialized(size_t n) {
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
-	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
-	                                                    (n * sizeof(DeeObject *)));
+	result = (DREF Tuple *)DeeObject_TryMalloc(offsetof(Tuple, t_elem) +
+	                                           (n * sizeof(DeeObject *)));
 	if unlikely(!result)
 		goto done;
 	result->t_size = n;
@@ -231,7 +231,9 @@ tuple_tp_free(void *__restrict ob) {
 			atomic_lock_acquire(&c->c_lock);
 #ifndef CONFIG_NO_THREADS
 			COMPILER_READ_BARRIER();
-			if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE)
+			if unlikely(c->c_count >= CONFIG_TUPLE_CACHE_MAXSIZE) {
+				atomic_lock_release(&c->c_lock);
+			} else
 #endif /* !CONFIG_NO_THREADS */
 			{
 				struct cached_object *cob;
@@ -242,7 +244,6 @@ tuple_tp_free(void *__restrict ob) {
 				atomic_lock_release(&c->c_lock);
 				return;
 			}
-			atomic_lock_release(&c->c_lock);
 		}
 	}
 	DeeObject_Free(ob);
@@ -261,13 +262,13 @@ DeeTuple_FreeUninitialized(DREF DeeObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                              size_t new_size) {
-	DREF DeeTupleObject *new_tuple;
+	DREF Tuple *new_tuple;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	if unlikely(DeeTuple_SIZE(self) == new_size)
 		return self;
 	if unlikely(DeeTuple_IsEmpty(self)) {
 		/* Special case: Must not resize the empty tuple. */
-		new_tuple = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(new_size);
+		new_tuple = (DREF Tuple *)DeeTuple_NewUninitialized(new_size);
 		if likely(new_tuple)
 			Dee_DecrefNokill(self);
 		return (DREF DeeObject *)new_tuple;
@@ -292,16 +293,16 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict 
 			if (c->c_head)
 #endif /* !CONFIG_NO_THREADS */
 			{
-				STATIC_ASSERT((offsetof(DeeTupleObject, t_elem) %
+				STATIC_ASSERT((offsetof(Tuple, t_elem) %
 				               sizeof(DREF DeeObject *)) == 0);
 				ASSERT(c->c_head);
-				new_tuple = (DREF DeeTupleObject *)c->c_head;
+				new_tuple = (DREF Tuple *)c->c_head;
 				c->c_head = ((struct cached_object *)new_tuple)->co_next;
 				--c->c_count;
 				atomic_lock_release(&c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 				memcpyc(new_tuple, self,
-				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+				        (offsetof(Tuple, t_elem) / sizeof(DREF DeeObject *)) +
 				        MIN(DeeTuple_SIZE(self), new_size),
 				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
@@ -319,9 +320,9 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict 
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	/* Resize the old tuple. */
-	new_tuple = (DREF DeeTupleObject *)DeeObject_Realloc(self,
-	                                                     offsetof(DeeTupleObject, t_elem) +
-	                                                     new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF Tuple *)DeeObject_Realloc(self,
+	                                            offsetof(Tuple, t_elem) +
+	                                            new_size * sizeof(DREF DeeObject *));
 	if unlikely(!new_tuple)
 		goto err;
 #ifndef NDEBUG
@@ -339,7 +340,7 @@ err:
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                                size_t new_size) {
-	DREF DeeTupleObject *new_tuple;
+	DREF Tuple *new_tuple;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	ASSERT(new_size <= DeeTuple_SIZE(self));
 	if unlikely(DeeTuple_SIZE(self) == new_size)
@@ -366,13 +367,13 @@ DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restric
 #endif /* !CONFIG_NO_THREADS */
 			{
 				ASSERT(c->c_head);
-				new_tuple = (DREF DeeTupleObject *)c->c_head;
+				new_tuple = (DREF Tuple *)c->c_head;
 				c->c_head = ((struct cached_object *)new_tuple)->co_next;
 				--c->c_count;
 				atomic_lock_release(&c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 				memcpyc(new_tuple, self,
-				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+				        (offsetof(Tuple, t_elem) / sizeof(DREF DeeObject *)) +
 				        MIN(DeeTuple_SIZE(self), new_size),
 				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
@@ -390,10 +391,11 @@ DeeTuple_TruncateUninitialized(/*inherit(on_success)*/ DREF DeeObject *__restric
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	/* Try to resize the old tuple. */
-	new_tuple = (DREF DeeTupleObject *)DeeObject_TryRealloc(self, offsetof(DeeTupleObject, t_elem) +
-	                                                              new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self,
+	                                               offsetof(Tuple, t_elem) +
+	                                               new_size * sizeof(DREF DeeObject *));
 	if unlikely(!new_tuple)
-		new_tuple = (DREF DeeTupleObject *)self;
+		new_tuple = (DREF Tuple *)self;
 	new_tuple->t_size = new_size;
 	return (DREF DeeObject *)new_tuple;
 }
@@ -489,7 +491,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_FromIterator(DeeObject *__restrict self) {
 	DREF DeeObject *elem, *next;
 	size_t used_size;
-	DREF DeeTupleObject *result;
+	DREF Tuple *result;
 	/* Optimizations for empty- and single-element iterators. */
 	elem = DeeObject_IterNext(self);
 	if unlikely(!elem)
@@ -500,12 +502,12 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
 	if unlikely(!next)
 		goto err_elem;
 	if (next == ITER_DONE) {
-		result = (DREF DeeTupleObject *)DeeTuple_PackSymbolic(1, elem);
+		result = (DREF Tuple *)DeeTuple_PackSymbolic(1, elem);
 		if unlikely(!result)
 			goto err_elem;
 		return (DREF DeeObject *)result;
 	}
-	result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(2);
+	result = (DREF Tuple *)DeeTuple_NewUninitialized(2);
 	if unlikely(!result) {
 		Dee_Decref(next);
 		goto err_elem;
@@ -524,7 +526,7 @@ DeeTuple_FromIterator(DeeObject *__restrict self) {
 				Dee_Decref(elem);
 				goto err_cleanup;
 			}
-			result = (DREF DeeTupleObject *)new_result;
+			result = (DREF Tuple *)new_result;
 		}
 		result->t_elem[used_size++] = elem; /* Inherit reference. */
 		if (DeeThread_CheckInterrupt())
@@ -541,7 +543,7 @@ err_cleanup:
 		/* Fix the actually used size. */
 #if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
 		if (used_size < CONFIG_TUPLE_CACHE_MAXCOUNT) {
-			DREF DeeTupleObject *new_tuple;
+			DREF Tuple *new_tuple;
 			struct tuple_cache *c = &cache[used_size - 1];
 			if (c->c_count) {
 				atomic_lock_acquire(&c->c_lock);
@@ -551,14 +553,14 @@ err_cleanup:
 #endif /* !CONFIG_NO_THREADS */
 				{
 					ASSERT(c->c_head);
-					new_tuple = (DREF DeeTupleObject *)c->c_head;
+					new_tuple = (DREF Tuple *)c->c_head;
 					c->c_head = ((struct cached_object *)new_tuple)->co_next;
 					--c->c_count;
 					atomic_lock_release(&c->c_lock);
 					/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 					ASSERT(used_size < DeeTuple_SIZE(result));
 					memcpyc(new_tuple, result,
-					        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+					        (offsetof(Tuple, t_elem) / sizeof(DREF DeeObject *)) +
 					        used_size,
 					        sizeof(DREF DeeObject *));
 					tuple_tp_free(result);
@@ -572,10 +574,10 @@ err_cleanup:
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 		ASSERT(result->ob_refcnt == 1);
 		next = (DREF DeeObject *)DeeObject_TryRealloc(result,
-		                                              offsetof(DeeTupleObject, t_elem) +
+		                                              offsetof(Tuple, t_elem) +
 		                                              used_size * sizeof(DREF DeeObject *));
 		if likely(next)
-			result = (DREF DeeTupleObject *)next;
+			result = (DREF Tuple *)next;
 		result->t_size = used_size;
 	}
 	return (DREF DeeObject *)result;
@@ -756,23 +758,23 @@ DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(on_success)*/ DREF DeeObject *const *argv) {
-	DREF DeeTupleObject *result;
+	DREF Tuple *result;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeTuple_Check(self));
 	if (!DeeObject_IsShared(self)) {
 		size_t old_size; /* Optimization: The old object can be re-used. */
-		old_size = ((DREF DeeTupleObject *)self)->t_size;
-		result   = (DREF DeeTupleObject *)DeeTuple_ResizeUninitialized(self, old_size + argc);
+		old_size = ((DREF Tuple *)self)->t_size;
+		result   = (DREF Tuple *)DeeTuple_ResizeUninitialized(self, old_size + argc);
 		if unlikely(!result)
 			goto err;
 		memcpyc(result->t_elem + old_size, argv,
 		        argc, sizeof(DREF DeeObject *));
 	} else if unlikely(!argc) {
-		result = (DREF DeeTupleObject *)self;
+		result = (DREF Tuple *)self;
 	} else {
 		DREF DeeObject **iter;
 		size_t mylen = DeeTuple_SIZE(self);
-		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(mylen + argc);
+		result = (DREF Tuple *)DeeTuple_NewUninitialized(mylen + argc);
 		if unlikely(!result)
 			goto err;
 		iter = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
@@ -788,7 +790,7 @@ err:
  * inheriting a reference from `self' in the process. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *sequence) {
-	DREF DeeTupleObject *result;
+	DREF Tuple *result;
 	size_t oldsize;
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(sequence);
@@ -796,13 +798,13 @@ DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject
 	oldsize = DeeTuple_SIZE(self);
 	if (!DeeObject_IsShared(self)) {
 		/* Re-use `self'. */
-		result = (DREF DeeTupleObject *)self;
+		result = (DREF Tuple *)self;
 		/* Optimizations for specific types. */
 #if 0
 		if (DeeTuple_CheckExact(sequence)) {
-			DREF DeeTupleObject *new_result;
+			DREF Tuple *new_result;
 			size_t addsize = DeeTuple_SIZE(sequence);
-			new_result = (DREF DeeTupleObject *)DeeTuple_ResizeUninitialized(result, oldsize + addsize);
+			new_result = (DREF Tuple *)DeeTuple_ResizeUninitialized(result, oldsize + addsize);
 			if unlikely(!new_result)
 				goto err_inherit;
 			result = new_result;
@@ -811,13 +813,13 @@ DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject
 		}
 #endif
 		if (DeeList_CheckExact(sequence)) {
-			DREF DeeTupleObject *new_result;
+			DREF Tuple *new_result;
 			size_t lstsize = ATOMIC_READ(DeeList_SIZE(sequence));
 			if unlikely(!lstsize)
 				goto done;
 handle_list_size:
-			new_result = (DREF DeeTupleObject *)DeeTuple_ResizeUninitialized((DeeObject *)result,
-			                                                                 oldsize + lstsize);
+			new_result = (DREF Tuple *)DeeTuple_ResizeUninitialized((DeeObject *)result,
+			                                                        oldsize + lstsize);
 			if unlikely(!new_result) {
 				ASSERT(!DeeObject_IsShared(result));
 				Dee_Decrefv(DeeTuple_ELEM(result), oldsize);
@@ -845,8 +847,7 @@ handle_list_size:
 #if 0
 		if (DeeTuple_CheckExact(sequence)) {
 			size_t addsize = DeeTuple_SIZE(sequence);
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(oldsize +
-			                                                          addsize);
+			result = (DREF Tuple *)DeeTuple_NewUninitialized(oldsize + addsize);
 			if unlikely(!result)
 				goto err_inherit;
 			Dee_Movrefv(DeeTuple_ELEM(result),
@@ -863,7 +864,7 @@ handle_list_size:
 			size_t lstsize;
 			lstsize = ATOMIC_READ(DeeList_SIZE(sequence));
 handle_list_size2:
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(oldsize + lstsize);
+			result = (DREF Tuple *)DeeTuple_NewUninitialized(oldsize + lstsize);
 			if unlikely(!result)
 				goto err;
 			COMPILER_READ_BARRIER();
@@ -883,7 +884,7 @@ handle_list_size2:
 		}
 
 		/* Copy the `self' tuple, so-as to allow us to modify it. */
-		result = (DREF DeeTupleObject *)DeeTuple_NewVector(oldsize, DeeTuple_ELEM(self));
+		result = (DREF Tuple *)DeeTuple_NewVector(oldsize, DeeTuple_ELEM(self));
 		Dee_Decref_unlikely(self);
 		if unlikely(!result)
 			goto err;
@@ -892,8 +893,8 @@ handle_list_size2:
 	if unlikely(!sequence)
 		goto err_result;
 	{
-		DREF DeeTupleObject *new_result;
-		new_result = (DREF DeeTupleObject *)DeeTuple_AppendIterator((DeeObject *)result, sequence);
+		DREF Tuple *new_result;
+		new_result = (DREF Tuple *)DeeTuple_AppendIterator((DeeObject *)result, sequence);
 		Dee_Decref(sequence);
 		if unlikely(!new_result)
 			goto err_result;
@@ -902,7 +903,7 @@ handle_list_size2:
 done:
 	return (DREF DeeObject *)result;
 err_result:
-	if (result != (DREF DeeTupleObject *)self)
+	if (result != (DREF Tuple *)self)
 		Dee_DecrefDokill(result);
 err:
 	return NULL;
@@ -920,8 +921,8 @@ err:
 /*  ====== `Tuple.Iterator' type implementation ======  */
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeTupleObject *ti_tuple; /* [1..1][const] Referenced tuple. */
-	DWEAK size_t         ti_index; /* [<= ti_tuple->t_size] Next-element index. */
+	DREF Tuple  *ti_tuple; /* [1..1][const] Referenced tuple. */
+	DWEAK size_t ti_index; /* [<= ti_tuple->t_size] Next-element index. */
 } TupleIterator;
 
 #ifdef CONFIG_NO_THREADS
@@ -934,7 +935,7 @@ INTDEF DeeTypeObject DeeTupleIterator_Type;
 
 PRIVATE NONNULL((1)) int DCALL
 tuple_iterator_ctor(TupleIterator *__restrict self) {
-	self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
+	self->ti_tuple = (DREF Tuple *)Dee_EmptyTuple;
 	self->ti_index = 0;
 	Dee_Incref(Dee_EmptyTuple);
 	return 0;
@@ -952,7 +953,7 @@ tuple_iterator_copy(TupleIterator *__restrict self,
 PRIVATE NONNULL((1, 2)) int DCALL
 tuple_iterator_deep(TupleIterator *__restrict self,
                     TupleIterator *__restrict other) {
-	self->ti_tuple = (DREF DeeTupleObject *)DeeObject_DeepCopy((DeeObject *)other->ti_tuple);
+	self->ti_tuple = (DREF Tuple *)DeeObject_DeepCopy((DeeObject *)other->ti_tuple);
 	if unlikely(!self->ti_tuple)
 		goto err;
 	self->ti_index = READ_INDEX(other);
@@ -964,7 +965,7 @@ err:
 PRIVATE NONNULL((1, 3)) int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
+	self->ti_tuple = (DREF Tuple *)Dee_EmptyTuple;
 	self->ti_index = 0;
 	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ ":_TupleIterator",
 	                  &self->ti_tuple, &self->ti_index))
@@ -1040,7 +1041,7 @@ DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_gr, >)
 DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ge, >=)
 #undef DEFINE_TUPLE_ITERATOR_COMPARE
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_iterator_nii_getseq(TupleIterator *__restrict self) {
 	return_reference_(self->ti_tuple);
 }
@@ -1928,8 +1929,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         "${"
 	                         /**/ "operator repr() {\n"
 	                         /**/ "	if (#this == 1)\n"
-	                         /**/ "		return \"({!r},)\".format({ this[0] });\n"
-	                         /**/ "	return \"(\" + \", \".join(for (local x: this) repr x) + \")\";\n"
+	                         /**/ "		return f\"({repr this[0]},)\";\n"
+	                         /**/ "	return f\"({\", \".join(for (local x: this) repr x)})\";\n"
 	                         /**/ "}"
 	                         "}\n"
 	                         "\n"

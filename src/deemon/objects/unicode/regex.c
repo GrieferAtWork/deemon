@@ -203,12 +203,12 @@ typedef Dee_ssize_t re_sregoff_t;
 #undef __libc_realloc
 #undef __libc_free
 #define malloc(s)            Dee_TryMalloc(s)
-#define calloc(c, n)         Dee_TryCalloc((c) * (n))
+#define calloc(c, n)         Dee_TryCallocc(c, n)
 #define realloc(p, s)        Dee_TryRealloc(p, s)
-#define reallocv(p, c, n)    Dee_TryRealloc(p, (c) * (n))
+#define reallocv(p, c, n)    Dee_TryReallocc(p, c, n)
 #define free(p)              Dee_Free(p)
 #define __libc_malloc(s)     Dee_TryMalloc(s)
-#define __libc_calloc(c, n)  Dee_TryCalloc((c) * (n))
+#define __libc_calloc(c, n)  Dee_TryCallocc(c, n)
 #define __libc_realloc(p, s) Dee_TryRealloc(p, s)
 #define __libc_free(p)       Dee_Free(p)
 
@@ -813,8 +813,8 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 	}
 	ASSERT(regex_cache_used < new_mask);
 	ASSERT(regex_cache_used <= regex_cache_size);
-	new_vector = (struct regex_cache_entry *)Dee_TryCalloc((new_mask + 1) *
-	                                                       sizeof(struct regex_cache_entry));
+	new_vector = (struct regex_cache_entry *)Dee_TryCallocc(new_mask + 1,
+	                                                        sizeof(struct regex_cache_entry));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((regex_cache_base == regex_cache_empty) == (regex_cache_mask == 0));

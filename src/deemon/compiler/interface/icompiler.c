@@ -767,7 +767,7 @@ unpack_catch_expressions(DeeObject *__restrict handlers,
 	catch_c = DeeFastSeq_GetSize(handlers);
 	/* Make use of fast-sequence optimizations. */
 	if (catch_c != DEE_FASTSEQ_NOTFAST) {
-		catch_v = (struct catch_expr *)Dee_Malloc(catch_c * sizeof(struct catch_expr));
+		catch_v = (struct catch_expr *)Dee_Mallocc(catch_c, sizeof(struct catch_expr));
 		if unlikely(!catch_v)
 			goto done;
 		for (i = 0; i < catch_c; ++i) {
@@ -802,12 +802,12 @@ err_fast:
 			struct catch_expr *new_catch_v;
 			if unlikely(!new_catch_a)
 				new_catch_a = 2;
-			new_catch_v = (struct catch_expr *)Dee_TryRealloc(catch_v, new_catch_a *
-			                                                           sizeof(struct catch_expr));
+			new_catch_v = (struct catch_expr *)Dee_TryReallocc(catch_v, new_catch_a,
+			                                                   sizeof(struct catch_expr));
 			if unlikely(!new_catch_v) {
 				new_catch_a = catch_c + 1;
-				new_catch_v = (struct catch_expr *)Dee_Realloc(catch_v, new_catch_a *
-				                                                        sizeof(struct catch_expr));
+				new_catch_v = (struct catch_expr *)Dee_Reallocc(catch_v, new_catch_a,
+				                                                sizeof(struct catch_expr));
 				if unlikely(!new_catch_v)
 					goto err_catch_elem;
 			}
@@ -824,8 +824,8 @@ err_fast:
 	/* Release unused memory. */
 	if (catch_c != catch_a) {
 		struct catch_expr *new_catch_v;
-		new_catch_v = (struct catch_expr *)Dee_TryRealloc(catch_v, catch_c *
-		                                                           sizeof(struct catch_expr));
+		new_catch_v = (struct catch_expr *)Dee_TryReallocc(catch_v, catch_c,
+		                                                   sizeof(struct catch_expr));
 		if likely(new_catch_v)
 			catch_v = new_catch_v;
 	}

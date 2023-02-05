@@ -181,7 +181,7 @@ err_entry_assumptions:
 				/* Unused loop:
 				 * >> while (0) { ... } */
 				DREF struct ast **elemv, *none_ast;
-				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+				elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!elemv)
 					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);
@@ -249,7 +249,7 @@ err_entry_assumptions:
 				 * >> do { ... } while (0); */
 				/* Convert to `{ <loop>; <next>; <cond>; none; }' */
 				DREF struct ast **elemv, *none_ast, **iter;
-				elemv = (DREF struct ast **)Dee_Malloc(4 * sizeof(DREF struct ast *));
+				elemv = (DREF struct ast **)Dee_Mallocc(4, sizeof(DREF struct ast *));
 				if unlikely(!elemv)
 					goto err;
 				none_ast = ast_setscope_and_ddi(ast_constexpr(Dee_None), self);

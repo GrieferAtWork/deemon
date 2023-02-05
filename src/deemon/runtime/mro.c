@@ -142,8 +142,8 @@ membercache_rehash(struct membercache *__restrict self) {
 	if unlikely(new_mask == 1)
 		new_mask = 16 - 1; /* Start out bigger than 2. */
 	ASSERT(self->mc_size < new_mask);
-	new_vector = (struct membercache_slot *)Dee_TryCalloc((new_mask + 1) *
-	                                                      sizeof(struct membercache_slot));
+	new_vector = (struct membercache_slot *)Dee_TryCallocc(new_mask + 1,
+	                                                       sizeof(struct membercache_slot));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->mc_table == NULL) == (self->mc_size == 0));

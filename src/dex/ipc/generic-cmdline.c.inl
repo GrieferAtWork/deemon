@@ -695,7 +695,7 @@ process_cmdline_decode_full(char const *__restrict cmdline,
 	size_t cmdline_len;
 	char *cmdline_copy;
 	cmdline_len  = strlen(cmdline);
-	cmdline_copy = (char *)Dee_Malloc((cmdline_len + 1) * sizeof(char));
+	cmdline_copy = (char *)Dee_Mallocc(cmdline_len + 1, sizeof(char));
 	if unlikely(!cmdline_copy)
 		goto err;
 	memcpyc(cmdline_copy, cmdline, cmdline_len + 1, sizeof(char));

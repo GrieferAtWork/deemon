@@ -556,9 +556,9 @@ again:
 		goto err;
 	}
 	/* Allocate more entries. */
-	new_list = (struct atexit_entry *)Dee_TryRealloc(atexit_list,
-	                                                 (atexit_size + 1) *
-	                                                 sizeof(struct atexit_entry));
+	new_list = (struct atexit_entry *)Dee_TryReallocc(atexit_list,
+	                                                  atexit_size + 1,
+	                                                  sizeof(struct atexit_entry));
 	if unlikely(!new_list) {
 		size_t old_size = atexit_size;
 		rwlock_endwrite(&atexit_lock);

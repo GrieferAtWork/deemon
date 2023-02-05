@@ -723,11 +723,11 @@ public:
 
 #ifdef __native_char16_t_defined
 #ifndef _dee_c16len
-DeeSystem_DEFINE_XSTRLEN(_dee_c16len, uint16_t)
+_DeeSystem_DEFINE_strlenT(uint16_t, _dee_c16len)
 #define _dee_c16len(str) _dee_c16len(str)
 #endif /* !_dee_c16len */
 #ifndef _dee_c32len
-DeeSystem_DEFINE_XSTRLEN(_dee_c32len, uint32_t)
+_DeeSystem_DEFINE_strlenT(uint32_t, _dee_c32len)
 #define _dee_c32len(str) _dee_c32len(str)
 #endif /* !_dee_c32len */
 template<> class any_convertible<char16_t const *>: public any_convertible_base {
@@ -801,8 +801,7 @@ public:
 				DeeTuple_SET(result, i, temp);
 			}
 		} catch (...) {
-			while (i--)
-				Dee_Decref(DeeTuple_GET(result, i));
+			Dee_Decrefv(DeeTuple_ELEM(result, i));
 			DeeTuple_FreeUninitialized(result);
 			throw;
 		}

@@ -10574,7 +10574,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
 	            /**/ "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored"),
 
-/* TODO: What about something like this?:
+	/* TODO: What about something like this?:
 	 * >> print "Your name is $your_name, and I'm ${my_name}"
 	 * >>       .substitute({ .your_name = "foo", .my_name = "bar" });
 	 * >> print "You owe $guy $$10 dollars!"
@@ -10668,10 +10668,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_ANY_STRING_TRAIT("isanysymstrt", string_isanysymstrt, "can be used to start a symbol name"),
 	DEFINE_ANY_STRING_TRAIT("isanysymcont", string_isanysymcont, "can be used to continue a symbol name"),
 	DEFINE_ANY_STRING_TRAIT("isanyspacexlf", string_isanycempty, "is a space character, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#isanycempty)"),
-	TYPE_KWMETHOD("isanyascii", &string_isanyascii,
-	              "(start=!0,end=!-1)->?Dbool\n"
-	              "Returns ?t if any character in ${this.substr(start, end)} is "
-	              /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
+	DEFINE_ANY_STRING_TRAIT("isanyascii", string_isanyascii, " is an ascii character, that is has an ordinal value ${<= 0x7f}"),
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_ANY_STRING_TRAIT_EX
 
@@ -10751,8 +10748,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "The obvious problem here is that this alternative representation uses 2 characters "
 	              /**/ "where previously there was only one. ?#casefold solves this problem by replacing $\"\xC3\x9F\" "
 	              /**/ "with $\"ss\", allowing functions such as ?#casecompare to indicate equal strings in "
-	              /**/ "cases such as ${\"Stra\xc3\x9f"
-	              "e\".casecompare(\"Strasse\") == 0}"),
+	              /**/ "cases such as ${\"Stra\xc3\x9f" "e\".casecompare(\"Strasse\") == 0}"),
 
 	/* Case-sensitive query functions */
 	TYPE_KWMETHOD(STR_replace, &string_replace,
@@ -11151,7 +11147,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "The intended use is for generating strings from structured data, such as HTML:\n"
 	            "${"
 	            /**/ "text = getHtmlText();\n"
-	            /**/ "text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });"
+	            /**/ "text = f\"<html>\n{text.strip().indent()}\n</html>\";"
 	            "}"),
 	TYPE_METHOD("dedent", &string_dedent,
 	            "(max_chars=!1,mask?:?.)->?.\n"
@@ -11189,9 +11185,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            /**/ "first @close that doesn't have a match @{open}:\n"
 	            "${"
 	            /**/ "s = \"foo(bar(), baz(42), 7).strip()\";\n"
-	            /**/ "lcol = s.find(\"(\");\n"
+	            /**/ "local lcol = s.find(\"(\");\n"
 	            /**/ "print lcol; /* 3 */\n"
-	            /**/ "mtch = s.findmatch(\"(\", \")\", lcol+1);\n"
+	            /**/ "local mtch = s.findmatch(\"(\", \")\", lcol + 1);\n"
 	            /**/ "print repr s[lcol:mtch+1]; /* \"(bar(), baz(42), 7)\" */"
 	            "}\n"
 	            "If no @close without a matching @open exists, $-1 is returned\n"
@@ -11255,7 +11251,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "${"
 	            /**/ "s = \"foo { x, y, { 13, 19, 42, { } }, w } -- tail {}\";\n"
 	            /**/ "/* { \"foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail {}\" } */\n"
-	            /**/ "print repr s.partitionmatch(\"{\", \"\");"
+	            /**/ "print repr s.partitionmatch(\"{\", \"}\");"
 	            "}\n"
 	            "if no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
 	            "${\n"
@@ -11280,7 +11276,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "${"
 	            /**/ "s = \"{ } foo { x, y, { 13, 19, 42, { } }, w } -- tail\";\n"
 	            /**/ "/* { \"{ } foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail\" } */\n"
-	            /**/ "print repr s.rpartitionmatch(\"{\", \"\"); /* { \"{ } foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail\" } */"
+	            /**/ "print repr s.rpartitionmatch(\"{\", \"}\");"
 	            "}\n"
 	            "If no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
 	            "${"
@@ -11309,16 +11305,16 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            /**/ "last segment containing the remaining characters and having a length of between "
 	            /**/ "$1 and @substring_length characters.\n"
 	            "This function is similar to ?#distribute, but instead of being given the "
-	            /**/ "length of sub-strings and figuring out their amount, this function takes "
-	            /**/ "the amount of sub-strings and figures out their lengths"),
+	            /**/ "amount of sub-strings and figuring out their lengths, this function takes "
+	            /**/ "the length of sub-strings and figures out their amount"),
 	TYPE_METHOD("distribute", &string_distribute,
 	            "(substring_count:?Dint)->?S?.\n"
 	            "Split @this ?. into @substring_count similarly sized sub-strings, each with a "
 	            /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	            /**/ "sub-string containing all remaining characters.\n"
 	            "This function is similar to ?#segments, but instead of being given the "
-	            /**/ "amount of sub-strings and figuring out their lengths, this function takes "
-	            /**/ "the length of sub-strings and figures out their amount"),
+	            /**/ "length of sub-strings and figuring out their amount, this function takes "
+	            /**/ "the amount of sub-strings and figures out their lengths"),
 
 	/* Regex functions. */
 	TYPE_KWMETHOD("rematch", &string_rematch,
@@ -11333,7 +11329,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "$\"i\"|Perform a case-insensitive regex match. Note that due to limitations, this sort of match may "
 	              /**/ /*  */ "be different from (e.g.) ?#casecompare, in that neither the @pattern, nor @this string are "
 	              /**/ /*  */ "case-folded prior to being compared to each other (as is done by ?#casecompare; s.a. ?#casefold)."
-	              /**/ /*  */ "Instead, case-insensitive compare only takes into account different character representations"
+	              /**/ /*  */ "Instead, case-insensitive compare only takes into account different character representations "
 	              /**/ /*  */ "that all consist of the same number of actual characters (e.g. #Ca and #CA, but not #C{ß} and #Css)&"
 	              /**/ "...|Illegal character cause an error :ValueError being thrown"
 	              "}\n"
@@ -11342,9 +11338,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "slowly only the first time around. However, be careful not to write code where the used patterns "
 	              /**/ "are derived from other objects every time they are used (e.g. sub-strings), or decoded from bytes. "
 	              /**/ "To prevent regex patterns from constantly needing to be re-compiled, make sure to store the pattern "
-	              /**/ "strings with duration that spans across all use instances (constant string literals share their storage "
-	              /**/ "duration with that of the containing surrounding module and are thus the perfect candidate, meaning\n"
-	              /**/ "that hard-coded regex patterns are always optimal).\n"
+	              /**/ "strings with duration that spans across all use instances (constant string literals share their "
+	              /**/ "storage duration with that of the surrounding module and are thus the perfect candidate, meaning "
+	              /**/ "that hard-coded regex pattern strings are always optimal).\n"
 	              "Supported Match expressions:"
 	              "#T{Expression|Description~"
 	              /**/ "#C{XY}|Match #CX followed by #CY&"
@@ -11360,15 +11356,15 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "#C{\\S}|Alias for #C{[^[:space:]]}&"
 	              /**/ "#C{\\d}|Alias for #C{[[:digit:]]}&"
 	              /**/ "#C{\\D}|Alias for #C{[^[:digit:]]}&"
-	              /**/ "#C{\\0123}|Match the octal-encoded byte #C{0123} (only allowed byte-mode; s.a. ?Arematch?DBytes)&"
-	              /**/ "#C{\\xAB}|Match the hex-encoded byte #C{0xAB} (only allowed byte-mode; s.a. ?Arematch?DBytes)&"
-	              /**/ "#C{\\uABCD}|Match the unicode-character #C{U+ABCD} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
-	              /**/ "#C{\\U12345678}|Match the unicode-character #C{U+12345678} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
-	              /**/ "#C{\\u{1234 5689}}|Match the unicode-characters #C{U+1234}, followed by #C{U+5678} (not allowed byte-mode; s.a. ?Arematch?DBytes)&"
+	              /**/ "#C{\\0123}|Match the octal-encoded byte #C{0123} (only allowed in byte-mode; s.a. ?Arematch?DBytes)&"
+	              /**/ "#C{\\xAB}|Match the hex-encoded byte #C{0xAB} (only allowed in byte-mode; s.a. ?Arematch?DBytes)&"
+	              /**/ "#C{\\uABCD}|Match the unicode-character #C{U+ABCD} (not allowed in byte-mode; s.a. ?Arematch?DBytes)&"
+	              /**/ "#C{\\U12345678}|Match the unicode-character #C{U+12345678} (not allowed in byte-mode; s.a. ?Arematch?DBytes)&"
+	              /**/ "#C{\\u{1234 5689}}|Match the unicode-characters #C{U+1234}, followed by #C{U+5678} (not allowed in byte-mode; s.a. ?Arematch?DBytes)&"
 	              /**/ "#C{\\1-9}|Back-reference to a preceding group (i.e. #C{( ... )}-pairs). "
 	              /**/ /*      */ "Group indexes start at 1, and get assigned when an open-${(} is encountered in the input). "
 	              /**/ /*      */ "There is no way to create back-references for groups other than the first 9. "
-	              /**/ /*      */ "Character-ranges matched by groups can also be returned explicitly by ?#regmatch. "
+	              /**/ /*      */ "Character-ranges matched by groups can also be returned explicitly by ?#{regmatch}. "
 	              /**/ /*      */ "Matches exactly what was previously matched by said group&"
 	              /**/ "#C{\\x}|Match the literal $\"x\" (where #Cx is not one of the special escapes above). "
 	              /**/ /*   */ "For the sake of compatibility, it is recommended not to use this, but to instead "
@@ -11429,8 +11425,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}\n"
 	              "Supported location-assertion expressions:"
 	              "#T{Expression|Description~"
-	              /**/ "#C{^}|At start-of-input, of following a line-feed character&"
-	              /**/ "#C{$}|At end-of-input, of preceding a line-feed character&"
+	              /**/ "#C{^}|At start-of-input, or following a line-feed character&"
+	              /**/ "#C{$}|At end-of-input, or preceding a line-feed character&"
 	              /**/ "#C{\\`}|At start-of-input&"
 	              /**/ "#C{\\A}|At start-of-input&"
 	              /**/ "#C{\\'}|At end-of-input&"

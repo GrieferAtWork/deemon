@@ -231,19 +231,19 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 	new_alloc = regs->dx_spnama * 2;
 	if (new_alloc < min_size)
 		new_alloc = min_size;
-	new_vec = (uint16_t *)Dee_TryRealloc(regs->dx_spnamv,
-	                                     new_alloc *
-	                                     sizeof(uint16_t));
+	new_vec = (uint16_t *)Dee_TryReallocc(regs->dx_spnamv,
+	                                      new_alloc,
+	                                      sizeof(uint16_t));
 	if (!new_vec) {
 		new_alloc = min_size;
 		if (flags & DDI_STATE_FNOTHROW) {
-			new_vec = (uint16_t *)Dee_TryRealloc(regs->dx_spnamv,
-			                                     new_alloc *
-			                                     sizeof(uint16_t));
+			new_vec = (uint16_t *)Dee_TryReallocc(regs->dx_spnamv,
+			                                      new_alloc,
+			                                      sizeof(uint16_t));
 		} else {
-			new_vec = (uint16_t *)Dee_Realloc(regs->dx_spnamv,
-			                                  new_alloc *
-			                                  sizeof(uint16_t));
+			new_vec = (uint16_t *)Dee_Reallocc(regs->dx_spnamv,
+			                                   new_alloc,
+			                                   sizeof(uint16_t));
 		}
 		if unlikely(!new_vec)
 			goto err;
@@ -399,15 +399,15 @@ next_ip:
 				if (!save->s_save.dx_lcnamc)
 					save->s_save.dx_lcnamv = NULL;
 				else {
-					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
-					                                                   sizeof(uint16_t));
+					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
+					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_lcnamv) {
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save);
 							goto next_ip;
 						}
-						save->s_save.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc *
-						                                                sizeof(uint16_t));
+						save->s_save.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
+						                                                 sizeof(uint16_t));
 						if unlikely(!save->s_save.dx_lcnamv)
 							goto err_save;
 					}
@@ -426,16 +426,16 @@ next_ip:
 				if (!save->s_save.dx_spnama) {
 					save->s_save.dx_spnamv = NULL;
 				} else {
-					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMalloc(save->s_save.dx_spnama *
-					                                                   sizeof(uint16_t));
+					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMallocc(save->s_save.dx_spnama,
+					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_spnamv) {
 						if (flags & DDI_STATE_FNOTHROW) {
 							Dee_Free(save->s_save.dx_lcnamv);
 							Dee_Free(save);
 							goto next_ip;
 						}
-						save->s_save.dx_spnamv = (uint16_t *)Dee_Malloc(save->s_save.dx_spnama *
-						                                                sizeof(uint16_t));
+						save->s_save.dx_spnamv = (uint16_t *)Dee_Mallocc(save->s_save.dx_spnama,
+						                                                 sizeof(uint16_t));
 						if unlikely(!save->s_save.dx_spnamv)
 							goto err_save_lc;
 					}
@@ -511,14 +511,14 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	if (!self->rs_xregs.dx_lcnamc)
 		self->rs_xregs.dx_lcnamv = NULL;
 	else {
-		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_lcnamc *
-		                                                     sizeof(uint16_t));
+		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
+		                                                      sizeof(uint16_t));
 		if unlikely(!self->rs_xregs.dx_lcnamv) {
 			if (flags & DDI_STATE_FNOTHROW)
 				self->rs_xregs.dx_lcnamc = 0;
 			else {
-				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Malloc(self->rs_xregs.dx_lcnamc *
-				                                                  sizeof(uint16_t));
+				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
+				                                                   sizeof(uint16_t));
 				if unlikely(!self->rs_xregs.dx_lcnamv)
 					return DDI_NEXT_ERR;
 			}
@@ -530,8 +530,8 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	if (!self->rs_xregs.dx_spnama)
 		self->rs_xregs.dx_spnamv = NULL;
 	else {
-		self->rs_xregs.dx_spnamv = (uint16_t *)Dee_TryMalloc(self->rs_xregs.dx_spnama *
-		                                                     sizeof(uint16_t));
+		self->rs_xregs.dx_spnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_spnama,
+		                                                      sizeof(uint16_t));
 		if unlikely(!self->rs_xregs.dx_spnamv)
 			self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
 		else {

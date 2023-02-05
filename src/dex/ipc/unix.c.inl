@@ -294,10 +294,10 @@ process_pack_argv_fast(DeeObject *__restrict seq, size_t fastlen,
 	char **result, *utf8;
 	DREF DeeObject *elem, **obj_vector;
 	size_t i;
-	result = (char **)Dee_Malloc((fastlen + 2) * sizeof(char *));
+	result = (char **)Dee_Mallocc(fastlen + 2, sizeof(char *));
 	if (!result)
 		goto done;
-	obj_vector = (DREF DeeObject **)Dee_Malloc(fastlen * sizeof(DREF DeeObject *));
+	obj_vector = (DREF DeeObject **)Dee_Mallocc(fastlen, sizeof(DREF DeeObject *));
 	if (!result)
 		goto err_result;
 	for (i = 0; i < fastlen; ++i) {
@@ -337,13 +337,13 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 	DREF DeeObject *elem;
 	result_len   = 0;
 	result_alloc = 8;
-	result       = (char **)Dee_TryMalloc((result_alloc + 2) * sizeof(char *));
-	obj_vector   = (DREF DeeObject **)Dee_TryMalloc(result_alloc * sizeof(DREF DeeObject *));
+	result       = (char **)Dee_TryMallocc(result_alloc + 2, sizeof(char *));
+	obj_vector   = (DREF DeeObject **)Dee_TryMallocc(result_alloc, sizeof(DREF DeeObject *));
 	if (!result || !obj_vector) {
 		Dee_Free(result);
 		Dee_Free(obj_vector);
 		result_alloc = 0;
-		result = (char **)Dee_Malloc((result_alloc + 2) * sizeof(char *));
+		result = (char **)Dee_Mallocc(result_alloc + 2, sizeof(char *));
 		if unlikely(!result)
 			goto done;
 		obj_vector = NULL;
@@ -360,22 +360,20 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 			size_t new_alloc = result_alloc * 2;
 			if unlikely(!new_alloc)
 				new_alloc = 1;
-			new_obj_vector = (DREF DeeObject **)Dee_TryRealloc(obj_vector,
-			                                                   new_alloc *
-			                                                   sizeof(DREF DeeObject *));
+			new_obj_vector = (DREF DeeObject **)Dee_TryReallocc(obj_vector, new_alloc,
+			                                                    sizeof(DREF DeeObject *));
 			if unlikely(!new_obj_vector) {
 				new_alloc = result_alloc + 1;
-				new_obj_vector = (DREF DeeObject **)Dee_Realloc(obj_vector,
-				                                                new_alloc *
-				                                                sizeof(DREF DeeObject *));
+				new_obj_vector = (DREF DeeObject **)Dee_Reallocc(obj_vector, new_alloc,
+				                                                 sizeof(DREF DeeObject *));
 				if unlikely(!new_obj_vector)
 					goto err_elem;
 			}
 			obj_vector = new_obj_vector;
-			new_result = (char **)Dee_TryRealloc(result, (new_alloc + 2) * sizeof(char *));
+			new_result = (char **)Dee_TryReallocc(result, new_alloc + 2, sizeof(char *));
 			if unlikely(!new_result) {
 				new_alloc = result_alloc + 1;
-				new_result = (char **)Dee_Realloc(result, (new_alloc + 2) * sizeof(char *));
+				new_result = (char **)Dee_Reallocc(result, new_alloc + 2, sizeof(char *));
 				if unlikely(!new_result)
 					goto err_elem;
 			}
@@ -390,12 +388,11 @@ process_pack_argv_iter(DeeObject *__restrict iterator,
 		goto err;
 	ASSERT(result_len <= result_alloc);
 	if (result_len < result_alloc) {
-		new_result = (char **)Dee_TryRealloc(result, (result_len + 2) * sizeof(char *));
+		new_result = (char **)Dee_TryReallocc(result, result_len + 2, sizeof(char *));
 		if likely(new_result)
 			result = new_result;
-		new_obj_vector = (DREF DeeObject **)Dee_TryRealloc(obj_vector,
-		                                                   result_len *
-		                                                   sizeof(DREF DeeObject *));
+		new_obj_vector = (DREF DeeObject **)Dee_TryReallocc(obj_vector, result_len,
+		                                                    sizeof(DREF DeeObject *));
 		if likely(new_obj_vector)
 			obj_vector = new_obj_vector;
 	}
@@ -445,10 +442,10 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
 	result_len   = 0;
 	result_alloc = 8;
-	result       = (char **)Dee_TryMalloc((result_alloc + 1) * sizeof(char *));
+	result       = (char **)Dee_TryMallocc(result_alloc + 1, sizeof(char *));
 	if (!result) {
 		result_alloc = 0;
-		result = (char **)Dee_Malloc((result_alloc + 1) * sizeof(char *));
+		result = (char **)Dee_Mallocc(result_alloc + 1, sizeof(char *));
 		if unlikely(!result)
 			goto done;
 	}
@@ -460,10 +457,10 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 			size_t new_alloc = result_alloc * 2;
 			if unlikely(!new_alloc)
 				new_alloc = 1;
-			new_result = (char **)Dee_TryRealloc(result, (new_alloc + 1) * sizeof(char *));
+			new_result = (char **)Dee_TryReallocc(result, new_alloc + 1, sizeof(char *));
 			if unlikely(!new_result) {
 				new_alloc = result_alloc + 1;
-				new_result = (char **)Dee_Realloc(result, (new_alloc + 1) * sizeof(char *));
+				new_result = (char **)Dee_Reallocc(result, new_alloc + 1, sizeof(char *));
 				if unlikely(!new_result)
 					goto err_elem;
 			}
@@ -486,7 +483,7 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 		key_length   = WSTR_LENGTH(key_utf8);
 		value_length = WSTR_LENGTH(value_utf8);
 		line_length  = key_length + 1 + value_length;
-		line = (char *)Dee_Malloc((line_length + 1) * sizeof(char));
+		line = (char *)Dee_Mallocc(line_length + 1, sizeof(char));
 		if unlikely(!line)
 			goto err_key_and_value;
 		p    = line;
@@ -503,7 +500,7 @@ process_pack_envp_iter(DeeObject *__restrict iterator) {
 		goto err;
 	ASSERT(result_len <= result_alloc);
 	if (result_len < result_alloc) {
-		new_result = (char **)Dee_TryRealloc(result, (result_len + 1) * sizeof(char *));
+		new_result = (char **)Dee_TryReallocc(result, result_len + 1, sizeof(char *));
 		if likely(new_result)
 			result = new_result;
 	}

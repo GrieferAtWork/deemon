@@ -842,7 +842,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 
 INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_ReBytseLocateAllIterator",
+	/* .tp_name     = */ "_ReBytesLocateAllIterator",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

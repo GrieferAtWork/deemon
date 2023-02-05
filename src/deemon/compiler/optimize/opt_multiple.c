@@ -310,10 +310,10 @@ continue_inline_at_iter:
 					--self->a_multiple.m_astc;
 					goto continue_inline_at_iter;
 				}
-				new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
-				                                           (self->a_multiple.m_astc - 1 +
-				                                            inner->a_multiple.m_astc) *
-				                                           sizeof(DREF struct ast *));
+				new_astv = (DREF struct ast **)Dee_Reallocc(self->a_multiple.m_astv,
+				                                            self->a_multiple.m_astc - 1 +
+				                                            inner->a_multiple.m_astc,
+				                                            sizeof(DREF struct ast *));
 				if unlikely(!new_astv)
 					goto err;
 				move_count              = (size_t)((end - iter) - 1);
@@ -356,9 +356,9 @@ continue_inline_at_iter:
 					--self->a_multiple.m_astc;
 					goto continue_inline_at_iter;
 				}
-				new_astv = (DREF struct ast **)Dee_Realloc(self->a_multiple.m_astv,
-				                                           (self->a_multiple.m_astc - 1 + len) *
-				                                           sizeof(DREF struct ast *));
+				new_astv = (DREF struct ast **)Dee_Reallocc(self->a_multiple.m_astv,
+				                                            self->a_multiple.m_astc - 1 + len,
+				                                            sizeof(DREF struct ast *));
 				if unlikely(!new_astv) {
 err_expand_vec:
 					while (len--)

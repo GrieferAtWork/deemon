@@ -1102,6 +1102,7 @@ restart_clear_weakrefs:
 }
 
 
+/* Destroy a given deemon object (called when its refcnt reaches `0') */
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
 PUBLIC NONNULL((1)) void
 (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,

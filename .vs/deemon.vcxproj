@@ -99,6 +99,7 @@
     <ClInclude Include="..\include\deemon\cxx\list.h" />
     <ClInclude Include="..\include\deemon\cxx\mapping.h" />
     <ClInclude Include="..\include\deemon\cxx\module.h" />
+    <ClInclude Include="..\include\deemon\cxx\numeric.h" />
     <ClInclude Include="..\include\deemon\cxx\object.h" />
     <ClInclude Include="..\include\deemon\cxx\sequence.h" />
     <ClInclude Include="..\include\deemon\cxx\string.h" />

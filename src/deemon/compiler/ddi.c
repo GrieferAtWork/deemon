@@ -122,8 +122,7 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 		goto err;
 	}
 	/* Append a new value. */
-	vector = (uint32_t *)Dee_Realloc(vector, (size + 1) *
-	                                         sizeof(uint32_t));
+	vector = (uint32_t *)Dee_Reallocc(vector, size + 1, sizeof(uint32_t));
 	if unlikely(!vector)
 		goto err;
 	vector[size] = offset_value;

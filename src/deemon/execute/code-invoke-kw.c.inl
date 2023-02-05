@@ -146,15 +146,15 @@ PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
 		goto err;
 #endif /* !Dee_Alloca || (CODE_FLAGS & CODE_FYIELDING) != 0 */
 #else /* CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS) */
-#ifdef Dee_Alloca
-	frame.cf_kw = (struct code_frame_kwds *)((uintptr_t)Dee_Alloca(ex_argc * sizeof(DeeObject *)) -
+#ifdef Dee_Allocac
+	frame.cf_kw = (struct code_frame_kwds *)((uintptr_t)Dee_Allocac(ex_argc, sizeof(DeeObject *)) -
 	                                         offsetof(struct code_frame_kwds, fk_kargv));
-#else /* Dee_Alloca */
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Malloc(ex_argc * sizeof(DeeObject *));
+#else /* Dee_Allocac */
+	frame.cf_kw = (struct code_frame_kwds *)Dee_Mallocc(ex_argc, sizeof(DeeObject *));
 	if unlikely(!frame.cf_kw)
 		goto err;
 	frame.cf_kw = (struct code_frame_kwds *)((uintptr_t)frame.cf_kw - offsetof(struct code_frame_kwds, fk_kargv));
-#endif /* !Dee_Alloca */
+#endif /* !Dee_Allocac */
 #endif /* !(CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)) */
 
 	i = 0;

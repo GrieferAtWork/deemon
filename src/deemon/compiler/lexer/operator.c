@@ -307,7 +307,7 @@ do_generic:
 		/* Pack together the argument list. */
 		if unlikely((args = ast_expand(args)) == NULL)
 			goto err;
-		argv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+		argv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 		if unlikely(!argv)
 			goto err_args;
 		argv[0] = self;

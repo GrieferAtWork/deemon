@@ -69,8 +69,9 @@ astlist_upsize(struct astlist *__restrict self,
 	while ((new_alloc - self->ast_c) < min_add)
 		new_alloc *= 2;
 do_realloc:
-	new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v, new_alloc *
-	                                                             sizeof(DREF struct ast *));
+	new_vector = (DREF struct ast **)Dee_TryReallocc(self->ast_v,
+	                                                 new_alloc,
+	                                                 sizeof(DREF struct ast *));
 	if unlikely(!new_vector) {
 		if (new_alloc != self->ast_c + min_add) {
 			new_alloc = self->ast_c + min_add;
@@ -92,8 +93,9 @@ astlist_trunc(struct astlist *__restrict self) {
 	DREF struct ast **new_vector;
 	if (self->ast_c == self->ast_a)
 		return;
-	new_vector = (DREF struct ast **)Dee_TryRealloc(self->ast_v, self->ast_c *
-	                                                             sizeof(DREF struct ast *));
+	new_vector = (DREF struct ast **)Dee_TryReallocc(self->ast_v,
+	                                                 self->ast_c,
+	                                                 sizeof(DREF struct ast *));
 	if likely(new_vector)
 		self->ast_v = new_vector;
 }
@@ -604,7 +606,7 @@ err_function_anno:
 				if unlikely(!args)
 					goto err_current;
 				/* Wrap the returned ast in a 1-element tuple (for the argument list) */
-				exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+				exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 				if unlikely(!exprv)
 					goto err_args;
 				exprv[0] = args; /* Inherit */
@@ -920,7 +922,7 @@ done_expression:
 			/* If the caller wants to force us to package
 			 * everything in a multi-branch, grant that wish. */
 			DREF struct ast **astv, *result;
-			astv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+			astv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 			if unlikely(!astv)
 				goto err_current;
 			astv[0] = current;

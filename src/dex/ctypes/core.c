@@ -280,7 +280,7 @@ stype_dofunc(DeeSTypeObject *self, size_t argc,
 		cc = (ctypes_cc_t)((unsigned int)cc |
 		                   (unsigned int)cc_flags);
 	}
-	argv_types = (DeeSTypeObject **)Dee_Malloc(argc * sizeof(DeeSTypeObject *));
+	argv_types = (DeeSTypeObject **)Dee_Mallocc(argc, sizeof(DeeSTypeObject *));
 	if unlikely(!argv_types)
 		goto err;
 

@@ -72,14 +72,14 @@ objectlist_alloc(struct objectlist *__restrict self, size_t num_objects) {
 		while (new_alloc < min_alloc)
 			new_alloc *= 2;
 		Dee_ASSERT(new_alloc > self->ol_size);
-		new_list = (DREF DeeObject **)Dee_TryRealloc(self->ol_list,
-		                                             new_alloc *
-		                                             sizeof(DREF DeeObject *));
+		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_list,
+		                                              new_alloc,
+		                                              sizeof(DREF DeeObject *));
 		if unlikely(!new_list) {
 			new_alloc = min_alloc;
-			new_list = (DREF DeeObject **)Dee_Realloc(self->ol_list,
-			                                          new_alloc *
-			                                          sizeof(DREF DeeObject *));
+			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_list,
+			                                           new_alloc,
+			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_list)
 				goto err;
 		}
@@ -104,14 +104,14 @@ objectlist_append(struct objectlist *__restrict self,
 		if (!new_alloc)
 			new_alloc = 2;
 		Dee_ASSERT(new_alloc > self->ol_size);
-		new_list = (DREF DeeObject **)Dee_TryRealloc(self->ol_list,
-		                                             new_alloc *
-		                                             sizeof(DREF DeeObject *));
+		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_list,
+		                                              new_alloc,
+		                                              sizeof(DREF DeeObject *));
 		if unlikely(!new_list) {
 			new_alloc = self->ol_size + 1;
-			new_list = (DREF DeeObject **)Dee_Realloc(self->ol_list,
-			                                          new_alloc *
-			                                          sizeof(DREF DeeObject *));
+			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_list,
+			                                           new_alloc,
+			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_list)
 				goto err;
 		}

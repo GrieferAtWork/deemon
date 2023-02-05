@@ -888,7 +888,7 @@ DeeSharedMap_Decref(DREF DeeObject *__restrict self);
  * The following types function as fast-sequence-compatible:
  *  - Tuple
  *  - List
- *  - _SharedVector      (Created by a `ASM_CALL_SEQ' instruction -- `call top, {#X}')
+ *  - _SharedVector      (Created by a `ASM_CALL_SEQ' instruction -- `call top, [#X]')
  *  - _SeqSubRange       (Only if the sub-ranged sequence is a fast-sequence)
  *  - _SeqSubRangeN      (*ditto*)
  *  - _SeqTransformation (Only if the sequence being transformed is a fast-sequence)

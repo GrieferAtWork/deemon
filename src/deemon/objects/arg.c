@@ -907,8 +907,7 @@ kmap_copy(KwdsMapping *__restrict self,
           KwdsMapping *__restrict other) {
 	size_t i, count;
 	count          = other->kmo_kwds->kw_size;
-	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
-	                                               sizeof(DREF DeeObject *));
+	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!self->kmo_argv)
 		goto err;
 	atomic_rwlock_read(&other->kmo_lock);
@@ -930,8 +929,7 @@ kmap_deep(KwdsMapping *__restrict self,
           KwdsMapping *__restrict other) {
 	size_t i, count;
 	count          = other->kmo_kwds->kw_size;
-	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(count *
-	                                               sizeof(DREF DeeObject *));
+	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!self->kmo_argv)
 		goto err;
 	atomic_rwlock_read(&other->kmo_lock);
@@ -973,8 +971,8 @@ kmap_init(KwdsMapping *__restrict self,
 		return err_keywords_bad_for_argc(DeeTuple_SIZE(args),
 		                                 self->kmo_kwds->kw_size);
 	}
-	self->kmo_argv = (DREF DeeObject **)Dee_Malloc(DeeTuple_SIZE(args) *
-	                                               sizeof(DREF DeeObject *));
+	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(DeeTuple_SIZE(args),
+	                                                sizeof(DREF DeeObject *));
 	if unlikely(!self->kmo_argv)
 		goto err;
 	for (i = 0; i < DeeTuple_SIZE(args); ++i) {
@@ -1225,7 +1223,7 @@ clear_argv:
 			atomic_rwlock_endwrite(&me->kmo_lock);
 		} else {
 			do {
-				argv = (DREF DeeObject **)Dee_TryMalloc(argc * sizeof(DREF DeeObject *));
+				argv = (DREF DeeObject **)Dee_TryMallocc(argc, sizeof(DREF DeeObject *));
 			} while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
 			if unlikely(!argv)
 				goto clear_argv;

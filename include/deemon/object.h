@@ -642,6 +642,8 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 
 /* incref() + return `self' */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
+
+/* Destroy a given deemon object (called when its refcnt reaches `0') */
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)
 DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy(DeeObject *__restrict self);
 #else /* CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_TRACE_REFCHANGES */

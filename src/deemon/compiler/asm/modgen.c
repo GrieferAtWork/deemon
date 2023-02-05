@@ -60,16 +60,16 @@ module_compile(DeeModuleObject *__restrict mod,
 	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
 	if (current_rootscope->rs_importa != current_rootscope->rs_importc) {
 		DREF DeeModuleObject **new_vector;
-		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
-		                                                     current_rootscope->rs_importc *
-		                                                     sizeof(DREF DeeModuleObject *));
+		new_vector = (DREF DeeModuleObject **)Dee_TryReallocc(current_rootscope->rs_importv,
+		                                                      current_rootscope->rs_importc,
+		                                                      sizeof(DREF DeeModuleObject *));
 		if likely(new_vector)
 			current_rootscope->rs_importv = new_vector;
 	}
 
 	/* Start filling in members of the module. */
-	mod->mo_globalv = (DREF DeeObject **)Dee_Calloc(current_rootscope->rs_globalc *
-	                                                sizeof(DREF DeeObject *));
+	mod->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
+	                                                 sizeof(DREF DeeObject *));
 	if unlikely(!mod->mo_globalv)
 		goto err;
 	mod->mo_globalc = current_rootscope->rs_globalc;

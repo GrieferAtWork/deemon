@@ -781,47 +781,47 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 
 
 /* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
-#define DEFINE_FUZZY_COMPARE_FUNCTION(name, T, transform)        \
-	PRIVATE dssize_t DCALL                                       \
-	name(T const *__restrict a, size_t alen,                     \
-	     T const *__restrict b, size_t blen) {                   \
-		size_t *v0, *v1, i, j, cost, temp;                       \
-		if unlikely(!alen)                                       \
-			return blen;                                         \
-		if unlikely(!blen)                                       \
-			return alen;                                         \
-		v0 = (size_t *)Dee_AMalloc((blen + 1) * sizeof(size_t)); \
-		if unlikely(!v0)                                         \
-			return -1;                                           \
-		v1 = (size_t *)Dee_AMalloc((blen + 1) * sizeof(size_t)); \
-		if unlikely(!v1) {                                       \
-			Dee_AFree(v0);                                       \
-			return -1;                                           \
-		}                                                        \
-		for (i = 0; i < blen; ++i)                               \
-			v0[i] = i;                                           \
-		for (i = 0; i < alen; ++i) {                             \
-			T a_value = transform(a[i]);                         \
-			v1[0]     = i + 1;                                   \
-			for (j = 0; j < blen; ++j) {                         \
-				cost = (a_value == transform(b[j])) ? 0u : 1u;   \
-				cost += v0[j];                                   \
-				temp = v1[j] + 1;                                \
-				if (temp < cost)                                 \
-					cost = temp;                                 \
-				temp = v0[j + 1] + 1;                            \
-				if (temp < cost)                                 \
-					cost = temp;                                 \
-				v1[j + 1] = cost;                                \
-			}                                                    \
-			memcpyc(v0, v1, blen, sizeof(size_t));               \
-		}                                                        \
-		temp = v1[blen];                                         \
-		Dee_AFree(v0);                                           \
-		Dee_AFree(v1);                                           \
-		if (temp > SSIZE_MAX)                                    \
-			temp = SSIZE_MAX;                                    \
-		return temp;                                             \
+#define DEFINE_FUZZY_COMPARE_FUNCTION(name, T, transform)      \
+	PRIVATE dssize_t DCALL                                     \
+	name(T const *__restrict a, size_t alen,                   \
+	     T const *__restrict b, size_t blen) {                 \
+		size_t *v0, *v1, i, j, cost, temp;                     \
+		if unlikely(!alen)                                     \
+			return blen;                                       \
+		if unlikely(!blen)                                     \
+			return alen;                                       \
+		v0 = (size_t *)Dee_AMallocc(blen + 1, sizeof(size_t)); \
+		if unlikely(!v0)                                       \
+			return -1;                                         \
+		v1 = (size_t *)Dee_AMallocc(blen + 1, sizeof(size_t)); \
+		if unlikely(!v1) {                                     \
+			Dee_AFree(v0);                                     \
+			return -1;                                         \
+		}                                                      \
+		for (i = 0; i < blen; ++i)                             \
+			v0[i] = i;                                         \
+		for (i = 0; i < alen; ++i) {                           \
+			T a_value = transform(a[i]);                       \
+			v1[0]     = i + 1;                                 \
+			for (j = 0; j < blen; ++j) {                       \
+				cost = (a_value == transform(b[j])) ? 0u : 1u; \
+				cost += v0[j];                                 \
+				temp = v1[j] + 1;                              \
+				if (temp < cost)                               \
+					cost = temp;                               \
+				temp = v0[j + 1] + 1;                          \
+				if (temp < cost)                               \
+					cost = temp;                               \
+				v1[j + 1] = cost;                              \
+			}                                                  \
+			memcpyc(v0, v1, blen, sizeof(size_t));             \
+		}                                                      \
+		temp = v1[blen];                                       \
+		Dee_AFree(v0);                                         \
+		Dee_AFree(v1);                                         \
+		if (temp > SSIZE_MAX)                                  \
+			temp = SSIZE_MAX;                                  \
+		return temp;                                           \
 	}
 #undef fuzzy_compareb
 #undef fuzzy_comparew
@@ -851,10 +851,10 @@ DEFINE_FUZZY_COMPARE_FUNCTION(dee_fuzzy_asciicasecompareb, uint8_t, (uint8_t)tol
 			return folded_blen;                                                  \
 		if unlikely(!folded_blen)                                                \
 			return folded_alen;                                                  \
-		v0 = (size_t *)Dee_AMalloc((folded_blen + 1) * sizeof(size_t));          \
+		v0 = (size_t *)Dee_AMallocc(folded_blen + 1, sizeof(size_t));            \
 		if unlikely(!v0)                                                         \
 			return -1;                                                           \
-		v1 = (size_t *)Dee_AMalloc((folded_blen + 1) * sizeof(size_t));          \
+		v1 = (size_t *)Dee_AMallocc(folded_blen + 1, sizeof(size_t));            \
 		if unlikely(!v1) {                                                       \
 			Dee_AFree(v0);                                                       \
 			return -1;                                                           \

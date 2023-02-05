@@ -106,7 +106,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	 * [0] -- __hidden_symbol = with_expression;
 	 * [1] -- __hidden_symbol.operator enter();
 	 * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
-	result_v = (DREF struct ast **)Dee_Malloc(3 * sizeof(DREF struct ast *));
+	result_v = (DREF struct ast **)Dee_Mallocc(3, sizeof(DREF struct ast *));
 	if unlikely(!result_v)
 		goto err_scope_r;
 	result_v[0] = result; /* Inherit */
@@ -231,7 +231,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
 	 * [0] -- __hidden_symbol = with_expression;
 	 * [1] -- __hidden_symbol.operator enter();
 	 * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
-	result_v = (DREF struct ast **)Dee_Malloc(3 * sizeof(DREF struct ast *));
+	result_v = (DREF struct ast **)Dee_Mallocc(3, sizeof(DREF struct ast *));
 	if unlikely(!result_v)
 		goto err_scope_r;
 	result_v[0] = result; /* Inherit */

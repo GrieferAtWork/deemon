@@ -81,11 +81,11 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 			min_mask = (min_mask << 1) | 1;
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
-		result->s_elem = (struct hashset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct hashset_item));
+		result->s_elem = (struct hashset_item *)Dee_TryCallocc(mask + 1, sizeof(struct hashset_item));
 		if unlikely(!result->s_elem) {
 			/* Try one level less if that failed. */
 			mask           = min_mask;
-			result->s_elem = (struct hashset_item *)Dee_Calloc((mask + 1) * sizeof(struct hashset_item));
+			result->s_elem = (struct hashset_item *)Dee_Callocc(mask + 1, sizeof(struct hashset_item));
 			if unlikely(!result->s_elem)
 				goto err_r;
 		}
@@ -185,8 +185,8 @@ set_init_sequence(Set *__restrict self,
 		if unlikely(!self->s_size)
 			self->s_elem = (struct hashset_item *)empty_set_items;
 		else {
-			self->s_elem = (struct hashset_item *)Dee_Malloc((src->rs_mask + 1) *
-			                                                 sizeof(struct hashset_item));
+			self->s_elem = (struct hashset_item *)Dee_Mallocc(src->rs_mask + 1,
+			                                                  sizeof(struct hashset_item));
 			if unlikely(!self->s_elem)
 				goto err;
 			iter = (struct hashset_item *)memcpyc(self->s_elem, src->rs_elem,
@@ -267,7 +267,7 @@ again:
 	self->s_size = other->s_size;
 	self->s_used = other->s_used;
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
-		self->s_elem = (struct hashset_item *)Dee_TryMalloc((other->s_mask + 1) * sizeof(struct hashset_item));
+		self->s_elem = (struct hashset_item *)Dee_TryMallocc(other->s_mask + 1, sizeof(struct hashset_item));
 		if unlikely(!self->s_elem) {
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((other->s_mask + 1) * sizeof(struct hashset_item)))
@@ -308,7 +308,7 @@ set_deepload(Set *__restrict self) {
 		if (item_count <= ols_item_count)
 			break;
 		DeeHashSet_LockEndRead(self);
-		new_items = (DREF DeeObject **)Dee_Realloc(items, item_count * sizeof(DREF DeeObject *));
+		new_items = (DREF DeeObject **)Dee_Reallocc(items, item_count, sizeof(DREF DeeObject *));
 		if unlikely(!new_items)
 			goto err_items;
 		ols_item_count = item_count;
@@ -335,7 +335,7 @@ set_deepload(Set *__restrict self) {
 	new_mask = 1;
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
-	new_map = (struct hashset_item *)Dee_Calloc((new_mask + 1) * sizeof(struct hashset_item));
+	new_map = (struct hashset_item *)Dee_Callocc(new_mask + 1, sizeof(struct hashset_item));
 	if unlikely(!new_map)
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */
@@ -507,7 +507,7 @@ set_rehash(Set *__restrict self, int sizedir) {
 	}
 	ASSERT(self->s_used < new_mask);
 	ASSERT(self->s_used <= self->s_size);
-	new_vector = (struct hashset_item *)Dee_TryCalloc((new_mask + 1) * sizeof(struct hashset_item));
+	new_vector = (struct hashset_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct hashset_item));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
@@ -1839,6 +1839,9 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("update", &set_update,
 	            "(items:?S?O)->?Dint\n"
 	            "Insert all items from @items into @this set, and return the number of inserted items"),
+	TYPE_METHOD("insertall", &set_update,
+	            "(items:?S?O)->?Dint\n"
+	            "Alias for ?#update"),
 	TYPE_METHOD(STR_remove, &set_remove,
 	            "(ob)->?Dbool\n"
 	            "Returns ?t if the object was removed from the set"),

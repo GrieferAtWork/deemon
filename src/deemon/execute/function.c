@@ -1562,8 +1562,8 @@ again:
 		*(uintptr_t *)&self->yi_frame.cf_sp -= (uintptr_t)self->yi_frame.cf_stack;
 		if (self->yi_frame.cf_stacksz) {
 			/* Copy a heap-allocated, extended stack. */
-			self->yi_frame.cf_stack = (DREF DeeObject **)Dee_TryMalloc(self->yi_frame.cf_stacksz *
-			                                                           sizeof(DREF DeeObject *));
+			self->yi_frame.cf_stack = (DREF DeeObject **)Dee_TryMallocc(self->yi_frame.cf_stacksz,
+			                                                            sizeof(DREF DeeObject *));
 			if unlikely(!self->yi_frame.cf_stack)
 				goto nomem;
 			Dee_Movrefv(self->yi_frame.cf_stack,

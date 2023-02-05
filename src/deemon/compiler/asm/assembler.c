@@ -167,8 +167,8 @@ INTERN WUNUSED struct ddi_checkpoint *DCALL asm_newddi(void) {
 		if (!new_alloc)
 			new_alloc = 16;
 do_realloc:
-		result = (struct ddi_checkpoint *)Dee_TryRealloc(result, new_alloc *
-		                                                         sizeof(struct ddi_checkpoint));
+		result = (struct ddi_checkpoint *)Dee_TryReallocc(result, new_alloc,
+		                                                  sizeof(struct ddi_checkpoint));
 		if unlikely(!result) {
 			result = current_assembler.a_ddi.da_checkv;
 			if (new_alloc != current_assembler.a_ddi.da_checkc + 1) {
@@ -192,9 +192,9 @@ do_realloc:
 	result->dc_bndv = current_assembler.a_ddi.da_bndv;
 	if (current_assembler.a_ddi.da_bndc != current_assembler.a_ddi.da_bnda) {
 		/* Release the unused portion of the symbol-binding cache. */
-		result->dc_bndv = (struct ddi_binding *)Dee_TryRealloc(result->dc_bndv,
-		                                                       result->dc_bndc *
-		                                                       sizeof(struct ddi_binding));
+		result->dc_bndv = (struct ddi_binding *)Dee_TryReallocc(result->dc_bndv,
+		                                                        result->dc_bndc,
+		                                                        sizeof(struct ddi_binding));
 		if unlikely(!result->dc_bndv)
 			result->dc_bndv = current_assembler.a_ddi.da_bndv;
 	}
@@ -228,7 +228,7 @@ ddi_newfile(char const *__restrict filename,
 #if TPPFILE_KIND_TEXT != 0
 	result->f_kind = TPPFILE_KIND_TEXT;
 #endif
-	result->f_name = (char *)Dee_Malloc((filename_length + 1) * sizeof(char));
+	result->f_name = (char *)Dee_Mallocc(filename_length + 1, sizeof(char));
 	if unlikely(!result->f_name) {
 		Dee_Free(result);
 		goto err;
@@ -321,12 +321,12 @@ PRIVATE WUNUSED struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
 			if unlikely(new_alloc <= current_assembler.a_ddi.da_bndc)
 				new_alloc = current_assembler.a_ddi.da_bndc + 1;
 		}
-		new_vec = (struct ddi_binding *)Dee_TryRealloc(current_assembler.a_ddi.da_bndv,
-		                                               new_alloc * sizeof(struct ddi_binding));
+		new_vec = (struct ddi_binding *)Dee_TryReallocc(current_assembler.a_ddi.da_bndv,
+		                                                new_alloc, sizeof(struct ddi_binding));
 		if unlikely(!new_vec) {
 			new_alloc = current_assembler.a_ddi.da_bndc + 1;
-			new_vec = (struct ddi_binding *)Dee_Realloc(current_assembler.a_ddi.da_bndv,
-			                                            new_alloc * sizeof(struct ddi_binding));
+			new_vec = (struct ddi_binding *)Dee_Reallocc(current_assembler.a_ddi.da_bndv,
+			                                             new_alloc, sizeof(struct ddi_binding));
 			if unlikely(!new_vec)
 				goto err;
 		}
@@ -376,9 +376,9 @@ asm_putddi_bind(uint16_t ddi_class,
 			binding->db_name = name;
 			goto done;
 		}
-		new_vector = (struct ddi_binding *)Dee_Realloc(last_checkpoint->dc_bndv,
-		                                               (last_checkpoint->dc_bndc + 1) *
-		                                               sizeof(struct ddi_binding));
+		new_vector = (struct ddi_binding *)Dee_Reallocc(last_checkpoint->dc_bndv,
+		                                                last_checkpoint->dc_bndc + 1,
+		                                                sizeof(struct ddi_binding));
 		if unlikely(!new_vector)
 			goto err;
 		last_checkpoint->dc_bndv = new_vector;
@@ -562,7 +562,9 @@ PRIVATE WUNUSED int DCALL asm_realloc_exc(void) {
 
 	/* Must allocate more exception handlers. */
 do_realloc:
-	new_vector = (struct asm_exc *)Dee_TryRealloc(new_vector, new_alloc * sizeof(struct asm_exc));
+	new_vector = (struct asm_exc *)Dee_TryReallocc(new_vector,
+	                                               new_alloc,
+	                                               sizeof(struct asm_exc));
 	if unlikely(!new_vector) {
 		if (new_alloc != current_assembler.a_exceptc + 1) {
 			new_alloc = current_assembler.a_exceptc + 1;
@@ -1091,9 +1093,8 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 	if (sc_main.sec_rela < total_rel) {
 		struct asm_rel *new_rel;
 		/* Make sure to allocate enough relocations. */
-		new_rel = (struct asm_rel *)Dee_Realloc(sc_main.sec_relv,
-		                                        total_rel *
-		                                        sizeof(struct asm_rel));
+		new_rel = (struct asm_rel *)Dee_Reallocc(sc_main.sec_relv, total_rel,
+		                                         sizeof(struct asm_rel));
 		if unlikely(!new_rel)
 			goto err;
 		sc_main.sec_relv = new_rel;
@@ -1137,8 +1138,8 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	total_count   = static_offset + current_assembler.a_staticc;
 	if unlikely(static_offset > total_count)
 		goto err_too_many; /* Too many variables. */
-	total_vector = (DREF DeeObject **)Dee_Realloc(current_assembler.a_constv,
-	                                              total_count * sizeof(DREF DeeObject *));
+	total_vector = (DREF DeeObject **)Dee_Reallocc(current_assembler.a_constv,
+	                                               total_count, sizeof(DREF DeeObject *));
 	if unlikely(!total_vector)
 		goto err;
 	/* Copy static variable initializers. */
@@ -1434,15 +1435,16 @@ INTERN WUNUSED struct except_handler *DCALL asm_pack_exceptv(void) {
 	struct asm_exc *begin, *iter;
 	struct except_handler *dst;
 #ifndef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
-	exceptv = (struct except_handler *)Dee_Malloc(current_assembler.a_exceptc *
-	                                              sizeof(struct except_handler));
+	exceptv = (struct except_handler *)Dee_Mallocc(current_assembler.a_exceptc,
+	                                               sizeof(struct except_handler));
 	if unlikely(!exceptv)
 		return NULL; /* Well... $h1t. */
 #else /* !CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
 	exceptv = (struct except_handler *)current_assembler.a_exceptv;
 	if (current_assembler.a_exceptc != current_assembler.a_excepta) {
-		exceptv = (struct except_handler *)Dee_TryRealloc(exceptv, current_assembler.a_exceptc *
-		                                                           sizeof(struct except_handler));
+		exceptv = (struct except_handler *)Dee_TryReallocc(exceptv,
+		                                                   current_assembler.a_exceptc,
+		                                                   sizeof(struct except_handler));
 		if (exceptv)
 			current_assembler.a_exceptv = (struct asm_exc *)exceptv;
 		else {
@@ -1505,9 +1507,9 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	}
 	if (current_assembler.a_staticc != current_assembler.a_statica) {
 		struct asm_symbol_static *svec;
-		svec = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
-		                                                  current_assembler.a_staticc *
-		                                                  sizeof(struct asm_symbol_static));
+		svec = (struct asm_symbol_static *)Dee_TryReallocc(current_assembler.a_staticv,
+		                                                   current_assembler.a_staticc,
+		                                                   sizeof(struct asm_symbol_static));
 		if likely(svec)
 			current_assembler.a_staticv = svec;
 	}
@@ -1525,8 +1527,8 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	/* Allocate keyword information (if necessary) */
 	if (current_basescope->bs_argc_max != 0) {
 		uint16_t i, size = current_basescope->bs_argc_max;
-		kwds = (DREF DeeStringObject **)Dee_Malloc(size *
-		                                           sizeof(DREF DeeStringObject *));
+		kwds = (DREF DeeStringObject **)Dee_Mallocc(size,
+		                                            sizeof(DREF DeeStringObject *));
 		if unlikely(!kwds)
 			goto err_ddi;
 		for (i = 0; i < size; ++i) {
@@ -1623,8 +1625,8 @@ INTERN WUNUSED struct asm_rel *(FCALL asm_allocrel)(void) {
 			new_rela *= 2;
 		/* Must allocate more relocations. */
 do_realloc:
-		result = (struct asm_rel *)Dee_TryRealloc(current_assembler.a_curr->sec_relv,
-		                                          new_rela * sizeof(struct asm_rel));
+		result = (struct asm_rel *)Dee_TryReallocc(current_assembler.a_curr->sec_relv,
+		                                           new_rela, sizeof(struct asm_rel));
 		if unlikely(!result) {
 			if (new_rela != current_assembler.a_curr->sec_relc + 1) {
 				new_rela = current_assembler.a_curr->sec_relc + 1;
@@ -1679,8 +1681,8 @@ INTERN WUNUSED instruction_t *(FCALL asm_alloc)(size_t n_bytes) {
 		result                             = ((DeeCodeObject *)result)->co_code;
 	} else {
 	realloc_instr: /* Directly re-allocate code. */
-		result = (instruction_t *)Dee_TryRealloc(current_assembler.a_curr->sec_begin,
-		                                         new_size * sizeof(instruction_t));
+		result = (instruction_t *)Dee_TryReallocc(current_assembler.a_curr->sec_begin,
+		                                          new_size, sizeof(instruction_t));
 		if unlikely(!result) {
 			if (new_size != min_size) {
 				new_size = min_size;
@@ -2557,8 +2559,8 @@ PRIVATE WUNUSED int DCALL check_resize_constants(void) {
 			}
 		}
 do_realloc:
-		new_vector = (DREF DeeObject **)Dee_TryRealloc(current_assembler.a_constv,
-		                                               new_consta * sizeof(DREF DeeObject *));
+		new_vector = (DREF DeeObject **)Dee_TryReallocc(current_assembler.a_constv,
+		                                                new_consta, sizeof(DREF DeeObject *));
 		if unlikely(!new_vector) {
 			if (new_consta != current_assembler.a_constc + 1) {
 				new_consta = current_assembler.a_constc + 1;
@@ -2657,9 +2659,9 @@ asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym) {
 			}
 		}
 do_realloc:
-		new_vector = (struct asm_symbol_static *)Dee_TryRealloc(current_assembler.a_staticv,
-		                                                        new_statica *
-		                                                        sizeof(struct asm_symbol_static));
+		new_vector = (struct asm_symbol_static *)Dee_TryReallocc(current_assembler.a_staticv,
+		                                                         new_statica,
+		                                                         sizeof(struct asm_symbol_static));
 		if unlikely(!new_vector) {
 			if (new_statica != current_assembler.a_staticc + 1) {
 				new_statica = current_assembler.a_staticc + 1;
@@ -2781,7 +2783,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 	struct module_symbol *iter, *end;
 	/* Try to rehash the global variable table. */
 	new_mask   = (current_rootscope->rs_bucketm << 1) | 1;
-	new_vector = (struct module_symbol *)Dee_TryCalloc((new_mask + 1) * sizeof(struct module_symbol));
+	new_vector = (struct module_symbol *)Dee_TryCallocc(new_mask + 1, sizeof(struct module_symbol));
 	if unlikely(!new_vector)
 		return false;
 	if (current_rootscope->rs_bucketv != empty_module_buckets) {
@@ -3036,9 +3038,9 @@ asm_rsymid(struct symbol *__restrict sym) {
 		if unlikely(new_size <= result)
 			new_size = UINT16_MAX;
 do_realloc:
-		new_vector = (struct asm_symbol_ref *)Dee_TryRealloc(current_assembler.a_refv,
-		                                                     new_size *
-		                                                     sizeof(struct asm_symbol_ref));
+		new_vector = (struct asm_symbol_ref *)Dee_TryReallocc(current_assembler.a_refv,
+		                                                      new_size,
+		                                                      sizeof(struct asm_symbol_ref));
 		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
@@ -3094,8 +3096,8 @@ asm_asymid_r(struct symbol *__restrict sym) {
 		if unlikely(new_size <= result)
 			new_size = UINT16_MAX;
 do_realloc:
-		new_vector = (struct symbol **)Dee_TryRealloc(current_assembler.a_argrefv,
-		                                              new_size * sizeof(struct symbol *));
+		new_vector = (struct symbol **)Dee_TryReallocc(current_assembler.a_argrefv,
+		                                               new_size, sizeof(struct symbol *));
 		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
@@ -3146,9 +3148,9 @@ asm_newmodule(DeeModuleObject *__restrict mod) {
 		if unlikely(new_size <= result)
 			new_size = UINT16_MAX;
 do_realloc:
-		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
-		                                                     new_size *
-		                                                     sizeof(DREF DeeModuleObject *));
+		new_vector = (DREF DeeModuleObject **)Dee_TryReallocc(current_rootscope->rs_importv,
+		                                                      new_size,
+		                                                      sizeof(DREF DeeModuleObject *));
 		if unlikely(!new_vector) {
 			if (new_size != result + 1) {
 				new_size = result + 1;
@@ -3572,9 +3574,9 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 			/* Adjust the resulting code object to account for references-through-arguments. */
 			if (result->co_keywords) {
 				DREF DeeStringObject **new_keyword_vector;
-				new_keyword_vector = (DREF DeeStringObject **)Dee_Realloc((void *)result->co_keywords,
-				                                                          result->co_argc_max *
-				                                                          sizeof(DREF DeeStringObject *));
+				new_keyword_vector = (DREF DeeStringObject **)Dee_Reallocc((void *)result->co_keywords,
+				                                                           result->co_argc_max,
+				                                                           sizeof(DREF DeeStringObject *));
 				if unlikely(!new_keyword_vector)
 					goto err_r;
 				for (i = result->co_argc_max - current_assembler.a_argrefc;
@@ -3589,10 +3591,10 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 				/* We shouldn't get here, but we must still keep consistency! */
 				if (result->co_defaultv) {
 					DREF DeeObject **new_default_vector;
-					new_default_vector = (DREF DeeObject **)Dee_Realloc((void *)result->co_defaultv,
-					                                                    ((result->co_argc_max - result->co_argc_min) +
-					                                                     current_assembler.a_argrefc) *
-					                                                    sizeof(DREF DeeObject *));
+					new_default_vector = (DREF DeeObject **)Dee_Reallocc((void *)result->co_defaultv,
+					                                                     (result->co_argc_max - result->co_argc_min) +
+					                                                     current_assembler.a_argrefc,
+					                                                     sizeof(DREF DeeObject *));
 					if unlikely(!new_default_vector)
 						goto err_r;
 					for (i = result->co_argc_max;

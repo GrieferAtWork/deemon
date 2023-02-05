@@ -100,12 +100,12 @@ ast_parse_argument_list(uint16_t mode,
 					size_t new_alloc = multiple_a * 2;
 					if unlikely(!new_alloc)
 						new_alloc = 2;
-					new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
-					                                              new_alloc * sizeof(DREF struct ast *));
+					new_astv = (DREF struct ast **)Dee_TryReallocc(result->a_multiple.m_astv,
+					                                               new_alloc, sizeof(DREF struct ast *));
 					if unlikely(!new_astv) {
 						new_alloc = result->a_multiple.m_astc + 1;
-						new_astv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
-						                                           new_alloc * sizeof(DREF struct ast *));
+						new_astv = (DREF struct ast **)Dee_Reallocc(result->a_multiple.m_astv,
+						                                            new_alloc, sizeof(DREF struct ast *));
 						if unlikely(!new_astv)
 							goto err_r_kwdlist;
 					}
@@ -135,9 +135,9 @@ ast_parse_argument_list(uint16_t mode,
 			/* Flush unused memory from keyword-bound arguments. */
 			if (multiple_a > result->a_multiple.m_astc) {
 				DREF struct ast **new_astv;
-				new_astv = (DREF struct ast **)Dee_TryRealloc(result->a_multiple.m_astv,
-				                                              result->a_multiple.m_astc *
-				                                              sizeof(DREF struct ast *));
+				new_astv = (DREF struct ast **)Dee_TryReallocc(result->a_multiple.m_astv,
+				                                               result->a_multiple.m_astc,
+				                                               sizeof(DREF struct ast *));
 				if likely(new_astv)
 					result->a_multiple.m_astv = new_astv;
 			}

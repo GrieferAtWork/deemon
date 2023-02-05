@@ -314,8 +314,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	DREF DeeObject **items, *temp;
 	size_t i;
-	items = (DREF DeeObject **)Dee_AMalloc(self->fl_size *
-	                                       sizeof(DREF DeeObject *));
+	items = (DREF DeeObject **)Dee_AMallocc(self->fl_size,
+	                                        sizeof(DREF DeeObject *));
 	if unlikely(!items)
 		goto err;
 	if (DeeObject_Unpack(other, self->fl_size, items))
@@ -349,8 +349,8 @@ fl_moveassign(FixedList *__restrict self,
 		                       "Expected a fixed list containing %Iu object%s when one containing %Iu was given",
 		                       self->fl_size, self->fl_size > 1 ? "s" : "", other->fl_size);
 	}
-	items = (DREF DeeObject **)Dee_AMalloc(self->fl_size *
-	                                       sizeof(DREF DeeObject *));
+	items = (DREF DeeObject **)Dee_AMallocc(self->fl_size,
+	                                        sizeof(DREF DeeObject *));
 	if unlikely(!items)
 		goto err;
 #ifndef CONFIG_NO_THREADS
@@ -698,7 +698,7 @@ fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
 	if ((size_t)end > self->fl_size)
 		end = (dssize_t)self->fl_size;
 	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_AMalloc(count * sizeof(DREF DeeObject *));
+	values_buf = (DREF DeeObject **)Dee_AMallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
 	rwlock_write(&self->fl_lock);
@@ -730,7 +730,7 @@ fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values
 	if ((size_t)end > self->fl_size)
 		end = (dssize_t)self->fl_size;
 	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_AMalloc(count * sizeof(DREF DeeObject *));
+	values_buf = (DREF DeeObject **)Dee_AMallocc(count, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
 	if (DeeObject_UnpackWithUnbound(values, count, values_buf))

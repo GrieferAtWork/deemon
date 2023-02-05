@@ -936,8 +936,8 @@ do_switch_ch_at_start_of_line:
 					char const *nextline_start = NULL;
 
 					/* Allocate & initialize buffers for all of the columns. */
-					columns = (struct table_column *)Dee_Malloc(column_count *
-					                                            sizeof(struct table_column));
+					columns = (struct table_column *)Dee_Mallocc(column_count,
+		                                                         sizeof(struct table_column));
 					if unlikely(!columns)
 						goto err_table_output;
 					/* Initialize printers for the cells. */

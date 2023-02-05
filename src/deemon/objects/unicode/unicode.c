@@ -4533,7 +4533,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 	/* The unicode printer already uses a character width of more
 	 * than 1 byte, meaning we can't allocate the buffer in-line.
 	 * In this case, we allocate the caller-requested buffer separately on the heap. */
-	return (char *)Dee_TryMalloc((length + 1) * sizeof(char));
+	return (char *)Dee_TryMallocc(length + 1, sizeof(char));
 err:
 	return NULL;
 }
@@ -4590,7 +4590,7 @@ Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
 		return buf;
 	} else {
 		/* The buffer is purely heap-allocated. */
-		return (char *)Dee_TryRealloc(buf, (new_length + 1) * sizeof(char));
+		return (char *)Dee_TryReallocc(buf, new_length + 1, sizeof(char));
 	}
 err:
 	return NULL;
@@ -4894,7 +4894,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 		*result = *(uint16_t *)self->up_pend;
 		return result + 1;
 	}
-	return (uint16_t *)Dee_TryMalloc((length + 1) * sizeof(uint16_t));
+	return (uint16_t *)Dee_TryMallocc(length + 1, sizeof(uint16_t));
 err:
 	return NULL;
 }
@@ -4944,7 +4944,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 		return buf;
 	} else {
 		/* The buffer is purely heap-allocated. */
-		return (uint16_t *)Dee_TryRealloc(buf, (new_length + 1) * sizeof(uint16_t));
+		return (uint16_t *)Dee_TryReallocc(buf, new_length + 1, sizeof(uint16_t));
 	}
 err:
 	return NULL;
@@ -5154,7 +5154,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		self->up_length += length;
 		return result;
 	}
-	return (uint32_t *)Dee_TryMalloc((length + 1) * sizeof(uint32_t));
+	return (uint32_t *)Dee_TryMallocc(length + 1, sizeof(uint32_t));
 err:
 	return NULL;
 }
@@ -5204,7 +5204,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		return buf;
 	} else {
 		/* The buffer is purely heap-allocated. */
-		return (uint32_t *)Dee_TryRealloc(buf, (new_length + 1) * sizeof(uint32_t));
+		return (uint32_t *)Dee_TryReallocc(buf, new_length + 1, sizeof(uint32_t));
 	}
 err:
 	return NULL;

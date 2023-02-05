@@ -53,7 +53,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 	if unlikely(new_mask == 1)
 		new_mask = 16 - 1;
 	ASSERT(self->aa_syms.sa_size < new_mask);
-	new_vector = (struct ast_symbol_assume *)Dee_Calloc((new_mask + 1) * sizeof(struct ast_symbol_assume));
+	new_vector = (struct ast_symbol_assume *)Dee_Callocc(new_mask + 1, sizeof(struct ast_symbol_assume));
 	if unlikely(!new_vector)
 		goto err;
 	if (self->aa_syms.sa_elem) {

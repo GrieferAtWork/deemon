@@ -90,7 +90,7 @@ XMLNode_TryRehashChildren(XMLNode *__restrict self) {
 	size_t new_mask, old_mask, i;
 	struct xml_node_child *new_list, *old_list;
 	if (!self->xn_children.ncs_list) {
-		new_list = (struct xml_node_child *)Dee_TryCalloc(4 * sizeof(struct xml_node_child));
+		new_list = (struct xml_node_child *)Dee_TryCallocc(4, sizeof(struct xml_node_child));
 		if unlikely(!new_list)
 			goto err;
 		self->xn_children.ncs_mask = XML_NODE_DEFAULT_CHILD_MASK;
@@ -101,8 +101,8 @@ XMLNode_TryRehashChildren(XMLNode *__restrict self) {
 	}
 	old_mask = self->xn_children.ncs_mask;
 	new_mask = (self->xn_children.ncs_mask << 1) | 1;
-	new_list = (struct xml_node_child *)Dee_TryCalloc((new_mask + 1) *
-	                                                  sizeof(struct xml_node_child));
+	new_list = (struct xml_node_child *)Dee_TryCallocc(new_mask + 1,
+	                                                   sizeof(struct xml_node_child));
 	if unlikely(!new_list)
 		goto err;
 	old_list = self->xn_children.ncs_list;

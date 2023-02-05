@@ -92,11 +92,11 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 
 		/* Prefer using a mask of one greater level to improve performance. */
 		mask           = (min_mask << 1) | 1;
-		result->d_elem = (struct dict_item *)Dee_TryCalloc((mask + 1) * sizeof(struct dict_item));
+		result->d_elem = (struct dict_item *)Dee_TryCallocc(mask + 1, sizeof(struct dict_item));
 		if unlikely(!result->d_elem) {
 			/* Try one level less if that failed. */
 			mask           = min_mask;
-			result->d_elem = (struct dict_item *)Dee_Calloc((mask + 1) * sizeof(struct dict_item));
+			result->d_elem = (struct dict_item *)Dee_Callocc(mask + 1, sizeof(struct dict_item));
 			if unlikely(!result->d_elem)
 				goto err_r;
 		}
@@ -210,8 +210,8 @@ dict_init_sequence(Dict *__restrict self,
 		if unlikely(!self->d_size) {
 			self->d_elem = (struct dict_item *)empty_dict_items;
 		} else {
-			self->d_elem = (struct dict_item *)Dee_Malloc((src->rd_mask + 1) *
-			                                              sizeof(struct dict_item));
+			self->d_elem = (struct dict_item *)Dee_Mallocc(src->rd_mask + 1,
+			                                               sizeof(struct dict_item));
 			if unlikely(!self->d_elem)
 				goto err;
 			memcpyc(self->d_elem, src->rd_elem,
@@ -299,8 +299,8 @@ again:
 	self->d_used = other->d_used;
 	self->d_size = other->d_size;
 	if ((self->d_elem = other->d_elem) != empty_dict_items) {
-		self->d_elem = (struct dict_item *)Dee_TryMalloc((other->d_mask + 1) *
-		                                                 sizeof(struct dict_item));
+		self->d_elem = (struct dict_item *)Dee_TryMallocc(other->d_mask + 1,
+		                                                  sizeof(struct dict_item));
 		if unlikely(!self->d_elem) {
 			DeeDict_LockEndRead(other);
 			if (Dee_CollectMemory((other->d_mask + 1) *
@@ -357,7 +357,7 @@ dict_deepload(Dict *__restrict self) {
 		if (item_count <= old_item_count)
 			break;
 		DeeDict_LockEndRead(self);
-		new_items = (Entry *)Dee_Realloc(items, item_count * sizeof(Entry));
+		new_items = (Entry *)Dee_Reallocc(items, item_count, sizeof(Entry));
 		if unlikely(!new_items)
 			goto err_items;
 		old_item_count = item_count;
@@ -388,7 +388,7 @@ dict_deepload(Dict *__restrict self) {
 	new_mask = 1;
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
-	new_map = (struct dict_item *)Dee_Calloc((new_mask + 1) * sizeof(struct dict_item));
+	new_map = (struct dict_item *)Dee_Callocc(new_mask + 1, sizeof(struct dict_item));
 	if unlikely(!new_map)
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */
@@ -569,7 +569,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 	}
 	ASSERT(self->d_used < new_mask);
 	ASSERT(self->d_used <= self->d_size);
-	new_vector = (struct dict_item *)Dee_TryCalloc((new_mask + 1) * sizeof(struct dict_item));
+	new_vector = (struct dict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct dict_item));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));

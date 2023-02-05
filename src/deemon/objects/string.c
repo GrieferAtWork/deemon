@@ -1824,8 +1824,8 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "contains(substr:?X2?.?DBytes)->\n"
 	                         "Returns ?t if @substr is apart of @this ?.\n"
 	                         "${"
-	                         /**/ ">print \"foo\" in \"bar\";    /* false */\n"
-	                         /**/ ">print \"foo\" in \"foobar\"; /* true */"
+	                         /**/ "print \"foo\" in \"bar\";    /* false */\n"
+	                         /**/ "print \"foo\" in \"foobar\"; /* true */"
 	                         "}\n"
 	                         "\n"
 

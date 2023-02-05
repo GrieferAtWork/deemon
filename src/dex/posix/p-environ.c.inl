@@ -252,7 +252,7 @@ PRIVATE bool DCALL try_set_system_wenviron_is_dee_heap_allocated(void) {
 		while (wenviron[count])
 			++count;
 	}
-	new_wenviron = (dwchar_t **)Dee_TryMalloc((count + 1) * sizeof(dwchar_t *));
+	new_wenviron = (dwchar_t **)Dee_TryMallocc(count + 1, sizeof(dwchar_t *));
 	if unlikely(!new_wenviron)
 		goto err_new_wenviron;
 	for (i = 0; i < count; ++i) {
@@ -260,7 +260,7 @@ PRIVATE bool DCALL try_set_system_wenviron_is_dee_heap_allocated(void) {
 		size_t old_len;
 		old_str = wenviron[i];
 		old_len = wcslen(old_str);
-		new_str = (dwchar_t *)Dee_TryMalloc((old_len + 1) * sizeof(dwchar_t));
+		new_str = (dwchar_t *)Dee_TryMallocc(old_len + 1, sizeof(dwchar_t));
 		if unlikely(!new_str)
 			goto err_new_wenviron_i;
 		new_str = (dwchar_t *)memcpyc(new_str, old_str, old_len, sizeof(dwchar_t));
@@ -293,7 +293,7 @@ PRIVATE bool DCALL try_set_system_environ_is_dee_heap_allocated(void) {
 		while (environ[count])
 			++count;
 	}
-	new_environ = (char **)Dee_TryMalloc((count + 1) * sizeof(char *));
+	new_environ = (char **)Dee_TryMallocc(count + 1, sizeof(char *));
 	if unlikely(!new_environ)
 		goto err_new_environ;
 	for (i = 0; i < count; ++i) {
@@ -301,7 +301,7 @@ PRIVATE bool DCALL try_set_system_environ_is_dee_heap_allocated(void) {
 		size_t old_len;
 		old_str = environ[i];
 		old_len = strlen(old_str);
-		new_str = (char *)Dee_TryMalloc((old_len + 1) * sizeof(char));
+		new_str = (char *)Dee_TryMallocc(old_len + 1, sizeof(char));
 		if unlikely(!new_str)
 			goto err_new_environ_i;
 		new_str = (char *)memcpyc(new_str, old_str, old_len, sizeof(char));
@@ -864,7 +864,7 @@ err:
 		goto err;
 	wide_name_len  = wcslen(wide_name);
 	wide_value_len = wcslen(wide_value);
-	wide_envline   = (dwchar_t *)Dee_Malloc((wide_name_len + 1 + wide_value_len + 1) * sizeof(dwchar_t));
+	wide_envline   = (dwchar_t *)Dee_Mallocc(wide_name_len + 1 + wide_value_len + 1, sizeof(dwchar_t));
 	if unlikely(!wide_envline)
 		goto err;
 	{
@@ -911,7 +911,7 @@ again_insert_env:
 		size_t old_wenviron_count;
 		for (old_wenviron_count = 0; wenviron[old_wenviron_count]; ++old_wenviron_count)
 			;
-		new_wenviron = (dwchar_t **)Dee_TryRealloc(wenviron, (old_wenviron_count + 2) * sizeof(dwchar_t *));
+		new_wenviron = (dwchar_t **)Dee_TryReallocc(wenviron, old_wenviron_count + 2, sizeof(dwchar_t *));
 		if unlikely(!new_wenviron)
 			goto unlock_and_try_collect_memory;
 		new_wenviron[old_wenviron_count + 0] = wide_envline;
@@ -944,7 +944,7 @@ err:
 		goto err;
 	utf8_name_len  = strlen(utf8_name);
 	utf8_value_len = strlen(utf8_value);
-	utf8_envline   = (char *)Dee_Malloc((utf8_name_len + 1 + utf8_value_len + 1) * sizeof(char));
+	utf8_envline   = (char *)Dee_Mallocc(utf8_name_len + 1 + utf8_value_len + 1, sizeof(char));
 	if unlikely(!utf8_envline)
 		goto err;
 	{
@@ -991,7 +991,7 @@ again_insert_env:
 		size_t old_environ_count;
 		for (old_environ_count = 0; environ[old_environ_count]; ++old_environ_count)
 			;
-		new_environ = (char **)Dee_TryRealloc(environ, (old_environ_count + 2) * sizeof(char *));
+		new_environ = (char **)Dee_TryReallocc(environ, old_environ_count + 2, sizeof(char *));
 		if unlikely(!new_environ)
 			goto unlock_and_try_collect_memory;
 		new_environ[old_environ_count + 0] = utf8_envline;
@@ -1152,7 +1152,7 @@ again_search_env:
 				             wenviron_after, sizeof(dwchar_t *));
 				i += wenviron_after;
 				wenviron[i] = NULL;
-				new_wenviron = (dwchar_t **)Dee_TryRealloc(wenviron, (i + 1) * sizeof(dwchar_t *));
+				new_wenviron = (dwchar_t **)Dee_TryReallocc(wenviron, i + 1, sizeof(dwchar_t *));
 				if likely(new_wenviron)
 					wenviron = new_wenviron;
 				DBG_ALIGNMENT_ENABLE();
@@ -1198,7 +1198,7 @@ again_search_env:
 				             environ_after, sizeof(char *));
 				i += environ_after;
 				environ[i] = NULL;
-				new_environ = (char **)Dee_TryRealloc(environ, (i + 1) * sizeof(char *));
+				new_environ = (char **)Dee_TryReallocc(environ, i + 1, sizeof(char *));
 				if likely(new_environ)
 					environ = new_environ;
 				DBG_ALIGNMENT_ENABLE();
@@ -1300,7 +1300,7 @@ again:
 		++namelen; /* Trailing NUL */
 		if (namelen > namebuflen) {
 			dwchar_t *new_namebuf;
-			new_namebuf = (dwchar_t *)Dee_TryRealloc(namebuf, namelen * sizeof(dwchar_t));
+			new_namebuf = (dwchar_t *)Dee_TryReallocc(namebuf, namelen, sizeof(dwchar_t));
 			if unlikely(!new_namebuf) {
 				environ_lock_endwrite();
 				if (Dee_CollectMemory(1))
@@ -1343,7 +1343,7 @@ again:
 		++namelen; /* Trailing NUL */
 		if (namelen > namebuflen) {
 			char *new_namebuf;
-			new_namebuf = (char *)Dee_TryRealloc(namebuf, namelen * sizeof(char));
+			new_namebuf = (char *)Dee_TryReallocc(namebuf, namelen, sizeof(char));
 			if unlikely(!new_namebuf) {
 				environ_lock_endwrite();
 				if (Dee_CollectMemory(1))
@@ -1381,7 +1381,7 @@ again:
 		char **new_environ;
 again_alloc_empty:
 #ifdef HAVE_system_environ_is_dee_heap_allocated
-		new_environ = (char **)Dee_TryCalloc(1 * sizeof(char *));
+		new_environ = (char **)Dee_TryCallocc(1, sizeof(char *));
 #else /* HAVE_system_environ_is_dee_heap_allocated */
 		new_environ = (char **)calloc(1, sizeof(char *));
 #endif /* !HAVE_system_environ_is_dee_heap_allocated */
@@ -1421,7 +1421,7 @@ again_alloc_empty:
 		dwchar_t **new_wenviron;
 again_alloc_empty:
 #ifdef HAVE_system_wenviron_is_dee_heap_allocated
-		new_wenviron = (dwchar_t **)Dee_TryCalloc(1 * sizeof(dwchar_t *));
+		new_wenviron = (dwchar_t **)Dee_TryCallocc(1, sizeof(dwchar_t *));
 #else /* HAVE_system_wenviron_is_dee_heap_allocated */
 		new_wenviron = (dwchar_t **)calloc(1, sizeof(dwchar_t *));
 #endif /* !HAVE_system_wenviron_is_dee_heap_allocated */

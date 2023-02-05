@@ -285,12 +285,12 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 
 /* Create an integer from signed/unsigned LEB data. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewSleb(uint8_t **__restrict preader) {
+DeeInt_NewSleb(uint8_t const **__restrict preader) {
+	uint8_t const *reader = *preader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
 	uint8_t num_bits;
-	uint8_t *reader   = *preader;
 	size_t num_digits = 1;
 	/* Figure out a worst-case for how many digits we'll be needing. */
 	while (*reader++ & 0x80)
@@ -348,12 +348,12 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewUleb(uint8_t **__restrict preader) {
+DeeInt_NewUleb(uint8_t const **__restrict preader) {
+	uint8_t const *reader = *preader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
 	uint8_t num_bits;
-	uint8_t *reader   = *preader;
 	size_t num_digits = 1;
 	/* Figure out a worst-case for how many digits we'll be needing. */
 	while (*reader++ & 0x80)
@@ -965,8 +965,8 @@ PRIVATE digit const convmultmax_base_[35] = {
 #endif /* CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
 LOCAL WUNUSED DREF DeeIntObject *DCALL
-int_from_nonbinary_string(char *__restrict begin,
-                          char *__restrict end,
+int_from_nonbinary_string(char const *__restrict begin,
+                          char const *__restrict end,
                           unsigned int radix,
                           uint32_t radix_and_flags) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
@@ -1112,11 +1112,14 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
 	bool negative      = false;
 	DREF DeeIntObject *result;
-	char *iter, *begin = (char *)str, *end = (char *)str + len;
+	char const *iter;
+	char const *begin = str;
+	char const *end   = str + len;
 	digit *dst;
 	twodigits number;
 	uint8_t num_bits;
 	uint8_t bits_per_digit;
+
 	/* Parse a sign prefix. */
 	for (;; ++begin) {
 		if (begin == end)
@@ -1129,8 +1132,8 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		}
 		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
-			char *new_begin = begin + 1;
-			begin_plus_one  = utf8_readchar((char const **)&new_begin, end);
+			char const *new_begin = begin + 1;
+			begin_plus_one = utf8_readchar((char const **)&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				begin = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -1143,7 +1146,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	}
 	if (!radix) {
 		/* Automatically determine the radix. */
-		char *old_begin = begin;
+		char const *old_begin = begin;
 		uint32_t leading_zero;
 		leading_zero = utf8_readchar((char const **)&begin, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
@@ -1151,8 +1154,8 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 				return_reference_((DeeObject *)&DeeInt_Zero);
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
-				char *new_begin = begin + 1;
-				begin_plus_one  = utf8_readchar((char const **)&new_begin, end);
+				char const *new_begin = begin + 1;
+				begin_plus_one = utf8_readchar((char const **)&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					begin = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -1162,11 +1165,11 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X')
+			if (*begin == 'x' || *begin == 'X') {
 				radix = 16, ++begin;
-			else if (*begin == 'b' || *begin == 'B')
+			} else if (*begin == 'b' || *begin == 'B') {
 				radix = 2, ++begin;
-			else {
+			} else {
 				radix = 8;
 			}
 		} else {
@@ -1198,8 +1201,10 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			       num_digits,
 			       sizeof(digit));
 		}
-		dst    = result->ob_digit;
-		number = 0, num_bits = 0;
+		dst      = result->ob_digit;
+		number   = 0;
+		num_bits = 0;
+
 		/* Parse the integer starting with the least significant bits. */
 		iter = end;
 		while (iter > begin) {
@@ -1228,9 +1233,11 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			} else {
 				goto invalid_r;
 			}
+
 			/* Got the digit. */
 			if unlikely(dig >= radix)
 				goto invalid_r;
+
 			/* Add the digit to out number buffer. */
 			number |= (twodigits)dig << num_bits;
 			num_bits += bits_per_digit;
@@ -1240,6 +1247,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 				num_bits -= DIGIT_BITS;
 			}
 		}
+
 		/* Append trailing bits. */
 		if (num_bits) {
 			ASSERT(num_bits < DIGIT_BITS);
@@ -1249,6 +1257,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		       !result->ob_digit[result->ob_size - 1])
 			--result->ob_size;
 	}
+
 	/* Negate the integer if it was prefixed by `-' */
 	if (negative)
 		result->ob_size = -result->ob_size;
@@ -1271,7 +1280,9 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
 	bool negative      = false;
 	DREF DeeIntObject *result;
-	char *iter, *begin = (char *)str, *end = (char *)str + len;
+	char const *iter;
+	char const *begin = str;
+	char const *end = str + len;
 	digit *dst;
 	twodigits number;
 	uint8_t num_bits;
@@ -1441,9 +1452,12 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
                    size_t len, uint32_t radix_and_flags,
                    int64_t *__restrict value) {
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
-	char *iter, *begin = (char *)str, *end = (char *)str + len;
+	char const *iter;
+	char const *begin = str;
+	char const *end   = str + len;
 	bool negative = false;
 	uint64_t result;
+
 	/* Parse a sign prefix. */
 	for (;; ++begin) {
 		if (begin == end)
@@ -1456,8 +1470,8 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		}
 		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
-			char *new_begin = begin + 1;
-			begin_plus_one  = utf8_readchar((char const **)&new_begin, end);
+			char const *new_begin = begin + 1;
+			begin_plus_one = utf8_readchar((char const **)&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				begin = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -1476,8 +1490,8 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	}
 	if (!radix) {
 		/* Automatically determine the radix. */
-		char *old_begin = begin;
 		uint32_t leading_zero;
+		char const *old_begin = begin;
 		leading_zero = utf8_readchar((char const **)&begin, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (begin == end) {
@@ -1487,8 +1501,8 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 			}
 			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
-				char *new_begin = begin + 1;
-				begin_plus_one  = utf8_readchar((char const **)&new_begin, end);
+				char const *new_begin = begin + 1;
+				begin_plus_one = utf8_readchar((char const **)&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					begin = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -1513,6 +1527,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	if unlikely(begin == end)
 		goto err_invalid;
 	ASSERT(radix >= 2);
+
 	/* Parse the integer starting with the least significant bits. */
 	result = 0;
 	iter   = end;
@@ -1542,15 +1557,18 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 		} else {
 			goto err_invalid;
 		}
+
 		/* Got the digit. */
 		if unlikely(dig >= radix)
 			goto err_invalid;
+
 		/* Add the digit to out number buffer. */
 		if (OVERFLOW_UMUL(result, radix, &result))
 			goto err_overflow;
 		if (OVERFLOW_UADD(result, dig, &result))
 			goto err_overflow;
 	}
+
 	/* Negate the integer if it was prefixed by `-' */
 	if (negative) {
 		if (result > INT64_MAX)
@@ -1671,7 +1689,7 @@ err:
 		return -1;
 	}
 	size = 1 + size_a * DIGIT_BITS / (3 * DeeInt_DECIMAL_SHIFT);
-	pout = (digit *)Dee_AMalloc(size * sizeof(digit));
+	pout = (digit *)Dee_AMallocc(size, sizeof(digit));
 	if (!pout)
 		goto err;
 	pin  = self->ob_digit;
@@ -1681,8 +1699,7 @@ err:
 		for (j = 0; j < size; j++) {
 			twodigits z = (twodigits)pout[j] << DIGIT_BITS | hi;
 			hi = (digit)(z / DeeInt_DECIMAL_BASE);
-			pout[j] = (digit)(z - (twodigits)hi *
-			                      DeeInt_DECIMAL_BASE);
+			pout[j] = (digit)(z - (twodigits)hi * DeeInt_DECIMAL_BASE);
 		}
 		while (hi) {
 			pout[size++] = hi % DeeInt_DECIMAL_BASE;
@@ -1699,7 +1716,7 @@ err:
 		++buflen;
 	}
 	/* Allocate a string target buffer. */
-	buf = (char *)Dee_AMalloc(buflen * sizeof(char));
+	buf = (char *)Dee_AMallocc(buflen,sizeof(char));
 	if unlikely(!buf)
 		goto err_pout;
 	iter = buf + buflen;
@@ -1793,7 +1810,7 @@ do_print:
 		if ((dssize_t)num_digits <= 0) {
 			if (!num_digits) {
 				bufsize = 4;
-				buf     = (char *)Dee_AMalloc(bufsize * sizeof(char));
+				buf     = (char *)Dee_AMallocc(bufsize, sizeof(char));
 				if unlikely(!buf)
 					goto err;
 				iter    = buf + bufsize;
@@ -1803,7 +1820,7 @@ do_print:
 			num_digits = (size_t) - (dssize_t)num_digits;
 		}
 		bufsize = 4 + ((num_digits * DIGIT_BITS) / dig_bits);
-		buf     = (char *)Dee_AMalloc(bufsize * sizeof(char));
+		buf     = (char *)Dee_AMallocc(bufsize, sizeof(char));
 		if unlikely(!buf)
 			goto err;
 		iter   = buf + bufsize;
@@ -1820,6 +1837,7 @@ do_print:
 						--num_bits;
 				}
 			}
+
 			/* Print extracted digits. */
 			while (num_bits >= dig_bits) {
 				num_bits -= dig_bits;
@@ -1887,6 +1905,7 @@ do_print_prefix:
 				*--iter = digit_chars[11]; /* b */
 			*--iter = '0';
 		}
+
 		/* Print the sign prefix. */
 		if (me->ob_size < 0) {
 			*--iter = '-';
@@ -1903,6 +1922,7 @@ done_buf:
 	default:
 		break;
 	}
+
 	/* TODO: support for arbitrary values for radix! (in the range 2..36 inclusively)
 	 *       After all: the fromstring() function also supports arbitrary values... */
 	DeeError_Throwf(&DeeError_NotImplemented,
@@ -2185,7 +2205,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS8)(DeeObject *__restrict self,
                        int8_t *__restrict value) {
 	int error = DeeInt_TryAs8(self, value);
-	if (error == INT_UNSIGNED && *(uint8_t *)value > INT8_MAX)
+	if (error == INT_UNSIGNED && *(uint8_t const *)value > INT8_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2195,7 +2215,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS16)(DeeObject *__restrict self,
                         int16_t *__restrict value) {
 	int error = DeeInt_TryAs16(self, value);
-	if (error == INT_UNSIGNED && *(uint16_t *)value > INT16_MAX)
+	if (error == INT_UNSIGNED && *(uint16_t const *)value > INT16_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2205,7 +2225,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS32)(DeeObject *__restrict self,
                         int32_t *__restrict value) {
 	int error = DeeInt_TryAs32(self, value);
-	if (error == INT_UNSIGNED && *(uint32_t *)value > INT32_MAX)
+	if (error == INT_UNSIGNED && *(uint32_t const *)value > INT32_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2215,7 +2235,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsS64)(DeeObject *__restrict self,
                         int64_t *__restrict value) {
 	int error = DeeInt_TryAs64(self, value);
-	if (error == INT_UNSIGNED && *(uint64_t *)value > INT64_MAX)
+	if (error == INT_UNSIGNED && *(uint64_t const *)value > INT64_MAX)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2235,7 +2255,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU8)(DeeObject *__restrict self,
                        uint8_t *__restrict value) {
 	int error = DeeInt_TryAs8(self, (int8_t *)value);
-	if (error == INT_SIGNED && *(int8_t *)value < 0)
+	if (error == INT_SIGNED && *(int8_t const *)value < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2245,7 +2265,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU16)(DeeObject *__restrict self,
                         uint16_t *__restrict value) {
 	int error = DeeInt_TryAs16(self, (int16_t *)value);
-	if (error == INT_SIGNED && *(int16_t *)value < 0)
+	if (error == INT_SIGNED && *(int16_t const *)value < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2255,7 +2275,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU32)(DeeObject *__restrict self,
                         uint32_t *__restrict value) {
 	int error = DeeInt_TryAs32(self, (int32_t *)value);
-	if (error == INT_SIGNED && *(int32_t *)value < 0)
+	if (error == INT_SIGNED && *(int32_t const *)value < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2265,7 +2285,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU64)(DeeObject *__restrict self,
                         uint64_t *__restrict value) {
 	int error = DeeInt_TryAs64(self, (int64_t *)value);
-	if (error == INT_SIGNED && *(int64_t *)value < 0)
+	if (error == INT_SIGNED && *(int64_t const *)value < 0)
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2275,7 +2295,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInt_TryAsU128)(DeeObject *__restrict self,
                          duint128_t *__restrict value) {
 	int error = DeeInt_TryAs128(self, (dint128_t *)value);
-	if (error == INT_SIGNED && DSINT128_ISNEG(*value))
+	if (error == INT_SIGNED && DSINT128_ISNEG(*(dint128_t const *)value))
 		return false;
 	return (error != INT_POS_OVERFLOW &&
 	        error != INT_NEG_OVERFLOW);
@@ -2783,7 +2803,7 @@ int_new(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|" UNPu16 ":int", &val, &radix))
 		goto err;
 	if (DeeString_Check(val)) {
-		char *utf8 = DeeString_AsUtf8(val);
+		char const *utf8 = DeeString_AsUtf8(val);
 		if unlikely(!utf8)
 			goto err;
 		if unlikely(radix == 1)
@@ -2796,7 +2816,7 @@ int_new(size_t argc, DeeObject *const *argv) {
 	if (DeeBytes_Check(val)) {
 		if unlikely(radix == 1)
 			goto err_bad_radix;
-		return DeeInt_FromAscii((char *)DeeBytes_DATA(val),
+		return DeeInt_FromAscii((char const *)DeeBytes_DATA(val),
 		                        DeeBytes_SIZE(val),
 		                        DEEINT_STRING(radix,
 		                                      DEEINT_STRING_FNORMAL));
@@ -2808,8 +2828,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL int_bool(DeeObject *__restrict self) {
-	return ((DeeIntObject *)self)->ob_size != 0;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+int_bool(DeeIntObject *__restrict self) {
+	return self->ob_size != 0;
 }
 
 
@@ -3002,10 +3023,10 @@ PRIVATE struct type_cmp int_cmp = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_tostr_impl(DeeObject *__restrict self, uint32_t flags, size_t precision) {
+int_tostr_impl(DeeIntObject *__restrict self, uint32_t flags, size_t precision) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(DeeInt_Print(self, flags, precision,
+	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
 	                         &unicode_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
@@ -3015,7 +3036,7 @@ err_printer:
 	return NULL;
 #else
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(DeeInt_Print(self, flags, precision,
+	if unlikely(DeeInt_Print((DeeObject *)self, flags, precision,
 	                         &ascii_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
@@ -3027,17 +3048,17 @@ err_printer:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_str(DeeObject *__restrict self) {
+int_str(DeeIntObject *__restrict self) {
 	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_tostr(DeeObject *self, size_t argc,
+int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE struct keyword kwlist[] = { K(radix), K(precision), K(mode), KEND };
 	size_t precision = 0;
 	uint32_t flags_and_radix = 10 << DEEINT_PRINT_RSHIFT;
-	char *flags_str = NULL;
+	char const *flags_str = NULL;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 UNPuSIZ "s:tostr",
 	                    &((uint16_t *)&flags_and_radix)[0], &precision, &flags_str))
@@ -3048,7 +3069,7 @@ int_tostr(DeeObject *self, size_t argc,
 		goto err;
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 	if (flags_str) {
-		char *iter = flags_str;
+		char const *iter = flags_str;
 		for (;;) {
 			char ch = *iter++;
 			if (!ch)
@@ -3075,7 +3096,7 @@ err:
 PRIVATE struct keyword precision_kwlist[] = { K(precision), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
 	                    "|" UNPuSIZ ":hex", &precision))
@@ -3086,7 +3107,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+int_bin(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
 	                    "|" UNPuSIZ ":bin", &precision))
@@ -3097,7 +3118,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+int_oct(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
 	                    "|" UNPuSIZ ":oct", &precision))
@@ -3305,7 +3326,7 @@ PRIVATE struct type_method tpconst int_class_methods[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_sizeof(DeeIntObject *self) {
+int_sizeof(DeeIntObject *__restrict self) {
 	size_t int_size;
 	int_size = (size_t)self->ob_size;
 	if ((dssize_t)int_size < 0)
@@ -3541,20 +3562,20 @@ int_get_abs(DeeIntObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_return_true(DeeObject *__restrict self) {
+int_return_true(DeeIntObject *__restrict self) {
 	(void)self;
 	return_true;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_return_false(DeeObject *__restrict self) {
+int_return_false(DeeIntObject *__restrict self) {
 	(void)self;
 	return_false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_return_nonzero(DeeObject *__restrict self) {
-	return_bool(((DeeIntObject *)self)->ob_size != 0);
+int_return_nonzero(DeeIntObject *__restrict self) {
+	return_bool(self->ob_size != 0);
 }
 
 
@@ -3862,9 +3883,9 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ &int_str,
-		/* .tp_repr = */ &int_str,
-		/* .tp_bool = */ &int_bool
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&int_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

@@ -66,9 +66,8 @@ cmd_addlater(int (DCALL *func)(char *arg), char *arg) {
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		entry = (struct late_cmd_option *)Dee_UntrackAlloc(Dee_TryRealloc(late_options.lco_optv,
-		                                                                  new_alloc *
-		                                                                  sizeof(struct late_cmd_option)));
+		entry = (struct late_cmd_option *)Dee_UntrackAlloc(Dee_TryReallocc(late_options.lco_optv, new_alloc,
+		                                                                   sizeof(struct late_cmd_option)));
 		if unlikely(!entry) {
 			if (new_alloc != late_options.lco_optc + 1) {
 				new_alloc = late_options.lco_optc + 1;
@@ -306,7 +305,7 @@ has_opt:
 				if (*iter == ',' && iter[-1] != '\\')
 					++sub_argc;
 			}
-			sub_argv = (char **)Dee_AMalloc((unsigned int)sub_argc * sizeof(char *));
+			sub_argv = (char **)Dee_AMallocc((unsigned int)sub_argc, sizeof(char *));
 			if unlikely(!sub_argv)
 				goto err;
 			argend             = iter;

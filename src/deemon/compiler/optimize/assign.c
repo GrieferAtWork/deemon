@@ -66,8 +66,8 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		struct class_member *dst;
 		size_t i;
 		temp->a_class.c_memberc = other->a_class.c_memberc;
-		dst = (struct class_member *)Dee_Malloc(temp->a_class.c_memberc *
-		                                        sizeof(struct class_member));
+		dst = (struct class_member *)Dee_Mallocc(temp->a_class.c_memberc,
+		                                         sizeof(struct class_member));
 		if unlikely(!dst)
 			goto err;
 		temp->a_class.c_base = other->a_class.c_base;
@@ -135,8 +135,8 @@ do_xcopy_3:
 		DREF struct ast **iter, **end, **dst;
 		temp->a_multiple.m_astc = other->a_multiple.m_astc;
 		end = (iter = other->a_multiple.m_astv) + other->a_multiple.m_astc;
-		dst = (DREF struct ast **)Dee_Malloc(temp->a_multiple.m_astc *
-		                                     sizeof(DREF struct ast *));
+		dst = (DREF struct ast **)Dee_Mallocc(temp->a_multiple.m_astc,
+		                                      sizeof(DREF struct ast *));
 		if unlikely(!dst)
 			goto err;
 		temp->a_multiple.m_astv = dst;
@@ -152,8 +152,8 @@ do_xcopy_3:
 		temp->a_try.t_catchc = other->a_try.t_catchc;
 		ast_incref(temp->a_try.t_guard);
 		end = (iter = other->a_try.t_catchv) + other->a_try.t_catchc;
-		dst = (struct catch_expr *)Dee_Malloc(temp->a_try.t_catchc *
-		                                      sizeof(struct catch_expr));
+		dst = (struct catch_expr *)Dee_Mallocc(temp->a_try.t_catchc,
+		                                       sizeof(struct catch_expr));
 		if unlikely(!dst)
 			goto err;
 		temp->a_try.t_catchv = dst;
@@ -239,7 +239,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	DREF struct ast **elemv;
 	if (self->a_scope == other->a_scope)
 		return ast_assign(self, other);
-	elemv = (struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+	elemv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 	if unlikely(!elemv)
 		goto err;
 	elemv[0] = other;

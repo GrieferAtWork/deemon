@@ -98,21 +98,22 @@ dex_load_handle(DeeDexObject *__restrict self,
 	impcount = 0, imports = NULL;
 	if (descriptor->d_import_names && *descriptor->d_import_names) {
 		size_t i;
-		char **names = (char **)descriptor->d_import_names;
-		self->d_import_names = (char const *const *)names;
-		while (*names)
-			++impcount, ++names;
+		char const *const *names;
+		names = descriptor->d_import_names;
+		self->d_import_names = names;
+		for (; *names; ++names)
+			++impcount;
 		if unlikely(impcount > UINT16_MAX) {
 			DeeError_Throwf(&DeeError_RuntimeError,
 			                "Dex extension %r has too many imports",
 			                input_file);
 			goto err;
 		}
-		imports = (DREF DeeModuleObject **)Dee_Malloc(impcount *
-		                                              sizeof(DREF DeeModuleObject *));
+		imports = (DREF DeeModuleObject **)Dee_Mallocc(impcount,
+		                                               sizeof(DREF DeeModuleObject *));
 		if unlikely(!imports)
 			goto err;
-		names = (char **)descriptor->d_import_names;
+		names = descriptor->d_import_names;
 		/* Load import modules, using the same index as the original name. */
 		for (i = 0; i < impcount; ++i) {
 			DREF DeeObject *import;
@@ -153,7 +154,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 	ASSERT(glbcount >= symcount);
 	/* Generate the global variable table. */
 	symbols = descriptor->d_symbols;
-	globals = (DREF DeeObject **)Dee_Malloc(glbcount * sizeof(DREF DeeObject *));
+	globals = (DREF DeeObject **)Dee_Mallocc(glbcount, sizeof(DREF DeeObject *));
 	if unlikely(!globals)
 		goto err_imp_elem;
 	/* Figure out how large the hash-mask should be. */
@@ -163,8 +164,8 @@ dex_load_handle(DeeDexObject *__restrict self,
 	if ((bucket_mask - symcount) < 16)
 		bucket_mask <<= 1;
 	--bucket_mask;
-	modsym = (struct module_symbol *)Dee_Calloc((bucket_mask + 1) *
-	                                            sizeof(struct module_symbol));
+	modsym = (struct module_symbol *)Dee_Callocc(bucket_mask + 1,
+	                                             sizeof(struct module_symbol));
 	if unlikely(!modsym)
 		goto err_glob;
 	/* Set the symbol table and global variable vector. */
@@ -263,16 +264,16 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 		{
 			char *temp_name;
 			size_t namelen = strlen(name);
-#ifdef Dee_AMallocNoFail
-			Dee_AMallocNoFail(temp_name, (namelen + 2) * sizeof(char));
-#else /* Dee_AMallocNoFail */
-			temp_name = (char *)Dee_AMalloc((namelen + 2) * sizeof(char));
+#ifdef Dee_AMallocNoFailc
+			Dee_AMallocNoFailc(temp_name, namelen + 2, sizeof(char));
+#else /* Dee_AMallocNoFailc */
+			temp_name = (char *)Dee_AMallocc(namelen + 2, sizeof(char));
 			if unlikely(!temp_name) {
 				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 				return NULL; /* ... Technically not correct, but if memory has gotten
 				              *     this low, that's the last or the user's problems. */
 			}
-#endif /* !Dee_AMallocNoFail */
+#endif /* !Dee_AMallocNoFailc */
 			memcpyc(temp_name + 1, name,
 			        namelen + 1,
 			        sizeof(char));

@@ -1269,8 +1269,8 @@ code_copy(DeeCodeObject *__restrict self) {
 		if (!result->co_argc_max) {
 			result->co_keywords = NULL;
 		} else {
-			result->co_keywords = (DREF DeeStringObject **)Dee_Malloc(result->co_argc_max *
-			                                                          sizeof(DREF DeeStringObject *));
+			result->co_keywords = (DREF DeeStringObject **)Dee_Mallocc(result->co_argc_max,
+			                                                           sizeof(DREF DeeStringObject *));
 			if unlikely(!result->co_keywords)
 				goto err_r;
 			Dee_Movrefv((DREF DeeObject **)result->co_keywords,
@@ -1282,7 +1282,7 @@ code_copy(DeeCodeObject *__restrict self) {
 	       (result->co_argc_max == result->co_argc_min));
 	if (result->co_defaultv) {
 		uint16_t n          = result->co_argc_max - result->co_argc_min;
-		result->co_defaultv = (DREF DeeObject **)Dee_Malloc(n * sizeof(DREF DeeObject *));
+		result->co_defaultv = (DREF DeeObject **)Dee_Mallocc(n, sizeof(DREF DeeObject *));
 		if unlikely(!result->co_defaultv)
 			goto err_r_keywords;
 		Dee_XMovrefv((DREF DeeObject **)result->co_defaultv, self->co_defaultv, n);
@@ -1290,8 +1290,8 @@ code_copy(DeeCodeObject *__restrict self) {
 	ASSERT((result->co_staticc != 0) ==
 	       (result->co_staticv != NULL));
 	if (result->co_staticv) {
-		result->co_staticv = (DREF DeeObject **)Dee_Malloc(result->co_staticc *
-		                                                   sizeof(DREF DeeObject *));
+		result->co_staticv = (DREF DeeObject **)Dee_Mallocc(result->co_staticc,
+		                                                    sizeof(DREF DeeObject *));
 		if unlikely(!result->co_staticv)
 			goto err_r_default;
 		atomic_rwlock_read(&self->co_static_lock);
@@ -1302,8 +1302,8 @@ code_copy(DeeCodeObject *__restrict self) {
 		result->co_exceptv = NULL;
 	} else {
 		uint16_t i;
-		result->co_exceptv = (struct except_handler *)Dee_Malloc(result->co_exceptc *
-		                                                         sizeof(struct except_handler));
+		result->co_exceptv = (struct except_handler *)Dee_Mallocc(result->co_exceptc,
+		                                                          sizeof(struct except_handler));
 		if unlikely(!result->co_exceptv)
 			goto err_r_static;
 		memcpyc(result->co_exceptv,
@@ -1595,8 +1595,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			}
 			coargc = (uint16_t)keyword_count;
 		} else {
-			keyword_vec = (DREF DeeStringObject **)Dee_Malloc(coargc *
-			                                                  sizeof(DREF DeeStringObject *));
+			keyword_vec = (DREF DeeStringObject **)Dee_Mallocc(coargc,
+			                                                   sizeof(DREF DeeStringObject *));
 			if unlikely(!keyword_vec)
 				goto err_r;
 			if unlikely(DeeObject_Unpack(keywords, coargc, (DeeObject **)keyword_vec)) {
@@ -1629,7 +1629,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			                default_c, coargc);
 			goto err_r_keywords;
 		}
-		default_vec = (DREF DeeObject **)Dee_Malloc(default_c * sizeof(DREF DeeObject *));
+		default_vec = (DREF DeeObject **)Dee_Mallocc(default_c, sizeof(DREF DeeObject *));
 		if unlikely(!default_vec)
 			goto err_r_keywords;
 		for (i = 0; i < default_c; ++i) {
@@ -1718,12 +1718,12 @@ err_r_except_temp_iter:
 					}
 					new_except_a = (uint16_t)-1;
 				}
-				new_except_v = (struct except_handler *)Dee_TryRealloc(except_v, new_except_a *
-				                                                                 sizeof(struct except_handler));
+				new_except_v = (struct except_handler *)Dee_TryReallocc(except_v, new_except_a,
+				                                                        sizeof(struct except_handler));
 				if unlikely(!new_except_v) {
 					new_except_a = except_c + 1;
-					new_except_v = (struct except_handler *)Dee_Realloc(except_v, new_except_a *
-					                                                              sizeof(struct except_handler));
+					new_except_v = (struct except_handler *)Dee_Reallocc(except_v, new_except_a,
+					                                                     sizeof(struct except_handler));
 					if unlikely(!new_except_v)
 						goto err_r_except_temp_iter_elem;
 				}
@@ -1739,9 +1739,8 @@ err_r_except_temp_iter:
 			goto err_r_except_temp_iter;
 		Dee_Decref(iter);
 		if (except_a > except_c) {
-			new_except_v = (struct except_handler *)Dee_TryRealloc(except_v,
-			                                                       except_c *
-			                                                       sizeof(struct except_handler));
+			new_except_v = (struct except_handler *)Dee_TryReallocc(except_v, except_c,
+			                                                        sizeof(struct except_handler));
 			if likely(new_except_v)
 				except_v = new_except_v;
 		}

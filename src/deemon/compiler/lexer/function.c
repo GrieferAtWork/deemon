@@ -106,8 +106,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL resize_argument_list(uint16_t *__restrict
 		if (!new_arga)
 			new_arga = 2;
 do_realloc_symv:
-		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
-		                                            new_arga * sizeof(struct symbol *));
+		new_symv = (struct symbol **)Dee_TryReallocc(current_basescope->bs_argv,
+		                                             new_arga, sizeof(struct symbol *));
 		if unlikely(!new_symv) {
 			if (new_arga != current_basescope->bs_argc + 1) {
 				new_arga = current_basescope->bs_argc + 1;
@@ -133,8 +133,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL resize_default_list(uint16_t *__restrict 
 		if (!new_defaulta)
 			new_defaulta = 2;
 do_realloc_symv:
-		new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
-		                                                 new_defaulta * sizeof(DREF DeeObject *));
+		new_defaultv = (DREF DeeObject **)Dee_TryReallocc(current_basescope->bs_default,
+		                                                  new_defaulta, sizeof(DREF DeeObject *));
 		if unlikely(!new_defaultv) {
 			if (new_defaulta != defaultc + 1) {
 				new_defaulta = defaultc + 1;
@@ -446,9 +446,9 @@ next_argument:
 	/* Truncate the argument vector. */
 	if (arga != current_basescope->bs_argc) {
 		struct symbol **new_symv;
-		new_symv = (struct symbol **)Dee_TryRealloc(current_basescope->bs_argv,
-		                                            current_basescope->bs_argc *
-		                                            sizeof(struct symbol *));
+		new_symv = (struct symbol **)Dee_TryReallocc(current_basescope->bs_argv,
+		                                             current_basescope->bs_argc,
+		                                             sizeof(struct symbol *));
 		if likely(new_symv)
 			current_basescope->bs_argv = new_symv;
 	}
@@ -456,8 +456,8 @@ next_argument:
 		/* Truncate the default argument vector. */
 		uint16_t req_defaulta = (current_basescope->bs_argc_max - current_basescope->bs_argc_min);
 		if (defaulta != req_defaulta) {
-			new_defaultv = (DREF DeeObject **)Dee_TryRealloc(current_basescope->bs_default,
-			                                                 req_defaulta * sizeof(DREF DeeObject *));
+			new_defaultv = (DREF DeeObject **)Dee_TryReallocc(current_basescope->bs_default,
+			                                                  req_defaulta, sizeof(DREF DeeObject *));
 			if likely(new_defaultv)
 				current_basescope->bs_default = new_defaultv;
 		}
@@ -797,7 +797,7 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		ASSERT(current_basescope->bs_argc_min == 0);
 		ASSERT(current_basescope->bs_argc_max == 0);
 		ASSERT(current_basescope->bs_argv == NULL);
-		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 		if unlikely(!current_basescope->bs_argv)
 			goto err_scope;
 

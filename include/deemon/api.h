@@ -403,7 +403,7 @@ DECL_BEGIN
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 /* Highlight invalid usage of `NULL' in functions returning `int' */
 #undef NULL
-#define NULL nullptr
+#define NULL __NULLPTR
 #endif /* __INTELLISENSE__ && __cplusplus */
 
 #ifndef Dee_BREAKPOINT

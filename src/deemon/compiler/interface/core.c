@@ -314,8 +314,8 @@ again:
 		struct compiler_item_object_list *new_map;
 		if (new_mask == 1)
 			new_mask = 16 - 1;
-		new_map = (struct compiler_item_object_list *)Dee_TryCalloc((new_mask + 1) *
-		                                                            sizeof(struct compiler_item_object_list));
+		new_map = (struct compiler_item_object_list *)Dee_TryCallocc(new_mask + 1,
+		                                                             sizeof(struct compiler_item_object_list));
 		if unlikely(!new_map && !self->cp_items.ci_list) {
 			atomic_rwlock_endwrite(&self->cp_items.ci_lock);
 			DeeObject_FREE(result);

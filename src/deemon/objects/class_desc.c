@@ -858,8 +858,8 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	            "Evaluates to ?t if @this class attribute was defined as a property\n"
 	            "When this is the case, a ?#readonly attribute only has a single callback "
 	            "that may be stored at ?#addr + 0, with that callback being the getter\n"
-	            "Otherwise, up to 3 indices within the associated object table are used by "
-	            "@this attribute, each of which may be left unbound:\n"
+	            "Otherwise, up to " PP_STR(CLASS_GETSET_COUNT) " indices within the associated "
+	            "object table are used by @this attribute, each of which may be left unbound:\n"
 	            "#T{Offset|Callback|Description~"
 	            "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
 	            "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
@@ -1523,8 +1523,8 @@ cd_rehash_cattr(ClassDescriptor *__restrict self) {
 	new_mask = (self->cd_cattr_mask << 1) | 1;
 	if (new_mask < 7)
 		new_mask = 7;
-	new_map = (struct class_attribute *)Dee_Calloc((new_mask + 1) *
-	                                               sizeof(struct class_attribute));
+	new_map = (struct class_attribute *)Dee_Callocc(new_mask + 1,
+	                                                sizeof(struct class_attribute));
 	if unlikely(!new_map)
 		goto err;
 	if (self->cd_cattr_list != empty_class_attributes) {
@@ -1693,8 +1693,7 @@ cd_add_operator(ClassDescriptor *__restrict self,
 		mask = (self->cd_clsop_mask << 1) | 1;
 		if (mask <= 1)
 			mask = 3;
-		map = (struct class_operator *)Dee_Malloc((mask + 1) *
-		                                          sizeof(struct class_operator));
+		map = (struct class_operator *)Dee_Mallocc(mask + 1, sizeof(struct class_operator));
 		if unlikely(!map)
 			goto err;
 		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
@@ -3072,11 +3071,13 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 		goto not_found;
 	attr_type = NULL, inst = NULL;
 	perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
+
 	/* Figure out which instance descriptor the property is connected to. */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 		inst = class_desc_as_instance(my_class);
-	else if (instance)
+	} else if (instance) {
 		inst = DeeInstance_DESC(my_class, instance);
+	}
 	if (inst)
 		atomic_rwlock_read(&inst->id_lock);
 	if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -3104,10 +3105,11 @@ DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, D
 	}
 	if (inst)
 		atomic_rwlock_endread(&inst->id_lock);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		perm |= ATTR_PROPERTY;
-	else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		perm |= ATTR_PERMCALL;
+	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 		perm |= ATTR_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {
@@ -3136,12 +3138,14 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
                               struct class_attribute *__restrict attr) {
 	DREF DeePropertyObject *result;
 	struct class_desc *my_class;
+
 	/* Return an instance-wrapper for instance-members. */
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		return DeeInstanceMember_New(class_type, attr);
 	my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
 		DREF DeeObject *member_value;
+
 		/* Simple case: direct access to unbound class-based attr. */
 		atomic_rwlock_read(&my_class->cd_lock);
 		member_value = my_class->cd_members[attr->ca_addr];
@@ -3159,6 +3163,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 	atomic_rwlock_read(&my_class->cd_lock);
 	result->p_get = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
 	Dee_XIncref(result->p_get);
+
 	/* Only non-readonly property members have callbacks other than a getter.
 	 * In this case, the readonly flag both protects the property from being
 	 * overwritten, as well as being invoked using something other than read-access. */
@@ -3169,12 +3174,14 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 		Dee_XIncref(result->p_set);
 	}
 	atomic_rwlock_endread(&my_class->cd_lock);
+
 	/* Make sure that at least a single property callback has been assigned.
 	 * If not, raise an unbound-attr error. */
 	if (!result->p_get && !result->p_del && !result->p_set) {
 		DeeObject_FREE(result);
 		goto unbound;
 	}
+
 	/* Finalize initialization of the property wrapper and return it. */
 	DeeObject_Init(result, &DeeProperty_Type);
 	return (DREF DeeObject *)result;
@@ -3190,11 +3197,14 @@ DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
                                 struct class_attribute *__restrict attr) {
 	int result;
 	struct class_desc *my_class;
+
 	/* Return an instance-wrapper for instance-members. */
-	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
 		return 1; /* instance-members outside of class memory are
 		           * accessed through wrappers, which are always bound. */
+	}
 	my_class = DeeClass_DESC(class_type);
+
 	/* Check if the member is assigned. */
 	atomic_rwlock_read(&my_class->cd_lock);
 	if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FREADONLY)) ==
@@ -3536,22 +3546,21 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		Dee_XDecref(old_value);
 #endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
-		/* Property callbacks (delete 3 bindings, rather than 1) */
-		DREF DeeObject *old_value[3];
+		/* Property callbacks (delete all bindings, rather than 1) */
+		unsigned int i;
+		DREF DeeObject *old_value[CLASS_GETSET_COUNT];
 		atomic_rwlock_write(&my_class->cd_lock);
-		old_value[0] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET];
-		old_value[1] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL];
-		old_value[2] = my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET];
-		my_class->cd_members[attr->ca_addr + CLASS_GETSET_GET] = NULL;
-		my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL] = NULL;
-		my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET] = NULL;
+		for (i = 0; i < CLASS_GETSET_COUNT; ++i) {
+			old_value[i] = my_class->cd_members[attr->ca_addr + i];
+			my_class->cd_members[attr->ca_addr + i] = NULL;
+		}
 		atomic_rwlock_endwrite(&my_class->cd_lock);
 #ifdef CONFIG_ERROR_DELETE_UNBOUND
 		/* Only thrown an unbound-error when none of the callbacks were assigned. */
 		if unlikely(!old_value[0] &&
-			         !old_value[1] &&
-			         !old_value[2])
-		goto unbound;
+		            !old_value[1] &&
+		            !old_value[2])
+			goto unbound;
 #endif /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value[2]);
 		Dee_XDecref(old_value[1]);
@@ -3575,6 +3584,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		goto err_noaccess;
+
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
 		err_cant_access_attribute(class_type,
@@ -3601,6 +3611,7 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 		my_class->cd_members[attr->ca_addr + CLASS_GETSET_DEL] = ((DeePropertyObject *)value)->p_del;
 		my_class->cd_members[attr->ca_addr + CLASS_GETSET_SET] = ((DeePropertyObject *)value)->p_set;
 		atomic_rwlock_endwrite(&my_class->cd_lock);
+
 		/* Drop references from the old callbacks. */
 		Dee_XDecref(old_value[2]);
 		Dee_XDecref(old_value[1]);
@@ -3644,6 +3655,7 @@ DeeInstance_GetAttribute(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
@@ -3697,6 +3709,7 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto unbound;
+
 		/* Invoke the getter. */
 		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
@@ -3741,11 +3754,13 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
+
 		/* Invoke the return value of the getter. */
 		if unlikely(!callback)
 			goto err;
@@ -3795,11 +3810,13 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
+
 		/* Invoke the return value of the getter. */
 		if unlikely(!callback)
 			goto err;
@@ -3850,11 +3867,13 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
+
 		/* Invoke the return value of the getter. */
 		if unlikely(!callback)
 			goto err;
@@ -3905,11 +3924,13 @@ DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
+
 		/* Invoke the return value of the getter. */
 		if unlikely(!callback)
 			goto err;
@@ -3959,11 +3980,13 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!getter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		callback = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		           ? DeeObject_ThisCall(getter, this_arg, 0, NULL)
 		           : DeeObject_Call(getter, 0, NULL);
 		Dee_Decref(getter);
+
 		/* Invoke the return value of the getter. */
 		if unlikely(!callback)
 			goto err;
@@ -4003,6 +4026,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          DeeObject *__restrict this_arg,
                          struct class_attribute *__restrict attr) {
 	ASSERT_OBJECT(this_arg);
+
 	/* Make sure that the access is allowed. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 		goto illegal;
@@ -4016,6 +4040,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!delfun)
 			goto illegal;
+
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCall(delfun, this_arg, 0, NULL)
@@ -4026,6 +4051,7 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
+
 		/* Simply unbind the field in the attr table. */
 		atomic_rwlock_write(&self->id_lock);
 		old_value                    = self->id_vtab[attr->ca_addr];
@@ -4065,6 +4091,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *setter, *temp;
+
 		/* Make sure that the access is allowed. */
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
 			goto illegal;
@@ -4074,6 +4101,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		atomic_rwlock_endread(&self->id_lock);
 		if unlikely(!setter)
 			goto illegal;
+
 		/* Invoke the getter. */
 		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCall(setter, this_arg, 1, (DeeObject **)&value)
@@ -4084,6 +4112,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 		Dee_Decref(temp);
 	} else {
 		DREF DeeObject *old_value;
+
 		/* Simply override the field in the attr table. */
 		atomic_rwlock_write(&self->id_lock);
 		old_value = self->id_vtab[attr->ca_addr];
@@ -4095,6 +4124,7 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 			self->id_vtab[attr->ca_addr] = value;
 		}
 		atomic_rwlock_endwrite(&self->id_lock);
+
 		/* Drop a reference from the old value. */
 		Dee_XDecref(old_value);
 	}
@@ -4117,6 +4147,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
 		return 2; /* Not a basic attribute. */
+
 	/* Simply override the field in the attr table. */
 	atomic_rwlock_write(&self->id_lock);
 	old_value = self->id_vtab[attr->ca_addr];
@@ -4128,6 +4159,7 @@ INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 		self->id_vtab[attr->ca_addr] = value;
 	}
 	atomic_rwlock_endwrite(&self->id_lock);
+
 	/* Drop a reference from the old value. */
 	Dee_XDecref(old_value);
 	return 0;
@@ -4148,6 +4180,7 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 	ASSERT_OBJECT_TYPE(impl_class, &DeeType_Type);
 	ASSERT(DeeType_IsClass(impl_class));
 	ASSERT(self->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
+
 	/* Only allow access if the calling code-frame originates from
 	 * a this-call who's this-argument derives from `class_type'. */
 	caller_frame = DeeThread_Self()->t_exec;
@@ -4338,6 +4371,7 @@ err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
 		name = DeeString_STR(attr->ca_name);
 		break;
 	}
+
 	/* Throw the error. */
 	return err_unbound_attribute(class_type, name);
 }
@@ -4399,6 +4433,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	desc = DeeClass_DESC(tp_self);
 	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
+
 	/* Lock and extract the member. */
 	atomic_rwlock_write(&inst->id_lock);
 	old_value           = inst->id_vtab[addr];
@@ -4427,6 +4462,7 @@ INTERN NONNULL((1, 2, 4)) void
 	desc = DeeClass_DESC(tp_self);
 	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
+
 	/* Lock and extract the member. */
 	Dee_Incref(value);
 	atomic_rwlock_write(&inst->id_lock);
@@ -4569,6 +4605,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 	ASSERT(DeeType_IsClass(self));
 	desc = DeeClass_DESC(self);
 	ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
+
 	/* Lock and extract the member. */
 	atomic_rwlock_write(&desc->cd_lock);
 	result = desc->cd_members[addr];

@@ -34,8 +34,9 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 	result = ast_parse_unary(LOOKUP_SYM_NORMAL);
 	if (tok == '|' && result) {
 		struct ast_loc multi_loc;
-		exprc = 1, expra = 2;
-		exprv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+		exprc = 1;
+		expra = 2;
+		exprv = (DREF struct ast **)Dee_Mallocc(expra, sizeof(DREF struct ast *));
 		if unlikely(!exprv)
 			goto err_r;
 		exprv[0] = result; /* Inherit */
@@ -71,9 +72,8 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 				DREF struct ast **new_exprv;
 				size_t new_expra = expra * 2;
 do_realloc:
-				new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv,
-				                                               new_expra *
-				                                               sizeof(DREF struct ast *));
+				new_exprv = (DREF struct ast **)Dee_TryReallocc(exprv, new_expra,
+				                                                sizeof(DREF struct ast *));
 				if unlikely(!new_exprv) {
 					if (new_expra != exprc + 1) {
 						new_expra = exprc + 1;
@@ -148,8 +148,8 @@ ast_parse_try(bool is_statement) {
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 do_realloc_catchv:
-			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
-			                                                      sizeof(struct catch_expr));
+			handler = (struct catch_expr *)Dee_TryReallocc(catchv, new_catcha,
+			                                               sizeof(struct catch_expr));
 			if unlikely(!handler) {
 				if (new_catcha != catchc + 1) {
 					new_catcha = catchc + 1;
@@ -276,8 +276,8 @@ end_catch_handler:
 	}
 	/* Clear unused buffer memory. */
 	if (catchc != catcha) {
-		handler = (struct catch_expr *)Dee_TryRealloc(catchv, catchc *
-		                                                      sizeof(struct catch_expr));
+		handler = (struct catch_expr *)Dee_TryReallocc(catchv, catchc,
+		                                               sizeof(struct catch_expr));
 		if likely(handler)
 			catchv = handler;
 	}
@@ -345,8 +345,8 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
 do_realloc_catchv:
-			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
-			                                                      sizeof(struct catch_expr));
+			handler = (struct catch_expr *)Dee_TryReallocc(catchv, new_catcha,
+			                                               sizeof(struct catch_expr));
 			if unlikely(!handler) {
 				if (new_catcha != catchc + 1) {
 					new_catcha = catchc + 1;
@@ -469,8 +469,8 @@ end_catch_handler:
 	}
 	/* Clear unused buffer memory. */
 	if (catchc != catcha) {
-		handler = (struct catch_expr *)Dee_TryRealloc(catchv, catchc *
-		                                                      sizeof(struct catch_expr));
+		handler = (struct catch_expr *)Dee_TryReallocc(catchv, catchc,
+		                                               sizeof(struct catch_expr));
 		if likely(handler)
 			catchv = handler;
 	}

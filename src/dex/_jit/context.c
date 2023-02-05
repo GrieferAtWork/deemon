@@ -795,14 +795,10 @@ JITLValueList_Append(JITLValueList *__restrict self,
 		if (!new_alloc)
 			new_alloc = 1;
 		ASSERT(new_alloc > self->ll_size);
-		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
-		                                       new_alloc *
-		                                       sizeof(JITLValue));
+		new_list = (JITLValue *)Dee_TryReallocc(self->ll_list, new_alloc, sizeof(JITLValue));
 		if unlikely(!new_list) {
 			new_alloc = self->ll_size + 1;
-			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
-			                                    new_alloc *
-			                                    sizeof(JITLValue));
+			new_list = (JITLValue *)Dee_Reallocc(self->ll_list, new_alloc, sizeof(JITLValue));
 			if unlikely(!new_list)
 				goto err;
 		}
@@ -829,14 +825,10 @@ JITLValueList_AppendRValue(JITLValueList *__restrict self,
 		if (!new_alloc)
 			new_alloc = 1;
 		ASSERT(new_alloc > self->ll_size);
-		new_list = (JITLValue *)Dee_TryRealloc(self->ll_list,
-		                                       new_alloc *
-		                                       sizeof(JITLValue));
+		new_list = (JITLValue *)Dee_TryReallocc(self->ll_list, new_alloc, sizeof(JITLValue));
 		if unlikely(!new_list) {
 			new_alloc = self->ll_size + 1;
-			new_list = (JITLValue *)Dee_Realloc(self->ll_list,
-			                                    new_alloc *
-			                                    sizeof(JITLValue));
+			new_list = (JITLValue *)Dee_Reallocc(self->ll_list, new_alloc, sizeof(JITLValue));
 			if unlikely(!new_list)
 				goto err;
 		}

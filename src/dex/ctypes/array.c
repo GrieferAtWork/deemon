@@ -784,8 +784,8 @@ stype_array_rehash(DeeSTypeObject *__restrict self,
 	struct array_type_list *biter, *bend;
 	DeeArrayTypeObject *iter, *next;
 again:
-	new_map = (struct array_type_list *)Dee_TryCalloc((new_mask + 1) *
-	                                                  sizeof(struct array_type_list));
+	new_map = (struct array_type_list *)Dee_TryCallocc(new_mask + 1,
+	                                                   sizeof(struct array_type_list));
 	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_array.sa_list && new_mask != 0) {

@@ -832,9 +832,9 @@ blv_copy(BlackListVarkwds *__restrict self) {
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	count           = self->vk_kwds->kw_size;
-	result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
-	                                                sizeof(DREF DeeObject *));
+	count = self->vk_kwds->kw_size;
+	result->vk_argv = (DREF DeeObject **)Dee_Mallocc(count,
+	                                                 sizeof(DREF DeeObject *));
 	if unlikely(!result->vk_argv)
 		goto err_r;
 	rwlock_read(&self->vk_lock);
@@ -870,9 +870,9 @@ blv_deep(BlackListVarkwds *__restrict self) {
 	                                                   sizeof(BlackListVarkwdsEntry));
 	if unlikely(!result)
 		goto done;
-	count           = self->vk_kwds->kw_size;
-	result->vk_argv = (DREF DeeObject **)Dee_Malloc(count *
-	                                                sizeof(DREF DeeObject *));
+	count = self->vk_kwds->kw_size;
+	result->vk_argv = (DREF DeeObject **)Dee_Mallocc(count,
+	                                                 sizeof(DREF DeeObject *));
 	if unlikely(!result->vk_argv)
 		goto err_r;
 	rwlock_read(&self->vk_lock);
@@ -1025,7 +1025,7 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 
 	/* Must transform the object such that it can continue to exist without causing problems. */
 	kwdc = DeeKwds_SIZE(me->vk_kwds);
-	argv = (DREF DeeObject **)Dee_TryMalloc(kwdc * sizeof(DREF DeeObject *));
+	argv = (DREF DeeObject **)Dee_TryMallocc(kwdc, sizeof(DREF DeeObject *));
 	if likely(argv) {
 		/* Initialize the argument vector copy. */
 		Dee_Movrefv(argv, me->vk_argv, kwdc);

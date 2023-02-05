@@ -1564,8 +1564,8 @@ svec_copy(SharedVector *__restrict self,
 again:
 	atomic_rwlock_read(&other->sv_lock);
 	self->sv_length = other->sv_length;
-	self->sv_vector = (DREF DeeObject **)Dee_TryMalloc(self->sv_length *
-	                                                   sizeof(DREF DeeObject *));
+	self->sv_vector = (DREF DeeObject **)Dee_TryMallocc(self->sv_length,
+	                                                    sizeof(DREF DeeObject *));
 	if unlikely(!self->sv_vector) {
 		atomic_rwlock_endread(&other->sv_lock);
 		if (Dee_CollectMemory(self->sv_length * sizeof(DREF DeeObject *)))
@@ -1709,8 +1709,8 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 
 	/* Difficult case: must duplicate the vector. */
 	atomic_rwlock_write(&me->sv_lock);
-	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sv_length *
-	                                               sizeof(DREF DeeObject *));
+	vector_copy = (DREF DeeObject **)Dee_TryMallocc(me->sv_length,
+	                                                sizeof(DREF DeeObject *));
 	if unlikely(!vector_copy)
 		goto err_cannot_inherit;
 

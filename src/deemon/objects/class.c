@@ -1046,7 +1046,7 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 		goto err;
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	old_items      = (DREF DeeObject **)Dee_AMalloc(size * sizeof(DREF DeeObject *));
+	old_items      = (DREF DeeObject **)Dee_AMallocc(size, sizeof(DREF DeeObject *));
 	if unlikely(!old_items)
 		goto err;
 
@@ -1092,7 +1092,7 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 		goto err;
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
-	old_items      = (DREF DeeObject **)Dee_AMalloc(size * sizeof(DREF DeeObject *));
+	old_items      = (DREF DeeObject **)Dee_AMallocc(size, sizeof(DREF DeeObject *));
 	if unlikely(!old_items)
 		goto err;
 

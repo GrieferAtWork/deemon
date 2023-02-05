@@ -461,7 +461,7 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_tryfinally,
 	struct catch_expr *catchv;
 	DREF struct ast *result;
 	/* Allocate the catch-expression vector inherited by `a_try' upon success. */
-	catchv = (struct catch_expr *)Dee_Malloc(1 * sizeof(struct catch_expr));
+	catchv = (struct catch_expr *)Dee_Mallocc(1, sizeof(struct catch_expr));
 	if unlikely(!catchv)
 		goto err;
 	catchv[0].ce_code  = finally_expression;         /* Reference is incremented later. */

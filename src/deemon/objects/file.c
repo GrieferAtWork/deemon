@@ -1858,11 +1858,11 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	                      /**/ "renamed to ?#System\n"
 	                      /**/ "With that in mind, this field is now simply an alias for ?DFile"),
 	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
-	                      "Deprecated argument for #?seek (Use the string $\"set\" instead"),
+	                      "Deprecated argument for ?#seek (Use the string $\"set\" instead)"),
 	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
-	                      "Deprecated argument for #?seek (Use the string $\"cur\" instead"),
+	                      "Deprecated argument for ?#seek (Use the string $\"cur\" instead)"),
 	TYPE_MEMBER_CONST_DOC("SEEK_END", (DeeObject *)&file_SEEK_END,
-	                      "Deprecated argument for #?seek (Use the string $\"end\" instead"),
+	                      "Deprecated argument for ?#seek (Use the string $\"end\" instead)"),
 	TYPE_MEMBER_END
 };
 
@@ -2463,7 +2463,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	/* mmap support */
 	TYPE_KWMETHOD("mmap",
 	              &file_mmap,
-	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytse\n"
+	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
 	              "@param minbytes The  min number of bytes (excluding @nulbytes) that should be mapped "
 	              /*           */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
 	              /*           */ "this number of bytes has been reached, nul bytes are mapped for its remainder.\n"
@@ -2649,7 +2649,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ /**/ "but ?#buffer supports it, thereby allowing you to wrap practically any "
 		                         /**/ /**/ "file into a buffer to enable support for ungetc, which is a dependency "
 		                         /**/ /**/ "for ?#readline. If the character could be returned, ?t is returned. "
-		                         /**/ /**/ "Otherwise ?f is"
+		                         /**/ /**/ "Otherwise ?f is is returned."
 		                         "&"
 		                         /**/ "${operator putc(ch: int): bool}|"
 		                         /**/ "Write a single byte to the stream (Usually the same as ${operator write"

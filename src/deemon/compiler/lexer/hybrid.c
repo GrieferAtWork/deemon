@@ -311,7 +311,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 					goto err_r;
 			}
 			/* Wrap the result as a single sequence. */
-			new_elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+			new_elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 			if unlikely(!new_elemv)
 				goto err_r;
 			new_elemv[0] = result; /* Inherit reference. */
@@ -524,9 +524,9 @@ parse_remainder_after_statement:
 			if (remainder->a_type == AST_MULTIPLE &&
 			    remainder->a_flag == AST_FMULTIPLE_KEEPLAST &&
 			    remainder->a_scope == current_scope) {
-				new_elemv = (DREF struct ast **)Dee_Realloc(remainder->a_multiple.m_astv,
-				                                            (remainder->a_multiple.m_astc + 1) *
-				                                            sizeof(DREF struct ast *));
+				new_elemv = (DREF struct ast **)Dee_Reallocc(remainder->a_multiple.m_astv,
+				                                             remainder->a_multiple.m_astc + 1,
+				                                             sizeof(DREF struct ast *));
 				if unlikely(!new_elemv)
 					goto err_r_remainder;
 				memmoveupc(new_elemv + 1,
@@ -537,7 +537,7 @@ parse_remainder_after_statement:
 				new_elemv[0]                 = result; /* Inherit reference. */
 				++remainder->a_multiple.m_astc;
 			} else {
-				new_elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+				new_elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!new_elemv)
 					goto err_r_remainder;
 				new_elemv[0] = result;    /* Inherit reference. */

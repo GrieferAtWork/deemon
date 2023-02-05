@@ -160,7 +160,7 @@ ast_parse_del(unsigned int lookup_mode) {
 				goto done;
 			}
 		}
-		delv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+		delv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 		if unlikely(!delv)
 			goto err_r;
 		dela = 2, delc = 1;
@@ -173,9 +173,8 @@ ast_parse_del(unsigned int lookup_mode) {
 				DREF struct ast **new_delv;
 				size_t new_dela = dela * 2;
 do_realloc_delv:
-				new_delv = (DREF struct ast **)Dee_TryRealloc(delv,
-				                                              new_dela *
-				                                              sizeof(DREF struct ast *));
+				new_delv = (DREF struct ast **)Dee_TryReallocc(delv, new_dela,
+				                                               sizeof(DREF struct ast *));
 				if unlikely(!new_delv) {
 					if (new_dela != delc + 1) {
 						new_dela = delc + 1;
@@ -207,8 +206,8 @@ do_realloc_delv:
 		ASSERT(delc <= dela);
 		if (delc != dela) {
 			DREF struct ast **new_delv;
-			new_delv = (DREF struct ast **)Dee_TryRealloc(delv,
-			                                              delc * sizeof(DREF struct ast *));
+			new_delv = (DREF struct ast **)Dee_TryReallocc(delv, delc,
+			                                               sizeof(DREF struct ast *));
 			if likely(new_delv)
 				delv = new_delv;
 		}

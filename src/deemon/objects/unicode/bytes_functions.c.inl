@@ -5923,16 +5923,16 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	            /**/ "last segment containing the remaining characters and having a length of between "
 	            /**/ "$1 and @substring_length characters.\n"
 	            "This function is similar to ?#distribute, but instead of being given the "
-	            /**/ "length of sub-strings and figuring out their amount, this function takes "
-	            /**/ "the amount of sub-strings and figures out their lengths"),
+	            /**/ "amount of sub-strings and figuring out their lengths, this function takes "
+	            /**/ "the length of sub-strings and figures out their amount"),
 	TYPE_METHOD("distribute", &bytes_distribute,
 	            "(substring_count:?Dint)->?S?.\n"
 	            "Split @this ?. object into @substring_count similarly sized sub-strings, each with a "
 	            /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	            /**/ "sub-string containing all remaining characters.\n"
 	            "This function is similar to ?#segments, but instead of being given the "
-	            /**/ "amount of sub-strings and figuring out their lengths, this function takes "
-	            /**/ "the length of sub-strings and figures out their amount"),
+	            /**/ "length of sub-strings and figuring out their amount, this function takes "
+	            /**/ "the amount of sub-strings and figures out their lengths"),
 
 	/* Regex functions. */
 	TYPE_KWMETHOD("rematch", &bytes_rematch,

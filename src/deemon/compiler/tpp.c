@@ -115,7 +115,7 @@ DECL_END
 
 /* Redirect heap allocations to use deemon's general-purpose heap. */
 #define malloc(s)     Dee_TryMalloc(s)
-#define calloc(c, s)  Dee_TryCalloc((c) * (s))
+#define calloc(c, s)  Dee_TryCallocc(c, s)
 #define realloc(p, s) Dee_TryRealloc(p, s)
 #define free(p)       Dee_Free(p)
 #if !defined(alloca) && defined(Dee_Alloca)

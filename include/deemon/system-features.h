@@ -10236,7 +10236,8 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 DECL_BEGIN
 #undef strlen
 #define strlen dee_strlen
-LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t
+dee_strlen(char const *str) {
 	size_t result;
 	for (result = 0; str[result]; ++result)
 		;
@@ -10250,7 +10251,7 @@ DECL_END
 DECL_BEGIN
 #undef strchr
 #define strchr dee_strchr
-LOCAL WUNUSED NONNULL((1)) char *
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) char *
 dee_strchr(char const *haystack, int needle) {
 	for (;; ++haystack) {
 		char ch = *haystack;
@@ -10322,7 +10323,7 @@ DECL_END
 
 
 #define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \
-	LOCAL WUNUSED NONNULL((1)) rT *                       \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *             \
 	name(void const *__restrict p, Tneedle c, size_t n) { \
 		T const *hay_iter = (T const *)p;                 \
 		for (; n--; ++hay_iter) {                         \
@@ -10333,7 +10334,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name)  \
-	LOCAL WUNUSED NONNULL((1)) rT *                       \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *             \
 	name(void const *__restrict p, Tneedle c, size_t n) { \
 		T const *iter = (T const *)p + n;                 \
 		while (iter != (T const *)p) {                    \
@@ -10344,7 +10345,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_memcmpT(T, name)            \
-	LOCAL WUNUSED NONNULL((1, 2)) int                 \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int       \
 	name(void const *s1, void const *s2, size_t n) {  \
 		T const *p1 = (T const *)s1;                  \
 		T const *p2 = (T const *)s2;                  \
@@ -10358,7 +10359,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_strcmpT(T, unsignedT, name)        \
-	LOCAL WUNUSED NONNULL((1, 2)) int                        \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int              \
 	name(T const *s1, T const *s2) {                         \
 		T c1, c2;                                            \
 		do {                                                 \
@@ -10369,7 +10370,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_strncmpT(T, unsignedT, name)       \
-	LOCAL WUNUSED NONNULL((1, 2)) int                        \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int              \
 	name(T const *s1, T const *s2, size_t maxlen) {          \
 		T c1, c2;                                            \
 		do {                                                 \
@@ -10382,7 +10383,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_strcasecmpT(T, unsignedT, name)           \
-	LOCAL WUNUSED NONNULL((1, 2)) int                               \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int                     \
 	name(T const *s1, T const *s2) {                                \
 		T c1, c2;                                                   \
 		do {                                                        \
@@ -10395,7 +10396,7 @@ DECL_END
 	}
 
 #define _DeeSystem_DEFINE_strncasecmpT(T, unsignedT, name)          \
-	LOCAL WUNUSED NONNULL((1, 2)) int                               \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int                     \
 	name(T const *s1, T const *s2, size_t maxlen) {                 \
 		T c1, c2;                                                   \
 		do {                                                        \
@@ -10427,7 +10428,7 @@ DECL_END
 		return buf;                                                 \
 	}
 
-#define DeeSystem_DEFINE_memrchr(name) _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
+#define DeeSystem_DEFINE_memrchr(name)  _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
 #define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
 #define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t, uint32_t, uint32_t, name)
 #define DeeSystem_DEFINE_memrchrq(name) _DeeSystem_DEFINE_memrchrT(uint64_t, uint64_t, uint64_t, name)
@@ -10552,7 +10553,7 @@ DECL_END
 		return result;                                              \
 	}
 
-#define DeeSystem_DEFINE_XSTRLEN(name, T)       \
+#define _DeeSystem_DEFINE_strlenT(T, name)      \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t \
 	name(T const *__restrict str) {             \
 		size_t result;                          \
@@ -10562,7 +10563,7 @@ DECL_END
 	}
 
 #define DeeSystem_DEFINE_wcslen(name) \
-	DeeSystem_DEFINE_XSTRLEN(name, Dee_wchar_t)
+	_DeeSystem_DEFINE_strlenT(Dee_wchar_t, name)
 
 #define DeeSystem_DEFINE_rawmemchr(name)        \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void * \
@@ -10695,7 +10696,7 @@ DECL_END
 #define DeeSystem_DEFINE_memcasemem(name)                                               \
 	LOCAL ATTR_PURE WUNUSED void *                                                      \
 	name(void const *__restrict haystack, size_t haystack_len,                          \
-	                 void const *__restrict needle, size_t needle_len) {                \
+	     void const *__restrict needle, size_t needle_len) {                            \
 		void const *candidate;                                                          \
 		uint8_t marker1, marker2;                                                       \
 		if unlikely(!needle_len || needle_len > haystack_len)                           \

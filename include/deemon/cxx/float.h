@@ -23,11 +23,12 @@
 #include "api.h"
 
 #include "../float.h"
+#include "numeric.h"
 #include "object.h"
 
 DEE_CXX_BEGIN
 
-class float_: public Object {
+class float_: public Numeric {
 public:
 	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
 		return &DeeFloat_Type;
@@ -40,16 +41,12 @@ public:
 	}
 
 public:
-	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(float_, Object)
-	float_()
-	    : Object(inherit(DeeFloat_New(0.0))) {}
-	float_(float value)
-	    : Object(inherit(DeeFloat_New((double)value))) {}
-	float_(double value)
-	    : Object(inherit(DeeFloat_New(value))) {}
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(float_, Numeric)
+	float_(): Numeric(inherit(DeeFloat_New(0.0))) {}
+	float_(float value): Numeric(inherit(DeeFloat_New((double)value))) {}
+	float_(double value): Numeric(inherit(DeeFloat_New(value))) {}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-	float_(long double value)
-	    : Object(inherit(DeeFloat_New((double)value))) {}
+	float_(__LONGDOUBLE value): Numeric(inherit(DeeFloat_New((double)value))) {}
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #ifndef __OPTIMIZE_SIZE__
 	using Object::getval;
@@ -66,9 +63,9 @@ public:
 		return *this;
 	}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-	float_ const &getval(long double &value) const {
+	float_ const &getval(__LONGDOUBLE &value) const {
 		if likely(DeeFloat_CheckExact(this->ptr()))
-			value = (long double)DeeFloat_VALUE(this->ptr());
+			value = (__LONGDOUBLE)DeeFloat_VALUE(this->ptr());
 		else Object::getval(value);
 		return *this;
 	}
@@ -84,8 +81,8 @@ public:
 		return result;
 	}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-	WUNUSED long double asldouble() const {
-		long double result;
+	WUNUSED __LONGDOUBLE asldouble() const {
+		__LONGDOUBLE result;
 		getval(result);
 		return result;
 	}
@@ -101,8 +98,8 @@ public:
 		return result;
 	}
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-	explicit WUNUSED operator long double() const {
-		long double result;
+	explicit WUNUSED operator __LONGDOUBLE() const {
+		__LONGDOUBLE result;
 		getval(result);
 		return result;
 	}

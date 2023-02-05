@@ -360,8 +360,8 @@ uset_rehash(USet *__restrict self, int sizedir) {
 	}
 	ASSERT(self->s_used < new_mask);
 	ASSERT(self->s_used <= self->s_size);
-	new_vector = (struct uset_item *)Dee_TryCalloc((new_mask + 1) *
-	                                               sizeof(struct uset_item));
+	new_vector = (struct uset_item *)Dee_TryCallocc(new_mask + 1,
+	                                                sizeof(struct uset_item));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
@@ -592,8 +592,8 @@ again_hashset:
 		} else {
 			size_t i;
 			self->s_mask = src->s_mask;
-			self->s_elem = (struct uset_item *)Dee_TryCalloc((src->s_mask + 1) *
-			                                                 sizeof(struct uset_item));
+			self->s_elem = (struct uset_item *)Dee_TryCallocc(src->s_mask + 1,
+			                                                  sizeof(struct uset_item));
 			if unlikely(!self->s_elem) {
 				USet_LockEndRead(src);
 				if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
@@ -621,8 +621,8 @@ again_hashset:
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
 			self->s_mask = src->rs_mask;
-			self->s_elem = (struct uset_item *)Dee_Malloc((src->rs_mask + 1) *
-			                                              sizeof(struct uset_item));
+			self->s_elem = (struct uset_item *)Dee_Mallocc(src->rs_mask + 1,
+			                                               sizeof(struct uset_item));
 			if unlikely(!self->s_elem)
 				goto err;
 			Dee_XMovrefv((DeeObject **)self->s_elem,
@@ -643,8 +643,8 @@ again_hashset:
 			self->s_elem = (struct uset_item *)empty_set_items;
 		} else {
 			self->s_mask = src->rs_mask;
-			self->s_elem = (struct uset_item *)Dee_Calloc((src->rs_mask + 1) *
-			                                              sizeof(struct uset_item));
+			self->s_elem = (struct uset_item *)Dee_Callocc(src->rs_mask + 1,
+			                                               sizeof(struct uset_item));
 			if unlikely(!self->s_elem)
 				goto err;
 			for (i = 0; i <= src->rs_mask; ++i) {
@@ -671,11 +671,11 @@ again_hashset:
 				min_mask = (min_mask << 1) | 1;
 			/* Prefer using a mask of one greater level to improve performance. */
 			mask         = (min_mask << 1) | 1;
-			self->s_elem = (struct uset_item *)Dee_TryCalloc((mask + 1) * sizeof(struct uset_item));
+			self->s_elem = (struct uset_item *)Dee_TryCallocc(mask + 1, sizeof(struct uset_item));
 			if unlikely(!self->s_elem) {
 				/* Try one level less if that failed. */
 				mask         = min_mask;
-				self->s_elem = (struct uset_item *)Dee_Calloc((mask + 1) * sizeof(struct uset_item));
+				self->s_elem = (struct uset_item *)Dee_Callocc(mask + 1, sizeof(struct uset_item));
 				if unlikely(!self->s_elem)
 					goto err;
 			}
@@ -793,8 +793,8 @@ again:
 	self->s_size = other->s_size;
 	self->s_used = other->s_used;
 	if ((self->s_elem = other->s_elem) != empty_set_items) {
-		self->s_elem = (struct uset_item *)Dee_TryMalloc((other->s_mask + 1) *
-		                                                 sizeof(struct uset_item));
+		self->s_elem = (struct uset_item *)Dee_TryMallocc(other->s_mask + 1,
+		                                                  sizeof(struct uset_item));
 		if unlikely(!self->s_elem) {
 			USet_LockEndRead(other);
 			if (Dee_CollectMemory((self->s_mask + 1) * sizeof(struct uset_item)))
@@ -833,9 +833,8 @@ uset_deepload(USet *__restrict self) {
 		if (item_count <= ols_item_count)
 			break;
 		USet_LockEndRead(self);
-		new_items = (DREF DeeObject **)Dee_Realloc(items,
-		                                           item_count *
-		                                           sizeof(DREF DeeObject *));
+		new_items = (DREF DeeObject **)Dee_Reallocc(items, item_count,
+		                                            sizeof(DREF DeeObject *));
 		if unlikely(!new_items)
 			goto err_items;
 		ols_item_count = item_count;
@@ -862,7 +861,7 @@ uset_deepload(USet *__restrict self) {
 	new_mask = 1;
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
-	new_map = (struct uset_item *)Dee_Calloc((new_mask + 1) * sizeof(struct uset_item));
+	new_map = (struct uset_item *)Dee_Callocc(new_mask + 1, sizeof(struct uset_item));
 	if unlikely(!new_map)
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */

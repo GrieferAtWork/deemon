@@ -46,7 +46,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 	if unlikely(!item)
 		goto err;
 	elema = 1, elemc = 0;
-	elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+	elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 	if unlikely(!elemv) {
 		ast_decref(item);
 		goto err;
@@ -107,9 +107,8 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			size_t new_elema = elema * 2;
 			ASSERT(new_elema != 0);
 do_realloc_dict:
-			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
-			                                               (new_elema * 2) *
-			                                               sizeof(DREF struct ast *));
+			new_elemv = (DREF struct ast **)Dee_TryReallocc(elemv, new_elema * 2,
+			                                                sizeof(DREF struct ast *));
 			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
@@ -128,9 +127,8 @@ do_realloc_dict:
 	}
 	if (elemc != elema) {
 		DREF struct ast **new_elemv;
-		new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
-		                                               (elemc * 2) *
-		                                               sizeof(DREF struct ast *));
+		new_elemv = (DREF struct ast **)Dee_TryReallocc(elemv, elemc * 2,
+		                                                sizeof(DREF struct ast *));
 		if likely(new_elemv)
 			elemv = new_elemv;
 	}
@@ -160,7 +158,7 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
 	DREF struct ast *result;
 	DREF struct ast **elemv;
 	size_t elema = 1, elemc = 1;
-	elemv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+	elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 	if unlikely(!elemv)
 		goto err;
 	ast_incref(initial_item);
@@ -196,9 +194,8 @@ parse_list_item:
 			size_t new_elema = elema * 2;
 			ASSERT(new_elema != 0);
 do_realloc_list:
-			new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv,
-			                                               new_elema *
-			                                               sizeof(DREF struct ast *));
+			new_elemv = (DREF struct ast **)Dee_TryReallocc(elemv, new_elema,
+			                                                sizeof(DREF struct ast *));
 			if unlikely(!new_elemv) {
 				if (new_elema != elemc + 1) {
 					new_elema = elemc + 1;
@@ -215,8 +212,8 @@ do_realloc_list:
 	}
 	if (elemc != elema) {
 		DREF struct ast **new_elemv;
-		new_elemv = (DREF struct ast **)Dee_TryRealloc(elemv, elemc *
-		                                                      sizeof(DREF struct ast *));
+		new_elemv = (DREF struct ast **)Dee_TryReallocc(elemv, elemc,
+		                                                sizeof(DREF struct ast *));
 		if likely(new_elemv)
 			elemv = new_elemv;
 	}

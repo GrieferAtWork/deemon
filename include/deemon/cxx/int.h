@@ -24,11 +24,12 @@
 
 #include "../format.h" /* DEE_PCK* */
 #include "../int.h"
+#include "numeric.h"
 #include "object.h"
 
 DEE_CXX_BEGIN
 
-class int_: public Object {
+class int_: public Numeric {
 public:
 	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
 		return &DeeInt_Type;
@@ -41,23 +42,23 @@ public:
 	}
 
 public:
-	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(int_, Object)
-	int_() DEE_CXX_NOTHROW: Object(nonnull((DeeObject *)&DeeInt_Zero)) {}
-	int_(char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewChar(value))) {}
-	int_(signed char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewSChar(value))) {}
-	int_(unsigned char value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUChar(value))) {}
-	int_(short value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewShort(value))) {}
-	int_(unsigned short value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUShort(value))) {}
-	int_(int value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewInt(value))) {}
-	int_(unsigned int value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewUInt(value))) {}
-	int_(long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewLong(value))) {}
-	int_(unsigned long value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewULong(value))) {}
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(int_, Numeric)
+	int_() DEE_CXX_NOTHROW: Numeric(nonnull((DeeObject *)&DeeInt_Zero)) {}
+	int_(char value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewChar(value))) {}
+	int_(signed char value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewSChar(value))) {}
+	int_(unsigned char value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewUChar(value))) {}
+	int_(short value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewShort(value))) {}
+	int_(unsigned short value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewUShort(value))) {}
+	int_(int value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewInt(value))) {}
+	int_(unsigned int value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewUInt(value))) {}
+	int_(long value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewLong(value))) {}
+	int_(unsigned long value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewULong(value))) {}
 #ifdef __COMPILER_HAVE_LONGLONG
-	int_(__LONGLONG value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewLLong(value))) {}
-	int_(__ULONGLONG value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewULLong(value))) {}
+	int_(__LONGLONG value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewLLong(value))) {}
+	int_(__ULONGLONG value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewULLong(value))) {}
 #endif /* __COMPILER_HAVE_LONGLONG */
-	int_(Dee_int128_t value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewS128(value))) {}
-	int_(Dee_uint128_t value) DEE_CXX_NOTHROW: Object(inherit(DeeInt_NewU128(value))) {}
+	int_(Dee_int128_t value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewS128(value))) {}
+	int_(Dee_uint128_t value) DEE_CXX_NOTHROW: Numeric(inherit(DeeInt_NewU128(value))) {}
 
 #ifndef __OPTIMIZE_SIZE__
 	/* Optimized conversion operators (based on `DeeInt_AsS32()' and friends) */
@@ -422,21 +423,6 @@ DEFINE_ELEM_FIND_FUNCTION(deemon::Sequence<deemon::int_>, brange)
 
 
 #ifdef GUARD_DEEMON_CXX_STRING_H
-inline WUNUSED deemon::int_ string::asnumber() const {
-	return inherit(DeeObject_CallAttrString(this->ptr(), "asnumber", 0, NULL));
-}
-inline WUNUSED deemon::int_ string::asnumber(size_t index) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ, index));
-}
-inline WUNUSED deemon::int_ string::asnumber(size_t index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", DEE_PCKuSIZ "d", index, defl));
-}
-inline WUNUSED deemon::int_ string::asnumber(DeeObject *__restrict index) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "o", index));
-}
-inline WUNUSED deemon::int_ string::asnumber(DeeObject *__restrict index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asnumber", "od", index, defl));
-}
 inline WUNUSED deemon::int_ string::asdigit() const {
 	return inherit(DeeObject_CallAttrString(this->ptr(), "asdigit", 0, NULL));
 }
@@ -452,20 +438,20 @@ inline WUNUSED deemon::int_ string::asdigit(DeeObject *__restrict index) const {
 inline WUNUSED deemon::int_ string::asdigit(DeeObject *__restrict index, int defl) const {
 	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdigit", "od", index, defl));
 }
-inline WUNUSED deemon::int_ string::asdecimal() const {
-	return inherit(DeeObject_CallAttrString(this->ptr(), "asdecimal", 0, NULL));
+inline WUNUSED deemon::int_ string::asxdigit() const {
+	return inherit(DeeObject_CallAttrString(this->ptr(), "asxdigit", 0, NULL));
 }
-inline WUNUSED deemon::int_ string::asdecimal(size_t index) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ, index));
+inline WUNUSED deemon::int_ string::asxdigit(size_t index) const {
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", DEE_PCKuSIZ, index));
 }
-inline WUNUSED deemon::int_ string::asdecimal(size_t index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", DEE_PCKuSIZ "d", index, defl));
+inline WUNUSED deemon::int_ string::asxdigit(size_t index, int defl) const {
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", DEE_PCKuSIZ "d", index, defl));
 }
-inline WUNUSED deemon::int_ string::asdecimal(DeeObject *__restrict index) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "o", index));
+inline WUNUSED deemon::int_ string::asxdigit(DeeObject *__restrict index) const {
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", "o", index));
 }
-inline WUNUSED deemon::int_ string::asdecimal(DeeObject *__restrict index, int defl) const {
-	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asdecimal", "od", index, defl));
+inline WUNUSED deemon::int_ string::asxdigit(DeeObject *__restrict index, int defl) const {
+	return inherit(DeeObject_CallAttrStringf(this->ptr(), "asxdigit", "od", index, defl));
 }
 #define DEFINE_FIND_FUNCTION(Treturn, name, needle)                                                                     \
 	inline WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle) const {                               \

@@ -192,7 +192,7 @@ err_ff_tt_assumes:
 			 *       `{ <l_cond>; __stack local _temp = <eval_branch>;
 			 *          <everything_after_label_in(other_branch)>; _temp; }'
 			 *       instead, if `other_branch' contains a `label'. */
-			elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+			elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 			if unlikely(!elemv)
 				goto err;
 			elemv[0] = self->a_conditional.c_cond;
@@ -231,7 +231,7 @@ after_constant_condition:
 					/* Optimize: `!!foo() ? : true' --> `({ foo(); true; })' */
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_ff);
-					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 					if unlikely(!elemv)
 						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
@@ -269,7 +269,7 @@ after_constant_condition:
 					/* Optimize: `!!foo() ? false : ' --> `({ foo(); false; })' */
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_tt);
-					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 					if unlikely(!elemv)
 						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
@@ -322,7 +322,7 @@ apply_bool_matrix_transformation:
 					/* cond ? true : true  --> ({ cond; true; }) */
 					DREF struct ast **elemv;
 optimize_conditional_bool_predictable_inherit_multiple:
-					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 					if unlikely(!elemv)
 						goto err;
 					elemv[0] = self->a_conditional.c_cond; /* Inherit reference. */
@@ -440,7 +440,7 @@ optimize_conditional_bool_predictable_inherit_multiple:
 				/* The true and false branches are identical. */
 				DREF struct ast **elemv;
 if_statement_branches_identical:
-				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+				elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!elemv)
 					goto err;
 				ast_fini_contents(tt);

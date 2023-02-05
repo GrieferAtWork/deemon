@@ -260,7 +260,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 	if unlikely(new_mask == 1)
 		new_mask = 64 - 1; /* Start out bigger than 2. */
 	ASSERT(self->t_deepassoc.da_used < new_mask);
-	new_vector = (struct deep_assoc_entry *)Dee_TryCalloc((new_mask + 1) * sizeof(struct deep_assoc_entry));
+	new_vector = (struct deep_assoc_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct deep_assoc_entry));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->t_deepassoc.da_list == empty_deep_assoc) == (self->t_deepassoc.da_used == 0));
@@ -4136,8 +4136,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 		if (!code->co_localc) {
 			vector->cf_frame = NULL;
 		} else {
-			new_vector = (DREF DeeObject **)Dee_Malloc(code->co_localc *
-			                                           sizeof(DREF DeeObject *));
+			new_vector = (DREF DeeObject **)Dee_Mallocc(code->co_localc,
+			                                            sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
 			vector->cf_frame = (DREF DeeObject **)memcpyc(new_vector, vector->cf_frame,
@@ -4146,8 +4146,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 		if (!vector->cf_argc) {
 			vector->cf_argv = NULL;
 		} else {
-			new_vector = (DREF DeeObject **)Dee_Malloc(vector->cf_argc *
-			                                           sizeof(DREF DeeObject *));
+			new_vector = (DREF DeeObject **)Dee_Mallocc(vector->cf_argc,
+			                                            sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
 			vector->cf_argv = (DREF DeeObject **)memcpyc(new_vector, vector->cf_argv,

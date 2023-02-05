@@ -336,7 +336,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 		struct symbol *dots = new_unnamed_symbol();
 		if unlikely(!dots)
 			goto err_compiler;
-		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 		if unlikely(!current_basescope->bs_argv)
 			goto err_compiler;
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
@@ -555,7 +555,7 @@ PRIVATE bool DCALL rehash_file_modules(void) {
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
-	new_vector = (struct module_object_list *)Dee_TryCalloc(new_size * sizeof(struct module_object_list));
+	new_vector = (struct module_object_list *)Dee_TryCallocc(new_size, sizeof(struct module_object_list));
 	if unlikely(!new_vector) {
 		if (modules_a != 0)
 			return true; /* Don't actually need to rehash. */
@@ -599,7 +599,7 @@ PRIVATE bool DCALL rehash_glob_modules(void) {
 	if unlikely(!new_size)
 		new_size = 4;
 do_alloc_new_vector:
-	new_vector = (struct module_object_list *)Dee_TryCalloc(new_size * sizeof(struct module_object_list));
+	new_vector = (struct module_object_list *)Dee_TryCallocc(new_size, sizeof(struct module_object_list));
 	if unlikely(!new_vector) {
 		if (modules_glob_a != 0)
 			return true; /* Don't actually need to rehash. */
@@ -1328,13 +1328,13 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
 #if !defined(CONFIG_NO_DEC) && !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX_C((size_t)5, (size_t)SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + MAX_C((size_t)5, (size_t)SHLEN) + 1, sizeof(char));
 #elif !defined(CONFIG_NO_DEC)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5 + 1) * sizeof(char));
+	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + 5 + 1, sizeof(char));
 #elif !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + MAX_C((size_t)4, (size_t)SHLEN) + 1, sizeof(char));
 #else /* ... */
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 4 + 1) * sizeof(char));
+	buf = (char *)Dee_AMallocc(module_pathsize + 1 + module_namesize + 4 + 1, sizeof(char));
 #endif /* !... */
 	if unlikely(!buf)
 		goto err;
@@ -2504,8 +2504,8 @@ PRIVATE WUNUSED int DCALL module_rehash_globals(void) {
 	size_t i, new_mask = (current_rootscope->rs_bucketm << 1) | 1;
 	struct module_symbol *new_vec;
 	ASSERT(!(new_mask & (new_mask + 1)));
-	new_vec = (struct module_symbol *)Dee_Calloc((new_mask + 1) *
-	                                             sizeof(struct module_symbol));
+	new_vec = (struct module_symbol *)Dee_Callocc(new_mask + 1,
+	                                              sizeof(struct module_symbol));
 	if unlikely(!new_vec)
 		goto err;
 	for (i = 0; i <= current_rootscope->rs_bucketm; ++i) {
@@ -2580,14 +2580,14 @@ module_import_symbol(DeeModuleObject *__restrict self,
 			if (!new_globala)
 				new_globala = 2;
 			ASSERT(new_globala > self->mo_globalc);
-			new_globalv = (DREF DeeObject **)Dee_TryRealloc(self->mo_globalv,
-			                                                new_globala *
-			                                                sizeof(DREF DeeObject *));
+			new_globalv = (DREF DeeObject **)Dee_TryReallocc(self->mo_globalv,
+			                                                 new_globala,
+			                                                 sizeof(DREF DeeObject *));
 			if unlikely(!new_globalv) {
 				new_globala = self->mo_globalc + 1;
-				new_globalv = (DREF DeeObject **)Dee_Realloc(self->mo_globalv,
-				                                             new_globala *
-				                                             sizeof(DREF DeeObject *));
+				new_globalv = (DREF DeeObject **)Dee_Reallocc(self->mo_globalv,
+				                                              new_globala,
+				                                              sizeof(DREF DeeObject *));
 				if unlikely(!new_globalv)
 					goto err;
 			}
@@ -2818,7 +2818,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 		struct symbol *dots = new_unnamed_symbol();
 		if unlikely(!dots)
 			goto err_r_compiler;
-		current_basescope->bs_argv = (struct symbol **)Dee_Malloc(1 * sizeof(struct symbol *));
+		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 		if unlikely(!current_basescope->bs_argv)
 			goto err_r_compiler;
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
@@ -2931,23 +2931,23 @@ pack_code_in_return:
 	/* Finally, put together the module itself. */
 	if (current_rootscope->rs_importa != current_rootscope->rs_importc) {
 		DREF DeeModuleObject **new_vector;
-		new_vector = (DREF DeeModuleObject **)Dee_TryRealloc(current_rootscope->rs_importv,
-		                                                     current_rootscope->rs_importc *
-		                                                     sizeof(DREF DeeModuleObject *));
+		new_vector = (DREF DeeModuleObject **)Dee_TryReallocc(current_rootscope->rs_importv,
+		                                                      current_rootscope->rs_importc,
+		                                                      sizeof(DREF DeeModuleObject *));
 		if likely(new_vector)
 			current_rootscope->rs_importv = new_vector;
 	}
 	if (!result->mo_globalv) {
-		result->mo_globalv = (DREF DeeObject **)Dee_Calloc(current_rootscope->rs_globalc *
-		                                                   sizeof(DREF DeeObject *));
+		result->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
+		                                                    sizeof(DREF DeeObject *));
 		if unlikely(!result->mo_globalv)
 			goto err_r_compiler;
 	} else {
 		if (current_rootscope->rs_globalc > result_globala) {
 			DREF DeeObject **final_globalv;
-			final_globalv = (DREF DeeObject **)Dee_Realloc(result->mo_globalv,
-			                                               current_rootscope->rs_globalc *
-			                                               sizeof(DREF DeeObject *));
+			final_globalv = (DREF DeeObject **)Dee_Reallocc(result->mo_globalv,
+			                                                current_rootscope->rs_globalc,
+			                                                sizeof(DREF DeeObject *));
 			if unlikely(!final_globalv)
 				goto err_r_compiler;
 			result->mo_globalv = final_globalv;

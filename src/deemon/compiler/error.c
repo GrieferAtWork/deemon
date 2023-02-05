@@ -159,9 +159,8 @@ PRIVATE int DCALL resize_errors(void) {
 	if (!new_alloc)
 		new_alloc = 2;
 do_realloc_errors:
-	new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
-	                                                            new_alloc *
-	                                                            sizeof(DREF DeeCompilerErrorObject *));
+	new_vector = (DREF DeeCompilerErrorObject **)Dee_TryReallocc(current_parser_errors.pe_errorv, new_alloc,
+	                                                             sizeof(DREF DeeCompilerErrorObject *));
 	if unlikely(!new_vector) {
 		if (new_alloc != current_parser_errors.pe_errorc + 1) {
 			new_alloc = current_parser_errors.pe_errorc + 1;
@@ -331,9 +330,8 @@ handle_master:
 				if (new_count > current_parser_errors.pe_errora) {
 					/* Must allocate more vector space. */
 					DREF DeeCompilerErrorObject **new_vector;
-					new_vector = (DREF DeeCompilerErrorObject **)Dee_Realloc(current_parser_errors.pe_errorv,
-					                                                         new_count *
-					                                                         sizeof(DREF DeeCompilerErrorObject *));
+					new_vector = (DREF DeeCompilerErrorObject **)Dee_Reallocc(current_parser_errors.pe_errorv, new_count,
+					                                                          sizeof(DREF DeeCompilerErrorObject *));
 					if unlikely(!new_vector)
 						goto err;
 					current_parser_errors.pe_errora = new_count;
@@ -355,9 +353,9 @@ handle_master:
 		if (current_parser_errors.pe_errora != count) {
 			DREF DeeCompilerErrorObject **new_vector;
 			/* Truncate unused entries. */
-			new_vector = (DREF DeeCompilerErrorObject **)Dee_TryRealloc(current_parser_errors.pe_errorv,
-			                                                            current_parser_errors.pe_errorc *
-			                                                            sizeof(DREF DeeCompilerErrorObject *));
+			new_vector = (DREF DeeCompilerErrorObject **)Dee_TryReallocc(current_parser_errors.pe_errorv,
+			                                                             current_parser_errors.pe_errorc,
+			                                                             sizeof(DREF DeeCompilerErrorObject *));
 			if likely(new_vector) {
 				current_parser_errors.pe_errorv = new_vector;
 				current_parser_errors.pe_errora = current_parser_errors.pe_errorc;

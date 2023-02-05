@@ -116,7 +116,7 @@ PRIVATE WUNUSED bool FCALL symtab_rehash(void) {
 		new_size = 1;
 	new_size *= 2;
 rehash_realloc:
-	new_map = (struct asm_sym **)Dee_TryCalloc(new_size * sizeof(struct asm_sym *));
+	new_map = (struct asm_sym **)Dee_TryCallocc(new_size, sizeof(struct asm_sym *));
 	if unlikely(!new_map) {
 		if (new_size != 1) {
 			new_size = 1;
@@ -2057,7 +2057,7 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 		goto done;
 	/* Try to cache the mnemonic in the keyword. */
 #undef calloc
-#define calloc(n, s) Dee_Calloc((n) * (s))
+#define calloc(n, s) Dee_Callocc(n, s)
 	if (TPPKeyword_MAKERARE(name) &&
 	    !name->k_rare->kr_user)
 		name->k_rare->kr_user = (void *)result;

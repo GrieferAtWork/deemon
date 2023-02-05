@@ -49,7 +49,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 		    (func->a_operator.o_op1 == NULL)) {
 			/* Invoke the annotation function using the current input:
 			 * >> input = aa_func(input); */
-			expr_v = (struct ast **)Dee_Malloc(1 * sizeof(struct ast *));
+			expr_v = (struct ast **)Dee_Mallocc(1, sizeof(struct ast *));
 			if unlikely(!expr_v)
 				goto err_input;
 			expr_v[0] = input; /* Inherit reference. */
@@ -75,9 +75,9 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 			{
 				if (args->a_type == AST_MULTIPLE &&
 				    args->a_flag == AST_FMULTIPLE_TUPLE) {
-					expr_v = (DREF struct ast **)Dee_Realloc(args->a_multiple.m_astv,
-					                                         (args->a_multiple.m_astc + 1) *
-					                                         sizeof(DREF struct ast *));
+					expr_v = (DREF struct ast **)Dee_Reallocc(args->a_multiple.m_astv,
+					                                          args->a_multiple.m_astc + 1,
+					                                          sizeof(DREF struct ast *));
 					if unlikely(!expr_v)
 						goto err_input;
 					memmoveupc(expr_v + 1,
@@ -94,7 +94,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 			merge = ast_setddi(ast_expand(args), &func->a_ddi);
 			if unlikely(!merge)
 				goto err_input;
-			expr_v = (struct ast **)Dee_Malloc(2 * sizeof(struct ast *));
+			expr_v = (struct ast **)Dee_Mallocc(2, sizeof(struct ast *));
 			if unlikely(!expr_v)
 				goto err_input_merge;
 			expr_v[0] = input; /* Inherit reference. */
@@ -188,14 +188,12 @@ INTERN WUNUSED NONNULL((1)) int
 		size_t new_alloc = current_tags.at_anno.an_annoa * 2;
 		if (!new_alloc)
 			new_alloc = 2;
-		new_anno = (struct ast_annotation *)Dee_TryRealloc(current_tags.at_anno.an_annov,
-		                                                   new_alloc *
-		                                                   sizeof(struct ast_annotation));
+		new_anno = (struct ast_annotation *)Dee_TryReallocc(current_tags.at_anno.an_annov, new_alloc,
+		                                                    sizeof(struct ast_annotation));
 		if unlikely(!new_anno) {
 			new_alloc = current_tags.at_anno.an_annoc + 1;
-			new_anno = (struct ast_annotation *)Dee_Realloc(current_tags.at_anno.an_annov,
-			                                                new_alloc *
-			                                                sizeof(struct ast_annotation));
+			new_anno = (struct ast_annotation *)Dee_Reallocc(current_tags.at_anno.an_annov, new_alloc,
+			                                                 sizeof(struct ast_annotation));
 			if unlikely(!new_anno)
 				goto err;
 		}

@@ -210,12 +210,12 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 #if __VA_SIZE >= 2
 #define DEE_PCKu16 "u"
 #define DEE_PCKd16 "d"
-#elif __SIZEOF_LONG__ == 2
-#define DEE_PCKu16 "lu"
-#define DEE_PCKd16 "ld"
 #elif __SIZEOF_SHORT__ == 2
 #define DEE_PCKu16 "hu"
 #define DEE_PCKd16 "hd"
+#elif __SIZEOF_LONG__ == 2
+#define DEE_PCKu16 "lu"
+#define DEE_PCKd16 "ld"
 #elif __SIZEOF_POINTER__ == 2
 #define DEE_PCKu16 "Iu"
 #define DEE_PCKd16 "Id"
@@ -257,12 +257,12 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 #elif __SIZEOF_LONG__ == 8
 #define DEE_PCKu64 "lu"
 #define DEE_PCKd64 "ld"
-#elif __SIZEOF_SHORT__ == 8
-#define DEE_PCKu64 "hu"
-#define DEE_PCKd64 "hd"
 #elif __SIZEOF_POINTER__ == 8
 #define DEE_PCKu64 "Iu"
 #define DEE_PCKd64 "Id"
+#elif __SIZEOF_SHORT__ == 8
+#define DEE_PCKu64 "hu"
+#define DEE_PCKd64 "hd"
 #elif __SIZEOF_CHAR__ == 8
 #define DEE_PCKu64 "hhu"
 #define DEE_PCKd64 "hhd"

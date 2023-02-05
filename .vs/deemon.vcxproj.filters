@@ -390,6 +390,9 @@
     <ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
       <Filter>src\deemon\objects\unicode</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\numeric.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

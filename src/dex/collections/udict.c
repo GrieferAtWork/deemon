@@ -453,8 +453,8 @@ again:
 	self->d_used = other->d_used;
 	self->d_size = other->d_size;
 	if ((self->d_elem = other->d_elem) != empty_dict_items) {
-		self->d_elem = (struct udict_item *)Dee_TryMalloc((other->d_mask + 1) *
-		                                                  sizeof(struct udict_item));
+		self->d_elem = (struct udict_item *)Dee_TryMallocc(other->d_mask + 1,
+		                                                   sizeof(struct udict_item));
 		if unlikely(!self->d_elem) {
 			UDict_LockEndRead(other);
 			if (Dee_CollectMemory((other->d_mask + 1) *
@@ -511,7 +511,7 @@ udict_deepload(UDict *__restrict self) {
 		if (item_count <= old_item_count)
 			break;
 		UDict_LockEndRead(self);
-		new_items = (Entry *)Dee_Realloc(items, item_count * sizeof(Entry));
+		new_items = (Entry *)Dee_Reallocc(items, item_count, sizeof(Entry));
 		if unlikely(!new_items)
 			goto err_items;
 		old_item_count = item_count;
@@ -542,7 +542,7 @@ udict_deepload(UDict *__restrict self) {
 	new_mask = 1;
 	while ((item_count & new_mask) != item_count)
 		new_mask = (new_mask << 1) | 1;
-	new_map = (struct udict_item *)Dee_Calloc((new_mask + 1) * sizeof(struct udict_item));
+	new_map = (struct udict_item *)Dee_Callocc(new_mask + 1, sizeof(struct udict_item));
 	if unlikely(!new_map)
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */
@@ -706,7 +706,7 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 	}
 	ASSERT(self->d_used < new_mask);
 	ASSERT(self->d_used <= self->d_size);
-	new_vector = (struct udict_item *)Dee_TryCalloc((new_mask + 1) * sizeof(struct udict_item));
+	new_vector = (struct udict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct udict_item));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));

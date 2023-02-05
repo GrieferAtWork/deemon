@@ -166,8 +166,8 @@ ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 			if (!new_expra)
 				new_expra = 8;
 do_realloc:
-			new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
-			                                                      sizeof(DREF struct ast *));
+			new_exprv = (DREF struct ast **)Dee_TryReallocc(exprv, new_expra,
+			                                                sizeof(DREF struct ast *));
 			if unlikely(!new_exprv) {
 				if (new_expra != exprc + 1) {
 					new_expra = exprc + 1;
@@ -191,7 +191,7 @@ do_realloc:
 	/* Truncate the expression buffer to what is actually being used. */
 	if (exprc != expra) {
 		DREF struct ast **new_exprv;
-		new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, exprc * sizeof(DREF struct ast *));
+		new_exprv = (DREF struct ast **)Dee_TryReallocc(exprv, exprc, sizeof(DREF struct ast *));
 		if (new_exprv)
 			exprv = new_exprv;
 	}
@@ -564,7 +564,7 @@ do_else_branch:
 		ast_xdecref(iter_or_next);
 		ast_xdecref(elem_or_cond);
 		if (init) {
-			DREF struct ast **exprv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+			DREF struct ast **exprv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 			if unlikely(!exprv) {
 err_loop_init:
 				ast_decref(init);
@@ -964,9 +964,9 @@ handle_post_label:
 				    result->a_flag == AST_FMULTIPLE_KEEPLAST) {
 					/* Prepend the label AST before all the others in the MULTIPLE-ast. */
 					DREF struct ast **elemv;
-					elemv = (DREF struct ast **)Dee_Realloc(result->a_multiple.m_astv,
-					                                        (result->a_multiple.m_astc + 1) *
-					                                        sizeof(DREF struct ast *));
+					elemv = (DREF struct ast **)Dee_Reallocc(result->a_multiple.m_astv,
+					                                         result->a_multiple.m_astc + 1,
+					                                         sizeof(DREF struct ast *));
 					if unlikely(!elemv)
 						goto err_label_ast;
 					memmoveupc(elemv + 1,
@@ -979,7 +979,7 @@ handle_post_label:
 				} else {
 					/* Create a new MULTIPLE-ast */
 					DREF struct ast **elemv;
-					elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 					if unlikely(!elemv) {
 err_label_ast:
 						ast_decref(label_ast);

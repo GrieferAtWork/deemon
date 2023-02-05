@@ -2240,8 +2240,10 @@ done_special:
 	}
 	result->s_refcnt = 1;
 	result->s_size = self->af_printer.ap_length;
-	result = (struct TPPString *)Dee_TryRealloc(result, offsetof(struct TPPString, s_text) +
-	                                                    (self->af_printer.ap_length + 1) * sizeof(char));
+	result = (struct TPPString *)Dee_TryRealloc(result,
+	                                            offsetof(struct TPPString, s_text) +
+	                                            (self->af_printer.ap_length + 1) *
+	                                            sizeof(char));
 	if unlikely(!result)
 		result = (struct TPPString *)self->af_printer.ap_string;
 	self->af_printer.ap_string = NULL;
@@ -2275,9 +2277,9 @@ ast_genasm_userasm(struct ast *__restrict self) {
 	/* Keep track of operands that must be popped during cleanup. */
 	if (self->a_assembly.as_num_o ||
 	    self->a_assembly.as_num_i) {
-		cleanup_actions = (struct cleanup_mode *)Dee_Calloc((self->a_assembly.as_num_o +
-		                                                     self->a_assembly.as_num_i) *
-		                                                    sizeof(struct cleanup_mode));
+		cleanup_actions = (struct cleanup_mode *)Dee_Callocc(self->a_assembly.as_num_o +
+		                                                     self->a_assembly.as_num_i,
+		                                                     sizeof(struct cleanup_mode));
 		if unlikely(!cleanup_actions)
 			goto err;
 	}
@@ -2287,8 +2289,8 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		DREF DeeStringObject **dst;
 		/* Setup the formatter for user-assembly text. */
 		formatter.af_ast     = self;
-		formatter.af_opreprv = (DREF DeeStringObject **)Dee_Calloc(self->a_assembly.as_opc *
-		                                                           sizeof(DREF DeeStringObject *));
+		formatter.af_opreprv = (DREF DeeStringObject **)Dee_Callocc(self->a_assembly.as_opc,
+		                                                            sizeof(DREF DeeStringObject *));
 		if unlikely(!formatter.af_opreprv)
 			goto err;
 		ascii_printer_init(&formatter.af_printer);

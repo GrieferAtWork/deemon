@@ -226,7 +226,7 @@ capi_strdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen),
 	                    goto err);
-	resptr = Dee_Malloc((len + 1) * sizeof(char));
+	resptr = Dee_Mallocc(len + 1, sizeof(char));
 	if unlikely(!resptr)
 		goto err;
 	CTYPES_FAULTPROTECT(memcpyc(resptr, str.pchar, len, sizeof(char)),
@@ -256,7 +256,7 @@ capi_trystrdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	CTYPES_FAULTPROTECT(len = strnlen(str.pchar, maxlen),
 	                    goto err);
-	resptr = Dee_TryMalloc((len + 1) * sizeof(char));
+	resptr = Dee_TryMallocc(len + 1, sizeof(char));
 	if likely(resptr) {
 		CTYPES_FAULTPROTECT({
 			*(char *)mempcpyc(resptr, str.pchar, len, sizeof(char)) = '\0';

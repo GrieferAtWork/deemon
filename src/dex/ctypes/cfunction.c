@@ -347,7 +347,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	} else if (!argc) {
 		argv_copy = NULL;
 	} else {
-		argv_copy = (DREF DeeSTypeObject **)Dee_Malloc(argc * sizeof(DREF DeeSTypeObject *));
+		argv_copy = (DREF DeeSTypeObject **)Dee_Mallocc(argc, sizeof(DREF DeeSTypeObject *));
 		if unlikely(!argv_copy)
 			goto err;
 #ifndef NDEBUG
@@ -391,7 +391,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	result->ft_ffi_return_type = stype_ffitype(return_type);
 	if unlikely(!result->ft_ffi_return_type)
 		goto err_argv_r_name;
-	result->ft_ffi_arg_type_v = (ffi_type **)Dee_Malloc(argc * sizeof(ffi_type *));
+	result->ft_ffi_arg_type_v = (ffi_type **)Dee_Mallocc(argc, sizeof(ffi_type *));
 	if unlikely(!result->ft_ffi_arg_type_v)
 		goto err_argv_r_name;
 	for (i = 0; i < argc; ++i) {
@@ -461,8 +461,8 @@ stype_cfunction_rehash(DeeSTypeObject *__restrict self,
 	struct cfunction_type_list *biter, *bend;
 	DeeCFunctionTypeObject *iter, *next;
 again:
-	new_map = (struct cfunction_type_list *)Dee_TryCalloc((new_mask + 1) *
-	                                                      sizeof(struct cfunction_type_list));
+	new_map = (struct cfunction_type_list *)Dee_TryCallocc(new_mask + 1,
+	                                                       sizeof(struct cfunction_type_list));
 	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_cfunction.sf_list && new_mask != 0) {

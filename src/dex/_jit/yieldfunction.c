@@ -105,8 +105,8 @@ jy_iter(JITYieldFunction *__restrict self) {
 	ASSERT(jf->jf_args.ot_prev.otp_tab == &jf->jf_refs);
 	memcpy(&result->ji_loc, &jf->jf_args, sizeof(JITObjectTable));
 	ASSERT(result->ji_loc.ot_prev.otp_tab != NULL);
-	result->ji_loc.ot_list = (struct jit_object_entry *)Dee_Malloc((result->ji_loc.ot_mask + 1) *
-	                                                               sizeof(struct jit_object_entry));
+	result->ji_loc.ot_list = (struct jit_object_entry *)Dee_Mallocc(result->ji_loc.ot_mask + 1,
+	                                                                sizeof(struct jit_object_entry));
 	if unlikely(!result->ji_loc.ot_list)
 		goto err_r;
 	memcpyc(result->ji_loc.ot_list, jf->jf_args.ot_list,

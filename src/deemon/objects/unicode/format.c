@@ -301,8 +301,8 @@ object_vector_append(struct object_vector *__restrict self,
 		size_t new_count = self->ov_siz * 2;
 		if (!new_count)
 			new_count = 4;
-		new_vector = (DREF DeeObject **)Dee_Realloc(self->ov_vec, new_count *
-		                                                          sizeof(DREF DeeObject *));
+		new_vector = (DREF DeeObject **)Dee_Reallocc(self->ov_vec, new_count,
+		                                             sizeof(DREF DeeObject *));
 		if unlikely(!new_vector) {
 			/* Always inherit a reference. */
 			Dee_Decref(ob);

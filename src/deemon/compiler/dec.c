@@ -382,9 +382,8 @@ INTERN WUNUSED struct dec_rel *DCALL dec_newrel(void) {
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv,
-		                                          new_alloc *
-		                                          sizeof(struct dec_rel));
+		result = (struct dec_rel *)Dee_TryReallocc(sec->ds_relv, new_alloc,
+		                                           sizeof(struct dec_rel));
 		if unlikely(!result) {
 			if (new_alloc != sec->ds_relc + 1) {
 				new_alloc = sec->ds_relc + 1;

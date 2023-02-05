@@ -208,7 +208,7 @@ again:
 				ast_value = !ast_value;
 			if (ast_has_sideeffects(self->a_bool)) {
 				/* Replace this branch with `{ ...; true/false; }' */
-				elemv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
+				elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!elemv)
 					goto err;
 				elemv[0] = self->a_bool;

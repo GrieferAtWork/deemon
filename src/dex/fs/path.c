@@ -1022,7 +1022,7 @@ print_env:
 			} else {
 				/* Must use a temporary string. */
 				size_t length = (size_t)(name_end - name_start);
-				char *temp    = (char *)Dee_Malloc((length + 1) * sizeof(char));
+				char *temp    = (char *)Dee_Mallocc(length + 1, sizeof(char));
 				if unlikely(!temp)
 					goto err;
 				*(char *)mempcpyc(temp, name_start, length, sizeof(char)) = '\0';

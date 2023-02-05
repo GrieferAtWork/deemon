@@ -48,8 +48,8 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
 	struct jit_object_entry *new_table;
 	ASSERT(new_mask >= self->jf_args.ot_used);
 	ASSERT(new_mask != 0);
-	new_table = (struct jit_object_entry *)Dee_TryCalloc((new_mask + 1) *
-	                                                     sizeof(struct jit_object_entry));
+	new_table = (struct jit_object_entry *)Dee_TryCallocc(new_mask + 1,
+	                                                      sizeof(struct jit_object_entry));
 	if unlikely(!new_table)
 		return false;
 	if (self->jf_args.ot_list != jit_empty_object_list) {
@@ -288,7 +288,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 			                                    COMPILER_STRLEN(JIT_RTSYM_THIS));
 			if unlikely(!argent)
 				goto err_r;
-			result->jf_argv = (size_t *)Dee_Malloc(1 * sizeof(size_t));
+			result->jf_argv = (size_t *)Dee_Mallocc(1, sizeof(size_t));
 			if unlikely(!result->jf_argv)
 				goto err_r;
 			result->jf_argv[0]  = (size_t)(argent - result->jf_args.ot_list);
@@ -425,12 +425,12 @@ err_no_keyword_for_argument:
 									goto err_r;
 								}
 							}
-							new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
-							                                    new_arga * sizeof(size_t));
+							new_argv = (size_t *)Dee_TryReallocc(result->jf_argv,
+							                                     new_arga, sizeof(size_t));
 							if unlikely(!new_argv) {
 								new_arga = result->jf_argc_max + 1;
-								new_argv = (size_t *)Dee_Realloc(result->jf_argv,
-								                                 new_arga * sizeof(size_t));
+								new_argv = (size_t *)Dee_Reallocc(result->jf_argv,
+								                                  new_arga, sizeof(size_t));
 								if unlikely(!new_argv)
 									goto err_r;
 							}
@@ -457,8 +457,9 @@ err_no_keyword_for_argument:
 		if (result->jf_argc_max < arga) {
 			/* Release unused memory */
 			size_t *new_argv;
-			new_argv = (size_t *)Dee_TryRealloc(result->jf_argv,
-			                                    result->jf_argc_max * sizeof(size_t));
+			new_argv = (size_t *)Dee_TryReallocc(result->jf_argv,
+			                                     result->jf_argc_max,
+			                                     sizeof(size_t));
 			if likely(new_argv)
 				result->jf_argv = new_argv;
 		}
@@ -468,7 +469,7 @@ err_no_keyword_for_argument:
 		                                    COMPILER_STRLEN(JIT_RTSYM_THIS));
 		if unlikely(!argent)
 			goto err_r;
-		result->jf_argv = (size_t *)Dee_Malloc(1 * sizeof(size_t));
+		result->jf_argv = (size_t *)Dee_Mallocc(1, sizeof(size_t));
 		if unlikely(!result->jf_argv)
 			goto err_r;
 		result->jf_argv[0] = (size_t)(argent - result->jf_args.ot_list);
@@ -707,8 +708,8 @@ jf_call_kw(JITFunction *self, size_t argc,
 	ASSERT(self->jf_args.ot_prev.otp_tab == &self->jf_refs);
 	memcpy(&base_locals, &self->jf_args, sizeof(JITObjectTable));
 	ASSERT(base_locals.ot_prev.otp_tab != NULL);
-	base_locals.ot_list = (struct jit_object_entry *)Dee_Malloc((base_locals.ot_mask + 1) *
-	                                                            sizeof(struct jit_object_entry));
+	base_locals.ot_list = (struct jit_object_entry *)Dee_Mallocc(base_locals.ot_mask + 1,
+	                                                             sizeof(struct jit_object_entry));
 	if unlikely(!base_locals.ot_list)
 		goto err;
 	memcpyc(base_locals.ot_list, self->jf_args.ot_list,
@@ -1168,7 +1169,7 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 			char const *attname = DeeString_STR(ref->oe_attr.a_attr->ca_name);
 			size_t /**/ attsize = DeeString_SIZE(ref->oe_attr.a_attr->ca_name);
 			size_t namelen = refsize + 2 + attsize + 1;
-			char *namestr  = (char *)Dee_Malloc(namelen * sizeof(char));
+			char *namestr  = (char *)Dee_Mallocc(namelen, sizeof(char));
 			char *iter;
 			if unlikely(!namestr)
 				goto err_r;

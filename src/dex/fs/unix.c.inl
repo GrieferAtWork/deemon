@@ -1478,7 +1478,7 @@ query_iter(Dir *__restrict self) {
 			char *temp_filename;
 			int old_errno;
 			size_t temp_filesize = (size_t)(query_start - query_str);
-			temp_filename        = (char *)Dee_AMalloc((temp_filesize + 1) * sizeof(char));
+			temp_filename        = (char *)Dee_AMallocc(temp_filesize + 1, sizeof(char));
 			if unlikely(!temp_filename)
 				goto err_r;
 			/* Override the '/' to terminate the string. */

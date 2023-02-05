@@ -226,6 +226,7 @@ DECL_BEGIN
 #define CLASS_GETSET_GET            Dee_CLASS_GETSET_GET
 #define CLASS_GETSET_DEL            Dee_CLASS_GETSET_DEL
 #define CLASS_GETSET_SET            Dee_CLASS_GETSET_SET
+#define CLASS_GETSET_COUNT          Dee_CLASS_GETSET_COUNT
 #define CLASS_ATTRIBUTE_FNORMAL     Dee_CLASS_ATTRIBUTE_FNORMAL
 #define CLASS_ATTRIBUTE_FPUBLIC     Dee_CLASS_ATTRIBUTE_FPUBLIC
 #define CLASS_ATTRIBUTE_FPRIVATE    Dee_CLASS_ATTRIBUTE_FPRIVATE
@@ -243,9 +244,10 @@ DECL_BEGIN
 struct Dee_string_object;
 typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 
-#define Dee_CLASS_GETSET_GET 0 /* Offset to the getter of a user-defined getset in a class. */
-#define Dee_CLASS_GETSET_DEL 1 /* Offset to the delete of a user-defined getset in a class. */
-#define Dee_CLASS_GETSET_SET 2 /* Offset to the setter of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_GET   0 /* Offset to the getter of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_DEL   1 /* Offset to the delete of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_SET   2 /* Offset to the setter of a user-defined getset in a class. */
+#define Dee_CLASS_GETSET_COUNT 3 /* # of operators defined by getsets. */
 
 #define Dee_CLASS_ATTRIBUTE_FNORMAL   0x0000 /* Normal class attribute flags. */
 #define Dee_CLASS_ATTRIBUTE_FPUBLIC   0x0000 /* The attribute is publicly available. */

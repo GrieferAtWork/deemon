@@ -104,25 +104,25 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 
-#define Dee_UINT128_SET __hybrid_uint128_set
-#define Dee_SINT128_SET __hybrid_int128_set
-#define Dee_SINT128_DEC __hybrid_int128_dec
-#define Dee_SINT128_INC __hybrid_int128_inc
-#define Dee_SINT128_INV __hybrid_int128_inv
+#define Dee_UINT128_SET   __hybrid_uint128_set
+#define Dee_SINT128_SET   __hybrid_int128_set
+#define Dee_SINT128_DEC   __hybrid_int128_dec
+#define Dee_SINT128_INC   __hybrid_int128_inc
+#define Dee_SINT128_INV   __hybrid_int128_inv
 #define Dee_SINT128_TONEG __hybrid_int128_neg
 #define Dee_SINT128_ISNEG __hybrid_int128_isneg
 #define Dee_SINT128_ISNUL __hybrid_int128_iszero
-#define Dee_SINT128_IS64 __hybrid_int128_is64bit
-#define Dee_UINT128_IS64 __hybrid_uint128_is64bit
-#define Dee_UINT128_OR __hybrid_uint128_or
-#define Dee_UINT128_AND __hybrid_uint128_and
-#define Dee_UINT128_XOR __hybrid_uint128_xor
+#define Dee_SINT128_IS64  __hybrid_int128_is64bit
+#define Dee_UINT128_IS64  __hybrid_uint128_is64bit
+#define Dee_UINT128_OR    __hybrid_uint128_or
+#define Dee_UINT128_AND   __hybrid_uint128_and
+#define Dee_UINT128_XOR   __hybrid_uint128_xor
 
 /* Unsigned shift-right for n <= 64 */
 #define Dee_UINT128_SHR __hybrid_uint128_shr64
 
 /* Unsigned shift-left for n <= 64 */
-#define Dee_UINT128_SHL __hybrid_uint128_shl64
+#define Dee_UINT128_SHL               __hybrid_uint128_shl64
 #define Dee_UINT128_SHL_WILL_OVERFLOW __hybrid_uint128_shl64_overflows
 
 #define Dee_INT128_SETMIN   __hybrid_int128_setmin
@@ -134,21 +134,21 @@ DECL_BEGIN
 
 typedef struct Dee_int_object DeeIntObject;
 
-#if __SIZEOF_POINTER__ == 8
-#define Dee_DIGIT_BITS  30
-#else /* __SIZEOF_POINTER__ == 8 */
-#define Dee_DIGIT_BITS  15
-#endif /* __SIZEOF_POINTER__ != 8 */
+#if __SIZEOF_POINTER__ >= 8
+#define Dee_DIGIT_BITS 30
+#else /* __SIZEOF_POINTER__ >= 8 */
+#define Dee_DIGIT_BITS 15
+#endif /* __SIZEOF_POINTER__ < 8 */
 
 
 #if Dee_DIGIT_BITS == 30
-typedef uint32_t    Dee_digit_t;
-typedef int32_t    Dee_sdigit_t;
+typedef uint32_t Dee_digit_t;
+typedef int32_t Dee_sdigit_t;
 typedef uint64_t Dee_twodigits_t;
 typedef int64_t Dee_stwodigits_t;
 #else /* Dee_DIGIT_BITS == 30 */
-typedef uint16_t    Dee_digit_t;
-typedef int16_t    Dee_sdigit_t;
+typedef uint16_t Dee_digit_t;
+typedef int16_t Dee_sdigit_t;
 typedef uint32_t Dee_twodigits_t;
 typedef int32_t Dee_stwodigits_t;
 #endif /* Dee_DIGIT_BITS != 30 */
@@ -157,10 +157,10 @@ typedef int32_t Dee_stwodigits_t;
 
 
 #ifdef DEE_SOURCE
-#define DIGIT_BITS  Dee_DIGIT_BITS
-typedef Dee_digit_t      digit;
-typedef Dee_sdigit_t     sdigit;
-typedef Dee_twodigits_t  twodigits;
+#define DIGIT_BITS Dee_DIGIT_BITS
+typedef Dee_digit_t digit;
+typedef Dee_sdigit_t sdigit;
+typedef Dee_twodigits_t twodigits;
 typedef Dee_stwodigits_t stwodigits;
 #define DIGIT_BASE Dee_DIGIT_BASE
 #define DIGIT_MASK Dee_DIGIT_MASK
@@ -535,9 +535,9 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 
 /* Create an integer from signed/unsigned LEB data. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewSleb(uint8_t **__restrict preader);
+DeeInt_NewSleb(uint8_t const **__restrict preader);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeInt_NewUleb(uint8_t **__restrict preader);
+DeeInt_NewUleb(uint8_t const **__restrict preader);
 
 /* Write the value of an integer as signed/unsigned LEB data.
  * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */

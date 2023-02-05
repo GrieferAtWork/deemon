@@ -110,8 +110,8 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			if (!dst->cf_argc) {
 				dst->cf_argv = NULL;
 			} else {
-				dst->cf_argv = (DREF DeeObject **)Dee_TryMalloc(dst->cf_argc *
-				                                                sizeof(DREF DeeObject *));
+				dst->cf_argv = (DREF DeeObject **)Dee_TryMallocc(dst->cf_argc,
+				                                                 sizeof(DREF DeeObject *));
 				if (dst->cf_argv) {
 					size_t i;
 					for (i = 0; i < dst->cf_argc; ++i) {
@@ -127,8 +127,8 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			if (ITER_ISOK(dst->cf_result))
 				Dee_Incref(dst->cf_result);
 			/* Duplicate local variables. */
-			dst->cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_localc *
-			                                                 sizeof(DREF DeeObject *));
+			dst->cf_frame = (DREF DeeObject **)Dee_TryMallocc(code->co_localc,
+			                                                  sizeof(DREF DeeObject *));
 			if (dst->cf_frame) {
 				size_t i;
 				for (i = 0; i < code->co_localc; ++i) {
@@ -179,7 +179,7 @@ DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
 	stacksz = (uint16_t)(frame->cf_sp - frame->cf_stack);
 	if unlikely(!stacksz)
 		goto done;
-	dst->cf_stack = (DREF DeeObject **)Dee_TryMalloc(stacksz * sizeof(DREF DeeObject *));
+	dst->cf_stack = (DREF DeeObject **)Dee_TryMallocc(stacksz, sizeof(DREF DeeObject *));
 	if likely(dst->cf_stack) {
 		dst->cf_stacksz = stacksz;
 		dst->cf_sp      = dst->cf_stack + stacksz;
@@ -715,10 +715,10 @@ traceback_current(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst traceback_class_getsets[] = {
-	TYPE_GETSET("current", &traceback_current, NULL, NULL,
-	                "->?.\n"
-	                "@throw RuntimeError No exception was being handled\n"
-	                "Returns the traceback associated with the current exception"),
+	TYPE_GETTER("current", &traceback_current,
+	            "->?.\n"
+	            "@throw RuntimeError No exception was being handled\n"
+	            "Returns the traceback associated with the current exception"),
 	TYPE_GETSET_END
 };
 
@@ -750,7 +750,7 @@ traceback_sizeof(DeeTracebackObject *self) {
 }
 
 PRIVATE struct type_getset tpconst traceback_getsets[] = {
-	TYPE_GETSET("__sizeof__", &traceback_sizeof, NULL, NULL, "->?Dint"),
+	TYPE_GETTER("__sizeof__", &traceback_sizeof, "->?Dint"),
 	TYPE_GETSET_END
 };
 

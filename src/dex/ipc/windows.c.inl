@@ -521,7 +521,7 @@ again:
 		SIZE_T appnameBufferSize = szApplicationNameLength + 4; /* Optimize for 4-character long extensions. */
 		if unlikely(!pathext)
 			goto err;
-		appnameBuffer = (LPWSTR)Dee_Malloc((appnameBufferSize + 1) * sizeof(WCHAR));
+		appnameBuffer = (LPWSTR)Dee_Mallocc(appnameBufferSize + 1, sizeof(WCHAR));
 		if unlikely(!appnameBuffer)
 			goto err_pathext;
 		iter = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
@@ -542,7 +542,7 @@ again:
 			appnameLength = szApplicationNameLength + extLength;
 			if unlikely(appnameLength > appnameBufferSize) {
 				/* More-than-4-character extension. */
-				newAppnameBuffer = (LPWSTR)Dee_Realloc(appnameBuffer, (appnameLength + 1) * sizeof(WCHAR));
+				newAppnameBuffer = (LPWSTR)Dee_Reallocc(appnameBuffer, appnameLength + 1, sizeof(WCHAR));
 				if unlikely(!newAppnameBuffer) {
 					Dee_Free(appnameBuffer);
 					goto err_pathext;

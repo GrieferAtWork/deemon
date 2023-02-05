@@ -157,7 +157,7 @@ tiny_set_rehash(struct tiny_set *__restrict self) {
 	DeeObject **new_map;
 	size_t new_mask = (self->ts_mask << 1) | 1;
 	/* Allocate the new map. */
-	new_map = (DeeObject **)Dee_Calloc((new_mask + 1) * sizeof(DeeObject *));
+	new_map = (DeeObject **)Dee_Callocc(new_mask + 1, sizeof(DeeObject *));
 	if unlikely(!new_map)
 		return false;
 	/* Rehash the old map. */
