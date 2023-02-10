@@ -354,6 +354,57 @@
     <ClInclude Include="..\include\deemon\cxx\sequence.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\bytes.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\string.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\cell.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\tuple.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\mapping.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\dict.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\float.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\int.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\function.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\callable.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\list.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\file.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\bool.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\set.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\hashset.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\type.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx.h">
+      <Filter>include\deemon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

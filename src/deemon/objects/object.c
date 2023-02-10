@@ -2330,8 +2330,8 @@ PRIVATE struct type_method tpconst object_methods[] = {
 	/* Operator invocation functions. */
 	TYPE_METHOD(STR___copy__,       &object_copy, "->\n@return A copy of @this object"),
 	TYPE_METHOD(STR___deepcopy__,   &object_deepcopy, "->\n@return A deep copy of @this object"),
-	TYPE_METHOD(STR___assign__,     &object_assign, "(other)->@this\nAssigns @other to @this and"),
-	TYPE_METHOD(STR___moveassign__, &object_moveassign, "(other)->@this\nMove-assign @other to @this and"),
+	TYPE_METHOD(STR___assign__,     &object_assign, "(other)->\nAssigns @other to @this and"),
+	TYPE_METHOD(STR___moveassign__, &object_moveassign, "(other)->\nMove-assign @other to @this and"),
 	TYPE_METHOD(STR___str__,        &object_dostr, "->?Dstring\n@return @this converted to a ?Dstring"),
 	TYPE_METHOD(STR___repr__,       &object_dorepr, "->?Dstring\n@return The ?Dstring representation of @this"),
 	TYPE_METHOD(STR___bool__,       &object_bool, "->?Dbool\n@return The ?Dbool value of @this"),

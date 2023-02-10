@@ -21,6 +21,7 @@
 import * from deemon;
 import * from doc;
 import ..hash as rtHash;
+import util;
 
 function commonType(types: {Type...}): Type {
 	if (!types)
@@ -35,53 +36,53 @@ function commonType(types: {Type...}): Type {
 }
 
 global final cxxTypes: {Type: string} = {
-	Object    : "deemon::Object",
-	string    : "deemon::string",
-	Numeric   : "deemon::Numeric",
-	bool      : "deemon::bool_",
-	int       : "deemon::int_",
-	float     : "deemon::float_",
-	type none : "deemon::None",
-	Bytes     : "deemon::Bytes",
-	File      : "deemon::File",
-	Super     : "deemon::Super",
-	Type      : "deemon::Type",
-	Cell      : "deemon::Cell",
-	Iterator  : "deemon::Iterator",
-	Sequence  : "deemon::Sequence",
-	Set       : "deemon::Set",
-	HashSet   : "deemon::HashSet",
-	Mapping   : "deemon::Mapping",
-	Dict      : "deemon::Dict",
-	List      : "deemon::List",
-	Tuple     : "deemon::Tuple",
+	Object    : "Object",
+	string    : "string",
+	Numeric   : "Numeric",
+	bool      : "deemon::bool_",  /* Need namespace because also exists a member */
+	int       : "deemon::int_",   /* Need namespace because also exists a member */
+	float     : "deemon::float_", /* Need namespace because also exists a member */
+	type none : "None",
+	Bytes     : "Bytes",
+	File      : "File",
+	Super     : "Super",
+	Type      : "Type",
+	Cell      : "Cell",
+	Iterator  : "Iterator",
+	Sequence  : "Sequence",
+	Set       : "Set",
+	HashSet   : "HashSet",
+	Mapping   : "Mapping",
+	Dict      : "Dict",
+	List      : "List",
+	Tuple     : "Tuple",
 };
 global final cxxTypenamesAsType: {string: Type} =
 	Dict(for (local t, n: cxxTypes) (n, t)).frozen;
 
 global final cxxGenericSequenceTypes: {string...} = {
-	"deemon::Cell"     : "deemon::Cell<>",
-	"deemon::Iterator" : "deemon::Iterator<>",
-	"deemon::Sequence" : "deemon::Sequence<>",
-	"deemon::Set"      : "deemon::Set<>",
-	"deemon::HashSet"  : "deemon::HashSet<>",
-	"deemon::Mapping"  : "deemon::Mapping<>",
-	"deemon::Dict"     : "deemon::Dict<>",
-	"deemon::List"     : "deemon::List<>",
+	"Cell"     : "Cell<>",
+	"Iterator" : "Iterator<>",
+	"Sequence" : "Sequence<>",
+	"Set"      : "Set<>",
+	"HashSet"  : "HashSet<>",
+	"Mapping"  : "Mapping<>",
+	"Dict"     : "Dict<>",
+	"List"     : "List<>",
 	/* Tuple is special in that it doesn't have a universal element type in c++ */
-	"deemon::Tuple"    : "deemon::Sequence<>",
+	"Tuple"    : "Sequence<>",
 };
 
 @@Types that have special treatment with written as (e.g.) @"HashSet with string",
 @@which in turn gets compiled as `HashSet<string>` within the c++ API.
 global final cxxAbstractSequenceTypes: {string...} = {
-	"deemon::Cell",
-	"deemon::Iterator",
-	"deemon::Sequence",
-	"deemon::Set",
-	"deemon::HashSet",
-	"deemon::List",
-	"deemon::Tuple",
+	"Cell",
+	"Iterator",
+	"Sequence",
+	"Set",
+	"HashSet",
+	"List",
+	"Tuple",
 };
 
 function templateGt(s: string): string {
@@ -101,7 +102,7 @@ function typeExprsToCxxType(txs: {TypeExpr...}): string {
 			finalizeCxxType(typeExprToCxxType(x))
 	);
 	if (!variants)
-		return "deemon::Object";
+		return "Object";
 	if (#variants == 1)
 		return variants.first;
 	local deemonType = commonType(HashSet(
@@ -116,8 +117,8 @@ function typeExprToCxxType(tx: TypeExpr): string {
 
 	case "C": {
 		local cellType = typeExprToCxxType(tx.Ccelltype);
-		if (cellType == "deemon::Tuple")
-			cellType = "deemon::Sequence";
+		if (cellType == "Tuple")
+			cellType = "Sequence";
 		if (cellType in cxxAbstractSequenceTypes) {
 			local itemType = typeExprToCxxType(tx.Citemtype);
 			local itemType = finalizeCxxType(itemType);
@@ -153,6 +154,232 @@ function typeExprToCxxType(tx: TypeExpr): string {
 	return cxxTypes[deemonType];
 }
 
+global final cxxParameterTypes: {Type: {string...}} = {
+	string  : { "char const *" },
+	Numeric : { "size_t", "Dee_ssize_t", "double" },
+	bool    : { "bool" },
+	int     : { "size_t", "Dee_ssize_t" },
+	float   : { "double" },
+	Bytes   : { "char const *" },
+};
+
+global final cxxParameterPackFormat: {string: string} = {
+	"int"          : repr "d",
+	"unsigned int" : repr "u",
+	"char const *" : repr "s",
+	"size_t"       : "DEE_PCKuSIZ",
+	"Dee_ssize_t"  : "DEE_PCKdSIZ",
+	"double"       : repr "f",
+	"DeeObject *"  : repr "o",
+	"bool"         : repr "b",
+};
+
+global final cxxReservedNames: {string...} = {
+	"int",
+	"float",
+	"this",
+	"bool",
+	"template",
+	"signed",
+	"unsigned",
+	"union",
+};
+
+function cxxEscapeReservedName(name: string): string {
+	while (name in cxxReservedNames)
+		name = name + "_";
+	return name;
+}
+
+function typeExprToCxxParameterTypes(tx: TypeExpr): {string...} {
+	local deemonType = commonType(tx.types);
+	while (deemonType !in cxxTypes)
+		deemonType = deemonType.__base__;
+	local types = cxxParameterTypes.get(deemonType);
+	if (types !is none)
+		yield types...;
+	yield "DeeObject *";
+}
+
+function parameterToCxxParameterTypes(param: Parameter): {none | string...} {
+	if (param.isoptional || param.defexpr !is none)
+		yield none;
+	yield typeExprToCxxParameterTypes(param.typ)...;
+}
+
+function packCxxParameterListFormatString(cxxTypes: {string...}): string {
+	local result = "";
+	local inRawString = false;
+	for (local cxxType: cxxTypes) {
+		local format = cxxParameterPackFormat[cxxType];
+		if (format.startswith('"')) {
+			assert format.endswith('"');
+			if (!inRawString) {
+				if (result)
+					result += " ";
+				result += '"';
+				inRawString = true;
+			}
+			result += format[1:-1];
+		} else {
+			assert !format.endswith('"');
+			if (inRawString) {
+				result += '"';
+				inRawString = false;
+			}
+			result += " ";
+			result += format;
+		}
+	}
+	if (inRawString)
+		result += '"';
+	if (!result)
+		result = '""';
+	return result;
+}
+
+@@Given a list of parameters, and their possible types, yield all possible permutations
+function getParameterPermutations(types: {{string | none...}...}): {{string...}...} {
+	if (types) {
+		local firstArgTypes: {string | none...} = types.first;
+		local remainingArgsPermutations: {{string...}...} =
+			List(getParameterPermutations(types[1:]));
+		if (!remainingArgsPermutations) {
+			for (local firstArgType: firstArgTypes) {
+				if (firstArgType is none) {
+					yield ();
+				} else {
+					yield (firstArgType,);
+				}
+			}
+		} else {
+			for (local firstArgType: firstArgTypes) {
+				if (firstArgType is none) {
+					yield remainingArgsPermutations...;
+				} else {
+					for (local remainingArgs: remainingArgsPermutations) {
+						yield (firstArgType, remainingArgs...);
+					}
+				}
+			}
+		}
+	}
+}
+
+function encodeTemplateParameters(
+		attributeName: string,
+		cxxReturnType: string,
+		templateParameters: {string...}): string {
+	if (templateParameters) {
+		/* TODO: Deemon doc text needs a way to expression generic types, so we're
+		 *       somehow able to encode RTTI information such that the runtime will
+		 *       know that (e.g.) `Sequence<T>.frozen' returns `Sequence<T>'
+		 * This also goes for deemon code, where `{string...}' is `Sequence<T>'.
+		 * Also, get rid of the "Cell with int" syntax. - Instead, the syntax
+		 * used should be "Cell<int>" (which simply feels much more natural).
+		 *
+		 * Also: it should be possible for user-defined deemon types to be written
+		 *       such that they take template parameters:
+		 * >> // "List<T>" here is parsed like "List", but the parameter is stored in RTTI and may be used by an IDE
+		 * >> class MyList<T>: List<T> {
+		 * >>     public operator [](index: int): T {
+		 * >>         return super[index];
+		 * >>     }
+		 * >> }
+		 *
+		 * The existence of the template parameter "T" must then be stored within
+		 * the type's doc-string, and use of "T" in doc strings of members must
+		 * reference the template parameter of the surrounding class. The same must
+		 * then also be possible for user-defined functions:
+		 * >> function getitem<T>(seq: {T...}, index: int): T {
+		 * >>     return seq[index];
+		 * >> }
+		 *
+		 * When a template parameter list is specified alongside a type, it must
+		 * always be complete (i.e. have the same # of parameters as are used by
+		 * that type). If a template parameter list is omitted, behavior is the
+		 * same as though all parameters were "Object from deemon".
+		 *
+		 * Anonymous classes and functions can't have template parameter lists.
+		 */
+
+		// FIXME: Super hacky and not very well defined at all!
+		//print File.stderr: attributeName, repr cxxReturnType;
+		local usedType;
+		if (#templateParameters > 1) {
+			local narrowCxxReturnType = cxxReturnType.replace(" ", "");
+			usedType = f"_AbstractTuple<{templateGt(", ".join(templateParameters))}>";
+			switch (attributeName) {
+			case "byattr":
+				return cxxReturnType;
+			case "get":
+			case "pop":
+			case "setdefault":
+			case "setold_ex":
+			case "setnew_ex":
+				usedType = templateParameters.last;
+				break;
+			case "keys":
+				usedType = templateParameters.first;
+				break;
+			case "values":
+				if (narrowCxxReturnType == "Sequence<>")
+					return f"Sequence<{templateGt(templateParameters.last)}>";
+				break;
+			case "items":
+				if (narrowCxxReturnType == "Sequence<>") {
+					return f"Sequence<{
+						templateGt(f'_AbstractTuple<{
+							templateGt(", ".join(templateParameters))
+						}>')
+					}>";
+				}
+				break;
+			case "iterkeys":
+				if (narrowCxxReturnType == "Iterator<>")
+					return f"Iterator<{templateGt(templateParameters.first)}>";
+				break;
+			case "itervalues":
+				if (narrowCxxReturnType == "Iterator<>")
+					return f"Iterator<{templateGt(templateParameters.last)}>";
+				break;
+			case "iteritems":
+				if (narrowCxxReturnType == "Iterator<>") {
+					return f"Iterator<{
+						templateGt(f"_AbstractTuple<{
+							templateGt(", ".join(templateParameters))
+						}>")
+					}>";
+				}
+				break;
+			default:
+				break;
+			}
+			if (#templateParameters == 2) {
+				if (narrowCxxReturnType in ["Mapping<>", "Dict<>"]) {
+					return narrowCxxReturnType.replace("<>", f"<{
+						templateGt(", ".join(templateParameters))
+					}>");
+				}
+				if ("_AbstractTuple<Object, Object>" in cxxReturnType) {
+					return cxxReturnType.replace(
+						"_AbstractTuple<Object, Object>",
+						f"_AbstractTuple<{templateGt(", ".join(templateParameters))}>"
+					);
+				}
+			}
+		} else {
+			usedType = templateParameters.first;
+		}
+		cxxReturnType = cxxReturnType
+			.replace("Object", usedType)
+			.replace("<>", f"<{templateGt(usedType)}>")
+			.replace(">>", "> >");
+	}
+	return cxxReturnType;
+}
+
+
 
 final class CxxType {
 	public member typ: Type;
@@ -161,23 +388,38 @@ final class CxxType {
 	this(typ: Type) {
 		this.typ = typ;
 		this.doc = Doc(typ);
-		this.base = typ.__base__ is none ? none : CxxType(typ.__base__);
+		local typBase = Type.__base__(typ);
+		this.base = typBase is none ? none : CxxType(typBase);
 	}
 
-	public function printCxxApi() {
+	@@@param: exclude:            Names of attributes to exclude
+	@@@param: templateParameters: Template type parameter list
+	public function printCxxApi(
+			exclude: {string...} = (),
+			templateParameters: {string...} = ()
+	) {
+		local encounteredNames: {string...} = HashSet();
 		for (local c: doc) {
 			if (c.isprivate)
 				continue;
 			local name = c.name;
-			if (name in ["this", "class", "type", "super"])
-				continue; /* Don't generate code for these special attributes. */
-			name = {
-				"int" : "int_",
-				"float" : "float_",
-			}.get(name, name);
+			if (name in exclude)
+				continue;
+			local cxxName = cxxEscapeReservedName(name);
+			local nameHashSelect = f"_Dee_HashSelect(UINT32_C({
+				rtHash.hash32(name).hex()
+			}), UINT64_C({
+				rtHash.hash64(name).hex()
+			}))";
 			switch (c.kind) {
 
+			case "operator":
+				/* TODO: Like "function", but generate overloads for the associated c++ operator */
+				break;
+
 			case "function": {
+				if (!encounteredNames.insert(name))
+					continue; /* FIXME: Work-around because `Doc(Type)' enumerates attributes twice. */
 				/* Every deemon type should have a list of C types:
 				 *  - int: {ssize_t, size_t}
 				 *  - float: {double}
@@ -186,18 +428,162 @@ final class CxxType {
 				 * Additionally, any deemon type can also be encoded as `DEE_ENABLE_IF_OBJECT_PTR_T()'
 				 * We must generate overloads for all possible permutations of argument types, and
 				 * always chose the correct return type. */
-				print("	// TODO: function ", name);
-				// TODO
+				
+				@@Mapping for @(cxxParameterTypes...) to @(cxxReturnType, {cxxArgumentNames...})
+				local overloads: {{string...}: (string, {string...})} = Dict();
+				for (local d: c.decls) {
+					@@List of c++ types that can be used to each parameter
+					local cxxParamTypes: {{none | string...}...} = [];
+					local cxxReturnType: string = finalizeCxxType(typeExprToCxxType(d.ret));
+					local params: {Parameter...} = d.parameters;
+					local parameterNames: {string...} = List(params.each.name);
+					for (local param: params) {
+						cxxParamTypes.append(List(parameterToCxxParameterTypes(param)));
+					}
+					for (local overloadArgs: getParameterPermutations(cxxParamTypes)) {
+						local overloadParameterNames = parameterNames[:#overloadArgs];
+						local existingReturnType, existingParameternames =
+							overloads.get(overloadArgs)...;
+						if (existingReturnType is none) {
+							existingReturnType     = cxxReturnType;
+							existingParameternames = overloadParameterNames;
+						} else {
+							if (existingReturnType != cxxReturnType)
+								existingReturnType = "Object";
+							if (existingParameternames != overloadParameterNames) {
+								existingParameternames = List(
+									for (local old, new: util.zip(
+											existingParameternames,
+											overloadParameterNames))
+										old == new ? old : f"{old}_or_{new}");
+							}
+						}
+						overloads[overloadArgs] = (
+							existingReturnType,
+							existingParameternames
+						);
+					}
+				}
+				for (local argTypes: overloads.keys.sorted()) {
+					local cxxReturnType: string;
+					local parameterNames: {string...};
+					cxxReturnType, parameterNames = overloads[argTypes]...;
+					cxxReturnType = encodeTemplateParameters(name, cxxReturnType, templateParameters);
+					parameterNames = List(for (local x: parameterNames) cxxEscapeReservedName(x));
+					local returnsVoid = cxxReturnType == "None";
+					print("	"),;
+					if (!returnsVoid)
+						print("WUNUSED "),;
+					local objectArgumentIndices = List(
+						for (local i, argType: util.enumerate(argTypes))
+							if (argType == "DeeObject *") (i + 1)
+					);
+					if (objectArgumentIndices)
+						print("NONNULL_CXX((", ", ".join(objectArgumentIndices), ")) "),;
+					if (returnsVoid) {
+						print("void"),;
+					} else {
+						print("Ref<", templateGt(cxxReturnType), ">"),;
+					}
+					print(" (", cxxName, ")("),;
+					local isFirstArg = true;
+					local areAllArgumentsObjects = true;
+					for (local argName, argType: util.zip(parameterNames, argTypes)) {
+						if (!isFirstArg)
+							print(", "),;
+						print(argType),;
+						if (!argType.endswith("*"))
+							print(" "),;
+						if (argType != "DeeObject *")
+							areAllArgumentsObjects = false;
+						print(argName),;
+						isFirstArg = false;
+					}
+					print(") {");
+					local callExpr: string;
+					if (areAllArgumentsObjects) {
+						if (parameterNames) {
+							local argsVarname = "args";
+							while (argsVarname in parameterNames)
+								argsVarname += "_";
+							print("		DeeObject *", argsVarname, "[", #parameterNames, "];");
+							for (local i, parameterName: util.enumerate(parameterNames)) {
+								print("		", argsVarname, "[", i, "] = ", parameterName, ";");
+							}
+							callExpr = f"DeeObject_CallAttrStringHash(this, {
+								repr name}, {nameHashSelect}, {#parameterNames}, {argsVarname})";
+						} else {
+							callExpr = f"DeeObject_CallAttrStringHash(this, {
+								repr name}, {nameHashSelect}, 0, NULL)";
+						}
+					} else {
+						callExpr = f"DeeObject_CallAttrStringHashf(this, {
+							repr name}, {nameHashSelect}, {
+							packCxxParameterListFormatString(argTypes)}, {
+							", ".join(parameterNames)})";
+					}
+					if (returnsVoid) {
+						print("		decref(throw_if_null(", callExpr, "));");
+					} else {
+						print("		return inherit(", callExpr, ");");
+					}
+					print("	}");
+				}
 			}	break;
 
 			case "property": {
-				local returnType: string = typeExprsToCxxType(c.decls.each.ret);
-				print("	WUNUSED deemon::Ref<", templateGt(returnType), "> ", name, "() {");
-				print("		return inherit(DeeObject_GetAttrStringHash(this, ",
-					repr name, ", _Dee_HashSelect("
-					"UINT32_C(", rtHash.hash32(name).hex(), "), "
-					"UINT64_C(", rtHash.hash64(name).hex(), ")"
-					")));");
+				if (!encounteredNames.insert(name))
+					continue; /* FIXME: Work-around because `Doc(Type)' enumerates attributes twice. */
+				local cxxReturnType: string = typeExprsToCxxType(c.decls.each.ret);
+				cxxReturnType = encodeTemplateParameters(name, cxxReturnType, templateParameters);
+				local propertyWrapperClassName = f"_Wrap_{cxxName}";
+				print("	class ", propertyWrapperClassName),;
+				local canget = c.canget;
+				local candel = c.candel;
+				local canset = c.canset;
+				if (canget || canset) {
+					print;
+					print("		: public deemon::detail::Const", canget ? "G" : "S", "etRefProxy<",
+						propertyWrapperClassName, ", ",
+						templateGt(cxxReturnType), ">"),;
+					if (canget && canset) {
+						print;
+						print("		, public deemon::detail::ConstSetRefProxy<",
+							propertyWrapperClassName, ", ",
+							templateGt(cxxReturnType), ">"),;
+					}
+				}
+				print(" {");
+				print("	private:");
+				print("		DeeObject *m_self; /* [1..1] Linked object */");
+				print("	public:");
+				print("		", propertyWrapperClassName, "(DeeObject *self) DEE_CXX_NOTHROW");
+				print("			: m_self(self) {}");
+				if (canget) {
+					print("		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {");
+					print("			return DeeObject_GetAttrStringHash("
+						"m_self, ", repr name, ", ", nameHashSelect, ");");
+					print("		}");
+					print("		WUNUSED bool bound() const {");
+					print("			return throw_if_minusone(DeeObject_BoundAttrStringHash("
+						"m_self, ", repr name, ", ", nameHashSelect, "));");
+					print("		}");
+				}
+				if (candel) {
+					print("		void del() const {");
+					print("			throw_if_nonzero(DeeObject_DelAttrStringHash("
+						"m_self, ", repr name, ", ", nameHashSelect, "));");
+					print("		}");
+				}
+				if (canset) {
+					print("		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {");
+					print("			return DeeObject_SetAttrStringHash("
+						"m_self, ", repr name, ", ", nameHashSelect, ", value);");
+					print("		}");
+				}
+				print("	};");
+				print("	WUNUSED ", propertyWrapperClassName, " (", cxxName, ")() {");
+				print("		return this;");
 				print("	}");
 			}	break;
 

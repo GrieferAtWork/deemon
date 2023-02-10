@@ -157,7 +157,7 @@ DeeList_PrintRepr(DeeObject *__restrict self,
 #define DeeList_InsertSequence(self, index, sequence) __builtin_expect(DeeList_InsertSequence(self, index, sequence), 0)
 #define DeeList_InsertVector(self, index, objc, objv) __builtin_expect(DeeList_InsertVector(self, index, objc, objv), 0)
 #endif /* !__NO_builtin_expect */
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

@@ -140,9 +140,9 @@ function zip(seqs...: Sequence): {Sequence...} {
 	)...];
 	try {
 		for (;;) {
-			yield (
+			yield Tuple(
 				for (local it: iterators)
-					it.operator next()...);
+					it.operator next());
 		}
 	} catch (Signal.StopIteration) {
 	}

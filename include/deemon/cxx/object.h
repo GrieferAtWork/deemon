@@ -55,8 +55,9 @@ class float_;
 class None;
 class Bytes;
 class File;
-class Super;
 class Type;
+class Callable;
+class Function;
 template<class T = Object> class Cell;
 template<class T = Object> class Iterator;
 template<class T = Object> class Sequence;
@@ -621,7 +622,7 @@ public:
 			detail::err_cannot_lock_weakref();
 		return result;
 	}
-	ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *lock(DeeObject *def) const DEE_CXX_NOTHROW {
+	ATTR_RETNONNULL WUNUSED NONNULL_CXX((1)) DREF DeeObject *lock(DeeObject *def) const DEE_CXX_NOTHROW {
 		DREF DeeObject *result = Dee_weakref_lock(&w_ref);
 		if (!result) {
 			result = def;
@@ -668,10 +669,10 @@ public:
 
 /* Indicate that is-NULL checks to throw an exception can
  * be omitted, because an object pointer is never NULL. */
-inline WUNUSED NONNULL((1)) detail::ObjNonNull<> nonnull(DeeObject *__restrict ptr) {
+inline WUNUSED NONNULL_CXX((1)) detail::ObjNonNull<> nonnull(DeeObject *__restrict ptr) {
 	return detail::ObjNonNull<>(ptr);
 }
-template<class T> inline WUNUSED NONNULL((1))
+template<class T> inline WUNUSED NONNULL_CXX((1))
 detail::ObjNonNull<DEE_ENABLE_IF_OBJECT(T)> nonnull(T *__restrict ptr) {
 	return detail::ObjNonNull<T>(ptr);
 }
@@ -1025,8 +1026,6 @@ public:
 		: WeakRefBase(static_cast<WeakRefBase const &>(other)) {}
 	WeakRef(WeakRef<T> &&other) DEE_CXX_NOTHROW
 		: WeakRefBase(static_cast<WeakRefBase &&>(other)) {}
-	template<class S> WeakRef(S &ob, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S) * = 0)
-		: WeakRefBase((DeeObject &)ob) {}
 	template<class S> WeakRef(S *ob, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S) * = 0)
 		: WeakRefBase((DeeObject *)ob) {}
 	template<class S> WeakRef(Ref<S> const &ob, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S) * = 0)
@@ -1046,10 +1045,6 @@ public:
 	}
 	WeakRef<T> &operator=(WeakRef<T> &&other) DEE_CXX_NOTHROW {
 		WeakRefBase::operator=(static_cast<WeakRefBase &&>(other));
-		return *this;
-	}
-	template<class S> WeakRef<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> &operator=(S &ob) {
-		WeakRefBase::set(static_cast<DeeObject &>(ob));
 		return *this;
 	}
 	template<class S> WeakRef<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> &operator=(S *ob) {
@@ -1083,21 +1078,18 @@ public:
 	WUNUSED Ref<T> lock() const {
 		return detail::ObjNonNullInherited<T>(WeakRefBase::lock());
 	}
-	template<class S> WUNUSED Ref<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> lock(S &def) const DEE_CXX_NOTHROW {
-		return detail::ObjNonNullInherited<T>(WeakRefBase::lock(&static_cast<DeeObject &>(def)));
+	WUNUSED NONNULL_CXX((1)) Ref<T> lock(DeeObject *def) const DEE_CXX_NOTHROW {
+		return detail::ObjNonNullInherited<T>(WeakRefBase::lock(def));
 	}
 	using WeakRefBase::alive;
 	using WeakRefBase::operator bool;
 	using WeakRefBase::operator!;
 	using WeakRefBase::clear;
-	template<class S1, class S2> Ref<DEE_ENABLE_IF_OBJECT_ASSIGNABLE2(T, S1, S2)> cmpxch(S1 *old_ob, S2 *new_ob) DEE_CXX_NOTHROW {
-		return WeakRefBase::cmpxch(static_cast<DeeObject *>(old_ob), static_cast<DeeObject *>(new_ob));
+	Ref<T> cmpxch(DeeObject *old_ob, DeeObject *new_ob) DEE_CXX_NOTHROW {
+		return WeakRefBase::cmpxch(old_ob, new_ob);
 	}
-	template<class S> DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(T, S, void) set(S *ptr) {
-		WeakRefBase::set(static_cast<DeeObject *>(ptr));
-	}
-	template<class S> DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(T, S, void) set(S &obj) {
-		WeakRefBase::set(static_cast<DeeObject &>(obj));
+	NONNULL_CXX((1)) void set(DeeObject *ptr) {
+		WeakRefBase::set(ptr);
 	}
 	template<class S> DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(T, S, void) set(detail::ObjNonNull<S> ptr) {
 		WeakRefBase::set(ptr);
@@ -1119,7 +1111,7 @@ namespace detail {
 
 template<class ProxyType,
          class GetReturnType = Object>
-class ConstGetAndSetRefProxy {
+class ConstGetRefProxy {
 public:
 	Ref<GetReturnType> get() const {
 		return inherit(((ProxyType const *)this)->_getref());
@@ -1130,15 +1122,38 @@ public:
 	Ref<GetReturnType> operator->() const {
 		return inherit(((ProxyType const *)this)->_getref());
 	}
+};
+
+template<class ProxyType,
+         class SetValueType = Object>
+class ConstSetRefProxy {
+public:
 	template<class S>
-	void set(S *value, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(GetReturnType, S) * = 0) const {
+	void set(S *value, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(SetValueType, S) * = 0) const {
 		throw_if_nonzero(((ProxyType const *)this)->_setref(value));
 	}
 	template<class S>
-	DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(GetReturnType, S, ProxyType) const &operator=(S *value) const {
+	void set(Ref<S> const &value, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(SetValueType, S) * = 0) const {
+		throw_if_nonzero(((ProxyType const *)this)->_setref(value));
+	}
+	template<class S>
+	DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(SetValueType, S, ProxyType) const &operator=(S *value) const {
 		set(value);
 		return *(ProxyType const *)this;
 	}
+	template<class S>
+	DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(SetValueType, S, ProxyType) const &operator=(Ref<S> const &value) const {
+		set(value);
+		return *(ProxyType const *)this;
+	}
+};
+
+template<class ProxyType,
+         class GetReturnType = Object>
+class ConstGetAndSetRefProxy
+	: public ConstGetRefProxy<ProxyType, GetReturnType>
+	, public ConstSetRefProxy<ProxyType, GetReturnType>
+{
 };
 
 template<class ProxyType, class GetReturnType = Object>
@@ -1457,7 +1472,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttr(m_ptr, m_str)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttr(m_ptr, m_str)) > 0;
+		return throw_if_minusone(DeeObject_BoundAttr(m_ptr, m_str));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttr(m_ptr, m_str));
@@ -1497,7 +1512,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrString(m_ptr, m_str)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrString(m_ptr, m_str)) > 0;
+		return throw_if_minusone(DeeObject_BoundAttrString(m_ptr, m_str));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrString(m_ptr, m_str));
@@ -1541,7 +1556,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringHash(m_ptr, m_str, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringHash(m_ptr, m_str, m_hsh)) > 0;
+		return throw_if_minusone(DeeObject_BoundAttrStringHash(m_ptr, m_str, m_hsh));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringHash(m_ptr, m_str, m_hsh));
@@ -1587,7 +1602,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringLenHash(m_ptr, m_str, m_len, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(m_ptr, m_str, m_len, m_hsh)) > 0;
+		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(m_ptr, m_str, m_len, m_hsh));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringLenHash(m_ptr, m_str, m_len, m_hsh));
@@ -1630,7 +1645,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringLen(m_ptr, m_str, m_len)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringLen(m_ptr, m_str, m_len)) > 0;
+		return throw_if_minusone(DeeObject_BoundAttrStringLen(m_ptr, m_str, m_len));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringLen(m_ptr, m_str, m_len));
@@ -2244,219 +2259,219 @@ template<class ProxyType,
          class CallReturnType = Object>
 class AttrProxyAccessor {
 public:
-	NONNULL((1)) AttrProxyObj<GetAttrType, CallReturnType> attr(string *name) {
+	NONNULL_CXX((1)) AttrProxyObj<GetAttrType, CallReturnType> attr(string *name) {
 		return AttrProxyObj<GetAttrType, CallReturnType>(((ProxyType *)this)->ptr(), (DeeObject *)name);
 	}
-	NONNULL((1)) AttrProxyStr<GetAttrType, CallReturnType> attr(char const *name) {
+	NONNULL_CXX((1)) AttrProxyStr<GetAttrType, CallReturnType> attr(char const *name) {
 		return AttrProxyStr<GetAttrType, CallReturnType>(((ProxyType *)this)->ptr(), name);
 	}
-	NONNULL((1)) AttrProxySth<GetAttrType, CallReturnType> attr(char const *name, Dee_hash_t hash) {
+	NONNULL_CXX((1)) AttrProxySth<GetAttrType, CallReturnType> attr(char const *name, Dee_hash_t hash) {
 		return AttrProxySth<GetAttrType, CallReturnType>(((ProxyType *)this)->ptr(), name, hash);
 	}
-	NONNULL((1)) AttrProxySnh<GetAttrType, CallReturnType> attr(char const *name, size_t namelen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) AttrProxySnh<GetAttrType, CallReturnType> attr(char const *name, size_t namelen, Dee_hash_t hash) {
 		return AttrProxySnh<GetAttrType, CallReturnType>(((ProxyType *)this)->ptr(), name, namelen, hash);
 	}
-	NONNULL((1)) Ref<GetAttrType> getattr(string *name) {
+	NONNULL_CXX((1)) Ref<GetAttrType> getattr(string *name) {
 		return inherit(DeeObject_GetAttr(((ProxyType *)this)->ptr(), (DeeObject *)name));
 	}
-	NONNULL((1)) Ref<GetAttrType> getattr(char const *name) {
+	NONNULL_CXX((1)) Ref<GetAttrType> getattr(char const *name) {
 		return inherit(DeeObject_GetAttrString(((ProxyType *)this)->ptr(), name));
 	}
-	NONNULL((1)) Ref<GetAttrType> getattr(char const *name, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<GetAttrType> getattr(char const *name, Dee_hash_t hash) {
 		return inherit(DeeObject_GetAttrStringHash(((ProxyType *)this)->ptr(), name, hash));
 	}
-	NONNULL((1)) Ref<GetAttrType> getattr(char const *name, size_t namelen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<GetAttrType> getattr(char const *name, size_t namelen, Dee_hash_t hash) {
 		return inherit(DeeObject_GetAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash));
 	}
-	NONNULL((1)) bool hasattr(string *name) {
+	NONNULL_CXX((1)) bool hasattr(string *name) {
 		return throw_if_negative(DeeObject_HasAttr(((ProxyType *)this)->ptr(), name)) != 0;
 	}
-	NONNULL((1)) bool hasattr(char const *__restrict name) {
+	NONNULL_CXX((1)) bool hasattr(char const *__restrict name) {
 		return throw_if_negative(DeeObject_HasAttrString(((ProxyType *)this)->ptr(), name)) != 0;
 	}
-	NONNULL((1)) bool hasattr(char const *__restrict name, Dee_hash_t hash) {
+	NONNULL_CXX((1)) bool hasattr(char const *__restrict name, Dee_hash_t hash) {
 		return throw_if_negative(DeeObject_HasAttrStringHash(((ProxyType *)this)->ptr(), name, hash)) != 0;
 	}
-	NONNULL((1)) bool hasattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) bool hasattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
 		return throw_if_negative(DeeObject_HasAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash)) != 0;
 	}
-	NONNULL((1)) bool boundattr(string *name) {
-		return throw_if_minusone(DeeObject_BoundAttr(((ProxyType *)this)->ptr(), name)) > 0;
+	NONNULL_CXX((1)) bool boundattr(string *name) {
+		return throw_if_minusone(DeeObject_BoundAttr(((ProxyType *)this)->ptr(), name));
 	}
-	NONNULL((1)) bool boundattr(char const *__restrict name) {
-		return throw_if_minusone(DeeObject_BoundAttrString(((ProxyType *)this)->ptr(), name)) > 0;
+	NONNULL_CXX((1)) bool boundattr(char const *__restrict name) {
+		return throw_if_minusone(DeeObject_BoundAttrString(((ProxyType *)this)->ptr(), name));
 	}
-	NONNULL((1)) bool boundattr(char const *__restrict name, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundAttrStringHash(((ProxyType *)this)->ptr(), name, hash)) > 0;
+	NONNULL_CXX((1)) bool boundattr(char const *__restrict name, Dee_hash_t hash) {
+		return throw_if_minusone(DeeObject_BoundAttrStringHash(((ProxyType *)this)->ptr(), name, hash));
 	}
-	NONNULL((1)) bool boundattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash)) > 0;
+	NONNULL_CXX((1)) bool boundattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
+		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash));
 	}
-	NONNULL((1)) void delattr(string *name) {
+	NONNULL_CXX((1)) void delattr(string *name) {
 		throw_if_negative(DeeObject_DelAttr(((ProxyType *)this)->ptr(), name));
 	}
-	NONNULL((1)) void delattr(char const *__restrict name) {
+	NONNULL_CXX((1)) void delattr(char const *__restrict name) {
 		throw_if_negative(DeeObject_DelAttrString(((ProxyType *)this)->ptr(), name));
 	}
-	NONNULL((1)) void delattr(char const *__restrict name, Dee_hash_t hash) {
+	NONNULL_CXX((1)) void delattr(char const *__restrict name, Dee_hash_t hash) {
 		throw_if_negative(DeeObject_DelAttrStringHash(((ProxyType *)this)->ptr(), name, hash));
 	}
-	NONNULL((1)) void delattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) void delattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
 		throw_if_negative(DeeObject_DelAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash));
 	}
-	NONNULL((1)) void setattr(string *name, DeeObject *value) {
+	NONNULL_CXX((1)) void setattr(string *name, DeeObject *value) {
 		throw_if_negative(DeeObject_SetAttr(((ProxyType *)this)->ptr(), name, value));
 	}
-	NONNULL((1)) void setattr(char const *__restrict name, DeeObject *value) {
+	NONNULL_CXX((1)) void setattr(char const *__restrict name, DeeObject *value) {
 		throw_if_negative(DeeObject_SetAttrString(((ProxyType *)this)->ptr(), name, value));
 	}
-	NONNULL((1)) void setattr(char const *__restrict name, Dee_hash_t hash, DeeObject *value) {
+	NONNULL_CXX((1)) void setattr(char const *__restrict name, Dee_hash_t hash, DeeObject *value) {
 		throw_if_negative(DeeObject_SetAttrStringHash(((ProxyType *)this)->ptr(), name, hash, value));
 	}
-	NONNULL((1)) void setattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, DeeObject *value) {
+	NONNULL_CXX((1)) void setattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, DeeObject *value) {
 		throw_if_negative(DeeObject_SetAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash, value));
 	}
 
-	NONNULL((1)) Ref<CallReturnType> callattr(string *name) {
+	NONNULL_CXX((1)) Ref<CallReturnType> callattr(string *name) {
 		return inherit(DeeObject_CallAttr(((ProxyType *)this)->ptr(), (DeeObject *)name, 0, NULL));
 	}
-	template<class ...ArgTypes> NONNULL((1))
+	template<class ...ArgTypes> NONNULL_CXX((1))
 	Ref<CallReturnType> callattr(string *name, Tuple<ArgTypes...> const *args) {
 		return inherit(DeeObject_CallAttrTuple(((ProxyType *)this)->ptr(), (DeeObject *)name, (DeeObject *)args));
 	}
-	template<class KwTypePtr, class ...ArgTypes> NONNULL((1))
+	template<class KwTypePtr, class ...ArgTypes> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(KwTypePtr, Ref<CallReturnType>) callattr(string *name, Tuple<ArgTypes...> const *args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrTupleKw(((ProxyType *)this)->ptr(), (DeeObject *)name, (DeeObject *)args, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(string *name, size_t argc, ArgType *const *argv) {
 		return inherit(DeeObject_CallAttr(((ProxyType *)this)->ptr(), (DeeObject *)name, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(string *name, size_t argc, ArgType **argv) {
 		return inherit(DeeObject_CallAttr(((ProxyType *)this)->ptr(), (DeeObject *)name, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(string *name, size_t argc, ArgType *const *argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrKw(((ProxyType *)this)->ptr(), (DeeObject *)name, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(string *name, size_t argc, ArgType **argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrKw(((ProxyType *)this)->ptr(), (DeeObject *)name, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(ArgType, Ref<CallReturnType>) callattr(string *name, std::initializer_list<ArgType> const &args) {
 		return inherit(DeeObject_CallAttr(((ProxyType *)this)->ptr(), (DeeObject *)name, args.size(), (DeeObject *const *)args.begin()));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR2_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(string *name, std::initializer_list<ArgType> const &args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrKw(((ProxyType *)this)->ptr(), (DeeObject *)name, args.size(), (DeeObject *const *)args.begin(), (DeeObject *)kw));
 	}
 
-	NONNULL((1)) Ref<CallReturnType> callattr(char const *__restrict name) {
+	NONNULL_CXX((1)) Ref<CallReturnType> callattr(char const *__restrict name) {
 		return inherit(DeeObject_CallAttrString(((ProxyType *)this)->ptr(), name, 0, NULL));
 	}
-	template<class ...ArgTypes> NONNULL((1))
+	template<class ...ArgTypes> NONNULL_CXX((1))
 	Ref<CallReturnType> callattr(char const *__restrict name, Tuple<ArgTypes...> const *args) {
 		return inherit(DeeObject_CallAttrStringTuple(((ProxyType *)this)->ptr(), name, (DeeObject *)args));
 	}
-	template<class KwTypePtr, class ...ArgTypes> NONNULL((1))
+	template<class KwTypePtr, class ...ArgTypes> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, Tuple<ArgTypes...> const *args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringTupleKw(((ProxyType *)this)->ptr(), name, (DeeObject *)args, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, size_t argc, ArgType *const *argv) {
 		return inherit(DeeObject_CallAttrString(((ProxyType *)this)->ptr(), name, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, size_t argc, ArgType **argv) {
 		return inherit(DeeObject_CallAttrString(((ProxyType *)this)->ptr(), name, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t argc, ArgType *const *argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringKw(((ProxyType *)this)->ptr(), name, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t argc, ArgType **argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringKw(((ProxyType *)this)->ptr(), name, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, std::initializer_list<ArgType> const &args) {
 		return inherit(DeeObject_CallAttrString(((ProxyType *)this)->ptr(), name, args.size(), (DeeObject *const *)args.begin()));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR2_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, std::initializer_list<ArgType> const &args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringKw(((ProxyType *)this)->ptr(), name, args.size(), (DeeObject *const *)args.begin(), (DeeObject *)kw));
 	}
 
-	NONNULL((1)) Ref<CallReturnType> callattr(char const *__restrict name, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<CallReturnType> callattr(char const *__restrict name, Dee_hash_t hash) {
 		return inherit(DeeObject_CallAttrStringHash(((ProxyType *)this)->ptr(), name, hash, 0, NULL));
 	}
-	template<class ...ArgTypes> NONNULL((1))
+	template<class ...ArgTypes> NONNULL_CXX((1))
 	Ref<CallReturnType> callattr(char const *__restrict name, Dee_hash_t hash, Tuple<ArgTypes...> const *args) {
 		return inherit(DeeObject_CallAttrStringHashTuple(((ProxyType *)this)->ptr(), name, hash, (DeeObject *)args));
 	}
-	template<class KwTypePtr, class ...ArgTypes> NONNULL((1))
+	template<class KwTypePtr, class ...ArgTypes> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, Tuple<ArgTypes...> const *args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringHashTupleKw(((ProxyType *)this)->ptr(), name, hash, (DeeObject *)args, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, ArgType *const *argv) {
 		return inherit(DeeObject_CallAttrStringHash(((ProxyType *)this)->ptr(), name, hash, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, ArgType **argv) {
 		return inherit(DeeObject_CallAttrStringHash(((ProxyType *)this)->ptr(), name, hash, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, ArgType *const *argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringHashKw(((ProxyType *)this)->ptr(), name, hash, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, size_t argc, ArgType **argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringHashKw(((ProxyType *)this)->ptr(), name, hash, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<ArgType> const &args) {
 		return inherit(DeeObject_CallAttrStringHash(((ProxyType *)this)->ptr(), name, hash, args.size(), (DeeObject *const *)args.begin()));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR2_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, Dee_hash_t hash, std::initializer_list<ArgType> const &args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringHashKw(((ProxyType *)this)->ptr(), name, hash, args.size(), (DeeObject *const *)args.begin(), (DeeObject *)kw));
 	}
 
-	NONNULL((1)) Ref<CallReturnType> callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<CallReturnType> callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
 		return inherit(DeeObject_CallAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash, 0, NULL));
 	}
-	template<class ...ArgTypes> NONNULL((1))
+	template<class ...ArgTypes> NONNULL_CXX((1))
 	Ref<CallReturnType> callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, Tuple<ArgTypes...> const *args) {
 		return inherit(DeeObject_CallAttrStringLenHashTuple(((ProxyType *)this)->ptr(), name, namelen, hash, (DeeObject *)args));
 	}
-	template<class KwTypePtr, class ...ArgTypes> NONNULL((1))
+	template<class KwTypePtr, class ...ArgTypes> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, Tuple<ArgTypes...> const *args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringLenHashTupleKw(((ProxyType *)this)->ptr(), name, namelen, hash, (DeeObject *)args, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, ArgType *const *argv) {
 		return inherit(DeeObject_CallAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, ArgType **argv) {
 		return inherit(DeeObject_CallAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash, argc, (DeeObject *const *)argv));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, ArgType *const *argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringLenHashKw(((ProxyType *)this)->ptr(), name, namelen, hash, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_AND_PTR_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, ArgType **argv, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringLenHashKw(((ProxyType *)this)->ptr(), name, namelen, hash, argc, (DeeObject *const *)argv, (DeeObject *)kw));
 	}
-	template<class ArgType> NONNULL((1))
+	template<class ArgType> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR_T(ArgType, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<ArgType> const &args) {
 		return inherit(DeeObject_CallAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash, args.size(), (DeeObject *const *)args.begin()));
 	}
-	template<class ArgType, class KwTypePtr> NONNULL((1))
+	template<class ArgType, class KwTypePtr> NONNULL_CXX((1))
 	DEE_ENABLE_IF_OBJECT_PTR2_T(ArgType, KwTypePtr, Ref<CallReturnType>) callattr(char const *__restrict name, size_t namelen, Dee_hash_t hash, std::initializer_list<ArgType> const &args, KwTypePtr kw) {
 		return inherit(DeeObject_CallAttrStringLenHashKw(((ProxyType *)this)->ptr(), name, namelen, hash, args.size(), (DeeObject *const *)args.begin(), (DeeObject *)kw));
 	}
@@ -2478,128 +2493,128 @@ public:
 		return CxxIterator<GetItemType>();
 	}
 
-	NONNULL((1)) ItemProxyObj<GetItemType> operator[](DeeObject *index_or_key) {
+	NONNULL_CXX((1)) ItemProxyObj<GetItemType> operator[](DeeObject *index_or_key) {
 		return ItemProxyObj<GetItemType>(((ProxyType *)this)->ptr(), index_or_key);
 	}
 	ItemProxyIdx<GetItemType> operator[](size_t index) {
 		return ItemProxyIdx<GetItemType>(((ProxyType *)this)->ptr(), index);
 	}
-	NONNULL((1)) ItemProxySth<GetItemType> operator[](char const *key) {
+	NONNULL_CXX((1)) ItemProxySth<GetItemType> operator[](char const *key) {
 		return ItemProxySth<GetItemType>(((ProxyType *)this)->ptr(), key, Dee_HashStr(key));
 	}
 
-	NONNULL((1)) ItemProxyObj<GetItemType> item(DeeObject *index_or_key) {
+	NONNULL_CXX((1)) ItemProxyObj<GetItemType> item(DeeObject *index_or_key) {
 		return ItemProxyObj<GetItemType>(((ProxyType *)this)->ptr(), index_or_key);
 	}
 	ItemProxyIdx<GetItemType> item(size_t index) {
 		return ItemProxyIdx<GetItemType>(((ProxyType *)this)->ptr(), index);
 	}
-	NONNULL((1)) ItemProxySth<GetItemType> item(char const *key) {
+	NONNULL_CXX((1)) ItemProxySth<GetItemType> item(char const *key) {
 		return ItemProxySth<GetItemType>(((ProxyType *)this)->ptr(), key, Dee_HashStr(key));
 	}
-	NONNULL((1)) ItemProxySth<GetItemType> item(char const *key, Dee_hash_t hash) {
+	NONNULL_CXX((1)) ItemProxySth<GetItemType> item(char const *key, Dee_hash_t hash) {
 		return ItemProxySth<GetItemType>(((ProxyType *)this)->ptr(), key, hash);
 	}
-	NONNULL((1)) ItemProxySnh<GetItemType> item(char const *key, size_t keylen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) ItemProxySnh<GetItemType> item(char const *key, size_t keylen, Dee_hash_t hash) {
 		return ItemProxySnh<GetItemType>(((ProxyType *)this)->ptr(), key, keylen, hash);
 	}
 
-	NONNULL((1)) Ref<GetItemType> getitem(DeeObject *index_or_key) {
+	NONNULL_CXX((1)) Ref<GetItemType> getitem(DeeObject *index_or_key) {
 		return inherit(DeeObject_GetItem(((ProxyType *)this)->ptr(), index_or_key));
 	}
-	NONNULL((1, 2)) Ref<GetItemType> getitem(DeeObject *index_or_key, DeeObject *def) {
+	NONNULL_CXX((1, 2)) Ref<GetItemType> getitem(DeeObject *index_or_key, DeeObject *def) {
 		return inherit(DeeObject_GetItemDef(((ProxyType *)this)->ptr(), index_or_key, def));
 	}
 	Ref<GetItemType> getitem(size_t index) {
 		return inherit(DeeObject_GetItemIndex(((ProxyType *)this)->ptr(), index));
 	}
-	NONNULL((2)) Ref<GetItemType> getitem(size_t index, DeeObject *def) {
+	NONNULL_CXX((2)) Ref<GetItemType> getitem(size_t index, DeeObject *def) {
 		DREF DeeObject *index_ob, *result;
 		index_ob = throw_if_null(DeeInt_NewSize(m_idx));
 		result = DeeObject_GetItemDef(m_ptr, index_ob, def);
 		Dee_Decref(index_ob);
 		return inherit(result);
 	}
-	NONNULL((1)) Ref<GetItemType> getitem(char const *key) {
+	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key) {
 		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key)));
 	}
-	NONNULL((1, 2)) Ref<GetItemType> getitem(char const *key, DeeObject *def) {
+	NONNULL_CXX((1, 2)) Ref<GetItemType> getitem(char const *key, DeeObject *def) {
 		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), def));
 	}
-	NONNULL((1)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash) {
 		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key, hash));
 	}
-	NONNULL((1, 3)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash, DeeObject *def) {
+	NONNULL_CXX((1, 3)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash, DeeObject *def) {
 		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, hash, def));
 	}
-	NONNULL((1)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash) {
 		return inherit(DeeObject_GetItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash));
 	}
-	NONNULL((1, 4)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *def) {
+	NONNULL_CXX((1, 4)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *def) {
 		return inherit(DeeObject_GetItemStringLenDef(((ProxyType *)this)->ptr(), key, keylen, hash, def));
 	}
 
-	NONNULL((1)) bool bounditem(DeeObject *index_or_key, bool allow_missing = true) {
+	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key, bool allow_missing = true) {
 		return throw_if_minusone(DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key, allow_missing)) > 0;
 	}
 	bool bounditem(size_t index, bool allow_missing = true) {
 		return throw_if_minusone(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index, allow_missing)) > 0;
 	}
-	NONNULL((1)) bool bounditem(char const *key, bool allow_missing = true) {
+	NONNULL_CXX((1)) bool bounditem(char const *key, bool allow_missing = true) {
 		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), allow_missing)) > 0;
 	}
-	NONNULL((1)) bool bounditem(char const *key, Dee_hash_t hash, bool allow_missing = true) {
+	NONNULL_CXX((1)) bool bounditem(char const *key, Dee_hash_t hash, bool allow_missing = true) {
 		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, hash, allow_missing)) > 0;
 	}
-	NONNULL((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash, bool allow_missing = true) {
+	NONNULL_CXX((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash, bool allow_missing = true) {
 		return throw_if_minusone(DeeObject_BoundItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash, allow_missing)) > 0;
 	}
 
-	NONNULL((1)) bool hasitem(DeeObject *index_or_key) {
+	NONNULL_CXX((1)) bool hasitem(DeeObject *index_or_key) {
 		return throw_if_negative(DeeObject_HasItem(((ProxyType *)this)->ptr(), index_or_key)) != 0;
 	}
 	bool hasitem(size_t index) {
 		return throw_if_negative(DeeObject_HasItemIndex(((ProxyType *)this)->ptr(), index)) != 0;
 	}
-	NONNULL((1)) bool hasitem(char const *key) {
+	NONNULL_CXX((1)) bool hasitem(char const *key) {
 		return throw_if_negative(DeeObject_HasItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key))) != 0;
 	}
-	NONNULL((1)) bool hasitem(char const *key, Dee_hash_t hash) {
+	NONNULL_CXX((1)) bool hasitem(char const *key, Dee_hash_t hash) {
 		return throw_if_negative(DeeObject_HasItemString(((ProxyType *)this)->ptr(), key, hash)) != 0;
 	}
-	NONNULL((1)) bool hasitem(char const *key, size_t keylen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) bool hasitem(char const *key, size_t keylen, Dee_hash_t hash) {
 		return throw_if_negative(DeeObject_HasItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash)) != 0;
 	}
 
-	NONNULL((1)) void delitem(DeeObject *index_or_key) {
+	NONNULL_CXX((1)) void delitem(DeeObject *index_or_key) {
 		throw_if_nonzero(DeeObject_DelItem(((ProxyType *)this)->ptr(), index_or_key));
 	}
 	void delitem(size_t index) {
 		throw_if_nonzero(DeeObject_DelItemIndex(((ProxyType *)this)->ptr(), index));
 	}
-	NONNULL((1)) void delitem(char const *key) {
+	NONNULL_CXX((1)) void delitem(char const *key) {
 		throw_if_nonzero(DeeObject_DelItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key)));
 	}
-	NONNULL((1)) void delitem(char const *key, Dee_hash_t hash) {
+	NONNULL_CXX((1)) void delitem(char const *key, Dee_hash_t hash) {
 		throw_if_nonzero(DeeObject_DelItemString(((ProxyType *)this)->ptr(), key, hash));
 	}
-	NONNULL((1)) void delitem(char const *key, size_t keylen, Dee_hash_t hash) {
+	NONNULL_CXX((1)) void delitem(char const *key, size_t keylen, Dee_hash_t hash) {
 		throw_if_nonzero(DeeObject_DelItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash));
 	}
 
-	NONNULL((1, 2)) void setitem(DeeObject *index_or_key, DeeObject *value) {
+	NONNULL_CXX((1, 2)) void setitem(DeeObject *index_or_key, DeeObject *value) {
 		throw_if_nonzero(DeeObject_SetItem(((ProxyType *)this)->ptr(), index_or_key, value));
 	}
-	NONNULL((2)) void setitem(size_t index, DeeObject *value) {
+	NONNULL_CXX((2)) void setitem(size_t index, DeeObject *value) {
 		throw_if_nonzero(DeeObject_SetItemIndex(((ProxyType *)this)->ptr(), index, value));
 	}
-	NONNULL((1, 2)) void setitem(char const *key, DeeObject *value) {
+	NONNULL_CXX((1, 2)) void setitem(char const *key, DeeObject *value) {
 		throw_if_nonzero(DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, Dee_HashStr(key), value));
 	}
-	NONNULL((1, 3)) void setitem(char const *key, Dee_hash_t hash, DeeObject *value) {
+	NONNULL_CXX((1, 3)) void setitem(char const *key, Dee_hash_t hash, DeeObject *value) {
 		throw_if_nonzero(DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, hash, value));
 	}
-	NONNULL((1, 4)) void setitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+	NONNULL_CXX((1, 4)) void setitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
 		throw_if_nonzero(DeeObject_SetItemStringLen(((ProxyType *)this)->ptr(), key, keylen, hash, value));
 	}
 };
@@ -2608,36 +2623,36 @@ template<class ProxyType,
          class RangeSeqType = Sequence<> >
 class RangeProxyAccessor {
 public:
-	NONNULL((1, 2)) RangeProxyObj<RangeSeqType> range(DeeObject *begin, DeeObject *end) {
+	NONNULL_CXX((1, 2)) RangeProxyObj<RangeSeqType> range(DeeObject *begin, DeeObject *end) {
 		return RangeProxyObj<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
-	NONNULL((1)) RangeProxyObjIdx<RangeSeqType> range(DeeObject *begin, size_t end) {
+	NONNULL_CXX((1)) RangeProxyObjIdx<RangeSeqType> range(DeeObject *begin, size_t end) {
 		return RangeProxyObjIdx<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
-	NONNULL((2)) RangeProxyIdxObj<RangeSeqType> range(size_t begin, DeeObject *end) {
+	NONNULL_CXX((2)) RangeProxyIdxObj<RangeSeqType> range(size_t begin, DeeObject *end) {
 		return RangeProxyIdxObj<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
 	RangeProxyIdx<RangeSeqType> range(size_t begin, size_t end) {
 		return RangeProxyIdx<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
 
-	NONNULL((1, 2)) Ref<RangeSeqType> getrange(DeeObject *begin, DeeObject *end) {
+	NONNULL_CXX((1, 2)) Ref<RangeSeqType> getrange(DeeObject *begin, DeeObject *end) {
 		return inherit(DeeObject_GetRange(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL((1)) Ref<RangeSeqType> getrange(DeeObject *begin, size_t end) {
+	NONNULL_CXX((1)) Ref<RangeSeqType> getrange(DeeObject *begin, size_t end) {
 		return inherit(DeeObject_GetRangeEndIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL((2)) Ref<RangeSeqType> getrange(size_t begin, DeeObject *end) {
+	NONNULL_CXX((2)) Ref<RangeSeqType> getrange(size_t begin, DeeObject *end) {
 		return inherit(DeeObject_GetRangeBeginIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
 	Ref<RangeSeqType> getrange(size_t begin, size_t end) {
 		return inherit(DeeObject_GetRangeIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
 
-	NONNULL((1, 2)) void delrange(DeeObject *begin, DeeObject *end) {
+	NONNULL_CXX((1, 2)) void delrange(DeeObject *begin, DeeObject *end) {
 		throw_if_nonzero(DeeObject_DelRange(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL((1)) void delrange(DeeObject *begin, size_t end) {
+	NONNULL_CXX((1)) void delrange(DeeObject *begin, size_t end) {
 		int error;
 		DREF DeeObject *end_ob;
 		end_ob = throw_if_null(DeeInt_NewSize(end));
@@ -2645,7 +2660,7 @@ public:
 		Dee_Decref(end_ob);
 		throw_if_nonzero(error);
 	}
-	NONNULL((2)) void delrange(size_t begin, DeeObject *end) {
+	NONNULL_CXX((2)) void delrange(size_t begin, DeeObject *end) {
 		int error;
 		DREF DeeObject *begin_ob;
 		begin_ob = throw_if_null(DeeInt_NewSize(begin));
@@ -2668,16 +2683,16 @@ public:
 		throw_if_nonzero(error);
 	}
 
-	NONNULL((1, 2, 3)) void setrange(DeeObject *begin, DeeObject *end, DeeObject *value) {
+	NONNULL_CXX((1, 2, 3)) void setrange(DeeObject *begin, DeeObject *end, DeeObject *value) {
 		return inherit(DeeObject_SetRange(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL((1, 3)) void setrange(DeeObject *begin, size_t end, DeeObject *value) {
+	NONNULL_CXX((1, 3)) void setrange(DeeObject *begin, size_t end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeEndIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL((2, 3)) void setrange(size_t begin, DeeObject *end, DeeObject *value) {
+	NONNULL_CXX((2, 3)) void setrange(size_t begin, DeeObject *end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeBeginIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL((3)) void setrange(size_t begin, size_t end, DeeObject *value) {
+	NONNULL_CXX((3)) void setrange(size_t begin, size_t end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
 };
@@ -2862,13 +2877,13 @@ class Object
 	__CXX_DELETE_COPY_ASSIGN(Object);
 	__CXX_DELETE_VOLATILE_COPY_ASSIGN(Object);
 public:
-	static Type &classtype() DEE_CXX_NOTHROW {
+	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
 		return *(Type *)&DeeObject_Type;
 	}
-	static bool check(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW {
+	static WUNUSED NONNULL_CXX((1)) bool check(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW {
 		return true;
 	}
-	static bool checkexact(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW {
+	static WUNUSED NONNULL_CXX((1)) bool checkexact(DeeObject *__restrict UNUSED(ob)) DEE_CXX_NOTHROW {
 		return true;
 	}
 
@@ -2876,10 +2891,10 @@ public:
 	ATTR_RETNONNULL WUNUSED DeeObject *ptr() DEE_CXX_NOTHROW {
 		return this;
 	}
-	WUNUSED NONNULL((1)) DREF DeeObject *_callref(DeeObject *args) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1)) DREF DeeObject *_callref(DeeObject *args) DEE_CXX_NOTHROW {
 		return DeeObject_CallTuple(this, args);
 	}
-	WUNUSED NONNULL((1)) DREF DeeObject *_callref(DeeObject *args, DeeObject *kw) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1)) DREF DeeObject *_callref(DeeObject *args, DeeObject *kw) DEE_CXX_NOTHROW {
 		return DeeObject_CallTupleKw(this, args, kw);
 	}
 	WUNUSED DREF DeeObject *_callref(size_t argc, DeeObject *const *argv) DEE_CXX_NOTHROW {
@@ -2889,16 +2904,16 @@ public:
 		return DeeObject_CallKw(this, argc, argv, kw);
 	}
 
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *_thiscallref(DeeObject *this_arg, DeeObject *args) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1, 2)) DREF DeeObject *_thiscallref(DeeObject *this_arg, DeeObject *args) DEE_CXX_NOTHROW {
 		return DeeObject_ThisCallTuple(this, this_arg, args);
 	}
-	WUNUSED NONNULL((1, 2)) DREF DeeObject *_thiscallref(DeeObject *this_arg, DeeObject *args, DeeObject *kw) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1, 2)) DREF DeeObject *_thiscallref(DeeObject *this_arg, DeeObject *args, DeeObject *kw) DEE_CXX_NOTHROW {
 		return DeeObject_ThisCallTupleKw(this, this_arg, args, kw);
 	}
-	WUNUSED NONNULL((1)) DREF DeeObject *_thiscallref(DeeObject *this_arg, size_t argc, DeeObject *const *argv) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1)) DREF DeeObject *_thiscallref(DeeObject *this_arg, size_t argc, DeeObject *const *argv) DEE_CXX_NOTHROW {
 		return DeeObject_ThisCall(this, this_arg, argc, argv);
 	}
-	WUNUSED NONNULL((1)) DREF DeeObject *_thiscallref(DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw) DEE_CXX_NOTHROW {
+	WUNUSED NONNULL_CXX((1)) DREF DeeObject *_thiscallref(DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw) DEE_CXX_NOTHROW {
 		return DeeObject_ThisCallKw(this, this_arg, argc, argv, kw);
 	}
 
@@ -2908,18 +2923,25 @@ public:
 	Ref<string> repr() {
 		return inherit(DeeObject_Repr(this));
 	}
-	Ref<Super> super() {
+	Ref<Object> super() {
 		return inherit(DeeSuper_Of(this));
 	}
-	Ref<Super> super(DeeTypeObject *__restrict super_type) {
+	Ref<Object> super(DeeTypeObject *__restrict super_type) {
 		return inherit(DeeSuper_New(super_type, this));
 	}
-	Ref<Super> next() {
+	Ref<Object> next() {
 		DREF DeeObject *result;
 		result = throw_if_null(DeeObject_IterNext(this));
 		if (result == ITER_DONE)
 			result = NULL;
 		return inherit(maybenull(result));
+	}
+
+	bool contains(DeeObject *value) {
+		return throw_if_negative(DeeObject_Contains(this, value)) > 0;
+	}
+	size_t size() {
+		return throw_if_minusone(DeeObject_Size(this));
 	}
 
 #undef print
@@ -2960,13 +2982,22 @@ public:
 		return inherit(DeeObject_InvokeOperator(this, name, args.size(), (DeeObject *const *)args.begin()));
 	}
 
-	WUNUSED operator bool() {
+	WUNUSED bool istrue() {
 		return throw_if_negative(DeeObject_Bool(this)) != 0;
 	}
+	WUNUSED bool isfalse() {
+		return !istrue();
+	}
+	WUNUSED operator bool() {
+		return istrue();
+	}
 	WUNUSED bool operator!() {
-		return throw_if_negative(DeeObject_Bool(this)) == 0;
+		return isfalse();
 	}
 
+	WUNUSED Dee_hash_t hash() DEE_CXX_NOTHROW {
+		return DeeObject_Hash(this);
+	}
 
 	WUNUSED Ref<Object> operator==(DeeObject *other) {
 		return inherit(DeeObject_CompareEqObject(this, other));
@@ -3068,45 +3099,29 @@ public:
 		return result;
 	}
 	WUNUSED short asshort() {
-		short result;
-		getval(result);
-		return result;
+		return asval<short>();
 	}
 	WUNUSED unsigned short asushort() {
-		unsigned short result;
-		getval(result);
-		return result;
+		return asval<unsigned short>();
 	}
 	WUNUSED int asint() {
-		int result;
-		getval(result);
-		return result;
+		return asval<int>();
 	}
 	WUNUSED unsigned int asuint() {
-		unsigned int result;
-		getval(result);
-		return result;
+		return asval<unsigned int>();
 	}
 	WUNUSED long aslong() {
-		long result;
-		getval(result);
-		return result;
+		return asval<long>();
 	}
 	WUNUSED unsigned long asulong() {
-		unsigned long result;
-		getval(result);
-		return result;
+		return asval<unsigned long>();
 	}
 #ifdef __COMPILER_HAVE_LONGLONG
 	WUNUSED __LONGLONG asllong() {
-		__LONGLONG result;
-		getval(result);
-		return result;
+		return asval<__LONGLONG>();
 	}
 	WUNUSED __ULONGLONG asullong() {
-		__ULONGLONG result;
-		getval(result);
-		return result;
+		return asval<__ULONGLONG>();
 	}
 #endif /* __COMPILER_HAVE_LONGLONG */
 	WUNUSED int8_t ass8() {
@@ -3217,17 +3232,342 @@ public:
 	template<class T> DEE_ENABLE_IF_OBJECT(T) const &as() const DEE_CXX_NOTHROW {
 		return *(T const *)this;
 	}
+
+/*[[[deemon (CxxType from rt.gen.cxxapi)(Object from deemon).printCxxApi(exclude: { "this", "class", "type", "super" });]]]*/
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__assign__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__assign__", _Dee_HashSelect(UINT32_C(0x1fe4d78d), UINT64_C(0x874637496b0b0a2d)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__moveassign__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__moveassign__", _Dee_HashSelect(UINT32_C(0x45785caa), UINT64_C(0x3ef73258381466b4)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__call__)(DeeObject *args) {
+		DeeObject *args_[1];
+		args_[0] = args;
+		return inherit(DeeObject_CallAttrStringHash(this, "__call__", _Dee_HashSelect(UINT32_C(0xbf1484cd), UINT64_C(0x98fac865489cd2e0)), 1, args_));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__thiscall__)(DeeObject *this_arg, DeeObject *args) {
+		DeeObject *args_[2];
+		args_[0] = this_arg;
+		args_[1] = args;
+		return inherit(DeeObject_CallAttrStringHash(this, "__thiscall__", _Dee_HashSelect(UINT32_C(0xb621cbeb), UINT64_C(0x1f66fa1159253519)), 2, args_));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__add__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__add__", _Dee_HashSelect(UINT32_C(0x5cb4d11a), UINT64_C(0x6f33a2bc44b51c54)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__sub__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__sub__", _Dee_HashSelect(UINT32_C(0xc2239a1e), UINT64_C(0xd91dc2370225ae2f)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__mul__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__mul__", _Dee_HashSelect(UINT32_C(0x51c62b13), UINT64_C(0x7e793c85424d924c)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__div__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__div__", _Dee_HashSelect(UINT32_C(0x5b814977), UINT64_C(0x4a50b3e0b859e051)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__mod__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__mod__", _Dee_HashSelect(UINT32_C(0x481c8a3), UINT64_C(0x4f56cb923e40dd8)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__shl__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__shl__", _Dee_HashSelect(UINT32_C(0xca15bfa1), UINT64_C(0x8eb668f22579acf1)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__shr__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__shr__", _Dee_HashSelect(UINT32_C(0xb066ed7b), UINT64_C(0xc3d4cf88459979b3)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__and__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__and__", _Dee_HashSelect(UINT32_C(0xac39cb48), UINT64_C(0x2b28cb619a45a71e)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__or__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__or__", _Dee_HashSelect(UINT32_C(0xf95e054c), UINT64_C(0x2bc6caacde6c129e)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__xor__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__xor__", _Dee_HashSelect(UINT32_C(0x7378854c), UINT64_C(0x4a8410f65a74106f)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__pow__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__pow__", _Dee_HashSelect(UINT32_C(0xe40938b1), UINT64_C(0xefb08d20fe1ec58)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__eq__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__eq__", _Dee_HashSelect(UINT32_C(0x2e15aa28), UINT64_C(0x20311e6561792a00)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ne__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ne__", _Dee_HashSelect(UINT32_C(0x485d961), UINT64_C(0xe9453f35f2aef187)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__lo__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__lo__", _Dee_HashSelect(UINT32_C(0xbd689eba), UINT64_C(0xf2a5e28053b056c9)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__le__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__le__", _Dee_HashSelect(UINT32_C(0xd4e31410), UINT64_C(0xe371879105557498)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__gr__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__gr__", _Dee_HashSelect(UINT32_C(0x8af205e9), UINT64_C(0x3fe2793f689055e5)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ge__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ge__", _Dee_HashSelect(UINT32_C(0xe467e452), UINT64_C(0xe5ad3ef5f6f17572)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__contains__)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "__contains__", _Dee_HashSelect(UINT32_C(0x769af591), UINT64_C(0x80f9234f8000b556)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__getitem__)(DeeObject *index) {
+		DeeObject *args[1];
+		args[0] = index;
+		return inherit(DeeObject_CallAttrStringHash(this, "__getitem__", _Dee_HashSelect(UINT32_C(0x2796c7b1), UINT64_C(0x326672bfc335fb3d)), 1, args));
+	}
+	NONNULL_CXX((1)) void (__delitem__)(DeeObject *index) {
+		DeeObject *args[1];
+		args[0] = index;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delitem__", _Dee_HashSelect(UINT32_C(0x20ba3d50), UINT64_C(0x477c6001247177f)), 1, args)));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__setitem__)(DeeObject *index, DeeObject *value) {
+		DeeObject *args[2];
+		args[0] = index;
+		args[1] = value;
+		return inherit(DeeObject_CallAttrStringHash(this, "__setitem__", _Dee_HashSelect(UINT32_C(0xa12b6584), UINT64_C(0x4f2c202e4a8ee77a)), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__getrange__)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "__getrange__", _Dee_HashSelect(UINT32_C(0x7f22541), UINT64_C(0x53d4d4259a06a055)), 2, args));
+	}
+	NONNULL_CXX((1, 2)) void (__delrange__)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delrange__", _Dee_HashSelect(UINT32_C(0x685a6ec8), UINT64_C(0xbd7df74412129f9d)), 2, args)));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Object> (__setrange__)(DeeObject *start, DeeObject *end, DeeObject *value) {
+		DeeObject *args[3];
+		args[0] = start;
+		args[1] = end;
+		args[2] = value;
+		return inherit(DeeObject_CallAttrStringHash(this, "__setrange__", _Dee_HashSelect(UINT32_C(0x7f9874f9), UINT64_C(0x9da9fdb9a7e37ce8)), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__getattr__)(DeeObject *name) {
+		DeeObject *args[1];
+		args[0] = name;
+		return inherit(DeeObject_CallAttrStringHash(this, "__getattr__", _Dee_HashSelect(UINT32_C(0x59b442c5), UINT64_C(0xdef2290969a1663b)), 1, args));
+	}
+	WUNUSED Ref<Object> (__getattr__)(char const *name) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__getattr__", _Dee_HashSelect(UINT32_C(0x59b442c5), UINT64_C(0xdef2290969a1663b)), "s", name));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (__callattr__)(DeeObject *name, DeeObject *args) {
+		DeeObject *args_[2];
+		args_[0] = name;
+		args_[1] = args;
+		return inherit(DeeObject_CallAttrStringHash(this, "__callattr__", _Dee_HashSelect(UINT32_C(0xdb8ad67), UINT64_C(0x55d365851b01ce77)), 2, args_));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<Object> (__callattr__)(char const *name, DeeObject *args) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__callattr__", _Dee_HashSelect(UINT32_C(0xdb8ad67), UINT64_C(0x55d365851b01ce77)), "so", name, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (__hasattr__)(DeeObject *name) {
+		DeeObject *args[1];
+		args[0] = name;
+		return inherit(DeeObject_CallAttrStringHash(this, "__hasattr__", _Dee_HashSelect(UINT32_C(0xca559b90), UINT64_C(0x8e9c1065fc0f38a5)), 1, args));
+	}
+	WUNUSED Ref<deemon::bool_> (__hasattr__)(char const *name) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__hasattr__", _Dee_HashSelect(UINT32_C(0xca559b90), UINT64_C(0x8e9c1065fc0f38a5)), "s", name));
+	}
+	NONNULL_CXX((1)) void (__delattr__)(DeeObject *name) {
+		DeeObject *args[1];
+		args[0] = name;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__delattr__", _Dee_HashSelect(UINT32_C(0x4f3fb870), UINT64_C(0x15b0036f4684d4a7)), 1, args)));
+	}
+	void (__delattr__)(char const *name) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__delattr__", _Dee_HashSelect(UINT32_C(0x4f3fb870), UINT64_C(0x15b0036f4684d4a7)), "s", name)));
+	}
+	NONNULL_CXX((1, 2)) void (__setattr__)(DeeObject *name, DeeObject *value) {
+		DeeObject *args[2];
+		args[0] = name;
+		args[1] = value;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "__setattr__", _Dee_HashSelect(UINT32_C(0x8a57f5f3), UINT64_C(0x8f1d3bac859d769d)), 2, args)));
+	}
+	NONNULL_CXX((2)) void (__setattr__)(char const *name, DeeObject *value) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "__setattr__", _Dee_HashSelect(UINT32_C(0x8a57f5f3), UINT64_C(0x8f1d3bac859d769d)), "so", name, value)));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<string> (__format__)(DeeObject *format) {
+		DeeObject *args[1];
+		args[0] = format;
+		return inherit(DeeObject_CallAttrStringHash(this, "__format__", _Dee_HashSelect(UINT32_C(0xb59a1ae2), UINT64_C(0xdf14ed3788cde344)), 1, args));
+	}
+	WUNUSED Ref<string> (__format__)(char const *format) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__format__", _Dee_HashSelect(UINT32_C(0xb59a1ae2), UINT64_C(0xdf14ed3788cde344)), "s", format));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__lt__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__lt__", _Dee_HashSelect(UINT32_C(0x121ff95f), UINT64_C(0x3a902a00b1c281dc)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__gt__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__gt__", _Dee_HashSelect(UINT32_C(0x17d0ec4e), UINT64_C(0x27b68eacce43548b)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (__is__)(DeeObject *tp) {
+		DeeObject *args[1];
+		args[0] = tp;
+		return inherit(DeeObject_CallAttrStringHash(this, "__is__", _Dee_HashSelect(UINT32_C(0x2b1a70e0), UINT64_C(0xad244331897a16d8)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__deepequals__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__deepequals__", _Dee_HashSelect(UINT32_C(0x3313c27d), UINT64_C(0xe49a1925c263f351)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__iadd__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__iadd__", _Dee_HashSelect(UINT32_C(0xa098243d), UINT64_C(0x285a2423f4071a26)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__isub__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__isub__", _Dee_HashSelect(UINT32_C(0x8ab9b3ac), UINT64_C(0xaeba4543ae375177)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__imul__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__imul__", _Dee_HashSelect(UINT32_C(0x147f6149), UINT64_C(0xfe507ea03c334483)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__idiv__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__idiv__", _Dee_HashSelect(UINT32_C(0xe6ec70cc), UINT64_C(0x25a04ba2340cfea4)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__imod__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__imod__", _Dee_HashSelect(UINT32_C(0xceed3226), UINT64_C(0x77990987221a348e)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ishl__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ishl__", _Dee_HashSelect(UINT32_C(0xe34046a4), UINT64_C(0xfb3c3eaf13c7ebf5)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ishr__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ishr__", _Dee_HashSelect(UINT32_C(0xa03408b4), UINT64_C(0x12df0bba41454989)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__iand__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__iand__", _Dee_HashSelect(UINT32_C(0x303cee11), UINT64_C(0x7247beb98b3e97fa)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ior__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ior__", _Dee_HashSelect(UINT32_C(0xcd0bcc8c), UINT64_C(0xeacfdc77e1d50bef)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ixor__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ixor__", _Dee_HashSelect(UINT32_C(0x4a21400c), UINT64_C(0x29dec6e135bac526)), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (__ipow__)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "__ipow__", _Dee_HashSelect(UINT32_C(0xf77b6ecf), UINT64_C(0x401aa0d3bfcf83df)), 1, args));
+	}
+	class _Wrap___itable__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___itable__, Sequence<> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___itable__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__itable__", _Dee_HashSelect(UINT32_C(0xb7ec355a), UINT64_C(0xbcabfd5c3d01dac0)));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelect(UINT32_C(0xb7ec355a), UINT64_C(0xbcabfd5c3d01dac0))));
+		}
+	};
+	WUNUSED _Wrap___itable__ (__itable__)() {
+		return this;
+	}
+	class _Wrap_id
+		: public deemon::detail::ConstGetRefProxy<_Wrap_id, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_id(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "id", _Dee_HashSelect(UINT32_C(0x98768be1), UINT64_C(0x828b9fe0c4522be2)));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelect(UINT32_C(0x98768be1), UINT64_C(0x828b9fe0c4522be2))));
+		}
+	};
+	WUNUSED _Wrap_id (id)() {
+		return this;
+	}
+	class _Wrap___sizeof__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___sizeof__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___sizeof__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760)));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelect(UINT32_C(0x422f56f1), UINT64_C(0x4240f7a183278760))));
+		}
+	};
+	WUNUSED _Wrap___sizeof__ (__sizeof__)() {
+		return this;
+	}
+/*[[[end]]]*/
 };
 
 class None: public Object {
 public:
-	static Type &classtype() DEE_CXX_NOTHROW {
+	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
 		return *(Type *)&DeeNone_Type;
 	}
-	static bool check(DeeObject *ob) DEE_CXX_NOTHROW {
+	static WUNUSED NONNULL_CXX((1)) bool check(DeeObject *ob) DEE_CXX_NOTHROW {
 		return DeeNone_Check(ob);
 	}
-	static bool checkexact(DeeObject *ob) DEE_CXX_NOTHROW {
+	static WUNUSED NONNULL_CXX((1)) bool checkexact(DeeObject *ob) DEE_CXX_NOTHROW {
 		return DeeNone_CheckExact(ob);
 	}
 };

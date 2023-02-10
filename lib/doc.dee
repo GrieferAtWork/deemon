@@ -754,7 +754,10 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 		} else {
 			mod = import(modnam);
 		}
-		return mod.operator . (symnam);
+		local result = mod.operator . (symnam);
+		if (result is none)
+			result = type none;
+		return result;
 	}	break;
 
 	case "G": {
@@ -2061,12 +2064,13 @@ class Parameter: WeakRefAble {
 	private decode_docstring() {
 		m_isoptional = m_isvarargs = m_iskwargs = false;
 		m_typstring = m_defstring = none;
+		local doclen = #docstring;
+#if 0 /* Disabled, as this breaks for stuff like `filler=!P{ }' */
 		/* For backwards-compatibility, check for old-type parameter
 		 * declarations in the form of `int x', something that we
 		 * identify by searching for a non-escaped space-character,
 		 * which we then interpret as the delimiter between name & type */
 		local type_end = findNonEscaped(docstring, " ");
-		local doclen = #docstring;
 		if (type_end >= 0) {
 			/* Since old-style declarations were sometimes also written
 			 * as `int x, int y', meaning we'd end up with " int y", we
@@ -2144,6 +2148,7 @@ class Parameter: WeakRefAble {
 				return;
 			}
 		}
+#endif
 		if (!doclen) {
 			/* Try to extract the argument name from varkwds information */
 			m_namstring = getGenericArgumentName(
@@ -3523,6 +3528,36 @@ set_is_type:
 
 	@@Evaluates to @true if the object is an operator
 	public final member isoperator: bool = false;
+
+	@@Evaluates to @true if the object can be read from
+	public final property canget: bool = {
+		get() {
+			local at = attr;
+			if (at !is none)
+				return at.canget;
+			return true;
+		}
+	}
+
+	@@Evaluates to @true if the object can be deleted
+	public final property candel: bool = {
+		get() {
+			local at = attr;
+			if (at !is none)
+				return at.candel;
+			return true;
+		}
+	}
+
+	@@Evaluates to @true if the object can be written to
+	public final property canset: bool = {
+		get() {
+			local at = attr;
+			if (at !is none)
+				return at.canset;
+			return true;
+		}
+	}
 
 
 

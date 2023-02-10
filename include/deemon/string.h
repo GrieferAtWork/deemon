@@ -590,16 +590,16 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *       `DeeString_SetUtf8()' when the input string contains ASCII characters
  *       outside of the ASCII range (or in some cases: LATIN-1 range).
  */
-#define DeeString_STR_ISUTF8(x)                                               \
-	(((DeeStringObject *)self)->s_data &&                                     \
-	 ((((DeeStringObject *)self)->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
-	  ((DeeStringObject *)self)->s_data->u_width != Dee_STRING_WIDTH_1BYTE))
+#define DeeString_STR_ISUTF8(x)                                              \
+	(((DeeStringObject *)(x))->s_data &&                                     \
+	 ((((DeeStringObject *)(x))->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
+	  ((DeeStringObject *)(x))->s_data->u_width != Dee_STRING_WIDTH_1BYTE))
 
 /* Returns true if `DeeString_STR()' is encoded in LATIN-1, or ASCII */
-#define DeeString_STR_ISLATIN1(x)                                            \
-	(!((DeeStringObject *)self)->s_data ||                                   \
-	 (((DeeStringObject *)self)->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
-	 ((DeeStringObject *)self)->s_data->u_width == Dee_STRING_WIDTH_1BYTE)
+#define DeeString_STR_ISLATIN1(x)                                           \
+	(!((DeeStringObject *)(x))->s_data ||                                   \
+	 (((DeeStringObject *)(x))->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
+	 ((DeeStringObject *)(x))->s_data->u_width == Dee_STRING_WIDTH_1BYTE)
 
 
 /* Check if the given string object `x' has had its hash calculated. */
