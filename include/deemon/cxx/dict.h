@@ -33,7 +33,7 @@
 
 DEE_CXX_BEGIN
 
-template<class Key, class Value>
+template<class Key = Object, class Value = Object>
 class Dict
 	: public Mapping<Key, Value>
 {

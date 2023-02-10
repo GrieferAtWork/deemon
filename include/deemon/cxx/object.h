@@ -48,25 +48,11 @@ DEE_CXX_BEGIN
 /* C++ wrappers for deemon types */
 class Object;
 class string;
-class Numeric;
 class bool_;
 class int_;
-class float_;
-class None;
-class Bytes;
-class File;
 class Type;
-class Callable;
-class Function;
-template<class T = Object> class Cell;
 template<class T = Object> class Iterator;
 template<class T = Object> class Sequence;
-template<class T = Object> class Set;
-template<class T = Object> class HashSet;
-template<class Key = Object, class Value = Object> class Mapping;
-template<class Key = Object, class Value = Object> class Dict;
-template<class T = Object> class List;
-template<class ...Types> class _AbstractTuple;
 template<class ...Types> class Tuple;
 
 /* C++ wrappers for deemon object holders */
