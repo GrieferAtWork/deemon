@@ -255,9 +255,6 @@
     <ClInclude Include="..\src\deemon\objects\seq\set.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\object.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\deemon\cxx\api.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
@@ -309,36 +306,6 @@
     <ClInclude Include="..\include\deemon\notify.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\string.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\int.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\type.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\sequence.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\tuple.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\list.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\function.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\float.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\file.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\super.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\deemon\util\bytewriter.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
@@ -356,18 +323,6 @@
     </ClInclude>
     <ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
       <Filter>src\deemon\objects\seq</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\cell.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\dict.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\mapping.h">
-      <Filter>include\deemon\cxx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\deemon\cxx\module.h">
-      <Filter>include\deemon\cxx</Filter>
     </ClInclude>
     <ClInclude Include="..\include\deemon\compiler\traits.h">
       <Filter>include\deemon\compiler</Filter>
@@ -390,7 +345,13 @@
     <ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
       <Filter>src\deemon\objects\unicode</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\object.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\deemon\cxx\numeric.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\sequence.h">
       <Filter>include\deemon\cxx</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1228,9 +1189,6 @@
     </None>
     <None Include="..\include\deemon\ctypes-abi.h">
       <Filter>include\deemon</Filter>
-    </None>
-    <None Include="..\include\deemon\cxx\bytes.h">
-      <Filter>include\deemon\cxx</Filter>
     </None>
     <None Include="..\include\deemon\compiler\doctext.h">
       <Filter>include\deemon\compiler</Filter>
