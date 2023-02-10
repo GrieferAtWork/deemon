@@ -67,6 +67,12 @@ public:
 		args[0] = defl;
 		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelect(UINT32_C(0xb2ae48a2), UINT64_C(0xcc667a4d924a91f8)), 1, args));
 	}
+	WUNUSED Ref<deemon::bool_> (prev)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "prev", _Dee_HashSelect(UINT32_C(0xeb31683d), UINT64_C(0x7487ec947044729e)), 0, NULL));
+	}
+	void (rewind)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "rewind", _Dee_HashSelect(UINT32_C(0x2ab1b235), UINT64_C(0xa35b8bb3941ca25f)), 0, NULL)));
+	}
 	NONNULL_CXX((1)) void (revert)(DeeObject *step) {
 		DeeObject *args[1];
 		args[0] = step;
@@ -197,6 +203,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_index, deemon::int_>::operator =;
 		_Wrap_index(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {

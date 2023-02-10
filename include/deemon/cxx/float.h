@@ -279,6 +279,12 @@ public:
 /*[[[end]]]*/
 };
 
+#ifdef CONFIG_HAVE_FPU
+inline WUNUSED Ref<float_> of(double value) {
+	return inherit(DeeFloat_New(value));
+}
+#endif /* CONFIG_HAVE_FPU */
+
 DEE_CXX_END
 
 #endif /* !GUARD_DEEMON_CXX_FLOAT_H */

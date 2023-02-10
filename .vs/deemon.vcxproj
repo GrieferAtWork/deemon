@@ -101,8 +101,10 @@
     <ClInclude Include="..\include\deemon\cxx\function.h" />
     <ClInclude Include="..\include\deemon\cxx\hashset.h" />
     <ClInclude Include="..\include\deemon\cxx\int.h" />
+    <ClInclude Include="..\include\deemon\cxx\iterator.h" />
     <ClInclude Include="..\include\deemon\cxx\list.h" />
     <ClInclude Include="..\include\deemon\cxx\mapping.h" />
+    <ClInclude Include="..\include\deemon\cxx\none.h" />
     <ClInclude Include="..\include\deemon\cxx\numeric.h" />
     <ClInclude Include="..\include\deemon\cxx\object.h" />
     <ClInclude Include="..\include\deemon\cxx\sequence.h" />

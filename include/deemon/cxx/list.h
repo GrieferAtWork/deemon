@@ -230,6 +230,9 @@ public:
 	WUNUSED NONNULL_CXX((2)) Ref<T> (xch)(size_t index, DeeObject *value) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "xch", _Dee_HashSelect(UINT32_C(0x818ce38a), UINT64_C(0x6bb37305be1b0321)),  DEE_PCKuSIZ "o", index, value));
 	}
+	void (clear)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelect(UINT32_C(0x7857faae), UINT64_C(0x22a34b6f82b3b83c)), 0, NULL)));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should) {
 		DeeObject *args[1];
 		args[0] = should;
@@ -288,10 +291,25 @@ public:
 		args[0] = item;
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "pushback", _Dee_HashSelect(UINT32_C(0xad1e1509), UINT64_C(0x4cfafd84a12923bd)), 1, args)));
 	}
+	WUNUSED Ref<T> (popfront)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "popfront", _Dee_HashSelect(UINT32_C(0x46523911), UINT64_C(0x22a469cc52318bba)), 0, NULL));
+	}
+	WUNUSED Ref<T> (popback)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "popback", _Dee_HashSelect(UINT32_C(0xd84577aa), UINT64_C(0xb77f74a49a9cc289)), 0, NULL));
+	}
+	void (reverse)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "reverse", _Dee_HashSelect(UINT32_C(0xd8d820f4), UINT64_C(0x278cbcd3a230313a)), 0, NULL)));
+	}
+	void (sort)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelect(UINT32_C(0xde7868af), UINT64_C(0x58835b3b7416f7f1)), 0, NULL)));
+	}
 	NONNULL_CXX((1)) void (sort)(DeeObject *key) {
 		DeeObject *args[1];
 		args[0] = key;
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelect(UINT32_C(0xde7868af), UINT64_C(0x58835b3b7416f7f1)), 1, args)));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "sorted", _Dee_HashSelect(UINT32_C(0x93fb6d4), UINT64_C(0x2fc60c43cfaf0860)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Sequence<T> > (sorted)(DeeObject *key) {
 		DeeObject *args[1];
@@ -308,6 +326,9 @@ public:
 	}
 	void (reserve)(size_t size) {
 		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reserve", _Dee_HashSelect(UINT32_C(0x62fb4af5), UINT64_C(0x3a9a799f304cf8c9)),  DEE_PCKuSIZ, size)));
+	}
+	void (shrink)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "shrink", _Dee_HashSelect(UINT32_C(0xd8afa32b), UINT64_C(0xf4785bc46214dc5)), 0, NULL)));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (remove_if)(DeeObject *should) {
 		DeeObject *args[1];
@@ -401,12 +422,16 @@ public:
 		args[0] = item;
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "pop_back", _Dee_HashSelect(UINT32_C(0x72cb762e), UINT64_C(0x379e1e780abd2dbc)), 1, args)));
 	}
+	void (shrink_to_fit)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "shrink_to_fit", _Dee_HashSelect(UINT32_C(0xdc684938), UINT64_C(0x94741bfe350f497f)), 0, NULL)));
+	}
 	class _Wrap_allocated
 		: public deemon::detail::ConstGetRefProxy<_Wrap_allocated, deemon::int_>
 		, public deemon::detail::ConstSetRefProxy<_Wrap_allocated, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_allocated, deemon::int_>::operator =;
 		_Wrap_allocated(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
@@ -431,6 +456,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_first, T>::operator =;
 		_Wrap_first(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
@@ -455,6 +481,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_last, T>::operator =;
 		_Wrap_last(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {

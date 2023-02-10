@@ -271,6 +271,51 @@ public:
 		args[0] = other;
 		return inherit(DeeObject_CallAttrStringHash(this, "derived_from", _Dee_HashSelect(UINT32_C(0xd5ca0338), UINT64_C(0xc9563f499d5ca8b9)), 1, args));
 	}
+	WUNUSED Ref<deemon::bool_> (is_vartype)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_vartype", _Dee_HashSelect(UINT32_C(0x7c864a03), UINT64_C(0x74cc77cd00dcc3d5)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_heaptype)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_heaptype", _Dee_HashSelect(UINT32_C(0x24f570de), UINT64_C(0x1581ef944a8aaa0b)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_gctype)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_gctype", _Dee_HashSelect(UINT32_C(0x76acb304), UINT64_C(0x6ef63a1ea060c5db)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_final)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_final", _Dee_HashSelect(UINT32_C(0x581c8ec6), UINT64_C(0x1efe4691869c396f)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_class)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_class", _Dee_HashSelect(UINT32_C(0x2947c448), UINT64_C(0x538c2dae31aecaff)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_complete)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_complete", _Dee_HashSelect(UINT32_C(0xe4974a1e), UINT64_C(0x9f51d1a812b7db87)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_classtype)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_classtype", _Dee_HashSelect(UINT32_C(0x78743248), UINT64_C(0x38068baf674ec3a8)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_pointer)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_pointer", _Dee_HashSelect(UINT32_C(0x51d02720), UINT64_C(0xde6ea15c6f83c796)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_lvalue)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_lvalue", _Dee_HashSelect(UINT32_C(0xd6755fdd), UINT64_C(0xfb7e17b7a9dd8393)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_structured)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_structured", _Dee_HashSelect(UINT32_C(0x2e2730f0), UINT64_C(0x747ac51301af2a7e)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_struct)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_struct", _Dee_HashSelect(UINT32_C(0x628ee615), UINT64_C(0x4d8ae8916873e4cd)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_array)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_array", _Dee_HashSelect(UINT32_C(0xc50bca46), UINT64_C(0x595fe48e3a39713b)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_foreign_function)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_foreign_function", _Dee_HashSelect(UINT32_C(0x443fcdf1), UINT64_C(0x2f8fe3a73336066d)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_file)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_file", _Dee_HashSelect(UINT32_C(0x202225d1), UINT64_C(0xd98e30093fc5ea17)), 0, NULL));
+	}
+	WUNUSED Ref<deemon::bool_> (is_super_base)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "is_super_base", _Dee_HashSelect(UINT32_C(0x63c8c0fc), UINT64_C(0x6878259a0fe9a07)), 0, NULL));
+	}
 	class _Wrap_isbuffer
 		: public deemon::detail::ConstGetRefProxy<_Wrap_isbuffer, deemon::bool_> {
 	private:

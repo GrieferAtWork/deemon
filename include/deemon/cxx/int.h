@@ -38,7 +38,34 @@ DEE_CXX_BEGIN
 
 class int_
 	: public Numeric
+	, public detail::MathProxyAccessor<int_, int_>
 {
+public:
+	using detail::MathProxyAccessor<int_, int_>::inv;
+	using detail::MathProxyAccessor<int_, int_>::pos;
+	using detail::MathProxyAccessor<int_, int_>::neg;
+	using detail::MathProxyAccessor<int_, int_>::add;
+	using detail::MathProxyAccessor<int_, int_>::sub;
+	using detail::MathProxyAccessor<int_, int_>::mul;
+	using detail::MathProxyAccessor<int_, int_>::div;
+	using detail::MathProxyAccessor<int_, int_>::mod;
+	using detail::MathProxyAccessor<int_, int_>::shl;
+	using detail::MathProxyAccessor<int_, int_>::shr;
+	using detail::MathProxyAccessor<int_, int_>::and_;
+	using detail::MathProxyAccessor<int_, int_>::or_;
+	using detail::MathProxyAccessor<int_, int_>::xor_;
+	using detail::MathProxyAccessor<int_, int_>::pow;
+	using detail::MathProxyAccessor<int_, int_>::operator~;
+	using detail::MathProxyAccessor<int_, int_>::operator+;
+	using detail::MathProxyAccessor<int_, int_>::operator-;
+	using detail::MathProxyAccessor<int_, int_>::operator*;
+	using detail::MathProxyAccessor<int_, int_>::operator/;
+	using detail::MathProxyAccessor<int_, int_>::operator%;
+	using detail::MathProxyAccessor<int_, int_>::operator<<;
+	using detail::MathProxyAccessor<int_, int_>::operator>>;
+	using detail::MathProxyAccessor<int_, int_>::operator&;
+	using detail::MathProxyAccessor<int_, int_>::operator|;
+	using detail::MathProxyAccessor<int_, int_>::operator^;
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
 		return *(Type *)&DeeInt_Type;
@@ -505,6 +532,9 @@ public:
 	WUNUSED Ref<deemon::int_> (bitcount)(bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "bitcount", _Dee_HashSelect(UINT32_C(0x4cacc37f), UINT64_C(0x8e82ba8252728a35)), "b", signed_));
 	}
+	WUNUSED Ref<deemon::int_> (__forcecopy__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__forcecopy__", _Dee_HashSelect(UINT32_C(0xc96f01d0), UINT64_C(0xc90cb18768481fa9)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<_AbstractTuple<deemon::int_, deemon::int_> > (divmod)(DeeObject *y) {
 		DeeObject *args[1];
 		args[0] = y;
@@ -853,6 +883,46 @@ public:
 	}
 /*[[[end]]]*/
 };
+
+inline WUNUSED Ref<int_> of(__INT8_TYPE__ value) {
+	return inherit(DeeInt_NewS8(value));
+}
+inline WUNUSED Ref<int_> of(__INT16_TYPE__ value) {
+	return inherit(DeeInt_NewS16(value));
+}
+inline WUNUSED Ref<int_> of(__INT32_TYPE__ value) {
+	return inherit(DeeInt_NewS32(value));
+}
+inline WUNUSED Ref<int_> of(__INT64_TYPE__ value) {
+	return inherit(DeeInt_NewS64(value));
+}
+inline WUNUSED Ref<int_> of(Dee_int128_t value) {
+	return inherit(DeeInt_NewS128(value));
+}
+inline WUNUSED Ref<int_> of(__UINT8_TYPE__ value) {
+	return inherit(DeeInt_NewU8(value));
+}
+inline WUNUSED Ref<int_> of(__UINT16_TYPE__ value) {
+	return inherit(DeeInt_NewU16(value));
+}
+inline WUNUSED Ref<int_> of(__UINT32_TYPE__ value) {
+	return inherit(DeeInt_NewU32(value));
+}
+inline WUNUSED Ref<int_> of(__UINT64_TYPE__ value) {
+	return inherit(DeeInt_NewU64(value));
+}
+inline WUNUSED Ref<int_> of(Dee_uint128_t value) {
+	return inherit(DeeInt_NewU128(value));
+}
+#ifdef __FIFTHINT_TYPE__
+inline WUNUSED Ref<int_> of(__FIFTHINT_TYPE__ value) {
+	return inherit(DeeInt_NEWS(value));
+}
+inline WUNUSED Ref<int_> of(__UFIFTHINT_TYPE__ value) {
+	return inherit(DeeInt_NEWU(value));
+}
+#endif /* __FIFTHINT_TYPE__ */
+
 
 DEE_CXX_END
 

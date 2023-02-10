@@ -30,7 +30,36 @@
 
 DEE_CXX_BEGIN
 
-class Numeric: public Object {
+class Numeric
+	: public Object
+	, public detail::MathProxyAccessor<Numeric, Numeric>
+{
+public:
+	using detail::MathProxyAccessor<Numeric, Numeric>::inv;
+	using detail::MathProxyAccessor<Numeric, Numeric>::pos;
+	using detail::MathProxyAccessor<Numeric, Numeric>::neg;
+	using detail::MathProxyAccessor<Numeric, Numeric>::add;
+	using detail::MathProxyAccessor<Numeric, Numeric>::sub;
+	using detail::MathProxyAccessor<Numeric, Numeric>::mul;
+	using detail::MathProxyAccessor<Numeric, Numeric>::div;
+	using detail::MathProxyAccessor<Numeric, Numeric>::mod;
+	using detail::MathProxyAccessor<Numeric, Numeric>::shl;
+	using detail::MathProxyAccessor<Numeric, Numeric>::shr;
+	using detail::MathProxyAccessor<Numeric, Numeric>::and_;
+	using detail::MathProxyAccessor<Numeric, Numeric>::or_;
+	using detail::MathProxyAccessor<Numeric, Numeric>::xor_;
+	using detail::MathProxyAccessor<Numeric, Numeric>::pow;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator~;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator+;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator-;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator*;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator/;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator%;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator<<;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator>>;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator&;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator|;
+	using detail::MathProxyAccessor<Numeric, Numeric>::operator^;
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
 		return *(Type *)&DeeNumeric_Type;

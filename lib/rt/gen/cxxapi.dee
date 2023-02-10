@@ -183,6 +183,7 @@ global final cxxReservedNames: {string...} = {
 	"signed",
 	"unsigned",
 	"union",
+	"delete",
 };
 
 function cxxEscapeReservedName(name: string): string {
@@ -263,6 +264,8 @@ function getParameterPermutations(types: {{string | none...}...}): {{string...}.
 				}
 			}
 		}
+	} else {
+		yield ();
 	}
 }
 
@@ -557,6 +560,12 @@ final class CxxType {
 				print("	private:");
 				print("		DeeObject *m_self; /* [1..1] Linked object */");
 				print("	public:");
+				if (canset) {
+					/* Because of copy-assign, we must inherit the assignment operator. */
+					print("		using deemon::detail::ConstSetRefProxy<",
+						propertyWrapperClassName, ", ",
+						templateGt(cxxReturnType), ">::operator =;");
+				}
 				print("		", propertyWrapperClassName, "(DeeObject *self) DEE_CXX_NOTHROW");
 				print("			: m_self(self) {}");
 				if (canget) {

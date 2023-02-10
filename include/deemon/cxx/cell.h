@@ -78,10 +78,19 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Cell from deemon).printCxxApi(templateParameters: { "T" });]]]*/
+	WUNUSED Ref<T> (get)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelect(UINT32_C(0x3b6d35a2), UINT64_C(0x7c8e1568eac4979f)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<T> (get)(DeeObject *def) {
 		DeeObject *args[1];
 		args[0] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelect(UINT32_C(0x3b6d35a2), UINT64_C(0x7c8e1568eac4979f)), 1, args));
+	}
+	WUNUSED Ref<deemon::bool_> (delete_)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "delete", _Dee_HashSelect(UINT32_C(0x26f7366c), UINT64_C(0xe5950d7b4ca209c3)), 0, NULL));
+	}
+	WUNUSED Ref<T> (pop)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelect(UINT32_C(0x960361ff), UINT64_C(0x666fb01461b0a0eb)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<T> (pop)(DeeObject *def) {
 		DeeObject *args[1];
@@ -138,6 +147,9 @@ public:
 		args[1] = new_value;
 		return inherit(DeeObject_CallAttrStringHash(this, "cmpset", _Dee_HashSelect(UINT32_C(0xebdea141), UINT64_C(0xaa28c2c4dbba2ceb)), 2, args));
 	}
+	WUNUSED Ref<deemon::bool_> (del)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "del", _Dee_HashSelect(UINT32_C(0x26f49208), UINT64_C(0x4dde761d85eeecc2)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<T> (exchange)(DeeObject *value) {
 		DeeObject *args[1];
 		args[0] = value;
@@ -155,6 +167,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_value, T>::operator =;
 		_Wrap_value(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {

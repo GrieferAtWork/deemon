@@ -405,6 +405,12 @@
     <ClInclude Include="..\include\deemon\cxx.h">
       <Filter>include\deemon</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\none.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\iterator.h">
+      <Filter>include\deemon\cxx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\deemon\runtime\error.c">

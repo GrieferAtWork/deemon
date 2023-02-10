@@ -24,6 +24,7 @@
 /**/
 
 #include "object.h"
+#include "sequence.h"
 /**/
 
 #include "../format.h"
@@ -44,7 +45,7 @@ DEE_CXX_BEGIN
 #undef vprintf
 
 class File
-	: public Object
+	: public Sequence<Bytes>
 {
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
@@ -62,6 +63,24 @@ public:
 	}
 	static Ref<File> open(/*utf-8*/ char const *__restrict filename, int oflags, int mode) {
 		return inherit(DeeFile_OpenString(filename, oflags, mode));
+	}
+	static Ref<File> openfd(DeeSysFD fd, /*String*/ DeeObject *filename, int oflags, bool inherit_fd) {
+		return inherit(DeeFile_OpenFd(fd, filename, oflags, inherit_fd));
+	}
+	static Ref<File> stdstream(unsigned int id) {
+		return inherit(DeeFile_GetStd(id));
+	}
+	static Ref<File> stdin_() {
+		return inherit(DeeFile_GetStd(DEE_STDIN));
+	}
+	static Ref<File> stdout_() {
+		return inherit(DeeFile_GetStd(DEE_STDOUT));
+	}
+	static Ref<File> stderr_() {
+		return inherit(DeeFile_GetStd(DEE_STDERR));
+	}
+	static Ref<File> stddbg_() {
+		return inherit(DeeFile_GetStd(DEE_STDDBG));
 	}
 
 public:
@@ -233,7 +252,8 @@ public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(File from deemon).printCxxApi(exclude: {
 	"getc", "read", "pread", "readall", "preadall",
 	"putc", "write", "pwrite", "writeall", "pwriteall",
-	"ungetc", "seek", "trunc", "readline",
+	"ungetc", "seek", "trunc", "readline", "tell", "size",
+	"close", "sync", "rewind",
 	"mmap", // Way too many overloads (over 1000)
 });]]]*/
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (readinto)(DeeObject *dst) {
@@ -541,6 +561,9 @@ public:
 	WUNUSED Ref<deemon::int_> (setpos)(size_t pos) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "setpos", _Dee_HashSelect(UINT32_C(0xcd1307ba), UINT64_C(0x680cb194d112c412)),  DEE_PCKuSIZ, pos));
 	}
+	void (flush)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "flush", _Dee_HashSelect(UINT32_C(0xc55ede0a), UINT64_C(0x8a3df9f6a93e2205)), 0, NULL)));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (puts)(DeeObject *data) {
 		DeeObject *args[1];
 		args[0] = data;
@@ -555,6 +578,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_pos, deemon::int_>::operator =;
 		_Wrap_pos(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {

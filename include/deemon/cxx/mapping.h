@@ -55,6 +55,7 @@ public:
 
 public:
 	using detail::ItemProxyAccessor<Mapping<Key, Value>, Value>::iterator;
+	using detail::ItemProxyAccessor<Mapping<Key, Value>, Value>::iter;
 	using detail::ItemProxyAccessor<Mapping<Key, Value>, Value>::begin;
 	using detail::ItemProxyAccessor<Mapping<Key, Value>, Value>::end;
 	using detail::ItemProxyAccessor<Mapping<Key, Value>, Value>::operator[];

@@ -23,12 +23,13 @@
 #include "api.h"
 /**/
 
+#include "mapping.h"
 #include "object.h"
 #include "tuple.h"
 /**/
 
-#include "../format.h"
 #include "../dict.h"
+#include "../format.h"
 /**/
 
 DEE_CXX_BEGIN
@@ -83,6 +84,12 @@ public:
 		args[0] = key;
 		args[1] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelect(UINT32_C(0x960361ff), UINT64_C(0x666fb01461b0a0eb)), 2, args));
+	}
+	void (clear)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelect(UINT32_C(0x7857faae), UINT64_C(0x22a34b6f82b3b83c)), 0, NULL)));
+	}
+	WUNUSED Ref<_AbstractTuple<Key, Value> > (popitem)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelect(UINT32_C(0x40b249f3), UINT64_C(0x131a404a88439bc0)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Value> (setdefault)(DeeObject *key) {
 		DeeObject *args[1];
@@ -208,6 +215,7 @@ public:
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_max_load_factor, deemon::float_>::operator =;
 		_Wrap_max_load_factor(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {

@@ -37,7 +37,34 @@ DEE_CXX_BEGIN
 
 class bool_
 	: public Numeric
+	, public detail::MathProxyAccessor<bool_, bool_>
 {
+public:
+	using detail::MathProxyAccessor<bool_, bool_>::inv;
+	using detail::MathProxyAccessor<bool_, bool_>::pos;
+	using detail::MathProxyAccessor<bool_, bool_>::neg;
+	using detail::MathProxyAccessor<bool_, bool_>::add;
+	using detail::MathProxyAccessor<bool_, bool_>::sub;
+	using detail::MathProxyAccessor<bool_, bool_>::mul;
+	using detail::MathProxyAccessor<bool_, bool_>::div;
+	using detail::MathProxyAccessor<bool_, bool_>::mod;
+	using detail::MathProxyAccessor<bool_, bool_>::shl;
+	using detail::MathProxyAccessor<bool_, bool_>::shr;
+	using detail::MathProxyAccessor<bool_, bool_>::and_;
+	using detail::MathProxyAccessor<bool_, bool_>::or_;
+	using detail::MathProxyAccessor<bool_, bool_>::xor_;
+	using detail::MathProxyAccessor<bool_, bool_>::pow;
+	using detail::MathProxyAccessor<bool_, bool_>::operator~;
+	using detail::MathProxyAccessor<bool_, bool_>::operator+;
+	using detail::MathProxyAccessor<bool_, bool_>::operator-;
+	using detail::MathProxyAccessor<bool_, bool_>::operator*;
+	using detail::MathProxyAccessor<bool_, bool_>::operator/;
+	using detail::MathProxyAccessor<bool_, bool_>::operator%;
+	using detail::MathProxyAccessor<bool_, bool_>::operator<<;
+	using detail::MathProxyAccessor<bool_, bool_>::operator>>;
+	using detail::MathProxyAccessor<bool_, bool_>::operator&;
+	using detail::MathProxyAccessor<bool_, bool_>::operator|;
+	using detail::MathProxyAccessor<bool_, bool_>::operator^;
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
 		return *(Type *)&DeeBool_Type;
@@ -66,6 +93,10 @@ public:
 
 /*[[[end]]]*/
 };
+
+inline WUNUSED Ref<bool_> of(bool value) {
+	return nonnull(DeeBool_For(value));
+}
 
 DEE_CXX_END
 

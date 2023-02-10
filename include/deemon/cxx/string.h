@@ -33,6 +33,13 @@
 
 #include <stdarg.h>
 
+#ifndef CONFIG_HAVE_wcslen
+#define wcslen dee_wcslen
+DECL_BEGIN
+DeeSystem_DEFINE_wcslen(dee_wcslen)
+DECL_END
+#endif /* !CONFIG_HAVE_wcslen */
+
 DEE_CXX_BEGIN
 
 class string
@@ -49,12 +56,12 @@ public:
 		return DeeString_CheckExact(ob);
 	}
 public:
-	static WUNUSED Ref<string> ofutf8(char const *__restrict text) {
-		return inherit(DeeString_NewUtf8(text, strlen(text), Dee_STRING_ERROR_FSTRICT));
+	static WUNUSED Ref<string> ofutf8(char const *__restrict str) {
+		return inherit(DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FSTRICT));
 	}
-	static WUNUSED Ref<string> ofutf8(char const *__restrict text, size_t length,
+	static WUNUSED Ref<string> ofutf8(char const *__restrict str, size_t length,
 	                                  unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
-		return inherit(DeeString_NewUtf8(text, length, error_mode));
+		return inherit(DeeString_NewUtf8(str, length, error_mode));
 	}
 	static WUNUSED Ref<string> ofutf16(uint16_t const *__restrict str, size_t length,
 	                                   unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
@@ -105,11 +112,11 @@ public:
 		return inherit(DeeString_NewWideBe(str, length, error_mode));
 	}
 
-	static WUNUSED Ref<string> ofascii(char const *__restrict text) {
-		return inherit(DeeString_New(text));
+	static WUNUSED Ref<string> ofascii(char const *__restrict str) {
+		return inherit(DeeString_New(str));
 	}
-	static WUNUSED Ref<string> ofauto(char const *__restrict text) {
-		return inherit(DeeString_NewAuto(text));
+	static WUNUSED Ref<string> ofauto(char const *__restrict str) {
+		return inherit(DeeString_NewAuto(str));
 	}
 	static WUNUSED Ref<string> ofascii(char const *__restrict str, size_t length) {
 		return inherit(DeeString_NewSized(str, length));
@@ -374,6 +381,9 @@ public:
 	WUNUSED Ref<Bytes> (bytes)(size_t start, size_t end, bool allow_invalid) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "bytes", _Dee_HashSelect(UINT32_C(0x998eb0c), UINT64_C(0x88b08b49ba3c5d43)),  DEE_PCKuSIZ DEE_PCKuSIZ "b", start, end, allow_invalid));
 	}
+	WUNUSED Ref<deemon::int_> (ord)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "ord", _Dee_HashSelect(UINT32_C(0x54d9abbb), UINT64_C(0xccb84bdb7e4a345f)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (ord)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -397,6 +407,9 @@ public:
 	}
 	WUNUSED Ref<Sequence<Object> > (scanf)(char const *format) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "scanf", _Dee_HashSelect(UINT32_C(0x1369b612), UINT64_C(0x86d0b7e2f8b4b546)), "s", format));
+	}
+	WUNUSED Ref<deemon::bool_> (iscntrl)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "iscntrl", _Dee_HashSelect(UINT32_C(0x7786d46d), UINT64_C(0x24f218122d667104)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (iscntrl)(DeeObject *index) {
 		DeeObject *args[1];
@@ -439,6 +452,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (iscntrl)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "iscntrl", _Dee_HashSelect(UINT32_C(0x7786d46d), UINT64_C(0x24f218122d667104)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (istab)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "istab", _Dee_HashSelect(UINT32_C(0x8b46029f), UINT64_C(0x36fc8d71532e1ebe)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (istab)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -479,6 +495,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (istab)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "istab", _Dee_HashSelect(UINT32_C(0x8b46029f), UINT64_C(0x36fc8d71532e1ebe)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (iscempty)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "iscempty", _Dee_HashSelect(UINT32_C(0x9fd05a4c), UINT64_C(0x79ff8d8131b18750)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (iscempty)(DeeObject *index) {
 		DeeObject *args[1];
@@ -521,6 +540,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (iscempty)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "iscempty", _Dee_HashSelect(UINT32_C(0x9fd05a4c), UINT64_C(0x79ff8d8131b18750)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (iswhite)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "iswhite", _Dee_HashSelect(UINT32_C(0x73f14618), UINT64_C(0x87f21eb928d062e1)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (iswhite)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -561,6 +583,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (iswhite)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "iswhite", _Dee_HashSelect(UINT32_C(0x73f14618), UINT64_C(0x87f21eb928d062e1)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (islf)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "islf", _Dee_HashSelect(UINT32_C(0x6af4be87), UINT64_C(0x4e2d84e51be952da)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (islf)(DeeObject *index) {
 		DeeObject *args[1];
@@ -603,6 +628,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (islf)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "islf", _Dee_HashSelect(UINT32_C(0x6af4be87), UINT64_C(0x4e2d84e51be952da)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isspace)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isspace", _Dee_HashSelect(UINT32_C(0xc45d2caa), UINT64_C(0xbc2f2e2389adbbdd)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isspace)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -643,6 +671,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isspace)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isspace", _Dee_HashSelect(UINT32_C(0xc45d2caa), UINT64_C(0xbc2f2e2389adbbdd)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (islower)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "islower", _Dee_HashSelect(UINT32_C(0x6b6a48), UINT64_C(0xc8a40f07ea7306e9)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (islower)(DeeObject *index) {
 		DeeObject *args[1];
@@ -685,6 +716,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (islower)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "islower", _Dee_HashSelect(UINT32_C(0x6b6a48), UINT64_C(0xc8a40f07ea7306e9)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isupper)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isupper", _Dee_HashSelect(UINT32_C(0x5ebadeb3), UINT64_C(0x90d26e07c8c05630)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isupper)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -725,6 +759,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isupper)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isupper", _Dee_HashSelect(UINT32_C(0x5ebadeb3), UINT64_C(0x90d26e07c8c05630)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (isalpha)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isalpha", _Dee_HashSelect(UINT32_C(0x935a1c21), UINT64_C(0xcaf616c4636b27fa)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isalpha)(DeeObject *index) {
 		DeeObject *args[1];
@@ -767,6 +804,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isalpha)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isalpha", _Dee_HashSelect(UINT32_C(0x935a1c21), UINT64_C(0xcaf616c4636b27fa)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isdigit)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isdigit", _Dee_HashSelect(UINT32_C(0xce45b62f), UINT64_C(0x5e7ac9bd627de55f)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isdigit)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -807,6 +847,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isdigit)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isdigit", _Dee_HashSelect(UINT32_C(0xce45b62f), UINT64_C(0x5e7ac9bd627de55f)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (ishex)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "ishex", _Dee_HashSelect(UINT32_C(0xe4d14c26), UINT64_C(0x5e50a3100b760175)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (ishex)(DeeObject *index) {
 		DeeObject *args[1];
@@ -849,6 +892,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (ishex)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "ishex", _Dee_HashSelect(UINT32_C(0xe4d14c26), UINT64_C(0x5e50a3100b760175)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isxdigit)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isxdigit", _Dee_HashSelect(UINT32_C(0x278182e2), UINT64_C(0x52d5a6cdf2e5ae56)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isxdigit)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -889,6 +935,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isxdigit)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isxdigit", _Dee_HashSelect(UINT32_C(0x278182e2), UINT64_C(0x52d5a6cdf2e5ae56)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (isalnum)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isalnum", _Dee_HashSelect(UINT32_C(0x37073d41), UINT64_C(0x562f39e0d960378e)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isalnum)(DeeObject *index) {
 		DeeObject *args[1];
@@ -931,6 +980,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isalnum)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isalnum", _Dee_HashSelect(UINT32_C(0x37073d41), UINT64_C(0x562f39e0d960378e)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (ispunct)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "ispunct", _Dee_HashSelect(UINT32_C(0x99c944fc), UINT64_C(0xe18408da15c7f4b5)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (ispunct)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -971,6 +1023,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (ispunct)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "ispunct", _Dee_HashSelect(UINT32_C(0x99c944fc), UINT64_C(0xe18408da15c7f4b5)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (isgraph)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isgraph", _Dee_HashSelect(UINT32_C(0x2bbafe90), UINT64_C(0x8872dd9e9bee7b84)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isgraph)(DeeObject *index) {
 		DeeObject *args[1];
@@ -1013,6 +1068,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isgraph)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isgraph", _Dee_HashSelect(UINT32_C(0x2bbafe90), UINT64_C(0x8872dd9e9bee7b84)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isprint)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isprint", _Dee_HashSelect(UINT32_C(0x4407dc7d), UINT64_C(0xa895e47ceb474e0e)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isprint)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -1053,6 +1111,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isprint)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isprint", _Dee_HashSelect(UINT32_C(0x4407dc7d), UINT64_C(0xa895e47ceb474e0e)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (isblank)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isblank", _Dee_HashSelect(UINT32_C(0x545c18de), UINT64_C(0x788503078110be73)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isblank)(DeeObject *index) {
 		DeeObject *args[1];
@@ -1095,6 +1156,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isblank)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isblank", _Dee_HashSelect(UINT32_C(0x545c18de), UINT64_C(0x788503078110be73)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isnumeric)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isnumeric", _Dee_HashSelect(UINT32_C(0xf7e14e2b), UINT64_C(0xf4ad1549bdb1ca7a)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isnumeric)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -1135,6 +1199,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (isnumeric)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isnumeric", _Dee_HashSelect(UINT32_C(0xf7e14e2b), UINT64_C(0xf4ad1549bdb1ca7a)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (issymstrt)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "issymstrt", _Dee_HashSelect(UINT32_C(0xea56daef), UINT64_C(0x77ffc6b28a3d97e7)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (issymstrt)(DeeObject *index) {
 		DeeObject *args[1];
@@ -1177,6 +1244,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (issymstrt)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "issymstrt", _Dee_HashSelect(UINT32_C(0xea56daef), UINT64_C(0x77ffc6b28a3d97e7)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (issymcont)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "issymcont", _Dee_HashSelect(UINT32_C(0xe044a21c), UINT64_C(0xf31e9a5bdd4d21e0)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (issymcont)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -1217,6 +1287,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (issymcont)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "issymcont", _Dee_HashSelect(UINT32_C(0xe044a21c), UINT64_C(0xf31e9a5bdd4d21e0)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (isspacexlf)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isspacexlf", _Dee_HashSelect(UINT32_C(0x63d44638), UINT64_C(0x4ae49b2074bd3dc2)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isspacexlf)(DeeObject *index) {
 		DeeObject *args[1];
@@ -1259,6 +1332,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isspacexlf)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isspacexlf", _Dee_HashSelect(UINT32_C(0x63d44638), UINT64_C(0x4ae49b2074bd3dc2)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (isascii)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "isascii", _Dee_HashSelect(UINT32_C(0x79c9dde1), UINT64_C(0x6a5c3fa8b5b559cb)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (isascii)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -1300,6 +1376,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isascii)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isascii", _Dee_HashSelect(UINT32_C(0x79c9dde1), UINT64_C(0x6a5c3fa8b5b559cb)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<deemon::bool_> (istitle)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "istitle", _Dee_HashSelect(UINT32_C(0xd0b69b57), UINT64_C(0x6d1556d9a29239eb)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (istitle)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -1340,6 +1419,9 @@ public:
 	}
 	WUNUSED Ref<deemon::bool_> (istitle)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "istitle", _Dee_HashSelect(UINT32_C(0xd0b69b57), UINT64_C(0x6d1556d9a29239eb)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED Ref<deemon::bool_> (issymbol)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "issymbol", _Dee_HashSelect(UINT32_C(0x6fdc69aa), UINT64_C(0xead3c562cf30ca07)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (issymbol)(DeeObject *index) {
 		DeeObject *args[1];
@@ -2394,6 +2476,9 @@ public:
 	WUNUSED Ref<deemon::bool_> (isanyascii)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "isanyascii", _Dee_HashSelect(UINT32_C(0x49832081), UINT64_C(0x2ddfe414e2e43c69)),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
 	}
+	WUNUSED Ref<Numeric> (asnumeric)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "asnumeric", _Dee_HashSelect(UINT32_C(0x10d78e), UINT64_C(0x81aaaf9957020829)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<Numeric> (asnumeric)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -2435,6 +2520,9 @@ public:
 	WUNUSED Ref<Numeric> (asnumeric)(size_t index, size_t defl) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "asnumeric", _Dee_HashSelect(UINT32_C(0x10d78e), UINT64_C(0x81aaaf9957020829)),  DEE_PCKuSIZ DEE_PCKuSIZ, index, defl));
 	}
+	WUNUSED Ref<deemon::int_> (asdigit)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "asdigit", _Dee_HashSelect(UINT32_C(0xce9abe86), UINT64_C(0x384ff364d958053f)), 0, NULL));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (asdigit)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
@@ -2475,6 +2563,9 @@ public:
 	}
 	WUNUSED Ref<deemon::int_> (asdigit)(size_t index, size_t defl) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "asdigit", _Dee_HashSelect(UINT32_C(0xce9abe86), UINT64_C(0x384ff364d958053f)),  DEE_PCKuSIZ DEE_PCKuSIZ, index, defl));
+	}
+	WUNUSED Ref<deemon::int_> (asxdigit)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "asxdigit", _Dee_HashSelect(UINT32_C(0x8d53931f), UINT64_C(0x3b8c21e507d1790b)), 0, NULL));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (asxdigit)(DeeObject *index) {
 		DeeObject *args[1];
@@ -33297,6 +33388,22 @@ public:
 	}
 /*[[[end]]]*/
 };
+
+inline WUNUSED Ref<string> of(char const *__restrict str) {
+	return inherit(DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FSTRICT));
+}
+inline WUNUSED Ref<string> of(char const *__restrict str, size_t length,
+                              unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
+	return inherit(DeeString_NewUtf8(str, length, error_mode));
+}
+inline WUNUSED Ref<string> of(Dee_wchar_t const *__restrict str) {
+	return inherit(DeeString_NewWide(str, wcslen(str), Dee_STRING_ERROR_FSTRICT));
+}
+inline WUNUSED Ref<string> of(Dee_wchar_t const *__restrict str, size_t length,
+                              unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
+	return inherit(DeeString_NewWide(str, length, error_mode));
+}
+
 
 DEE_CXX_END
 

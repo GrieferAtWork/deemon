@@ -54,6 +54,10 @@ public:
 /*[[[end]]]*/
 };
 
+inline ATTR_RETNONNULL WUNUSED None *none() DEE_CXX_NOTHROW {
+	return (None *)Dee_None;
+}
+
 DEE_CXX_END
 
 #endif /* !GUARD_DEEMON_CXX_NONE_H */
