@@ -39,8 +39,10 @@ for (local name: [opendir("cxx").each.d_name...].sorted()) {
 #include <deemon/cxx/function.h>
 #include <deemon/cxx/hashset.h>
 #include <deemon/cxx/int.h>
+#include <deemon/cxx/iterator.h>
 #include <deemon/cxx/list.h>
 #include <deemon/cxx/mapping.h>
+#include <deemon/cxx/none.h>
 #include <deemon/cxx/numeric.h>
 #include <deemon/cxx/object.h>
 #include <deemon/cxx/sequence.h>
