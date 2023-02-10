@@ -280,9 +280,9 @@ call_format_function:
 				callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
 			} else {
 				format_str_obj = DeeString_NewUtf8(format_str, format_len, STRING_ERROR_FIGNORE);
-				if unlikely(!format_str_obj)
+				if unlikely(!format_str_obj) {
 					callback_result = NULL;
-				else {
+				} else {
 					callback_result = DeeObject_Call(format_function, 1, &format_str_obj);
 					Dee_Decref(format_str_obj);
 				}

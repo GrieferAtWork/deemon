@@ -364,13 +364,7 @@ do_invoke_var_any_ctor_kw:
 	} else {
 		int error;
 		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
-		if (object_type->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-		else if (object_type->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, object_type);
@@ -385,22 +379,10 @@ do_invoke_alloc_any_ctor_kw:
 			error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result, 0, NULL, NULL);
 		} else {
 			DeeObject_FreeTracker(result);
-			if (object_type->tp_init.tp_alloc.tp_free)
-				(*object_type->tp_init.tp_alloc.tp_free)(result);
-			else if (object_type->tp_flags & TP_FGC)
-				DeeGCObject_Free(result);
-			else {
-				DeeObject_Free(result);
-			}
+			DeeType_FreeInstance(object_type, result);
 			if (!type_inherit_constructors(object_type))
 				goto err_not_implemented;
-			if (object_type->tp_init.tp_alloc.tp_free)
-				result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-			else if (object_type->tp_flags & TP_FGC)
-				result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			else {
-				result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			}
+			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
 			DeeObject_InitNoref(result, object_type);
@@ -427,13 +409,7 @@ err_not_implemented_r:
 	err_unimplemented_constructor(object_type, 0, NULL);
 err_r:
 	DeeObject_FreeTracker(result);
-	if (object_type->tp_init.tp_alloc.tp_free)
-		(*object_type->tp_init.tp_alloc.tp_free)(result);
-	else if (object_type->tp_flags & TP_FGC)
-		DeeGCObject_Free(result);
-	else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(object_type, result);
 err_object_type:
 	Dee_Decref(object_type);
 	goto err;
@@ -476,13 +452,7 @@ do_invoke_var_copy:
 	} else {
 		int error;
 		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
-		if (object_type->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-		else if (object_type->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, object_type);
@@ -501,22 +471,10 @@ do_invoke_alloc_copy:
 			error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result, argv[0]);
 		} else {
 			DeeObject_FreeTracker(result);
-			if (object_type->tp_init.tp_alloc.tp_free)
-				(*object_type->tp_init.tp_alloc.tp_free)(result);
-			else if (object_type->tp_flags & TP_FGC)
-				DeeGCObject_Free(result);
-			else {
-				DeeObject_Free(result);
-			}
+			DeeType_FreeInstance(object_type, result);
 			if (!type_inherit_constructors(object_type))
 				goto err_not_implemented;
-			if (object_type->tp_init.tp_alloc.tp_free)
-				result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-			else if (object_type->tp_flags & TP_FGC)
-				result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			else {
-				result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			}
+			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
 			DeeObject_InitNoref(result, object_type);
@@ -546,13 +504,7 @@ err_not_implemented_r:
 	err_unimplemented_constructor(object_type, argc, argv);
 err_r:
 	DeeObject_FreeTracker(result);
-	if (object_type->tp_init.tp_alloc.tp_free)
-		(*object_type->tp_init.tp_alloc.tp_free)(result);
-	else if (object_type->tp_flags & TP_FGC)
-		DeeGCObject_Free(result);
-	else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(object_type, result);
 err_object_type:
 	Dee_Decref(object_type);
 	goto err;
@@ -635,13 +587,7 @@ do_invoke_var_copy:
 	} else {
 		int error;
 		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
-		if (object_type->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-		else if (object_type->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, object_type);
@@ -699,22 +645,10 @@ do_invoke_alloc_copy:
 			error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result, argv[0]);
 		} else {
 			DeeObject_FreeTracker(result);
-			if (object_type->tp_init.tp_alloc.tp_free)
-				(*object_type->tp_init.tp_alloc.tp_free)(result);
-			else if (object_type->tp_flags & TP_FGC)
-				DeeGCObject_Free(result);
-			else {
-				DeeObject_Free(result);
-			}
+			DeeType_FreeInstance(object_type, result);
 			if (!type_inherit_constructors(object_type))
 				goto err_not_implemented;
-			if (object_type->tp_init.tp_alloc.tp_free)
-				result = (DREF DeeObject *)(*object_type->tp_init.tp_alloc.tp_alloc)();
-			else if (object_type->tp_flags & TP_FGC)
-				result = (DREF DeeObject *)DeeGCObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			else {
-				result = (DREF DeeObject *)DeeObject_Malloc(object_type->tp_init.tp_alloc.tp_instance_size);
-			}
+			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
 			DeeObject_InitNoref(result, object_type);
@@ -747,13 +681,7 @@ err_not_implemented_r:
 	err_unimplemented_constructor(object_type, argc, argv);
 err_r:
 	DeeObject_FreeTracker(result);
-	if (object_type->tp_init.tp_alloc.tp_free)
-		(*object_type->tp_init.tp_alloc.tp_free)(result);
-	else if (object_type->tp_flags & TP_FGC)
-		DeeGCObject_Free(result);
-	else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(object_type, result);
 err_object_type:
 	Dee_Decref(object_type);
 	goto err;
@@ -861,6 +789,7 @@ DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)
 	DREF DeeObject *result;
 	DeeThreadObject *thread_self = DeeThread_Self();
 	LOAD_TP_SELF;
+
 	/* Check to make sure that a deepcopy construction is implemented by this type.
 	 * Note that the variable-and fixed-length constructors are located at the same
 	 * offset in the type structure, meaning that we only need to check one address. */
@@ -872,6 +801,7 @@ DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)
 				if (tp_self->tp_init.tp_alloc.tp_copy_ctor)
 					goto got_normal_copy;
 			}
+
 			/* when neither a deepcopy, nor a regular copy operator are present,
 			 * assume that the object is immutable and re-return the object itself. */
 			return_reference_(self);
@@ -891,6 +821,7 @@ got_deep_copy:
 	if (result)
 		return_reference_(result);
 	deepcopy_begin(thread_self);
+
 	/* Allocate an to basic construction of the deepcopy object. */
 	if (tp_self->tp_flags & TP_FVARIABLE) {
 		/* Variable-length object. */
@@ -901,39 +832,32 @@ got_deep_copy:
 			goto done_endcopy;
 	} else {
 		ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+
 		/* Static-length object. */
-		if (tp_self->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
-		else if (tp_self->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto done_endcopy;
+
 		/* Perform basic object initialization. */
 		DeeObject_Init(result, tp_self);
+
 		/* Invoke the deepcopy constructor first. */
 		if unlikely(tp_self->tp_init.tp_alloc.tp_deep_ctor
 		            ? (*tp_self->tp_init.tp_alloc.tp_deep_ctor)(result, self)
 		            : (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result, self)) {
 			/* Undo allocating and base-initializing the new object. */
 			DeeObject_FreeTracker(result);
-			if (tp_self->tp_init.tp_alloc.tp_free)
-				(*tp_self->tp_init.tp_alloc.tp_free)(result);
-			else if (tp_self->tp_flags & TP_FGC)
-				DeeGCObject_Free(result);
-			else {
-				DeeObject_Free(result);
-			}
+			DeeType_FreeInstance(tp_self, result);
 			Dee_Decref(tp_self);
 			result = NULL;
 			goto done_endcopy;
 		}
+
 		/* Begin tracking the returned object if this is a GC type. */
 		if (tp_self->tp_flags & TP_FGC)
 			DeeGC_Track(result);
 	}
+
 	/* Now comes the interesting part concerning
 	 * recursion possible with deepcopy. */
 	if (tp_self->tp_init.tp_deepload) {
@@ -1017,19 +941,14 @@ do_invoke_var_any_ctor_kw:
 	} else if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
 		int error;
 do_invoke_alloc_copy:
-		if (tp_self->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
-		else if (tp_self->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, tp_self);
 		error = (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result, self);
 		if unlikely(error)
 			goto err_r;
+
 		/* Begin tracking the returned object. */
 		if (tp_self->tp_flags & TP_FGC)
 			DeeGC_Track(result);
@@ -1039,13 +958,7 @@ do_invoke_alloc_copy:
 	} else {
 		int error;
 		ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
-		if (tp_self->tp_init.tp_alloc.tp_free)
-			result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
-		else if (tp_self->tp_flags & TP_FGC)
-			result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		else {
-			result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-		}
+		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, tp_self);
@@ -1057,13 +970,7 @@ do_invoke_alloc_any_ctor_kw:
 			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor_kw)(result, 1, (DeeObject **)&self, NULL);
 		} else {
 			DeeObject_FreeTracker(result);
-			if (tp_self->tp_init.tp_alloc.tp_free)
-				(*tp_self->tp_init.tp_alloc.tp_free)(result);
-			else if (tp_self->tp_flags & TP_FGC)
-				DeeGCObject_Free(result);
-			else {
-				DeeObject_Free(result);
-			}
+			DeeType_FreeInstance(tp_self, result);
 			if (!type_inherit_constructors(tp_self))
 				goto err_not_implemented;
 			if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
@@ -1074,13 +981,7 @@ do_invoke_alloc_any_ctor_kw:
 				Dee_DecrefNokill(tp_self);
 				goto do_invoke_var_deep;
 			}
-			if (tp_self->tp_init.tp_alloc.tp_free)
-				result = (DREF DeeObject *)(*tp_self->tp_init.tp_alloc.tp_alloc)();
-			else if (tp_self->tp_flags & TP_FGC)
-				result = (DREF DeeObject *)DeeGCObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-			else {
-				result = (DREF DeeObject *)DeeObject_Malloc(tp_self->tp_init.tp_alloc.tp_instance_size);
-			}
+			result = DeeType_AllocInstance(tp_self);
 			if unlikely(!result)
 				goto err_object_type;
 			DeeObject_InitNoref(result, tp_self);
@@ -1105,13 +1006,7 @@ err_not_implemented_r:
 	err_unimplemented_constructor(tp_self, 0, NULL);
 err_r:
 	DeeObject_FreeTracker(result);
-	if (tp_self->tp_init.tp_alloc.tp_free)
-		(*tp_self->tp_init.tp_alloc.tp_free)(result);
-	else if (tp_self->tp_flags & TP_FGC)
-		DeeGCObject_Free(result);
-	else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(tp_self, result);
 err_object_type:
 	Dee_Decref(tp_self);
 	goto err;
@@ -2136,8 +2031,9 @@ err:
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC int (DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
-                                      uint32_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsUInt32)(DeeObject *__restrict self,
+                           uint32_t *__restrict result) {
 	int error;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -2209,8 +2105,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
-                                     int32_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsInt32)(DeeObject *__restrict self,
+                          int32_t *__restrict result) {
 	int error;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -2285,8 +2182,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
-                                      uint64_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsUInt64)(DeeObject *__restrict self,
+                           uint64_t *__restrict result) {
 	int error;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -2352,8 +2250,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
-                                     int64_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
+                          int64_t *__restrict result) {
 	int error;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -2376,9 +2275,9 @@ PUBLIC int (DCALL DeeObject_AsInt64)(DeeObject *__restrict self,
 				error = DeeType_INVOKE_INT32(tp_self, self, &val32);
 				if (error < 0)
 					goto err;
-				if (error == INT_SIGNED)
+				if (error == INT_SIGNED) {
 					*result = (int64_t)val32;
-				else {
+				} else {
 					*result = (int64_t)((uint64_t)(uint32_t)val32);
 				}
 				return 0;
@@ -2415,16 +2314,18 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
-                                      dint128_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsInt128)(DeeObject *__restrict self,
+                           dint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, result);
 	if (error == INT_UNSIGNED && DSINT128_ISNEG(*result))
 		return err_integer_overflow(self, 128, true);
 	return 0;
 }
 
-PUBLIC int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
-                                       duint128_t *__restrict result) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
+                            duint128_t *__restrict result) {
 	int error = DeeObject_GetInt128(self, (dint128_t *)result);
 	if (error == INT_SIGNED && DSINT128_ISNEG(*result))
 		return err_integer_overflow(self, 128, false);
@@ -2447,18 +2348,18 @@ DEFINE_OPERATOR(int, AsDouble,
 				return DeeType_INVOKE_DOUBLE(tp_self, self, result);
 			if (tp_self->tp_math->tp_int64) {
 				error = DeeType_INVOKE_INT64(tp_self, self, &res.res64);
-				if (error == INT_UNSIGNED)
+				if (error == INT_UNSIGNED) {
 					*result = (double)(uint64_t)res.res64;
-				else {
+				} else {
 					*result = (double)res.res64;
 				}
 				return error < 0 ? -1 : 0;
 			}
 			if (tp_self->tp_math->tp_int32) {
 				error = DeeType_INVOKE_INT32(tp_self, self, &res.res32);
-				if (error == INT_UNSIGNED)
+				if (error == INT_UNSIGNED) {
 					*result = (double)(uint32_t)res.res32;
-				else {
+				} else {
 					*result = (double)res.res32;
 				}
 				return error < 0 ? -1 : 0;
@@ -2470,9 +2371,9 @@ DEFINE_OPERATOR(int, AsDouble,
 					goto err;
 				error = DeeInt_As64(temp_int, &res.res64);
 				Dee_Decref(temp_int);
-				if (error == INT_UNSIGNED)
+				if (error == INT_UNSIGNED) {
 					*result = (double)(uint64_t)res.res64;
-				else {
+				} else {
 					*result = (double)res.res64;
 				}
 				return error < 0 ? -1 : 0;

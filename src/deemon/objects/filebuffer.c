@@ -655,17 +655,19 @@ again:
 			if (self->fb_chng + self->fb_chsz < self->fb_ptr + bufavail)
 				self->fb_chsz = (size_t)((self->fb_ptr + bufavail) - self->fb_chng);
 		}
+
 		/* If this is a TTY device, add it to the chain of changed ones. */
 		if (self->fb_flag & FILE_BUFFER_FISATTY)
 			buffer_addtty(self);
 
 		/* Update the file pointer. */
 		self->fb_ptr += bufavail;
-		if (self->fb_cnt >= bufavail)
+		if (self->fb_cnt >= bufavail) {
 			self->fb_cnt -= bufavail;
-		else {
+		} else {
 			self->fb_cnt = 0;
 		}
+
 		/* When operating in line-buffered mode, check
 		 * if there was a linefeed in what we just wrote. */
 		if ((self->fb_flag & FILE_BUFFER_FLNBUF) &&
@@ -784,13 +786,14 @@ buffer_seek_nolock(Buffer *__restrict self,
 		uint8_t *new_pos;
 		if unlikely(!self->fb_file)
 			goto err_closed;
+
 		/* For these modes, we can calculate the new position,
 		 * allowing for in-buffer seek, as well as delayed seek. */
 		old_abspos = self->fb_fblk;
 		old_abspos += (self->fb_ptr - self->fb_base);
-		if (whence == SEEK_SET)
+		if (whence == SEEK_SET) {
 			new_abspos = (dpos_t)off;
-		else {
+		} else {
 			new_abspos = old_abspos + off;
 		}
 		if unlikely(new_abspos >= INT64_MAX) {
@@ -818,9 +821,9 @@ buffer_seek_nolock(Buffer *__restrict self,
 			self->fb_cnt = 0;
 		} else {
 			size_t skipsz = (size_t)(new_pos - self->fb_ptr);
-			if (self->fb_cnt >= skipsz)
+			if (self->fb_cnt >= skipsz) {
 				self->fb_cnt -= skipsz;
-			else {
+			} else {
 				self->fb_cnt = 0;
 			}
 		}
@@ -1085,10 +1088,11 @@ read_through:
 	if unlikely(self->fb_chsz)
 		goto again;
 	self->fb_fpos = next_data + read_size;
+
 	/* Check for special case: EOF reached. */
-	if (!read_size)
+	if (!read_size) {
 		result = GETC_EOF;
-	else {
+	} else {
 		self->fb_cnt = read_size - 1;
 		self->fb_ptr = self->fb_base + 1;
 		result       = (int)(unsigned int)(unsigned char)*self->fb_base;
@@ -1287,9 +1291,9 @@ buffer_close(Buffer *__restrict self) {
 	/* Clear out buffer pointers. */
 	self->fb_ptr = NULL;
 	self->fb_cnt = 0;
-	if (flags & FILE_BUFFER_FREADING)
+	if (flags & FILE_BUFFER_FREADING) {
 		buffer = NULL;
-	else {
+	} else {
 		self->fb_base = NULL;
 		self->fb_size = 0;
 	}
@@ -1371,13 +1375,13 @@ buffer_ctor(Buffer *__restrict self,
 			}
 			if (CASEEQ(*mode_iter, 'c')) {
 				++mode_iter;
-				if (*mode_iter == '-' || *mode_iter == ',')
+				if (*mode_iter == '-' || *mode_iter == ',') {
 					++mode_iter;
-				else if (CASEEQ(mode_iter[0], 'l') &&
-				         CASEEQ(mode_iter[1], 'o') &&
-				         CASEEQ(mode_iter[2], 's') &&
-				         CASEEQ(mode_iter[3], 'e') &&
-				         mode_iter[4] == ',') {
+				} else if (CASEEQ(mode_iter[0], 'l') &&
+				           CASEEQ(mode_iter[1], 'o') &&
+				           CASEEQ(mode_iter[2], 's') &&
+				           CASEEQ(mode_iter[3], 'e') &&
+				           mode_iter[4] == ',') {
 					mode_iter += 5;
 				}
 				if (mode & FILE_BUFFER_FCLOFILE)
@@ -1387,12 +1391,12 @@ buffer_ctor(Buffer *__restrict self,
 			}
 			if (CASEEQ(*mode_iter, 's')) {
 				++mode_iter;
-				if (*mode_iter == '-' || *mode_iter == ',')
+				if (*mode_iter == '-' || *mode_iter == ',') {
 					++mode_iter;
-				else if (CASEEQ(mode_iter[0], 'y') &&
-				         CASEEQ(mode_iter[1], 'n') &&
-				         CASEEQ(mode_iter[2], 'c') &&
-				         mode_iter[3] == ',') {
+				} else if (CASEEQ(mode_iter[0], 'y') &&
+				           CASEEQ(mode_iter[1], 'n') &&
+				           CASEEQ(mode_iter[2], 'c') &&
+				           mode_iter[3] == ',') {
 					mode_iter += 4;
 				}
 				if (mode & FILE_BUFFER_FSYNC)
@@ -1554,12 +1558,12 @@ buffer_setbuf(Buffer *self, size_t argc,
 	for (;;) {
 		if (CASEEQ(*mode_iter, 's')) {
 			++mode_iter;
-			if (*mode_iter == '-' || *mode_iter == ',')
+			if (*mode_iter == '-' || *mode_iter == ',') {
 				++mode_iter;
-			else if (CASEEQ(mode_iter[0], 'y') &&
-			         CASEEQ(mode_iter[1], 'n') &&
-			         CASEEQ(mode_iter[2], 'c') &&
-			         mode_iter[3] == ',') {
+			} else if (CASEEQ(mode_iter[0], 'y') &&
+			           CASEEQ(mode_iter[1], 'n') &&
+			           CASEEQ(mode_iter[2], 'c') &&
+			           mode_iter[3] == ',') {
 				mode_iter += 4;
 			}
 			if (mode & FILE_BUFFER_FSYNC)

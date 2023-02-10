@@ -94,9 +94,9 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	temp = DeeInt_NewSize(index);
 	if unlikely(!temp)
 		goto err;
-	if (self->c_getitem->tp_get == &instance_getitem)
+	if (self->c_getitem->tp_get == &instance_getitem) {
 		result = instance_tgetitem(self->c_getitem_tp, self->c_seq, temp);
-	else {
+	} else {
 		result = (*self->c_getitem->tp_get)(self->c_seq, temp);
 	}
 	Dee_Decref(temp);

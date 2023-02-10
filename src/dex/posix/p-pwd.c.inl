@@ -111,7 +111,7 @@ DECL_BEGIN
 
 #ifndef posix_getenv_USE_STUB
 /*[[[deemon
-import PRIVATE_DEFINE_STRING from rt.gen;
+import PRIVATE_DEFINE_STRING from rt.gen.string;
 PRIVATE_DEFINE_STRING("posix_tmpdir_0", "TMPDIR");
 PRIVATE_DEFINE_STRING("posix_tmpdir_1", "TMP");
 PRIVATE_DEFINE_STRING("posix_tmpdir_2", "TEMP");

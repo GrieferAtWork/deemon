@@ -1426,48 +1426,48 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) void *DCALL
-DeeType_GetOpPointer(DeeTypeObject *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2)) void const *DCALL
+DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
                      struct opinfo const *__restrict info) {
 	switch (info->oi_class) {
 
 	case OPCLASS_TYPE:
-		return *(void **)((uintptr_t)self + info->oi_offset);
+		return *(void const **)((uintptr_t)self + info->oi_offset);
 
 	case OPCLASS_GC:
 		if (!self->tp_gc)
 			break;
-		return *(void **)((uintptr_t)self->tp_gc + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_gc + info->oi_offset);
 
 	case OPCLASS_MATH:
 		if (!self->tp_math)
 			break;
-		return *(void **)((uintptr_t)self->tp_math + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_math + info->oi_offset);
 
 	case OPCLASS_CMP:
 		if (!self->tp_cmp)
 			break;
-		return *(void **)((uintptr_t)self->tp_cmp + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_cmp + info->oi_offset);
 
 	case OPCLASS_SEQ:
 		if (!self->tp_seq)
 			break;
-		return *(void **)((uintptr_t)self->tp_seq + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_seq + info->oi_offset);
 
 	case OPCLASS_ATTR:
 		if (!self->tp_attr)
 			break;
-		return *(void **)((uintptr_t)self->tp_attr + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_attr + info->oi_offset);
 
 	case OPCLASS_WITH:
 		if (!self->tp_with)
 			break;
-		return *(void **)((uintptr_t)self->tp_with + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_with + info->oi_offset);
 
 	case OPCLASS_BUFFER:
 		if (!self->tp_buffer)
 			break;
-		return *(void **)((uintptr_t)self->tp_buffer + info->oi_offset);
+		return *(void const **)((uintptr_t)self->tp_buffer + info->oi_offset);
 
 	default:
 		break; /* XXX: Extended operators? */
@@ -1477,7 +1477,7 @@ DeeType_GetOpPointer(DeeTypeObject *__restrict self,
 
 /* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
+DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	struct opinfo const *info;
 	if (name == OPERATOR_CONSTRUCTOR) {
 		/* Special case: the constructor operator (which cannot be inherited). */
@@ -1498,8 +1498,8 @@ DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name) {
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
-	void *my_ptr;
+DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+	void const *my_ptr;
 	struct opinfo const *info;
 	if (name == OPERATOR_CONSTRUCTOR) {
 		/* Special case: the constructor operator (which cannot be inherited). */
@@ -1633,14 +1633,14 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 	return 0;
 }
 
-#define DEFINE_TOI_COMPARE(name, op)                                                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                               \
-	name(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {                   \
+#define DEFINE_TOI_COMPARE(name, op)                                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {      \
 		if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type)) \
-			goto err;                                                                   \
-		return_bool(TOI_GETOPID(self) op TOI_GETOPID(other));                           \
-	err:                                                                                \
-		return NULL;                                                                    \
+			goto err;                                                      \
+		return_bool(TOI_GETOPID(self) op TOI_GETOPID(other));              \
+	err:                                                                   \
+		return NULL;                                                       \
 	}
 DEFINE_TOI_COMPARE(toi_eq, ==)
 DEFINE_TOI_COMPARE(toi_ne, !=)
@@ -1679,7 +1679,8 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 		result        = self->to_opid;
 #endif /* CONFIG_NO_THREADS */
 		for (;; ++result) {
-			void *my_ptr;
+			void const *my_ptr;
+
 			/* Query information about the given operator. */
 			info = Dee_OperatorInfo(Dee_TYPE(tp), result);
 			if (result == OPERATOR_CONSTRUCTOR) {
@@ -1696,11 +1697,13 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 					result = OPERATOR_EXTENDED(0);
 					continue;
 				}
+
 				/* If we already were within extended operators, then
 				 * we know we've check all of them at this point, meaning
 				 * we know that all operators have now been enumerated. */
 				return ITER_DONE;
 			}
+
 			/* Check if this operator is implemented (though isn't inherited). */
 			if ((my_ptr = DeeType_GetOpPointer(tp, info)) != NULL &&
 			    (!tp->tp_base || my_ptr != DeeType_GetOpPointer(tp->tp_base, info)))

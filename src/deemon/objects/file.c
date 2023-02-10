@@ -209,11 +209,11 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
 				                                                   &value, sizeof(unsigned char),
 				                                                   Dee_FILEIO_FNORMAL);
-				if (error == (size_t)-1)
+				if (error == (size_t)-1) {
 					result = GETC_ERR;
-				else if (error >= sizeof(char))
+				} else if (error >= sizeof(char)) {
 					result = (int)(unsigned int)value;
-				else {
+				} else {
 					result = GETC_EOF;
 				}
 			} else {
@@ -248,11 +248,11 @@ DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_read)((DeeFileObject *)self,
 				                                                   &value, sizeof(char),
 				                                                   flags);
-				if (error == (size_t)-1)
+				if (error == (size_t)-1) {
 					result = GETC_ERR;
-				else if (error >= sizeof(char))
+				} else if (error >= sizeof(char)) {
 					result = (int)value;
-				else {
+				} else {
 					result = GETC_EOF;
 				}
 			} else {
@@ -289,11 +289,11 @@ DeeFile_Putc(DeeObject *__restrict self, int ch) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    Dee_FILEIO_FNORMAL);
-				if (error == (size_t)-1)
+				if (error == (size_t)-1) {
 					result = GETC_ERR;
-				else if (error >= sizeof(char))
+				} else if (error >= sizeof(char)) {
 					result = (int)(unsigned int)(unsigned char)value;
-				else {
+				} else {
 					result = GETC_EOF;
 				}
 			} else {
@@ -329,11 +329,11 @@ DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    flags);
-				if (error == (size_t)-1)
+				if (error == (size_t)-1) {
 					result = GETC_ERR;
-				else if (error >= sizeof(char))
+				} else if (error >= sizeof(char)) {
 					result = (int)(unsigned int)(unsigned char)value;
-				else {
+				} else {
 					result = GETC_EOF;
 				}
 			} else {

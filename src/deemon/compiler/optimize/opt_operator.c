@@ -735,9 +735,9 @@ cleanup_operands:
 					real_result = emulate_method_call(argv[0],
 					                                  DeeTuple_SIZE(argv[1]),
 					                                  DeeTuple_ELEM(argv[1]));
-					if likely(real_result)
+					if likely(real_result) {
 						Dee_Decref(real_result);
-					else {
+					} else {
 						Dee_Clear(operator_result);
 					}
 				}
@@ -758,9 +758,9 @@ not_allowed:
 			if likely(operator_result) {
 				DREF DeeObject *real_result;
 				real_result = DeeObject_InvokeOperator(argv[0], self->a_flag, opcount - 1, argv + 1);
-				if likely(real_result)
+				if likely(real_result) {
 					Dee_Decref(real_result);
-				else {
+				} else {
 					Dee_Clear(operator_result);
 				}
 			}
@@ -834,15 +834,15 @@ generic_operator_optimizations:
 			/* Propagate explicit cast calls to underlying sequence types:
 			 * >> tuple([10, 20, 30]); // Optimize to `pack(10, 20, 30)' */
 			uint16_t new_kind;
-			if (function == (DeeObject *)&DeeTuple_Type)
+			if (function == (DeeObject *)&DeeTuple_Type) {
 				new_kind = AST_FMULTIPLE_TUPLE;
-			else if (function == (DeeObject *)&DeeList_Type)
+			} else if (function == (DeeObject *)&DeeList_Type) {
 				new_kind = AST_FMULTIPLE_LIST;
-			else if (function == (DeeObject *)&DeeHashSet_Type)
+			} else if (function == (DeeObject *)&DeeHashSet_Type) {
 				new_kind = AST_FMULTIPLE_HASHSET;
-			else if (function == (DeeObject *)&DeeDict_Type)
+			} else if (function == (DeeObject *)&DeeDict_Type) {
 				new_kind = AST_FMULTIPLE_DICT;
-			else {
+			} else {
 				goto after_sequence_cast_propagation;
 			}
 			if (AST_FMULTIPLE_ISDICT(new_kind)) {

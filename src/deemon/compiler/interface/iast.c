@@ -286,9 +286,9 @@ ast_setsym(Ast *__restrict self,
 	} else {
 		struct symbol *sym;
 		sym = DeeCompilerItem_VALUE(value, struct symbol);
-		if unlikely(!sym)
+		if unlikely(!sym) {
 			result = -1;
-		else {
+		} else {
 			struct ast *me = self->ci_value;
 			switch (me->a_type) {
 			case AST_SYM:
@@ -479,9 +479,9 @@ ast_setmultiple_typing(Ast *__restrict self,
 	} else {
 		uint16_t new_flags;
 		new_flags = get_ast_multiple_typing(value);
-		if (new_flags == (uint16_t)-1)
+		if (new_flags == (uint16_t)-1) {
 			result = -1;
-		else {
+		} else {
 			me->a_flag = new_flags;
 		}
 	}
@@ -798,11 +798,11 @@ ast_settryhandlers(Ast *__restrict self,
 		struct catch_expr *old_handv;
 		size_t old_handc, i;
 		new_handv = unpack_catch_expressions(value, &new_handc, me->a_scope->s_base);
-		if unlikely(!new_handv)
+		if unlikely(!new_handv) {
 			result = -1;
-		else {
-			old_handv          = me->a_try.t_catchv;
-			old_handc          = me->a_try.t_catchc;
+		} else {
+			old_handv = me->a_try.t_catchv;
+			old_handc = me->a_try.t_catchc;
 			me->a_try.t_catchv = new_handv;
 			me->a_try.t_catchc = new_handc;
 			for (i = 0; i < old_handc; ++i) {
@@ -2064,9 +2064,9 @@ ast_setfunctioncode(Ast *__restrict self,
 	} else {
 		DeeBaseScopeObject *code_scope;
 		code_scope = value->ci_value->a_scope->s_base;
-		if unlikely(check_function_code_scope(code_scope, me->a_scope->s_base))
+		if unlikely(check_function_code_scope(code_scope, me->a_scope->s_base)) {
 			result = -1;
-		else {
+		} else {
 			DREF DeeBaseScopeObject *old_scope;
 			DREF struct ast *old_code;
 			ast_incref(value->ci_value);
@@ -2757,10 +2757,10 @@ ast_setactionname(Ast *__restrict self,
 	} else {
 		int32_t new_id;
 		new_id = get_action_by_name(DeeString_STR(value));
-		if unlikely(new_id < 0)
+		if unlikely(new_id < 0) {
 			result = -1;
-		else if (AST_FACTION_ARGC_GT(new_id) ==
-		         AST_FACTION_ARGC_GT(me->a_flag)) {
+		} else if (AST_FACTION_ARGC_GT(new_id) ==
+		           AST_FACTION_ARGC_GT(me->a_flag)) {
 			me->a_flag = (uint16_t)new_id;
 		} else if ((uint16_t)new_id == AST_FACTION_ASSERT &&
 		         AST_FACTION_ARGC_GT(me->a_flag) == 2) {
@@ -3152,11 +3152,12 @@ print_function_atargs(struct ast *__restrict self,
 		if (argsym == function_scope->bs_varargs) {
 			PRINT("...");
 		} else if (argsym == function_scope->bs_varkwds) {
+			/* ... */
 		} else if (i >= function_scope->bs_argc_min && i < function_scope->bs_argc_max) {
 			DeeObject *defl = function_scope->bs_default[i - function_scope->bs_argc_min];
-			if (defl)
+			if (defl) {
 				printf(" = %r", defl);
-			else {
+			} else {
 				PRINT("?");
 			}
 		}
@@ -3259,9 +3260,9 @@ force_scope:
 		switch (self->a_flag) {
 
 		case AST_FMULTIPLE_TUPLE:
-			if (!self->a_multiple.m_astc)
+			if (!self->a_multiple.m_astc) {
 				PRINT("pack()");
-			else {
+			} else {
 				PRINT("(");
 				for (i = 0; i < self->a_multiple.m_astc; ++i) {
 					DO(print_ast_code(self->a_multiple.m_astv[i], printer, arg, true, self->a_scope, indent + 1));
@@ -4862,19 +4863,19 @@ print_single_expr:
 		PRINT("makeconditional(cond: ");
 		PRINTAST(self->a_conditional.c_cond);
 		PRINT(", tt: ");
-		if (!self->a_conditional.c_tt)
+		if (!self->a_conditional.c_tt) {
 			PRINT_NONE();
-		else if (self->a_conditional.c_tt == self->a_conditional.c_cond)
+		} else if (self->a_conditional.c_tt == self->a_conditional.c_cond) {
 			PRINT("<cond>");
-		else {
+		} else {
 			PRINTAST(self->a_conditional.c_tt);
 		}
 		PRINT(", ff: ");
-		if (!self->a_conditional.c_ff)
+		if (!self->a_conditional.c_ff) {
 			PRINT_NONE();
-		else if (self->a_conditional.c_ff == self->a_conditional.c_cond)
+		} else if (self->a_conditional.c_ff == self->a_conditional.c_cond) {
 			PRINT("<cond>");
-		else {
+		} else {
 			PRINTAST(self->a_conditional.c_ff);
 		}
 		first_flag = true;

@@ -2165,9 +2165,9 @@ do_iter_attr:
 					tp_self = iter;
 					goto again;
 				}
-				if (getattr == &instance_getattr)
+				if (getattr == &instance_getattr) {
 					found_object = instance_tgetattr(iter, self, attr_name);
-				else {
+				} else {
 					found_object = (*getattr)(self, attr_name);
 				}
 				if likely(found_object) {
@@ -2239,9 +2239,9 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewWithHash(attr_name, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (getattr == &instance_getattr)
+				if (getattr == &instance_getattr) {
 					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				else {
+				} else {
 					found_object = (*getattr)(self, attr_name_ob);
 				}
 				Dee_Decref(attr_name_ob);
@@ -2315,9 +2315,9 @@ do_iter_attr:
 				attr_name_ob = DeeString_NewSizedWithHash(attr_name, attrlen, hash);
 				if unlikely(!attr_name_ob)
 					goto err;
-				if (getattr == &instance_getattr)
+				if (getattr == &instance_getattr) {
 					found_object = instance_tgetattr(iter, self, attr_name_ob);
-				else {
+				} else {
 					found_object = (*getattr)(self, attr_name_ob);
 				}
 				Dee_Decref(attr_name_ob);

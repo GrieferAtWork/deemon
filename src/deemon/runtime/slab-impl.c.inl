@@ -491,9 +491,11 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_Malloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	if unlikely(!result)
+	if unlikely(!result) {
 		result = (Dee_Malloc)(ITEMSIZE);
-	else INIT_DEBUG(result);
+	} else {
+		INIT_DEBUG(result);
+	}
 	return result;
 }
 
@@ -501,9 +503,11 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	if unlikely(!result)
+	if unlikely(!result) {
 		result = (DeeDbg_Malloc)(ITEMSIZE, file, line);
-	else INIT_DEBUG(result);
+	} else {
+		INIT_DEBUG(result);
+	}
 	return result;
 }
 
@@ -511,9 +515,11 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	if unlikely(!result)
+	if unlikely(!result) {
 		result = (Dee_TryMalloc)(ITEMSIZE);
-	else INIT_DEBUG(result);
+	} else {
+		INIT_DEBUG(result);
+	}
 	return result;
 }
 
@@ -521,9 +527,11 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	if unlikely(!result)
+	if unlikely(!result) {
 		result = (DeeDbg_TryMalloc)(ITEMSIZE, file, line);
-	else INIT_DEBUG(result);
+	} else {
+		INIT_DEBUG(result);
+	}
 	return result;
 }
 #endif /* !NDEBUG */
@@ -566,9 +574,9 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 
 #undef DeeSlab_Free
 PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
-	if (IS_SLAB_POINTER(ptr))
+	if (IS_SLAB_POINTER(ptr)) {
 		FUNC(DeeSlab_DoFree)(ptr);
-	else {
+	} else {
 		(Dee_Free)(ptr);
 	}
 }
@@ -577,9 +585,9 @@ PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
 INTDEF DREF DeeStringObject *latin1_chars[256];
 PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr,
                                           char const *file, int line) {
-	if (IS_SLAB_POINTER(ptr))
+	if (IS_SLAB_POINTER(ptr)) {
 		FUNC(DeeSlab_DoFree)(ptr);
-	else {
+	} else {
 		(DeeDbg_Free)(ptr, file, line);
 	}
 }

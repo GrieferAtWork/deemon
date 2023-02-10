@@ -487,16 +487,18 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 	    (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FFLAGMASK)) {
 		if (((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_TOP ||
 		     (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_POP) &&
-		    (iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_POP_OR_TOP)
-			;
-		else if ((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_PREFIX)
-			;
+		    (iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_POP_OR_TOP) {
+			/* ... */
+		} else if ((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_PREFIX) {
+			/* ... */
+		} else
 #if 0
-		else if (OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&oop->aoo_class)) &&
-		         OPERAND_CLASS_ISDISP(iop->io_class))
-			;
+		if (OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&oop->aoo_class)) &&
+		    OPERAND_CLASS_ISDISP(iop->io_class)) {
+			/* ... */
+		} else
 #endif
-		else {
+		{
 			goto nope;
 		}
 	}
@@ -1295,13 +1297,13 @@ struct assembler_state {
 
 PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	if (name & 0xff000000)
-		;
-	else if (name & 0x00ff0000)
+	if (name & 0xff000000) {
+		/* ... */
+	} else if (name & 0x00ff0000) {
 		name = name << 8;
-	else if (name & 0x0000ff00)
+	} else if (name & 0x0000ff00) {
 		name = name << 16;
-	else {
+	} else {
 		name = name << 24;
 	}
 #else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
@@ -1601,9 +1603,9 @@ abs_stack_any:
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
-		if (mode == OPTION_MODE_INPUT)
+		if (mode == OPTION_MODE_INPUT) {
 			sid = asm_ssymid_for_read(sym, self);
-		else {
+		} else {
 			sid = asm_ssymid(sym);
 		}
 		if unlikely(sid < 0)
@@ -1634,9 +1636,9 @@ abs_stack_any:
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
 		if (sym->s_type != SYMBOL_TYPE_GLOBAL)
 			goto next_option;
-		if (mode == OPTION_MODE_INPUT)
+		if (mode == OPTION_MODE_INPUT) {
 			gid = asm_gsymid_for_read(sym, self);
-		else {
+		} else {
 			gid = asm_gsymid(sym);
 		}
 		if unlikely(gid < 0)
@@ -1654,9 +1656,9 @@ abs_stack_any:
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
 write_regular_local:
-		if (mode == OPTION_MODE_INPUT)
+		if (mode == OPTION_MODE_INPUT) {
 			lid = asm_lsymid_for_read(sym, self);
-		else {
+		} else {
 			lid = asm_lsymid(sym);
 		}
 		if unlikely(lid < 0)
@@ -1984,11 +1986,11 @@ write_regular_local:
 	case ASM_OP_PUSH:
 		if (mode == OPTION_MODE_UNDEF)
 			goto err_undefined_mode;
-		if (mode == OPTION_MODE_INPUT)
+		if (mode == OPTION_MODE_INPUT) {
 			result = get_assembly_formatter_oprepr(self, "nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR",
 			                                       mode | OPTION_MODE_TRY,
 			                                       cleanup, init_state);
-		else {
+		} else {
 			result = get_assembly_formatter_oprepr(self, "eglCsS",
 			                                       mode | OPTION_MODE_TRY,
 			                                       cleanup, init_state);
@@ -2444,9 +2446,9 @@ create_assembly_file:
 			                            (self->a_assembly.as_num_i +
 			                             self->a_assembly.as_num_o);
 			parser_start();
-			if unlikely(yield() < 0)
+			if unlikely(yield() < 0) {
 				result = -1;
-			else {
+			} else {
 				result = uasm_parse();
 			}
 			current_userasm.ua_labelc = old_user_label_c;
@@ -2466,10 +2468,10 @@ create_assembly_file:
 		    current_assembler.a_curr != old_section) {
 			/* Generate a jump to the proper section. */
 			struct asm_sym *temp = asm_newsym();
-			if unlikely(!temp)
+			if unlikely(!temp) {
 				result = -1;
-			else {
-				result                   = asm_gjmp(ASM_JMP, temp);
+			} else {
+				result = asm_gjmp(ASM_JMP, temp);
 				current_assembler.a_curr = old_section;
 				asm_defsym(temp);
 			}

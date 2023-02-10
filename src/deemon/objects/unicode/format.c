@@ -68,10 +68,10 @@ Formatter_GetUnaryArg(struct formatter *__restrict self,
 		ASSERT(!DeeUni_IsSymCont('}'));
 		while (DeeUni_IsSymCont(*key_end))
 			++key_end;
-		if (!do_eval)
-			result = Dee_None,
+		if (!do_eval) {
+			result = Dee_None;
 			Dee_Incref(result);
-		else {
+		} else {
 			size_t len = (size_t)(key_end - fmt_start);
 			result = DeeObject_GetItemStringLen(self->f_args,
 			                                    fmt_start,
@@ -908,9 +908,9 @@ format_bytes_impl(struct formatter *__restrict self,
 			char mode = *++format_start;
 			if (mode == 'a' || mode == 's')
 				goto print_normal;
-			if (mode == 'r')
+			if (mode == 'r') {
 				print_error = DeeObject_PrintRepr(in_arg, printer, arg);
-			else {
+			} else {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid character %.1q following `!' in string.format",
 				                format_start);

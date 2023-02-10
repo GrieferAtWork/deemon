@@ -611,9 +611,9 @@ nt_CreateProcessExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
 		if unlikely(!pathext)
 			goto err;
 		lpPathExt = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
-		if unlikely(!lpPathExt)
+		if unlikely(!lpPathExt) {
 			result = NULL;
-		else {
+		} else {
 			result = nt_CreateProcessPathWithExt(lpApplicationName,
 			                                     szApplicationNameLength,
 			                                     lpPathExt,
@@ -1104,9 +1104,9 @@ process_id(Process *__restrict self) {
 		DBG_ALIGNMENT_ENABLE();
 		rwlock_upgrade(&self->p_lock);
 		COMPILER_READ_BARRIER();
-		if (self->p_id == (DWORD)-1)
+		if (self->p_id == (DWORD)-1) {
 			self->p_id = pid;
-		else {
+		} else {
 			pid = self->p_id;
 		}
 		rwlock_endwrite(&self->p_lock);
@@ -1153,9 +1153,9 @@ process_terminate(Process *self, size_t argc, DeeObject *const *argv) {
 			/* Try to acquire the terminate-permission. */
 			DBG_ALIGNMENT_DISABLE();
 			hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-			if (!hProcess)
+			if (!hProcess) {
 				error = GetLastError();
-			else {
+			} else {
 				if (TerminateProcess(hProcess, exit_code)) {
 					CloseHandle(hProcess);
 					goto term_ok;
@@ -1320,9 +1320,9 @@ pt_iter(ProcessThreads *__restrict self) {
 	}
 	result->pti_entry.dwSize = sizeof(result->pti_entry);
 	DBG_ALIGNMENT_DISABLE();
-	if (!Thread32First(result->pti_handle, &result->pti_entry))
+	if (!Thread32First(result->pti_handle, &result->pti_entry)) {
 		result->pti_entry.dwSize = 0;
-	else {
+	} else {
 		while (!result->pti_entry.dwSize) {
 			if (!Thread32Next(result->pti_handle, &result->pti_entry)) {
 				result->pti_entry.dwSize = 0;

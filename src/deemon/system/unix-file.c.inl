@@ -91,9 +91,9 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 again:
 	result = me->sf_filename;
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else {
+	} else {
 		int fd = (int)me->sf_handle;
 		if unlikely(fd < 0) {
 			err_file_closed();

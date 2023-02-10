@@ -944,9 +944,9 @@ module_import_symbol_pair(DeeModuleObject *self,
 	int result;
 	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
 		goto err;
-	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type))
+	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type)) {
 		result = -1;
-	else {
+	} else {
 		result = module_import_symbol(self,
 		                              (DeeStringObject *)key_and_value[0],
 		                              key_and_value[1]);
@@ -1421,11 +1421,11 @@ imod_ctor(InteractiveModule *__restrict self,
 		/* (file stream, string pathname) */
 		/* (file stream, tuple argv) */
 		/* (file stream, mapping default_symbols) */
-		if (DeeTuple_Check(argv[1]))
+		if (DeeTuple_Check(argv[1])) {
 			imod_argv = argv[1];
-		else if (DeeString_Check(argv[1]))
+		} else if (DeeString_Check(argv[1])) {
 			imod_path = argv[1];
-		else {
+		} else {
 			imod_syms = argv[1];
 		}
 		break;
@@ -1442,11 +1442,11 @@ imod_ctor(InteractiveModule *__restrict self,
 			if (DeeObject_AssertTypeExact(argv[1], &DeeString_Type))
 				goto err;
 			imod_path = argv[1];
-			if (DeeTuple_Check(argv[2]))
+			if (DeeTuple_Check(argv[2])) {
 				imod_argv = argv[2];
-			else if (DeeString_Check(argv[2]))
+			} else if (DeeString_Check(argv[2])) {
 				imod_name = argv[2];
-			else {
+			} else {
 				imod_syms = argv[2];
 			}
 		}

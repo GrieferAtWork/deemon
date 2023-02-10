@@ -591,17 +591,19 @@ handle_compiler_warning(struct ast_loc *loc,
 	DREF DeeCompilerErrorObject *error;
 	int mode;
 	++TPPLexer_Current->l_warncount;
-	if (force_fatal)
+	if (force_fatal) {
 		mode = Dee_COMPILER_ERROR_FATALITY_FORCEFATAL;
-	else {
+	} else {
 		/* Invoke the warning using current TPP behavior. */
 		mode = TPPLexer_InvokeWarning(wnum);
 		ASSERT(mode >= 0);
 		if (mode >= TPP_WARNINGMODE_IGNORE)
 			goto done_nonfatal;
+
 		/* Translate the warning mode. */
 		mode = tpp_warning_mode_matrix[mode];
 	}
+
 	/* Construct a new compiler error. */
 	error = DeeObject_MALLOC(DeeCompilerErrorObject);
 	if unlikely(!error)

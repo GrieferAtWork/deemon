@@ -639,9 +639,9 @@ tpp_unknown_file(int mode, char *__restrict filename,
 	buflen = 128 + filename_size;
 	buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
 	                                                (buflen + 1) * sizeof(char));
-	if unlikely(!buffer)
+	if unlikely(!buffer) {
 		buflen = 0;
-	else {
+	} else {
 		buffer->s_data = NULL;
 		buffer->s_hash = (dhash_t)-1;
 	}

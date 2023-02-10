@@ -1826,12 +1826,12 @@ stat_get_mode(DeeStatObject *__restrict self) {
 		ATTR_FALLTHROUGH
 	default:
 		if (self->st_stat.s_info.dwFileAttributes &
-		    FILE_ATTRIBUTE_DIRECTORY)
+		    FILE_ATTRIBUTE_DIRECTORY) {
 			result |= STAT_IFDIR;
-		else if (self->st_stat.s_info.dwFileAttributes &
-		         FILE_ATTRIBUTE_REPARSE_POINT)
+		} else if (self->st_stat.s_info.dwFileAttributes &
+		           FILE_ATTRIBUTE_REPARSE_POINT) {
 			result |= STAT_IFLNK;
-		else {
+		} else {
 			result |= STAT_IFREG;
 		}
 		break;
@@ -2086,9 +2086,9 @@ stat_class_ischr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (error > 0)
 		return_false;
-	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
+	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)) {
 		error = 0;
-	else {
+	} else {
 		error = stat_get_nttype(&buf, true) == FILE_TYPE_CHAR;
 	}
 	Stat_Fini(&buf);
@@ -2114,9 +2114,9 @@ stat_class_isblk(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (error > 0)
 		return_false;
-	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
+	if (!(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)) {
 		error = 0;
-	else {
+	} else {
 		error = stat_get_nttype(&buf, true) == FILE_TYPE_DISK;
 	}
 	Stat_Fini(&buf);
@@ -2305,9 +2305,9 @@ is_exe_filename(DeeObject *__restrict path) {
 	ext_size = (size_t)(ext_end - ext_begin);
 	/* Got the file path. */
 	pathext_ob = nt_GetEnvironmentVariableA("PATHEXT");
-	if likely(pathext_ob)
+	if likely(pathext_ob) {
 		pathext = DeeString_STR(pathext_ob);
-	else {
+	} else {
 		pathext = (char *)".COM;.EXE;.BAT;.CMD";
 	}
 	result = false;

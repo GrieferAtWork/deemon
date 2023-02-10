@@ -585,9 +585,9 @@ f_math_ldexp(size_t argc, DeeObject *const *argv) {
 	if unlikely(!y)
 		goto err;
 	error = DeeInt_TryAsInt(y, &y_value);
-	if (error == INT_POS_OVERFLOW)
+	if (error == INT_POS_OVERFLOW) {
 		y_value = INT_MAX;
-	else if (error == INT_NEG_OVERFLOW) {
+	} else if (error == INT_NEG_OVERFLOW) {
 		y_value = INT_MIN;
 	}
 	SET_OK();

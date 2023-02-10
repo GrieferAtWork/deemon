@@ -671,6 +671,7 @@ again:
 			}
 			ATOMIC_WRITE(*self->wr_pself, next);
 		}
+
 		/* Now to re-insert the weakref. */
 		self->wr_pself = &new_list->wl_nodes;
 		self->wr_obj   = ob;
@@ -711,9 +712,11 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 		COMPILER_READ_BARRIER();
 		result = self->wr_obj; /* Re-read in case it changed. */
 #ifdef CONFIG_NO_THREADS
-		if likely(result->ob_refcnt != 0)
+		if likely(result->ob_refcnt != 0) {
 			++result->ob_refcnt;
-		else result = NULL;
+		} else {
+			result = NULL;
+		}
 #else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
@@ -790,6 +793,7 @@ again:
 				WEAKREF_UNLOCK(self);
 			} else {
 				struct weakref *next;
+
 				/* Delete a previously assigned object. */
 				if unlikely(!TRYLOCK_POINTER(*self->wr_pself)) {
 					WEAKREF_UNLOCK(self);
@@ -809,6 +813,7 @@ again:
 					WEAKREF_UNLOCK(next);
 				}
 				ATOMIC_WRITE(*self->wr_pself, next);
+
 				/* Now to re-insert the weakref. */
 				self->wr_obj = NULL;
 #ifndef NDEBUG
@@ -846,6 +851,7 @@ again:
 					}
 					ATOMIC_WRITE(*self->wr_pself, next);
 				}
+
 				/* Now to re-insert the weakref. */
 				self->wr_pself = &new_list->wl_nodes;
 				self->wr_obj   = new_ob;
@@ -869,9 +875,9 @@ again:
 		result = self->wr_obj; /* Re-read in case it changed. */
 #endif
 #ifdef CONFIG_NO_THREADS
-		if likely(result->ob_refcnt != 0)
+		if likely(result->ob_refcnt != 0) {
 			++result->ob_refcnt;
-		else {
+		} else {
 			result = NULL;
 		}
 #else /* CONFIG_NO_THREADS */
@@ -919,6 +925,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 			COMPILER_WRITE_BARRIER();
 			(*undo_start->tp_init.tp_dtor)(self);
 			COMPILER_READ_BARRIER();
+
 			/* Special case: The destructor managed to revive the object. */
 			{
 				drefcnt_t refcnt;
@@ -930,8 +937,9 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 				return false;
 			}
 		}
-destroy_weak:
+
 		/* Delete all weak references linked against this type level. */
+destroy_weak:
 		if (has_noninherited_weakrefs(undo_start)) {
 			struct weakref *iter, *next;
 			struct weakref_list *list;
@@ -959,6 +967,7 @@ restart_clear_weakrefs:
 					next->wr_pself = &list->wl_nodes;
 					WEAKREF_UNLOCK(next);
 				}
+
 				/* Overwrite the weakly referenced object with NULL,
 				 * indicating that the link has been severed. */
 				ATOMIC_WRITE(iter->wr_obj, NULL);
@@ -1078,6 +1087,7 @@ restart_clear_weakrefs:
 			next->wr_pself = &list->wl_nodes;
 			WEAKREF_UNLOCK(next);
 		}
+
 		/* Overwrite the weakly referenced object with NULL,
 		 * indicating that the link has been severed. */
 		ATOMIC_WRITE(iter->wr_obj, NULL);
@@ -1147,6 +1157,7 @@ again:
 		Dee_BREAKPOINT();
 	}
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
+
 #if 0
 #ifndef CONFIG_NO_THREADS
 	/* Make sure that all threads now see this object as dead.
@@ -1154,11 +1165,14 @@ again:
 	__hybrid_atomic_thread_fence(__ATOMIC_ACQ_REL);
 #endif /* !CONFIG_NO_THREADS */
 #endif
+
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 	Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
+
 	if (type->tp_flags & TP_FGC) {
 		/* Special handling to track/untrack GC objects during destructor calls. */
+
 		/* Start by untracking the object in question. */
 		DeeGC_Untrack(self);
 		for (;;) {
@@ -1180,14 +1194,17 @@ again:
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 				Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
+
 				/* Special case: The destructor managed to revive the object. */
 				if unlikely(self->ob_refcnt != 0) {
 					Dee_Incref(type);
 					ASSERTF(type->tp_flags & TP_FGC,
 					        "This runtime does not implementing reviving "
 					        "GC-allocated objects as non-GC objects.");
+
 					/* Continue tracking the object. */
 					DeeGC_Track(self);
+
 					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
 					 * in order to prevent a race condition that could otherwise occur when another
 					 * thread would have cleared the external reference after the destructor created
@@ -1196,6 +1213,7 @@ again:
 					 * the object, causing it to be destroyed in multiple threads at the same time,
 					 * which is something that's not allowed! */
 					Dee_Decref(orig_type);
+
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
@@ -1213,6 +1231,7 @@ again:
 					return;
 				}
 			}
+
 			/* Drop the reference held by this type.
 			 * NOTE: Keep the reference to `orig_type' alive, though! */
 			if ((type = type->tp_base) == NULL)
@@ -1221,9 +1240,9 @@ again:
 #ifdef CONFIG_TRACE_REFCHANGES
 		free_reftracker(self->ob_trace);
 #endif /* CONFIG_TRACE_REFCHANGES */
-		if (orig_type->tp_init.tp_alloc.tp_free)
+		if (orig_type->tp_init.tp_alloc.tp_free) {
 			(*orig_type->tp_init.tp_alloc.tp_free)(self);
-		else {
+		} else {
 			DeeGCObject_Free(self);
 		}
 	} else {
@@ -1248,17 +1267,19 @@ again:
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 				Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
+
 				/* Special case: The destructor managed to revive the object. */
 				if unlikely(self->ob_refcnt != 0) {
 					/* Incref() the new type that now describes this revived object.
 					 * NOTE: The fact that this type may use a different (or none at all)
 					 *       tp_free function, is the reason why no GC-able type from who's
-					 *       destruct a user-callback that can somehow get ahold of the
-					 *       instance being destroyed (which is also possible for any
-					 *       weakly referenceable type), is allowed to assume that it
-					 *       will actually be called, limiting its use to pre-allocated object
-					 *       caches that allocate their instances using `DeeObject_Malloc'. */
+					 *       destruction a user-callback that can somehow get ahold of the
+					 *       instance being destroyed (which is also possible for any weakly
+					 *       referenceable type), is allowed to assume that it will actually
+					 *       be called, limiting its use to pre-allocated object caches that
+					 *       allocate their instances using `DeeObject_Malloc'. */
 					Dee_Incref(type);
+
 					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
 					 * in order to prevent a race condition that could otherwise occur when another
 					 * thread would have cleared the external reference after the destructor created
@@ -1267,6 +1288,7 @@ again:
 					 * the object, causing it to be destroyed in multiple threads at the same time,
 					 * which is something that's not allowed! */
 					Dee_Decref(orig_type);
+
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
@@ -1284,6 +1306,7 @@ again:
 					return;
 				}
 			}
+
 			/* Drop the reference held by this type.
 			 * NOTE: Keep the reference to `orig_type' alive, though! */
 			if ((type = type->tp_base) == NULL)
@@ -1292,10 +1315,11 @@ again:
 #ifdef CONFIG_TRACE_REFCHANGES
 		free_reftracker(self->ob_trace);
 #endif /* CONFIG_TRACE_REFCHANGES */
+
 		/* Invoke `tp_free' using the original type */
-		if (orig_type->tp_init.tp_alloc.tp_free)
+		if (orig_type->tp_init.tp_alloc.tp_free) {
 			(*orig_type->tp_init.tp_alloc.tp_free)(self);
-		else {
+		} else {
 			DeeObject_Free(self);
 		}
 	}
@@ -1572,11 +1596,11 @@ object_sizeof(DeeObject *self) {
 		size_t slab_size;
 		void (DCALL *tp_free)(void *__restrict ob);
 		tp_free = type->tp_init.tp_alloc.tp_free;
-#define CHECK_SIZE(index, size)                     \
-		if (tp_free == &DeeObject_SlabFree##size || \
-		    tp_free == &DeeGCObject_SlabFree##size) \
-			slab_size = size * __SIZEOF_POINTER__;  \
-		else
+#define CHECK_SIZE(index, size)                       \
+		if (tp_free == &DeeObject_SlabFree##size ||   \
+		    tp_free == &DeeGCObject_SlabFree##size) { \
+			slab_size = size * __SIZEOF_POINTER__;    \
+		} else
 		DeeSlab_ENUMERATE(CHECK_SIZE)
 #undef CHECK_SIZE
 		{
@@ -2414,7 +2438,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
 	            /**/ "returned, rather than the actual Type"),
 	TYPE_GETTER("super", &DeeSuper_Of,
-	            "->?Dsuper\n"
+	            "->?DSuper\n"
 	            "Returns a view for the super-instance of @this object"),
 	TYPE_GETTER("__itable__", &instance_get_itable,
 	            "->?AObjectTable?Ert:ClassDescriptor\n"
@@ -2650,16 +2674,11 @@ type_new_raw(DeeTypeObject *__restrict self) {
 		err_init_var_type(self);
 		goto err;
 	}
-	if (self->tp_init.tp_alloc.tp_free) {
-		result = (DREF DeeObject *)(*self->tp_init.tp_alloc.tp_alloc)();
-	} else if (self->tp_flags & TP_FGC) {
-		result = (DREF DeeObject *)DeeGCObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
-	} else {
-		result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
-	}
+	result = DeeType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, self);
+
 	/* Search for the first non-class base. */
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
@@ -2726,13 +2745,7 @@ err_r:
 			break;
 	}
 	Dee_DecrefNokill(self);
-	if (self->tp_init.tp_alloc.tp_free) {
-		(*self->tp_init.tp_alloc.tp_free)(result);
-	} else if (self->tp_flags & TP_FGC) {
-		DeeGCObject_Free(result);
-	} else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(self, result);
 err:
 	return NULL;
 }
@@ -3042,16 +3055,11 @@ type_new_extended(DeeTypeObject *self,
 		err_init_var_type(self);
 		goto err;
 	}
-	if (self->tp_init.tp_alloc.tp_free) {
-		result = (DREF DeeObject *)(*self->tp_init.tp_alloc.tp_alloc)();
-	} else if (self->tp_flags & TP_FGC) {
-		result = (DREF DeeObject *)DeeGCObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
-	} else {
-		result = (DREF DeeObject *)DeeObject_Malloc(self->tp_init.tp_alloc.tp_instance_size);
-	}
+	result = DeeType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, self);
+
 	/* Search for the first non-class base. */
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
@@ -3065,9 +3073,11 @@ type_new_extended(DeeTypeObject *self,
 		if (!first_base)
 			break;
 	}
+
 	/* Instantiate non-base types. */
 	if (!first_base || first_base == &DeeObject_Type)
 		goto done_fields;
+
 	/* {(Type, ({(string, Object)...}, Tuple))...} */
 	/* {(Type, ({(string, Object)...}, Tuple, Mapping))...} */
 	init_info = DeeObject_GetItemDef(initializer, (DeeObject *)first_base, Dee_None);
@@ -3077,6 +3087,7 @@ type_new_extended(DeeTypeObject *self,
 	Dee_Decref(init_info);
 	if unlikely(temp)
 		goto err_r;
+
 	/* Invoke the mandatory base-type constructor. */
 	temp = type_invoke_base_constructor(first_base, result,
 	                                    DeeTuple_SIZE(init_args),
@@ -3090,6 +3101,7 @@ type_new_extended(DeeTypeObject *self,
 	if unlikely(temp)
 		goto err_r_firstbase;
 done_fields:
+
 	/* Fill in all of the fields of non-first-base types. */
 	iter = self;
 	do {
@@ -3135,13 +3147,7 @@ err_r:
 			break;
 	}
 	Dee_DecrefNokill(self);
-	if (self->tp_init.tp_alloc.tp_free) {
-		(*self->tp_init.tp_alloc.tp_free)(result);
-	} else if (self->tp_flags & TP_FGC) {
-		DeeGCObject_Free(result);
-	} else {
-		DeeObject_Free(result);
-	}
+	DeeType_FreeInstance(self, result);
 err:
 	return NULL;
 }
@@ -4642,9 +4648,9 @@ Dee_Decref_traced(DeeObject *__restrict ob,
 	if unlikely(newref == 0)
 		DeeFatal_BadDecref(ob, file, line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
-	if unlikely(newref == 1)
+	if unlikely(newref == 1) {
 		DeeObject_Destroy_d(ob, file, line);
-	else {
+	} else {
 		reftracker_addchange(ob, file, -line);
 	}
 }

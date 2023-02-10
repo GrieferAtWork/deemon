@@ -505,11 +505,11 @@ yield_done:
 			goto err;
 		if (result->ie_sym && WARN(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
 			goto err;
-		if (operation == '!')
+		if (operation == '!') {
 			result->ie_val = !result->ie_val;
-		else if (operation == '~')
+		} else if (operation == '~') {
 			result->ie_val = ~result->ie_val;
-		else {
+		} else {
 			result->ie_val = -result->ie_val;
 		}
 	}	break;
@@ -1473,12 +1473,12 @@ parse_arg_operand:
 		if unlikely(val < 0)
 			goto err;
 		if (current_basescope->bs_varargs &&
-		    current_basescope->bs_varargs->s_symid == (uint16_t)val)
+		    current_basescope->bs_varargs->s_symid == (uint16_t)val) {
 			result->io_class = OPERAND_CLASS_VARARGS;
-		else if (current_basescope->bs_varkwds &&
-		         current_basescope->bs_varkwds->s_symid == (uint16_t)val)
+		} else if (current_basescope->bs_varkwds &&
+		           current_basescope->bs_varkwds->s_symid == (uint16_t)val) {
 			result->io_class = OPERAND_CLASS_VARKWDS;
-		else {
+		} else {
 			result->io_class = OPERAND_CLASS_ARG;
 			result->io_symid = (uint16_t)val;
 		}

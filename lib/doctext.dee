@@ -65,9 +65,9 @@ local function findNonEscapedMatch(
 				++start;
 			continue;
 		}
-		if (ch == openCh)
+		if (ch == openCh) {
 			++recursion;
-		else if (ch == closeCh) {
+		} else if (ch == closeCh) {
 			if (!recursion)
 				return start;
 			--recursion;
@@ -229,7 +229,7 @@ again_handle_l:
 function createConsoleString(
 		obj: string | Object,
 		maxWidth: int = DEFAULT_CONSOLE_WIDTH): string {
-	local p = ConsolePrinter();
+	local p = ConsolePrinter(maxWidth: maxWidth);
 	p.append(obj);
 	return p.fp.string;
 }
@@ -373,7 +373,7 @@ class Emphasis {
 	@@|       |                   |
 	@@| @"I"  | *Italic*          |
 	@@|       |                   |
-	@@| @"S"  | ~Strikethrough~   |
+	@@| @"S"  | ~Strike-through~  |
 	@@+-------+-------------------+
 	public member kind: string;
 
@@ -695,14 +695,14 @@ class ExternalReference {
 		get(): string {
 			if (m_name !is bound) {
 				local result = path.rfind("/");
-				if (result < 0)
+				if (result < 0) {
 					result = path;
-				else {
+				} else {
 					result = path[result + 1:];
 				}
-				if (result.startswith("i:") || result.startswith("c:"))
+				if (result.startswith("i:") || result.startswith("c:")) {
 					result = result[2:];
-				else if (result.startswith("op:")) {
+				} else if (result.startswith("op:")) {
 					local opid = result[3:];
 					result = "operator " + PRETTY_OPERATOR_NAMES.get(opid, opid);
 				}
@@ -793,7 +793,7 @@ use_first_candy:
 		goto use_first_candy;
 	}
 different_objects:
-	/* Ambiguous, or undeterminable */
+	/* Ambiguous, or indeterminable */
 	return none;
 }
 
@@ -809,7 +809,7 @@ function getCurrentModulePath(mypath: (string, bool)): string {
 
 @@Return the path to the current type of @mypath
 function getCurrentTypePath(mypath: (string, bool)): string {
-	/* Special case: we're alrady dealing with the current type. */
+	/* Special case: we're already dealing with the current type. */
 	if (mypath[1])
 		return mypath[0];
 	local result = mypath[0].rstrip("/");
@@ -877,7 +877,7 @@ function claculateComponentIndentation(
 @@                followed by @true if the component is referring to a type,
 @@                rather than a type member or function.
 @@
-@@This function yields the raw text parts as @(string)s, seperated from each
+@@This function yields the raw text parts as @(string)s, separated from each
 @@other by one of the special documentation text component descriptor classes
 @@that can also be found in this file:
 @@+--------------------------------+----------------------------------------+

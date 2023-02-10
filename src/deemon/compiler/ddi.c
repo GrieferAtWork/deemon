@@ -253,11 +253,11 @@ xddi_putsymbol(struct bytewriter *__restrict writer,
                uint16_t symbol_id,
                uint32_t name_offset) {
 	uint8_t length;
-	if (name_offset > UINT16_MAX)
+	if (name_offset > UINT16_MAX) {
 		length = DDI_EXDAT_OP32;
-	else if (name_offset > UINT8_MAX || symbol_id > UINT8_MAX)
+	} else if (name_offset > UINT8_MAX || symbol_id > UINT8_MAX) {
 		length = DDI_EXDAT_OP16;
-	else {
+	} else {
 		length = DDI_EXDAT_OP8;
 	}
 	if (bytewriter_putb(writer, length | symbol_class))

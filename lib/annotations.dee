@@ -175,9 +175,9 @@ class Synchronized: Callable {
 	@@Construct a new Synchronized function annotation for @func
 	this(func: Callable, lock?: Mutex from threading | Object) {
 		m_func = func;
-		if (lock is bound)
+		if (lock is bound) {
 			m_lock = lock;
-		else {
+		} else {
 			m_lock = import("threading").Mutex();
 		}
 	}

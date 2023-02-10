@@ -368,9 +368,9 @@ super_pow(Super *self, DeeObject *some_object) {
 		Dee_Decref(value);                                        \
 		return error;                                             \
 	}                                                             \
-	if (value == self->s_self)                                    \
+	if (value == self->s_self) {                                  \
 		Dee_Decref(value);                                        \
-	else {                                                        \
+	} else {                                                      \
 		/* Create a new super-wrapper for the updated value. */   \
 		if (DeeObject_InstanceOf(value, self->s_type)) {          \
 			self = (Super *)DeeSuper_New(self->s_type, value);    \

@@ -427,9 +427,9 @@ DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init) {
 	Dee_XIncref(result);
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		/* Special handling for the first element. */
-		if (!result)
+		if (!result) {
 			result = elem;
-		else {
+		} else {
 			/* Invoke the given combination-callback to merge the 2 items. */
 			merge = DeeObject_CallPack(combine, 2, result, elem);
 			Dee_Decref(elem);
@@ -671,9 +671,9 @@ DeeSeq_Min_k(DeeObject *self,
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if (!result)
+		if (!result) {
 			result = elem;
-		else {
+		} else {
 			DREF DeeObject *key_elem;
 			if (!key_result) {
 				key_result = DeeObject_Call(key, 1, &result);
@@ -733,9 +733,9 @@ DeeSeq_Max_k(DeeObject *self,
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if (!result)
+		if (!result) {
 			result = elem;
-		else {
+		} else {
 			DREF DeeObject *key_elem;
 			if (!key_result) {
 				key_result = DeeObject_Call(key, 1, &result);
@@ -797,9 +797,9 @@ DeeSeq_Min(DeeObject *self, DeeObject *key) {
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if (!result)
+		if (!result) {
 			result = elem;
-		else {
+		} else {
 			temp = DeeObject_CompareLo(result, elem);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
@@ -845,9 +845,9 @@ DeeSeq_Max(DeeObject *self, DeeObject *key) {
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if (!result)
+		if (!result) {
 			result = elem;
-		else {
+		} else {
 			temp = DeeObject_CompareLo(result, elem);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
@@ -1100,9 +1100,9 @@ DeeSeq_EndsWith(DeeObject *self,
 						goto err;
 					if unlikely(!seq_length)
 						goto err_empty;
-					if (nsi->nsi_seqlike.nsi_getitem_fast)
+					if (nsi->nsi_seqlike.nsi_getitem_fast) {
 						result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, seq_length - 1);
-					else {
+					} else {
 						result = (*nsi->nsi_seqlike.nsi_getitem)(self, seq_length - 1);
 					}
 					if unlikely(!result)

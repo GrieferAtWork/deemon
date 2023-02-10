@@ -169,9 +169,9 @@ function include(filename: string) {
 
 function getDefaultLibnameOfSourceFile(filename: string): string {
 	filename = fs.tailof(filename);
-	if (filename.endswith(".c.inl"))
+	if (filename.endswith(".c.inl")) {
 		filename = filename[:-6];
-	else {
+	} else {
 		filename = fs.fileof(filename);
 	}
 	return filename.replace("-", "_").replace(".", "_");
@@ -348,14 +348,14 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	}
 	function print_user_impl() {
 		print("FORCELOCAL WUNUSED DREF DeeObject *DCALL ", user_impl_name, "("),;
-		if (!arg_data)
+		if (!arg_data) {
 			print "void",;
-		else {
+		} else {
 			local is_first = true;
 			for (local x, y, z: arg_data) {
-				if (is_first)
+				if (is_first) {
 					is_first = false;
-				else {
+				} else {
 					print ", ",;
 				}
 				local conv;
@@ -368,10 +368,11 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 						conv = map[4][0];
 				}
 				print conv,;
-				/*if (conv.endswith("*") && z != "NULL")
+				/*if (conv.endswith("*") && z != "NULL") {
 					print "__restrict ",;
-				else*/ if (!conv.endswith("*"))
+				} else*/ if (!conv.endswith("*")) {
 					print " ",;
+				}
 				print x,;
 			}
 		}
@@ -387,9 +388,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	print(");");
 	function print_default_doc_decl() {
 		if (!arg_data) {
-			if (return_type && return_type !in ["?N", "?Dnone", "?Edeemon:none"])
+			if (return_type && return_type !in ["?N", "?Dnone", "?Edeemon:none"]) {
 				print("->", return_type),;
-			else {
+			} else {
 				print("()"),;
 			}
 			return;
@@ -397,9 +398,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print("("),;
 		local is_first = true;
 		for (local x, y, z: arg_data) {
-			if (is_first)
+			if (is_first) {
 				is_first = false;
-			else {
+			} else {
 				print(","),;
 			}
 			print(x),;
@@ -432,11 +433,11 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 				local r = map.get(z);
 				if (r is none) {
 					r = z;
-					if (z.isnumeric(0) || (#z >= 2 && z[0] == "-" && z.isnumeric(1)))
+					if (z.isnumeric(0) || (#z >= 2 && z[0] == "-" && z.isnumeric(1))) {
 						r = "!" + z;
-					else if (z.issymbol())
+					} else if (z.issymbol()) {
 						r = "!G" + z;
-					else {
+					} else {
 						/* TODO: Support for string constants! */
 					}
 				}

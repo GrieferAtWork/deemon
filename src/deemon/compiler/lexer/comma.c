@@ -335,9 +335,9 @@ next_expr:
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
-				if (current_scope == &current_rootscope->rs_scope.bs_scope)
+				if (current_scope == &current_rootscope->rs_scope.bs_scope) {
 					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else {
+				} else {
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}

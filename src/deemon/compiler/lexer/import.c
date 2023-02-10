@@ -78,12 +78,13 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 					path_start = path_start2;
 			}
 #endif /* DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
-			if (path_start)
+			if (path_start) {
 				++path_start;
-			else {
+			} else {
 				path_start = (char *)filename;
 			}
 			filename_length = (size_t)(path_start - filename);
+
 			/* Interpret the module name relative to the path of the current source file. */
 			result = (DREF DeeModuleObject *)DeeModule_OpenRelative((DeeObject *)module_name,
 			                                                        filename, filename_length,
@@ -325,12 +326,13 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 	if unlikely(!utf8_repr)
 		goto err;
 	symbol_start = (char *)memrchr(utf8_repr, '.', WSTR_LENGTH(utf8_repr));
-	if (!symbol_start)
+	if (!symbol_start) {
 		symbol_start = utf8_repr;
-	else {
+	} else {
 		++symbol_start;
 	}
 	symbol_length = (size_t)((utf8_repr + WSTR_LENGTH(utf8_repr)) - symbol_start);
+
 	/* Make sure that the symbol name is valid. */
 	{
 		char *iter, *end;

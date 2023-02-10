@@ -1325,11 +1325,13 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X')
-				radix = 16, ++begin;
-			else if (*begin == 'b' || *begin == 'B')
-				radix = 2, ++begin;
-			else {
+			if (*begin == 'x' || *begin == 'X') {
+				radix = 16;
+				++begin;
+			} else if (*begin == 'b' || *begin == 'B') {
+				radix = 2;
+				++begin;
+			} else {
 				radix = 8;
 			}
 		} else {
@@ -1512,11 +1514,13 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X')
-				radix = 16, ++begin;
-			else if (*begin == 'b' || *begin == 'B')
-				radix = 2, ++begin;
-			else {
+			if (*begin == 'x' || *begin == 'X') {
+				radix = 16;
+				++begin;
+			} else if (*begin == 'b' || *begin == 'B') {
+				radix = 2;
+				++begin;
+			} else {
 				radix = 8;
 			}
 		} else {
@@ -2885,9 +2889,9 @@ int_compareint(DeeIntObject *a, DeeIntObject *b) {
 			i = -i;
 		while (--i >= 0 && a->ob_digit[i] == b->ob_digit[i])
 			;
-		if (i < 0)
+		if (i < 0) {
 			sign = 0;
-		else {
+		} else {
 			sign = ((sdigit)a->ob_digit[i] -
 			        (sdigit)b->ob_digit[i]);
 			if (a->ob_size < 0)
@@ -3290,11 +3294,11 @@ int_frombytes(DeeObject *UNUSED(self), size_t argc,
 	} else {
 		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
 			goto err;
-		if (DeeString_EQUALS_ASCII(byteorder, "little"))
+		if (DeeString_EQUALS_ASCII(byteorder, "little")) {
 			encode_little = true;
-		else if (DeeString_EQUALS_ASCII(byteorder, "big"))
+		} else if (DeeString_EQUALS_ASCII(byteorder, "big")) {
 			encode_little = false;
-		else {
+		} else {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid byteorder %r",
 			                byteorder);

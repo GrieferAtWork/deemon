@@ -389,9 +389,9 @@ print_escaped_dedent(struct unicode_printer *__restrict printer,
                      /*utf-8*/ char const *text,
                      /*utf-8*/ char const *end,
                      size_t num_characters) {
-	if (!num_characters)
+	if (!num_characters) {
 		return print_escaped(printer, text, end);
-	else {
+	} else {
 		size_t nskip;
 		nskip = num_characters;
 		for (;;) {
@@ -1091,9 +1091,9 @@ continue_table_extended_scan_after_escape:
 										if (ch == '\r') {
 											char const *temp = iter;
 											ch = utf8_readchar((char const **)&iter, end);
-											if (ch != '\n')
+											if (ch != '\n') {
 												iter = temp;
-											else {
+											} else {
 												ch_start = temp;
 											}
 										}
@@ -1225,14 +1225,14 @@ extend_table_row_or_insert_thin_separator:
 								for (;;) {
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										goto set_end_of_table;
-									if (DeeUni_IsSpace(ch))
-										/* continue */;
-									else if (ch == vertical_ch)
+									if (DeeUni_IsSpace(ch)) {
+										/* continue */
+									} else if (ch == vertical_ch) {
 										break; /* end-of-cell */
-									else if (ch == horizontal_ch)
+									} else if (ch == horizontal_ch) {
 										did_encounter_horizontal_character = true;
-									else if (table_ishori(ch) && !horizontal_ch) {
-										horizontal_ch                      = ch;
+									} else if (table_ishori(ch) && !horizontal_ch) {
+										horizontal_ch = ch;
 										did_encounter_horizontal_character = true;
 									} else {
 										/* Non-empty cell. */
@@ -2129,11 +2129,11 @@ check_ordered_list_digit:
 			{
 				char buf[2];
 				buf[0] = '#';
-				if (ch == '_')
+				if (ch == '_') {
 					buf[1] = 'B'; /* Bold */
-				else if (ch == '*')
+				} else if (ch == '*') {
 					buf[1] = 'I'; /* Italic */
-				else {
+				} else {
 					buf[1] = 'S'; /* Strikethrough */
 				}
 				PRINTASCII(buf, 2);
@@ -2541,11 +2541,11 @@ done_dontflush:
 							goto done_return_now;
 						ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 						++i;
-						if (ch2 == '#')
+						if (ch2 == '#') {
 							++i;
-						else if (ch2 == '{')
+						} else if (ch2 == '{') {
 							++recursion;
-						else if (ch2 == '}') {
+						} else if (ch2 == '}') {
 							if (!recursion)
 								break;
 							--recursion;
@@ -2553,9 +2553,9 @@ done_dontflush:
 					}
 				} else if (ch2 == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
 					ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
-					if (ch2 == '{' || ch2 == '#')
+					if (ch2 == '{' || ch2 == '#') {
 						++i; /* Escaped brace/pound (ignore) */
-					else if (ch2 == 'T' || ch2 == 'L') {
+					} else if (ch2 == 'T' || ch2 == 'L') {
 						size_t recursion;
 						/* Tables and Lists are followed by implicit line-feeds.
 						 * As such, we must also strip common whitespace following
@@ -2578,11 +2578,11 @@ done_dontflush:
 								goto done_return_now;
 							ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 							++i;
-							if (ch2 == '#')
+							if (ch2 == '#') {
 								++i;
-							else if (ch2 == '{')
+							} else if (ch2 == '{') {
 								++recursion;
-							else if (ch2 == '}') {
+							} else if (ch2 == '}') {
 								if (!recursion)
 									break;
 								--recursion;

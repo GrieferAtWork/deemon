@@ -682,11 +682,11 @@ parse_handler_flags(char const *__restrict flags,
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
-			if (IS_FLAG("finally"))
+			if (IS_FLAG("finally")) {
 				result->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
-			else if (IS_FLAG("interrupt"))
+			} else if (IS_FLAG("interrupt")) {
 				result->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
-			else {
+			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown handler flag %$q",
 				                       flag_length,
@@ -909,13 +909,13 @@ parse_loop_flags(char const *__restrict flags,
 		/* TODO: Strip leading/trailing spaces! */
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
-			if (IS_FLAG("foreach"))
+			if (IS_FLAG("foreach")) {
 				*presult |= AST_FLOOP_FOREACH;
-			else if (IS_FLAG("postcond"))
+			} else if (IS_FLAG("postcond")) {
 				*presult |= AST_FLOOP_POSTCOND;
-			else if (IS_FLAG("unlikely"))
+			} else if (IS_FLAG("unlikely")) {
 				*presult |= AST_FLOOP_UNLIKELY;
-			else {
+			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown loop flag %$q",
 				                       flag_length,
@@ -1878,9 +1878,9 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 		}
 	}
 	if (AST_FACTION_ARGC_GT((uint16_t)id) != opc) {
-		if ((uint16_t)id == AST_FACTION_ASSERT && opc == 2)
+		if ((uint16_t)id == AST_FACTION_ASSERT && opc == 2) {
 			id = (int32_t)AST_FACTION_ASSERT_M;
-		else {
+		} else {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Invalid operand count for action %k expecting %u operands when %u were given",
 			                name,

@@ -130,9 +130,9 @@ cmdline_add_args(struct ascii_printer *__restrict printer,
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		if (DeeObject_AssertTypeExact(elem, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(elem, &DeeString_Type)) {
 			result = -1;
-		else {
+		} else {
 			result = cmdline_add_arg(printer, (DeeStringObject *)elem);
 		}
 		Dee_Decref(elem);

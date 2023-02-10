@@ -140,7 +140,7 @@ err:
 }
 
 
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_makeanon", "makeanon");]]]*/
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_makeanon", "makeanon");]]]*/
 PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
 /*[[[end]]]*/
 PRIVATE WUNUSED DREF DeeObject *DCALL default_DeeTime_New(uint64_t microseconds) {
@@ -540,7 +540,7 @@ INTERN DEFINE_STRING(libfs_delim, DeeSystem_DELIM_S);
 
 
 /*[[[deemon
-import INTERN_DEFINE_STRING from rt.gen;
+import INTERN_DEFINE_STRING from rt.gen.string;
 print("#ifdef CONFIG_HOST_WINDOWS");
 INTERN_DEFINE_STRING("libfs_DEV_NULL", "NUL");
 INTERN_DEFINE_STRING("libfs_DEV_TTY", "CON");

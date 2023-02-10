@@ -1092,9 +1092,9 @@ next_instr:
 			DDI_STATE_DO(iter, &state) {
 				file = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_file);
 				name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
-				if (!state.rs_regs.dr_path--)
+				if (!state.rs_regs.dr_path--) {
 					path = NULL;
-				else {
+				} else {
 					path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
 				}
 				Dee_DPRINTF("%s%s%s(%d,%d) : %s+%.4I32X",
@@ -2147,9 +2147,9 @@ do_class_c:
 				descriptor = CONSTimm;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
-				else {
+				} else {
 					new_class = DeeClass_New((DeeTypeObject *)TOP, descriptor);
 				}
 				Dee_Decref(descriptor);
@@ -2185,9 +2185,9 @@ do_class_gc:
 				descriptor = CONSTimm2;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
-				else {
+				} else {
 					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 				}
 				Dee_Decref(descriptor);
@@ -2227,9 +2227,9 @@ do_class_gc:
 				descriptor = CONSTimm;
 				Dee_Incref(descriptor);
 				CONST_LOCKENDREAD();
-				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
-				else {
+				} else {
 					new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 				}
 				Dee_Decref(descriptor);
@@ -4568,9 +4568,9 @@ do_setattr_this_c:
 						descriptor = CONSTimm;
 						Dee_Incref(descriptor);
 						CONST_LOCKENDREAD();
-						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 							new_class = NULL;
-						else {
+						} else {
 							new_class = DeeClass_New((DeeTypeObject *)base, descriptor);
 						}
 						Dee_Decref(descriptor);

@@ -235,10 +235,10 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
 	Dee_XDecref(script_options.co_decoutput);
-	if (strcmp(arg, "-") == 0)
+	if (strcmp(arg, "-") == 0) {
 		/* Special case: output to stdout */
 		script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT);
-	else {
+	} else {
 		script_options.co_decoutput = DeeFile_OpenString(arg,
 		                                                 OPEN_FWRONLY | OPEN_FCREAT,
 		                                                 644);
@@ -1299,15 +1299,15 @@ int main(int argc, char *argv[]) {
 			/* Print a full disassembly of the user-module. */
 			int error = -1;
 			if (!script_options.co_decoutput &&
-			    (script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT)) == NULL)
-				;
-			else {
+			    (script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT)) == NULL) {
+				/* ... */
+			} else {
 				PRIVATE DEFINE_STRING(str_disassembler, "disassembler");
 				DREF DeeObject *disassembler_module;
 				disassembler_module = DeeModule_OpenGlobal((DeeObject *)&str_disassembler, NULL, true);
-				if unlikely(!disassembler_module)
-					;
-				else {
+				if unlikely(!disassembler_module) {
+					/* ... */
+				} else {
 					DREF DeeObject *disasm_error;
 					disasm_error = DeeObject_CallAttrStringf(disassembler_module,
 					                                         "printcode",
@@ -2160,9 +2160,9 @@ try_exec_format_impl(DeeObject *__restrict stream,
 
 		/* During Execution of script code, define another macro `__FORMAT_SCRIPT__',
 		 * allowing the execution-context of a format script to be detected in user-code. */
-		if (!TPPLexer_Define("__FORMAT_SCRIPT__", 17, "1", 1, TPPLEXER_DEFINE_FLAG_NONE))
+		if (!TPPLexer_Define("__FORMAT_SCRIPT__", 17, "1", 1, TPPLEXER_DEFINE_FLAG_NONE)) {
 			script_module = NULL;
-		else {
+		} else {
 			/* Compile the format-script into a module. */
 			script_module = (DREF DeeModuleObject *)DeeModule_OpenSourceMemoryString(format_code_start,
 			                                                                         (size_t)(format_code_end - format_code_start),

@@ -163,9 +163,9 @@ print_ddi(struct ascii_printer *__restrict printer,
 		DDI_STATE_DO(iter, &state) {
 			file = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_file);
 			name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
-			if (!state.rs_regs.dr_path--)
+			if (!state.rs_regs.dr_path--) {
 				path = NULL;
-			else {
+			} else {
 				path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
 			}
 			print_error = ascii_printer_printf(printer,
@@ -303,22 +303,24 @@ frame_getlocation(Frame *__restrict self) {
 	DDI_STATE_DO(iter, &state) {
 		char *temp, *file;
 		file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
-		if unlikely(!file)
-			fileob = Dee_None, Dee_Incref(Dee_None);
-		else {
+		if unlikely(!file) {
+			fileob = Dee_None;
+			Dee_Incref(Dee_None);
+		} else {
 			if (!state.rs_regs.dr_path-- ||
-			    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL)
+			    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file)) == NULL) {
 				fileob = DeeString_New(file);
-			else {
+			} else {
 				fileob = DeeString_Newf("%s" TRACEBACK_SLASH "%s", temp, file);
 			}
 			if unlikely(!fileob)
 				goto err_state_r;
 		}
 		temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_name);
-		if (!temp)
-			nameob = Dee_None, Dee_Incref(Dee_None);
-		else {
+		if (!temp) {
+			nameob = Dee_None;
+			Dee_Incref(Dee_None);
+		} else {
 			nameob = DeeString_New(temp);
 			if unlikely(!nameob)
 				goto err_state_r_fileob;
@@ -363,13 +365,14 @@ frame_getfile(Frame *__restrict self) {
 	if unlikely(!code)
 		goto err;
 	file = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_file);
-	if unlikely(!file)
-		result = Dee_None, Dee_Incref(Dee_None);
-	else {
+	if unlikely(!file) {
+		result = Dee_None;
+		Dee_Incref(Dee_None);
+	} else {
 		if (!state.rs_regs.dr_path-- ||
-		    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL)
+		    (temp = DeeCode_GetDDIString((DeeObject *)code, state.rs_regs.dr_path)) == NULL) {
 			result = DeeString_New(file);
-		else {
+		} else {
 			result = DeeString_Newf("%s" TRACEBACK_SLASH "%s", temp, file);
 		}
 	}

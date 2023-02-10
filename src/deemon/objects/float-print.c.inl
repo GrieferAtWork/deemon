@@ -72,11 +72,11 @@ do_special_float:
 			result += temp;
 		}
 		if (total_len == 4) {
-			if (is_negative)
+			if (is_negative) {
 				buf[0] = '-';
-			else if (flags & DEEFLOAT_PRINT_FSIGN)
+			} else if (flags & DEEFLOAT_PRINT_FSIGN) {
 				buf[0] = '+';
-			else {
+			} else {
 				buf[0] = ' ';
 			}
 			temp = (*printer)(arg, buf, 4);
@@ -107,18 +107,22 @@ do_special_float:
 		is_negative = true;
 		value       = -value;
 	}
+
 	/* Determine the intended precision. */
 	max_prec = (unsigned int)precision;
 	min_prec = (unsigned int)precision;
-	if (!(flags & DEEFLOAT_PRINT_FPRECISION))
+	if (!(flags & DEEFLOAT_PRINT_FPRECISION)) {
 		max_prec = 6, min_prec = 0;
-	else if (max_prec > 9)
+	} else if (max_prec > 9) {
 		max_prec = min_prec = 9;
+	}
+
 	/* XXX: This cast can overflow */
 	whole  = (uintmax_t)value;
 	tmpval = (value - whole) * pow10[max_prec];
 	frac   = (uintmax_t)tmpval;
 	diff   = tmpval - frac;
+
 	/* Round to the closest fraction. */
 	if (diff > 0.5) {
 		++frac;
@@ -129,6 +133,7 @@ do_special_float:
 	} else if (diff == 0.5 && (frac == 0 || frac & 1)) {
 		++frac;
 	}
+
 	/* Special case: no fraction wanted. - Round the whole-part. */
 	if (max_prec == 0) {
 		diff = value - (FLOAT_TYPE)whole;
@@ -138,6 +143,7 @@ do_special_float:
 			++whole;
 		}
 	}
+
 	/* Print the whole part. */
 	len = COMPILER_LENOF(buf);
 	for (;;) {
@@ -146,6 +152,7 @@ do_special_float:
 		if (!whole)
 			break;
 	}
+
 	/* Trim unused fraction digits. (should precision or
 	 * width require them, they'll be re-added later) */
 	while (frac && (frac % 10) == 0)
@@ -187,6 +194,7 @@ do_special_float:
 				goto err;
 			result += temp;
 		}
+
 		/* Insert leading zeroes for padding. */
 		temp = DeeFormat_Repeat(printer, arg, '0', width - total_len);
 		if unlikely(temp < 0)
@@ -194,12 +202,13 @@ do_special_float:
 		result += temp;
 	} else {
 do_float_normal_width:
-		if (is_negative)
+		if (is_negative) {
 			buf[--len] = '-';
-		else if (flags & DEEFLOAT_PRINT_FSIGN)
+		} else if (flags & DEEFLOAT_PRINT_FSIGN) {
 			buf[--len] = '+';
-		else if (flags & DEEFLOAT_PRINT_FSPACE)
+		} else if (flags & DEEFLOAT_PRINT_FSPACE) {
 			buf[--len] = ' ';
+		}
 	}
 	temp = (*printer)(arg, buf + len, COMPILER_LENOF(buf) - len);
 	if unlikely(temp < 0)

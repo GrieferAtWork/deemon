@@ -4765,9 +4765,11 @@ lazy_allocate(void **__restrict ptable, size_t table_size) {
 	if unlikely(!new_table)
 		goto err;
 #ifdef CONFIG_NO_THREADS
-	if unlikely(*ptable)
+	if unlikely(*ptable) {
 		Dee_Free(new_table);
-	else *ptable = new_table;
+	} else {
+		*ptable = new_table;
+	}
 #else /* CONFIG_NO_THREADS */
 	if unlikely(!ATOMIC_CMPXCH(*ptable, NULL, new_table))
 		Dee_Free(new_table);
@@ -4918,10 +4920,10 @@ err_custom_allocator:
 			tp_free = base->tp_init.tp_alloc.tp_free;
 			/* Figure out the slab size used by the base-class. */
 			if (base->tp_flags & TP_FGC) {
-#define CHECK_ALLOCATOR(index, size)                        \
-				if (tp_free == &DeeGCObject_SlabFree##size) \
-					base_size = size * sizeof(void *);      \
-				else
+#define CHECK_ALLOCATOR(index, size)                          \
+				if (tp_free == &DeeGCObject_SlabFree##size) { \
+					base_size = size * sizeof(void *);        \
+				} else
 				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
 				{
@@ -4929,10 +4931,10 @@ err_custom_allocator:
 					goto err_custom_allocator;
 				}
 			} else {
-#define CHECK_ALLOCATOR(index, size)                      \
-				if (tp_free == &DeeObject_SlabFree##size) \
-					base_size = size * sizeof(void *);    \
-				else
+#define CHECK_ALLOCATOR(index, size)                        \
+				if (tp_free == &DeeObject_SlabFree##size) { \
+					base_size = size * sizeof(void *);      \
+				} else
 				DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
 #undef CHECK_ALLOCATOR
 				{

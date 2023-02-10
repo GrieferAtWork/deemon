@@ -397,9 +397,9 @@ INTERN WUNUSED NONNULL((1)) bool DCALL
 GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 	size_t new_mask;
 	GCSet *new_set, *old_set;
-	if ((old_set = self->gs_set) != NULL)
+	if ((old_set = self->gs_set) != NULL) {
 		new_mask = (old_set->gs_mask << 1) | 1;
-	else {
+	} else {
 		new_mask = 31;
 	}
 	new_set = (GCSet *)DeeObject_TryCalloc(offsetof(GCSet, gs_elem) +

@@ -2733,10 +2733,11 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 		attr_type = NULL;
 		perm = (ATTR_IMEMBER | ATTR_CMEMBER | ATTR_WRAPPER |
 		        ATTR_PERMGET | ATTR_NAMEOBJ);
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			perm |= ATTR_PROPERTY;
-		else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 			perm |= ATTR_PERMCALL;
+		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 			perm |= ATTR_PRIVATE;
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
@@ -2820,10 +2821,11 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 			}
 		}
 		atomic_rwlock_endread(&my_class->cd_lock);
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			perm |= ATTR_PROPERTY;
-		else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 			perm |= ATTR_PERMCALL;
+		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 			perm |= ATTR_PRIVATE;
 		if (attr->ca_doc)
@@ -2858,10 +2860,11 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 		inst = NULL, attr_type = NULL;
 		perm = (ATTR_IMEMBER | ATTR_PERMGET | ATTR_NAMEOBJ);
 		/* Figure out which instance descriptor the property is connected to. */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 			inst = class_desc_as_instance(my_class);
-		else if (instance)
+		} else if (instance) {
 			inst = DeeInstance_DESC(my_class, instance);
+		}
 		if (inst)
 			atomic_rwlock_read(&inst->id_lock);
 		if (inst && !(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
@@ -2889,10 +2892,11 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
 		}
 		if (inst)
 			atomic_rwlock_endread(&inst->id_lock);
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 			perm |= ATTR_PROPERTY;
-		else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 			perm |= ATTR_PERMCALL;
+		}
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 			perm |= ATTR_PRIVATE;
 		if (attr->ca_doc)
@@ -2952,10 +2956,11 @@ DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
 		}
 	}
 	atomic_rwlock_endread(&my_class->cd_lock);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 		perm |= ATTR_PROPERTY;
-	else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
 		perm |= ATTR_PERMCALL;
+	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
 		perm |= ATTR_PRIVATE;
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value) {

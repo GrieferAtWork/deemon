@@ -400,9 +400,9 @@ process_cmdline_encode_argument(dformatprinter printer, void *arg,
 	num_squote = 0; /* Number of '-characters */
 	num_slash  = 0; /* Number of \-characters */
 	for (iter = arg_start; (ch = utf8_readchar(&iter, arg_end)) != 0; ) {
-		if (DeeUni_IsSpace(ch))
+		if (DeeUni_IsSpace(ch)) {
 			++num_spaces;
-		else {
+		} else {
 			if (ch == '\'') {
 				++num_squote;
 			} else if (ch == '\"') {

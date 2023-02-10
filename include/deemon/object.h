@@ -1236,12 +1236,12 @@ typedef Dee_enum_t denum_t;
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DEE_TYPE_SIZED_ALLOCATOR_R     TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR_GC_R  TYPE_AUTOSIZED_ALLOCATOR_R
-#define DEE_TYPE_SIZED_ALLOCATOR       TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_SIZED_ALLOCATOR_GC    TYPE_AUTOSIZED_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR       TYPE_AUTO_ALLOCATOR
-#define DEE_TYPE_FIXED_ALLOCATOR_GC    TYPE_AUTO_ALLOCATOR
+#define DEE_TYPE_SIZED_ALLOCATOR_R     DEE_TYPE_AUTOSIZED_ALLOCATOR_R
+#define DEE_TYPE_SIZED_ALLOCATOR_GC_R  DEE_TYPE_AUTOSIZED_ALLOCATOR_R
+#define DEE_TYPE_SIZED_ALLOCATOR       DEE_TYPE_AUTOSIZED_ALLOCATOR
+#define DEE_TYPE_SIZED_ALLOCATOR_GC    DEE_TYPE_AUTOSIZED_ALLOCATOR
+#define DEE_TYPE_FIXED_ALLOCATOR       DEE_TYPE_AUTO_ALLOCATOR
+#define DEE_TYPE_FIXED_ALLOCATOR_GC    DEE_TYPE_AUTO_ALLOCATOR
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define DEE_TYPE_SIZED_ALLOCATOR_R(min_size, max_size)                     \
 	  DeeSlab_Invoke((Dee_funptr_t)&DeeObject_SlabFree, min_size, , NULL), \
@@ -1325,17 +1325,18 @@ struct Dee_type_constructor {
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
 
 		struct {
-			/* NOTE: Var-constructors are allowed to return instances of types other than `tp'
-			 *       However, this is a privilege that is not exposed to user-code.
-			 *       Additionally, any type making use of this must
-			 *       openly document this in order to prevent confusion.
-			 *       It should also be noted that the deemon core does not make use of
-			 *       this functionality anywhere, and as of right now, the only type
-			 *       that does make use of it is the copy constructor of `lvalue'
-			 *       objects found in `ctypes'.
-			 *       Rather than returning another instance of the l-value type, it
-			 *       returns a regular structured object containing a copy of the data
-			 *       that was pointed-to by the l-value.
+			/* NOTES:
+			 * - Var-constructors are allowed to return instances of types other than
+			 *   `tp'. However, this is a privilege that is not exposed to user-code.
+			 * - Additionally, any type making use of this must openly document this
+			 *   in order to prevent confusion.
+			 * - It should also be noted that the deemon core does not make use of
+			 *   this functionality anywhere, and as of right now, the only type that
+			 *   does make use of it is the copy constructor of `LValue' objects
+			 *   found in `ctypes'.
+			 * - Rather than returning another instance of the l-value type, it
+			 *   returns a regular structured object containing a copy of the data
+			 *   that was pointed-to by the l-value.
 			 */
 			WUNUSED_T                DREF DeeObject *(DCALL *tp_ctor)(void);
 			WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
@@ -2372,7 +2373,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 /*      Dee_TP_F                0x1000  * ... */
-#define Dee_TP_FVARIABLE        0x2000 /* Variable-length object type. (`tp_new' is used, rather than `tp_init') */
+#define Dee_TP_FVARIABLE        0x2000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
 #define Dee_TP_FGC              0x4000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x8000 /* This type was allocated on the heap. */
 #define Dee_TP_FINTERHITABLE   (Dee_TP_FINTERRUPT | Dee_TP_FVARIABLE | Dee_TP_FGC) \
@@ -2468,39 +2469,56 @@ struct Dee_type_object {
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
 	/* ... `struct class_desc' of class types goes here */
 };
-#define DeeType_IsFinal(x)               (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FFINAL)
-#define DeeType_IsInterrupt(x)           (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINTERRUPT)
-#define DeeType_IsAbstract(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FABSTRACT)
-#define DeeType_IsVariable(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FVARIABLE)
-#define DeeType_IsGC(x)                  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FGC)
-#define DeeType_IsClass(x)               (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_class != NULL)
-#define DeeType_IsArithmetic(x)          (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_math != NULL)
-#define DeeType_IsComparable(x)          (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_cmp != NULL)
-#define DeeType_IsSequence(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_seq != NULL)
-#define DeeType_IsIntTruncated(x)        (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FTRUNCATE)
-#define DeeType_HasMoveAny(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FMOVEANY)
-#define DeeType_IsIterator(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_iter_next != NULL)
-#define DeeType_IsTypeType(x)            DeeType_IsInherited((DeeTypeObject *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
-#define DeeType_IsCustom(x)              (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
-#define DeeType_IsSuperConstructible(x)  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINHERITCTOR)
-#define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
-#define DeeType_IsVarArgConstructible(x) (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
+#define DeeType_IsFinal(x)               (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FFINAL)
+#define DeeType_IsInterrupt(x)           (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINTERRUPT)
+#define DeeType_IsAbstract(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FABSTRACT)
+#define DeeType_IsVariable(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FVARIABLE)
+#define DeeType_IsGC(x)                  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FGC)
+#define DeeType_IsClass(x)               (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_class != NULL)
+#define DeeType_IsArithmetic(x)          (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_math != NULL)
+#define DeeType_IsComparable(x)          (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_cmp != NULL)
+#define DeeType_IsSequence(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_seq != NULL)
+#define DeeType_IsIntTruncated(x)        (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FTRUNCATE)
+#define DeeType_HasMoveAny(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FMOVEANY)
+#define DeeType_IsIterator(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_iter_next != NULL)
+#define DeeType_IsTypeType(x)            DeeType_IsInherited((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
+#define DeeType_IsCustom(x)              (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
+#define DeeType_IsSuperConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINHERITCTOR)
+#define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
+#define DeeType_IsVarArgConstructible(x) (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
 #define DeeType_IsConstructible(x)       (DeeType_IsSuperConstructible(x) || DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
-#define DeeType_IsCopyable(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
-#define DeeType_Base(x)                  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_base)
-#define DeeType_GCPriority(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
+#define DeeType_IsCopyable(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
+#define DeeType_Base(x)                  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_base)
+#define DeeType_GCPriority(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject const *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
 
+/* Helpers for allocating/freeing fixed-length (non-variable) type instances. */
+#define DeeType_AllocInstance(tp_self)                                                      \
+	(((tp_self)->tp_init.tp_alloc.tp_free)                                                  \
+	 ? (DREF DeeObject *)(*(tp_self)->tp_init.tp_alloc.tp_alloc)()                          \
+	 : ((tp_self)->tp_flags & TP_FGC)                                                       \
+	   ? (DREF DeeObject *)DeeGCObject_Malloc((tp_self)->tp_init.tp_alloc.tp_instance_size) \
+	   : (DREF DeeObject *)DeeObject_Malloc((tp_self)->tp_init.tp_alloc.tp_instance_size))
+#define DeeType_FreeInstance(tp_self, obj)         \
+	(((tp_self)->tp_init.tp_alloc.tp_free)         \
+	 ? (*(tp_self)->tp_init.tp_alloc.tp_free)(obj) \
+	 : ((tp_self)->tp_flags & TP_FGC)              \
+	   ? DeeGCObject_Free(obj)                     \
+	   : DeeObject_Free(obj))
+
+
+
+
 /* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasOperator(DeeTypeObject *__restrict self, uint16_t name);
+DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
+DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Inherit different groups of operators from base-classes, returning `true' if

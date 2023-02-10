@@ -1311,9 +1311,9 @@ intrange_size(IntRange *__restrict self) {
 	dssize_t result;
 	ASSERT(self->ir_step != 0);
 	result = (self->ir_end - self->ir_start) + self->ir_step;
-	if (self->ir_step >= 0)
+	if (self->ir_step >= 0) {
 		--result;
-	else {
+	} else {
 		++result;
 	}
 	result /= self->ir_step;
@@ -1327,9 +1327,9 @@ intrange_nsi_getsize(IntRange *__restrict self) {
 	dssize_t result;
 	ASSERT(self->ir_step != 0);
 	result = (self->ir_end - self->ir_start) + self->ir_step;
-	if (self->ir_step >= 0)
+	if (self->ir_step >= 0) {
 		--result;
-	else {
+	} else {
 		++result;
 	}
 	result /= self->ir_step;

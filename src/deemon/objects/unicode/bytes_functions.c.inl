@@ -107,9 +107,9 @@ bytes_find(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		result = NULL;
-	else {
+	} else {
 		result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
 		                            end - start,
 		                            needle.n_data,
@@ -138,9 +138,9 @@ bytes_casefind(Bytes *self, size_t argc,
 		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
-	if (start >= end)
+	if (start >= end) {
 		ptr = NULL;
-	else {
+	} else {
 		ptr = (uint8_t *)memasciicasemem(DeeBytes_DATA(self) + start,
 		                                 end - start,
 		                                 needle.n_data,
@@ -6051,7 +6051,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              /**/ "#C{\\n}|Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
 	              /**/ /*   */ "@pattern (groups are determined by parenthesis in regex patterns)&"
 	              /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
-	              /**/ "#C{\\&}|Outputs a literal $r\"&\" into the returned ?."
+	              /**/ "#C{\\#&}|Outputs a literal $r\"#&\" into the returned ?."
 	              "}"),
 	TYPE_KWMETHOD("refindall", &bytes_refindall,
 	              "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"

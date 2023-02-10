@@ -481,18 +481,18 @@ if_statement_branches_identical:
 				struct ast **ff_astv;
 				size_t ff_astc;
 				if (tt->a_type == AST_MULTIPLE &&
-				    tt->a_flag == AST_FMULTIPLE_KEEPLAST)
-					tt_astv = tt->a_multiple.m_astv,
+				    tt->a_flag == AST_FMULTIPLE_KEEPLAST) {
+					tt_astv = tt->a_multiple.m_astv;
 					tt_astc = tt->a_multiple.m_astc;
-				else {
+				} else {
 					tt_astv = &tt;
 					tt_astc = 1;
 				}
 				if (ff->a_type == AST_MULTIPLE &&
-				    ff->a_flag == AST_FMULTIPLE_KEEPLAST)
-					ff_astv = ff->a_multiple.m_astv,
+				    ff->a_flag == AST_FMULTIPLE_KEEPLAST) {
+					ff_astv = ff->a_multiple.m_astv;
 					ff_astc = ff->a_multiple.m_astc;
-				else {
+				} else {
 					ff_astv = &ff;
 					ff_astc = 1;
 				}

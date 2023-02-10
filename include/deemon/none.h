@@ -50,7 +50,7 @@ DDATDEF DeeObject     DeeNone_Singleton;
 #define Dee_return_none  Dee_return_reference_(Dee_None)
 
 /* WARNING: If these two macros are ever changed, make sure to allow
- *         `NULL' to be passed for `x', as code exists that assumes
+ *          `NULL' to be passed for `x', as code exists that assumes
  *          this being possible (btw: `NULL' should evaluate to `false') */
 #define DeeNone_Check(x)      ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
 #define DeeNone_CheckExact(x) ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None)

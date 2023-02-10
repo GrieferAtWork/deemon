@@ -1082,10 +1082,10 @@ do_search_desc:
 							if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
 								size_t i;
 								dssize_t result;
-								if (desc->cd_name)
+								if (desc->cd_name) {
 									class_name = DeeString_STR(desc->cd_name);
-								else if (DeeType_Check(class_type) &&
-								         ((DeeTypeObject *)class_type)->tp_name) {
+								} else if (DeeType_Check(class_type) &&
+								           ((DeeTypeObject *)class_type)->tp_name) {
 									class_name = (char *)((DeeTypeObject *)class_type)->tp_name;
 								}
 								if (is_cmember) {

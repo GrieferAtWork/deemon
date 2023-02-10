@@ -749,9 +749,9 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 				if (last_print_ddi.dr_name != ddi.rs_regs.dr_name) {
 					char *name = DeeCode_GetDDIString((DeeObject *)code,
 					                                  ddi.rs_regs.dr_name);
-					if (name)
+					if (name) {
 						printf("@name(%q)", name);
-					else {
+					} else {
 						PRINT("@name(none)");
 					}
 					is_first = false;
@@ -1091,9 +1091,9 @@ prefix_except_prefix:
 				char *inner_prefix;
 				result += temp;
 				inner_prefix = (char *)Dee_Mallocc(prefix_len + 5, sizeof(char));
-				if unlikely(!inner_prefix)
+				if unlikely(!inner_prefix) {
 					temp = -1;
-				else {
+				} else {
 					memset(inner_prefix, ' ', (prefix_len + 4) * sizeof(char));
 					inner_prefix[prefix_len + 4] = '\0';
 					temp = libdisasm_printcode(printer, arg,

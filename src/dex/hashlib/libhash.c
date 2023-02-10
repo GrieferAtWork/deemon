@@ -58,13 +58,13 @@ function DEEMON_GENERATE_CRC(width, polynom, reflect_input) {
 		type_mask |= 0x1;
 	}
 	local hash_width = width;
-	if (hash_width > 32)
+	if (hash_width > 32) {
 		hash_width = 64;
-	else if (hash_width > 16)
+	} else if (hash_width > 16) {
 		hash_width = 32;
-	else if (hash_width > 8)
+	} else if (hash_width > 8) {
 		hash_width = 16;
-	else {
+	} else {
 		hash_width = 8;
 	}
 	local crc_shift = 0;
@@ -105,11 +105,11 @@ function get_hashfunc(width, revin, revout) {
 	if (key in known_hashfuncs)
 		return known_hashfuncs[key];
 	local name = "_hashimpl_" + width;
-	if (revin && revout)
+	if (revin && revout) {
 		name += "_ioref";
-	else if (revout)
+	} else if (revout) {
 		name += "_oref";
-	else if (revin) {
+	} else if (revin) {
 		name += "_iref";
 	}
 	print "#define WIDTH", width;

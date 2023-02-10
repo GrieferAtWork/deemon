@@ -864,9 +864,9 @@ process_id(Process *__restrict self) {
 		DBG_ALIGNMENT_ENABLE();
 		rwlock_upgrade(&self->p_lock);
 		COMPILER_READ_BARRIER();
-		if (self->p_pid == 0)
+		if (self->p_pid == 0) {
 			self->p_pid = pid;
-		else {
+		} else {
 			pid = self->p_pid;
 		}
 		rwlock_endwrite(&self->p_lock);
@@ -936,11 +936,11 @@ wait_for_process(Process *__restrict self,
 again:
 #endif /* EINTR */
 	/* Handle the simple cases: no timeout/infinite timeout. */
-	if (timeout_microseconds == 0)
+	if (timeout_microseconds == 0) {
 		result = tryjoinpid(pid, &self->p_status);
-	else if (timeout_microseconds == (uint64_t)-1)
+	} else if (timeout_microseconds == (uint64_t)-1) {
 		result = joinpid(pid, &self->p_status);
-	else {
+	} else {
 #if defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
     defined(CONFIG_HAVE_sigprocmask)
 		/* The complicated: a custom timeout. */

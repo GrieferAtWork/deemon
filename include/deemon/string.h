@@ -945,9 +945,9 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewAuto(/*unsigned*/ char const *__restrict str) {
 	DeeObject *result;
 	result = DeeString_IsObject(str);
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else {
+	} else {
 		result = DeeString_New(str);
 	}
 	return result;
@@ -1018,9 +1018,9 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewAutoUtf8(/*unsigned*/ char const *__restrict str) {
 	DeeObject *result;
 	result = DeeString_IsObject(str);
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else {
+	} else {
 		result = DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FIGNORE);
 	}
 	return result;

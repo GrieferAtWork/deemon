@@ -635,9 +635,9 @@ subrangen_nsi_getsize(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->sr_seq);
 	if likely(result != (size_t)-1) {
-		if (result <= self->sr_start)
+		if (result <= self->sr_start) {
 			result = 0;
-		else {
+		} else {
 			result -= self->sr_start;
 		}
 	}
@@ -649,9 +649,9 @@ subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->sr_seq);
 	if likely(result != (size_t)-1) {
-		if (result <= self->sr_start)
+		if (result <= self->sr_start) {
 			result = 0;
-		else {
+		} else {
 			result -= self->sr_start;
 		}
 	}

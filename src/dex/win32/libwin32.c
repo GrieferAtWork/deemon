@@ -2494,7 +2494,7 @@ err:
 }
 
 
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_nul", "\0");]]]*/
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_nul", "\0");]]]*/
 PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
 /*[[[end]]]*/
 

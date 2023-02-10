@@ -2142,9 +2142,9 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	if (!pdyn_GetFinalPathNameByHandleW) {
 		/* Try to load `GetFinalPathNameByHandleW()' */
 		HMODULE hKernel32 = GetKernel32Handle();
-		if (!hKernel32)
+		if (!hKernel32) {
 			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
-		else {
+		} else {
 			LPGETFINALPATHNAMEBYHANDLEW func;
 			func = (LPGETFINALPATHNAMEBYHANDLEW)GetProcAddress(hKernel32, "GetFinalPathNameByHandleW");
 			if (!func)

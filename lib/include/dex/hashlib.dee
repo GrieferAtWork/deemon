@@ -75,9 +75,9 @@ global class crc_hasher {
 	public function add(data: Bytes | string, s: int = -1) {
 		if (s >= 0)
 			data = data[:s];
-		if (m_result is bound)
+		if (m_result is bound) {
 			m_result = hashlib.hash(m_name, data, m_result);
-		else {
+		} else {
 			m_result = hashlib.hash(m_name, data);
 		}
 	}

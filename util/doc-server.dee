@@ -808,14 +808,15 @@ function listModulesInPath(
 					yield new_prefix + x;
 				continue;
 			}
-			if (f.startswith(".") && f.startswith(".dec"))
+			if (f.startswith(".") && f.startswith(".dec")) {
 				yield f[1:-4];
-			else if (f.endswith(".so"))
+			} else if (f.endswith(".so")) {
 				yield f[:-3];
-			else if (f.endswith(".dll"))
+			} else if (f.endswith(".dll")) {
 				yield f[:-4];
-			else if (f.endswith(".dee"))
+			} else if (f.endswith(".dee")) {
 				yield f[:-4];
+			}
 		}
 	} catch (...) {
 	}

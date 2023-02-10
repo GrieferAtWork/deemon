@@ -312,9 +312,9 @@ do_flush_after_sep:
 		                          (size_t)(flush_end - flush_start)) < 0)
 			goto err;
 		flush_start = iter;
-		if (did_print_sep)
-			; /* The slash has already been been printed: `foo/ bar' */
-		else if (sep_loc == iter - 1
+		if (did_print_sep) {
+			/* The slash has already been been printed: `foo/ bar' */
+		} else if (sep_loc == iter - 1
 #ifdef CONFIG_HOST_WINDOWS
 		         && (!*sep_loc || *sep_loc == DeeSystem_SEP)
 #endif /* !CONFIG_HOST_WINDOWS */
@@ -994,9 +994,9 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 	DBG_ALIGNMENT_DISABLE();
 	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
 		HMODULE hKernel32 = GetKernel32Handle();
-		if (!hKernel32)
+		if (!hKernel32) {
 			ATOMIC_WRITE(*(void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
-		else {
+		} else {
 			LPGETSYSTEMTIMEPRECISEASFILETIME func;
 			func = (LPGETSYSTEMTIMEPRECISEASFILETIME)GetProcAddress(hKernel32, "GetSystemTimePreciseAsFileTime");
 			if (!func)

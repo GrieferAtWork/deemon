@@ -546,9 +546,9 @@ gc_deps_insert(struct gc_deps *__restrict self,
 #ifdef GC_ASSERT_REFERENCE_COUNTS
 		ASSERT(dep->gd_extern >= num_tracked_references);
 #endif /* GC_ASSERT_REFERENCE_COUNTS */
-		if (dep->gd_extern >= num_tracked_references)
+		if (dep->gd_extern >= num_tracked_references) {
 			dep->gd_extern -= num_tracked_references;
-		else {
+		} else {
 			dep->gd_extern = 0;
 		}
 		break;

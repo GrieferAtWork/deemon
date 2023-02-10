@@ -347,10 +347,11 @@ class PyAstFor: PyAst {
 			o = config.isbasescope;
 			config.isbasescope = true;
 		}
-		if (loop is bound)
+		if (loop is bound) {
 			loop.generate(out, config, asExpression);
-		else if (asExpression)
+		} else if (asExpression) {
 			out << "none";
+		}
 		if (!asExpression) {
 			--config.indent;
 			out << "\t" * config.indent << "}\n";
@@ -426,9 +427,9 @@ class PyAstIf: PyAst {
 		if (asExpression) {
 			cond.generate(out, config, true);
 			out << " ? ";
-			if (tt is bound)
+			if (tt is bound) {
 				tt.generate(out, config, true);
-			else {
+			} else {
 				out << "none";
 			}
 			if (ff is bound) {
@@ -963,9 +964,9 @@ done:
 					continue;
 				break;
 			}
-			if (st is PyAstMultiple)
+			if (st is PyAstMultiple) {
 				asts.extend(st.branches);
-			else {
+			} else {
 				asts.append(st);
 			}
 		}
@@ -1007,9 +1008,9 @@ done:
 						err("Missing `pass' in empty block")
 					break;
 				}
-				if (st is PyAstMultiple)
+				if (st is PyAstMultiple) {
 					asts.extend(st.branches);
-				else {
+				} else {
 					asts.append(st);
 				}
 				while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
@@ -1177,9 +1178,9 @@ again:
 			break;
 		}
 		local result = parseExpression(allowcomma: true);
-		if (tok == ";")
+		if (tok == ";") {
 			next();
-		else {
+		} else {
 			skip("\n");
 		}
 		return result;

@@ -880,9 +880,9 @@ again:
 	} else {
 #ifndef CONFIG_NO_THREADS
 		if (!atomic_rwlock_upgrade(&me->fo_lock) &&
-		    (result = me->w_string) != NULL)
-			;
-		else
+		    (result = me->w_string) != NULL) {
+			/* ... */
+		} else
 #endif /* !CONFIG_NO_THREADS */
 		{
 			/* Must pack together a multi-byte string. */

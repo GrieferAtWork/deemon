@@ -112,9 +112,12 @@ aiter_getseq(ArrayIterator *__restrict self) {
 	DREF DeeArrayTypeObject *atype;
 	DREF DeeLValueTypeObject *ltype;
 	size_t count = (self->ai_end.uint - self->ai_begin.uint);
-	if unlikely(!self->ai_siz)
+	if unlikely(!self->ai_siz) {
 		count = 0;
-	else count /= self->ai_siz;
+	} else {
+		count /= self->ai_siz;
+	}
+
 	/* Reverse engineer the proper array type. */
 	atype = DeeSType_Array(self->ai_type->lt_orig, count);
 	if unlikely(!atype)

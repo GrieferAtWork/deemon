@@ -624,39 +624,23 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 	DeeObject *result;
 	size_t datasize;
 	uint8_t *dst, *src;
-	DeeSTypeObject *orig_type = (DeeSTypeObject *)Dee_TYPE(self);
-	ASSERT(!orig_type->st_base.tp_init.tp_alloc.tp_free);
-	if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
-		result = (DeeObject *)(*orig_type->st_base.tp_init.tp_alloc.tp_alloc)();
-	} else {
-		datasize = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
-		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
-			/* This can happen when the user creates their own
-			 * classes that are derived from structured types. */
-			result = (DeeObject *)DeeGCObject_Malloc(datasize);
-		} else {
-			result = (DeeObject *)DeeObject_Malloc(datasize);
-		}
-	}
+	DeeSTypeObject *orig_type = ((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig;
+	result = DeeType_AllocInstance(&orig_type->st_base);
 	if unlikely(!result)
 		goto done;
 	datasize = orig_type->st_sizeof;
 	dst = (uint8_t *)DeeStruct_Data(result);
 	src = (uint8_t *)self->l_ptr.ptr;
+
 	/* Copy data into the copy of the underlying object. */
 	CTYPES_FAULTPROTECT(memcpy(dst, src, datasize), {
-		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
-			(*orig_type->st_base.tp_init.tp_alloc.tp_free)(result);
-		} else if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
-			DeeGCObject_Free(result);
-		} else {
-			DeeObject_Free(result);
-		}
+		DeeType_FreeInstance(&orig_type->st_base, result);
 		return NULL;
 	});
-
 	DeeObject_Init(result, (DeeTypeObject *)orig_type);
-	/* Handle GC objects (see above) */
+
+	/* Handle GC objects (which can appear if the user
+	 * their own creates sub-classes of types from ctypes) */
 	if unlikely(orig_type->st_base.tp_flags & TP_FGC)
 		DeeGC_Track(result);
 done:

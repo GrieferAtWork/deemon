@@ -69,13 +69,13 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
 			}
 			j &= new_mask;
 			/* Re-hash argument indices. */
-			if (self->jf_selfarg == i)
+			if (self->jf_selfarg == i) {
 				self->jf_selfarg = j;
-			else if (self->jf_varargs == i)
+			} else if (self->jf_varargs == i) {
 				self->jf_varargs = j;
-			else if (self->jf_varkwds == i)
+			} else if (self->jf_varkwds == i) {
 				self->jf_varkwds = j;
-			else {
+			} else {
 				for (argi = 0; argi < self->jf_argc_max; ++argi) {
 					if (self->jf_argv[argi] != i)
 						continue;

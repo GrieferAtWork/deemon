@@ -406,13 +406,13 @@ after_target_symbol_optimization:
 			expr_result = DeeObject_ContainsObject(self->a_action.a_act1->a_constexpr,
 			                                       self->a_action.a_act0->a_constexpr);
 action_set_expr_result:
-			if (!expr_result)
+			if (!expr_result) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
-			else {
+			} else {
 				int temp = allow_constexpr(expr_result);
-				if (temp == CONSTEXPR_ILLEGAL)
+				if (temp == CONSTEXPR_ILLEGAL) {
 					Dee_Decref(expr_result);
-				else {
+				} else {
 					if (temp == CONSTEXPR_USECOPY &&
 					    DeeObject_InplaceDeepCopy(&expr_result)) {
 						Dee_Decref(expr_result);
@@ -504,9 +504,9 @@ action_set_expr_result:
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 			int temp = DeeSeq_Any(self->a_action.a_act0->a_constexpr);
-			if unlikely(temp < 0)
+			if unlikely(temp < 0) {
 				expr_result = NULL;
-			else {
+			} else {
 				expr_result = DeeBool_For(temp);
 				Dee_Incref(expr_result);
 			}
@@ -519,9 +519,9 @@ action_set_expr_result:
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 			int temp = DeeSeq_All(self->a_action.a_act0->a_constexpr);
-			if unlikely(temp < 0)
+			if unlikely(temp < 0) {
 				expr_result = NULL;
-			else {
+			} else {
 				expr_result = DeeBool_For(temp);
 				Dee_Incref(expr_result);
 			}
@@ -539,9 +539,9 @@ action_set_expr_result:
 		    DeeString_Check(self->a_action.a_act1->a_constexpr)) {
 			int temp = DeeObject_BoundAttr(self->a_action.a_act0->a_constexpr,
 			                               self->a_action.a_act1->a_constexpr);
-			if (temp == -1)
+			if (temp == -1) {
 				expr_result = NULL;
-			else {
+			} else {
 				expr_result = DeeBool_For(temp > 0);
 				Dee_Incref(expr_result);
 			}
@@ -560,9 +560,9 @@ action_set_expr_result:
 			int temp = DeeObject_BoundItem(self->a_action.a_act0->a_constexpr,
 			                               self->a_action.a_act1->a_constexpr,
 			                               true);
-			if (temp == -1)
+			if (temp == -1) {
 				expr_result = NULL;
-			else {
+			} else {
 				expr_result = DeeBool_For(temp > 0);
 				Dee_Incref(expr_result);
 			}

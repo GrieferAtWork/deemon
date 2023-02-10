@@ -1009,10 +1009,11 @@ repeatitem_getrange(RepeatItem *self,
 	dssize_t start, end;
 	if (DeeObject_AsSSize(start_ob, &start))
 		goto err;
-	if (DeeNone_Check(end_ob))
+	if (DeeNone_Check(end_ob)) {
 		end = self->ri_num;
-	else if (DeeObject_AsSSize(end_ob, &end))
+	} else if (DeeObject_AsSSize(end_ob, &end)) {
 		goto err;
+	}
 	if unlikely(start < 0)
 		start += self->ri_num;
 	if unlikely(end < 0)

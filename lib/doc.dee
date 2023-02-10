@@ -649,13 +649,16 @@ local function qualifyLegacyTyperef(docnode: WeakRef with Doc, s: string): strin
 			return f"?A{encodeName(s)}{node.qualpath}";
 		node = node.parent;
 	} while (node !is none);
+
 	/* Search for known sub-classes of `Error' */
 	local result = findErrorByName(Error, "?DError", s);
 	if (result !is none)
 		return result;
+
 	/* Search the deemon module itself. */
 	if (hasattr(deemon, s))
 		return "?D" + encodeName(s);
+
 	/* Fallback: Invalid encoding -> Encode an unknown */
 	return "?U" + encodeName(s);
 }
@@ -733,7 +736,8 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 		local attrend = decodeNameEnd(qual, 2);
 		local base = getTypeFromQualPath(docnode, qual.substr(attrend));
 		local result = base.operator . (qual.substr(2, attrend));
-		if (result is none) result = type none;
+		if (result is none)
+			result = type none;
 		return result;
 	}	break;
 
@@ -756,7 +760,8 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 	case "G": {
 		local basemod = docnode.value.module;
 		local result = basemod.operator . (qual.substr(2));
-		if (result is none) result = type none;
+		if (result is none)
+			result = type none;
 		return result;
 	}	break;
 
@@ -810,21 +815,18 @@ class TypeRef: WeakRefAble {
 		})";
 	}
 
-	@@The actual type object represented by @this TypeRef,
-	@@or @none if that type is unreachable or unknown
-	public final property typ: Type | none = {
-		get(): Type | none {
+	@@The actual type object represented by @this TypeRef
+	public final property typ: Type = {
+		get(): Type {
 			if (m_typ !is bound) {
-				m_typ =
-					try getTypeFromQualPath(docnode, m_docstring)
-					catch (...) none;
+				m_typ = getTypeFromQualPath(docnode, m_docstring);
 				if (m_typ !is Type)
-					m_typ = none;
+					throw Error(f"Qualified path {repr m_docstring} does not name a type");
 			}
 			return m_typ;
 		}
 	}
-	private member m_typ: Type | none;
+	private member m_typ: Type;
 
 
 	@@Returns the Doc path associated with the type referenced by @this
@@ -881,9 +883,9 @@ class TypeRef: WeakRefAble {
 	public final property prettyname: string = {
 		get() {
 			if (m_prettyname !is bound) {
-				if (docstring.startswith("?G"))
+				if (docstring.startswith("?G")) {
 					m_prettyname = decodeName(docstring.substr(2));
-				else {
+				} else {
 					m_prettyname = getprettyname(docstring);
 				}
 			}
@@ -1236,11 +1238,11 @@ class TypeExpr: WeakRefAble {
 	public final property acceptsany: bool = {
 		get(): bool {
 			if (m_acceptsany !is bound) {
-				if (m_docstring !is string)
+				if (m_docstring !is string) {
 					m_acceptsany = m_docstring === Object;
-				else if (m_docstring in ["?O", "?Dobject", "?Edeemon:Object"])
+				} else if (m_docstring in ["?O", "?Dobject", "?Edeemon:Object"]) {
 					m_acceptsany = true;
-				else {
+				} else {
 					m_acceptsany = false;
 					if (kind == "X") {
 						for (local x: Xtypes) {
@@ -1368,9 +1370,9 @@ check_elem:
 
 		case "S": {
 			local st = Stype;
-			if (st.docstring.startswith("?T2"))
+			if (st.docstring.startswith("?T2")) {
 				yield Mapping; /* Sequence of 2-element tuples. */
-			else {
+			} else {
 				yield Sequence; /* Sequence of something else. */
 			}
 		}	break;
@@ -1396,9 +1398,9 @@ check_elem:
 	public final property kind: string = {
 		get(): string {
 			if (m_kind !is bound) {
-				if (#m_docstring < 2 || !m_docstring.startswith("?"))
+				if (#m_docstring < 2 || !m_docstring.startswith("?")) {
 					m_kind = "E"; /* Legacy-like type name */
-				else {
+				} else {
 					m_kind = m_docstring[1];
 					if (m_kind in [".", "N", "O", "#", "D", "U", "G" /*, "E"*/, "A"])
 						m_kind = "E"; /* Fully qualifyable */
@@ -2295,9 +2297,9 @@ class Parameter: WeakRefAble {
 		get(): Expression | none {
 			if (m_defexpr !is bound) {
 				local defstr = defstring;
-				if (defstr is none)
+				if (defstr is none) {
 					m_defexpr = none;
-				else {
+				} else {
 					if (!defstr) {
 						/* Try to load the default value from the documented object. */
 						local node = docdecl.lock(none)
@@ -2362,10 +2364,11 @@ done:
 		if (isvarkwds)
 			fp << "**";
 		fp << name;
-		if (isoptional)
+		if (isoptional) {
 			fp << "?";
-		else if (isvarargs)
+		} else if (isvarargs) {
 			fp << "...";
+		}
 		fp << ": ";
 		fp << typ;
 		local def = defexpr;
@@ -2435,10 +2438,11 @@ class Declaration: WeakRefAble {
 		m_parstring = m_namstring = m_retstring = none;
 		m_isdeleted = m_isinherited = m_explittype = false;
 		if (par_start >= 0) {
-			if (ret_start > 0 && ds[ret_start - 1] == ")")
+			if (ret_start > 0 && ds[ret_start - 1] == ")") {
 				m_parstring = ds.substr(par_start + 1, ret_start - 1);
-			else if (ds[#ds - 1] == ")")
+			} else if (ds[#ds - 1] == ")") {
 				m_parstring = ds.substr(par_start + 1, #ds - 1);
+			}
 		}
 		if (par_start >= 0) {
 			if (par_start > 0)
@@ -2570,9 +2574,9 @@ class Declaration: WeakRefAble {
 		get(): string | none {
 			if (m_opname !is bound) {
 				local name = namstring;
-				if (name is none)
+				if (name is none) {
 					m_opname = "constructor";
-				else {
+				} else {
 					m_opname = getRealOperatorName(name);
 					/* Check if also need argument count to deduce the real operator name */
 					if (m_opname is none)
@@ -2621,11 +2625,11 @@ class Declaration: WeakRefAble {
 		get(): TypeExpr {
 			if (m_typ !is bound) {
 				local retstr = retstring;
-				if (retstr is none)
+				if (retstr is none) {
 					m_typ = TypeExpr(this, "?N");
-				else if (!retstr)
+				} else if (!retstr) {
 					m_typ = TypeExpr(this, "?O");
-				else {
+				} else {
 					m_typ = TypeExpr(this, retstr);
 				}
 			}
@@ -2641,9 +2645,9 @@ class Declaration: WeakRefAble {
 				local parstr = parstring;
 				if (parstr is none) {
 					local doc = docsect.value.docnode.value;
-					if (doc.isfunction)
+					if (doc.isfunction) {
 						m_parameters = [Parameter(this, 0, "args!")];
-					else {
+					} else {
 						m_parameters = none; /* No parameters */
 					}
 				} else {
@@ -3165,9 +3169,9 @@ class Doc: WeakRefAble {
 	public final property attr: Attribute | none = {
 		get(): Attribute | none {
 			if (m_attr !is bound) {
-				if (isoperator || parent is none || name is none)
+				if (isoperator || parent is none || name is none) {
 					m_attr = none;
-				else {
+				} else {
 					m_attr = Attribute(parent.object, name);
 				}
 			}
@@ -3764,11 +3768,11 @@ set_is_type:
 			local at = attr;
 			if (at !is none) {
 				local attr_type = at.attrtype;
-				if (at.cancall || Callable.baseof(attr_type))
+				if (at.cancall || Callable.baseof(attr_type)) {
 					yield DocSection(this, "(args!)->"); /* Some kind of function... */
-				else if (attr_type !is none)
+				} else if (attr_type !is none) {
 					yield DocSection(this, "->" + encodeType(attr_type));
-				else {
+				} else {
 					yield DocSection(this, "->");
 				}
 			} else {

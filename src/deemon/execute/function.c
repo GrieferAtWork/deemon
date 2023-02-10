@@ -1284,9 +1284,9 @@ exec_finally:
 			/* Default case: Execute from a fast yield-function-iterator frame. */
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}
-		if likely(result)
+		if likely(result) {
 			Dee_Decref(result); /* Most likely, this is `none' */
-		else {
+		} else {
 			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor\n",
 			               ERROR_PRINT_DOHANDLE);
 		}

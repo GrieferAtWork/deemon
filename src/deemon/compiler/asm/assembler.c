@@ -450,9 +450,9 @@ INTERN void DCALL assembler_fini(void) {
 	userassembler_fini();
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	for (i = 0; i < SECTION_COUNT; ++i) {
-		if (current_assembler.a_sect[i].sec_code)
+		if (current_assembler.a_sect[i].sec_code) {
 			DeeGCObject_Free(current_assembler.a_sect[i].sec_code);
-		else {
+		} else {
 			Dee_Free(current_assembler.a_sect[i].sec_begin);
 		}
 		Dee_Free(current_assembler.a_sect[i].sec_relv);
@@ -1025,16 +1025,21 @@ INTERN bool DCALL asm_minjmp(void) {
 			if (stack_offset >= -2 && stack_offset <= +2) {
 				/* Optimize to `pop; pop' or `push none; push none', and everything in-between. */
 				instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
-				if (stack_offset == -2)
-					*(instr + 0) = ASM_POP, *(instr + 1) = ASM_POP;
-				else if (stack_offset == -1)
-					*(instr + 0) = ASM_POP, *(instr + 1) = ASM_DELOP;
-				else if (stack_offset == 0)
-					*(instr + 0) = ASM_DELOP, *(instr + 1) = ASM_DELOP;
-				else if (stack_offset == 1)
-					*(instr + 0) = ASM_PUSH_NONE, *(instr + 1) = ASM_DELOP;
-				else {
-					*(instr + 0) = ASM_PUSH_NONE, *(instr + 1) = ASM_PUSH_NONE;
+				if (stack_offset == -2) {
+					instr[0] = ASM_POP;
+					instr[1] = ASM_POP;
+				} else if (stack_offset == -1) {
+					instr[0] = ASM_POP;
+					instr[1] = ASM_DELOP;
+				} else if (stack_offset == 0) {
+					instr[0] = ASM_DELOP;
+					instr[1] = ASM_DELOP;
+				} else if (stack_offset == 1) {
+					instr[0] = ASM_PUSH_NONE;
+					instr[1] = ASM_DELOP;
+				} else {
+					instr[0] = ASM_PUSH_NONE;
+					instr[1] = ASM_PUSH_NONE;
 				}
 				asm_reldel(iter); /* Delete this relocation. */
 				result = true;
@@ -1445,9 +1450,9 @@ INTERN WUNUSED struct except_handler *DCALL asm_pack_exceptv(void) {
 		exceptv = (struct except_handler *)Dee_TryReallocc(exceptv,
 		                                                   current_assembler.a_exceptc,
 		                                                   sizeof(struct except_handler));
-		if (exceptv)
+		if (exceptv) {
 			current_assembler.a_exceptv = (struct asm_exc *)exceptv;
-		else {
+		} else {
 			exceptv = (struct except_handler *)current_assembler.a_exceptv;
 		}
 	}
@@ -2069,9 +2074,9 @@ fix_relint(DeeObject **__restrict pobj) {
 	ASSERT(relint->ri_sym);
 	ASSERT(ASM_SYM_DEFINED(relint->ri_sym));
 	value = relint->ri_add;
-	if (relint->ri_mode == RELINT_MODE_FADDR)
+	if (relint->ri_mode == RELINT_MODE_FADDR) {
 		value += relint->ri_sym->as_addr;
-	else {
+	} else {
 		value += relint->ri_sym->as_stck;
 	}
 	intob = DeeInt_NewS64(value);

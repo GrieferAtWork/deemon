@@ -824,9 +824,9 @@ DEFINE_AST_GENERATOR(NONNULL((2)), ast_class,
 			/* If the base expression is a symbol that is identical to the super-symbol,
 			 * then set the NOWRITESUPER flag to prevent an unnecessary write! */
 			if (base && base->a_type == AST_SYM &&
-			    base->a_sym == super_symbol)
+			    base->a_sym == super_symbol) {
 				result->a_flag |= AST_FCLASS_NOWRITESUPER;
-			else {
+			} else {
 				SYMBOL_INC_NWRITE(super_symbol);
 			}
 		}

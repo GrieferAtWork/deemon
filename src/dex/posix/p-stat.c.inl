@@ -2206,8 +2206,8 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const
 #endif /* !MEMCASEEQ */
 
 /*[[[deemon
-(PRIVATE_DEFINE_STRING from rt.gen)("str_PATHEXT", "PATHEXT");
-(PRIVATE_DEFINE_STRING from rt.gen)("str_PATHEXT_default", ".COM;.EXE;.BAT;.CMD");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_PATHEXT", "PATHEXT");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_PATHEXT_default", ".COM;.EXE;.BAT;.CMD");
 ]]]*/
 PRIVATE DEFINE_STRING_EX(str_PATHEXT, "PATHEXT", 0xe011e8eb, 0x16a0c5286fc39b1b);
 PRIVATE DEFINE_STRING_EX(str_PATHEXT_default, ".COM;.EXE;.BAT;.CMD", 0x4fb60429, 0xd467178bef4dfb48);
@@ -2580,7 +2580,7 @@ posix_dex_fini(DeeDexObject *__restrict self) {
 	Dee_XDecref(dee_time_module);
 }
 
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_makeanon", "makeanon");]]]*/
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_makeanon", "makeanon");]]]*/
 PRIVATE DEFINE_STRING_EX(str_makeanon, "makeanon", 0x2c680852, 0xee6c933604aac03d);
 /*[[[end]]]*/
 

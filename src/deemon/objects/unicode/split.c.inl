@@ -72,10 +72,10 @@ splititer_next(StringSplitIterator *__restrict self) {
 			result_end = (uint8_t *)memmemb((uint8_t *)result_start,
 			                                (uint8_t *)self->s_end - (uint8_t *)result_start,
 			                                (uint8_t *)self->s_sep, self->s_sepsz);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + self->s_sepsz * 1;
 			}
 			result_len = (size_t)((uint8_t *)result_end - (uint8_t *)result_start);
@@ -131,10 +131,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			                                    (uint8_t *)self->s_end - (uint8_t *)result_start,
 			                                    (uint8_t *)self->s_sep, self->s_sepsz,
 			                                    &match_length);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + match_length * 1;
 			}
 			result_len = (size_t)((uint8_t *)result_end - (uint8_t *)result_start);
@@ -145,10 +145,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			                                    (uint16_t *)self->s_end - (uint16_t *)result_start,
 			                                    (uint16_t *)self->s_sep, self->s_sepsz,
 			                                    &match_length);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + match_length * 2;
 			}
 			result_len = (size_t)((uint16_t *)result_end - (uint16_t *)result_start);
@@ -159,10 +159,10 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			                                    (uint32_t *)self->s_end - (uint32_t *)result_start,
 			                                    (uint32_t *)self->s_sep, self->s_sepsz,
 			                                    &match_length);
-			if (!result_end)
-				result_end = self->s_end,
+			if (!result_end) {
+				result_end = self->s_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + match_length * 4;
 			}
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
@@ -773,10 +773,10 @@ lineiter_next(LineSplitIterator *__restrict self) {
 		CASE_WIDTH_1BYTE:
 			result_end = (uint8_t *)find_lfb((uint8_t *)result_start,
 			                                 (uint8_t *)self->ls_end - (uint8_t *)result_start);
-			if (!result_end)
-				result_end = self->ls_end,
+			if (!result_end) {
+				result_end = self->ls_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + 1;
 				if (*(uint8_t *)result_end == UNICODE_CR &&
 				    *(uint8_t *)next_ptr == UNICODE_LF)
@@ -789,10 +789,10 @@ lineiter_next(LineSplitIterator *__restrict self) {
 		CASE_WIDTH_2BYTE:
 			result_end = (uint8_t *)find_lfw((uint16_t *)result_start,
 			                                 (uint16_t *)self->ls_end - (uint16_t *)result_start);
-			if (!result_end)
-				result_end = self->ls_end,
+			if (!result_end) {
+				result_end = self->ls_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + 2;
 				if (*(uint16_t *)result_end == UNICODE_CR &&
 				    *(uint16_t *)next_ptr == UNICODE_LF)
@@ -805,10 +805,10 @@ lineiter_next(LineSplitIterator *__restrict self) {
 		CASE_WIDTH_4BYTE:
 			result_end = (uint8_t *)find_lfl((uint32_t *)result_start,
 			                                 (uint32_t *)self->ls_end - (uint32_t *)result_start);
-			if (!result_end)
-				result_end = self->ls_end,
+			if (!result_end) {
+				result_end = self->ls_end;
 				next_ptr   = NULL;
-			else {
+			} else {
 				next_ptr = result_end + 4;
 				if (*(uint32_t *)result_end == UNICODE_CR &&
 				    *(uint32_t *)next_ptr == UNICODE_LF)

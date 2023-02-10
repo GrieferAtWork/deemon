@@ -198,9 +198,9 @@ iter_done:
 	} while (ATOMIC_CMPXCH(me->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
-	if (!valstart)
+	if (!valstart) {
 		valstart = strend(result);
-	else {
+	} else {
 		--valstart;
 	}
 allocate_name:

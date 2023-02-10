@@ -1087,10 +1087,10 @@ do_conditional_forward_optimization:
 											ASSERT(ASM_SYM_DEFINED(jmp_reloc->ar_sym));
 											ASSERT(jmp_reloc->ar_sym->as_used);
 											ASSERT(jmp_reloc->ar_sym->as_stck == stacksz);
-											if (jmp_reloc->ar_sym->as_used == 1)
-												jmp_reloc->ar_sym->as_addr += target_size,
+											if (jmp_reloc->ar_sym->as_used == 1) {
+												jmp_reloc->ar_sym->as_addr += target_size;
 												--jmp_reloc->ar_sym->as_stck;
-											else {
+											} else {
 												struct asm_sym *newsym = asm_newsym();
 												if unlikely(!newsym)
 													goto err;
@@ -1137,10 +1137,10 @@ conditional_jump_forwarding_ok:
 											ASSERT(ASM_SYM_DEFINED(jmp_reloc->ar_sym));
 											ASSERT(jmp_reloc->ar_sym->as_used);
 											ASSERT(jmp_reloc->ar_sym->as_stck == stacksz);
-											if (jmp_reloc->ar_sym->as_used == 1)
-												jmp_reloc->ar_sym->as_addr += target_size,
+											if (jmp_reloc->ar_sym->as_used == 1) {
+												jmp_reloc->ar_sym->as_addr += target_size;
 												--jmp_reloc->ar_sym->as_stck;
-											else {
+											} else {
 												struct asm_sym *newsym = asm_newsym();
 												if unlikely(!newsym)
 													goto err;
@@ -1688,20 +1688,23 @@ do_unused_operand_optimization_ex:
 			      next_instruction[1] == ASM_ADJSTACK &&
 			      (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2)) < 0)) &&
 			    !IS_PROTECTED(next_instruction)) {
+
 				/* Optimize stuff like `dup; pop' */
 				int16_t total_adjustment = stacksz - iiter_sp;
 				instruction_t *continue_after;
-				if (next_instruction[0] == ASM_POP)
+				if (next_instruction[0] == ASM_POP) {
 					total_adjustment -= 1;
-				else if (next_instruction[0] == ASM_ADJSTACK)
+				} else if (next_instruction[0] == ASM_ADJSTACK) {
 					total_adjustment += *(int8_t *)(next_instruction + 1);
-				else {
+				} else {
 					total_adjustment += (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2));
 				}
+
 				/* Delete existing assembly. */
 				continue_after = DeeAsm_NextInstr(next_instruction);
 				delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 				                (code_size_t)(continue_after - iter));
+
 				/* Write some new assembly to do this adjustment. */
 				switch (total_adjustment) {
 

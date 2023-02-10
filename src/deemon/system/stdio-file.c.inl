@@ -658,9 +658,9 @@ sysfile_getc(SystemFile *__restrict self, dioflag_t UNUSED(flags)) {
 #else /* CONFIG_HAVE_fgetc */
 	{
 		unsigned char chr;
-		if (!fread(&chr, sizeof(chr), 1, (FILE *)self->sf_handle))
+		if (!fread(&chr, sizeof(chr), 1, (FILE *)self->sf_handle)) {
 			result = EOF;
-		else {
+		} else {
 			result = (int)(unsigned int)chr;
 		}
 	}
@@ -908,14 +908,14 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject *const *argv) {
 		if (CASEEQ(*mode_iter, 'n')) {
 			++mode_iter;
 			if (CASEEQ(mode_iter[0], 's') &&
-			    (mode_iter[1] == '-' || mode_iter[1] == ','))
+			    (mode_iter[1] == '-' || mode_iter[1] == ',')) {
 				mode_iter += 2;
-			else if (CASEEQ(mode_iter[0], 'o') &&
-			         CASEEQ(mode_iter[1], 's') &&
-			         CASEEQ(mode_iter[2], 'y') &&
-			         CASEEQ(mode_iter[3], 'n') &&
-			         CASEEQ(mode_iter[4], 'c') &&
-			         mode_iter[5] == ',') {
+			} else if (CASEEQ(mode_iter[0], 'o') &&
+			           CASEEQ(mode_iter[1], 's') &&
+			           CASEEQ(mode_iter[2], 'y') &&
+			           CASEEQ(mode_iter[3], 'n') &&
+			           CASEEQ(mode_iter[4], 'c') &&
+			           mode_iter[5] == ',') {
 				mode_iter += 6;
 			}
 			continue;

@@ -731,9 +731,9 @@ INTERN WUNUSED NONNULL((1)) int
 			size_t pathlen;
 			char *dst, *dec_filestart;
 			dec_filestart = (char *)memrchr(dec_filestr, DeeSystem_SEP, dec_filelen);
-			if (dec_filestart)
+			if (dec_filestart) {
 				++dec_filestart;
-			else {
+			} else {
 				dec_filestart = dec_filestr;
 			}
 			pathlen = (size_t)(dec_filestart - dec_filestr);

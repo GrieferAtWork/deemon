@@ -214,17 +214,17 @@ int_sub(DeeIntObject *a, DeeObject *b_ob) {
 		goto done;
 	}
 	if (a->ob_size < 0) {
-		if (b->ob_size < 0)
+		if (b->ob_size < 0) {
 			z = x_sub(a, b);
-		else {
+		} else {
 			z = x_add(a, b);
 		}
 		if (z != NULL /* && z->ob_size != 0*/)
 			z->ob_size = -z->ob_size;
 	} else {
-		if (b->ob_size < 0)
+		if (b->ob_size < 0) {
 			z = x_add(a, b);
-		else {
+		} else {
 			z = x_sub(a, b);
 		}
 	}
@@ -861,17 +861,17 @@ DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
 	if (ABS(a->ob_size) <= 1)
 		return DeeInt_NewMedian(MEDIUM_VALUE(a) - b);
 	if (a->ob_size < 0) {
-		if (b < 0)
+		if (b < 0) {
 			z = x_sub_int(a, (digit)-b);
-		else {
+		} else {
 			z = x_add_int(a, (digit)b);
 		}
 		if (z != NULL /* && z->ob_size != 0*/)
 			z->ob_size = -z->ob_size;
 	} else {
-		if (b < 0)
+		if (b < 0) {
 			z = x_add_int(a, (digit)-b);
-		else {
+		} else {
 			z = x_sub_int(a, (digit)b);
 		}
 	}
@@ -1619,9 +1619,9 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 		z->ob_digit[i] = (digit)(accum & DIGIT_MASK);
 		accum >>= DIGIT_BITS;
 	}
-	if (remshift)
+	if (remshift) {
 		z->ob_digit[newsize - 1] = (digit)accum;
-	else {
+	} else {
 		ASSERT(!accum);
 	}
 	z = int_normalize(z);

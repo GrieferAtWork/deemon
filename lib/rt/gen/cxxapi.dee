@@ -1,0 +1,209 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from doc;
+import ..hash as rtHash;
+
+function commonType(types: {Type...}): Type {
+	if (!types)
+		return Object;
+	types = List(types);
+	local result = types.first;
+	for (local x: types[1:]) {
+		while (result !== Object && !result.baseof(x))
+			result = result.__base__;
+	}
+	return result;
+}
+
+global final cxxTypes: {Type: string} = {
+	Object    : "deemon::Object",
+	string    : "deemon::string",
+	Numeric   : "deemon::Numeric",
+	bool      : "deemon::bool_",
+	int       : "deemon::int_",
+	float     : "deemon::float_",
+	type none : "deemon::None",
+	Bytes     : "deemon::Bytes",
+	File      : "deemon::File",
+	Super     : "deemon::Super",
+	Type      : "deemon::Type",
+	Cell      : "deemon::Cell",
+	Iterator  : "deemon::Iterator",
+	Sequence  : "deemon::Sequence",
+	Set       : "deemon::Set",
+	HashSet   : "deemon::HashSet",
+	Mapping   : "deemon::Mapping",
+	Dict      : "deemon::Dict",
+	List      : "deemon::List",
+	Tuple     : "deemon::Tuple",
+};
+global final cxxTypenamesAsType: {string: Type} =
+	Dict(for (local t, n: cxxTypes) (n, t)).frozen;
+
+global final cxxGenericSequenceTypes: {string...} = {
+	"deemon::Cell"     : "deemon::Cell<>",
+	"deemon::Iterator" : "deemon::Iterator<>",
+	"deemon::Sequence" : "deemon::Sequence<>",
+	"deemon::Set"      : "deemon::Set<>",
+	"deemon::HashSet"  : "deemon::HashSet<>",
+	"deemon::Mapping"  : "deemon::Mapping<>",
+	"deemon::Dict"     : "deemon::Dict<>",
+	"deemon::List"     : "deemon::List<>",
+	/* Tuple is special in that it doesn't have a universal element type in c++ */
+	"deemon::Tuple"    : "deemon::Sequence<>",
+};
+
+@@Types that have special treatment with written as (e.g.) @"HashSet with string",
+@@which in turn gets compiled as `HashSet<string>` within the c++ API.
+global final cxxAbstractSequenceTypes: {string...} = {
+	"deemon::Cell",
+	"deemon::Iterator",
+	"deemon::Sequence",
+	"deemon::Set",
+	"deemon::HashSet",
+	"deemon::List",
+	"deemon::Tuple",
+};
+
+function templateGt(s: string): string {
+	if (s.endswith(">"))
+		return s + " ";
+	return s;
+}
+
+function finalizeCxxType(tp: string): string {
+	return cxxGenericSequenceTypes.get(tp, tp);
+}
+
+global typeExprToCxxType;
+function typeExprsToCxxType(txs: {TypeExpr...}): string {
+	local variants: {string...} = HashSet(
+		for (local x: txs)
+			finalizeCxxType(typeExprToCxxType(x))
+	);
+	if (!variants)
+		return "deemon::Object";
+	if (#variants == 1)
+		return variants.first;
+	local deemonType = commonType(HashSet(
+		for (local name: variants)
+			cxxTypenamesAsType.get(name.partition("<").first, Object)
+	));
+	return cxxTypes[deemonType];
+}
+
+function typeExprToCxxType(tx: TypeExpr): string {
+	switch (tx.kind) {
+
+	case "C": {
+		local cellType = typeExprToCxxType(tx.Ccelltype);
+		if (cellType == "deemon::Tuple")
+			cellType = "deemon::Sequence";
+		if (cellType in cxxAbstractSequenceTypes) {
+			local itemType = typeExprToCxxType(tx.Citemtype);
+			local itemType = finalizeCxxType(itemType);
+			return f"{cellType}<{templateGt(itemType)}>";
+		}
+	}	break;
+
+	case "T": {
+		local tupleElemTypes: {TypeExpr...} = tx.Ttypes;
+		local cxxElemTypes: {string...} = List(
+			for (local x: tupleElemTypes)
+				finalizeCxxType(typeExprToCxxType(x))
+		);
+		if (cxxElemTypes.last.endswith(">"))
+			cxxElemTypes = cxxElemTypes[:-1] + [templateGt(cxxElemTypes.last)];
+		return f"_AbstractTuple<{", ".join(cxxElemTypes)}>";
+	}	break;
+
+	case "X":
+		return typeExprsToCxxType(tx.Xtypes);
+
+	case "S": {
+		local elemType = finalizeCxxType(typeExprToCxxType(tx.Stype));
+		return f"Sequence<{templateGt(elemType)}>";
+	}	break;
+
+	default:
+		break;
+	}
+	local deemonType = commonType(tx.types);
+	while (deemonType !in cxxTypes)
+		deemonType = deemonType.__base__;
+	return cxxTypes[deemonType];
+}
+
+
+final class CxxType {
+	public member typ: Type;
+	public member doc: Doc;
+	public member base: CxxType | none;
+	this(typ: Type) {
+		this.typ = typ;
+		this.doc = Doc(typ);
+		this.base = typ.__base__ is none ? none : CxxType(typ.__base__);
+	}
+
+	public function printCxxApi() {
+		for (local c: doc) {
+			if (c.isprivate)
+				continue;
+			local name = c.name;
+			if (name in ["this", "class", "type", "super"])
+				continue; /* Don't generate code for these special attributes. */
+			name = {
+				"int" : "int_",
+				"float" : "float_",
+			}.get(name, name);
+			switch (c.kind) {
+
+			case "function": {
+				/* Every deemon type should have a list of C types:
+				 *  - int: {ssize_t, size_t}
+				 *  - float: {double}
+				 *  - string: {char const *, wchar_t const *, char16_t const *, char32_t const *}
+				 *  - ...
+				 * Additionally, any deemon type can also be encoded as `DEE_ENABLE_IF_OBJECT_PTR_T()'
+				 * We must generate overloads for all possible permutations of argument types, and
+				 * always chose the correct return type. */
+				print("	// TODO: function ", name);
+				// TODO
+			}	break;
+
+			case "property": {
+				local returnType: string = typeExprsToCxxType(c.decls.each.ret);
+				print("	WUNUSED deemon::Ref<", templateGt(returnType), "> ", name, "() {");
+				print("		return inherit(DeeObject_GetAttrStringHash(this, ",
+					repr name, ", _Dee_HashSelect("
+					"UINT32_C(", rtHash.hash32(name).hex(), "), "
+					"UINT64_C(", rtHash.hash64(name).hex(), ")"
+					")));");
+				print("	}");
+			}	break;
+
+			default:
+				break;
+			}
+		}
+	}
+}

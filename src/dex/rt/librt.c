@@ -131,7 +131,7 @@ PRIVATE DEFINE_KWCMETHOD(librt_makeclass, librt_makeclass_f);
 #if 1
 #define str_Iterator (*COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name, DeeStringObject, s_str))
 #else
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("str_Iterator", "Iterator");]]]*/
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_Iterator", "Iterator");]]]*/
 PRIVATE DEFINE_STRING_EX(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebfff);
 /*[[[end]]]*/
 #endif

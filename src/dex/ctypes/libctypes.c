@@ -225,9 +225,9 @@ f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "o:sizeof", &arg))
 		goto err;
-	if (DeeStruct_Check(arg))
+	if (DeeStruct_Check(arg)) {
 		type = (DeeSTypeObject *)Dee_TYPE(arg);
-	else {
+	} else {
 		if (DeeBytes_Check(arg))
 			return DeeInt_NewSize(DeeBytes_SIZE(arg));
 		type = DeeSType_Get(arg);
@@ -249,9 +249,9 @@ f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, "o:alignof", &arg))
 		goto err;
-	if (DeeStruct_Check(arg))
+	if (DeeStruct_Check(arg)) {
 		type = (DeeSTypeObject *)Dee_TYPE(arg);
-	else {
+	} else {
 		type = DeeSType_Get(arg);
 		if unlikely(!type)
 			goto err;

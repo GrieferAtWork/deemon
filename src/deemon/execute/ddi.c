@@ -396,9 +396,9 @@ next_ip:
 				save->s_save.dx_lcnamc = self->rs_xregs.dx_lcnamc;
 				if (flags & DDI_STATE_FNONAMES)
 					save->s_save.dx_lcnamc = 0;
-				if (!save->s_save.dx_lcnamc)
+				if (!save->s_save.dx_lcnamc) {
 					save->s_save.dx_lcnamv = NULL;
-				else {
+				} else {
 					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
 					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_lcnamv) {
@@ -508,15 +508,15 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 		self->rs_xregs.dx_spnama = 0;
 	}
 	/* Allocate the local-name buffer. */
-	if (!self->rs_xregs.dx_lcnamc)
+	if (!self->rs_xregs.dx_lcnamc) {
 		self->rs_xregs.dx_lcnamv = NULL;
-	else {
+	} else {
 		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
 		                                                      sizeof(uint16_t));
 		if unlikely(!self->rs_xregs.dx_lcnamv) {
-			if (flags & DDI_STATE_FNOTHROW)
+			if (flags & DDI_STATE_FNOTHROW) {
 				self->rs_xregs.dx_lcnamc = 0;
-			else {
+			} else {
 				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
 				                                                   sizeof(uint16_t));
 				if unlikely(!self->rs_xregs.dx_lcnamv)
@@ -527,14 +527,14 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 			self->rs_xregs.dx_lcnamv[i] = DDI_REGS_UNBOUND_NAME;
 	}
 	/* Allocate an initial stack-name buffer. */
-	if (!self->rs_xregs.dx_spnama)
+	if (!self->rs_xregs.dx_spnama) {
 		self->rs_xregs.dx_spnamv = NULL;
-	else {
+	} else {
 		self->rs_xregs.dx_spnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_spnama,
 		                                                      sizeof(uint16_t));
-		if unlikely(!self->rs_xregs.dx_spnamv)
+		if unlikely(!self->rs_xregs.dx_spnamv) {
 			self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
-		else {
+		} else {
 			for (i = 0; i < self->rs_xregs.dx_spnama; ++i) {
 				self->rs_xregs.dx_spnamv[i] = DDI_REGS_UNBOUND_NAME;
 			}

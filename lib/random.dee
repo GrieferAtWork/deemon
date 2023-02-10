@@ -49,9 +49,9 @@ class Random {
 	public final member seed: int;
 
 	this(seed: int = none) {
-		if (seed !is none)
+		if (seed !is none) {
 			this.seed = seed;
-		else {
+		} else {
 			randomize();
 		}
 	}

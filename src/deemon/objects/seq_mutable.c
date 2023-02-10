@@ -53,9 +53,9 @@ has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) 
 	if (tp_self->tp_attr) {
 		if (tp_self->tp_attr->tp_getattr) {
 			DREF DeeObject *obj;
-			if (tp_self->tp_attr->tp_getattr == &instance_getattr)
+			if (tp_self->tp_attr->tp_getattr == &instance_getattr) {
 				obj = instance_tgetattr(tp_self, self, attr);
-			else {
+			} else {
 				obj = (*tp_self->tp_attr->tp_getattr)(self, attr);
 			}
 			if (obj) {
@@ -200,9 +200,9 @@ call_generic_attribute_in_range(DeeTypeObject *tp_limit, DeeObject *self,
 		if (iter->tp_attr) {
 			if (iter->tp_attr->tp_getattr) {
 				DREF DeeObject *func;
-				if (iter->tp_attr->tp_getattr == &instance_getattr)
+				if (iter->tp_attr->tp_getattr == &instance_getattr) {
 					func = instance_tgetattr(iter, self, name);
-				else {
+				} else {
 					func = (*iter->tp_attr->tp_getattr)(self, name);
 				}
 				if unlikely(!func)
@@ -247,9 +247,9 @@ call_generic_attribute_anywhere(DeeObject *self, DeeObject *name,
 		if (iter->tp_attr) {
 			if (iter->tp_attr->tp_getattr) {
 				DREF DeeObject *func;
-				if (iter->tp_attr->tp_getattr == &instance_getattr)
+				if (iter->tp_attr->tp_getattr == &instance_getattr) {
 					func = instance_tgetattr(iter, self, name);
-				else {
+				} else {
 					func = (*iter->tp_attr->tp_getattr)(self, name);
 				}
 				if unlikely(!func)
@@ -343,9 +343,9 @@ DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
 			if (tp_self->tp_attr) {
 				if (tp_self->tp_attr->tp_getattr) {
 					DREF DeeObject *erase_function, *erase_result;
-					if (tp_self->tp_attr->tp_getattr == &instance_getattr)
+					if (tp_self->tp_attr->tp_getattr == &instance_getattr) {
 						erase_function = instance_tgetattr(tp_self, self, (DeeObject *)&str_erase);
-					else {
+					} else {
 						erase_function = (*tp_self->tp_attr->tp_getattr)(self, (DeeObject *)&str_erase);
 					}
 					if unlikely(!erase_function)
@@ -397,9 +397,9 @@ did_find_attributes:
 				Dee_Decref(start_index);
 				goto err;
 			}
-			if (has_noninherited_delrange(tp_self, seq))
+			if (has_noninherited_delrange(tp_self, seq)) {
 				result = (*seq->tp_range_del)(self, start_index, end_index);
-			else {
+			} else {
 				result = (*seq->tp_range_set)(self, start_index, end_index, Dee_None);
 			}
 			Dee_Decref(end_index);
@@ -726,9 +726,9 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 					Dee_Decref(start_index);
 					goto err;
 				}
-				if (has_noninherited_delrange(tp_self, seq))
+				if (has_noninherited_delrange(tp_self, seq)) {
 					result = (*seq->tp_range_del)(self, start_index, end_index);
-				else {
+				} else {
 					result = (*seq->tp_range_set)(self, start_index, end_index, Dee_None);
 				}
 				Dee_Decref(end_index);
@@ -866,9 +866,9 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 				start_index = DeeInt_NewSize(start);
 				if unlikely(!start_index)
 					goto err;
-				if (seq->tp_range_del)
+				if (seq->tp_range_del) {
 					result = (*seq->tp_range_del)(self, start_index, Dee_None);
-				else {
+				} else {
 					result = (*seq->tp_range_set)(self, start_index, Dee_None, Dee_None);
 				}
 				Dee_Decref(start_index);
@@ -2369,10 +2369,12 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if unlikely(mylen == (size_t)-1)
 						goto err;
-					if (index >= mylen)
-						index = mylen, count = 0;
-					else if (index + count > mylen)
+					if (index >= mylen) {
+						index = mylen;
+						count = 0;
+					} else if (index + count > mylen) {
 						count = mylen - index;
+					}
 					if ((*nsi->nsi_seqlike.nsi_setrange)(self, index, index + count, Dee_None))
 						goto err;
 					return count;
@@ -2381,10 +2383,12 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					size_t i, mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if unlikely(mylen == (size_t)-1)
 						goto err;
-					if (index >= mylen)
-						index = mylen, count = 0;
-					else if (index + count > mylen)
+					if (index >= mylen) {
+						index = mylen;
+						count = 0;
+					} else if (index + count > mylen) {
 						count = mylen - index;
+					}
 					if (count) {
 						i = index + count;
 						do {
@@ -2402,10 +2406,12 @@ DeeSeq_Erase(DeeObject *__restrict self,
 				size_t mylen = DeeObject_Size(self);
 				if unlikely(mylen == (size_t)-1)
 					goto err;
-				if (index >= mylen)
-					index = mylen, count = 0;
-				else if (index + count > mylen)
+				if (index >= mylen) {
+					index = mylen;
+					count = 0;
+				} else if (index + count > mylen) {
 					count = mylen - index;
+				}
 				start_index = DeeInt_NewSize(index);
 				if unlikely(!start_index)
 					goto err;
@@ -2427,10 +2433,12 @@ DeeSeq_Erase(DeeObject *__restrict self,
 				size_t mylen = DeeObject_Size(self);
 				if unlikely(mylen == (size_t)-1)
 					goto err;
-				if (index >= mylen)
-					index = mylen, count = 0;
-				else if (index + count > mylen)
+				if (index >= mylen) {
+					index = mylen;
+					count = 0;
+				} else if (index + count > mylen) {
 					count = mylen - index;
+				}
 				if (count) {
 					size_t i = index + count;
 					do {
@@ -2489,9 +2497,9 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 						size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 						if unlikely(mylen == (size_t)-1)
 							goto err;
-						if (index < 0)
+						if (index < 0) {
 							index += mylen;
-						else if unlikely((size_t)index >= mylen) {
+						} else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}
@@ -2524,9 +2532,9 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 						size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 						if unlikely(mylen == (size_t)-1)
 							goto err;
-						if (index < 0)
+						if (index < 0) {
 							index += mylen;
-						else if unlikely((size_t)index >= mylen) {
+						} else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}
@@ -2559,9 +2567,9 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 						size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 						if unlikely(mylen == (size_t)-1)
 							goto err;
-						if (index < 0)
+						if (index < 0) {
 							index += mylen;
-						else if unlikely((size_t)index >= mylen) {
+						} else if unlikely((size_t)index >= mylen) {
 							err_index_out_of_bounds(self, (size_t)index, mylen);
 							goto err;
 						}

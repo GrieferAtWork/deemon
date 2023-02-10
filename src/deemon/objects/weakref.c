@@ -97,9 +97,9 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
 		ASSERT(me->wr_del);
 		result = DeeObject_Call(me->wr_del, 1, (DeeObject **)&me);
 		Dee_Decref(me);
-		if likely(result)
+		if likely(result) {
 			Dee_Decref(result);
-		else {
+		} else {
 			DeeError_Print("Unhandled exception in WeakRef callback",
 			               ERROR_PRINT_DOHANDLE);
 		}
@@ -166,9 +166,9 @@ ob_weakref_assign(WeakRef *__restrict self,
 #else
 		DREF DeeObject *refobj;
 		refobj = Dee_weakref_lock(&((WeakRef *)other)->wr_ref);
-		if (!refobj)
+		if (!refobj) {
 			Dee_weakref_clear(&self->wr_ref);
-		else {
+		} else {
 #ifdef NDEBUG
 			Dee_weakref_set(&self->wr_ref, refobj);
 #else /* NDEBUG */
@@ -195,8 +195,8 @@ ob_weakref_moveassign(WeakRef *__restrict self,
 }
 
 /*[[[deemon
-(PRIVATE_DEFINE_STRING from rt.gen)("empty_weakref", "empty WeakRef");
-(PRIVATE_DEFINE_STRING from rt.gen)("empty_weakref_repr", "WeakRef()");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("empty_weakref", "empty WeakRef");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("empty_weakref_repr", "WeakRef()");
 ]]]*/
 PRIVATE DEFINE_STRING_EX(empty_weakref, "empty WeakRef", 0x21b9fba5, 0x271729924e7f107d);
 PRIVATE DEFINE_STRING_EX(empty_weakref_repr, "WeakRef()", 0x7f35b6fd, 0xa52703d4c6e4c57e);
@@ -299,9 +299,9 @@ ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
-		if ((result = alt) == NULL)
+		if ((result = alt) == NULL) {
 			err_cannot_lock_weakref();
-		else {
+		} else {
 			Dee_Incref(result);
 		}
 	}

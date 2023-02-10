@@ -63,6 +63,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 		}
 		goto done;
 	}
+
 	/* Assertions have their own action due to their very special encoding:
 	 * >> assert foo() == bar(), "This is bad";
 	 * This generates the following assembly:
@@ -106,6 +107,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	     operator_name < OPERATOR_INC || operator_name > OPERATOR_INPLACE_POW)) {
 		instruction_t op_instr;
 		uint8_t operand_mode;
+
 		/* Figure out how many operands there are while generating code for the operator itself. */
 		argc = 1;
 		if (ast_genasm(expr->a_operator.o_op0, ASM_G_FPUSHRES))
@@ -125,10 +127,12 @@ INTERN WUNUSED NONNULL((1, 3)) int
 		++argc;
 		if (ast_genasm_one(expr->a_operator.o_op3, ASM_G_FPUSHRES))
 			goto err;
-emit_instruction:
+
 		/* Duplicate all operands. */
+emit_instruction:
 		if (asm_putddi(ddi_ast))
 			goto err;
+
 		/* TODO: Some operands don't need to be duplicated, as re-loading them
 		 *       from their base-expression doesn't have any side-effects.
 		 *       Such operands include constants, or symbols that couldn't be
@@ -172,6 +176,7 @@ emit_instruction:
 
 		if (asm_putddi(expr))
 			goto err;
+
 		/* With all the operands on-stack, as well as duplicated,
 		 * it's time to perform the operation that's to-be asserted. */
 		if (operator_name > OPERATOR_USERCOUNT ||
@@ -186,7 +191,9 @@ emit_instruction:
 			if (asm_put(op_instr))
 				goto err;
 			asm_subsp(argc);
+
 			/* STACK: a, [b, [c, [d]]], [check_cond] (remember the duplicates we created above) */
+
 			/* Must unify the instruction behavior by fixing the
 			 * stack (`check_cond' must always be present). */
 			switch (operand_mode & OPCOUNT_RESULTMASK) {
@@ -227,10 +234,12 @@ emit_instruction:
 		}
 		if (asm_putddi(ddi_ast))
 			goto err;
+
 		/* Duplicate `condition' to-be re-used as result of the assert expression. */
 		if ((gflags & ASM_G_FPUSHRES) && asm_gdup())
 			goto err;
-			/* STACK: a, [b, [c, [d]]] condition [condition] */
+
+		/* STACK: a, [b, [c, [d]]] condition [condition] */
 #define assert_cleanup assert_enter
 		old_section = current_assembler.a_curr;
 		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
@@ -246,9 +255,11 @@ emit_instruction:
 				goto err;
 			asm_defsym(assert_enter);
 		}
+
 		/* STACK: a, [b, [c, [d]]], [condition] */
 		if ((gflags & ASM_G_FPUSHRES) && asm_gpop())
 			goto err; /* Pop the duplicated `condition' */
+
 		/* STACK: a, [b, [c, [d]]] */
 		if (message) {
 			if (ast_genasm_one(message, ASM_G_FPUSHRES))
@@ -259,42 +270,55 @@ emit_instruction:
 			if (asm_gpush_none())
 				goto err;
 		}
+
 		/* STACK: a, [b, [c, [d]]], message */
 		if (asm_grrot(argc + 1))
 			goto err;
+
 		/* STACK: message, a, [b, [c, [d]]] */
 		if (asm_gpush_u16(operator_name))
 			goto err; /* Push the instruction id */
+
 		/* STACK: message, a, [b, [c, [d]]], operator_name */
 		if (asm_grrot(argc + 1))
 			goto err;
+
 		/* STACK: message, operator_name, a, [b, [c, [d]]] */
+
 		/* Add `deemon' to the import list. */
 		deemon_modid = asm_newmodule(DeeModule_GetDeemon());
 		if unlikely(deemon_modid < 0)
 			goto err;
+
 		/* Generate the call to the builtin assertion function. */
 		if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc + 2))
 			goto err;
+
 		/* Pop the result when it isn't being used. */
 		if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
 			goto err;
+
 		/* Jump back to regular code. */
 		if (asm_gjmp(ASM_JMP, assert_leave))
 			goto err;
 		current_assembler.a_curr = old_section;
+
 		/* Generate the stack-cleanup for when the assertion didn't fail. */
 		asm_addsp(argc);
-		if (old_section == &current_assembler.a_sect[SECTION_COLD])
+		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
 			asm_defsym(assert_cleanup);
-		else if (asm_putddi(ddi_ast))
+		} else if (asm_putddi(ddi_ast)) {
 			goto err;
+		}
+
 		/* STACK: a, [b, [c, [d]]] [condition] */
 		if ((gflags & ASM_G_FPUSHRES) && asm_grrot(argc + 1))
 			goto err;
+
 		/* STACK: [condition] a, [b, [c, [d]]] */
 		if (asm_gadjstack(-(int16_t)argc))
 			goto err;
+
 		/* STACK: [condition] */
 		asm_defsym(assert_leave);
 		goto done;
@@ -329,6 +353,7 @@ emit_instruction:
 		goto emit_instruction;
 	}
 #endif
+
 	/* Fallback: Do not include extended information in the failure.
 	 * In this kind of message, information about operands is omit. */
 	if (ast_genasm(expr, ASM_G_FPUSHRES))
@@ -351,10 +376,12 @@ emit_instruction:
 			goto err;
 	}
 	asm_defsym(assert_enter);
+
 	/* Now we're inside the assertion handler. */
 	if ((gflags & ASM_G_FPUSHRES) && asm_gpop())
 		goto err; /* The asserted expression. */
 	argc = 0;
+
 	/* Generate code for the assertion message. */
 	if (message) {
 		if (ast_genasm_one(message, ASM_G_FPUSHRES))
@@ -363,16 +390,20 @@ emit_instruction:
 			goto err;
 		++argc;
 	}
+
 	/* Add `deemon' to the import list. */
 	deemon_modid = asm_newmodule(DeeModule_GetDeemon());
 	if unlikely(deemon_modid < 0)
 		goto err;
+
 	/* Generate the call to the builtin assertion function. */
 	if (asm_gcall_extern((uint16_t)deemon_modid, id___assert, argc))
 		goto err;
+
 	/* Pop the result when it isn't being used. */
 	if (!(gflags & ASM_G_FPUSHRES) && asm_gpop())
 		goto err;
+
 	/* Jump back to regular code if we went into the cold section. */
 	if (old_section != &current_assembler.a_sect[SECTION_COLD] &&
 	    asm_gjmp(ASM_JMP, assert_leave))

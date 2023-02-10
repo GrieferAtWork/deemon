@@ -929,10 +929,11 @@ parse_again_same_statement:
 	case '{': {
 		struct jit_state *st;
 		st = self->ji_state;
+
 		/* Transform the current state to become block-scopes. */
-		if (st->js_flag & JIT_STATE_FLAG_SINGLE)
+		if (st->js_flag & JIT_STATE_FLAG_SINGLE) {
 			st->js_flag &= ~JIT_STATE_FLAG_SINGLE;
-		else {
+		} else {
 			/* Recursively defined block scope. */
 			st = jit_state_alloc();
 			if unlikely(!st)

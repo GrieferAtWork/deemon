@@ -1395,9 +1395,11 @@ err_function_code:
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *item;
 			/* Read the individual tuple items. */
-			if unlikely(reader >= end)
-				item      = ITER_DONE;
-			else item = DecFile_LoadObject(self, &reader);
+			if unlikely(reader >= end) {
+				item = ITER_DONE;
+			} else {
+				item = DecFile_LoadObject(self, &reader);
+			}
 			if unlikely(!ITER_ISOK(item)) {
 				while (i--)
 					Dee_Decref(DeeTuple_GET(result, i));
@@ -1421,9 +1423,11 @@ err_function_code:
 		for (i = 0; i < length; ++i) {
 			DREF DeeObject *item;
 			/* Read the individual list items. */
-			if unlikely(reader >= end)
-				item      = ITER_DONE;
-			else item = DecFile_LoadObject(self, &reader);
+			if unlikely(reader >= end) {
+				item = ITER_DONE;
+			} else {
+				item = DecFile_LoadObject(self, &reader);
+			}
 			if unlikely(!ITER_ISOK(item)) {
 				while (i--)
 					Dee_Decref(DeeList_GET(result, i));

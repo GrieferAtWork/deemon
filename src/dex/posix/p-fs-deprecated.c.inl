@@ -146,9 +146,9 @@ EINTR_LABEL(again)
 	if unlikely(!args[0])
 		goto err;
 	func = libposix_getfs_chown_f(0, NULL);
-	if unlikely(!func)
+	if unlikely(!func) {
 		result = NULL;
-	else {
+	} else {
 		args[1] = owner;
 		args[2] = group;
 		result = DeeObject_Call(func, 3, args);
@@ -229,13 +229,13 @@ EINTR_LABEL(again)
 	if unlikely(!args[0])
 		goto err;
 	func = libposix_getfs_chmod_f(0, NULL);
-	if unlikely(!func)
+	if unlikely(!func) {
 		result = NULL;
-	else {
+	} else {
 		args[1] = DeeInt_NewUInt(mode);
-		if unlikely(!args[1])
+		if unlikely(!args[1]) {
 			result = NULL;
-		else {
+		} else {
 			result = DeeObject_Call(func, 2, args);
 			Dee_Decref(args[1]);
 		}

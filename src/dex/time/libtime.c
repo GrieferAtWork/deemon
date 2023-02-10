@@ -108,9 +108,9 @@ INTERN WUNUSED dtime_t DCALL time_now(void) {
 	DBG_ALIGNMENT_DISABLE();
 	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
 		HMODULE hKernel32 = GetKernel32Handle();
-		if (!hKernel32)
+		if (!hKernel32) {
 			ATOMIC_WRITE(*(void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
-		else {
+		} else {
 			LPGETSYSTEMTIMEPRECISEASFILETIME func;
 			func = (LPGETSYSTEMTIMEPRECISEASFILETIME)GetProcAddress(hKernel32, "GetSystemTimePreciseAsFileTime");
 			if (!func)
@@ -1168,9 +1168,9 @@ print_number_2:
 				}
 				if (mode_begin != mode_end) {
 					if (*mode_begin == 'n' || *mode_begin == 's' ||
-					    *mode_begin == 'S' || *mode_begin == ' ')
+					    *mode_begin == 'S' || *mode_begin == ' ') {
 						repr_mode = *mode_begin++;
-					else {
+					} else {
 						repr_mode = 0;
 					}
 					/* Parse the width modifier */

@@ -358,9 +358,9 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 	parser_start();
 
 	/* Yield the initial token. */
-	if unlikely(yield() < 0)
+	if unlikely(yield() < 0) {
 		code = NULL;
-	else {
+	} else {
 		/* Parse statements until the end of the source stream. */
 		code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, TOK_EOF);
 	}
@@ -459,9 +459,11 @@ DeeModule_LoadSourceStream(/*Module*/ DeeObject *__restrict self,
 		                                      start_col,
 		                                      options,
 		                                      NULL);
-		if unlikely(result)
+		if unlikely(result) {
 			DeeModule_FailLoading((DeeModuleObject *)self);
-		else DeeModule_DoneLoading((DeeModuleObject *)self);
+		} else {
+			DeeModule_DoneLoading((DeeModuleObject *)self);
+		}
 	}
 	return result;
 }
@@ -2631,9 +2633,9 @@ module_import_symbol_pair(DeeModuleObject *__restrict self,
 	int result;
 	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
 		goto err;
-	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type))
+	if (DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type)) {
 		result = -1;
-	else {
+	} else {
 		result = module_import_symbol(self,
 		                              (DeeStringObject *)key_and_value[0],
 		                              key_and_value[1],
@@ -2848,9 +2850,9 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	parser_start();
 
 	/* Yield the initial token. */
-	if unlikely(yield() < 0)
+	if unlikely(yield() < 0) {
 		code = NULL;
-	else {
+	} else {
 		/* Parse statements until the end of the source stream. */
 		switch (mode & DEE_EXEC_RUNMODE_MASK) {
 

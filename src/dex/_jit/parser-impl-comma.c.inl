@@ -115,9 +115,9 @@ next_expr:
 			unsigned int symbol_mode = lookup_mode;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
-				if (JITContext_IsGlobalScope(self->jl_context))
+				if (JITContext_IsGlobalScope(self->jl_context)) {
 					symbol_mode |= LOOKUP_SYM_VGLOBAL;
-				else {
+				} else {
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}

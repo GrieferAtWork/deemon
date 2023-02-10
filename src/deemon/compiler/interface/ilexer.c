@@ -1080,9 +1080,9 @@ err:
 		if unlikely(newval < 0)                                        \
 			return -1;                                                 \
 		COMPILER_BEGIN(self->cw_compiler);                             \
-		if (newval)                                                    \
+		if (newval) {                                                  \
 			TPPLexer_Current->l_flags |= flag;                         \
-		else {                                                         \
+		} else {                                                       \
 			TPPLexer_Current->l_flags &= ~flag;                        \
 		}                                                              \
 		COMPILER_END();                                                \
@@ -2069,9 +2069,9 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 	                             WSTR_LENGTH(name_utf8),
 	                             create);
 	if unlikely(!kwd) {
-		if (create)
+		if (create) {
 			result = NULL;
-		else {
+		} else {
 			result = Dee_None;
 			Dee_Incref(Dee_None);
 		}
@@ -2109,9 +2109,9 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 	                                    WSTR_LENGTH(name_utf8),
 	                                    create);
 	if unlikely(!kwd) {
-		if (create)
+		if (create) {
 			result = NULL;
-		else {
+		} else {
 			result = Dee_None;
 			Dee_Incref(Dee_None);
 		}
@@ -2414,9 +2414,9 @@ lexer_keywords_getitem(DeeCompilerWrapperObject *self,
 	kwd = TPPLexer_LookupKeyword(DeeString_STR(name),
 	                             DeeString_SIZE(name),
 	                             1);
-	if unlikely(!kwd)
+	if unlikely(!kwd) {
 		result = NULL;
-	else {
+	} else {
 		result = DeeCompiler_GetKeyword(kwd);
 	}
 	COMPILER_END();
@@ -3581,9 +3581,9 @@ file_stream(DeeCompilerItemObject *__restrict self) {
 			result = (DREF DeeObject *)file->f_textfile.f_ownedstream;
 			if (result == (DREF DeeObject *)TPP_STREAM_INVALID)
 				result = (DREF DeeObject *)file->f_textfile.f_stream;
-			if likely(result)
+			if likely(result) {
 				Dee_Incref(result);
-			else {
+			} else {
 				err_unbound_attribute(&DeeCompilerFile_Type, "stream");
 			}
 		}
@@ -3822,9 +3822,9 @@ file_setdisallowguard(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval)
+			if (newval) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NOGUARD;
-			else {
+			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_NOGUARD;
 			}
 			result = 0;
@@ -3886,9 +3886,9 @@ file_setissystemheader(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval)
+			if (newval) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_SYSHEADER;
-			else {
+			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_SYSHEADER;
 			}
 			result = 0;
@@ -3950,9 +3950,9 @@ file_setnonblocking(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval)
+			if (newval) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NONBLOCK;
-			else {
+			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_NONBLOCK;
 			}
 			result = 0;

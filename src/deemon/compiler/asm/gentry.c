@@ -512,9 +512,10 @@ handle_mask_ast:
 					maskv         = DeeTuple_ELEM(mask_ast->a_constexpr);
 					catch_mask_c  = DeeTuple_SIZE(mask_ast->a_constexpr);
 					enter_handler = NULL;
-					if unlikely(!catch_mask_c) /* No mask? */
-					catch_mask_v = NULL;
-					else {
+					if unlikely(!catch_mask_c) {
+						/* No mask? */
+						catch_mask_v = NULL;
+					} else {
 						size_t catch_mask_i;
 						catch_mask_v = (DREF DeeTypeObject **)Dee_Callocc(catch_mask_c,
 						                                                  sizeof(DREF DeeTypeObject *));
@@ -561,9 +562,10 @@ handle_mask_ast:
 						goto handle_mask_ast;
 					}
 					catch_mask_c = mask_ast->a_multiple.m_astc;
-					if unlikely(!catch_mask_c) /* No mask? */
-					catch_mask_v = NULL;
-					else {
+					if unlikely(!catch_mask_c) {
+						/* No mask? */
+						catch_mask_v = NULL;
+					} else {
 						size_t catch_mask_i;
 						catch_mask_v = (DREF DeeTypeObject **)Dee_Callocc(catch_mask_c,
 						                                                  sizeof(DREF DeeTypeObject *));

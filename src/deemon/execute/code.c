@@ -1241,9 +1241,9 @@ code_str(DeeCodeObject *__restrict self) {
 	DREF DeeObject *name = code_get_name(self);
 	if unlikely(!name)
 		goto err;
-	if (DeeNone_Check(name))
+	if (DeeNone_Check(name)) {
 		result = DeeString_New("<code for <anonymous>>");
-	else {
+	} else {
 		result = DeeString_Newf("<code for %r>", name);
 	}
 	Dee_Decref(name);

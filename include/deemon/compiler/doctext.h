@@ -50,7 +50,7 @@ DECL_BEGIN
  *
  * First off, before any additional formating is done, Encoded Documentation Texts
  * to-be embedded within __doc__ strings are escaped as follows in order to turn
- * them info Fully Encoded Documentation Texts:
+ * them into Fully Encoded Documentation Texts:
  *  #1 Any instance of \ is replaced with \\
  *     >> replace("\\", "\\\\");
  *  #2 Multiple consecutive line-feeds (i.e. sequences of at least 1 empty line) are
@@ -64,7 +64,7 @@ DECL_BEGIN
  *     >> replace("\n(", "\n\\(");
  *  #4 Any instance of -> is replaced with -\>:
  *     >> replace("->", "-\\>");
- *  #5 If the doc text stats with a \n-character, make it start with \\\n instead:
+ *  #5 If the doc text starts with a \n-character, make it start with \\\n instead:
  *     >> if (startswith("\n")) this = "\\" + this;
  *
  * The resulting text is then appended after the documentation's declaration string,
@@ -129,9 +129,9 @@ DECL_BEGIN
  *     \ _ @ ` [ ] ( ) - + | = ~ * # : >
  *
  *     0 1 2 3 4 5 6 7 8 9 .  (Only if the character appeared at the beginning of a line, or
- *                             was preceded by only other decimal, \, . or : characters (i.e.
- *                             would have been apart of a possibly already broken ordered list))
- *                             HINT: Any character matching `DeeUni_IsDigit()' is considered
+ *                            was preceded by only other decimal, \, . or : characters (i.e.
+ *                            would have been apart of a possibly already broken ordered list))
+ *                            HINT: Any character matching `DeeUni_IsDigit()' is considered
  *
  * Additionally, ' ' (or any other ) can be escaped to force the insertion of an additional
  * or specific space character.
@@ -194,8 +194,8 @@ DECL_BEGIN
  *     >> NOTE: Second line Third line
  *
  *   - Multiple consecutive line-feeds are replaced by having one of the line-feeds be
- *     removed, while the remainder of line-feeds is kept (though the one removed line-feed
- *     is _NOT_ replaced by a space character!)
+ *     removed, while the remainder of line-feeds is kept (though the one removed line-
+ *     feed is _NOT_ replaced by a space character!)
  *     >> @@First line
  *     >> @@Second line
  *     >> @@
@@ -243,7 +243,7 @@ DECL_BEGIN
  *     >> 2. Second item
  *     >> - First unordered item
  *     >> - Second unordered item
- *     Lists cone in 2 forms:
+ *     Lists come in 2 forms:
  *       - Numbered:  each line begins with a decimal number, followed by (the same) . or :
  *                    These numbers don't necessarily have to be incremental, nor does there
  *                    need to be only a single decimal number (so-long as decimals are only
@@ -411,10 +411,10 @@ DECL_BEGIN
  *       - The format starts with an @-character that is followed by one of:
  *         - "- or '-character (normal string; allow \-escape):
  *           @"foo"  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
- *           @'foo'  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
+ *           @'foo'  Encoded as '```deemon\n'Foo'```'  (except that no new-line is inserted)
  *         - r, followed by a "- or '-character (raw string; no \-escape):
  *           @r"foo"  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
- *           @r'foo'  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
+ *           @r'foo'  Encoded as '```deemon\n'Foo'```'  (except that no new-line is inserted)
  *         - A digit:
  *           @123    Encoded as "```deemon\n123```"  (except that no new-line is inserted)
  *           @123.   Encoded as "```deemon\n123```."  (except that no new-line is inserted)
@@ -429,7 +429,7 @@ DECL_BEGIN
  *           @foo    Resolves to a clickable symbol `foo' in the context of the component
  *                   being annotated by the documentation text. Note that in the case of
  *                   a function, this also allows function arguments to be annotated!
- *           @foo()  Same a pure keyword, but annotate as a function-call
+ *           @foo()  Same as a pure keyword, but annotate as a function-call
  *         - A ( [ or {-character:
  *           @(foo)          Same as `@foo'
  *           @(foo, bar)     A tuple expression (```deemon\n(foo, bar)```)
@@ -498,15 +498,15 @@ DECL_BEGIN
  *             Syntax:
  *               - The LINK text is not processed recursively, but is the actual
  *                 hyper-link location (with things like |-characters escaped as #|)
- *               - BODY will be clickable to go the given indicated link, and is
- *                 processed recursively for more format specifiers
+ *               - BODY will be clickable to go to the given indicated link, and
+ *                 is processed recursively for more format specifiers
  *
  *
  *   - Inline code (with- and without deemon syntax highlighting)
  *         #C{BODY}           - BODY is high-lit as abstract code
  *         #C[deemon]{BODY}   - BODY is high-lit as deemon code
  *         #CBODY             - Same as #C{BODY}, but BODY is must start with issymstrt() and ends on the first !issymcont()
- *         #C[deemon]BODY     - Same as #C[deemon]{BODY}, but BODY is must start with issymstrt() and ends on the first !issymcont()
+ *         #C[deemon]BODY     - Same as #C[deemon]{BODY}, but BODY must start with issymstrt() and ends on the first !issymcont()
  *         ${BODY}            - Same as #C[deemon]{BODY}
  *         $BODY              - Same as #C[deemon]BODY
  *             Syntax:
@@ -546,8 +546,8 @@ DECL_BEGIN
  *                 undefined behavior, in that it is up to the renderer what to do with superfluous
  *                 cells, or cells that are missing.
  *               - At the start of a cell, an additional {...} block may be placed where ...
- *                 is a comma-separated list of additional renderer options. - The following
- *                 list of options is recognized:
+ *                 is a ,-separated list of additional renderer options. - The following list
+ *                 of options is recognized:
  *                 - tl, t, tr, l, c, r, bl, b, br -- Set the alignment of the cell's contents. (default: tl)
  *                 - ...                           -- Any other rendering option should silently
  *                                                    by ignored by the rendering engine in order

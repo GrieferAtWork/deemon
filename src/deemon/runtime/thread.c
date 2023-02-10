@@ -2693,9 +2693,9 @@ thread_ctor(DeeThreadObject *__restrict self,
 	if (argc) {
 		self->t_threadargs = (DREF struct tuple_object *)argv[0];
 		/* Allow `none' as an alias for an empty tuple. */
-		if (DeeNone_Check(self->t_threadargs))
+		if (DeeNone_Check(self->t_threadargs)) {
 			self->t_threadargs = (DREF struct tuple_object *)Dee_EmptyTuple;
-		else {
+		} else {
 			/* Make sure that the callback arguments are a tuple. */
 			if (DeeObject_AssertTypeExact(self->t_threadargs,
 			                              &DeeTuple_Type))

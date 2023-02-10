@@ -19,7 +19,7 @@
  */
 
 import * from deemon;
-import .hash as rtHash;
+import ..hash as rtHash;
 
 function DEFINE_STRING(name: string, value: string): File {
 	local hash32 = rtHash.hash32(value);

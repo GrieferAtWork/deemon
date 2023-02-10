@@ -241,7 +241,7 @@ DeeCell_Set(DeeObject *self, DeeObject *value) {
 }
 
 
-/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen)("empty_cell_repr", "Cell()");]]]*/
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("empty_cell_repr", "Cell()");]]]*/
 PRIVATE DEFINE_STRING_EX(empty_cell_repr, "Cell()", 0x96abe6c, 0x2370159788821e2);
 /*[[[end]]]*/
 

@@ -358,9 +358,9 @@ again_shutdown:
 			DBG_ALIGNMENT_ENABLE();
 			ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 			socket_endread(self);
-			if (error == EINVAL)
+			if (error == EINVAL) {
 				err_invalid_shutdown_how(error, mode);
-			else {
+			} else {
 				err_shutdown_failed(self, error);
 			}
 			goto err;
@@ -428,11 +428,11 @@ again_shutdown:
 			} else {
 				ATOMIC_AND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 				socket_endread(self);
-				if (error == EINVAL)
+				if (error == EINVAL) {
 					err_invalid_shutdown_how(error, mode);
-				else if (error == EBADF || error == ENOTSOCK)
+				} else if (error == EBADF || error == ENOTSOCK) {
 					err_socket_closed(error, self);
-				else {
+				} else {
 					err_shutdown_failed(self, error);
 				}
 				goto err;

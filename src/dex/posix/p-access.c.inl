@@ -365,9 +365,9 @@ err:
 	if (atflags & AT_EACCESS) {
 		char *ufullname;
 		ufullname = DeeString_AsUtf8(fullname);
-		if unlikely(!ufullname)
+		if unlikely(!ufullname) {
 			result = NULL;
-		else {
+		} else {
 			result = posix_euidaccess_f_impl(ufullname, how);
 		}
 	} else
@@ -380,9 +380,9 @@ err:
 		char *str_fullname;
 		str_fullname = DeeString_AsUtf8(fullname);
 #endif /* !posix_access_USE_waccess */
-		if unlikely(!str_fullname)
+		if unlikely(!str_fullname) {
 			result = NULL;
-		else {
+		} else {
 			result = posix_access_f_impl(str_fullname, how);
 		}
 	}

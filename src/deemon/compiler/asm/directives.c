@@ -733,9 +733,9 @@ ddi_update:
 			if (DeeObject_AsInt(line, &ddi->dc_loc.l_line))
 				goto err_ddi_col;
 			--ddi->dc_loc.l_line;
-			if (!col)
+			if (!col) {
 				ddi->dc_loc.l_col = 0;
-			else {
+			} else {
 				if (DeeObject_AsInt(col, &ddi->dc_loc.l_col))
 					goto err_ddi_col;
 				if (ddi->dc_loc.l_col)

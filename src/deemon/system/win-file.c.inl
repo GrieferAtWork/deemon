@@ -240,9 +240,9 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 again:
 	result = me->sf_filename;
-	if (result)
+	if (result) {
 		Dee_Incref(result);
-	else {
+	} else {
 		HANDLE hnd = me->sf_handle;
 		if unlikely(hnd == INVALID_HANDLE_VALUE) {
 			err_file_closed();
@@ -302,9 +302,9 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	if (oflags & OPEN_FXWRITE)
 		dwShareMode &= ~(FILE_SHARE_WRITE);
 	if (oflags & OPEN_FCREAT) {
-		if (oflags & OPEN_FEXCL)
+		if (oflags & OPEN_FEXCL) {
 			dwCreationDisposition = CREATE_NEW;
-		else {
+		} else {
 			dwCreationDisposition = ((oflags & OPEN_FTRUNC)
 			                         ? CREATE_ALWAYS
 			                         : OPEN_ALWAYS);

@@ -130,9 +130,9 @@ fs_pathfile(DeeObject *__restrict path) {
 		}
 	}
 #endif /* !DEE_SYSTEM_PATH_ACCEPTS_BACKSLASH */
-	if (tailsep)
+	if (tailsep) {
 		++tailsep;
-	else {
+	} else {
 		tailsep = DeeString_STR(path);
 	}
 	tailsize = (size_t)(DeeString_END(path) - tailsep);
@@ -708,9 +708,9 @@ continue_uprefs_normal:
 			/* Got a self/parent directory reference. */
 			if (is_parent_ref) {
 				/* Simple case: undo an upwards reference. */
-				if (uprefs)
+				if (uprefs) {
 					--uprefs;
-				else {
+				} else {
 					/* relpath("E:/c/dexmon/deemon", "E:/c/dexmon/../../d/unrelated");
 					 * RESULT: "../../c/dexmon/deemon"
 					 *                [][-----]
@@ -1175,13 +1175,13 @@ do_flush_after_sep:
 		                          (size_t)(flush_end - flush_start)) < 0)
 			goto err;
 		flush_start = iter;
-		if (did_print_sep)
-			; /* The slash has already been been printed: `foo/ bar' */
-		else if (sep_loc == iter - 1
+		if (did_print_sep) {
+			/* The slash has already been been printed: `foo/ bar' */
+		} else if (sep_loc == iter - 1
 #ifdef CONFIG_HOST_WINDOWS
-		         && (!*sep_loc || *sep_loc == DeeSystem_SEP)
+		           && (!*sep_loc || *sep_loc == DeeSystem_SEP)
 #endif /* CONFIG_HOST_WINDOWS */
-		         ) {
+		           ) {
 			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
 		} else {
 			/* The slash must be printed explicitly: `foo / bar' */

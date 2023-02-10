@@ -182,9 +182,9 @@ set_init_sequence(Set *__restrict self,
 		atomic_rwlock_init(&self->s_lock);
 		self->s_mask = src->rs_mask;
 		self->s_used = self->s_size = src->rs_size;
-		if unlikely(!self->s_size)
+		if unlikely(!self->s_size) {
 			self->s_elem = (struct hashset_item *)empty_set_items;
-		else {
+		} else {
 			self->s_elem = (struct hashset_item *)Dee_Mallocc(src->rs_mask + 1,
 			                                                  sizeof(struct hashset_item));
 			if unlikely(!self->s_elem)

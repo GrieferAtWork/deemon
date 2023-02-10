@@ -68,13 +68,13 @@ multiple_continue_at_iter:
 		if ((*iter)->a_type != AST_CONSTEXPR)
 			only_constexpr = false;
 		temp = ast_doesnt_return(*iter, AST_DOESNT_RETURN_FNORMAL);
-		if (temp < 0)
+		if (temp < 0) {
 			is_unreachable = (temp == -2);
-		else if (is_unreachable ||
-		         /* Delete branches that are unreachable or have no side-effects. */
-		         (self->a_flag == AST_FMULTIPLE_KEEPLAST &&
-		          (iter != end - 1 || !result_used) &&
-		          !ast_has_sideeffects(*iter))) {
+		} else if (is_unreachable ||
+		           /* Delete branches that are unreachable or have no side-effects. */
+		           (self->a_flag == AST_FMULTIPLE_KEEPLAST &&
+		            (iter != end - 1 || !result_used) &&
+		            !ast_has_sideeffects(*iter))) {
 			/* Get rid of this one. */
 			OPTIMIZE_VERBOSEAT(*iter, is_unreachable ? "Delete unreachable AST\n"
 			                                         : "Delete AST without side-effects\n");
@@ -264,11 +264,11 @@ after_multiple_constexpr:
 			struct ast *expanded_expr;
 			DeeTypeObject *expanded_type;
 			DeeTypeObject *needed_type;
-			if (self->a_flag == AST_FMULTIPLE_TUPLE)
+			if (self->a_flag == AST_FMULTIPLE_TUPLE) {
 				needed_type = &DeeTuple_Type;
-			else if (self->a_flag == AST_FMULTIPLE_GENERIC)
+			} else if (self->a_flag == AST_FMULTIPLE_GENERIC) {
 				needed_type = &DeeSeq_Type;
-			else {
+			} else {
 				goto done_seq_cast_optimization;
 			}
 			expanded_expr = self->a_multiple.m_astv[0]->a_expand;

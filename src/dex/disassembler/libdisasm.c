@@ -91,9 +91,9 @@ parse_asm_flags(char *__restrict str,
 					          optlen, sizeof(char)) != 0)
 						continue;
 					/* Found it! (update the resulting set of flags) */
-					if (remove_flag ^ disasm_flags[i].invert)
+					if (remove_flag ^ disasm_flags[i].invert) {
 						*presult &= ~disasm_flags[i].flag;
-					else {
+					} else {
 						*presult |= disasm_flags[i].flag;
 					}
 					goto next_opt;
@@ -126,9 +126,9 @@ libdisasm_public_printcode_f(size_t argc,
 	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(out), K(flags), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:printcode", &code, &fp, &flags_ob))
 		goto err;
-	if (DeeFunction_Check(code))
+	if (DeeFunction_Check(code)) {
 		code = DeeFunction_CODE(code);
-	else {
+	} else {
 		if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 			goto err;
 	}

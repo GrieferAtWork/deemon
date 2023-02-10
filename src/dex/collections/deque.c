@@ -1638,9 +1638,9 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 	atomic_rwlock_write(&self->di_lock);
 	Deque_LockRead(self->di_deq);
 	self->di_ver = self->di_deq->d_version;
-	if unlikely(index >= self->di_deq->d_size)
+	if unlikely(index >= self->di_deq->d_size) {
 		--self->di_ver;
-	else {
+	} else {
 		DequeIterator_InitAt(&self->di_iter,
 		                     self->di_deq,
 		                     index);
@@ -1726,9 +1726,9 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 	} else {
 		result = DequeIterator_ITEM(&self->di_iter);
 		Dee_Incref(result);
-		if (DequeIterator_HasNext(&self->di_iter, self->di_deq))
+		if (DequeIterator_HasNext(&self->di_iter, self->di_deq)) {
 			DequeIterator_Next(&self->di_iter, self->di_deq);
-		else {
+		} else {
 			--self->di_ver; /* Invalidate the version number. */
 		}
 	}

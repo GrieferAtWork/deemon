@@ -1284,9 +1284,9 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
 	}
 	if ((perm & rules->alr_perm_mask) != rules->alr_perm_value)
 		return 0;
-	if (perm & ATTR_NAMEOBJ)
+	if (perm & ATTR_NAMEOBJ) {
 		attr_hash = DeeString_Hash((DeeObject *)COMPILER_CONTAINER_OF(attr_name, DeeStringObject, s_str));
-	else {
+	} else {
 		attr_hash = Dee_HashStr(attr_name);
 	}
 	if (attr_hash != rules->alr_hash)

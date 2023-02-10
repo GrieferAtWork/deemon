@@ -224,18 +224,18 @@ nextfmt:
 		goto nextfmt;
 
 	case 'h':
-		if (*format != 'h')
+		if (*format != 'h') {
 			length = LENGTH_VASIZEOF(LENGTH_H);
-		else {
+		} else {
 			++format;
 			length = LENGTH_VASIZEOF(LENGTH_HH);
 		}
 		goto nextfmt;
 
 	case 'l':
-		if (*format != 'l')
+		if (*format != 'l') {
 			length = LENGTH_VASIZEOF(LENGTH_l);
-		else {
+		} else {
 			++format;
 			length = LENGTH_VASIZEOF(LENGTH_LL);
 		}
@@ -276,19 +276,19 @@ nextfmt:
 	case 'd':
 	case 'i':
 #if VA_SIZE < 2
-		if (length == LENGTH_VASIZEOF(LENGTH_I8))
+		if (length == LENGTH_VASIZEOF(LENGTH_I8)) {
 			va_arg(args, uint8_t);
-		else
+		} else
 #endif /* VA_SIZE < 2 */
 #if VA_SIZE < 4
-		if (length == LENGTH_VASIZEOF(LENGTH_I16))
+		if (length == LENGTH_VASIZEOF(LENGTH_I16)) {
 			va_arg(args, uint16_t);
-		else
+		} else
 #endif /* VA_SIZE < 4 */
 #if VA_SIZE < 8
-		if (length == LENGTH_VASIZEOF(LENGTH_I32))
+		if (length == LENGTH_VASIZEOF(LENGTH_I32)) {
 			va_arg(args, uint32_t);
-		else
+		} else
 #endif /* VA_SIZE < 8 */
 		{
 			va_arg(args, uint64_t);
@@ -503,18 +503,18 @@ nextfmt:
 		goto nextfmt;
 
 	case 'h':
-		if (*format != 'h')
+		if (*format != 'h') {
 			length = LENGTH_H;
-		else {
+		} else {
 			++format;
 			length = LENGTH_HH;
 		}
 		goto nextfmt;
 
 	case 'l':
-		if (*format != 'l')
+		if (*format != 'l') {
 			length = LENGTH_l;
-		else {
+		} else {
 			++format;
 			length = LENGTH_LL;
 		}
@@ -795,9 +795,9 @@ nextfmt:
 		case LENGTH_IXSIZEOF(LENGTH_I16): /* 2-byte */
 			if (!string)
 				string = (char *)null16;
-			if (flags & F_FIXBUF)
+			if (flags & F_FIXBUF) {
 				string_length = precision;
-			else {
+			} else {
 				string_length = strnlen16((uint16_t *)string, precision);
 			}
 			if (ch == 'q') {
@@ -822,9 +822,9 @@ nextfmt:
 		case LENGTH_IXSIZEOF(LENGTH_I32): /* 4-byte */
 			if (!string)
 				string = (char *)null32;
-			if (flags & F_FIXBUF)
+			if (flags & F_FIXBUF) {
 				string_length = precision;
-			else {
+			} else {
 				string_length = strnlen32((uint32_t *)string, precision);
 			}
 			if (ch == 'q') {
