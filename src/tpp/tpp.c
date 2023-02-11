@@ -3033,9 +3033,9 @@ convert_encoding(/*ref*/ struct TPPString *data,
  *       more effective for file input.
  */
 #if TPP_CONFIG_DEBUG && 0
-#define STREAM_BUFSIZE  1 /* This must still work, but also makes errors show up more easily. */
+#define STREAM_BUFSIZE 1 /* This must still work, but also makes errors show up more easily. */
 #else /* TPP_CONFIG_DEBUG */
-#define STREAM_BUFSIZE  1024
+#define STREAM_BUFSIZE 4096
 #endif /* !TPP_CONFIG_DEBUG */
 
 PUBLIC int TPPCALL
@@ -3070,6 +3070,7 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 	if (self->f_kind != TPPFILE_KIND_TEXT ||
 	    self->f_textfile.f_stream == TPP_STREAM_INVALID)
 		return 0;
+
 	/* Load a new chunk from the associated stream. */
 	for (;;) {
 		assert(!self->f_end || !*self->f_end ||
@@ -3219,6 +3220,7 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 		DBG_ALIGNMENT_ENABLE();
 #endif /* Unix... */
 		assert(read_bufsize <= STREAM_BUFSIZE);
+
 		/* Clamp the chunk size to what was actually read. */
 		assert(newchunk == self->f_text);
 		if (read_bufsize < STREAM_BUFSIZE) {
@@ -3230,9 +3232,9 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 			newchunk = (struct TPPString *)realloc(newchunk,
 			                                       TPP_OFFSETOF(struct TPPString, s_text) +
 			                                       (newchunk->s_size + 1) * sizeof(char));
-			if (newchunk)
+			if (newchunk) {
 				self->f_text = newchunk;
-			else {
+			} else {
 				newchunk = self->f_text;
 			}
 			self->f_begin = newchunk->s_text + (self->f_begin - old_textbegin);
@@ -3242,6 +3244,7 @@ TPPFile_NextChunk(struct TPPFile *__restrict self, unsigned int flags) {
 			assertf(self->f_pos >= TPPString_TEXT(self->f_text), DBG_INFO);
 			assertf(self->f_pos <= TPPString_TEXT(self->f_text) + TPPString_SIZE(self->f_text), DBG_INFO);
 		}
+
 #ifdef TPP_CONFIG_SET_API_ERROR
 		/* Check if an API error was set by the user-callback. */
 		if (!read_bufsize &&
@@ -3373,21 +3376,22 @@ search_suitable_end_again:
 					mode ^= MODE_INSTRING;
 					if ((mode & MODE_INSTRING) && iter - 1 > self->f_begin && iter[-2] == 'r')
 						mode |= MODE_RAW;
-				}
+				} else
 #else /* TPP_CONFIG_RAW_STRING_LITERALS */
 				if (ch == '\\' && iter < end) {
 					if (*iter++ == '\r' && iter < end && *iter == '\n')
 						++iter;
-				} else if (ch == '\'' && !(mode & ~(MODE_INCHAR)))
+				} else if (ch == '\'' && !(mode & ~(MODE_INCHAR))) {
 					mode ^= MODE_INCHAR;
-				else if (ch == '\"' && !(mode & ~(MODE_INSTRING)))
+				} else if (ch == '\"' && !(mode & ~(MODE_INSTRING))) {
 					mode ^= MODE_INSTRING;
+				} else
 #endif /* !TPP_CONFIG_RAW_STRING_LITERALS */
-					/* Linefeeds should also terminate strings when the line started with a `#':
-					 * >> #define m  This macro's fine!
-					 * >> #error This error contains an unmatched ", but that's OK (< and so was that)
-					 * NOTE: Though remember that escaped linefeeds are always more powerful! */
-				else if (tpp_islf(ch)) {
+				/* Linefeeds should also terminate strings when the line started with a `#':
+				 * >> #define m  This macro's fine!
+				 * >> #error This error contains an unmatched ", but that's OK (< and so was that)
+				 * NOTE: Though remember that escaped linefeeds are always more powerful! */
+				if (tpp_islf(ch)) {
 					if (ch == '\r' && iter < end && *iter == '\n')
 						++iter;
 					mode &= ~(MODE_INPP);
@@ -3447,6 +3451,7 @@ skip_line_comment:
 			}
 			if (!mode)
 				break; /* everything's OK! */
+
 			/* The special mode doesn't terminate.
 			 * Instead: Take the last time the current mode was ZERO(0)
 			 *          and perform another search for a suitable end

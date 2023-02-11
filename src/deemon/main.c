@@ -2011,6 +2011,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	*(uintptr_t *)&override_start_ptr += (uintptr_t)file->f_begin;
 	if (error < 0)
 		goto err;
+
 	/* Setup the lexer to not escape the current file. */
 	TPPLexer_Current->l_eob_file = file;
 
@@ -2033,6 +2034,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		}
 	}
 	override_end_ptr = token.t_begin;
+
 	/* Do some special checking to skip a single leading line-feed
 	 * within the data block which is going to get overwritten.
 	 * -> That way, the user can easily insert a persistent LF
@@ -2211,14 +2213,17 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		size_t new_text_size;
 		result_start = DeeString_STR(script_result);
 		result_end   = result_start + DeeString_SIZE(script_result);
+
 		/* Strip trailing whitespace. */
 		while (result_end > result_start &&
 		       DeeUni_IsSpace(result_end[-1]))
 			--result_end;
+
 		/* Now comes the part that it's been all about:
 		 * This is where we override the original source file's contents! */
 		if unlikely(DeeFile_SetPos(stream, override_start_pos) == (dpos_t)-1)
 			goto err_script_result;
+
 		/* Write data to the stream. */
 		new_text_size = (size_t)(result_end - result_start);
 		if (DeeFile_WriteAll(stream, result_start, new_text_size) == (size_t)-1)
@@ -2377,6 +2382,7 @@ do_set_ddi_name:
 	}
 
 	TPPLexer_PushFileInherited(file);
+
 	/* Scan for comment tokens. */
 	parser_start();
 	for (;;) {
@@ -2387,6 +2393,7 @@ do_set_ddi_name:
 			goto next_token; /* Not a comment. */
 		if (token.t_file != file)
 			goto next_token; /* Located in a different file. */
+
 		/* Found a token that may be what we're looking for. */
 		comment_start = token.t_begin + 1;
 		comment_end   = token.t_end;
@@ -2563,6 +2570,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 	 * leading to a lot of format-scripts starting with:
 	 * >> #include <fs>
 	 * >> fs.chdir(fs.path.head(__FILE__));
+	 *
 	 * The idea here is that format-scripts usually do
 	 * something like this:
 	 * >> import * from deemon;
@@ -2588,8 +2596,10 @@ dchdir_and_format_source_files(char *__restrict filename) {
 			*path_end = backup;
 			if (!chdir_ok)
 				break;
+
 			/* Format the script as though it was located in the current folder. */
 			result = dformat_source_files(path_end + 1, filename);
+
 			/* Change back to the directory that we originated from. */
 			num_uprefs = 1;
 			iter       = filename;
@@ -2615,6 +2625,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 					break;
 				*iter++ = DeeSystem_SEP;
 			}
+
 			/* Back back to the original folder. */
 			*iter = '\0';
 			(void)os_trychdir(buffer);
@@ -2624,6 +2635,7 @@ dchdir_and_format_source_files(char *__restrict filename) {
 		}
 		--path_end;
 	}
+
 	/* Without any slashes, or if the chdir() failed, don't change directory! */
 	result = dformat_source_files(filename, NULL);
 	return result;
@@ -2635,11 +2647,13 @@ err:
 PRIVATE WUNUSED int DCALL
 operation_mode_format(int argc, char **argv) {
 	int i;
+
 	/* Acquire a lock to the compiler sub-system to prevent
 	 * scripts from spawning new threads and having those threads
 	 * tinker with the compiler while the main thread is trying to
 	 * format the original source file. */
 	recursive_rwlock_write(&DeeCompiler_Lock);
+
 	/* Go over all input files and format them individually. */
 	for (i = 0; i < argc; ++i) {
 		char *filename;
