@@ -1834,7 +1834,7 @@ struct Dee_type_getset {
 	 (mask) == 0x20 ? Dee_STRUCT_BOOLBIT5 : (mask) == 0x10 ? Dee_STRUCT_BOOLBIT4 : \
 	 (mask) == 0x08 ? Dee_STRUCT_BOOLBIT3 : (mask) == 0x04 ? Dee_STRUCT_BOOLBIT2 : \
 	 (mask) == 0x02 ? Dee_STRUCT_BOOLBIT1 : Dee_STRUCT_BOOLBIT0)
-#define Dee_STRUCT_BOOLBITMASK(type) (1 << ((type) - Dee_STRUCT_BOOLBIT0))
+#define Dee_STRUCT_BOOLBITMASK(type) (1 << (((type) - Dee_STRUCT_BOOLBIT0) >> 1))
 #define Dee_STRUCT_FLOAT       0x0081 /* `float' */
 #define Dee_STRUCT_DOUBLE      0x0083 /* `double' */
 #define Dee_STRUCT_LDOUBLE     0x0085 /* `long double' */

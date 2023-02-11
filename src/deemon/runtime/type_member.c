@@ -79,6 +79,23 @@ STATIC_ASSERT((STRUCT_INT32 & 1) == 1);
 STATIC_ASSERT((STRUCT_INT64 & 1) == 1);
 STATIC_ASSERT((STRUCT_INT128 & 1) == 1);
 
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT0) == 0x01);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT1) == 0x02);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT2) == 0x04);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT3) == 0x08);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT4) == 0x10);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT5) == 0x20);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT6) == 0x40);
+STATIC_ASSERT(STRUCT_BOOLBITMASK(STRUCT_BOOLBIT7) == 0x80);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x01) == STRUCT_BOOLBIT0);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x02) == STRUCT_BOOLBIT1);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x04) == STRUCT_BOOLBIT2);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x08) == STRUCT_BOOLBIT3);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x10) == STRUCT_BOOLBIT4);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x20) == STRUCT_BOOLBIT5);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x40) == STRUCT_BOOLBIT6);
+STATIC_ASSERT(STRUCT_BOOLBIT(0x80) == STRUCT_BOOLBIT7);
+
 
 INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self) {
@@ -304,9 +321,11 @@ type_obmeth_call(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!(cls_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(argv[0], cls_type))
-		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(argv[0], cls_type))
+			goto err;
+	}
+
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
 		return (*(dkwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, NULL);
@@ -326,9 +345,11 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!(cls_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(argv[0], cls_type))
-		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(argv[0], cls_type))
+			goto err;
+	}
+
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
 		return (*(dkwobjmethod_t)desc->m_func)(argv[0], argc - 1, argv + 1, kw);
@@ -414,8 +435,10 @@ type_obprop_call(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
-	if unlikely(!(cls_type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(thisarg, cls_type))
-		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err;
+	}
 	return (*desc->gs_get)(thisarg);
 err_unbound:
 	err_cant_access_attribute(cls_type, desc->gs_name, ATTR_ACCESS_GET);
@@ -433,8 +456,10 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
-	if unlikely(!(cls_type->tp_flags & TP_FABSTRACT) && DeeObject_AssertType(thisarg, cls_type))
-		goto err;
+	if (!(cls_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, cls_type))
+			goto err;
+	}
 	return (*desc->gs_get)(thisarg);
 err_unbound:
 	err_cant_access_attribute(cls_type, desc->gs_name, ATTR_ACCESS_GET);
@@ -752,7 +777,7 @@ type_member_set(struct type_member const *desc,
 		boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
 			goto err;
-		mask = Dee_STRUCT_BOOLBITMASK(desc->m_field.m_type & ~STRUCT_ATOMIC);
+		mask = STRUCT_BOOLBITMASK(desc->m_field.m_type & ~STRUCT_ATOMIC);
 		pfield = &FIELD(uint8_t);
 		if (boolval) {
 #ifndef CONFIG_NO_THREADS

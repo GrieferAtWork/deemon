@@ -214,8 +214,8 @@ DECL_BEGIN
  *       -> Since this includes every incref and decref operation
  *          ever performed on the object, as well as the reference
  *          counter values at that point in time, it becomes fairly
- *          easy to spot the point when the reference counter become
- *          unsynchronized due to the lack of a required decref.
+ *          easy to spot the point when the reference counter became
+ *          desynchronized due to the lack of a required decref.
  * WARNING: Since every object in existence is tracked when this is
  *          enabled, combined with the open-ended-ness of the journal
  *          being kept, this option can become quite expensive to leave
