@@ -788,7 +788,7 @@ public:
 		return *this;
 	}
 
-	WUNUSED DREF T *release() const DEE_CXX_NOTHROW {
+	WUNUSED DREF T *release() DEE_CXX_NOTHROW {
 		return (DREF T *)RefBase::release();
 	}
 	WUNUSED operator T *(void) const DEE_CXX_NOTHROW {
@@ -1027,6 +1027,10 @@ public:
 	template<class S> WeakRef(WeakRef<S> &&other, DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S) * = 0) DEE_CXX_NOTHROW
 		: WeakRefBase(static_cast<WeakRefBase &&>(other)) {}
 
+	WeakRef<T> &operator=(std::nullptr_t) DEE_CXX_NOTHROW {
+		WeakRefBase::set(std::nullptr_t());
+		return *this;
+	}
 	WeakRef<T> &operator=(WeakRef<T> const &other) DEE_CXX_NOTHROW {
 		WeakRefBase::operator=(static_cast<WeakRefBase const &>(other));
 		return *this;
@@ -1044,11 +1048,11 @@ public:
 		return *this;
 	}
 	template<class S> WeakRef<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> &operator=(detail::ObjNonNull<S> ptr) {
-		WeakRefBase::set(*(DeeObject *)ptr);
+		WeakRefBase::set(ptr);
 		return *this;
 	}
 	template<class S> WeakRef<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> &operator=(detail::ObjMaybeNull<S> ptr) {
-		WeakRefBase::set((DeeObject *)ptr);
+		WeakRefBase::set(ptr);
 		return *this;
 	}
 	template<class S> WeakRef<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(T, S)> &operator=(WeakRef<S> const &other) DEE_CXX_NOTHROW {
@@ -1075,6 +1079,9 @@ public:
 	using WeakRefBase::clear;
 	Ref<T> cmpxch(DeeObject *old_ob, DeeObject *new_ob) DEE_CXX_NOTHROW {
 		return WeakRefBase::cmpxch(old_ob, new_ob);
+	}
+	void set(std::nullptr_t) {
+		WeakRefBase::set(std::nullptr_t());
 	}
 	NONNULL_CXX((1)) void set(DeeObject *ptr) {
 		WeakRefBase::set(ptr);
@@ -1142,6 +1149,7 @@ class ConstGetAndSetRefProxy
 	: public ConstGetRefProxy<ProxyType, GetReturnType>
 	, public ConstSetRefProxy<ProxyType, GetReturnType>
 {
+public:
 	using ConstSetRefProxy<ProxyType, GetReturnType>::operator=;
 };
 
@@ -1778,7 +1786,7 @@ protected:
 		it_next = throw_if_null(DeeObject_IterNext(this->it_iter));
 		return *this;
 	}
-	ATTR_RETNONNULL WUNUSED DREF DeeObject *postinc(int) {
+	ATTR_RETNONNULL WUNUSED DREF DeeObject *postinc() {
 		DREF DeeObject *result;
 		result = throw_if_null(DeeObject_Copy(this->it_iter));
 		if (ITER_ISOK(it_next))
@@ -2543,8 +2551,8 @@ public:
 	}
 	NONNULL_CXX((2)) Ref<GetItemType> getitem(size_t index, DeeObject *def) {
 		DREF DeeObject *index_ob, *result;
-		index_ob = throw_if_null(DeeInt_NewSize(m_idx));
-		result = DeeObject_GetItemDef(m_ptr, index_ob, def);
+		index_ob = throw_if_null(DeeInt_NewSize(index));
+		result = DeeObject_GetItemDef(((ProxyType *)this)->ptr(), index_ob, def);
 		Dee_Decref(index_ob);
 		return inherit(result);
 	}

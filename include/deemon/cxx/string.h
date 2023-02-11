@@ -163,7 +163,7 @@ public:
 	WUNUSED bool cstr_is_latin1() const DEE_CXX_NOTHROW {
 		return DeeString_STR_ISLATIN1(this);
 	}
-	ATTR_RETNONNULL WUNUSED size_t csize() const DEE_CXX_NOTHROW {
+	WUNUSED size_t csize() const DEE_CXX_NOTHROW {
 		return DeeString_SIZE(this);
 	}
 	ATTR_RETNONNULL WUNUSED void const *cwstr() const DEE_CXX_NOTHROW {
@@ -172,10 +172,10 @@ public:
 	ATTR_RETNONNULL WUNUSED void const *cwend() const DEE_CXX_NOTHROW {
 		return DeeString_WEND(this);
 	}
-	ATTR_RETNONNULL WUNUSED size_t cwlen() const DEE_CXX_NOTHROW {
+	WUNUSED size_t cwlen() const DEE_CXX_NOTHROW {
 		return DeeString_WLEN(this);
 	}
-	ATTR_RETNONNULL WUNUSED size_t cwsize() const DEE_CXX_NOTHROW {
+	WUNUSED size_t cwsize() const DEE_CXX_NOTHROW {
 		return DeeString_WSIZ(this);
 	}
 	WUNUSED bool cempty() const DEE_CXX_NOTHROW {

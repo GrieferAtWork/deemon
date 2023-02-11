@@ -56,7 +56,7 @@ public:
 		return inherit(DeeDict_FromSequence(seq));
 	}
 	static WUNUSED NONNULL_CXX((1)) Ref<Dict<Key, Value> > ofiter(DeeObject *iter) DEE_CXX_NOTHROW {
-		return inherit(DeeDict_FromIterator(seq));
+		return inherit(DeeDict_FromIterator(iter));
 	}
 
 public:

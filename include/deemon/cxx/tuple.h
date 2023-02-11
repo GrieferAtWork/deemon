@@ -163,7 +163,7 @@ for (local n: [:N+1]) {
 	if (n) {
 		print("public:");
 		print("	T", n, " &ccomponent", n, "() const DEE_CXX_NOTHROW {");
-		print("		return *(T", n, " *)_citem(", n - 1, ");");
+		print("		return *(T", n, " *)this->_citem(", n - 1, ");");
 		print("	}");
 	}
 	print("};");
@@ -297,7 +297,7 @@ class _TupleComponentFunctions<TupleType, T1>
 {
 public:
 	T1 &ccomponent1() const DEE_CXX_NOTHROW {
-		return *(T1 *)_citem(0);
+		return *(T1 *)this->_citem(0);
 	}
 };
 template<class TupleType, class T1, class T2>
@@ -306,7 +306,7 @@ class _TupleComponentFunctions<TupleType, T1, T2>
 {
 public:
 	T2 &ccomponent2() const DEE_CXX_NOTHROW {
-		return *(T2 *)_citem(1);
+		return *(T2 *)this->_citem(1);
 	}
 };
 template<class TupleType, class T1, class T2, class T3>
@@ -315,7 +315,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3>
 {
 public:
 	T3 &ccomponent3() const DEE_CXX_NOTHROW {
-		return *(T3 *)_citem(2);
+		return *(T3 *)this->_citem(2);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4>
@@ -324,7 +324,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4>
 {
 public:
 	T4 &ccomponent4() const DEE_CXX_NOTHROW {
-		return *(T4 *)_citem(3);
+		return *(T4 *)this->_citem(3);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5>
@@ -333,7 +333,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5>
 {
 public:
 	T5 &ccomponent5() const DEE_CXX_NOTHROW {
-		return *(T5 *)_citem(4);
+		return *(T5 *)this->_citem(4);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5, class T6>
@@ -342,7 +342,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5, T6>
 {
 public:
 	T6 &ccomponent6() const DEE_CXX_NOTHROW {
-		return *(T6 *)_citem(5);
+		return *(T6 *)this->_citem(5);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5, class T6, class T7>
@@ -351,7 +351,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5, T6, T7>
 {
 public:
 	T7 &ccomponent7() const DEE_CXX_NOTHROW {
-		return *(T7 *)_citem(6);
+		return *(T7 *)this->_citem(6);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
@@ -360,7 +360,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5, T6, T7, T8>
 {
 public:
 	T8 &ccomponent8() const DEE_CXX_NOTHROW {
-		return *(T8 *)_citem(7);
+		return *(T8 *)this->_citem(7);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
@@ -369,7 +369,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5, T6, T7, T8, T9>
 {
 public:
 	T9 &ccomponent9() const DEE_CXX_NOTHROW {
-		return *(T9 *)_citem(8);
+		return *(T9 *)this->_citem(8);
 	}
 };
 template<class TupleType, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
@@ -378,7 +378,7 @@ class _TupleComponentFunctions<TupleType, T1, T2, T3, T4, T5, T6, T7, T8, T9, T1
 {
 public:
 	T10 &ccomponent10() const DEE_CXX_NOTHROW {
-		return *(T10 *)_citem(9);
+		return *(T10 *)this->_citem(9);
 	}
 };
 template<class TupleType, class ...Types>
@@ -448,10 +448,10 @@ public:
 		return DeeTuple_ELEM(this);
 	}
 	DeeObject *cget(size_t index) const DEE_CXX_NOTHROW {
-		return DeeTuple_GET(this, i);
+		return DeeTuple_GET(this, index);
 	}
 	void cset(size_t index, DeeObject *value) DEE_CXX_NOTHROW {
-		DeeTuple_SET(this, i, value);
+		DeeTuple_SET(this, index, value);
 	}
 
 public:

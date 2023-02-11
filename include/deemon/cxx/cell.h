@@ -73,7 +73,7 @@ public:
 	}
 	/*nullable*/ Ref<T> ccmpxch(/*nullable*/ DeeObject *old_value,
 	                            /*nullable*/ DeeObject *new_value) {
-		return inherit(maybenull(DeeCell_CmpXch(this, old_value, DeeObject *new_value)));
+		return inherit(maybenull(DeeCell_CmpXch(this, old_value, new_value)));
 	}
 
 public:

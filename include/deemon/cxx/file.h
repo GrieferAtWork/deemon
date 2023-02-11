@@ -253,7 +253,7 @@ public:
 	"getc", "read", "pread", "readall", "preadall",
 	"putc", "write", "pwrite", "writeall", "pwriteall",
 	"ungetc", "seek", "trunc", "readline", "tell", "size",
-	"close", "sync", "rewind",
+	"close", "sync", "rewind", "setpos",
 	"mmap", // Way too many overloads (over 1000)
 });]]]*/
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (readinto)(DeeObject *dst) {
@@ -549,17 +549,6 @@ public:
 	}
 	WUNUSED Ref<Bytes> (readallat)(size_t pos, size_t maxbytes) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readallat", _Dee_HashSelect(UINT32_C(0x4a3b37ea), UINT64_C(0x92eb943eeeb4889d)),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (setpos)(DeeObject *pos) {
-		DeeObject *args[1];
-		args[0] = pos;
-		return inherit(DeeObject_CallAttrStringHash(this, "setpos", _Dee_HashSelect(UINT32_C(0xcd1307ba), UINT64_C(0x680cb194d112c412)), 1, args));
-	}
-	WUNUSED Ref<deemon::int_> (setpos)(Dee_ssize_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "setpos", _Dee_HashSelect(UINT32_C(0xcd1307ba), UINT64_C(0x680cb194d112c412)),  DEE_PCKdSIZ, pos));
-	}
-	WUNUSED Ref<deemon::int_> (setpos)(size_t pos) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "setpos", _Dee_HashSelect(UINT32_C(0xcd1307ba), UINT64_C(0x680cb194d112c412)),  DEE_PCKuSIZ, pos));
 	}
 	void (flush)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "flush", _Dee_HashSelect(UINT32_C(0xc55ede0a), UINT64_C(0x8a3df9f6a93e2205)), 0, NULL)));
