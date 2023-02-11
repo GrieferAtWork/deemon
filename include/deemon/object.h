@@ -1927,14 +1927,14 @@ struct Dee_type_getset {
 struct Dee_type_member {
 	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
 	union {
-		DeeObject        *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
+		DeeObject        *m_const;  /* [valid_if(Dee_TYPE_MEMBER_ISCONST(this))][1..1] Constant. */
 		struct {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
-			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
+			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
-			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+			__UINTPTR_HALF_TYPE__ m_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
+			__UINTPTR_HALF_TYPE__ m_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
 #endif /* !... */
 		}                 m_field;
 	}

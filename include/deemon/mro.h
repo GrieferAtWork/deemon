@@ -184,7 +184,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttr)(DeeTyp
 INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrLen)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
 #else /* __INTELLISENSE__ */
 #define DeeType_HasCachedInstanceAttr(tp_self, attr, hash)             DeeType_HasCachedAttr(tp_self, attr, hash)
-#define DeeType_HasCachedInstanceAttrLen(tp_self, attr, attrlen, hash) DeeType_HasCachedAttr(tp_self, attr, attrlen, hash)
+#define DeeType_HasCachedInstanceAttrLen(tp_self, attr, attrlen, hash) DeeType_HasCachedAttrLen(tp_self, attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
 
 /* @return:  1: The attribute could not be found in the cache.
@@ -259,6 +259,9 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClass
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedAttrf)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
 INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedClassAttrf)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
 //INTDEF WUNUSED DREF DeeObject *(DCALL DeeType_VCallCachedInstanceAttrf)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+
+struct attribute_info;
+struct attribute_lookup_rules;
 
 /* @return:  0: Attribute was found.
  * @return:  1: Attribute wasn't found.
