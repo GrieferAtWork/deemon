@@ -127,8 +127,8 @@ stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
 		pchar.ptr = READ_PTR(self);
 		if (pchar.ptr >= self->soi_end.ptr)
 			return ITER_DONE;
-	} while (!atomic_cmpxch_or_write(&self->soi_ptr.cp8, pchar.cp8,
-	                                 pchar.cp8 + STRING_SIZEOF_WIDTH(self->soi_width)));
+	} while (!atomic_cmpxch_weak_or_write(&self->soi_ptr.cp8, pchar.cp8,
+	                                      pchar.cp8 + STRING_SIZEOF_WIDTH(self->soi_width)));
 	SWITCH_SIZEOF_WIDTH(self->soi_width) {
 
 	CASE_WIDTH_1BYTE:

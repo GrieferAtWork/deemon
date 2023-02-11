@@ -1339,7 +1339,7 @@ fli_revert(FixedListIterator *__restrict self, size_t step) {
 		oldpos = atomic_read(&self->li_iter);
 		if (OVERFLOW_USUB(oldpos, step, &newpos))
 			newpos = 0;
-	} while (!atomic_cmpxch_or_write(&self->li_iter, oldpos, newpos));
+	} while (!atomic_cmpxch_weak_or_write(&self->li_iter, oldpos, newpos));
 	if (newpos == 0)
 		return 1;
 	return 2;
@@ -1352,7 +1352,7 @@ fli_advance(FixedListIterator *__restrict self, size_t step) {
 		oldpos = atomic_read(&self->li_iter);
 		if (OVERFLOW_UADD(oldpos, step, &newpos))
 			newpos = (size_t)-1;
-	} while (!atomic_cmpxch_or_write(&self->li_iter, oldpos, newpos));
+	} while (!atomic_cmpxch_weak_or_write(&self->li_iter, oldpos, newpos));
 	if (newpos >= self->li_list->fl_size)
 		return 1;
 	return 2;
@@ -1440,7 +1440,7 @@ again:
 	for (;; ++newiter) {
 		if (newiter >= list->fl_size) {
 			rwlock_endread(&list->fl_lock);
-			if (!atomic_cmpxch_or_write(&self->li_iter, iter, newiter))
+			if (!atomic_cmpxch_weak_or_write(&self->li_iter, iter, newiter))
 				goto again;
 			return ITER_DONE;
 		}
@@ -1450,7 +1450,7 @@ again:
 	}
 	Dee_Incref(result);
 	rwlock_endread(&list->fl_lock);
-	if (!atomic_cmpxch_or_write(&self->li_iter, iter, newiter + 1)) {
+	if (!atomic_cmpxch_weak_or_write(&self->li_iter, iter, newiter + 1)) {
 		Dee_Decref(result);
 		goto again;
 	}

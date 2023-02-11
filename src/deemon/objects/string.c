@@ -933,11 +933,11 @@ stringiter_next(StringIterator *__restrict self) {
 
 	/* Consume one character (atomically) */
 	do {
-		pos.ptr = self->si_iter.ptr;
+		pos.ptr = atomic_read(&self->si_iter.ptr);
 		if (pos.ptr >= self->si_end.ptr)
 			return ITER_DONE;
 		new_pos.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
+	} while (!atomic_cmpxch_weak_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
 
 	/* Create the single-character string. */
 	SWITCH_SIZEOF_WIDTH(self->si_width) {
@@ -1072,7 +1072,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 		if (pos.ptr <= (void *)DeeString_WSTR(self->si_string))
 			return 1;
 		new_pos.cp8 = pos.cp8 - STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
+	} while (!atomic_cmpxch_weak_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
 	return 0;
 }
 
@@ -1086,7 +1086,7 @@ stringiter_nii_next(StringIterator *__restrict self) {
 		if (pos.ptr >= self->si_end.ptr)
 			return 1;
 		new_pos.cp8 = pos.cp8 + STRING_SIZEOF_WIDTH(self->si_width);
-	} while (!atomic_cmpxch_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
+	} while (!atomic_cmpxch_weak_or_write(&self->si_iter.ptr, pos.ptr, new_pos.ptr));
 	return 0;
 }
 

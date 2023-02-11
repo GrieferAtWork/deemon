@@ -1152,7 +1152,7 @@ iri_next(IntRangeIterator *__restrict self) {
 		    (likely(self->iri_step >= 0) ? result_index >= self->iri_end
 		                                 : result_index <= self->iri_end))
 			return ITER_DONE;
-	} while (!atomic_cmpxch_or_write(&self->iri_index, result_index, new_index));
+	} while (!atomic_cmpxch_weak_or_write(&self->iri_index, result_index, new_index));
 
 	/* Return a new integer for the resulting index. */
 	return DeeInt_NewSSize(result_index);

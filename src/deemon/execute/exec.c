@@ -808,7 +808,7 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 				break;
 			SCHED_YIELD();
 		}
-	} while (!atomic_cmpxch(&usercode_argv, old_argv, argv));
+	} while (!atomic_cmpxch_weak_or_write(&usercode_argv, old_argv, argv));
 	Dee_Decref(old_argv);
 }
 #endif /* !CONFIG_NO_THREADS */

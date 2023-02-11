@@ -207,9 +207,9 @@ env_next(Env *__restrict self) {
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!atomic_cmpxch_or_write(&self->e_iter,
-	                                 result_string,
-	                                 next_string));
+	} while (!atomic_cmpxch_weak_or_write(&self->e_iter,
+	                                      result_string,
+	                                      next_string));
 
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;
@@ -249,9 +249,9 @@ enviterator_next_key(DeeObject *__restrict self) {
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!atomic_cmpxch_or_write(&me->e_iter,
-	                                 result_string,
-	                                 next_string));
+	} while (!atomic_cmpxch_weak_or_write(&me->e_iter,
+	                                      result_string,
+	                                      next_string));
 
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;
@@ -274,7 +274,9 @@ enviterator_next_value(DeeObject *__restrict self) {
 		next_string = result_string;
 		while (*next_string++)
 			;
-	} while (!atomic_cmpxch(&me->e_iter, result_string, next_string));
+	} while unlikely(!atomic_cmpxch_weak_or_write(&me->e_iter,
+	                                              result_string,
+	                                              next_string));
 
 	/* Split the line to extract the name and value. */
 	next_string = result_string + 1;

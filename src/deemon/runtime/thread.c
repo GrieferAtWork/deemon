@@ -815,7 +815,8 @@ again_locked:
 			refcnt = atomic_read(&iter->ob_refcnt);
 			if (!refcnt)
 				goto next_thread;
-		} while (!atomic_cmpxch(&iter->ob_refcnt, refcnt, refcnt + 1));
+		} while unlikely(!atomic_cmpxch_weak_or_write(&iter->ob_refcnt,
+		                                              refcnt, refcnt + 1));
 		goto handle_iter;
 next_thread:
 		iter = iter->t_globalnext;

@@ -80,7 +80,7 @@ smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_key);
 		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
@@ -106,7 +106,7 @@ smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result_value);
 		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
@@ -135,7 +135,7 @@ smapiter_next(SharedMapIterator *__restrict self) {
 		Dee_Incref(result_key);
 		Dee_Incref(result_value);
 		rwlock_endread(&map->sm_lock);
-		if (atomic_cmpxch_or_write(&self->sm_index, index, index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->sm_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */

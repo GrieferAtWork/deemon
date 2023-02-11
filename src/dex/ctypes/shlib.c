@@ -265,6 +265,7 @@ shlib_getattr(Shlib *self,
 		if unlikely(!new_type)
 			goto err;
 		result_type = new_type;
+
 		/* Save the reference in the shlib descriptor. */
 		if (!atomic_cmpxch(&self->sh_vfunptr, NULL, result_type))
 			Dee_DecrefNokill((DeeObject *)result_type);

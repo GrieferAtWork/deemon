@@ -203,7 +203,7 @@ again:
 			if unlikely(!result)
 				goto done;
 			/* Cache the name-string as part of the attribute structure. */
-			if (!atomic_cmpxch(&self->a_name, name_str, DeeString_STR(result))) {
+			if unlikely(!atomic_cmpxch_weak(&self->a_name, name_str, DeeString_STR(result))) {
 				Dee_Decref(result);
 				goto again;
 			}
@@ -241,7 +241,7 @@ again:
 			if unlikely(!result)
 				goto done;
 			/* Cache the doc-string as part of the attribute structure. */
-			if (!atomic_cmpxch(&self->a_info.a_doc, doc_str, DeeString_STR(result))) {
+			if unlikely(!atomic_cmpxch_weak(&self->a_info.a_doc, doc_str, DeeString_STR(result))) {
 				Dee_Decref(result);
 				goto again;
 			}
@@ -1199,7 +1199,7 @@ done:
 		presult = atomic_read(&self->ei_iter);
 		if (presult == self->ei_end)
 			return (DREF Attr *)ITER_DONE;
-	} while (!atomic_cmpxch(&self->ei_iter, presult, presult + 1));
+	} while unlikely(!atomic_cmpxch_weak(&self->ei_iter, presult, presult + 1));
 	return_reference_(*presult);
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }

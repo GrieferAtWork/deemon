@@ -291,7 +291,7 @@ again:
 		table = (struct class_optable *)Dee_TryCalloc(sizeof(struct class_optable));
 		if unlikely(!table)
 			goto done;
-		if (!atomic_cmpxch(&self->cd_ops[table_index], NULL, table)) {
+		if unlikely(!atomic_cmpxch_weak(&self->cd_ops[table_index], NULL, table)) {
 			/* Table was already allocated! */
 			Dee_Free(table);
 			goto again;

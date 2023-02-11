@@ -1738,7 +1738,7 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_weak_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
@@ -1746,7 +1746,7 @@ again:
 		}
 	}
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_weak_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
@@ -1854,14 +1854,14 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_weak_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 			goto again;
 		}
 	}
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_weak_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 		goto again;
@@ -1946,14 +1946,14 @@ again:
 	{
 		ENVIRON_ITERATOR_tchar *new_iter;
 		new_iter = eq + value_len + 1;
-		if (!atomic_cmpxch_or_write(&self->ei_environment_iter, envline, new_iter)) {
+		if (!atomic_cmpxch_weak_or_write(&self->ei_environment_iter, envline, new_iter)) {
 			environ_lock_endread();
 			ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 			goto again;
 		}
 	}
 #else /* posix_enumenv_USE_GetEnvironmentStringsW */
-	if (!atomic_cmpxch_or_write(&self->ei_index, line_index, line_index + 1)) {
+	if (!atomic_cmpxch_weak_or_write(&self->ei_index, line_index, line_index + 1)) {
 		environ_lock_endread();
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
 		goto again;

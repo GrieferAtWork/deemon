@@ -1108,7 +1108,7 @@ sveciter_next(SharedVectorIterator *__restrict self) {
 		/* Acquire a reference to keep the item alive. */
 		Dee_Incref(result);
 		atomic_rwlock_endread(&vec->sv_lock);
-		if (atomic_cmpxch_or_write(&self->si_index, index, index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->si_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */

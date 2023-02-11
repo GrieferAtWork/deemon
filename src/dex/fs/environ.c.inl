@@ -124,7 +124,7 @@ iter_done:
 		presult = atomic_read(&self->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (atomic_cmpxch_or_write(&self->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_weak_or_write(&self->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart)
@@ -191,7 +191,7 @@ iter_done:
 		presult = atomic_read(&me->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (atomic_cmpxch_or_write(&me->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_weak_or_write(&me->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart) {
@@ -235,7 +235,7 @@ iter_done:
 		presult = atomic_read(&me->e_iter);
 		if (!*presult)
 			goto iter_done;
-	} while (atomic_cmpxch_or_write(&me->e_iter, presult, presult + 1));
+	} while (atomic_cmpxch_weak_or_write(&me->e_iter, presult, presult + 1));
 	result   = *presult;
 	valstart = strrchr(result, '=');
 	if (!valstart) {

@@ -201,7 +201,7 @@ again:
 		return ITER_DONE;
 	result = DeeRegexMatch_AsRangeObject(&self->rgi_groups->rg_groups[index]);
 	if likely(result) {
-		if unlikely(!atomic_cmpxch_or_write(&self->rgi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->rgi_index, index, index + 1))
 			goto again;
 	}
 	return result;
@@ -219,7 +219,7 @@ again:
 	                                   self->rssi_strings->rss_baseown,
 	                                   self->rssi_strings->rss_baseptr);
 	if likely(result) {
-		if unlikely(!atomic_cmpxch_or_write(&self->rssi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->rssi_index, index, index + 1))
 			goto again;
 	}
 	return result;
@@ -237,7 +237,7 @@ again:
 	                                   self->rssi_strings->rss_baseown,
 	                                   self->rssi_strings->rss_baseptr);
 	if likely(result) {
-		if unlikely(!atomic_cmpxch_or_write(&self->rssi_index, index, index + 1))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->rssi_index, index, index + 1))
 			goto again;
 	}
 	return result;

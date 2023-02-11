@@ -755,7 +755,7 @@ again:
 	if (result == NULL) {
 		result = diriter_makepathstr(self);
 		/* Remember the full path string. */
-		if (!atomic_cmpxch(&self->di_pathstr, NULL, result)) {
+		if unlikely(!atomic_cmpxch_weak(&self->di_pathstr, NULL, result)) {
 			Dee_Decref_likely(result);
 			goto again;
 		}

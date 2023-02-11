@@ -75,8 +75,9 @@ again:
 		result = (DREF DeeStringObject *)DeeString_New(name_str);
 		if unlikely(!result)
 			goto done;
+
 		/* Cache the name-string as part of the attribute structure. */
-		if (!atomic_cmpxch(&self->ss_name, name_str, DeeString_STR(result))) {
+		if (!atomic_cmpxch_weak(&self->ss_name, name_str, DeeString_STR(result))) {
 			Dee_Decref(result);
 			goto again;
 		}
@@ -109,8 +110,9 @@ again:
 		                                                   STRING_ERROR_FIGNORE);
 		if unlikely(!result)
 			goto done;
+
 		/* Cache the doc-string as part of the attribute structure. */
-		if (!atomic_cmpxch(&self->ss_doc, doc_str, DeeString_STR(result))) {
+		if (!atomic_cmpxch_weak(&self->ss_doc, doc_str, DeeString_STR(result))) {
 			Dee_Decref(result);
 			goto again;
 		}
@@ -916,7 +918,9 @@ begin_init:
 			err_module_not_loaded(me);
 			return -1; /* Not loaded yet. */
 		}
-	} while (!atomic_cmpxch(&me->mo_flags, flags, flags | MODULE_FINITIALIZING));
+	} while (!atomic_cmpxch_weak(&me->mo_flags, flags,
+	                             flags | MODULE_FINITIALIZING));
+
 	if (flags & MODULE_FINITIALIZING) {
 		/* Module is already being loaded. */
 		while ((flags = atomic_read(&me->mo_flags),

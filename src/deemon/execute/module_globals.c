@@ -192,7 +192,7 @@ again:
 continue_symbol_search:
 			++new_index;
 			if (new_index > module->mo_bucketm) {
-				if (!atomic_cmpxch(&self->mei_index, old_index, new_index))
+				if (!atomic_cmpxch_weak(&self->mei_index, old_index, new_index))
 					goto again;
 				DeeModule_UnlockSymbols(module);
 				return ITER_DONE;
@@ -205,7 +205,7 @@ continue_symbol_search:
 				goto err;
 			goto continue_symbol_search;
 		}
-		if (atomic_cmpxch(&self->mei_index, old_index, new_index + 1))
+		if (atomic_cmpxch_weak(&self->mei_index, old_index, new_index + 1))
 			break;
 		Dee_Decref_unlikely(result_value);
 	}
@@ -652,14 +652,14 @@ again:
 			++new_index;
 			if (new_index >= module->mo_globalc) {
 				rwlock_endread(&module->mo_lock);
-				if (!atomic_cmpxch_or_write(&self->mgi_index, old_index, new_index))
+				if (!atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index))
 					goto again;
 				return ITER_DONE;
 			}
 		}
 		Dee_Incref(result);
 		rwlock_endread(&module->mo_lock);
-		if (atomic_cmpxch_or_write(&self->mgi_index, old_index, new_index + 1))
+		if (atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index + 1))
 			break;
 		Dee_Decref(result);
 	}

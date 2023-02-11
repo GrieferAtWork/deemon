@@ -299,7 +299,7 @@ again:
 			self->wr_next                       = (struct weakref *)other;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
-			atomic_write(&*self->wr_pself, self);
+			atomic_write(self->wr_pself, self);
 		} else {
 			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			self->wr_obj = NULL;
@@ -384,13 +384,13 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				atomic_write(&*self->wr_pself, next);
+				atomic_write(self->wr_pself, next);
 			}
 			self->wr_pself                      = other->wr_pself;
 			((struct weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);
 			atomic_write(&self->wr_next, other);
-			atomic_write(&*self->wr_pself, self);
+			atomic_write(self->wr_pself, self);
 		} else {
 			atomic_write(&other->wr_next, NULL); /* WEAKREF_UNLOCK(other); */
 			Dee_weakref_clear(self);
@@ -473,7 +473,7 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				atomic_write(&*self->wr_pself, next);
+				atomic_write(self->wr_pself, next);
 			}
 			{
 				struct weakref *next;
@@ -489,10 +489,10 @@ again:
 						goto again;
 					}
 					next->wr_pself = &self->wr_next;
-					atomic_write(&*self->wr_pself, self);
+					atomic_write(self->wr_pself, self);
 					WEAKREF_UNLOCK(next);
 				} else {
-					atomic_write(&*self->wr_pself, self);
+					atomic_write(self->wr_pself, self);
 				}
 			}
 			/*WEAKREF_UNLOCK(other);*/
@@ -536,10 +536,10 @@ again:
 					goto again;
 				}
 				next->wr_pself = &dst->wr_next;
-				atomic_write(&*dst->wr_pself, dst);
+				atomic_write(dst->wr_pself, dst);
 				WEAKREF_UNLOCK(next);
 			} else {
-				atomic_write(&*dst->wr_pself, dst);
+				atomic_write(dst->wr_pself, dst);
 			}
 			/*WEAKREF_UNLOCK(src);*/
 		} else {
@@ -576,7 +576,7 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			atomic_write(&*self->wr_pself, next);
+			atomic_write(self->wr_pself, next);
 		}
 		/*WEAKREF_UNLOCK(self);*/
 	}
@@ -615,7 +615,7 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			atomic_write(&*self->wr_pself, next);
+			atomic_write(self->wr_pself, next);
 			self->wr_obj = NULL;
 		}
 #ifndef NDEBUG
@@ -669,7 +669,7 @@ again:
 				next->wr_pself = self->wr_pself;
 				WEAKREF_UNLOCK(next);
 			}
-			atomic_write(&*self->wr_pself, next);
+			atomic_write(self->wr_pself, next);
 		}
 
 		/* Now to re-insert the weakref. */
@@ -800,7 +800,7 @@ again:
 					next->wr_pself = self->wr_pself;
 					WEAKREF_UNLOCK(next);
 				}
-				atomic_write(&*self->wr_pself, next);
+				atomic_write(self->wr_pself, next);
 
 				/* Now to re-insert the weakref. */
 				self->wr_obj = NULL;
@@ -837,7 +837,7 @@ again:
 						next->wr_pself = self->wr_pself;
 						WEAKREF_UNLOCK(next);
 					}
-					atomic_write(&*self->wr_pself, next);
+					atomic_write(self->wr_pself, next);
 				}
 
 				/* Now to re-insert the weakref. */
@@ -912,7 +912,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 					refcnt = atomic_read(&self->ob_refcnt);
 					if (refcnt == 0)
 						goto destroy_weak;
-				} while (atomic_cmpxch(&self->ob_refcnt, refcnt, refcnt + 1));
+				} while unlikely(atomic_cmpxch_weak_or_write(&self->ob_refcnt, refcnt, refcnt + 1));
 				return false;
 			}
 		}
@@ -4566,6 +4566,7 @@ again:
 		last->rc_chng[i].rc_line = line;
 		return; /* Got it! */
 	}
+
 	/* Must allocate a new set of changes. */
 	new_changes = (struct Dee_refchanges *)Dee_TryCalloc(sizeof(struct Dee_refchanges));
 	if unlikely(!new_changes)
@@ -4573,8 +4574,9 @@ again:
 	new_changes->rc_chng[0].rc_file = file;
 	new_changes->rc_chng[0].rc_line = line;
 	new_changes->rc_prev            = last;
+
 	/* Save the new set of changes as the latest set active. */
-	if (!atomic_cmpxch(&self->rt_last, last, new_changes)) {
+	if unlikely(!atomic_cmpxch_weak(&self->rt_last, last, new_changes)) {
 		Dee_Free(new_changes);
 		goto again;
 	}

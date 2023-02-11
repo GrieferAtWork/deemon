@@ -72,10 +72,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {
 	uint8_t *pos;
 	do {
-		pos = self->bi_iter;
+		pos = atomic_read(&self->bi_iter);
 		if (pos >= self->bi_end)
 			return ITER_DONE;
-	} while (!atomic_cmpxch(&self->bi_iter, pos, pos + 1));
+	} while unlikely(!atomic_cmpxch_weak_or_write(&self->bi_iter, pos, pos + 1));
 	return DeeInt_NewU8(*pos);
 }
 

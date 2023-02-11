@@ -763,7 +763,7 @@ again:
 		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending,
 		                              pending_count, sizeof(unsigned char));
 		memcpyc(p, buffer, bufsize, sizeof(unsigned char));
-		if (!atomic_cmpxch(&self->sf_pendingc, pending_count, 0))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
 		if unlikely(temp == (size_t)-1) {
@@ -778,7 +778,7 @@ again:
 			return append_pending_utf8(self, with_pending + temp, pending_count);
 	} else {
 		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
-		if (!atomic_cmpxch(&self->sf_pendingc, 0, bufsize))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, 0, bufsize))
 			goto again;
 	}
 	return 0;
@@ -805,7 +805,7 @@ again:
 		if (total_length > COMPILER_LENOF(with_pending))
 			total_length = COMPILER_LENOF(with_pending);
 		memcpyc(p, buffer, total_length - pending_count, sizeof(char));
-		if (!atomic_cmpxch(&self->sf_pendingc, pending_count, 0))
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, pending_count, 0))
 			goto again;
 		num_written = write_utf8_to_console(self,
 		                                    with_pending,

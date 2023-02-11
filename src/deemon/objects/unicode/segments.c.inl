@@ -109,7 +109,7 @@ ssegiter_next(StringSegmentsIterator *__restrict self) {
 		if (ptr >= self->s_end)
 			return ITER_DONE;
 		new_ptr = ptr + self->s_siz * STRING_SIZEOF_WIDTH(self->s_width);
-	} while (!atomic_cmpxch_or_write(&self->s_ptr, ptr, new_ptr));
+	} while (!atomic_cmpxch_weak_or_write(&self->s_ptr, ptr, new_ptr));
 	part_size = self->s_siz;
 	if (new_ptr > self->s_end) {
 		part_size = (self->s_end - ptr) / STRING_SIZEOF_WIDTH(self->s_width);

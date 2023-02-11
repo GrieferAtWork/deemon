@@ -205,7 +205,7 @@ again:
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
+		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -251,7 +251,7 @@ again:
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
+		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -323,7 +323,7 @@ set_utf8_and_return_1byte:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
+		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -410,7 +410,7 @@ set_utf8_and_return_1byte:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
+		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}
@@ -659,7 +659,7 @@ load_2byte_width:
 					result = new_result;
 			}
 			/* Save the utf-16 encoded string. */
-			if (!atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, result)) {
+			if (!atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, result)) {
 				DeeString_Free2ByteBuffer(result);
 				return (uint16_t *)utf->u_utf16;
 			}
@@ -667,8 +667,8 @@ load_2byte_width:
 			return result;
 		}
 		/* The 2-byte variant doesn't contain any illegal characters,
-			 * so we can simply re-use it as the utf-16 variant. */
-		atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, str);
+		 * so we can simply re-use it as the utf-16 variant. */
+		atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, str);
 		return (uint16_t *)utf->u_utf16;
 	}	break;
 
@@ -727,7 +727,7 @@ err_invalid_unicode:
 		ASSERT(dst == result + result_length);
 		*dst = 0;
 		/* Save the utf-16 encoded string. */
-		if (!atomic_cmpxch(&*(uint16_t **)&utf->u_utf16, NULL, result)) {
+		if (!atomic_cmpxch((uint16_t **)&utf->u_utf16, NULL, result)) {
 			DeeString_Free2ByteBuffer(result);
 			return (uint16_t *)utf->u_utf16;
 		}
@@ -837,7 +837,7 @@ print_ascii:
 		bzero(utf, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
-		if (!atomic_cmpxch(&((String *)self)->s_data, NULL, utf)) {
+		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
 			Dee_string_utf_free(utf);
 			goto again;
 		}

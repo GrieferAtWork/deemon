@@ -81,11 +81,11 @@ dictiterator_next_key(DictIterator *__restrict self) {
 		while (item < end && (!item->di_key || item->di_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
 			break;
 	}
 	result = item->di_key;

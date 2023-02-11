@@ -124,11 +124,11 @@ rosetiterator_next(SetIterator *__restrict self) {
 		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
 			break;
 	}
 	return_reference_(item->si_key);

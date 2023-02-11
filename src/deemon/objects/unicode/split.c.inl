@@ -106,7 +106,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
 			break;
 		}
-	} while (!atomic_cmpxch(&self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->s_next, result_start, next_ptr));
 
 	/* Return the part-string. */
 	return DeeString_NewWithWidth(result_start,
@@ -168,7 +168,7 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 			result_len = (size_t)((uint32_t *)result_end - (uint32_t *)result_start);
 			break;
 		}
-	} while (!atomic_cmpxch(&self->s_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->s_next, result_start, next_ptr));
 
 	/* Return the part-string. */
 	return DeeString_NewWithWidth(result_start,
@@ -815,7 +815,7 @@ lineiter_next(LineSplitIterator *__restrict self) {
 			                      (uint32_t *)result_start);
 			break;
 		}
-	} while (!atomic_cmpxch(&self->ls_next, result_start, next_ptr));
+	} while (!atomic_cmpxch_weak(&self->ls_next, result_start, next_ptr));
 
 	/* Add the linefeed itself if we're supposed to include it. */
 	if (self->ls_keep && next_ptr)

@@ -91,11 +91,11 @@ usetiterator_next(USetIterator *__restrict self) {
 		while (item < end && (!item->si_key || item->si_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
 			break;
 	}
 	result = item->si_key;
@@ -1318,11 +1318,11 @@ urosetiterator_next(URoSetIterator *__restrict self) {
 		while (item < end && !item->si_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->si_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
 			break;
 	}
 	return_reference_(item->si_key);

@@ -280,7 +280,7 @@ traceiter_next(TraceIterator *__restrict self) {
 		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
 			return ITER_DONE;
-	} while (!atomic_cmpxch_or_write(&self->ti_next, result_frame, result_frame - 1));
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_next, result_frame, result_frame - 1));
 
 	/* Create a new frame wrapper for this entry. */
 	return DeeFrame_NewReferenceWithLock((DeeObject *)self->ti_trace,
@@ -350,7 +350,7 @@ traceiter_nii_next(TraceIterator *__restrict self) {
 		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
 			return 1;
-	} while (!atomic_cmpxch_or_write(&self->ti_next, result_frame, result_frame - 1));
+	} while (!atomic_cmpxch_weak_or_write(&self->ti_next, result_frame, result_frame - 1));
 
 	/* Create a new frame wrapper for this entry. */
 	return 0;

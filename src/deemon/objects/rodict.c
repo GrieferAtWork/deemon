@@ -131,11 +131,11 @@ rodictiterator_next_item(DictIterator *__restrict self) {
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
 			break;
 	}
 	return DeeTuple_Pack(2, item->di_key, item->di_value);
@@ -156,11 +156,11 @@ rodictiterator_next_key(DictIterator *__restrict self) {
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
 			break;
 	}
 	return_reference_(item->di_key);
@@ -181,11 +181,11 @@ rodictiterator_next_value(DictIterator *__restrict self) {
 		while (item < end && !item->di_key)
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_or_write(&self->di_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->di_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_or_write(&self->di_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->di_next, old_item, item + 1))
 			break;
 	}
 	return_reference_(item->di_value);

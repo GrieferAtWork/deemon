@@ -193,7 +193,7 @@ DeeGC_Track(DeeObject *__restrict ob) {
 			next = atomic_read(&gc_pending);
 			head->gc_next = next;
 			COMPILER_WRITE_BARRIER();
-		} while (!atomic_cmpxch(&gc_pending, next, head));
+		} while unlikely(!atomic_cmpxch_weak_or_write(&gc_pending, next, head));
 	} else {
 		gc_pending_service();
 		ASSERT(head != gc_root);
