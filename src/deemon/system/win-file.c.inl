@@ -437,9 +437,15 @@ DeeFile_DefaultStd(unsigned int id) {
 		DWORD std_id;
 		HANDLE std_handle;
 		switch (id) {
-		case DEE_STDIN: std_id = STD_INPUT_HANDLE; break;
-		case DEE_STDOUT: std_id = STD_OUTPUT_HANDLE; break;
-		default: std_id = STD_ERROR_HANDLE; break;
+		case DEE_STDIN:
+			std_id = STD_INPUT_HANDLE;
+			break;
+		case DEE_STDOUT:
+			std_id = STD_OUTPUT_HANDLE;
+			break;
+		default:
+			std_id = STD_ERROR_HANDLE;
+			break;
 		}
 		DBG_ALIGNMENT_DISABLE();
 		std_handle = GetStdHandle(std_id);

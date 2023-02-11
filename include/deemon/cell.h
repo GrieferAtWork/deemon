@@ -45,7 +45,7 @@ struct Dee_cell_object {
 #ifdef CONFIG_NO_THREADS
 #define DeeCell_Bound(x) (DeeCell_Item(x) != NULL)
 #else /* CONFIG_NO_THREADS */
-#define DeeCell_Bound(x) (__hybrid_atomic_load(DeeCell_Item(x), __ATOMIC_ACQUIRE) != NULL)
+#define DeeCell_Bound(x) (__hybrid_atomic_load(&DeeCell_Item(x), __ATOMIC_ACQUIRE) != NULL)
 #endif /* !CONFIG_NO_THREADS */
 
 #define DeeCell_LockReading(x)    Dee_atomic_rwlock_reading(&((DeeCellObject *)Dee_REQUIRES_OBJECT(x))->c_lock)

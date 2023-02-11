@@ -35,7 +35,6 @@
 #define Dee_atomic_signal_fence(order)             (void)0
 #define Dee_atomic_read_explicit(p, order)         (*(p))
 #define Dee_atomic_write_explicit(p, value, order) (void)(*(p) = (value))
-#define Dee_atomic_xch_explicit(p, value, order)   __hybrid_atomic_xch(*(p), value, order)
 #define Dee_atomic_cmpxch_explicit(p, old_value, new_value, succ_order, fail_order) \
 	(*(p) == (old_value) ? (*(p) = (new_value), 1) : 0)
 #define Dee_atomic_cmpxch_val_explicit(p, old_value, new_value, succ_order, fail_order) \
@@ -66,15 +65,23 @@
 #define Dee_atomic_cmpxch_weak_or_write(p, old_value, new_value) (Dee_ASSERT(*(p) == (old_value)), *(p) = (new_value), 1)
 
 #if !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_AUTOTYPE)
+#define Dee_atomic_xch_explicit(p, value, order)       __XBLOCK({ __auto_type _dafxe_res = *(p); *(p) = (value); __XRETURN _dafxe_res; })
 #define Dee_atomic_fetchand_explicit(p, value, order)  __XBLOCK({ __auto_type _dafae_res = *(p); *(p) &= (value); __XRETURN _dafae_res; })
 #define Dee_atomic_fetchor_explicit(p, value, order)   __XBLOCK({ __auto_type _dafoe_res = *(p); *(p) |= (value); __XRETURN _dafoe_res; })
 #define Dee_atomic_fetchnand_explicit(p, value, order) __XBLOCK({ __auto_type _dafne_res = *(p); *(p) = ~(*(p) & (value)); __XRETURN _dafne_res; })
 #elif !defined(__NO_XBLOCK) && defined(__COMPILER_HAVE_TYPEOF)
+#define Dee_atomic_xch_explicit(p, value, order)       __XBLOCK({ __typeof__(*(p)) _dafxe_res = *(p); *(p) = (value); __XRETURN _dafxe_res; })
 #define Dee_atomic_fetchand_explicit(p, value, order)  __XBLOCK({ __typeof__(*(p)) _dafae_res = *(p); *(p) &= (value); __XRETURN _dafae_res; })
 #define Dee_atomic_fetchor_explicit(p, value, order)   __XBLOCK({ __typeof__(*(p)) _dafoe_res = *(p); *(p) |= (value); __XRETURN _dafoe_res; })
 #define Dee_atomic_fetchnand_explicit(p, value, order) __XBLOCK({ __typeof__(*(p)) _dafne_res = *(p); *(p) = ~(*(p) & (value)); __XRETURN _dafne_res; })
 #elif defined(__cplusplus)
 extern "C++" {
+template<class T> inline WUNUSED NONNULL((1)) T
+_Dee_atomic_xch_no_threads(T *p, T value) {
+	T result = *p;
+	*p = value;
+	return result;
+}
 template<class T> inline WUNUSED NONNULL((1)) T
 _Dee_atomic_fetchand_no_threads(T *p, T value) {
 	T result = *p;
@@ -94,6 +101,7 @@ _Dee_atomic_fetchnand_no_threads(T *p, T value) {
 	return result;
 }
 } /* extern "C++" */
+#define Dee_atomic_xch_explicit(p, value, order)       _Dee_atomic_xch_no_threads(p, value)
 #define Dee_atomic_fetchand_explicit(p, value, order)  _Dee_atomic_fetchand_no_threads(p, value)
 #define Dee_atomic_fetchor_explicit(p, value, order)   _Dee_atomic_fetchor_no_threads(p, value)
 #define Dee_atomic_fetchnand_explicit(p, value, order) _Dee_atomic_fetchnand_no_threads(p, value)
@@ -101,6 +109,12 @@ _Dee_atomic_fetchnand_no_threads(T *p, T value) {
 #include <hybrid/typecore.h>
 
 #define DEE_DEFINE_ATOMIC_HELPERS(n, T)                   \
+	LOCAL WUNUSED NONNULL((1)) T                          \
+	_Dee_atomic_xch_no_threads_##n(T *p, T value) {       \
+		T result = *p;                                    \
+		*p = value;                                       \
+		return result;                                    \
+	}                                                     \
 	LOCAL WUNUSED NONNULL((1)) T                          \
 	_Dee_atomic_fetchand_no_threads_##n(T *p, T value) {  \
 		T result = *p;                                    \
@@ -139,6 +153,11 @@ DEE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
 #define _Dee_ATOMIC_DOWNCAST(T) (T)
 #endif /* !_MSC_VER */
 /* clang-format off */
+#define Dee_atomic_xch_explicit(p, value, order)                                                                                                 \
+	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_xch_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                         sizeof(x) == 2 ? _Dee_atomic_xch_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                         sizeof(x) == 4 ? _Dee_atomic_xch_no_threads_32((__UINT32_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                          _Dee_atomic_xch_no_threads_64((__UINT64_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
 #define Dee_atomic_fetchand_explicit(p, value, order)                                                                                                 \
 	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchand_no_threads_8((__UINT8_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
 	                         sizeof(x) == 2 ? _Dee_atomic_fetchand_no_threads_16((__UINT16_TYPE__ *)(p), __ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
@@ -169,42 +188,42 @@ DEE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
 
 #define Dee_atomic_thread_fence(order)             __hybrid_atomic_thread_fence(order)
 #define Dee_atomic_signal_fence(order)             __hybrid_atomic_signal_fence(order)
-#define Dee_atomic_read_explicit(p, order)         __hybrid_atomic_load(*(p), order)
-#define Dee_atomic_write_explicit(p, value, order) __hybrid_atomic_store(*(p), value, order)
-#define Dee_atomic_xch_explicit(p, value, order)   __hybrid_atomic_xch(*(p), value, order)
+#define Dee_atomic_read_explicit(p, order)         __hybrid_atomic_load(p, order)
+#define Dee_atomic_write_explicit(p, value, order) __hybrid_atomic_store(p, value, order)
+#define Dee_atomic_xch_explicit(p, value, order)   __hybrid_atomic_xch(p, value, order)
 #define Dee_atomic_cmpxch_explicit(p, old_value, new_value, succ_order, fail_order) \
-	__hybrid_atomic_cmpxch(*(p), old_value, new_value, succ_order, fail_order)
+	__hybrid_atomic_cmpxch(p, old_value, new_value, succ_order, fail_order)
 #define Dee_atomic_cmpxch_weak_explicit(p, old_value, new_value, succ_order, fail_order) \
-	__hybrid_atomic_cmpxch_weak(*(p), old_value, new_value, succ_order, fail_order)
+	__hybrid_atomic_cmpxch_weak(p, old_value, new_value, succ_order, fail_order)
 #define Dee_atomic_cmpxch_val_explicit(p, old_value, new_value, succ_order, fail_order) \
-	__hybrid_atomic_cmpxch_val(*(p), old_value, new_value, succ_order, fail_order)
+	__hybrid_atomic_cmpxch_val(p, old_value, new_value, succ_order, fail_order)
 
-#define Dee_atomic_fetchinc_explicit(p, order)         __hybrid_atomic_fetchinc(*(p), order)
-#define Dee_atomic_fetchdec_explicit(p, order)         __hybrid_atomic_fetchdec(*(p), order)
-#define Dee_atomic_fetchadd_explicit(p, value, order)  __hybrid_atomic_fetchadd(*(p), value, order)
-#define Dee_atomic_fetchsub_explicit(p, value, order)  __hybrid_atomic_fetchsub(*(p), value, order)
-#define Dee_atomic_fetchand_explicit(p, value, order)  __hybrid_atomic_fetchand(*(p), value, order)
-#define Dee_atomic_fetchor_explicit(p, value, order)   __hybrid_atomic_fetchor(*(p), value, order)
-#define Dee_atomic_fetchxor_explicit(p, value, order)  __hybrid_atomic_fetchxor(*(p), value, order)
-#define Dee_atomic_fetchnand_explicit(p, value, order) __hybrid_atomic_fetchnand(*(p), value, order)
+#define Dee_atomic_fetchinc_explicit(p, order)         __hybrid_atomic_fetchinc(p, order)
+#define Dee_atomic_fetchdec_explicit(p, order)         __hybrid_atomic_fetchdec(p, order)
+#define Dee_atomic_fetchadd_explicit(p, value, order)  __hybrid_atomic_fetchadd(p, value, order)
+#define Dee_atomic_fetchsub_explicit(p, value, order)  __hybrid_atomic_fetchsub(p, value, order)
+#define Dee_atomic_fetchand_explicit(p, value, order)  __hybrid_atomic_fetchand(p, value, order)
+#define Dee_atomic_fetchor_explicit(p, value, order)   __hybrid_atomic_fetchor(p, value, order)
+#define Dee_atomic_fetchxor_explicit(p, value, order)  __hybrid_atomic_fetchxor(p, value, order)
+#define Dee_atomic_fetchnand_explicit(p, value, order) __hybrid_atomic_fetchnand(p, value, order)
 
-#define Dee_atomic_incfetch_explicit(p, order)         __hybrid_atomic_incfetch(*(p), order)
-#define Dee_atomic_decfetch_explicit(p, order)         __hybrid_atomic_decfetch(*(p), order)
-#define Dee_atomic_addfetch_explicit(p, value, order)  __hybrid_atomic_addfetch(*(p), value, order)
-#define Dee_atomic_subfetch_explicit(p, value, order)  __hybrid_atomic_subfetch(*(p), value, order)
-#define Dee_atomic_andfetch_explicit(p, value, order)  __hybrid_atomic_andfetch(*(p), value, order)
-#define Dee_atomic_orfetch_explicit(p, value, order)   __hybrid_atomic_orfetch(*(p), value, order)
-#define Dee_atomic_xorfetch_explicit(p, value, order)  __hybrid_atomic_xorfetch(*(p), value, order)
-#define Dee_atomic_nandfetch_explicit(p, value, order) __hybrid_atomic_nandfetch(*(p), value, order)
+#define Dee_atomic_incfetch_explicit(p, order)         __hybrid_atomic_incfetch(p, order)
+#define Dee_atomic_decfetch_explicit(p, order)         __hybrid_atomic_decfetch(p, order)
+#define Dee_atomic_addfetch_explicit(p, value, order)  __hybrid_atomic_addfetch(p, value, order)
+#define Dee_atomic_subfetch_explicit(p, value, order)  __hybrid_atomic_subfetch(p, value, order)
+#define Dee_atomic_andfetch_explicit(p, value, order)  __hybrid_atomic_andfetch(p, value, order)
+#define Dee_atomic_orfetch_explicit(p, value, order)   __hybrid_atomic_orfetch(p, value, order)
+#define Dee_atomic_xorfetch_explicit(p, value, order)  __hybrid_atomic_xorfetch(p, value, order)
+#define Dee_atomic_nandfetch_explicit(p, value, order) __hybrid_atomic_nandfetch(p, value, order)
 
-#define Dee_atomic_inc_explicit(p, order)         __hybrid_atomic_inc(*(p), order)
-#define Dee_atomic_dec_explicit(p, order)         __hybrid_atomic_dec(*(p), order)
-#define Dee_atomic_add_explicit(p, value, order)  __hybrid_atomic_add(*(p), value, order)
-#define Dee_atomic_sub_explicit(p, value, order)  __hybrid_atomic_sub(*(p), value, order)
-#define Dee_atomic_and_explicit(p, value, order)  __hybrid_atomic_and(*(p), value, order)
-#define Dee_atomic_or_explicit(p, value, order)   __hybrid_atomic_or(*(p), value, order)
-#define Dee_atomic_xor_explicit(p, value, order)  __hybrid_atomic_xor(*(p), value, order)
-#define Dee_atomic_nand_explicit(p, value, order) __hybrid_atomic_nand(*(p), value, order)
+#define Dee_atomic_inc_explicit(p, order)         __hybrid_atomic_inc(p, order)
+#define Dee_atomic_dec_explicit(p, order)         __hybrid_atomic_dec(p, order)
+#define Dee_atomic_add_explicit(p, value, order)  __hybrid_atomic_add(p, value, order)
+#define Dee_atomic_sub_explicit(p, value, order)  __hybrid_atomic_sub(p, value, order)
+#define Dee_atomic_and_explicit(p, value, order)  __hybrid_atomic_and(p, value, order)
+#define Dee_atomic_or_explicit(p, value, order)   __hybrid_atomic_or(p, value, order)
+#define Dee_atomic_xor_explicit(p, value, order)  __hybrid_atomic_xor(p, value, order)
+#define Dee_atomic_nand_explicit(p, value, order) __hybrid_atomic_nand(p, value, order)
 
 #endif /* !CONFIG_NO_THREADS */
 

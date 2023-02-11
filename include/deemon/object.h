@@ -466,10 +466,10 @@ struct Dee_weakref {
  */
 #ifdef __cplusplus
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
+	__hybrid_atomic_store(&(x)->wr_next, (struct ::Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
+	__hybrid_atomic_store(&(x)->wr_next, (struct Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #endif /* !__cplusplus */
 
 
@@ -489,9 +489,9 @@ struct Dee_weakref_list {
 
 /* Finalize weakref support (must be called manually by
  * destructors of types implementing weakref support!) */
-#define Dee_weakref_support_fini(x)                                    \
-	(__hybrid_atomic_load((x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
-	 ? Dee_weakref_support_fini(&(x)->ob_weakrefs)                     \
+#define Dee_weakref_support_fini(x)                                     \
+	(__hybrid_atomic_load(&(x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
+	 ? Dee_weakref_support_fini(&(x)->ob_weakrefs)                      \
 	 : (void)0)
 DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
 
@@ -637,7 +637,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 /* Same as `DeeObject_UndoConstruction()', however optimize for the
  * case of `undo_start' known to either be `NULL' or `DeeObject_Type' */
 #define DeeObject_UndoConstructionNoBase(self) \
-	__hybrid_atomic_cmpxch((self)->ob_refcnt, 1, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
+	__hybrid_atomic_cmpxch(&(self)->ob_refcnt, 1, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 
 
 /* incref() + return `self' */
@@ -719,15 +719,15 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor, try to bypass them here to speed up compile-time and ease debugging. */
 #if __SIZEOF_POINTER__ == __SIZEOF_LONG__
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)&(x)) - 1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)&(x)) + 1)
-#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)) + 1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement((long volatile *)(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement((long volatile *)(x)))
 #elif __SIZEOF_POINTER__ == 8
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)&(x)) - 1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)&(x)) + 1)
-#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)) + 1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)_InterlockedIncrement64((__int64 volatile *)(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)_InterlockedDecrement64((__int64 volatile *)(x)))
 #endif
 #endif /* _MSC_VER */
 #ifndef _DeeRefcnt_FetchInc
@@ -741,24 +741,24 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
 #endif /* !_DeeRefcnt_FetchAdd */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc((x)->ob_refcnt) || (_DeeFatal_BadIncref(x), 0))
-#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
-#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (_DeeFatal_BadDecref(x), 0))
-#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc(&(x)->ob_refcnt) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd(&(x)->ob_refcnt, n) || (_DeeFatal_BadIncref(x), 0))
+#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec(&(x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (_DeeFatal_BadDecref(x), 0))
+#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)          (void)_DeeRefcnt_FetchInc((x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)     (void)_DeeRefcnt_AddFetch((x)->ob_refcnt, n)
-#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_DecFetch((x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
-#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Incref_untraced(x)          (void)_DeeRefcnt_FetchInc(&(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     (void)_DeeRefcnt_AddFetch(&(x)->ob_refcnt, n)
+#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_DecFetch(&(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_DecFetch(&(x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_DecFetch(&(x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    DeeObject_Destroy((DeeObject *)(x))
-#define Dee_DecrefNokill_untraced(x)    (void)_DeeRefcnt_DecFetch((x)->ob_refcnt)
-#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_DecFetch((x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_DecrefNokill_untraced(x)    (void)_DeeRefcnt_DecFetch(&(x)->ob_refcnt)
+#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_DecFetch(&(x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced((DeeObject *)(self))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_DecrefIfNotOne_untraced(self)  Dee_DecrefIfNotOne_untraced((DeeObject *)(self))
@@ -778,10 +778,10 @@ LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	Dee_refcnt_t refcnt;
 	do {
-		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
+		refcnt = __hybrid_atomic_load(&self->ob_refcnt, __ATOMIC_ACQUIRE);
 		if (refcnt <= 1)
 			return false;
-	} while (!__hybrid_atomic_cmpxch_weak(self->ob_refcnt, refcnt, refcnt - 1,
+	} while (!__hybrid_atomic_cmpxch_weak(&self->ob_refcnt, refcnt, refcnt - 1,
 	                                      __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 	return true;
 }
@@ -790,10 +790,10 @@ LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 	Dee_refcnt_t refcnt;
 	do {
-		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
+		refcnt = __hybrid_atomic_load(&self->ob_refcnt, __ATOMIC_ACQUIRE);
 		if (!refcnt)
 			return false;
-	} while (!__hybrid_atomic_cmpxch_weak(self->ob_refcnt, refcnt, refcnt + 1,
+	} while (!__hybrid_atomic_cmpxch_weak(&self->ob_refcnt, refcnt, refcnt + 1,
 	                                      __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 	return true;
 }
@@ -803,7 +803,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
                                    char const *file, int line) {
-	if (!__hybrid_atomic_cmpxch(self->ob_refcnt, 1, 0,
+	if (!__hybrid_atomic_cmpxch(&self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
 	                            __ATOMIC_SEQ_CST))
 		return false;
@@ -813,7 +813,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
-	if (!__hybrid_atomic_cmpxch(self->ob_refcnt, 1, 0,
+	if (!__hybrid_atomic_cmpxch(&self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
 	                            __ATOMIC_SEQ_CST))
 		return false;

@@ -893,10 +893,10 @@ INTDEF NONNULL((1)) void DCALL symbol_fini(struct symbol *__restrict self);
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 /* Destroy a given symbol. */
 INTDEF NONNULL((1)) void DCALL symbol_destroy(struct symbol *__restrict self);
-#define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST))
-#define symbol_decref(x)  (void)(__hybrid_atomic_decfetch((x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0))
-#define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc((x)->s_refcnt, __ATOMIC_SEQ_CST)))
-#define symbol_xdecref(x) (void)(!(x) || (__hybrid_atomic_decfetch((x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0)))
+#define symbol_incref(x)  (void)(__hybrid_atomic_fetchinc(&(x)->s_refcnt, __ATOMIC_SEQ_CST))
+#define symbol_decref(x)  (void)(__hybrid_atomic_decfetch(&(x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0))
+#define symbol_xincref(x) (void)(!(x) || (__hybrid_atomic_fetchinc(&(x)->s_refcnt, __ATOMIC_SEQ_CST)))
+#define symbol_xdecref(x) (void)(!(x) || (__hybrid_atomic_decfetch(&(x)->s_refcnt, __ATOMIC_SEQ_CST) || (symbol_destroy(x), 0)))
 #else /* CONFIG_SYMBOL_HAS_REFCNT */
 #define symbol_incref(x)  (void)0
 #define symbol_decref(x)  (void)0
